@@ -937,11 +937,11 @@
     	float: right;
     }
     
-    .annotate-tagsets-grid .v-treegrid-row-selected  > .v-treegrid-cell-focused::before {
+    .no-focused-before-border .v-treegrid-row-selected  > .v-treegrid-cell-focused::before {
 		border-color: transparent;
 	}
 	
-    .annotate-tagsets-grid .v-treegrid-row-focused::before {
+    .no-focused-before-border .v-treegrid-row-focused::before {
 		border-color: transparent;
 	}
 

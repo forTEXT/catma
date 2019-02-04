@@ -343,6 +343,10 @@ public class ResourcePanel extends VerticalLayout {
 
 	private void handleVisibilityClickEvent(RendererClickEvent<DocumentTreeItem> documentSelectionClick) {
 		DocumentTreeItem selectedItem = documentSelectionClick.getItem();
+		handleVisibilityClicItem(selectedItem);
+	}
+	
+	private void handleVisibilityClicItem(DocumentTreeItem selectedItem) {
 		selectedItem.setSelected(!selectedItem.isSelected());
 		
 		if (selectedItem.isSingleSelection()) {
@@ -354,7 +358,25 @@ public class ResourcePanel extends VerticalLayout {
 		}		
 		documentTree.getDataProvider().refreshAll();
 		
-		selectedItem.fireSelectedEvent(this.resourceSelectionListener);
+		selectedItem.fireSelectedEvent(this.resourceSelectionListener);		
+	}
+	
+	public void selectCollectionVisible(String collectionId) {
+		documentsData.getRootItems()
+		.stream()
+		.filter(documentTreeItem->documentTreeItem.isSelected())
+		.findFirst()
+		.ifPresent(
+			documentItem -> selectCollectionVisible(documentItem, collectionId));
+		
+	}
+
+	private void selectCollectionVisible(DocumentTreeItem documentItem, String collectionId) {
+		documentsData.getChildren(documentItem)
+		.stream()
+		.filter(item -> ((CollectionDataItem)item).getCollectionRef().getId().equals(collectionId))
+		.findFirst()
+		.ifPresent(collectionItem -> handleVisibilityClicItem(collectionItem));
 	}
 
 	public void setSelectionListener(

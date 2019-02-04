@@ -101,13 +101,6 @@ public class Tagger extends AbstractComponent {
 				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
 				taggerListener.tagInstanceAdded(
 						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
-				
-				Annotation tagInstanceInfo = 
-						taggerListener.getTagInstanceInfo(tagInstance.getInstanceID());
-				getState().tagInstanceIdToTooltipInfo.put(
-					tagInstance.getInstanceID(), 
-					tagInstanceInfoHTMLSerializer.toHTML(tagInstanceInfo));
-
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					Messages.getString("Tagger.errorAddingAnnotation"), e); //$NON-NLS-1$
@@ -138,6 +131,14 @@ public class Tagger extends AbstractComponent {
 		getState().tagInstanceIdToTooltipInfo = new HashMap<>();
 	}
 	
+	public void updateAnnotation(String annotationId) {
+		Annotation annotation = 
+				taggerListener.getTagInstanceInfo(annotationId);
+		getState().tagInstanceIdToTooltipInfo.put(
+			annotationId, 
+			tagInstanceInfoHTMLSerializer.toHTML(annotation));
+	}
+	
 	@Override
 	public void beforeClientResponse(boolean initial) {
 		super.beforeClientResponse(initial);
@@ -161,7 +162,20 @@ public class Tagger extends AbstractComponent {
 		Page page = pager.getPage(pageNumber);
 		setPage(page.toHTML(), page.getLineCount());
 	}
-
+	
+	void removeTagInstances(Collection<String> annotationIds) {
+		for (String annotationId : annotationIds) {
+			for (Page page : pager.getPagesForAnnotationId(annotationId)) {
+				page.removeRelativeTagInstance(annotationId);
+			}
+			getState().tagInstanceIdToTooltipInfo.remove(annotationId);
+		}
+		if (pager.getCurrentPage().isDirty()) {
+			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+		}
+	}
+	
+	
 	void setTagInstancesVisible(
 			Collection<ClientTagInstance> tagInstances, boolean visible) {
 				
@@ -235,9 +249,9 @@ public class Tagger extends AbstractComponent {
 		pager.highlight(absoluteRange);
 	}
 
-	public void setTagInstanceSelected(TagInstance tagInstance) {
+	public void setTagInstanceSelected(String annotationId) {
 		getRpcProxy(TaggerClientRpc.class).setTagInstanceSelected(
-				tagInstance==null?"":tagInstance.getUuid());		 //$NON-NLS-1$
+				annotationId==null?"":annotationId);//$NON-NLS-1$
 	}
 
 	public void setTraceSelection(Boolean traceSelection) {

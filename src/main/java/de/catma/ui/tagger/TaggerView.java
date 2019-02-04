@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -61,26 +62,26 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
-import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
-import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
 import de.catma.ui.tagger.annotationpanel.AnnotationPanel;
+import de.catma.ui.tagger.annotationpanel.EditAnnotationPropertiesDialog;
 import de.catma.ui.tagger.contextmenu.TaggerContextMenu;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
@@ -88,7 +89,6 @@ import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.tagger.resourcepanel.ResourcePanel;
 import de.catma.ui.tagger.resourcepanel.ResourceSelectionListener;
-import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.util.Pair;
 
 public class TaggerView extends HorizontalLayout 
@@ -98,7 +98,6 @@ public class TaggerView extends HorizontalLayout
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
 	private Pager pager;
-	private MarkupPanel markupPanel;
 	private TagManager tagManager;
 	private int taggerID;
 	private Button btAnalyze;
@@ -122,6 +121,7 @@ public class TaggerView extends HorizontalLayout
 	private EventBus eventBus;
 	private TaggerContextMenu taggerContextMenu;
 	private ErrorHandler errorHandler;
+	private PropertyChangeListener annotationPropertiesChangedListener;
 	
 	public TaggerView(
 			int taggerID, 
@@ -201,7 +201,7 @@ public class TaggerView extends HorizontalLayout
 					for (TagReference tr : tagReferences) {
 						if (isRelevantTagReference(
 								tr, 
-								markupPanel.getUserMarkupCollections())) {
+								userMarkupCollectionManager.getUserMarkupCollections())) {
 							relevantTagReferences.add(tr);
 						}
 					}
@@ -213,11 +213,8 @@ public class TaggerView extends HorizontalLayout
 						tagInstanceUuids.add(tr.getTagInstance().getUuid());
 					}
 					
-					if (tagInstanceUuids.size() == 1){
-						markupPanel.showPropertyEditDialog(
-								changeValue.getFirst(),
-								relevantTagReferences.get(0).getTagInstance());
-					}
+					
+					tagInstanceUuids.forEach(annotationId -> tagger.updateAnnotation(annotationId));
 
 				}
 				else if (evt.getOldValue() != null) {
@@ -225,20 +222,15 @@ public class TaggerView extends HorizontalLayout
 					Pair<String, Collection<String>> changeValue = 
 							(Pair<String, Collection<String>>) evt.getOldValue();
 					
-					Collection<String> annotationsIds = changeValue.getSecond(); 
-					List<TagReference> tagReferences = new ArrayList<>();
-					UserMarkupCollectionManager umcManager = 
-						markupPanel.getUserMarkupCollectionManager();
-					if (umcManager.contains(changeValue.getFirst())) {
-						for (String annotationId : annotationsIds) {
-							tagReferences.addAll(umcManager.getTagReferences(annotationId));
-						}
-						umcManager.removeTagInstance(annotationsIds, false);
+					String collectionId = changeValue.getFirst();
+					Collection<String> annotationIds = changeValue.getSecond(); 
+
+					if (userMarkupCollectionManager.contains(collectionId)) {
+						userMarkupCollectionManager.removeTagInstance(annotationIds, false);
 					}
 					
-					tagger.setVisible(tagReferences, false);
-					markupPanel.showTagInstanceInfo(
-							tagReferences.toArray(new TagReference[]{}));
+					tagger.removeTagInstances(annotationIds);
+					annotationPanel.removeAnnotations(annotationIds);
 				}
 			}
 		};
@@ -246,6 +238,17 @@ public class TaggerView extends HorizontalLayout
 		project.addPropertyChangeListener(
 			RepositoryChangeEvent.tagReferencesChanged, 
 			tagReferencesChangedListener);
+		
+		annotationPropertiesChangedListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+
+			}
+		};
+		project.addPropertyChangeListener(
+				RepositoryChangeEvent.propertyValueChanged,
+				annotationPropertiesChangedListener);
 	}
 
 	private boolean isRelevantTagReference(TagReference tr,
@@ -387,7 +390,7 @@ public class TaggerView extends HorizontalLayout
 					tagger.setVisible(tagReferences, selected);
 				}
 			});
-		
+		//TODO: handle missing collection
 		taggerContextMenu.setTagSelectionListener(tag -> tagger.addTagInstanceWith(tag));
 		
 	}
@@ -402,7 +405,6 @@ public class TaggerView extends HorizontalLayout
 
 		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button"); //$NON-NLS-1$
-//		btHelp.addStyleName(MaterialTheme.BUTTON_FLAT);
 		
 		IndexInfoSet indexInfoSet = 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
@@ -456,43 +458,10 @@ public class TaggerView extends HorizontalLayout
 		btClearSearchHighlights = new IconButton(VaadinIcons.ERASER);
 		btClearSearchHighlights.setDescription(Messages.getString("TaggerView.clearAllSearchHighlights")); //$NON-NLS-1$
 		actionPanel.addComponent(btClearSearchHighlights);
-		
-		markupPanel = new MarkupPanel(
-				project,tagger,
-				
-				new PropertyChangeListener() {
-					
-					public void propertyChange(PropertyChangeEvent evt) {
-						boolean selected = evt.getNewValue() != null;
-						@SuppressWarnings("unchecked")
-						List<TagReference> tagReferences = 
-							(List<TagReference>)(
-									selected?evt.getNewValue():evt.getOldValue());
-						if (!tagReferences.isEmpty()) {
-							tagger.setVisible(tagReferences, selected);
-						}
-					}
-				},
-				new PropertyChangeListener() {
-					
-					public void propertyChange(PropertyChangeEvent evt) {
-						@SuppressWarnings("unchecked")
-						Set<TagDefinition> removedTagDefinitions = 
-								(Set<TagDefinition>) evt.getOldValue();
-						pager.removeTagInstances(removedTagDefinitions);
-						tagger.setPage(pager.getCurrentPageNumber());
-					}
-				},
-				new TagInstanceSelectedListener() {
-					
-					@Override
-					public void tagInstanceSelected(TagInstance tagInstance) {
-						tagger.setTagInstanceSelected(tagInstance);
-					}
-				},
-				sourceDocument.getID());
-		
-		annotationPanel = new AnnotationPanel(project);
+		annotationPanel = new AnnotationPanel(
+			project, 
+			userMarkupCollectionManager,
+			selectedAnnotationId -> tagger.setTagInstanceSelected(selectedAnnotationId));
 		
 		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
@@ -570,38 +539,7 @@ public class TaggerView extends HorizontalLayout
 	
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
-		markupPanel.openUserMarkupCollection(userMarkupCollection);
-		// hier die library holen ueber tagset loopen und dann openTgsetDef ausfuehren
-		/*for (TagsetDefinition ts : userMarkupCollection.getTagLibrary()) {
-			geht so da TagLib ein Iterable ist...
-			und dann sowat 	:
-			
-								TagLibrary tagLibrary = repository.getTagLibraryFor(tagsetDefinition.getUuid(), null);--> version vielleicht hier doch dabei und nicht null
-								if (tagLibrary != null) {
-										((CatmaApplication) UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
-										((CatmaApplication) UI.getCurrent()).addTagsetToActiveDocument(tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()),
-												tagsetSelectionListener);
-									}
-								}.
-		}*/
-	}
-
-	public void openTagsetDefinition(
-			CatmaApplication catmaApplication, String uuid, Version version) throws IOException {
-		TagLibrary tagLibrary = project.getTagLibraryFor(uuid, version);
-		if (tagLibrary != null) {
-			catmaApplication.openTagLibrary(project, tagLibrary, false);
-			openTagsetDefinition(catmaApplication, tagLibrary.getTagsetDefinition(uuid));
-		}
-	}
-	
-
-	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener){
-		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition,tagsetSelectionListener);
-	}
-	
-	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition){
-		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition);
+		resourcePanel.selectCollectionVisible(userMarkupCollection.getUuid());
 	}
 
 	public void close() {
@@ -614,12 +552,15 @@ public class TaggerView extends HorizontalLayout
 		project.removePropertyChangeListener(
 				RepositoryChangeEvent.tagReferencesChanged, 
 				tagReferencesChangedListener);
-
+		project.removePropertyChangeListener(
+				RepositoryChangeEvent.propertyValueChanged,
+				annotationPropertiesChangedListener);
 		sourceDocChangedListener = null;
 	}
 	
 	public void tagInstanceAdded(
 			ClientTagInstance clientTagInstance) {
+		
 		UserMarkupCollection collection = annotationPanel.getSelectedEditableCollection();
 		
 		TagLibrary tagLibrary = collection.getTagLibrary();
@@ -642,7 +583,24 @@ public class TaggerView extends HorizontalLayout
 						new TagReference(ti, sourceDocument.getID(), r, userMarkupCollectionUuid);
 				tagReferences.add(ref);
 			}
-			userMarkupCollectionManager.addTagReferences(tagReferences, collection);
+			
+			final Annotation annotation = 
+				new Annotation(ti, tagReferences, collection, tagLibrary.getTagPath(tagDef));
+			if (!tagDef.getUserDefinedPropertyDefinitions().isEmpty()) {
+				EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
+						new EditAnnotationPropertiesDialog(annotation, new SaveCancelListener<List<Property>>() {
+							
+							@Override
+							public void savePressed(List<Property> result) {
+								userMarkupCollectionManager.addTagReferences(tagReferences, collection);
+							}
+						});
+				editAnnotationPropertiesDialog.show();
+			}
+			else {
+				userMarkupCollectionManager.addTagReferences(tagReferences, collection);
+			}
+			
 		} catch (URISyntaxException e) {
 			errorHandler.showAndLogError(
 				Messages.getString("TaggerView.errorAddingAnnotations"), e); //$NON-NLS-1$
@@ -686,10 +644,6 @@ public class TaggerView extends HorizontalLayout
 	}
 	
 	public void tagInstanceSelected(String instancePartID, String lineID) {
-		//TODO:
-//		markupPanel.showTagInstanceInfo(
-//			pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID), 
-//			ClientTagInstance.getTagInstanceIDFromPartId(instancePartID));
 		try {
 			annotationPanel.showAnnotationDetails(
 					userMarkupCollectionManager.getAnnotations(
@@ -702,8 +656,6 @@ public class TaggerView extends HorizontalLayout
 	
 	@Override
 	public void tagInstanceSelected(Set<String> tagInstanceIDs) {
-		//TODO:
-//		markupPanel.showTagInstanceInfo(tagInstanceIDs, null);
 		try {
 			annotationPanel.showAnnotationDetails(
 				userMarkupCollectionManager.getAnnotations(tagInstanceIDs));

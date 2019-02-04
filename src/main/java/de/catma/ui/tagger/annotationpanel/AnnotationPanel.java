@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.vaadin.dialogs.ConfirmDialog;
@@ -43,6 +44,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -51,7 +53,6 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.modules.main.ErrorHandler;
-import de.catma.ui.util.Cleaner;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -79,10 +80,15 @@ public class AnnotationPanel extends VerticalLayout {
 	private AnnotationDetailsPanel annotationDetailsPanel;
 	private Button btMaximizeAnnotationDetailsRibbon;
 	private VerticalSplitPanel rightSplitPanel;
+	private UserMarkupCollectionManager collectionManager;
 
-	public AnnotationPanel(Repository project) {
+	public AnnotationPanel(
+			Repository project, 
+			UserMarkupCollectionManager collectionManager, 
+			Consumer<String> annotationSelectionListener) {
 		this.project = project;
-		initComponents();
+		this.collectionManager = collectionManager;
+		initComponents(annotationSelectionListener);
 		initActions();
 		initListeners();
 	}
@@ -332,9 +338,9 @@ public class AnnotationPanel extends VerticalLayout {
 		currentEditableCollectionBox.setEmptySelectionCaption("Please select or create a Collection...");
 		
 		annotationDetailsPanel.addMinimizeButtonClickListener(
-				clickEvent -> setAnnotationDetailsRibbonVisible(false));
+				clickEvent -> setAnnotationDetailsPanelVisible(false));
 		btMaximizeAnnotationDetailsRibbon.addClickListener(
-				ClickEvent -> setAnnotationDetailsRibbonVisible(true));
+				ClickEvent -> setAnnotationDetailsPanelVisible(true));
 		
 	}
 
@@ -408,11 +414,28 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handleAddPropertyRequest() {
-		final List<TagDefinition> targetTags = tagsetGrid.getSelectedItems()
-		.stream()
-		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
-		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
-		.collect(Collectors.toList());
+		final List<TagDefinition> targetTags = new ArrayList<>();
+		if (tagsetGrid.getSelectedItems().size() == 1) {
+			TagsetTreeItem selectedItem = 
+				tagsetGrid.getSelectedItems().iterator().next();
+			
+			while (!(selectedItem instanceof TagDataItem) && (selectedItem != null)) {
+				selectedItem = tagsetData.getParent(selectedItem);
+			}
+			
+			if (selectedItem != null) {
+				targetTags.add(((TagDataItem)selectedItem).getTag());
+			}
+		}
+		else {
+			targetTags.addAll(
+				tagsetGrid.getSelectedItems()
+				.stream()
+				.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
+				.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
+				.collect(Collectors.toList()));
+		}
+		
 		if (targetTags.isEmpty()) {
 			Notification.show("Info", "Please select one ore more Tags first!", Type.TRAY_NOTIFICATION);
 		}
@@ -430,75 +453,131 @@ public class AnnotationPanel extends VerticalLayout {
 				}
 			}
 			
-			
 			List<PropertyDefinition> commonProperties = 
 				propertiesByName.asMap().entrySet()
 				.stream()
 				.filter(entry -> entry.getValue().size() == targetTags.size())
 				.map(entry -> new PropertyDefinition(entry.getValue().iterator().next()))
 				.collect(Collectors.toList());
-			
+			final boolean bulkEdit = targetTags.size() > 1; // just a single tag's properties or is it a bulk(>1) edit?
+					
 			AddEditPropertyDialog addPropertyDialog = new AddEditPropertyDialog(
-				targetTags.size() > 1, // just a single tag's properties or is it a bulk(>1) edit?
+				bulkEdit,
 				commonProperties,
 				new SaveCancelListener<List<PropertyDefinition>>() {
 					@Override
 					public void savePressed(List<PropertyDefinition> result) {
-						final Set<String> availableCommonPropertyNames = 
-								result.stream().map(propertyDef -> propertyDef.getName())
-								.collect(Collectors.toSet());
-						
-						final Set<String> deletedCommonProperyNames = commonProperties
-						.stream()
-						.map(propertyDef -> propertyDef.getName())
-						.filter(name -> !availableCommonPropertyNames.contains(name))
-						.collect(Collectors.toSet());
-						
-						for (TagDefinition tag : targetTags) {
-							TagsetDefinition tagset = 
-								project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
-	
-							for (PropertyDefinition existingPropertyDef : 
-								new ArrayList<>(tag.getUserDefinedPropertyDefinitions())) {
-								
-								//handle deleted PropertyDefs
-								if (deletedCommonProperyNames.contains(existingPropertyDef.getName())) {
-									project.getTagManager().removeUserDefinedPropertyDefinition(
-											existingPropertyDef, tag, tagset);
-								}
-								//handle updated PropertyDefs
-								else if (availableCommonPropertyNames.contains(existingPropertyDef.getName())) {
-									result
-									.stream()
-									.filter(possiblyChangedPd -> 
-										possiblyChangedPd.getName().equals(existingPropertyDef.getName()))
-									.findFirst()
-									.ifPresent(possiblyChangedPd -> 
-										existingPropertyDef.setPossibleValueList(
-											possiblyChangedPd.getPossibleValueList()));
-									
-									project.getTagManager().updateUserDefinedPropertyDefinition(
-										tag, existingPropertyDef);
-								}
-							}
-							
-							//handle created PropertyDefs
-							for (PropertyDefinition pd : result) {
-								if (tag.getPropertyDefinition(pd.getName()) == null) {
-									PropertyDefinition createdPropertyDefinition = 
-											new PropertyDefinition(pd);
-									pd.setUuid(idGenerator.generate());
-									
-									project.getTagManager().addUserDefinedPropertyDefinition(
-										tag, createdPropertyDefinition);
-								}
-							}
+						if (bulkEdit) {
+							handleBulkEditProperties(result,
+									commonProperties, targetTags);
+						}
+						else {
+							handleSingleEditProperties(result, targetTags.iterator().next());
 						}
 						
 					}
 			});
 			
 			addPropertyDialog.show();
+		}
+	}
+
+	private void handleSingleEditProperties(List<PropertyDefinition> editedPropertyDefs, TagDefinition tag) {
+		TagsetDefinition tagset = 
+				project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
+		
+		for (PropertyDefinition existingPropertyDef : 
+			new ArrayList<>(tag.getUserDefinedPropertyDefinitions())) {
+			
+			//handle deleted PropertyDefs
+			if (!editedPropertyDefs.contains(existingPropertyDef)) {
+				project.getTagManager().removeUserDefinedPropertyDefinition(
+						existingPropertyDef, tag, tagset);
+			}
+			//handle updated PropertyDefs
+			else {
+				editedPropertyDefs
+					.stream()
+					.filter(possiblyChangedPd -> 
+						possiblyChangedPd.getUuid().equals(existingPropertyDef.getUuid()))
+					.findFirst()
+					.ifPresent(editedPropertyDef -> {
+						existingPropertyDef.setName(editedPropertyDef.getName());
+						existingPropertyDef.setPossibleValueList(
+							editedPropertyDef.getPossibleValueList());
+					});
+				
+				project.getTagManager().updateUserDefinedPropertyDefinition(
+					tag, existingPropertyDef);
+			}
+		}
+		
+		//handle created PropertyDefs
+		for (PropertyDefinition pd : editedPropertyDefs) {
+			if (tag.getPropertyDefinition(pd.getName()) == null) {
+				PropertyDefinition createdPropertyDefinition = 
+						new PropertyDefinition(pd);
+				pd.setUuid(idGenerator.generate());
+				
+				project.getTagManager().addUserDefinedPropertyDefinition(
+					tag, createdPropertyDefinition);
+			}
+		}
+	}
+
+	private void handleBulkEditProperties(
+		List<PropertyDefinition> editedProperties, 
+		List<PropertyDefinition> commonProperties,
+		List<TagDefinition> targetTags) {
+		final Set<String> availableCommonPropertyNames = 
+				editedProperties.stream().map(propertyDef -> propertyDef.getName())
+				.collect(Collectors.toSet());
+		
+		final Set<String> deletedCommonProperyNames = commonProperties
+		.stream()
+		.map(propertyDef -> propertyDef.getName())
+		.filter(name -> !availableCommonPropertyNames.contains(name))
+		.collect(Collectors.toSet());
+		
+		for (TagDefinition tag : targetTags) {
+			TagsetDefinition tagset = 
+				project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
+
+			for (PropertyDefinition existingPropertyDef : 
+				new ArrayList<>(tag.getUserDefinedPropertyDefinitions())) {
+				
+				//handle deleted PropertyDefs
+				if (deletedCommonProperyNames.contains(existingPropertyDef.getName())) {
+					project.getTagManager().removeUserDefinedPropertyDefinition(
+							existingPropertyDef, tag, tagset);
+				}
+				//handle updated PropertyDefs
+				else if (availableCommonPropertyNames.contains(existingPropertyDef.getName())) {
+					editedProperties
+					.stream()
+					.filter(possiblyChangedPd -> 
+						possiblyChangedPd.getName().equals(existingPropertyDef.getName()))
+					.findFirst()
+					.ifPresent(possiblyChangedPd -> 
+						existingPropertyDef.setPossibleValueList(
+							possiblyChangedPd.getPossibleValueList()));
+					
+					project.getTagManager().updateUserDefinedPropertyDefinition(
+						tag, existingPropertyDef);
+				}
+			}
+			
+			//handle created PropertyDefs
+			for (PropertyDefinition pd : editedProperties) {
+				if (tag.getPropertyDefinition(pd.getName()) == null) {
+					PropertyDefinition createdPropertyDefinition = 
+							new PropertyDefinition(pd);
+					pd.setUuid(idGenerator.generate());
+					
+					project.getTagManager().addUserDefinedPropertyDefinition(
+						tag, createdPropertyDefinition);
+				}
+			}
 		}
 	}
 
@@ -656,7 +735,7 @@ public class AnnotationPanel extends VerticalLayout {
 				tagsetDataProvider, selected, false);
 	}
 
-	private void initComponents() {
+	private void initComponents(Consumer<String> annotationSelectionListener) {
 		setSizeFull();
 		setSpacing(true);
 		
@@ -678,7 +757,8 @@ public class AnnotationPanel extends VerticalLayout {
 		Label tagsetsLabel = new Label("Tagsets");
 		
 		tagsetGrid = new TreeGrid<>();
-		tagsetGrid.addStyleNames("annotate-tagsets-grid", "flat-undecorated-icon-buttonrenderer");
+		tagsetGrid.addStyleNames(
+				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
 		tagsetGrid.setSizeFull();
 		tagsetGrid.setSelectionMode(SelectionMode.SINGLE);
 		tagsetGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
@@ -702,9 +782,12 @@ public class AnnotationPanel extends VerticalLayout {
         btMaximizeAnnotationDetailsRibbon.addStyleName("annotation-panel-button-right-align");
         rightSplitPanel.addComponent(btMaximizeAnnotationDetailsRibbon);
         
-        annotationDetailsPanel = new AnnotationDetailsPanel(project);
+        annotationDetailsPanel = new AnnotationDetailsPanel(
+        		project, 
+        		collectionManager,
+        		annotationSelectionListener);
 	}
-	
+
 	public void setData(
 			SourceDocument document, 
 			Collection<TagsetDefinition> tagsets, 
@@ -783,7 +866,7 @@ public class AnnotationPanel extends VerticalLayout {
 			
 	}
 	
-	private void setAnnotationDetailsRibbonVisible(boolean visible) {
+	private void setAnnotationDetailsPanelVisible(boolean visible) {
 		if (visible && (annotationDetailsPanel.getParent() == null)){
 			rightSplitPanel.removeComponent(btMaximizeAnnotationDetailsRibbon);
 			rightSplitPanel.addComponent(annotationDetailsPanel);
@@ -801,11 +884,13 @@ public class AnnotationPanel extends VerticalLayout {
 
 	public void showAnnotationDetails(Collection<Annotation> annotations) throws IOException {
 		if (annotationDetailsPanel.getParent() == null) {
-			setAnnotationDetailsRibbonVisible(true);
+			setAnnotationDetailsPanelVisible(true);
 		}
-		for (Annotation annotation : annotations) {
-			annotationDetailsPanel.addAnnotation(annotation);
-		}
+		annotationDetailsPanel.addAnnotations(annotations);
 		
+	}
+
+	public void removeAnnotations(Collection<String> annotationIds) {
+		annotationDetailsPanel.removeAnnotations(annotationIds);
 	}
 }

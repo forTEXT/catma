@@ -1077,7 +1077,7 @@
  */
 
 .v-vaadin-version:after {
-	content: "8.6.2";
+	content: "8.7.0";
 }
 
 .v-widget {
@@ -9590,6 +9590,70 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-left: 15em;
 }
 
+.catma .v-tree8-node.depth-16 {
+	padding-left: 16em;
+}
+
+.catma .v-tree8-node.depth-17 {
+	padding-left: 17em;
+}
+
+.catma .v-tree8-node.depth-18 {
+	padding-left: 18em;
+}
+
+.catma .v-tree8-node.depth-19 {
+	padding-left: 19em;
+}
+
+.catma .v-tree8-node.depth-20 {
+	padding-left: 20em;
+}
+
+.catma .v-tree8-node.depth-21 {
+	padding-left: 21em;
+}
+
+.catma .v-tree8-node.depth-22 {
+	padding-left: 22em;
+}
+
+.catma .v-tree8-node.depth-23 {
+	padding-left: 23em;
+}
+
+.catma .v-tree8-node.depth-24 {
+	padding-left: 24em;
+}
+
+.catma .v-tree8-node.depth-25 {
+	padding-left: 25em;
+}
+
+.catma .v-tree8-node.depth-26 {
+	padding-left: 26em;
+}
+
+.catma .v-tree8-node.depth-27 {
+	padding-left: 27em;
+}
+
+.catma .v-tree8-node.depth-28 {
+	padding-left: 28em;
+}
+
+.catma .v-tree8-node.depth-29 {
+	padding-left: 29em;
+}
+
+.catma .v-tree8-node.depth-30 {
+	padding-left: 30em;
+}
+
+.catma .v-tree8-node.depth-31 {
+	padding-left: 31em;
+}
+
 .catma .v-tree8-cell-content {
 	display: inline-block;
 	vertical-align: middle;
@@ -10654,6 +10718,70 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-node.depth-15 {
 	padding-left: 15em;
+}
+
+.catma .v-treegrid-node.depth-16 {
+	padding-left: 16em;
+}
+
+.catma .v-treegrid-node.depth-17 {
+	padding-left: 17em;
+}
+
+.catma .v-treegrid-node.depth-18 {
+	padding-left: 18em;
+}
+
+.catma .v-treegrid-node.depth-19 {
+	padding-left: 19em;
+}
+
+.catma .v-treegrid-node.depth-20 {
+	padding-left: 20em;
+}
+
+.catma .v-treegrid-node.depth-21 {
+	padding-left: 21em;
+}
+
+.catma .v-treegrid-node.depth-22 {
+	padding-left: 22em;
+}
+
+.catma .v-treegrid-node.depth-23 {
+	padding-left: 23em;
+}
+
+.catma .v-treegrid-node.depth-24 {
+	padding-left: 24em;
+}
+
+.catma .v-treegrid-node.depth-25 {
+	padding-left: 25em;
+}
+
+.catma .v-treegrid-node.depth-26 {
+	padding-left: 26em;
+}
+
+.catma .v-treegrid-node.depth-27 {
+	padding-left: 27em;
+}
+
+.catma .v-treegrid-node.depth-28 {
+	padding-left: 28em;
+}
+
+.catma .v-treegrid-node.depth-29 {
+	padding-left: 29em;
+}
+
+.catma .v-treegrid-node.depth-30 {
+	padding-left: 30em;
+}
+
+.catma .v-treegrid-node.depth-31 {
+	padding-left: 31em;
 }
 
 .catma .v-treegrid-cell-content {
@@ -17870,11 +17998,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	float: right;
 }
 
-.catma .annotate-tagsets-grid .v-treegrid-row-selected > .v-treegrid-cell-focused::before {
+.catma .no-focused-before-border .v-treegrid-row-selected > .v-treegrid-cell-focused::before {
 	border-color: transparent;
 }
 
-.catma .annotate-tagsets-grid .v-treegrid-row-focused::before {
+.catma .no-focused-before-border .v-treegrid-row-focused::before {
 	border-color: transparent;
 }
 

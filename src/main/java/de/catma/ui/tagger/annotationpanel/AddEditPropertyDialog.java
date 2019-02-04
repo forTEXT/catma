@@ -146,7 +146,15 @@ public class AddEditPropertyDialog extends AbstractOkCancelDialog<List<PropertyD
 
 		propertyDefinitionGrid = new Grid<PropertyDefinition>("Assigned Properties");
 		propertyDefinitionGrid.addStyleName("flat-undecorated-icon-buttonrenderer");
-		propertyDefinitionGrid.addColumn(propertyDef -> propertyDef.getName());
+		TextField propertyNameField = new TextField();
+		
+		propertyDefinitionGrid.addColumn(
+			propertyDef -> propertyDef.getName())
+		.setEditorComponent(
+			    propertyNameField, PropertyDefinition::setName)
+		.setEditable(!bulkEdit);
+
+		propertyDefinitionGrid.getEditor().setEnabled(true);
 		propertyDefinitionGrid.setHeaderVisible(false);
 		propertyDefinitionGrid.setWidth("99%");
 		propertyDefinitionGrid.setHeight("100%");

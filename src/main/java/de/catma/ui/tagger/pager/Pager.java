@@ -281,4 +281,15 @@ public class Pager implements Iterable<Page> {
 		
 	}
 
+	public List<Page> getPagesForAnnotationId(String annotationId) {
+		List<Page> result = new ArrayList<>();
+		for (Page page : pages) {
+			if (page.contains(annotationId)) {
+				result.add(page);
+			}
+		}
+		
+		return result;
+	}
+
 }

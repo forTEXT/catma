@@ -10,14 +10,18 @@ public class AnnotationPropertyValueDataItem implements AnnotationTreeItem {
 	}
 
 	@Override
-	public String getName() {
-		return value; //intended
+	public String getDetail() {
+		if (value.length() > MAX_VALUE_LENGTH) {
+			return shorten(value, MAX_VALUE_LENGTH);
+		}
+		return value;
 	}
 
+
+
 	@Override
-	public String getValue() {
-		// TODO Auto-generated method stub
-		return null;
+	public String getDescription() {
+		return value;
 	}
 
 }

@@ -13,45 +13,46 @@ import de.catma.ui.tagger.TaggerView;
 
 public enum ParameterComponentValue {
 	TAGGER( catmaApplication -> {
-		String sourceDocumentId = catmaApplication.getParameter(Parameter.TAGGER_DOCUMENT);
-		
-		TaggerView taggerView = catmaApplication.openSourceDocument(sourceDocumentId);
-		SourceDocument sourceDocument = taggerView.getSourceDocument();
-		
-		List<UserMarkupCollectionReference> collectionRefs = 
-				sourceDocument.getUserMarkupCollectionRefs();
-
-		Set<String> tagsetDefinitionUuids = new HashSet<>();
-		for (UserMarkupCollectionReference ref : collectionRefs) {
-			try {
-				UserMarkupCollection umc = taggerView.openUserMarkupCollection(ref);
-				for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
-					if (!tagsetDefinitionUuids.contains(tagsetDefinition.getUuid())) {
-						tagsetDefinitionUuids.add(tagsetDefinition.getUuid());
-						taggerView.openTagsetDefinition(catmaApplication, 	tagsetDefinition.getUuid(), tagsetDefinition.getVersion());
-					}
-				}
-			}
-			catch (IOException e) {
-				catmaApplication.showAndLogError(Messages.getString("ParameterComponentValue.errorOpeningAnnotations"), e); //$NON-NLS-1$
-			}
-		}
-		
-		
-		String[] additionalTagsetDefinitionUuids = catmaApplication.getParameters(Parameter.TAGGER_TAGSETDEF);
-		if ((additionalTagsetDefinitionUuids != null) && (additionalTagsetDefinitionUuids.length > 0)) {
-			for (String tagsetDefinitionUuid : additionalTagsetDefinitionUuids) {
-				if (!tagsetDefinitionUuids.contains(tagsetDefinitionUuid)) {
-					try {
-						taggerView.openTagsetDefinition(catmaApplication, tagsetDefinitionUuid, null);
-						tagsetDefinitionUuids.add(tagsetDefinitionUuid);
-					}
-					catch (IOException e) {
-						catmaApplication.showAndLogError(Messages.getString("ParameterComponentValue.errorOpeningTagLibrary"), e); //$NON-NLS-1$
-					}
-				}
-			}
-		}		
+		//TODO: no replacement yet
+//		String sourceDocumentId = catmaApplication.getParameter(Parameter.TAGGER_DOCUMENT);
+//		
+//		TaggerView taggerView = catmaApplication.openSourceDocument(sourceDocumentId);
+//		SourceDocument sourceDocument = taggerView.getSourceDocument();
+//		
+//		List<UserMarkupCollectionReference> collectionRefs = 
+//				sourceDocument.getUserMarkupCollectionRefs();
+//
+//		Set<String> tagsetDefinitionUuids = new HashSet<>();
+//		for (UserMarkupCollectionReference ref : collectionRefs) {
+//			try {
+//				UserMarkupCollection umc = taggerView.openUserMarkupCollection(ref);
+//				for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
+//					if (!tagsetDefinitionUuids.contains(tagsetDefinition.getUuid())) {
+//						tagsetDefinitionUuids.add(tagsetDefinition.getUuid());
+//						taggerView.openTagsetDefinition(catmaApplication, 	tagsetDefinition.getUuid(), tagsetDefinition.getVersion());
+//					}
+//				}
+//			}
+//			catch (IOException e) {
+//				catmaApplication.showAndLogError(Messages.getString("ParameterComponentValue.errorOpeningAnnotations"), e); //$NON-NLS-1$
+//			}
+//		}
+//		
+//		
+//		String[] additionalTagsetDefinitionUuids = catmaApplication.getParameters(Parameter.TAGGER_TAGSETDEF);
+//		if ((additionalTagsetDefinitionUuids != null) && (additionalTagsetDefinitionUuids.length > 0)) {
+//			for (String tagsetDefinitionUuid : additionalTagsetDefinitionUuids) {
+//				if (!tagsetDefinitionUuids.contains(tagsetDefinitionUuid)) {
+//					try {
+//						taggerView.openTagsetDefinition(catmaApplication, tagsetDefinitionUuid, null);
+//						tagsetDefinitionUuids.add(tagsetDefinitionUuid);
+//					}
+//					catch (IOException e) {
+//						catmaApplication.showAndLogError(Messages.getString("ParameterComponentValue.errorOpeningTagLibrary"), e); //$NON-NLS-1$
+//					}
+//				}
+//			}
+//		}		
 	})
 	;
 	

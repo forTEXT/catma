@@ -1139,8 +1139,9 @@ public class GraphProjectHandler {
 						)
 					);
 					
-					
-					
+					updateProperties(
+						session, rootRevisionHash, 
+						ti, ti.getUserDefinedProperties());
 				}
 				
 			}
@@ -1323,32 +1324,37 @@ public class GraphProjectHandler {
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
-				for (Property property : properties) {
-					session.run(
-						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-						+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-						+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
-						+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
-						+ "(:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
-						+ "(i:"+nt(TagInstance)+"{tagInstanceId:{pTagInstanceId}})"
-						+ "WITH i "
-						+ "MERGE (i)-[:"+rt(hasProperty)+"]->"
-						+ "(:"+nt(AnnotationProperty)+"{"
-							+ "uuid:{pUuid},"
-							+ "values:{pValues} "
-						+"})",
-						Values.parameters(
-							"pUserId", user.getIdentifier(),
-							"pProjectId", projectReference.getProjectId(),
-							"pRootRevisionHash", rootRevisionHash,
-							"pTagInstanceId", tagInstance.getUuid(),
-							"pUuid", property.getPropertyDefinition().getUuid(),
-							"pValues", property.getPropertyValueList()
-						)
-					);
-				}
+				updateProperties(session, rootRevisionHash, tagInstance, properties);
 			}
 		});
+	}
+
+	private void updateProperties(Session session, String rootRevisionHash, TagInstance tagInstance,
+			Collection<Property> properties) {
+		for (Property property : properties) {
+			session.run(
+				"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+				+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+				+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+				+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+				+ "(:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
+				+ "(i:"+nt(TagInstance)+"{tagInstanceId:{pTagInstanceId}})"
+				+ "WITH i "
+				+ "MERGE (i)-[:"+rt(hasProperty)+"]->"
+				+ "(:"+nt(AnnotationProperty)+"{"
+					+ "uuid:{pUuid},"
+					+ "values:{pValues} "
+				+"})",
+				Values.parameters(
+					"pUserId", user.getIdentifier(),
+					"pProjectId", projectReference.getProjectId(),
+					"pRootRevisionHash", rootRevisionHash,
+					"pTagInstanceId", tagInstance.getUuid(),
+					"pUuid", property.getPropertyDefinition().getUuid(),
+					"pValues", property.getPropertyValueList()
+				)
+			);
+		}
 	}
 
 	public Multimap<String, String> getAnnotationIdsByCollectionId(

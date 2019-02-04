@@ -157,10 +157,9 @@ public class CatmaApplication extends UI implements
 			TreeGrid<String> grid = new TreeGrid<String>(dp);
 			grid.setHierarchyColumn(
 					grid.addColumn(item -> item.toString()).setCaption("Name"));
-			
 			ButtonRenderer<String> buttonRenderer = new ButtonRenderer<>(clickEvent -> System.out.println("clicked"));
 			buttonRenderer.setHtmlContentAllowed(true);
-			grid.addColumn(item->VaadinIcons.ABACUS.getHtml(), buttonRenderer).setCaption("Click");
+			grid.addColumn(item->VaadinIcons.ABACUS.getHtml(), buttonRenderer).setCaption("Click").setHidable(true);
 			nasenPanel.addComponent(grid);
 			
 			setContent(nasenPanel);
