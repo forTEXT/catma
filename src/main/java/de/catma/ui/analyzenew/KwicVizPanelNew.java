@@ -127,6 +127,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		selectedItemsTreeGrid = new TreeGrid<TagRowItem>();
 		selectedItemsTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("tag");
 		selectedItemsTreeGrid.addColumn(TagRowItem::getPhrase).setCaption("phrase");
+		selectedItemsTreeGrid.addColumn(TagRowItem::getPropertyName).setCaption("property");
 	
 		selectedItemsTreeGridData= new 	TreeData<TagRowItem>();
 		selectedDataProvider = new TreeDataProvider<>(selectedItemsTreeGridData);
@@ -173,20 +174,19 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			
 			@Override
 			public void onDataChange(DataChangeEvent<TagRowItem> event) {
-				if(comboBox.getValue().contains("tag")) {
+			//	if(comboBox.getValue().contains("tag")) {
 					updateKwicView();
-					System.out.println("TreeGrid hat sich geändert");
 					
-				}
-				
-
-				
+					System.out.println("TreeGrid hat sich geändert");	
+				//}
 			}
 		});
 	}
 	
 	private void updateKwicView() {
-		QueryResult queryResult = createQueryResultFromTreeGridData();
+		//QueryResult queryResult = createQueryResultFromTreeGridDataTags();
+		ArrayList<QueryResultRow> queryResult = createQueryResultFromTreeGridData();
+		
 		try {
 			
 			kwicNew.addQueryResultRows(queryResult);
@@ -199,7 +199,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	
 	
 	
-	private QueryResult createQueryResultFromTreeGridData() {
+	private QueryResult createQueryResultFromTreeGridDataTags() {
+		
 		TagQueryResult tagQueryResult = new TagQueryResult("some Tags");
 
 		List<TagRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
@@ -220,6 +221,34 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 		return tagQueryResult;
 	}
+	
+	private ArrayList<QueryResultRow> createQueryResultFromTreeGridData() {
+		
+		ArrayList<QueryResultRow> queryResult = new ArrayList<QueryResultRow>();
+
+		List<TagRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
+
+		if (!rootElements.isEmpty()) {
+			for (TagRowItem root : rootElements) {
+				List<TagRowItem> children= new ArrayList<TagRowItem>();
+			   children	= selectedItemsTreeGridData.getChildren(root);
+				if(!children.isEmpty()) {
+					for (TagRowItem child : children) 		{
+						QueryResultRow tagQueryResultRow = child.getQueryResultRow();
+						queryResult.add(tagQueryResultRow);
+					}	
+				}				
+			}
+		} else {
+		}
+
+		return  queryResult;
+	
+	
+	
+	
+	}
+	
 	
 
 	private ArrayList<String> getQueriesForAvailableResults() {

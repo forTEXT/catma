@@ -145,6 +145,9 @@ public class KwicPanelNew extends VerticalLayout{
 			
 			for (QueryResultRow row : queryResult) {
 				
+				
+				
+				
 				SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
 				
 				if (!kwicProviders.containsKey(sourceDocument.getID())) {
@@ -182,20 +185,33 @@ public class KwicPanelNew extends VerticalLayout{
 
 	}
 		
-		private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic) {
-		TagQueryResultRow	tagQueryResultRow = (TagQueryResultRow) queryResultRow;
+	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic) {
 		KwicItem kwicItem = new KwicItem();
 		
-	
-		kwicItem.setDocCollection(tagQueryResultRow.getTagDefinitionPath());
-		kwicItem.setKeyWord(tagQueryResultRow.getPhrase());
-		kwicItem.setBackwardContext(kwic.getBackwardContext());
-		kwicItem.setForewardContext(kwic.getForwardContext());
-		kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
-		kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
+		if(queryResultRow instanceof TagQueryResultRow) {
 			
+			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
+			kwicItem.setDocCollection(tagQueryResultRow.getTagDefinitionPath());
+			kwicItem.setKeyWord(tagQueryResultRow.getPhrase());
+			kwicItem.setBackwardContext(kwic.getBackwardContext());
+			kwicItem.setForewardContext(kwic.getForwardContext());
+			kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
+			kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
+
 			return kwicItem;
+			
+		}else {
+			kwicItem.setKeyWord(queryResultRow.getPhrase());
+			kwicItem.setBackwardContext(kwic.getBackwardContext());
+			kwicItem.setForewardContext(kwic.getForwardContext());
+			kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
+			kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
+
+			return kwicItem;
+			
 		}
+
+	}
 }
 
 
