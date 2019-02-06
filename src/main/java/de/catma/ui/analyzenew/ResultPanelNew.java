@@ -681,6 +681,7 @@ public class ResultPanelNew extends Panel {
 							propItem.setTreePath(tagQueryResultRow.getTagDefinitionPath());
 							propItem.setPropertyName(tagQueryResultRow.getPropertyName());
 							propItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
+							propItem.setQueryResultRow(tagQueryResultRow);
 
 							treeData.addItem(oneCollection, propItem);
 						}
