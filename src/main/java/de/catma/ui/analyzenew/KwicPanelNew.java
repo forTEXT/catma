@@ -15,6 +15,7 @@ import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -79,6 +80,7 @@ public class KwicPanelNew extends VerticalLayout{
 		private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 		private int kwicSize = 5;
 		private List<KwicItem> kwicItemList;
+		private boolean showPropertyColumns;
 		
 		
 		public KwicPanelNew(Repository repository) { 
@@ -137,17 +139,22 @@ public class KwicPanelNew extends VerticalLayout{
 		
 		public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
 
+		if(kwicGrid.getColumn("propValueID") != null){
+					
+			kwicGrid.removeColumn("propValueID");
+			kwicGrid.removeColumn("propNameID");
+			
+		}
+			
 			HashMap<String, KwicProvider> kwicProviders =	new HashMap<String, KwicProvider>();
 			kwicItemList.removeAll(kwicItemList);
 			
-			boolean showPropertyColumns = false;
+			showPropertyColumns = false;
 			boolean markupBased=true;
 			
 			for (QueryResultRow row : queryResult) {
 				
-				
-				
-				
+	
 				SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
 				
 				if (!kwicProviders.containsKey(sourceDocument.getID())) {
@@ -164,28 +171,25 @@ public class KwicPanelNew extends VerticalLayout{
 				
 				itemDirCache.put(row, kwic.isRightToLeft());
 					
-				KwicItem kwicItem=createKwicItemFromQueryResultRow(row , kwic);
-				
-          /*	create kwicRowItems like:
-            	kwic.getBackwardContext(),
-				kwic.getKeyword(),
-				kwic.getForwardContext(),
-				tRow.getTagDefinitionPath(),
-				propertyName,
-				propertyValue,
-				row.getRange().getStartPoint(),
-				row.getRange().getEndPoint()},
-			*/
+				KwicItem kwicItem=createKwicItemFromQueryResultRow(row , kwic, showPropertyColumns);
+	
 				kwicItemList.add(kwicItem);
 			
-		}
+	 	}
+			if(showPropertyColumns) {
+				kwicGrid.addColumn(KwicItem::getPropertyName).setCaption("Property Name").setId("propNameID");
+				kwicGrid.addColumn(KwicItem::getPropertyValue).setCaption("Property Value").setId("propValueID");
+			
+				
+			}
 			
 			 kwicGrid.setItems(kwicItemList);
 			 
-
 	}
 		
-	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic) {
+
+		
+	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic, boolean showPropertyColumns ) {
 		KwicItem kwicItem = new KwicItem();
 		
 		if(queryResultRow instanceof TagQueryResultRow) {
@@ -197,6 +201,14 @@ public class KwicPanelNew extends VerticalLayout{
 			kwicItem.setForewardContext(kwic.getForwardContext());
 			kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
 			kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
+			
+			if(tagQueryResultRow.getPropertyName()!=null) {
+				
+			this.showPropertyColumns = true;
+				kwicItem.setPropertyName(tagQueryResultRow.getPropertyName());
+				kwicItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
+						
+			}
 
 			return kwicItem;
 			
