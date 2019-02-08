@@ -12,6 +12,7 @@ import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.KwicProvider;
+import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.util.Cleaner;
@@ -37,17 +38,19 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 	}
 	
 	private String buildAnnotatedText() {
+		TagDefinition tagDefinition = 
+			tagset.getTagDefinition(annotation.getTagInstance().getTagDefinitionId());
 		StringBuilder builder = new StringBuilder();
 		builder.append("<div");
 		builder.append(" class=\"annotation-details-tag-color\"");
 		builder.append(" style=\"");
 		builder.append(" background-color:");
 		builder.append("#"+ColorConverter.toHex(
-				annotation.getTagInstance().getTagDefinition().getColor()));
+				tagDefinition.getColor()));
 		builder.append(";");
 		builder.append(" color:");
 		builder.append(ColorConverter.isLightColor(
-			annotation.getTagInstance().getTagDefinition().getColor())?"black":"white");
+			tagDefinition.getColor())?"black":"white");
 		builder.append(";");
 		builder.append("\">");
 		
@@ -83,7 +86,7 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 
 	@Override
 	public String getTag() {
-		return annotation.getTagInstance().getTagDefinition().getName();
+		return tagset.getTagDefinition(annotation.getTagInstance().getTagDefinitionId()).getName();
 	}
 
 	@Override
@@ -112,6 +115,9 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 	}
 
 	private String buildKeywordInContext() {
+		TagDefinition tagDefinition = 
+			tagset.getTagDefinition(annotation.getTagInstance().getTagDefinitionId());
+
 		StringBuilder builder = new StringBuilder();
 		
 		List<Range> ranges = Range.mergeRanges(
@@ -130,11 +136,11 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 				builder.append(" style=\"");
 				builder.append(" background-color:");
 				builder.append("#"+ColorConverter.toHex(
-						annotation.getTagInstance().getTagDefinition().getColor()));
+						tagDefinition.getColor()));
 				builder.append(";");
 				builder.append(" color:");
 				builder.append(ColorConverter.isLightColor(
-					annotation.getTagInstance().getTagDefinition().getColor())?"black":"white");
+					tagDefinition.getColor())?"black":"white");
 				builder.append(";");
 				builder.append("\">");
 				builder.append(
@@ -151,7 +157,7 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 			
 			builder.append("<br /><hr />");
 			builder.append("Tag Path: <b>");
-			builder.append(tagset.getTagPath(annotation.getTagInstance().getTagDefinition()));
+			builder.append(tagset.getTagPath(tagDefinition));
 			builder.append("</b>");
 		}
 		catch (IOException e) {

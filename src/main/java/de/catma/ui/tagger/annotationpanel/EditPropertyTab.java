@@ -25,10 +25,12 @@ public class EditPropertyTab extends HorizontalLayout {
 	private boolean changed = false;
 	private TextArea adhocValueArea;
 	private ListDataProvider<String> valueProvider;
+	private List<String> proposedValueList;
 
-	public EditPropertyTab(Property property) {
+	public EditPropertyTab(Property property, List<String> proposedValueList) {
 		super();
 		this.property = property;
+		this.proposedValueList = proposedValueList;
 		initComponents();
 		initActions();
 	}
@@ -63,7 +65,7 @@ public class EditPropertyTab extends HorizontalLayout {
 		setSpacing(true);
 		setMargin(true);
 		
-		ArrayList<String> valueList = new ArrayList<>(property.getPropertyDefinition().getPossibleValueList());
+		ArrayList<String> valueList = new ArrayList<>(proposedValueList);
 		for (String value : property.getPropertyValueList()) {
 			if (!valueList.contains(value)) {
 				valueList.add(value);

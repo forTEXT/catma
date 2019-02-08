@@ -154,7 +154,7 @@ public class AddEditPropertyDialog extends AbstractOkCancelDialog<List<PropertyD
 			    propertyNameField, PropertyDefinition::setName)
 		.setEditable(!bulkEdit);
 
-		propertyDefinitionGrid.getEditor().setEnabled(true);
+		propertyDefinitionGrid.getEditor().setEnabled(!bulkEdit);
 		propertyDefinitionGrid.setHeaderVisible(false);
 		propertyDefinitionGrid.setWidth("99%");
 		propertyDefinitionGrid.setHeight("100%");

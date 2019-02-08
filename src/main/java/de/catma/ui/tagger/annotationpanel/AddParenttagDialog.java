@@ -18,7 +18,7 @@ public class AddParenttagDialog extends AbstractAddEditTagDialog<Pair<TagsetDefi
 			Optional<TagsetDefinition> preSelectedTagset, 
 			SaveCancelListener<Pair<TagsetDefinition, TagDefinition>> saveCancelListener) {
 		super("Add Tag", saveCancelListener);
-		initComponents(availableTagsets, preSelectedTagset);
+		initComponents(availableTagsets, preSelectedTagset, false);
 		initActions();
 	}
 

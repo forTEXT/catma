@@ -13,7 +13,7 @@ public class EditTagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	public EditTagDialog(TagDefinition tagDefinition, SaveCancelListener<TagDefinition> saveCancelListener) {
 		super("Edit Tag", saveCancelListener);
 		this.tagDefinition = tagDefinition;
-		initComponents();
+		initComponents(true);
 		initActions();
 		setPropertyDefinitionsVisible();
 		initData(tagDefinition);

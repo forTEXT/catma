@@ -1099,14 +1099,8 @@ public class GraphProjectHandler {
 						.collect(Collectors.toList());
 					
 					
-					if (ti.getSystemProperty(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
-						PropertyDefinition authorPropertyDefinition = 
-								ti.getTagDefinition().getPropertyDefinition(
-										PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
-						ti.addSystemProperty(
-							new de.catma.tag.Property(
-								authorPropertyDefinition, 
-								Collections.singleton(user.getIdentifier())));
+					if (ti.getAuthor() == null) {
+						ti.setAuthor(user.getIdentifier());
 					}
 					
 					session.run(
@@ -1130,10 +1124,10 @@ public class GraphProjectHandler {
 							"pUserId", user.getIdentifier(),
 							"pProjectId", projectReference.getProjectId(),
 							"pRootRevisionHash", rootRevisionHash,
-							"pTagId", ti.getTagDefinition().getUuid(),
+							"pTagId", ti.getTagDefinitionId(),
 							"pCollectionId", userMarkupCollection.getId(),
 							"pTagInstanceId", ti.getUuid(),
-							"pAuthor", ti.getProperty(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()).getFirstValue(),
+							"pAuthor", ti.getAuthor(),
 							"pCreationDate",  ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 							"pRanges", flatRanges
 						)
@@ -1278,11 +1272,19 @@ public class GraphProjectHandler {
 	private List<TagReference> createTagReferences(
 			TagDefinition tagDefinition, Node tagInstanceNode, 
 			String collectionId, String sourceDocumentId, List<Node> properties) throws Exception {
+		String author = tagInstanceNode.get("author").asString();
+		String timestamp = tagInstanceNode.get("creationDate").asString();
+		
 
-		TagInstance tagInstance = new TagInstance(tagInstanceNode.get("tagInstanceId").asString(), tagDefinition);
+		TagInstance tagInstance = new TagInstance(
+				tagInstanceNode.get("tagInstanceId").asString(), 
+				tagDefinition.getUuid(),
+				author, timestamp, 
+				tagDefinition.getUserDefinedPropertyDefinitions(),
+				tagDefinition.getTagsetDefinitionUuid());
 		
 		for (Node propertyNode : properties) {
-			tagInstance.addUserDefinedProperty(createAnnotationProperty(propertyNode, tagDefinition));
+			tagInstance.addUserDefinedProperty(createAnnotationProperty(propertyNode));
 		}
 		
 		List<Integer> rangeOffsets = 
@@ -1308,15 +1310,13 @@ public class GraphProjectHandler {
 		return tagReferenceList;
 	}
 
-	private Property createAnnotationProperty(Node propertyNode, TagDefinition tagDefinition) {
+	private Property createAnnotationProperty(Node propertyNode) {
 		
 		String uuid = propertyNode.get("uuid").asString();
 		
 		List<String> values = propertyNode.get("values").asList(value -> value.asString());
 		
-		PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinitionByUuid(uuid);
-		
-		return new Property(propertyDefinition, values);
+		return new Property(uuid, values);
 	}
 
 	public void updateProperties(
@@ -1350,7 +1350,7 @@ public class GraphProjectHandler {
 					"pProjectId", projectReference.getProjectId(),
 					"pRootRevisionHash", rootRevisionHash,
 					"pTagInstanceId", tagInstance.getUuid(),
-					"pUuid", property.getPropertyDefinition().getUuid(),
+					"pUuid", property.getPropertyDefinitionId(),
 					"pValues", property.getPropertyValueList()
 				)
 			);

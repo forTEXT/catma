@@ -40,7 +40,10 @@ import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.indexer.KwicProvider;
 import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -57,6 +60,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	private Consumer<String> annotationSelectionListener;
 	private String lastSelectedAnnotationId = null;
 	private IconButton btClearSelected;
+	private PropertyChangeListener propertyDefinitionChangedListener;
+	private PropertyChangeListener tagChangedListener;
 
 	public AnnotationDetailsPanel(
 		Repository project, UserMarkupCollectionManager collectionManager, 
@@ -121,6 +126,47 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		project.addPropertyChangeListener(
 				RepositoryChangeEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
+		
+		propertyDefinitionChangedListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				refreshAnnotations();
+			}
+		};
+		
+		project.getTagManager().addPropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged, 
+				propertyDefinitionChangedListener);			
+		
+		tagChangedListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				refreshAnnotations();
+			}
+		};
+		
+		project.getTagManager().addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);
+		
+	}
+
+	private void refreshAnnotations() {
+		Collection<Annotation> annotations = annotationDetailData.getRootItems()
+				.stream()
+				.map(annotationTreeItem -> ((AnnotationDataItem)annotationTreeItem).getAnnotation())
+				.collect(Collectors.toList());
+			
+		annotationDetailData.clear();
+		
+		try {
+			addAnnotations(annotations);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private Optional<AnnotationDataItem> findAnnotationDataItem(String annotationId) {
@@ -262,7 +308,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		
 		EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-			new EditAnnotationPropertiesDialog(annotation, 
+			new EditAnnotationPropertiesDialog(project, annotation, 
 					new SaveCancelListener<List<Property>>() {
 			
 			
@@ -309,14 +355,25 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 					new AnnotationDataItem(
 						annotation, 
 						project.getTagManager().getTagLibrary().getTagsetDefinition(
-							annotation.getTagInstance().getTagDefinition().getTagsetDefinitionUuid()), 
+							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider);
 			
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());
 			annotationDetailData.addItem(null, annotationDataItem);
 			
+			String tagId = annotation.getTagInstance().getTagDefinitionId();
+
 			for (Property property : annotation.getTagInstance().getUserDefinedProperties()) {
-				AnnotationPropertyDataItem propertyDataItem = new AnnotationPropertyDataItem(property);
+				AnnotationPropertyDataItem propertyDataItem = 
+						new AnnotationPropertyDataItem(
+							property, 
+							() -> {
+								TagDefinition tag = 
+									project.getTagManager().getTagLibrary().getTagDefinition(tagId);
+								PropertyDefinition propertyDef = 
+										tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId());
+								return propertyDef.getName();
+							});
 				annotationDetailData.addItem(annotationDataItem, propertyDataItem);
 				for (String value : property.getPropertyValueList()) {
 					AnnotationPropertyValueDataItem valueDataItem = 
@@ -339,6 +396,18 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			if (annotationPropertiesChangedListener != null) {
 				project.removePropertyChangeListener(
 					RepositoryChangeEvent.propertyValueChanged, annotationPropertiesChangedListener);
+			}
+			
+			if (propertyDefinitionChangedListener != null) {
+				project.getTagManager().removePropertyChangeListener(
+						TagManagerEvent.userPropertyDefinitionChanged, 
+						propertyDefinitionChangedListener);					
+			}
+			
+			if (tagChangedListener != null) {
+				project.getTagManager().removePropertyChangeListener(
+						TagManagerEvent.tagDefinitionChanged, 
+						tagChangedListener);				
 			}
 		}
 	}

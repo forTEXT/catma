@@ -395,8 +395,7 @@ public class CorpusCleaner {
 		
 		for (TagReference tagReference : umc.getTagReferences()) {
 			
-			TagDefinition tagDefinition = tagReference.getTagDefinition();
-			String path = tagLibrary.getTagPath(tagDefinition);
+			String path = tagLibrary.getTagPath(tagReference.getTagDefinitionId());
 			
 				
 			if (path.equals("/Time Tagset/disagreement_approved")) {
@@ -406,9 +405,6 @@ public class CorpusCleaner {
 				String conceptName = getConcept(path);
 				if (conceptName != null && isValidCombination(conceptName, umc.toString(), sourceDocName)) {
 					TagInstance tagInstance = tagReference.getTagInstance();
-					PropertyDefinition propertyDefinition = 
-						tagDefinition.getPropertyDefinition(
-								SystemPropertyName.catma_markupauthor.name());
 					
 					String annotatorAnonym = getAnnotatorAnonym(annotator);
 					
@@ -417,9 +413,7 @@ public class CorpusCleaner {
 							targetLib, annotator, annotatorAnonym, sourceDocName);
 					
 					//anonymizing authors
-					tagInstance.getProperty(
-						propertyDefinition.getName()).setPropertyValueList(
-								Collections.singleton(annotatorAnonym));
+					tagInstance.setAuthor(annotatorAnonym);
 					
 					targetUmc.addTagReference(tagReference);
 					includedInstances.add(tagReference.getTagInstanceID());
@@ -433,19 +427,12 @@ public class CorpusCleaner {
 		}
 		
 		for (TagReference tagReference : diagreementApprTagRefs) {
-			TagDefinition tagDefinition = tagReference.getTagDefinition();
 			
 			TagInstance tagInstance = tagReference.getTagInstance();
-			PropertyDefinition propertyDefinition = 
-				tagDefinition.getPropertyDefinition(
-						SystemPropertyName.catma_markupauthor.name());
-			
 			String annotatorAnonym = getAnnotatorAnonym(annotator);
 			
 			//anonymizing authors
-			tagInstance.getProperty(
-				propertyDefinition.getName()).setPropertyValueList(
-						Collections.singleton(annotatorAnonym));
+			tagInstance.setAuthor(annotatorAnonym);
 
 			for (UserMarkupCollection targetUmc : affectedCollections) {
 				targetUmc.addTagReference(tagReference);

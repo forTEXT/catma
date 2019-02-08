@@ -30,10 +30,10 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
 import de.catma.document.Range;
+import de.catma.document.repository.Repository;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.tagger.TaggerServerRpc;
@@ -45,7 +45,6 @@ import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.util.ColorConverter;
 import de.catma.util.Pair;
-
 
 /**
  * @author marco.petris@web.de
@@ -119,13 +118,15 @@ public class Tagger extends AbstractComponent {
 	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
 	private TagInstanceInfoHTMLSerializer tagInstanceInfoHTMLSerializer;
 	private String taggerID;
+	private Repository project;
 
-	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
+	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener, Repository project) {
 		registerRpc(rpc);
 		this.pager = pager;
 		this.taggerListener = taggerListener;
+		this.project = project;
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
-		this.tagInstanceInfoHTMLSerializer = new TagInstanceInfoHTMLSerializer();
+		this.tagInstanceInfoHTMLSerializer = new TagInstanceInfoHTMLSerializer(project);
 		this.taggerID = String.valueOf(taggerID);
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
 		getState().tagInstanceIdToTooltipInfo = new HashMap<>();
@@ -230,12 +231,15 @@ public class Tagger extends AbstractComponent {
 			ClientTagInstance tagInstance = 
 					tagInstancesByInstanceID.get(tagReference.getTagInstanceID());
 			if (tagInstance == null) {
+				TagDefinition tagDefintion = 
+					project.getTagManager().getTagLibrary().getTagDefinition(tagReference.getTagDefinitionId());
+				
 				tagInstancesByInstanceID.put(
 						tagReference.getTagInstanceID(),
 						new ClientTagInstance(
-								tagReference.getTagDefinition().getUuid(),
+								tagReference.getTagDefinitionId(),
 								tagReference.getTagInstanceID(), 
-								ColorConverter.toHex(tagReference.getColor()), 
+								ColorConverter.toHex(tagDefintion.getColor()), 
 								textRanges));
 			}
 			else {

@@ -15,6 +15,7 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.util.IDGenerator;
 
+@Deprecated
 public class TagInstanceMapper implements
 		RecordMapper<Record, TagInstance> {
 	
@@ -35,31 +36,32 @@ public class TagInstanceMapper implements
 	}
 
 	public TagInstance map(Record record) {
-		TagInstance ti = new TagInstance(
-			idGenerator.uuidBytesToCatmaID(record.getValue(TAGINSTANCE.UUID)),
-			tagLibrary.getTagDefinition(
-				idGenerator.uuidBytesToCatmaID(record.getValue(TAGDEFINITION.UUID))));
-		addProperties(record.getValue(TAGINSTANCE.TAGINSTANCEID), ti);
-		return ti;
+//		TagInstance ti = new TagInstance(
+//			idGenerator.uuidBytesToCatmaID(record.getValue(TAGINSTANCE.UUID)),
+//			tagLibrary.getTagDefinition(
+//				idGenerator.uuidBytesToCatmaID(record.getValue(TAGDEFINITION.UUID))));
+//		addProperties(record.getValue(TAGINSTANCE.TAGINSTANCEID), ti);
+//		return ti;
+		return null;
 	}
 
-	private void addProperties(Integer tagInstanceId, TagInstance ti) {
-		PropertyMapper propertyMapper = 
-				new PropertyMapper(
-						ti.getTagDefinition(), 
-						propertyValueRecordsByPropertyId);
-		if (propertyRecordsByTagInstanceId.containsKey(tagInstanceId)) {
-			for (Record r : propertyRecordsByTagInstanceId.get(tagInstanceId)) {
-				Property p = propertyMapper.map(r);
-				if (PropertyDefinition.SystemPropertyName.hasPropertyName(p.getName())) {
-					ti.addSystemProperty(p);
-				}
-				else {
-					ti.addUserDefinedProperty(p);
-				}
-			}
-		}
-		
-	}
+//	private void addProperties(Integer tagInstanceId, TagInstance ti) {
+//		PropertyMapper propertyMapper = 
+//				new PropertyMapper(
+//						ti.getTagDefinition(), 
+//						propertyValueRecordsByPropertyId);
+//		if (propertyRecordsByTagInstanceId.containsKey(tagInstanceId)) {
+//			for (Record r : propertyRecordsByTagInstanceId.get(tagInstanceId)) {
+//				Property p = propertyMapper.map(r);
+////				if (PropertyDefinition.SystemPropertyName.hasPropertyName(p.getName())) {
+////					ti.addSystemProperty(p);
+////				}
+////				else {
+////					ti.addUserDefinedProperty(p);
+////				}
+//			}
+//		}
+//		
+//	}
 
 }

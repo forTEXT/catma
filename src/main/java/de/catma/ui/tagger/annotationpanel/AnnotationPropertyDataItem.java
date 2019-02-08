@@ -1,5 +1,6 @@
 package de.catma.ui.tagger.annotationpanel;
 
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import de.catma.tag.Property;
@@ -7,15 +8,17 @@ import de.catma.tag.Property;
 public class AnnotationPropertyDataItem implements AnnotationTreeItem {
 	
 	private Property property;
+	private Supplier<String> propertyNameProvider;
 	
-	public AnnotationPropertyDataItem(Property property) {
+	public AnnotationPropertyDataItem(Property property, Supplier<String> propertyNameProvider) {
 		super();
 		this.property = property;
+		this.propertyNameProvider = propertyNameProvider;
 	}
 
 	@Override
 	public String getDetail() {
-		return property.getName();
+		return propertyNameProvider.get();
 	}
 	
 	@Override

@@ -3,6 +3,8 @@ package de.catma.serialization.intrinsic.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -192,7 +194,13 @@ public class XmlMarkupCollectionSerializationHandler implements
 			
         }
         
-        TagInstance tagInstance = new TagInstance(idGenerator.generate(), tagDefinition);
+        TagInstance tagInstance = new TagInstance(
+        	idGenerator.generate(), 
+        	tagDefinition.getUuid(),
+        	tagDefinition.getAuthor(),
+        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+        	tagDefinition.getUserDefinedPropertyDefinitions(),
+        	tagDefinition.getTagsetDefinitionUuid());
 
         for (int i=0; i<element.getAttributeCount(); i++) {
         	PropertyDefinition propertyDefinition = 
@@ -218,7 +226,7 @@ public class XmlMarkupCollectionSerializationHandler implements
         	}
         	Property property = 
         		new Property(
-        			propertyDefinition, 
+        			propertyDefinition.getUuid(), 
         			Collections.singleton(element.getAttribute(i).getValue()));
         	tagInstance.addUserDefinedProperty(property);
         }

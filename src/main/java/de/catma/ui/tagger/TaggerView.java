@@ -22,6 +22,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -29,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -67,7 +68,9 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
+import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.Slider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -122,6 +125,7 @@ public class TaggerView extends HorizontalLayout
 	private TaggerContextMenu taggerContextMenu;
 	private ErrorHandler errorHandler;
 	private PropertyChangeListener annotationPropertiesChangedListener;
+	private PropertyChangeListener tagChangedListener;
 	
 	public TaggerView(
 			int taggerID, 
@@ -243,12 +247,46 @@ public class TaggerView extends HorizontalLayout
 			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-
+				TagInstance tagInstance = (TagInstance) evt.getOldValue();
+				tagger.updateAnnotation(tagInstance.getUuid());
 			}
 		};
 		project.addPropertyChangeListener(
 				RepositoryChangeEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
+		
+		tagChangedListener = new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				Object newValue = evt.getNewValue();
+				Object oldValue = evt.getOldValue();
+				if (oldValue == null) { //created
+					// noop
+				}
+				else if (newValue == null) { //removed
+					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
+					//TODO: probably a noop since annotations get deleted
+				}
+				else { //update
+					TagDefinition tag = (TagDefinition) newValue;
+					
+					for (UserMarkupCollection collection : 
+						userMarkupCollectionManager.getUserMarkupCollections()) {
+						List<TagReference> relevantTagReferences = 
+								collection.getTagReferences(tag);
+						tagger.setVisible(relevantTagReferences, false);
+						tagger.setVisible(relevantTagReferences, true);
+					}
+					
+				}
+				
+			}
+		};
+		
+		project.getTagManager().addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);
+		
 	}
 
 	private boolean isRelevantTagReference(TagReference tr,
@@ -354,8 +392,8 @@ public class TaggerView extends HorizontalLayout
 			public void annotationCollectionSelected(UserMarkupCollectionReference collectionReference,
 					boolean selected) {
 				try {
+					UserMarkupCollection collection = project.getUserMarkupCollection(collectionReference);
 					if (selected) {
-						UserMarkupCollection collection = project.getUserMarkupCollection(collectionReference);
 						userMarkupCollectionManager.add(collection);
 						annotationPanel.addCollection(collection);
 					}
@@ -412,7 +450,7 @@ public class TaggerView extends HorizontalLayout
 		pager = new Pager(taggerID, approxMaxLineLength, maxPageLengthInLines, 
 				indexInfoSet.isRightToLeftWriting());
 		
-		tagger = new Tagger(taggerID, pager, this);
+		tagger = new Tagger(taggerID, pager, this, project);
 		tagger.addStyleName("tagger"); //$NON-NLS-1$
 		tagger.setWidth("100%"); //$NON-NLS-1$
 		
@@ -555,6 +593,10 @@ public class TaggerView extends HorizontalLayout
 		project.removePropertyChangeListener(
 				RepositoryChangeEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
+		project.getTagManager().removePropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);
+				
 		sourceDocChangedListener = null;
 	}
 	
@@ -570,7 +612,13 @@ public class TaggerView extends HorizontalLayout
 						clientTagInstance.getTagDefinitionID());
 		
 		TagInstance ti = 
-			new TagInstance(clientTagInstance.getInstanceID(), tagDef);
+			new TagInstance(
+				clientTagInstance.getInstanceID(), 
+				tagDef.getUuid(),
+				tagDef.getAuthor(),
+	        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+	        	tagDef.getUserDefinedPropertyDefinitions(),
+	        	tagDef.getTagsetDefinitionUuid());
 		
 		List<TagReference> tagReferences = new ArrayList<TagReference>();
 		
@@ -588,13 +636,16 @@ public class TaggerView extends HorizontalLayout
 				new Annotation(ti, tagReferences, collection, tagLibrary.getTagPath(tagDef));
 			if (!tagDef.getUserDefinedPropertyDefinitions().isEmpty()) {
 				EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-						new EditAnnotationPropertiesDialog(annotation, new SaveCancelListener<List<Property>>() {
+					new EditAnnotationPropertiesDialog(
+						project, annotation, 
+						new SaveCancelListener<List<Property>>() {
 							
 							@Override
 							public void savePressed(List<Property> result) {
-								userMarkupCollectionManager.addTagReferences(tagReferences, collection);
+								userMarkupCollectionManager.addTagReferences(
+										tagReferences, collection);
 							}
-						});
+					});
 				editAnnotationPropertiesDialog.show();
 			}
 			else {

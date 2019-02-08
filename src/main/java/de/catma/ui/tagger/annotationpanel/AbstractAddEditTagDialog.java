@@ -144,12 +144,12 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		//noop
 	}
 	
-	protected void initComponents() {
-		initComponents(Collections.emptyList(), Optional.empty());
+	protected void initComponents(boolean allowPropertyDefEditing) {
+		initComponents(Collections.emptyList(), Optional.empty(), allowPropertyDefEditing);
 	}
 	
 	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
-			Optional<TagsetDefinition> preSelectedTagset) {
+			Optional<TagsetDefinition> preSelectedTagset, boolean allowPropertyDefEditing) {
 		
 		if (isWithTagsetSelection()) {
 			cbTagsets = new ComboBox<TagsetDefinition>("Tagset", availableTagsets);
@@ -200,9 +200,19 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		propertyDefPanel.setSizeFull();
 		propertyDefPanel.setVisible(false);
 
+		TextField propertyNameField = new TextField();
+
 		propertyDefinitionGrid = new Grid<PropertyDefinition>("Assigned Properties");
 		propertyDefinitionGrid.addStyleName("flat-undecorated-icon-buttonrenderer");
-		propertyDefinitionGrid.addColumn(propertyDef -> propertyDef.getName());
+		
+		propertyDefinitionGrid.addColumn(
+				propertyDef -> propertyDef.getName())
+			.setEditorComponent(
+				    propertyNameField, PropertyDefinition::setName)
+			.setEditable(allowPropertyDefEditing);
+		
+		propertyDefinitionGrid.getEditor().setEnabled(allowPropertyDefEditing);
+		
 		propertyDefinitionGrid.setHeaderVisible(false);
 		propertyDefinitionGrid.setWidth("99%");
 		propertyDefinitionGrid.setHeight("100%");

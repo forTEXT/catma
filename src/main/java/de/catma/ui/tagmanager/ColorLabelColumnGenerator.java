@@ -28,6 +28,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.util.ColorConverter;
 
+@Deprecated
 public class ColorLabelColumnGenerator implements ColumnGenerator {
 	
 	public static final String COLORLABEL_HTML = 
@@ -54,9 +55,9 @@ public class ColorLabelColumnGenerator implements ColumnGenerator {
 	
 	public static class TagInstanceTagDefinitionProvider implements TagDefinitionProvider {
 		public TagDefinition getTagDefinition(Object itemId) {
-			if (itemId instanceof TagInstance) {
-				return ((TagInstance)itemId).getTagDefinition();
-			}
+//			if (itemId instanceof TagInstance) {
+//				return ((TagInstance)itemId).getTagDefinition();
+//			}
 			return null;
 		}
 	}

@@ -58,6 +58,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
 
+@Deprecated
 public class TagReferenceIndexer {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -118,43 +119,47 @@ public class TagReferenceIndexer {
 			for (TagReference tr : tagReferences) {
 				byte[] tagInstanceUUIDBytes = idGenerator.catmaIDToUUIDBytes(
 						tr.getTagInstanceID());
-				insertTagRefBatch.bind(
-					sourceDocumentID,
-					userMarkupCollectionID,
-					tagLibrary.getTagPath(tr.getTagDefinition()),
-					idGenerator.catmaIDToUUIDBytes(
-							tr.getTagDefinition().getUuid()),
-					tagInstanceUUIDBytes,
-					tr.getTagDefinition().getVersion().toString(),
-					tr.getRange().getStartPoint(),
-					tr.getRange().getEndPoint());
+//				insertTagRefBatch.bind(
+//					sourceDocumentID,
+//					userMarkupCollectionID,
+//					tagLibrary.getTagPath(tr.getTagDefinition()),
+//					idGenerator.catmaIDToUUIDBytes(
+//							tr.getTagDefinition().getUuid()),
+//					tagInstanceUUIDBytes,
+//					tr.getTagDefinition().getVersion().toString(),
+//					tr.getRange().getStartPoint(),
+//					tr.getRange().getEndPoint());
+				//defect due to refactoring
 			
-				for (Property property : tr.getTagInstance().getSystemProperties()) {
-					byte[] propertyDefUUIDBytes = idGenerator.catmaIDToUUIDBytes(
-							property.getPropertyDefinition().getName());
-					for (String value : property.getPropertyValueList()) {
-						insertPropertyBatch.bind(
-							tagInstanceUUIDBytes,
-							propertyDefUUIDBytes,
-							property.getName(),
-							value);
-					}
-				}
+//				for (Property property : tr.getTagInstance().getSystemProperties()) {
+//					byte[] propertyDefUUIDBytes = idGenerator.catmaIDToUUIDBytes(
+//							property.getPropertyDefinition().getName());
+//					for (String value : property.getPropertyValueList()) {
+//						insertPropertyBatch.bind(
+//							tagInstanceUUIDBytes,
+//							propertyDefUUIDBytes,
+//							property.getName(),
+//							value);
+//					}
+//				}
 
 				// normal addition of TagReferences does not produce user defined properties
 				// as each property is created and indexed individually
 				// however import of umc does come with tagreferences that have user defined props
-				for (Property property : tr.getTagInstance().getUserDefinedProperties()) {
-					byte[] propertyDefUUIDBytes = idGenerator.catmaIDToUUIDBytes(
-							property.getPropertyDefinition().getName());
-					for (String value : property.getPropertyValueList()) {
-						insertPropertyBatch.bind(
-							tagInstanceUUIDBytes,
-							propertyDefUUIDBytes,
-							property.getName(),
-							value);
-					}
-				}
+				
+				//defect due to refactoring
+
+//				for (Property property : tr.getTagInstance().getUserDefinedProperties()) {
+//					byte[] propertyDefUUIDBytes = idGenerator.catmaIDToUUIDBytes(
+//							property.getPropertyDefinition().getName());
+//					for (String value : property.getPropertyValueList()) {
+//						insertPropertyBatch.bind(
+//							tagInstanceUUIDBytes,
+//							propertyDefUUIDBytes,
+//							property.getName(),
+//							value);
+//					}
+//				}
 			}
 			
 			insertTagRefBatch.execute();
@@ -266,9 +271,9 @@ public class TagReferenceIndexer {
 		try {
 			byte[] tagInstanceUUIDBytes = 
 					idGenerator.catmaIDToUUIDBytes(tagInstance.getUuid());
-			byte[] propDefUUIDBytes = 
-				idGenerator.catmaIDToUUIDBytes(idGenerator.generate(
-						property.getPropertyDefinition().getName()));
+			byte[] propDefUUIDBytes = null;
+//				idGenerator.catmaIDToUUIDBytes(idGenerator.generate(
+//						property.getPropertyDefinition().getName()));
 			
 			Result<Record2<Integer, String>> existingRecords = db
 					.select(PROPERTY.PROPERTYID, PROPERTY.VALUE)
@@ -303,12 +308,13 @@ public class TagReferenceIndexer {
 			deleteQuery.execute();
 
 			if (!existingIDs.isEmpty()) {
-				db
-				.update(PROPERTY)
-				.set(PROPERTY.NAME, property.getName())
-				.where(PROPERTY.PROPERTYID.in(existingIDs))
-				.and(PROPERTY.NAME.ne(property.getName()))
-				.execute();
+				//defect due to refactoring
+//				db
+//				.update(PROPERTY)
+//				.set(PROPERTY.NAME, property.getName())
+//				.where(PROPERTY.PROPERTYID.in(existingIDs))
+//				.and(PROPERTY.NAME.ne(property.getName()))
+//				.execute();
 			}
 			
 			if (!toBeIndexed.isEmpty()) {
@@ -325,13 +331,13 @@ public class TagReferenceIndexer {
 					(String)null,
 					(String)null));
 						
-				for (String value : toBeIndexed) {
-					insertPropertyBatch.bind(
-						tagInstanceUUIDBytes,
-						propDefUUIDBytes,
-						property.getName(),
-						value);
-				}
+//				for (String value : toBeIndexed) {
+//					insertPropertyBatch.bind(
+//						tagInstanceUUIDBytes,
+//						propDefUUIDBytes,
+//						property.getName(),
+//						value);
+//				}
 				
 				insertPropertyBatch.execute();
 			}

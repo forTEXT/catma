@@ -582,7 +582,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public Collection<TagsetDefinition> getTagsets() throws Exception {
-		return graphProjectHandler.getTagsets( this.rootRevisionHash);
+		return tagManager.getTagLibrary().getTagsetDefinitions();
 	}
 
 	@Override
@@ -751,7 +751,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			if (userMarkupCollection.getTagReferences().containsAll(
 					tagReferences)) {
 				gitProjectHandler.addOrUpdate(
-						userMarkupCollection.getUuid(), tagReferences);
+						userMarkupCollection.getUuid(), tagReferences, tagManager.getTagLibrary());
 				graphProjectHandler.addTagReferences(
 						GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
 				propertyChangeSupport.firePropertyChange(
@@ -790,7 +790,9 @@ public class GraphWorktreeProject implements IndexedRepository {
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
 		try {
 			gitProjectHandler.addOrUpdate(
-					userMarkupCollection.getUuid(), userMarkupCollection.getTagReferences(tagInstance));
+					userMarkupCollection.getUuid(), 
+					userMarkupCollection.getTagReferences(tagInstance), 
+					tagManager.getTagLibrary());
 			graphProjectHandler.updateProperties(
 					GraphWorktreeProject.this.rootRevisionHash, tagInstance, properties);
 			propertyChangeSupport.firePropertyChange(
@@ -936,7 +938,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 				
 				@Override
 				public void synch(String collectionId, List<TagReference> tagReferences) throws Exception {
-					gitProjectHandler.addOrUpdate(collectionId, tagReferences);
+					gitProjectHandler.addOrUpdate(collectionId, tagReferences, tagManager.getTagLibrary());
 				}
 			}
 		);

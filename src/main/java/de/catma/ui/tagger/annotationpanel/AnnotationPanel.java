@@ -331,7 +331,7 @@ public class AnnotationPanel extends VerticalLayout {
 				tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
 		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
-		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handlePropertiesTagRequest());
+		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
 		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
 		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 		
@@ -352,7 +352,7 @@ public class AnnotationPanel extends VerticalLayout {
 		// TODO Auto-generated method stub
 	}
 
-	private void handlePropertiesTagRequest() {
+	private void handleEditPropertiesRequest() {
 		handleAddPropertyRequest();
 	}
 
@@ -514,7 +514,7 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		//handle created PropertyDefs
 		for (PropertyDefinition pd : editedPropertyDefs) {
-			if (tag.getPropertyDefinition(pd.getName()) == null) {
+			if (tag.getPropertyDefinitionByUuid(pd.getUuid()) == null) {
 				PropertyDefinition createdPropertyDefinition = 
 						new PropertyDefinition(pd);
 				pd.setUuid(idGenerator.generate());
@@ -809,6 +809,7 @@ public class AnnotationPanel extends VerticalLayout {
 	public void addCollection(UserMarkupCollection collection) {
 		this.collections.add(collection);
 		currentEditableCollectionBox.getDataProvider().refreshAll();	
+		//TODO: show Annotations from this collection and selected Tagsets
 	}
 	
 	private void removeCollection(UserMarkupCollection collection) {
@@ -818,6 +819,10 @@ public class AnnotationPanel extends VerticalLayout {
 		}
 		collections.remove(collection);
 		currentEditableCollectionBox.getDataProvider().refreshAll();	
+		//TODO: hide annotations from selected tagsets and this collection
+		annotationDetailsPanel.removeAnnotations(
+			collection.getTagReferences().stream().map(
+					tr -> tr.getTagInstanceID()).collect(Collectors.toSet()));
 	}
 
 	public void removeCollection(String collectionId) {

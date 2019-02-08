@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +28,9 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 
 /**
  * Represents an annotation instance that, when serialized, conforms to the Web Annotation Data Model and JSON-LD
@@ -44,7 +48,7 @@ public class JsonLdWebAnnotation {
 
 	}
 
-	public JsonLdWebAnnotation(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences)
+	public JsonLdWebAnnotation(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -63,7 +67,7 @@ public class JsonLdWebAnnotation {
 			tagReferences.get(0).getTagInstance().getUuid()
 		).toString();
 
-		this.body = new JsonLdWebAnnotationBody_Dataset(gitServerBaseUrl, projectId, tagReferences);
+		this.body = new JsonLdWebAnnotationBody_Dataset(gitServerBaseUrl, projectId, tagReferences, tagLibrary);
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
 	}
 
@@ -185,20 +189,19 @@ public class JsonLdWebAnnotation {
 
 		TagInstance tagInstance = new TagInstance(
 			this.getTagInstanceUuid(),
-			tagDefinition
+			tagDefinition.getUuid(),
+			tagDefinition.getAuthor(),
+			ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+			tagDefinition.getUserDefinedPropertyDefinitions(),
+			tagDefinition.getTagsetDefinitionUuid()
 		);
-
-		// the TagInstance constructor sets default values for system properties, so we need to clear them TODO: why?
-		for (Property property : tagInstance.getSystemProperties()) {
-//			property.setPropertyValueList(new PropertyValueList());
-		}
 
 		TreeMap<String, TreeMap<String, TreeSet<String>>> properties = this.body.getProperties();
 
 		for (Map.Entry<String, TreeMap<String, TreeSet<String>>> entry : properties.entrySet()) {
 			for (Map.Entry<String, TreeSet<String>> subEntry : entry.getValue().entrySet()) {
 				Property property = new Property(
-					tagDefinition.getPropertyDefinitionByUuid(subEntry.getKey()),
+					subEntry.getKey(),
 					subEntry.getValue()
 				);
 				if (entry.getKey().equals(JsonLdWebAnnotationBody_Dataset.SYSTEM_PROPERTIES_KEY)) {

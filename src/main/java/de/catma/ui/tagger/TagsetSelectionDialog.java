@@ -26,7 +26,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.ui.tagmanager.TagsetTree;
-
+@Deprecated
 public class TagsetSelectionDialog extends Window {
 	
 	private final static String TAGLIB_CAPTION_PROPERTY = "TAGLIBPROPERTY"; //$NON-NLS-1$
