@@ -7,6 +7,9 @@ import de.catma.queryengine.result.QueryResultRow;
 
 public class TagRowItem {
 	
+	static final String HORIZONTAL_ELLIPSIS = "\u2026";
+	static final int MAX_VALUE_LENGTH = 10;
+	static final int maxLength = 50;
 	private String tagID;
 	private String sourceDocumentID;
 	private String sourceDocName;
@@ -101,7 +104,8 @@ public class TagRowItem {
 		return treePath;
 	}
 	public void setTreePath(String treePath) {
-		this.treePath = treePath;
+		shorten(treePath, 20);
+		this.treePath = shorten(treePath, 26);
 	}
 	public boolean setFrequencyOneUp() {
 		frequency++;
@@ -130,8 +134,21 @@ public class TagRowItem {
 		return phrase;
 	}
 	public void setPhrase(String phrase) {
-		this.phrase = phrase;
+		this.phrase = 	shorten(phrase, 50);
 	}
+	
+   private String shorten(String toShortenValue, int maxLength) {
+		if (toShortenValue.length() <= maxLength) {
+			return toShortenValue;
+		}
+		
+		return toShortenValue.substring(0, maxLength/2) 
+				+"["+HORIZONTAL_ELLIPSIS+"]"
+				+ toShortenValue.substring(toShortenValue.length()-((maxLength/2)-2), toShortenValue.length());
+	}
+	
+	
+	
 	
 	
 	
