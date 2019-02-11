@@ -1,3 +1,4 @@
+
 @import "default.scss";
 
 .catma {
@@ -495,6 +496,28 @@
 
     
     /*New layout*/
+    
+      /* homepage */
+        .home {
+        }
+        
+        .home__menu {
+        	margin-top: 10px;
+        	margin-bottom: 10px;
+        }
+        
+        .home__menu > * {
+        	padding-left: 10px;
+           	padding-right: 10px;
+        }
+        
+        .home__content__btns {
+           margin-top: 60px;
+     	   justify-content: space-evenly;
+     	   padding-left: 80px;
+    	   padding-right: 80px;
+        }
+        
       /* main views */
         .main-view {
             display: flex;
@@ -640,6 +663,33 @@
             border: none; 
     		box-shadow: none;
         }
+        
+        .button__label {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            justify-content: center;
+            border-radius: 6px;
+            -webkit-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+			-moz-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+			box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.75);
+            font-size: 16px;
+            color: rgb(255, 255, 255);
+            display:flex;
+            background-color: #5a98a1;
+            font-size: 1.5em;
+            padding: 10px 30px 10px 30px;
+        }
+
+        .button__label:focus, .button__label:hover {
+            outline: none;
+            background-color: #083658;
+        }
+        
+        .button__label:focus:after,.button__icon:after {
+            border: none; 
+    		box-shadow: none;
+        }
                 
         /* Huge card */
         .hugecard {
@@ -776,17 +826,18 @@
             justify-content: center;
         }
 
-        .documentsgrid__doc {
-            display: flex;
+        div.documentsgrid__doc {
+            display: block; /* testing block was flex*/
             flex-direction: column;
             flex-grow: 1;
         }
 
         .documentsgrid__doc__title {
-
+			display:block;
         }
 
         .documentsgrid__doc__author {
+			display:block;    
             font-size: 0.75em;
             color: rgba(0, 0, 0, 0.54);
         }
@@ -813,7 +864,11 @@
         */
 
         .projectlist {
-            flex-wrap: wrap;
+            padding: 20px;
+        }
+        
+        .projectlist__list {
+        	flex-wrap: wrap;
         }
 
         .projectlist vaadin-button {
@@ -824,7 +879,28 @@
             width: 500px;
         }
 
+        .projectlist__newproject {
+            width: 352px;
+            border-radius: 4px;
+            background-color: #ffffff;
+            border: dashed 3px rgba(151, 151, 151, 0.12);
+            margin: 10px;
+            padding: 10px;
+            align-items: center;
+        }
 
+
+        .projectlist__newproject__link {
+            height: 176px;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5em;
+            cursor: pointer;
+            font-size: 1.5em;
+            text-transform: uppercase;
+            justify-content: center;
+        }
+        
         .projectlist__card {
             width: 352px;
             border-radius: 4px;
@@ -846,10 +922,10 @@
             flex-direction: column;
             padding: 0.5em;
             cursor: pointer;
+            width: 100%
         }
         .projectlist__card__descriptionbar {
-        	padding-left: 1em;
-   			padding-bottom: 0.25em;
+        	padding: 10px;
         }
 
 
@@ -861,16 +937,11 @@
     	float: right;
     }
     
-    .annotate-tagsets-grid button {
-		background-color: transparent;
-		border: none;    
-    }
-    
-    .annotate-tagsets-grid .v-treegrid-row-selected  > .v-treegrid-cell-focused::before {
+    .no-focused-before-border .v-treegrid-row-selected  > .v-treegrid-cell-focused::before {
 		border-color: transparent;
 	}
 	
-    .annotate-tagsets-grid .v-treegrid-row-focused::before {
+    .no-focused-before-border .v-treegrid-row-focused::before {
 		border-color: transparent;
 	}
 
@@ -905,10 +976,18 @@
 	tr.v-treegrid-row.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 button.v-nativebutton {
     	font-size: 12px;
 	}
-	
-    .annotate-panel-property-data-item .v-treegrid-body .v-treegrid-row:not(:first-child) {
+
+    .v-treegrid-row.v-treegrid-row-has-data.annotate-panel-possible-value-data-item.v-treegrid-row-depth-3 {
     	border-top: none;
     }
+
+	tr.annotate-panel-property-data-item .v-treegrid-expander.expanded {
+	    display: none;
+	}    
+    
+    tr.annotate-panel-possible-value-data-item .v-treegrid-cell {
+	    font-size: 11px;
+	}
     
     .annotate-properties-details-tree .v-captiontext {
     	font-size: smaller;
@@ -923,11 +1002,6 @@
 		background: #FFFFFF;
 		color: #000000;
 	}
-
-	.annotate-resource-grid button {
-		background-color: transparent;
-		border: none;    
-    }
     
     .tagger-contextmenu-menuitem-caption {
     	display: inline-block;
@@ -950,4 +1024,57 @@
 	    margin-right: 20px;
 	}
 
+	.abstract-ok-cancel-dialog-hide-maximize-restore-icon .v-window-maximizebox {
+		display:none;
+	}
+	
+	.v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {
+    	border-bottom: 1px solid;
+	}
+	
+	.flat-undecorated-icon-buttonrenderer button {
+		background-color: transparent;
+		border: none;    
+		cursor: pointer;	
+	}
+	
+	.annotation-details-tag-color {
+    	/*width: 100%;*/
+	}
+	
+	.annotation-panel-button-right-align {
+		float: right;
+		margin-right: 5px;
+	}
+	
+	.v-treegrid.v-widget.annotation-details-card-property-tree.v-treegrid-annotation-details-card-property-tree.v-has-height {
+	    box-shadow: none;
+	}
+	
+	.annotation-details-card-property-tree .v-treegrid-header th {
+		border: none;
+	}
+	
+	.annotation-details-panel-annotation-details-grid :not(.v-treegrid-header) > .v-treegrid-row:last-child {
+		border: none;
+	}
+	.annotation-details-panel-annotation-details-grid .v-treegrid-body .v-treegrid-row:not(:first-child) {
+		border: none;
+	}
+	
+	.annotation-details-panel-annotation-details-grid .v-grid-spacer.stripe > td {
+	    background-color: white;
+	    border-top: none;
+	    border-bottom: none;
+	}
+	
+	.annotation-details-panel-annotation-details-grid .v-treegrid-cell {
+		font-size: 12px;	
+	}
+	
+	.v-verticallayout.v-layout.v-vertical.v-widget.annotation-details-panel.v-verticallayout-annotation-details-panel.v-has-width.v-has-height.v-margin-top.v-margin-right.v-margin-bottom.v-margin-left {
+	
+	    padding: 0px;
+	
+	}	
 }

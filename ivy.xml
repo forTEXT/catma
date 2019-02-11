@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE ivy-module [
-	<!ENTITY vaadin.version "8.6.2">
+	<!ENTITY vaadin.version "8.7.0">
 ]>
 <ivy-module version="2.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -89,7 +89,7 @@
 		<dependency org="org.eclipse.jgit" name="org.eclipse.jgit" rev="4.8.0.201706111038-r"/>
 
 		<!-- https://mvnrepository.com/artifact/org.gitlab4j/gitlab4j-api -->
-		<dependency org="org.gitlab4j" name="gitlab4j-api" rev="4.6.0"/>
+		<dependency org="org.gitlab4j" name="gitlab4j-api" rev="4.7.15"/>
 
 		<!-- https://mvnrepository.com/artifact/org.awaitility/awaitility -->
 		<dependency org="org.awaitility" name="awaitility" rev="3.0.0"/>

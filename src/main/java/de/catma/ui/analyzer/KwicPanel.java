@@ -19,6 +19,8 @@
 package de.catma.ui.analyzer;
 
 import java.text.MessageFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -60,6 +62,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
@@ -314,8 +317,7 @@ public class KwicPanel extends VerticalLayout {
 			UserMarkupCollection umc = entry.getValue();
 			
 			if (!umc.getTagLibrary().contains(incomingTagsetDef)) {
-				repository.getTagManager().addTagsetDefinition(
-					umc.getTagLibrary(), new TagsetDefinition(incomingTagsetDef));
+				repository.getTagManager().addTagsetDefinition(new TagsetDefinition(incomingTagsetDef));
 			}
 			userMarkupCollectionManager.add(umc);
 		}
@@ -336,11 +338,16 @@ public class KwicPanel extends VerticalLayout {
 			UserMarkupCollection umc = 
 					result.get(row.getSourceDocumentId());
 			if (umc != null) {
+				TagDefinition tagDefinition = umc.getTagLibrary().getTagDefinition(
+						incomingTagDef.getUuid());
 				TagInstance ti = 
 						new TagInstance(
 							idGenerator.generate(), 
-							umc.getTagLibrary().getTagDefinition(
-									incomingTagDef.getUuid()));
+							tagDefinition.getUuid(),
+							tagDefinition.getAuthor(),
+							ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+							tagDefinition.getUserDefinedPropertyDefinitions(),
+							tagDefinition.getTagsetDefinitionUuid());
 				
 				TagReference tr = new TagReference(
 					ti, repository.getSourceDocument(

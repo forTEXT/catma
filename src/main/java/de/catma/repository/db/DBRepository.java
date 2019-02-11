@@ -759,11 +759,11 @@ public class DBRepository implements IndexedRepository {
 	
 	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
 			throws IOException{
-		TagLibrary tagLibrary = tagManager.getTagLibrary(tagLibraryReference);
-		if (tagLibrary == null) {
-			tagLibrary = dbTagLibraryHandler.getTagLibrary(tagLibraryReference);
-			tagManager.addTagLibrary(tagLibrary);
-		}
+		TagLibrary tagLibrary = tagManager.getTagLibrary();
+//		if (tagLibrary == null) {
+//			tagLibrary = dbTagLibraryHandler.getTagLibrary(tagLibraryReference);
+//			tagManager.addTagLibrary(tagLibrary);
+//		}
 		return tagLibrary;
 	}
 
@@ -1196,7 +1196,7 @@ public class DBRepository implements IndexedRepository {
 	public TagLibrary getTagLibraryFor(String uuid, Version version) throws IOException {
 		TagLibrary tagLibrary = dbTagLibraryHandler.getTagLibraryFor(uuid, version);
 		TagLibrary openLibrary = 
-			tagManager.getTagLibrary(new TagLibraryReference(tagLibrary.getId(), tagLibrary.getContentInfoSet()));
+			tagManager.getTagLibrary();
 		return openLibrary!=null?openLibrary:tagLibrary;
 	}
 	

@@ -674,45 +674,38 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									if ((tagLibRef != null)
 											&& (evt.getOldValue() == null)) {
 										IDGenerator idGenerator = new IDGenerator();
-										try {
-											TagLibrary tagLibrary = 
-													repository.getTagLibrary(tagLibRef);
 											
-											TagsetDefinition tsd = 
-													new TagsetDefinition(
-														null,
-														idGenerator.generate(), 
-														Messages.getString("SourceDocumentPanel.exampleTagset"),  //$NON-NLS-1$
-														new Version());
-											
-											repository.getTagManager().addTagsetDefinition(
-													tagLibrary, tsd);
+										TagsetDefinition tsd = 
+												new TagsetDefinition(
+													null,
+													idGenerator.generate(), 
+													Messages.getString("SourceDocumentPanel.exampleTagset"),  //$NON-NLS-1$
+													new Version());
+										
+										repository.getTagManager().addTagsetDefinition(
+												tsd);
 
-											TagDefinition td = 
-													new TagDefinition(
-															null,
-															idGenerator.generate(),
-															Messages.getString("SourceDocumentPanel.exampleTag"), //$NON-NLS-1$
-															new Version(), 
-															null, "", //$NON-NLS-1$
-															tsd.getUuid()); 
-											PropertyDefinition colorPropertyDef =
-													new PropertyDefinition(
-														idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
-														PropertyDefinition.SystemPropertyName.
-															catma_displaycolor.name(),
-														Collections.singleton(
-															ColorConverter.toRGBIntAsString(
-																ColorConverter.randomHex())));
-											td.addSystemPropertyDefinition(
-													colorPropertyDef);
-											repository.getTagManager().addTagDefinition(
-												tsd, td);
-											
-										} catch (IOException e) {
-											((CatmaApplication)UI.getCurrent()).showAndLogError(
-												Messages.getString("SourceDocumentPanel.errorCreatingExampleTagset"), e); //$NON-NLS-1$
-										}
+										TagDefinition td = 
+												new TagDefinition(
+														null,
+														idGenerator.generate(),
+														Messages.getString("SourceDocumentPanel.exampleTag"), //$NON-NLS-1$
+														new Version(), 
+														null, "", //$NON-NLS-1$
+														tsd.getUuid()); 
+										PropertyDefinition colorPropertyDef =
+												new PropertyDefinition(
+													idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
+													PropertyDefinition.SystemPropertyName.
+														catma_displaycolor.name(),
+													Collections.singleton(
+														ColorConverter.toRGBIntAsString(
+															ColorConverter.randomHex())));
+										td.addSystemPropertyDefinition(
+												colorPropertyDef);
+										repository.getTagManager().addTagDefinition(
+											tsd, td);
+
 										
 										repository.removePropertyChangeListener(
 												RepositoryChangeEvent.tagLibraryChanged, 

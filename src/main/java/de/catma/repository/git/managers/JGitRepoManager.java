@@ -22,13 +22,17 @@ import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.util.FS;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.user.User;
@@ -359,6 +363,17 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
+
+			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
+			Path relativeFilePath = basePath.relativize(absoluteFilePath);
+
+			this.gitApi
+				.rm()
+				.setCached(true)
+				.addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString()))
+				.call();
+			
 			if (targetFile.isDirectory()) {
 				FileUtils.deleteDirectory(targetFile);
 			}
@@ -367,14 +382,54 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 						"could not remove %s", 
 						targetFile.toString()));
 			}
-
-			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
-			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
-			Path relativeFilePath = basePath.relativize(absoluteFilePath);
-
-			this.gitApi.rm().addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString())).call();
 		}
 		catch (GitAPIException e) {
+			throw new IOException(e);
+		}
+	}
+	
+	@Override
+	public void removeSubmodule(File submodulePath) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `removeSubmodule` on a detached instance");
+		}
+		try {
+			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteFilePath = Paths.get(submodulePath.getAbsolutePath());
+			Path relativeFilePath = basePath.relativize(absoluteFilePath);
+			String relativeUnixStyleFilePath = FilenameUtils.separatorsToUnix(relativeFilePath.toString());
+			
+		    File gitSubmodulesFile = 
+		    	new File(
+		    			this.gitApi.getRepository().getWorkTree(), 
+		    			Constants.DOT_GIT_MODULES );
+		    FileBasedConfig gitSubmodulesConfig = 
+		    		new FileBasedConfig(null, gitSubmodulesFile, FS.DETECTED );		
+		    gitSubmodulesConfig.load();
+		    gitSubmodulesConfig.unsetSection(
+		    		ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
+		    gitSubmodulesConfig.save();
+		    StoredConfig repositoryConfig = this.getGitApi().getRepository().getConfig();
+		    repositoryConfig.unsetSection(
+		    	ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
+		    repositoryConfig.save();
+		    
+		    gitApi.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
+		    gitApi.rm().setCached(true).addFilepattern(relativeUnixStyleFilePath).call();
+			gitApi.commit().setMessage("Removed submodule " + relativeUnixStyleFilePath).call(); //TODO: resource title instead of filepath
+			
+			File submoduleGitDir = 
+				basePath
+				.resolve(Constants.DOT_GIT)
+				.resolve(Constants.MODULES)
+				.resolve(relativeFilePath).toFile();
+			
+			FileUtils.deleteDirectory(submoduleGitDir);
+			
+			FileUtils.deleteDirectory(absoluteFilePath.toFile());
+
+		}
+		catch (GitAPIException | ConfigInvalidException e) {
 			throw new IOException(e);
 		}
 	}

@@ -83,7 +83,6 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userDefinedPropertyChangedListener;
-	private TagLibraryReference tagLibraryReference;
 	private GraphProjectIndexer indexer;
 
 	public GraphWorktreeProject(GitUser user,
@@ -139,16 +138,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 					() -> gitProjectHandler.getSourceDocumentStream(),
 					() -> gitProjectHandler.getUserMarkupCollectionReferenceStream());
 			
-			//TODO: check if we can get rid of the reference 
-			this.tagLibraryReference = 
-				new TagLibraryReference(
-						projectReference.getProjectId(), 
-						new ContentInfoSet(projectReference.getName()));
-			
-			TagLibrary tagLibrary = new TagLibrary(projectReference.getProjectId(), projectReference.getName());
-			graphProjectHandler.getTagsets(this.rootRevisionHash).stream().forEach(tagsetDef -> tagLibrary.add(tagsetDef));
-			
-			tagManager.addTagLibrary(tagLibrary);
+			tagManager.load(graphProjectHandler.getTagsets(this.rootRevisionHash));
 			
 			initTagManagerListeners();
 			openProjectListener.ready(this);
@@ -176,22 +166,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 					else if (evt.getNewValue() == null) { //delete
 						final TagsetDefinition tagsetDefinition = 
 							(TagsetDefinition)evt.getOldValue();
-						//TODO:
-//						execShield.execute(new DBOperation<Void>() {
-//							public Void execute() throws Exception {
-//								dbTagLibraryHandler.removeTagsetDefinition(args.getSecond());
-//								return null;
-//							}
-//						});
+						
+						removeTagsetDefinition(tagsetDefinition);
 					}
-					else { //update //TODO
-//						execShield.execute(new DBOperation<Void>() {
-//							public Void execute() throws Exception {
-//								dbTagLibraryHandler.updateTagsetDefinition(
-//										(TagsetDefinition)evt.getNewValue());
-//								return null;
-//							}
-//						});
+					else { //update
+						final TagsetDefinition tagsetDefinition = 
+								(TagsetDefinition)evt.getNewValue();
+						
+						updateTagsetDefinition(tagsetDefinition);
+
 					}
 				}
 				catch (Exception e) {
@@ -232,12 +215,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 						removeTagDefinition(tagDefinition, tagsetDefinition);
 					}
 					else {
-						@SuppressWarnings("unchecked")
-						final Pair<TagDefinition, TagsetDefinition> args = 
-							(Pair<TagDefinition, TagsetDefinition>)evt.getNewValue();
-						TagDefinition tagDefinition = (TagDefinition)args.getFirst();
-						TagsetDefinition tagsetDefinition = args.getSecond();
-						updateTagDefinition(tagDefinition, tagsetDefinition);
+						TagDefinition tag = (TagDefinition) evt.getNewValue();
+						TagsetDefinition tagset = (TagsetDefinition) evt.getOldValue();
+						
+						updateTagDefinition(tag, tagset);
 					}
 				}
 				catch (Exception e) {
@@ -306,10 +287,23 @@ public class GraphWorktreeProject implements IndexedRepository {
 				userDefinedPropertyChangedListener);
 	}
 
+	protected void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+		gitProjectHandler.updateTagset(tagsetDefinition);
+		tagsetDefinition.setRevisionHash(tagsetDefinition.getRevisionHash());
+		graphProjectHandler.updateTagset(this.rootRevisionHash, tagsetDefinition);
+	}
+
+	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+		String oldRootRevisionHash = this.rootRevisionHash;
+		gitProjectHandler.removeTagset(tagsetDefinition);
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
+		graphProjectHandler.removeTagset(this.rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
+	}
+
 	private void addPropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
 		
 		TagsetDefinition tagsetDefinition = 
-			tagManager.getTagLibrary(this.tagLibraryReference).getTagsetDefinition(tagDefinition);
+			tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
 		
 		String tagsetRevision = gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
 		tagsetDefinition.setRevisionHash(tagsetRevision);
@@ -336,18 +330,19 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private void updatePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
 		
 		TagsetDefinition tagsetDefinition = 
-			tagManager.getTagLibrary(this.tagLibraryReference).getTagsetDefinition(tagDefinition);
+			tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
 		
 		String tagsetRevision = gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-		graphProjectHandler.updatePropertyDefinition(
+		graphProjectHandler.createOrUpdatePropertyDefinition(
 			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
-		String tagsetRevision = gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
+		String tagsetRevision = 
+			gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
@@ -587,7 +582,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public Collection<TagsetDefinition> getTagsets() throws Exception {
-		return graphProjectHandler.getTagsets( this.rootRevisionHash);
+		return tagManager.getTagLibrary().getTagsetDefinitions();
 	}
 
 	@Override
@@ -756,7 +751,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			if (userMarkupCollection.getTagReferences().containsAll(
 					tagReferences)) {
 				gitProjectHandler.addOrUpdate(
-						userMarkupCollection.getUuid(), tagReferences);
+						userMarkupCollection.getUuid(), tagReferences, tagManager.getTagLibrary());
 				graphProjectHandler.addTagReferences(
 						GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
 				propertyChangeSupport.firePropertyChange(
@@ -795,7 +790,9 @@ public class GraphWorktreeProject implements IndexedRepository {
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
 		try {
 			gitProjectHandler.addOrUpdate(
-					userMarkupCollection.getUuid(), userMarkupCollection.getTagReferences(tagInstance));
+					userMarkupCollection.getUuid(), 
+					userMarkupCollection.getTagReferences(tagInstance), 
+					tagManager.getTagLibrary());
 			graphProjectHandler.updateProperties(
 					GraphWorktreeProject.this.rootRevisionHash, tagInstance, properties);
 			propertyChangeSupport.firePropertyChange(
@@ -858,19 +855,17 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Deprecated
 	public Collection<TagLibraryReference> getTagLibraryReferences() {
 
-		return Collections.singleton(this.tagLibraryReference);
+		return Collections.emptyList();
 	}
 
+	@Deprecated
 	private TagLibrary getTagLibrary() {
-		//TODO: 
-
-		return tagManager.getTagLibrary(this.tagLibraryReference);
+		return tagManager.getTagLibrary();
 	}
 	
 	@Override
 	@Deprecated
 	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) throws IOException {
-		// TODO:
 		return getTagLibrary();
 	}
 
@@ -926,8 +921,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	@Deprecated
 	public User createIfAbsent(Map<String, String> userIdentification) throws IOException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -943,7 +938,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 				
 				@Override
 				public void synch(String collectionId, List<TagReference> tagReferences) throws Exception {
-					gitProjectHandler.addOrUpdate(collectionId, tagReferences);
+					gitProjectHandler.addOrUpdate(collectionId, tagReferences, tagManager.getTagLibrary());
 				}
 			}
 		);

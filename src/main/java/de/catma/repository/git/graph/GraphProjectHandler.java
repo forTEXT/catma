@@ -5,6 +5,7 @@ import static de.catma.repository.git.graph.NodeType.DeletedAnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedTag;
 import static de.catma.repository.git.graph.NodeType.DeletedTagInstance;
+import static de.catma.repository.git.graph.NodeType.DeletedTagset;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
 import static de.catma.repository.git.graph.NodeType.Project;
 import static de.catma.repository.git.graph.NodeType.ProjectRevision;
@@ -598,6 +599,35 @@ public class GraphProjectHandler {
 						"parentTagId", tagDefinition.getParentUuid()
 					)
 				);
+				
+				for (PropertyDefinition propertyDefinition : tagDefinition.getUserDefinedPropertyDefinitions()) {
+					session.run(
+							"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+							+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+							+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+							+"(ts:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+							+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+							+"SET pr.revisionHash = {pRootRevisionHash} "
+							+"SET ts.revisionHash = {pTagsetRevisionHash} "
+							+"MERGE (t)-[:"+rt(hasProperty)+"]->"
+							+"(:"+nt(Property)+"{"
+								+ "uuid:{pUuid},"
+								+ "name:{pName},"
+								+ "values:{pValues} "
+							+"})",
+							Values.parameters(
+								"pUserId", user.getIdentifier(),
+								"pProjectId", projectReference.getProjectId(),
+								"pRootRevisionHash", rootRevisionHash,
+								"pOldRootRevisionHash", oldRootRevisionHash,
+								"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
+								"pTagId", tagDefinition.getUuid(),
+								"pUuid", propertyDefinition.getUuid(),
+								"pName", propertyDefinition.getName(),
+								"pValues", propertyDefinition.getPossibleValueList()
+							)
+						);					
+				}
 			}
 		});
 		
@@ -607,7 +637,7 @@ public class GraphProjectHandler {
 			String rootRevisionHash, TagDefinition tagDefinition, 
 			TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
 		
-		if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
+		if (tagDefinition.getAuthor() == null) {
 			PropertyDefinition authorPropertyDefinition = 
 					new PropertyDefinition(
 						idGenerator.generate(),
@@ -643,6 +673,41 @@ public class GraphProjectHandler {
 						"pModifiedDate", tagDefinition.getVersion().toString() //TODO: change to java.util.time
 					)
 				);
+				
+				for (PropertyDefinition propertyDefinition : tagDefinition.getUserDefinedPropertyDefinitions()) {
+					createOrUpdatePropertyDefinition(
+						session, 
+						rootRevisionHash, 
+						propertyDefinition, 
+						tagDefinition, 
+						tagsetDefinition, 
+						oldRootRevisionHash);					
+				}
+				
+				session.run(
+						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+						+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+						+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+						+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}})-[:"+rt(hasTag)+"]->"
+						+"(:"+nt(Tag)+"{tagId:{pTagId}})-[:"+rt(hasProperty)+"]->"
+						+"(p:"+nt(Property)+") "
+						+"WHERE NOT(p.uuid in {pPropertyIdList}) "
+						+"SET ts.revisionHash = {pTagsetRevisionHash} "
+						+"REMOVE p:"+nt(Property)+ " "
+						+"SET p:"+nt(DeletedProperty)+ " ",
+						Values.parameters(
+							"pUserId", user.getIdentifier(),
+							"pProjectId", projectReference.getProjectId(),
+							"pRootRevisionHash", rootRevisionHash,
+							"pTagsetId", tagsetDefinition.getUuid(),
+							"pTagId", tagDefinition.getUuid(),
+							"pPropertyIdList", tagDefinition.getUserDefinedPropertyDefinitions()
+								.stream()
+								.map(PropertyDefinition::getUuid)
+								.collect(Collectors.toList()),
+							"pTagsetRevisionHash", tagsetDefinition.getRevisionHash()
+						)
+					);				
 			}
 		});
 		
@@ -829,7 +894,7 @@ public class GraphProjectHandler {
 	
 		String uuid = propertyNode.get("uuid").asString();
 		String name = propertyNode.get("name").asString();
-		List<String> values = propertyNode.get("values").asList(value -> value.toString());
+		List<String> values = propertyNode.get("values").asList(value -> value.asString());
 		
 		
 		return new PropertyDefinition(uuid, name, values);
@@ -911,35 +976,49 @@ public class GraphProjectHandler {
 		});		
 	}
 	
-	public void updatePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
+	public void createOrUpdatePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
 			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
-				session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-					+"(ts:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
-					+"(:"+nt(Tag)+"{tagId:{pTagId}})-[:"+rt(hasProperty)+"]->"
-					+ "(p:"+nt(Property)+"{uuid:{pUuid}}) "
-					+"SET pr.revisionHash = {pRootRevisionHash} "
-					+"SET ts.revisionHash = {pTagsetRevisionHash} "
-					+"SET p.name = {pName}, p.values={pValues}",
-					Values.parameters(
-						"pUserId", user.getIdentifier(),
-						"pProjectId", projectReference.getProjectId(),
-						"pRootRevisionHash", rootRevisionHash,
-						"pOldRootRevisionHash", oldRootRevisionHash,
-						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
-						"pTagId", tagDefinition.getUuid(),
-						"pUuid", propertyDefinition.getUuid(),
-						"pName", propertyDefinition.getName(),
-						"pValues", propertyDefinition.getPossibleValueList()
-					)
-				);
+				createOrUpdatePropertyDefinition(
+					session, 
+					rootRevisionHash, 
+					propertyDefinition, 
+					tagDefinition, 
+					tagsetDefinition, 
+					oldRootRevisionHash);
 			}
 		});		
+	}
+	
+	private void createOrUpdatePropertyDefinition(Session session, String rootRevisionHash, PropertyDefinition propertyDefinition,
+			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
+		session.run(
+				"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+				+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+				+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+				+"(ts:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+				+"(t:"+nt(Tag)+"{tagId:{pTagId}})"
+				+"SET pr.revisionHash = {pRootRevisionHash} "
+				+"SET ts.revisionHash = {pTagsetRevisionHash} "
+				+"WITH t "
+				+"MERGE (t)-[:"+rt(hasProperty)+"]->"
+				+ "(p:"+nt(Property)+"{uuid:{pUuid}}) "
+				+"ON CREATE SET p.name = {pName}, p.values={pValues} "
+				+"ON MATCH SET p.name = {pName}, p.values={pValues} ",
+				Values.parameters(
+					"pUserId", user.getIdentifier(),
+					"pProjectId", projectReference.getProjectId(),
+					"pRootRevisionHash", rootRevisionHash,
+					"pOldRootRevisionHash", oldRootRevisionHash,
+					"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
+					"pTagId", tagDefinition.getUuid(),
+					"pUuid", propertyDefinition.getUuid(),
+					"pName", propertyDefinition.getName(),
+					"pValues", propertyDefinition.getPossibleValueList()
+				)
+			);		
 	}
 
 	public UserMarkupCollection getUserMarkupCollection(String rootRevisionHash,
@@ -1020,14 +1099,8 @@ public class GraphProjectHandler {
 						.collect(Collectors.toList());
 					
 					
-					if (ti.getSystemProperty(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
-						PropertyDefinition authorPropertyDefinition = 
-								ti.getTagDefinition().getPropertyDefinition(
-										PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
-						ti.addSystemProperty(
-							new de.catma.tag.Property(
-								authorPropertyDefinition, 
-								Collections.singleton(user.getIdentifier())));
+					if (ti.getAuthor() == null) {
+						ti.setAuthor(user.getIdentifier());
 					}
 					
 					session.run(
@@ -1051,17 +1124,18 @@ public class GraphProjectHandler {
 							"pUserId", user.getIdentifier(),
 							"pProjectId", projectReference.getProjectId(),
 							"pRootRevisionHash", rootRevisionHash,
-							"pTagId", ti.getTagDefinition().getUuid(),
+							"pTagId", ti.getTagDefinitionId(),
 							"pCollectionId", userMarkupCollection.getId(),
 							"pTagInstanceId", ti.getUuid(),
-							"pAuthor", ti.getProperty(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()).getFirstValue(),
+							"pAuthor", ti.getAuthor(),
 							"pCreationDate",  ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 							"pRanges", flatRanges
 						)
 					);
 					
-					
-					
+					updateProperties(
+						session, rootRevisionHash, 
+						ti, ti.getUserDefinedProperties());
 				}
 				
 			}
@@ -1198,11 +1272,19 @@ public class GraphProjectHandler {
 	private List<TagReference> createTagReferences(
 			TagDefinition tagDefinition, Node tagInstanceNode, 
 			String collectionId, String sourceDocumentId, List<Node> properties) throws Exception {
+		String author = tagInstanceNode.get("author").asString();
+		String timestamp = tagInstanceNode.get("creationDate").asString();
+		
 
-		TagInstance tagInstance = new TagInstance(tagInstanceNode.get("tagInstanceId").asString(), tagDefinition);
+		TagInstance tagInstance = new TagInstance(
+				tagInstanceNode.get("tagInstanceId").asString(), 
+				tagDefinition.getUuid(),
+				author, timestamp, 
+				tagDefinition.getUserDefinedPropertyDefinitions(),
+				tagDefinition.getTagsetDefinitionUuid());
 		
 		for (Node propertyNode : properties) {
-			tagInstance.addUserDefinedProperty(createAnnotationProperty(propertyNode, tagDefinition));
+			tagInstance.addUserDefinedProperty(createAnnotationProperty(propertyNode));
 		}
 		
 		List<Integer> rangeOffsets = 
@@ -1228,15 +1310,13 @@ public class GraphProjectHandler {
 		return tagReferenceList;
 	}
 
-	private Property createAnnotationProperty(Node propertyNode, TagDefinition tagDefinition) {
+	private Property createAnnotationProperty(Node propertyNode) {
 		
 		String uuid = propertyNode.get("uuid").asString();
 		
 		List<String> values = propertyNode.get("values").asList(value -> value.asString());
 		
-		PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinitionByUuid(uuid);
-		
-		return new Property(propertyDefinition, values);
+		return new Property(uuid, values);
 	}
 
 	public void updateProperties(
@@ -1244,32 +1324,37 @@ public class GraphProjectHandler {
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
-				for (Property property : properties) {
-					session.run(
-						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-						+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-						+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
-						+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
-						+ "(:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
-						+ "(i:"+nt(TagInstance)+"{tagInstanceId:{pTagInstanceId}})"
-						+ "WITH i "
-						+ "MERGE (i)-[:"+rt(hasProperty)+"]->"
-						+ "(:"+nt(AnnotationProperty)+"{"
-							+ "uuid:{pUuid},"
-							+ "values:{pValues} "
-						+"})",
-						Values.parameters(
-							"pUserId", user.getIdentifier(),
-							"pProjectId", projectReference.getProjectId(),
-							"pRootRevisionHash", rootRevisionHash,
-							"pTagInstanceId", tagInstance.getUuid(),
-							"pUuid", property.getPropertyDefinition().getUuid(),
-							"pValues", property.getPropertyValueList()
-						)
-					);
-				}
+				updateProperties(session, rootRevisionHash, tagInstance, properties);
 			}
 		});
+	}
+
+	private void updateProperties(Session session, String rootRevisionHash, TagInstance tagInstance,
+			Collection<Property> properties) {
+		for (Property property : properties) {
+			session.run(
+				"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+				+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+				+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+				+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+				+ "(:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
+				+ "(i:"+nt(TagInstance)+"{tagInstanceId:{pTagInstanceId}})"
+				+ "WITH i "
+				+ "MERGE (i)-[:"+rt(hasProperty)+"]->"
+				+ "(:"+nt(AnnotationProperty)+"{"
+					+ "uuid:{pUuid},"
+					+ "values:{pValues} "
+				+"})",
+				Values.parameters(
+					"pUserId", user.getIdentifier(),
+					"pProjectId", projectReference.getProjectId(),
+					"pRootRevisionHash", rootRevisionHash,
+					"pTagInstanceId", tagInstance.getUuid(),
+					"pUuid", property.getPropertyDefinitionId(),
+					"pValues", property.getPropertyValueList()
+				)
+			);
+		}
 	}
 
 	public Multimap<String, String> getAnnotationIdsByCollectionId(
@@ -1441,6 +1526,57 @@ public class GraphProjectHandler {
 						"pTagId", tagDefinition.getUuid(),
 						"pPropertyId", propertyDefinition.getUuid(),
 						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash()
+					)
+				);
+			}
+		});		
+	}
+
+	public void removeTagset(String rootRevisionHash, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}})"
+					+"OPTIONAL MATCH (ts)-[:"+rt(hasTag)+"]->(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+"OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
+					+"REMOVE ts:"+nt(Tagset)+ " "
+					+"SET ts:"+nt(DeletedTagset)+ " "
+					+"DETACH DELETE t, p ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
+						"pTagsetId", tagsetDefinition.getUuid()
+					)
+				);
+			}
+		});	
+	}
+
+	public void updateTagset(String rootRevisionHash, TagsetDefinition tagsetDefinition) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}}) "
+					+"SET ts.revisionHash = {pTagsetRevisionHash}, "
+					+"ts.name = {pName} ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pTagsetId", tagsetDefinition.getUuid(),
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
+						"pName", tagsetDefinition.getName()
 					)
 				);
 			}

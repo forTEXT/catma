@@ -35,7 +35,6 @@ import nu.xom.Nodes;
 public class TeiTagLibraryDeserializer {
 	
 	private TeiDocument teiDocument;
-	private TagLibrary tagLibrary;
 	private TagManager tagManager;
 
 	public TeiTagLibraryDeserializer(
@@ -43,8 +42,6 @@ public class TeiTagLibraryDeserializer {
 		super();
 		this.teiDocument = teiDocument;
 		this.tagManager = tagManager;
-		this.tagLibrary = new TagLibrary(
-				teiDocument.getId(), teiDocument.getName());
 		try {
 			deserialize();
 		} catch (ParseException e) {
@@ -70,7 +67,7 @@ public class TeiTagLibraryDeserializer {
 			
 			addTagDefinitions(tagsetDefinition, tagsetDefinitionElement.getChildElements(TeiElementName.fsDecl));
 
-			tagManager.addTagsetDefinition(tagLibrary, tagsetDefinition);
+			tagManager.addTagsetDefinition(tagsetDefinition);
 		}
 	}
 
@@ -160,7 +157,4 @@ public class TeiTagLibraryDeserializer {
 				pvf.getValueAsList());
 	}
 
-	public TagLibrary getTagLibrary() {
-		return tagLibrary;
-	}
 }

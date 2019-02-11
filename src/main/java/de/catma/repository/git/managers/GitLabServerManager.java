@@ -3,14 +3,17 @@ package de.catma.repository.git.managers;
 import java.io.IOException;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import de.catma.repository.git.GitMember;
-import de.catma.repository.git.GitUser;
-import de.catma.user.Permission;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
@@ -26,14 +29,21 @@ import org.gitlab4j.api.models.User;
 import de.catma.Pager;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
 import de.catma.user.UserProperty;
 import de.catma.util.Pair;
+import elemental.json.Json;
+import elemental.json.JsonException;
+import elemental.json.JsonObject;
+import elemental.json.JsonValue;
 
 public class GitLabServerManager implements IRemoteGitServerManager {
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+
 	private final String gitLabAdminPersonalAccessToken;
 	private final String gitLabServerUrl;
 
@@ -280,7 +290,28 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			groupApi.deleteGroup(group);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException("Failed to delete remote group", e);
+			//TODO: Nasty workaround, but it's not fixed in gitlab4j yet.
+			// A switch to a new gitlab4j requires jaxb 2.3.0 to work. This requires jetty 9.4 to work, which is 
+			// broken in the current elcipse jetty plugin
+			if(e.getHttpStatus() == 202){  // Async operation indicated by HTTP ACCEPT 202. wait till finished
+				for(int i = 0;i < 10; i++ ){
+					logger.info("gitlab: async delete operation detected, waiting 150msec per round. round: " + i );
+					try {
+						Thread.sleep(150);
+						List<Group> res = groupApi.getGroups(path);
+						if(res.isEmpty()){
+							return;
+						}
+					} catch (GitLabApiException e1) {
+						continue; //NOOP
+					} catch (InterruptedException e1) {
+						continue; //NOOP
+					}
+				}
+				throw new IOException("Failed to delete remote group", e);
+			}else {
+				throw new IOException("Failed to delete remote group", e);
+			}
 		}
 	}
 
@@ -493,7 +524,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		try {
 
 			Group group = this.userGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
-			return new ProjectReference(group.getPath(),group.getDescription(),"TODO");
+			return unmarshallProjectReference(group.getPath(),group.getDescription());
 		} catch (GitLabApiException e) {
 			throw new IOException("failed to fetch project ", e);
 		}
@@ -514,9 +545,9 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 		try {
 			return new GitLabPager<>(
-					groupApi.getGroups(30),//TODO: constant
-					group -> new ProjectReference(
-							group.getPath(), group.getDescription(), "TODO"));
+					groupApi.getGroups(30),
+					group -> unmarshallProjectReference(
+							group.getPath(),  group.getDescription()));
 		}
 		catch (Exception e) {
 			throw new IOException("Failed to load groups", e);
@@ -567,5 +598,17 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 
 	public String getEmail() {
 		return gitLabUser.getEmail();
+	}
+	
+
+	private ProjectReference unmarshallProjectReference(String path, String eventuallyMarshalledMetadata){
+		try {
+			JsonObject obj = Json.parse(eventuallyMarshalledMetadata);
+			String name = obj.get("name").asString();
+			String desc = obj.get("description").asString();
+			return new ProjectReference(path, name, desc);
+		} catch (JsonException e) {
+			return new ProjectReference(path, eventuallyMarshalledMetadata, "nonexistent description");
+		}
 	}
 }

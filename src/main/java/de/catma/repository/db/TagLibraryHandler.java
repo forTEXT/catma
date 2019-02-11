@@ -277,7 +277,7 @@ class TagLibraryHandler {
 			possValuesByPropDefUuid));
 		
 		for (TagsetDefinition tagsetDef : tagsetDefinitions) {
-			tagLibrary.add(tagsetDef);
+//			tagLibrary.add(tagsetDef);
 		}
 		
 		return tagLibrary;
@@ -777,7 +777,7 @@ class TagLibraryHandler {
 			db.commitTransaction();
 
 			tagLibraryReferencesById.remove(tagLibraryReference.getId());
-			tagManager.removeTagLibrary(tagLibraryReference);
+//			tagManager.removeTagLibrary(tagLibraryReference);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.tagLibraryChanged.name(),
@@ -1224,7 +1224,7 @@ class TagLibraryHandler {
 		for (Map.Entry<String,TagLibraryReference> entry : tagLibraryReferencesById.entrySet()) {
 			TagLibraryReference  tagLibraryReference = entry.getValue();
 			
-			dbRepository.getTagManager().removeTagLibrary(tagLibraryReference);
+//			dbRepository.getTagManager().removeTagLibrary(tagLibraryReference);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.tagLibraryChanged.name(),

@@ -16,6 +16,5 @@ public class VerticalLayout extends FlexLayout {
 	
 	private void addStyle(){
 		addStyleNames("flex-vertical");
-
 	}
 }

@@ -239,12 +239,12 @@ public class TagsetTree extends HorizontalLayout {
 						removeTagDefinitionFromTree(td, removeOperationResult.getFirst());
 					}
 				} else {
-					TagDefinition tagDefinition = ((Pair<TagDefinition, TagsetDefinition>) evt.getNewValue()).getFirst();
-
-					Property prop = tagTree.getContainerProperty(tagDefinition, TagTreePropertyName.caption);
-					if (prop != null) {
-						prop.setValue(tagDefinition.getName());
-					}
+//					TagDefinition tagDefinition = ((Pair<TagDefinition, TagsetDefinition>) evt.getNewValue()).getFirst();
+//
+//					Property prop = tagTree.getContainerProperty(tagDefinition, TagTreePropertyName.caption);
+//					if (prop != null) {
+//						prop.setValue(tagDefinition.getName());
+//					}
 				}
 			}
 		};
@@ -447,10 +447,10 @@ public class TagsetTree extends HorizontalLayout {
 
 							Property<?> colorProperty = propertysetItem.getItemProperty(tagDefColorProp);
 
-							tagManager.setTagDefinitionTypeAndColor(
-									selTagDefinition, (String) nameProperty.getValue(),
-									ColorConverter.toRGBIntAsString((String) colorProperty.getValue()),
-									getTagsetDefinition(selTagDefinition));
+//							tagManager.setTagDefinitionTypeAndColor(
+//									selTagDefinition, (String) nameProperty.getValue(),
+//									ColorConverter.toRGBIntAsString((String) colorProperty.getValue()),
+//									getTagsetDefinition(selTagDefinition));
 						}
 					});
 			tagFormDialog.show("50%"); //$NON-NLS-1$
@@ -609,7 +609,7 @@ public class TagsetTree extends HorizontalLayout {
 
 						public void onClose(ConfirmDialog dialog) {
 							if (dialog.isConfirmed()) {
-								tagManager.removeTagsetDefinition(tagLibrary, td);
+								tagManager.removeTagsetDefinition(td);
 							}
 						}
 					});
@@ -639,7 +639,7 @@ public class TagsetTree extends HorizontalLayout {
 						TagsetDefinition td = new TagsetDefinition(null, new IDGenerator().generate(),
 								(String) property.getValue(), new Version());
 
-						tagManager.addTagsetDefinition(tagLibrary, td);
+						tagManager.addTagsetDefinition(td);
 					}
 				});
 		configureTagsetFormDialog(tagsetFormDialog, tagsetdefinitionnameProperty);
@@ -953,9 +953,7 @@ public class TagsetTree extends HorizontalLayout {
 	public void close(boolean closeLibrary) {
 		tagManager.removePropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged,
 				tagsetDefinitionChangedListener);
-		if (closeLibrary) {
-			tagManager.removeTagLibrary(tagLibrary);
-		}
+
 		tagManager.removePropertyChangeListener(TagManagerEvent.tagDefinitionChanged, tagDefinitionChangedListener);
 		tagManager.removePropertyChangeListener(TagManagerEvent.userPropertyDefinitionChanged,
 				userPropertyDefinitionChangedListener);

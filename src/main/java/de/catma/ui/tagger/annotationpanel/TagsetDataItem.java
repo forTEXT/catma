@@ -111,15 +111,5 @@ public class TagsetDataItem implements TagsetTreeItem {
 	public String getPropertySummary() {
 		return null; // no properties for Tagsets
 	}
-	
-	@Override
-	public boolean isPropertiesExpanded() {
-		return false;
-	}
-
-	@Override
-	public void setPropertiesExpanded(boolean propertiesExpanded) {
-		//noop
-	}
 
 }

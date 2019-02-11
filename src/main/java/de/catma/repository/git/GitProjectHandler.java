@@ -24,6 +24,7 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 
@@ -364,7 +365,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public void addOrUpdate(String collectionId, List<TagReference> tagReferenceList) throws IOException {
+	public void addOrUpdate(String collectionId, List<TagReference> tagReferenceList, TagLibrary tagLibrary) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
@@ -372,7 +373,8 @@ public class GitProjectHandler {
 					new JsonLdWebAnnotation(
 						RepositoryPropertyKey.GitLabServerUrl.getValue(), 
 						projectId, 
-						tagReferenceList);
+						tagReferenceList,
+						tagLibrary);
 			gitMarkupCollectionHandler.createTagInstance(projectId, collectionId, annotation);
 		}		
 	}
@@ -434,6 +436,37 @@ public class GitProjectHandler {
 	
 	public List<User> getProjectMembers() throws Exception {
 		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
+	}
+
+	public void removeTagset(TagsetDefinition tagsetDefinition) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String tagsetId = tagsetDefinition.getUuid();
+			
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+	
+			// remove the submodule only!!!
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					TAGSET_SUBMODULES_DIRECTORY_NAME,
+					tagsetId
+			).toFile();
+	
+			localGitRepoManager.removeSubmodule(targetSubmodulePath);
+		}		
+	}
+
+	public String updateTagset(TagsetDefinition tagsetDefinition) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			String tagsetRevision = 
+				gitTagsetHandler.updateTagsetDefinition(projectId, tagsetDefinition);
+			
+			
+			return tagsetRevision;
+		}
 	}
 
 }
