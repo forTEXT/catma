@@ -244,12 +244,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 		return  queryResult;
 	
-	
-	
-	
+
 	}
-	
-	
 
 	private ArrayList<String> getQueriesForAvailableResults() {
 		ArrayList<String> allQueries = new ArrayList<>();
@@ -299,26 +295,18 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				}
 			}
 		});*/
+		
 		// add selected items to the slected-panel
 	     resultsTreeGrid.addSelectionListener(new SelectionListener<TagRowItem>() {
 				
 				@Override
 				public void selectionChange(SelectionEvent<TagRowItem> event) {
-					//selectedDataProvider.refreshAll();
 					
-					Optional<String> currentQuery = comboBox.getSelectedItem();
-					
-					
-					Collection<TagRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
-					
-					
+				Optional<String> currentQuery = comboBox.getSelectedItem();
+								
+				Collection<TagRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();	
 				Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
-		
 				
-				selectedItems.forEach(item -> { System.out.println(" Tag__Path :"+item.getTreePath()+ 
-						" Collection :"+item.getCollectionName()+"Tag__ID:"+item.getTagInstanceID());});
-				
-				//selectedItems.forEach(item-> addItemToSelectedPanel(item));
 				addItemsToSelectedPanel(currentQuery.toString(), (Collection<TagRowItem>) selectedItems, allRootItems);
 				
 				}
