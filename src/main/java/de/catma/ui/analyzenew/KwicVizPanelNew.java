@@ -304,6 +304,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				
 				@Override
 				public void selectionChange(SelectionEvent<TagRowItem> event) {
+					//selectedDataProvider.refreshAll();
 					
 					Optional<String> currentQuery = comboBox.getSelectedItem();
 					
@@ -419,14 +420,37 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		selectedTreeGrid.setWidth("100%");
 		return selectedTreeGrid;
 	}
-	// here and actual only tag queries
+
 	private void addItemsToSelectedPanel(String query, Collection<TagRowItem> items,Collection<TagRowItem> allRootItemsIncoming) {
 		
 		TagRowItem newRoot = new TagRowItem();
+		
 		int length=query.length();
+		String queryString = query.substring(20, length-1);
+		
+		newRoot.setTreePath(queryString);
+		
+		Collection<TagRowItem> allRootItems= allRootItemsIncoming;
+		Iterator<TagRowItem> rootsIterator =allRootItems.iterator();
+		
+		
+		if (items.isEmpty()) {
+			
+		while (rootsIterator.hasNext()) { 
 
-		newRoot.setTreePath(	query.substring(20, length-1));
-		final Collection<TagRowItem> allRootItems= allRootItemsIncoming;
+				TagRowItem emptyRootItem = rootsIterator.next();
+
+				if (emptyRootItem.getTreePath().equals(queryString)) {
+				
+					selectedItemsTreeGridData.removeItem(emptyRootItem);
+					selectedDataProvider.refreshAll();
+					break;
+				}
+			}
+		}
+		
+		else {
+					
 		boolean contains= false;
 		
 		if (allRootItems.isEmpty()) {
@@ -456,6 +480,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					selectedDataProvider.refreshAll();
 				}
 			}
+		}
+	
 		}
 	
 

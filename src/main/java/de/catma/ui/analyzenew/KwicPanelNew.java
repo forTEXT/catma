@@ -128,6 +128,8 @@ public class KwicPanelNew extends VerticalLayout{
 			kwicGrid.addColumn(KwicItem::getForewardContext).setCaption("Right Context").setId("forewardID");
 			kwicGrid.addColumn(KwicItem::getRangeStartPoint).setCaption("Start Point").setId("startPointID");
 			kwicGrid.addColumn(KwicItem::getRangeEndPoint).setCaption("End Point").setId("endPointID");
+			kwicGrid.addColumn(KwicItem::getTagDefinitionPath).setCaption("Tag").setId("tagID");
+		
 			
 			//kwicGrid.getColumn("keyWordID").setExpandRatio(7);
 			
@@ -189,18 +191,28 @@ public class KwicPanelNew extends VerticalLayout{
 		
 
 		
-	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic, boolean showPropertyColumns ) {
+	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic, boolean showPropertyColumns ) throws Exception {
 		KwicItem kwicItem = new KwicItem();
+		
+		
+		
 		
 		if(queryResultRow instanceof TagQueryResultRow) {
 			
 			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-			kwicItem.setDocCollection(tagQueryResultRow.getTagDefinitionPath());
+			
+		
+	     	 SourceDocument sourceDoc = repository.getSourceDocument(queryResultRow.getSourceDocumentId());
+			 kwicItem.setDocCollection(sourceDoc
+						.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
+			
+		
 			kwicItem.setKeyWord(tagQueryResultRow.getPhrase());
 			kwicItem.setBackwardContext(kwic.getBackwardContext());
 			kwicItem.setForewardContext(kwic.getForwardContext());
 			kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
 			kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
+			kwicItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
 			
 			if(tagQueryResultRow.getPropertyName()!=null) {
 				
@@ -213,6 +225,10 @@ public class KwicPanelNew extends VerticalLayout{
 			return kwicItem;
 			
 		}else {
+			
+			String sourceDocName=repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString();
+			
+			kwicItem.setDocCollection(sourceDocName);
 			kwicItem.setKeyWord(queryResultRow.getPhrase());
 			kwicItem.setBackwardContext(kwic.getBackwardContext());
 			kwicItem.setForewardContext(kwic.getForwardContext());
