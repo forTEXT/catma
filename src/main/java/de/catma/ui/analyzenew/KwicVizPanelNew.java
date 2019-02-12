@@ -29,6 +29,7 @@ import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
@@ -39,6 +40,8 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.tagger.annotationpanel.AnnotationTreeItem;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -58,7 +61,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private ComboBox<String> comboBox;
 	private List<String> availableResultSets;
 	private VerticalLayout vertical;
-	private Panel treeGridPanelKwic;
+	private Panel queryResultsPanel;
 	private HorizontalLayout mainContentPanel;
 	private Panel rightSide;
 	private ArrayList<CurrentTreeGridData> currentTreeGridDatas;
@@ -121,8 +124,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				swichToResultTree(queryAsString);
 			}
 		});
-		treeGridPanelKwic = new Panel();
-		treeGridPanelKwic.setHeight("350px");
+		queryResultsPanel = new Panel();
+		queryResultsPanel.setHeight("230px");
 		resultsTreeGrid= new TreeGrid<>();
 		selectedItemsTreeGrid = new TreeGrid<TagRowItem>();
 		selectedItemsTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("tag");
@@ -138,11 +141,13 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		selectedItemsPanel.setCaption("selected items for the kwic visualization");
 
 		selectedItemsPanel.setWidth("100%");
+		selectedItemsPanel.setHeight("230px");
 		
 		selectedItemsPanel.setContent(selectedItemsTreeGrid);
 		leftSide.addComponent(comboBox);
-		leftSide.addComponent(treeGridPanelKwic);
+		leftSide.addComponent(queryResultsPanel);
 		leftSide.addComponent(selectedItemsPanel);
+		leftSide.addComponent(selectedItemsTreeGrid);
 		
 		mainContentPanel.addComponents(leftSide, rightSide);
 		float left= 0.4f;
@@ -271,7 +276,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		resultsTreeGrid = createTreeGridFromData(resultsTreeGridData, selectedGridView);
 		resultsTreeGrid.setSelectionMode(SelectionMode.MULTI);
 		resultsTreeGrid.setWidth("100%");
-		resultsTreeGrid.setHeight("100%");
+		resultsTreeGrid.setHeight("230px");
 		
 		// first try to add a selection logic to the tree
 /*		resultsTreeGrid.addSelectionListener(new SelectionListener<TagRowItem>() {
@@ -311,7 +316,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				
 				}
 			});
-		treeGridPanelKwic.setContent(resultsTreeGrid);
+		queryResultsPanel.setContent(resultsTreeGrid);
 	}
 
 	
@@ -469,8 +474,16 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				}
 			}
 		}
+		
+	
 	
 		}
+	
+	private void setActionGridComponenet() {
+		ActionGridComponent<TreeGrid<TagRowItem>> selectedGridComponent = 
+				new ActionGridComponent<>(new Label("Selected Resultrows"), selectedItemsTreeGrid);
+		leftSide.addComponent(selectedGridComponent);
+	}
 	
 
 	@Override

@@ -80,14 +80,16 @@ public class AnalyzeNewView extends VerticalLayout
 	private ComboBox<String> queryComboBox;
 	private ResultPanelNew queryResultPanel;
 	private HorizontalLayout resultAndVizSnapshotsPanel;
-	private VerticalLayout resultPanel;
-	private VerticalLayout visualizationPreviewPanel;
+	private VerticalLayout resultsPanel;
+	private VerticalLayout snapshotsPanel;
 	private MarginInfo margin;
 	private Panel resultScrollPanel;
 	private Iterator<Component> allResultPanelsIterator;
 	private VerticalLayout contentPanel;
 	private HorizontalLayout searchAndVisIconsPanel;
 	private HashSet currentResults;
+	private Panel resultsFramePanel;
+	private Panel snapshotsFramePanel;
 
 	private Component searchPanel;
 	private Component visIconsPanel;
@@ -125,8 +127,9 @@ public class AnalyzeNewView extends VerticalLayout
 
 		resultAndVizSnapshotsPanel = new HorizontalLayout();
 		resultAndVizSnapshotsPanel.setWidth("100%");
-		resultPanel = new VerticalLayout();
-		resultPanel.setHeightUndefined();
+		resultAndVizSnapshotsPanel.setHeight("450px");
+		resultsPanel = new VerticalLayout();
+		resultsPanel.setHeightUndefined();
 
 		// this didnt work for making the resultpanel scrollable
 		// resultScrollPanel = new Panel();
@@ -135,10 +138,17 @@ public class AnalyzeNewView extends VerticalLayout
 
 		contentPanel = new VerticalLayout();
 
-		visualizationPreviewPanel = new VerticalLayout();
-		resultAndVizSnapshotsPanel.addComponents(resultPanel, visualizationPreviewPanel);
-		resultAndVizSnapshotsPanel.setExpandRatio(resultPanel, 1);
-		resultAndVizSnapshotsPanel.setExpandRatio(visualizationPreviewPanel, 1);
+		snapshotsPanel = new VerticalLayout();
+		snapshotsPanel.setHeightUndefined();
+		 resultsFramePanel = new Panel();
+		resultsFramePanel.setContent(resultsPanel);
+		resultsFramePanel.setHeight("380px");
+		snapshotsFramePanel = new Panel();
+		snapshotsFramePanel.setContent(snapshotsPanel);
+		snapshotsFramePanel.setHeight("380px");
+		resultAndVizSnapshotsPanel.addComponents(resultsFramePanel, snapshotsFramePanel);
+		resultAndVizSnapshotsPanel.setExpandRatio(resultsFramePanel, 1);
+		resultAndVizSnapshotsPanel.setExpandRatio(snapshotsFramePanel, 1);
 
 		resultAndVizSnapshotsPanel.setMargin(margin);
 		setMargin(true);
@@ -217,7 +227,7 @@ public class AnalyzeNewView extends VerticalLayout
 					@Override
 					public void onClose() {
 						VizSnapshot kwivSnapshot = new VizSnapshot("Kwic Snapshot");
-						visualizationPreviewPanel.addComponent(kwivSnapshot);
+						snapshotsPanel.addComponent(kwivSnapshot);
 					
 						setContent(contentPanel);
 					}
@@ -356,7 +366,7 @@ public class AnalyzeNewView extends VerticalLayout
 	}*/
 
 	private ArrayList<CurrentTreeGridData> getAllTreeGridDatas() {
-		Iterator<Component> iterator = resultPanel.getComponentIterator();
+		Iterator<Component> iterator = resultsPanel.getComponentIterator();
 		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
 		while (iterator.hasNext()) {
 			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();
@@ -386,7 +396,7 @@ public class AnalyzeNewView extends VerticalLayout
 
 										@Override
 										public void closeRequest(ResultPanelNew queryResultPanel) {
-											resultPanel.removeComponent(queryResultPanel);
+											resultsPanel.removeComponent(queryResultPanel);
 
 										}
 									});
@@ -404,8 +414,8 @@ public class AnalyzeNewView extends VerticalLayout
 							}
 						});
 
-						resultPanel.setSpacing(true);
-						resultPanel.addComponentAsFirst(queryResultPanel);
+						resultsPanel.setSpacing(true);
+						resultsPanel.addComponentAsFirst(queryResultPanel);
 						
 
 					};

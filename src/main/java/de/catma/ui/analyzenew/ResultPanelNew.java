@@ -40,6 +40,8 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.analyzer.AnalyzerView.CloseListener;
+import de.catma.ui.component.actiongrid.ActionGridBar;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -144,12 +146,15 @@ public class ResultPanelNew extends Panel {
 		setContent(contentVerticalLayout);
 
 		treeGridTag = new TreeGrid<TagRowItem>();
+		treeGridTag.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
 		// treeGridTag.setSelectionMode(SelectionMode.MULTI);
 
 		treeGridPhrase = new TreeGrid<TagRowItem>();
+		treeGridPhrase.addStyleName( "flat-undecorated-icon-buttonrenderer");
 		// treeGridPhrase.setSelectionMode(SelectionMode.MULTI);
 
 		treeGridProperty = new TreeGrid<TagRowItem>();
+		treeGridProperty.addStyleName("annotate-resource-grid");
 		// treeGridProperty.setSelectionMode(SelectionMode.MULTI);
 
 		// treeGridPhrase = new TreeGrid<TagRowItem>();
@@ -188,6 +193,8 @@ public class ResultPanelNew extends Panel {
 		contentVerticalLayout.addComponent(groupedIcons);
 		contentVerticalLayout.setComponentAlignment(groupedIcons, Alignment.MIDDLE_RIGHT);
 	}
+	
+	
 
 	private void initListeners() {
 
@@ -295,7 +302,10 @@ public class ResultPanelNew extends Panel {
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(tagData);
 
 		treeGridTag.addColumn(TagRowItem::getTreePath).setCaption("Tag").setId("tagID");
-		treeGridTag.getColumn("tagID").setExpandRatio(7);
+		treeGridTag.getColumn("tagID").setExpandRatio(5);
+		
+		treeGridTag.addColumn(TagRowItem::getPhrase).setCaption("Phrase").setId("tagPhraseID");
+		treeGridTag.getColumn("tagPhraseID").setExpandRatio(7);
 
 		treeGridTag.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridTag.getColumn("freqID").setExpandRatio(1);
@@ -552,6 +562,7 @@ public class ResultPanelNew extends Panel {
 									.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId())
 									.getName());
 							tagTagRowItem.setTreePath(oneCollection.getTagDefinitionPath());
+							tagTagRowItem.setPhrase(tagQueryResultRow.getPhrase());
 							tagTagRowItem.setQueryResultRow(tagQueryResultRow);
 							tagsForACollection.add(tagTagRowItem);
 						}

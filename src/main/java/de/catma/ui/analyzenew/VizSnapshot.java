@@ -17,7 +17,7 @@ public class VizSnapshot extends Panel {
 	
 	public VizSnapshot(String title) {
 		this.title=title;
-		setHeight("200px");
+		setHeight("160px");
 		setWidth("100%");
 		setContent(title);
 		initListeners();
