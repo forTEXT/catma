@@ -21,7 +21,7 @@ public class TagRowItem {
 	private ArrayList <TagRowItem>children;
 	private UUID uuid;
 	private String treePath;
-	private int frequency;
+	private Integer frequency;
 	private String propertyName;
 	private Object propertyValue;
 	private QueryResultRow queryResultRow; 
@@ -30,7 +30,7 @@ public class TagRowItem {
 	
 	public TagRowItem() {
 		//uuid = UUID.randomUUID();
-		frequency=1;
+
 		
 		
 	}
@@ -88,12 +88,15 @@ public class TagRowItem {
 	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
 	}
-	public int getFrequency() {
+	public Integer getFrequency() {
 		return frequency;
 	}
 	public void setFrequency(int frequency) {
-		this.frequency = frequency;
+		
+		
+		this.frequency = new Integer(frequency);
 	}
+
 	public String getCollectionName() {
 		return collectionName;
 	}
@@ -104,11 +107,17 @@ public class TagRowItem {
 		return treePath;
 	}
 	public void setTreePath(String treePath) {
-		shorten(treePath, 20);
-		this.treePath = shorten(treePath, 26);
+		this.treePath = treePath;
 	}
 	public boolean setFrequencyOneUp() {
-		frequency++;
+		if(frequency==null) {
+			frequency= new Integer(1);
+			
+		}else {
+			frequency=frequency.intValue()+1;
+					
+		}
+	
 		return true;
 	}
 
@@ -135,6 +144,11 @@ public class TagRowItem {
 	}
 	public void setPhrase(String phrase) {
 		this.phrase = 	shorten(phrase, 50);
+	}
+	
+	
+	public String getShortenTreePath(){
+		return shorten(this.treePath,26);
 	}
 	
    private String shorten(String toShortenValue, int maxLength) {

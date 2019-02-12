@@ -301,7 +301,7 @@ public class ResultPanelNew extends Panel {
 		tagData = populateTreeDataWithTags(repository, tagData, queryResult);
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(tagData);
 
-		treeGridTag.addColumn(TagRowItem::getTreePath).setCaption("Tag").setId("tagID");
+		treeGridTag.addColumn(TagRowItem::getShortenTreePath).setCaption("Tag").setId("tagID");
 		treeGridTag.getColumn("tagID").setExpandRatio(5);
 		
 		treeGridTag.addColumn(TagRowItem::getPhrase).setCaption("Phrase").setId("tagPhraseID");
@@ -352,7 +352,7 @@ public class ResultPanelNew extends Panel {
 
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(phraseData);
 
-		treeGridPhrase.addColumn(TagRowItem::getTreePath).setCaption("Phrase").setId("phraseID");
+		treeGridPhrase.addColumn(TagRowItem::getShortenTreePath).setCaption("Phrase").setId("phraseID");
 		treeGridPhrase.getColumn("phraseID").setExpandRatio(7);
 
 		treeGridPhrase.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
@@ -399,7 +399,7 @@ public class ResultPanelNew extends Panel {
 
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(propData);
 
-		treeGridProperty.addColumn(TagRowItem::getTreePath).setCaption("Tag").setId("tagID");
+		treeGridProperty.addColumn(TagRowItem::getShortenTreePath).setCaption("Tag").setId("tagID");
 		treeGridProperty.getColumn("tagID").setExpandRatio(3);
 
 		treeGridProperty.addColumn(TagRowItem::getPropertyName).setCaption("Property name").setId("propNameID");
@@ -522,6 +522,8 @@ public class ResultPanelNew extends Panel {
 						if (!collectionsForADocument.stream().anyMatch(var -> var.getCollectionID()
 								.equalsIgnoreCase(collectionTagRowItem.getCollectionID()))) {
 							collectionsForADocument.add(collectionTagRowItem);
+							collectionTagRowItem.setFrequency(1);
+						
 
 						} else {
 							collectionsForADocument.stream()
@@ -564,6 +566,7 @@ public class ResultPanelNew extends Panel {
 							tagTagRowItem.setTreePath(oneCollection.getTagDefinitionPath());
 							tagTagRowItem.setPhrase(tagQueryResultRow.getPhrase());
 							tagTagRowItem.setQueryResultRow(tagQueryResultRow);
+					
 							tagsForACollection.add(tagTagRowItem);
 						}
 					}

@@ -128,7 +128,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		queryResultsPanel.setHeight("230px");
 		resultsTreeGrid= new TreeGrid<>();
 		selectedItemsTreeGrid = new TreeGrid<TagRowItem>();
-		selectedItemsTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("tag");
+		selectedItemsTreeGrid.addColumn(TagRowItem::getShortenTreePath).setCaption("tag");
 		selectedItemsTreeGrid.addColumn(TagRowItem::getPhrase).setCaption("phrase");
 		selectedItemsTreeGrid.addColumn(TagRowItem::getPropertyName).setCaption("property");
 	
@@ -141,13 +141,13 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		selectedItemsPanel.setCaption("selected items for the kwic visualization");
 
 		selectedItemsPanel.setWidth("100%");
-		selectedItemsPanel.setHeight("230px");
+		selectedItemsPanel.setHeight("250px");
 		
 		selectedItemsPanel.setContent(selectedItemsTreeGrid);
 		leftSide.addComponent(comboBox);
 		leftSide.addComponent(queryResultsPanel);
 		leftSide.addComponent(selectedItemsPanel);
-		leftSide.addComponent(selectedItemsTreeGrid);
+		//leftSide.addComponent(selectedItemsTreeGrid);
 		
 		mainContentPanel.addComponents(leftSide, rightSide);
 		float left= 0.4f;
@@ -373,7 +373,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeGrid<TagRowItem> addDataTagStyle(TreeData<TagRowItem> treeData) {
 		TreeGrid<TagRowItem> selectedTreeGrid = new TreeGrid<>();
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(treeData);
-		selectedTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("Tag").setId("tagID");
+		selectedTreeGrid.addColumn(TagRowItem::getShortenTreePath).setCaption("Tag").setId("tagID");
 		selectedTreeGrid.getColumn("tagID").setExpandRatio(7);
 		selectedTreeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		selectedTreeGrid.getColumn("freqID").setExpandRatio(1);
@@ -387,7 +387,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeGrid<TagRowItem> addDataPhraseStyle(TreeData<TagRowItem> treeData) {
 		TreeGrid<TagRowItem> selectedTreeGrid = new TreeGrid<>();
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(treeData);
-		selectedTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("Phrase").setId("phraseID");
+		selectedTreeGrid.addColumn(TagRowItem::getShortenTreePath).setCaption("Phrase").setId("phraseID");
 		selectedTreeGrid.getColumn("phraseID").setExpandRatio(7);
 		selectedTreeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		selectedTreeGrid.getColumn("freqID").setExpandRatio(1);
@@ -400,7 +400,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeGrid<TagRowItem> addDataPropertyStyle(TreeData<TagRowItem> treeData) {
 		TreeGrid<TagRowItem> selectedTreeGrid = new TreeGrid<>();
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(treeData);
-		selectedTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("Tag").setId("tagID");
+		selectedTreeGrid.addColumn(TagRowItem::getShortenTreePath).setCaption("Tag").setId("tagID");
 		selectedTreeGrid.getColumn("tagID").setExpandRatio(3);
 		selectedTreeGrid.addColumn(TagRowItem::getPropertyName).setCaption("Property name").setId("propNameID");
 		selectedTreeGrid.getColumn("propNameID").setExpandRatio(3);
