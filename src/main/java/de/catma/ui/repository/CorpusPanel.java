@@ -419,7 +419,7 @@ public class CorpusPanel extends VerticalLayout {
 										
 										if (corpusMarkupCollectionUploadMonitorFuture == null) {
 											corpusMarkupCollectionUploadMonitorFuture = 
-													((CatmaApplication)UI.getCurrent()).getBackgroundService().scheduleWithFixedDelay(
+													((CatmaApplication)UI.getCurrent()).accuireBackgroundService().scheduleWithFixedDelay(
 														corpusMarkupCollectionUploadMonitor,
 														5,
 														10,
@@ -467,7 +467,7 @@ public class CorpusPanel extends VerticalLayout {
 			@Override
 			public InputStream getStream() {
 				try {
-					File file = new File(((CatmaApplication)UI.getCurrent()).getTempDirectory() 
+					File file = new File(((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder() 
 							+ "/" +filename); //$NON-NLS-1$
 					try (FileOutputStream corpusOut = new FileOutputStream(file)) {
 						

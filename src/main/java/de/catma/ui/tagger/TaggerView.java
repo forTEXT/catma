@@ -39,6 +39,7 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -119,21 +120,18 @@ public class TaggerView extends HorizontalLayout
 	private ResourcePanel resourcePanel;
 	private AnnotationPanel annotationPanel;
 	private UserMarkupCollectionManager userMarkupCollectionManager;
-	private EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 	private TaggerContextMenu taggerContextMenu;
 	private ErrorHandler errorHandler;
 	
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, Repository project, 
-			PropertyChangeListener sourceDocChangedListener,
-			EventBus eventBus) {
-		this.taggerID = taggerID;
+			PropertyChangeListener sourceDocChangedListener){
 		this.tagManager = project.getTagManager();
 		this.project = project;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
-		this.eventBus = eventBus;
 		
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 		this.userMarkupCollectionManager = new UserMarkupCollectionManager(project);

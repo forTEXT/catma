@@ -22,7 +22,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
@@ -30,7 +30,7 @@ import de.catma.tag.TagLibrary;
 
 public class GitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitServerManager remoteGitServerManager;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
 
 	private static final String MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT = "%s_markupcollection";
 
@@ -39,7 +39,7 @@ public class GitMarkupCollectionHandler {
 	}
 
 	public GitMarkupCollectionHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-									  IRemoteGitServerManager remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 	}
@@ -75,7 +75,7 @@ public class GitMarkupCollectionHandler {
 					markupCollectionId
 			);
 
-			IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
+			CreateRepositoryResponse createRepositoryResponse =
 					this.remoteGitServerManager.createRepository(
 							markupCollectionRepoName, markupCollectionRepoName, projectId
 					);

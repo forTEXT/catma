@@ -27,6 +27,7 @@ import com.vaadin.ui.TabSheet.CloseHandler;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.modules.main.login.AuthenticationDialog;
 import de.catma.ui.tabbedview.TabbedView;
 
 public class RepositoryManagerView extends TabbedView implements CloseHandler {

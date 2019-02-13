@@ -95,7 +95,7 @@
 		<dependency org="org.awaitility" name="awaitility" rev="3.0.0"/>
 
 		<!-- https://mvnrepository.com/artifact/com.jsoniter/jsoniter -->
-		<dependency org="com.jsoniter" name="jsoniter" rev="0.9.15"/>
+		<dependency org="com.jsoniter" name="jsoniter" rev="0.9.23"/>
 
 		<!-- https://mvnrepository.com/artifact/org.javassist/javassist -->
 		<dependency org="org.javassist" name="javassist" rev="3.21.0-GA"/>
@@ -112,6 +112,26 @@
 		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 		<dependency org="commons-io" name="commons-io" rev="2.6"/>
 		
+		<!-- https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-json-jackson -->
+		<dependency org="org.glassfish.jersey.media" name="jersey-media-json-jackson" rev="2.27"/>
+		
+		<dependency org="com.hazelcast" name="hazelcast" rev="3.11.1"/>
+		
+		<!-- https://mvnrepository.com/artifact/com.hazelcast/hazelcast-client -->
+		<dependency org="com.hazelcast" name="hazelcast-client" rev="3.11.1"/>
+		
+		<!-- https://mvnrepository.com/artifact/javax.cache/cache-api -->
+		<dependency org="javax.cache" name="cache-api" rev="1.1.0"/>
+		
+		<!-- https://mvnrepository.com/artifact/com.google.inject/guice -->
+		<dependency org="com.google.inject" name="guice" rev="4.2.2"/>
+
+		<!-- https://mvnrepository.com/artifact/com.google.inject.extensions/guice-servlet -->
+		<dependency org="com.google.inject.extensions" name="guice-servlet" rev="4.2.2"/>
+
+		<!-- https://mvnrepository.com/artifact/com.google.inject.extensions/guice-throwingproviders -->
+		<dependency org="com.google.inject.extensions" name="guice-throwingproviders" rev="4.2.2"/>
+
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>

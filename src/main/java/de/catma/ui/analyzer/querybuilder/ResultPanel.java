@@ -154,7 +154,7 @@ public class ResultPanel extends VerticalLayout {
 		QueryJob job = new QueryJob(
 				query,
 				queryOptions);
-		((BackgroundServiceProvider)UI.getCurrent()).getBackgroundService().submit(
+		((BackgroundServiceProvider)UI.getCurrent()).accuireBackgroundService().submit(
 				job, 
 				new ExecutionListener<QueryResult>() {
 				public void done(QueryResult result) {

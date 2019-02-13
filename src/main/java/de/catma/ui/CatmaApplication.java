@@ -18,36 +18,34 @@
  */
 package de.catma.ui;
 
-import java.io.File;
+import java.io.Closeable;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.ref.WeakReference;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinService;
-import com.vaadin.server.VaadinServlet;
-import com.vaadin.server.VaadinServletService;
 import com.vaadin.server.VaadinSession;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Image;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Link;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.JavaScript;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 
@@ -64,296 +62,117 @@ import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
-import de.catma.project.ProjectManager;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
-import de.catma.repository.LoginToken;
-import de.catma.repository.db.maintenance.UserManager;
-import de.catma.repository.git.GitProjectManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.analyzer.QueryOptionsProvider;
-import de.catma.ui.authentication.AuthenticationHandler;
 import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.component.IconButton;
-import de.catma.ui.component.LabelButton;
+import de.catma.ui.events.CloseableEvent;
+import de.catma.ui.events.TokenInvalidEvent;
+import de.catma.ui.events.TokenValidEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
-import de.catma.ui.layout.FlexLayout.AlignItems;
-import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.login.InitializationService;
+import de.catma.ui.login.LoginService;
 import de.catma.ui.modules.main.ErrorHandler;
-import de.catma.ui.modules.main.MainView;
+import de.catma.ui.modules.main.signup.CreateUserDialog;
+import de.catma.ui.modules.main.signup.SignupTokenManager;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.ui.util.Version;
-import de.catma.user.User;
 
 @Theme("catma")
 @PreserveOnRefresh
 public class CatmaApplication extends UI implements 
-	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, LoginToken, ParameterProvider, FocusHandler {
+	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, ParameterProvider, FocusHandler {
 
-	private static final String WEB_INF_DIR = "WEB-INF"; //$NON-NLS-1$
-
-	private String tempDirectory = null;
-	private BackgroundService backgroundService;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String, String[]> parameters = new HashMap<String, String[]>();
-	private boolean repositoryOpened = false;
+		
+	private final List<WeakReference<Closeable>> closeListener = Lists.newArrayList();
 	
-	private UserManager userManager = new UserManager();
-	private Object user;
-	
-	private VerticalLayout mainLayout;
-	private VerticalLayout contentPanel;
+	private final Injector injector = VaadinSession.getCurrent().getAttribute(Injector.class);
 
-	private HorizontalLayout menuLayout;
-	
-	private Button btHelp;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 
-	private ThemeResource logoResource;
+	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
 
-	private UIHelpWindow uiHelpWindow = new UIHelpWindow();
-//	private Button btloginLogout;
-	
-	private final EventBus eventBus = new EventBus();
-	private MainView mainView;
+	private final Class<? extends Annotation> loginType; 
+	private final Class<? extends Annotation> initType;
+	 
+	private final LoginService loginservice;
+	private final InitializationService initService;
+
+//	private MainView mainView;
 	
 //	private final MainView mainView = new MainView(new EventBus());
 
-	public CatmaApplication() {
+	public CatmaApplication() throws IOException {
+		eventBus.register(this);
+			try {
+				loginType = 
+							(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.LoginType.getValue());
+				initType = 
+						(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.InitType.getValue());
+				loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
+				initService = injector.getInstance(Key.get(InitializationService.class, initType));
+			} catch (ClassNotFoundException e) {
+				throw new IOException("Runtime configuration error", e);
+			}
 	}
 
 	@Override
 	protected void init(VaadinRequest request) {
+		
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
 		Page.getCurrent().setTitle(Version.LATEST.toString()); //$NON-NLS-1$
-
-		mainLayout = new VerticalLayout();
-		mainLayout.setSizeFull();
-		mainLayout.setAlignItems(AlignItems.CENTER);
-		mainLayout.addStyleName("home");
 		
-
-		menuLayout = new HorizontalLayout();
-		menuLayout.setWidth("100%");
-		menuLayout.setJustifyContent(JustifyContent.FLEX_END);
-		menuLayout.setAlignItems(AlignItems.CENTER);
-		menuLayout.addStyleName("home__menu");
-		mainLayout.addComponent(menuLayout);
-		menuLayout.setWidth("100%"); //$NON-NLS-1$
-
-//		logoResource = new ThemeResource("catma-logo.png"); //$NON-NLS-1$
-//		Link logoImage = new Link(null, new ExternalResource("http://www.catma.de")); //$NON-NLS-1$
-//		logoImage.setIcon(logoResource);
-//		logoImage.setTargetName("_blank"); //$NON-NLS-1$
-//		menuLayout.addComponent(logoImage);
-		
-		
-//		Link latestFeaturesLink = new Link(Messages.getString("CatmaApplication.latestFeatures"), //$NON-NLS-1$
-//				new ExternalResource("http://www.catma.de/latestfeatures")); //$NON-NLS-1$
-//		latestFeaturesLink.setTargetName("_blank"); //$NON-NLS-1$
-//		menuLayout.addComponent(latestFeaturesLink);
-//		menuLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
-//		menuLayout.setExpandRatio(latestFeaturesLink, 1.0f);
-
-		Link aboutLink = new Link(Messages.getString("CatmaApplication.about"), //$NON-NLS-1$
-				new ExternalResource("http://www.catma.de")); //$NON-NLS-1$
-		aboutLink.setTargetName("_blank"); //$NON-NLS-1$
-		menuLayout.addComponent(aboutLink);
-
-		Link termsOfUseLink = new Link(Messages.getString("CatmaApplication.termsOfUse"), //$NON-NLS-1$
-				new ExternalResource("http://www.catma.de/termsofuse")); //$NON-NLS-1$
-		termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
-		menuLayout.addComponent(termsOfUseLink);
-
-		Link imprintLink = new Link("Imprint",
-				new ExternalResource("http://www.catma.de/documentation/imprint"));
-		imprintLink.setTargetName("_blank"); 
-		menuLayout.addComponent(imprintLink);
-
-		Link privacyLink = new Link("Privacy Statement",
-				new ExternalResource("http://catma.de/documentation/privacy/")); 
-		privacyLink.setTargetName("_blank");
-		menuLayout.addComponent(privacyLink);
-		
-		Link manualLink = new Link(Messages.getString("CatmaApplication.Manual"), //$NON-NLS-1$
-				new ExternalResource(request.getContextPath() + "/manual/")); //$NON-NLS-1$
-		manualLink.setTargetName("_blank"); //$NON-NLS-1$
-		menuLayout.addComponent(manualLink);
-
-		Link helpLink = new Link(Messages.getString("CatmaApplication.Helpdesk"), //$NON-NLS-1$
-				new ExternalResource("http://www.catma.de/helpdesk/")); //$NON-NLS-1$
-		helpLink.setTargetName("_blank"); //$NON-NLS-1$
-		menuLayout.addComponent(helpLink);
-		helpLink.setVisible(false);
-
-		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE);
-
-		menuLayout.addComponent(btHelp);
-
-		btHelp.addClickListener(new ClickListener() {
-
-			public void buttonClick(ClickEvent event) {
-
-				if (uiHelpWindow.getParent() == null) {
-					UI.getCurrent().addWindow(uiHelpWindow);
-				} else {
-					UI.getCurrent().removeWindow(uiHelpWindow);
-				}
-
-			}
-		});
-
-//		btloginLogout = new Button(Messages.getString("CatmaApplication.signIn"), //$NON-NLS-1$
-//				event -> handleLoginLogoutEvent(event));
-//		btloginLogout.setStyleName(BaseTheme.BUTTON_LINK);
-//		btloginLogout.addStyleName("application-loginlink"); //$NON-NLS-1$
-//		menuLayout.addComponent(btloginLogout);
-//		menuLayout.setComponentAlignment(btloginLogout, Alignment.TOP_RIGHT);
-
-		contentPanel = new VerticalLayout();
-		contentPanel.setHeight("100%"); //$NON-NLS-1$
-		contentPanel.addStyleName("home__content"); //$NON-NLS-1$
-	
-		logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$	
-		contentPanel.addComponent(new Image(null,logoResource));		
-		
-		LabelButton btn_signup = new LabelButton("Sign up");
-		LabelButton btn_login = new LabelButton("Login",event -> handleLoginLogoutEvent(event));
-		LabelButton btn_newsletter = new LabelButton("Newsletter");
-
-		HorizontalLayout buttonPanel = new HorizontalLayout(btn_signup,btn_login,btn_newsletter);
-		buttonPanel.addStyleName("home__content__btns");
-		buttonPanel.setJustifyContent(JustifyContent.CENTER);
-		contentPanel.addComponent(buttonPanel);
-		mainLayout.addComponent(contentPanel);
-		
-		setContent(mainLayout);
-		
-
 		try {
+			Component component = initService.newEntryPage(loginservice);
+			setContent(component);
 
 
-//			menu = menuFactory.createMenu(menuLayout, contentPanel,
-//					new MenuFactory.MenuEntryDefinition(Messages.getString("CatmaApplication.repositoryManager"), //$NON-NLS-1$
-//							repositoryManagerView),
-//					new MenuFactory.MenuEntryDefinition(Messages.getString("CatmaApplication.tagManager"), //$NON-NLS-1$
-//							tagManagerView),
-//					new MenuFactory.MenuEntryDefinition(Messages.getString("CatmaApplication.tagger"), //$NON-NLS-1$
-//							taggerManagerView),
-//					new MenuFactory.MenuEntryDefinition(Messages.getString("CatmaApplication.analyzer"), //$NON-NLS-1$
-//							analyzerManagerView),
-//					new MenuFactory.MenuEntryDefinition(Messages.getString("CatmaApplication.visualizer"), //$NON-NLS-1$
-//							visualizationManagerView));
-//			addPropertyChangeListener(CatmaApplicationEvent.userChange, menu.userChangeListener);
+	        // implement a custom resize propagation for all Layouts including CSSLayouts
+	        JavaScript.getCurrent().addFunction("browserWindowResized", e -> {
+	        	this.markAsDirtyRecursive();
+	        });
+	        Page.getCurrent().getJavaScript().execute(
+	        		"var timeout = null;"
+	        				+ "window.onresize = function() { "
+	        				+ "  if (timeout != null) clearTimeout(timeout); "
+	        				+ "  timeout = setTimeout(function() {"
+	        				+ "    browserWindowResized(); "
+	        				+ "  }, 250);"
+	        				+ "}");
+	                
 
-
-//	TODO: marco fragen !!!!		if (getParameter(Parameter.USER_IDENTIFIER) != null) {
-//				btloginLogout.click();
-//			}
-
-			setPollInterval(1000);
-			
-//TODO:
-//			if ((getParameter(Parameter.AUTOLOGIN) != null) && (getUser() == null)) {
-//				getPage().setLocation(repositoryManagerView.createAuthenticationDialog().createLogInClick(this,
-//						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
-//						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
-//						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
-//						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(), URLEncoder.encode("/", "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
-//			}
-//
-//			if (VaadinSession.getCurrent().getAttribute(SessionKey.USER.name()) != null) {
-//				logger.info("auto opening repo for: " + VaadinSession.getCurrent().getAttribute(SessionKey.USER.name()));
-//				repositoryManagerView.openFirstRepository(this, (Map<String, String>) VaadinSession.getCurrent().getAttribute(SessionKey.USER.name()));
-////				menu.executeEntry(repositoryManagerView);// TODO:
-//			}
-//			else {
-//				logger.info("SessionKey.USER not set");
-//			}
-			
-		} catch (Exception e) {
-			showAndLogError(Messages.getString("CatmaApplication.errorSystemNotInitialized"), e); //$NON-NLS-1$
+		} catch (IOException e) {
+			showAndLogError("error creating landing page",e);			
 		}
 
+		eventBus.post(new RouteToDashboardEvent());
+
+		// A fresh UI and session doesn't have a request handler registered yet.
+		// we need to verify tokens here too.
+		
+		if(signupTokenManager.parseUri(request.getPathInfo())) {
+			EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+			SignupTokenManager tokenManager = new SignupTokenManager();
+			tokenManager.handleVerify( request.getParameter("token"), eventBus);
+		}
+		
+//		SignupTokenManager.parseToken(request.getPathInfo(), request.getParameter("token"));
 	}
-
-	private void handleLoginLogoutEvent(ClickEvent event) {
-		
-		String scheme = VaadinServletService.getCurrentServletRequest().getScheme();		
-		String serverName = VaadinServletService.getCurrentServletRequest().getServerName();		
-		Integer port = VaadinServletService.getCurrentServletRequest().getServerPort();
-		String contextPath = VaadinService.getCurrentRequest().getContextPath();
-		
-		final String afterLogoutRedirectURL = 
-				String.format("%s://%s%s%s", scheme, serverName, port == 80 ? "" : ":"+port, contextPath); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-		
-		if (this.user == null) {
-			
-			AuthenticationHandler authenticationHandler = 
-					new AuthenticationHandler();
-			
-			authenticationHandler.authenticate(userIdentification -> {
-				try {
-					
-					this.user = userIdentification;
-					userManager.login(this);
-
-					backgroundService = new UIBackgroundService(true);
-
-					initTempDirectory();
-					
-//	NEEE				btloginLogout.setHtmlContentAllowed(true);
-					
-					ProjectManager projectManager = 
-						new GitProjectManager(
-							RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
-							userIdentification,
-							backgroundService);
-					
-					User user = projectManager.getUser();
-										
-					//TODO:
-//					if (user.isGuest()) {
-//						identifier = Messages.getString("CatmaApplication.Guest"); //$NON-NLS-1$
-//					}
-
-//	NEEE				btloginLogout.setCaption(
-//						MessageFormat.format(
-//							Messages.getString("CatmaApplication.signOut"), user.getName())); //$NON-NLS-1$
-
-					// new design test
-					// TODO: set this correctly later :-)
-					mainView = new MainView(projectManager, eventBus);
-					setContent(mainView);
-					eventBus.post(new RouteToDashboardEvent());
-					
-				} catch (Exception e) {
-					showAndLogError(Messages.getString("CatmaApplication.errorSystemNotInitialized"), e); //$NON-NLS-1$
-				}
-			});
-		}
-		else {
-//	NEEE		btloginLogout.setCaption(Messages.getString("CatmaApplication.signIn")); //$NON-NLS-1$
-			
-			logger.info("closing session and redirecting to " + afterLogoutRedirectURL);
-			Page.getCurrent().setLocation(afterLogoutRedirectURL);
-			VaadinSession.getCurrent().close();
-		}
-
-		
-		
-
-
-	}
-
+	
+//			logger.info("closing session and redirecting to " + afterLogoutRedirectURL);
+//			Page.getCurrent().setLocation(afterLogoutRedirectURL);
+//			VaadinSession.getCurrent().close();
+//	
 	private void storeParameters(Map<String, String[]> parameters) {
 		this.parameters.putAll(parameters);
 	}
@@ -388,24 +207,7 @@ public class CatmaApplication extends UI implements
 		return parameters.get(key);
 	}
 
-	private void initTempDirectory() throws IOException {
-		String tempDirProp = RepositoryPropertyKey.TempDir.getValue();
-		File tempDir = new File(tempDirProp);
-
-		if (!tempDir.isAbsolute()) {
-			this.tempDirectory = VaadinServlet.getCurrent().getServletContext().getRealPath(// TODO:
-																							// check
-					WEB_INF_DIR + System.getProperty("file.separator") //$NON-NLS-1$
-							+ tempDirProp);
-		} else {
-			this.tempDirectory = tempDirProp;
-		}
-
-		tempDir = new File(this.tempDirectory);
-		if ((!tempDir.exists() && !tempDir.mkdirs())) {
-			throw new IOException("could not create temporary directory: " + this.tempDirectory); //$NON-NLS-1$
-		}
-	}
+	
 	@Deprecated
 	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener) {
 		
@@ -445,17 +247,17 @@ public class CatmaApplication extends UI implements
 		return null;
 	}
 
-	public String getTempDirectory() {
-		return tempDirectory;
+	public String accquirePersonalTempFolder() throws IOException {
+		return initService.accquirePersonalTempFolder();
 	}
 
-	public BackgroundService getBackgroundService() {
-		return backgroundService;
+	public BackgroundService accuireBackgroundService() {
+		return initService.accuireBackgroundService();
 	}
 
 	public <T> void submit(String caption, final ProgressCallable<T> callable, final ExecutionListener<T> listener) {
 		logger.info("submitting job '" + caption + "' " + callable); //$NON-NLS-1$ //$NON-NLS-2$
-		getBackgroundService().submit(callable, new ExecutionListener<T>() {
+		accuireBackgroundService().submit(callable, new ExecutionListener<T>() {
 			public void done(T result) {
 				listener.done(result);
 			};
@@ -499,27 +301,33 @@ public class CatmaApplication extends UI implements
 
 	@Override
 	public void close() {
-		VaadinSession.getCurrent().setAttribute("USER", null);
-
-		logger.info("application for user" + getUser() + " has been closed"); //$NON-NLS-1$ //$NON-NLS-2$
+		loginservice.getAPI().ifPresent((api) -> 
+			logger.info("application for user" + api.getUsername() + " has been closed") );
 		
-		if (mainView != null) {
-			mainView.close();
+		for (WeakReference<Closeable> weakReference : closeListener) {
+			Closeable ref = weakReference.get();
+			if (ref != null) {
+				try {
+					ref.close();
+				} catch (IOException e) {
+					logger.log(Level.INFO,"couldn't cleanup resource",e);
+				}
+			}
 		}
 		
-		if (repositoryOpened) {
-			userManager.logout(this);
-			repositoryOpened = false;
-		}
-		if (backgroundService != null) {
-			backgroundService.shutdown();
-		}
+		initService.shutdown();
 		super.close();
 	}
 
 	@Override
 	public void showAndLogError(String message, Throwable e) {
-		logger.log(Level.SEVERE, "[" + getUser() + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
+		Optional<IRemoteGitManagerRestricted> api;
+		api = loginservice.getAPI();
+		
+		if(api.isPresent()){
+			logger.log(Level.SEVERE, "[" + api.get().getUsername() + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
+			
+		}
 
 		if (message == null) {
 			message = Messages.getString("CatmaApplication.internalError"); //$NON-NLS-1$
@@ -547,11 +355,6 @@ public class CatmaApplication extends UI implements
 //		menu.executeEntry(visualizationManagerView);
 //		visualizationManagerView.addVega(queryResult, queryOptionsProvider);
 	}
-
-	@Override
-	public Object getUser() {
-		return user;
-	}
 	
 	@Override
 	public void focusDeferred(Focusable focusable) {
@@ -566,7 +369,26 @@ public class CatmaApplication extends UI implements
 
 	public ScheduledFuture<?> schedule(Runnable command,
 			long delay, TimeUnit unit) {
-		return backgroundService.schedule(command, delay, unit);
+		return accuireBackgroundService().schedule(command, delay, unit);
 	}
 	
+	@Subscribe
+	public void handleTokenValid(TokenValidEvent tokenValidEvent){
+		getUI().access(() -> {
+			CreateUserDialog createUserDialog = new CreateUserDialog("Create User", tokenValidEvent.getSignupToken());
+			createUserDialog.show();
+		});
+	}
+	
+	@Subscribe
+	public void handleTokenValid(TokenInvalidEvent tokenInvalidEvent){
+		getUI().access(() -> {
+			Notification.show(tokenInvalidEvent.getReason(), Type.WARNING_MESSAGE);
+		});
+	}
+	
+	@Subscribe
+	public void handleClosableResources(CloseableEvent closeableEvent ){
+		closeListener.add(new WeakReference<Closeable>(closeableEvent.getCloseable()));
+	}
 }

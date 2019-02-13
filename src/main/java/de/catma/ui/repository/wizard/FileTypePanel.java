@@ -173,7 +173,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 				|| inputFileURI.toURL().getProtocol().toLowerCase().equals("https")) { //$NON-NLS-1$
 			
 			final String destinationFileUri = repository.getFileURL(
-					fileID, ((CatmaApplication)UI.getCurrent()).getTempDirectory() + "/"); //$NON-NLS-1$
+					fileID, ((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder() + "/"); //$NON-NLS-1$
 			
 			return new HttpProtocolHandler(
 					inputFileURI, destinationFileUri);
@@ -210,7 +210,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			ZipFile zipFile = new ZipFile(uri.getPath());
 			Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
 			
-			String tempDir = ((CatmaApplication)UI.getCurrent()).getTempDirectory();
+			String tempDir = ((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
 			IDGenerator idGenerator = new IDGenerator();
 			
 			while (entries.hasMoreElements()) {

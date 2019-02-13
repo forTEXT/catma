@@ -994,11 +994,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						}
 					}
 					else {
-						logger.warning(
-							"[" + ((CatmaApplication)UI.getCurrent()).getUser()  //$NON-NLS-1$
-							+ "] could not find UserMarkupCollection "  //$NON-NLS-1$
-							+ umc + "#" + umc.getId()  //$NON-NLS-1$
-							+ " in the MarkupCollectionsPanel.Tree!"); //$NON-NLS-1$
+//		TODO: shouldn't this class be removed anyways?
+//						logger.warning(
+//							"[" + ((CatmaApplication)UI.getCurrent()).getUser()  //$NON-NLS-1$
+//							+ "] could not find UserMarkupCollection "  //$NON-NLS-1$
+//							+ umc + "#" + umc.getId()  //$NON-NLS-1$
+//							+ " in the MarkupCollectionsPanel.Tree!"); //$NON-NLS-1$
 					}
 				}
 			}

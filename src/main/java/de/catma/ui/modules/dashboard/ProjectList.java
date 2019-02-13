@@ -11,6 +11,7 @@ import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.Registration;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
@@ -34,15 +35,14 @@ public class ProjectList extends VerticalLayout implements
 
     private final ProjectManager projectManager;
     private final ErrorHandler errorLogger;
-	private final EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 	private final Comparator<ProjectReference> sortByNameAsc = (ref1,ref2) -> ref1.getName().compareTo(ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = (ref1,ref2) -> ref2.getName().compareTo(ref1.getName());
 	
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 
-    ProjectList(ProjectManager projectManager, EventBus eventBus) {
+    ProjectList(ProjectManager projectManager){ 
         this.errorLogger = (ErrorHandler)UI.getCurrent();
-        this.eventBus = eventBus;
         this.projectManager = projectManager;
         initComponents();
         eventBus.register(this);
@@ -70,10 +70,10 @@ public class ProjectList extends VerticalLayout implements
 
     private void rebuild() {
         projectsLayout.removeAllComponents();
-        projectsLayout.addComponent(new CreateProjectCard(projectManager, eventBus));
+        projectsLayout.addComponent(new CreateProjectCard(projectManager));
         this.dataProvider.fetch(new Query<>())
         		.sorted(selectedSortOrder)
-        		.map((prj) -> new ProjectCard(prj, projectManager, eventBus))
+        		.map((prj) -> new ProjectCard(prj, projectManager))
                 .forEach(projectsLayout::addComponent);
     }
 

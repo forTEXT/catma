@@ -48,6 +48,7 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
 import de.catma.ui.ParameterComponentValue;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.modules.main.login.AuthenticationDialog;
 import de.catma.ui.tabbedview.TabComponent;
 import de.catma.user.UserProperty;
 import de.catma.util.IDGenerator;
@@ -180,7 +181,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		authDialog.show();
 	}
 	
-	void open(
+	public void open(
 			CatmaApplication catmaApplication, // needs to be passed in, as getUI() may not be initialized yet 
 			RepositoryReference repositoryReference, 
 			Map<String,String> userIdentification) throws Exception {
@@ -208,7 +209,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 
 	}
 
-	void open(
+	public void open(
 			CatmaApplication catmaApplication, // needs to be passed in, as getUI() may not be initialized yet 
 			Map<String,String> userIdentification) throws Exception {
 
@@ -288,16 +289,20 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		return createAuthenticationDialog(repositoryReference);
 	}
 	
+	//TODO: should be removed!!
+	//FIXME: please remove this !
+	@Deprecated
 	private AuthenticationDialog createAuthenticationDialog(RepositoryReference repositoryReference) {
 		String baseURL = 
 				RepositoryPropertyKey.BaseURL.getValue(
 					RepositoryPropertyKey.BaseURL.getDefaultValue());
-
-		return new AuthenticationDialog(
-						Messages.getString("RepositoryListView.authenticateYourself"),  //$NON-NLS-1$
-						repositoryReference, 
-						this,
-						baseURL);
+		return null; 
+		
+//		return new AuthenticationDialog(
+//						Messages.getString("RepositoryListView.authenticateYourself"),  //$NON-NLS-1$
+//						repositoryReference, 
+//						this,
+//						baseURL);
 	}
 
 }
