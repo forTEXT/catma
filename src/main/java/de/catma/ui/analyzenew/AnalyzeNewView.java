@@ -14,6 +14,7 @@ import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.TreeData;
 import com.vaadin.event.MouseEvents;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -323,6 +324,14 @@ public class AnalyzeNewView extends VerticalLayout
 		distBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		distBt.setWidth("100%");
 		distBt.setHeight("100%");
+		distBt.setDescription(
+			    "<h2>"+
+			    	    "A richtext tooltip</h2>"+
+			    	    "<ul>"+
+			    	    "  <li>Use rich formatting with HTML</li>"+
+			    	    "  <li>Include images from themes</li>"+
+			    	    "  <li>etc.</li>"+
+			    	    "</ul>",ContentMode.HTML);
 
 		wordCloudBt = new Button("WORDCLOUD", VaadinIcons.CLOUD);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);

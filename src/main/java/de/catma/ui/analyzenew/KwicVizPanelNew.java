@@ -20,6 +20,7 @@ import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ClientConnector.AttachEvent;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
@@ -186,6 +187,25 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				//}
 			}
 		});
+		
+		
+		
+
+	/*
+	
+	setDescription(
+		    "<h2>"+
+		    	    "A richtext tooltip</h2>"+
+		    	    "<ul>"+
+		    	    "  <li>Use rich formatting with HTML</li>"+
+		    	    "  <li>Include images from themes</li>"+
+		    	    "  <li>etc.</li>"+
+		    	    "</ul>",ContentMode.HTML);
+	*/
+		
+		
+		
+		
 	}
 	
 	private void updateKwicView() {
@@ -375,11 +395,13 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(treeData);
 		selectedTreeGrid.addColumn(TagRowItem::getShortenTreePath).setCaption("Tag").setId("tagID");
 		selectedTreeGrid.getColumn("tagID").setExpandRatio(7);
+		selectedTreeGrid.getColumn("tagID").setDescriptionGenerator(e-> e.getTreePath() , ContentMode.HTML);
 		selectedTreeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		selectedTreeGrid.getColumn("freqID").setExpandRatio(1);
 		dataProvider.refreshAll();
 		selectedTreeGrid.setDataProvider(dataProvider);
 		selectedTreeGrid.setWidth("100%");
+	
 		return selectedTreeGrid;
 	}
 

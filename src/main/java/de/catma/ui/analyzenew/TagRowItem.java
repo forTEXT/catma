@@ -91,12 +91,9 @@ public class TagRowItem {
 	public Integer getFrequency() {
 		return frequency;
 	}
-	public void setFrequency(int frequency) {
-		
-		
+	public void setFrequency(int frequency) {	
 		this.frequency = new Integer(frequency);
 	}
-
 	public String getCollectionName() {
 		return collectionName;
 	}
@@ -111,13 +108,10 @@ public class TagRowItem {
 	}
 	public boolean setFrequencyOneUp() {
 		if(frequency==null) {
-			frequency= new Integer(1);
-			
+			frequency= new Integer(1);	
 		}else {
 			frequency=frequency.intValue()+1;
-					
 		}
-	
 		return true;
 	}
 
