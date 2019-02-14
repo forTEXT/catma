@@ -736,6 +736,7 @@ public class ResultPanelNew extends Panel {
 		String docName = retrieveDocumentName(repository, row.getSourceDocumentId());
 		if(document.getSourceDocName().equalsIgnoreCase(docName)) {
 			TagRowItem phraseItem= new TagRowItem();
+			phraseItem.setSourceDocName(docName);
 			phraseItem.setPhrase(row.getPhrase());
 			phraseItem.setTreePath(row.getPhrase());
 			phraseItem.setQueryResultRow(row);
