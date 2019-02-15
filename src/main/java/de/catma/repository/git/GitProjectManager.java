@@ -9,15 +9,13 @@ import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-
 import de.catma.Pager;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.Repository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
@@ -28,7 +26,6 @@ import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import elemental.json.Json;
 import elemental.json.JsonObject;
-import elemental.json.JsonValue;
 
 public class GitProjectManager implements ProjectManager {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -127,6 +124,11 @@ public class GitProjectManager implements ProjectManager {
 		}
 
 		this.remoteGitServerManager.deleteGroup(projectId);
+		try {
+			new GraphProjectDeletionHandler(user).deleteProject(projectId);
+		} catch (Exception e) {
+			throw new IOException(e);
+		};
 	}
 	
 	@Override

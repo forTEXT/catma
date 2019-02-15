@@ -47,16 +47,11 @@ public class UserMarkupCollectionExport extends ServerResource {
 					umcId,  
 					null, //TODO: revision hash might be needed
 					new ContentInfoSet(),
-					null, 
 					null);
 			
 			for (SourceDocument sd : repo.getSourceDocuments()) {
 				if (sd.getUserMarkupCollectionRefs().contains(umcRef)) {
 					UserMarkupCollection umc = repo.getUserMarkupCollection(umcRef);
-					umcRef.setSourceDocumentId(sd.getID());
-					umcRef.setSourceDocumentTitle(
-						sd.getSourceContentHandler().getSourceDocumentInfo()
-						.getContentInfoSet().getTitle());
 					TeiUserMarkupCollectionSerializationHandler handler =
 							new TeiUserMarkupCollectionSerializationHandler(
 									repo.getTagManager(), false);

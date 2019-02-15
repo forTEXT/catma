@@ -264,8 +264,17 @@ public class TaggerView extends HorizontalLayout
 					// noop
 				}
 				else if (newValue == null) { //removed
-					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
-					//TODO: probably a noop since annotations get deleted
+					@SuppressWarnings("unchecked")
+					Pair<TagsetDefinition,TagDefinition> deleted = 
+						(Pair<TagsetDefinition, TagDefinition>) oldValue;
+					
+					for (UserMarkupCollectionReference ref : 
+						userMarkupCollectionManager.getCollections(deleted.getSecond())) {
+					
+						setAnnotationCollectionSelected(ref, false);
+						setAnnotationCollectionSelected(ref, true);
+					}
+					
 				}
 				else { //update
 					TagDefinition tag = (TagDefinition) newValue;
@@ -391,21 +400,7 @@ public class TaggerView extends HorizontalLayout
 			@Override
 			public void annotationCollectionSelected(UserMarkupCollectionReference collectionReference,
 					boolean selected) {
-				try {
-					UserMarkupCollection collection = project.getUserMarkupCollection(collectionReference);
-					if (selected) {
-						userMarkupCollectionManager.add(collection);
-						annotationPanel.addCollection(collection);
-					}
-					else {
-						userMarkupCollectionManager.remove(collectionReference.getId());
-						annotationPanel.removeCollection(collectionReference.getId());
-					}
-					
-				}
-				catch (Exception e) {
-					errorHandler.showAndLogError("Error handling Annotation Collection!", e);
-				}
+				setAnnotationCollectionSelected(collectionReference, selected);
 			}
 
 			@Override
@@ -431,6 +426,25 @@ public class TaggerView extends HorizontalLayout
 		//TODO: handle missing collection
 		taggerContextMenu.setTagSelectionListener(tag -> tagger.addTagInstanceWith(tag));
 		
+	}
+
+	private void setAnnotationCollectionSelected(UserMarkupCollectionReference collectionReference,
+			boolean selected) {
+		try {
+			UserMarkupCollection collection = project.getUserMarkupCollection(collectionReference);
+			if (selected) {
+				userMarkupCollectionManager.add(collection);
+				annotationPanel.addCollection(collection);
+			}
+			else {
+				userMarkupCollectionManager.remove(collectionReference.getId());
+				annotationPanel.removeCollection(collectionReference.getId());
+			}
+			
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Error handling Annotation Collection!", e);
+		}
 	}
 
 	private void initComponents() {

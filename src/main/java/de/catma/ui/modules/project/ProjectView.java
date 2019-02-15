@@ -144,13 +144,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		Object newValue = evt.getNewValue();
 		
 		if (oldValue == null) { // creation
-			TagsetDefinition tagset = (TagsetDefinition)newValue;
-			tagsetData.getItems().add(tagset);
 			tagsetData.refreshAll();
 		}
 		else if (newValue == null) { // removal
-			TagsetDefinition tagset = (TagsetDefinition)oldValue;
-			tagsetData.getItems().remove(tagset);
 			tagsetData.refreshAll();
 		}
 		else { // metadata update

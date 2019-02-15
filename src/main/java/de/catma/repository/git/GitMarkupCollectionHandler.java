@@ -296,7 +296,7 @@ public class GitMarkupCollectionHandler {
 
 			return  new UserMarkupCollectionReference(
 					markupCollectionId, markupCollectionRevisionHash,
-					contentInfoSet, markupCollectionHeader.getSourceDocumentId(), "TODO"); //TODO
+					contentInfoSet, markupCollectionHeader.getSourceDocumentId());
 		}
 
 	}

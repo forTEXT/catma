@@ -365,7 +365,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public void addOrUpdate(String collectionId, List<TagReference> tagReferenceList, TagLibrary tagLibrary) throws IOException {
+	public void addOrUpdate(String collectionId, Collection<TagReference> tagReferenceList, TagLibrary tagLibrary) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
@@ -408,14 +408,14 @@ public class GitProjectHandler {
 		}
 	}
 
-	public String addAndCommitChanges(UserMarkupCollectionReference collectionRef) throws IOException {
+	public String addAndCommitCollection(String collectionId, String commitMsg) throws IOException {
 		
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
-			String revisionHash = gitMarkupCollectionHandler.addAndCommitChanges(projectId, collectionRef.getId(), "Annotations changed");
+			String revisionHash = gitMarkupCollectionHandler.addAndCommitChanges(
+				projectId, collectionId, commitMsg);
 			
-			collectionRef.setRevisionHash(revisionHash);
 			
 			return revisionHash;
 		}	

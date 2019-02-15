@@ -86,7 +86,8 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        		new IDGenerator().generate(),
 	        		new ContentInfoSet(
 	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
-	        		tagManager.getTagLibrary());
+	        		tagManager.getTagLibrary(),
+	        		sourceDocumentId);
 	        
 	        scanElements(
 	        		contentBuilder, 

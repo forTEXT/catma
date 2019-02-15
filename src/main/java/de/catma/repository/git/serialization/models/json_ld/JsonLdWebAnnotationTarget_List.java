@@ -1,10 +1,10 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-
-import java.util.List;
+import java.util.Collection;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 
 /**
  * Represents a Web Annotation Data Model conformant annotation target of type 'List'.
@@ -20,7 +20,7 @@ public class JsonLdWebAnnotationTarget_List {
 		this.items = new TreeSet<>();
 	}
 
-	public JsonLdWebAnnotationTarget_List(List<TagReference> tagReferences) {
+	public JsonLdWebAnnotationTarget_List(Collection<TagReference> tagReferences) {
 		this();
 		this.items = new TreeSet<>(tagReferences.stream().map(JsonLdWebAnnotationTarget::new)
 				.collect(Collectors.toList()));

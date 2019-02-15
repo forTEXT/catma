@@ -41,7 +41,6 @@ import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
-import de.catma.repository.git.graph.GraphProjectHandler.TagInstanceSynchHandler;
 import de.catma.repository.git.graph.indexer.GraphProjectIndexer;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
@@ -314,7 +313,44 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	private void removePropertyDefinition(
-			PropertyDefinition propertyDefinition, TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+			PropertyDefinition propertyDefinition, 
+			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		
+		// remove AnnotationProperties
+		Multimap<String, TagReference> annotationIdsByCollectionId =
+			graphProjectHandler.getTagReferencesByCollectionId(
+					this.rootRevisionHash, propertyDefinition, tagManager.getTagLibrary());
+		
+		for (String collectionId : annotationIdsByCollectionId.keySet()) {
+			// TODO: check permissions if commit is allowed, if that is not the case skip git update
+			
+			Collection<TagReference> tagReferences = 
+					annotationIdsByCollectionId.get(collectionId);
+			
+			tagReferences
+			.stream()
+			.map(tagReference -> tagReference.getTagInstance())
+			.collect(Collectors.toSet())
+			.forEach(
+				tagInstance -> tagInstance.removeUserDefinedProperty(propertyDefinition.getUuid()));
+				
+			gitProjectHandler.addOrUpdate(
+				collectionId, 
+				tagReferences, 
+				tagManager.getTagLibrary());
+			
+			String collectionRevisionHash = 
+				gitProjectHandler.addAndCommitCollection(
+					collectionId,
+					String.format(
+						"Annotation Properties removed, caused by the removal of Tag Property %1$s ", 
+						propertyDefinition.getName()));
+			
+			graphProjectHandler.removeProperties(
+				this.rootRevisionHash, 
+				collectionId, collectionRevisionHash, 
+				propertyDefinition.getUuid());
+		}
 		
 		String tagsetRevision = gitProjectHandler.removePropertyDefinition(
 				propertyDefinition, tagDefinition, tagsetDefinition);
@@ -687,10 +723,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 							collectionId, 
 							umcRevisionHash,
 							new ContentInfoSet(name),
-							sourceDocument.getID(),
-							sourceDocument
-							.getSourceContentHandler().getSourceDocumentInfo()
-							.getContentInfoSet().getTitle());
+							sourceDocument.getID());
 			
 			sourceDocument.addUserMarkupCollectionReference(reference);
 			
@@ -752,6 +785,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 					tagReferences)) {
 				gitProjectHandler.addOrUpdate(
 						userMarkupCollection.getUuid(), tagReferences, tagManager.getTagLibrary());
+				//TODO: check update
 				graphProjectHandler.addTagReferences(
 						GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
 				propertyChangeSupport.firePropertyChange(
@@ -924,30 +958,6 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Deprecated
 	public User createIfAbsent(Map<String, String> userIdentification) throws IOException {
 		return null;
-	}
-
-	public void synchTagInstancesToGit() throws Exception {
-		graphProjectHandler.synchTagInstanceToGit(
-			this.rootRevisionHash,
-			new TagInstanceSynchHandler() {
-				
-				@Override
-				public void synch(String collectionId, String deletedTagInstanceId) throws Exception {
-					gitProjectHandler.removeTagInstance(collectionId, deletedTagInstanceId);
-				}
-				
-				@Override
-				public void synch(String collectionId, List<TagReference> tagReferences) throws Exception {
-					gitProjectHandler.addOrUpdate(collectionId, tagReferences, tagManager.getTagLibrary());
-				}
-			}
-		);
-	}
-	
-	@Override
-	public void addAndCommitChanges(UserMarkupCollectionReference ref) throws Exception {
-		gitProjectHandler.addAndCommitChanges(ref);
-		graphProjectHandler.updateCollectionRevisionHash(this.rootRevisionHash, ref);
 	}
 	
 	@Override

@@ -19,11 +19,9 @@ public enum NodeType implements Label {
 	Tag,
 	Property,
 	
-	DeletedTagset,
+	DeletedProject,
 	DeletedTag,
 	DeletedProperty,
-	DeletedTagInstance,
-	DeletedAnnotationProperty,
 	;
 	
 	public static String nt(NodeType nodeType) {

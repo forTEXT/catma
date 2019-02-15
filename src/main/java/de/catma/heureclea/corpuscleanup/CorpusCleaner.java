@@ -410,7 +410,8 @@ public class CorpusCleaner {
 					
 					UserMarkupCollection targetUmc = getTargetUmc(
 							conceptName, umc.getContentInfoSet(), 
-							targetLib, annotator, annotatorAnonym, sourceDocName);
+							targetLib, annotator, annotatorAnonym, sourceDocName,
+							sourceDocId);
 					
 					//anonymizing authors
 					tagInstance.setAuthor(annotatorAnonym);
@@ -544,14 +545,14 @@ public class CorpusCleaner {
 
 	private UserMarkupCollection getTargetUmc(
 			String conceptName, ContentInfoSet contentInfoSet, TagLibrary targetLib,
-			String annotator, String annotatorAnonym, String sourceDocName) {
+			String annotator, String annotatorAnonym, String sourceDocName, String sourceDocId) {
 		
 		UserMarkupCollection targetCollection = collections.get(annotator, conceptName);
 		
 		if (targetCollection == null) {
 			targetCollection = 
 					new UserMarkupCollection(
-							new IDGenerator().generate(), new ContentInfoSet(contentInfoSet), targetLib);
+							new IDGenerator().generate(), new ContentInfoSet(contentInfoSet), targetLib, sourceDocId);
 			targetCollection.getContentInfoSet().setTitle(
 					annotatorAnonym + " " + sourceDocName + " " + conceptName);
 			targetCollection.getContentInfoSet().setAuthor(author);

@@ -7,6 +7,7 @@ import java.net.URL;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class JsonLdWebAnnotation {
 
 	}
 
-	public JsonLdWebAnnotation(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences, TagLibrary tagLibrary)
+	public JsonLdWebAnnotation(String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -63,8 +64,8 @@ public class JsonLdWebAnnotation {
 		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 		this.id = this.buildTagInstanceUrl(
-			gitServerBaseUrl, projectRootRepositoryName, tagReferences.get(0).getUserMarkupCollectionUuid(),
-			tagReferences.get(0).getTagInstance().getUuid()
+			gitServerBaseUrl, projectRootRepositoryName, tagReferences.iterator().next().getUserMarkupCollectionUuid(),
+			tagReferences.iterator().next().getTagInstance().getUuid()
 		).toString();
 
 		this.body = new JsonLdWebAnnotationBody_Dataset(gitServerBaseUrl, projectId, tagReferences, tagLibrary);
