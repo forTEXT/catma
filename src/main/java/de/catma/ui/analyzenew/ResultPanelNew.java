@@ -560,9 +560,8 @@ public class ResultPanelNew extends Panel {
 							tagTagRowItem.setCollectionName(sourceDoc
 									.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId())
 									.getName());
-							tagTagRowItem.setTagDefinitionPath(sourceDoc
-									.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId())
-									.getName());
+							tagTagRowItem.setSourceDocName(repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString());
+							tagTagRowItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
 							tagTagRowItem.setTreePath(oneCollection.getTagDefinitionPath());
 							tagTagRowItem.setPhrase(tagQueryResultRow.getPhrase());
 							tagTagRowItem.setQueryResultRow(tagQueryResultRow);

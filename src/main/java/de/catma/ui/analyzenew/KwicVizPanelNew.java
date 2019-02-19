@@ -448,6 +448,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	}
 
 	private void addItemsToSelectedPanel(String query, Collection<TagRowItem> items,Collection<TagRowItem> allRootItemsIncoming) {
+
 		
 		TagRowItem newRoot = new TagRowItem();
 		
@@ -486,6 +487,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			if(selectedGridView==ViewID.phrase) {
 				selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot,selectedItemsTreeGridData, items);
 			}
+			
+			if(selectedGridView==ViewID.tag) {
+				selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, items);
+			}
 			//selectedItemsTreeGridData.addItems(newRoot, items);
 			selectedDataProvider.refreshAll();
 		} else {
@@ -495,10 +500,15 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				if (rootItem.getTreePath().equalsIgnoreCase(newRoot.getTreePath())) {
 					contains=true;		
 					selectedItemsTreeGridData.removeItem(rootItem);
+					selectedDataProvider.refreshAll();
 					selectedItemsTreeGridData.addItem(null, newRoot);
+			
 					
 					if(selectedGridView==ViewID.phrase) {
 						selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot,selectedItemsTreeGridData, items);
+					}					
+					if(selectedGridView==ViewID.tag) {
+						selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, items);
 					}
 					//selectedItemsTreeGridData.addItems(newRoot, items);
 					selectedItemsTreeGrid.setWidth("100%");
@@ -512,6 +522,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					if(selectedGridView==ViewID.phrase) {
 						selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot,selectedItemsTreeGridData, items);
 					}
+					
+					if(selectedGridView==ViewID.tag) {
+						selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, items);
+					}
 					//selectedItemsTreeGridData.addItems(newRoot, items);
 					selectedItemsTreeGrid.setWidth("100%");
 					selectedDataProvider.refreshAll();
@@ -523,42 +537,123 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	
 		}
 	
-	private TreeData<TagRowItem> sortIncomingRowItemsToPhraseTreeData(TagRowItem root,TreeData<TagRowItem> treeData,Collection<TagRowItem> items) {
-		
-		Collection <TagRowItem> allItems= items;
-		
-		ArrayList<TagRowItem> allDocs= new ArrayList<TagRowItem>();
-		for(TagRowItem item:allItems) {
-			String sourceDocName=item.getSourceDocName();
+	private TreeData<TagRowItem> sortIncomingRowItemsToPhraseTreeData(TagRowItem root, TreeData<TagRowItem> treeData,
+			Collection<TagRowItem> items) {
+
+		Collection<TagRowItem> allItems = items;
+
+		ArrayList<TagRowItem> allDocs = new ArrayList<TagRowItem>();
+		for (TagRowItem item : allItems) {
+			String sourceDocName = item.getSourceDocName();
 			TagRowItem doc = new TagRowItem();
 			doc.setSourceDocName(sourceDocName);
 			doc.setTreePath(sourceDocName);
-			
-		/*	if (!collectionsForADocument.stream().anyMatch(
-					var -> var.getCollectionID().equalsIgnoreCase(tagRowItem.getCollectionID()))) {
-				collectionsForADocument.add(tagRowItem);*/
-			
-			if(!allDocs.stream().anyMatch(
-					var -> var.getSourceDocName().equalsIgnoreCase(sourceDocName))){
-			
-			allDocs.add(doc);	
-		}
-				
-			
+
+			if (!allDocs.stream().anyMatch(var -> var.getSourceDocName().equalsIgnoreCase(sourceDocName))) {
+				allDocs.add(doc);
+			}
 		}
 		treeData.addItems(root, allDocs);
 		
-		for(TagRowItem doc:allDocs) {
-		String sourceDoc=	doc.getSourceDocName();
-		for(TagRowItem item: allItems) {
-			if(item.getSourceDocName().equalsIgnoreCase(sourceDoc)) {
-				treeData.addItem(doc, item);
+
+		for (TagRowItem doc : allDocs) {
+			String sourceDoc = doc.getSourceDocName();
+			for (TagRowItem item : allItems) {
+				if (item.getSourceDocName().equalsIgnoreCase(sourceDoc)) {
+					treeData.addItem(doc, item);
+				}
 			}
-		}
 		}
 
 		return treeData;
 	}
+
+	private TreeData<TagRowItem> sortIncomingRowItemsToTagTreeData(TagRowItem root, TreeData<TagRowItem> treeData,
+			Collection<TagRowItem> items) {
+		Collection<TagRowItem> allItems = items;
+		// adding tags as children for the query
+		ArrayList<TagRowItem> allTags = new ArrayList<TagRowItem>();
+		for (TagRowItem item : allItems) {
+			String tagName = item.getTagDefinitionPath();
+			TagRowItem tag = new TagRowItem();
+			tag.setSourceDocName(item.getSourceDocName());
+			tag.setCollectionName(item.getCollectionName());
+			tag.setTreePath(tagName);
+			tag.setTagDefinitionPath(tagName);
+
+			if (!allTags.stream().anyMatch(var -> var.getTagDefinitionPath().equalsIgnoreCase(tagName))) {
+				allTags.add(tag);
+			}
+
+		}
+		treeData.addItems(root, allTags);
+
+		// adding documents as children for the tags
+		for (TagRowItem oneTag : allTags) {
+			// String sourceDocName = tag.getSourceDocName();
+			ArrayList<TagRowItem> documentsForATag = new ArrayList<TagRowItem>();
+			for (TagRowItem item : allItems) {
+				// add document if not already inside
+				TagRowItem doc = new TagRowItem();
+				doc.setSourceDocName(item.getSourceDocName());
+				doc.setTagDefinitionPath(oneTag.getTagDefinitionPath());
+
+				if (!documentsForATag.stream()
+						.anyMatch(var -> var.getTagDefinitionPath().equalsIgnoreCase(doc.getTagDefinitionPath()))
+						&& (!documentsForATag.stream()
+								.anyMatch(var -> var.getSourceDocName().equalsIgnoreCase(doc.getSourceDocName())))) {
+
+					/*
+					 * if (!(documentsForATag.stream() .anyMatch(var ->
+					 * var.getTagDefinitionPath().equalsIgnoreCase(tag.getTagDefinitionPath())&&
+					 * var.getSourceDocName().equalsIgnoreCase(doc.getSourceDocName())))) {
+					 */
+
+					//doc.setTagDefinitionPath(item.getTagDefinitionPath());
+					doc.setTreePath(item.getSourceDocName());
+					doc.setSourceDocName(item.getSourceDocName());
+					documentsForATag.add(doc);
+
+					treeData.addItem(oneTag, doc);
+					
+					//search for collections for that document where oneTag is used
+
+					ArrayList<TagRowItem> collectionsForADocument = new ArrayList<TagRowItem>();
+
+					for (TagRowItem oneItem : allItems) {
+						TagRowItem oneCollection = new TagRowItem();
+						//oneCollection.setCollectionName(oneItem.getCollectionName());
+						oneCollection.setSourceDocName(doc.getSourceDocName());
+						oneCollection.setTagDefinitionPath(oneTag.getTagDefinitionPath());
+						oneCollection.setCollectionName(oneItem.getCollectionName());
+						
+						if((oneItem.getTagDefinitionPath().equalsIgnoreCase(oneCollection.getTagDefinitionPath()))&&((oneItem.getSourceDocName().equalsIgnoreCase(oneCollection.getSourceDocName())))) {
+							
+
+						if (!collectionsForADocument.stream()
+								.anyMatch(var -> var.getCollectionName().equalsIgnoreCase(oneCollection.getCollectionName()))){
+									oneCollection.setTreePath(oneItem.getCollectionName());
+									collectionsForADocument.add(oneCollection);
+
+									treeData.addItem(doc, oneCollection);
+									selectedDataProvider.refreshAll();
+							
+						}
+							
+
+						
+						}
+					}
+
+				}
+			}
+
+		}
+
+		return treeData;
+
+	}
+
 	
 	private void setActionGridComponenet() {
 		
