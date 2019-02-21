@@ -4,6 +4,7 @@ import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedTag;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
+import static de.catma.repository.git.graph.NodeType.Position;
 import static de.catma.repository.git.graph.NodeType.Project;
 import static de.catma.repository.git.graph.NodeType.ProjectRevision;
 import static de.catma.repository.git.graph.NodeType.Property;
@@ -11,17 +12,20 @@ import static de.catma.repository.git.graph.NodeType.SourceDocument;
 import static de.catma.repository.git.graph.NodeType.Tag;
 import static de.catma.repository.git.graph.NodeType.TagInstance;
 import static de.catma.repository.git.graph.NodeType.Tagset;
+import static de.catma.repository.git.graph.NodeType.Term;
 import static de.catma.repository.git.graph.NodeType.User;
 import static de.catma.repository.git.graph.NodeType.nt;
 import static de.catma.repository.git.graph.RelationType.hasCollection;
 import static de.catma.repository.git.graph.RelationType.hasDocument;
 import static de.catma.repository.git.graph.RelationType.hasInstance;
 import static de.catma.repository.git.graph.RelationType.hasParent;
+import static de.catma.repository.git.graph.RelationType.hasPosition;
 import static de.catma.repository.git.graph.RelationType.hasProject;
 import static de.catma.repository.git.graph.RelationType.hasProperty;
 import static de.catma.repository.git.graph.RelationType.hasRevision;
 import static de.catma.repository.git.graph.RelationType.hasTag;
 import static de.catma.repository.git.graph.RelationType.hasTagset;
+import static de.catma.repository.git.graph.RelationType.isPartOf;
 import static de.catma.repository.git.graph.RelationType.rt;
 
 import java.nio.charset.StandardCharsets;
@@ -678,28 +682,28 @@ public class GraphProjectHandler {
 				}
 				
 				session.run(
-						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-						+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-						+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-						+"(:"+nt(Tagset)+"{tagsetId:{pTagsetId}})-[:"+rt(hasTag)+"]->"
-						+"(:"+nt(Tag)+"{tagId:{pTagId}})-[:"+rt(hasProperty)+"]->"
-						+"(p:"+nt(Property)+") "
-						+"WHERE NOT(p.uuid in {pPropertyIdList}) "
-						+"REMOVE p:"+nt(Property)+ " "
-						+"SET p:"+nt(DeletedProperty)+ " ",
-						Values.parameters(
-							"pUserId", user.getIdentifier(),
-							"pProjectId", projectReference.getProjectId(),
-							"pRootRevisionHash", rootRevisionHash,
-							"pTagsetId", tagsetDefinition.getUuid(),
-							"pTagId", tagDefinition.getUuid(),
-							"pPropertyIdList", tagDefinition.getUserDefinedPropertyDefinitions()
-								.stream()
-								.map(PropertyDefinition::getUuid)
-								.collect(Collectors.toList()),
-							"pTagsetRevisionHash", tagsetDefinition.getRevisionHash()
-						)
-					);				
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(:"+nt(Tagset)+"{tagsetId:{pTagsetId}})-[:"+rt(hasTag)+"]->"
+					+"(:"+nt(Tag)+"{tagId:{pTagId}})-[:"+rt(hasProperty)+"]->"
+					+"(p:"+nt(Property)+") "
+					+"WHERE NOT(p.uuid in {pPropertyIdList}) "
+					+"REMOVE p:"+nt(Property)+ " "
+					+"SET p:"+nt(DeletedProperty)+ " ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pTagsetId", tagsetDefinition.getUuid(),
+						"pTagId", tagDefinition.getUuid(),
+						"pPropertyIdList", tagDefinition.getUserDefinedPropertyDefinitions()
+							.stream()
+							.map(PropertyDefinition::getUuid)
+							.collect(Collectors.toList()),
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash()
+					)
+				);				
 			}
 		});
 		
@@ -1234,8 +1238,8 @@ public class GraphProjectHandler {
 					+ "(c:"+nt(MarkupCollection)+"{collectionId:{pCollectionId}}) "
 					+ "SET c.revisionHash = {pCollectionRevisionHash} "
 					+ "WITH c "
-					+ "MATCH (c)-[:"+rt(hasInstance)+"->(:"+nt(TagInstance)+")"
-					+ "-[:"+rt(hasProperty)+"->(ap:"+nt(AnnotationProperty)+"{uuid:{pPropertyDefId}}) "
+					+ "MATCH (c)-[:"+rt(hasInstance)+"]->(:"+nt(TagInstance)+")"
+					+ "-[:"+rt(hasProperty)+"]->(ap:"+nt(AnnotationProperty)+"{uuid:{pPropertyDefId}}) "
 					+ "DETACH DELETE ap ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
@@ -1500,10 +1504,7 @@ public class GraphProjectHandler {
 					+"(:"+nt(Tag)+"{tagId:{pTagId}})-[:"+rt(hasProperty)+"]->"
 					+"(p:"+nt(Property)+"{uuid:{pPropertyId}}) "
 					+"SET ts.revisionHash = {pTagsetRevisionHash} "
-					+"REMOVE p:"+nt(Property)+ " "
-					+"SET p:"+nt(DeletedProperty)+ " "
-					+"MATCH (ap:"+nt(AnnotationProperty) + "{uuid:{pPropertyId}}) "
-					+"DETACH DELETE ap ",
+					+"REMOVE p:"+nt(Property)+ " ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -1565,5 +1566,59 @@ public class GraphProjectHandler {
 				);
 			}
 		});		
+	}
+
+	public void removeCollection(
+			String rootRevisionHash, UserMarkupCollectionReference userMarkupCollectionReference,
+			String oldRootRevisionHash) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+"(d:"+nt(SourceDocument)+"{sourceDocumentId:{pSourceDocumentId}})"+ "-[:"+rt(hasCollection)+"]->"
+					+"(c:"+nt(MarkupCollection)+"{collectionId:{pCollectionId}}) "
+					+"OPTIONAL MATCH (c)-[:"+rt(hasInstance)+"]->(ti:"+nt(TagInstance)+") "
+					+"OPTIONAL MATCH (ti)-[:"+rt(hasProperty)+"]->(ap:"+nt(AnnotationProperty)+") "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
+					+"DETACH DELETE ap, ti, c ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
+						"pSourceDocumentId", userMarkupCollectionReference.getSourceDocumentId(),
+						"pCollectionId", userMarkupCollectionReference.getId()
+					)
+				);
+			}
+		});	
+	}
+
+	public void removeDocument(String rootRevisionHash, SourceDocument sourceDocument, String oldRootRevisionHash) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+"(d:"+nt(SourceDocument)+"{sourceDocumentId:{pSourceDocumentId}}) "
+					+"OPTIONAL MATCH (d)<-[:"+rt(isPartOf)+"]-(t:"+nt(Term)+") "
+					+"OPTIONAL MATCH (t)-[:"+rt(hasPosition)+"]->(ps:"+nt(Position)+") "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
+					+"DETACH DELETE ps, t, d ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
+						"pSourceDocumentId", sourceDocument.getID()
+					)
+				);
+			}
+		});	
 	}
 }

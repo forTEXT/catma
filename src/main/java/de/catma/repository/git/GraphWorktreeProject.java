@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -326,18 +327,23 @@ public class GraphWorktreeProject implements IndexedRepository {
 			
 			Collection<TagReference> tagReferences = 
 					annotationIdsByCollectionId.get(collectionId);
-			
+			Set<TagInstance> tagInstances = 
 			tagReferences
 			.stream()
 			.map(tagReference -> tagReference.getTagInstance())
-			.collect(Collectors.toSet())
-			.forEach(
+			.collect(Collectors.toSet());
+			
+			tagInstances.forEach(
 				tagInstance -> tagInstance.removeUserDefinedProperty(propertyDefinition.getUuid()));
-				
-			gitProjectHandler.addOrUpdate(
-				collectionId, 
-				tagReferences, 
-				tagManager.getTagLibrary());
+			
+			for (TagInstance tagInstance : tagInstances) {
+				gitProjectHandler.addOrUpdate(
+					collectionId, 
+					tagReferences.stream()
+						.filter(tagRef -> tagRef.getTagInstanceID().equals(tagInstance.getUuid()))
+						.collect(Collectors.toList()), 
+					tagManager.getTagLibrary());
+			}
 			
 			String collectionRevisionHash = 
 				gitProjectHandler.addAndCommitCollection(
@@ -643,9 +649,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public void delete(SourceDocument sourceDocument) throws IOException {
-		// TODO Auto-generated method stub
-
+	public void delete(SourceDocument sourceDocument) throws Exception {
+		for (UserMarkupCollectionReference collectionRef : sourceDocument.getUserMarkupCollectionRefs()) {
+			delete(collectionRef);
+		}
+		
+		String oldRootRevisionHash = this.rootRevisionHash;
+		gitProjectHandler.removeDocument(sourceDocument);
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
+		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocument, oldRootRevisionHash);	
 	}
 
 	@Override
@@ -855,9 +867,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public void delete(UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
-		// TODO Auto-generated method stub
-
+	public void delete(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+		String oldRootRevisionHash = this.rootRevisionHash;
+		gitProjectHandler.removeCollection(userMarkupCollectionReference);
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
+		graphProjectHandler.removeCollection(this.rootRevisionHash, userMarkupCollectionReference, oldRootRevisionHash);	
 	}
 
 	@Deprecated

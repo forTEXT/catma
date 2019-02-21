@@ -469,4 +469,40 @@ public class GitProjectHandler {
 		}
 	}
 
+	public void removeCollection(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String collectionId = userMarkupCollectionReference.getId();
+			
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+	
+			// remove the submodule only!!!
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					collectionId
+			).toFile();
+	
+			localGitRepoManager.removeSubmodule(targetSubmodulePath);
+		}		
+	}
+
+	public void removeDocument(SourceDocument sourceDocument) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String documentId = sourceDocument.getID();
+			
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+	
+			// remove the submodule only!!!
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+					documentId
+			).toFile();
+	
+			localGitRepoManager.removeSubmodule(targetSubmodulePath);
+		}	
+	}
+
 }

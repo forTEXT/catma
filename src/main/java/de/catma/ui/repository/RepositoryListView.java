@@ -52,6 +52,7 @@ import de.catma.ui.tabbedview.TabComponent;
 import de.catma.user.UserProperty;
 import de.catma.util.IDGenerator;
 
+@Deprecated
 public class RepositoryListView extends VerticalLayout implements TabComponent {
 
 	private final static Logger LOGGER = Logger.getLogger(RepositoryListView.class.getName());

@@ -29,6 +29,7 @@ import de.catma.document.repository.RepositoryManager;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.tabbedview.TabbedView;
 
+@Deprecated
 public class RepositoryManagerView extends TabbedView implements CloseHandler {
 
 	private RepositoryListView repositoryListView;
