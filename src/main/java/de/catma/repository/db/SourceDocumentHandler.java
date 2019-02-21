@@ -250,7 +250,7 @@ public class SourceDocumentHandler {
 			
 			dbRepository.getIndexer().index(
 				sourceDocument, 
-				dbRepository.getBackgroundServiceProvider().getBackgroundService());
+				dbRepository.getBackgroundServiceProvider().accuireBackgroundService());
 
 			sourceDocumentsByID.put(
 					sourceDocument.getID(), sourceDocument);

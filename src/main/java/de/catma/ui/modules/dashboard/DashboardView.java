@@ -4,6 +4,7 @@ import java.util.Comparator;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.data.provider.DataProvider;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.UI;
 
@@ -24,15 +25,14 @@ public class DashboardView extends VerticalLayout {
 
     private final ErrorHandler errorLogger;
 
-	private final EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 
 	private final ProjectList projects;
 
-    public DashboardView(ProjectManager projectManager, EventBus eventBus){
+    public DashboardView(ProjectManager projectManager){ 
         this.projectManager = projectManager;
-        this.eventBus = eventBus;
         this.errorLogger = (ErrorHandler)(UI.getCurrent());
-        this.projects = new ProjectList(projectManager, eventBus);
+        this.projects = new ProjectList(projectManager); 
         initComponents();
     }
 

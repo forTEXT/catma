@@ -25,7 +25,7 @@ import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.GitTagsetHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -141,7 +141,7 @@ public class JsonLdWebAnnotation {
 
 	public List<TagReference> toTagReferenceList(
 			String projectId, String markupCollectionId,
-			ILocalGitRepositoryManager localGitRepositoryManager, IRemoteGitServerManager remoteGitServerManager)
+			ILocalGitRepositoryManager localGitRepositoryManager, IRemoteGitManagerRestricted remoteGitServerManager)
 				throws IOException {
 		TagInstance tagInstance = this.getTagInstance(localGitRepositoryManager, remoteGitServerManager, projectId);
 		String sourceDocumentUri = this.getSourceDocumentUri();
@@ -182,7 +182,7 @@ public class JsonLdWebAnnotation {
 
 	@JsonIgnore
 	public TagInstance getTagInstance(ILocalGitRepositoryManager localGitRepositoryManager,
-									  IRemoteGitServerManager remoteGitServerManager, String projectId)
+			IRemoteGitManagerRestricted remoteGitServerManager, String projectId)
 			throws IOException {
 		TagDefinition tagDefinition = this.getTagDefinition(
 			localGitRepositoryManager, remoteGitServerManager, projectId
@@ -218,7 +218,7 @@ public class JsonLdWebAnnotation {
 	}
 
 	private TagDefinition getTagDefinition(ILocalGitRepositoryManager localGitRepositoryManager,
-										   IRemoteGitServerManager remoteGitServerManager, String projectId)
+			IRemoteGitManagerRestricted remoteGitServerManager, String projectId)
 			throws IOException {
 		GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepositoryManager, remoteGitServerManager);
 

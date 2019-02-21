@@ -20,12 +20,11 @@ package de.catma.ui.analyzer;
 
 import java.util.HashSet;
 
-import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.UI;
 
 import de.catma.document.Corpus;
 import de.catma.indexer.IndexedRepository;
@@ -36,12 +35,10 @@ import de.catma.ui.tabbedview.TabbedView;
 public class AnalyzerManagerView extends TabbedView {
 	
 	private Button btnAnalyzeCurrentOpenDoc;
-	private EventBus eventBus;
 	
 
-	public AnalyzerManagerView(EventBus eventBus) {
+	public AnalyzerManagerView(){
 		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
-		this.eventBus = eventBus;
 		
 		initComponents();
 		initAnalyzerAction();	

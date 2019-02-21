@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 
 import de.catma.document.repository.Repository;
@@ -34,12 +35,11 @@ import de.catma.ui.tabbedview.TabbedView;
 public class TaggerManagerView extends TabbedView {
 	
 	private int nextTaggerID = 0;
-	private EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 	
-	public TaggerManagerView(EventBus eventBus) {
+	public TaggerManagerView() {
 		super(
 			Messages.getString("TaggerManagerView.noOpenDocumentsInfo")); //$NON-NLS-1$
-		this.eventBus = eventBus;
 		this.eventBus.register(this);
 	}
 	
@@ -88,8 +88,7 @@ public class TaggerManagerView extends TabbedView {
 							}
 							
 						}
-					},
-					eventBus);
+					});
 			addClosableTab(taggerView, sourceDocument.toString());
 			setSelectedTab(taggerView);
 		}

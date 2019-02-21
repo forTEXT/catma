@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
@@ -17,8 +16,7 @@ import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.managers.GitLabServerManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
@@ -29,7 +27,7 @@ import elemental.json.JsonObject;
 
 public class GitProjectManager implements ProjectManager {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitServerManager remoteGitServerManager;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
 
 	private final IDGenerator idGenerator;
     private final BackgroundService backgroundService;
@@ -44,15 +42,13 @@ public class GitProjectManager implements ProjectManager {
 
 	public GitProjectManager(
             String gitBasedRepositoryBasePath,
-            Map<String, String>	userIdentification,
+            IRemoteGitManagerRestricted remoteGitServerManager,
             BackgroundService backgroundService)
 					throws IOException {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
-		this.remoteGitServerManager = 
-				new GitLabServerManager(
-					userIdentification);
+		this.remoteGitServerManager = remoteGitServerManager;
 		this.backgroundService = backgroundService;
-		this.user = new GitUser(((GitLabServerManager) this.remoteGitServerManager).getGitLabUser());
+		this.user = remoteGitServerManager.getGitUser();
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
 
 		this.idGenerator = new IDGenerator();
@@ -83,7 +79,7 @@ public class GitProjectManager implements ProjectManager {
 			// create the root repository
 			String projectNameAndPath = GitProjectManager.getProjectRootRepositoryName(projectId);
 
-			IRemoteGitServerManager.CreateRepositoryResponse response =
+			CreateRepositoryResponse response =
 					this.remoteGitServerManager.createRepository(
 				projectNameAndPath, projectNameAndPath, groupPath
 			);

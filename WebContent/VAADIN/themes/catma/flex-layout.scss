@@ -138,7 +138,7 @@
     position: relative;
   }
   
-  // Horizonal Layout
+  /* Horizonal Layout */
   
   .flex-horizontal {
   	display: flex;
@@ -151,4 +151,22 @@
     box-sizing: border-box;
   }
 
+  /* spacing */
+  
+  .flexlayout-spacing > * {
+  	margin: 10px;
+  }
+  
+  .flexlayout-spacing-left-right > * {
+  	margin: 0px 10px 0px 10px;
+  }
+ 
+  .flexlayout-margin  {
+  	margin: 10px;
+  }
+  
+    .flexlayout-margin-left-right  {
+  	margin: 0px 10px 0px 10px;
+  }
+  
 }

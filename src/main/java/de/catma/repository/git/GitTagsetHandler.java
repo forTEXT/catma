@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -17,7 +16,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.GitTagsetHeader;
@@ -27,7 +26,7 @@ import de.catma.tag.TagsetDefinition;
 
 public class GitTagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitServerManager remoteGitServerManager;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
 
 	private static final String TAGSET_REPOSITORY_NAME_FORMAT = "%s_tagset";
 
@@ -36,7 +35,7 @@ public class GitTagsetHandler {
 	}
 
 	public GitTagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-							IRemoteGitServerManager remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 	}
@@ -64,7 +63,7 @@ public class GitTagsetHandler {
 			// create the remote tagset repository
 			String tagsetRepoName = GitTagsetHandler.getTagsetRepositoryName(tagsetId);
 
-			IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
+			CreateRepositoryResponse createRepositoryResponse =
 					this.remoteGitServerManager.createRepository(tagsetRepoName, tagsetRepoName, projectId);
 
 			// clone the repository locally

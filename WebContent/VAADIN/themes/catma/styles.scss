@@ -518,6 +518,10 @@
     	   padding-right: 80px;
         }
         
+      /* signup */
+        .g-recaptcha-response {
+    		display: none !important;
+	    }
       /* main views */
         .main-view {
             display: flex;
@@ -546,13 +550,14 @@
             align-items: center;
         }
 
-        .header .v-button {
+        .header .v-button, .header .button__icon {
             color: white;
             cursor: pointer;
             text-decoration: none;
+            opacity: inherit;
         }
 
-        .header .v-button:hover {
+        .header .v-button:hover, .header .button__icon:hover {
             text-decoration: none;
         }
 

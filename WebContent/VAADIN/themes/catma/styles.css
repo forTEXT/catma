@@ -17046,6 +17046,22 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	box-sizing: border-box;
 }
 
+.catma .flexlayout-spacing > * {
+	margin: 10px;
+}
+
+.catma .flexlayout-spacing-left-right > * {
+	margin: 0px 10px 0px 10px;
+}
+
+.catma .flexlayout-margin {
+	margin: 10px;
+}
+
+.catma .flexlayout-margin-left-right {
+	margin: 0px 10px 0px 10px;
+}
+
 .catma .v-treegrid.borderless {
 	overflow: hidden;
 }
@@ -17602,6 +17618,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 80px;
 }
 
+.catma .g-recaptcha-response {
+	display: none !important;
+}
+
 .catma .main-view {
 	display: flex;
 	flex-direction: column;
@@ -17628,13 +17648,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	align-items: center;
 }
 
-.catma .header .v-button {
+.catma .header .v-button, .catma .header .button__icon {
 	color: white;
 	cursor: pointer;
 	text-decoration: none;
+	opacity: inherit;
 }
 
-.catma .header .v-button:hover {
+.catma .header .v-button:hover, .catma .header .button__icon:hover {
 	text-decoration: none;
 }
 

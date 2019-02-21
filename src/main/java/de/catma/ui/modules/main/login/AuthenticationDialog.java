@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.ui.repository;
+package de.catma.ui.modules.main.login;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,9 +27,8 @@ import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
@@ -47,32 +46,35 @@ import org.jboss.aerogear.security.otp.api.Clock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.appreciated.material.MaterialTheme;
+import com.google.common.eventbus.EventBus;
 import com.vaadin.server.ClassResource;
-import com.vaadin.server.ExternalResource;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinSession;
-import com.vaadin.v7.shared.ui.label.ContentMode;
-import com.vaadin.ui.Alignment;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.ui.Link;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.v7.ui.themes.BaseTheme;
 
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.document.repository.RepositoryReference;
-import de.catma.ui.CatmaApplication;
-import de.catma.ui.SessionKey;
-import de.catma.user.UserProperty;
+import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.layout.FlexLayout.JustifyContent;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.login.InitializationService;
+import de.catma.ui.login.LoginService;
+import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.ui.repository.Messages;
 
 /**
  * Authentication dialog for OpenID Connect authentication with Google.
@@ -82,26 +84,31 @@ import de.catma.user.UserProperty;
  * @author marco.petris@web.de
  *
  */
-public class AuthenticationDialog extends VerticalLayout {
+public class AuthenticationDialog extends Window {
+	
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+
 	
 	private static class AuthenticationRequestHandler implements RequestHandler {
 		
 		private Logger logger = Logger.getLogger(this.getClass().getName());
 		private String returnURL;
-		private RepositoryReference repositoryReference;
-		private RepositoryListView repositoryListView;
 		private Window dialogWindow;
 		private UI ui;
 		private String token;
 		private String oauthAccessTokenRequestURL;
 		private String oauthClientId;
 		private String oauthClientSecret;
-
+		private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+		private final LoginService loginservice;
+		private final InitializationService initService;
+		
 		public AuthenticationRequestHandler(
 				UI ui, // UI.getCurrent() is not available during request handling, therefore we pass in the UI
+				LoginService loginservice,
+				InitializationService initService,
 				String returnURL, 
-				RepositoryReference repositoryReference,
-				RepositoryListView repositoryListView, Window dialogWindow, 
+				Window dialogWindow, 
 				String token,
 				String oauthAccessTokenRequestURL,
 				String oauthClientId,
@@ -109,13 +116,13 @@ public class AuthenticationDialog extends VerticalLayout {
 			super();
 			this.ui = ui;
 			this.returnURL = returnURL;
-			this.repositoryReference = repositoryReference;
-			this.repositoryListView = repositoryListView;
 			this.dialogWindow = dialogWindow;
 			this.token = token;
 			this.oauthAccessTokenRequestURL = oauthAccessTokenRequestURL;
 			this.oauthClientId = oauthClientId;
 			this.oauthClientSecret = oauthClientSecret;
+			this.loginservice = loginservice;
+			this.initService = initService;
 		}
 			
 		@Override
@@ -199,30 +206,19 @@ public class AuthenticationDialog extends VerticalLayout {
 					logger.info("decodedPayload: " + decodedPayload); //$NON-NLS-1$
 					
 					// finally the email address
-					String email = payloadJson.get("email").asText(); //$NON-NLS-1$
+					// String email = payloadJson.get("email").asText(); //$NON-NLS-1$
 
-					// construct CATMA user identification
-					Map<String, String> userIdentification = 
-							new HashMap<String, String>();
-					
-					logger.info("retrieved email: " + email); //$NON-NLS-1$
-					
-	                userIdentification.put(
-							UserProperty.identifier.name(), email);
-	                userIdentification.put(
-	                		UserProperty.email.name(), email);
-	                userIdentification.put(
-	                		UserProperty.name.name(), email);
+					String identifier = payloadJson.get("sub").asText();
+					String name = payloadJson.get("name") == null ? identifier : payloadJson.get("name").asText();
+					String email = payloadJson.get("email").asText();
+					String provider = "google.com";
+					loginservice.loggedInFromThirdParty(identifier, provider, email, name);
 
-	                logger.info("opening repository for user: " + email); //$NON-NLS-1$
-
-	                repositoryListView.open(
-	                	(CatmaApplication) ui, 
-	                	repositoryReference, 
-	                	userIdentification);
-	                
-	                VaadinSession.getCurrent().setAttribute(SessionKey.USER.name(), userIdentification);
-	                
+					Component mainView = initService.newEntryPage(loginservice);
+					ui.setContent(mainView);
+					ui.getPage().replaceState(RepositoryPropertyKey.BaseURL.getValue());
+					eventBus.post(new RouteToDashboardEvent());
+		                
 	                return false;
 				}
 				else {
@@ -238,7 +234,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				((CatmaApplication)ui).showAndLogError(
+				((ErrorHandler)ui).showAndLogError(
 						Messages.getString("AuthenticationDialog.errorOpeningRepo"), e); //$NON-NLS-1$
 			}
 			
@@ -248,51 +244,49 @@ public class AuthenticationDialog extends VerticalLayout {
 		}
 	}
 	
-	private Window dialogWindow;
-	private String caption;
 	private Button btCancel;
-	private RepositoryReference repositoryReference;
-	private RepositoryListView repositoryListView;
-	private Button catmaLogInLink;
 	private Button googleLogInLink;
 	private String baseUrl;
-	
+	private TextField tfUsername;
+	private PasswordField pfPassword;
+	private Button btLogin;
+	private final LoginService loginservice;
+	private final InitializationService initService;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+
 	public AuthenticationDialog(
-			String caption, RepositoryReference repositoryReference, 
-			RepositoryListView repositoryListView, String baseUrl) {
-		this.caption = caption;
-		this.repositoryReference = repositoryReference;
-		this.repositoryListView = repositoryListView;
+			String caption, 
+			String baseUrl,
+			LoginService loginService,
+			InitializationService initService
+			) { 
+		super(caption);
+		setModal(true);
 		this.baseUrl = baseUrl;
+		this.loginservice = loginService;
+		this.initService = initService;
+		
+	
 		initComponents();
 		initActions();
 	}
 
 
 	private void initActions() {
-		btCancel.addClickListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				UI.getCurrent().removeWindow(dialogWindow);
-			}
-		});
-		
-		catmaLogInLink.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-				try {
-					UI.getCurrent().getPage().setLocation(createLogInClick(
-						UI.getCurrent(), 
-						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
-						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
-						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
-						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
-						URLEncoder.encode("/", "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				catch (Exception e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
-				}
+		btCancel.addClickListener(click -> close());			
+
+		btLogin.addClickListener(click -> {
+			try {
+				
+				loginservice.login(tfUsername.getValue(), pfPassword.getValue());
+				Component mainView = initService.newEntryPage(loginservice);
+				UI.getCurrent().setContent(mainView);
+				eventBus.post(new RouteToDashboardEvent());
+				close();
+				
+			} catch (IOException e) {
+				Notification.show("Login error", "username or password wrong", Type.ERROR_MESSAGE);
+				logger.log(Level.SEVERE,"login services" , e);
 			}
 		});
 		
@@ -311,7 +305,7 @@ public class AuthenticationDialog extends VerticalLayout {
 						URLEncoder.encode(baseUrl, "UTF-8"))); //$NON-NLS-1$
 				}
 				catch (Exception e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
+					((ErrorHandler)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
 				}
 			}
 		});
@@ -349,10 +343,10 @@ public class AuthenticationDialog extends VerticalLayout {
 		final AuthenticationRequestHandler authenticationRequestHandler =
 				new AuthenticationRequestHandler(
 						ui,
+						loginservice,
+						initService,
 						baseUrl, 
-						repositoryReference,
-						repositoryListView, 
-						dialogWindow,
+						this,
 						token,
 						oauthAccessTokenRequestURL,
 						oauthClientId,
@@ -366,34 +360,25 @@ public class AuthenticationDialog extends VerticalLayout {
 
 
 	private void initComponents() {
-		setSizeFull();
-		setSpacing(true);
 		VerticalLayout content = new VerticalLayout();
-		content.setMargin(true);
-		dialogWindow = new Window(caption, content);
-		dialogWindow.setModal(true);
+		content.addStyleName("spacing");
+		content.addStyleName("margin");
 		
-		catmaLogInLink = new Button(Messages.getString("AuthenticationDialog.logInWithCATMAAccount")); //$NON-NLS-1$
-		catmaLogInLink.setIcon(new ClassResource("repository/resources/catma.png")); //$NON-NLS-1$
-		catmaLogInLink.setStyleName(BaseTheme.BUTTON_LINK);
-		catmaLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
-		addComponent(catmaLogInLink);
+		tfUsername = new TextField("Username");
+		tfUsername.setSizeFull();
+		pfPassword = new PasswordField("Password");
+		pfPassword.setSizeFull();
 		
-		Link catmaCreateAccountLink = 
-			new Link(
-				Messages.getString("AuthenticationDialog.createCATMAaccount"),  //$NON-NLS-1$
-				new ExternalResource("https://auth.catma.de/openam/XUI/#register/")); //$NON-NLS-1$
-		catmaCreateAccountLink.setIcon(
-				new ClassResource("repository/resources/catma.png")); //$NON-NLS-1$
 		
-		addComponent(catmaCreateAccountLink);
-
+		content.addComponent(tfUsername);
+		content.addComponent(pfPassword);
 		
 		googleLogInLink = new Button(Messages.getString("AuthenticationDialog.logInWithGoogleAccount")); //$NON-NLS-1$
 		googleLogInLink.setIcon(new ClassResource(Messages.getString("AuthenticationDialog.48"))); //$NON-NLS-1$
-		googleLogInLink.setStyleName(BaseTheme.BUTTON_LINK);
+		googleLogInLink.setStyleName(MaterialTheme.BUTTON_LINK);
 		googleLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
-		addComponent(googleLogInLink);
+		
+		content.addComponent(googleLogInLink);
 		
 		Label termsOfUse = new Label(
 				MessageFormat.format(
@@ -401,24 +386,26 @@ public class AuthenticationDialog extends VerticalLayout {
 					"http://www.catma.de/termsofuse")); //$NON-NLS-1$
 		termsOfUse.setContentMode(ContentMode.HTML);
 		termsOfUse.setSizeFull();
-		addComponent(termsOfUse);
+		
+		content.addComponent(termsOfUse);
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
-		buttonPanel.setSpacing(true);
-		
+		buttonPanel.addStyleName("spacing-left-right");
+		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
+
+		btLogin = new Button("Login"); 
 		btCancel = new Button(Messages.getString("AuthenticationDialog.Cancel")); //$NON-NLS-1$
+
 		buttonPanel.addComponent(btCancel);
+		buttonPanel.addComponent(btLogin);
 		
-		addComponent(buttonPanel);
-		this.setComponentAlignment(buttonPanel, Alignment.BOTTOM_RIGHT);
+		content.addComponent(buttonPanel);
 		
-		content.addComponent(this);
-		
+		setContent(content);
 	}
 	
 	public void show(String dialogWidth) {
-		dialogWindow.setWidth(dialogWidth);
-		UI.getCurrent().addWindow(dialogWindow);
+		UI.getCurrent().addWindow(this);
 	}
 	
 	public void show() {

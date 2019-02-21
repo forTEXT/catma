@@ -112,7 +112,7 @@ public class CustomUserApi extends AbstractApi {
          formData.param("username", user.getUsername());
          formData.param("name", user.getName());
 //         formData.param("external", String.valueOf(false));
-         if (!user.getIdentities().isEmpty()) {
+         if (user.getIdentities() != null && !user.getIdentities().isEmpty()) {
 	         Identity identity = user.getIdentities().iterator().next();
 	         formData.param("extern_uid", identity.getExternUid());
 	         formData.param("provider", identity.getProvider());

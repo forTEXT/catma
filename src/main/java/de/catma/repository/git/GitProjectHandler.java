@@ -20,7 +20,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -35,12 +35,12 @@ public class GitProjectHandler {
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
 
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitServerManager remoteGitServerManager;
-	private final GitUser user;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final User user;
 	private final String projectId;
 
 	public GitProjectHandler(GitUser user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitServerManager remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager) {
 		super();
 		this.user = user;
 		this.projectId = projectId;
