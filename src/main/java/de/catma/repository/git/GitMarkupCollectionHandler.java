@@ -100,6 +100,7 @@ public class GitMarkupCollectionHandler {
 			return localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
+					String.format("Added Collection %1$s with ID %2$s", name, markupCollectionId),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
@@ -127,7 +128,8 @@ public class GitMarkupCollectionHandler {
 	public void addTagset(@Nonnull String projectId,
 						  @Nonnull String markupCollectionId,
 						  @Nonnull String tagsetId,
-						  @Nonnull String tagsetVersion
+						  @Nonnull String tagsetVersion,
+						  String commitMsg
 	) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -154,6 +156,7 @@ public class GitMarkupCollectionHandler {
 
 			localGitRepoManager.addAndCommit(
 					targetMarkupCollectionHeaderFilePath, serializedHeader.getBytes(StandardCharsets.UTF_8),
+					commitMsg,
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);

@@ -2,6 +2,7 @@ package de.catma.repository.git.interfaces;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public interface ILocalGitRepositoryManager extends AutoCloseable {
 	static String DEFAULT_LOCAL_DEV_BRANCH = "dev";
@@ -22,8 +23,10 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	void open(String group, String name) throws IOException;
 
 	void add(File targetFile, byte[] bytes) throws IOException;
+	
+	void add(Path relativePath) throws IOException;
 
-	String addAndCommit(File targetFile, byte[] bytes, String committerName, String committerEmail)
+	String addAndCommit(File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail)
 			throws IOException;
 
 	String commit(String message, String committerName, String committerEmail) throws IOException;
@@ -52,7 +55,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void remove(File targetFile) throws IOException;
 
-	String removeAndCommit(File targetFile, String committerName, String committerEmail) throws IOException;
+	String removeAndCommit(File targetFile, String commitMsg, String committerName, String committerEmail) throws IOException;
 
 	String getRevisionHash(String submodule) throws IOException;
 
@@ -62,6 +65,10 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	String addAllAndCommit(String commitMsg, String committerName, String committerEmail) throws IOException;
 
-	void removeSubmodule(File submodulePath) throws IOException;
+	void removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException;
+
+	void merge(String branch) throws IOException;
+
+	void rebase(String branch) throws IOException;
 
 }

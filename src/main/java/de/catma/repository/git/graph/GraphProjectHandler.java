@@ -1528,7 +1528,7 @@ public class GraphProjectHandler {
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
 					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}})"
-					+"OPTIONAL MATCH (ts)-[:"+rt(hasTag)+"]->(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+"OPTIONAL MATCH (ts)-[:"+rt(hasTag)+"]->(t:"+nt(Tag)+") "
 					+"OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
 					+"SET pr.revisionHash = {pRootRevisionHash} "
 					+"DETACH DELETE ts, t, p ",
@@ -1544,21 +1544,23 @@ public class GraphProjectHandler {
 		});	
 	}
 
-	public void updateTagset(String rootRevisionHash, TagsetDefinition tagsetDefinition) throws Exception {
+	public void updateTagset(String rootRevisionHash, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
 				session.run(
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
 					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}}) "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
 					+"SET ts.revisionHash = {pTagsetRevisionHash}, "
 					+"ts.name = {pName} ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
 						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
 						"pTagsetId", tagsetDefinition.getUuid(),
 						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
 						"pName", tagsetDefinition.getName()
