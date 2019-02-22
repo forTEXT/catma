@@ -3,6 +3,8 @@ package de.catma.ui.analyzenew;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import com.vaadin.icons.VaadinIcons;
+
 import de.catma.queryengine.result.QueryResultRow;
 
 public class TagRowItem {
@@ -76,9 +78,9 @@ public class TagRowItem {
 	public void setTagDefinitionPath(String tagDefinitionPath) {
 		this.tagDefinitionPath = tagDefinitionPath;
 	}
-	public ArrayList<TagRowItem> getChildren() {
+/*	public ArrayList<TagRowItem> getChildren() {
 		return children;
-	}
+	}*/
 	public void setChildren(ArrayList<TagRowItem> children) {
 		this.children = children;
 	}
@@ -154,6 +156,11 @@ public class TagRowItem {
 				+"["+HORIZONTAL_ELLIPSIS+"]"
 				+ toShortenValue.substring(toShortenValue.length()-((maxLength/2)-2), toShortenValue.length());
 	}
+   
+   
+   public String getSelectIcon() {
+	   return VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml();
+   }
 	
 	
 	
