@@ -19,6 +19,7 @@ import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RmCommand;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -732,6 +733,21 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			return gitApi.status().call().hasUncommittedChanges();
 		} catch (GitAPIException e) {
 			throw new IOException("Failed to check for uncommited changes", e);
+		}
+	}
+	
+	@Override
+	public boolean hasUntrackedChanges() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `status` on a detached instance");
+		}
+		
+		try {
+			Status status = gitApi.status().call();
+			
+			return !status.getUntracked().isEmpty() || !status.getUntrackedFolders().isEmpty();
+		} catch (GitAPIException e) {
+			throw new IOException("Failed to check for untracked changes", e);
 		}
 	}
 	

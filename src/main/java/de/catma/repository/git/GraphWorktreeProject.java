@@ -325,7 +325,19 @@ public class GraphWorktreeProject implements IndexedRepository {
 		
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+
+		// project commit
+		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
+			tagsetDefinition, 
+			String.format(
+				"Added Property Definition %1$s with %2$s to Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
+				propertyDefinition.getName(),
+				propertyDefinition.getUuid(),
+				tagDefinition.getName(),
+				tagDefinition.getUuid(),
+				tagsetDefinition.getName(),
+				tagsetDefinition.getUuid()));
+		
 		graphProjectHandler.addPropertyDefinition(
 			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
@@ -341,6 +353,13 @@ public class GraphWorktreeProject implements IndexedRepository {
 		
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			// TODO: check permissions if commit is allowed, if that is not the case skip git update
+			
+			gitProjectHandler.addAndCommitCollection(
+					collectionId,
+					String.format(
+						"Auto commiting changes before performing an update of Annotations "
+						+ "as part of a Property Definition deletion operation",
+						propertyDefinition.getName()));
 			
 			Collection<TagReference> tagReferences = 
 					annotationIdsByCollectionId.get(collectionId);
@@ -379,13 +398,21 @@ public class GraphWorktreeProject implements IndexedRepository {
 				propertyDefinition, tagDefinition, tagsetDefinition);
 		
 		tagsetDefinition.setRevisionHash(tagsetRevision);
+		
+		
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		this.rootRevisionHash = 
-				gitProjectHandler.commitProject(String.format("Property Definition removed %1$s ", 
-						tagDefinition.toString()), true);
-		
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+				gitProjectHandler.commitProject(
+					String.format(
+						"Removed Property Definition %1$s with ID %2$s "
+						+ "from Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s", 
+						propertyDefinition.getName(),
+						propertyDefinition.getUuid(),
+						tagDefinition.getName(),
+						tagDefinition.getUuid(),
+						tagsetDefinition.getName(),
+						tagsetDefinition.getUuid()), true);
 		
 		graphProjectHandler.removePropertyDefinition(
 			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
@@ -399,7 +426,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String tagsetRevision = gitProjectHandler.createOrUpdateTag(
 				tagsetDefinition.getUuid(), tagDefinition,
 				String.format(
-					"Updated Property Definition %1$s with %2$s to Tag %3$s with ID %4$s",
+					"Updated Property Definition %1$s with %2$s in Tag %3$s with ID %4$s",
 					propertyDefinition.getName(),
 					propertyDefinition.getUuid(),
 					tagDefinition.getName(),
@@ -407,7 +434,19 @@ public class GraphWorktreeProject implements IndexedRepository {
 		
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+
+		// project commit
+		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
+			tagsetDefinition, 
+			String.format(
+				"Updated Property Definition %1$s with %2$s in Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
+				propertyDefinition.getName(),
+				propertyDefinition.getUuid(),
+				tagDefinition.getName(),
+				tagDefinition.getUuid(),
+				tagsetDefinition.getName(),
+				tagsetDefinition.getUuid()));
+		
 		graphProjectHandler.createOrUpdatePropertyDefinition(
 			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}

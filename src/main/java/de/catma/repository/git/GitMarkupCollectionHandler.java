@@ -110,11 +110,6 @@ public class GitMarkupCollectionHandler {
 
 	}
 
-	public void delete(@Nonnull String projectId, @Nonnull String markupCollectionId)
-			throws IOException {
-		throw new UnsupportedOperationException("Not implemented");
-	}
-
 	/**
 	 * Adds an existing tagset, identified by <code>tagsetId</code> and <code>tagsetVersion</code>, to the markup
 	 * collection identified by <code>markupCollectionId</code>.
@@ -391,6 +386,13 @@ public class GitMarkupCollectionHandler {
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 
+			if (localGitRepoManager.hasUntrackedChanges()) {
+				localGitRepoManager.addAllAndCommit(
+					"Auto commiting changes before performing a deletion of Annotations as part of a Tag deletion operation",
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());				
+			}
+			
 			removeTagInstances(localGitRepoManager, deletedTagInstanceIds);
 
 			if (localGitRepoManager.hasUncommitedChanges()) {

@@ -27,6 +27,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
+import de.catma.util.IDGenerator;
 
 public class GitProjectHandler {
 
@@ -38,6 +39,7 @@ public class GitProjectHandler {
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 	private final User user;
 	private final String projectId;
+	private IDGenerator idGenerator = new IDGenerator();
 
 	public GitProjectHandler(GitUser user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitManagerRestricted remoteGitServerManager) {
@@ -99,6 +101,17 @@ public class GitProjectHandler {
 	
 	public String createOrUpdateTag(String tagsetId, TagDefinition tagDefinition, String commitMsg) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			
+			if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
+				PropertyDefinition authorPropertyDefinition = 
+						new PropertyDefinition(
+							idGenerator.generate(),
+							PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
+							Collections.singleton(user.getIdentifier()));
+				tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
+			}
+			
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
@@ -412,7 +425,9 @@ public class GitProjectHandler {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
-			return gitMarkupCollectionHandler.removeTagInstancesAndCommit(projectId, collectionId, deletedTagInstanceIds, commitMsg);
+			
+			return gitMarkupCollectionHandler.removeTagInstancesAndCommit(
+					projectId, collectionId, deletedTagInstanceIds, commitMsg);
 		}	
 	}
 

@@ -71,4 +71,6 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void rebase(String branch) throws IOException;
 
+	boolean hasUntrackedChanges() throws IOException;
+
 }

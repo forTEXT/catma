@@ -548,15 +548,6 @@ public class GraphProjectHandler {
 	public void addTagDefinition(String rootRevisionHash, TagDefinition tagDefinition,
 			TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
 		
-		if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
-			PropertyDefinition authorPropertyDefinition = 
-					new PropertyDefinition(
-						idGenerator.generate(),
-						PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
-						Collections.singleton(user.getIdentifier()));
-			tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
-		}
-		
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
@@ -633,16 +624,7 @@ public class GraphProjectHandler {
 	public void updateTagDefinition(
 			String rootRevisionHash, TagDefinition tagDefinition, 
 			TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
-		
-		if (tagDefinition.getAuthor() == null) {
-			PropertyDefinition authorPropertyDefinition = 
-					new PropertyDefinition(
-						idGenerator.generate(),
-						PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
-						Collections.singleton(user.getIdentifier()));
-			tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
-		}
-		
+
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
@@ -1499,16 +1481,18 @@ public class GraphProjectHandler {
 				session.run(
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
 					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}})-[:"+rt(hasTag)+"]->"
 					+"(:"+nt(Tag)+"{tagId:{pTagId}})-[:"+rt(hasProperty)+"]->"
 					+"(p:"+nt(Property)+"{uuid:{pPropertyId}}) "
+					+ "SET pr.revisionHash = {pRootRevisionHash} "
 					+"SET ts.revisionHash = {pTagsetRevisionHash} "
 					+"REMOVE p:"+nt(Property)+ " ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
 						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
 						"pTagsetId", tagsetDefinition.getUuid(),
 						"pTagId", tagDefinition.getUuid(),
 						"pPropertyId", propertyDefinition.getUuid(),
