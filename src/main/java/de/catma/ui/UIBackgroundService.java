@@ -44,7 +44,7 @@ public class UIBackgroundService implements BackgroundService {
 	                        			listener.done(result);
 	                        		}
 	                        		finally {
-//		                        		ui.push();
+		                        		ui.push();
 	                        		}
 	                        	}
 	                        });
@@ -61,7 +61,7 @@ public class UIBackgroundService implements BackgroundService {
 	                            			listener.error(t);
 	                            		}
 	                            		finally {
-//		                            		ui.push();
+		                            		ui.push();
 	                            		}
 	                            	}
 	                            });

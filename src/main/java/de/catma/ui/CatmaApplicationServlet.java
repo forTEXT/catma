@@ -39,6 +39,7 @@ import com.vaadin.server.SystemMessagesInfo;
 import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.UIProvider;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.server.VaadinServletService;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.ui.modules.main.signup.SignupTokenVerificationRequestHandler;
@@ -148,10 +149,8 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
 		}
 	}
 	
-	
 	@Override
 	protected void servletInitialized() throws ServletException {
-		super.servletInitialized();
         getService().addSessionInitListener(this);
 
 		getService().addSessionInitListener(new SessionInitListener() {
@@ -199,18 +198,19 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
 	}
 	
     protected DeploymentConfiguration createDeploymentConfiguration(Properties initParameters) {
-
         initParameters.setProperty("widgetset","de.catma.ui.CleaWidgetset" );
         initParameters.setProperty("productionMode", "true");
         initParameters.setProperty("closeIdleSessions", "true");
         initParameters.setProperty("pushMode", "manual");
+        initParameters.setProperty("transport", "websocket-xhr");
         return super.createDeploymentConfiguration(initParameters);
-
     }
 
 	@Override
 	public void sessionInit(SessionInitEvent event) throws ServiceException {
-        event.getSession()
+		event.getSession().getUIProviders().forEach(event.getSession()::removeUIProvider);
+
+		event.getSession()
         .addUIProvider(uiProvider);		
 	}
 	

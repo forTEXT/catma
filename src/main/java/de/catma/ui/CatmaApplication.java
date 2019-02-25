@@ -39,10 +39,12 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.vaadin.annotations.PreserveOnRefresh;
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinSession;
+import com.vaadin.shared.communication.PushMode;
+import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.JavaScript;
 import com.vaadin.ui.Notification;
@@ -86,6 +88,7 @@ import de.catma.ui.util.Version;
 
 @Theme("catma")
 @PreserveOnRefresh
+@Push(value=PushMode.MANUAL,transport=Transport.WEBSOCKET_XHR )
 public class CatmaApplication extends UI implements 
 	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, ParameterProvider, FocusHandler {
 

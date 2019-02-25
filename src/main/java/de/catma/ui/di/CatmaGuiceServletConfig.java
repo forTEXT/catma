@@ -2,7 +2,7 @@ package de.catma.ui.di;
 
 import javax.servlet.annotation.WebListener;
 
-import com.google.gwt.dev.util.collect.Maps;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
@@ -23,9 +23,13 @@ public class CatmaGuiceServletConfig extends GuiceServletContextListener {
 		return Guice.createInjector(
 				new ServletModule(){
 					protected void configureServlets() {
-						serve("/*").with(CatmaApplicationServlet.class,Maps.create("loadOnStartup", "0"));
 						bind(UI.class).to(CatmaApplication.class).in(ServletScopes.SESSION);
 						bind(UIProvider.class).to(CatmaUIProvider.class);
+						serve("/*").with(CatmaApplicationServlet.class, ImmutableMap.<String,String>builder()
+								.put("loadOnStartup", "0")
+								.put("async-supported", "true")
+								.put("org.atmosphere.container.JSR356AsyncSupport.mappingPath","/PUSH")
+								.build());
 					};
 				}
 				, new GitlabModule(), new BootstrapModule(), new UIModule()
