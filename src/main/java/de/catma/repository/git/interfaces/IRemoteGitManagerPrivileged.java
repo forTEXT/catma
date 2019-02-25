@@ -11,15 +11,8 @@ import de.catma.util.Pair;
  * @author db
  *
  */
-public interface IRemoteGitManagerPrivileged {
+public interface IRemoteGitManagerPrivileged extends ICommonRemoteGitManager {
 
-	/**
-	 * checks if a given User or Email exists
-	 * @param usernameOrEmail
-	 * @return
-	 * @throws IOException
-	 */
-	boolean existsUserOrEmail(String usernameOrEmail) throws IOException;
 	
 	/**
 	 * Acquires (gets or creates) a GitLab impersonation token for the supplied
@@ -54,5 +47,14 @@ public interface IRemoteGitManagerPrivileged {
 	 *         user
 	 */
 	int createUser(String email, String username, String password, String name, Boolean isAdmin) throws IOException;
+
+	/**
+	 * Changes a user 
+	 * @param userId
+	 * @param name
+	 * @param password
+	 * @throws IOException
+	 */
+	void modifyUserAttributes(int userId, String name, String password) throws IOException;
 
 }

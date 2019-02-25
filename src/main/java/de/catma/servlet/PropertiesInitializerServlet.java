@@ -5,11 +5,13 @@ import java.util.Properties;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
 import de.catma.document.repository.RepositoryProperties;
 import de.catma.util.NonModifiableProperties;
 
+@WebServlet(loadOnStartup = 1, name="PropertiesInitializer", urlPatterns="/PropertiesInitializer")
 public class PropertiesInitializerServlet extends HttpServlet {
 	
     @Override

@@ -1,10 +1,12 @@
 package de.catma.ui.login;
 
 import java.io.IOException;
-import java.util.Optional;
+
+import com.google.inject.ImplementedBy;
 
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 
+@ImplementedBy(LocalUserLoginService.class)
 public interface LoginService {
 	
 	/**
@@ -34,7 +36,7 @@ public interface LoginService {
 	 * 
 	 * @return current API
 	 */
-	Optional<IRemoteGitManagerRestricted> getAPI();
+	IRemoteGitManagerRestricted getAPI();
 	
 	/**
 	 * logout the current user

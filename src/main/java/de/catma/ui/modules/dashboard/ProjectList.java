@@ -6,13 +6,12 @@ import java.util.Objects;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 import com.vaadin.data.HasDataProvider;
 import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.VaadinSession;
-import com.vaadin.shared.Registration;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
@@ -35,15 +34,17 @@ public class ProjectList extends VerticalLayout implements
 
     private final ProjectManager projectManager;
     private final ErrorHandler errorLogger;
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+	private final EventBus eventBus;
 	private final Comparator<ProjectReference> sortByNameAsc = (ref1,ref2) -> ref1.getName().compareTo(ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = (ref1,ref2) -> ref2.getName().compareTo(ref1.getName());
 	
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 
-    ProjectList(ProjectManager projectManager){ 
+	@Inject
+    ProjectList(ProjectManager projectManager, EventBus eventBus){ 
         this.errorLogger = (ErrorHandler)UI.getCurrent();
         this.projectManager = projectManager;
+        this.eventBus = eventBus;
         initComponents();
         eventBus.register(this);
     }
@@ -70,10 +71,10 @@ public class ProjectList extends VerticalLayout implements
 
     private void rebuild() {
         projectsLayout.removeAllComponents();
-        projectsLayout.addComponent(new CreateProjectCard(projectManager));
+        projectsLayout.addComponent(new CreateProjectCard(projectManager,eventBus));
         this.dataProvider.fetch(new Query<>())
         		.sorted(selectedSortOrder)
-        		.map((prj) -> new ProjectCard(prj, projectManager))
+        		.map((prj) -> new ProjectCard(prj, projectManager,eventBus))
                 .forEach(projectsLayout::addComponent);
     }
 

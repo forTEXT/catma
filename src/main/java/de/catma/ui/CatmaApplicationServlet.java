@@ -18,32 +18,45 @@
  */
 package de.catma.ui;
 
+import java.util.Properties;
+
 import javax.servlet.ServletException;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.servlet.ServletModule;
+import com.google.inject.Singleton;
 import com.vaadin.server.BootstrapFragmentResponse;
 import com.vaadin.server.BootstrapListener;
 import com.vaadin.server.BootstrapPageResponse;
 import com.vaadin.server.CustomizedSystemMessages;
+import com.vaadin.server.DeploymentConfiguration;
 import com.vaadin.server.ServiceException;
 import com.vaadin.server.SessionInitEvent;
 import com.vaadin.server.SessionInitListener;
 import com.vaadin.server.SystemMessages;
 import com.vaadin.server.SystemMessagesInfo;
 import com.vaadin.server.SystemMessagesProvider;
+import com.vaadin.server.UIProvider;
 import com.vaadin.server.VaadinServlet;
 
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.ui.di.GitlabModule;
-import de.catma.ui.di.Vaadin8Module;
-import de.catma.ui.login.GitlabLoginService;
 import de.catma.ui.modules.main.signup.SignupTokenVerificationRequestHandler;
 
-public class CatmaApplicationServlet extends VaadinServlet {
+@Singleton
+public class CatmaApplicationServlet extends VaadinServlet implements SessionInitListener {
 	
+	private final UIProvider uiProvider;
+
+	private final Injector injector;
+	
+	@Inject
+	public CatmaApplicationServlet(UIProvider uiProvider, Injector injector){
+		super();
+		this.uiProvider = uiProvider;
+		this.injector = injector;
+	}
+
 	private enum JsLib {
 //		JQUERY("jquery/jquery-1.7.2.min.js"),
 		HIGHCHARTS_SL("highcharts/standalone-framework-4.0.3.js"),
@@ -135,9 +148,12 @@ public class CatmaApplicationServlet extends VaadinServlet {
 		}
 	}
 	
+	
 	@Override
 	protected void servletInitialized() throws ServletException {
 		super.servletInitialized();
+        getService().addSessionInitListener(this);
+
 		getService().addSessionInitListener(new SessionInitListener() {
 			
 			@Override
@@ -167,34 +183,36 @@ public class CatmaApplicationServlet extends VaadinServlet {
 				return messages;
 			}
 		});
-		
-		/* initialize global Eventbus */
-		getService().addSessionInitListener(new SessionInitListener() {
-			@Override
-			public void sessionInit(SessionInitEvent event)
-					throws ServiceException {
-				event.getSession().setAttribute(EventBus.class, new EventBus());
-			}
-		});
 
 		/* init token verifier */
 		getService().addSessionInitListener(new SessionInitListener() {
+						
 			@Override
 			public void sessionInit(SessionInitEvent event)
-					throws ServiceException {				
-				event.getSession().addRequestHandler(new SignupTokenVerificationRequestHandler());
+					throws ServiceException {
+				
+				event.getSession().addRequestHandler(new SignupTokenVerificationRequestHandler(
+						injector.getInstance(EventBus.class)));
 			}
 		});
-	
-		/* DI with google guice */
-		getService().addSessionInitListener(new SessionInitListener() {
-			@Override
-			public void sessionInit(SessionInitEvent event)
-					throws ServiceException {				
-				event.getSession().setAttribute(Injector.class, Guice.createInjector(
-						new ServletModule(), new GitlabModule(), new Vaadin8Module()
-						));
-			}
-		});
+		
 	}
+	
+    protected DeploymentConfiguration createDeploymentConfiguration(Properties initParameters) {
+
+        initParameters.setProperty("widgetset","de.catma.ui.CleaWidgetset" );
+        initParameters.setProperty("productionMode", "true");
+        initParameters.setProperty("closeIdleSessions", "true");
+        initParameters.setProperty("pushMode", "manual");
+        return super.createDeploymentConfiguration(initParameters);
+
+    }
+
+	@Override
+	public void sessionInit(SessionInitEvent event) throws ServiceException {
+        event.getSession()
+        .addUIProvider(uiProvider);		
+	}
+	
+
 }

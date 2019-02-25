@@ -1,7 +1,6 @@
 package de.catma.ui.modules.main.signup;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
 
 import com.vaadin.data.ValidationResult;
 import com.vaadin.data.Validator;
@@ -11,33 +10,34 @@ import com.vaadin.ui.UI;
 import de.catma.repository.git.interfaces.ICommonRemoteGitManager;
 import de.catma.ui.modules.main.ErrorHandler;
 
-public class UsernameValidator implements Validator<String>{
+/**
+ * checks if an account has been taken already
+ * @author db
+ *
+ */
+public class AccountAlreadyTakenValidator implements Validator<String>{
 
 	private final ICommonRemoteGitManager commonGitManagerApi;
-	private final Pattern usernamePattern = Pattern.compile("[a-zA-Z0-9_-]+");
 
-	public UsernameValidator(ICommonRemoteGitManager commonGitManagerApi) {
+	public AccountAlreadyTakenValidator(ICommonRemoteGitManager commonGitManagerApi) {
 		this.commonGitManagerApi = commonGitManagerApi;
 	}
 	
 	@Override
 	public ValidationResult apply(String value, ValueContext context) {
 		if (value == null || value.isEmpty()) {
-			return ValidationResult.error("Username can't be empty");
-		}
-		if (!usernamePattern.matcher(value).matches()) {
-			return ValidationResult.error("Username must be alphanumeric");
+			return ValidationResult.error("Username or email can't be empty");
 		}
 		
 		try {
 			if(commonGitManagerApi.existsUserOrEmail(value) ) {
-				return ValidationResult.error("username or E-Mail already taken");
+				return ValidationResult.error("username or email already taken");
 			}else {
 				return ValidationResult.ok();
 			}
 		} catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("username can't be checked", e);
-			return ValidationResult.error("username can't be checked");
+			((ErrorHandler)UI.getCurrent()).showAndLogError("username or email can't be checked", e);
+			return ValidationResult.error("username or email can't be checked");
 		}
 	}
 

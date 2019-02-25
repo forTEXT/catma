@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -36,6 +35,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.vaadin.annotations.PreserveOnRefresh;
@@ -94,27 +94,26 @@ public class CatmaApplication extends UI implements
 		
 	private final List<WeakReference<Closeable>> closeListener = Lists.newArrayList();
 	
-	private final Injector injector = VaadinSession.getCurrent().getAttribute(Injector.class);
-
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
-
 	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
 
 	private final Class<? extends Annotation> loginType; 
 	private final Class<? extends Annotation> initType;
 	 
-	private final LoginService loginservice;
-	private final InitializationService initService;
+	private LoginService loginservice;
+	private InitializationService initService;
 
-//	private MainView mainView;
+	private final Injector injector;
+	private final EventBus eventBus;
 	
-//	private final MainView mainView = new MainView(new EventBus());
-
-	public CatmaApplication() throws IOException {
-		eventBus.register(this);
+	@Inject
+	public CatmaApplication(Injector injector, EventBus eventbus) throws IOException {
+		this.injector = injector;
+		this.eventBus = eventbus;
+		this.eventBus.register(this);
 			try {
+				
 				loginType = 
-							(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.LoginType.getValue());
+						(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.LoginType.getValue());
 				initType = 
 						(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.InitType.getValue());
 				loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
@@ -126,7 +125,9 @@ public class CatmaApplication extends UI implements
 
 	@Override
 	protected void init(VaadinRequest request) {
-		
+		loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
+		initService = injector.getInstance(Key.get(InitializationService.class, initType));
+
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
@@ -161,7 +162,6 @@ public class CatmaApplication extends UI implements
 		// we need to verify tokens here too.
 		
 		if(signupTokenManager.parseUri(request.getPathInfo())) {
-			EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 			SignupTokenManager tokenManager = new SignupTokenManager();
 			tokenManager.handleVerify( request.getParameter("token"), eventBus);
 		}
@@ -301,8 +301,11 @@ public class CatmaApplication extends UI implements
 
 	@Override
 	public void close() {
-		loginservice.getAPI().ifPresent((api) -> 
-			logger.info("application for user" + api.getUsername() + " has been closed") );
+		IRemoteGitManagerRestricted api = loginservice.getAPI();
+
+		if(api != null){
+			logger.info("application for user " + api.getUsername() + " has been closed");
+		}
 		
 		for (WeakReference<Closeable> weakReference : closeListener) {
 			Closeable ref = weakReference.get();
@@ -321,11 +324,10 @@ public class CatmaApplication extends UI implements
 
 	@Override
 	public void showAndLogError(String message, Throwable e) {
-		Optional<IRemoteGitManagerRestricted> api;
-		api = loginservice.getAPI();
+		IRemoteGitManagerRestricted api = loginservice.getAPI();
 		
-		if(api.isPresent()){
-			logger.log(Level.SEVERE, "[" + api.get().getUsername() + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
+		if(api != null){
+			logger.log(Level.SEVERE, "[" + api.getUsername() + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
 			
 		}
 

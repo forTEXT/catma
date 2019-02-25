@@ -35,11 +35,12 @@ import de.catma.ui.tabbedview.TabbedView;
 public class TaggerManagerView extends TabbedView {
 	
 	private int nextTaggerID = 0;
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+	private final EventBus eventBus;
 	
-	public TaggerManagerView() {
+	public TaggerManagerView(EventBus eventBus) {
 		super(
 			Messages.getString("TaggerManagerView.noOpenDocumentsInfo")); //$NON-NLS-1$
+		this.eventBus = eventBus;
 		this.eventBus.register(this);
 	}
 	
@@ -88,7 +89,8 @@ public class TaggerManagerView extends TabbedView {
 							}
 							
 						}
-					});
+					},
+					eventBus);
 			addClosableTab(taggerView, sourceDocument.toString());
 			setSelectedTab(taggerView);
 		}

@@ -99,12 +99,13 @@ public class AuthenticationDialog extends Window {
 		private String oauthAccessTokenRequestURL;
 		private String oauthClientId;
 		private String oauthClientSecret;
-		private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+		private final EventBus eventBus;
 		private final LoginService loginservice;
 		private final InitializationService initService;
 		
 		public AuthenticationRequestHandler(
 				UI ui, // UI.getCurrent() is not available during request handling, therefore we pass in the UI
+				EventBus eventBus,
 				LoginService loginservice,
 				InitializationService initService,
 				String returnURL, 
@@ -115,6 +116,7 @@ public class AuthenticationDialog extends Window {
 				String oauthClientSecret) {
 			super();
 			this.ui = ui;
+			this.eventBus = eventBus;
 			this.returnURL = returnURL;
 			this.dialogWindow = dialogWindow;
 			this.token = token;
@@ -252,19 +254,21 @@ public class AuthenticationDialog extends Window {
 	private Button btLogin;
 	private final LoginService loginservice;
 	private final InitializationService initService;
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
-
+	private final EventBus eventBus;
+	
 	public AuthenticationDialog(
 			String caption, 
 			String baseUrl,
 			LoginService loginService,
-			InitializationService initService
+			InitializationService initService,
+			EventBus eventBus
 			) { 
 		super(caption);
 		setModal(true);
 		this.baseUrl = baseUrl;
 		this.loginservice = loginService;
 		this.initService = initService;
+		this.eventBus = eventBus;
 		
 	
 		initComponents();
@@ -343,6 +347,7 @@ public class AuthenticationDialog extends Window {
 		final AuthenticationRequestHandler authenticationRequestHandler =
 				new AuthenticationRequestHandler(
 						ui,
+						eventBus,
 						loginservice,
 						initService,
 						baseUrl, 

@@ -132,6 +132,12 @@
 		<!-- https://mvnrepository.com/artifact/com.google.inject.extensions/guice-throwingproviders -->
 		<dependency org="com.google.inject.extensions" name="guice-throwingproviders" rev="4.2.2"/>
 
+		<!-- https://mvnrepository.com/artifact/com.google.inject.extensions/guice-throwingproviders -->
+		<dependency org="com.google.inject.extensions" name="guice-throwingproviders" rev="4.2.2"/>
+
+		<!-- https://mvnrepository.com/artifact/com.google.inject.extensions/guice-assistedinject -->
+		<dependency org="com.google.inject.extensions" name="guice-assistedinject" rev="4.2.2"/>
+
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>

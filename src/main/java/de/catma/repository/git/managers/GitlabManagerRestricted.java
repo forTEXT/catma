@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,11 @@ import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Project;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
+
 import de.catma.Pager;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.project.ProjectReference;
@@ -29,43 +35,53 @@ import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IGitUserInformation;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.ui.authentication.Credentials;
-import de.catma.ui.authentication.GitlabCredentials;
+import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
 import elemental.json.Json;
 import elemental.json.JsonException;
 import elemental.json.JsonObject;
 
-public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGitUserInformation{
+public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGitUserInformation {
 
 	private final GitLabApi restrictedGitLabApi;
-	private final GitUser user;
-	private final Credentials credentials;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private GitUser user;
 
-	
-	private GitlabManagerRestricted(GitLabApi gitlabApi) throws GitLabApiException {
-		org.gitlab4j.api.models.User currentUser = gitlabApi.getUserApi().getCurrentUser();
-		this.user = new GitUser(currentUser);
-		this.credentials = new GitlabCredentials(currentUser.getUsername(), currentUser.getEmail(),currentUser.getName(), gitlabApi.getAuthToken());
-		this.restrictedGitLabApi = gitlabApi;
+	@AssistedInject
+	public GitlabManagerRestricted(EventBus eventBus, @Assisted("token") String userImpersonationToken) throws IOException {
+		this(eventBus,new GitLabApi(RepositoryPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
 	}
 	
-	public static GitlabManagerRestricted fromToken(GitUser username, String userImpersonationToken) throws IOException {
+	@AssistedInject
+	public GitlabManagerRestricted(EventBus eventBus, @Assisted("username") String username, @Assisted("password") String password) throws IOException {
+		this(eventBus, oauth2Login(RepositoryPropertyKey.GitLabServerUrl.getValue(), username, password));
+	}
+
+	private GitlabManagerRestricted(EventBus eventBus, GitLabApi api) throws IOException {
+		org.gitlab4j.api.models.User currentUser;
 		try {
-			GitLabApi api = new GitLabApi(RepositoryPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken);
-			return new GitlabManagerRestricted(api);
+			currentUser = api.getUserApi().getCurrentUser();
+			this.user = new GitUser(currentUser);
+			this.restrictedGitLabApi = api;
+			eventBus.register(this);
 		} catch (GitLabApiException e) {
-			throw new IOException("failed to login",e);
+			throw new IOException(e);
 		}
 	}
 	
-	public static GitlabManagerRestricted gitlabLogin(String username, String password) throws IOException {
+	/**
+	 * A wrapper to hide imports from outside world 
+	 * @param url
+	 * @param username
+	 * @param password
+	 * @return
+	 * @throws IOException
+	 */
+	private static GitLabApi oauth2Login(String url, String username, String password) throws IOException {
 		try {
-			GitLabApi api = GitLabApi.oauth2Login(RepositoryPropertyKey.GitLabServerUrl.getValue(), username, password);
-			return new GitlabManagerRestricted(api);
+			return GitLabApi.oauth2Login(RepositoryPropertyKey.GitLabServerUrl.getValue(), username, password);
 		} catch (GitLabApiException e) {
-			throw new IOException("failed to login", e);
+			throw new IOException(e);
 		}
 	}
 	
@@ -266,6 +282,21 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 		}
 	}
 	
+	@Override
+	public boolean existsUserOrEmail(String usernameOrEmail) throws IOException {
+		try {
+			List<org.gitlab4j.api.models.User> userPager = this.restrictedGitLabApi.getUserApi().findUsers(usernameOrEmail);
+			
+			return userPager.stream()
+			.filter(u -> usernameOrEmail.equals(u.getUsername()) || usernameOrEmail.equals(u.getEmail()))
+			.filter(u -> user.getUserId() != u.getId())
+			.count() > 0;
+			
+		} catch(GitLabApiException e){
+			throw new IOException("failed to check for username",e);
+		}
+	}
+	
 	/**
 	 * @deprecated is this old?
 	 * @param projectReference
@@ -307,23 +338,26 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 
 	@Override
 	public String getUsername() {
-		return credentials.getIdentifier();
+		return user.getIdentifier();
 	}
 	
 	@Override
 	public String getPassword() {
-		return getCredentials().getImpersonationToken();
+		return restrictedGitLabApi.getAuthToken();
 	}
 
 	@Override
 	public String getEmail() {
-		return credentials.getEmail();
+		return user.getEmail();
 	}
 
-	@Override
-	public Credentials getCredentials() {
-		return credentials;
+	@Subscribe
+	public void handleChangeUserAttributes(ChangeUserAttributeEvent event){
+		try {
+			this.user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
+		} catch (GitLabApiException e) {
+			logger.log(Level.WARNING, "can't fetch user from backend", e);
+		}
 	}
-	
 
 }

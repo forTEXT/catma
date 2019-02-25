@@ -11,6 +11,7 @@ import com.google.common.base.Joiner;
 import com.vaadin.annotations.JavaScript;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
+import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
@@ -95,7 +96,8 @@ public class SignUpDialog extends Window {
 		content.addComponent(buttonPanel);
 				
 		userBinder.forField(tfEmail)
-	    .withValidator(new UsernameValidator(gitlabManagerPrivileged))
+	    .withValidator(new EmailValidator("must be a valid email address"))
+	    .withValidator(new AccountAlreadyTakenValidator(gitlabManagerPrivileged))
 	    .bind(UserData::getEmail, UserData::setEmail);
 		
 		btnSignup.addClickListener(click -> {

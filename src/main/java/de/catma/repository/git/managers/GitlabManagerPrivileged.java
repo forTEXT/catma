@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
@@ -21,7 +22,6 @@ import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
-import de.catma.user.UserProperty;
 import de.catma.util.Pair;
 
 public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged {
@@ -169,10 +169,29 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged {
 	}
 	
 	@Override
+	public void modifyUserAttributes(int userId, String name, String password) throws IOException {
+		try {
+			User user = privilegedGitLabApi.getUserApi().getUser(userId);
+			
+			BiConsumer<String,Consumer<String>> fExecIfNotNull = (attr,func) -> { 
+				if(attr != null) 
+					func.accept(attr);
+			};
+			fExecIfNotNull.accept(name, user::setName);
+
+			this.privilegedGitLabApi.getUserApi().modifyUser(user, password, user.getProjectsLimit());
+		} catch(GitLabApiException e){
+			throw new IOException("failed to check for username",e);
+		}
+	}
+	
+	@Override
 	public boolean existsUserOrEmail(String usernameOrEmail) throws IOException {
 		try {
 			List<User> userPager = this.privilegedGitLabApi.getUserApi().findUsers(usernameOrEmail);
-			return ! userPager.isEmpty() ;
+			return userPager.stream()
+			.filter(u -> usernameOrEmail.equals(u.getUsername()) || usernameOrEmail.equals(u.getEmail()))
+			.count() > 0;
 		} catch(GitLabApiException e){
 			throw new IOException("failed to check for username",e);
 		}
