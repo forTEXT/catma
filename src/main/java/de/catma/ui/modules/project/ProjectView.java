@@ -36,10 +36,12 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.IndexedRepository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
@@ -53,6 +55,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
@@ -501,7 +504,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         ContextMenu hugeCardMoreOptions = getBtnMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));// TODO: 29.10.18 actually share something
         hugeCardMoreOptions.addItem("Delete Ressources", e -> Notification.show("Deleting")); // TODO: 29.10.18 actually delete something
-
+      
         resourcePanel.addComponent(initResourceContent());
         teamPanel.addComponent(initTeamContent());
 
@@ -565,6 +568,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         ContextMenu BtnMoreOptionsContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
         BtnMoreOptionsContextMenu.addItem("Share documents / collections", (menuItem) -> handleShareResources(menuItem, resourceGrid));
+        BtnMoreOptionsContextMenu.addItem("Analyze Ressources", (menuItem) -> handleAnalyzeResources(menuItem,resourceGrid ));
 
 
         resourceContent.addComponent(sourceDocumentsGridComponent);
@@ -760,6 +764,32 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             dialog.close();
         },true);
     }
+
+	private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
+
+		ConfirmDialog.show(UI.getCurrent(), "Info",
+				"Are you sure you want to analyze the selected resources: " + resourceGrid.getSelectedItems().stream()
+						.map(resource -> resource.getName()).collect(Collectors.joining(",")) + "?",
+				"Yes", "Cancel", dlg -> {
+
+					Corpus corpus = new Corpus("corpus to be analyzed");
+
+					for (Resource resource : resourceGrid.getSelectedItems()) {
+
+						if (resource.getIcon().equalsIgnoreCase(VaadinIcons.NOTEBOOK.getHtml())) {
+							CollectionResource collResource = (CollectionResource) resource;
+							corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
+
+						} else {
+							DocumentResource docResource = (DocumentResource) resource;
+							corpus.addSourceDocument(docResource.getDocument());
+
+						}
+					}
+					eventBus.post(new RouteToAnalyzeNewEvent((IndexedRepository) project, corpus));
+				});
+
+	}
 
 	public void close() {
 		try {
