@@ -203,6 +203,8 @@ public class CatmaApplication extends UI implements
 			tokenManager.handleVerify( request.getParameter("token"), eventBus);
 		}
 		
+		setPollInterval(1000);
+		
 //		SignupTokenManager.parseToken(request.getPathInfo(), request.getParameter("token"));
 	}
 	
