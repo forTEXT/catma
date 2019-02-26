@@ -131,6 +131,9 @@
 
 		<!-- https://mvnrepository.com/artifact/com.google.inject.extensions/guice-throwingproviders -->
 		<dependency org="com.google.inject.extensions" name="guice-throwingproviders" rev="4.2.2"/>
+		
+		<dependency org="org.apache.tinkerpop" name="gremlin-core" rev="3.4.0"/>
+		<dependency org="org.apache.tinkerpop" name="tinkergraph-gremlin" rev="3.4.0"/>
 
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	

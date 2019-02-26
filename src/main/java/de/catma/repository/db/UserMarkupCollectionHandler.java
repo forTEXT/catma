@@ -226,6 +226,7 @@ class UserMarkupCollectionHandler {
 							String.valueOf(userMarkupCollectionId), 
 							null,
 							new ContentInfoSet(name),
+							"",
 							"");
 			
 			sourceDocument.addUserMarkupCollectionReference(reference);
@@ -266,7 +267,7 @@ class UserMarkupCollectionHandler {
 		dbRepository.setTagManagerListenersEnabled(false);
 		UserMarkupCollection umc = null;
 		try {
-			umc = userMarkupCollectionSerializationHandler.deserialize(null, inputStream);
+			umc = userMarkupCollectionSerializationHandler.deserialize(sourceDocument, null, inputStream);
 		}
 		finally {
 			dbRepository.setTagManagerListenersEnabled(true);
@@ -401,7 +402,8 @@ class UserMarkupCollectionHandler {
 						String.valueOf(userMarkupCollectionId), 
 						null,
 						umc.getContentInfoSet(),
-						"");
+						sourceDocument.getID(),
+						sourceDocument.getRevisionHash());
 		sourceDocument.addUserMarkupCollectionReference(umcRef);
 		
 		return umcRef;

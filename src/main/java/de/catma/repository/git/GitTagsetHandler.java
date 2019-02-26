@@ -167,7 +167,7 @@ public class GitTagsetHandler {
 		}		
 	}
 	
-	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
+	public TagsetDefinition getTagset(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
@@ -395,4 +395,5 @@ public class GitTagsetHandler {
 			return tagsetRevision;
 		}
 	}
+
 }

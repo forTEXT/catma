@@ -408,7 +408,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public void removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException {
+	public String removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `removeSubmodule` on a detached instance");
 		}
@@ -436,7 +436,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		    gitApi.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
 		    gitApi.rm().setCached(true).addFilepattern(relativeUnixStyleFilePath).call();
 
-		    commit(commitMsg, committerName, committerEmail);
+		    String projectRevisionHash = commit(commitMsg, committerName, committerEmail);
 			
 			File submoduleGitDir = 
 				basePath
@@ -448,6 +448,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			
 			FileUtils.deleteDirectory(absoluteFilePath.toFile());
 
+			return projectRevisionHash;
 		}
 		catch (GitAPIException | ConfigInvalidException e) {
 			throw new IOException(e);

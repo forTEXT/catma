@@ -23,9 +23,6 @@ import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
-import de.catma.repository.git.GitTagsetHandler;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -45,11 +42,16 @@ public class JsonLdWebAnnotation {
 	private JsonLdWebAnnotationBody_Dataset body;
 	private JsonLdWebAnnotationTarget_List target;
 
+	
+	/**
+	 * Constructor for deserialization
+	 */
 	public JsonLdWebAnnotation() {
 
 	}
 
-	public JsonLdWebAnnotation(String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
+	public JsonLdWebAnnotation(
+			String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -140,15 +142,12 @@ public class JsonLdWebAnnotation {
 	}
 
 	public List<TagReference> toTagReferenceList(
-			String projectId, String markupCollectionId,
-			ILocalGitRepositoryManager localGitRepositoryManager, IRemoteGitManagerRestricted remoteGitServerManager)
-				throws IOException {
-		TagInstance tagInstance = this.getTagInstance(localGitRepositoryManager, remoteGitServerManager, projectId);
+			String projectId, String markupCollectionId, TagLibrary tagLibrary)
+				throws Exception {
+		TagInstance tagInstance = this.getTagInstance(tagLibrary);
 		String sourceDocumentUri = this.getSourceDocumentUri();
 		List<Range> ranges = this.getRanges();
 
-		// TODO: figure out how to do this with .stream().map while handling exceptions properly
-		// see https://stackoverflow.com/a/33218789 & https://stackoverflow.com/a/30118121 for pointers
 		List<TagReference> tagReferences = new ArrayList<>();
 		try {
 			for (Range range : ranges) {
@@ -157,8 +156,10 @@ public class JsonLdWebAnnotation {
 		}
 		catch (URISyntaxException e) {
 			throw new IOException(
-				"Failed to turn internal representation back into a collection of TagReference objects", e
-			);
+				String.format("error loading Collection %1$s of project %2$s ",
+						markupCollectionId,
+						projectId), 
+				e);
 		}
 
 		return tagReferences;
@@ -181,12 +182,9 @@ public class JsonLdWebAnnotation {
 	}
 
 	@JsonIgnore
-	public TagInstance getTagInstance(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager, String projectId)
-			throws IOException {
-		TagDefinition tagDefinition = this.getTagDefinition(
-			localGitRepositoryManager, remoteGitServerManager, projectId
-		);
+	public TagInstance getTagInstance(TagLibrary tagLibrary)
+			throws Exception {
+		TagDefinition tagDefinition = this.getTagDefinition(tagLibrary);
 
 		TagInstance tagInstance = new TagInstance(
 			this.getTagInstanceUuid(),
@@ -217,17 +215,13 @@ public class JsonLdWebAnnotation {
 		return tagInstance;
 	}
 
-	private TagDefinition getTagDefinition(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager, String projectId)
+	private TagDefinition getTagDefinition(TagLibrary tagLibrary)
 			throws IOException {
-		GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepositoryManager, remoteGitServerManager);
-
-		// TODO: open a TagDefinition directly?
-		TagsetDefinition tagsetDefinition = gitTagsetHandler.open(
-				projectId,
-				this.getLastPathSegmentFromUrl(this.body.getTagset())
-		);
-		return tagsetDefinition.getTagDefinition(this.getLastPathSegmentFromUrl(this.body.getTag()));
+		String tagsetId = this.getLastPathSegmentFromUrl(this.body.getTagset());
+		String tagId = this.getLastPathSegmentFromUrl(this.body.getTag());
+		
+		TagsetDefinition tagsetDefinition = tagLibrary.getTagsetDefinition(tagsetId);
+		return tagsetDefinition.getTagDefinition(tagId);
 
 	}
 

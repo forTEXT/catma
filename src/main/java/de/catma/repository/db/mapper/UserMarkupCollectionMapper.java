@@ -36,7 +36,6 @@ public class UserMarkupCollectionMapper implements RecordMapper<Record, UserMark
 				record.getValue(USERMARKUPCOLLECTION.PUBLISHER),
 				record.getValue(USERMARKUPCOLLECTION.TITLE)),
 			tagLibrary,
-			tagReferences,
-			accessMode);
+			"","");
 	}
 }

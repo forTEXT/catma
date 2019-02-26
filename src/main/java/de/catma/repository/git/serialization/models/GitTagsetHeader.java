@@ -5,14 +5,14 @@ import java.util.TreeSet;
 
 public class GitTagsetHeader extends GitHeaderBase {
 	
-	private SortedSet<String> deletedTags;
+	private TreeSet<String> deletedTags;
 	
 	public GitTagsetHeader() {
 		super();
 		this.deletedTags = new TreeSet<>();
 	}
 
-	public GitTagsetHeader(String name, String description, SortedSet<String> deletedTags) {
+	public GitTagsetHeader(String name, String description, TreeSet<String> deletedTags) {
 		super(name, description);
 		this.deletedTags = deletedTags;
 	}
@@ -21,7 +21,7 @@ public class GitTagsetHeader extends GitHeaderBase {
 		return deletedTags;
 	}
 	
-	public void setDeletedTags(SortedSet<String> deletedTags) {
+	public void setDeletedTags(TreeSet<String> deletedTags) {
 		this.deletedTags = deletedTags;
 	}
 	

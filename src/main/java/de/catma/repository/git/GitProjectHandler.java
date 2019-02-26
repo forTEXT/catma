@@ -6,17 +6,21 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -31,6 +35,8 @@ import de.catma.util.IDGenerator;
 
 public class GitProjectHandler {
 
+	private Logger logger = Logger.getLogger(GitProjectHandler.class.getName());
+	
 	public static final String TAGSET_SUBMODULES_DIRECTORY_NAME = "tagsets";
 	public static final String MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
@@ -187,13 +193,11 @@ public class GitProjectHandler {
 				String.format("Added Collection %1$s with ID %2$s", name, markupCollectionId),
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail());
-				
-//			gitApi
-//				.push()
-//				.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-//					username, password
-//				))
-//				.call(); //TODO: push might need a pull first in collaborative settings!			
+			localGitRepoManager.detach(); 
+			
+			gitMarkupCollectionHandler.checkout(
+				projectId, markupCollectionId, 
+				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);			
 
 			return revisionHash;
 		}
@@ -334,78 +338,152 @@ public class GitProjectHandler {
 			sourceDocumentId);
 	}
 
-	public Stream<SourceDocument> getSourceDocumentStream() {
+	public List<SourceDocument> getDocuments() {
+		ArrayList<SourceDocument> documents = new ArrayList<>();
+		
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-					localRepoManager, this.remoteGitServerManager
-				);
-			 try {
-				 localRepoManager.open(
-						 projectId,
-						 GitProjectManager.getProjectRootRepositoryName(projectId));
-				 
-				 Path sourceDirPath = 
-						 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-						 .resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
-				 localRepoManager.detach();
-				 if (!sourceDirPath.toFile().exists()) {
-					 return Stream.empty();
-				 }
-				 return Files
-					 .walk(sourceDirPath, 1)
-					 .filter(sourceDocPath -> !sourceDocPath.equals(sourceDirPath))
-					 .map(sourceDocPath -> {
-						 String sourceDocumentId = sourceDocPath.getFileName().toString();
-						 try {
-							return gitSourceDocumentHandler.open(projectId, sourceDocumentId);
-						} catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-					 });
-			 }
-			 catch (IOException e) {
-				 throw new RuntimeException(e);
-			 }
+					localRepoManager, this.remoteGitServerManager);
+			
+			localRepoManager.open(
+					projectId,
+					GitProjectManager.getProjectRootRepositoryName(projectId));
+			 
+			Path sourceDirPath = 
+					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					.resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
+			localRepoManager.detach();
+			if (!sourceDirPath.toFile().exists()) {
+				return documents;
+			}
+			 
+			 
+			List<Path> paths = Files
+				 .walk(sourceDirPath, 1)
+				 .filter(sourceDocPath -> !sourceDocPath.equals(sourceDirPath))
+				 .collect(Collectors.toList());
+			for (Path sourceDocPath : paths) {
+				String sourceDocumentId = sourceDocPath.getFileName().toString();
+				try {
+					documents.add(gitSourceDocumentHandler.open(projectId, sourceDocumentId));
+				} catch (Exception e) {
+					logger.log(
+						Level.SEVERE,
+						String.format(
+							"error loading Document %1$s for project %2$s",
+							sourceDirPath,
+							projectId), 
+						e);					
+				}
+			}
 		}
+		catch (Exception e) {
+			logger.log(
+				Level.SEVERE,
+				String.format(
+					"error loading Documents for project %1$s",
+					projectId), 
+				e);					
+		}
+		
+		return documents;
 	}
 
-	public Stream<UserMarkupCollectionReference> getUserMarkupCollectionReferenceStream() {
+	public List<UserMarkupCollectionReference> getCollectionReferences() {
+		ArrayList<UserMarkupCollectionReference> collectionReferences = new ArrayList<>();
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
-					localRepoManager, this.remoteGitServerManager
-				);
-			 try {
-				 localRepoManager.open(
-						 projectId,
-						 GitProjectManager.getProjectRootRepositoryName(projectId));
+					localRepoManager, this.remoteGitServerManager);
+			try {
+				localRepoManager.open(
+					projectId,
+					GitProjectManager.getProjectRootRepositoryName(projectId));
 				 
-				 Path collectionDirPath = 
-						 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-						 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
-				 localRepoManager.detach();
+				Path collectionDirPath = 
+					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+				localRepoManager.detach();
 				 
-				 if (!collectionDirPath.toFile().exists()) {
-					 return Stream.empty();
-				 }
-
-				 return Files
-					 .walk(collectionDirPath, 1)
-					 .filter(collectionPath -> !collectionDirPath.equals(collectionPath))
-					 .map(collectionPath -> {
-						 String collectionId = collectionPath.getFileName().toString();
-						 try {
-							return gitMarkupCollectionHandler.getUserMarkupCollectionReference(projectId, collectionId);
-						} catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-					 });
-			 }
-			 catch (IOException e) {
-				 throw new RuntimeException(e);
-			 }
+				if (!collectionDirPath.toFile().exists()) {
+					return collectionReferences;
+				}
+				List<Path> paths = Files
+						.walk(collectionDirPath, 1)
+						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
+						.collect(Collectors.toList());
+				for (Path collectionPath : paths) {
+					String collectionId = collectionPath.getFileName().toString();
+					try {
+						collectionReferences.add(
+							gitMarkupCollectionHandler.getCollectionReference(projectId, collectionId));
+					} catch (Exception e) {
+						logger.log(
+						Level.SEVERE, 
+							String.format(
+								"error loading Collection reference %1$s for project %2$s",
+								collectionPath,
+								projectId), 
+							e);
+						 
+					}
+				}
+			}
+			catch (Exception e) {
+				logger.log(
+					Level.SEVERE, 
+					"error loading Collection references for project %1$s" + projectId, e);
+			}
 		}
+		return collectionReferences;
 	}
 
+	public List<UserMarkupCollection> getCollections(TagLibrary tagLibrary) {
+		ArrayList<UserMarkupCollection> collections = new ArrayList<>();
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+					localRepoManager, this.remoteGitServerManager);
+			try {
+				localRepoManager.open(
+					projectId,
+					GitProjectManager.getProjectRootRepositoryName(projectId));
+				 
+				Path collectionDirPath = 
+					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+				localRepoManager.detach();
+				 
+				if (!collectionDirPath.toFile().exists()) {
+					return collections;
+				}
+				List<Path> paths = Files
+						.walk(collectionDirPath, 1)
+						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
+						.collect(Collectors.toList());
+				for (Path collectionPath : paths) {
+					String collectionId = collectionPath.getFileName().toString();
+					try {
+						collections.add(
+							gitMarkupCollectionHandler.getCollection(projectId, collectionId, tagLibrary));
+					} catch (Exception e) {
+						logger.log(
+						Level.SEVERE, 
+							String.format(
+								"error loading Collection reference %1$s for project %2$s",
+								collectionPath,
+								projectId), 
+							e);
+						 
+					}
+				}
+			}
+			catch (Exception e) {
+				logger.log(
+					Level.SEVERE, 
+					"error loading Collection references for project %1$s" + projectId, e);
+			}
+		}
+		return collections;
+	}	
 	public void addOrUpdate(String collectionId, Collection<TagReference> tagReferenceList, TagLibrary tagLibrary) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
@@ -528,10 +606,18 @@ public class GitProjectHandler {
 		}
 	}
 
-	public void removeCollection(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+	public String removeCollection(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String collectionId = userMarkupCollectionReference.getId();
 			
+			GitMarkupCollectionHandler collectionHandler = 
+					new GitMarkupCollectionHandler(localGitRepoManager, remoteGitServerManager);
+
+			collectionHandler.synchronizeBranchWithRemoteMaster(
+					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
+					projectId, collectionId);
+				
+				localGitRepoManager.detach();			
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 	
@@ -542,7 +628,7 @@ public class GitProjectHandler {
 					collectionId
 			).toFile();
 	
-			localGitRepoManager.removeSubmodule(
+			return localGitRepoManager.removeSubmodule(
 				targetSubmodulePath,
 				String.format(
 					"Removed Collection %1$s with ID %2$s", 
@@ -588,6 +674,21 @@ public class GitProjectHandler {
 		}	
 	}
 	
+	public String addToStagedAndCommit(UserMarkupCollectionReference collectionRef, String commitMsg) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			Path relativePath = Paths.get(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionRef.getId());
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+
+			localGitRepoManager.add(relativePath);
+			
+			return localGitRepoManager.commit(
+					commitMsg, 
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());			
+		}	
+	}
+	
 	
 	public String addToStagedAndCommit(TagsetDefinition tagsetDefinition, String commitMsg) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -602,6 +703,69 @@ public class GitProjectHandler {
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail());
 		}		
+	}
+
+	public String updateCollection(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler collectionHandler = 
+				new GitMarkupCollectionHandler(localGitRepoManager, remoteGitServerManager);
+			String collectionRevision = 
+				collectionHandler.updateCollection(projectId, userMarkupCollectionReference);
+			return collectionRevision;
+		}		
+	}
+
+	public List<TagsetDefinition> getTagsets() {
+		ArrayList<TagsetDefinition> result = new ArrayList<>();
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			GitTagsetHandler gitTagsetHandler = 
+					new GitTagsetHandler(localGitRepositoryManager, remoteGitServerManager);
+			localGitRepoManager.open(
+					 projectId,
+					 GitProjectManager.getProjectRootRepositoryName(projectId));
+			 
+			 Path tagsetsDirPath = 
+					 Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+					 .resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
+			 localGitRepoManager.detach();
+			 
+			 if (!tagsetsDirPath.toFile().exists()) {
+				 return result;
+			 }			
+			 
+			 List<Path> paths = Files
+			 .walk(tagsetsDirPath, 1)
+			 .filter(tagsetPath -> !tagsetsDirPath.equals(tagsetPath))
+			 .collect(Collectors.toList());
+			 
+			 for (Path tagsetPath : paths) {
+				 try {
+					 TagsetDefinition tagset = gitTagsetHandler.getTagset(
+							 projectId, 
+							 tagsetPath.getFileName().toString());						 
+					 result.add(tagset);
+				 }
+				 catch (Exception e) {
+					logger.log(
+						Level.SEVERE,
+						String.format(
+							"error loading Tagset %1$s for project %2$s",
+							tagsetPath,
+							projectId), 
+						e);
+				 }
+				 
+			 }
+		}
+		catch (Exception e) {
+			logger.log(
+				Level.SEVERE, 
+				String.format("error loading Tagsets for project %1$s", projectId), 
+				e);
+		}
+		
+		return result;
 	}
 
 }

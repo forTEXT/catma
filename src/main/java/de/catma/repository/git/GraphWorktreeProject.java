@@ -42,6 +42,7 @@ import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
+import de.catma.repository.git.graph.N4JGraphProjectHandler;
 import de.catma.repository.git.graph.indexer.GraphProjectIndexer;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
@@ -97,7 +98,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		this.backgroundService = backgroundService;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = 
-			new GraphProjectHandler(
+			new N4JGraphProjectHandler(
 				this.projectReference, 
 				this.user,
 				new FileInfoProvider() {
@@ -135,10 +136,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			graphProjectHandler.ensureProjectRevisionIsLoaded(
 					rootRevisionHash,
-					() -> gitProjectHandler.getSourceDocumentStream(),
-					() -> gitProjectHandler.getUserMarkupCollectionReferenceStream());
-			
-			tagManager.load(graphProjectHandler.getTagsets(this.rootRevisionHash));
+					tagManager,
+					() -> gitProjectHandler.getTagsets(),
+					() -> gitProjectHandler.getDocuments(),
+					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
 			
 			initTagManagerListeners();
 			openProjectListener.ready(this);
@@ -748,7 +749,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public Collection<SourceDocument> getSourceDocuments() throws Exception {
-		return graphProjectHandler.getSourceDocuments( this.rootRevisionHash);
+		return graphProjectHandler.getDocuments( this.rootRevisionHash);
 	}
 
 	@Override
@@ -838,7 +839,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			String oldRootRevisionHash = this.rootRevisionHash;
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 
-			graphProjectHandler.addUserMarkupCollection(
+			graphProjectHandler.addCollection(
 				rootRevisionHash, 
 				collectionId, name, umcRevisionHash, 
 				sourceDocument, oldRootRevisionHash);
@@ -848,7 +849,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 							collectionId, 
 							umcRevisionHash,
 							new ContentInfoSet(name),
-							sourceDocument.getID());
+							sourceDocument.getID(),
+							sourceDocument.getRevisionHash());
 			
 			sourceDocument.addUserMarkupCollectionReference(reference);
 			
@@ -866,12 +868,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 	
 	@Override
 	public List<UserMarkupCollectionReference> getUserMarkupCollectionReferences(int offset, int limit) throws Exception {
-		return graphProjectHandler.getUserMarkupCollectionReferences(rootRevisionHash, offset, limit);
+		return graphProjectHandler.getCollectionReferences(rootRevisionHash, offset, limit);
 	}
 	
 	@Override
 	public int getUserMarkupCollectionReferenceCount() throws Exception {
-		return graphProjectHandler.getUserMarkupCollectionReferenceCount(rootRevisionHash);
+		return graphProjectHandler.getCollectionReferenceCount(rootRevisionHash);
 	}
 
 	@Override
@@ -891,7 +893,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	public UserMarkupCollection getUserMarkupCollection(UserMarkupCollectionReference userMarkupCollectionReference)
 			throws IOException {
 		try {
-			return graphProjectHandler.getUserMarkupCollection(rootRevisionHash, getTagLibrary(), userMarkupCollectionReference);
+			return graphProjectHandler.getCollection(rootRevisionHash, getTagLibrary(), userMarkupCollectionReference);
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
@@ -974,16 +976,32 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public void update(UserMarkupCollectionReference userMarkupCollectionReference, ContentInfoSet contentInfoSet) {
-		// TODO Auto-generated method stub
+	public void update(
+			UserMarkupCollectionReference collectionReference, 
+			ContentInfoSet contentInfoSet) throws Exception {
+		String collectionRevision = 
+			gitProjectHandler.updateCollection(collectionReference);
+		collectionReference.setRevisionHash(collectionRevision);
+		
+		String oldRootRevisionHash = this.rootRevisionHash;
+		
+		// project commit
+		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
+			collectionReference, 
+			String.format("Updated metadata of Collection %1$s with ID %2$s", 
+					collectionReference.getName(), collectionReference.getId()));
+		
+		graphProjectHandler.updateCollection(
+			this.rootRevisionHash, collectionReference, oldRootRevisionHash);		
 
 	}
 
 	@Override
 	public void delete(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
 		String oldRootRevisionHash = this.rootRevisionHash;
-		gitProjectHandler.removeCollection(userMarkupCollectionReference);
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
+		
+		this.rootRevisionHash = gitProjectHandler.removeCollection(userMarkupCollectionReference);
+		
 		graphProjectHandler.removeCollection(this.rootRevisionHash, userMarkupCollectionReference, oldRootRevisionHash);	
 	}
 

@@ -20,6 +20,7 @@ public class UserMarkupCollectionReferenceMapper implements
 				record.getValue(USERMARKUPCOLLECTION.DESCRIPTION),
 				record.getValue(USERMARKUPCOLLECTION.PUBLISHER),
 				record.getValue(USERMARKUPCOLLECTION.TITLE)),
+			"",
 			"");
 	}
 }

@@ -71,6 +71,7 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 	}
 
 	public UserMarkupCollection deserialize(
+			SourceDocument sourceDocument,
 			String id, InputStream inputStream) throws IOException {
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();
@@ -86,7 +87,8 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 			return new UserMarkupCollection(
 				id, teiDocument.getContentInfoSet(),
 				tagLibrary, deserializer.getTagReferences(),
-				AccessMode.WRITE);
+				sourceDocument.getID(),
+				sourceDocument.getRevisionHash());
 			
 		} catch (Exception exc) {
 			throw new IOException(exc);

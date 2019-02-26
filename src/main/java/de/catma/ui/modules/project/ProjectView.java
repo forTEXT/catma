@@ -234,6 +234,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
         addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
         
+        
+
+        ContextMenu BtnMoreOptionsContextMenu = 
+        	sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+        BtnMoreOptionsContextMenu.addItem(
+            	"Edit documents / collections",(menuItem) -> handleEditResources());
+        BtnMoreOptionsContextMenu.addItem(
+        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
+        BtnMoreOptionsContextMenu.addItem(
+        	"Share documents / collections", (menuItem) -> handleShareResources(menuItem, resourceGrid));
+        
         tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
         	click -> handleAddTagsetRequest());
         
@@ -243,7 +254,59 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 	}
 
-    private void handleDeleteTagsetRequest() {
+    private void handleEditResources() {
+		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
+		if ((selectedResources.size() != 1) 
+				&& !selectedResources.iterator().next().isCollection()) {
+			Notification.show("info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE);
+		}	
+		else {
+			final Resource resource = selectedResources.iterator().next();
+			
+			// TODO: add proper edit metadata dialog including document level annotations!
+			
+			if (resource.isCollection()) {
+				final UserMarkupCollectionReference collectionRef = 
+						((CollectionResource)selectedResources.iterator().next()).getCollectionReference();
+		    	SingleTextInputDialog collectionNameDlg = 
+	        		new SingleTextInputDialog("Edit Collection", "Please enter the new Collection name:",
+        				new SaveCancelListener<String>() {
+    						@Override
+    						public void savePressed(String result) {
+    							collectionRef.getContentInfoSet().setTitle(result);
+    							try {
+									project.update(collectionRef, collectionRef.getContentInfoSet());
+									resourceGrid.getDataProvider().refreshItem(resource);
+								} catch (Exception e) {
+									errorHandler.showAndLogError("error updating Collection", e);
+								}
+    						}
+    					});
+	            	
+	            collectionNameDlg.show();						
+			}
+			else {
+				final SourceDocument document = 
+						((DocumentResource)selectedResources.iterator().next()).getDocument();
+		    	SingleTextInputDialog collectionNameDlg = 
+	        		new SingleTextInputDialog("Edit Document", "Please enter the new Document name:",
+        				new SaveCancelListener<String>() {
+    						@Override
+    						public void savePressed(String result) {
+    							document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().setTitle(result);
+    							project.update(
+    								document, 
+    								document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());
+    						}
+    					});
+	            	
+	            collectionNameDlg.show();								
+			}
+		}
+		
+	}
+
+	private void handleDeleteTagsetRequest() {
 		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
 		if (!tagsets.isEmpty()) {
 			ConfirmDialog.show(
@@ -271,7 +334,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
 		if (!tagsets.isEmpty()) {
 			final TagsetDefinition tagset = tagsets.iterator().next();
-	    	SingleTextInputDialog collectionNameDlg = 
+	    	SingleTextInputDialog tagsetNameDlg = 
 	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:",
 	        				new SaveCancelListener<String>() {
 	    						@Override
@@ -280,7 +343,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    						}
 	    					});
 	            	
-	            collectionNameDlg.show();			
+	            tagsetNameDlg.show();			
 		}
 		else {
 			Notification.show(
@@ -561,11 +624,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 resourceGrid
         );
         sourceDocumentsGridComponent.addStyleName("project-view-action-grid");
-
-        ContextMenu BtnMoreOptionsContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
-        BtnMoreOptionsContextMenu.addItem("Share documents / collections", (menuItem) -> handleShareResources(menuItem, resourceGrid));
-
 
         resourceContent.addComponent(sourceDocumentsGridComponent);
 

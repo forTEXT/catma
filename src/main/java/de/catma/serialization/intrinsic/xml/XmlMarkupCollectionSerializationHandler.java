@@ -39,7 +39,6 @@ public class XmlMarkupCollectionSerializationHandler implements
 	
 	private SourceDocument sourceDocument;
 	private TagManager tagManager;
-	private String sourceDocumentId;
 	private IDGenerator idGenerator;
 	private HashMap<String, TagDefinition> pathToTagDefMap;
 	private XML2ContentHandler xmlContentHandler;
@@ -47,11 +46,9 @@ public class XmlMarkupCollectionSerializationHandler implements
 
 	
 	public XmlMarkupCollectionSerializationHandler(
-			SourceDocument sourceDocuemnt,TagManager tagManager, String sourceDocumentId, XML2ContentHandler xmlContentHandler) {
+			TagManager tagManager, XML2ContentHandler xmlContentHandler) {
 		super();
-		this.sourceDocument=sourceDocuemnt;
 		this.tagManager = tagManager;
-		this.sourceDocumentId = sourceDocumentId;
 		this.idGenerator = new IDGenerator();
 		this.pathToTagDefMap = new HashMap<>();
 		this.xmlContentHandler = xmlContentHandler;
@@ -67,7 +64,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	}
 
 	@Override
-	public UserMarkupCollection deserialize(String id, InputStream inputStream)
+	public UserMarkupCollection deserialize(SourceDocument sourceDocument, String id, InputStream inputStream)
 			throws IOException {
 		
 		try {
@@ -87,7 +84,8 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        		new ContentInfoSet(
 	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
 	        		tagManager.getTagLibrary(),
-	        		sourceDocumentId);
+	        		sourceDocument.getID(),
+	        		sourceDocument.getRevisionHash());
 	        
 	        scanElements(
 	        		contentBuilder, 
@@ -232,7 +230,8 @@ public class XmlMarkupCollectionSerializationHandler implements
         	tagInstance.addUserDefinedProperty(property);
         }
         														
-        TagReference tagReference = new TagReference(tagInstance, sourceDocumentId, range, userMarkupCollection.getId());
+        TagReference tagReference = new TagReference(
+        	tagInstance, sourceDocument.getID(), range, userMarkupCollection.getId());
         userMarkupCollection.addTagReference(tagReference);
      
         elementStack.pop();	
