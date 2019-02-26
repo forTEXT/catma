@@ -42,7 +42,7 @@ import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
-import de.catma.repository.git.graph.N4JGraphProjectHandler;
+import de.catma.repository.git.graph.TPGraphProjectHandler;
 import de.catma.repository.git.graph.indexer.GraphProjectIndexer;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
@@ -98,7 +98,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		this.backgroundService = backgroundService;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = 
-			new N4JGraphProjectHandler(
+			new TPGraphProjectHandler(
 				this.projectReference, 
 				this.user,
 				new FileInfoProvider() {
@@ -119,7 +119,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 	
 	private Path getTokenizedSourceDocumentPath(String documentId) {
 		return Paths
-			.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
+//			.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
+			.get(new File(RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
 			.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(documentId))
 			.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
 	}

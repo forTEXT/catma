@@ -164,6 +164,8 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 						)
 					);
 					for (TagsetDefinition tagset : tagsets) {
+						//TODO: handle deleted
+						
 						addTagset(session, revisionHash, tagset, revisionHash);
 						
 						for (TagDefinition tag : tagset) {
