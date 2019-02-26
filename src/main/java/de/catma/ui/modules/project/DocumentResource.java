@@ -1,7 +1,9 @@
 package de.catma.ui.modules.project;
 
+import com.aliasi.util.Strings;
 import com.vaadin.icons.VaadinIcons;
 
+import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 
 public class DocumentResource implements Resource {
@@ -23,7 +25,10 @@ public class DocumentResource implements Resource {
     
     @Override
     public boolean hasDetail() {
-        return true;
+    	String author = 
+    		sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor();
+    	
+    	return author != null && !author.trim().isEmpty();
     }
 
     @Override
@@ -43,6 +48,11 @@ public class DocumentResource implements Resource {
 		result = prime * result + ((sourceDocument == null) ? 0 : sourceDocument.hashCode());
 		return result;
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -61,5 +71,9 @@ public class DocumentResource implements Resource {
 		return true;
 	}
     
+	@Override
+	public void deleteFrom(Repository project) throws Exception {
+		project.delete(sourceDocument);
+	}
     
 }

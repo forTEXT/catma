@@ -1,7 +1,11 @@
 package de.catma.ui.modules.main;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import com.google.common.eventbus.EventBus;
 import com.vaadin.server.Page;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.JavaScript;
@@ -12,6 +16,8 @@ import de.catma.ui.CatmaRouter;
 import de.catma.ui.analyzenew.AnalyzeNewManagerView;
 import de.catma.ui.analyzenew.AnalyzeNewView;
 import de.catma.ui.analyzer.AnalyzerManagerView;
+import de.catma.ui.events.CloseableEvent;
+import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
@@ -26,7 +32,7 @@ import de.catma.ui.tagger.TaggerManagerView;
  *
  * @author db
  */
-public class MainView extends CssLayout implements CatmaRouter  {
+public class MainView extends CssLayout implements CatmaRouter, Closeable {
 
     /**
      * Header part
@@ -53,7 +59,7 @@ public class MainView extends CssLayout implements CatmaRouter  {
     /**
      * global communication via eventbus
      */
-    private final EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 
     /**
      * projectmanager
@@ -78,28 +84,15 @@ public class MainView extends CssLayout implements CatmaRouter  {
 	 * @param projectManager
 	 * @param eventBus
 	 */
-    public MainView(ProjectManager projectManager, EventBus eventBus) {
-        this.eventBus = eventBus;
+    public MainView(ProjectManager projectManager){
         this.projectManager = projectManager;
-        this.header = new CatmaHeader(eventBus);
-        this.navigation = new CatmaNav(eventBus);
+        this.header = new CatmaHeader();
+        this.navigation = new CatmaNav();
         initComponents();
         addStyleName("main-view");
         eventBus.register(this);
+        eventBus.post(new CloseableEvent(this));
         
-        // implement a custom resize propagation for all Layouts including CSSLayouts
-        JavaScript.getCurrent().addFunction("browserWindowResized", e -> {
-        	this.markAsDirtyRecursive();
-        });
-        Page.getCurrent().getJavaScript().execute(
-        		"var timeout = null;"
-        				+ "window.onresize = function() { "
-        				+ "  if (timeout != null) clearTimeout(timeout); "
-        				+ "  timeout = setTimeout(function() {"
-        				+ "    browserWindowResized(); "
-        				+ "  }, 250);"
-        				+ "}");
-                
     }
 
     /**
@@ -126,7 +119,7 @@ public class MainView extends CssLayout implements CatmaRouter  {
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
 			this.projectView = null;
 			this.taggerManagerView = null;
-			setContent(new DashboardView(projectManager, eventBus));
+			setContent(new DashboardView(projectManager));
 			eventBus.post(new HeaderContextChangeEvent(new Label("")));
 			currentRoute = routeToDashboardEvent.getClass();
 		}
@@ -136,7 +129,7 @@ public class MainView extends CssLayout implements CatmaRouter  {
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if(isNewTarget(routeToProjectEvent.getClass())) {
 			if (this.projectView == null) {
-				this.projectView = new ProjectView(projectManager, eventBus);
+				this.projectView = new ProjectView(projectManager);
 				this.projectView.setProjectReference(routeToProjectEvent.getProjectReference());
 			}
 	    	setContent(projectView);
@@ -148,7 +141,7 @@ public class MainView extends CssLayout implements CatmaRouter  {
 	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
 		if (isNewTarget(routeToAnnotateEvent.getClass())) {
 			if (this.taggerManagerView == null) {
-				this.taggerManagerView = new TaggerManagerView(eventBus);
+				this.taggerManagerView = new TaggerManagerView();
 			}
 			
 			setContent(taggerManagerView);
@@ -165,7 +158,7 @@ public class MainView extends CssLayout implements CatmaRouter  {
 	public void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent) {
 		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
 			if (this.analyzerManagerView == null) {
-				this.analyzerManagerView = new AnalyzerManagerView(eventBus);
+				this.analyzerManagerView = new AnalyzerManagerView();
 			}
 			
 			setContent(analyzerManagerView);
@@ -202,7 +195,8 @@ public class MainView extends CssLayout implements CatmaRouter  {
 		return currentRoute;
 	}
 
-	public void close() {
+	@Override
+	public void close() throws IOException {
 		if (projectView != null) {
 			projectView.close();
 		}

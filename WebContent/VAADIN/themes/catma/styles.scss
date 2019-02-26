@@ -518,6 +518,10 @@
     	   padding-right: 80px;
         }
         
+      /* signup */
+        .g-recaptcha-response {
+    		display: none !important;
+	    }
       /* main views */
         .main-view {
             display: flex;
@@ -546,13 +550,14 @@
             align-items: center;
         }
 
-        .header .v-button {
+        .header .v-button, .header .button__icon {
             color: white;
             cursor: pointer;
             text-decoration: none;
+            opacity: inherit;
         }
 
-        .header .v-button:hover {
+        .header .v-button:hover, .header .button__icon:hover {
             text-decoration: none;
         }
 
@@ -827,17 +832,16 @@
         }
 
         div.documentsgrid__doc {
-            display: block; /* testing block was flex*/
+            display: flex;
             flex-direction: column;
-            flex-grow: 1;
+            height: 100%;
+            justify-content: center;
         }
 
         .documentsgrid__doc__title {
-			display:block;
         }
 
         .documentsgrid__doc__author {
-			display:block;    
             font-size: 0.75em;
             color: rgba(0, 0, 0, 0.54);
         }

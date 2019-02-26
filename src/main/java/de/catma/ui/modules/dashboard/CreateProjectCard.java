@@ -3,6 +3,7 @@ package de.catma.ui.modules.dashboard;
 import java.util.Objects;
 
 import com.google.common.eventbus.EventBus;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
@@ -25,12 +26,11 @@ public class CreateProjectCard extends VerticalLayout {
 
 	private final ErrorHandler errorLogger;
 	private final ProjectManager projectManager;
-	private final EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 
 	
-	public CreateProjectCard(ProjectManager projectManager, EventBus eventBus){
+	public CreateProjectCard(ProjectManager projectManager){
 		this.projectManager = Objects.requireNonNull(projectManager);
-		this.eventBus = Objects.requireNonNull(eventBus);
         this.errorLogger = (ErrorHandler) UI.getCurrent();
         initComponents();
 

@@ -104,7 +104,7 @@ import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
-@SuppressWarnings("deprecation")
+@Deprecated
 public class SourceDocumentPanel extends HorizontalSplitPanel
 	implements ValueChangeListener {
 	
@@ -820,7 +820,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							if (dialog.isConfirmed()) {
 								try {
 									repository.delete(sd);
-								} catch (IOException e) {
+								} catch (Exception e) {
 									((CatmaApplication)UI.getCurrent()).showAndLogError(
 											Messages.getString("SourceDocumentPanel.errorDeletingSourceDoc"), e); //$NON-NLS-1$
 								}
@@ -1144,7 +1144,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		                if (dialog.isConfirmed()) {
 		                	try {
 								repository.delete(userMarkupCollectionReference);
-							} catch (IOException e) {
+							} catch (Exception e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
 									Messages.getString("SourceDocumentPanel.errorDeletingAnnotations"), e); //$NON-NLS-1$
 							}

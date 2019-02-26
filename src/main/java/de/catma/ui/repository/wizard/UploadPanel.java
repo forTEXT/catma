@@ -21,6 +21,7 @@ package de.catma.ui.repository.wizard;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.text.MessageFormat;
@@ -103,7 +104,7 @@ class UploadPanel extends HorizontalLayout {
 
 				try {
 					String tempDir = 
-							((CatmaApplication)UI.getCurrent()).getTempDirectory();
+							((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
 					IDGenerator idGenerator = new IDGenerator();
 					
 					File uploadFile = new File(new File(tempDir), idGenerator.generate());
@@ -114,7 +115,7 @@ class UploadPanel extends HorizontalLayout {
 					}
 			
 					return new FileOutputStream(uploadFile);					
-				} catch (FileNotFoundException e) {
+				} catch (IOException e) {
 					e.printStackTrace(); // TODO: handle
 					return null;
 				}

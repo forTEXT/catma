@@ -1,4 +1,4 @@
-package de.catma.ui.modules.main;
+package de.catma.ui.events;
 
 import com.vaadin.ui.Component;
 

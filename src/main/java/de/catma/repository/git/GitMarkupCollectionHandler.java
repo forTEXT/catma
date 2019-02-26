@@ -22,7 +22,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
@@ -30,7 +30,7 @@ import de.catma.tag.TagLibrary;
 
 public class GitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitServerManager remoteGitServerManager;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
 
 	private static final String MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT = "%s_markupcollection";
 
@@ -39,7 +39,7 @@ public class GitMarkupCollectionHandler {
 	}
 
 	public GitMarkupCollectionHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-									  IRemoteGitServerManager remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 	}
@@ -75,7 +75,7 @@ public class GitMarkupCollectionHandler {
 					markupCollectionId
 			);
 
-			IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
+			CreateRepositoryResponse createRepositoryResponse =
 					this.remoteGitServerManager.createRepository(
 							markupCollectionRepoName, markupCollectionRepoName, projectId
 					);
@@ -100,6 +100,7 @@ public class GitMarkupCollectionHandler {
 			return localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
+					String.format("Added Collection %1$s with ID %2$s", name, markupCollectionId),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
@@ -107,11 +108,6 @@ public class GitMarkupCollectionHandler {
 
 		}
 
-	}
-
-	public void delete(@Nonnull String projectId, @Nonnull String markupCollectionId)
-			throws IOException {
-		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	/**
@@ -127,7 +123,8 @@ public class GitMarkupCollectionHandler {
 	public void addTagset(@Nonnull String projectId,
 						  @Nonnull String markupCollectionId,
 						  @Nonnull String tagsetId,
-						  @Nonnull String tagsetVersion
+						  @Nonnull String tagsetVersion,
+						  String commitMsg
 	) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -154,6 +151,7 @@ public class GitMarkupCollectionHandler {
 
 			localGitRepoManager.addAndCommit(
 					targetMarkupCollectionHeaderFilePath, serializedHeader.getBytes(StandardCharsets.UTF_8),
+					commitMsg,
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
@@ -296,7 +294,7 @@ public class GitMarkupCollectionHandler {
 
 			return  new UserMarkupCollectionReference(
 					markupCollectionId, markupCollectionRevisionHash,
-					contentInfoSet, markupCollectionHeader.getSourceDocumentId(), "TODO"); //TODO
+					contentInfoSet, markupCollectionHeader.getSourceDocumentId());
 		}
 
 	}
@@ -388,6 +386,13 @@ public class GitMarkupCollectionHandler {
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 
+			if (localGitRepoManager.hasUntrackedChanges()) {
+				localGitRepoManager.addAllAndCommit(
+					"Auto commiting changes before performing a deletion of Annotations as part of a Tag deletion operation",
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());				
+			}
+			
 			removeTagInstances(localGitRepoManager, deletedTagInstanceIds);
 
 			if (localGitRepoManager.hasUncommitedChanges()) {

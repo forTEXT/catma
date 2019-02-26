@@ -23,7 +23,7 @@ import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
@@ -32,7 +32,7 @@ public class GitSourceDocumentHandler {
 	private Logger logger = Logger.getLogger(GitSourceDocumentHandler.class.getName());
 	
     private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitServerManager remoteGitServerManager;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
 
 	private static final String SOURCEDOCUMENT_REPOSITORY_NAME_FORMAT = "%s_sourcedocument";
 
@@ -41,7 +41,7 @@ public class GitSourceDocumentHandler {
 	}
 
 	public GitSourceDocumentHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-									IRemoteGitServerManager remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 	}
@@ -85,7 +85,7 @@ public class GitSourceDocumentHandler {
 			// create the source document repository
 			String sourceDocumentRepoName = GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId);
 
-			IRemoteGitServerManager.CreateRepositoryResponse response = 
+			CreateRepositoryResponse response = 
 				this.remoteGitServerManager.createRepository(
 					sourceDocumentRepoName, sourceDocumentRepoName, projectId
 				);

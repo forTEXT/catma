@@ -41,6 +41,7 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -123,7 +124,7 @@ public class TaggerView extends HorizontalLayout
 	private ResourcePanel resourcePanel;
 	private AnnotationPanel annotationPanel;
 	private UserMarkupCollectionManager userMarkupCollectionManager;
-	private EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 	private TaggerContextMenu taggerContextMenu;
 	private ErrorHandler errorHandler;
 	private PropertyChangeListener annotationPropertiesChangedListener;
@@ -132,14 +133,11 @@ public class TaggerView extends HorizontalLayout
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, Repository project, 
-			PropertyChangeListener sourceDocChangedListener,
-			EventBus eventBus) {
-		this.taggerID = taggerID;
+			PropertyChangeListener sourceDocChangedListener){
 		this.tagManager = project.getTagManager();
 		this.project = project;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
-		this.eventBus = eventBus;
 		
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 		this.userMarkupCollectionManager = new UserMarkupCollectionManager(project);
@@ -266,8 +264,17 @@ public class TaggerView extends HorizontalLayout
 					// noop
 				}
 				else if (newValue == null) { //removed
-					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
-					//TODO: probably a noop since annotations get deleted
+					@SuppressWarnings("unchecked")
+					Pair<TagsetDefinition,TagDefinition> deleted = 
+						(Pair<TagsetDefinition, TagDefinition>) oldValue;
+					
+					for (UserMarkupCollectionReference ref : 
+						userMarkupCollectionManager.getCollections(deleted.getSecond())) {
+					
+						setAnnotationCollectionSelected(ref, false);
+						setAnnotationCollectionSelected(ref, true);
+					}
+					
 				}
 				else { //update
 					TagDefinition tag = (TagDefinition) newValue;
@@ -418,21 +425,7 @@ public class TaggerView extends HorizontalLayout
 			@Override
 			public void annotationCollectionSelected(UserMarkupCollectionReference collectionReference,
 					boolean selected) {
-				try {
-					UserMarkupCollection collection = project.getUserMarkupCollection(collectionReference);
-					if (selected) {
-						userMarkupCollectionManager.add(collection);
-						annotationPanel.addCollection(collection);
-					}
-					else {
-						userMarkupCollectionManager.remove(collectionReference.getId());
-						annotationPanel.removeCollection(collectionReference.getId());
-					}
-					
-				}
-				catch (Exception e) {
-					errorHandler.showAndLogError("Error handling Annotation Collection!", e);
-				}
+				setAnnotationCollectionSelected(collectionReference, selected);
 			}
 
 			@Override
@@ -458,6 +451,25 @@ public class TaggerView extends HorizontalLayout
 		//TODO: handle missing collection
 		taggerContextMenu.setTagSelectionListener(tag -> tagger.addTagInstanceWith(tag));
 		
+	}
+
+	private void setAnnotationCollectionSelected(UserMarkupCollectionReference collectionReference,
+			boolean selected) {
+		try {
+			UserMarkupCollection collection = project.getUserMarkupCollection(collectionReference);
+			if (selected) {
+				userMarkupCollectionManager.add(collection);
+				annotationPanel.addCollection(collection);
+			}
+			else {
+				userMarkupCollectionManager.remove(collectionReference.getId());
+				annotationPanel.removeCollection(collectionReference.getId());
+			}
+			
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Error handling Annotation Collection!", e);
+		}
 	}
 
 	private void initComponents() {

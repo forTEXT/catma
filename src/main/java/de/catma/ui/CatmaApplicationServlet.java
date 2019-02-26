@@ -20,6 +20,10 @@ package de.catma.ui;
 
 import javax.servlet.ServletException;
 
+import com.google.common.eventbus.EventBus;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.servlet.ServletModule;
 import com.vaadin.server.BootstrapFragmentResponse;
 import com.vaadin.server.BootstrapListener;
 import com.vaadin.server.BootstrapPageResponse;
@@ -33,6 +37,10 @@ import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.VaadinServlet;
 
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.ui.di.GitlabModule;
+import de.catma.ui.di.Vaadin8Module;
+import de.catma.ui.login.GitlabLoginService;
+import de.catma.ui.modules.main.signup.SignupTokenVerificationRequestHandler;
 
 public class CatmaApplicationServlet extends VaadinServlet {
 	
@@ -159,6 +167,34 @@ public class CatmaApplicationServlet extends VaadinServlet {
 				return messages;
 			}
 		});
+		
+		/* initialize global Eventbus */
+		getService().addSessionInitListener(new SessionInitListener() {
+			@Override
+			public void sessionInit(SessionInitEvent event)
+					throws ServiceException {
+				event.getSession().setAttribute(EventBus.class, new EventBus());
+			}
+		});
 
+		/* init token verifier */
+		getService().addSessionInitListener(new SessionInitListener() {
+			@Override
+			public void sessionInit(SessionInitEvent event)
+					throws ServiceException {				
+				event.getSession().addRequestHandler(new SignupTokenVerificationRequestHandler());
+			}
+		});
+	
+		/* DI with google guice */
+		getService().addSessionInitListener(new SessionInitListener() {
+			@Override
+			public void sessionInit(SessionInitEvent event)
+					throws ServiceException {				
+				event.getSession().setAttribute(Injector.class, Guice.createInjector(
+						new ServletModule(), new GitlabModule(), new Vaadin8Module()
+						));
+			}
+		});
 	}
 }

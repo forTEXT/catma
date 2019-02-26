@@ -5,6 +5,7 @@ import java.util.List;
 import de.catma.document.repository.Repository;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -46,11 +47,14 @@ public class TagInstanceInfoHTMLSerializer {
 			
 			for (Property property : tagInstance.getUserDefinedProperties()) {
 				List<String> values = property.getPropertyValueList();
-				
-				addRow(
-					table, 
-					tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId()).getName(), 
-					values.isEmpty()?"":values.size() > 1?values.toString():values.get(0)); //$NON-NLS-1$
+				PropertyDefinition propertyDefinition = 
+						tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId());
+				if (propertyDefinition != null) { // may be deleted already
+					addRow(
+							table, 
+							tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId()).getName(), 
+							values.isEmpty()?"":values.size() > 1?values.toString():values.get(0)); //$NON-NLS-1$
+				}
 			}
 		}		
 		

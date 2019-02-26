@@ -1042,7 +1042,8 @@ public class DBRepository implements IndexedRepository {
 				getSourceDocument(new UserMarkupCollectionReference(
 						userMarkupCollectionRef.getId(), 
 						null,
-						userMarkupCollectionRef.getContentInfoSet()));
+						userMarkupCollectionRef.getContentInfoSet(),
+						""));
 		
 		share(db, targetUserId, sourceDocument, accessMode);
 		
@@ -1208,11 +1209,6 @@ public class DBRepository implements IndexedRepository {
 	@Override
 	public List<UserMarkupCollectionReference> getUserMarkupCollectionReferences(int offset, int limit)
 			throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void addAndCommitChanges(UserMarkupCollectionReference ref) {
 		throw new UnsupportedOperationException();
 	}
 

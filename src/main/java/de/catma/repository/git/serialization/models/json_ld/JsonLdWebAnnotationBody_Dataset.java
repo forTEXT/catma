@@ -46,7 +46,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 	}
 
 	public JsonLdWebAnnotationBody_Dataset(
-		String gitServerBaseUrl, String projectId, List<TagReference> tagReferences, TagLibrary tagLibrary)
+		String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		this();
 		this.context.put("tagset", "http://catma.de/portal/tagset");  // TODO: what should this URL be?
@@ -62,10 +62,10 @@ public class JsonLdWebAnnotationBody_Dataset {
 			);
 		}
 
-		String tagDefinitionId = tagReferences.get(0).getTagDefinitionId();
+		String tagDefinitionId = tagReferences.iterator().next().getTagDefinitionId();
 		TagDefinition tagDefinition = tagLibrary.getTagDefinition(tagDefinitionId);
 		
-		TagInstance tagInstance = tagReferences.get(0).getTagInstance();
+		TagInstance tagInstance = tagReferences.iterator().next().getTagInstance();
 
 		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 

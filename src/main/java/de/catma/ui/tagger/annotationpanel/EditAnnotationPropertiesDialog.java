@@ -1,6 +1,7 @@
 package de.catma.ui.tagger.annotationpanel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,10 +38,12 @@ public class EditAnnotationPropertiesDialog extends AbstractOkCancelDialog<List<
 
 		String tagId = annotation.getTagInstance().getTagDefinitionId();
 		TagDefinition tag = project.getTagManager().getTagLibrary().getTagDefinition(tagId);
-
-		for (Property property : annotation.getTagInstance().getUserDefinedProperties()) {
-			PropertyDefinition propertyDef = 
-					tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId());
+		for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
+			Property property = 
+				annotation.getTagInstance().getUserDefinedPropetyByUuid(propertyDef.getUuid());
+			if (property == null) {
+				property = new Property(propertyDef.getUuid(), Collections.emptySet());
+			}
 			propertyTabSheet.addTab(
 				new EditPropertyTab(property, propertyDef.getPossibleValueList()), 
 				propertyDef.getName()

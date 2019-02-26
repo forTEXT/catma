@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -19,15 +20,14 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
-import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -51,13 +51,13 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.CanReloadAll;
 import de.catma.ui.modules.main.ErrorHandler;
-import de.catma.ui.modules.main.HeaderContextChangeEvent;
 import de.catma.ui.repository.Messages;
 import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
@@ -79,7 +79,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private Repository project;
 
     private final ErrorHandler errorHandler;
-    private final EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 
     private TreeGrid<Resource> resourceGrid;
     private Grid<TagsetDefinition> tagsetGrid;
@@ -92,10 +92,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
 
-    public ProjectView(ProjectManager projectManager, EventBus eventBus) {
+    public ProjectView(ProjectManager projectManager){
     	super("Project");
     	this.projectManager = projectManager;
-        this.eventBus = eventBus;
         this.errorHandler = (ErrorHandler)UI.getCurrent();
         initProjectListeners();
 
@@ -144,13 +143,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		Object newValue = evt.getNewValue();
 		
 		if (oldValue == null) { // creation
-			TagsetDefinition tagset = (TagsetDefinition)newValue;
-			tagsetData.getItems().add(tagset);
 			tagsetData.refreshAll();
 		}
 		else if (newValue == null) { // removal
-			TagsetDefinition tagset = (TagsetDefinition)oldValue;
-			tagsetData.getItems().remove(tagset);
 			tagsetData.refreshAll();
 		}
 		else { // metadata update
@@ -335,20 +330,24 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		selectedDocuments.add(documentResource.getDocument());
     	}
     	
-    	
-    	SingleTextInputDialog collectionNameDlg = 
-    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
-    				new SaveCancelListener<String>() {
-						
-						@Override
-						public void savePressed(String result) {
-							for (SourceDocument document : selectedDocuments) {
-								project.createUserMarkupCollection(result, document);
+    	if (!selectedDocuments.isEmpty()) {
+	    	SingleTextInputDialog collectionNameDlg = 
+	    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+	    				new SaveCancelListener<String>() {
+							
+							@Override
+							public void savePressed(String result) {
+								for (SourceDocument document : selectedDocuments) {
+									project.createUserMarkupCollection(result, document);
+								}
 							}
-						}
-					});
-    	
-    	collectionNameDlg.show();
+						});
+	    	
+	    	collectionNameDlg.show();
+    	}
+    	else {
+    		Notification.show("Info", "Please select one or more Documents first!", Type.HUMANIZED_MESSAGE);
+    	}
     }
 
 	private void handleAddDocumentRequest() {
@@ -520,14 +519,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         resourceGrid.setRowHeight(45);
 
 		resourceGrid
-			.addColumn(resource -> resource.getIcon(), new HtmlRenderer());
+			.addColumn(resource -> resource.getIcon(), new HtmlRenderer())
+			.setWidth(100);
         
 		Function<Resource,String> buildNameFunction = (resource) -> {
 			StringBuilder sb = new StringBuilder()
 			  .append("<div class='documentsgrid__doc'> ")
-		      .append("<span class='documentsgrid__doc__title'> ")
+		      .append("<div class='documentsgrid__doc__title'> ")
 		      .append(resource.getName())
-		      .append("</span>");
+		      .append("</div>");
 			if(resource.hasDetail()){
 		        sb
 		        .append("<span class='documentsgrid__doc__author'> ")
@@ -542,7 +542,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         resourceGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
-        	.setExpandRatio(2);
+        	.setWidth(300);
         //TODO: see MD for when it is appropriate to offer row options
 //        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
 //				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
@@ -573,11 +573,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         tagsetGrid.setHeaderVisible(false);
         tagsetGrid.setWidth("400px");
 
-        tagsetGrid.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer());
+        tagsetGrid.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer()).setWidth(100);
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")
-			.setExpandRatio(2);
+			.setWidth(300);
 	
 
         Label tagsetsAnnotations = new Label("Tagsets");
@@ -709,8 +709,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     @Subscribe
     public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
-    	//TODO:
-//        resourcesChangedEvent.getComponent().setDataProvider(buildResourceDataProvider());
+    	initData();
     }
 
     /**
@@ -720,39 +719,28 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @param resourceGrid
      */
     private void handleDeleteResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-        ConfirmDialog dialog = new ConfirmDialog();
-        VerticalLayout dialogContent = new VerticalLayout();
-        dialogContent.setWidth("100%");
-        
-        ListSelect<Resource> listBox = new ListSelect<>();
-        Set<Resource> resources = resourceGrid.getSelectedItems();
-        listBox.setDataProvider(DataProvider.fromStream(resources.stream()));
-        listBox.setReadOnly(true);
-        dialogContent.addComponent(new Label("The following resources will be deleted"));
-        dialogContent.addComponent(listBox);
-        dialog.getCancelButton().addClickListener((evt)-> dialog.close());
-        dialog.setContent(dialogContent);
-        
-        dialog.show(UI.getCurrent(), (evt) -> {
-            for (Resource resource: resources) {
-                //try {
-                Notification.show("resouce has been fake deleted");
-                //                if(resource instanceof SourceDocument) {
-                //                    repository.delete((SourceDocument) resource);
-                //                }
-                //                if(resource instanceof UserMarkupCollectionReference) {
-                //                    repository.delete((UserMarkupCollectionReference) resource);
-                //                }
-                //repository.delete(resource); // TODO: 29.10.18 delete all resources at once wrapped in a transaction
-                //} catch (IOException e) {
-                //    errorLogger.showAndLogError("Resouce couldn't be deleted",e);
-                //    dialog.close();
-                //}
+    	
+    	ConfirmDialog.show(
+    		UI.getCurrent(), 
+    		"Info", 
+    		"Are you sure you want to delete the selected resources: "
+    		+ resourceGrid.getSelectedItems()
+    			.stream()
+    			.map(resource -> resource.getName())
+    			.collect(Collectors.joining(","))
+    		+ "?", 
+    		"Yes", 
+    		"Cancel", dlg -> {
+	            for (Resource resource: resourceGrid.getSelectedItems()) {
+	            	try {
+	            		resource.deleteFrom(project);
+	                } catch (Exception e) {
+	                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
+	                }
+	            }
+	            eventBus.post(new ResourcesChangedEvent<>(resourceGrid));
+    		});
 
-            }
-            eventBus.post(new ResourcesChangedEvent(resourceGrid));
-            dialog.close();
-        }, true);
     }
 
     /**

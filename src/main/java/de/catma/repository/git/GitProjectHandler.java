@@ -20,13 +20,14 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
+import de.catma.util.IDGenerator;
 
 public class GitProjectHandler {
 
@@ -35,12 +36,13 @@ public class GitProjectHandler {
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
 
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitServerManager remoteGitServerManager;
-	private final GitUser user;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final User user;
 	private final String projectId;
+	private IDGenerator idGenerator = new IDGenerator();
 
 	public GitProjectHandler(GitUser user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitServerManager remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager) {
 		super();
 		this.user = user;
 		this.projectId = projectId;
@@ -75,12 +77,18 @@ public class GitProjectHandler {
 					tagsetId
 			).toFile();
 
+			// submodule files and the changed .gitmodules file are automatically staged
 			localGitRepoManager.addSubmodule(
 					targetSubmodulePath,
 					tagsetRepoRemoteUrl,
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getPassword()
 			);
+			
+			localGitRepoManager.commit(
+					String.format("Added Tagset %1$s with ID %2$s", name, tagsetId),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
 
 			localGitRepoManager.detach(); 
 			
@@ -91,15 +99,25 @@ public class GitProjectHandler {
 		}
 	}
 	
-	public String createOrUpdateTag(String tagsetId, TagDefinition tagDefinition) throws IOException {
+	public String createOrUpdateTag(String tagsetId, TagDefinition tagDefinition, String commitMsg) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			
+			if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
+				PropertyDefinition authorPropertyDefinition = 
+						new PropertyDefinition(
+							idGenerator.generate(),
+							PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
+							Collections.singleton(user.getIdentifier()));
+				tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
+			}
+			
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String tagsetRevision = 
-				gitTagsetHandler.createOrUpdateTagDefinition(projectId, tagsetId, tagDefinition);
-			
-			
+				gitTagsetHandler.createOrUpdateTagDefinition(projectId, tagsetId, tagDefinition, commitMsg);
+
 			return tagsetRevision;
 		}
 	}
@@ -157,12 +175,25 @@ public class GitProjectHandler {
 					markupCollectionId
 			).toFile();
 
+			// submodule files and the changed .gitmodules file are automatically staged
 			localGitRepoManager.addSubmodule(
 					targetSubmodulePath,
 					markupCollectionRepoRemoteUrl,
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getPassword()
 			);
+			
+			localGitRepoManager.commit(
+				String.format("Added Collection %1$s with ID %2$s", name, markupCollectionId),
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail());
+				
+//			gitApi
+//				.push()
+//				.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+//					username, password
+//				))
+//				.call(); //TODO: push might need a pull first in collaborative settings!			
 
 			return revisionHash;
 		}
@@ -231,12 +262,22 @@ public class GitProjectHandler {
 						convertedSourceDocumentFileName)
 					.toUri());
 
+			// submodule files and the changed .gitmodules file are automatically staged
 			localRepoManager.addSubmodule(
 				targetSubmodulePath, remoteUri,
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getPassword()
 			);
-		
+			
+			String name = sourceDocumentInfo.getContentInfoSet().getTitle();
+			if ((name == null) || name.isEmpty()) {
+				name = "N/A";
+			}
+			localRepoManager.commit(
+				String.format("Added Document %1$s with ID %2$s", name, sourceDocumentId),
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail());
+			
 			return revisionHash;
 		}
 
@@ -365,7 +406,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public void addOrUpdate(String collectionId, List<TagReference> tagReferenceList, TagLibrary tagLibrary) throws IOException {
+	public void addOrUpdate(String collectionId, Collection<TagReference> tagReferenceList, TagLibrary tagLibrary) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
@@ -379,12 +420,14 @@ public class GitProjectHandler {
 		}		
 	}
 
-	public String removeTagInstances(
+	public String removeTagInstancesAndCommit(
 		String collectionId, Collection<String> deletedTagInstanceIds, String commitMsg) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
-			return gitMarkupCollectionHandler.removeTagInstancesAndCommit(projectId, collectionId, deletedTagInstanceIds, commitMsg);
+			
+			return gitMarkupCollectionHandler.removeTagInstancesAndCommit(
+					projectId, collectionId, deletedTagInstanceIds, commitMsg);
 		}	
 	}
 
@@ -408,14 +451,14 @@ public class GitProjectHandler {
 		}
 	}
 
-	public String addAndCommitChanges(UserMarkupCollectionReference collectionRef) throws IOException {
+	public String addAndCommitCollection(String collectionId, String commitMsg) throws IOException {
 		
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
-			String revisionHash = gitMarkupCollectionHandler.addAndCommitChanges(projectId, collectionRef.getId(), "Annotations changed");
+			String revisionHash = gitMarkupCollectionHandler.addAndCommitChanges(
+				projectId, collectionId, commitMsg);
 			
-			collectionRef.setRevisionHash(revisionHash);
 			
 			return revisionHash;
 		}	
@@ -442,6 +485,15 @@ public class GitProjectHandler {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String tagsetId = tagsetDefinition.getUuid();
 			
+			GitTagsetHandler gitTagsetHandler = 
+					new GitTagsetHandler(localGitRepositoryManager, remoteGitServerManager);
+
+			gitTagsetHandler.synchronizeBranchWithRemoteMaster(
+				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
+				projectId, tagsetId);
+			
+			localGitRepoManager.detach();
+			
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 	
@@ -452,7 +504,14 @@ public class GitProjectHandler {
 					tagsetId
 			).toFile();
 	
-			localGitRepoManager.removeSubmodule(targetSubmodulePath);
+			localGitRepoManager.removeSubmodule(
+					targetSubmodulePath,
+					String.format(
+						"Removed Tagset %1$s with ID %2$s", 
+						tagsetDefinition.getName(), 
+						tagsetDefinition.getUuid()),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
 		}		
 	}
 
@@ -467,6 +526,82 @@ public class GitProjectHandler {
 			
 			return tagsetRevision;
 		}
+	}
+
+	public void removeCollection(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String collectionId = userMarkupCollectionReference.getId();
+			
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+	
+			// remove the submodule only!!!
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					collectionId
+			).toFile();
+	
+			localGitRepoManager.removeSubmodule(
+				targetSubmodulePath,
+				String.format(
+					"Removed Collection %1$s with ID %2$s", 
+					userMarkupCollectionReference.getName(), 
+					userMarkupCollectionReference.getId()), 
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail());
+		}		
+	}
+
+	public void removeDocument(SourceDocument sourceDocument) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String documentId = sourceDocument.getID();
+			
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+	
+			// remove the submodule only!!!
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+					documentId
+			).toFile();
+
+			localGitRepoManager.removeSubmodule(
+				targetSubmodulePath,
+				String.format(
+					"Removed Document %1$s with ID %2$s", 
+					sourceDocument.toString(), 
+					sourceDocument.getID()), 
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail());
+		}	
+	}
+
+	public void addCollectionToStaged(String collectionId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			Path relativePath = Paths.get(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionId);
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+
+			localGitRepoManager.add(relativePath);
+		}	
+	}
+	
+	
+	public String addToStagedAndCommit(TagsetDefinition tagsetDefinition, String commitMsg) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			Path relativePath = Paths.get(TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetDefinition.getUuid());
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+
+			localGitRepoManager.add(relativePath);
+			
+			return localGitRepoManager.commit(
+					commitMsg, 
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
+		}		
 	}
 
 }

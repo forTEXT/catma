@@ -364,23 +364,25 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			String tagId = annotation.getTagInstance().getTagDefinitionId();
 
 			for (Property property : annotation.getTagInstance().getUserDefinedProperties()) {
-				AnnotationPropertyDataItem propertyDataItem = 
-						new AnnotationPropertyDataItem(
-							property, 
-							() -> {
-								TagDefinition tag = 
-									project.getTagManager().getTagLibrary().getTagDefinition(tagId);
-								PropertyDefinition propertyDef = 
-										tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId());
-								return propertyDef.getName();
-							});
-				annotationDetailData.addItem(annotationDataItem, propertyDataItem);
-				for (String value : property.getPropertyValueList()) {
-					AnnotationPropertyValueDataItem valueDataItem = 
-							new AnnotationPropertyValueDataItem(value);
-					annotationDetailData.addItem(propertyDataItem, valueDataItem);
+				TagDefinition tag = 
+						project.getTagManager().getTagLibrary().getTagDefinition(tagId);
+				if (tag != null) { // may be deleted already
+					PropertyDefinition propertyDef = 
+							tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId());
+					if (propertyDef != null) { // may be deleted already
+						AnnotationPropertyDataItem propertyDataItem = 
+								new AnnotationPropertyDataItem(
+										property, 
+										() -> propertyDef.getName());
+						annotationDetailData.addItem(annotationDataItem, propertyDataItem);
+						for (String value : property.getPropertyValueList()) {
+							AnnotationPropertyValueDataItem valueDataItem = 
+									new AnnotationPropertyValueDataItem(value);
+							annotationDetailData.addItem(propertyDataItem, valueDataItem);
+						}
+						annotationDetailsTree.expand(propertyDataItem);
+					}
 				}
-				annotationDetailsTree.expand(propertyDataItem);
 			}
 			
 			annotationDetailsTree.expand(annotationDataItem);

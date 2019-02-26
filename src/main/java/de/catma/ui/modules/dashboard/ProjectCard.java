@@ -6,6 +6,7 @@ import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
@@ -33,12 +34,11 @@ public class ProjectCard extends VerticalLayout  {
     private final ErrorHandler errorLogger;
     private final ProjectManager projectManager;
 
-	private final EventBus eventBus;
+	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
 
-    ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventbus){
+    ProjectCard(ProjectReference projectReference, ProjectManager projectManager){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
-        this.eventBus = eventbus;
         this.errorLogger = (ErrorHandler) UI.getCurrent();
         initComponents();
     }
