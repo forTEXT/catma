@@ -234,7 +234,7 @@ public class ResultPanelNew extends Panel {
 		});
 
 		// we dont select items here anymore, just as test for fullview now
-		treeGridTag.addSelectionListener(new SelectionListener<TagRowItem>() {
+/*		treeGridTag.addSelectionListener(new SelectionListener<TagRowItem>() {
 			@Override
 			public void selectionChange(SelectionEvent<TagRowItem> event) {
 				Iterable<TagRowItem> selectedItems = event.getAllSelectedItems();
@@ -255,7 +255,7 @@ public class ResultPanelNew extends Panel {
 					}
 				}
 			}
-		});
+		});*/
 
 		/*
 		 * treeGridPhraseLazy.addExpandListener(new ExpandListener<TagRowItem>() {
@@ -439,6 +439,7 @@ public class ResultPanelNew extends Panel {
 					.anyMatch(var -> var.getTagDefinitionPath().equalsIgnoreCase(tagRowItem.getTagDefinitionPath()))) {
 
 				tagRowItem.setTreePath(tagRowItem.getTagDefinitionPath());
+				tagRowItem.setFrequencyOneUp();
 				tagsAsRoot.add(tagRowItem);
 			} else {
 				tagsAsRoot.stream().filter(x -> x.getTagDefinitionPath().equals(tagRowItem.getTagDefinitionPath()))
@@ -470,6 +471,7 @@ public class ResultPanelNew extends Panel {
 
 					if (!docsForATag.stream().anyMatch(
 							var -> var.getSourceDocumentID().equalsIgnoreCase(docItem.getSourceDocumentID()))) {
+						docItem.setFrequencyOneUp();
 						docsForATag.add(docItem);
 					} else {
 						docsForATag.stream()
@@ -581,8 +583,6 @@ public class ResultPanelNew extends Panel {
 	private TreeData<TagRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TagRowItem> treeData,
 			QueryResult queryResult) throws Exception {
 
-		// adding tags as root items, for now. in future properties will be the root
-		// elements
 		ArrayList<TagRowItem> tagsAsRoot = new ArrayList<TagRowItem>();
 
 		for (QueryResultRow queryResultRow : queryResult) {

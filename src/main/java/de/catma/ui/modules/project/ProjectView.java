@@ -568,7 +568,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         ContextMenu BtnMoreOptionsContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
         BtnMoreOptionsContextMenu.addItem("Share documents / collections", (menuItem) -> handleShareResources(menuItem, resourceGrid));
-        BtnMoreOptionsContextMenu.addItem("Analyze Ressources", (menuItem) -> handleAnalyzeResources(menuItem,resourceGrid ));
+        BtnMoreOptionsContextMenu.addItem("Analyze resources", (menuItem) -> handleAnalyzeResources(menuItem,resourceGrid ));
 
 
         resourceContent.addComponent(sourceDocumentsGridComponent);
@@ -768,9 +768,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
 
 		ConfirmDialog.show(UI.getCurrent(), "Info",
-				"Are you sure you want to analyze the selected resources: " + resourceGrid.getSelectedItems().stream()
+				"Resources to be analyzed: " + resourceGrid.getSelectedItems().stream()
 						.map(resource -> resource.getName()).collect(Collectors.joining(",")) + "?",
-				"Yes", "Cancel", dlg -> {
+				"Go on", "Cancel", dlg -> {
 
 					Corpus corpus = new Corpus("corpus to be analyzed");
 
