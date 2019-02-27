@@ -743,19 +743,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public int getTagsetsCount() throws Exception {
-		return graphProjectHandler.getTagsetsCount( this.rootRevisionHash);
-	}
-
-
-	@Override
 	public Collection<SourceDocument> getSourceDocuments() throws Exception {
 		return graphProjectHandler.getDocuments( this.rootRevisionHash);
-	}
-
-	@Override
-	public int getSourceDocumentsCount() throws Exception {
-		return graphProjectHandler.getSourceDocumentsCount( this.rootRevisionHash);
 	}
 
 	@Override
@@ -865,16 +854,6 @@ public class GraphWorktreeProject implements IndexedRepository {
 					RepositoryChangeEvent.exceptionOccurred.name(),
 					null, e);
 		}
-	}
-	
-	@Override
-	public List<UserMarkupCollectionReference> getUserMarkupCollectionReferences(int offset, int limit) throws Exception {
-		return graphProjectHandler.getCollectionReferences(rootRevisionHash, offset, limit);
-	}
-	
-	@Override
-	public int getUserMarkupCollectionReferenceCount() throws Exception {
-		return graphProjectHandler.getCollectionReferenceCount(rootRevisionHash);
 	}
 
 	@Override

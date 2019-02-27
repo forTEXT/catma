@@ -34,8 +34,6 @@ public interface GraphProjectHandler {
 	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document,
 			Path tokenizedSourceDocumentPath) throws Exception;
 
-	int getSourceDocumentsCount(String rootRevisionHash) throws Exception;
-
 	Collection<SourceDocument> getDocuments(String rootRevisionHash) throws Exception;
 
 	SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception;
@@ -46,27 +44,20 @@ public interface GraphProjectHandler {
 	void addTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
 
-	void addTagDefinition(String rootRevisionHash, TagDefinition tagDefinition, TagsetDefinition tagset,
+	void addTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
 			String oldRootRevisionHash) throws Exception;
 
-	void updateTagDefinition(String rootRevisionHash, TagDefinition tagDefinition, TagsetDefinition tagset,
+	void updateTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
 			String oldRootRevisionHash) throws Exception;
-
-	List<UserMarkupCollectionReference> getCollectionReferences(String rootRevisionHash, int offset, int limit)
-			throws Exception;
-
-	int getCollectionReferenceCount(String rootRevisionHash) throws Exception;
 
 	Collection<TagsetDefinition> getTagsets(String rootRevisionHash) throws Exception;
 
-	int getTagsetsCount(String rootRevisionHash) throws Exception;
-
 	void addPropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
-			TagDefinition tagDefinition, TagsetDefinition tagset, String oldRootRevisionHash)
+			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
 
 	void createOrUpdatePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
-			TagDefinition tagDefinition, TagsetDefinition tagset, String oldRootRevisionHash)
+			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
 
 	UserMarkupCollection getCollection(String rootRevisionHash, TagLibrary tagLibrary,
@@ -84,7 +75,7 @@ public interface GraphProjectHandler {
 	void updateProperties(String rootRevisionHash, TagInstance tagInstance, Collection<Property> properties)
 			throws Exception;
 
-	Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tagDefinition)
+	Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tag)
 			throws Exception;
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(String rootRevisionHash,
@@ -93,7 +84,7 @@ public interface GraphProjectHandler {
 	void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds,
 			String collectionRevisionHash) throws Exception;
 
-	void removeTagDefinition(String rootRevisionHash, TagDefinition tagDefinition, TagsetDefinition tagset)
+	void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset)
 			throws Exception;
 
 	void updateProjectRevisionHash(String oldRootRevisionHash, String rootRevisionHash) throws Exception;
@@ -101,7 +92,7 @@ public interface GraphProjectHandler {
 	void updateCollectionRevisionHash(String rootRevisionHash, UserMarkupCollectionReference collectionReference) throws Exception;
 
 	void removePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
-			TagDefinition tagDefinition, TagsetDefinition tagset, String oldRootRevisionHash)
+			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
 
 	void removeTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)

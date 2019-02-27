@@ -545,17 +545,6 @@ public class DBRepository implements IndexedRepository {
 		return dbSourceDocumentHandler.getSourceDocuments();
 	}
 
-	/**
-	 * TODO: 15.10.18 REMOVE dbrepo
-	 * @implNote not implemented
-	 * @return
-	 * @throws Exception
-	 */
-	@Override
-	public int getSourceDocumentsCount() throws Exception {
-		return 0;
-	}
-
 	public SourceDocument getSourceDocument(String id) {
 		return dbSourceDocumentHandler.getSourceDocument(id);
 	}
@@ -1203,26 +1192,10 @@ public class DBRepository implements IndexedRepository {
 	}
 	
 	@Override
-	public int getUserMarkupCollectionReferenceCount() throws Exception {
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
-	public List<UserMarkupCollectionReference> getUserMarkupCollectionReferences(int offset, int limit)
-			throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Collection<TagsetDefinition> getTagsets() throws Exception {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public int getTagsetsCount() throws Exception {
-		throw new UnsupportedOperationException();
-	}
-	
 	@Override
 	public List<User> getProjectMembers() throws Exception {
 		throw new UnsupportedOperationException();

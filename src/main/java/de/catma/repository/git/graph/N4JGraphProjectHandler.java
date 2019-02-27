@@ -64,7 +64,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.gwt.i18n.client.impl.cldr.DateTimeFormatInfoImpl_uz_UZ;
 
 import de.catma.document.Range;
 import de.catma.document.source.ContentInfoSet;
@@ -377,36 +376,6 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 		    .build();
     	
     	scheduler.scheduleJob(jobDetail, trigger);
-	}
-
-	@Override
-	public int getSourceDocumentsCount(String rootRevisionHash) throws Exception {
-		final int[] result = {0};
-		StatementExcutor.execute(new SessionRunner() {
-			@Override
-			public void run(Session session) throws Exception {
-				StatementResult statementResult = session.run(
-						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"+""
-								+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-								+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
-								+ "(s:"+nt(SourceDocument)+") "
-								+ "RETURN count(s) as counter ",
-						Values.parameters(
-								"pUserId", user.getIdentifier(),
-								"pProjectId", projectReference.getProjectId(),
-								"pRootRevisionHash", rootRevisionHash
-						)
-				);
-
-				while (statementResult.hasNext()) {
-					Record record = statementResult.next();
-					Value value = record.get("counter");
-					result[0] = value.asInt();
-				}
-			}
-
-		});
-		return result[0];
 	}
 
 	@Override
@@ -763,47 +732,6 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 		
 	}
 
-	@Override
-	public List<UserMarkupCollectionReference> getCollectionReferences(String rootRevisionHash, int offset, int limit) throws Exception {
-		List<UserMarkupCollectionReference> collectionContainer = Lists.newArrayList();
-		
-		StatementExcutor.execute(new SessionRunner() {
-			@Override
-			public void run(Session session) throws Exception {
-				StatementResult statementResult = session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
-					+ "(s:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
-					+ "(c:"+nt(MarkupCollection)+") "
-					+ "RETURN s.sourceDocumentId, s.revisionHash, c.collectionId, c.revisionHash, c.name SKIP {pOffset} LIMIT {pLimit} ",
-					Values.parameters(
-						"pUserId", user.getIdentifier(),
-						"pProjectId", projectReference.getProjectId(),
-						"pRootRevisionHash", rootRevisionHash,
-						"pOffset", offset,
-						"pLimit", limit
-					)
-				);
-				
-				while (statementResult.hasNext()) {
-					Record record = statementResult.next();
-					
-					collectionContainer.add(
-						createCollectionReference(
-							record.get("c.collectionId"), 
-							record.get("c.revisionHash"), 
-							record.get("c.name"),
-							record.get("s.sourceDocumentId"),
-							record.get("s.revisionHash")));
-				}
-			}
-		});
-		
-		
-		return collectionContainer;
-	}
-
 	private UserMarkupCollectionReference createCollectionReference(
 			Node collectionNode, String sourceDocumentId, String sourceDocumentRevision) {
 			
@@ -813,47 +741,6 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 				new ContentInfoSet(collectionNode.get("name").asString()),
 				sourceDocumentId,
 				sourceDocumentId);
-	}
-	private UserMarkupCollectionReference createCollectionReference(
-		Value idValue, Value revisionHashValue, Value nameValue, 
-		Value sourceDocumentIdValue, Value sourceDocumentRevisionHashValue) {
-		
-		return new UserMarkupCollectionReference(
-				idValue.asString(), 
-				revisionHashValue.asString(), 
-				new ContentInfoSet(nameValue.asString()),
-				sourceDocumentIdValue.asString(),
-				sourceDocumentRevisionHashValue.asString());
-	}
-
-	@Override
-	public int getCollectionReferenceCount(String rootRevisionHash) throws Exception {
-		ValueContainer<Integer> countContainer = new ValueContainer<>(0);
-		
-		StatementExcutor.execute(new SessionRunner() {
-			@Override
-			public void run(Session session) throws Exception {
-				StatementResult statementResult = session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
-					+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
-					+ "(c:"+nt(MarkupCollection)+") "
-					+ "RETURN count(c) as umcCount ",
-					Values.parameters(
-						"pUserId", user.getIdentifier(),
-						"pProjectId", projectReference.getProjectId(),
-						"pRootRevisionHash", rootRevisionHash
-					)
-				);
-				
-				if (statementResult.hasNext()) {
-					countContainer.setValue(statementResult.next().get("umcCount").asInt());
-				}
-			}
-		});
-
-		return countContainer.getValue();
 	}
 
 	@Override
@@ -912,36 +799,6 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 		
 		
 		return tagsets;
-	}
-
-	@Override
-	public int getTagsetsCount(String rootRevisionHash) throws Exception {
-		final int[] result = {0};
-
-		StatementExcutor.execute(new SessionRunner() {
-			@Override
-			public void run(Session session) throws Exception {
-				StatementResult statementResult = session.run(
-						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-								+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-								+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-								+ "(ts:"+nt(Tagset)+") "
-								+ "RETURN count(ts) as counter",
-						Values.parameters(
-								"pUserId", user.getIdentifier(),
-								"pProjectId", projectReference.getProjectId(),
-								"pRootRevisionHash", rootRevisionHash
-						)
-				);
-
-				while (statementResult.hasNext()) {
-					Record record = statementResult.next();
-					Value value = record.get("counter");
-					result[0] = value.asInt();
-				}
-			}
-		});
-		return result[0];
 	}
 
 	private PropertyDefinition createPropertyDefinition(Node propertyNode) {

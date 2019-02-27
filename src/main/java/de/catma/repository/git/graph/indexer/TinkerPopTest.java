@@ -109,24 +109,51 @@ public class TinkerPopTest {
 //			System.out.println("[" + start +"," + end +"]");
 		}
 		
-		for (Range r : ranges) {
-			System.out.println(r);
-		}
- 		
-		List<String> terms = g.V().has("term", "literal", "Grierson")
-		.outE("hasPosition")
-		.inV().hasLabel("position")
-		.outE("isAdjacent")
-		.inV().hasLabel("position")
-		.inE("hasPosition")
-		.outV().hasLabel("term")
-		.properties("literal")
-		.map(prop -> (String)prop.get().orElse(null))
-		.toList();
+//		for (Range r : ranges) {
+//			System.out.println(r);
+//		}
 		
-		for (String term : terms) {
-			System.out.println(term);
-		}
+//		
+// 		
+//		List<String> terms = g.V().has("term", "literal", "Emily")
+//		.outE("hasPosition")
+//		.inV().hasLabel("position")
+//		.outE("isAdjacent")
+//		.inV().hasLabel("position")
+//		.inE("hasPosition")
+//		.outV().hasLabel("term")
+//		.properties("literal")
+//		.map(prop -> (String)prop.get().orElse(null))
+//		.toList();
+		
+//		for (String term : terms) {
+//			System.out.println(term);
+//		}
+
+		System.out.println(graph.toString());
+		
+		System.out.println("Emily1: " + g.V().has("term", "literal", "Emily").outE("hasPosition").inV().count().next());
+		
+		g.V().has("term", "literal", "Emily").store("m").outE("hasPosition").inV().drop().cap("m").unfold().drop().iterate();
+
+		System.out.println(graph.toString());
+		System.out.println("Emily2: " + g.V().has("term", "literal", "Emily").outE("hasPosition").inV().count().tryNext().orElse(0L));
+
+//		terms = g.V().has("term", "literal", "Emily")
+//		.outE("hasPosition")
+//		.inV().hasLabel("position")
+//		.outE("isAdjacent")
+//		.inV().hasLabel("position")
+//		.inE("hasPosition")
+//		.outV().hasLabel("term")
+//		.properties("literal")
+//		.map(prop -> (String)prop.get().orElse(null))
+//		.toList();
+//		
+//		for (String term : terms) {
+//			System.out.println(term);
+//		}
+//
 		
 		logger.info("finished test");
 	}
