@@ -128,7 +128,7 @@ public class AnalyzeNewView extends VerticalLayout
 
 		resultAndVizSnapshotsPanel = new HorizontalLayout();
 		resultAndVizSnapshotsPanel.setWidth("100%");
-		resultAndVizSnapshotsPanel.setHeight("450px");
+		resultAndVizSnapshotsPanel.setHeight("100%");
 		resultsPanel = new VerticalLayout();
 		resultsPanel.setHeightUndefined();
 
@@ -143,7 +143,7 @@ public class AnalyzeNewView extends VerticalLayout
 		snapshotsPanel.setHeightUndefined();
 		 resultsFramePanel = new Panel();
 		resultsFramePanel.setContent(resultsPanel);
-		resultsFramePanel.setHeight("380px");
+		resultsFramePanel.setHeight("100%");
 		snapshotsFramePanel = new Panel();
 		snapshotsFramePanel.setContent(snapshotsPanel);
 		snapshotsFramePanel.setHeight("380px");

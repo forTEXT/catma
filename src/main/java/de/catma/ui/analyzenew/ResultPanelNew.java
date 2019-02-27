@@ -523,14 +523,16 @@ public class ResultPanelNew extends Panel {
 
 						if (!collectionsForADocument.stream().anyMatch(var -> var.getCollectionID()
 								.equalsIgnoreCase(collectionTagRowItem.getCollectionID()))) {
+							collectionTagRowItem.setFrequencyOneUp();
 							collectionsForADocument.add(collectionTagRowItem);
-							collectionTagRowItem.setFrequency(1);
+					
 						
 
 						} else {
+							// collection already inside , we just set frequency one up
 							collectionsForADocument.stream()
-									.filter(x -> x.getTagDefinitionPath()
-											.equals(collectionTagRowItem.getTagDefinitionPath()))
+									.filter(x -> x.getTreePath()
+											.equals(collectionTagRowItem.getTreePath()))
 									.findFirst().get().setFrequencyOneUp();
 
 						}
@@ -596,6 +598,7 @@ public class ResultPanelNew extends Panel {
 					.anyMatch(var -> var.getTagDefinitionPath().equalsIgnoreCase(tagRowItem.getTagDefinitionPath()))) {
 
 				tagRowItem.setTreePath(tagRowItem.getTagDefinitionPath());
+				tagRowItem.setFrequencyOneUp();
 				tagsAsRoot.add(tagRowItem);
 			} else {
 				tagsAsRoot.stream().filter(x -> x.getTagDefinitionPath().equals(tagRowItem.getTagDefinitionPath()))
@@ -627,6 +630,7 @@ public class ResultPanelNew extends Panel {
 
 					if (!docsForATag.stream().anyMatch(
 							var -> var.getSourceDocumentID().equalsIgnoreCase(docItem.getSourceDocumentID()))) {
+						docItem.setFrequencyOneUp();
 						docsForATag.add(docItem);
 					} else {
 						docsForATag.stream()
@@ -663,6 +667,7 @@ public class ResultPanelNew extends Panel {
 
 						if (!collectionsForADocument.stream().anyMatch(
 								var -> var.getCollectionID().equalsIgnoreCase(tagRowItem.getCollectionID()))) {
+							tagRowItem.setFrequencyOneUp();
 							collectionsForADocument.add(tagRowItem);
 						} else {
 							collectionsForADocument.stream()
