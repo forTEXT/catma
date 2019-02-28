@@ -845,7 +845,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                		tagsetChangeListener);
 				}				
 			}			
-			
+			project = null;
 		}
 		catch (Exception e) {
 			errorHandler.showAndLogError("Error closing ProjectView", e);

@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
@@ -206,6 +207,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	private void addDocument(Vertex projectRevV, SourceDocument document) throws Exception {
+		logger.info("Starting to add Document " + document + " to the graph");
 		Vertex documentV = graph.addVertex(nt(SourceDocument));
 		SourceDocumentInfo info = 
 			document.getSourceContentHandler().getSourceDocumentInfo();
@@ -261,7 +263,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			for (int i=0; i<adjacencyMap.size()-1; i++) {
 				adjacencyMap.get(i).addEdge(rt(isAdjacentTo), adjacencyMap.get(i+1));
 			}
-			
+			logger.info("Finished adding Document " + document + " to the graph");	
 		}
 		catch (Exception e) {
 			logger.log(
@@ -488,22 +490,42 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.store("instances")
 		.outE(rt(hasProperty)).inV().drop()
 		.cap("instances").unfold().drop().iterate();
+		
 		System.out.println(graph);
 	}
 
 	@Override
 	public void removeProperties(String rootRevisionHash, String collectionId, String collectionRevisionHash,
 			String propertyDefId) throws Exception {
-		// TODO Auto-generated method stub
-
+		GraphTraversalSource g = graph.traversal();
+		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
+		.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", collectionId)
+		.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
+		.outE(rt(hasProperty)).inV().has(nt(AnnotationProperty), "uuid", propertyDefId)
+		.drop().iterate();
 	}
 
 	@Override
-	public void updateProperties(String rootRevisionHash, TagInstance tagInstance, Collection<Property> properties)
-			throws Exception {
-		// TODO Auto-generated method stub
-
+	public void updateProperties(
+			String rootRevisionHash, 
+			UserMarkupCollection collection, 
+			TagInstance tagInstance, Collection<Property> properties) throws Exception {
+	
+		GraphTraversalSource g = graph.traversal();
+		
+		GraphTraversal<Vertex, Vertex> tagInstanceTraversal = g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", collection.getSourceDocumentId())
+		.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", collection.getId())
+		.outE(rt(hasInstance)).inV().has(nt(TagInstance), "tagInstanceId", tagInstance.getUuid());
+		
+		for (Property property : properties) {
+			tagInstanceTraversal
+			.outE(rt(hasProperty)).inV().hasLabel(nt(Property))
+			.property(property.getPropertyDefinitionId(), property.getPropertyValueList());
+		}
 	}
+	
 
 	@Override
 	public Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tagDefinition)
@@ -514,16 +536,35 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(String rootRevisionHash,
-			PropertyDefinition propertyDefinition, TagLibrary tagLibrary) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+			PropertyDefinition propertyDefinition, TagDefinition tag, TagLibrary tagLibrary) throws Exception {
+		Multimap<String, TagReference> result = ArrayListMultimap.create();
+		
+		GraphTraversalSource g = graph.traversal();
+		
+		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
+		.outE(rt(hasCollection)).inV().hasLabel(nt(MarkupCollection))
+		.properties("collection")
+		.map(prop -> (UserMarkupCollection)prop.get().orElse(null))
+		.toList()
+		.forEach(collection -> result.putAll(collection.getId(), collection.getTagReferences(tag)));
+		
+		return result;
 	}
 
 	@Override
 	public void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds,
 			String collectionRevisionHash) throws Exception {
-		// TODO Auto-generated method stub
-
+		GraphTraversalSource g = graph.traversal();
+		
+		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
+		.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", collectionId)
+		.outE(rt(hasInstance)).inV().has(nt(TagInstance), "tagInstanceId", P.within(tagInstanceIds))
+		.store("instances")
+		.outE(rt(hasProperty)).inV().drop()
+		.cap("instances").unfold().drop().iterate();
+		
 	}
 
 	@Override

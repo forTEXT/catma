@@ -72,14 +72,14 @@ public interface GraphProjectHandler {
 	void removeProperties(String rootRevisionHash, String collectionId, String collectionRevisionHash,
 			String propertyDefId) throws Exception;
 
-	void updateProperties(String rootRevisionHash, TagInstance tagInstance, Collection<Property> properties)
+	void updateProperties(String rootRevisionHash, UserMarkupCollection collection, TagInstance tagInstance, Collection<Property> properties)
 			throws Exception;
 
 	Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tag)
 			throws Exception;
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(String rootRevisionHash,
-			PropertyDefinition propertyDefinition, TagLibrary tagLibrary) throws Exception;
+			PropertyDefinition propertyDefinition, TagDefinition tag, TagLibrary tagLibrary) throws Exception;
 
 	void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds,
 			String collectionRevisionHash) throws Exception;

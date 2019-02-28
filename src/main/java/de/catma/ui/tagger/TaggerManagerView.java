@@ -114,5 +114,4 @@ public class TaggerManagerView extends TabbedView {
 		taggerView.openUserMarkupCollection(userMarkupCollection);
 	}
 	
-	
 }

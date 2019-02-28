@@ -1185,7 +1185,9 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void updateProperties(
-			String rootRevisionHash, TagInstance tagInstance, Collection<Property> properties) throws Exception {		
+			String rootRevisionHash, 
+			UserMarkupCollection collection, 
+			TagInstance tagInstance, Collection<Property> properties) throws Exception {		
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
@@ -1261,7 +1263,7 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(
-			String rootRevisionHash, PropertyDefinition propertyDefinition, TagLibrary tagLibrary) throws Exception {
+			String rootRevisionHash, PropertyDefinition propertyDefinition, TagDefinition tag, TagLibrary tagLibrary) throws Exception {
 		final Multimap<String, TagReference> annotationIdsByCollectionId = 
 				HashMultimap.create();
 		StatementExcutor.execute(new SessionRunner() {

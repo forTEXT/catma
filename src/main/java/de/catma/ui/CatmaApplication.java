@@ -338,6 +338,13 @@ public class CatmaApplication extends UI implements
 
 	@Override
 	public void close() {
+		if (getContent() instanceof Closeable) {
+			try {
+				((Closeable)getContent()).close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		loginservice.getAPI().ifPresent((api) -> 
 			logger.info("application for user" + api.getUsername() + " has been closed") );
 		

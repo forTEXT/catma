@@ -108,12 +108,25 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
     	this.viewSection.addComponent(component);
     }
 
+    private void closeViews() {
+		if (this.projectView != null) {
+			this.projectView.close();
+			this.projectView = null;
+		}
+		if (this.taggerManagerView != null) {
+			this.taggerManagerView.closeClosables();
+			this.taggerManagerView = null;
+		}
+		if (this.analyzerManagerView != null) {
+			this.analyzerManagerView.closeClosables();
+			this.analyzerManagerView = null;
+		}	    	
+    }
     
 	@Override
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
-			this.projectView = null;
-			this.taggerManagerView = null;
+			closeViews();
 			setContent(new DashboardView(projectManager));
 			eventBus.post(new HeaderContextChangeEvent(new Label("")));
 			currentRoute = routeToDashboardEvent.getClass();
@@ -174,9 +187,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 
 	@Override
 	public void close() throws IOException {
-		if (projectView != null) {
-			projectView.close();
-		}
+		closeViews();
 	}
     
 }

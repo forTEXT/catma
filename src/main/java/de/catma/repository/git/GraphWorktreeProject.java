@@ -351,7 +351,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		// remove AnnotationProperties
 		Multimap<String, TagReference> annotationIdsByCollectionId =
 			graphProjectHandler.getTagReferencesByCollectionId(
-					this.rootRevisionHash, propertyDefinition, tagManager.getTagLibrary());
+					this.rootRevisionHash, propertyDefinition, tagDefinition, tagManager.getTagLibrary());
 		
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			// TODO: check permissions if commit is allowed, if that is not the case skip git update
@@ -927,15 +927,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public void update(
-			UserMarkupCollection userMarkupCollection, 
+			UserMarkupCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
 		try {
 			gitProjectHandler.addOrUpdate(
-					userMarkupCollection.getUuid(), 
-					userMarkupCollection.getTagReferences(tagInstance), 
+					collection.getUuid(), 
+					collection.getTagReferences(tagInstance), 
 					tagManager.getTagLibrary());
 			graphProjectHandler.updateProperties(
-					GraphWorktreeProject.this.rootRevisionHash, tagInstance, properties);
+					GraphWorktreeProject.this.rootRevisionHash, collection, tagInstance, properties);
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.propertyValueChanged.name(),
 					tagInstance, properties);
