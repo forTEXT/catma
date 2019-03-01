@@ -1,4 +1,4 @@
-package de.catma.repository.git.graph;
+package de.catma.repository.git.graph.n4j;
 
 import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedProperty;
@@ -80,8 +80,10 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob;
-import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob.DataField;
+import de.catma.repository.git.graph.FileInfoProvider;
+import de.catma.repository.git.graph.GraphProjectHandler;
+import de.catma.repository.git.graph.NodeType;
+import de.catma.repository.git.graph.n4j.N4JSourceDocumentIndexerJob.DataField;
 import de.catma.repository.neo4j.SessionRunner;
 import de.catma.repository.neo4j.StatementExcutor;
 import de.catma.repository.neo4j.ValueContainer;
@@ -360,7 +362,7 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 		String userName = user.getIdentifier();
 		
     	JobDetail jobDetail = 
-        	JobBuilder.newJob(SourceDocumentIndexerJob.class)
+        	JobBuilder.newJob(N4JSourceDocumentIndexerJob.class)
         	.withIdentity(
         			userName+"_" +projectId+"_"+rootRevisionHash+"_"+sourceDocument.getID()+"_"+sourceDocument.getRevisionHash(),
         			userName)
@@ -1351,18 +1353,19 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void removeTagDefinition(String rootRevisionHash, TagDefinition tagDefinition,
-			TagsetDefinition tagsetDefinition) throws Exception {
+			TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
 				session.run(
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
 					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}})-[:"+rt(hasTag)+"]->"
 					+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
 					+"OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
 					+"OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(dp:"+nt(DeletedProperty)+") "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
 					+"SET ts.revisionHash = {pTagsetRevisionHash} "
 					+"REMOVE t:"+nt(Tag)+ " "
 					+"SET t:"+nt(DeletedTag)+ " "
@@ -1371,6 +1374,7 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
 						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
 						"pTagsetId", tagsetDefinition.getUuid(),
 						"pTagId", tagDefinition.getUuid(),
 						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash()
@@ -1378,54 +1382,6 @@ public class N4JGraphProjectHandler implements GraphProjectHandler {
 				);
 			}
 		});			
-	}
-
-	@Override
-	public void updateProjectRevisionHash(String oldRootRevisionHash, String rootRevisionHash) throws Exception {
-		StatementExcutor.execute(new SessionRunner() {
-			@Override
-			public void run(Session session) throws Exception {
-				session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}}) "
-					+"SET pr.revisionHash = {pRootRevisionHash} ",
-					Values.parameters(
-						"pUserId", user.getIdentifier(),
-						"pProjectId", projectReference.getProjectId(),
-						"pOldRootRevisionHash", oldRootRevisionHash,
-						"pRootRevisionHash", rootRevisionHash
-					)
-				);
-			}
-		});				
-	}
-
-	@Override
-	public void updateCollectionRevisionHash(String rootRevisionHash, UserMarkupCollectionReference ref) throws Exception {
-		StatementExcutor.execute(new SessionRunner() {
-			@Override
-			public void run(Session session) throws Exception {
-				session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
-					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
-					+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
-					+ "(c:"+nt(MarkupCollection)+"{collectionId:{pCollectionId}}) "
-					+ "SET c.revisionHash = {pCollectionRevisionHash} "
-					,
-					Values.parameters(
-						"pUserId", user.getIdentifier(),
-						"pProjectId", projectReference.getProjectId(),
-						"pRootRevisionHash", rootRevisionHash,
-						"pCollectionId", ref.getId(),
-						"pCollectionRevisionHash", ref.getRevisionHash()
-					)
-				);
-		
-			}
-		});
-		
 	}
 
 	@Override

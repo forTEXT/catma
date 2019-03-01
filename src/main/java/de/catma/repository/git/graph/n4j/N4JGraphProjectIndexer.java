@@ -1,4 +1,4 @@
-package de.catma.repository.git.graph.indexer;
+package de.catma.repository.git.graph.n4j;
 
 import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
@@ -72,13 +72,13 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 
-public class GraphProjectIndexer implements Indexer {
+public class N4JGraphProjectIndexer implements Indexer {
 
 	private User user;
 	private ProjectReference projectReference;
 	private Supplier<String> rootRevisionHashSupplier;
 
-	public GraphProjectIndexer(User user, ProjectReference projectReference,
+	public N4JGraphProjectIndexer(User user, ProjectReference projectReference,
 			Supplier<String> rootRevisionHashSupplier) {
 		super();
 		this.user = user;

@@ -1,4 +1,4 @@
-package de.catma.repository.git.graph.indexer;
+package de.catma.repository.git.graph;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -46,18 +46,21 @@ public class TinkerPopTest {
 		logger.info("load finished");
 		
 		TinkerGraph graph = TinkerGraph.open();
+		Vertex documentV = graph.addVertex("Document");
+		
 		Map<Integer, Vertex> adjacencyMap = new HashMap<>();
 		for (Map.Entry<String, Any> entry : content.asMap().entrySet()) {
 			String term = entry.getKey();
-			Vertex termV = graph.addVertex("term");
+			Vertex termV = graph.addVertex("Term");
 			termV.property("literal", term);
+			termV.addEdge("isPartOf", documentV);
 			
 			for (Any posEntry : entry.getValue().asList()) {
 				int startOffset = posEntry.get("startOffset").as(Integer.class);
 				int endOffset = posEntry.get("endOffset").as(Integer.class);
 				int tokenOffset = posEntry.get("tokenOffset").as(Integer.class);
 				
-				Vertex positionV = graph.addVertex("position");
+				Vertex positionV = graph.addVertex("Position");
 				positionV.property(
 					"startOffset", startOffset);
 				positionV.property( 
@@ -71,8 +74,11 @@ public class TinkerPopTest {
 			}
 		}
 		for (int i=0; i<adjacencyMap.size()-1; i++) {
-			adjacencyMap.get(i).addEdge("isAdjacent", adjacencyMap.get(i+1));
+			adjacencyMap.get(i).addEdge("isAdjacentTo", adjacencyMap.get(i+1));
 		}
+		
+		GraphTraversalSource g = graph.traversal();
+		g.io("c:/test/emily.json").write().iterate();
 		
 		System.out.println(graph.toString());
 		
@@ -82,15 +88,14 @@ public class TinkerPopTest {
 
 		logger.info("graph index finished");
 
-		GraphTraversalSource g = graph.traversal();
 
-		List<Path> result = g.V().has("term", "literal", "Miss")
+		List<Path> result = g.V().has("Term", "literal", "Miss")
 		.outE("hasPosition")
-		.inV().hasLabel("position")
-		.outE("isAdjacent")
-		.inV().hasLabel("position")
+		.inV().hasLabel("Position")
+		.outE("isAdjacentTo")
+		.inV().hasLabel("Position")
 		.inE("hasPosition")
-		.outV().has("term", "literal", "Emily")
+		.outV().has("Term", "literal", "Emily")
 		.path()
 		.fill(new ArrayList<>());
 		
@@ -115,13 +120,13 @@ public class TinkerPopTest {
 		
 //		
 // 		
-//		List<String> terms = g.V().has("term", "literal", "Emily")
+//		List<String> terms = g.V().has("Term", "literal", "Emily")
 //		.outE("hasPosition")
-//		.inV().hasLabel("position")
+//		.inV().hasLabel("Position")
 //		.outE("isAdjacent")
-//		.inV().hasLabel("position")
+//		.inV().hasLabel("Position")
 //		.inE("hasPosition")
-//		.outV().hasLabel("term")
+//		.outV().hasLabel("Term")
 //		.properties("literal")
 //		.map(prop -> (String)prop.get().orElse(null))
 //		.toList();
@@ -132,20 +137,20 @@ public class TinkerPopTest {
 
 		System.out.println(graph.toString());
 		
-		System.out.println("Emily1: " + g.V().has("term", "literal", "Emily").outE("hasPosition").inV().count().next());
+		System.out.println("Emily1: " + g.V().has("Term", "literal", "Emily").outE("hasPosition").inV().count().next());
 		
-		g.V().has("term", "literal", "Emily").store("m").outE("hasPosition").inV().drop().cap("m").unfold().drop().iterate();
+		g.V().has("Term", "literal", "Emily").store("m").outE("hasPosition").inV().drop().cap("m").unfold().drop().iterate();
 
 		System.out.println(graph.toString());
-		System.out.println("Emily2: " + g.V().has("term", "literal", "Emily").outE("hasPosition").inV().count().tryNext().orElse(0L));
+		System.out.println("Emily2: " + g.V().has("Term", "literal", "Emily").outE("hasPosition").inV().count().tryNext().orElse(0L));
 
-//		terms = g.V().has("term", "literal", "Emily")
+//		terms = g.V().has("Term", "literal", "Emily")
 //		.outE("hasPosition")
-//		.inV().hasLabel("position")
+//		.inV().hasLabel("Position")
 //		.outE("isAdjacent")
-//		.inV().hasLabel("position")
+//		.inV().hasLabel("Position")
 //		.inE("hasPosition")
-//		.outV().hasLabel("term")
+//		.outV().hasLabel("Term")
 //		.properties("literal")
 //		.map(prop -> (String)prop.get().orElse(null))
 //		.toList();

@@ -84,12 +84,8 @@ public interface GraphProjectHandler {
 	void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds,
 			String collectionRevisionHash) throws Exception;
 
-	void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset)
+	void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
-
-	void updateProjectRevisionHash(String oldRootRevisionHash, String rootRevisionHash) throws Exception;
-
-	void updateCollectionRevisionHash(String rootRevisionHash, UserMarkupCollectionReference collectionReference) throws Exception;
 
 	void removePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)

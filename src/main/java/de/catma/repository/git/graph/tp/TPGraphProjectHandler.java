@@ -1,4 +1,4 @@
-package de.catma.repository.git.graph;
+package de.catma.repository.git.graph.tp;
 
 import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
@@ -16,6 +16,7 @@ import static de.catma.repository.git.graph.NodeType.nt;
 import static de.catma.repository.git.graph.RelationType.hasCollection;
 import static de.catma.repository.git.graph.RelationType.hasDocument;
 import static de.catma.repository.git.graph.RelationType.hasInstance;
+import static de.catma.repository.git.graph.RelationType.hasParent;
 import static de.catma.repository.git.graph.RelationType.hasPosition;
 import static de.catma.repository.git.graph.RelationType.hasProject;
 import static de.catma.repository.git.graph.RelationType.hasProperty;
@@ -23,6 +24,7 @@ import static de.catma.repository.git.graph.RelationType.hasRevision;
 import static de.catma.repository.git.graph.RelationType.hasTag;
 import static de.catma.repository.git.graph.RelationType.hasTagset;
 import static de.catma.repository.git.graph.RelationType.isAdjacentTo;
+import static de.catma.repository.git.graph.RelationType.isPartOf;
 import static de.catma.repository.git.graph.RelationType.rt;
 
 import java.nio.file.Path;
@@ -41,6 +43,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
@@ -56,7 +59,10 @@ import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.Indexer;
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.graph.FileInfoProvider;
+import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -65,16 +71,14 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
-import de.catma.util.IDGenerator;
 
 public class TPGraphProjectHandler implements GraphProjectHandler {
 
 	private Logger logger = Logger.getLogger(TPGraphProjectHandler.class.getName());
-	private TinkerGraph graph;
+	private Graph graph;
 	private ProjectReference projectReference;
 	private User user;
 	private FileInfoProvider fileInfoProvider;
-	private IDGenerator idGenerator;
 	private TagManager tagManager;
 	
 	public TPGraphProjectHandler(ProjectReference projectReference, 
@@ -82,7 +86,6 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		this.projectReference = projectReference;
 		this.user = user;
 		this.fileInfoProvider = fileInfoProvider;
-		this.idGenerator = new IDGenerator();
 		
 		graph = TinkerGraph.open();
 	}
@@ -111,7 +114,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		this.tagManager = tagManager;
 		
 		for (TagsetDefinition tagset : tagsets) {
-			addTagset(projectRevV, tagset);
+			Vertex tagsetV = addTagset(projectRevV, tagset);
+			addHasParentRelations(tagsetV, tagset);
 		}
 		
 		for (SourceDocument document : documentsSupplier.get()) {
@@ -122,6 +126,23 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			addCollection(revisionHash, revisionHash, collection);
 		}
 		logger.info("Finished loading " + projectReference.getName() + " " + projectReference.getProjectId());
+	}
+
+	private void addHasParentRelations(Vertex tagsetV, TagsetDefinition tagset) {
+		if (!tagset.isEmpty()) {
+			GraphTraversalSource g = graph.traversal();
+			
+			for (TagDefinition tag : tagset) {
+				if (!tag.getParentUuid().isEmpty()) {
+					Vertex tagV = g.V(tagsetV).outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid()).next();
+				
+					Vertex parentTagV = g.V(tagsetV).outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getParentUuid()).next();
+					
+					tagV.addEdge(rt(hasParent), parentTagV);
+				}
+			}
+			
+		}
 	}
 
 	private void addCollection(String oldRevisionHash, String revisionHash, UserMarkupCollection collection) {
@@ -242,6 +263,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 				List<Any> positionList = entry.getValue().asList();
 				termV.property("freq", positionList.size());
 				
+				termV.addEdge(rt(isPartOf), documentV);
+				
 				for (Any posEntry : positionList) {
 					int startOffset = posEntry.get("startOffset").as(Integer.class);
 					int endOffset = posEntry.get("endOffset").as(Integer.class);
@@ -277,23 +300,25 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			
 	}
 
-	private void addTagset(Vertex projectRevV, TagsetDefinition tagset) {
+	private Vertex addTagset(Vertex projectRevV, TagsetDefinition tagset) {
 		Vertex tagsetV = graph.addVertex(nt(Tagset));
 		
 		tagsetV.property("tagsetId", tagset.getUuid());
-//		tagsetV.property("name", tagset.getName());
+		tagsetV.property("name", tagset.getName());
 //		tagsetV.property("revisionHash", tagset.getRevisionHash());
 //		tagsetV.property("description", "");// TODO: 
 		tagsetV.property("tagset", tagset);
 		
 		projectRevV.addEdge(rt(hasTagset), tagsetV);
 		
-		for (TagDefinition tag : tagset) {
-			addTag(tagsetV, tag);
+		for (TagDefinition tag : tagset) {			
+			addTag(tagsetV, null, tag);
 		}
+		
+		return tagsetV;
 	}
 
-	private void addTag(Vertex tagsetV, TagDefinition tag) {
+	private void addTag(Vertex tagsetV, Vertex parentTagV, TagDefinition tag) {
 		Vertex tagV = graph.addVertex(nt(Tag));
 		
 		tagV.property("tagId", tag.getUuid());
@@ -302,6 +327,10 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		tagV.property("name", tag.getName());
 		
 		tagsetV.addEdge(rt(hasTag), tagV);
+		
+		if (parentTagV != null) {
+			tagV.addEdge(rt(hasParent), parentTagV);
+		}
 		
 		for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
 			addPropertyDefinition(tagV, propertyDef);
@@ -371,7 +400,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash).next();
 		projectRevV.property("revisionHash", rootRevisionHash);
 		
-		addTagset(projectRevV, tagset);
+		Vertex tagsetV = addTagset(projectRevV, tagset);
+		addHasParentRelations(tagsetV, tagset);
 	}
 
 	@Override
@@ -384,7 +414,12 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			.property("revisionHash", rootRevisionHash)
 			.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid()).next();
 		
-		addTag(tagsetV, tag);
+		Vertex parentTagV = null;
+		if (!tag.getParentUuid().isEmpty()) {
+			parentTagV = g.V(tagsetV).outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getParentUuid()).next();
+		}
+		
+		addTag(tagsetV, parentTagV, tag);
 	}
 
 	@Override
@@ -474,7 +509,9 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public void removeTagReferences(String rootRevisionHash, UserMarkupCollection collection,
 			List<TagReference> tagReferences) throws Exception {
+		
 		System.out.println(graph);
+		
 		Set<String> tagInstanceIds = 
 			tagReferences
 				.stream()
@@ -561,72 +598,109 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
 		.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", collectionId)
 		.outE(rt(hasInstance)).inV().has(nt(TagInstance), "tagInstanceId", P.within(tagInstanceIds))
-		.store("instances")
-		.outE(rt(hasProperty)).inV().drop()
-		.cap("instances").unfold().drop().iterate();
+		.store("toBeDropped")
+		.outE(rt(hasProperty)).inV().hasLabel(nt(AnnotationProperty)).drop() //AnnotationProperties
+		.cap("toBeDropped").unfold().drop().iterate(); //TagInstance
 		
 	}
 
 	@Override
-	public void removeTagDefinition(String rootRevisionHash, TagDefinition tagDefinition, TagsetDefinition tagset)
+	public void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void updateProjectRevisionHash(String oldRootRevisionHash, String rootRevisionHash) throws Exception {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void updateCollectionRevisionHash(String rootRevisionHash, UserMarkupCollectionReference collectionReference)
-			throws Exception {
-		// TODO Auto-generated method stub
-
+		GraphTraversalSource g = graph.traversal();
+		
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		.property("revisionHash", rootRevisionHash)
+		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
+		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid())
+		.store("toBeDropped")
+		.outE(rt(hasProperty)).inV().hasLabel(nt(Property)).drop() // Properties
+		.cap("toBeDropped").unfold().drop().iterate(); // Tag
 	}
 
 	@Override
 	public void removePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
-			TagDefinition tagDefinition, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
-		// TODO Auto-generated method stub
-
+			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
+		GraphTraversalSource g = graph.traversal();
+		
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		.property("revisionHash", rootRevisionHash)
+		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
+		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid())
+		.outE(rt(hasProperty)).inV().has(nt(Property), "uuid", propertyDefinition.getUuid())
+		.drop().iterate();
 	}
 
 	@Override
 	public void removeTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
-		// TODO Auto-generated method stub
+		GraphTraversalSource g = graph.traversal();
 
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		.property("revisionHash", rootRevisionHash)
+		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
+		.store("toBeDropped")
+		.outE(rt(hasTag)).inV().hasLabel(nt(Tag))
+		.store("toBeDropped")
+		.outE(rt(hasProperty)).inV().drop() // Properties
+		.cap("toBeDropped").unfold().drop().iterate(); // Tagset and Tags	
 	}
 
 	@Override
 	public void updateTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
-		// TODO Auto-generated method stub
-
+		GraphTraversalSource g = graph.traversal();
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		.property("revisionHash", rootRevisionHash)
+		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
+		.property("name", tagset.getName());
 	}
 
 	@Override
 	public void updateCollection(String rootRevisionHash, UserMarkupCollectionReference collectionRef,
 			String oldRootRevisionHash) throws Exception {
-		// TODO Auto-generated method stub
-
+		GraphTraversalSource g = graph.traversal();
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		.property("revisionHash", rootRevisionHash);
+		
+		// the collection itself has currently no indexed fields so there is no updated to be done
 	}
 
 	@Override
 	public void removeCollection(String rootRevisionHash, UserMarkupCollectionReference collectionReference,
 			String oldRootRevisionHash) throws Exception {
-		// TODO Auto-generated method stub
+		GraphTraversalSource g = graph.traversal();
+		
+		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.property("revisionHash", rootRevisionHash)
+		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", collectionReference.getSourceDocumentId())
+		.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", collectionReference.getId())
+		.store("toBeDropped")
+		.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
+		.store("toBeDropped")
+		.outE(rt(hasProperty)).inV().hasLabel(nt(AnnotationProperty)).drop() //AnnotationProperties
+		.cap("toBeDropped").unfold().drop().iterate(); // Collection and TagInstances		
 
 	}
 
 	@Override
 	public void removeDocument(String rootRevisionHash, SourceDocument document, String oldRootRevisionHash)
 			throws Exception {
-		// TODO Auto-generated method stub
 
+		GraphTraversalSource g = graph.traversal();
+		
+		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.property("revisionHash", rootRevisionHash)
+		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", document.getID())
+		.store("toBeDropped")
+		.inE(rt(isPartOf)).outV().hasLabel(nt(Term))
+		.store("toBeDropped")
+		.outE(rt(hasPosition)).inV().hasLabel(nt(Position)).drop() // Positions
+		.cap("toBeDropped").unfold().drop().iterate();  // Document and Terms
+	}
+	
+	public Indexer createIndexer() {
+		return new TPGraphProjectIndexer(graph);
 	}
 
 }

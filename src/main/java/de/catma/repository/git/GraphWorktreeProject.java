@@ -42,8 +42,7 @@ import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
-import de.catma.repository.git.graph.TPGraphProjectHandler;
-import de.catma.repository.git.graph.indexer.GraphProjectIndexer;
+import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -84,7 +83,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userDefinedPropertyChangedListener;
-	private GraphProjectIndexer indexer;
+	private Indexer indexer;
 
 	public GraphWorktreeProject(GitUser user,
 								GitProjectHandler gitProjectHandler,
@@ -114,13 +113,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 					}
 				});
 		this.tempDir = RepositoryPropertyKey.TempDir.getValue();
-		this.indexer = new GraphProjectIndexer(user, projectReference, () -> this.rootRevisionHash);
+		this.indexer = ((TPGraphProjectHandler)this.graphProjectHandler).createIndexer();
 	}
 	
 	private Path getTokenizedSourceDocumentPath(String documentId) {
 		return Paths
-//			.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
-			.get(new File(RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+			.get(new File(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue()).toURI())
 			.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(documentId))
 			.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
@@ -535,24 +533,22 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String tagsetRevision = gitProjectHandler.removeTag(tagsetDefinition, tagDefinition);
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 
-		graphProjectHandler.removeTagDefinition(
-				rootRevisionHash, tagDefinition, tagsetDefinition);
-			
 		// commit Project
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
-			tagsetDefinition,
-			String.format(
-				"Removed Tag %1$s with ID %2$s "
-				+ "from Tagset %3$s with ID %4$s "
-				+ "and corresponding Annotations",
-					tagDefinition.getName(),
-					tagDefinition.getUuid(),
-					tagsetDefinition.getName(),
-					tagsetDefinition.getUuid()));
-
-		graphProjectHandler.updateProjectRevisionHash(oldRootRevisionHash, this.rootRevisionHash);
+				tagsetDefinition,
+				String.format(
+						"Removed Tag %1$s with ID %2$s "
+								+ "from Tagset %3$s with ID %4$s "
+								+ "and corresponding Annotations",
+								tagDefinition.getName(),
+								tagDefinition.getUuid(),
+								tagsetDefinition.getName(),
+								tagsetDefinition.getUuid()));
 		
+		graphProjectHandler.removeTagDefinition(
+				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+			
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.tagReferencesChanged.name(), 

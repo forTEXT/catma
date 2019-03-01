@@ -33,6 +33,7 @@ public class GitProjectManager implements ProjectManager {
     private final BackgroundService backgroundService;
     private String gitBasedRepositoryBasePath;
 	private GitUser user;
+	private GraphProjectDeletionHandler graphProjectDeletionHandler;
 
 	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_root";
 
@@ -43,10 +44,12 @@ public class GitProjectManager implements ProjectManager {
 	public GitProjectManager(
             String gitBasedRepositoryBasePath,
             IRemoteGitManagerRestricted remoteGitServerManager,
+            GraphProjectDeletionHandler graphProjectDeletionHandler,
             BackgroundService backgroundService)
 					throws IOException {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = remoteGitServerManager;
+		this.graphProjectDeletionHandler = graphProjectDeletionHandler;
 		this.backgroundService = backgroundService;
 		this.user = remoteGitServerManager.getGitUser();
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
@@ -121,7 +124,7 @@ public class GitProjectManager implements ProjectManager {
 
 		this.remoteGitServerManager.deleteGroup(projectId);
 		try {
-			new GraphProjectDeletionHandler(user).deleteProject(projectId);
+			graphProjectDeletionHandler.deleteProject(projectId);
 		} catch (Exception e) {
 			throw new IOException(e);
 		};
