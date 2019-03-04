@@ -39,8 +39,13 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzenew.treehelper.DocumentItem;
+import de.catma.ui.analyzenew.treehelper.RootItem;
+import de.catma.ui.analyzenew.treehelper.RowItem;
+import de.catma.ui.analyzenew.treehelper.TreeItem;
 import de.catma.ui.analyzer.AnalyzerView.CloseListener;
 import de.catma.ui.component.actiongrid.ActionGridBar;
+import de.catma.ui.modules.project.DocumentResource;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -65,6 +70,10 @@ public class ResultPanelNew extends Panel {
 
 	private TreeData<TagRowItem> phraseData;
 	private TreeGrid<TagRowItem> treeGridPhrase;
+	
+	
+	private TreeGrid<TreeItem> phraseItemTreeGrid;
+	private TreeDataProvider<TreeItem>  phraseItemDataProvider;
 
 	private TreeGrid<TagRowItem> treeGridProperty;
 
@@ -99,7 +108,6 @@ public class ResultPanelNew extends Panel {
 		if (queryAsString.contains("tag=")) {
 			setDataTagStyle();
 			setCurrentView(ViewID.tag);
-
 			treeGridPanel.setContent(treeGridTag);
 		}
 
@@ -112,10 +120,11 @@ public class ResultPanelNew extends Panel {
 		}
 		if (queryAsString.contains("wild=")) {
 			// setDataPhraseStyleLazy();
-			setDataPhraseStyle();
+			//setDataPhraseStyle();
+			setDataPhraseItemStyle();
 			setCurrentView(ViewID.phrase);
 			// treeGridPanel.setContent(treeGridPhrase);
-			treeGridPanel.setContent(treeGridPhrase);
+			treeGridPanel.setContent(phraseItemTreeGrid);
 		}
 
 	}
@@ -152,6 +161,10 @@ public class ResultPanelNew extends Panel {
 		treeGridPhrase = new TreeGrid<TagRowItem>();
 		treeGridPhrase.addStyleName( "flat-undecorated-icon-buttonrenderer");
 		// treeGridPhrase.setSelectionMode(SelectionMode.MULTI);
+		
+		
+
+		
 
 		treeGridProperty = new TreeGrid<TagRowItem>();
 		treeGridProperty.addStyleName("annotate-resource-grid");
@@ -322,7 +335,9 @@ public class ResultPanelNew extends Panel {
 	}
 
 	private void setDataPhraseStyle() throws Exception {
-
+		
+		
+		
 		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
 		TreeData<TagRowItem> phraseData = new TreeData<>();
 		//phraseData = new TreeData<>();
@@ -342,30 +357,86 @@ public class ResultPanelNew extends Panel {
 			
 			for(TagRowItem doc : documentsForAPhrase) {
 				ArrayList<TagRowItem> phraseItems = new ArrayList<>();
-				phraseItems=retrievePhraseItemsAsChildren(groupedQueryResult,doc);
-				
+				phraseItems=retrievePhraseItemsAsChildren(groupedQueryResult,doc);			
 				phraseData.addItems(doc,phraseItems);
-		
 			}
-
 		}
 
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(phraseData);
-
 		treeGridPhrase.addColumn(TagRowItem::getShortenTreePath).setCaption("Phrase").setId("phraseID");
 		treeGridPhrase.getColumn("phraseID").setExpandRatio(7);
-
 		treeGridPhrase.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
-
-		dataProvider.refreshAll();
-		
-
+		dataProvider.refreshAll();	
 		treeGridPhrase.setDataProvider(dataProvider);
 		treeGridPhrase.setWidth("100%");
 	}
+		
+	private void setDataPhraseItemStyle() {
+	
+		TreeData<TreeItem> phraseItemData = new TreeData<>();
+		phraseItemTreeGrid = new TreeGrid<TreeItem>();
+	
+		
+		//QueryResultRowArray groupedQueryResultArray = queryResult.asQueryResultRowArray();
+		Set<GroupedQueryResult> resultAsSet= queryResult.asGroupedSet();
+		
+		
 
-	/*
+		// add phrases as roots
+		for (GroupedQueryResult onePhraseGroupedQueryResult : resultAsSet) {
+
+			String phrase = (String) onePhraseGroupedQueryResult.getGroup();
+			RootItem rootPhrase =   new RootItem();
+		
+			Set<String> allDocsForThatPhrase= onePhraseGroupedQueryResult.getSourceDocumentIDs();
+			
+			rootPhrase.setTreeKey(phrase); 
+			rootPhrase.setRows(onePhraseGroupedQueryResult);
+			phraseItemData.addItem(null,  rootPhrase);
+			ArrayList <TreeItem> allDocuments= new ArrayList<>();
+			
+			for(String docID: allDocsForThatPhrase) {
+			GroupedQueryResult oneDocGroupedQueryResult=onePhraseGroupedQueryResult.getSubResult(docID);
+			DocumentItem docItem = new DocumentItem();
+			docItem.setTreeKey(docID);
+			docItem.setRows(oneDocGroupedQueryResult);
+			allDocuments.add( docItem);
+				
+			}
+		
+			
+			
+			phraseItemData.addItems( rootPhrase, allDocuments);
+			
+	
+			
+				
+		
+		}
+	  phraseItemDataProvider = new TreeDataProvider<>(phraseItemData);
+
+		phraseItemTreeGrid.setDataProvider(phraseItemDataProvider);
+		treeGridPanel.setContent(phraseItemTreeGrid);
+		
+		phraseItemDataProvider.refreshAll();
+		phraseItemTreeGrid.addColumn(TreeItem::getTreeKey).setCaption("Phrase").setId("phraseID");
+		phraseItemTreeGrid.getColumn("phraseID").setExpandRatio(7);
+		phraseItemTreeGrid.addColumn(TreeItem::getFrequency).setCaption("Frequency").setId("freqID");
+		phraseItemTreeGrid.getColumn("freqID").setExpandRatio(1);
+	
+		
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+
+	/* *********Lazy style************************
 	 * private void setDataPhraseStyleLazy() throws Exception {
 	 * 
 	 * Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();

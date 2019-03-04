@@ -1,5 +1,6 @@
 package de.catma.ui.analyzenew;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -162,11 +163,9 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		mainContentPanel.setExpandRatio(leftSide, left);
 		mainContentPanel.setExpandRatio(rightSide, right);
 		//mainContentSplitPanel.setExpandRatio(leftSide, 0.4f);
-	
-			
+				
 	}
 
-	
 	private void initActions() {
 		arrowLeftBt.addClickListener(new ClickListener() {
 			@Override
@@ -176,65 +175,36 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 			}
 		});
-		
-
 
 	}
 
 	private void initListeners() {
-		
-		selectedDataProvider.addDataProviderListener(new DataProviderListener<TagRowItem>() {
-			
+		selectedDataProvider.addDataProviderListener(new DataProviderListener<TagRowItem>() {	
 			@Override
 			public void onDataChange(DataChangeEvent<TagRowItem> event) {
-			//	if(comboBox.getValue().contains("tag")) {
-				
-					updateKwicView();
-					
-					System.out.println("TreeGrid hat sich geändert");	
+			//	if(comboBox.getValue().contains("tag")) {		
+					updateKwicView();	
 				//}
 			}
 		});
-		
-		
-		
-
-	/*
-	
-	setDescription(
-		    "<h2>"+
-		    	    "A richtext tooltip</h2>"+
-		    	    "<ul>"+
-		    	    "  <li>Use rich formatting with HTML</li>"+
-		    	    "  <li>Include images from themes</li>"+
-		    	    "  <li>etc.</li>"+
-		    	    "</ul>",ContentMode.HTML);
-	*/
-		
-		
-		
-		
+			
 	}
 	
 	private void updateKwicView() {
-		//QueryResult queryResult = createQueryResultFromTreeGridDataTags();
+		// QueryResult queryResult = createQueryResultFromTreeGridDataTags();
 		ArrayList<QueryResultRow> queryResult = createQueryResultFromTreeGridData();
-		
 		try {
-			
-		//	kwicNew.addQueryResultRows(queryResult);
-			
-		} catch (Exception e) {		
+
+			// kwicNew.addQueryResultRows(queryResult);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private QueryResult createQueryResultFromTreeGridDataTags() {
-		
+	
+	private QueryResult createQueryResultFromTreeGridDataTags() {	
 		TagQueryResult tagQueryResult = new TagQueryResult("some Tags");
-
 		List<TagRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
-
 		if (!rootElements.isEmpty()) {
 			for (TagRowItem root : rootElements) {
 				List<TagRowItem> children= new ArrayList<TagRowItem>();
@@ -247,17 +217,14 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				}				
 			}
 		} else {
+			// TODO
 		}
-
 		return tagQueryResult;
 	}
 	
-	private ArrayList<QueryResultRow> createQueryResultFromTreeGridData() {
-		
+	private ArrayList<QueryResultRow> createQueryResultFromTreeGridData() {	
 		ArrayList<QueryResultRow> queryResult = new ArrayList<QueryResultRow>();
-
 		List<TagRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
-
 		if (!rootElements.isEmpty()) {
 			for (TagRowItem root : rootElements) {
 				List<TagRowItem> children= new ArrayList<TagRowItem>();
@@ -307,40 +274,14 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		resultsTreeGrid.setWidth("100%");
 		resultsTreeGrid.setHeight("230px");
 		
-/*
-		resultsTreeGrid.addSelectionListener(new SelectionListener<TagRowItem>() {
-			@Override
-			public void selectionChange(SelectionEvent<TagRowItem> event) {
-				
-				Iterable<TagRowItem> selectedItems = event.getAllSelectedItems();
-				
-				selectedItems.forEach(item -> {
-					System.out.println(" TgaPath :" + item.getTreePath() + " Collection :" + item.getCollectionName()
-							+ " Tag ID:" + item.getTagInstanceID());
-				});
-				
-				for (TagRowItem item : selectedItems) {
-					TagRowItem parent = resultsTreeGridData.getParent(item);
-					// can have siblings
-					if (parent != null) {
-						checkIfAllSiblingsAreSelectedAndSelectParent(item);
-						// setChildrenSelected(item);
-						// is root= no siblings
-					} else {
-						// setChildrenSelected(item);
-					}
-				}
-			}
-		});*/
 		
-		// add selected items to the slected-panel
+		// add selected items to the selected-panel
 	     resultsTreeGrid.addSelectionListener(new SelectionListener<TagRowItem>() {
 				
 				@Override
 				public void selectionChange(SelectionEvent<TagRowItem> event) {
 					
-				Optional<String> currentQuery = comboBox.getSelectedItem();
-								
+				Optional<String> currentQuery = comboBox.getSelectedItem();				
 				Collection<TagRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();	
 				Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
 				
@@ -348,36 +289,11 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				
 				}
 			});
+	     
 		queryResultsPanel.setContent(resultsTreeGrid);
 	}
 
 	
-	private void checkIfAllSiblingsAreSelectedAndSelectParent(TagRowItem item) {
-		boolean allChildrenSelected = true;
-		TagRowItem parent = resultsTreeGridData.getParent(item);
-		List<TagRowItem> children = resultsTreeGridData.getChildren(item);
-		List<TagRowItem> siblings = resultsTreeGridData.getChildren(parent);
-
-		/*
-		 * if (siblings.size() == 1) { treeGridTag.asMultiSelect().select(parent); }
-		 * else {
-		 */
-
-		for (TagRowItem sibl : siblings) {
-			if (resultsTreeGrid.asMultiSelect().isSelected(sibl)) {
-				// allChildrenSelected remains true
-			} else {
-				allChildrenSelected = false;
-			}
-		}
-		if (allChildrenSelected) {
-			resultsTreeGrid.asMultiSelect().select(parent);
-
-		} else {
-			resultsTreeGrid.asMultiSelect().deselect(parent);
-		}
-	}
-
 	
 	private TreeGrid<TagRowItem> createResultsTreeGridFromData(TreeData<TagRowItem> treeData, ViewID currentView) {
 		TreeGrid<TagRowItem> resultSetTreeGrid = new TreeGrid<>();
@@ -459,40 +375,45 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	
 	private void handleSelectClickEvent(RendererClickEvent<TagRowItem> rendererClickEvent) {
 		TagRowItem selectedItem = rendererClickEvent.getItem();
-		
-		List<TagRowItem> childList= resultsTreeGridData.getChildren(selectedItem);
+
+		List<TagRowItem> childList = resultsTreeGridData.getChildren(selectedItem);
 		List<TagRowItem> childChildList;
-		childList=resultsTreeGridData.getChildren(selectedItem);
-		TagRowItem parent;
-
-		// item is phrase-tag-rowitems
+		TagRowItem parent = resultsTreeGridData.getParent(selectedItem);
+		Optional<String> currentQuery = comboBox.getSelectedItem();	
+		Collection<TagRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();	
+         ArrayList<TagRowItem> selectedItems=new ArrayList<TagRowItem>();
+         selectedItems.add(selectedItem);
+		
+		// item is single-phrase-rowitems
 		if (childList.isEmpty()) {
-			System.out.println("rowitems:"+selectedItem.getTreePath());
-	
+			System.out.println("rowitems:" + selectedItem.getTreePath());
+			addItemsToSelectedPanel(currentQuery.toString(), (Collection<TagRowItem>) selectedItems, allRootItems);
 
-		}else {
+		} else {
 			// item is on document level
-			childList=resultsTreeGridData.getChildren(selectedItem);
-			childChildList =resultsTreeGridData.getChildren(childList.get(0));
+			childList = resultsTreeGridData.getChildren(selectedItem);
+			childChildList = resultsTreeGridData.getChildren(childList.get(0));
 			if (childChildList.isEmpty()) {
-				System.out.println("document:"+selectedItem.getTreePath());
-		
-			}else {
-				// item is rootelement= query	
+				System.out.println("document:" + selectedItem.getTreePath());
+				addItemsToSelectedPanel(currentQuery.toString(), (Collection<TagRowItem>) childList, allRootItems);
+
+			} else {
+				// item is on resultPhrase level because the roots of the resultTree are the resultPhrase and not the query like in the selectedTree
 				if (resultsTreeGridData.getParent(selectedItem) == null) {
-					System.out.println("root, single phrase result:"+selectedItem.getTreePath());
-				
+					ArrayList <TagRowItem> allItems = new ArrayList<>();
+					for (TagRowItem document :childList) {
+						allItems.addAll(resultsTreeGridData.getChildren(document));
+					}
+					System.out.println("root, single phrase result:" + selectedItem.getTreePath());
+					addItemsToSelectedPanel(currentQuery.toString(), (Collection<TagRowItem>) allItems, allRootItems);
+
+				}
+
 			}
-			
-		}
-	
-		
-
-	
 
 		}
-	
-		//childList.stream().forEach(v -> System.out.println(v.getPhrase()));
+
+		// childList.stream().forEach(v -> System.out.println(v.getPhrase()));
 
 	}
 
@@ -501,28 +422,25 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	
 	
 	
-	private void addItemsToSelectedPanel(String query, Collection<TagRowItem> items,Collection<TagRowItem> allRootItemsIncoming) {
-
+	private void addItemsToSelectedPanel(String query, Collection<TagRowItem> newItems,Collection<TagRowItem> currentRootItems) {	
 		
 		TagRowItem newRoot = new TagRowItem();
-		
+		TagRowItem phraseItem = new TagRowItem();
 		int length=query.length();
 		String queryString = query.substring(20, length-1);
-		
 		newRoot.setTreePath(queryString);
-		
-		Collection<TagRowItem> allRootItems= allRootItemsIncoming;
+		Collection<TagRowItem> allRootItems= currentRootItems;
 		Iterator<TagRowItem> rootsIterator =allRootItems.iterator();
+		phraseItem.setTreePath(newItems.stream().findFirst().get().getTreePath());
+	
 		
-		
-		if (items.isEmpty()) {
+		// all is deselected--- currently irelevant
+/*		if (newItems.isEmpty()) {
 			
 		while (rootsIterator.hasNext()) { 
-
 				TagRowItem emptyRootItem = rootsIterator.next();
 
 				if (emptyRootItem.getTreePath().equals(queryString)) {
-				
 					selectedItemsTreeGridData.removeItem(emptyRootItem);
 					selectedDataProvider.refreshAll();
 					break;
@@ -530,20 +448,24 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			}
 		}
 		
-		else {
+		else {*/
 					
 		boolean contains= false;
 		
 		if (allRootItems.isEmpty()) {
 			// rootItem is the first/only item in the Grid
-			selectedItemsTreeGridData.addItems(null, newRoot);
+			//selectedItemsTreeGridData.addItems(null, newRoot);
+			
+	
+			//selectedItemsTreeGridData.addItems(newRoot, phraseItem);
 			
 			if(selectedGridView==ViewID.phrase) {
-				selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot,selectedItemsTreeGridData, items);
+				selectedItemsTreeGridData.clear();
+				selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot, phraseItem,selectedItemsTreeGridData, newItems);
 			}
 			
 			if(selectedGridView==ViewID.tag) {
-				selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, items);
+				selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, newItems);
 			}
 			//selectedItemsTreeGridData.addItems(newRoot, items);
 			selectedDataProvider.refreshAll();
@@ -552,17 +474,29 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			for (TagRowItem rootItem : allRootItems) {
 				// rootItem exists, therefore renew root+branch
 				if (rootItem.getTreePath().equalsIgnoreCase(newRoot.getTreePath())) {
+					
 					contains=true;		
-					selectedItemsTreeGridData.removeItem(rootItem);
-					selectedDataProvider.refreshAll();
-					selectedItemsTreeGridData.addItem(null, newRoot);
+					//selectedItemsTreeGridData.removeItem(rootItem);	
+					//selectedDataProvider.refreshAll();
+					//selectedItemsTreeGridData.addItem(null, newRoot);
+					
+					ArrayList<TagRowItem> completeItemList = new ArrayList<>();
+					completeItemList.addAll(newItems);
+					
+					List<TagRowItem> docList =selectedItemsTreeGridData.getChildren(rootItem);
+					for(TagRowItem doc : docList) {
+					completeItemList.addAll(selectedItemsTreeGridData.getChildren(doc));
+						
+					}
 			
 					
 					if(selectedGridView==ViewID.phrase) {
-						selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot,selectedItemsTreeGridData, items);
+						//selectedItemsTreeGridData.clear();
+						selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot,phraseItem,selectedItemsTreeGridData, completeItemList);
+						selectedDataProvider.refreshAll();
 					}					
 					if(selectedGridView==ViewID.tag) {
-						selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, items);
+						selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, newItems);
 					}
 					//selectedItemsTreeGridData.addItems(newRoot, items);
 					selectedItemsTreeGrid.setWidth("100%");
@@ -574,11 +508,11 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					// rootItem is new, but not the first in the grid
 					selectedItemsTreeGridData.addItems(null,newRoot);
 					if(selectedGridView==ViewID.phrase) {
-						selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot,selectedItemsTreeGridData, items);
+						selectedItemsTreeGridData=	sortIncomingRowItemsToPhraseTreeData(newRoot,phraseItem,selectedItemsTreeGridData, newItems);
 					}
 					
 					if(selectedGridView==ViewID.tag) {
-						selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, items);
+						selectedItemsTreeGridData=	sortIncomingRowItemsToTagTreeData(newRoot,selectedItemsTreeGridData, newItems);
 					}
 					//selectedItemsTreeGridData.addItems(newRoot, items);
 					selectedItemsTreeGrid.setWidth("100%");
@@ -589,10 +523,16 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		
 	
 	
-		}
+		
 	
-	private TreeData<TagRowItem> sortIncomingRowItemsToPhraseTreeData(TagRowItem root, TreeData<TagRowItem> treeData,
+	private TreeData<TagRowItem> sortIncomingRowItemsToPhraseTreeData(TagRowItem root,TagRowItem phrase, TreeData<TagRowItem> treeData,
 			Collection<TagRowItem> items) {
+		// phrase is not first, root ( query) already inside
+		//if(root == null)
+		
+			
+		treeData.addItem(null, root);
+		treeData.addItem(root, phrase);
 
 		Collection<TagRowItem> allItems = items;
 
@@ -607,16 +547,18 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				allDocs.add(doc);
 			}
 		}
-		treeData.addItems(root, allDocs);
+		treeData.addItems(phrase, allDocs);
 		
 
 		for (TagRowItem doc : allDocs) {
 			String sourceDoc = doc.getSourceDocName();
+			ArrayList <TagRowItem>itemList = new ArrayList<>();
 			for (TagRowItem item : allItems) {
 				if (item.getSourceDocName().equalsIgnoreCase(sourceDoc)) {
-					treeData.addItem(doc, item);
+					itemList.add(item);
 				}
 			}
+			treeData.addItems(doc, itemList);
 		}
 
 		return treeData;

@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.ui.modules.project.DocumentResource;
 
 public class TagRowItem {
 	
@@ -141,6 +142,34 @@ public class TagRowItem {
 	public void setPhrase(String phrase) {
 		this.phrase = 	shorten(phrase, 50);
 	}
+	
+/*	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((treePath == null) ? 0 : treePath.hashCode());
+		return result;
+	}
+	
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TagRowItem other = (TagRowItem) obj;
+		if (treePath == null) {
+			if (other.treePath != null)
+				return false;
+		} else if (!treePath.equals(other.treePath))
+			return false;
+		return true;
+	}*/
 	
 	
 	public String getShortenTreePath(){
