@@ -202,8 +202,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			Vertex tagInstanceV = graph.addVertex(nt(TagInstance));
 			
 			tagInstanceV.property("tagInstanceId", ti.getUuid());
-//			tagInstanceV.property("author", ti.getAuthor());
-//			tagInstanceV.property("creationDate", ti.getTimestamp());
+			tagInstanceV.property("author", ti.getAuthor());
+			tagInstanceV.property("timestamp", ti.getTimestamp());
 			tagInstanceV.property("ranges", flatRanges);
 			
 			collectionV.addEdge(rt(hasInstance), tagInstanceV);
@@ -325,6 +325,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 //		tagV.property("author", tag.getAuthor());
 //		tagV.property("color", tag.getColor());
 		tagV.property("name", tag.getName());
+		tagV.property("tag", tag);
 		
 		tagsetV.addEdge(rt(hasTag), tagV);
 		
