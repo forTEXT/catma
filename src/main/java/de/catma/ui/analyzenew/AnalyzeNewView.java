@@ -46,6 +46,7 @@ import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
+import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.analyzer.GroupedQueryResultSelectionListener;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
@@ -143,7 +144,7 @@ public class AnalyzeNewView extends VerticalLayout
 		snapshotsPanel.setHeightUndefined();
 		 resultsFramePanel = new Panel();
 		resultsFramePanel.setContent(resultsPanel);
-		resultsFramePanel.setHeight("100%");
+		resultsFramePanel.setHeight("380px");
 		snapshotsFramePanel = new Panel();
 		snapshotsFramePanel.setContent(snapshotsPanel);
 		snapshotsFramePanel.setHeight("380px");
@@ -379,7 +380,7 @@ public class AnalyzeNewView extends VerticalLayout
 		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
 		while (iterator.hasNext()) {
 			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();
-			CurrentTreeGridData current= new CurrentTreeGridData(onePanel.getQueryAsString(),  (TreeData<TagRowItem>) onePanel.getCurrentTreeGridData(),onePanel.getCurrentView());
+			CurrentTreeGridData current= new CurrentTreeGridData(onePanel.getQueryAsString(),  (TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(),onePanel.getCurrentView());
 			toReturnList.add(current);
 		}
 		return toReturnList;

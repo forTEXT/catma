@@ -2,17 +2,25 @@ package de.catma.ui.analyzenew;
 
 import com.vaadin.data.TreeData;
 
+import de.catma.ui.analyzenew.treehelper.TreeRowItem;
+
 
 public class CurrentTreeGridData {
 	private String query;
-	private TreeData<TagRowItem> currentTreeData;
+	private TreeData<TreeRowItem> currentTreeData;
 	private ViewID viewID;
 
-	public CurrentTreeGridData(String queryAsString, TreeData<TagRowItem> currentTreeData, ViewID viewID) {
+/*	public CurrentTreeGridData( TreeData<TreeRowItem> currentTreeData, ViewID viewID) {
 		this.currentTreeData=currentTreeData;
-		this.query= queryAsString;
+		this.query= "random String";
 		this.viewID= viewID;
 		
+	}*/
+
+	public CurrentTreeGridData(String queryString, TreeData<TreeRowItem> currentTreeGridData, ViewID currentView) {
+		this.currentTreeData=currentTreeGridData;
+		this.query= queryString;
+		this.viewID= currentView;
 	}
 
 	public String getQuery() {
@@ -23,11 +31,11 @@ public class CurrentTreeGridData {
 		this.query = query;
 	}
 
-	public TreeData<TagRowItem> getCurrentTreeData() {
+	public TreeData<TreeRowItem> getCurrentTreeData() {
 		return currentTreeData;
 	}
 
-	private void setCurrentTreeData(TreeData<TagRowItem> currentTreeData) {
+	private void setCurrentTreeData(TreeData<TreeRowItem> currentTreeData) {
 		this.currentTreeData = currentTreeData;
 	}
 

@@ -41,8 +41,7 @@ import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.analyzenew.treehelper.DocumentItem;
 import de.catma.ui.analyzenew.treehelper.RootItem;
-import de.catma.ui.analyzenew.treehelper.RowItem;
-import de.catma.ui.analyzenew.treehelper.TreeItem;
+import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.analyzer.AnalyzerView.CloseListener;
 import de.catma.ui.component.actiongrid.ActionGridBar;
 import de.catma.ui.modules.project.DocumentResource;
@@ -72,8 +71,8 @@ public class ResultPanelNew extends Panel {
 	private TreeGrid<TagRowItem> treeGridPhrase;
 	
 	
-	private TreeGrid<TreeItem> phraseItemTreeGrid;
-	private TreeDataProvider<TreeItem>  phraseItemDataProvider;
+	private TreeGrid<TreeRowItem> phraseItemTreeGrid;
+	private TreeDataProvider<TreeRowItem>  phraseItemDataProvider;
 
 	private TreeGrid<TagRowItem> treeGridProperty;
 
@@ -135,9 +134,9 @@ public class ResultPanelNew extends Panel {
 	 * (TreeGrid<TagRowItem>) treeGridPanel.getContent(); return currentTreeGrid; }
 	 */
 
-	public TreeData getCurrentTreeGridData() {
-		TreeGrid<TagRowItem> currentTreeGrid = (TreeGrid<TagRowItem>) treeGridPanel.getContent();
-		TreeDataProvider<TagRowItem> dataProvider = (TreeDataProvider<TagRowItem>) currentTreeGrid.getDataProvider();
+	public TreeData<TreeRowItem> getCurrentTreeGridData() {
+		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getContent();
+		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
 		return (TreeData) dataProvider.getTreeData();
 	}
 
@@ -374,8 +373,8 @@ public class ResultPanelNew extends Panel {
 		
 	private void setDataPhraseItemStyle() {
 	
-		TreeData<TreeItem> phraseItemData = new TreeData<>();
-		phraseItemTreeGrid = new TreeGrid<TreeItem>();
+		TreeData<TreeRowItem> phraseItemData = new TreeData<>();
+		phraseItemTreeGrid = new TreeGrid<TreeRowItem>();
 	
 		
 		//QueryResultRowArray groupedQueryResultArray = queryResult.asQueryResultRowArray();
@@ -394,12 +393,19 @@ public class ResultPanelNew extends Panel {
 			rootPhrase.setTreeKey(phrase); 
 			rootPhrase.setRows(onePhraseGroupedQueryResult);
 			phraseItemData.addItem(null,  rootPhrase);
-			ArrayList <TreeItem> allDocuments= new ArrayList<>();
+			ArrayList <TreeRowItem> allDocuments= new ArrayList<>();
 			
 			for(String docID: allDocsForThatPhrase) {
 			GroupedQueryResult oneDocGroupedQueryResult=onePhraseGroupedQueryResult.getSubResult(docID);
 			DocumentItem docItem = new DocumentItem();
-			docItem.setTreeKey(docID);
+			try {
+				String docName = repository.getSourceDocument(docID).toString();
+				docItem.setTreeKey(docName);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
 			docItem.setRows(oneDocGroupedQueryResult);
 			allDocuments.add( docItem);
 				
@@ -420,9 +426,9 @@ public class ResultPanelNew extends Panel {
 		treeGridPanel.setContent(phraseItemTreeGrid);
 		
 		phraseItemDataProvider.refreshAll();
-		phraseItemTreeGrid.addColumn(TreeItem::getTreeKey).setCaption("Phrase").setId("phraseID");
+		phraseItemTreeGrid.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
 		phraseItemTreeGrid.getColumn("phraseID").setExpandRatio(7);
-		phraseItemTreeGrid.addColumn(TreeItem::getFrequency).setCaption("Frequency").setId("freqID");
+		phraseItemTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		phraseItemTreeGrid.getColumn("freqID").setExpandRatio(1);
 	
 		

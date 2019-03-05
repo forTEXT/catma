@@ -6,7 +6,7 @@ import java.util.List;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 
-public class DocumentItem implements TreeItem{
+public class DocumentItem implements TreeRowItem{
 	
 	
 	public GroupedQueryResult singleResultRowsList;

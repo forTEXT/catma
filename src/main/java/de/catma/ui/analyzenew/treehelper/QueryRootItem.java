@@ -1,12 +1,14 @@
 package de.catma.ui.analyzenew.treehelper;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import de.catma.queryengine.result.GroupedQueryResult;
-import de.catma.queryengine.result.QueryResultRow;
 
-public class RootItem implements TreeRowItem {
+public class QueryRootItem implements TreeRowItem{
+
+
+
+
 	GroupedQueryResult groupedSubResult;
 	ArrayList<TreeRowItem> singleItemsArrayList;
 	String treeKey;
@@ -36,6 +38,5 @@ public class RootItem implements TreeRowItem {
 		this.groupedSubResult = groupedQueryResult;
 		
 	}
-
 
 }
