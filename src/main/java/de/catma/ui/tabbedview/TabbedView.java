@@ -75,6 +75,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
+		tabSheet.addStyleName("hugecard-tabbed-view-tabsheet");
 		
 		introPanel = new VerticalLayout();
 		introPanel.setSpacing(true);

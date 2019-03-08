@@ -844,7 +844,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                		TagManagerEvent.tagsetDefinitionChanged,
 	                		tagsetChangeListener);
 				}				
-			}			
+			}		
+			project.close();
 			project = null;
 		}
 		catch (Exception e) {

@@ -357,7 +357,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			gitProjectHandler.addAndCommitCollection(
 					collectionId,
 					String.format(
-						"Auto commiting changes before performing an update of Annotations "
+						"Autocommitting changes before performing an update of Annotations "
 						+ "as part of a Property Definition deletion operation",
 						propertyDefinition.getName()));
 			
@@ -582,7 +582,25 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Override
 	public void close() {
 		try {
-//			synchTagInstancesToGit();
+			for (UserMarkupCollectionReference collectionRef : getSourceDocuments().stream()
+					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
+					.collect(Collectors.toList())) {
+				
+				gitProjectHandler.addAndCommitCollection(
+					collectionRef.getId(), 
+					String.format(
+						"Auto-committing Collection %1$s with ID %2$s on Project close",
+						collectionRef.getName(),
+						collectionRef.getId()));
+			}
+			
+			gitProjectHandler.commitProject(
+				String.format(
+					"Auto-committing Project %1$s with ID %2$s on close", 
+					projectReference.getName(),
+					projectReference.getProjectId()), 
+				true);
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

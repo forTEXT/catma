@@ -157,6 +157,8 @@ public class GitProjectManager implements ProjectManager {
 			ProjectReference projectReference,
 			OpenProjectListener openProjectListener) {
 		try {
+			
+			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
 
 			TagLibrary tagLibrary = new TagLibrary(projectReference.getProjectId(), projectReference.getName());
 
@@ -180,11 +182,6 @@ public class GitProjectManager implements ProjectManager {
 		} catch (Exception e) {
 			openProjectListener.failure(e);
 		}
-		//TODO ensure existence in graphdb via plugin
-		// check commit checksum
-		// if not: 
-		// -> load: parse .gitmodules 
-
 	}
 
 	public boolean existsLocally(ProjectReference projectReference) {
@@ -194,7 +191,6 @@ public class GitProjectManager implements ProjectManager {
 				.exists();
 	}
 
-	//TODO: make this part of accepting new project membership
 	private void cloneRootLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws Exception {
 		if (!Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
 			.resolve(user.getIdentifier())

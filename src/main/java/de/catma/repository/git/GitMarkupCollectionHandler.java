@@ -394,7 +394,8 @@ public class GitMarkupCollectionHandler {
 
 			if (localGitRepoManager.hasUntrackedChanges()) {
 				localGitRepoManager.addAllAndCommit(
-					"Auto commiting changes before performing a deletion of Annotations as part of a Tag deletion operation",
+					"Auto-committing changes before performing a deletion of "
+					+ "Annotations as part of a Tag deletion operation",
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail());				
 			}

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
+import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
@@ -35,7 +37,11 @@ import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
+import org.eclipse.jgit.transport.HttpTransport;
+import org.eclipse.jgit.transport.TransportHttp;
+import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.http.HttpConnectionFactory;
 import org.eclipse.jgit.util.FS;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -236,16 +242,24 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		try {
 			CloneCommand cloneCommand = Git.cloneRepository().setURI(uri).setDirectory(path);
+
 			if (username != null) {
 				cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					username, password
+					 "oauth2", password
 				));
 			}
 			this.gitApi = cloneCommand.call();
 			
 			if (initAndUpdateSubmodules) {
 				this.gitApi.submoduleInit().call();
-				this.gitApi.submoduleUpdate().call();
+				SubmoduleUpdateCommand submoduleUpdateCommand = this.gitApi.submoduleUpdate();
+				if (username != null) {
+					submoduleUpdateCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+							"oauth2", password
+							));
+				}					
+				submoduleUpdateCommand.call();
+				
 			}
 		}
 		catch (GitAPIException e) {

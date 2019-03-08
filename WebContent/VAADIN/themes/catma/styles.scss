@@ -711,6 +711,10 @@
     	  height: unset !important;
     	  overflow: auto;
         } 
+        
+        .hugecard-tabbed-view-tabsheet {
+          overflow: hidden !important;
+        }
              
         .hugecard__bar + div {
             margin-left: 32px;

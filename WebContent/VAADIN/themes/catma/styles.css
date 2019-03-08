@@ -17809,6 +17809,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	overflow: auto;
 }
 
+.catma .hugecard-tabbed-view-tabsheet {
+	overflow: hidden !important;
+}
+
 .catma .hugecard__bar + div {
 	margin-left: 32px;
 	margin-top: 14px;

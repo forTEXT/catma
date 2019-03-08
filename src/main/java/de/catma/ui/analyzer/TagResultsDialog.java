@@ -2,27 +2,25 @@ package de.catma.ui.analyzer;
 
 import java.io.IOException;
 
+import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.Window;
 import com.vaadin.v7.data.Property.ValueChangeEvent;
 import com.vaadin.v7.data.Property.ValueChangeListener;
 import com.vaadin.v7.data.util.HierarchicalContainer;
 import com.vaadin.v7.ui.AbstractSelect.ItemCaptionMode;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.v7.ui.Label;
 import com.vaadin.v7.ui.Table.TableDragMode;
 import com.vaadin.v7.ui.Tree;
-import com.vaadin.ui.UI;
 import com.vaadin.v7.ui.VerticalLayout;
-import com.vaadin.ui.Window;
 
 import de.catma.document.repository.Repository;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.menu.MainMenu;
-import de.catma.ui.menu.MainMenu.MenuItemSelectedEvent;
 import de.catma.ui.tagmanager.TagsetTree;
 
+@Deprecated
 public class TagResultsDialog extends Window {
 	
 	private final static String SORTCAP_PROP = "SORTCAP"; //$NON-NLS-1$
@@ -139,19 +137,6 @@ public class TagResultsDialog extends Window {
 			tagLibrary = null;
 		}
 	}
-	
-	private MainMenu.MenuItemSelectedListener menuItemSelectedListener = new MainMenu.MenuItemSelectedListener() {		
-		@Override
-		public void menuItemSelected(MenuItemSelectedEvent event) {
-			
-			Component component = event.getComponent();			
-			if (component instanceof AnalyzerManagerView) {
-				return;
-			}
-			
-			close();
-		}
-	};
 	
 	private void initListeners() {
 		//TODO: listen to detach of project view 
