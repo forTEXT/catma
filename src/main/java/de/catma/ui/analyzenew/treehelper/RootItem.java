@@ -3,13 +3,21 @@ package de.catma.ui.analyzenew.treehelper;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hazelcast.map.impl.querycache.publisher.QueryCacheListenerRegistry;
+
 import de.catma.queryengine.result.GroupedQueryResult;
+import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 public class RootItem implements TreeRowItem {
-	GroupedQueryResult groupedSubResult;
-	ArrayList<TreeRowItem> singleItemsArrayList;
-	String treeKey;
+	public QueryResultRowArray queryResultRowArray;
+	public ArrayList<TreeRowItem> singleItemsArrayList;
+    public 	String treeKey;
+	static final String HORIZONTAL_ELLIPSIS = "\u2026";
+	static final int MAX_VALUE_LENGTH = 10;
+	static final int maxLength = 50;
+	private Integer frequency;
 	
 
 	@Override
@@ -23,18 +31,43 @@ public class RootItem implements TreeRowItem {
 
 	@Override
 	public int getFrequency() {
-     return   groupedSubResult.getTotalFrequency();
+	return	queryResultRowArray.size();
+	   
+   }
      
-	}
+	
 
 	@Override
-	public GroupedQueryResult getRows() {
+	public QueryResultRowArray getRows() {
 		// TODO Auto-generated method stub
-		return groupedSubResult;
+		return queryResultRowArray;
 	}
-	public void setRows(GroupedQueryResult groupedQueryResult) {
-		this.groupedSubResult = groupedQueryResult;
+	public void setRows(QueryResultRowArray queryResultRowArray) {
+		this.queryResultRowArray =  queryResultRowArray;
 		
+	}
+	public void setOneRow(QueryResultRow queryResultRow) {
+		
+	}
+	
+
+
+	@Override
+	public String getArrowIcon() {
+		
+		return null;
+	}
+	public String getShortenTreeKey(){
+		return shorten(this.treeKey,26);
+	}
+
+	private String shorten(String toShortenValue, int maxLength) {
+		if (toShortenValue.length() <= maxLength) {
+			return toShortenValue;
+		}	
+		return toShortenValue.substring(0, maxLength/2) 
+				+"["+HORIZONTAL_ELLIPSIS+"]"
+				+ toShortenValue.substring(toShortenValue.length()-((maxLength/2)-2), toShortenValue.length());
 	}
 
 

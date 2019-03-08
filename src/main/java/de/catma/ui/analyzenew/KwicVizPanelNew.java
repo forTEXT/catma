@@ -47,7 +47,10 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzenew.treehelper.DocumentItem;
 import de.catma.ui.analyzenew.treehelper.QueryRootItem;
+import de.catma.ui.analyzenew.treehelper.RootItem;
+import de.catma.ui.analyzenew.treehelper.SingleItem;
 import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.tagger.annotationpanel.AnnotationTreeItem;
@@ -78,6 +81,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeData<TreeRowItem> resultsTreeGridData;
 	private TreeGrid<TreeRowItem> resultsTreeGrid;
 	//private Grid<TagRowItem>selectedItemsGrid;
+	private TreeGrid<TreeRowItem> phraseTreeGrid;
+	private TreeDataProvider<TreeRowItem> dataProvider;
 	private TreeData<TreeRowItem> selectedItemsTreeGridData;
 	private TreeGrid<TreeRowItem>selectedItemsTreeGrid;
 	private TreeDataProvider<TreeRowItem> selectedDataProvider;
@@ -339,8 +344,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 	
 	private TreeGrid<TreeRowItem> addDataPhraseStyle(TreeData<TreeRowItem> treeData) {
-		TreeGrid<TreeRowItem> phraseTreeGrid = new TreeGrid<>();
-		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(treeData);
+		 phraseTreeGrid = new TreeGrid<>();
+	     dataProvider = new TreeDataProvider<>(treeData);
 		
 		phraseTreeGrid.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
 		phraseTreeGrid.getColumn("phraseID").setExpandRatio(7);
@@ -351,6 +356,11 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	    selectItemsRenderer.setHtmlContentAllowed(true);		
 	    phraseTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select").setId("selectID");
 		phraseTreeGrid.getColumn("selectID").setExpandRatio(1);
+		
+		ButtonRenderer<TreeRowItem> arrowRenderer = new ButtonRenderer<TreeRowItem>( arrowClickEvent-> handleArrowClickEvent(arrowClickEvent, phraseTreeGrid));
+		arrowRenderer.setHtmlContentAllowed(true);
+	    phraseTreeGrid.addColumn(TreeRowItem::getArrowIcon, arrowRenderer).setId("arrowID");
+	    phraseTreeGrid.getColumn("arrowID").setExpandRatio(1);
 		
 		dataProvider.refreshAll();
 		phraseTreeGrid.setDataProvider(dataProvider);
@@ -375,13 +385,57 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		return propertyTreeGrid;
 	}
 
+	private void handleArrowClickEvent(RendererClickEvent<TreeRowItem> arrowClickEvent, TreeGrid<TreeRowItem> phraseTreeGrid) {
+		 
+	   DocumentItem selectedItem = (DocumentItem)arrowClickEvent.getItem();
+	   if(!selectedItem.isUnfold()) {
+		   selectedItem.setUnfold(true);
+		   
+	   }else {
+		   selectedItem.setUnfold(false);
+		   
+	   }
+		
+		phraseTreeGrid.getDataProvider().refreshItem(selectedItem);
+		
+		System.out.println("TreeRowItems grouped : "+selectedItem.getRows().toString());
+	    ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem);
+	    
+		dataProvider.getTreeData().addItems(selectedItem, children);
+		//phraseTreeGrid.getDataProvider().
+		
+		
+	}
 	
+	private ArrayList <TreeRowItem> createSingleItemRowsArrayList(TreeRowItem selectedItem) {
+		ArrayList <TreeRowItem> children = new ArrayList<>();
+			
+		GroupedQueryResult groupedChildren= selectedItem.getRows();
+		
+		Iterator<QueryResultRow> resultIterator=	groupedChildren.iterator();
+		
+		while (resultIterator.hasNext()) {
+			QueryResultRow queryResultRow = (QueryResultRow) resultIterator.next();
+	
+			SingleItem item = new SingleItem();
+			item.setTreeKey(queryResultRow.getPhrase());	
+			
+		    children.add((TreeRowItem)item);	
+		}
+		return children;
+		
+	}
 	
 	private void handleSelectClickEvent(RendererClickEvent<TreeRowItem> rendererClickEvent) {
 		TreeRowItem selectedItem = rendererClickEvent.getItem();
 		System.out.println("TreeRowItem : "+selectedItem.getTreeKey());
 		GroupedQueryResult subresultGrouped= selectedItem.getRows();
 	    QueryRootItem queryAsRoot= new QueryRootItem();
+	    RootItem treeKeyRoot = new RootItem();
+	    
+	    
+	    
+	    
 
 /*		List<TreeRowItem> childList = resultsTreeGridData.getChildren(selectedItem);
 		List<TreeRowItem> childChildList;

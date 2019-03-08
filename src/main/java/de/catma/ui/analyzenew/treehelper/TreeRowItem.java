@@ -6,18 +6,24 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 public interface TreeRowItem {
 
+
+
 public String 	getTreeKey(); 
 public int 	getFrequency();
-public GroupedQueryResult getRows();
+public QueryResultRowArray getRows();
+public String getShortenTreeKey();
+
+
+
 
 public default String getSelectIcon() {
 	   return VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml();
 }
 
-
-
+public  String getArrowIcon();
 
 }
