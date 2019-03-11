@@ -25,6 +25,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -302,7 +303,7 @@ public class GitProjectHandler {
 			localRepoManager.open(
 				projectId,
 				GitProjectManager.getProjectRootRepositoryName(projectId));
-				
+				//TODO
 			// get involved tagsets
 			// check for modifications
 			// fetch/merge master / merge dev into master
@@ -766,6 +767,50 @@ public class GitProjectHandler {
 		}
 		
 		return result;
+	}
+
+	public void ensureDevBranches() throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			for (TagsetDefinition tagset : getTagsets()) {
+				gitTagsetHandler.checkout(
+					projectId, tagset.getUuid(), 
+					JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+			}
+			
+			GitMarkupCollectionHandler collectionHandler = 
+				new GitMarkupCollectionHandler(localGitRepoManager, remoteGitServerManager);
+			
+			for (UserMarkupCollectionReference collectionReference : getCollectionReferences()) {
+				collectionHandler.checkout(
+					projectId, 
+					collectionReference.getId(), 
+					JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+			}
+		}		
+	}
+
+	public boolean hasUncommittedChanges() throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler collectionHandler = 
+					new GitMarkupCollectionHandler(localGitRepoManager, remoteGitServerManager);
+
+			for (UserMarkupCollectionReference collectionRef : getDocuments().stream()
+					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
+					.collect(Collectors.toList())) {
+				
+				if (collectionHandler.hasUncommittedChanges(projectId, collectionRef.getId())) {
+					return true;
+				}
+			}
+			
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			
+			return localGitRepoManager.hasUncommitedChanges();
+		}
 	}
 
 }

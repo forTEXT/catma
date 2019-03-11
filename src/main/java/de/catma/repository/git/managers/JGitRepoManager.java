@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,14 +36,11 @@ import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
-import org.eclipse.jgit.transport.HttpTransport;
-import org.eclipse.jgit.transport.TransportHttp;
-import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.eclipse.jgit.transport.http.HttpConnectionFactory;
 import org.eclipse.jgit.util.FS;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
 
 public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
@@ -53,6 +49,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	private String username;
 
 	private Git gitApi;
+	private JGitFactory jGitFactory;
+	
 
 	/**
 	 * Creates a new instance of this class for the given {@link User}.
@@ -67,30 +65,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	public JGitRepoManager(String repositoryBasePath, User catmaUser) {
 		this.repositoryBasePath = repositoryBasePath;
 		this.username = catmaUser.getIdentifier();
-	}
-
-	/**
-	 * Creates an instance of this class for the given {@link User} and opens an existing Git repository with the
-	 * directory name <code>repositoryName</code>.
-	 * <p>
-	 * Note that the <code>catmaUser</code> argument is NOT used for authentication to remote Git servers. It is only
-	 * used to organise repositories on the local file system, based on the User's identifier. Methods of this class
-	 * that support authentication have their own username and password parameters for this purpose.
-	 * <p>
-	 * Calls {@link #open(String)} internally.
-	 *
-	 * @param repositoryBasePath the repo base path
-	 * @param catmaUser a {@link User} object
-	 * @param repositoryName the directory name of the Git repository to open
-	 * @throws IOException if the Git repository couldn't be found or
-	 *         couldn't be opened for some other reason
-	 */
-	public JGitRepoManager(String repositoryBasePath, User catmaUser, String group,
-			String repositoryName)
-			throws IOException {
-		this(repositoryBasePath, catmaUser);
-
-		this.open(group, repositoryName);
+		this.jGitFactory = new RelativeJGitFactory();
 	}
 
 	public Git getGitApi() {
@@ -241,7 +216,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
-			CloneCommand cloneCommand = Git.cloneRepository().setURI(uri).setDirectory(path);
+			CloneCommand cloneCommand = 
+					jGitFactory.newCloneCommand()
+					.setURI(uri).setDirectory(path);
 
 			if (username != null) {
 				cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
@@ -252,7 +229,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			
 			if (initAndUpdateSubmodules) {
 				this.gitApi.submoduleInit().call();
-				SubmoduleUpdateCommand submoduleUpdateCommand = this.gitApi.submoduleUpdate();
+				SubmoduleUpdateCommand submoduleUpdateCommand = 
+					jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+				
 				if (username != null) {
 					submoduleUpdateCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
 							"oauth2", password
@@ -560,7 +539,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		try {
 			SubmoduleAddCommand submoduleAddCommand = 
-				new RelativeSubmoduleAddCommand(gitApi.getRepository())
+				jGitFactory.newSubmoduleAddCommand(gitApi.getRepository())
 					.setURI(uri)
 					.setPath(unixStyleRelativeSubmodulePath);
 			//needs permissions because the submodule is cloned from remote first and then added locally
@@ -697,9 +676,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
-			CheckoutCommand checkoutCommand = this.gitApi.checkout();
-			checkoutCommand.setCreateBranch(createBranch);
-			checkoutCommand.setName(name).call();
+			if (!this.gitApi.getRepository().getBranch().equals(name)) {
+				CheckoutCommand checkoutCommand = this.gitApi.checkout();
+				checkoutCommand.setCreateBranch(createBranch);
+				checkoutCommand.setName(name).call();
+			}
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to checkout", e);

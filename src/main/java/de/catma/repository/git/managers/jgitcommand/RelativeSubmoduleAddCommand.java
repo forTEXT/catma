@@ -1,4 +1,4 @@
-package de.catma.repository.git.managers;
+package de.catma.repository.git.managers.jgitcommand;
 
 import java.io.File;
 import java.io.IOException;
@@ -123,6 +123,7 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 		}
 		// Clone submodule repository
 		File moduleDirectory = SubmoduleWalk.getSubmoduleDirectory(repo, path);
+		// mpetris: changed to use the RelativeCloneCommand 
 		CloneCommand clone = new RelativeCloneCommand();
 		configure(clone);
 		clone.setDirectory(moduleDirectory);

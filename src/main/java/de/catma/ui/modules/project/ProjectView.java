@@ -29,6 +29,7 @@ import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
@@ -84,7 +85,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private TreeGrid<Resource> resourceGrid;
     private Grid<TagsetDefinition> tagsetGrid;
 	private Grid<User> teamGrid;
-	private ActionGridComponent<TreeGrid<Resource>> sourceDocumentsGridComponent;
+	private ActionGridComponent<TreeGrid<Resource>> documentsGridComponent;
 	private PropertyChangeListener collectionChangeListener;
 	private PropertyChangeListener projectExceptionListener;
 	private PropertyChangeListener documentChangeListener;
@@ -230,20 +231,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	resourceGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
     	
         ContextMenu addContextMenu = 
-        	sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
+        	documentsGridComponent.getActionGridBar().getBtnAddContextMenu();
         addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
         addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
-        
-        
 
-        ContextMenu BtnMoreOptionsContextMenu = 
-        	sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        BtnMoreOptionsContextMenu.addItem(
+        ContextMenu documentsGridMoreOptionsContextMenu = 
+        	documentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+        documentsGridMoreOptionsContextMenu.addItem(
             	"Edit documents / collections",(menuItem) -> handleEditResources());
-        BtnMoreOptionsContextMenu.addItem(
+        documentsGridMoreOptionsContextMenu.addItem(
         	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
-        BtnMoreOptionsContextMenu.addItem(
-        	"Share documents / collections", (menuItem) -> handleShareResources(menuItem, resourceGrid));
         
         tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
         	click -> handleAddTagsetRequest());
@@ -252,13 +249,41 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	tagsetsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
         moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
+        
+        ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
+        hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
+        hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
 	}
 
-    private void handleEditResources() {
+	private void handleSynchronizeRequest() {
+    	try {
+	    	if (project.hasUncommittedChanges()) {
+	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
+	    			"Commit all changes", 
+	    			"You have uncommited changes, please enter a short description for this commit:", 
+	    			commitMsg -> {
+	    				project.commitChanges(commitMsg);
+	    				project.synchronizeWithRemote();
+	    				Notification.show(
+	    					"Info", 
+	    					"Your Project has been synchronized!", 
+	    					Type.HUMANIZED_MESSAGE);
+	    			});
+	    		dlg.show();
+	    	}
+	    	else {
+	    		project.synchronizeWithRemote();
+	    	}
+    	}
+    	catch (Exception e) {
+            errorHandler.showAndLogError("error accessing project", e);
+    	}	}
+
+	private void handleEditResources() {
 		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
 		if ((selectedResources.size() != 1) 
 				&& !selectedResources.iterator().next().isCollection()) {
-			Notification.show("info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE);
 		}	
 		else {
 			final Resource resource = selectedResources.iterator().next();
@@ -561,16 +586,36 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         addComponent(mainPanel);
         
-        ContextMenu hugeCardMoreOptions = getBtnMoreOptionsContextMenu();
-        hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));// TODO: 29.10.18 actually share something
-        hugeCardMoreOptions.addItem("Delete Ressources", e -> Notification.show("Deleting")); // TODO: 29.10.18 actually delete something
-
         resourcePanel.addComponent(initResourceContent());
         teamPanel.addComponent(initTeamContent());
 
     }
 
-    /**
+    private void handleCommitRequest() {
+    	try {
+	    	if (project.hasUncommittedChanges()) {
+	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
+	    			"Commit all changes", 
+	    			"Please enter a short description for this commit:", 
+	    			commitMsg -> {
+	    				project.commitChanges(commitMsg);
+	    				Notification.show(
+	    					"Info", 
+	    					"Your changes have been committed!", 
+	    					Type.HUMANIZED_MESSAGE);
+	    			});
+	    		dlg.show();
+	    	}
+	    	else {
+	    		Notification.show("Info", "There are no uncommitted changes!", Type.HUMANIZED_MESSAGE);
+	    	}
+    	}
+    	catch (Exception e) {
+            errorHandler.showAndLogError("error accessing project", e);
+    	}
+	}
+
+	/**
      * initialize the resource part
      * @return
      */
@@ -619,13 +664,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         Label documentsAnnotations = new Label("Documents & Annotations");
 
-        sourceDocumentsGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
+        documentsGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
                 resourceGrid
         );
-        sourceDocumentsGridComponent.addStyleName("project-view-action-grid");
+        documentsGridComponent.addStyleName("project-view-action-grid");
 
-        resourceContent.addComponent(sourceDocumentsGridComponent);
+        resourceContent.addComponent(documentsGridComponent);
 
         tagsetGrid = new Grid<>();
         tagsetGrid.setHeaderVisible(false);
@@ -799,24 +844,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	            eventBus.post(new ResourcesChangedEvent<>(resourceGrid));
     		});
 
-    }
-
-    /**
-     * TODO: 29.10.18 actually share resources
-     *
-     * @param clickEvent
-     * @param resourceGrid
-     */
-    private void handleShareResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-    	ConfirmDialog dialog = new ConfirmDialog();
-        VerticalLayout dialogContent = new VerticalLayout();
-        dialogContent.setWidth("100%");
-        dialogContent.addComponent(new Label("The following resources will be shared"));
-        dialog.getCancelButton().addClickListener((evt)-> dialog.close());
-        dialog.setContent(dialogContent);
-        dialog.show(UI.getCurrent(),(evt) -> {
-            dialog.close();
-        },true);
     }
 
 	public void close() {

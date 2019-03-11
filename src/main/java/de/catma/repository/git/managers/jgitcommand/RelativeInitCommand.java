@@ -1,4 +1,4 @@
-package de.catma.repository.git.managers;
+package de.catma.repository.git.managers.jgitcommand;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public class RelativeInitCommand extends InitCommand {
 				}
 			}
 			builder.setFS(FS.DETECTED);
-			
+			//mpetris: changed to use the RelativeFileRepository
 			Repository repository = new RelativeFileRepository(builder.setup());
 			if (!repository.getObjectDatabase().exists())
 				repository.create(bare);
@@ -93,7 +93,7 @@ public class RelativeInitCommand extends InitCommand {
 	 *             to the same directory of if for a bare repository both
 	 *             directory and gitDir are specified
 	 */
-	public RelativeInitCommand setDirectory(File directory)
+	public InitCommand setDirectory(File directory)
 			throws IllegalStateException {
 		validateDirs(directory, gitDir, bare);
 		this.directory = directory;
@@ -111,7 +111,7 @@ public class RelativeInitCommand extends InitCommand {
 	 *             directory and gitDir are specified
 	 * @since 3.6
 	 */
-	public RelativeInitCommand setGitDir(File gitDir)
+	public InitCommand setGitDir(File gitDir)
 			throws IllegalStateException {
 		validateDirs(directory, gitDir, bare);
 		this.gitDir = gitDir;
@@ -145,7 +145,7 @@ public class RelativeInitCommand extends InitCommand {
 	 *             directory and gitDir are specified
 	 * @return this instance
 	 */
-	public RelativeInitCommand setBare(boolean bare) {
+	public InitCommand setBare(boolean bare) {
 		validateDirs(directory, gitDir, bare);
 		this.bare = bare;
 		return this;

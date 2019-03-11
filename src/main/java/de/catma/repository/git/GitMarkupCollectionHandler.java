@@ -552,4 +552,18 @@ public class GitMarkupCollectionHandler {
 		}		
 	}
 
+	public boolean hasUncommittedChanges(String projectId, String collectionId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+			
+			return localGitRepoManager.hasUncommitedChanges();
+		}
+	}
+
 }

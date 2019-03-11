@@ -1,4 +1,4 @@
-package de.catma.repository.git.managers;
+package de.catma.repository.git.managers.jgitcommand;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,7 @@ import org.eclipse.jgit.util.SystemReader;
 
 final class RelativeFileRepository extends FileRepository {
 
-	public RelativeFileRepository(BaseRepositoryBuilder options) throws IOException {
+	public RelativeFileRepository(final BaseRepositoryBuilder<?,?> options) throws IOException {
 		super(options);
 	}
 
@@ -96,8 +96,8 @@ final class RelativeFileRepository extends FileRepository {
 		if (!bare) {
 			File workTree = getWorkTree();
 			if (!getDirectory().getParentFile().equals(workTree)) {
+				// mpetris: Git doesn't understand Windows path separators (\), we follow git clc style and use relative unix paths
 				Path relativeWorkTreePath = getDirectory().toPath().relativize(workTree.toPath());
-				// NB: Git doesn't understand Windows path separators (\)
 				String unixStyleRelativeWorkTreePath = FilenameUtils.separatorsToUnix(relativeWorkTreePath.toString());
 
 				
@@ -108,8 +108,8 @@ final class RelativeFileRepository extends FileRepository {
 						Constants.DOT_GIT));
 				try {
 					if (dotGitLockFile.lock()) {
+						// mpetris: Git doesn't understand Windows path separators (\), we follow git clc style and use relative unix paths
 						Path relativeGitDirPath = workTree.toPath().relativize(getDirectory().toPath());
-						// NB: Git doesn't understand Windows path separators (\)
 						String unixStyleRelativeGitDirPath = 
 								FilenameUtils.separatorsToUnix(relativeGitDirPath.toString());
 						

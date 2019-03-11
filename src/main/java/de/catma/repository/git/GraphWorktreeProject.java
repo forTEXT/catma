@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -139,6 +140,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 					() -> gitProjectHandler.getTagsets(),
 					() -> gitProjectHandler.getDocuments(),
 					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
+			
+			gitProjectHandler.ensureDevBranches();			
 			
 			initTagManagerListeners();
 			openProjectListener.ready(this);
@@ -582,25 +585,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Override
 	public void close() {
 		try {
-			for (UserMarkupCollectionReference collectionRef : getSourceDocuments().stream()
-					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
-					.collect(Collectors.toList())) {
-				
-				gitProjectHandler.addAndCommitCollection(
-					collectionRef.getId(), 
-					String.format(
+			commitAllChanges(
+				collectionRef -> String.format(
 						"Auto-committing Collection %1$s with ID %2$s on Project close",
 						collectionRef.getName(),
-						collectionRef.getId()));
-			}
-			
-			gitProjectHandler.commitProject(
+						collectionRef.getId()),
 				String.format(
-					"Auto-committing Project %1$s with ID %2$s on close", 
-					projectReference.getName(),
-					projectReference.getProjectId()), 
-				true);
-			
+						"Auto-committing Project %1$s with ID %2$s on close", 
+						projectReference.getName(),
+						projectReference.getProjectId()));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1103,5 +1096,41 @@ public class GraphWorktreeProject implements IndexedRepository {
 	public List<User> getProjectMembers() throws Exception {
 		return gitProjectHandler.getProjectMembers();
 	}
+	
+	@Override
+	public boolean hasUncommittedChanges() throws Exception {
+		return gitProjectHandler.hasUncommittedChanges();
+	}
 
+	@Override
+	public void commitChanges(String commitMsg) {
+		commitAllChanges(collectionRef -> commitMsg, commitMsg);
+	}
+
+	private void commitAllChanges(
+		Function<UserMarkupCollectionReference, String> collectionCcommitMsgProvider, 
+		String projectCommitMsg) {
+		try {
+			for (UserMarkupCollectionReference collectionRef : getSourceDocuments().stream()
+					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
+					.collect(Collectors.toList())) {
+				
+				gitProjectHandler.addAndCommitCollection(
+					collectionRef.getId(), 
+					collectionCcommitMsgProvider.apply(collectionRef));
+			}
+			
+			gitProjectHandler.commitProject(projectCommitMsg, true);
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void synchronizeWithRemote() {
+		// TODO Auto-generated method stub
+		
+	}
 }

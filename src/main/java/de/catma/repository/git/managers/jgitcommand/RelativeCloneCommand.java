@@ -1,4 +1,4 @@
-package de.catma.repository.git.managers;
+package de.catma.repository.git.managers.jgitcommand;
 
 import java.io.File;
 import java.io.IOException;
@@ -173,7 +173,7 @@ public class RelativeCloneCommand extends CloneCommand {
 	}
 
 	private Repository init() throws GitAPIException {
-		InitCommand command = new RelativeInitCommand();
+		InitCommand command = new RelativeInitCommand(); //mpetris: changed to use RelativeInitCommand
 		command.setBare(bare);
 		if (directory != null) {
 			command.setDirectory(directory);

@@ -627,7 +627,7 @@ public class TaggerView extends HorizontalLayout
 			new TagInstance(
 				clientTagInstance.getInstanceID(), 
 				tagDef.getUuid(),
-				tagDef.getAuthor(),
+				project.getUser().getIdentifier(),
 	        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 	        	tagDef.getUserDefinedPropertyDefinitions(),
 	        	tagDef.getTagsetDefinitionUuid());

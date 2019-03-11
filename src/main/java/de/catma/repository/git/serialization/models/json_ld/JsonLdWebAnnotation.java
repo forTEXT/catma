@@ -189,7 +189,7 @@ public class JsonLdWebAnnotation {
 		TagInstance tagInstance = new TagInstance(
 			this.getTagInstanceUuid(),
 			tagDefinition.getUuid(),
-			tagDefinition.getAuthor(),
+			tagDefinition.getAuthor(), //gets redefined by the system property below
 			ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 			tagDefinition.getUserDefinedPropertyDefinitions(),
 			tagDefinition.getTagsetDefinitionUuid()

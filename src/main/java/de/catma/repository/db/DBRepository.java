@@ -1200,4 +1200,22 @@ public class DBRepository implements IndexedRepository {
 	public List<User> getProjectMembers() throws Exception {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public boolean hasUncommittedChanges() throws Exception {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void commitChanges(String commitMsg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void synchronizeWithRemote() {
+		// TODO Auto-generated method stub
+		
+	}
 }
