@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 import com.google.inject.ScopeAnnotation;
 
 /**
- * Apply this to implementation classes when you want one instance per session.
+ * Apply this to implementation classes when you want one instance per UI.
  *
  * @see com.google.inject.Scopes#SINGLETON
  * @author crazybob@google.com (Bob Lee)

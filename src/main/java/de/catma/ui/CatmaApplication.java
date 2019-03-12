@@ -89,9 +89,8 @@ import de.catma.ui.util.Version;
 
 @Theme("catma")
 @PreserveOnRefresh
-@Push(value=PushMode.MANUAL,transport=Transport.WEBSOCKET_XHR )
-@com.vaadin.guice.annotation.GuiceUI
-public class CatmaApplication extends UI implements 
+@Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET_XHR )
+public class CatmaApplication extends UI implements KeyValueStorage,
 	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, ParameterProvider, FocusHandler {
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -115,6 +114,7 @@ public class CatmaApplication extends UI implements
 	public CatmaApplication(Injector injector) throws IOException {
 		this.injector = injector;
 	}
+
 
 	@Override
 	protected void init(VaadinRequest request) {
@@ -162,7 +162,6 @@ public class CatmaApplication extends UI implements
 		} catch (IOException e) {
 			showAndLogError("error creating landing page",e);			
 		}
-
 		eventBus.post(new RouteToDashboardEvent());
 
 		// A fresh UI and session doesn't have a request handler registered yet.
@@ -173,7 +172,15 @@ public class CatmaApplication extends UI implements
 			tokenManager.handleVerify( request.getParameter("token"), eventBus);
 		}
 		
-//		SignupTokenManager.parseToken(request.getPathInfo(), request.getParameter("token"));
+	}
+	
+	@Override
+	protected void refresh(VaadinRequest request) {
+		super.refresh(request);
+		if(signupTokenManager.parseUri(request.getPathInfo())) {
+			SignupTokenManager tokenManager = new SignupTokenManager();
+			tokenManager.handleVerify( request.getParameter("token"), eventBus);
+		}
 	}
 	
 //			logger.info("closing session and redirecting to " + afterLogoutRedirectURL);
@@ -381,10 +388,12 @@ public class CatmaApplication extends UI implements
 		return accuireBackgroundService().schedule(command, delay, unit);
 	}
 	
+	@Override
 	public Object setAttribute(String key, Object obj){
 		return this._attributes.computeIfAbsent(key, (noop) -> obj);
 	}
 
+	@Override
 	public Object getAttribute(String key){
 		return this._attributes.get(key);
 	}
@@ -408,4 +417,5 @@ public class CatmaApplication extends UI implements
 	public void handleClosableResources(CloseableEvent closeableEvent ){
 		closeListener.add(new WeakReference<Closeable>(closeableEvent.getCloseable()));
 	}
+	
 }

@@ -1,7 +1,5 @@
 package de.catma.ui.di;
 
-import static com.google.inject.servlet.ServletScopes.SESSION;
-
 import javax.servlet.annotation.WebListener;
 
 import com.google.common.collect.ImmutableMap;
@@ -9,8 +7,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
-import com.google.inject.servlet.ServletScopes;
-import com.google.inject.servlet.SessionScoped;
 import com.vaadin.server.UIProvider;
 import com.vaadin.ui.UI;
 

@@ -1,5 +1,8 @@
 package de.catma.ui.di;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import com.google.common.base.Preconditions;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
@@ -7,6 +10,7 @@ import com.google.inject.Scopes;
 import com.vaadin.ui.UI;
 
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.KeyValueStorage;
 
 
 public final class VaadinUIScope implements Scope {
@@ -24,7 +28,8 @@ public final class VaadinUIScope implements Scope {
       return new Provider<T>() {
         @Override
         public T get() {
-          CatmaApplication catmaApp = (CatmaApplication)UI.getCurrent();
+        	KeyValueStorage catmaApp = (KeyValueStorage)UI.getCurrent();
+        	checkNotNull(catmaApp, "UI (KeyValueStorage) not available yet. You can't use the UIScope here!");
           
           synchronized (catmaApp) {
             Object obj = catmaApp.getAttribute(name);
@@ -52,6 +57,6 @@ public final class VaadinUIScope implements Scope {
 
     @Override
     public String toString() {
-      return "ServletScopes.SESSION";
+      return "VaadinUIScope.VAADINUI";
     }
   }

@@ -22,9 +22,7 @@ import java.util.Properties;
 
 import javax.servlet.ServletException;
 
-import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.vaadin.server.BootstrapFragmentResponse;
 import com.vaadin.server.BootstrapListener;
@@ -39,25 +37,18 @@ import com.vaadin.server.SystemMessagesInfo;
 import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.UIProvider;
 import com.vaadin.server.VaadinServlet;
-import com.vaadin.server.VaadinServletService;
 
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.ui.modules.main.signup.SignupTokenVerificationRequestHandler;
 
 @Singleton
-@javax.servlet.annotation.WebServlet(name = "Guice-Vaadin-Servlet", urlPatterns = "/*")
-@com.vaadin.guice.annotation.PackagesToScan({"de.catma.ui"})
 public class CatmaApplicationServlet extends VaadinServlet implements SessionInitListener {
 	
 	private final UIProvider uiProvider;
-
-	private final Injector injector;
 	
 	@Inject
-	public CatmaApplicationServlet(UIProvider uiProvider, Injector injector){
+	public CatmaApplicationServlet(UIProvider uiProvider){
 		super();
 		this.uiProvider = uiProvider;
-		this.injector = injector;
 	}
 
 	private enum JsLib {
@@ -185,17 +176,6 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
 			}
 		});
 
-		/* init token verifier */
-		getService().addSessionInitListener(new SessionInitListener() {
-						
-			@Override
-			public void sessionInit(SessionInitEvent event)
-					throws ServiceException {
-				
-				event.getSession().addRequestHandler(new SignupTokenVerificationRequestHandler(injector));
-			}
-		});
-		
 	}
 	
     protected DeploymentConfiguration createDeploymentConfiguration(Properties initParameters) {
