@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import de.catma.Pager;
 import de.catma.backgroundservice.BackgroundService;
@@ -34,6 +36,7 @@ public class GitProjectManager implements ProjectManager {
     private String gitBasedRepositoryBasePath;
 	private GitUser user;
 	private GraphProjectDeletionHandler graphProjectDeletionHandler;
+	private final CredentialsProvider credentialsProvider;
 
 	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_root";
 
@@ -53,7 +56,8 @@ public class GitProjectManager implements ProjectManager {
 		this.backgroundService = backgroundService;
 		this.user = remoteGitServerManager.getGitUser();
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
-
+		this.credentialsProvider = 
+			new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
 		this.idGenerator = new IDGenerator();
 	}
 
@@ -92,8 +96,7 @@ public class GitProjectManager implements ProjectManager {
 				projectId,
 				response.repositoryHttpUrl,
 				null,
-				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getPassword()
+				credentialsProvider
 			);
 		}
 
@@ -206,8 +209,7 @@ public class GitProjectManager implements ProjectManager {
 					projectReference.getProjectId(),
 					remoteGitServerManager.getProjectRootRepositoryUrl(projectReference),
 					null,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword(),
+					credentialsProvider,
 					true // init and update submodules
 					
 				);

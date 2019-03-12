@@ -22,11 +22,14 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.eclipse.jgit.api.Status;
+
 import com.google.common.collect.Multimap;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
+import de.catma.document.repository.ConflictedRepository;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -44,6 +47,7 @@ import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
+import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -59,7 +63,7 @@ import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
-public class GraphWorktreeProject implements IndexedRepository {
+public class GraphWorktreeProject implements IndexedRepository, ConflictedRepository {
 	
 	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
 	private static final String ORIG_INFIX = "_orig";
@@ -134,20 +138,56 @@ public class GraphWorktreeProject implements IndexedRepository {
 		try {
 			
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-			graphProjectHandler.ensureProjectRevisionIsLoaded(
-					rootRevisionHash,
-					tagManager,
-					() -> gitProjectHandler.getTagsets(),
-					() -> gitProjectHandler.getDocuments(),
-					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
 			
-			gitProjectHandler.ensureDevBranches();			
-			
-			initTagManagerListeners();
-			openProjectListener.ready(this);
+			if (gitProjectHandler.hasConflicts()) {
+				openProjectListener.conflictResolutionNeeded(this);
+			}
+			else {
+				graphProjectHandler.ensureProjectRevisionIsLoaded(
+						rootRevisionHash,
+						tagManager,
+						() -> gitProjectHandler.getTagsets(),
+						() -> gitProjectHandler.getDocuments(),
+						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
+				printStatus();
+				gitProjectHandler.ensureDevBranches();			
+				
+				initTagManagerListeners();
+				openProjectListener.ready(this);
+			}
 		}
 		catch(Exception e) {
 			openProjectListener.failure(e);
+		}
+	}
+	
+	@Override
+	public void printStatus() {
+		try {
+			Status status = gitProjectHandler.getStatus();
+			
+			StatusPrinter.print(projectReference.toString(), status, System.out);
+			
+			for (TagsetDefinition tagset : getTagsets()) {
+				status = gitProjectHandler.getStatus(tagset);
+				StatusPrinter.print(
+						"Tagset " + tagset.getName() + " #"+tagset.getUuid(), 
+						status, System.out);
+			}
+			
+			for (UserMarkupCollectionReference collectionRef : getSourceDocuments().stream()
+					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
+					.collect(Collectors.toList())) {
+				
+				status = gitProjectHandler.getStatus(collectionRef);
+				StatusPrinter.print(
+					"Collection " + collectionRef.toString() + " #" + collectionRef.getId(), 
+					status, System.out);
+				
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -1122,6 +1162,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 			
 			gitProjectHandler.commitProject(projectCommitMsg, true);
 			
+			printStatus();
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1129,8 +1171,14 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 	
 	@Override
-	public void synchronizeWithRemote() {
-		// TODO Auto-generated method stub
+	public void synchronizeWithRemote() throws Exception {
+		if (hasUncommittedChanges()) {
+			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
+		}
+		
+		for (TagsetDefinition tagset : getTagsets()) {
+			gitProjectHandler.synchronizeWithRemote(tagset);
+		}
 		
 	}
 }

@@ -15,7 +15,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.transport.CredentialsProvider;
 
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -31,6 +34,7 @@ import de.catma.tag.TagLibrary;
 public class GitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final CredentialsProvider credentialsProvider;
 
 	private static final String MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT = "%s_markupcollection";
 
@@ -39,9 +43,11 @@ public class GitMarkupCollectionHandler {
 	}
 
 	public GitMarkupCollectionHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager,
+			CredentialsProvider credentialsProvider) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
+		this.credentialsProvider = credentialsProvider;
 	}
 
 	/**
@@ -85,8 +91,7 @@ public class GitMarkupCollectionHandler {
 					projectId,
 					createRepositoryResponse.repositoryHttpUrl,
 					null,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword()
+					credentialsProvider
 			);
 
 			// write header.json into the local repo
@@ -522,7 +527,7 @@ public class GitMarkupCollectionHandler {
 		}
 	}	
 	
-	public void synchronizeBranchWithRemoteMaster(
+	public MergeResult synchronizeBranchWithRemoteMaster(
 			String branch, String projectId, String collectionId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -535,19 +540,18 @@ public class GitMarkupCollectionHandler {
 
 			localGitRepoManager.checkout(Constants.MASTER, false);
 			
-			localGitRepoManager.fetch(
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword());
+			localGitRepoManager.fetch(credentialsProvider);
 			
-			localGitRepoManager.merge(branch);
+			MergeResult mergeResult = localGitRepoManager.merge(branch);
+			if (mergeResult.getMergeStatus().isSuccessful()) {
+				localGitRepoManager.push(credentialsProvider);
+				
+				localGitRepoManager.checkout(branch, false);
+				
+				localGitRepoManager.rebase(Constants.MASTER);
+			}
 			
-			localGitRepoManager.push(
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword());
-			
-			localGitRepoManager.checkout(branch, false);
-			
-			localGitRepoManager.rebase(Constants.MASTER);
+			return mergeResult;
 
 		}		
 	}
@@ -563,6 +567,19 @@ public class GitMarkupCollectionHandler {
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 			
 			return localGitRepoManager.hasUncommitedChanges();
+		}
+	}
+
+	public Status getStatus(String projectId, String collectionId) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+			return localGitRepositoryManager.getStatus();
 		}
 	}
 

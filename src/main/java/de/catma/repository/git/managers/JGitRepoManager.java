@@ -16,6 +16,7 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RmCommand;
@@ -36,7 +37,7 @@ import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.util.FS;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -185,9 +186,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 
-	public String clone(String group, String uri, File path, String username, String password)
+	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider)
 			throws IOException {
-		return clone(group, uri, path, username, password, false);
+		return clone(group, uri, path, credentialsProvider, false);
 	}
 	
 	/**
@@ -201,7 +202,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @return the name of the cloned repository
 	 */
 	@Override
-	public String clone(String group, String uri, File path, String username, String password, boolean initAndUpdateSubmodules)
+	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider, boolean initAndUpdateSubmodules)
 			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
@@ -220,11 +221,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					jGitFactory.newCloneCommand()
 					.setURI(uri).setDirectory(path);
 
-			if (username != null) {
-				cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					 "oauth2", password
-				));
-			}
+			cloneCommand.setCredentialsProvider(credentialsProvider);
+			
 			this.gitApi = cloneCommand.call();
 			
 			if (initAndUpdateSubmodules) {
@@ -232,11 +230,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				SubmoduleUpdateCommand submoduleUpdateCommand = 
 					jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
 				
-				if (username != null) {
-					submoduleUpdateCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-							"oauth2", password
-							));
-				}					
+				submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
 				submoduleUpdateCommand.call();
 				
 			}
@@ -526,7 +520,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws IOException if the submodule couldn't be added
 	 */
 	@Override
-	public void addSubmodule(File path, String uri, String username, String password)
+	public void addSubmodule(File path, String uri, CredentialsProvider credentialsProvider)
 			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addSubmodule` on a detached instance");
@@ -543,9 +537,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					.setURI(uri)
 					.setPath(unixStyleRelativeSubmodulePath);
 			//needs permissions because the submodule is cloned from remote first and then added locally
-			submoduleAddCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-				username, password
-			));
+			submoduleAddCommand.setCredentialsProvider(credentialsProvider);
 
 			Repository repository = submoduleAddCommand.call();
 			repository.close();
@@ -563,18 +555,14 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws IOException if the push operation failed
 	 */
 	@Override
-	public void push(String username, String password) throws IOException {
+	public void push(CredentialsProvider credentialsProvider) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
 
 		try {
 			PushCommand pushCommand = this.gitApi.push();
-			if (username != null) {
-				pushCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					username, password
-				));
-			}
+			pushCommand.setCredentialsProvider(credentialsProvider);
 			pushCommand.call();
 		}
 		catch (GitAPIException e) {
@@ -590,18 +578,14 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws IOException if the fetch operation failed
 	 */
 	@Override
-	public void fetch(String username, String password) throws IOException {
+	public void fetch(CredentialsProvider credentialsProvider) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `fetch` on a detached instance");
 		}
 
 		try {
 			FetchCommand fetchCommand = this.gitApi.fetch();
-			if (username != null) {
-				fetchCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					username, password
-				));
-			}
+			fetchCommand.setCredentialsProvider(credentialsProvider);
 			fetchCommand.call();
 		}
 		catch (GitAPIException e) {
@@ -610,7 +594,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public void merge(String branch) throws IOException {
+	public MergeResult merge(String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `merge` on a detached instance");
 		}
@@ -626,7 +610,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				mergeCommand.include(ObjectId.fromString(branch));
 			}
 
-			mergeCommand.call();
+			return mergeCommand.call();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to merge", e);
@@ -678,6 +662,17 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		try {
 			if (!this.gitApi.getRepository().getBranch().equals(name)) {
 				CheckoutCommand checkoutCommand = this.gitApi.checkout();
+				if (createBranch) {
+					List<Ref> refs = this.gitApi.branchList().call();
+					if (refs
+						.stream()
+						.map(rev -> rev.getName())
+						.filter(revName -> revName.equals("refs/heads/"+name))
+						.findFirst()
+						.isPresent()) {
+						createBranch = false;
+					}
+				}
 				checkoutCommand.setCreateBranch(createBranch);
 				checkoutCommand.setName(name).call();
 			}
@@ -785,6 +780,20 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		if (this.gitApi != null) {
 			this.gitApi.close();
 			this.gitApi = null;
+		}
+	}
+	
+	@Override
+	public Status getStatus() throws IOException {
+		try {
+			if (!isAttached()) {
+				throw new IllegalStateException("Can't call `getStatus` on a detached instance");
+			}
+			
+			return gitApi.status().call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to retrieve the status", e);
 		}
 	}
 

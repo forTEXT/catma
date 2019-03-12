@@ -29,7 +29,6 @@ import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
@@ -37,6 +36,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.document.repository.ConflictedRepository;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
@@ -253,6 +253,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
+        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
 	}
 
 	private void handleSynchronizeRequest() {
@@ -262,12 +263,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    			"Commit all changes", 
 	    			"You have uncommited changes, please enter a short description for this commit:", 
 	    			commitMsg -> {
-	    				project.commitChanges(commitMsg);
-	    				project.synchronizeWithRemote();
-	    				Notification.show(
-	    					"Info", 
-	    					"Your Project has been synchronized!", 
-	    					Type.HUMANIZED_MESSAGE);
+	    				try {
+		    				project.commitChanges(commitMsg);
+		    				project.synchronizeWithRemote();
+		    				Notification.show(
+		    					"Info", 
+		    					"Your Project has been synchronized!", 
+		    					Type.HUMANIZED_MESSAGE);
+	    				}
+	    				catch (Exception e) {
+	    					e.printStackTrace(); //TODO
+	    				}
 	    			});
 	    		dlg.show();
 	    	}
@@ -745,6 +751,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 
 				initData();
             }
+            
+            @Override
+            public void conflictResolutionNeeded(ConflictedRepository conflictedRepository) {
+            	// TODO Auto-generated method stub
+            	
+            }
 
             @Override
             public void failure(Throwable t) {
@@ -872,8 +884,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                		tagsetChangeListener);
 				}				
 			}		
-			project.close();
-			project = null;
+			if (project != null) {
+				project.close();
+				project = null;
+			}
 		}
 		catch (Exception e) {
 			errorHandler.showAndLogError("Error closing ProjectView", e);
