@@ -25,21 +25,21 @@ public class GitlabModule extends AbstractModule {
 	}
 	
 	@Provides
-	@SessionScoped
+	@VaadinUIScoped
 	IRemoteGitManagerPrivileged providePrivilegedGitManager(){
 		return new GitlabManagerPrivileged();
 		
 	}
 	
 	@Provides
-	@SessionScoped
+	@VaadinUIScoped
 	@Inject
 	@GitLabType LoginService provideGitlabLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory){
 		return new GitlabLoginService(iRemoteGitManagerFactory);
 	}
 
 	@Provides
-	@SessionScoped
+	@VaadinUIScoped
 	@Inject
 	@LocalUserLoginType LoginService ProvideFakeLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory){
 		return new LocalUserLoginService(iRemoteGitManagerFactory);

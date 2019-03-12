@@ -5,7 +5,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import com.google.inject.servlet.SessionScoped;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.ui.UIBackgroundService;
@@ -17,20 +16,20 @@ public class BootstrapModule extends AbstractModule {
 	@Vaadin8Type
 	@Provides 
 	@Inject
-	@SessionScoped
+	@VaadinUIScoped
 	InitializationService provideVaadin8InitializationService(Injector injector){
 		return new Vaadin8InitializationService(injector); 
 	}
 	
 
 	@Provides
-	@SessionScoped
+	@VaadinUIScoped
 	EventBus provideEventBus(){
 		return new EventBus();
 	}
 
 	@Provides
-	@SessionScoped
+	@VaadinUIScoped
 	BackgroundService provideBackgroundService(){
 		return new UIBackgroundService(true);
 	}

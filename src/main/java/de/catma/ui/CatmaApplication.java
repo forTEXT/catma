@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -89,6 +90,7 @@ import de.catma.ui.util.Version;
 @Theme("catma")
 @PreserveOnRefresh
 @Push(value=PushMode.MANUAL,transport=Transport.WEBSOCKET_XHR )
+@com.vaadin.guice.annotation.GuiceUI
 public class CatmaApplication extends UI implements 
 	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, ParameterProvider, FocusHandler {
 
@@ -97,37 +99,39 @@ public class CatmaApplication extends UI implements
 		
 	private final List<WeakReference<Closeable>> closeListener = Lists.newArrayList();
 	
+    private final ConcurrentHashMap<String,Object> _attributes = new ConcurrentHashMap<String, Object>();
 	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
 
-	private final Class<? extends Annotation> loginType; 
-	private final Class<? extends Annotation> initType;
+	private  Class<? extends Annotation> loginType; 
+	private  Class<? extends Annotation> initType;
 	 
 	private LoginService loginservice;
 	private InitializationService initService;
 
 	private final Injector injector;
-	private final EventBus eventBus;
+	private  EventBus eventBus;
 	
 	@Inject
-	public CatmaApplication(Injector injector, EventBus eventbus) throws IOException {
+	public CatmaApplication(Injector injector) throws IOException {
 		this.injector = injector;
-		this.eventBus = eventbus;
-		this.eventBus.register(this);
-			try {
-				
-				loginType = 
-						(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.LoginType.getValue());
-				initType = 
-						(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.InitType.getValue());
-				loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
-				initService = injector.getInstance(Key.get(InitializationService.class, initType));
-			} catch (ClassNotFoundException e) {
-				throw new IOException("Runtime configuration error", e);
-			}
 	}
 
 	@Override
 	protected void init(VaadinRequest request) {
+		this.eventBus = injector.getInstance(EventBus.class);
+		this.eventBus.register(this);
+		try {
+			
+			loginType = 
+					(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.LoginType.getValue());
+			initType = 
+					(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.InitType.getValue());
+			loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
+			initService = injector.getInstance(Key.get(InitializationService.class, initType));
+		} catch (ClassNotFoundException e) {
+			showAndLogError("Runtime configuration error", e);
+		}
+
 		loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
 		initService = injector.getInstance(Key.get(InitializationService.class, initType));
 
@@ -375,6 +379,14 @@ public class CatmaApplication extends UI implements
 	public ScheduledFuture<?> schedule(Runnable command,
 			long delay, TimeUnit unit) {
 		return accuireBackgroundService().schedule(command, delay, unit);
+	}
+	
+	public Object setAttribute(String key, Object obj){
+		return this._attributes.computeIfAbsent(key, (noop) -> obj);
+	}
+
+	public Object getAttribute(String key){
+		return this._attributes.get(key);
 	}
 	
 	@Subscribe

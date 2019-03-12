@@ -45,6 +45,8 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.ui.modules.main.signup.SignupTokenVerificationRequestHandler;
 
 @Singleton
+@javax.servlet.annotation.WebServlet(name = "Guice-Vaadin-Servlet", urlPatterns = "/*")
+@com.vaadin.guice.annotation.PackagesToScan({"de.catma.ui"})
 public class CatmaApplicationServlet extends VaadinServlet implements SessionInitListener {
 	
 	private final UIProvider uiProvider;
@@ -190,8 +192,7 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
 			public void sessionInit(SessionInitEvent event)
 					throws ServiceException {
 				
-				event.getSession().addRequestHandler(new SignupTokenVerificationRequestHandler(
-						injector.getInstance(EventBus.class)));
+				event.getSession().addRequestHandler(new SignupTokenVerificationRequestHandler(injector));
 			}
 		});
 		

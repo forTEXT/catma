@@ -1,5 +1,7 @@
 package de.catma.ui.di;
 
+import static com.google.inject.servlet.ServletScopes.SESSION;
+
 import javax.servlet.annotation.WebListener;
 
 import com.google.common.collect.ImmutableMap;
@@ -8,6 +10,7 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.google.inject.servlet.ServletScopes;
+import com.google.inject.servlet.SessionScoped;
 import com.vaadin.server.UIProvider;
 import com.vaadin.ui.UI;
 
@@ -23,8 +26,10 @@ public class CatmaGuiceServletConfig extends GuiceServletContextListener {
 		return Guice.createInjector(
 				new ServletModule(){
 					protected void configureServlets() {
-						bind(UI.class).to(CatmaApplication.class).in(ServletScopes.SESSION);
+						bind(UI.class).to(CatmaApplication.class).in(VaadinUIScope.VAADINUI);
 						bind(UIProvider.class).to(CatmaUIProvider.class);
+					    bindScope(VaadinUIScoped.class, VaadinUIScope.VAADINUI);
+					    
 						serve("/*").with(CatmaApplicationServlet.class, ImmutableMap.<String,String>builder()
 								.put("loadOnStartup", "0")
 								.put("async-supported", "true")

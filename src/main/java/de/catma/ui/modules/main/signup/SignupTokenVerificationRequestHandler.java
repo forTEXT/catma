@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
@@ -12,11 +13,11 @@ import com.vaadin.server.VaadinSession;
 
 public class SignupTokenVerificationRequestHandler implements RequestHandler {
 	
-	private final EventBus eventBus;
+	private final Injector injector;
 
 	@Inject
-	public SignupTokenVerificationRequestHandler(EventBus eventBus) {
-		this.eventBus = eventBus;
+	public SignupTokenVerificationRequestHandler(Injector injector) {
+		this.injector = injector;
 	}
 	
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -30,7 +31,7 @@ public class SignupTokenVerificationRequestHandler implements RequestHandler {
 			if(request.getPathInfo() != null ){
 				if(signupTokenManager.parseUri(request.getPathInfo())) {
 					SignupTokenManager tokenManager = new SignupTokenManager();
-					tokenManager.handleVerify( request.getParameter("token"), eventBus);
+					tokenManager.handleVerify( request.getParameter("token"), injector.getInstance(EventBus.class));
 				}
 			}
 		}

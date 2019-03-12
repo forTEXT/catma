@@ -5,6 +5,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.HmacUtils;
+import org.apache.commons.mail.DefaultAuthenticator;
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.SimpleEmail;
 import org.jboss.netty.handler.codec.http.QueryStringEncoder;
 
 import com.google.common.base.Joiner;
@@ -134,7 +137,17 @@ public class SignUpDialog extends Window {
 		        QueryStringEncoder qs = new QueryStringEncoder(RepositoryPropertyKey.BaseURL.getValue().trim()+"verify");
 		        qs.addParam("token", token);
 		        
-		        //TODO: mail the link!!!
+		        Email email = new SimpleEmail();
+		        email.setHostName("mx.bsdsystems.de");
+		        email.setSmtpPort(587);
+		        email.setAuthenticator(new DefaultAuthenticator("db", "huk4uisweak"));
+		        email.setStartTLSEnabled(true);
+		        email.setFrom("catma@nipsi.de");
+		        email.setSubject("Catma activation");
+		        email.setMsg("In order to verify your account please visit the following link.\n"+qs.toString());
+		        email.addTo(user.getEmail(),user.getName());
+		        email.send();
+
 		        logger.info("token URL is: "  + qs.toString());
 			} catch (Exception e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't create a new user in backend", e);

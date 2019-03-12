@@ -138,6 +138,12 @@
 		<!-- https://mvnrepository.com/artifact/com.google.inject.extensions/guice-assistedinject -->
 		<dependency org="com.google.inject.extensions" name="guice-assistedinject" rev="4.2.2"/>
 
+		<!-- https://mvnrepository.com/artifact/com.vaadin/guice-vaadin -->
+		<dependency org="com.vaadin" name="guice-vaadin" rev="2.0.1-vaadin8"/>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-email -->
+		<dependency org="org.apache.commons" name="commons-email" rev="1.5"/>
+
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>
