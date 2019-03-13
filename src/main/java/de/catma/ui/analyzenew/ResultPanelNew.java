@@ -22,12 +22,14 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.themes.ValoTheme;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzenew.treehelper.CollectionItem;
 import de.catma.ui.analyzenew.treehelper.DocumentItem;
 import de.catma.ui.analyzenew.treehelper.RootItem;
 import de.catma.ui.analyzenew.treehelper.SingleItem;
@@ -398,51 +400,75 @@ public class ResultPanelNew extends Panel {
 	
 	private TreeData<TreeRowItem> populateTreeDataWithTags(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
-		
-		
-	
-		HashMap<String,QueryResultRowArray >allRoots =groupRootsGroupedByTagDefinitionPath(queryResult);
-		
-		Set<String > keys=allRoots.keySet();
-		
-		for(String key: keys) {
+
+		HashMap<String, QueryResultRowArray> allRoots = groupRootsGroupedByTagDefinitionPath(queryResult);
+
+		Set<String> keys = allRoots.keySet();
+
+		for (String key : keys) {
 			RootItem root = new RootItem();
 			root.setTreeKey(key);
-			root.setRows(allRoots.get(key));	
-			treeData.addItems(null, (TreeRowItem)root);
-			
-			HashMap<String , QueryResultRowArray> docsForARoot= new HashMap<String, QueryResultRowArray>();
-			docsForARoot= groupDocumentsForRoot(root);
-			Set<String > sourceDocs=root.getRows().getSourceDocumentIDs();
-			
-			
-		
-			
-			
-			
+			root.setRows(allRoots.get(key));
+			treeData.addItems(null, (TreeRowItem) root);
 
-			for(String doc : sourceDocs) {
-			QueryResultRowArray oneDocArray=	docsForARoot.get(doc);
-				
+			HashMap<String, QueryResultRowArray> docsForARoot = new HashMap<String, QueryResultRowArray>();
+			docsForARoot = groupDocumentsForRoot(root);
+			Set<String> sourceDocs = root.getRows().getSourceDocumentIDs();
+
+			for (String doc : sourceDocs) {
+
+				QueryResultRowArray oneDocArray = docsForARoot.get(doc);
+
 				DocumentItem docItem = new DocumentItem();
-				docItem.setTreeKey(doc);
+				SourceDocument sourceDoc = repository.getSourceDocument(doc);
+				docItem.setTreeKey(sourceDoc.toString());
 				docItem.setRows(oneDocArray);
 				treeData.addItem(root, docItem);
+				// adding collections
+
+				QueryResultRowArray itemsForADoc = docItem.getRows();
+				HashMap<String, QueryResultRowArray> collectionsForADoc = new HashMap<String, QueryResultRowArray>();
+
+				for (QueryResultRow queryResultRow : itemsForADoc) {
+
+					TagQueryResultRow tRow = (TagQueryResultRow) queryResultRow;
+					
+					QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
+
+					String collID = tRow.getMarkupCollectionId();
+					String collName=sourceDoc.getUserMarkupCollectionReference(collID).getName();
+
+					if (collectionsForADoc.containsKey(collName)) {
+					 queryResultRowArray = collectionsForADoc.get(collName);
+						queryResultRowArray.add(queryResultRow);
+					}else {
+						queryResultRowArray.add(queryResultRow);
+						collectionsForADoc.put(collName, queryResultRowArray);
+						
+					}
+				}
 				
+
+				Set<String> collections = collectionsForADoc.keySet();
+				for (String coll : collections) {
+					CollectionItem collItem = new CollectionItem();
+					collItem.setTreeKey(coll);
+					collItem.setRows(collectionsForADoc.get(coll));
+					treeData.addItem(docItem, collItem);
+				}
+
 			}
-			
-			//treeData.addItems(root, root.getRows().getSourceDocumentIDs());
+
 		}
-		
-		
+
 		return treeData;
-	}
+	}	
+	
 	
 	private HashMap<String, QueryResultRowArray> groupDocumentsForRoot(RootItem root) {
 		HashMap<String, QueryResultRowArray> documentsForARoot = new HashMap<String, QueryResultRowArray>();
 		QueryResultRowArray allDocsArray=root.getRows();
 	
-	Set<String > docs=	allDocsArray.getSourceDocumentIDs();
 	for(QueryResultRow queryResultRow : allDocsArray) {
 		if (queryResultRow instanceof TagQueryResultRow) {
 			TagQueryResultRow tRow = (TagQueryResultRow) queryResultRow;
@@ -455,12 +481,7 @@ public class ResultPanelNew extends Panel {
 			}
 			rows.add(tRow);
 		}
-		
-	
-			
-		
-			
-		
+					
 	}
 		return documentsForARoot;
 		
