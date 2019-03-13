@@ -329,33 +329,7 @@ public class ResultPanelNew extends Panel {
 		
 	}
 	
-	
-	/* *********Lazy style************************
-	 * private void setDataPhraseStyleLazy() throws Exception {
-	 * 
-	 * Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
-	 * 
-	 * for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
-	 * 
-	 * String phrase = (String) groupedQueryResult.getGroup(); TagRowItem rootPhrase
-	 * = new TagRowItem(); rootPhrase.setTreePath(phrase);
-	 * rootPhrase.setFrequency(groupedQueryResult.getTotalFrequency());
-	 * lazyData.addItems(null, rootPhrase); TagRowItem placeHolder= new
-	 * TagRowItem(); lazyData.addItems(rootPhrase, placeHolder);
-	 * 
-	 * }
-	 * 
-	 * dataProviderLazy = new TreeDataProvider<>(lazyData);
-	 * treeGridPhraseLazy.addColumn(TagRowItem::getTreePath).setCaption("Phrase").
-	 * setId("phraseID");
-	 * treeGridPhraseLazy.getColumn("phraseID").setExpandRatio(7);
-	 * treeGridPhraseLazy.addColumn(TagRowItem::getFrequency).setCaption("Frequency"
-	 * ).setId("freqID"); treeGridPhraseLazy.getColumn("freqID").setExpandRatio(1);
-	 * dataProviderLazy.refreshAll();
-	 * treeGridPhraseLazy.setDataProvider(dataProviderLazy);
-	 * treeGridPhraseLazy.setCaption(queryAsString);
-	 * treeGridPhraseLazy.setWidth("100%"); }
-	 */
+
 
 	private void setDataPropertyStyle() throws Exception {
 		TreeData<TagRowItem> propData = new TreeData<>();
@@ -426,8 +400,8 @@ public class ResultPanelNew extends Panel {
 			QueryResult queryResult) throws Exception {
 		
 		
-		Set<String> tagDefinitions = new HashSet<String>();
-		HashMap<String,QueryResultRowArray >allRoots =setRootsGroupedByTagDefinitionPath(queryResult, tagDefinitions);
+	
+		HashMap<String,QueryResultRowArray >allRoots =groupRootsGroupedByTagDefinitionPath(queryResult);
 		
 		Set<String > keys=allRoots.keySet();
 		
@@ -436,13 +410,63 @@ public class ResultPanelNew extends Panel {
 			root.setTreeKey(key);
 			root.setRows(allRoots.get(key));	
 			treeData.addItems(null, (TreeRowItem)root);
+			
+			HashMap<String , QueryResultRowArray> docsForARoot= new HashMap<String, QueryResultRowArray>();
+			docsForARoot= groupDocumentsForRoot(root);
+			Set<String > sourceDocs=root.getRows().getSourceDocumentIDs();
+			
+			
+		
+			
+			
+			
+
+			for(String doc : sourceDocs) {
+			QueryResultRowArray oneDocArray=	docsForARoot.get(doc);
+				
+				DocumentItem docItem = new DocumentItem();
+				docItem.setTreeKey(doc);
+				docItem.setRows(oneDocArray);
+				treeData.addItem(root, docItem);
+				
+			}
+			
+			//treeData.addItems(root, root.getRows().getSourceDocumentIDs());
 		}
 		
 		
 		return treeData;
 	}
 	
-	private HashMap<String, QueryResultRowArray> setRootsGroupedByTagDefinitionPath(QueryResult queryResult,Set<String> tagDefinitions) throws Exception {
+	private HashMap<String, QueryResultRowArray> groupDocumentsForRoot(RootItem root) {
+		HashMap<String, QueryResultRowArray> documentsForARoot = new HashMap<String, QueryResultRowArray>();
+		QueryResultRowArray allDocsArray=root.getRows();
+	
+	Set<String > docs=	allDocsArray.getSourceDocumentIDs();
+	for(QueryResultRow queryResultRow : allDocsArray) {
+		if (queryResultRow instanceof TagQueryResultRow) {
+			TagQueryResultRow tRow = (TagQueryResultRow) queryResultRow;
+			
+			QueryResultRowArray rows = documentsForARoot.get(tRow.getSourceDocumentId());
+			
+			if (rows == null) {
+				rows = new QueryResultRowArray();
+				documentsForARoot.put(tRow.getSourceDocumentId(), rows);
+			}
+			rows.add(tRow);
+		}
+		
+	
+			
+		
+			
+		
+	}
+		return documentsForARoot;
+		
+	}
+	
+	private HashMap<String, QueryResultRowArray> groupRootsGroupedByTagDefinitionPath(QueryResult queryResults) throws Exception {
 		int totalFreq = 0;
 		HashMap<String, QueryResultRowArray> rowsGroupedByTagDefinitionPath = 
 				new HashMap<String, QueryResultRowArray>();
@@ -465,165 +489,7 @@ public class ResultPanelNew extends Panel {
 	}
 
 
-	private TreeData<TreeRowItem> populateTreeDataWithTagsOld(Repository repository, TreeData<TreeRowItem> treeData,
-			QueryResult queryResult) throws Exception {
-
-		// adding tags as root items
-		ArrayList<TagRowItem> tagsAsRoot = new ArrayList<TagRowItem>();
-
-		for (QueryResultRow queryResultRow : queryResult) {
-
-			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-			TagRowItem tagRowItem = new TagRowItem();
-
-			tagRowItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
-
-			if (!tagsAsRoot.stream()
-					.anyMatch(var -> var.getTagDefinitionPath().equalsIgnoreCase(tagRowItem.getTagDefinitionPath()))) {
-
-				tagRowItem.setTreePath(tagRowItem.getTagDefinitionPath());
-				tagRowItem.setFrequencyOneUp();
-				tagsAsRoot.add(tagRowItem);
-			} else {
-				tagsAsRoot.stream().filter(x -> x.getTagDefinitionPath().equals(tagRowItem.getTagDefinitionPath()))
-						.findFirst().get().setFrequencyOneUp();
-			}
-		}
-		treeData.addItems(null, tagsAsRoot);
-
-		// adding documents as children for tags and adding collections as children for
-		// documents...AND tags as children for collections
-		for (TagRowItem tag : tagsAsRoot) {
-
-			ArrayList<TagRowItem> docsForATag = new ArrayList<TagRowItem>();
-			String rootTagPath = tag.getTagDefinitionPath();
-
-			for (QueryResultRow queryResultRow : queryResult) {
-
-				TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-
-				if (rootTagPath.equalsIgnoreCase(tagQueryResultRow.getTagDefinitionPath())) {
-
-					TagRowItem docItem = new TagRowItem();
-					docItem.setSourceDocumentID(queryResultRow.getSourceDocumentId());
-					docItem.setSourceDocName(
-							repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString());
-					docItem.setCollectionID(tagQueryResultRow.getMarkupCollectionId());
-					docItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
-					docItem.setTreePath(docItem.getSourceDocName());
-
-					if (!docsForATag.stream().anyMatch(
-							var -> var.getSourceDocumentID().equalsIgnoreCase(docItem.getSourceDocumentID()))) {
-						docItem.setFrequencyOneUp();
-						docsForATag.add(docItem);
-					} else {
-						docsForATag.stream()
-								.filter(var -> var.getTagDefinitionPath().equals(docItem.getTagDefinitionPath()))
-								.findFirst().get().setFrequencyOneUp();
-					}
-				}
-			}
-
-			treeData.addItems(tag, docsForATag);
-
-			// ... adding collections as children for documents
-			for (TagRowItem oneDoc : docsForATag) {
-
-				ArrayList<TagRowItem> collectionsForADocument = new ArrayList<TagRowItem>();
-
-
-
-				for (QueryResultRow queryResultRow : queryResult) {
-
-					TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-					// search in the whole resultset for the one who fit the tag and docsForATag
-					if ((tagQueryResultRow.getTagDefinitionPath().equalsIgnoreCase(oneDoc.getTagDefinitionPath()))
-							&& (tagQueryResultRow.getSourceDocumentId()
-									.equalsIgnoreCase(oneDoc.getSourceDocumentID()))) {
-
-						// for every match create a new collectionItem...AND...
-						TagRowItem collectionTagRowItem = new TagRowItem();
-
-						SourceDocument sourceDoc = repository.getSourceDocument(queryResultRow.getSourceDocumentId());
-
-						collectionTagRowItem.setCollectionID(tagQueryResultRow.getMarkupCollectionId());
-						collectionTagRowItem.setCollectionName(sourceDoc
-								.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
-						collectionTagRowItem.setTagDefinitionPath(tag.getTreePath());
-						collectionTagRowItem.setTreePath(sourceDoc
-								.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
-						collectionTagRowItem.setSourceDocumentID(queryResultRow.getSourceDocumentId());
-
-						// ...AND... for every match create the tagItem as a child for the collection
-						// item
-						// TagRowItem tagTagRowItem = new TagRowItem();
-						// tagTagRowItem.setTreePath(tag.getTreePath());
-						// tagTagRowItem.setTagQueryResultRow(tagQueryResultRow);
-
-						// AND add the tag as a child to the collection
-						// treeData.addItem(collectionTagRowItem, tagTagRowItem);
-						// multiMap.put(collectionTagRowItem, tagTagRowItem);
-
-						if (!collectionsForADocument.stream().anyMatch(var -> var.getCollectionID()
-								.equalsIgnoreCase(collectionTagRowItem.getCollectionID()))) {
-							collectionTagRowItem.setFrequencyOneUp();
-							collectionsForADocument.add(collectionTagRowItem);
-					
-						
-
-						} else {
-							// collection already inside , we just set frequency one up
-							collectionsForADocument.stream()
-									.filter(x -> x.getTreePath()
-											.equals(collectionTagRowItem.getTreePath()))
-									.findFirst().get().setFrequencyOneUp();
-
-						}
-					}
-
-				}
-				treeData.addItems(oneDoc, collectionsForADocument);
-             // adding tag instances as children for a collection
-				for (TagRowItem oneCollection : collectionsForADocument) {
-					ArrayList<TagRowItem> tagsForACollection = new ArrayList<TagRowItem>();
-					for (QueryResultRow queryResultRow : queryResult) {
-
-						TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-
-						// search in the whole resultset for the one who fits the tag,the
-						// docsForATag,and the Collection
-						if ((tagQueryResultRow.getTagDefinitionPath()
-								.equalsIgnoreCase(oneCollection.getTagDefinitionPath())) // the right tag
-								&& (tagQueryResultRow.getSourceDocumentId()
-										.equalsIgnoreCase(oneCollection.getSourceDocumentID()))// the right document
-								&& (tagQueryResultRow.getMarkupCollectionId()
-										.equalsIgnoreCase(oneCollection.getCollectionID()))) {
-
-							// for every match create a new tagItem...AND...
-							TagRowItem tagTagRowItem = new TagRowItem();
-							tagTagRowItem.setCollectionID(tagQueryResultRow.getMarkupCollectionId());
-							SourceDocument sourceDoc = repository
-									.getSourceDocument(queryResultRow.getSourceDocumentId());
-							tagTagRowItem.setCollectionName(sourceDoc
-									.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId())
-									.getName());
-							tagTagRowItem.setSourceDocName(repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString());
-							tagTagRowItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
-							tagTagRowItem.setTreePath(oneCollection.getTagDefinitionPath());
-							tagTagRowItem.setPhrase(tagQueryResultRow.getPhrase());
-							tagTagRowItem.setQueryResultRow(tagQueryResultRow);
-					
-							tagsForACollection.add(tagTagRowItem);
-						}
-					}
-
-					treeData.addItems(oneCollection, tagsForACollection);
-				}
-			}
-		}
-
-		return treeData;
-	}
+	
 
 	private TreeData<TagRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TagRowItem> treeData,
 			QueryResult queryResult) throws Exception {

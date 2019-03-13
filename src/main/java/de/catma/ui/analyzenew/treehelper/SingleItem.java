@@ -33,7 +33,7 @@ public class SingleItem implements TreeRowItem{
 	}
 	
 	public void setRows(QueryResultRowArray queryResultRowArray) {
-		this.queryResultRowArray = queryResultRowArray;
+		this.queryResultRowArray = queryResultRowArrays;
 		
 	}
 	@Override
