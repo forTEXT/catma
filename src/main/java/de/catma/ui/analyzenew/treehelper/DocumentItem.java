@@ -114,5 +114,15 @@ public class DocumentItem implements TreeRowItem{
 	public boolean isUnfold() {
 		return this.unfold;
 	}
+	@Override
+	public String getPropertyName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public String getPropertyValue() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

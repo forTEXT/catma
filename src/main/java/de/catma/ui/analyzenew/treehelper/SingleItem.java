@@ -2,6 +2,7 @@ package de.catma.ui.analyzenew.treehelper;
 
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.queryengine.result.TagQueryResultRow;
 
 public class SingleItem implements TreeRowItem{
 	
@@ -33,12 +34,11 @@ public class SingleItem implements TreeRowItem{
 	}
 	
 	public void setRows(QueryResultRowArray queryResultRowArray) {
-		this.queryResultRowArray = queryResultRowArrays;
+		this.queryResultRowArray = queryResultRowArray;
 		
 	}
 	@Override
 	public String getArrowIcon() {
-
 		return null;
 	}
 	public String getShortenTreeKey(){
@@ -53,6 +53,23 @@ public class SingleItem implements TreeRowItem{
 				+"["+HORIZONTAL_ELLIPSIS+"]"
 				+ toShortenValue.substring(toShortenValue.length()-((maxLength/2)-2), toShortenValue.length());
 	}
+	
+	public String getPhrase() {
+		return queryResultRowArray.get(0).getPhrase();
+	}
+	
+	public String getPropertyName() {
+		TagQueryResultRow	tRow =(TagQueryResultRow)	queryResultRowArray.get(0);
+	return	tRow.getPropertyName();
+		
+		
+	}
+	public String getPropertyValue() {
+		TagQueryResultRow	tRow =(TagQueryResultRow)	queryResultRowArray.get(0);
+		return	tRow.getPropertyValue();
+		
+	}
+	
 	
 /*	public Kwic getKwic() {	
 	}*/

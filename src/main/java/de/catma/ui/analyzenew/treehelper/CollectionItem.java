@@ -100,6 +100,18 @@ public class CollectionItem implements TreeRowItem{
 				+"["+HORIZONTAL_ELLIPSIS+"]"
 				+ toShortenValue.substring(toShortenValue.length()-((maxLength/2)-2), toShortenValue.length());
 	}
+
+	@Override
+	public String getPropertyName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getPropertyValue() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	
 }

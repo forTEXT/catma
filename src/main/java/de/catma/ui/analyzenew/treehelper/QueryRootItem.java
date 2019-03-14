@@ -29,7 +29,7 @@ public class QueryRootItem implements TreeRowItem{
 
 	@Override
 	public int getFrequency() {
-     return   queryResulutRowArray.getTotalFrequency();
+     return   (Integer) null;
      
 	}
 
@@ -58,6 +58,18 @@ public class QueryRootItem implements TreeRowItem{
 		return toShortenValue.substring(0, maxLength/2) 
 				+"["+HORIZONTAL_ELLIPSIS+"]"
 				+ toShortenValue.substring(toShortenValue.length()-((maxLength/2)-2), toShortenValue.length());
+	}
+
+	@Override
+	public String getPropertyName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getPropertyValue() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

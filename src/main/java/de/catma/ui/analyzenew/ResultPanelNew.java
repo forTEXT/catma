@@ -47,17 +47,22 @@ public class ResultPanelNew extends Panel {
 	}
 
 	private VerticalLayout contentVerticalLayout;
+	
 	private TreeData<TreeRowItem> tagData;
 	private TreeGrid<TreeRowItem> treeGridTag;
 	
-	private TreeData<TreeRowItem> phraseData;
+	private TreeData<TreeRowItem>phraseData;
 	private TreeGrid<TreeRowItem> treeGridPhrase;
 	
-	private TreeData<TreeRowItem>phraseItemData;
-	private TreeGrid<TreeRowItem> phraseItemTreeGrid;
-	private TreeDataProvider<TreeRowItem>  phraseItemDataProvider;
-	
+	private TreeData<TreeRowItem>propertyData;
 	private TreeGrid<TreeRowItem> treeGridProperty;
+	
+
+
+
+
+	
+
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
 	private Button caretDownBt;
@@ -98,10 +103,10 @@ public class ResultPanelNew extends Panel {
 		if (queryAsString.contains("wild=")) {
 			// setDataPhraseStyleLazy();
 			//setDataPhraseStyle();
-			setDataPhraseItemStyle();
+			setDataPhraseStyle();
 			setCurrentView(ViewID.phrase);
 			// treeGridPanel.setContent(treeGridPhrase);
-			treeGridPanel.setContent(phraseItemTreeGrid);
+			treeGridPanel.setContent(treeGridPhrase);
 		}
 
 	}
@@ -126,17 +131,23 @@ public class ResultPanelNew extends Panel {
 		setContent(contentVerticalLayout);
 
 		treeGridTag = new TreeGrid<TreeRowItem>();
-		treeGridTag.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
+		treeGridTag.addStyleNames(
+				"annotation-details-panel-annotation-details-grid", 
+				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
 	//	treeGridPhrase = new TreeGrid<TreeRowItem>();
 	//	treeGridPhrase.addStyleName( "flat-undecorated-icon-buttonrenderer");
 		
 
-		phraseItemTreeGrid = new TreeGrid<TreeRowItem>();
-		phraseItemTreeGrid.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
+		treeGridPhrase = new TreeGrid<TreeRowItem>();
+		treeGridPhrase.addStyleNames(
+				"annotation-details-panel-annotation-details-grid", 
+				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
 		treeGridProperty = new TreeGrid<TreeRowItem>();
-		treeGridProperty.addStyleName("annotate-resource-grid");
+		treeGridProperty.addStyleNames(
+				"annotation-details-panel-annotation-details-grid", 
+				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
 		createResultInfoBar();
 		createButtonBar();
@@ -206,9 +217,7 @@ public class ResultPanelNew extends Panel {
 				resultPanelCloseListener.closeRequest(ResultPanelNew.this);
 			}
 		});
-
-
-		 
+	 
 	}
 
 	private void setDataTagStyle() throws Exception {
@@ -220,9 +229,6 @@ public class ResultPanelNew extends Panel {
 		treeGridTag.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
 		treeGridTag.getColumn("tagID").setExpandRatio(5);
 		
-		treeGridTag.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("tagPhraseID");
-		treeGridTag.getColumn("tagPhraseID").setExpandRatio(7);
-
 		treeGridTag.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridTag.getColumn("freqID").setExpandRatio(1);
 
@@ -234,62 +240,20 @@ public class ResultPanelNew extends Panel {
 
 		treeGridPanel.setContent(treeGridTag);
 		
-		//setDataPhraseStyle();
-		// setDataPhraseStyleLazy();
-	}
-
-	/*private void setDataPhraseStyle() throws Exception {	
-		
-		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
-		TreeData<TagRowItem> phraseData = new TreeData<>();
-		//phraseData = new TreeData<>();
-		ArrayList<TagRowItem> phraseAsRoots = new ArrayList<>();
-		// add phrases as roots
-		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
-
-			String phrase = (String) groupedQueryResult.getGroup();
-			TagRowItem rootPhrase = new TagRowItem();
-			rootPhrase.setTreePath(phrase);
-			rootPhrase.setFrequency(groupedQueryResult.getTotalFrequency());
-			phraseAsRoots.add(rootPhrase);
-			phraseData.addItems(null, rootPhrase);
-			// add documents and collections
-			ArrayList<TagRowItem> documentsForAPhrase = retrieveDocumentsAsChildren(groupedQueryResult);
-			phraseData.addItems(rootPhrase, documentsForAPhrase);
-			
-			for(TagRowItem doc : documentsForAPhrase) {
-				ArrayList<TagRowItem> phraseItems = new ArrayList<>();
-				phraseItems=retrievePhraseItemsAsChildren(groupedQueryResult,doc);			
-				phraseData.addItems(doc,phraseItems);
-			}
-		}
-
-		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(phraseData);
-		treeGridPhrase.addColumn(TagRowItem::getShortenTreePath).setCaption("Phrase").setId("phraseID");
-		treeGridPhrase.getColumn("phraseID").setExpandRatio(7);
-		treeGridPhrase.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
-		dataProvider.refreshAll();	
-		treeGridPhrase.setDataProvider(dataProvider);
-		treeGridPhrase.setWidth("100%");
-	}*/
-	private QueryResultRowArray transformGroupedResultToArray(GroupedQueryResult groupedQueryResult) {
-		QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
-		
-		for (QueryResultRow queryResultRow : groupedQueryResult) {
-			queryResultRowArray.add(queryResultRow);		
-		}
-		return queryResultRowArray;
+		setDataPhraseStyle();
 		
 	}
+
+
+
 	
 	
-	private void setDataPhraseItemStyle() {
+	private void setDataPhraseStyle() {
 	
-		phraseItemData = new TreeData<>();
-		//QueryResultRowArray groupedQueryResultArray = queryResult.asQueryResultRowArray();
+		phraseData = new TreeData<>();
+	
 		Set<GroupedQueryResult> resultAsSet= queryResult.asGroupedSet();
-		// add phrases as roots
+	
 		for (GroupedQueryResult onePhraseGroupedQueryResult : resultAsSet) {
 
 			String phrase = (String) onePhraseGroupedQueryResult.getGroup();
@@ -302,7 +266,7 @@ public class ResultPanelNew extends Panel {
 			QueryResultRowArray queryResultArray=transformGroupedResultToArray(onePhraseGroupedQueryResult);
 			
 			rootPhrase.setRows(queryResultArray);
-			phraseItemData.addItem(null,  rootPhrase);
+			phraseData.addItem(null,  rootPhrase);
 			ArrayList <TreeRowItem> allDocuments= new ArrayList<>();
 			
 			for(String docID: allDocsForThatPhrase) {
@@ -318,38 +282,39 @@ public class ResultPanelNew extends Panel {
 			docItem.setRows(transformGroupedResultToArray(oneDocGroupedQueryResult));
 			allDocuments.add( docItem);		
 			}
-			phraseItemData.addItems( rootPhrase, allDocuments);
+			phraseData.addItems( rootPhrase, allDocuments);
 		}
-	    phraseItemDataProvider = new TreeDataProvider<>(phraseItemData);
-		phraseItemTreeGrid.setDataProvider(phraseItemDataProvider);
-		treeGridPanel.setContent(phraseItemTreeGrid);
-		phraseItemDataProvider.refreshAll();
-		phraseItemTreeGrid.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
-		phraseItemTreeGrid.getColumn("phraseID").setExpandRatio(7);
-		phraseItemTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		phraseItemTreeGrid.getColumn("freqID").setExpandRatio(1);
+		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
+		treeGridPhrase.setDataProvider(phraseDataProvider);
+		treeGridPanel.setContent(treeGridPhrase);
+		phraseDataProvider.refreshAll();
+		treeGridPhrase.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
+		treeGridPhrase.getColumn("phraseID").setExpandRatio(7);
+		treeGridPhrase.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
+		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
+		treeGridPhrase.setWidth("100%");
 		
 	}
 	
 
 
 	private void setDataPropertyStyle() throws Exception {
-		TreeData<TagRowItem> propData = new TreeData<>();
-
+		
+		TreeData<TreeRowItem> propData = new TreeData<>();
 		propData = populateTreeDataWithProperties(repository, propData, queryResult); // TODO !!!!!!
 
-		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(propData);
+		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(propData);
 
-		treeGridProperty.addColumn(TagRowItem::getShortenTreePath).setCaption("Tag").setId("tagID");
+		treeGridProperty.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
 		treeGridProperty.getColumn("tagID").setExpandRatio(3);
 
-		treeGridProperty.addColumn(TagRowItem::getPropertyName).setCaption("Property name").setId("propNameID");
+		treeGridProperty.addColumn(TreeRowItem::getPropertyName).setCaption("Property name").setId("propNameID");
 		treeGridProperty.getColumn("propNameID").setExpandRatio(3);
 
-		treeGridProperty.addColumn(TagRowItem::getPropertyValue).setCaption("Property value").setId("propValueID");
+		treeGridProperty.addColumn(TreeRowItem::getPropertyValue).setCaption("Property value").setId("propValueID");
 		treeGridProperty.getColumn("propValueID").setExpandRatio(3);
 
-		treeGridProperty.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
+		treeGridProperty.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridProperty.getColumn("freqID").setExpandRatio(1);
 
 		dataProvider.refreshAll();
@@ -359,44 +324,11 @@ public class ResultPanelNew extends Panel {
 
 		treeGridPanel.setContent(treeGridProperty);
 
-		//setDataPhraseStyle();
-		// setDataPhraseStyleLazy();
-	}
-	
-	private TreeData<TreeRowItem> populateTreeDataWithTagsOld2(Repository repository, TreeData<TreeRowItem> treeData,
-			QueryResult queryResult) throws Exception {
-		
-		TreeData<TreeRowItem> currentData= treeData;
-		
-	
-		
-		QueryResultRowArray currentResult= (QueryResultRowArray)queryResult;
-	  	Set<GroupedQueryResult> currentSet=	currentResult.asGroupedSet(); // das gibt ein nach phrase gruppiertes set !!! nix mit tagresult danach 
-	  	
-	  	
-	  	for(GroupedQueryResult groupedQueryResult: currentSet) {
-	  	Object group=	groupedQueryResult.getGroup();
-
-	  
-	  		Set<String> currentDocuments=	groupedQueryResult.getSourceDocumentIDs();
-	  		for(String doc : currentDocuments) {
-	  		GroupedQueryResult oneDocResult=	groupedQueryResult.getSubResult(doc);
-	  	int freq=	oneDocResult.getTotalFrequency();
-	  	Iterator<QueryResultRow> docIterator=	oneDocResult.iterator();
-	  	
-	  	while( docIterator.hasNext()) {
-	  		TagQueryResultRow tagQueryResultRow = (TagQueryResultRow)docIterator.next();
-	  		SingleItem singleTagItem = new SingleItem();
-	  		singleTagItem.setTreeKey(tagQueryResultRow.getTagDefinitionPath());
-	  	}
-	  			
-	  		}
-	  		
-	  	}
-
-		return null;
+		setDataPhraseStyle();
 		
 	}
+	
+
 	
 	private TreeData<TreeRowItem> populateTreeDataWithTags(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
@@ -487,228 +419,42 @@ public class ResultPanelNew extends Panel {
 		
 	}
 	
-	private HashMap<String, QueryResultRowArray> groupRootsGroupedByTagDefinitionPath(QueryResult queryResults) throws Exception {
-		int totalFreq = 0;
-		HashMap<String, QueryResultRowArray> rowsGroupedByTagDefinitionPath = 
-				new HashMap<String, QueryResultRowArray>();
-		
+	private HashMap<String, QueryResultRowArray> groupRootsGroupedByTagDefinitionPath(QueryResult queryResults)
+			throws Exception {
+	
+		HashMap<String, QueryResultRowArray> rowsGroupedByTagDefinitionPath = new HashMap<String, QueryResultRowArray>();
+
 		for (QueryResultRow row : queryResult) {
-			
+
 			if (row instanceof TagQueryResultRow) {
 				TagQueryResultRow tRow = (TagQueryResultRow) row;
-				QueryResultRowArray rows = 
-						rowsGroupedByTagDefinitionPath.get(tRow.getTagDefinitionPath());
-				
+				QueryResultRowArray rows = rowsGroupedByTagDefinitionPath.get(tRow.getTagDefinitionPath());
+
 				if (rows == null) {
 					rows = new QueryResultRowArray();
 					rowsGroupedByTagDefinitionPath.put(tRow.getTagDefinitionPath(), rows);
 				}
 				rows.add(tRow);
-			}	
-	}
+			}
+		}
 		return rowsGroupedByTagDefinitionPath;
 	}
 
-
 	
-
-	private TreeData<TagRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TagRowItem> treeData,
-			QueryResult queryResult) throws Exception {
-
-		ArrayList<TagRowItem> tagsAsRoot = new ArrayList<TagRowItem>();
-
-		for (QueryResultRow queryResultRow : queryResult) {
-
-			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-			TagRowItem tagRowItem = new TagRowItem();
-
-			tagRowItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
-
-			if (!tagsAsRoot.stream()
-					.anyMatch(var -> var.getTagDefinitionPath().equalsIgnoreCase(tagRowItem.getTagDefinitionPath()))) {
-
-				tagRowItem.setTreePath(tagRowItem.getTagDefinitionPath());
-				tagRowItem.setFrequencyOneUp();
-				tagsAsRoot.add(tagRowItem);
-			} else {
-				tagsAsRoot.stream().filter(x -> x.getTagDefinitionPath().equals(tagRowItem.getTagDefinitionPath()))
-						.findFirst().get().setFrequencyOneUp();
-			}
-		}
-		treeData.addItems(null, tagsAsRoot);
-
-		// adding documents as children for tags and adding collections as children for
-		// documents
-		for (TagRowItem tag : tagsAsRoot) {
-
-			ArrayList<TagRowItem> docsForATag = new ArrayList<TagRowItem>();
-			String rootTagPath = tag.getTagDefinitionPath();
-
-			for (QueryResultRow queryResultRow : queryResult) {
-
-				TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-
-				if (rootTagPath.equalsIgnoreCase(tagQueryResultRow.getTagDefinitionPath())) {
-
-					TagRowItem docItem = new TagRowItem();
-					docItem.setSourceDocumentID(queryResultRow.getSourceDocumentId());
-					docItem.setSourceDocName(
-							repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString());
-					docItem.setCollectionID(tagQueryResultRow.getMarkupCollectionId());
-					docItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
-					docItem.setTreePath(docItem.getSourceDocName());
-
-					if (!docsForATag.stream().anyMatch(
-							var -> var.getSourceDocumentID().equalsIgnoreCase(docItem.getSourceDocumentID()))) {
-						docItem.setFrequencyOneUp();
-						docsForATag.add(docItem);
-					} else {
-						docsForATag.stream()
-								.filter(var -> var.getTagDefinitionPath().equals(docItem.getTagDefinitionPath()))
-								.findFirst().get().setFrequencyOneUp();
-					}
-				}
-			}
-
-			treeData.addItems(tag, docsForATag);
-
-			// ... adding collections as children for documents
-			for (TagRowItem oneDoc : docsForATag) {
-
-				ArrayList<TagRowItem> collectionsForADocument = new ArrayList<TagRowItem>();
-
-				for (QueryResultRow queryResultRow : queryResult) {
-
-					TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-
-					if ((tagQueryResultRow.getTagDefinitionPath().equalsIgnoreCase(oneDoc.getTagDefinitionPath()))
-							&& (tagQueryResultRow.getSourceDocumentId()
-									.equalsIgnoreCase(oneDoc.getSourceDocumentID()))) {
-
-						TagRowItem tagRowItem = new TagRowItem();
-						tagRowItem.setCollectionID(tagQueryResultRow.getMarkupCollectionId());
-
-						SourceDocument sourceDoc = repository.getSourceDocument(queryResultRow.getSourceDocumentId());
-						tagRowItem.setCollectionName(sourceDoc
-								.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
-						tagRowItem.setTagDefinitionPath(sourceDoc
-								.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
-						tagRowItem.setTreePath(tagRowItem.getCollectionName());
-
-						if (!collectionsForADocument.stream().anyMatch(
-								var -> var.getCollectionID().equalsIgnoreCase(tagRowItem.getCollectionID()))) {
-							tagRowItem.setFrequencyOneUp();
-							collectionsForADocument.add(tagRowItem);
-						} else {
-							collectionsForADocument.stream()
-									.filter(x -> x.getTagDefinitionPath().equals(tagRowItem.getTagDefinitionPath()))
-									.findFirst().get().setFrequencyOneUp();
-
-						}
-
-					}
-
-				}
-
-				treeData.addItems(oneDoc, collectionsForADocument);
-
-				// adding tag-property instances as children for a collection
-				for (TagRowItem oneCollection : collectionsForADocument) {
-
-					for (QueryResultRow queryResultRow : queryResult) {
-
-						TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-						// search for tags (in that query result all have properties) in the collection
-						if ((tag.getTreePath().equalsIgnoreCase(tagQueryResultRow.getTagDefinitionPath()))
-								&& (oneDoc.getSourceDocumentID()
-										.equalsIgnoreCase(tagQueryResultRow.getSourceDocumentId()))
-								&& (oneCollection.getCollectionID()
-										.equalsIgnoreCase(tagQueryResultRow.getMarkupCollectionId()))) {
-
-							TagRowItem propItem = new TagRowItem();
-							propItem.setTreePath(tagQueryResultRow.getTagDefinitionPath());
-							propItem.setPropertyName(tagQueryResultRow.getPropertyName());
-							propItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
-							propItem.setQueryResultRow(tagQueryResultRow);
-
-							treeData.addItem(oneCollection, propItem);
-						}
-
-					}
-
-				}
-
-			}
-
-		}
-
-		return treeData;
-
-	}
-
-	// get docs as children for a phrase- normal style
-	private ArrayList<TagRowItem> retrieveDocumentsAsChildren(GroupedQueryResult groupedQueryResult) throws Exception {
-
-		Set<String> docsForAPhrase = groupedQueryResult.getSourceDocumentIDs();
-		ArrayList<TagRowItem> docItems = new ArrayList<>();
-		for (String doc : docsForAPhrase) {
-			TagRowItem oneDocItem = new TagRowItem();
-			// get SourceDoc name from sorceDocID
-			String docName = retrieveDocumentName(this.repository, doc);
-			oneDocItem.setTreePath(docName);
-			oneDocItem.setSourceDocName(docName);
-			oneDocItem.setFrequency(groupedQueryResult.getFrequency(doc));
-			docItems.add(oneDocItem);
-
-		}
-		return docItems;
-	}
-	
-	private ArrayList<TagRowItem> retrievePhraseItemsAsChildren(GroupedQueryResult groupedQueryResult,TagRowItem document) throws Exception{
-		ArrayList<TagRowItem> phraseItems = new ArrayList<>();
-	for(QueryResultRow row:groupedQueryResult) {
-		String docName = retrieveDocumentName(repository, row.getSourceDocumentId());
-		if(document.getSourceDocName().equalsIgnoreCase(docName)) {
-			TagRowItem phraseItem= new TagRowItem();
-			phraseItem.setSourceDocName(docName);
-			phraseItem.setPhrase(row.getPhrase());
-			phraseItem.setTreePath(row.getPhrase());
-			phraseItem.setQueryResultRow(row);
-			phraseItems.add(phraseItem);
-	
-		}
-	}
+	private QueryResultRowArray transformGroupedResultToArray(GroupedQueryResult groupedQueryResult) {
+		QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
 		
-		return phraseItems;
-	}
-
-
-
-	// get docs as children for a phrase - lazy style
-	private ArrayList<TagRowItem> getChilderenForSpecificPhrase(TagRowItem phraseItem,
-			GroupedQueryResult onePhraseGroup) throws Exception {
-
-		ArrayList<TagRowItem> docItems = new ArrayList<>();
-		for (QueryResultRow resultRow : onePhraseGroup) {
-
-			String docName = retrieveDocumentName(this.repository, resultRow.getSourceDocumentId());
-			TagRowItem rowItem = new TagRowItem();
-			rowItem.setTreePath(docName);
-
-			if (!docItems.stream().anyMatch(var -> var.getTreePath().equalsIgnoreCase(rowItem.getTreePath()))) {
-				docItems.add(rowItem);
-			} else {
-				docItems.stream().filter(var -> var.getTreePath().equalsIgnoreCase(rowItem.getTreePath())).findFirst()
-						.get().setFrequencyOneUp();
-			}
+		for (QueryResultRow queryResultRow : groupedQueryResult) {
+			queryResultRowArray.add(queryResultRow);		
 		}
-
-		return docItems;
+		return queryResultRowArray;
+	
 	}
-
-	private String retrieveDocumentName(Repository repository, String docID) throws Exception {
-
-		return repository.getSourceDocument(docID).toString();
+	
+	
+	private TreeData<TreeRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TreeRowItem> treeData,
+			QueryResult queryResult) throws Exception {
+	return	populateTreeDataWithTags(repository, treeData, queryResult);
 	}
 
 	public String getQueryAsString() {
