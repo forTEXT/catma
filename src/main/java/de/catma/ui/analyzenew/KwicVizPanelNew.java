@@ -202,9 +202,9 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		selectedDataProvider.addDataProviderListener(new DataProviderListener<TreeRowItem>() {	
 			@Override
 			public void onDataChange(DataChangeEvent<TreeRowItem> event) {
-			//	if(comboBox.getValue().contains("tag")) {		
+				if(comboBox.getValue().contains("wild")) {		
 					updateKwicView();	
-				//}
+				}
 			}
 		});
 			
@@ -212,10 +212,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	
 	private void updateKwicView() {
 		// QueryResult queryResult = createQueryResultFromTreeGridDataTags();
-	//	ArrayList<QueryResultRow> queryResult = createQueryResultFromTreeGridData();
+		ArrayList<QueryResultRow> queryResult = createQueryResultFromTreeGridData();
 		try {
 
-			// kwicNew.addQueryResultRows(queryResult);
+			 kwicNew.addQueryResultRows(queryResult);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -247,12 +247,13 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		List<TreeRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
 		if (!rootElements.isEmpty()) {
 			for (TreeRowItem root : rootElements) {
+				//
 				List<TreeRowItem> children= new ArrayList<TreeRowItem>();
 			   children	= selectedItemsTreeGridData.getChildren(root);
 				if(!children.isEmpty()) {
 					for (TreeRowItem child : children) 		{
-						GroupedQueryResultRow queryResultRow = child.getRows();
-						queryResult.add(queryResultRow);
+						QueryResultRowArray queryResultRow = child.getRows();
+						queryResult.addAll(queryResultRow);
 					}	
 				}				
 			}
