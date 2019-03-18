@@ -36,7 +36,6 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
-import de.catma.document.repository.ConflictedRepository;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
@@ -44,6 +43,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.project.conflict.ConflictedProject;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -735,8 +735,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             }
 
             @Override
-            public void ready(Repository repository) {
-                ProjectView.this.project = repository;
+            public void ready(Repository project) {
+                ProjectView.this.project = project;
                 ProjectView.this.project.addPropertyChangeListener(
                 		RepositoryChangeEvent.exceptionOccurred, 
                 		projectExceptionListener);
@@ -755,7 +755,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             }
             
             @Override
-            public void conflictResolutionNeeded(ConflictedRepository conflictedRepository) {
+            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
             	// TODO Auto-generated method stub
             	
             }

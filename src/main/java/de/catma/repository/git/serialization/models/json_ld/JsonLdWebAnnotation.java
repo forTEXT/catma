@@ -8,6 +8,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -141,10 +142,9 @@ public class JsonLdWebAnnotation {
 		this.target = target;
 	}
 
-	public List<TagReference> toTagReferenceList(
-			String projectId, String markupCollectionId, TagLibrary tagLibrary)
+	public List<TagReference> toTagReferenceList(String projectId, String markupCollectionId)
 				throws Exception {
-		TagInstance tagInstance = this.getTagInstance(tagLibrary);
+		TagInstance tagInstance = this.getTagInstance();
 		String sourceDocumentUri = this.getSourceDocumentUri();
 		List<Range> ranges = this.getRanges();
 
@@ -182,17 +182,16 @@ public class JsonLdWebAnnotation {
 	}
 
 	@JsonIgnore
-	public TagInstance getTagInstance(TagLibrary tagLibrary)
+	public TagInstance getTagInstance()
 			throws Exception {
-		TagDefinition tagDefinition = this.getTagDefinition(tagLibrary);
 
 		TagInstance tagInstance = new TagInstance(
 			this.getTagInstanceUuid(),
-			tagDefinition.getUuid(),
-			tagDefinition.getAuthor(), //gets redefined by the system property below
+			getBody().getTag().substring(getBody().getTag().lastIndexOf('/')+1),
+			"", //author gets redefined with the system properties below
 			ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
-			tagDefinition.getUserDefinedPropertyDefinitions(),
-			tagDefinition.getTagsetDefinitionUuid()
+			Collections.emptyList(), //these get added with the user defined properties below
+			getBody().getTagset().substring(getBody().getTagset().lastIndexOf('/')+1)
 		);
 
 		TreeMap<String, TreeMap<String, TreeSet<String>>> properties = this.body.getProperties();

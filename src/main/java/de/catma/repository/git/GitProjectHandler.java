@@ -28,6 +28,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TermInfo;
+import de.catma.project.conflict.CollectionConflict;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
@@ -1002,4 +1003,47 @@ public class GitProjectHandler {
 		return false;
 	}
 
+	public List<CollectionConflict> getCollectionConflicts() throws Exception {
+		
+		ArrayList<CollectionConflict> collectionConflicts = new ArrayList<>();
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			localGitRepoManager.open(
+				 projectId,
+				 GitProjectManager.getProjectRootRepositoryName(projectId));
+			 
+			Path collectionDirPath = 
+					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+					.resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+
+			localGitRepoManager.detach();
+
+			if (collectionDirPath.toFile().exists()) {
+				List<Path> paths = Files
+						.walk(collectionDirPath, 1)
+						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
+						.collect(Collectors.toList());
+				
+				GitMarkupCollectionHandler gitCollectionHandler = 
+						new GitMarkupCollectionHandler(
+								localGitRepoManager, 
+								this.remoteGitServerManager,
+								this.credentialsProvider);
+
+				for (Path collectionPath : paths) {
+					String collectionId = collectionPath.getFileName().toString();
+					Status status = gitCollectionHandler.getStatus(projectId, collectionId);
+					if (!status.getConflicting().isEmpty()) {
+						collectionConflicts.add(
+								gitCollectionHandler.getCollectionConflict(
+										projectId, collectionId));
+					}					
+				}
+				
+			}
+		}
+		
+		return collectionConflicts;
+	}
+	
 }

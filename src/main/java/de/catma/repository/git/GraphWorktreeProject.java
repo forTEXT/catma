@@ -29,7 +29,6 @@ import com.google.common.collect.Multimap;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
-import de.catma.document.repository.ConflictedRepository;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -44,6 +43,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
+import de.catma.project.conflict.ConflictedProject;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
@@ -63,7 +63,7 @@ import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
-public class GraphWorktreeProject implements IndexedRepository, ConflictedRepository {
+public class GraphWorktreeProject implements IndexedRepository, ConflictedProject {
 	
 	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
 	private static final String ORIG_INFIX = "_orig";

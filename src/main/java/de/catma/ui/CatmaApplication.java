@@ -350,16 +350,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	@Override
 	public void close() {
 
-		//TODO: mabe obosolet:
-//		if (getContent() instanceof Closeable) {
-//			try {
-//				((Closeable)getContent()).close();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-		
-		
 		for (WeakReference<Closeable> weakReference : closeListener) {
 			Closeable ref = weakReference.get();
 			if (ref != null) {
