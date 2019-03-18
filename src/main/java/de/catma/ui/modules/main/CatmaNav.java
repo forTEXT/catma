@@ -3,15 +3,13 @@ package de.catma.ui.modules.main;
 import java.util.Iterator;
 
 import com.google.common.eventbus.EventBus;
-import com.vaadin.server.Page;
-import com.vaadin.server.VaadinSession;
+import com.google.inject.Inject;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
 
-import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.component.LargeLinkButton;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
@@ -35,9 +33,8 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	private LargeLinkButton btTags;
 	private LargeLinkButton btAnalyze;
 	
-    public CatmaNav(){ 
-    	EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
-
+	@Inject
+    public CatmaNav(EventBus eventBus){ 
         eventBus.register(this);
         initComponents();
         initActions(eventBus);

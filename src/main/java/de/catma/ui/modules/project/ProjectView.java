@@ -18,12 +18,12 @@ import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
@@ -80,7 +80,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private Repository project;
 
     private final ErrorHandler errorHandler;
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+	private final EventBus eventBus;
 
     private TreeGrid<Resource> resourceGrid;
     private Grid<TagsetDefinition> tagsetGrid;
@@ -93,10 +93,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
 
-    public ProjectView(ProjectManager projectManager){
+	@Inject
+    public ProjectView(ProjectManager projectManager, EventBus eventBus){
     	super("Project");
     	this.projectManager = projectManager;
-        this.errorHandler = (ErrorHandler)UI.getCurrent();
+        this.eventBus = eventBus;
+    	this.errorHandler = (ErrorHandler)UI.getCurrent();
         initProjectListeners();
 
         initComponents();

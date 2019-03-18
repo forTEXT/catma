@@ -4,17 +4,16 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import com.google.common.eventbus.EventBus;
-import com.vaadin.server.Page;
+import com.google.inject.Injector;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.JavaScript;
 import com.vaadin.ui.Label;
 
 import de.catma.project.ProjectManager;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.analyzer.AnalyzerManagerView;
-import de.catma.ui.events.CloseableEvent;
+import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
@@ -56,7 +55,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
     /**
      * global communication via eventbus
      */
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+	private final EventBus eventBus;
 
     /**
      * projectmanager
@@ -79,14 +78,15 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	 * @param projectManager
 	 * @param eventBus
 	 */
-    public MainView(ProjectManager projectManager){
+    public MainView(ProjectManager projectManager, CatmaHeader catmaHeader, EventBus eventBus){
         this.projectManager = projectManager;
-        this.header = new CatmaHeader();
-        this.navigation = new CatmaNav();
+        this.header = catmaHeader;
+        this.eventBus = eventBus;
+        this.navigation = new CatmaNav(eventBus);
         initComponents();
         addStyleName("main-view");
         eventBus.register(this);
-        eventBus.post(new CloseableEvent(this));
+        eventBus.post(new RegisterCloseableEvent(this));
         
     }
 
@@ -127,7 +127,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
 			closeViews();
-			setContent(new DashboardView(projectManager));
+			setContent(new DashboardView(projectManager, eventBus));
 			eventBus.post(new HeaderContextChangeEvent(new Label("")));
 			currentRoute = routeToDashboardEvent.getClass();
 		}
@@ -137,7 +137,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if(isNewTarget(routeToProjectEvent.getClass())) {
 			if (this.projectView == null) {
-				this.projectView = new ProjectView(projectManager);
+				this.projectView = new ProjectView(projectManager, eventBus);
 				this.projectView.setProjectReference(routeToProjectEvent.getProjectReference());
 			}
 	    	setContent(projectView);
@@ -149,7 +149,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
 		if (isNewTarget(routeToAnnotateEvent.getClass())) {
 			if (this.taggerManagerView == null) {
-				this.taggerManagerView = new TaggerManagerView();
+				this.taggerManagerView = new TaggerManagerView(eventBus);
 			}
 			
 			setContent(taggerManagerView);

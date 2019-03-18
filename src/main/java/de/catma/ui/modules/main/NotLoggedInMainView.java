@@ -1,13 +1,12 @@
 package de.catma.ui.modules.main;
 
+import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.ui.Messages;
@@ -20,8 +19,6 @@ import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.modules.main.login.AuthenticationDialog;
 import de.catma.ui.modules.main.signup.SignUpDialog;
-import de.catma.ui.layout.FlexLayout.AlignItems;
-import de.catma.ui.layout.FlexLayout.JustifyContent;
 
 /**
  * Main layout when not logged in
@@ -34,12 +31,14 @@ public class NotLoggedInMainView extends VerticalLayout {
 	private final UIHelpWindow uiHelpWindow = new UIHelpWindow();
 	private final InitializationService initService;
 	private final LoginService loginService;
-
+	private final EventBus eventBus;
+	
 	private IconButton btHelp;
 
-	public NotLoggedInMainView(InitializationService initService, LoginService loginService) {
+	public NotLoggedInMainView(InitializationService initService, LoginService loginService, EventBus eventBus) {
 		this.initService = initService;
 		this.loginService = loginService;
+		this.eventBus = eventBus;
 		initComponents();
 	}
 	
@@ -107,7 +106,8 @@ public class NotLoggedInMainView extends VerticalLayout {
 				RepositoryPropertyKey.BaseURL.getValue(
 						RepositoryPropertyKey.BaseURL.getDefaultValue()),
 				loginService,
-				initService).show());
+				initService,
+				eventBus).show());
 		LabelButton btn_newsletter = new LabelButton("Newsletter");
 
 		HorizontalLayout buttonPanel = new HorizontalLayout(btn_signup,btn_login,btn_newsletter);

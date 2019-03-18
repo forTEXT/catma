@@ -5,12 +5,16 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.HmacUtils;
+import org.apache.commons.mail.DefaultAuthenticator;
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.SimpleEmail;
 import org.jboss.netty.handler.codec.http.QueryStringEncoder;
 
 import com.google.common.base.Joiner;
 import com.vaadin.annotations.JavaScript;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
+import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
@@ -95,7 +99,8 @@ public class SignUpDialog extends Window {
 		content.addComponent(buttonPanel);
 				
 		userBinder.forField(tfEmail)
-	    .withValidator(new UsernameValidator(gitlabManagerPrivileged))
+	    .withValidator(new EmailValidator("must be a valid email address"))
+	    .withValidator(new AccountAlreadyTakenValidator(gitlabManagerPrivileged))
 	    .bind(UserData::getEmail, UserData::setEmail);
 		
 		btnSignup.addClickListener(click -> {
@@ -132,7 +137,17 @@ public class SignUpDialog extends Window {
 		        QueryStringEncoder qs = new QueryStringEncoder(RepositoryPropertyKey.BaseURL.getValue().trim()+"verify");
 		        qs.addParam("token", token);
 		        
-		        //TODO: mail the link!!!
+		        Email email = new SimpleEmail();
+		        email.setHostName("mx.bsdsystems.de");
+		        email.setSmtpPort(587);
+		        email.setAuthenticator(new DefaultAuthenticator("db", "huk4uisweak"));
+		        email.setStartTLSEnabled(true);
+		        email.setFrom("catma@nipsi.de");
+		        email.setSubject("Catma activation");
+		        email.setMsg("In order to verify your account please visit the following link.\n"+qs.toString());
+		        email.addTo(user.getEmail(),user.getName());
+		        email.send();
+
 		        logger.info("token URL is: "  + qs.toString());
 			} catch (Exception e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't create a new user in backend", e);

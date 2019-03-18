@@ -122,7 +122,7 @@ public class TaggerView extends HorizontalLayout
 	private ResourcePanel resourcePanel;
 	private AnnotationPanel annotationPanel;
 	private UserMarkupCollectionManager userMarkupCollectionManager;
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+	private final EventBus eventBus;
 	private TaggerContextMenu taggerContextMenu;
 	private ErrorHandler errorHandler;
 	private PropertyChangeListener annotationPropertiesChangedListener;
@@ -131,10 +131,12 @@ public class TaggerView extends HorizontalLayout
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, Repository project, 
-			PropertyChangeListener sourceDocChangedListener){
+			PropertyChangeListener sourceDocChangedListener,
+			EventBus eventBus){
 		this.tagManager = project.getTagManager();
 		this.project = project;
 		this.sourceDocument = sourceDocument;
+		this.eventBus = eventBus;
 		this.sourceDocChangedListener = sourceDocChangedListener;
 		
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
