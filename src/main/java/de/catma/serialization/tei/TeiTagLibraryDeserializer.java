@@ -81,7 +81,7 @@ public class TeiTagLibraryDeserializer {
 			
 			String description = "";
 			
-			if ((descriptionElement != null) && (descriptionElement != null)) {
+			if ((descriptionElement != null) && (descriptionElement.getValue() != null)) {
 				description = descriptionElement.getValue();
 			}
 			
