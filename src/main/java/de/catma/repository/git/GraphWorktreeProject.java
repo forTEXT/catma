@@ -48,7 +48,9 @@ import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
 import de.catma.repository.git.managers.StatusPrinter;
+import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
+import de.catma.serialization.tei.TeiSerializationHandlerFactory;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -1052,9 +1054,31 @@ public class GraphWorktreeProject implements IndexedRepository, ConflictedProjec
 	}
 
 	@Override
-	@Deprecated
 	public void importTagLibrary(InputStream inputStream) throws IOException {
+		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory();
+		factory.setTagManager(new TagManager(new TagLibrary(null, "import")));
+		TagLibrarySerializationHandler tagLibrarySerializationHandler = 
+				factory.getTagLibrarySerializationHandler();
+		TagLibrary importedLibrary =
+			tagLibrarySerializationHandler.deserialize(null, inputStream);
+		
+		for (TagsetDefinition tagset : importedLibrary) {
+			tagManager.addTagsetDefinition(tagset);
+			
+			
+			for (TagDefinition tag : tagset.getRootTagDefinitions()) {
+				tagManager.addTagDefinition(tagset, tag);
+				
+				importTagHierarchy(tag, tagset);
+			}
+		}
+	}
 
+	private void importTagHierarchy(TagDefinition tag, TagsetDefinition tagset) {
+		for (TagDefinition childTag : tagset.getDirectChildren(tag)) {
+			tagManager.addTagDefinition(tagset, childTag);
+			importTagHierarchy(childTag, tagset);
+		}
 	}
 
 	@Override

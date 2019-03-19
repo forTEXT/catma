@@ -26,15 +26,15 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.ProgressIndicator;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.Upload;
-import com.vaadin.v7.ui.Upload.FailedEvent;
-import com.vaadin.v7.ui.Upload.Receiver;
-import com.vaadin.v7.ui.Upload.StartedEvent;
-import com.vaadin.v7.ui.Upload.SucceededEvent;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.Upload;
+import com.vaadin.ui.Upload.FailedEvent;
+import com.vaadin.ui.Upload.Receiver;
+import com.vaadin.ui.Upload.StartedEvent;
+import com.vaadin.ui.Upload.SucceededEvent;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 public class UploadDialog extends VerticalLayout {
@@ -56,7 +56,7 @@ public class UploadDialog extends VerticalLayout {
 	private String caption;
 	private SaveCancelListener<byte[]> saveCancelListener;
 	private Upload upload;
-	private ProgressIndicator pi;
+	private ProgressBar pi;
 	private ByteArrayOutputStream data;
 	private Button btCancel;
 	
@@ -75,7 +75,6 @@ public class UploadDialog extends VerticalLayout {
 //	                upload.setVisible(false);
             	pi.setVisible(true);
                 pi.setValue(0f);
-                pi.setPollingInterval(500);
                 upload.setCaption(
                 		MessageFormat.format(Messages.getString("UploadDialog.uploadingFile"), event.getFilename())); //$NON-NLS-1$
             }
@@ -131,10 +130,9 @@ public class UploadDialog extends VerticalLayout {
 				Messages.getString("UploadDialog.selectFileHint"), //$NON-NLS-1$
 				new DataReceiver(data));
 		upload.setButtonCaption(Messages.getString("UploadDialog.selectFile")); //$NON-NLS-1$
-		upload.setImmediate(true);
 		
 		addComponent(upload);
-		pi = new ProgressIndicator();
+		pi = new ProgressBar();
 		pi.setVisible(false);
 		addComponent(pi);
 		

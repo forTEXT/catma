@@ -65,9 +65,9 @@ public class TeiTagLibraryDeserializer {
 							tagsetDefinitionElement.getID(),tagsetName, 
 							new Version(versionString));
 			
-			addTagDefinitions(tagsetDefinition, tagsetDefinitionElement.getChildElements(TeiElementName.fsDecl));
-
 			tagManager.addTagsetDefinition(tagsetDefinition);
+			
+			addTagDefinitions(tagsetDefinition, tagsetDefinitionElement.getChildElements(TeiElementName.fsDecl));
 		}
 	}
 

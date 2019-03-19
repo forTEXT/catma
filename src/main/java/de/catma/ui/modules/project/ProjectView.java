@@ -2,6 +2,10 @@ package de.catma.ui.modules.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +43,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
@@ -52,6 +57,7 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
@@ -64,6 +70,7 @@ import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.ui.repository.wizard.SourceDocumentResult;
 import de.catma.user.User;
+import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -251,11 +258,43 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	tagsetsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
         moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
+        moreOptionsMenu.addItem("Import Tagsets", clickEvent -> handleImportTagsetsRequest());
         
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
         hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
+	}
+
+	private void handleImportTagsetsRequest() {
+		UploadDialog uploadDialog =
+				new UploadDialog("Upload Tagsets",
+						new SaveCancelListener<byte[]>() {
+			
+			public void cancelPressed() {}
+			
+			public void savePressed(byte[] result) {
+				InputStream is = new ByteArrayInputStream(result);
+				try {
+					if (BOMFilterInputStream.hasBOM(result)) {
+						is = new BOMFilterInputStream(
+								is, Charset.forName("UTF-8")); //$NON-NLS-1$
+					}
+					
+					project.importTagLibrary(is);
+					
+					
+				} catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error importing Tagsets", e);
+				}
+				finally {
+					CloseSafe.close(is);
+				}
+			}
+			
+		});
+		uploadDialog.show();	
 	}
 
 	private void handleSynchronizeRequest() {
