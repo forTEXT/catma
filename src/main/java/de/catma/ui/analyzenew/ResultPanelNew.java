@@ -257,33 +257,43 @@ public class ResultPanelNew extends Panel {
 		for (GroupedQueryResult onePhraseGroupedQueryResult : resultAsSet) {
 
 			String phrase = (String) onePhraseGroupedQueryResult.getGroup();
-			RootItem rootPhrase =   new RootItem();
-		
-			Set<String> allDocsForThatPhrase= onePhraseGroupedQueryResult.getSourceDocumentIDs();
-			
-			rootPhrase.setTreeKey(phrase); 
-			
-			QueryResultRowArray queryResultArray=transformGroupedResultToArray(onePhraseGroupedQueryResult);
-			
+			RootItem rootPhrase = new RootItem();
+
+			Set<String> allDocsForThatPhrase = onePhraseGroupedQueryResult.getSourceDocumentIDs();
+
+			rootPhrase.setTreeKey(phrase);
+
+			QueryResultRowArray queryResultArray = transformGroupedResultToArray(onePhraseGroupedQueryResult);
+
 			rootPhrase.setRows(queryResultArray);
-			phraseData.addItem(null,  rootPhrase);
-			ArrayList <TreeRowItem> allDocuments= new ArrayList<>();
-			
-			for(String docID: allDocsForThatPhrase) {
-			GroupedQueryResult oneDocGroupedQueryResult=onePhraseGroupedQueryResult.getSubResult(docID);
-			DocumentItem docItem = new DocumentItem();
-			try {
-				String docName = repository.getSourceDocument(docID).toString();
-				docItem.setTreeKey(docName);
-			} catch (Exception e) {
+			phraseData.addItem(null, rootPhrase);
+			ArrayList<TreeRowItem> allDocuments = new ArrayList<>();
+
+			for (String docID : allDocsForThatPhrase) {
+				GroupedQueryResult oneDocGroupedQueryResult = onePhraseGroupedQueryResult.getSubResult(docID);
+				DocumentItem docItem = new DocumentItem();
+
+				try {
+					String docName = repository.getSourceDocument(docID).toString();
+					docItem.setTreeKey(docName);
+				} catch (Exception e) {
+
+					e.printStackTrace();
+				}
+
+				docItem.setRows(transformGroupedResultToArray(oneDocGroupedQueryResult));
+				allDocuments.add(docItem);
+			}
+
+			phraseData.addItems(rootPhrase, allDocuments);
+			for (TreeRowItem doc : allDocuments) {
+				SingleItem fakeChild = new SingleItem();
+				phraseData.addItems(doc, fakeChild);
 				
-				e.printStackTrace();
 			}
-			docItem.setRows(transformGroupedResultToArray(oneDocGroupedQueryResult));
-			allDocuments.add( docItem);		
-			}
-			phraseData.addItems( rootPhrase, allDocuments);
+			
 		}
+		
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
 		treeGridPhrase.setDataProvider(phraseDataProvider);
 		treeGridPanel.setContent(treeGridPhrase);
@@ -380,13 +390,15 @@ public class ResultPanelNew extends Panel {
 					}
 				}
 				
-
 				Set<String> collections = collectionsForADoc.keySet();
 				for (String coll : collections) {
 					CollectionItem collItem = new CollectionItem();
 					collItem.setTreeKey(coll);
 					collItem.setRows(collectionsForADoc.get(coll));
 					treeData.addItem(docItem, collItem);
+					
+					TreeRowItem dummyItem = new SingleItem();
+					treeData.addItem(collItem, dummyItem);
 				}
 
 			}

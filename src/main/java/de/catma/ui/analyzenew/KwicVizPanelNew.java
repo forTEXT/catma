@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import org.hamcrest.core.IsInstanceOf;
 
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.DataChangeEvent;
@@ -15,6 +16,8 @@ import com.vaadin.data.provider.DataProviderListener;
 import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ContextClickEvent;
+import com.vaadin.event.ExpandEvent;
+import com.vaadin.event.ExpandEvent.ExpandListener;
 import com.vaadin.event.SortEvent;
 import com.vaadin.event.SortEvent.SortListener;
 import com.vaadin.event.selection.SelectionEvent;
@@ -48,6 +51,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzenew.treehelper.CollectionItem;
 import de.catma.ui.analyzenew.treehelper.DocumentItem;
 import de.catma.ui.analyzenew.treehelper.QueryRootItem;
 import de.catma.ui.analyzenew.treehelper.RootItem;
@@ -83,6 +87,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeGrid<TreeRowItem> resultsTreeGrid;
 	//private Grid<TagRowItem>selectedItemsGrid;
 	private TreeGrid<TreeRowItem> phraseTreeGrid;
+	
 	private TreeDataProvider<TreeRowItem> dataProvider;
 	private TreeData<TreeRowItem> selectedItemsTreeGridData;
 	private TreeGrid<TreeRowItem>selectedItemsTreeGrid;
@@ -295,22 +300,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		resultsTreeGrid.setWidth("100%");
 		resultsTreeGrid.setHeight("230px");
 		
-		
-		// add selected items to the selected-panel
-	     resultsTreeGrid.addSelectionListener(new SelectionListener<TreeRowItem>() {
-				
-				@Override
-				public void selectionChange(SelectionEvent<TreeRowItem> event) {
-					
-				Optional<String> currentQuery = comboBox.getSelectedItem();				
-				Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();	
-				Iterable<TreeRowItem> selectedItems=	event.getAllSelectedItems();
-				
-				//saddItemsToSelectedPanel(currentQuery.toString(), (Collection<TreeRowItem>) selectedItems, allRootItems);
-				
-				}
-			});
-	     
 		queryResultsPanel.setContent(resultsTreeGrid);
 	}
 
@@ -343,14 +332,27 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeGrid<TreeRowItem> addDataTagStyle(TreeData<TreeRowItem> treeData) {
 		TreeGrid<TreeRowItem> tagTreeGrid = new TreeGrid<>();
 		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(treeData);
-		tagTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
+		tagTreeGrid.addColumn(TreeRowItem::getTreeKey).setCaption("Tag").setId("tagID");
 		tagTreeGrid.getColumn("tagID").setExpandRatio(7);
 		tagTreeGrid.getColumn("tagID").setDescriptionGenerator(e-> e.getTreeKey() , ContentMode.HTML);
 		tagTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		tagTreeGrid.getColumn("freqID").setExpandRatio(1);
+		
+	    ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(rendererClickEvent-> handleSelectClickEvent(rendererClickEvent));
+	    selectItemsRenderer.setHtmlContentAllowed(true);		
+	    tagTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select").setId("selectIconID");
+	    tagTreeGrid.getColumn("selectIconID").setExpandRatio(1);
+		
 		dataProvider.refreshAll();
 		tagTreeGrid.setDataProvider(dataProvider);
 		tagTreeGrid.setWidth("100%");
+		
+		tagTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() { 
+			public void itemExpand(ExpandEvent<TreeRowItem> event) {
+	    	handleExpandClickEventTag(event, dataProvider);
+							
+			}
+		});
 	
 		return tagTreeGrid;
 	}
@@ -372,13 +374,23 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	    phraseTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select").setId("selectID");
 		phraseTreeGrid.getColumn("selectID").setExpandRatio(1);
 		
-		ButtonRenderer<TreeRowItem> unfoldRenderer = new ButtonRenderer<TreeRowItem>( unfoldClickEvent-> handleUnfoldClickEvent(unfoldClickEvent, phraseTreeGrid));
+/*		ButtonRenderer<TreeRowItem> unfoldRenderer = new ButtonRenderer<TreeRowItem>( unfoldClickEvent-> handleUnfoldClickEvent(unfoldClickEvent, phraseTreeGrid));
 		unfoldRenderer.setHtmlContentAllowed(true);
 	    phraseTreeGrid.addColumn(TreeRowItem::getArrowIcon, unfoldRenderer).setId("arrowID");
-	    phraseTreeGrid.getColumn("arrowID").setExpandRatio(1);
+	    phraseTreeGrid.getColumn("arrowID").setExpandRatio(1);*/
 		
 		dataProvider.refreshAll();
 		phraseTreeGrid.setDataProvider(dataProvider);
+		phraseTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
+			
+			private static final long serialVersionUID = 1L;
+
+			public void itemExpand(ExpandEvent<TreeRowItem> event) {
+				handleExpandClickEvent(event, phraseTreeGrid);
+							
+			}
+		});
+		
 		return phraseTreeGrid;
 	}
 
@@ -407,34 +419,90 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
    }
  
  
-	private void handleUnfoldClickEvent(RendererClickEvent<TreeRowItem> arrowClickEvent, TreeGrid<TreeRowItem> phraseTreeGrid) {
-		 
-	   DocumentItem selectedItem = (DocumentItem)arrowClickEvent.getItem();
-	   if(!selectedItem.isUnfold()) {
-		   selectedItem.setUnfold(true);	   
-	   }else {
-		   selectedItem.setUnfold(false);	   
-	   }
-		phraseTreeGrid.getDataProvider().refreshItem(selectedItem);
-		System.out.println("TreeRowItems grouped : "+selectedItem.getRows().toString());
-	    ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem);
-	    
-		dataProvider.getTreeData().addItems(selectedItem, children);
-		//phraseTreeGrid.getDataProvider().	
+	private void handleUnfoldClickEvent(RendererClickEvent<TreeRowItem> arrowClickEvent,
+			TreeGrid<TreeRowItem> phraseTreeGrid) {
+
+		DocumentItem selectedItem = (DocumentItem) arrowClickEvent.getItem();
+		if (!selectedItem.isUnfold()) {
+			selectedItem.setUnfold(true);
+			phraseTreeGrid.getDataProvider().refreshItem(selectedItem);
+			System.out.println("TreeRowItems grouped : " + selectedItem.getRows().toString());
+			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem);
+			dataProvider.getTreeData().addItems(selectedItem, children);
+		} else {
+			selectedItem.setUnfold(false);
+			List<TreeRowItem> children = dataProvider.getTreeData().getChildren(selectedItem);
+			dataProvider.getTreeData().getChildren(selectedItem).removeAll(children);
+			dataProvider.refreshAll();
+
+		}
+
 	}
+	
+	private void handleExpandClickEvent(ExpandEvent<TreeRowItem> expandClickEvent,
+			TreeGrid<TreeRowItem> phraseTreeGrid) {
+
+		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
+		TreeRowItem dummyItem= dataProvider.getTreeData().getChildren(clickedItem).get(0);
+
+		if (clickedItem.getClass().equals(DocumentItem.class)&&(dummyItem.getTreeKey()==null)) {
+
+			DocumentItem selectedItem = (DocumentItem) clickedItem;
+			dataProvider.getTreeData().removeItem(dataProvider.getTreeData().getChildren(selectedItem).get(0));
+			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem);
+			dataProvider.getTreeData().addItems(selectedItem, children);
+
+		} else {
+			
+		}
+		dataProvider.refreshAll();
+
+	}
+	
+	private void handleExpandClickEventTag(ExpandEvent<TreeRowItem> expandClickEvent,
+			TreeDataProvider<TreeRowItem> dataProvider) {
+
+		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
+		TreeRowItem dummyItem = dataProvider.getTreeData().getChildren(clickedItem).get(0);
+
+		if (clickedItem.getClass().equals(CollectionItem.class) && (dummyItem.getTreeKey() == null)) {
+
+			CollectionItem selectedItem = (CollectionItem) clickedItem;
+			dataProvider.getTreeData().removeItem(dataProvider.getTreeData().getChildren(selectedItem).get(0));
+			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem);
+			dataProvider.getTreeData().addItems(selectedItem, children);
+
+		} else {
+
+		}
+		dataProvider.refreshAll();
+
+	}
+
+	
 	
 	private ArrayList <TreeRowItem> createSingleItemRowsArrayList(TreeRowItem selectedItem) {
 		ArrayList <TreeRowItem> children = new ArrayList<>();
 			
 		QueryResultRowArray groupedChildren= selectedItem.getRows();
 		
-		Iterator<QueryResultRow> resultIterator=	groupedChildren.iterator();
+		Iterator<QueryResultRow> resultIterator=groupedChildren.iterator();
 		
 		while (resultIterator.hasNext()) {
 			QueryResultRow queryResultRow = (QueryResultRow) resultIterator.next();
+			QueryResultRowArray itemAsQRRA= new QueryResultRowArray();
+			itemAsQRRA.add(queryResultRow);
 	
 			SingleItem item = new SingleItem();
-			item.setTreeKey(queryResultRow.getPhrase());	
+			if(queryResultRow.getClass().equals(TagQueryResultRow.class)) {
+				TagQueryResultRow tQRR=	(TagQueryResultRow)queryResultRow;
+				item.setTreeKey(tQRR.getTagDefinitionPath());
+			}else {
+				item.setTreeKey(queryResultRow.getPhrase());
+				
+			}
+				
+			item.setRows(itemAsQRRA);
 			
 		    children.add((TreeRowItem)item);	
 		}
@@ -445,7 +513,13 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private void handleSelectClickEvent(RendererClickEvent<TreeRowItem> rendererClickEvent) {
 		TreeRowItem selectedItem = rendererClickEvent.getItem();
 	
-		addPhraseItemsToSelectedPanel(selectedItem);
+		
+		if(comboBox.getValue().contains("wild")) {
+			addPhraseItemsToSelectedPanel(selectedItem);
+		}
+			
+	
+	
 		addTagItemsToSelectedPanel(selectedItem);
 		
 	
@@ -601,12 +675,33 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		}*/
 		
 	private void addTagItemsToSelectedPanel(TreeRowItem selectedItem) {
+		QueryResultRowArray subresultGrouped = selectedItem.getRows();
+
+		Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
+		Optional<String> currentQuery = comboBox.getSelectedItem();
+
+		int length = currentQuery.toString().length();
+		String queryString = currentQuery.toString().substring(20, length - 1);
+		QueryRootItem queryRoot = new QueryRootItem();
+		queryRoot.setTreeKey(queryString);
+
+		if (allRootItems.isEmpty()) {
+		
+		} else {
+			if (!allRootItems.contains(queryRoot)) {
+		
+			}
+			else {
+				if (allRootItems.contains(queryRoot)) {
+			
+				}
+			}
+		}
+		selectedDataProvider.refreshAll();
 		
 	}
 
 	private void addPhraseItemsToSelectedPanel(TreeRowItem selectedItem) {
-
-		QueryResultRowArray subresultGrouped = selectedItem.getRows();
 
 		Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
 		Optional<String> currentQuery = comboBox.getSelectedItem();
@@ -620,13 +715,11 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			selectedItemsTreeGridData.addItem(null, queryRoot);
 
 			if (selectedItem.getClass().equals(DocumentItem.class)) {
-				System.out.println("Document Item");
 				TreeRowItem root = resultsTreeGridData.getParent(selectedItem);
 				selectedItemsTreeGridData.addItem(queryRoot, root);
 				selectedItemsTreeGridData.addItem(root, selectedItem);
 			}
-			if (selectedItem.getClass().equals(RootItem.class)) {
-				System.out.println("Root Item ");
+			if (selectedItem.getClass().equals(RootItem.class)) {	
 				List<TreeRowItem> children = resultsTreeGridData.getChildren(selectedItem);
 				selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
 				selectedItemsTreeGridData.addItems(selectedItem, children);
@@ -634,44 +727,33 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		} else {
 			if (!allRootItems.contains(queryRoot)) {
 				selectedItemsTreeGridData.addItem(null, queryRoot);
-
 				if (selectedItem.getClass().equals(DocumentItem.class)) {
-					System.out.println("Document Item");
 					TreeRowItem root = resultsTreeGridData.getParent(selectedItem);
 					selectedItemsTreeGridData.addItem(queryRoot, root);
 					selectedItemsTreeGridData.addItem(root, selectedItem);
 				}
 				if (selectedItem.getClass().equals(RootItem.class)) {
-					System.out.println("Root Item ");
 					List<TreeRowItem> children = resultsTreeGridData.getChildren(selectedItem);
 					selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
 					selectedItemsTreeGridData.addItems(selectedItem, children);
 				}
-
 			}
-
 			else {
 				if (allRootItems.contains(queryRoot)) {
 					if (selectedItem.getClass().equals(DocumentItem.class)) {
-						System.out.println("Document Item");
 						TreeRowItem root = resultsTreeGridData.getParent(selectedItem);
 						selectedItemsTreeGridData.addItem(queryRoot, root);
 						selectedItemsTreeGridData.addItem(root, selectedItem);
 					}
-
 					if (selectedItem.getClass().equals(RootItem.class)) {
-						System.out.println("Root Item ");
 						List<TreeRowItem> children = resultsTreeGridData.getChildren(selectedItem);
 						selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
 						selectedItemsTreeGridData.addItems(selectedItem, children);
 					}
 				}
 			}
-
 		}
-
 		selectedDataProvider.refreshAll();
-
 		// selectedItemsTreeGridData.addItem(parent, item)
 	}
 		

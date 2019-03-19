@@ -16,7 +16,7 @@ public class DocumentItem implements TreeRowItem{
 	public QueryResultRowArray queryResultRowArray;
 	public String treeKey;
 	public ArrayList<TreeRowItem>singleItemsArray;
-	public boolean unfold= true;
+	public boolean unfold= false;
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;
@@ -91,7 +91,7 @@ public class DocumentItem implements TreeRowItem{
 	}*/
 	
 	public  String getArrowIcon() {
-		   return unfold? VaadinIcons.CARET_RIGHT.getHtml():VaadinIcons.CARET_DOWN.getHtml();
+		   return unfold? VaadinIcons.CARET_DOWN.getHtml():VaadinIcons.CARET_RIGHT.getHtml();
 	}
 	
 	public String getShortenTreeKey(){
