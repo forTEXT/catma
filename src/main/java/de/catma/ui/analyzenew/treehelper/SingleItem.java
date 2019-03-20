@@ -42,7 +42,7 @@ public class SingleItem implements TreeRowItem{
 		return null;
 	}
 	public String getShortenTreeKey(){
-		return shorten(this.treeKey,26);
+		return shorten(this.treeKey,18);
 	}
 
 	private String shorten(String toShortenValue, int maxLength) {

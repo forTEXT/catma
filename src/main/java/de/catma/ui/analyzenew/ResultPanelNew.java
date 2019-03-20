@@ -114,7 +114,45 @@ public class ResultPanelNew extends Panel {
 	public TreeData<TreeRowItem> getCurrentTreeGridData() {
 		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getContent();
 		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
-		return (TreeData<TreeRowItem>) dataProvider.getTreeData();
+		TreeData<TreeRowItem> treeData= (TreeData<TreeRowItem>) dataProvider.getTreeData();
+		return treeData;
+		//return addDummyItemsToTreeData(treeData);
+	}
+	
+	private TreeData<TreeRowItem> addDummyItemsToTreeData(TreeData<TreeRowItem> treeData) {
+
+		if (this.currentView == ViewID.phrase) {
+			List<TreeRowItem> roots = treeData.getRootItems();
+			for (TreeRowItem treeRowItem : roots) {
+				List<TreeRowItem> docs = treeData.getChildren(treeRowItem);
+				for (TreeRowItem doc : docs) {
+					SingleItem dummy = new SingleItem();
+					treeData.addItem(doc, dummy);
+
+				}
+			}
+
+		}
+		
+		if (this.currentView == ViewID.tag) {
+			List<TreeRowItem> roots = treeData.getRootItems();
+			for (TreeRowItem treeRowItem : roots) {
+				List<TreeRowItem> docs = treeData.getChildren(treeRowItem);
+				for (TreeRowItem doc : docs) {
+					List<TreeRowItem> collections=	treeData.getChildren(doc);
+					for (TreeRowItem coll: collections) {
+						SingleItem dummy = new SingleItem();
+						treeData.addItem(coll, dummy);
+
+					}
+				
+
+				}
+			}
+
+		}
+
+		return treeData;
 	}
 
 	private void setCurrentView(ViewID currentView) {
@@ -286,11 +324,12 @@ public class ResultPanelNew extends Panel {
 			}
 
 			phraseData.addItems(rootPhrase, allDocuments);
-			for (TreeRowItem doc : allDocuments) {
-				SingleItem fakeChild = new SingleItem();
-				phraseData.addItems(doc, fakeChild);
+			
+/*			for (TreeRowItem doc : allDocuments) {
+				SingleItem dummy = new SingleItem();
+				phraseData.addItems(doc, dummy);
 				
-			}
+			}*/
 			
 		}
 		
@@ -466,7 +505,10 @@ public class ResultPanelNew extends Panel {
 	
 	private TreeData<TreeRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
-	return	populateTreeDataWithTags(repository, treeData, queryResult);
+TreeData<TreeRowItem> data=	populateTreeDataWithTags(repository, treeData, queryResult);
+
+// diesem data die props, single items zukommen lassen , vielleicht erst nach dem clickevent in de kwic ?????????????????????????????
+return data;
 	}
 
 	public String getQueryAsString() {
