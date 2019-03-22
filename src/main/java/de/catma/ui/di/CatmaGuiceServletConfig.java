@@ -33,7 +33,7 @@ public class CatmaGuiceServletConfig extends GuiceServletContextListener {
 								.build());
 					};
 				}
-				, new GitlabModule(), new BootstrapModule(), new UIModule()
+				, new CoreModule(), new BootstrapModule(), new UIModule()
 				);
 	}
 

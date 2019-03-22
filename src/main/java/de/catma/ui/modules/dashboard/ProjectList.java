@@ -18,6 +18,7 @@ import com.vaadin.ui.UI;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.IRBACManager;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.FlexLayout;
@@ -37,14 +38,16 @@ public class ProjectList extends VerticalLayout implements
 	private final EventBus eventBus;
 	private final Comparator<ProjectReference> sortByNameAsc = (ref1,ref2) -> ref1.getName().compareTo(ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = (ref1,ref2) -> ref2.getName().compareTo(ref1.getName());
+	private final IRBACManager rbacManager;
 	
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 
 	@Inject
-    ProjectList(ProjectManager projectManager, EventBus eventBus){ 
+    ProjectList(ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){ 
         this.errorLogger = (ErrorHandler)UI.getCurrent();
         this.projectManager = projectManager;
         this.eventBus = eventBus;
+        this.rbacManager = rbacManager;
         initComponents();
         eventBus.register(this);
     }
@@ -74,7 +77,7 @@ public class ProjectList extends VerticalLayout implements
         projectsLayout.addComponent(new CreateProjectCard(projectManager,eventBus));
         this.dataProvider.fetch(new Query<>())
         		.sorted(selectedSortOrder)
-        		.map((prj) -> new ProjectCard(prj, projectManager,eventBus))
+        		.map((prj) -> new ProjectCard(prj, projectManager,eventBus, rbacManager))
                 .forEach(projectsLayout::addComponent);
     }
 

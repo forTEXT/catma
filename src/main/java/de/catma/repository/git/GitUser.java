@@ -40,7 +40,6 @@ public class GitUser implements User {
 
 	@Override
 	public boolean isGuest() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

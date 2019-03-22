@@ -8,6 +8,7 @@ import com.vaadin.ui.UI;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.IRBACManager;
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
@@ -26,10 +27,10 @@ public class DashboardView extends VerticalLayout {
 	private final ProjectList projects;
 
 	@Inject
-    public DashboardView(ProjectManager projectManager, EventBus eventBus){ 
+    public DashboardView(ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){ 
         this.projectManager = projectManager;
         this.errorLogger = (ErrorHandler)(UI.getCurrent());
-        this.projects = new ProjectList(projectManager, eventBus); 
+        this.projects = new ProjectList(projectManager, eventBus, rbacManager); 
         initComponents();
     }
 

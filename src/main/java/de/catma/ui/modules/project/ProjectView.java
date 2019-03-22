@@ -44,6 +44,10 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.RBACConstraint;
+import de.catma.rbac.RBACConstraintEnforcer;
+import de.catma.rbac.RBACPermission;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
@@ -61,6 +65,7 @@ import de.catma.ui.repository.Messages;
 import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.ui.repository.wizard.SourceDocumentResult;
+import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
@@ -78,20 +83,23 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private final ErrorHandler errorHandler;
 	private final EventBus eventBus;
-
+	private final IRemoteGitManagerRestricted remoteGitManager;
+	private final RBACConstraintEnforcer<ProjectReference> rbacEnforcer = new RBACConstraintEnforcer<>();
+	
     private TreeGrid<Resource> resourceGrid;
     private Grid<TagsetDefinition> tagsetGrid;
-	private Grid<User> teamGrid;
+	private Grid<Member> teamGrid;
 	private ActionGridComponent<TreeGrid<Resource>> sourceDocumentsGridComponent;
 	private PropertyChangeListener collectionChangeListener;
 	private PropertyChangeListener projectExceptionListener;
 	private PropertyChangeListener documentChangeListener;
 
 	@Inject
-    public ProjectView(ProjectManager projectManager, EventBus eventBus){
+    public ProjectView(ProjectManager projectManager, EventBus eventBus, IRemoteGitManagerRestricted remoteGitManager){
     	super("Project");
     	this.projectManager = projectManager;
         this.eventBus = eventBus;
+        this.remoteGitManager = remoteGitManager;
     	this.errorHandler = (ErrorHandler)UI.getCurrent();
         initProjectListeners();
 
@@ -386,11 +394,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         mainPanel.addComponent(resourcePanel);
 
-        VerticalLayout teamPanel = new VerticalLayout();
-        teamPanel.setSizeUndefined(); // don't set width 100%
-        teamPanel.addComponent(new Label("Team"));
-
-        mainPanel.addComponent(teamPanel);
 
         addComponent(mainPanel);
         
@@ -399,8 +402,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         hugeCardMoreOptions.addItem("Delete Ressources", e -> Notification.show("Deleting")); // TODO: 29.10.18 actually delete something
 
         resourcePanel.addComponent(initResourceContent());
+        
+        VerticalLayout teamPanel = new VerticalLayout();
+        teamPanel.setSizeUndefined(); // don't set width 100%
+        teamPanel.addComponent(new Label("Team"));
+        
+        mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
-
+        
+        rbacEnforcer.register(
+        		RBACConstraint.ifNotAuthorized((proj) -> 
+        			(remoteGitManager.isAuthorizedOnProject(remoteGitManager.getUser(),RBACPermission.PROJECT_MEMBERS_EDIT, proj.getProjectId())),
+        			() -> teamPanel.setVisible(false))
+        		);
     }
 
     /**
@@ -495,13 +509,26 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamGrid.setWidth("402px");
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
         teamGrid.addColumn(User::getName).setExpandRatio(1);
-
+        
         Label membersAnnotations = new Label("Members");
-        ActionGridComponent<Grid<User>> membersGridComponent = new ActionGridComponent<>(
+        ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
                 membersAnnotations,
                 teamGrid
         );
         membersGridComponent.addStyleName("project-view-action-grid");
+        ContextMenu membersContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
+        membersContextMenu.addItem("add member", (click) -> new CreateMemberDialog(
+        		this.projectReference.getProjectId(),
+        		this.remoteGitManager,
+        		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
+        		).show());
+        membersContextMenu.addItem("edit member", (click) -> new EditMemberDialog(
+        		projectReference.getProjectId(),
+        		(Member)teamGrid.getSelectedItems().iterator().next(),
+        		remoteGitManager,
+        		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
+        		).show());
+
         teamContent.addComponent(membersGridComponent);
         return teamContent;
     }
@@ -552,7 +579,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	ListDataProvider<TagsetDefinition> tagsetData = new ListDataProvider<>(project.getTagsets());
         	tagsetGrid.setDataProvider(tagsetData);
         	
-        	ListDataProvider<User> memberData = new ListDataProvider<>(project.getProjectMembers());
+        	ListDataProvider<Member> memberData = new ListDataProvider<>(project.getProjectMembers());
         	teamGrid.setDataProvider(memberData);
 		} catch (Exception e) {
 			errorHandler.showAndLogError("error initializing data", e);
@@ -584,6 +611,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     @Override
     public void reloadAll() {
         initProject(projectReference);
+    	rbacEnforcer.enforceConstraints(projectReference);
     }
 
     /**

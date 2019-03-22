@@ -33,7 +33,6 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged {
 	);
 	
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
-
 	
 	
 	@Override

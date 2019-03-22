@@ -31,7 +31,7 @@ public class GitProjectManager implements ProjectManager {
 	private final IDGenerator idGenerator;
     private final BackgroundService backgroundService;
     private String gitBasedRepositoryBasePath;
-	private GitUser user;
+	private User user;
 
 	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_root";
 
@@ -47,7 +47,7 @@ public class GitProjectManager implements ProjectManager {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = remoteGitServerManager;
 		this.backgroundService = backgroundService;
-		this.user = remoteGitServerManager.getGitUser();
+		this.user = remoteGitServerManager.getUser();
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
 
 		this.idGenerator = new IDGenerator();
