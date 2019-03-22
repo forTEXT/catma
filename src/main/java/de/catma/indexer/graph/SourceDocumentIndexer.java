@@ -135,7 +135,7 @@ public class SourceDocumentIndexer {
 					
 					if (nodeCount % commitAfterNodeCount == 0) {
 						progressListener.setProgress(
-								"graph insertion: commiting transaction nodecount "
+								"graph insertion: committing transaction nodecount "
 										+ nodeCount + " relcount " + relCount + " " + sourceDocument);
 						tx.success();
 						tx.close();
@@ -158,7 +158,7 @@ public class SourceDocumentIndexer {
 				
 				if (relCount % commitAfterRelationCount == 0) {
 					progressListener.setProgress(
-							"graph insertion: commiting transaction nodecount "
+							"graph insertion: committing transaction nodecount "
 									+ nodeCount + " relcount " + relCount + " " + sourceDocument);
 					tx.success();
 					tx.close();

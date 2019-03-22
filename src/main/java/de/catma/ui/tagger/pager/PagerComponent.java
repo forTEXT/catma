@@ -18,10 +18,9 @@
  */   
 package de.catma.ui.tagger.pager;
 
-import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
-import com.vaadin.server.ClassResource;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -30,6 +29,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
 
+import de.catma.ui.component.IconButton;
 import de.catma.ui.tagger.pager.Pager.PagerListener;
 
 /**
@@ -75,7 +75,6 @@ public class PagerComponent extends HorizontalLayout {
 	private int currentPageNumber = 1;
 	private int lastPageNumber;
 	private Label lastPageNumberLabel;
-	private boolean init = true;
 	
 	public PagerComponent(final Pager pager, PageChangeListener pageChangeListener) {
 		this.pageChangeListener = pageChangeListener;
@@ -189,11 +188,9 @@ public class PagerComponent extends HorizontalLayout {
 
 	private void initComponents() {
 		setSpacing(true);
-		firstPageButton = new Button();
-		firstPageButton.addStyleName(MaterialTheme.BUTTON_FLAT);
+		firstPageButton = new IconButton(VaadinIcons.FAST_BACKWARD);
 		addComponent(firstPageButton);
-		previousPageButton = new Button();
-		previousPageButton.addStyleName(MaterialTheme.BUTTON_FLAT);
+		previousPageButton = new IconButton(VaadinIcons.BACKWARDS);
 		addComponent(previousPageButton);
 		pageInput = new NumberField(1);
 		pageInput.setStyleName("pager-pageinput"); //$NON-NLS-1$
@@ -201,37 +198,12 @@ public class PagerComponent extends HorizontalLayout {
 		lastPageNumberLabel = new Label(Messages.getString("PagerComponent.notAvailableAbbr")); //$NON-NLS-1$
 		addComponent(lastPageNumberLabel);
 		this.setComponentAlignment(lastPageNumberLabel, Alignment.MIDDLE_LEFT);
-		nextPageButton = new Button();
-		nextPageButton.addStyleName(MaterialTheme.BUTTON_FLAT);
+		nextPageButton = new IconButton(VaadinIcons.FORWARD);
 		addComponent(nextPageButton);
-		lastPageButton = new Button();
-		lastPageButton.addStyleName(MaterialTheme.BUTTON_FLAT);
+		lastPageButton = new IconButton(VaadinIcons.FAST_FORWARD);
 		addComponent(lastPageButton);
 	}
 	
-	@Override
-	public void attach() {
-		super.attach();
-		
-		if (init) {
-			ClassResource firstPageIcon = 
-					new ClassResource(
-							"tagger/pager/resources/page-first.gif"); //$NON-NLS-1$
-			firstPageButton.setIcon(firstPageIcon);
-			ClassResource previousPageIcon = 
-					new ClassResource(
-							"tagger/pager/resources/page-prev.gif"); //$NON-NLS-1$
-			previousPageButton.setIcon(previousPageIcon);
-			ClassResource nextPageIcon = 
-					new ClassResource(
-							"tagger/pager/resources/page-next.gif"); //$NON-NLS-1$
-			nextPageButton.setIcon(nextPageIcon);
-			ClassResource lastPageIcon = new ClassResource(
-					"tagger/pager/resources/page-last.gif"); //$NON-NLS-1$
-			lastPageButton.setIcon(lastPageIcon);
-			init = false;
-		}
-	}
 
 	public void setPage(int pageNumber) {
 		currentPageNumber = pageNumber;

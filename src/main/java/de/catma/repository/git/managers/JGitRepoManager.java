@@ -15,22 +15,33 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RmCommand;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
+import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.util.FS;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
 
 public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
@@ -39,6 +50,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	private String username;
 
 	private Git gitApi;
+	private JGitFactory jGitFactory;
+	
 
 	/**
 	 * Creates a new instance of this class for the given {@link User}.
@@ -53,30 +66,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	public JGitRepoManager(String repositoryBasePath, User catmaUser) {
 		this.repositoryBasePath = repositoryBasePath;
 		this.username = catmaUser.getIdentifier();
-	}
-
-	/**
-	 * Creates an instance of this class for the given {@link User} and opens an existing Git repository with the
-	 * directory name <code>repositoryName</code>.
-	 * <p>
-	 * Note that the <code>catmaUser</code> argument is NOT used for authentication to remote Git servers. It is only
-	 * used to organise repositories on the local file system, based on the User's identifier. Methods of this class
-	 * that support authentication have their own username and password parameters for this purpose.
-	 * <p>
-	 * Calls {@link #open(String)} internally.
-	 *
-	 * @param repositoryBasePath the repo base path
-	 * @param catmaUser a {@link User} object
-	 * @param repositoryName the directory name of the Git repository to open
-	 * @throws IOException if the Git repository couldn't be found or
-	 *         couldn't be opened for some other reason
-	 */
-	public JGitRepoManager(String repositoryBasePath, User catmaUser, String group,
-			String repositoryName)
-			throws IOException {
-		this(repositoryBasePath, catmaUser);
-
-		this.open(group, repositoryName);
+		this.jGitFactory = new RelativeJGitFactory();
 	}
 
 	public Git getGitApi() {
@@ -196,9 +186,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 
-	public String clone(String group, String uri, File path, String username, String password)
+	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider)
 			throws IOException {
-		return clone(group, uri, path, username, password, false);
+		return clone(group, uri, path, credentialsProvider, false);
 	}
 	
 	/**
@@ -212,7 +202,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @return the name of the cloned repository
 	 */
 	@Override
-	public String clone(String group, String uri, File path, String username, String password, boolean initAndUpdateSubmodules)
+	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider, boolean initAndUpdateSubmodules)
 			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
@@ -227,17 +217,22 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
-			CloneCommand cloneCommand = Git.cloneRepository().setURI(uri).setDirectory(path);
-			if (username != null) {
-				cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					username, password
-				));
-			}
+			CloneCommand cloneCommand = 
+					jGitFactory.newCloneCommand()
+					.setURI(uri).setDirectory(path);
+
+			cloneCommand.setCredentialsProvider(credentialsProvider);
+			
 			this.gitApi = cloneCommand.call();
 			
 			if (initAndUpdateSubmodules) {
 				this.gitApi.submoduleInit().call();
-				this.gitApi.submoduleUpdate().call();
+				SubmoduleUpdateCommand submoduleUpdateCommand = 
+					jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+				
+				submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
+				submoduleUpdateCommand.call();
+				
 			}
 		}
 		catch (GitAPIException e) {
@@ -351,7 +346,22 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IOException(e);
 		}
 	}
-
+	
+	public void add(Path relativePath) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `add` on a detached instance");
+		}
+		try {
+			this.gitApi
+			.add()
+			.addFilepattern(FilenameUtils.separatorsToUnix(relativePath.toString()))
+			.call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException(e);
+		}
+	}
+	
 	@Override
 	public void remove(File targetFile) throws IOException {
 		if (!isAttached()) {
@@ -359,6 +369,17 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
+
+			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
+			Path relativeFilePath = basePath.relativize(absoluteFilePath);
+
+			this.gitApi
+				.rm()
+				.setCached(true)
+				.addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString()))
+				.call();
+			
 			if (targetFile.isDirectory()) {
 				FileUtils.deleteDirectory(targetFile);
 			}
@@ -367,12 +388,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 						"could not remove %s", 
 						targetFile.toString()));
 			}
-
-			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
-			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
-			Path relativeFilePath = basePath.relativize(absoluteFilePath);
-
-			this.gitApi.rm().addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString())).call();
 		}
 		catch (GitAPIException e) {
 			throw new IOException(e);
@@ -380,15 +395,62 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public String removeAndCommit(File targetFile, String committerName, String committerEmail)
+	public String removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `removeSubmodule` on a detached instance");
+		}
+		try {
+			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteFilePath = Paths.get(submodulePath.getAbsolutePath());
+			Path relativeFilePath = basePath.relativize(absoluteFilePath);
+			String relativeUnixStyleFilePath = FilenameUtils.separatorsToUnix(relativeFilePath.toString());
+			
+		    File gitSubmodulesFile = 
+		    	new File(
+		    			this.gitApi.getRepository().getWorkTree(), 
+		    			Constants.DOT_GIT_MODULES );
+		    FileBasedConfig gitSubmodulesConfig = 
+		    		new FileBasedConfig(null, gitSubmodulesFile, FS.DETECTED );		
+		    gitSubmodulesConfig.load();
+		    gitSubmodulesConfig.unsetSection(
+		    		ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
+		    gitSubmodulesConfig.save();
+		    StoredConfig repositoryConfig = this.getGitApi().getRepository().getConfig();
+		    repositoryConfig.unsetSection(
+		    	ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
+		    repositoryConfig.save();
+		    
+		    gitApi.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
+		    gitApi.rm().setCached(true).addFilepattern(relativeUnixStyleFilePath).call();
+
+		    String projectRevisionHash = commit(commitMsg, committerName, committerEmail);
+			
+			File submoduleGitDir = 
+				basePath
+				.resolve(Constants.DOT_GIT)
+				.resolve(Constants.MODULES)
+				.resolve(relativeFilePath).toFile();
+			
+			FileUtils.deleteDirectory(submoduleGitDir);
+			
+			FileUtils.deleteDirectory(absoluteFilePath.toFile());
+
+			return projectRevisionHash;
+		}
+		catch (GitAPIException | ConfigInvalidException e) {
+			throw new IOException(e);
+		}
+	}
+	
+	@Override
+	public String removeAndCommit(File targetFile, String commitMsg, String committerName, String committerEmail)
 			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `removeAndCommit` on a detached instance");
 		}
 
 		this.remove(targetFile);
-		String commitMessage = String.format("Removing %s", targetFile.getName());
-		return this.commit(commitMessage, committerName, committerEmail);
+		return this.commit(commitMsg, committerName, committerEmail);
 	}
 
 	/**
@@ -404,15 +466,15 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *         or the commit operation failed
 	 */
 	@Override
-	public String addAndCommit(File targetFile, byte[] bytes, String committerName, String committerEmail)
+	public String addAndCommit(
+		File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail)
 			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addAndCommit` on a detached instance");
 		}
 
 		this.add(targetFile, bytes);
-		String commitMessage = String.format("Adding %s", targetFile.getName());
-		return this.commit(commitMessage, committerName, committerEmail);
+		return this.commit(commitMsg, committerName, committerEmail);
 	}
 
 	/**
@@ -458,7 +520,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws IOException if the submodule couldn't be added
 	 */
 	@Override
-	public void addSubmodule(File path, String uri, String username, String password)
+	public void addSubmodule(File path, String uri, CredentialsProvider credentialsProvider)
 			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addSubmodule` on a detached instance");
@@ -471,26 +533,14 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		try {
 			SubmoduleAddCommand submoduleAddCommand = 
-				new RelativeSubmoduleAddCommand(gitApi.getRepository())
+				jGitFactory.newSubmoduleAddCommand(gitApi.getRepository())
 					.setURI(uri)
 					.setPath(unixStyleRelativeSubmodulePath);
-			
-			if (username != null) {
-				submoduleAddCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					username, password
-				));
-			}
+			//needs permissions because the submodule is cloned from remote first and then added locally
+			submoduleAddCommand.setCredentialsProvider(credentialsProvider);
 
 			Repository repository = submoduleAddCommand.call();
 			repository.close();
-			// TODO: pull commit up to have one commit for multiple submodules (e.g. add a corpus of documents)
-			gitApi.commit().setMessage("Added submodule " + path.toString()).call(); //TODO: resource title instead of filepath
-			gitApi
-				.push()
-				.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					username, password
-				))
-				.call(); //TODO: push might need a pull first in collaborative settings!
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to add submodule", e);
@@ -505,18 +555,14 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws IOException if the push operation failed
 	 */
 	@Override
-	public void push(String username, String password) throws IOException {
+	public void push(CredentialsProvider credentialsProvider) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
 
 		try {
 			PushCommand pushCommand = this.gitApi.push();
-			if (username != null) {
-				pushCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					username, password
-				));
-			}
+			pushCommand.setCredentialsProvider(credentialsProvider);
 			pushCommand.call();
 		}
 		catch (GitAPIException e) {
@@ -532,23 +578,61 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws IOException if the fetch operation failed
 	 */
 	@Override
-	public void fetch(String username, String password) throws IOException {
+	public void fetch(CredentialsProvider credentialsProvider) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `fetch` on a detached instance");
 		}
 
 		try {
 			FetchCommand fetchCommand = this.gitApi.fetch();
-			if (username != null) {
-				fetchCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-					username, password
-				));
-			}
+			fetchCommand.setCredentialsProvider(credentialsProvider);
 			fetchCommand.call();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to fetch", e);
 		}
+	}
+	
+	@Override
+	public MergeResult merge(String branch) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `merge` on a detached instance");
+		}
+
+		try {
+			MergeCommand mergeCommand = this.gitApi.merge();
+			
+			
+			Ref ref = this.gitApi.getRepository().findRef(branch);
+			if (ref != null) {
+				mergeCommand.include(ref);
+			} else {
+				mergeCommand.include(ObjectId.fromString(branch));
+			}
+
+			return mergeCommand.call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to merge", e);
+		}		
+	}
+	
+	@Override
+	public void rebase(String branch) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `rebase` on a detached instance");
+		}
+
+		try {
+			RebaseCommand rebaseCommand = this.gitApi.rebase();
+
+			rebaseCommand.setUpstream(branch);
+
+			rebaseCommand.call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to rebase", e);
+		}		
 	}
 
 	/**
@@ -576,9 +660,22 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
-			CheckoutCommand checkoutCommand = this.gitApi.checkout();
-			checkoutCommand.setCreateBranch(createBranch);
-			checkoutCommand.setName(name).call();
+			if (!this.gitApi.getRepository().getBranch().equals(name)) {
+				CheckoutCommand checkoutCommand = this.gitApi.checkout();
+				if (createBranch) {
+					List<Ref> refs = this.gitApi.branchList().call();
+					if (refs
+						.stream()
+						.map(rev -> rev.getName())
+						.filter(revName -> revName.equals("refs/heads/"+name))
+						.findFirst()
+						.isPresent()) {
+						createBranch = false;
+					}
+				}
+				checkoutCommand.setCreateBranch(createBranch);
+				checkoutCommand.setName(name).call();
+			}
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to checkout", e);
@@ -631,6 +728,21 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
+	public boolean hasUntrackedChanges() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `status` on a detached instance");
+		}
+		
+		try {
+			Status status = gitApi.status().call();
+			
+			return !status.getUntracked().isEmpty() || !status.getUntrackedFolders().isEmpty();
+		} catch (GitAPIException e) {
+			throw new IOException("Failed to check for untracked changes", e);
+		}
+	}
+	
+	@Override
 	public String addAllAndCommit(String message, String committerName, String committerEmail) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addAllAndCommit` on a detached instance");
@@ -668,6 +780,20 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		if (this.gitApi != null) {
 			this.gitApi.close();
 			this.gitApi = null;
+		}
+	}
+	
+	@Override
+	public Status getStatus() throws IOException {
+		try {
+			if (!isAttached()) {
+				throw new IllegalStateException("Can't call `getStatus` on a detached instance");
+			}
+			
+			return gitApi.status().call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to retrieve the status", e);
 		}
 	}
 

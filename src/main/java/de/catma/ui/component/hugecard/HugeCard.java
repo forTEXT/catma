@@ -25,6 +25,6 @@ public class HugeCard extends FlexLayout {
         addComponent(hugeCardBar);
     }
 
-    public ContextMenu getBtnMoreOptionsContextMenu() { return hugeCardBar.getBtnMoreOptionsContextMenu(); }
+    public ContextMenu getMoreOptionsContextMenu() { return hugeCardBar.getMoreOptionsContextMenu(); }
 
 }

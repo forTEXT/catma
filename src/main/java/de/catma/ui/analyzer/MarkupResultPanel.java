@@ -539,7 +539,10 @@ public class MarkupResultPanel extends VerticalLayout {
 											new UserMarkupCollectionReference(
 													tagRow.getMarkupCollectionId(),
 													null, //TODO: revisionHash might be needed
-													new ContentInfoSet())));
+													new ContentInfoSet(),
+													tagRow.getSourceDocumentId(),
+													"" //TODO: sourceDocRev
+													)));
 								}
 								toBeDeletedIDs.add(tagRow.getTagInstanceId());
 							}

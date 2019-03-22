@@ -125,7 +125,10 @@ public class UserMarkupCollectionImport extends ServerResource {
 						new UserMarkupCollectionReference(
 							newUmcID, 
 							null, //TODO: revision hash might be needed
-							new ContentInfoSet()));
+							new ContentInfoSet(),
+							"", //TODO: sourceDocId
+							"" //TODO: sourceDocRev
+						));
 					return true;
 				} catch (IOException e) {
 					e.printStackTrace();

@@ -197,7 +197,7 @@ public class TeiUserMarkupCollectionSerializer {
 		
 		fs.setID(tagInstance.getUuid());
 		fs.setAttributeValue(
-			Attribute.type, tagInstance.getTagDefinition().getUuid());
+			Attribute.type, tagInstance.getTagDefinitionId());
 		for (Property p : tagInstance.getSystemProperties()) {
 			writeProperty(p, fs);
 		}
@@ -222,7 +222,9 @@ public class TeiUserMarkupCollectionSerializer {
 		TeiElement f = new TeiElement(TeiElementName.f);
 		fs.appendChild(f);
 		
-		f.setAttributeValue(Attribute.f_name, Validator.SINGLETON.convertToXMLName(property.getName()));
+		//TODO: check if we need to make a new TeiDoc Version to support this, f_name no longer contains the name but the uuid!
+
+		f.setAttributeValue(Attribute.f_name, Validator.SINGLETON.convertToXMLName(property.getPropertyDefinitionId()));
 
 		if (property.getPropertyValueList().size() > 1) {
 			TeiElement vRange = new TeiElement(TeiElementName.vRange);

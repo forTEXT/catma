@@ -1077,7 +1077,7 @@
  */
 
 .v-vaadin-version:after {
-	content: "8.6.2";
+	content: "8.7.0";
 }
 
 .v-widget {
@@ -9590,6 +9590,70 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-left: 15em;
 }
 
+.catma .v-tree8-node.depth-16 {
+	padding-left: 16em;
+}
+
+.catma .v-tree8-node.depth-17 {
+	padding-left: 17em;
+}
+
+.catma .v-tree8-node.depth-18 {
+	padding-left: 18em;
+}
+
+.catma .v-tree8-node.depth-19 {
+	padding-left: 19em;
+}
+
+.catma .v-tree8-node.depth-20 {
+	padding-left: 20em;
+}
+
+.catma .v-tree8-node.depth-21 {
+	padding-left: 21em;
+}
+
+.catma .v-tree8-node.depth-22 {
+	padding-left: 22em;
+}
+
+.catma .v-tree8-node.depth-23 {
+	padding-left: 23em;
+}
+
+.catma .v-tree8-node.depth-24 {
+	padding-left: 24em;
+}
+
+.catma .v-tree8-node.depth-25 {
+	padding-left: 25em;
+}
+
+.catma .v-tree8-node.depth-26 {
+	padding-left: 26em;
+}
+
+.catma .v-tree8-node.depth-27 {
+	padding-left: 27em;
+}
+
+.catma .v-tree8-node.depth-28 {
+	padding-left: 28em;
+}
+
+.catma .v-tree8-node.depth-29 {
+	padding-left: 29em;
+}
+
+.catma .v-tree8-node.depth-30 {
+	padding-left: 30em;
+}
+
+.catma .v-tree8-node.depth-31 {
+	padding-left: 31em;
+}
+
 .catma .v-tree8-cell-content {
 	display: inline-block;
 	vertical-align: middle;
@@ -10654,6 +10718,70 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-node.depth-15 {
 	padding-left: 15em;
+}
+
+.catma .v-treegrid-node.depth-16 {
+	padding-left: 16em;
+}
+
+.catma .v-treegrid-node.depth-17 {
+	padding-left: 17em;
+}
+
+.catma .v-treegrid-node.depth-18 {
+	padding-left: 18em;
+}
+
+.catma .v-treegrid-node.depth-19 {
+	padding-left: 19em;
+}
+
+.catma .v-treegrid-node.depth-20 {
+	padding-left: 20em;
+}
+
+.catma .v-treegrid-node.depth-21 {
+	padding-left: 21em;
+}
+
+.catma .v-treegrid-node.depth-22 {
+	padding-left: 22em;
+}
+
+.catma .v-treegrid-node.depth-23 {
+	padding-left: 23em;
+}
+
+.catma .v-treegrid-node.depth-24 {
+	padding-left: 24em;
+}
+
+.catma .v-treegrid-node.depth-25 {
+	padding-left: 25em;
+}
+
+.catma .v-treegrid-node.depth-26 {
+	padding-left: 26em;
+}
+
+.catma .v-treegrid-node.depth-27 {
+	padding-left: 27em;
+}
+
+.catma .v-treegrid-node.depth-28 {
+	padding-left: 28em;
+}
+
+.catma .v-treegrid-node.depth-29 {
+	padding-left: 29em;
+}
+
+.catma .v-treegrid-node.depth-30 {
+	padding-left: 30em;
+}
+
+.catma .v-treegrid-node.depth-31 {
+	padding-left: 31em;
 }
 
 .catma .v-treegrid-cell-content {
@@ -17681,6 +17809,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	overflow: auto;
 }
 
+.catma .hugecard-tabbed-view-tabsheet {
+	overflow: hidden !important;
+}
+
 .catma .hugecard__bar + div {
 	margin-left: 32px;
 	margin-top: 14px;
@@ -17790,17 +17922,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma div.documentsgrid__doc {
-	display: block;
+	display: flex;
 	flex-direction: column;
-	flex-grow: 1;
-}
-
-.catma .documentsgrid__doc__title {
-	display: block;
+	height: 100%;
+	justify-content: center;
 }
 
 .catma .documentsgrid__doc__author {
-	display: block;
 	font-size: 0.75em;
 	color: rgba(0, 0, 0, 0.54);
 }
@@ -17891,11 +18019,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	float: right;
 }
 
-.catma .annotate-tagsets-grid .v-treegrid-row-selected > .v-treegrid-cell-focused::before {
+.catma .no-focused-before-border .v-treegrid-row-selected > .v-treegrid-cell-focused::before {
 	border-color: transparent;
 }
 
-.catma .annotate-tagsets-grid .v-treegrid-row-focused::before {
+.catma .no-focused-before-border .v-treegrid-row-focused::before {
 	border-color: transparent;
 }
 
@@ -17987,4 +18115,39 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background-color: transparent;
 	border: none;
 	cursor: pointer;
+}
+
+.catma .annotation-panel-button-right-align {
+	float: right;
+	margin-right: 5px;
+}
+
+.catma .v-treegrid.v-widget.annotation-details-card-property-tree.v-treegrid-annotation-details-card-property-tree.v-has-height {
+	box-shadow: none;
+}
+
+.catma .annotation-details-card-property-tree .v-treegrid-header th {
+	border: none;
+}
+
+.catma .annotation-details-panel-annotation-details-grid :not(.v-treegrid-header) > .v-treegrid-row:last-child {
+	border: none;
+}
+
+.catma .annotation-details-panel-annotation-details-grid .v-treegrid-body .v-treegrid-row:not(:first-child) {
+	border: none;
+}
+
+.catma .annotation-details-panel-annotation-details-grid .v-grid-spacer.stripe > td {
+	background-color: white;
+	border-top: none;
+	border-bottom: none;
+}
+
+.catma .annotation-details-panel-annotation-details-grid .v-treegrid-cell {
+	font-size: 12px;
+}
+
+.catma .v-verticallayout.v-layout.v-vertical.v-widget.annotation-details-panel.v-verticallayout-annotation-details-panel.v-has-width.v-has-height.v-margin-top.v-margin-right.v-margin-bottom.v-margin-left {
+	padding: 0px;
 }

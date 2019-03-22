@@ -20,6 +20,7 @@ package de.catma.queryengine.result;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +28,10 @@ import java.util.Set;
 public class QueryResultRowArray extends ArrayList<QueryResultRow> implements QueryResult {
 
 	public QueryResultRowArray() {
+	}
+	
+	public QueryResultRowArray(Collection<QueryResultRow> rows) {
+		addAll(rows);
 	}
 
 	@Override

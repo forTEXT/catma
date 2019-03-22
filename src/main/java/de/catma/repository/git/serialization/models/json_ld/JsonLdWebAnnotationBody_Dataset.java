@@ -21,6 +21,7 @@ import de.catma.repository.git.GitProjectManager;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
 
 /**
  * Represents a Web Annotation Data Model conformant annotation body of type 'Dataset'.
@@ -44,7 +45,8 @@ public class JsonLdWebAnnotationBody_Dataset {
 		this.properties.put(USER_PROPERTIES_KEY, new TreeMap<>());
 	}
 
-	public JsonLdWebAnnotationBody_Dataset(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences)
+	public JsonLdWebAnnotationBody_Dataset(
+		String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		this();
 		this.context.put("tagset", "http://catma.de/portal/tagset");  // TODO: what should this URL be?
@@ -60,13 +62,15 @@ public class JsonLdWebAnnotationBody_Dataset {
 			);
 		}
 
-		TagDefinition tagDefinition = tagReferences.get(0).getTagDefinition();
-		TagInstance tagInstance = tagReferences.get(0).getTagInstance();
+		String tagDefinitionId = tagReferences.iterator().next().getTagDefinitionId();
+		TagDefinition tagDefinition = tagLibrary.getTagDefinition(tagDefinitionId);
+		
+		TagInstance tagInstance = tagReferences.iterator().next().getTagInstance();
 
 		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 		this.tagset = this.buildTagsetUrl(
-			gitServerBaseUrl, projectRootRepositoryName, tagDefinition.getTagsetDefinitionUuid()
+			gitServerBaseUrl, projectRootRepositoryName, tagInstance.getTagsetId()
 		).toString();
 
 		this.tag = this.buildTagDefinitionUrl(this.tagset, tagDefinition).toString();
@@ -122,19 +126,19 @@ public class JsonLdWebAnnotationBody_Dataset {
 		for (Property property : properties) {
 			// add entries to the context that allow us to have PropertyDefinition URLs aliased by name
 			this.context.put(
-				property.getPropertyDefinition().getUuid(),
-				this.buildPropertyDefinitionUrl(tagDefinitionUrl, property.getPropertyDefinition().getUuid()).toString()
+				property.getPropertyDefinitionId(),
+				this.buildPropertyDefinitionUrl(tagDefinitionUrl, property.getPropertyDefinitionId()).toString()
 			);
 
 			// add property values
 			if (system) {
 				this.properties.get("system").put(
-					property.getPropertyDefinition().getUuid(), new TreeSet<>(property.getPropertyValueList())
+					property.getPropertyDefinitionId(), new TreeSet<>(property.getPropertyValueList())
 				);
 			}
 			else {
 				this.properties.get("user").put(
-					property.getPropertyDefinition().getUuid(), new TreeSet<>(property.getPropertyValueList())
+					property.getPropertyDefinitionId(), new TreeSet<>(property.getPropertyValueList())
 				);
 			}
 		}

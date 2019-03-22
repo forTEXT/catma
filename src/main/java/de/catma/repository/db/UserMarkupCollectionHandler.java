@@ -95,6 +95,7 @@ import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
+@Deprecated
 class UserMarkupCollectionHandler {
 	
 	private final static class ColorPropertyValueInfo {
@@ -224,7 +225,9 @@ class UserMarkupCollectionHandler {
 					new UserMarkupCollectionReference(
 							String.valueOf(userMarkupCollectionId), 
 							null,
-							new ContentInfoSet(name));
+							new ContentInfoSet(name),
+							"",
+							"");
 			
 			sourceDocument.addUserMarkupCollectionReference(reference);
 			
@@ -264,7 +267,7 @@ class UserMarkupCollectionHandler {
 		dbRepository.setTagManagerListenersEnabled(false);
 		UserMarkupCollection umc = null;
 		try {
-			umc = userMarkupCollectionSerializationHandler.deserialize(null, inputStream);
+			umc = userMarkupCollectionSerializationHandler.deserialize(sourceDocument, null, inputStream);
 		}
 		finally {
 			dbRepository.setTagManagerListenersEnabled(true);
@@ -398,7 +401,9 @@ class UserMarkupCollectionHandler {
 				new UserMarkupCollectionReference(
 						String.valueOf(userMarkupCollectionId), 
 						null,
-						umc.getContentInfoSet());
+						umc.getContentInfoSet(),
+						sourceDocument.getID(),
+						sourceDocument.getRevisionHash());
 		sourceDocument.addUserMarkupCollectionReference(umcRef);
 		
 		return umcRef;
@@ -423,9 +428,9 @@ class UserMarkupCollectionHandler {
 			else {
 				TagInstance ti = tr.getTagInstance();
 
-				TagDefinition tDef = 
-					umc.getTagLibrary().getTagDefinition(
-						tr.getTagInstance().getTagDefinition().getUuid());
+				TagDefinition tDef = null;
+//					umc.getTagLibrary().getTagDefinition(
+//						tr.getTagInstance().getTagDefinition().getUuid());
 				
 				curTagInstanceId = 
 				db.insertInto(
@@ -451,98 +456,97 @@ class UserMarkupCollectionHandler {
 							(String)null));
 
 				boolean authorPresent = false;
-				for (Property p : ti.getSystemProperties()) {
-					
-					if (p.getPropertyDefinition().getName().equals(
-							PropertyDefinition.SystemPropertyName.catma_markupauthor.name())) {
-						p.setPropertyValueList(Collections.singleton(
-								dbRepository.getCurrentUser().getIdentifier()));
-						authorPresent = true;
-					}
-					
-					Integer propertyId = db
-						.insertInto(
-							PROPERTY,
-								PROPERTY.PROPERTYDEFINITIONID,
-								PROPERTY.TAGINSTANCEID)
-						.values(
-							0, //p.getPropertyDefinition().getId(), obsolete
-							curTagInstanceId)
-						.returning(PROPERTY.PROPERTYID)
-						.fetchOne()
-						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+//				for (Property p : ti.getSystemProperties()) {
+//					
+//					if (p.getPropertyDefinitionId().equals(
+//							PropertyDefinition.SystemPropertyName.catma_markupauthor.name())) {
+//						p.setPropertyValueList(Collections.singleton(
+//								dbRepository.getCurrentUser().getIdentifier()));
+//						authorPresent = true;
+//					}
+//					
+//					Integer propertyId = db
+//						.insertInto(
+//							PROPERTY,
+//								PROPERTY.PROPERTYDEFINITIONID,
+//								PROPERTY.TAGINSTANCEID)
+//						.values(
+//							0, //p.getPropertyDefinition().getId(), obsolete
+//							curTagInstanceId)
+//						.returning(PROPERTY.PROPERTYID)
+//						.fetchOne()
+//						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+//				
+//					
+//					for (String value : p.getPropertyValueList()) {
+//						pValueInsertBatch.bind(propertyId, value);
+//					}
+//					
+//				}
 				
-					
-					for (String value : p.getPropertyValueList()) {
-						pValueInsertBatch.bind(propertyId, value);
-					}
-					
-				}
-				
-				if (!authorPresent) {
-					Property authorNameProp = 
-						new Property(
-							tDef.getPropertyDefinition(
-								PropertyDefinition.SystemPropertyName.catma_markupauthor.name()),
-							Collections.singleton(
-								dbRepository.getCurrentUser().getIdentifier()));
-					ti.addSystemProperty(authorNameProp);
-					
-					Integer propertyId = db
-						.insertInto(
-							PROPERTY,
-								PROPERTY.PROPERTYDEFINITIONID,
-								PROPERTY.TAGINSTANCEID)
-						.values(
-							0, //authorNameProp.getPropertyDefinition().getId(), obsolete
-							curTagInstanceId)
-						.returning(PROPERTY.PROPERTYID)
-						.fetchOne()
-						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
-
-					pValueInsertBatch.bind(
-						propertyId, 
-						authorNameProp.getFirstValue());
+//				if (!authorPresent) {
+//					Property authorNameProp = 
+//						new Property(
+//							PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
+//							Collections.singleton(
+//								dbRepository.getCurrentUser().getIdentifier()));
+//					ti.addSystemProperty(authorNameProp);
+//					
+//					Integer propertyId = db
+//						.insertInto(
+//							PROPERTY,
+//								PROPERTY.PROPERTYDEFINITIONID,
+//								PROPERTY.TAGINSTANCEID)
+//						.values(
+//							0, //authorNameProp.getPropertyDefinition().getId(), obsolete
+//							curTagInstanceId)
+//						.returning(PROPERTY.PROPERTYID)
+//						.fetchOne()
+//						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+//
+//					pValueInsertBatch.bind(
+//						propertyId, 
+//						authorNameProp.getFirstValue());
 				}
 					 
-				for (Property p : ti.getUserDefinedProperties()) {
-					if (!p.getPropertyValueList().isEmpty()) {
-						Integer propertyId = db
-							.insertInto(
-								PROPERTY,
-									PROPERTY.PROPERTYDEFINITIONID,
-									PROPERTY.TAGINSTANCEID)
-							.values(
-								0, //p.getPropertyDefinition().getId(), obsolete
-								curTagInstanceId)
-							.returning(PROPERTY.PROPERTYID)
-							.fetchOne()
-							.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
-					
-						
-						for (String value : p.getPropertyValueList()) {
-							pValueInsertBatch.bind(propertyId, value);
-						}
-					}
-				}
-
-				pValueInsertBatch.execute();
+//				for (Property p : ti.getUserDefinedProperties()) {
+//					if (!p.getPropertyValueList().isEmpty()) {
+//						Integer propertyId = db
+//							.insertInto(
+//								PROPERTY,
+//									PROPERTY.PROPERTYDEFINITIONID,
+//									PROPERTY.TAGINSTANCEID)
+//							.values(
+//								0, //p.getPropertyDefinition().getId(), obsolete
+//								curTagInstanceId)
+//							.returning(PROPERTY.PROPERTYID)
+//							.fetchOne()
+//							.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+//					
+//						
+//						for (String value : p.getPropertyValueList()) {
+//							pValueInsertBatch.bind(propertyId, value);
+//						}
+//					}
+//				}
+//
+//				pValueInsertBatch.execute();
 			}
 			
-			db
-			.insertInto(
-				TAGREFERENCE,
-					TAGREFERENCE.CHARACTERSTART,
-					TAGREFERENCE.CHARACTEREND,
-					TAGREFERENCE.USERMARKUPCOLLECTIONID,
-					TAGREFERENCE.TAGINSTANCEID)
-			.values(
-				tr.getRange().getStartPoint(),
-				tr.getRange().getEndPoint(),
-				Integer.valueOf(umc.getId()),
-				curTagInstanceId)
-			.execute();
-		}
+//			db
+//			.insertInto(
+//				TAGREFERENCE,
+//					TAGREFERENCE.CHARACTERSTART,
+//					TAGREFERENCE.CHARACTEREND,
+//					TAGREFERENCE.USERMARKUPCOLLECTIONID,
+//					TAGREFERENCE.TAGINSTANCEID)
+//			.values(
+//				tr.getRange().getStartPoint(),
+//				tr.getRange().getEndPoint(),
+//				Integer.valueOf(umc.getId()),
+//				curTagInstanceId)
+//			.execute();
+//		}
 	}
 
 	void delete(

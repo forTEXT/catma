@@ -1,5 +1,6 @@
 package de.catma.ui.modules.project;
 
+import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
@@ -18,5 +19,9 @@ public interface Resource {
     boolean hasDetail();
     
 	public String getIcon();
+
+	public void deleteFrom(Repository project) throws Exception;
+	
+	public default boolean isCollection() { return false; };
 
 }

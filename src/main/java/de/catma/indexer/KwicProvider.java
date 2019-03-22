@@ -28,7 +28,6 @@ import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 
 import de.catma.document.Range;
 import de.catma.document.source.IndexInfoSet;
-import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 
 public class KwicProvider {
@@ -45,16 +44,16 @@ public class KwicProvider {
 					.getSourceDocumentInfo().getIndexInfoSet();
 	}
 	
-	public List<KeywordInContext> getKwic(
+	public List<KeywordInSpanContext> getKwic(
 			List<Range> ranges, int span) throws IOException {
-		List<KeywordInContext> result = new ArrayList<KeywordInContext>();
+		List<KeywordInSpanContext> result = new ArrayList<KeywordInSpanContext>();
 		for (Range r : ranges) {
 			result.add(getKwic(r, span));
 		}
 		return result;
 	}
 	
-    public KeywordInContext getKwic(Range range, int span) throws IOException {
+    public KeywordInSpanContext getKwic(Range range, int span) throws IOException {
 
         SpanContext spanContext =
                 getSpanContextFor(range, span, SpanDirection.BOTH);

@@ -44,7 +44,6 @@ public class SQLWildcard2RegexConverter {
 			currentState = currentState.getHandler().handleCharacter(c, context);
 		}
 		
-		System.out.println(context);
 		return context.toString();
 	}
 	

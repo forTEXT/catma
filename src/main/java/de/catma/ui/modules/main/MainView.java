@@ -15,7 +15,7 @@ import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.analyzer.AnalyzerManagerView;
-import de.catma.ui.events.CloseableEvent;
+import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
@@ -98,7 +98,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
         initComponents();
         addStyleName("main-view");
         eventBus.register(this);
-        eventBus.post(new CloseableEvent(this));
+        eventBus.post(new RegisterCloseableEvent(this));
         
     }
 
@@ -120,12 +120,25 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
     	this.viewSection.addComponent(component);
     }
 
+    private void closeViews() {
+		if (this.projectView != null) {
+			this.projectView.close();
+			this.projectView = null;
+		}
+		if (this.taggerManagerView != null) {
+			this.taggerManagerView.closeClosables();
+			this.taggerManagerView = null;
+		}
+		if (this.analyzerManagerView != null) {
+			this.analyzerManagerView.closeClosables();
+			this.analyzerManagerView = null;
+		}	    	
+    }
     
 	@Override
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
-			this.projectView = null;
-			this.taggerManagerView = null;
+			closeViews();
 			setContent(new DashboardView(projectManager, eventBus, remoteGitManagerRestricted));
 			eventBus.post(new HeaderContextChangeEvent(new Label("")));
 			currentRoute = routeToDashboardEvent.getClass();
@@ -186,9 +199,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 
 	@Override
 	public void close() throws IOException {
-		if (projectView != null) {
-			projectView.close();
-		}
+		closeViews();
 	}
     
 }

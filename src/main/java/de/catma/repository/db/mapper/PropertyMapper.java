@@ -16,6 +16,7 @@ import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.util.IDGenerator;
 
+@Deprecated
 public class PropertyMapper implements RecordMapper<Record, Property> {
 	
 	private TagDefinition tagDefinition;
@@ -32,9 +33,7 @@ public class PropertyMapper implements RecordMapper<Record, Property> {
 
 	public Property map(Record record) {
 		return new Property(
-			tagDefinition.getPropertyDefinition(
-				idGenerator.uuidBytesToCatmaID(
-						record.getValue(PROPERTYDEFINITION.UUID))),
+			"",
 				createValueList(record.getValue(PROPERTY.PROPERTYID)));
 	}
 

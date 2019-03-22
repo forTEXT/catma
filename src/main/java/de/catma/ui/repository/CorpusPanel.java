@@ -89,6 +89,7 @@ import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
 import de.catma.user.Permission;
 
+@Deprecated
 public class CorpusPanel extends VerticalLayout {
 	private static class CorpusProperty extends AbstractProperty {
 		private Corpus corpus;

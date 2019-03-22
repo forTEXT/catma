@@ -2,6 +2,7 @@ package de.catma.ui.modules.project;
 
 import com.vaadin.icons.VaadinIcons;
 
+import de.catma.document.repository.Repository;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 public class CollectionResource implements Resource {
@@ -36,4 +37,18 @@ public class CollectionResource implements Resource {
 		return collectionReference;
 	}
     
+    @Override
+    public String toString() {
+    	return getName();
+    }
+    
+    @Override
+    public void deleteFrom(Repository project) throws Exception {
+    	project.delete(collectionReference);
+    }
+    
+    @Override
+    public boolean isCollection() {
+    	return true;
+    }
 }

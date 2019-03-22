@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.jgit.transport.CredentialsProvider;
 
 import com.google.common.collect.Maps;
 
@@ -31,19 +32,24 @@ import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
 public class GitSourceDocumentHandler {
 	private Logger logger = Logger.getLogger(GitSourceDocumentHandler.class.getName());
 	
-    private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitManagerRestricted remoteGitServerManager;
-
 	private static final String SOURCEDOCUMENT_REPOSITORY_NAME_FORMAT = "%s_sourcedocument";
-
+	
 	public static String getSourceDocumentRepositoryName(String sourceDocumentId) {
 		return String.format(SOURCEDOCUMENT_REPOSITORY_NAME_FORMAT, sourceDocumentId);
 	}
+	
+    private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
+
+	private final CredentialsProvider credentialsProvider;
+
 
 	public GitSourceDocumentHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager,
+			CredentialsProvider credentialsProvider) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
+		this.credentialsProvider = credentialsProvider;
 	}
 
 	/**
@@ -96,8 +102,7 @@ public class GitSourceDocumentHandler {
 				projectId,
 				response.repositoryHttpUrl,
 				null,
-				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getPassword()
+				credentialsProvider
 			);
 
 			// write the original and converted source document files into the local repo

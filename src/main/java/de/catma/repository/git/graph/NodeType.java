@@ -1,8 +1,6 @@
 package de.catma.repository.git.graph;
 
-import org.neo4j.graphdb.Label;
-
-public enum NodeType implements Label {
+public enum NodeType {
 	User,
 	Project, 
 	ProjectRevision,
@@ -19,10 +17,9 @@ public enum NodeType implements Label {
 	Tag,
 	Property,
 	
+	DeletedProject,
 	DeletedTag,
 	DeletedProperty,
-	DeletedTagInstance,
-	DeletedAnnotationProperty,
 	;
 	
 	public static String nt(NodeType nodeType) {

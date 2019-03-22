@@ -3,6 +3,8 @@ package de.catma.serialization.intrinsic.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +39,6 @@ public class XmlMarkupCollectionSerializationHandler implements
 	
 	private SourceDocument sourceDocument;
 	private TagManager tagManager;
-	private String sourceDocumentId;
 	private IDGenerator idGenerator;
 	private HashMap<String, TagDefinition> pathToTagDefMap;
 	private XML2ContentHandler xmlContentHandler;
@@ -45,11 +46,9 @@ public class XmlMarkupCollectionSerializationHandler implements
 
 	
 	public XmlMarkupCollectionSerializationHandler(
-			SourceDocument sourceDocuemnt,TagManager tagManager, String sourceDocumentId, XML2ContentHandler xmlContentHandler) {
+			TagManager tagManager, XML2ContentHandler xmlContentHandler) {
 		super();
-		this.sourceDocument=sourceDocuemnt;
 		this.tagManager = tagManager;
-		this.sourceDocumentId = sourceDocumentId;
 		this.idGenerator = new IDGenerator();
 		this.pathToTagDefMap = new HashMap<>();
 		this.xmlContentHandler = xmlContentHandler;
@@ -65,7 +64,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	}
 
 	@Override
-	public UserMarkupCollection deserialize(String id, InputStream inputStream)
+	public UserMarkupCollection deserialize(SourceDocument sourceDocument, String id, InputStream inputStream)
 			throws IOException {
 		
 		try {
@@ -84,7 +83,9 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        		new IDGenerator().generate(),
 	        		new ContentInfoSet(
 	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
-	        		tagManager.getTagLibrary());
+	        		tagManager.getTagLibrary(),
+	        		sourceDocument.getID(),
+	        		sourceDocument.getRevisionHash());
 	        
 	        scanElements(
 	        		contentBuilder, 
@@ -192,7 +193,13 @@ public class XmlMarkupCollectionSerializationHandler implements
 			
         }
         
-        TagInstance tagInstance = new TagInstance(idGenerator.generate(), tagDefinition);
+        TagInstance tagInstance = new TagInstance(
+        	idGenerator.generate(), 
+        	tagDefinition.getUuid(),
+        	tagDefinition.getAuthor(),
+        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+        	tagDefinition.getUserDefinedPropertyDefinitions(),
+        	tagDefinition.getTagsetDefinitionUuid());
 
         for (int i=0; i<element.getAttributeCount(); i++) {
         	PropertyDefinition propertyDefinition = 
@@ -218,12 +225,13 @@ public class XmlMarkupCollectionSerializationHandler implements
         	}
         	Property property = 
         		new Property(
-        			propertyDefinition, 
+        			propertyDefinition.getUuid(), 
         			Collections.singleton(element.getAttribute(i).getValue()));
         	tagInstance.addUserDefinedProperty(property);
         }
         														
-        TagReference tagReference = new TagReference(tagInstance, sourceDocumentId, range, userMarkupCollection.getId());
+        TagReference tagReference = new TagReference(
+        	tagInstance, sourceDocument.getID(), range, userMarkupCollection.getId());
         userMarkupCollection.addTagReference(tagReference);
      
         elementStack.pop();	

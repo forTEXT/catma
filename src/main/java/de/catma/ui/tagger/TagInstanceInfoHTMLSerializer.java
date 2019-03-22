@@ -2,16 +2,25 @@ package de.catma.ui.tagger;
 
 import java.util.List;
 
-import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
+import de.catma.document.repository.Repository;
+import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
+import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import nu.xom.Attribute;
 import nu.xom.Element;
 
 public class TagInstanceInfoHTMLSerializer {
 
-	public String toHTML(TagInstanceInfo tagInstanceInfo) {
+	private Repository project;
+
+	public TagInstanceInfoHTMLSerializer(Repository project) {
+		this.project = project;
+	}
+
+	public String toHTML(Annotation tagInstanceInfo) {
 		
 		Element table = new Element("table"); //$NON-NLS-1$
 		table.addAttribute(new Attribute("class", "taginstanceinfo")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -24,10 +33,10 @@ public class TagInstanceInfoHTMLSerializer {
 		addRow(table, "Collection", tagInstanceInfo.getUserMarkupCollection().getName()); //$NON-NLS-1$
 		
 		TagInstance tagInstance = tagInstanceInfo.getTagInstance();
+		String tagId = tagInstance.getTagDefinitionId();
+		String author = tagInstance.getAuthor();
+		TagDefinition tag = project.getTagManager().getTagLibrary().getTagDefinition(tagId);
 		
-		String author = tagInstance.getSystemProperty(
-			tagInstance.getTagDefinition().getPropertyDefinition(
-				SystemPropertyName.catma_markupauthor.name()).getName()).getFirstValue();
 		addRow(table, "Author", author); //$NON-NLS-1$
 		
 		if (!tagInstance.getUserDefinedProperties().isEmpty()) {
@@ -38,8 +47,14 @@ public class TagInstanceInfoHTMLSerializer {
 			
 			for (Property property : tagInstance.getUserDefinedProperties()) {
 				List<String> values = property.getPropertyValueList();
-				
-				addRow(table, property.getName(), values.isEmpty()?"":values.size() > 1?values.toString():values.get(0)); //$NON-NLS-1$
+				PropertyDefinition propertyDefinition = 
+						tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId());
+				if (propertyDefinition != null) { // may be deleted already
+					addRow(
+							table, 
+							tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId()).getName(), 
+							values.isEmpty()?"":values.size() > 1?values.toString():values.get(0)); //$NON-NLS-1$
+				}
 			}
 		}		
 		

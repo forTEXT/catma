@@ -42,15 +42,22 @@ import com.google.inject.Key;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
+import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.JavaScript;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.renderers.ButtonRenderer;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -74,7 +81,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.events.CloseableEvent;
+import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.TokenInvalidEvent;
 import de.catma.ui.events.TokenValidEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -137,6 +144,36 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
+		boolean nase = false;
+		//TODO: remove test code
+		
+		if (nase) {
+			VerticalLayout nasenPanel = new VerticalLayout();
+			nasenPanel.addComponent(new Label("Nase1"));
+			nasenPanel.addComponent(new Label("Nase2"));
+			nasenPanel.addComponent(new Label("Nase3"));
+			
+			
+			TreeData<String> treeData = new TreeData<>();
+			for (int i=0; i<8;i++) {
+				treeData.addItem(null, "item"+i);
+			}
+			
+			for (int i=0; i<10; i++) {
+				treeData.addItem("item5", "child"+i);
+			}
+			TreeDataProvider<String> dp = new TreeDataProvider<>(treeData);
+			TreeGrid<String> grid = new TreeGrid<String>(dp);
+			grid.setHierarchyColumn(
+					grid.addColumn(item -> item.toString()).setCaption("Name"));
+			ButtonRenderer<String> buttonRenderer = new ButtonRenderer<>(clickEvent -> System.out.println("clicked"));
+			buttonRenderer.setHtmlContentAllowed(true);
+			grid.addColumn(item->VaadinIcons.ABACUS.getHtml(), buttonRenderer).setCaption("Click").setHidable(true);
+			nasenPanel.addComponent(grid);
+			
+			setContent(nasenPanel);
+			return;
+		}
 
 		Page.getCurrent().setTitle(Version.LATEST.toString()); //$NON-NLS-1$
 		
@@ -172,6 +209,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			tokenManager.handleVerify( request.getParameter("token"), eventBus);
 		}
 		
+//		this.setPollInterval(1000);
 	}
 	
 	@Override
@@ -183,10 +221,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		}
 	}
 	
-//			logger.info("closing session and redirecting to " + afterLogoutRedirectURL);
-//			Page.getCurrent().setLocation(afterLogoutRedirectURL);
-//			VaadinSession.getCurrent().close();
-//	
 	private void storeParameters(Map<String, String[]> parameters) {
 		this.parameters.putAll(parameters);
 	}
@@ -315,12 +349,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 
 	@Override
 	public void close() {
-		IRemoteGitManagerRestricted api = loginservice.getAPI();
 
-		if(api != null){
-			logger.info("application for user " + api.getUsername() + " has been closed");
-		}
-		
 		for (WeakReference<Closeable> weakReference : closeListener) {
 			Closeable ref = weakReference.get();
 			if (ref != null) {
@@ -330,6 +359,12 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 					logger.log(Level.INFO,"couldn't cleanup resource",e);
 				}
 			}
+		}
+		
+		IRemoteGitManagerRestricted api = loginservice.getAPI();
+		
+		if(api != null){
+			logger.info("application for user " + api.getUsername() + " has been closed");
 		}
 		
 		initService.shutdown();
@@ -414,8 +449,8 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	}
 	
 	@Subscribe
-	public void handleClosableResources(CloseableEvent closeableEvent ){
-		closeListener.add(new WeakReference<Closeable>(closeableEvent.getCloseable()));
+	public void handleClosableResources(RegisterCloseableEvent registerCloseableEvent ){
+		closeListener.add(new WeakReference<Closeable>(registerCloseableEvent.getCloseable()));
 	}
 	
 }

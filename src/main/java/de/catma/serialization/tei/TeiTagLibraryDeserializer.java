@@ -65,9 +65,9 @@ public class TeiTagLibraryDeserializer {
 							tagsetDefinitionElement.getID(),tagsetName, 
 							new Version(versionString));
 			
-			addTagDefinitions(tagsetDefinition, tagsetDefinitionElement.getChildElements(TeiElementName.fsDecl));
-
 			tagManager.addTagsetDefinition(tagsetDefinition);
+			
+			addTagDefinitions(tagsetDefinition, tagsetDefinitionElement.getChildElements(TeiElementName.fsDecl));
 		}
 	}
 
@@ -81,7 +81,7 @@ public class TeiTagLibraryDeserializer {
 			
 			String description = "";
 			
-			if ((descriptionElement != null) && (descriptionElement != null)) {
+			if ((descriptionElement != null) && (descriptionElement.getValue() != null)) {
 				description = descriptionElement.getValue();
 			}
 			

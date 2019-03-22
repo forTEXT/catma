@@ -14,6 +14,10 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.transport.CredentialsProvider;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
@@ -27,6 +31,7 @@ import de.catma.tag.TagsetDefinition;
 public class GitTagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final CredentialsProvider credentialsProvider;
 
 	private static final String TAGSET_REPOSITORY_NAME_FORMAT = "%s_tagset";
 
@@ -35,9 +40,10 @@ public class GitTagsetHandler {
 	}
 
 	public GitTagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
+		this.credentialsProvider = credentialsProvider;
 	}
 
 	/**
@@ -70,9 +76,8 @@ public class GitTagsetHandler {
 			localGitRepoManager.clone(
 					projectId,
 					createRepositoryResponse.repositoryHttpUrl,
-					null,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword()
+					null, // destination path is created by the repo manager 
+					credentialsProvider
 			);
 
 			// write header.json into the local repo
@@ -84,16 +89,13 @@ public class GitTagsetHandler {
 			String revisionHash = localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
+					String.format("Added Tagset %1$s with ID %2$s", name, tagsetId),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
 			
 			return revisionHash;
 		}
-	}
-
-	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
-		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	private ArrayList<TagDefinition> openTagDefinitions(File parentDirectory) throws IOException {
@@ -139,7 +141,37 @@ public class GitTagsetHandler {
 		}		
 	}
 	
-	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
+	public MergeResult synchronizeBranchWithRemoteMaster(
+			String branch, String projectId, String tagsetId) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
+			
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			localGitRepoManager.checkout(Constants.MASTER, false);
+			
+			localGitRepoManager.fetch(credentialsProvider);
+			
+			MergeResult mergeResult = localGitRepoManager.merge(branch);
+			
+			if (mergeResult.getMergeStatus().isSuccessful()) {
+				
+				localGitRepoManager.push(credentialsProvider);
+				
+				localGitRepoManager.checkout(branch, false);
+				
+				localGitRepoManager.rebase(Constants.MASTER);
+			}
+			
+			return mergeResult;
+		}		
+	}
+	
+	public TagsetDefinition getTagset(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
@@ -188,7 +220,8 @@ public class GitTagsetHandler {
 	public String createOrUpdateTagDefinition(
 			String projectId,
 			String tagsetId,
-			TagDefinition tagDefinition
+			TagDefinition tagDefinition,
+			String commitMsg
 	) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -217,6 +250,7 @@ public class GitTagsetHandler {
 			String tagsetRevision = localGitRepoManager.addAndCommit(
 				targetPropertyDefinitionsFileAbsolutePath, 
 				serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8), 
+				commitMsg,
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail());
 			
@@ -262,6 +296,10 @@ public class GitTagsetHandler {
 
 			String tagsetRevision = localGitRepoManager.removeAndCommit(
 					targetTagDefinitionsFolderAbsolutePath, 
+					String.format(
+						"Removing Tag %1$s with ID %2$s", 
+						tagDefinition.getName(), 
+						tagDefinition.getUuid()),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail());
 				
@@ -315,6 +353,9 @@ public class GitTagsetHandler {
 			String tagsetRevision = localGitRepoManager.addAndCommit(
 				targetPropertyDefinitionsFileAbsolutePath, 
 				serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8), 
+				String.format("Removed Property Definition %1$s with ID %2$s from Tag %3$s with ID %4$s",
+					propertyDefinition.getName(), propertyDefinition.getUuid(),
+					tagDefinition.getName(), tagDefinition.getUuid()),
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail());
 			
@@ -322,4 +363,56 @@ public class GitTagsetHandler {
 			return tagsetRevision;
 		}
 	}
+
+	public String updateTagsetDefinition(String projectId, TagsetDefinition tagsetDefinition) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetDefinition.getUuid();
+			
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			GitTagsetHeader header = 
+					new GitTagsetHeader(
+							tagsetDefinition.getName(), 
+							"", //TODO: description
+							new TreeSet<>(tagsetDefinition.getDeletedDefinitions()));
+			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
+			
+			localGitRepoManager.add(
+					targetHeaderFile,
+					serializedHeader.getBytes(StandardCharsets.UTF_8));
+
+			String tagsetRevision = localGitRepoManager.addAndCommit(
+					targetHeaderFile, 
+					serializedHeader.getBytes(StandardCharsets.UTF_8), 
+					String.format("Updated metadata of Tagset %1$s with ID %2$s", 
+						tagsetDefinition.getName(), tagsetDefinition.getUuid()),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
+
+			return tagsetRevision;
+		}
+	}
+
+	public Status getStatus(String projectId, String tagsetId) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
+			
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+			
+			return localGitRepositoryManager.getStatus();
+		}
+	}
+
 }

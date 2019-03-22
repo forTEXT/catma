@@ -16,16 +16,16 @@ import de.catma.ui.util.Styles;
 public class HugeCardBar extends HorizontalLayout {
 
     private final String title;
-    private final IconButton buttonMoreOptions;
-    private final ContextMenu ctmMoreOptions;
-    private final HorizontalLayout moreOptions;
+    private final IconButton btMoreOptions;
+    private final ContextMenu moreOptionsContextMenu;
+    private final HorizontalLayout moreOptionsPanel;
 
     public HugeCardBar(String title){
         this.title = title;
-        moreOptions = new HorizontalLayout();
-        buttonMoreOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
-        ctmMoreOptions = new ContextMenu(buttonMoreOptions, false);
-        buttonMoreOptions.addClickListener((evt) ->  ctmMoreOptions.open(evt.getClientX(), evt.getClientY()));
+        moreOptionsPanel = new HorizontalLayout();
+        btMoreOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
+        moreOptionsContextMenu = new ContextMenu(btMoreOptions, false);
+        btMoreOptions.addClickListener((evt) ->  moreOptionsContextMenu.open(evt.getClientX(), evt.getClientY()));
         initComponents();
     }
 
@@ -34,12 +34,12 @@ public class HugeCardBar extends HorizontalLayout {
         Label headerText = new Label(title);
         headerText.setWidth("100%");
         addComponent(headerText);
-        moreOptions.setStyleName(Styles.hugecard__bar__moreoptions);
-        buttonMoreOptions.addStyleName(Styles.hugecard__bar__moreoptions__btn);
-        moreOptions.addComponent(buttonMoreOptions);
-        addComponent(moreOptions);
+        moreOptionsPanel.setStyleName(Styles.hugecard__bar__moreoptions);
+        btMoreOptions.addStyleName(Styles.hugecard__bar__moreoptions__btn);
+        moreOptionsPanel.addComponent(btMoreOptions);
+        addComponent(moreOptionsPanel);
     }
 
-    public ContextMenu getBtnMoreOptionsContextMenu() { return this.ctmMoreOptions; }
+    public ContextMenu getMoreOptionsContextMenu() { return this.moreOptionsContextMenu; }
 
 }

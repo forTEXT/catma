@@ -358,4 +358,8 @@ public class Page {
 			}
 		}
 	}
+
+	public boolean contains(String annotationId) {
+		return this.relativeTagInstances.containsKey(annotationId);
+	}
 }

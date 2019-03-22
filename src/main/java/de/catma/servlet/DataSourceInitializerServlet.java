@@ -48,24 +48,24 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			log("CATMA DB DataSource initialized.");
 			*/
 			log("CATMA Graph DataSource initializing...");
-			final Driver driver = GraphDatabase.driver(
-					RepositoryPropertyKey.GraphDbUri.getValue(), 
-					AuthTokens.basic(
-						RepositoryPropertyKey.GraphDbUser.getValue(), 
-						RepositoryPropertyKey.GraphDbPass.getValue()));
-			CatmaGraphDbName.CATMAGRAPHDB.setDriver(driver);
-			
-			Runtime.getRuntime().addShutdownHook(new Thread() {
-				@Override
-				public void run() {
-					try {
-						driver.close();
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			});
+//			final Driver driver = GraphDatabase.driver(
+//					RepositoryPropertyKey.GraphDbUri.getValue(), 
+//					AuthTokens.basic(
+//						RepositoryPropertyKey.GraphDbUser.getValue(), 
+//						RepositoryPropertyKey.GraphDbPass.getValue()));
+//			CatmaGraphDbName.CATMAGRAPHDB.setDriver(driver);
+//			
+//			Runtime.getRuntime().addShutdownHook(new Thread() {
+//				@Override
+//				public void run() {
+//					try {
+//						driver.close();
+//					}
+//					catch (Exception e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			});
 			
 			
 			//TODO: remove legacy code
@@ -156,7 +156,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
     	}
     	try {
     		log("Closing CATMA Graph DataSource...");
-    		CatmaGraphDbName.CATMAGRAPHDB.getGraphDatabaseService().shutdown();
+//    		CatmaGraphDbName.CATMAGRAPHDB.getGraphDatabaseService().shutdown();
     		log("CATMA Graph DataSource is closed.");
     	}
     	catch (Exception e) {

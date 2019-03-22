@@ -19,6 +19,8 @@
 package de.catma.serialization.tei;
 
 import java.net.URISyntaxException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +34,7 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
+import de.catma.tag.Version;
 import de.catma.util.IDGenerator;
 import nu.xom.Elements;
 import nu.xom.Nodes;
@@ -101,13 +104,19 @@ public class TeiUserMarkupCollectionDeserializer {
 			old2newTagInstanceIDs.put(tagInstanceElement.getID(), new IDGenerator().generate());
 		}
 		final TagInstance tagInstance = 
-				new TagInstance(old2newTagInstanceIDs.get(tagInstanceElement.getID()), tagDefinition);
+			new TagInstance(
+				old2newTagInstanceIDs.get(tagInstanceElement.getID()), 
+				tagDefinition.getUuid(),
+				tagDefinition.getAuthor(),
+				ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+				tagDefinition.getUserDefinedPropertyDefinitions(),
+				tagDefinition.getTagsetDefinitionUuid());
 		
 		Nodes systemPropertyElements = tagInstanceElement.getChildNodes(
 				TeiElementName.f,
 				AttributeValue.f_name_catma_system_property.getStartsWithFilter());
 		addProperties(
-				tagInstance.getTagDefinition(), 
+				tagDefinition, 
 				new AddPropertyHandler() {
 					public void addProperty(Property property) {
 						tagInstance.addSystemProperty(property);
@@ -118,7 +127,7 @@ public class TeiUserMarkupCollectionDeserializer {
 				TeiElementName.f,
 				AttributeValue.f_name_catma_system_property.getNotStartsWithFilter());
 		addProperties(
-				tagInstance.getTagDefinition(), 
+				tagDefinition, 
 				new AddPropertyHandler() {
 			
 					public void addProperty(Property property) {
@@ -137,6 +146,7 @@ public class TeiUserMarkupCollectionDeserializer {
 		for (int i=0; i<propertyElements.size(); i++) {
 			try {
 				TeiElement curPropertyElement = (TeiElement)propertyElements.get(i);
+				//TODO: check if we need to make a new TeiDoc Version to support this, f_name no longer contains the name but the uuid!
 				PropertyDefinition propertyDefinition =
 						tagDefinition.getPropertyDefinition(
 								curPropertyElement.getAttributeValue(Attribute.f_name));
@@ -145,7 +155,7 @@ public class TeiUserMarkupCollectionDeserializer {
 				if (curPropertyElement.getChildElements().size() == 0) {
 					addPropertyHandler.addProperty(
 							new Property(
-								propertyDefinition,
+								propertyDefinition.getUuid(),
 								Collections.emptyList()));
 				}
 				else {
@@ -155,7 +165,7 @@ public class TeiUserMarkupCollectionDeserializer {
 					if (valueElement.is(TeiElementName.numeric)) {
 						addPropertyHandler.addProperty(
 							new Property(
-								propertyDefinition,
+								propertyDefinition.getUuid(),
 									new NumericPropertyValueFactory(
 										curPropertyElement).getValueAsList()));
 					}
@@ -166,7 +176,7 @@ public class TeiUserMarkupCollectionDeserializer {
 						if (!stringPropFact.getValue().trim().isEmpty()) {
 							addPropertyHandler.addProperty(
 								new Property(
-									propertyDefinition,
+									propertyDefinition.getUuid(),
 										stringPropFact.getValueAsList()));
 						}
 					}
@@ -181,7 +191,7 @@ public class TeiUserMarkupCollectionDeserializer {
 							}
 							
 							addPropertyHandler.addProperty(new Property(
-									propertyDefinition, 
+									propertyDefinition.getUuid(), 
 									valueList));
 						}
 					}

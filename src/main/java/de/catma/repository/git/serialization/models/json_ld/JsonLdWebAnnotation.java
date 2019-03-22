@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,13 +24,12 @@ import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
-import de.catma.repository.git.GitTagsetHandler;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 
 /**
  * Represents an annotation instance that, when serialized, conforms to the Web Annotation Data Model and JSON-LD
@@ -40,11 +43,16 @@ public class JsonLdWebAnnotation {
 	private JsonLdWebAnnotationBody_Dataset body;
 	private JsonLdWebAnnotationTarget_List target;
 
+	
+	/**
+	 * Constructor for deserialization
+	 */
 	public JsonLdWebAnnotation() {
 
 	}
 
-	public JsonLdWebAnnotation(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences)
+	public JsonLdWebAnnotation(
+			String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -59,11 +67,11 @@ public class JsonLdWebAnnotation {
 		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 		this.id = this.buildTagInstanceUrl(
-			gitServerBaseUrl, projectRootRepositoryName, tagReferences.get(0).getUserMarkupCollectionUuid(),
-			tagReferences.get(0).getTagInstance().getUuid()
+			gitServerBaseUrl, projectRootRepositoryName, tagReferences.iterator().next().getUserMarkupCollectionUuid(),
+			tagReferences.iterator().next().getTagInstance().getUuid()
 		).toString();
 
-		this.body = new JsonLdWebAnnotationBody_Dataset(gitServerBaseUrl, projectId, tagReferences);
+		this.body = new JsonLdWebAnnotationBody_Dataset(gitServerBaseUrl, projectId, tagReferences, tagLibrary);
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
 	}
 
@@ -134,16 +142,12 @@ public class JsonLdWebAnnotation {
 		this.target = target;
 	}
 
-	public List<TagReference> toTagReferenceList(
-			String projectId, String markupCollectionId,
-			ILocalGitRepositoryManager localGitRepositoryManager, IRemoteGitManagerRestricted remoteGitServerManager)
-				throws IOException {
-		TagInstance tagInstance = this.getTagInstance(localGitRepositoryManager, remoteGitServerManager, projectId);
+	public List<TagReference> toTagReferenceList(String projectId, String markupCollectionId)
+				throws Exception {
+		TagInstance tagInstance = this.getTagInstance();
 		String sourceDocumentUri = this.getSourceDocumentUri();
 		List<Range> ranges = this.getRanges();
 
-		// TODO: figure out how to do this with .stream().map while handling exceptions properly
-		// see https://stackoverflow.com/a/33218789 & https://stackoverflow.com/a/30118121 for pointers
 		List<TagReference> tagReferences = new ArrayList<>();
 		try {
 			for (Range range : ranges) {
@@ -152,8 +156,10 @@ public class JsonLdWebAnnotation {
 		}
 		catch (URISyntaxException e) {
 			throw new IOException(
-				"Failed to turn internal representation back into a collection of TagReference objects", e
-			);
+				String.format("error loading Collection %1$s of project %2$s ",
+						markupCollectionId,
+						projectId), 
+				e);
 		}
 
 		return tagReferences;
@@ -176,29 +182,24 @@ public class JsonLdWebAnnotation {
 	}
 
 	@JsonIgnore
-	public TagInstance getTagInstance(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager, String projectId)
-			throws IOException {
-		TagDefinition tagDefinition = this.getTagDefinition(
-			localGitRepositoryManager, remoteGitServerManager, projectId
-		);
+	public TagInstance getTagInstance()
+			throws Exception {
 
 		TagInstance tagInstance = new TagInstance(
 			this.getTagInstanceUuid(),
-			tagDefinition
+			getBody().getTag().substring(getBody().getTag().lastIndexOf('/')+1),
+			"", //author gets redefined with the system properties below
+			ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+			Collections.emptyList(), //these get added with the user defined properties below
+			getBody().getTagset().substring(getBody().getTagset().lastIndexOf('/')+1)
 		);
-
-		// the TagInstance constructor sets default values for system properties, so we need to clear them TODO: why?
-		for (Property property : tagInstance.getSystemProperties()) {
-//			property.setPropertyValueList(new PropertyValueList());
-		}
 
 		TreeMap<String, TreeMap<String, TreeSet<String>>> properties = this.body.getProperties();
 
 		for (Map.Entry<String, TreeMap<String, TreeSet<String>>> entry : properties.entrySet()) {
 			for (Map.Entry<String, TreeSet<String>> subEntry : entry.getValue().entrySet()) {
 				Property property = new Property(
-					tagDefinition.getPropertyDefinitionByUuid(subEntry.getKey()),
+					subEntry.getKey(),
 					subEntry.getValue()
 				);
 				if (entry.getKey().equals(JsonLdWebAnnotationBody_Dataset.SYSTEM_PROPERTIES_KEY)) {
@@ -213,17 +214,13 @@ public class JsonLdWebAnnotation {
 		return tagInstance;
 	}
 
-	private TagDefinition getTagDefinition(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager, String projectId)
+	private TagDefinition getTagDefinition(TagLibrary tagLibrary)
 			throws IOException {
-		GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepositoryManager, remoteGitServerManager);
-
-		// TODO: open a TagDefinition directly?
-		TagsetDefinition tagsetDefinition = gitTagsetHandler.open(
-				projectId,
-				this.getLastPathSegmentFromUrl(this.body.getTagset())
-		);
-		return tagsetDefinition.getTagDefinition(this.getLastPathSegmentFromUrl(this.body.getTag()));
+		String tagsetId = this.getLastPathSegmentFromUrl(this.body.getTagset());
+		String tagId = this.getLastPathSegmentFromUrl(this.body.getTag());
+		
+		TagsetDefinition tagsetDefinition = tagLibrary.getTagsetDefinition(tagsetId);
+		return tagsetDefinition.getTagDefinition(tagId);
 
 	}
 
