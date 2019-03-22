@@ -63,8 +63,8 @@ public class DashboardView extends VerticalLayout {
                                 return 0;
                             }
                         }
-                );
-           try {
+        );
+        try {
 			projectManager.getProjectReferences().page(1); //Fake call to satisfy vaadin 10 and above
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

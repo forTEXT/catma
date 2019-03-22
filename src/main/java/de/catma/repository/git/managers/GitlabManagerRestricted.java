@@ -304,16 +304,22 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	}
 	
 	@Override
-	public List<User> findUser(String usernameOrEmail) throws IOException {
+	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
 		try {
-			List<org.gitlab4j.api.models.User> userPager = this.restrictedGitLabApi.getUserApi()
-					.findUsers(usernameOrEmail);
+			List<org.gitlab4j.api.models.User> userPager;
 			
+			if(usernameOrEmail.isEmpty()) {
+				userPager = this.restrictedGitLabApi.getUserApi()
+					.getUsers(offset, limit);
+			} else {
+				userPager = this.restrictedGitLabApi.getUserApi()
+						.findUsers(usernameOrEmail,offset, limit);
+			}
 			return userPager.stream()
-			.filter(u -> usernameOrEmail.equals(u.getUsername()) || usernameOrEmail.equals(u.getEmail()))
-			.filter(u -> user.getUserId() != u.getId())
+			.filter(u -> ! user.getUserId().equals(u.getId()))
 			.map(u -> new GitUser(u))
 			.collect(Collectors.toList());
+			
 		} catch(GitLabApiException e){
 			throw new IOException("failed to check for username",e);
 		}
@@ -432,7 +438,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 				if(member.getAccessLevel() != AccessLevel.OWNER && 
 						member.getAccessLevel().value.intValue() != role.value.intValue()){
 					return updateGroupMember(subject, role, group.getId());
-				}else {
+				} else {
 					// Role is either owner which mean we would deown the member, or it is already the same.
 					// In both cases we refuse to update the role.
 					return subject;

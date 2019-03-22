@@ -34,6 +34,9 @@ public abstract class AbstractMemberDialog extends AbstractOkCancelDialog<RBACSu
 		this.remoteGitManager = remoteGitManager;
 		
 		cb_users.setWidth("100%");
+		cb_users.setPageLength(20);
+		cb_users.setItemCaptionGenerator(User::getIdentifier);
+
 		cb_role.setWidth("100%");
 		cb_role.setItemCaptionGenerator(RBACRole::name);
 	}

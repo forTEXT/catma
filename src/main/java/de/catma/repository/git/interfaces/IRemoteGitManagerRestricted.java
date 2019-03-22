@@ -129,6 +129,6 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @return
 	 * @throws IOException
 	 */
-	List<User> findUser(String usernameOrEmail) throws IOException;
+	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
 
 }
