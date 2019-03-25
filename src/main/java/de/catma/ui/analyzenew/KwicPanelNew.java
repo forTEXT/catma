@@ -139,64 +139,54 @@ public class KwicPanelNew extends VerticalLayout{
 			
 		}
 		
-		public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
-
-		if(kwicGrid.getColumn("propValueID") != null){
-					
+	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
+		
+		if (kwicGrid.getColumn("propValueID") != null) {
 			kwicGrid.removeColumn("propValueID");
 			kwicGrid.removeColumn("propNameID");
-			
 		}
-			
-			HashMap<String, KwicProvider> kwicProviders =	new HashMap<String, KwicProvider>();
-			kwicItemList.removeAll(kwicItemList);
-			
-			showPropertyColumns = false;
-			boolean markupBased=true;
-			
-			for (QueryResultRow row : queryResult) {
-				
-	
-				SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
-				
-				if (!kwicProviders.containsKey(sourceDocument.getID())) {
-					kwicProviders.put(sourceDocument.getID(), new KwicProvider(sourceDocument));
-					}
-				
-				KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
-				KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
-				String sourceDocOrMarkupCollectionDisplay = sourceDocument.toString();
-				
-				if (markupBased && (row instanceof TagQueryResultRow)) {
-					sourceDocOrMarkupCollectionDisplay =sourceDocument.getUserMarkupCollectionReference(((TagQueryResultRow)row).getMarkupCollectionId()).getName();
-				}
-				
-				itemDirCache.put(row, kwic.isRightToLeft());
-					
-				KwicItem kwicItem=createKwicItemFromQueryResultRow(row , kwic, showPropertyColumns);
-	
-				kwicItemList.add(kwicItem);
-			
-	 	}
-			if(showPropertyColumns) {
-				kwicGrid.addColumn(KwicItem::getPropertyName).setCaption("Property Name").setId("propNameID");
-				kwicGrid.addColumn(KwicItem::getPropertyValue).setCaption("Property Value").setId("propValueID");
-			
-				
+		
+		HashMap<String, KwicProvider> kwicProviders = new HashMap<String, KwicProvider>();
+		kwicItemList.removeAll(kwicItemList);
+
+		showPropertyColumns = false;
+		boolean markupBased = true;
+
+		for (QueryResultRow row : queryResult) {
+
+			SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
+
+			if (!kwicProviders.containsKey(sourceDocument.getID())) {
+				kwicProviders.put(sourceDocument.getID(), new KwicProvider(sourceDocument));
 			}
-			
-			 kwicGrid.setItems(kwicItemList);
-			 
+
+			KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
+			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
+			String sourceDocOrMarkupCollectionDisplay = sourceDocument.toString();
+
+			if (markupBased && (row instanceof TagQueryResultRow)) {
+				sourceDocOrMarkupCollectionDisplay = sourceDocument
+						.getUserMarkupCollectionReference(((TagQueryResultRow) row).getMarkupCollectionId()).getName();
+			}
+
+			itemDirCache.put(row, kwic.isRightToLeft());
+
+			KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic, showPropertyColumns);
+
+			kwicItemList.add(kwicItem);
+		}
+		if (showPropertyColumns) {
+			kwicGrid.addColumn(KwicItem::getPropertyName).setCaption("Property Name").setId("propNameID");
+			kwicGrid.addColumn(KwicItem::getPropertyValue).setCaption("Property Value").setId("propValueID");
+		}
+		kwicGrid.setItems(kwicItemList);
 	}
 		
 
 		
 	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic, boolean showPropertyColumns ) throws Exception {
 		KwicItem kwicItem = new KwicItem();
-		
-		
-		
-		
+
 		if(queryResultRow instanceof TagQueryResultRow) {
 			
 			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;

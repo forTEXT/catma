@@ -18,6 +18,11 @@ public QueryResultRowArray getRows();
 public String getShortenTreeKey();
 public String getPropertyName();
 public String getPropertyValue();
+public String getContext();
+public String getBackward();
+public String getForward();
+
+public int getPosition();
 
 
 

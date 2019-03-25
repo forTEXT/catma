@@ -1,11 +1,16 @@
 package de.catma.ui.analyzenew;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.lang3.SerializationUtils;
+
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
@@ -111,12 +116,59 @@ public class ResultPanelNew extends Panel {
 
 	}
 
-	public TreeData<TreeRowItem> getCurrentTreeGridData() {
+	@SuppressWarnings("unchecked")
+	public TreeData<TreeRowItem> getCurrentTreeGridData()  {
 		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getContent();
 		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
+		
 		TreeData<TreeRowItem> treeData= (TreeData<TreeRowItem>) dataProvider.getTreeData();
-		return treeData;
-		//return addDummyItemsToTreeData(treeData);
+	
+		
+		TreeData <TreeRowItem> theNewData= new TreeData<>();
+		theNewData= treeData;
+		
+
+
+	
+return  copyTreeData( treeData);
+	
+
+	}
+	
+
+		
+
+	private TreeData<TreeRowItem> copyTreeData(TreeData<TreeRowItem> treeData) {
+		TreeData<TreeRowItem> toReturn = new TreeData<TreeRowItem>();
+
+		List<TreeRowItem> roots = treeData.getRootItems();
+		for (TreeRowItem root : roots) {
+			toReturn.addItem(null, root);
+			List<TreeRowItem> childrenOne = treeData.getChildren(root);
+			List<TreeRowItem> copyOfChildrenOne = new ArrayList<>(childrenOne);
+			toReturn.addItems(root, copyOfChildrenOne);
+
+			for (TreeRowItem childOne : copyOfChildrenOne) {
+				List<TreeRowItem> childrenTwo = treeData.getChildren(childOne);
+				List<TreeRowItem> copyOfChildrenTwo = new ArrayList<>(childrenTwo);
+				toReturn.addItems(childOne, copyOfChildrenTwo);
+		
+
+				if (!childrenTwo.isEmpty()) {
+
+					for (TreeRowItem childTwo : copyOfChildrenTwo) {
+						List<TreeRowItem> childrenThree = treeData.getChildren(childTwo);
+						List<TreeRowItem> copyOfChildrenThree = new ArrayList<>(childrenThree);
+						toReturn.addItems(childTwo, copyOfChildrenThree);
+
+					}
+				}
+			}
+
+		}
+
+		return toReturn;
+
 	}
 	
 	private TreeData<TreeRowItem> addDummyItemsToTreeData(TreeData<TreeRowItem> treeData) {

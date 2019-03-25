@@ -96,6 +96,30 @@ public class QueryRootItem implements TreeRowItem{
 			return false;
 		return true;
 	}
+
+	@Override
+	public String getForward() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getBackward() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getPosition() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public String getContext() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	
 
