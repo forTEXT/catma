@@ -140,31 +140,29 @@ public class ResultPanelNew extends Panel {
 			List<TreeRowItem> copyOfChildrenOne = new ArrayList<>(childrenOne);
 			toReturn.addItems(root, copyOfChildrenOne);
 			// add dummy on doclevel for phrase query
-			if(treeData.getChildren(childrenOne.get(0)).isEmpty()) {
-				
-				for (TreeRowItem childOne : copyOfChildrenOne) {	
+			if (treeData.getChildren(childrenOne.get(0)).isEmpty()) {
+
+				for (TreeRowItem childOne : copyOfChildrenOne) {
 					SingleItem dummy = new SingleItem();
 					dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
 					toReturn.addItem(childOne, dummy);
+				}
 
-			}
-				
-			}else {
+			} else {
 				for (TreeRowItem childOne : copyOfChildrenOne) {
-					
-				
 					List<TreeRowItem> childrenTwo = treeData.getChildren(childOne);
 					List<TreeRowItem> copyOfChildrenTwo = new ArrayList<>(childrenTwo);
-					
 					toReturn.addItems(childOne, copyOfChildrenTwo);
-					for (TreeRowItem childTwo : copyOfChildrenTwo) {	
+					for (TreeRowItem childTwo : copyOfChildrenTwo) {
 						SingleItem dummy = new SingleItem();
 						dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
 						toReturn.addItem(childTwo, dummy);
-				
-			}
 
-		}}}
+					}
+
+				}
+			}
+		}
 		return toReturn;
 
 	}
