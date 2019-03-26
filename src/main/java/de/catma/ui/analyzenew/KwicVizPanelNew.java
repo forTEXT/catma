@@ -703,7 +703,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			}
 		}
 		selectedDataProvider.refreshAll();
-
 	}
 
 	private void addPhraseItemsToSelectedPanel(TreeRowItem selectedItem) {

@@ -8,7 +8,7 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class CollectionItem implements TreeRowItem, Serializable{
+public class CollectionItem implements TreeRowItem{
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;

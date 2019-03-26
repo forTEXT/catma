@@ -11,7 +11,7 @@ import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class RootItem implements TreeRowItem ,Serializable{
+public class RootItem implements TreeRowItem {
 	public QueryResultRowArray queryResultRowArray;
 	public ArrayList<TreeRowItem> singleItemsArrayList;
     public 	String treeKey;

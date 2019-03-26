@@ -11,7 +11,7 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class DocumentItem implements TreeRowItem,Serializable{
+public class DocumentItem implements TreeRowItem{
 	
 	
 	public QueryResultRowArray queryResultRowArray;

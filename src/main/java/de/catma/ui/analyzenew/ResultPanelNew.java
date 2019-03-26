@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.SerializationUtils;
 
 import com.vaadin.data.TreeData;
@@ -118,20 +119,11 @@ public class ResultPanelNew extends Panel {
 
 	@SuppressWarnings("unchecked")
 	public TreeData<TreeRowItem> getCurrentTreeGridData()  {
+		
 		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getContent();
 		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
-		
-		TreeData<TreeRowItem> treeData= (TreeData<TreeRowItem>) dataProvider.getTreeData();
-	
-		
-		TreeData <TreeRowItem> theNewData= new TreeData<>();
-		theNewData= treeData;
-		
-
-
-	
-return  copyTreeData( treeData);
-	
+	   	TreeData<TreeRowItem> treeData= (TreeData<TreeRowItem>) dataProvider.getTreeData();
+         return  copyTreeData( treeData);
 
 	}
 	
@@ -147,26 +139,32 @@ return  copyTreeData( treeData);
 			List<TreeRowItem> childrenOne = treeData.getChildren(root);
 			List<TreeRowItem> copyOfChildrenOne = new ArrayList<>(childrenOne);
 			toReturn.addItems(root, copyOfChildrenOne);
+			// add dummy on doclevel for phrase query
+			if(treeData.getChildren(childrenOne.get(0)).isEmpty()) {
+				
+				for (TreeRowItem childOne : copyOfChildrenOne) {	
+					SingleItem dummy = new SingleItem();
+					dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
+					toReturn.addItem(childOne, dummy);
 
-			for (TreeRowItem childOne : copyOfChildrenOne) {
-				List<TreeRowItem> childrenTwo = treeData.getChildren(childOne);
-				List<TreeRowItem> copyOfChildrenTwo = new ArrayList<>(childrenTwo);
-				toReturn.addItems(childOne, copyOfChildrenTwo);
-		
-
-				if (!childrenTwo.isEmpty()) {
-
-					for (TreeRowItem childTwo : copyOfChildrenTwo) {
-						List<TreeRowItem> childrenThree = treeData.getChildren(childTwo);
-						List<TreeRowItem> copyOfChildrenThree = new ArrayList<>(childrenThree);
-						toReturn.addItems(childTwo, copyOfChildrenThree);
-
-					}
-				}
+			}
+				
+			}else {
+				for (TreeRowItem childOne : copyOfChildrenOne) {
+					
+				
+					List<TreeRowItem> childrenTwo = treeData.getChildren(childOne);
+					List<TreeRowItem> copyOfChildrenTwo = new ArrayList<>(childrenTwo);
+					
+					toReturn.addItems(childOne, copyOfChildrenTwo);
+					for (TreeRowItem childTwo : copyOfChildrenTwo) {	
+						SingleItem dummy = new SingleItem();
+						dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
+						toReturn.addItem(childTwo, dummy);
+				
 			}
 
-		}
-
+		}}}
 		return toReturn;
 
 	}
@@ -488,8 +486,6 @@ return  copyTreeData( treeData);
 					collItem.setRows(collectionsForADoc.get(coll));
 					treeData.addItem(docItem, collItem);
 					
-					TreeRowItem dummyItem = new SingleItem();
-					treeData.addItem(collItem, dummyItem);
 				}
 
 			}

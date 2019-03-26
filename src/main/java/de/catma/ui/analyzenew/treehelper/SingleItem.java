@@ -1,12 +1,9 @@
 package de.catma.ui.analyzenew.treehelper;
 
-import java.io.Serializable;
-
-import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 
-public class SingleItem implements TreeRowItem, Serializable {
+public class SingleItem implements TreeRowItem {
 
 	private String forward;
 	private String backward;
