@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.hamcrest.core.IsInstanceOf;
 
@@ -213,7 +214,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			@Override
 			public void onDataChange(DataChangeEvent<TreeRowItem> event) {
 				if (comboBox.getValue().contains("wild")) {
-					updateKwicView();
+					//updateKwicView();
 				}
 			}
 		});
@@ -222,6 +223,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 	private void updateKwicView() {
 		// QueryResult queryResult = createQueryResultFromTreeGridDataTags();
+		
 		ArrayList<QueryResultRow> queryResult = createQueryResultFromTreeGridData();
 		try {
 
@@ -261,8 +263,19 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				children = selectedItemsTreeGridData.getChildren(root);
 				if (!children.isEmpty()) {
 					for (TreeRowItem child : children) {
-						QueryResultRowArray queryResultRow = child.getRows();
-						queryResult.addAll(queryResultRow);
+						 List <TreeRowItem> childrenTwo=selectedItemsTreeGridData.getChildren(child);
+						 for (TreeRowItem treeRowItem : childrenTwo) {
+							 List <TreeRowItem> childrenThree=selectedItemsTreeGridData.getChildren(treeRowItem);
+							 for (TreeRowItem treeRowItem2 : childrenThree) {
+								 QueryResultRowArray queryResultRow = treeRowItem2.getRows();
+									queryResult.addAll(queryResultRow);
+								
+							}
+							 
+					
+							
+						}	
+						
 					}
 				}
 			}
@@ -736,11 +749,21 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	}
 
 	private void addPhraseItemsToSelectedPanel(TreeRowItem selectedItem) {
-		
-		// check if dummy is already removed
-		if(selectedItem.getClass()==DocumentItem.class && phraseDataProvider.getTreeData().getChildren(selectedItem).get(0).getForward()==null) {
-			replaceDummyWithRealItems(selectedItem, phraseDataProvider);		
+		try {
+			// check if dummy is already removed
+			TreeRowItem dummy=	phraseDataProvider.getTreeData().getChildren(selectedItem).get(0);
+			TreeRowItem dummyTwo = phraseDataProvider.getTreeData().getChildren(dummy).get(0);
+
+			
+				if((selectedItem.getClass()==DocumentItem.class && dummy.getRows()==null)||
+				(selectedItem.getClass()==RootItem.class && dummyTwo.getRows()==null)){
+					replaceDummyWithRealItems(selectedItem, phraseDataProvider);		
+				}
+			
+		} catch (Exception e) {
+		e.getMessage();
 		}
+
 
 		Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
 		Optional<String> currentQuery = comboBox.getSelectedItem();
@@ -779,7 +802,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				selectedItemsTreeGridData.addItems(document, selectedItem);
 			}
 
-		} else { // testen mit zweiter phrase query
+		} else { 
 			if (!allRootItems.contains(queryRoot)) {
 				selectedItemsTreeGridData.addItem(null, queryRoot);
 
@@ -807,13 +830,12 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					selectedItemsTreeGridData.addItems(phrase, document);
 					selectedItemsTreeGridData.addItems(document, selectedItem);
 				}
-			} else { // eigentlich der einzige komplexere Fall
+			} else {
 				if (allRootItems.contains(queryRoot)) {
 
 					if (selectedItem.getClass().equals(DocumentItem.class)) {
 
-						if (selectedItemsTreeGridData.contains(selectedItem)) { // replace item with full branched item,
-																				// means first delete
+						if (selectedItemsTreeGridData.contains(selectedItem)) { 
 							TreeRowItem phraseRoot = resultsTreeGridData.getParent(selectedItem);
 							selectedItemsTreeGridData.removeItem(selectedItem);
 							selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
@@ -823,10 +845,21 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 						} else {
 							TreeRowItem phraseRoot = resultsTreeGridData.getParent(selectedItem);
-							selectedItemsTreeGridData.addItem(queryRoot, phraseRoot);
-							selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
-							List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
-							selectedItemsTreeGridData.addItems(selectedItem, singleItems);
+							if(selectedItemsTreeGridData.contains(phraseRoot)) {
+								// phrase already inside
+								selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
+								List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
+								selectedItemsTreeGridData.addItems(selectedItem, singleItems);
+							}else {
+								// phrase not inside
+								selectedItemsTreeGridData.addItem(queryRoot, phraseRoot);
+								selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
+								List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
+								selectedItemsTreeGridData.addItems(selectedItem, singleItems);
+								
+							}
+							
+					
 
 						}
 
@@ -908,12 +941,30 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 	}
 	
-	private void replaceDummyWithRealItems(TreeRowItem selectedItem,
-			TreeDataProvider<TreeRowItem> phraseDataProvider2) {
+	private void replaceDummyWithRealItems(TreeRowItem selectedItem,TreeDataProvider<TreeRowItem> phraseDataProvider2) {
 		List<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem);
-		phraseDataProvider2.getTreeData()
-				.removeItem(phraseDataProvider2.getTreeData().getChildren(selectedItem).get(0));
-		phraseDataProvider2.getTreeData().addItems(selectedItem, children);
+		TreeRowItem dummy=	phraseDataProvider2.getTreeData().getChildren(selectedItem).get(0);
+		if(selectedItem.getClass()==DocumentItem.class) {
+			phraseDataProvider2.getTreeData().removeItem(dummy);
+			phraseDataProvider2.getTreeData().addItems(selectedItem, children);
+			
+		}else {
+			
+			 List <TreeRowItem> dummyTwoList=	phraseDataProvider2.getTreeData().getChildren(dummy);
+			 for (TreeRowItem treeRowItem : dummyTwoList) {
+					TreeRowItem parent=	phraseDataProvider2.getTreeData().getParent(treeRowItem);
+					List<TreeRowItem> children2 = createSingleItemRowsArrayList(parent);
+					phraseDataProvider2.getTreeData().removeItem(treeRowItem);
+					
+					phraseDataProvider2.getTreeData().addItems(parent, children2);
+				
+			}
+	    
+			
+		}
+		
+		
+	
 
 	}
 
