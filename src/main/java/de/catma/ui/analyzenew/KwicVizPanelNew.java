@@ -557,9 +557,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				item.setTreeKey(tQRR.getTagDefinitionPath());
 			} else {
 				item.setTreeKey(queryResultRow.getPhrase());
-
 			}
-
 			item.setRows(itemAsQRRA);
 			SingleItem itemWithContext;
 			try {
@@ -569,7 +567,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 		}
 		return children;
 
@@ -751,19 +748,28 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private void addPhraseItemsToSelectedPanel(TreeRowItem selectedItem) {
 		try {
 			// check if dummy is already removed
-			TreeRowItem dummy=	phraseDataProvider.getTreeData().getChildren(selectedItem).get(0);
-			TreeRowItem dummyTwo = phraseDataProvider.getTreeData().getChildren(dummy).get(0);
+			TreeRowItem dummy = phraseDataProvider.getTreeData().getChildren(selectedItem).get(0); 
+			List<TreeRowItem> childrenLevelOne = phraseDataProvider.getTreeData().getChildren(selectedItem); 
 
-			
-				if((selectedItem.getClass()==DocumentItem.class && dummy.getRows()==null)||
-				(selectedItem.getClass()==RootItem.class && dummyTwo.getRows()==null)){
-					replaceDummyWithRealItems(selectedItem, phraseDataProvider);		
+			if (selectedItem.getClass() == DocumentItem.class && dummy.getRows() == null) {
+				replaceDummyWithRealItems(selectedItem, phraseDataProvider);
+
+			}
+			if (selectedItem.getClass() == RootItem.class) {
+				for (TreeRowItem treeRowItem : childrenLevelOne) {
+					TreeRowItem dummy2 = phraseDataProvider.getTreeData().getChildren(treeRowItem).get(0);
+					if (dummy2.getRows() == null) {
+						replaceDummyWithRealItems(selectedItem, phraseDataProvider);
+
+					}
+
 				}
-			
-		} catch (Exception e) {
-		e.getMessage();
-		}
 
+			}
+
+		} catch (Exception e) {
+			e.getMessage();
+		}
 
 		Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
 		Optional<String> currentQuery = comboBox.getSelectedItem();
@@ -802,7 +808,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				selectedItemsTreeGridData.addItems(document, selectedItem);
 			}
 
-		} else { 
+		} else {
 			if (!allRootItems.contains(queryRoot)) {
 				selectedItemsTreeGridData.addItem(null, queryRoot);
 
@@ -815,7 +821,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					List<TreeRowItem> childrenDocs = resultsTreeGridData.getChildren(selectedItem);
 					selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
 					selectedItemsTreeGridData.addItems(selectedItem, childrenDocs);
-					
+
 					for (TreeRowItem doc : childrenDocs) {
 						List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(doc);
 						selectedItemsTreeGridData.addItems(doc, singleItems);
@@ -835,7 +841,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 					if (selectedItem.getClass().equals(DocumentItem.class)) {
 
-						if (selectedItemsTreeGridData.contains(selectedItem)) { 
+						if (selectedItemsTreeGridData.contains(selectedItem)) {
 							TreeRowItem phraseRoot = resultsTreeGridData.getParent(selectedItem);
 							selectedItemsTreeGridData.removeItem(selectedItem);
 							selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
@@ -845,21 +851,19 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 						} else {
 							TreeRowItem phraseRoot = resultsTreeGridData.getParent(selectedItem);
-							if(selectedItemsTreeGridData.contains(phraseRoot)) {
+							if (selectedItemsTreeGridData.contains(phraseRoot)) {
 								// phrase already inside
 								selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
 								List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
 								selectedItemsTreeGridData.addItems(selectedItem, singleItems);
-							}else {
+							} else {
 								// phrase not inside
 								selectedItemsTreeGridData.addItem(queryRoot, phraseRoot);
 								selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
 								List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
 								selectedItemsTreeGridData.addItems(selectedItem, singleItems);
-								
+
 							}
-							
-					
 
 						}
 
@@ -892,46 +896,46 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					if (selectedItem.getClass().equals(SingleItem.class)) {
 
 						TreeRowItem document = resultsTreeGridData.getParent(selectedItem);
-						TreeRowItem phrase=resultsTreeGridData.getParent(document);
-						
-						if(selectedItemsTreeGridData.contains(phrase)) {
+						TreeRowItem phrase = resultsTreeGridData.getParent(document);
+
+						if (selectedItemsTreeGridData.contains(phrase)) {
 							// doc already inside -> check if item inside and if not insert
-							if(selectedItemsTreeGridData.contains(document)){
+							if (selectedItemsTreeGridData.contains(document)) {
 								System.out.println("doc scho drinn");
-							if(!	selectedItemsTreeGridData.getChildren(document).contains(selectedItem)) {
-								selectedItemsTreeGridData.addItem(document,selectedItem);
-								
-							}else {
-								// do nothing because item already inside
-								System.out.println("item scho drinn du ");
-							}
-							}else {
+								if (!selectedItemsTreeGridData.getChildren(document).contains(selectedItem)) {
+									selectedItemsTreeGridData.addItem(document, selectedItem);
+
+								} else {
+									// do nothing because item already inside
+									System.out.println("item scho drinn du ");
+								}
+							} else {
 								System.out.println("doc nix drinn");
 								selectedItemsTreeGridData.addItem(phrase, document);
-								selectedItemsTreeGridData.addItem(document,selectedItem);
-								
-								
+								selectedItemsTreeGridData.addItem(document, selectedItem);
+
 							}
-							
-						}else {
+
+						} else {
 							// insert new phrase and new document before inserting the singleitem
 							System.out.println("phrase nix drinn");
 							selectedItemsTreeGridData.addItem(queryRoot, phrase);
 							selectedItemsTreeGridData.addItem(phrase, document);
-							selectedItemsTreeGridData.addItem(document,selectedItem);
+							selectedItemsTreeGridData.addItem(document, selectedItem);
 						}
-						
-/*
-						List<TreeRowItem> siblingsSelected = selectedItemsTreeGridData.getChildren(document);
 
-						List<SingleItem> castSiblings = (List<SingleItem>) (List<?>) siblingsSelected;
-
-						if (!castSiblings.stream().anyMatch(x -> x == ((SingleItem) selectedItem))) {
-							selectedItemsTreeGridData.addItems(document, selectedItem);
-
-						} else {
-							Notification.show("Item already selected");
-						}*/
+						/*
+						 * List<TreeRowItem> siblingsSelected =
+						 * selectedItemsTreeGridData.getChildren(document);
+						 * 
+						 * List<SingleItem> castSiblings = (List<SingleItem>) (List<?>)
+						 * siblingsSelected;
+						 * 
+						 * if (!castSiblings.stream().anyMatch(x -> x == ((SingleItem) selectedItem))) {
+						 * selectedItemsTreeGridData.addItems(document, selectedItem);
+						 * 
+						 * } else { Notification.show("Item already selected"); }
+						 */
 
 					}
 				}
@@ -943,6 +947,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	
 	private void replaceDummyWithRealItems(TreeRowItem selectedItem,TreeDataProvider<TreeRowItem> phraseDataProvider2) {
 		List<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem);
+		
 		TreeRowItem dummy=	phraseDataProvider2.getTreeData().getChildren(selectedItem).get(0);
 		if(selectedItem.getClass()==DocumentItem.class) {
 			phraseDataProvider2.getTreeData().removeItem(dummy);
@@ -950,22 +955,16 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			
 		}else {
 			
-			 List <TreeRowItem> dummyTwoList=	phraseDataProvider2.getTreeData().getChildren(dummy);
-			 for (TreeRowItem treeRowItem : dummyTwoList) {
-					TreeRowItem parent=	phraseDataProvider2.getTreeData().getParent(treeRowItem);
-					List<TreeRowItem> children2 = createSingleItemRowsArrayList(parent);
-					phraseDataProvider2.getTreeData().removeItem(treeRowItem);
-					
-					phraseDataProvider2.getTreeData().addItems(parent, children2);
-				
-			}
-	    
-			
+			 List <TreeRowItem> docList=	phraseDataProvider2.getTreeData().getChildren(selectedItem);
+			 for (TreeRowItem doc : docList) {
+				 
+				 TreeRowItem dummy2=	phraseDataProvider2.getTreeData().getChildren(doc).get(0);
+					//TreeRowItem parent=	phraseDataProvider2.getTreeData().getParent(treeRowItem);
+					List<TreeRowItem> children2 = createSingleItemRowsArrayList(doc);
+					phraseDataProvider2.getTreeData().removeItem(dummy2);			
+					phraseDataProvider2.getTreeData().addItems(doc, children2);	
+			}	
 		}
-		
-		
-	
-
 	}
 
 	private TreeData<TagRowItem> sortIncomingRowItemsToPhraseTreeData(TagRowItem root, TagRowItem phrase,
