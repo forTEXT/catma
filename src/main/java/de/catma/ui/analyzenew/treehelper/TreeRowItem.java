@@ -10,8 +10,6 @@ import de.catma.queryengine.result.QueryResultRowArray;
 
 public interface TreeRowItem {
 
-
-
 public String 	getTreeKey(); 
 public int 	getFrequency();
 public QueryResultRowArray getRows();
@@ -23,9 +21,6 @@ public String getBackward();
 public String getForward();
 
 public int getPosition();
-
-
-
 
 public default String getSelectIcon() {
 	   return VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml();

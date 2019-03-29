@@ -581,7 +581,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		QueryRootItem queryRoot = new QueryRootItem();
 		queryRoot.setTreeKey(queryString);
 
-		if (allRootItems.isEmpty()) {
+		if ((allRootItems.isEmpty())||(!allRootItems.contains(queryRoot))) {
 			selectedItemsTreeGridData.addItem(null, queryRoot);
 		
 			
@@ -623,8 +623,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				selectedItemsTreeGridData.addItems(selectedItem, items);
 
 				}
-
-			}
 			if (selectedItem.getClass().equals(SingleItem.class)) {
 				TreeRowItem collection = resultsTreeGridData.getParent(selectedItem);
 				TreeRowItem document = resultsTreeGridData.getParent(collection);
@@ -636,16 +634,164 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 			}
 
+			}
+			
+
 
 		 else {
-			if (!allRootItems.contains(queryRoot)) {
-
-			} else {
+		
 				if (allRootItems.contains(queryRoot)) {
+					
+				if (selectedItem.getClass().equals(RootItem.class)) {
+							// single items of that branch maybe already inside->update whole  branch  
+					if (selectedItemsTreeGridData.contains(selectedItem)) {
+						selectedItemsTreeGridData.removeItem(selectedItem);
+						selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
+
+						List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
+						selectedItemsTreeGridData.addItems(selectedItem, documents);
+
+						for (TreeRowItem doc : documents) {
+							List<TreeRowItem> collections = resultsTreeGridData.getChildren(doc);
+							for (TreeRowItem coll : collections) {
+								selectedItemsTreeGridData.addItem(doc, coll);
+								List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
+								selectedItemsTreeGridData.addItems(coll, items);
+							}
+
+						}
+
+					}else {
+						// add whole new branch to tree
+						selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
+
+						List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
+						selectedItemsTreeGridData.addItems(selectedItem, documents);
+
+						for (TreeRowItem doc : documents) {
+							List<TreeRowItem> collections = resultsTreeGridData.getChildren(doc);
+							for (TreeRowItem coll : collections) {
+								selectedItemsTreeGridData.addItem(doc, coll);
+								List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
+								selectedItemsTreeGridData.addItems(coll, items);
+							}
+
+						}
+
+					}
 
 				}
-			}
+				// update branch on doc level
+				if (selectedItem.getClass().equals(DocumentItem.class)) {
+					// single items of that doc-branch maybe already inside->update whole  doc_branch  
+					if (selectedItemsTreeGridData.contains(selectedItem)) {
+						TreeRowItem rootTag=	resultsTreeGridData.getParent(selectedItem);
+					
+						selectedItemsTreeGridData.removeItem(selectedItem);
+						selectedItemsTreeGridData.addItem(rootTag, selectedItem);
+
+						List<TreeRowItem> colls = resultsTreeGridData.getChildren(selectedItem);
+						selectedItemsTreeGridData.addItems(selectedItem, colls);
+
+						for (TreeRowItem coll : colls) {
+							List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
+							selectedItemsTreeGridData.addItems(coll, items);
+
+						}
+
+					}else {
+						// add whole new doc_branch to tree
+						
+						TreeRowItem rootTag=	resultsTreeGridData.getParent(selectedItem);
+						selectedItemsTreeGridData.addItem(queryRoot,rootTag);
+						selectedItemsTreeGridData.addItem(rootTag, selectedItem);
+				
+
+						List<TreeRowItem> colls = resultsTreeGridData.getChildren(selectedItem);
+						selectedItemsTreeGridData.addItems(selectedItem, colls);
+
+						for (TreeRowItem coll : colls) {
+							List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
+							selectedItemsTreeGridData.addItems(coll, items);
+
+						}
+					}
+
+				}
+				// update branch on collection level
+				if (selectedItem.getClass().equals(CollectionItem.class)) {
+					// single items of that collection-branch maybe already inside->update whole  collection_branch  
+					if (selectedItemsTreeGridData.contains(selectedItem)) {	
+						List<TreeRowItem> singleItems=	resultsTreeGridData.getChildren(selectedItem);
+						selectedItemsTreeGridData.removeItem(selectedItem);
+						selectedItemsTreeGridData.addItems( selectedItem,singleItems);	
+
+					}else {
+						// add whole new coll_branch to tree
+						
+							TreeRowItem doc=resultsTreeGridData.getParent(selectedItem);
+							TreeRowItem rootTag=resultsTreeGridData.getParent(doc);
+							List<TreeRowItem> items=resultsTreeGridData.getChildren(selectedItem);
+							if(selectedItemsTreeGridData.contains(doc)) {
+								selectedItemsTreeGridData.addItem(doc, selectedItem);
+								selectedItemsTreeGridData.addItems(selectedItem,items);
+								
+							}else {
+								selectedItemsTreeGridData.addItem(queryRoot, rootTag);
+								selectedItemsTreeGridData.addItem(rootTag, doc);
+								selectedItemsTreeGridData.addItem(doc, selectedItem);
+								selectedItemsTreeGridData.addItems(selectedItem,items);
+								
+							}
+					}
+
+				}
+				// update branch on singleItem level
+				if (selectedItem.getClass().equals(SingleItem.class)) {
+					// single item  already inside, do nothing 
+					if (selectedItemsTreeGridData.contains(selectedItem)) {	
+					
+					}else {
+						// item not inside-> check which hierarchy level already inside
+						
+							TreeRowItem coll=resultsTreeGridData.getParent(selectedItem);
+							TreeRowItem doc=resultsTreeGridData.getParent(coll);
+							TreeRowItem rootTag=resultsTreeGridData.getParent(doc);
+							
+							if(selectedItemsTreeGridData.contains(coll)) {
+								selectedItemsTreeGridData.addItem(coll, selectedItem);
+												
+							}else {
+							if(selectedItemsTreeGridData.contains(doc)) {
+								selectedItemsTreeGridData.addItem(doc, coll);
+								selectedItemsTreeGridData.addItem(coll, selectedItem);
+								
+							}
+							if(selectedItemsTreeGridData.contains(rootTag)) {
+								selectedItemsTreeGridData.addItem(rootTag, doc);				
+								selectedItemsTreeGridData.addItem(doc, coll);
+								selectedItemsTreeGridData.addItem(coll, selectedItem);					
+								
+							}
+						else { // tagRoot is not yet inside
+								selectedItemsTreeGridData.addItem(queryRoot,rootTag);
+								selectedItemsTreeGridData.addItem(rootTag, doc);				
+								selectedItemsTreeGridData.addItem(doc, coll);
+								selectedItemsTreeGridData.addItem(coll, selectedItem);
+								
+							}
+							}
+							
+					
+					}
+
+				
+			
 		}
+		
+	}
+		
+	}
 		selectedDataProvider.refreshAll();
 	}
 
