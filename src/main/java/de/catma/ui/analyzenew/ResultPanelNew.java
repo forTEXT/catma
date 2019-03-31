@@ -63,12 +63,6 @@ public class ResultPanelNew extends Panel {
 	private TreeData<TreeRowItem>propertyData;
 	private TreeGrid<TreeRowItem> treeGridProperty;
 	
-
-
-
-
-	
-
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
 	private Button caretDownBt;

@@ -1,5 +1,10 @@
 package de.catma.ui.analyzenew.treehelper;
 
+import java.util.Set;
+import java.util.TreeSet;
+
+import de.catma.document.Range;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 
@@ -10,9 +15,20 @@ public class SingleItem implements TreeRowItem {
 	private int position;
 	private String treeKey;
 	private QueryResultRowArray queryResultRowArray;
+	private  QueryResultRow queryResultRow;
+	private Range range;
+	int rangesHash;
+	private Set<Range> ranges;
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;
+	
+	
+
+	public SingleItem() {
+		ranges = new TreeSet<Range>();
+	
+	}
 
 	public void setTreeKey(String treeKey) {
 		this.treeKey = treeKey;
@@ -38,6 +54,15 @@ public class SingleItem implements TreeRowItem {
 
 	public void setRows(QueryResultRowArray queryResultRowArray) {
 		this.queryResultRowArray = queryResultRowArray;
+
+		queryResultRow = queryResultRowArray.get(0);
+		if (queryResultRow.getClass() == TagQueryResultRow.class) {
+			TagQueryResultRow tQRR = (TagQueryResultRow) queryResultRow;
+			range = tQRR.getRange();
+			ranges = tQRR.getRanges();
+			rangesHash = ranges.hashCode();
+
+		}
 
 	}
 
@@ -104,6 +129,12 @@ public class SingleItem implements TreeRowItem {
 
 	public void setQueryResultRowArray(QueryResultRowArray queryResultRowArray) {
 		this.queryResultRowArray = queryResultRowArray;
+		 queryResultRow=queryResultRowArray.get(0);
+		 if(queryResultRow.getClass()==TagQueryResultRow.class) {
+			 TagQueryResultRow tQRR= (TagQueryResultRow)queryResultRow;
+	
+			
+		 }
 	}
 
 	@Override
@@ -118,7 +149,11 @@ public class SingleItem implements TreeRowItem {
 		result = prime * result + ((backward == null) ? 0 : backward.hashCode());
 		result = prime * result + ((forward == null) ? 0 : forward.hashCode());
 		result = prime * result + position;
+		result = prime * result + ((queryResultRow == null) ? 0 : queryResultRow.hashCode());
 		result = prime * result + ((queryResultRowArray == null) ? 0 : queryResultRowArray.hashCode());
+		result = prime * result + ((range == null) ? 0 : range.hashCode());
+		result = prime * result + ((ranges == null) ? 0 : ranges.hashCode());
+		result = prime * result + rangesHash;
 		result = prime * result + ((treeKey == null) ? 0 : treeKey.hashCode());
 		return result;
 	}
@@ -144,10 +179,27 @@ public class SingleItem implements TreeRowItem {
 			return false;
 		if (position != other.position)
 			return false;
+		if (queryResultRow == null) {
+			if (other.queryResultRow != null)
+				return false;
+		} else if (!queryResultRow.equals(other.queryResultRow))
+			return false;
 		if (queryResultRowArray == null) {
 			if (other.queryResultRowArray != null)
 				return false;
 		} else if (!queryResultRowArray.equals(other.queryResultRowArray))
+			return false;
+		if (range == null) {
+			if (other.range != null)
+				return false;
+		} else if (!range.equals(other.range))
+			return false;
+		if (ranges == null) {
+			if (other.ranges != null)
+				return false;
+		} else if (!ranges.equals(other.ranges))
+			return false;
+		if (rangesHash != other.rangesHash)
 			return false;
 		if (treeKey == null) {
 			if (other.treeKey != null)
@@ -156,6 +208,23 @@ public class SingleItem implements TreeRowItem {
 			return false;
 		return true;
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
 	
 	
 

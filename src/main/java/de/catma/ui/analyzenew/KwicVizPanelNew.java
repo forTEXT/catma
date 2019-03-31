@@ -217,9 +217,9 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		selectedDataProvider.addDataProviderListener(new DataProviderListener<TreeRowItem>() {
 			@Override
 			public void onDataChange(DataChangeEvent<TreeRowItem> event) {
-				if (comboBox.getValue().contains("wild")) {
+				//if (comboBox.getValue().contains("wild")) {
 				updateKwicView();
-				}
+				//}
 			}
 		});
 
@@ -528,7 +528,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	}
 
 
-
 	private void addTagItemsToSelectedPanel(TreeRowItem selectedItem) {
 		try {
 			// check if dummy is already removed
@@ -546,9 +545,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 						replaceDummyWithTagItems(collection, tagDataProvider);
 
 					}
-
 				}
-
 			}
 			if (selectedItem.getClass() == RootItem.class) {
 				for (TreeRowItem document : childrenLevelOne) {
@@ -559,15 +556,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 							replaceDummyWithTagItems(collection, tagDataProvider);
 						
 					}
-					
 		
-
 					}
-
 				}
-
 			}
-
 		} catch (Exception e) {
 			e.getMessage();
 		}
@@ -636,8 +628,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 			}
 			
-
-
 		 else {
 		
 				if (allRootItems.contains(queryRoot)) {
@@ -1014,25 +1004,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	}
 	
 	
-	private QueryResult createQueryResultFromTreeGridDataTags() {
-		TagQueryResult tagQueryResult = new TagQueryResult("some Tags");
-		List<TreeRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
-		if (!rootElements.isEmpty()) {
-			for (TreeRowItem root : rootElements) {
-				List<TreeRowItem> children = new ArrayList<TreeRowItem>();
-				children = selectedItemsTreeGridData.getChildren(root);
-				if (!children.isEmpty()) {
-					for (TreeRowItem child : children) {
-						TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) child.getQueryResultRow();
-						tagQueryResult.add(tagQueryResultRow);
-					}
-				}
-			}
-		} else {
-			// TODO
-		}
-		return tagQueryResult;
-	}
 
 	
 	private ArrayList<QueryResultRow> createQueryResultFromTreeGridData() {
