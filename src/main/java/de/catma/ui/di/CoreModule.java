@@ -21,7 +21,8 @@ public class CoreModule extends AbstractModule {
 		super.configure();
 		  install(new FactoryModuleBuilder()
 				.implement(IRemoteGitManagerRestricted.class, GitlabManagerRestricted.class)
-				.build(IRemoteGitManagerFactory.class));
+				.build(IRemoteGitManagerFactory.class)
+				  );
 	}
 	
 	@Provides

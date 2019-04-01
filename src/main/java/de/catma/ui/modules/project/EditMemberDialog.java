@@ -1,43 +1,79 @@
 package de.catma.ui.modules.project;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import com.google.common.base.Joiner;
+import com.vaadin.data.Binder;
+import com.vaadin.data.BinderValidationStatus;
+import com.vaadin.data.ValidationResult;
 import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.ListSelect;
+import com.vaadin.ui.Notification;
 
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.user.Member;
+import de.catma.user.User;
 
-public class EditMemberDialog extends AbstractMemberDialog {
+public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 
-	private final Member member;
+	private final Set<Member> members;
 	private final String projectId;
+	private final Binder<RBACRole> roleBinder = new Binder<>();
 	
 	private RBACRole accesslevel;
+	private ListSelect<Member> ls_members;
 	
 	public EditMemberDialog(String projectId, 
-			Member member,
-			IRemoteGitManagerRestricted remoteGitManager, SaveCancelListener<RBACSubject> saveCancelListener) {
+			Set<Member> members,
+			IRemoteGitManagerRestricted remoteGitManager, SaveCancelListener<Set<RBACSubject>> saveCancelListener) {
 		super("Updates a member","update the role",remoteGitManager, saveCancelListener);
-		this.member = member;
+		this.members = members;
 		this.projectId = projectId;
-		this.accesslevel = member.getRole();
+		this.accesslevel = RBACRole.REPORTER;
 	}
 	
 	@Override
 	protected void addContent(ComponentContainer content) {
-		super.addContent(content);
-		cb_users.setValue(member);
-		cb_users.setReadOnly(true);
+		ls_members = new ListSelect<>("Members", members);
+		ls_members.setReadOnly(true);
+		ls_members.setWidth("100%");
+		ls_members.setItemCaptionGenerator(User::getIdentifier);
+
+		content.addComponent(l_description);
+		content.addComponent(ls_members);
+		content.addComponent(cb_role);
+		
+		roleBinder
+			.forField(cb_role)
+			.withValidator((role,context) ->  role.equals(RBACRole.OWNER)?  ValidationResult.error("Setting to owner is not allowed") : ValidationResult.ok());
 		cb_role.setValue(accesslevel);
 	}
-
+	
 	@Override
-	protected RBACSubject getResult() {
+	protected void handleOkPressed() {
+		BinderValidationStatus<RBACRole> validationResult = roleBinder.validate();
+		
+		if(validationResult.isOk()){
+		super.handleOkPressed();
+		} else {
+			Notification.show("Role not allowed", Joiner.on(',').join(validationResult.getValidationErrors()) , Notification.Type.WARNING_MESSAGE);
+		}
+	};
+	
+	@Override
+	protected Set<RBACSubject> getResult() {
 		try {
-			return remoteGitManager.assignOnProject(member, cb_role.getValue(), projectId);
+			Set<RBACSubject> result = new HashSet<>();
+			for(Member member : ls_members.getValue()){
+				result.add(remoteGitManager.assignOnProject(member, cb_role.getValue(), projectId));
+			}
+			return result;
 		} catch (Exception e) {
-			errorLogger.showAndLogError(e.getMessage(),e);
+			errorLogger.showAndLogError(e.getMessage(), e);
 			return null;
 		}
 	}

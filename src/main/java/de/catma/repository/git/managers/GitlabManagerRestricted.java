@@ -448,9 +448,21 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 			}
 		} catch (GitLabApiException e) {
 				throw new IOException("Project unkown "+ projectId,e);
-		}
-				
+		}	
 	};
+	
+	@Override
+	public void unassignFromProject(RBACSubject subject, String projectId) throws IOException {
+		try {
+			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
+			if(group == null) {
+				throw new IOException("Project unkown "+ projectId);
+			}
+			restrictedGitLabApi.getGroupApi().removeMember(group.getId(), subject.getUserId());
+		} catch (GitLabApiException e) {
+			throw new IOException("Project or user unkown: "+ projectId + "subject:" + subject, e);
+		}	
+	}
 	
 	@Override
 	public RBACSubject assignOnResource(RBACSubject subject, RBACRole role, Integer resourceId) throws IOException {

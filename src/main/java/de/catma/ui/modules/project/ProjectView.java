@@ -770,19 +770,27 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 teamGrid
         );
         membersGridComponent.addStyleName("project-view-action-grid");
-        ContextMenu membersContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
-        membersContextMenu.addItem("add member", (click) -> new CreateMemberDialog(
+        ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
+        addContextMenu.addItem("add member", (click) -> new CreateMemberDialog(
         		this.projectReference.getProjectId(),
         		this.remoteGitManager,
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
-        membersContextMenu.addItem("edit member", (click) -> new EditMemberDialog(
+        
+        ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+
+        moreOptionsContextMenu.addItem("edit members", (click) -> new EditMemberDialog(
         		projectReference.getProjectId(),
-        		(Member)teamGrid.getSelectedItems().iterator().next(),
+        		teamGrid.getSelectedItems(),
         		remoteGitManager,
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
-
+        moreOptionsContextMenu.addItem("remove members", (click) -> new RemoveMemberDialog(
+        		projectReference.getProjectId(),
+        		teamGrid.getSelectedItems(),
+        		remoteGitManager,
+        		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
+        		).show());
         teamContent.addComponent(membersGridComponent);
         return teamContent;
     }

@@ -15,7 +15,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.user.User;
 
-public abstract class AbstractMemberDialog extends AbstractOkCancelDialog<RBACSubject> {
+public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> {
 
 	protected final ComboBox<User> cb_users = new ComboBox<>("member");
 	protected final ComboBox<RBACRole> cb_role = new ComboBox<RBACRole>("role", 
@@ -27,7 +27,7 @@ public abstract class AbstractMemberDialog extends AbstractOkCancelDialog<RBACSu
 	protected ErrorHandler errorLogger;
 	
 	public AbstractMemberDialog(String title, String description, IRemoteGitManagerRestricted remoteGitManager, 
-			SaveCancelListener<RBACSubject> saveCancelListener) {
+			SaveCancelListener<T> saveCancelListener) {
 		super(title, saveCancelListener);
 		this.l_description = new Label(description);
 	    this.errorLogger = (ErrorHandler) UI.getCurrent();

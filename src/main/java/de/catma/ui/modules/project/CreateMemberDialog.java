@@ -15,7 +15,7 @@ import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.user.User;
 
-public class CreateMemberDialog extends AbstractMemberDialog {
+public class CreateMemberDialog extends AbstractMemberDialog<RBACSubject> {
 
 	private final String projectId;
 	private final LoadingCache<Query<User,String>, List<User>> users = CacheBuilder.newBuilder()
