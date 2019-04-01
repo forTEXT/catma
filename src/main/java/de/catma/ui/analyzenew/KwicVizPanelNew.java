@@ -183,7 +183,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		selectedItemsPanel.setCaption("selected items for the kwic visualization");
 
 		selectedItemsPanel.setWidth("100%");
-		selectedItemsPanel.setHeight("250px");
+		selectedItemsPanel.setHeight("200px");
 
 		selectedItemsPanel.setContent(selectedItemsTreeGrid);
 		leftSide.addComponent(comboBox);
@@ -305,6 +305,15 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		
 		tagTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		tagTreeGrid.getColumn("freqID").setExpandRatio(1);
+		
+		
+		tagTreeGrid.addColumn(TreeRowItem::getPosition).setCaption("Position").setId("positionID").setHidable(true)
+		.setHidden(true);
+		tagTreeGrid.getColumn("positionID").setExpandRatio(1);
+
+		tagTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
+		.setHidden(true).setWidth(100);
+		tagTreeGrid.getColumn("contextID").setExpandRatio(5);
 
 		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
 				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
@@ -1023,9 +1032,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 								 QueryResultRowArray queryResultRow = treeRowItem2.getRows();
 									queryResult.addAll(queryResultRow);
 								
-							}
-							 
-					
+							}					
 							
 						}	
 						

@@ -17,7 +17,7 @@ public class SingleItem implements TreeRowItem {
 	private QueryResultRowArray queryResultRowArray;
 	private  QueryResultRow queryResultRow;
 	private Range range;
-	int rangesHash;
+	private int rangesHash;
 	private Set<Range> ranges;
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
@@ -139,6 +139,7 @@ public class SingleItem implements TreeRowItem {
 
 	@Override
 	public String getContext() {
+		
 		return 	getBackward()+getTreeKey()+getForward();
 	}
 
