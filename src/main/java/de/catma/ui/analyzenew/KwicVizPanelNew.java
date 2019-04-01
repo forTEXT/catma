@@ -950,7 +950,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 						if (selectedItemsTreeGridData.contains(phrase)) {
 							// doc already inside -> check if item inside and if not insert
 							if (selectedItemsTreeGridData.contains(document)) {
-								System.out.println("doc scho drinn");
+					
 								if (!selectedItemsTreeGridData.getChildren(document).contains(selectedItem)) {
 									selectedItemsTreeGridData.addItem(document, selectedItem);
 
@@ -965,7 +965,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 						} else {
 							// insert new phrase and new document before inserting the singleitem
-							System.out.println("phrase nix drinn");
+						
 							selectedItemsTreeGridData.addItem(queryRoot, phrase);
 							selectedItemsTreeGridData.addItem(phrase, document);
 							selectedItemsTreeGridData.addItem(document, selectedItem);
