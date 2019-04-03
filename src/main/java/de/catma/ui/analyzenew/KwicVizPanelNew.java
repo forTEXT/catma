@@ -1,45 +1,27 @@
 package de.catma.ui.analyzenew;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import org.hamcrest.core.IsInstanceOf;
-
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProviderListener;
-import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
-import com.vaadin.event.ContextClickEvent;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.event.ExpandEvent.ExpandListener;
-import com.vaadin.event.SortEvent;
-import com.vaadin.event.SortEvent.SortListener;
-import com.vaadin.event.selection.SelectionEvent;
-import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.ClientConnector.AttachEvent;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.ComponentContainer;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
@@ -50,11 +32,8 @@ import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
-import de.catma.queryengine.result.GroupedQueryResult;
-import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
-import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.analyzenew.treehelper.CollectionItem;
 import de.catma.ui.analyzenew.treehelper.DocumentItem;
@@ -63,9 +42,6 @@ import de.catma.ui.analyzenew.treehelper.RootItem;
 import de.catma.ui.analyzenew.treehelper.SingleItem;
 import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
-import de.catma.ui.tagger.annotationpanel.AnnotationTreeItem;
-import de.catma.ui.tagger.annotationpanel.TagsetTreeItem;
-
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 
@@ -137,8 +113,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		mainContentPanel.setSizeFull();
 		setSpacing(false);
 
-		// mainContentPanel.setHeight("100%");
-		// mainContentPanel.setWidth("100%");
 		comboBox = new ComboBox<String>();
 		comboBox.setWidth("100%");
 		comboBox.setCaption("select one resultset");
@@ -402,31 +376,23 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		List<TreeRowItem> siblingsTwo = selectedItemsTreeGridData.getChildren(parentParent);
 		List<TreeRowItem> siblingsThree = selectedItemsTreeGridData.getChildren(parentParentParent);
 
-
 		if (siblingsOne.size() == 1) {
 			if (siblingsTwo.size() == 1) {
 				if (siblingsThree.size() == 1) {
 					
 					selectedItemsTreeGridData.removeItem(parentParentParent);
-
 				} else {
 					
 					selectedItemsTreeGridData.removeItem(parentParent);
-
 				}
-
 			} else {
 
 				selectedItemsTreeGridData.removeItem(parent);
-
 			}
-
 		}else {
-			selectedItemsTreeGridData.removeItem(toRemove);
-			
+			selectedItemsTreeGridData.removeItem(toRemove);		
 		}
 	
-
 		selectedDataProvider.refreshAll();
 	}
 
