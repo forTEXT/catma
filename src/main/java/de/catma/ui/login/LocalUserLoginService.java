@@ -1,52 +1,64 @@
 package de.catma.ui.login;
 
 import java.io.IOException;
-import java.util.Optional;
 
+import com.google.inject.Inject;
 import com.vaadin.server.VaadinSession;
 
 import de.catma.repository.git.GitUser;
+import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.ui.di.IRemoteGitManagerFactory;
 import de.catma.util.Pair;
 
 public class LocalUserLoginService implements LoginService {
+
+	private IRemoteGitManagerRestricted api;
+	
+	
+	private final IRemoteGitManagerFactory iRemoteGitManagerFactory;
+		
+	@Inject
+	public LocalUserLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory) {
+		this.iRemoteGitManagerFactory=iRemoteGitManagerFactory;
+	}
 	
 	@Override
 	public IRemoteGitManagerRestricted login(String username, String password) throws IOException {
 		String user = System.getProperty("user.name");
 		Pair<GitUser, String> userTokenPair = new GitlabManagerPrivileged().acquireImpersonationToken(
 				user, "catma", user+"@catma.de",user);
-		IRemoteGitManagerRestricted api = GitlabManagerRestricted.fromToken(userTokenPair.getFirst(),userTokenPair.getSecond());
-		VaadinSession.getCurrent().setAttribute(IRemoteGitManagerRestricted.class, api);
-
+		api = iRemoteGitManagerFactory.createFromToken(userTokenPair.getSecond());
 		return api;
 	}
 
 	@Override
 	public IRemoteGitManagerRestricted loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException {
-		IRemoteGitManagerRestricted api = GitlabManagerRestricted.gitlabLogin("", "");
-		VaadinSession.getCurrent().setAttribute(IRemoteGitManagerRestricted.class, api);
+		IRemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();		
+        Pair<GitUser, String> userAndToken = 
+        		gitlabManagerPrivileged.acquireImpersonationToken(identifier, provider, email, name);
 
+		api = iRemoteGitManagerFactory.createFromToken(userAndToken.getSecond());
 		return api;
 	}
 
 	@Override
-	public Optional<IRemoteGitManagerRestricted> getAPI() {
-		IRemoteGitManagerRestricted api = VaadinSession.getCurrent().getAttribute(IRemoteGitManagerRestricted.class);
-		if(api == null){
+	public IRemoteGitManagerRestricted getAPI() {
+		if(this.api == null){
 			try {
 				api = login("","");
 			} catch (IOException e) {
 				api = null; //NOOP 
 			}
 		}
-		return Optional.ofNullable(api);
+		return api;
 	}
 
 	@Override
 	public void logout() {
-		//NOOP
+		VaadinSession.getCurrent().close();
+		api = null;
+    	VaadinSession.getCurrent().getSession().invalidate();
 	}
 }

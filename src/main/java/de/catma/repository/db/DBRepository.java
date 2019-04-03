@@ -545,17 +545,6 @@ public class DBRepository implements IndexedRepository {
 		return dbSourceDocumentHandler.getSourceDocuments();
 	}
 
-	/**
-	 * TODO: 15.10.18 REMOVE dbrepo
-	 * @implNote not implemented
-	 * @return
-	 * @throws Exception
-	 */
-	@Override
-	public int getSourceDocumentsCount() throws Exception {
-		return 0;
-	}
-
 	public SourceDocument getSourceDocument(String id) {
 		return dbSourceDocumentHandler.getSourceDocument(id);
 	}
@@ -1043,6 +1032,7 @@ public class DBRepository implements IndexedRepository {
 						userMarkupCollectionRef.getId(), 
 						null,
 						userMarkupCollectionRef.getContentInfoSet(),
+						"",
 						""));
 		
 		share(db, targetUserId, sourceDocument, accessMode);
@@ -1202,28 +1192,36 @@ public class DBRepository implements IndexedRepository {
 	}
 	
 	@Override
-	public int getUserMarkupCollectionReferenceCount() throws Exception {
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
-	public List<UserMarkupCollectionReference> getUserMarkupCollectionReferences(int offset, int limit)
-			throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Collection<TagsetDefinition> getTagsets() throws Exception {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int getTagsetsCount() throws Exception {
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
 	public List<User> getProjectMembers() throws Exception {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean hasUncommittedChanges() throws Exception {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void commitChanges(String commitMsg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void synchronizeWithRemote() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void printStatus() {
+		// TODO Auto-generated method stub
+		
 	}
 }

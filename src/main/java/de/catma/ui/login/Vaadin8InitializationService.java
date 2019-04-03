@@ -2,9 +2,11 @@ package de.catma.ui.login;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.logging.Logger;
 
+import com.google.common.eventbus.EventBus;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
@@ -13,29 +15,35 @@ import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.ui.UIBackgroundService;
+import de.catma.ui.modules.main.CatmaHeader;
 import de.catma.ui.modules.main.MainView;
 import de.catma.ui.modules.main.NotLoggedInMainView;
 
 public class Vaadin8InitializationService implements InitializationService {
 
+	private final Injector injector;
+	
+	private BackgroundService backgroundService;
+
+	@Inject
+	public Vaadin8InitializationService(Injector injector) {
+		this.injector = injector;
+	}
+	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@Override
 	public BackgroundService accuireBackgroundService() {
-		BackgroundService bs = VaadinSession.getCurrent().getAttribute(BackgroundService.class);
-		if(bs == null) {
-			bs = new UIBackgroundService(true);
-			VaadinSession.getCurrent().setAttribute(BackgroundService.class,bs);
+		if(backgroundService == null) {
+			backgroundService = injector.getInstance(BackgroundService.class);
 		}
-		return bs;
+		return backgroundService;
 	}
 	
 	@Override
 	public void shutdown() {
-		BackgroundService bs = VaadinSession.getCurrent().getAttribute(BackgroundService.class);
-		if(bs != null) {
-			bs.shutdown();
+		if(backgroundService != null) {
+			backgroundService.shutdown();
 		}
 	}
 	
@@ -69,17 +77,19 @@ public class Vaadin8InitializationService implements InitializationService {
 	}
 
 	@Override
+	@Inject
 	public Component newEntryPage(LoginService loginService) throws IOException {
-		Optional<IRemoteGitManagerRestricted> api = loginService.getAPI();
+		IRemoteGitManagerRestricted api = loginService.getAPI();
 
-		if(api.isPresent()){
+		if(api != null ){
 			GitProjectManager projectManager = new GitProjectManager(
 					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
-					api.get(),
+					api,
+					(projectId) -> {}, //noop deletion handler
 					accuireBackgroundService());
-			return new MainView(projectManager);
+			return new MainView(projectManager, injector.getInstance(CatmaHeader.class), injector.getInstance(EventBus.class));
 		} else {
-			return new NotLoggedInMainView(this,loginService);
+			return new NotLoggedInMainView(this,loginService, injector.getInstance(EventBus.class));
 
 		}
 	}

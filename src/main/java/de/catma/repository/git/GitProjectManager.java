@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import de.catma.Pager;
 import de.catma.backgroundservice.BackgroundService;
@@ -33,6 +35,8 @@ public class GitProjectManager implements ProjectManager {
     private final BackgroundService backgroundService;
     private String gitBasedRepositoryBasePath;
 	private GitUser user;
+	private GraphProjectDeletionHandler graphProjectDeletionHandler;
+	private final CredentialsProvider credentialsProvider;
 
 	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_root";
 
@@ -43,14 +47,17 @@ public class GitProjectManager implements ProjectManager {
 	public GitProjectManager(
             String gitBasedRepositoryBasePath,
             IRemoteGitManagerRestricted remoteGitServerManager,
+            GraphProjectDeletionHandler graphProjectDeletionHandler,
             BackgroundService backgroundService)
 					throws IOException {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = remoteGitServerManager;
+		this.graphProjectDeletionHandler = graphProjectDeletionHandler;
 		this.backgroundService = backgroundService;
 		this.user = remoteGitServerManager.getGitUser();
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
-
+		this.credentialsProvider = 
+			new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
 		this.idGenerator = new IDGenerator();
 	}
 
@@ -89,8 +96,7 @@ public class GitProjectManager implements ProjectManager {
 				projectId,
 				response.repositoryHttpUrl,
 				null,
-				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getPassword()
+				credentialsProvider
 			);
 		}
 
@@ -121,7 +127,7 @@ public class GitProjectManager implements ProjectManager {
 
 		this.remoteGitServerManager.deleteGroup(projectId);
 		try {
-			new GraphProjectDeletionHandler(user).deleteProject(projectId);
+			graphProjectDeletionHandler.deleteProject(projectId);
 		} catch (Exception e) {
 			throw new IOException(e);
 		};
@@ -154,6 +160,8 @@ public class GitProjectManager implements ProjectManager {
 			ProjectReference projectReference,
 			OpenProjectListener openProjectListener) {
 		try {
+			
+			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
 
 			TagLibrary tagLibrary = new TagLibrary(projectReference.getProjectId(), projectReference.getName());
 
@@ -177,11 +185,6 @@ public class GitProjectManager implements ProjectManager {
 		} catch (Exception e) {
 			openProjectListener.failure(e);
 		}
-		//TODO ensure existence in graphdb via plugin
-		// check commit checksum
-		// if not: 
-		// -> load: parse .gitmodules 
-
 	}
 
 	public boolean existsLocally(ProjectReference projectReference) {
@@ -191,7 +194,6 @@ public class GitProjectManager implements ProjectManager {
 				.exists();
 	}
 
-	//TODO: make this part of accepting new project membership
 	private void cloneRootLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws Exception {
 		if (!Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
 			.resolve(user.getIdentifier())
@@ -207,8 +209,7 @@ public class GitProjectManager implements ProjectManager {
 					projectReference.getProjectId(),
 					remoteGitServerManager.getProjectRootRepositoryUrl(projectReference),
 					null,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword(),
+					credentialsProvider,
 					true // init and update submodules
 					
 				);

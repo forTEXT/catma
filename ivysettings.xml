@@ -37,6 +37,7 @@
 		<module organisation="com.carrotsearch" name="smartsprites"
 			revision="0.2.3-itmill" resolver="custom-smartsprites" />
 		<module organisation="javax.ws.rs" name="javax.ws.rs-api" revision="2.1" resolver="mylocal" />
+		<module organisation="org.eclipse.jgit" name="org.eclipse.jgit" revision="5.4.0-SNAPSHOT" resolver="mylocal" />
 	</modules>
 
 

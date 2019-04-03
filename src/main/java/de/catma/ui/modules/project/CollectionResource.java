@@ -46,4 +46,9 @@ public class CollectionResource implements Resource {
     public void deleteFrom(Repository project) throws Exception {
     	project.delete(collectionReference);
     }
+    
+    @Override
+    public boolean isCollection() {
+    	return true;
+    }
 }

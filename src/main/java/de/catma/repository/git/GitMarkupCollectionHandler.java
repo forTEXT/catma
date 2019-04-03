@@ -10,27 +10,36 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.IndexDiff.StageState;
+import org.eclipse.jgit.transport.CredentialsProvider;
 
-import de.catma.document.AccessMode;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.project.conflict.AnnotationConflict;
+import de.catma.project.conflict.CollectionConflict;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.TagLibrary;
+import de.catma.tag.TagManager;
 
 public class GitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final CredentialsProvider credentialsProvider;
 
 	private static final String MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT = "%s_markupcollection";
 
@@ -39,9 +48,11 @@ public class GitMarkupCollectionHandler {
 	}
 
 	public GitMarkupCollectionHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager,
+			CredentialsProvider credentialsProvider) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
+		this.credentialsProvider = credentialsProvider;
 	}
 
 	/**
@@ -85,8 +96,7 @@ public class GitMarkupCollectionHandler {
 					projectId,
 					createRepositoryResponse.repositoryHttpUrl,
 					null,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword()
+					credentialsProvider
 			);
 
 			// write header.json into the local repo
@@ -220,8 +230,9 @@ public class GitMarkupCollectionHandler {
 		);
 	}
 
-	private ArrayList<TagReference> openTagReferences(String projectId, String markupCollectionId, File parentDirectory)
-			throws IOException {
+	private ArrayList<TagReference> openTagReferences(
+		String projectId, String markupCollectionId, File parentDirectory)
+			throws Exception {
 
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
@@ -232,19 +243,19 @@ public class GitMarkupCollectionHandler {
 
 			// if it is a directory, recurse into it adding results to the current tagReferences list
 			if (target.isDirectory() && !target.getName().equalsIgnoreCase(".git")) {
-				tagReferences.addAll(this.openTagReferences(projectId, markupCollectionId, target));
-				continue;
+				tagReferences.addAll(
+					this.openTagReferences(projectId, markupCollectionId, target));
 			}
-
 			// if item is <CATMA_UUID>.json, read it into a list of TagReference objects
-			if (target.isFile() && isTagInstanceFilename(target.getName())) {
+			else if (target.isFile() && isTagInstanceFilename(target.getName())) {
 				String serialized = FileUtils.readFileToString(target, StandardCharsets.UTF_8);
 				JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
 						.deserialize(serialized, JsonLdWebAnnotation.class);
 
 				tagReferences.addAll(
 						jsonLdWebAnnotation.toTagReferenceList(
-								projectId, markupCollectionId, this.localGitRepositoryManager, this.remoteGitServerManager
+								projectId, 
+								markupCollectionId
 						)
 				);
 			}
@@ -253,28 +264,28 @@ public class GitMarkupCollectionHandler {
 		return tagReferences;
 	}
 
-	public UserMarkupCollectionReference getUserMarkupCollectionReference(String projectId, String markupCollectionId) throws Exception {
+	public UserMarkupCollectionReference getCollectionReference(String projectId, String markupCollectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
-			String markupCollectionSubmoduleName = String.format(
+			String markupCollectionSubmoduleRelDir = String.format(
 					"%s/%s", GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
 			);
 
-			File markupCollectionSubmodulePath = new File(
+			File markupCollectionSubmoduleAbsPath = new File(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					markupCollectionSubmoduleName
+					markupCollectionSubmoduleRelDir
 			);
 
 			String markupCollectionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(
-					markupCollectionSubmoduleName
+					markupCollectionSubmoduleRelDir
 			);
 
 			localGitRepoManager.detach();  // can't call open on an attached instance
 
 			File markupCollectionHeaderFile = new File(
-					markupCollectionSubmodulePath,
+					markupCollectionSubmoduleAbsPath,
 					"header.json"
 			);
 
@@ -294,39 +305,41 @@ public class GitMarkupCollectionHandler {
 
 			return  new UserMarkupCollectionReference(
 					markupCollectionId, markupCollectionRevisionHash,
-					contentInfoSet, markupCollectionHeader.getSourceDocumentId());
+					contentInfoSet, 
+					markupCollectionHeader.getSourceDocumentId(),
+					markupCollectionHeader.getSourceDocumentVersion());
 		}
 
 	}
 
-	public UserMarkupCollection open(@Nonnull String projectId, @Nonnull String markupCollectionId)
-			throws IOException {
+	public UserMarkupCollection getCollection(
+			@Nonnull String projectId, @Nonnull String markupCollectionId, TagLibrary tagLibrary)
+			throws Exception {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
-			String markupCollectionSubmoduleName = String.format(
-					"%s/%s", GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
-			);
+			String markupCollectionSubmoduleRelDir = 
+					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + markupCollectionId;
 
-			File markupCollectionSubmodulePath = new File(
+			File markupCollectionSubmoduleAbsPath = new File(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					markupCollectionSubmoduleName
+					markupCollectionSubmoduleRelDir
 			);
 
 			String markupCollectionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(
-					markupCollectionSubmoduleName
+					markupCollectionSubmoduleRelDir
 			);
 
 			localGitRepoManager.detach();  // can't call open on an attached instance
 
 			ArrayList<TagReference> tagReferences = this.openTagReferences(
-					projectId, markupCollectionId, markupCollectionSubmodulePath
+					projectId, markupCollectionId, markupCollectionSubmoduleAbsPath
 			);
 
 			File markupCollectionHeaderFile = new File(
-					markupCollectionSubmodulePath,
+					markupCollectionSubmoduleAbsPath,
 					"header.json"
 			);
 
@@ -344,13 +357,13 @@ public class GitMarkupCollectionHandler {
 					markupCollectionHeader.getName()
 			);
 
-			TagLibrary tagLibrary = new TagLibrary(markupCollectionId, contentInfoSet.getTitle());
-
 			UserMarkupCollection userMarkupCollection = new UserMarkupCollection(
-					markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE
+					markupCollectionId, contentInfoSet, tagLibrary, tagReferences,
+					markupCollectionHeader.getSourceDocumentId(), 
+					markupCollectionHeader.getSourceDocumentVersion()
 			);
 			userMarkupCollection.setRevisionHash(markupCollectionRevisionHash);
-
+			userMarkupCollection.addTagReferences(tagReferences);
 			return userMarkupCollection;
 		}
 	}
@@ -388,7 +401,8 @@ public class GitMarkupCollectionHandler {
 
 			if (localGitRepoManager.hasUntrackedChanges()) {
 				localGitRepoManager.addAllAndCommit(
-					"Auto commiting changes before performing a deletion of Annotations as part of a Tag deletion operation",
+					"Auto-committing changes before performing a deletion of "
+					+ "Annotations as part of a Tag deletion operation",
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail());				
 			}
@@ -459,4 +473,218 @@ public class GitMarkupCollectionHandler {
 					remoteGitServerManager.getEmail());
 		}
 	}
+	
+	public void checkout(String projectId, String collectionId, String branch, boolean createBranch) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+
+			localGitRepoManager.checkout(branch, createBranch);
+		}		
+	}	
+	
+	public String updateCollection(String projectId, UserMarkupCollectionReference collectionRef) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionRef.getId();
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+
+			
+			ContentInfoSet contentInfoSet = collectionRef.getContentInfoSet();
+			
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			GitMarkupCollectionHeader header = new GitMarkupCollectionHeader(
+					contentInfoSet.getTitle(), 
+					contentInfoSet.getDescription(), 
+					collectionRef.getSourceDocumentId(), 
+					collectionRef.getSourceDocumentRevisiohHash());
+
+			SerializationHelper<GitMarkupCollectionHeader> serializationHelper = new SerializationHelper<>();
+			String serializedHeader = serializationHelper.serialize(header);
+			
+			localGitRepoManager.add(
+					targetHeaderFile,
+					serializedHeader.getBytes(StandardCharsets.UTF_8));
+
+			String collectionRevision = localGitRepoManager.addAndCommit(
+					targetHeaderFile, 
+					serializedHeader.getBytes(StandardCharsets.UTF_8), 
+					String.format("Updated metadata of Collection %1$s with ID %2$s", 
+						collectionRef.getName(), collectionRef.getId()),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
+
+			return collectionRevision;
+		}
+	}	
+	
+	public MergeResult synchronizeBranchWithRemoteMaster(
+			String branch, String projectId, String collectionId) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+
+			localGitRepoManager.checkout(Constants.MASTER, false);
+			
+			localGitRepoManager.fetch(credentialsProvider);
+			
+			MergeResult mergeResult = localGitRepoManager.merge(branch);
+			if (mergeResult.getMergeStatus().isSuccessful()) {
+				localGitRepoManager.push(credentialsProvider);
+				
+				localGitRepoManager.checkout(branch, false);
+				
+				localGitRepoManager.rebase(Constants.MASTER);
+			}
+			
+			return mergeResult;
+
+		}		
+	}
+
+	public boolean hasUncommittedChanges(String projectId, String collectionId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+			
+			return localGitRepoManager.hasUncommitedChanges();
+		}
+	}
+
+	public Status getStatus(String projectId, String collectionId) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+			return localGitRepositoryManager.getStatus();
+		}
+	}
+
+	public CollectionConflict getCollectionConflict(String projectId, String collectionId) throws Exception {
+		
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
+
+			Status status =  localGitRepositoryManager.getStatus();
+			
+			String collectionSubmoduleRelDir = 
+					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + collectionId;
+			
+			File collectionSubmoduleAbsPath = new File(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					collectionSubmoduleRelDir
+			);
+
+			localGitRepoManager.detach(); 
+			
+			File collectionHeaderFile = new File(
+					collectionSubmoduleAbsPath,
+					"header.json"
+			);
+
+			String serializedCollectionHeaderFile = FileUtils.readFileToString(
+					collectionHeaderFile, StandardCharsets.UTF_8
+			);
+
+			GitMarkupCollectionHeader collectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
+					.deserialize(serializedCollectionHeaderFile, GitMarkupCollectionHeader.class);
+
+			ContentInfoSet contentInfoSet = new ContentInfoSet(
+					collectionHeader.getAuthor(),
+					collectionHeader.getDescription(),
+					collectionHeader.getPublisher(),
+					collectionHeader.getName()
+			);
+			
+			String collectionGitRepositoryName =
+					projectRootRepositoryName + "/" + collectionSubmoduleRelDir;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+
+			for (Entry<String, StageState> entry : status.getConflictingStageState().entrySet()) {
+				String relativeAnnotationPathname = entry.getKey();
+				String absAnnotationPathname = collectionGitRepositoryName + "/" + relativeAnnotationPathname;
+
+				StageState stageState = entry.getValue();
+				
+				
+				switch (stageState) {
+				case BOTH_MODIFIED: {
+					String serializedConflictingAnnotation = FileUtils.readFileToString(
+						new File(absAnnotationPathname), StandardCharsets.UTF_8);
+					
+					AnnotationConflict annotationConflict = 
+							getBothModifiedAnnotationConflict(
+								projectId, collectionId, serializedConflictingAnnotation);
+				}
+				default: System.out.println("not handled");
+				}
+
+				
+				
+				
+			}
+			return null;
+		}		
+	}
+
+	private AnnotationConflict getBothModifiedAnnotationConflict(
+			String projectId, String collectionId, String serializedConflictingAnnotation) throws Exception {
+
+		
+		String masterVersion = serializedConflictingAnnotation
+			.replaceAll("\\Q<<<<<<< HEAD\\E$", "")
+			.replaceAll("\\Q=======\\E$.*?\\Q>>>>>>> dev\\E$", "");
+		
+		String devVersion = serializedConflictingAnnotation
+				.replaceAll("\\Q<<<<<<< HEAD\\E$.*?\\Q=======\\E$", "")
+				.replaceAll("\\Q>>>>>>> dev\\E$", "");
+				
+		
+		JsonLdWebAnnotation masterVersionJsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
+				.deserialize(masterVersion, JsonLdWebAnnotation.class);
+
+		JsonLdWebAnnotation devVersionJsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
+				.deserialize(devVersion, JsonLdWebAnnotation.class);
+		
+		List<TagReference> masterTagReferences = 
+			masterVersionJsonLdWebAnnotation.toTagReferenceList(projectId, collectionId);
+		List<TagReference> defTagReferences = 
+			devVersionJsonLdWebAnnotation.toTagReferenceList(projectId, collectionId);
+
+		AnnotationConflict annotationConflict = new AnnotationConflict();
+		
+		
+		
+		return null;
+	}
+
 }

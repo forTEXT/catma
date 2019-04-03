@@ -21,5 +21,7 @@ public interface Resource {
 	public String getIcon();
 
 	public void deleteFrom(Repository project) throws Exception;
+	
+	public default boolean isCollection() { return false; };
 
 }

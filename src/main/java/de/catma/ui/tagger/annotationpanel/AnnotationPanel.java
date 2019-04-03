@@ -40,6 +40,7 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -81,6 +82,7 @@ public class AnnotationPanel extends VerticalLayout {
 	private Button btMaximizeAnnotationDetailsRibbon;
 	private VerticalSplitPanel rightSplitPanel;
 	private UserMarkupCollectionManager collectionManager;
+	private PropertyChangeListener collectionChangeListener;
 
 	public AnnotationPanel(
 			Repository project, 
@@ -217,6 +219,22 @@ public class AnnotationPanel extends VerticalLayout {
 		project.getTagManager().addPropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged, 
 				propertyDefinitionChangedListener);	
+		
+        this.collectionChangeListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				handleCollectionChange(evt);
+			}
+		};
+		
+		project.addPropertyChangeListener(
+			RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);		
+	}
+
+	private void handleCollectionChange(PropertyChangeEvent evt) {
+		//TODO: does this make sense?
+		
 	}
 
 	private void initData() {
@@ -868,7 +886,9 @@ public class AnnotationPanel extends VerticalLayout {
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);
-			
+		project.removePropertyChangeListener(
+				RepositoryChangeEvent.userMarkupCollectionChanged, 
+				collectionChangeListener);				
 	}
 	
 	private void setAnnotationDetailsPanelVisible(boolean visible) {

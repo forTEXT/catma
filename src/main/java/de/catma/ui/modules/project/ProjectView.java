@@ -2,6 +2,10 @@ package de.catma.ui.modules.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -18,12 +22,12 @@ import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
@@ -36,15 +40,15 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
-import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.indexer.IndexedRepository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.project.conflict.ConflictedProject;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -53,9 +57,9 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
@@ -66,6 +70,7 @@ import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.ui.repository.wizard.SourceDocumentResult;
 import de.catma.user.User;
+import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -82,12 +87,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private Repository project;
 
     private final ErrorHandler errorHandler;
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+	private final EventBus eventBus;
 
     private TreeGrid<Resource> resourceGrid;
     private Grid<TagsetDefinition> tagsetGrid;
 	private Grid<User> teamGrid;
-	private ActionGridComponent<TreeGrid<Resource>> sourceDocumentsGridComponent;
+	private ActionGridComponent<TreeGrid<Resource>> documentsGridComponent;
 	private PropertyChangeListener collectionChangeListener;
 	private PropertyChangeListener projectExceptionListener;
 	private PropertyChangeListener documentChangeListener;
@@ -95,10 +100,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
 
-    public ProjectView(ProjectManager projectManager){
+	@Inject
+    public ProjectView(ProjectManager projectManager, EventBus eventBus){
     	super("Project");
     	this.projectManager = projectManager;
-        this.errorHandler = (ErrorHandler)UI.getCurrent();
+        this.eventBus = eventBus;
+    	this.errorHandler = (ErrorHandler)UI.getCurrent();
         initProjectListeners();
 
         initComponents();
@@ -233,9 +240,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	resourceGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
     	
         ContextMenu addContextMenu = 
-        	sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
+        	documentsGridComponent.getActionGridBar().getBtnAddContextMenu();
         addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
         addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
+
+        ContextMenu documentsGridMoreOptionsContextMenu = 
+        	documentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+        documentsGridMoreOptionsContextMenu.addItem(
+            	"Edit documents / collections",(menuItem) -> handleEditResources());
+        documentsGridMoreOptionsContextMenu.addItem(
+        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
         
         tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
         	click -> handleAddTagsetRequest());
@@ -244,9 +258,127 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	tagsetsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
         moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
+        moreOptionsMenu.addItem("Import Tagsets", clickEvent -> handleImportTagsetsRequest());
+        
+        ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
+        hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
+        hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
+        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
 	}
 
-    private void handleDeleteTagsetRequest() {
+	private void handleImportTagsetsRequest() {
+		UploadDialog uploadDialog =
+				new UploadDialog("Upload Tagsets",
+						new SaveCancelListener<byte[]>() {
+			
+			public void cancelPressed() {}
+			
+			public void savePressed(byte[] result) {
+				InputStream is = new ByteArrayInputStream(result);
+				try {
+					if (BOMFilterInputStream.hasBOM(result)) {
+						is = new BOMFilterInputStream(
+								is, Charset.forName("UTF-8")); //$NON-NLS-1$
+					}
+					
+					project.importTagLibrary(is);
+					
+					
+				} catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error importing Tagsets", e);
+				}
+				finally {
+					CloseSafe.close(is);
+				}
+			}
+			
+		});
+		uploadDialog.show();	
+	}
+
+	private void handleSynchronizeRequest() {
+    	try {
+	    	if (project.hasUncommittedChanges()) {
+	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
+	    			"Commit all changes", 
+	    			"You have uncommited changes, please enter a short description for this commit:", 
+	    			commitMsg -> {
+	    				try {
+		    				project.commitChanges(commitMsg);
+		    				project.synchronizeWithRemote();
+		    				Notification.show(
+		    					"Info", 
+		    					"Your Project has been synchronized!", 
+		    					Type.HUMANIZED_MESSAGE);
+	    				}
+	    				catch (Exception e) {
+	    					e.printStackTrace(); //TODO
+	    				}
+	    			});
+	    		dlg.show();
+	    	}
+	    	else {
+	    		project.synchronizeWithRemote();
+	    	}
+    	}
+    	catch (Exception e) {
+            errorHandler.showAndLogError("error accessing project", e);
+    	}	}
+
+	private void handleEditResources() {
+		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
+		if ((selectedResources.size() != 1) 
+				&& !selectedResources.iterator().next().isCollection()) {
+			Notification.show("Info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE);
+		}	
+		else {
+			final Resource resource = selectedResources.iterator().next();
+			
+			// TODO: add proper edit metadata dialog including document level annotations!
+			
+			if (resource.isCollection()) {
+				final UserMarkupCollectionReference collectionRef = 
+						((CollectionResource)selectedResources.iterator().next()).getCollectionReference();
+		    	SingleTextInputDialog collectionNameDlg = 
+	        		new SingleTextInputDialog("Edit Collection", "Please enter the new Collection name:",
+        				new SaveCancelListener<String>() {
+    						@Override
+    						public void savePressed(String result) {
+    							collectionRef.getContentInfoSet().setTitle(result);
+    							try {
+									project.update(collectionRef, collectionRef.getContentInfoSet());
+									resourceGrid.getDataProvider().refreshItem(resource);
+								} catch (Exception e) {
+									errorHandler.showAndLogError("error updating Collection", e);
+								}
+    						}
+    					});
+	            	
+	            collectionNameDlg.show();						
+			}
+			else {
+				final SourceDocument document = 
+						((DocumentResource)selectedResources.iterator().next()).getDocument();
+		    	SingleTextInputDialog collectionNameDlg = 
+	        		new SingleTextInputDialog("Edit Document", "Please enter the new Document name:",
+        				new SaveCancelListener<String>() {
+    						@Override
+    						public void savePressed(String result) {
+    							document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().setTitle(result);
+    							project.update(
+    								document, 
+    								document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());
+    						}
+    					});
+	            	
+	            collectionNameDlg.show();								
+			}
+		}
+		
+	}
+
+	private void handleDeleteTagsetRequest() {
 		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
 		if (!tagsets.isEmpty()) {
 			ConfirmDialog.show(
@@ -274,7 +406,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
 		if (!tagsets.isEmpty()) {
 			final TagsetDefinition tagset = tagsets.iterator().next();
-	    	SingleTextInputDialog collectionNameDlg = 
+	    	SingleTextInputDialog tagsetNameDlg = 
 	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:",
 	        				new SaveCancelListener<String>() {
 	    						@Override
@@ -283,7 +415,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    						}
 	    					});
 	            	
-	            collectionNameDlg.show();			
+	            tagsetNameDlg.show();			
 		}
 		else {
 			Notification.show(
@@ -501,16 +633,36 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         addComponent(mainPanel);
         
-        ContextMenu hugeCardMoreOptions = getBtnMoreOptionsContextMenu();
-        hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));// TODO: 29.10.18 actually share something
-        hugeCardMoreOptions.addItem("Delete Ressources", e -> Notification.show("Deleting")); // TODO: 29.10.18 actually delete something
-      
         resourcePanel.addComponent(initResourceContent());
         teamPanel.addComponent(initTeamContent());
 
     }
 
-    /**
+    private void handleCommitRequest() {
+    	try {
+	    	if (project.hasUncommittedChanges()) {
+	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
+	    			"Commit all changes", 
+	    			"Please enter a short description for this commit:", 
+	    			commitMsg -> {
+	    				project.commitChanges(commitMsg);
+	    				Notification.show(
+	    					"Info", 
+	    					"Your changes have been committed!", 
+	    					Type.HUMANIZED_MESSAGE);
+	    			});
+	    		dlg.show();
+	    	}
+	    	else {
+	    		Notification.show("Info", "There are no uncommitted changes!", Type.HUMANIZED_MESSAGE);
+	    	}
+    	}
+    	catch (Exception e) {
+            errorHandler.showAndLogError("error accessing project", e);
+    	}
+	}
+
+	/**
      * initialize the resource part
      * @return
      */
@@ -559,19 +711,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         Label documentsAnnotations = new Label("Documents & Annotations");
 
-        sourceDocumentsGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
+        documentsGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
                 resourceGrid
         );
-        sourceDocumentsGridComponent.addStyleName("project-view-action-grid");
+        documentsGridComponent.addStyleName("project-view-action-grid");
 
-        ContextMenu BtnMoreOptionsContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
-        BtnMoreOptionsContextMenu.addItem("Share documents / collections", (menuItem) -> handleShareResources(menuItem, resourceGrid));
-        BtnMoreOptionsContextMenu.addItem("Analyze resources", (menuItem) -> handleAnalyzeResources(menuItem,resourceGrid ));
-
-
-        resourceContent.addComponent(sourceDocumentsGridComponent);
+        resourceContent.addComponent(documentsGridComponent);
 
         tagsetGrid = new Grid<>();
         tagsetGrid.setHeaderVisible(false);
@@ -628,8 +774,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             }
 
             @Override
-            public void ready(Repository repository) {
-                ProjectView.this.project = repository;
+            public void ready(Repository project) {
+                ProjectView.this.project = project;
                 ProjectView.this.project.addPropertyChangeListener(
                 		RepositoryChangeEvent.exceptionOccurred, 
                 		projectExceptionListener);
@@ -645,6 +791,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 		tagsetChangeListener);
                 
 				initData();
+            }
+            
+            @Override
+            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
+            	// TODO Auto-generated method stub
+            	
             }
 
             @Override
@@ -747,50 +899,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     }
 
-    /**
-     * TODO: 29.10.18 actually share resources
-     *
-     * @param clickEvent
-     * @param resourceGrid
-     */
-    private void handleShareResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-    	ConfirmDialog dialog = new ConfirmDialog();
-        VerticalLayout dialogContent = new VerticalLayout();
-        dialogContent.setWidth("100%");
-        dialogContent.addComponent(new Label("The following resources will be shared"));
-        dialog.getCancelButton().addClickListener((evt)-> dialog.close());
-        dialog.setContent(dialogContent);
-        dialog.show(UI.getCurrent(),(evt) -> {
-            dialog.close();
-        },true);
-    }
-
-	private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-
-		ConfirmDialog.show(UI.getCurrent(), "Info",
-				"Resources to be analyzed: " + resourceGrid.getSelectedItems().stream()
-						.map(resource -> resource.getName()).collect(Collectors.joining(",")) + "?",
-				"Go on", "Cancel", dlg -> {
-
-					Corpus corpus = new Corpus("corpus to be analyzed");
-
-					for (Resource resource : resourceGrid.getSelectedItems()) {
-
-						if (resource.getIcon().equalsIgnoreCase(VaadinIcons.NOTEBOOK.getHtml())) {
-							CollectionResource collResource = (CollectionResource) resource;
-							corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
-
-						} else {
-							DocumentResource docResource = (DocumentResource) resource;
-							corpus.addSourceDocument(docResource.getDocument());
-
-						}
-					}
-					eventBus.post(new RouteToAnalyzeNewEvent((IndexedRepository) project, corpus));
-				});
-
-	}
-
 	public void close() {
 		try {
 			if (project != null) {
@@ -816,8 +924,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                		TagManagerEvent.tagsetDefinitionChanged,
 	                		tagsetChangeListener);
 				}				
-			}			
-			
+			}		
+			if (project != null) {
+				project.close();
+				project = null;
+			}
 		}
 		catch (Exception e) {
 			errorHandler.showAndLogError("Error closing ProjectView", e);

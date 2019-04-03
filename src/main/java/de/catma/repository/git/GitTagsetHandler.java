@@ -14,7 +14,10 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.transport.CredentialsProvider;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
@@ -28,6 +31,7 @@ import de.catma.tag.TagsetDefinition;
 public class GitTagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final CredentialsProvider credentialsProvider;
 
 	private static final String TAGSET_REPOSITORY_NAME_FORMAT = "%s_tagset";
 
@@ -36,9 +40,10 @@ public class GitTagsetHandler {
 	}
 
 	public GitTagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager) {
+			IRemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
+		this.credentialsProvider = credentialsProvider;
 	}
 
 	/**
@@ -71,9 +76,8 @@ public class GitTagsetHandler {
 			localGitRepoManager.clone(
 					projectId,
 					createRepositoryResponse.repositoryHttpUrl,
-					null,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword()
+					null, // destination path is created by the repo manager 
+					credentialsProvider
 			);
 
 			// write header.json into the local repo
@@ -137,7 +141,7 @@ public class GitTagsetHandler {
 		}		
 	}
 	
-	public void synchronizeBranchWithRemoteMaster(
+	public MergeResult synchronizeBranchWithRemoteMaster(
 			String branch, String projectId, String tagsetId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -150,24 +154,24 @@ public class GitTagsetHandler {
 
 			localGitRepoManager.checkout(Constants.MASTER, false);
 			
-			localGitRepoManager.fetch(
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword());
+			localGitRepoManager.fetch(credentialsProvider);
 			
-			localGitRepoManager.merge(branch);
+			MergeResult mergeResult = localGitRepoManager.merge(branch);
 			
-			localGitRepoManager.push(
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getPassword());
+			if (mergeResult.getMergeStatus().isSuccessful()) {
+				
+				localGitRepoManager.push(credentialsProvider);
+				
+				localGitRepoManager.checkout(branch, false);
+				
+				localGitRepoManager.rebase(Constants.MASTER);
+			}
 			
-			localGitRepoManager.checkout(branch, false);
-			
-			localGitRepoManager.rebase(Constants.MASTER);
-
+			return mergeResult;
 		}		
 	}
 	
-	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
+	public TagsetDefinition getTagset(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
@@ -395,4 +399,20 @@ public class GitTagsetHandler {
 			return tagsetRevision;
 		}
 	}
+
+	public Status getStatus(String projectId, String tagsetId) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
+			
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+			
+			return localGitRepositoryManager.getStatus();
+		}
+	}
+
 }

@@ -39,6 +39,7 @@ public class GitPropertyDefinition {
 	}
 
 	public void setPossibleValueList(List<String> values){
+		this.propertyDefinition.setPossibleValueList(values);
 	}
 
 }

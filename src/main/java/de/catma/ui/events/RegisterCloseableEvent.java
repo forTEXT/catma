@@ -8,11 +8,11 @@ import java.io.Closeable;
  * @author db
  *
  */
-public class CloseableEvent {
+public class RegisterCloseableEvent {
 
 	private final Closeable closeable;
 
-	public CloseableEvent(Closeable closeable){
+	public RegisterCloseableEvent(Closeable closeable){
 		this.closeable = closeable;
 	}
 	

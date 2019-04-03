@@ -2,10 +2,11 @@ package de.catma.ui.modules.main;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Page;
-import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.themes.ValoTheme;
@@ -14,6 +15,8 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.login.LoginService;
+import de.catma.ui.modules.account.EditAccountDialog;
 import de.catma.ui.util.Version;
 
 
@@ -24,10 +27,16 @@ import de.catma.ui.util.Version;
  */
 public class CatmaHeader extends CssLayout {
 
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
+	private final EventBus eventBus;
+	private final Provider<EditAccountDialog> accountDialogProvider;
+	private final LoginService loginService;
 
-	public CatmaHeader(){
+	@Inject
+	public CatmaHeader(Provider<EditAccountDialog> accountDialogProvider, EventBus eventBus, LoginService loginService){
         super();
+        this.accountDialogProvider = accountDialogProvider;
+        this.eventBus = eventBus;
+        this.loginService = loginService;
         eventBus.register(this);
         initComponents();
     }
@@ -48,10 +57,15 @@ public class CatmaHeader extends CssLayout {
         IconButton btnAccount = new IconButton( VaadinIcons.USER);
 
         ContextMenu ctxAccount = new ContextMenu(btnAccount, true);
+        ctxAccount.addItem("edit account", (item) -> {
+        	EditAccountDialog editAccount = accountDialogProvider.get();
+        	editAccount.show();
+        });
         ctxAccount.addItem("logout", (item) -> {
-        	VaadinSession.getCurrent().close();
+        	loginService.logout();
         	Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
     	});
+        
         btnAccount.addClickListener((evt) ->  ctxAccount.open(evt.getClientX(), evt.getClientY()));
         
         addComponent(btnAccount);

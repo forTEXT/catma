@@ -59,7 +59,7 @@ public class SignupTokenManager {
      * @return token
      */
     public Optional<SignupToken> get(String token){
-    	logger.log(Level.INFO, "called with token" + token);
+    	logger.log(Level.INFO, "called with token " + token);
     	Objects.requireNonNull(token);
     	if(!containsToken(token)){
     		return Optional.empty();

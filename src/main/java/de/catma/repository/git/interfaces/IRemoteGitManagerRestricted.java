@@ -7,7 +7,6 @@ import de.catma.Pager;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitUser;
-import de.catma.ui.authentication.Credentials;
 import de.catma.user.User;
 
 /**
@@ -16,7 +15,7 @@ import de.catma.user.User;
  * @author db
  *
  */
-public interface IRemoteGitManagerRestricted extends IGitUserInformation {
+public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommonRemoteGitManager {
 
 	/**
 	 * Creates a new remote repository with the <code>name</code> and <code>path</code> supplied.
@@ -122,10 +121,5 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation {
 	 */
 	GitUser getGitUser();
 
-	/**
-	 *  
-	 * @return current credetials
-	 */
-	Credentials getCredentials();
 
 }

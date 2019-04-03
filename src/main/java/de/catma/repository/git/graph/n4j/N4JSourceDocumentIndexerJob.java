@@ -1,4 +1,4 @@
-package de.catma.repository.git.graph.indexer;
+package de.catma.repository.git.graph.n4j;
 
 import static de.catma.repository.git.graph.NodeType.Position;
 import static de.catma.repository.git.graph.NodeType.Project;
@@ -33,7 +33,7 @@ import de.catma.repository.git.graph.RelationType;
 import de.catma.repository.neo4j.SessionRunner;
 import de.catma.repository.neo4j.StatementExcutor;
 
-public class SourceDocumentIndexerJob implements Job {
+public class N4JSourceDocumentIndexerJob implements Job {
 	
 	public static enum DataField {
 		title,
@@ -46,7 +46,7 @@ public class SourceDocumentIndexerJob implements Job {
 		
 	}
 	
-	private Logger logger = Logger.getLogger(SourceDocumentIndexerJob.class.getName());
+	private Logger logger = Logger.getLogger(N4JSourceDocumentIndexerJob.class.getName());
 
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {

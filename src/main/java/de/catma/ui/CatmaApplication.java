@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -36,9 +36,11 @@ import java.util.logging.Logger;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.vaadin.annotations.PreserveOnRefresh;
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
@@ -46,6 +48,8 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.shared.communication.PushMode;
+import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.JavaScript;
 import com.vaadin.ui.Label;
@@ -78,7 +82,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.events.CloseableEvent;
+import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.TokenInvalidEvent;
 import de.catma.ui.events.TokenValidEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -93,7 +97,8 @@ import de.catma.ui.util.Version;
 
 @Theme("catma")
 @PreserveOnRefresh
-public class CatmaApplication extends UI implements 
+@Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET_XHR )
+public class CatmaApplication extends UI implements KeyValueStorage,
 	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, ParameterProvider, FocusHandler {
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -101,39 +106,43 @@ public class CatmaApplication extends UI implements
 		
 	private final List<WeakReference<Closeable>> closeListener = Lists.newArrayList();
 	
-	private final Injector injector = VaadinSession.getCurrent().getAttribute(Injector.class);
-
-	private final EventBus eventBus = VaadinSession.getCurrent().getAttribute(EventBus.class);
-
+    private final ConcurrentHashMap<String,Object> _attributes = new ConcurrentHashMap<String, Object>();
 	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
 
-	private final Class<? extends Annotation> loginType; 
-	private final Class<? extends Annotation> initType;
+	private  Class<? extends Annotation> loginType; 
+	private  Class<? extends Annotation> initType;
 	 
-	private final LoginService loginservice;
-	private final InitializationService initService;
+	private LoginService loginservice;
+	private InitializationService initService;
 
-//	private MainView mainView;
+	private final Injector injector;
+	private  EventBus eventBus;
 	
-//	private final MainView mainView = new MainView(new EventBus());
-
-	public CatmaApplication() throws IOException {
-		eventBus.register(this);
-			try {
-				loginType = 
-							(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.LoginType.getValue());
-				initType = 
-						(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.InitType.getValue());
-				loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
-				initService = injector.getInstance(Key.get(InitializationService.class, initType));
-			} catch (ClassNotFoundException e) {
-				throw new IOException("Runtime configuration error", e);
-			}
+	@Inject
+	public CatmaApplication(Injector injector) throws IOException {
+		this.injector = injector;
 	}
+
 
 	@Override
 	protected void init(VaadinRequest request) {
-		
+		this.eventBus = injector.getInstance(EventBus.class);
+		this.eventBus.register(this);
+		try {
+			
+			loginType = 
+					(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.LoginType.getValue());
+			initType = 
+					(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.InitType.getValue());
+			loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
+			initService = injector.getInstance(Key.get(InitializationService.class, initType));
+		} catch (ClassNotFoundException e) {
+			showAndLogError("Runtime configuration error", e);
+		}
+
+		loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
+		initService = injector.getInstance(Key.get(InitializationService.class, initType));
+
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 		boolean nase = false;
@@ -191,7 +200,6 @@ public class CatmaApplication extends UI implements
 		} catch (IOException e) {
 			showAndLogError("error creating landing page",e);			
 		}
-
 		eventBus.post(new RouteToDashboardEvent());
 
 		// A fresh UI and session doesn't have a request handler registered yet.
@@ -202,16 +210,18 @@ public class CatmaApplication extends UI implements
 			SignupTokenManager tokenManager = new SignupTokenManager();
 			tokenManager.handleVerify( request.getParameter("token"), eventBus);
 		}
-		
-		setPollInterval(1000);
-		
-//		SignupTokenManager.parseToken(request.getPathInfo(), request.getParameter("token"));
+//		this.setPollInterval(1000);
 	}
 	
-//			logger.info("closing session and redirecting to " + afterLogoutRedirectURL);
-//			Page.getCurrent().setLocation(afterLogoutRedirectURL);
-//			VaadinSession.getCurrent().close();
-//	
+	@Override
+	protected void refresh(VaadinRequest request) {
+		super.refresh(request);
+		if(signupTokenManager.parseUri(request.getPathInfo())) {
+			SignupTokenManager tokenManager = new SignupTokenManager();
+			tokenManager.handleVerify( request.getParameter("token"), eventBus);
+		}
+	}
+	
 	private void storeParameters(Map<String, String[]> parameters) {
 		this.parameters.putAll(parameters);
 	}
@@ -344,9 +354,7 @@ public class CatmaApplication extends UI implements
 
 	@Override
 	public void close() {
-		loginservice.getAPI().ifPresent((api) -> 
-			logger.info("application for user" + api.getUsername() + " has been closed") );
-		
+
 		for (WeakReference<Closeable> weakReference : closeListener) {
 			Closeable ref = weakReference.get();
 			if (ref != null) {
@@ -358,17 +366,22 @@ public class CatmaApplication extends UI implements
 			}
 		}
 		
+		IRemoteGitManagerRestricted api = loginservice.getAPI();
+		
+		if(api != null){
+			logger.info("application for user " + api.getUsername() + " has been closed");
+		}
+		
 		initService.shutdown();
 		super.close();
 	}
 
 	@Override
 	public void showAndLogError(String message, Throwable e) {
-		Optional<IRemoteGitManagerRestricted> api;
-		api = loginservice.getAPI();
+		IRemoteGitManagerRestricted api = loginservice.getAPI();
 		
-		if(api.isPresent()){
-			logger.log(Level.SEVERE, "[" + api.get().getUsername() + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
+		if(api != null){
+			logger.log(Level.SEVERE, "[" + api.getUsername() + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
 			
 		}
 
@@ -415,6 +428,16 @@ public class CatmaApplication extends UI implements
 		return accuireBackgroundService().schedule(command, delay, unit);
 	}
 	
+	@Override
+	public Object setAttribute(String key, Object obj){
+		return this._attributes.computeIfAbsent(key, (noop) -> obj);
+	}
+
+	@Override
+	public Object getAttribute(String key){
+		return this._attributes.get(key);
+	}
+	
 	@Subscribe
 	public void handleTokenValid(TokenValidEvent tokenValidEvent){
 		getUI().access(() -> {
@@ -431,7 +454,8 @@ public class CatmaApplication extends UI implements
 	}
 	
 	@Subscribe
-	public void handleClosableResources(CloseableEvent closeableEvent ){
-		closeListener.add(new WeakReference<Closeable>(closeableEvent.getCloseable()));
+	public void handleClosableResources(RegisterCloseableEvent registerCloseableEvent ){
+		closeListener.add(new WeakReference<Closeable>(registerCloseableEvent.getCloseable()));
 	}
+	
 }

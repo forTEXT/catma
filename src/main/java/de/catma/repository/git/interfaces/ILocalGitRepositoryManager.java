@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.transport.CredentialsProvider;
+
 public interface ILocalGitRepositoryManager extends AutoCloseable {
 	static String DEFAULT_LOCAL_DEV_BRANCH = "dev";
 	
@@ -17,7 +21,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void init(String group, String name, String description) throws IOException;
 
-	String clone(String group, String uri, File path, String username, String password)
+	String clone(String group, String uri, File path, CredentialsProvider credentialsProvider)
 			throws IOException;
 
 	void open(String group, String name) throws IOException;
@@ -31,12 +35,12 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	String commit(String message, String committerName, String committerEmail) throws IOException;
 
-	void addSubmodule(File path, String uri, String username, String password)
+	void addSubmodule(File path, String uri, CredentialsProvider credentialsProvider)
 			throws IOException;
 
-	void push(String username, String password) throws IOException;
+	void push(CredentialsProvider credentialsProvider) throws IOException;
 
-	void fetch(String username, String password) throws IOException;
+	void fetch(CredentialsProvider credentialsProvider) throws IOException;
 
 	void checkout(String name) throws IOException;
 	void checkout(String name, boolean createBranch) throws IOException;
@@ -48,7 +52,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	File getRepositoryBasePath();
 
-	String clone(String group, String uri, File path, String username, String password, boolean initSubmodules)
+	String clone(String group, String uri, File path, CredentialsProvider credentialsProvider, boolean initSubmodules)
 			throws IOException;
 
 	String getRevisionHash() throws IOException;
@@ -65,12 +69,14 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	String addAllAndCommit(String commitMsg, String committerName, String committerEmail) throws IOException;
 
-	void removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException;
+	String removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException;
 
-	void merge(String branch) throws IOException;
+	MergeResult merge(String branch) throws IOException;
 
 	void rebase(String branch) throws IOException;
 
 	boolean hasUntrackedChanges() throws IOException;
+
+	Status getStatus() throws IOException;
 
 }

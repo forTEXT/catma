@@ -466,7 +466,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				ContentInfoSet contentInfoSet = item.getBean();
 
 				if (value instanceof UserMarkupCollectionReference) {
-					repository.update((UserMarkupCollectionReference)value, contentInfoSet);
+					try {
+						repository.update((UserMarkupCollectionReference)value, contentInfoSet);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				else if (value instanceof SourceDocument) {
 					repository.update((SourceDocument)value, contentInfoSet);
@@ -1299,10 +1304,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		if (sourceDocument.getSourceContentHandler() instanceof XML2ContentHandler) {
 			XmlMarkupCollectionSerializationHandler xmlMarkupCollectionSerializationHandler = 
 				new XmlMarkupCollectionSerializationHandler(
-					sourceDocument,
 					repository.getTagManager(), 
-					sourceDocument.getID(),
-				//	sourceDocument.getLength()
 					(XML2ContentHandler)sourceDocument.getSourceContentHandler());
 			
 			try (InputStream is = 

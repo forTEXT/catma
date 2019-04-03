@@ -47,7 +47,9 @@ public class UserMarkupCollectionExport extends ServerResource {
 					umcId,  
 					null, //TODO: revision hash might be needed
 					new ContentInfoSet(),
-					null);
+					"", //TODO: sourceDocId
+					"" //TODO: sourceDocRev
+			);
 			
 			for (SourceDocument sd : repo.getSourceDocuments()) {
 				if (sd.getUserMarkupCollectionRefs().contains(umcRef)) {
