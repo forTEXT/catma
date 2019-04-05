@@ -182,7 +182,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			tagInstancesAndRanges.put(tagReference.getTagInstance(), tagReference.getRange());
 		});
 		
-		for (TagInstance ti : tagInstancesAndRanges.keys()) {
+		for (TagInstance ti : tagInstancesAndRanges.keySet()) {
 			List<Range> ranges = tagInstancesAndRanges.get(ti);
 			List<Integer> flatRanges = 
 				ranges
