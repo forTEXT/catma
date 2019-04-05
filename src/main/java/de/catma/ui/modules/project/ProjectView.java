@@ -640,15 +640,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         VerticalLayout teamPanel = new VerticalLayout();
         teamPanel.setSizeUndefined(); // don't set width 100%
+        teamPanel.setVisible(false);
         teamPanel.addComponent(new Label("Team"));
         
         mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
         
+ 
         rbacEnforcer.register(
-        		RBACConstraint.ifNotAuthorized((proj) -> 
-        			(remoteGitManager.isAuthorizedOnProject(remoteGitManager.getUser(),RBACPermission.PROJECT_MEMBERS_EDIT, proj.getProjectId())),
-        			() -> teamPanel.setVisible(false))
+        		RBACConstraint.ifAuthorized((proj) -> 
+        			(remoteGitManager.isAuthorizedOnProject(remoteGitManager.getUser(), RBACPermission.PROJECT_MEMBERS_EDIT, proj.getProjectId())),
+        			() -> { 
+        		        getMoreOptionsContextMenu().addItem("invite to project", (click) -> 
+        	        	new ProjectInvitationDialog(this.projectReference).show());
+        		        teamPanel.setVisible(true);
+        			})
         		);
     }
 

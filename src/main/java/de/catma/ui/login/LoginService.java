@@ -2,11 +2,8 @@ package de.catma.ui.login;
 
 import java.io.IOException;
 
-import com.google.inject.ImplementedBy;
-
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 
-@ImplementedBy(LocalUserLoginService.class)
 public interface LoginService {
 	
 	/**

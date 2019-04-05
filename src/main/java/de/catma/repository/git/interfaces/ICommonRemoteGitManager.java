@@ -2,7 +2,9 @@ package de.catma.repository.git.interfaces;
 
 import java.io.IOException;
 
-public interface ICommonRemoteGitManager {
+import de.catma.rbac.IRBACManager;
+
+public interface ICommonRemoteGitManager extends IRBACManager {
 	/**
 	 * checks if a given User or Email exists
 	 * @param usernameOrEmail

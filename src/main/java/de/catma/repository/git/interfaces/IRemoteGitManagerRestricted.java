@@ -16,7 +16,7 @@ import de.catma.user.User;
  * @author db
  *
  */
-public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommonRemoteGitManager, IRBACManager {
+public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommonRemoteGitManager {
 
 	/**
 	 * Creates a new remote repository with the <code>name</code> and <code>path</code> supplied.

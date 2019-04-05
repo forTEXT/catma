@@ -13,9 +13,9 @@ import com.vaadin.ui.Component;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.ui.di.UIFactory;
 import de.catma.ui.modules.main.CatmaHeader;
 import de.catma.ui.modules.main.MainView;
 import de.catma.ui.modules.main.NotLoggedInMainView;
@@ -91,7 +91,8 @@ public class Vaadin8InitializationService implements InitializationService {
 			return new MainView(projectManager, 
 					injector.getInstance(CatmaHeader.class), 
 					injector.getInstance(EventBus.class),
-					api
+					api,
+					injector.getInstance(UIFactory.class)
 					);
 		} else {
 			return new NotLoggedInMainView(this,loginService, injector.getInstance(EventBus.class));

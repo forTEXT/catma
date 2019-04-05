@@ -8,7 +8,6 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
 import de.catma.rbac.RBACRole;
-import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -39,6 +38,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 
 		cb_role.setWidth("100%");
 		cb_role.setItemCaptionGenerator(RBACRole::name);
+		cb_role.setEmptySelectionAllowed(false);
 	}
 
 

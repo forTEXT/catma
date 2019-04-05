@@ -15,6 +15,7 @@ import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.analyzer.AnalyzerManagerView;
+import de.catma.ui.di.UIFactory;
 import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
@@ -70,6 +71,11 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	/**
+	 * Factory to generate Views
+	 */
+	private final UIFactory uiFactory;
+
+	/**
 	 * current route
 	 */
 	private Class<?> currentRoute;
@@ -80,6 +86,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 
 	private AnalyzerManagerView analyzerManagerView;
 
+
 	
 	/**
 	 * 
@@ -89,12 +96,14 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
     public MainView(ProjectManager projectManager, 
     		CatmaHeader catmaHeader, 
     		EventBus eventBus,
-    		IRemoteGitManagerRestricted remoteGitManagerRestricted){
+    		IRemoteGitManagerRestricted remoteGitManagerRestricted,
+    		UIFactory uiFactory){
         this.projectManager = projectManager;
         this.header = catmaHeader;
         this.eventBus = eventBus;
         this.navigation = new CatmaNav(eventBus);
         this.remoteGitManagerRestricted = remoteGitManagerRestricted;
+        this.uiFactory = uiFactory;
         initComponents();
         addStyleName("main-view");
         eventBus.register(this);
@@ -139,7 +148,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
 			closeViews();
-			setContent(new DashboardView(projectManager, eventBus, remoteGitManagerRestricted));
+			setContent(uiFactory.getDashboardView(projectManager));
 			eventBus.post(new HeaderContextChangeEvent(new Label("")));
 			currentRoute = routeToDashboardEvent.getClass();
 		}

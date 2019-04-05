@@ -22,9 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
-import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,7 +55,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
@@ -128,15 +125,13 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	
     private final ConcurrentHashMap<String,Object> _attributes = new ConcurrentHashMap<String, Object>();
 	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
-
-	private  Class<? extends Annotation> loginType; 
-	private  Class<? extends Annotation> initType;
 	 
+	private final Injector injector;
+	
+	// Bind later when UI is ready.
 	private LoginService loginservice;
 	private InitializationService initService;
-
-	private final Injector injector;
-	private  EventBus eventBus;
+	private EventBus eventBus;
 	
 	@Inject
 	public CatmaApplication(Injector injector) throws IOException {
@@ -146,22 +141,11 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 
 	@Override
 	protected void init(VaadinRequest request) {
-		this.eventBus = injector.getInstance(EventBus.class);
+		eventBus = injector.getInstance(EventBus.class);
+		loginservice = injector.getInstance(LoginService.class);
+		initService = injector.getInstance(InitializationService.class);
+		
 		this.eventBus.register(this);
-		try {
-			
-			loginType = 
-					(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.LoginType.getValue());
-			initType = 
-					(Class<? extends Annotation>)Class.forName(RepositoryPropertyKey.InitType.getValue());
-			loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
-			initService = injector.getInstance(Key.get(InitializationService.class, initType));
-		} catch (ClassNotFoundException e) {
-			showAndLogError("Runtime configuration error", e);
-		}
-
-		loginservice = injector.getInstance(Key.get(LoginService.class, loginType));
-		initService = injector.getInstance(Key.get(InitializationService.class, initType));
 
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
@@ -226,21 +210,30 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		// A fresh UI and session doesn't have a request handler registered yet.
 		// we need to verify tokens here too.
 		
-		if(signupTokenManager.parseUri(request.getPathInfo())) {
-			SignupTokenManager tokenManager = new SignupTokenManager();
-			tokenManager.handleVerify( request.getParameter("token"), eventBus);
-		}
-		
+		handleRequestToken(request);
+		handleRequestOauth(request);
+
 //		this.setPollInterval(1000);
 	}
 	
 	@Override
 	protected void refresh(VaadinRequest request) {
 		super.refresh(request);
+		handleRequestToken(request);
+		handleRequestOauth(request);
+	}
+	
+	private void storeParameters(Map<String, String[]> parameters) {
+		this.parameters.putAll(parameters);
+	}
+	
+	private void handleRequestToken(VaadinRequest request){
 		if(signupTokenManager.parseUri(request.getPathInfo())) {
 			SignupTokenManager tokenManager = new SignupTokenManager();
 			tokenManager.handleVerify( request.getParameter("token"), eventBus);
 		}
+	}
+	private void handleRequestOauth(VaadinRequest request){
 		if(request.getParameter("code") != null && VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
 			handleOauth(request);
 			Component mainView;
@@ -253,10 +246,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 				showAndLogError("can't login properly", e);
 			}
 		}
-	}
-	
-	private void storeParameters(Map<String, String[]> parameters) {
-		this.parameters.putAll(parameters);
 	}
 
 	public Map<String, String[]> getParameters() {

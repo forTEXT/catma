@@ -1,7 +1,6 @@
 package de.catma.ui.modules.main.signup;
 
 import java.util.Iterator;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -15,8 +14,8 @@ import com.google.common.eventbus.EventBus;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.JsonException;
-import com.vaadin.server.VaadinSession;
 
+import de.catma.config.HazelcastConfiguration;
 import de.catma.ui.events.TokenInvalidEvent;
 import de.catma.ui.events.TokenValidEvent;
 
@@ -31,7 +30,7 @@ public class SignupTokenManager {
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     private final Cache<String, String> tokenCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache("signuptokens");
+    		Caching.getCachingProvider().getCacheManager().getCache(HazelcastConfiguration.CACHE_KEY_SIGNUPTOKEN);
 
     /**
      * checks if a token exists

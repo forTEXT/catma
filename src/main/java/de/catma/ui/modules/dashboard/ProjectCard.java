@@ -81,10 +81,10 @@ public class ProjectCard extends VerticalLayout  {
         descriptionBar.addComponent(name);
 //        descriptionBar.setExpandRatio(name,1.0f);
 
-        IconButton buttonRemove = new IconButton(VaadinIcons.TRASH);
-        descriptionBar.addComponents(buttonRemove);
+        IconButton btnRemove = new IconButton(VaadinIcons.TRASH);
+        descriptionBar.addComponents(btnRemove);
 
-        buttonRemove.addClickListener(
+        btnRemove.addClickListener(
                 (event -> {
                     ConfirmDialog.show(UI.getCurrent(),"Delete Project",
                             "Do you want to delete Project: " + projectReference.getName() + "?",
@@ -103,16 +103,28 @@ public class ProjectCard extends VerticalLayout  {
                 })
         );
         
-        IconButton editAction = new IconButton(VaadinIcons.PENCIL);
-        editAction.addClickListener(click -> {
+        IconButton btnEdit = new IconButton(VaadinIcons.PENCIL);
+        btnEdit.addClickListener(click -> {
         	new EditProjectDialog(projectReference, projectManager, result -> eventBus.post(new ResourcesChangedEvent<Component>(this))).show();
         });
-        descriptionBar.addComponent(editAction);
+        descriptionBar.addComponent(btnEdit);
         
         rbacEnforcer.register(
         		RBACConstraint.ifNotAuthorized((proj) -> 
-        			(rbacManager.isAuthorizedOnProject(projectManager.getUser(),RBACPermission.PROJECT_EDIT, proj.getProjectId())),
-        			() -> editAction.setVisible(false))
+        			(rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_EDIT, proj.getProjectId())),
+        			() -> { 
+        				btnEdit.setVisible(false);
+        				btnEdit.setEnabled(false);
+        			})
+        		);
+        
+        rbacEnforcer.register(
+        		RBACConstraint.ifNotAuthorized((proj) -> 
+        			(rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_DELETE, proj.getProjectId())),
+        			() -> { 
+        				btnRemove.setVisible(false);
+        				btnRemove.setEnabled(false);
+        			})
         		);
         
         IconButton buttonAction = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
