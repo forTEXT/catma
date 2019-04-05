@@ -2,13 +2,15 @@ package de.catma.ui.modules.dashboard;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.vaadin.data.provider.DataProvider;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.UI;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.rbac.IRBACManager;
+import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
@@ -26,11 +28,40 @@ public class DashboardView extends VerticalLayout {
 	
 	private final ProjectList projects;
 
+	private final EventBus eventBus;
+
+	private final DataProvider<ProjectReference,Void> projectDataProvider;
+
 	@Inject
-    public DashboardView(ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){ 
+    public DashboardView(@Assisted("projectManager")ProjectManager projectManager, ProjectList projectList, EventBus eventBus){ 
         this.projectManager = projectManager;
         this.errorLogger = (ErrorHandler)(UI.getCurrent());
-        this.projects = new ProjectList(projectManager, eventBus, rbacManager); 
+        this.projects = projectList;
+        this.eventBus = eventBus;
+        this.projectDataProvider = DataProvider.fromCallbacks(
+		        (query) -> {
+		            try {
+		            	int page = (query.getOffset() / query.getLimit()) + 1;
+		            
+		            	return projectManager.getProjectReferences()
+		                    .page(page)
+		                    .stream()
+		                    ;
+		            } catch (Exception e) {
+		                errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
+		                return null;
+		            }
+		        },
+		        query -> {
+		            try {
+		            	return projectManager.getProjectReferences().getTotalItems();
+		            } catch (Exception e) {
+		                errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
+		                return 0;
+		            }
+		        }
+        );
+        this.eventBus.register(this);
         initComponents();
     }
 
@@ -40,30 +71,7 @@ public class DashboardView extends VerticalLayout {
         CssLayout receivedResources = new CssLayout();
         receivedResources.setStyleName("flexlayout");
                    
-        DataProvider<ProjectReference,Void> projectDataProvider =
-                DataProvider.fromCallbacks(
-                        (query) -> {
-                            try {
-                            	int page = (query.getOffset() / query.getLimit()) + 1;
-                            
-                            	return projectManager.getProjectReferences()
-                                    .page(page)
-                                    .stream()
-                                    ;
-                            } catch (Exception e) {
-                                errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
-                                return null;
-                            }
-                        },
-                        query -> {
-                            try {
-                            	return projectManager.getProjectReferences().getTotalItems();
-                            } catch (Exception e) {
-                                errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
-                                return 0;
-                            }
-                        }
-        );
+        
         try {
 			projectManager.getProjectReferences().page(1); //Fake call to satisfy vaadin 10 and above
 		} catch (Exception e) {
@@ -75,4 +83,7 @@ public class DashboardView extends VerticalLayout {
         addComponents(projects, receivedResources);
     }
 
+    public void handleResourceChangedEvent(ResourcesChangedEvent<Component> event){
+    	projectDataProvider.refreshAll();
+    }
 }

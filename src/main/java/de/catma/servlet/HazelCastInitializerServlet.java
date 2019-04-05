@@ -1,18 +1,15 @@
 package de.catma.servlet;
 
-import static java.util.concurrent.TimeUnit.HOURS;
-
 import javax.cache.CacheManager;
 import javax.cache.Caching;
-import javax.cache.configuration.MutableConfiguration;
-import javax.cache.expiry.AccessedExpiryPolicy;
-import javax.cache.expiry.Duration;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+
+import de.catma.config.HazelcastConfiguration;
 /**
  * Initializes a hazelcast node and cache to store signup tokens.
  * Tokens are valid for 4 hours.
@@ -33,11 +30,8 @@ public class HazelCastInitializerServlet extends HttpServlet{
 		hazalcastNode = Hazelcast.newHazelcastInstance();
 	    CacheManager manager = Caching.getCachingProvider().getCacheManager();
 		
-	    MutableConfiguration<String, String> configuration = 
-	    		new MutableConfiguration<String, String>()
-	    		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(HOURS, 4)));
-	    // Get a Cache called "myCache" and configure with 1 minute expiry
-	    manager.createCache("signuptokens", configuration);
+	    manager.createCache(HazelcastConfiguration.CACHE_KEY_SIGNUPTOKEN, HazelcastConfiguration.signupTokenConfiguration);
+	    manager.createCache(HazelcastConfiguration.CACHE_KEY_INVITATIONS, HazelcastConfiguration.invitationConfiguration);
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override

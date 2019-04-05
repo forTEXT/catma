@@ -7,6 +7,8 @@ import java.util.Objects;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.assistedinject.Assisted;
 import com.vaadin.data.HasDataProvider;
 import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProvider;
@@ -39,15 +41,19 @@ public class ProjectList extends VerticalLayout implements
 	private final Comparator<ProjectReference> sortByNameAsc = (ref1,ref2) -> ref1.getName().compareTo(ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = (ref1,ref2) -> ref2.getName().compareTo(ref1.getName());
 	private final IRBACManager rbacManager;
-	
+	private final Provider<JoinProjectCard> joinProjectCardProvider;
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 
 	@Inject
-    ProjectList(ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){ 
+    ProjectList(@Assisted("projectManager")ProjectManager projectManager, 
+    		EventBus eventBus, 
+    		IRBACManager rbacManager, 
+    		Provider<JoinProjectCard> joinProjectCardProvider){ 
         this.errorLogger = (ErrorHandler)UI.getCurrent();
         this.projectManager = projectManager;
         this.eventBus = eventBus;
         this.rbacManager = rbacManager;
+        this.joinProjectCardProvider = joinProjectCardProvider;
         initComponents();
         eventBus.register(this);
     }
@@ -74,10 +80,11 @@ public class ProjectList extends VerticalLayout implements
 
     private void rebuild() {
         projectsLayout.removeAllComponents();
-        projectsLayout.addComponent(new CreateProjectCard(projectManager,eventBus));
+        projectsLayout.addComponent(new CreateProjectCard(projectManager, eventBus));
+        projectsLayout.addComponent(joinProjectCardProvider.get());
         this.dataProvider.fetch(new Query<>())
         		.sorted(selectedSortOrder)
-        		.map((prj) -> new ProjectCard(prj, projectManager,eventBus, rbacManager))
+        		.map((prj) -> new ProjectCard(prj, projectManager, eventBus, rbacManager))
                 .forEach(projectsLayout::addComponent);
     }
 

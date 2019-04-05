@@ -66,6 +66,7 @@ public class CatmaHeader extends CssLayout {
         	Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
     	});
         
+        
         btnAccount.addClickListener((evt) ->  ctxAccount.open(evt.getClientX(), evt.getClientY()));
         
         addComponent(btnAccount);

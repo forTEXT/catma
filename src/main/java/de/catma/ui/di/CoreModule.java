@@ -11,8 +11,9 @@ import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.ui.login.GitlabLoginService;
-import de.catma.ui.login.LocalUserLoginService;
+import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
+import de.catma.ui.login.Vaadin8InitializationService;
 
 public class CoreModule extends AbstractModule {
 
@@ -23,6 +24,8 @@ public class CoreModule extends AbstractModule {
 				.implement(IRemoteGitManagerRestricted.class, GitlabManagerRestricted.class)
 				.build(IRemoteGitManagerFactory.class)
 				  );
+		  bind(LoginService.class).to(GitlabLoginService.class).in(VaadinUIScoped.class);
+		  bind(InitializationService.class).to(Vaadin8InitializationService.class).in(VaadinUIScoped.class);
 	}
 	
 	@Provides
@@ -30,20 +33,6 @@ public class CoreModule extends AbstractModule {
 	IRemoteGitManagerPrivileged providePrivilegedGitManager(){
 		return new GitlabManagerPrivileged();
 		
-	}
-	
-	@Provides
-	@VaadinUIScoped
-	@Inject
-	@GitLabType LoginService provideGitlabLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory){
-		return new GitlabLoginService(iRemoteGitManagerFactory);
-	}
-
-	@Provides
-	@VaadinUIScoped
-	@Inject
-	@LocalUserLoginType LoginService provideFakeLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory){
-		return new LocalUserLoginService(iRemoteGitManagerFactory);
 	}
 	
 	@Provides
