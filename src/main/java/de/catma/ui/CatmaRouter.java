@@ -4,6 +4,7 @@ import com.google.common.eventbus.Subscribe;
 
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
+import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 
@@ -14,6 +15,9 @@ public interface CatmaRouter {
 
 	@Subscribe
 	void handleRouteToProject(RouteToProjectEvent routeToProjectEvent);
+
+	@Subscribe
+	void handleRouteToConflictedProject(RouteToConflictedProjectEvent routeToConflictedProjectEvent);
 	
 	@Subscribe
 	void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent);

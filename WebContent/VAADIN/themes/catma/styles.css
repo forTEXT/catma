@@ -17933,11 +17933,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: rgba(0, 0, 0, 0.54);
 }
 
-.catma .project-view-document-grid button {
-	background-color: transparent;
-	border: none;
-}
-
 .catma .project-view-action-grid {
 	margin: 10px;
 }

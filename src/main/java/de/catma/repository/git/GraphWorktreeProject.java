@@ -43,6 +43,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
+import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
@@ -65,7 +66,7 @@ import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
-public class GraphWorktreeProject implements IndexedRepository, ConflictedProject {
+public class GraphWorktreeProject implements IndexedRepository {
 	
 	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
 	private static final String ORIG_INFIX = "_orig";
@@ -142,7 +143,9 @@ public class GraphWorktreeProject implements IndexedRepository, ConflictedProjec
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			
 			if (gitProjectHandler.hasConflicts()) {
-				openProjectListener.conflictResolutionNeeded(this);
+				openProjectListener.conflictResolutionNeeded(
+						new GitConflictedProject(
+							gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
 			}
 			else {
 				graphProjectHandler.ensureProjectRevisionIsLoaded(

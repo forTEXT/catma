@@ -17,9 +17,11 @@ import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
+import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.modules.dashboard.DashboardView;
+import de.catma.ui.modules.project.ConflictedProjectView;
 import de.catma.ui.modules.project.ProjectView;
 import de.catma.ui.tagger.TaggerManagerView;
 
@@ -142,6 +144,17 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 			}
 	    	setContent(projectView);
 	    	currentRoute = routeToProjectEvent.getClass();
+		}
+	}
+	
+	@Override
+	public void handleRouteToConflictedProject(RouteToConflictedProjectEvent routeToConflictedProjectEvent) {
+		if (isNewTarget(routeToConflictedProjectEvent.getClass())) {
+			ConflictedProjectView conflictedProjectView = 
+				new ConflictedProjectView(
+					routeToConflictedProjectEvent.getConflictedProject(), eventBus);
+			setContent(conflictedProjectView);
+			currentRoute = routeToConflictedProjectEvent.getClass();
 		}
 	}
 	

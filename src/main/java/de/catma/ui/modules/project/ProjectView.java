@@ -48,6 +48,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
@@ -61,6 +62,7 @@ import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
+import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.CanReloadAll;
@@ -669,7 +671,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private Component initResourceContent() {
     	HorizontalLayout resourceContent = new HorizontalLayout();
     	resourceGrid = new TreeGrid<>();
-        resourceGrid.addStyleName("project-view-document-grid");
+        resourceGrid.addStyleNames(
+				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
+
         resourceGrid.setHeaderVisible(false);
         resourceGrid.setRowHeight(45);
 
@@ -795,8 +799,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             
             @Override
             public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
-            	// TODO Auto-generated method stub
-            	
+				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
             }
 
             @Override

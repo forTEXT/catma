@@ -16,6 +16,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
@@ -586,15 +587,12 @@ public class GitMarkupCollectionHandler {
 	}
 
 	public CollectionConflict getCollectionConflict(String projectId, String collectionId) throws Exception {
-		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
-			Status status =  localGitRepositoryManager.getStatus();
-			
 			String collectionSubmoduleRelDir = 
 					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + collectionId;
 			
@@ -604,7 +602,7 @@ public class GitMarkupCollectionHandler {
 			);
 
 			localGitRepoManager.detach(); 
-			
+			//TODO: handle header conflict
 			File collectionHeaderFile = new File(
 					collectionSubmoduleAbsPath,
 					"header.json"
@@ -623,15 +621,21 @@ public class GitMarkupCollectionHandler {
 					collectionHeader.getPublisher(),
 					collectionHeader.getName()
 			);
+			CollectionConflict collectionConflict = 
+					new CollectionConflict(
+						projectId, collectionId, contentInfoSet, 
+						collectionHeader.getSourceDocumentId());
 			
 			String collectionGitRepositoryName =
 					projectRootRepositoryName + "/" + collectionSubmoduleRelDir;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 
+			Status status = localGitRepositoryManager.getStatus();
+
 			for (Entry<String, StageState> entry : status.getConflictingStageState().entrySet()) {
 				String relativeAnnotationPathname = entry.getKey();
-				String absAnnotationPathname = collectionGitRepositoryName + "/" + relativeAnnotationPathname;
+				String absAnnotationPathname = collectionSubmoduleAbsPath + "/" + relativeAnnotationPathname;
 
 				StageState stageState = entry.getValue();
 				
@@ -644,29 +648,26 @@ public class GitMarkupCollectionHandler {
 					AnnotationConflict annotationConflict = 
 							getBothModifiedAnnotationConflict(
 								projectId, collectionId, serializedConflictingAnnotation);
+					collectionConflict.addAnnotationConflict(annotationConflict);
 				}
 				default: System.out.println("not handled");
 				}
-
-				
-				
 				
 			}
-			return null;
+			return collectionConflict;
 		}		
 	}
 
 	private AnnotationConflict getBothModifiedAnnotationConflict(
 			String projectId, String collectionId, String serializedConflictingAnnotation) throws Exception {
 
-		
 		String masterVersion = serializedConflictingAnnotation
-			.replaceAll("\\Q<<<<<<< HEAD\\E$", "")
-			.replaceAll("\\Q=======\\E$.*?\\Q>>>>>>> dev\\E$", "");
+			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
+			.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> dev\\E(\\r\\n|\\r|\\n)", "");
 		
 		String devVersion = serializedConflictingAnnotation
-				.replaceAll("\\Q<<<<<<< HEAD\\E$.*?\\Q=======\\E$", "")
-				.replaceAll("\\Q>>>>>>> dev\\E$", "");
+			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
+			.replaceAll("\\Q>>>>>>> dev\\E(\\r\\n|\\r|\\n)", "");
 				
 		
 		JsonLdWebAnnotation masterVersionJsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
@@ -677,14 +678,15 @@ public class GitMarkupCollectionHandler {
 		
 		List<TagReference> masterTagReferences = 
 			masterVersionJsonLdWebAnnotation.toTagReferenceList(projectId, collectionId);
-		List<TagReference> defTagReferences = 
+		List<TagReference> devTagReferences = 
 			devVersionJsonLdWebAnnotation.toTagReferenceList(projectId, collectionId);
 
-		AnnotationConflict annotationConflict = new AnnotationConflict();
+		AnnotationConflict annotationConflict = 
+				new AnnotationConflict(
+					masterTagReferences.get(0).getTagInstance(), masterTagReferences, 
+					devTagReferences.get(0).getTagInstance(), devTagReferences);
 		
-		
-		
-		return null;
+		return annotationConflict;
 	}
 
 }

@@ -14,6 +14,7 @@ import de.catma.ui.CatmaRouter;
 import de.catma.ui.component.LargeLinkButton;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
+import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 
@@ -79,7 +80,21 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 			currentRoute = routeToDashboardEvent.getClass();
 		}
 	}
+	
+	@Override
+	public void handleRouteToConflictedProject(RouteToConflictedProjectEvent routeToConflictedProjectEvent) {
+		if(isNewTarget(routeToConflictedProjectEvent.getClass())) {
+			removeAllComponents();
+			addComponent(newH3Label("Project"));
+			addComponent(newH3Label("Tags"));
+			addComponent(newH3Label("Annotate"));
+			addComponent(newH3Label("Analyze"));
+			
+			currentRoute = routeToConflictedProjectEvent.getClass();
+		}
+	}
 
+	
 	@Override
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if(isNewTarget(routeToProjectEvent.getClass())) {
