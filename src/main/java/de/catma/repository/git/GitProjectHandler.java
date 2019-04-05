@@ -38,6 +38,7 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
+import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 
@@ -53,10 +54,11 @@ public class GitProjectHandler {
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 	private final User user;
 	private final String projectId;
+
 	private final IDGenerator idGenerator = new IDGenerator();
 	private final CredentialsProvider credentialsProvider;
 	
-	public GitProjectHandler(GitUser user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
+	public GitProjectHandler(User user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitManagerRestricted remoteGitServerManager) {
 		super();
 		this.user = user;
@@ -605,7 +607,7 @@ public class GitProjectHandler {
 		}
 	}
 	
-	public List<User> getProjectMembers() throws Exception {
+	public List<Member> getProjectMembers() throws Exception {
 		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
 	}
 

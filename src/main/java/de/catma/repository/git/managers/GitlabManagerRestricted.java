@@ -16,7 +16,9 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Project;
 
@@ -28,6 +30,10 @@ import com.google.inject.assistedinject.AssistedInject;
 import de.catma.Pager;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.IRBACManager;
+import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitProjectManager;
@@ -41,7 +47,7 @@ import elemental.json.Json;
 import elemental.json.JsonException;
 import elemental.json.JsonObject;
 
-public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGitUserInformation {
+public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGitUserInformation, IRBACManager {
 
 	private final GitLabApi restrictedGitLabApi;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -49,7 +55,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 
 	@AssistedInject
 	public GitlabManagerRestricted(EventBus eventBus, @Assisted("token") String userImpersonationToken) throws IOException {
-		this(eventBus,new GitLabApi(RepositoryPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
+		this(eventBus, new GitLabApi(RepositoryPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
 	}
 	
 	@AssistedInject
@@ -244,7 +250,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	}
 
 	@Override
-	public List<User> getProjectMembers(String projectId) throws Exception {
+	public List<de.catma.user.Member> getProjectMembers(String projectId) throws Exception {
 		Group group = restrictedGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
 		return restrictedGitLabApi.getGroupApi().getMembers(group.getId())
 				.stream()
@@ -297,6 +303,28 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 		}
 	}
 	
+	@Override
+	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
+		try {
+			List<org.gitlab4j.api.models.User> userPager;
+			
+			if(usernameOrEmail.isEmpty()) {
+				userPager = this.restrictedGitLabApi.getUserApi()
+					.getUsers(offset, limit);
+			} else {
+				userPager = this.restrictedGitLabApi.getUserApi()
+						.findUsers(usernameOrEmail,offset, limit);
+			}
+			return userPager.stream()
+			.filter(u -> ! user.getUserId().equals(u.getId()))
+			.map(u -> new GitUser(u))
+			.collect(Collectors.toList());
+			
+		} catch(GitLabApiException e){
+			throw new IOException("failed to check for username",e);
+		}
+	}
+	
 	/**
 	 * @deprecated is this old?
 	 * @param projectReference
@@ -332,7 +360,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	}
 
 	@Override
-	public GitUser getGitUser() {
+	public User getUser() {
 		return user;
 	}
 
@@ -350,7 +378,45 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	public String getEmail() {
 		return user.getEmail();
 	}
+	
+	@Override
+	public boolean isAuthorizedOnProject(RBACSubject subject, RBACPermission permission, String projectId) {
+		try {
+			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
+			if(group == null) {
+				logger.log(Level.WARNING, "Project unkown "+ projectId);
+				return false;
+			}
+			return isMemberAuthorized(permission, restrictedGitLabApi.getGroupApi().getMember(group.getId(), subject.getUserId()));
+		} catch (GitLabApiException e) {
+			logger.log(Level.WARNING, "Can't retrieve permissions from project: "+ projectId,e);
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, Integer resourceId) {
+		try {
+	//TODO: not working YET 
+//			Project project = restrictedGitLabApi.getProjectApi().getProject(namespace, project)(projectId);
 
+			return isMemberAuthorized(permission,restrictedGitLabApi.getProjectApi().getMember(resourceId, subject.getUserId()));
+		} catch (GitLabApiException e) {
+			logger.log(Level.WARNING, "Can't retrieve permissions from resource: "+ resourceId,e);
+			return false;
+		}
+	}
+	
+	private boolean isMemberAuthorized(RBACPermission permission, Member member){
+		if(member == null)
+			return false;
+		if(permission == null)
+			return false;
+		
+		return member.getAccessLevel().value >= permission.getRoleRequired().value;
+		
+	}
+	
 	@Subscribe
 	public void handleChangeUserAttributes(ChangeUserAttributeEvent event){
 		try {
@@ -358,6 +424,66 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 		} catch (GitLabApiException e) {
 			logger.log(Level.WARNING, "can't fetch user from backend", e);
 		}
+	}
+
+	@Override
+	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role, String projectId) throws IOException {
+		try {
+			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
+			if(group == null) {
+				throw new IOException("Project unkown "+ projectId);
+			}
+			try {
+				Member member = restrictedGitLabApi.getGroupApi().getMember(group.getId(), subject.getUserId());
+				if(member.getAccessLevel() != AccessLevel.OWNER && 
+						member.getAccessLevel().value.intValue() != role.value.intValue()){
+					return updateGroupMember(subject, role, group.getId());
+				} else {
+					// Role is either owner which mean we would deown the member, or it is already the same.
+					// In both cases we refuse to update the role.
+					return subject;
+				}
+			} catch (GitLabApiException e) {
+				return createGroupMember(subject, role, group.getId());
+			}
+		} catch (GitLabApiException e) {
+				throw new IOException("Project unkown "+ projectId,e);
+		}	
+	};
+	
+	@Override
+	public void unassignFromProject(RBACSubject subject, String projectId) throws IOException {
+		try {
+			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
+			if(group == null) {
+				throw new IOException("Project unkown "+ projectId);
+			}
+			restrictedGitLabApi.getGroupApi().removeMember(group.getId(), subject.getUserId());
+		} catch (GitLabApiException e) {
+			throw new IOException("Project or user unkown: "+ projectId + "subject:" + subject, e);
+		}	
+	}
+	
+	@Override
+	public RBACSubject assignOnResource(RBACSubject subject, RBACRole role, Integer resourceId) throws IOException {
+		throw new RuntimeException("not implemented yet");
+	};
+	
+	private de.catma.user.Member createGroupMember(RBACSubject subject, RBACRole role, Integer groupId) throws IOException {
+		try {
+			return new GitMember(restrictedGitLabApi.getGroupApi().addMember(groupId, subject.getUserId(), AccessLevel.forValue(role.value)));
+		} catch (GitLabApiException e) {
+			throw new IOException("Project unkown "+ groupId,e);
+		}		
+	}
+	
+	
+	private de.catma.user.Member updateGroupMember(RBACSubject subject, RBACRole role, Integer groupId) throws IOException {
+		try {
+			return new GitMember(restrictedGitLabApi.getGroupApi().updateMember(groupId, subject.getUserId(), AccessLevel.forValue(role.value)));
+		} catch (GitLabApiException e) {
+			throw new IOException("Project unkown "+ groupId, e);
+		}		
 	}
 
 }

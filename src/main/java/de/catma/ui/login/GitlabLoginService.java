@@ -3,10 +3,8 @@ package de.catma.ui.login;
 import java.io.IOException;
 
 import com.google.inject.Inject;
-import com.vaadin.server.Page;
 import com.vaadin.server.VaadinSession;
 
-import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;

@@ -49,7 +49,7 @@ public class EditAccountDialog extends Window {
 		this.gitManagerPrivileged = gitManagerPrivileged;
 		this.eventBus = eventBus;
 		
-		User user = Objects.requireNonNull(loginService.getAPI()).getGitUser();
+		User user = Objects.requireNonNull(loginService.getAPI()).getUser();
 		this.email = user.getEmail();
 		this.username = user.getIdentifier();
 		this.name = user.getName();

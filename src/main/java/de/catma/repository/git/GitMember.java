@@ -1,18 +1,17 @@
 package de.catma.repository.git;
 
+import de.catma.rbac.RBACRole;
+import de.catma.user.Member;
 import de.catma.user.Permission;
-import de.catma.user.User;
-import org.gitlab4j.api.models.AccessLevel;
-import org.gitlab4j.api.models.Member;
 
 /**
  * A user implementation for a gitlab member
  */
-public class GitMember implements User {
+public class GitMember implements Member {
 
-    private Member delegate;
+    private org.gitlab4j.api.models.Member delegate;
 
-    public GitMember(Member member){
+    public GitMember(org.gitlab4j.api.models.Member member){
         this.delegate = member;
     }
 
@@ -43,7 +42,7 @@ public class GitMember implements User {
 
     @Override
     public boolean isGuest() {
-        return delegate.getAccessLevel() == AccessLevel.GUEST;
+        return delegate.getAccessLevel().value == RBACRole.GUEST.value;
     }
 
     @Override
@@ -54,5 +53,9 @@ public class GitMember implements User {
     @Override
     public boolean hasPermission(Permission permission) {
         return true;
+    }
+    
+    public RBACRole getRole(){
+    	return RBACRole.forValue(delegate.getAccessLevel().value);
     }
 }

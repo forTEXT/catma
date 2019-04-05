@@ -18,45 +18,24 @@
  */
 package de.catma.ui.modules.main.login;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
 import org.jboss.aerogear.security.otp.Totp;
 import org.jboss.aerogear.security.otp.api.Clock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.server.ClassResource;
-import com.vaadin.server.RequestHandler;
-import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -88,163 +67,6 @@ public class AuthenticationDialog extends Window {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
-	
-	private static class AuthenticationRequestHandler implements RequestHandler {
-		
-		private Logger logger = Logger.getLogger(this.getClass().getName());
-		private String returnURL;
-		private Window dialogWindow;
-		private UI ui;
-		private String token;
-		private String oauthAccessTokenRequestURL;
-		private String oauthClientId;
-		private String oauthClientSecret;
-		private final EventBus eventBus;
-		private final LoginService loginservice;
-		private final InitializationService initService;
-		
-		public AuthenticationRequestHandler(
-				UI ui, // UI.getCurrent() is not available during request handling, therefore we pass in the UI
-				EventBus eventBus,
-				LoginService loginservice,
-				InitializationService initService,
-				String returnURL, 
-				Window dialogWindow, 
-				String token,
-				String oauthAccessTokenRequestURL,
-				String oauthClientId,
-				String oauthClientSecret) {
-			super();
-			this.ui = ui;
-			this.eventBus = eventBus;
-			this.returnURL = returnURL;
-			this.dialogWindow = dialogWindow;
-			this.token = token;
-			this.oauthAccessTokenRequestURL = oauthAccessTokenRequestURL;
-			this.oauthClientId = oauthClientId;
-			this.oauthClientSecret = oauthClientSecret;
-			this.loginservice = loginservice;
-			this.initService = initService;
-		}
-			
-		@Override
-		public boolean handleRequest(VaadinSession session,
-				VaadinRequest request, VaadinResponse response)
-				throws IOException {
-
-			// this handles the answer to the authorization request
-			try {
-				
-				// clean up
-				VaadinSession.getCurrent().removeRequestHandler(this);
-				
-				if (ui == null) {
-					throw new NullPointerException(Messages.getString("AuthenticationDialog.UIUnavailable")); //$NON-NLS-1$
-				}
-				
-				ui.removeWindow(dialogWindow);
-				
-				dialogWindow = null;
-				
-				
-				// extract answer
-				String authorizationCode = request.getParameter("code"); //$NON-NLS-1$
-
-				String state = request.getParameter("state"); //$NON-NLS-1$
-
-				String error = request.getParameter("error"); //$NON-NLS-1$
-
-				// do we have a authorization request error?
-				if (error == null) {
-					// no, so we validate the state token
-					Totp totp = new Totp(
-							RepositoryPropertyKey.otpSecret.getValue()+token, 
-							new Clock(Integer.valueOf(
-								RepositoryPropertyKey.otpDuration.getValue())));
-					if (!totp.verify(state)) {
-						error = "state token verification failed"; //$NON-NLS-1$
-					}
-				}
-				
-				// state token get validation success?	
-				if (error == null) {
-					CloseableHttpClient httpclient = HttpClients.createDefault();
-					HttpPost httpPost = 
-						new HttpPost(oauthAccessTokenRequestURL);
-					List <NameValuePair> data = new ArrayList <NameValuePair>();
-					data.add(new BasicNameValuePair("code", authorizationCode)); //$NON-NLS-1$
-					data.add(new BasicNameValuePair("grant_type", "authorization_code")); //$NON-NLS-1$ //$NON-NLS-2$
-					data.add(new BasicNameValuePair(
-						"client_id", oauthClientId)); //$NON-NLS-1$
-					data.add(new BasicNameValuePair(
-						"client_secret", oauthClientSecret)); //$NON-NLS-1$
-					data.add(new BasicNameValuePair("redirect_uri", returnURL)); //$NON-NLS-1$
-					httpPost.setEntity(new UrlEncodedFormEntity(data));
-					CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
-					HttpEntity entity = tokenRequestResponse.getEntity();
-					InputStream content = entity.getContent();
-					ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
-					IOUtils.copy(content, bodyBuffer);
-					
-					logger.info("access token request result: " + bodyBuffer.toString("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
-					
-					ObjectMapper mapper = new ObjectMapper();
-
-					ObjectNode accessTokenResponseJSon = 
-							mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
-
-					// we're actually not interested in the access token 
-					// but we want the email information from the id token
-					String idToken = accessTokenResponseJSon.get("id_token").asText(); //$NON-NLS-1$
-					
-					String[] pieces = idToken.split("\\."); //$NON-NLS-1$
-					// we skip the header and go ahead with the payload
-					String payload = pieces[1];
-		
-					String decodedPayload = 
-							new String(Base64.decodeBase64(payload), "UTF-8"); //$NON-NLS-1$
-					ObjectNode payloadJson = mapper.readValue(decodedPayload, ObjectNode.class);
-					
-					logger.info("decodedPayload: " + decodedPayload); //$NON-NLS-1$
-					
-					// finally the email address
-					// String email = payloadJson.get("email").asText(); //$NON-NLS-1$
-
-					String identifier = payloadJson.get("sub").asText();
-					String name = payloadJson.get("name") == null ? identifier : payloadJson.get("name").asText();
-					String email = payloadJson.get("email").asText();
-					String provider = "google.com";
-					loginservice.loggedInFromThirdParty(identifier, provider, email, name);
-
-					Component mainView = initService.newEntryPage(loginservice);
-					ui.setContent(mainView);
-					ui.getPage().replaceState(RepositoryPropertyKey.BaseURL.getValue());
-					eventBus.post(new RouteToDashboardEvent());
-		                
-	                return false;
-				}
-				else {
-	                logger.info("authentication failure: " + error); //$NON-NLS-1$
-					new Notification(
-                        Messages.getString("AuthenticationDialog.authFailureTitle"), //$NON-NLS-1$
-                        Messages.getString("AuthenticationDialog.authFailureMessage"), //$NON-NLS-1$
-                        Type.ERROR_MESSAGE).show(ui.getPage());
-
-					return false;
-				}
-				
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-				((ErrorHandler)ui).showAndLogError(
-						Messages.getString("AuthenticationDialog.errorOpeningRepo"), e); //$NON-NLS-1$
-			}
-			
-			ui.close();
-			
-			return false;
-		}
-	}
 	
 	private Button btCancel;
 	private Button googleLogInLink;
@@ -295,36 +117,29 @@ public class AuthenticationDialog extends Window {
 		});
 		
 		
-		googleLogInLink.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-				try {
-					UI.getCurrent().getPage().setLocation(createLogInClick(
-						UI.getCurrent(), 
-						RepositoryPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
-						RepositoryPropertyKey.Google_oauthAccessTokenRequestURL.getValue(),
-						RepositoryPropertyKey.Google_oauthClientId.getValue(),
-						RepositoryPropertyKey.Google_oauthClientSecret.getValue(),
-						URLEncoder.encode(baseUrl, "UTF-8"))); //$NON-NLS-1$
-				}
-				catch (Exception e) {
-					((ErrorHandler)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
-				}
+		googleLogInLink.addClickListener(event -> {
+			try {
+				UI.getCurrent().getPage().setLocation(createLogInClick(
+					RepositoryPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
+					RepositoryPropertyKey.Google_oauthClientId.getValue(),
+					RepositoryPropertyKey.Google_oauthClientSecret.getValue())); //$NON-NLS-1$
+				close();
+			}
+			catch (Exception e) {
+				((ErrorHandler)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
 			}
 		});
 	}
 	
 	public String createLogInClick(
-			UI ui, 
 			String oauthAuthorizationCodeRequestURL, 
-			String oauthAccessTokenRequestURL,
 			String oauthClientId,
-			String oauthClientSecret,
 			String openidRealm) throws UnsupportedEncodingException {
 		
 		String token = new BigInteger(130, new SecureRandom()).toString(32);
 
+		VaadinSession.getCurrent().setAttribute("OAUTHTOKEN",token);
+		
 		// state token generation
 		Totp totp = new Totp(
 				RepositoryPropertyKey.otpSecret.getValue()+token, 
@@ -342,24 +157,7 @@ public class AuthenticationDialog extends Window {
 		authenticationUrlBuilder.append("&redirect_uri="+URLEncoder.encode(baseUrl, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
 		authenticationUrlBuilder.append("&state=" + totp.now()); //$NON-NLS-1$
 		authenticationUrlBuilder.append("&openid.realm="+openidRealm); //$NON-NLS-1$
-		
-		
-		final AuthenticationRequestHandler authenticationRequestHandler =
-				new AuthenticationRequestHandler(
-						ui,
-						eventBus,
-						loginservice,
-						initService,
-						baseUrl, 
-						this,
-						token,
-						oauthAccessTokenRequestURL,
-						oauthClientId,
-						oauthClientSecret);
-		
-		
-		VaadinSession.getCurrent().addRequestHandler(authenticationRequestHandler);
-		
+	
 		return authenticationUrlBuilder.toString();
 	}
 

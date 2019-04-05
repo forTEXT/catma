@@ -62,6 +62,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -76,7 +77,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	private PropertyChangeSupport propertyChangeSupport;
 
-	private GitUser user;
+	private User user;
 	private GitProjectHandler gitProjectHandler;
 	private ProjectReference projectReference;
 	private String rootRevisionHash;
@@ -93,7 +94,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private PropertyChangeListener userDefinedPropertyChangedListener;
 	private Indexer indexer;
 
-	public GraphWorktreeProject(GitUser user,
+	public GraphWorktreeProject(User user,
 								GitProjectHandler gitProjectHandler,
 								ProjectReference projectReference,
 								TagManager tagManager,
@@ -1160,7 +1161,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 	
 	@Override
-	public List<User> getProjectMembers() throws Exception {
+	public List<Member> getProjectMembers() throws Exception {
 		return gitProjectHandler.getProjectMembers();
 	}
 	

@@ -14,6 +14,10 @@ import com.vaadin.ui.UI;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.IRBACManager;
+import de.catma.rbac.RBACConstraint;
+import de.catma.rbac.RBACConstraintEnforcer;
+import de.catma.rbac.RBACPermission;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
@@ -35,14 +39,20 @@ public class ProjectCard extends VerticalLayout  {
     private final ProjectManager projectManager;
 
 	private final EventBus eventBus;
+
+	private final IRBACManager rbacManager;
 	
+	private final RBACConstraintEnforcer<ProjectReference> rbacEnforcer = new RBACConstraintEnforcer<>();
+
 	@Inject
-    ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventBus){
+    ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
         this.eventBus = eventBus;
+        this.rbacManager = rbacManager;
         this.errorLogger = (ErrorHandler) UI.getCurrent();
         initComponents();
+        rbacEnforcer.enforceConstraints(projectReference); // normally done in reload();
     }
 
 
@@ -92,11 +102,19 @@ public class ProjectCard extends VerticalLayout  {
                     });
                 })
         );
+        
         IconButton editAction = new IconButton(VaadinIcons.PENCIL);
         editAction.addClickListener(click -> {
         	new EditProjectDialog(projectReference, projectManager, result -> eventBus.post(new ResourcesChangedEvent<Component>(this))).show();
         });
         descriptionBar.addComponent(editAction);
+        
+        rbacEnforcer.register(
+        		RBACConstraint.ifNotAuthorized((proj) -> 
+        			(rbacManager.isAuthorizedOnProject(projectManager.getUser(),RBACPermission.PROJECT_EDIT, proj.getProjectId())),
+        			() -> editAction.setVisible(false))
+        		);
+        
         IconButton buttonAction = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
         descriptionBar.addComponents(buttonAction);
 

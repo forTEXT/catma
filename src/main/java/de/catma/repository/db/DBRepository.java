@@ -54,7 +54,6 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
 import de.catma.document.repository.UnknownUserException;
-import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -82,6 +81,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.user.Member;
 import de.catma.user.Permission;
 import de.catma.user.Role;
 import de.catma.user.User;
@@ -1197,11 +1197,6 @@ public class DBRepository implements IndexedRepository {
 	}
 
 	@Override
-	public List<User> getProjectMembers() throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public boolean hasUncommittedChanges() throws Exception {
 		// TODO Auto-generated method stub
 		return false;
@@ -1217,6 +1212,11 @@ public class DBRepository implements IndexedRepository {
 	public void synchronizeWithRemote() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public List<Member> getProjectMembers() throws Exception {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

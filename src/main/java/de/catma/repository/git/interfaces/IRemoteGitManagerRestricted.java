@@ -5,8 +5,9 @@ import java.util.List;
 
 import de.catma.Pager;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.CreateRepositoryResponse;
-import de.catma.repository.git.GitUser;
+import de.catma.user.Member;
 import de.catma.user.User;
 
 /**
@@ -15,7 +16,7 @@ import de.catma.user.User;
  * @author db
  *
  */
-public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommonRemoteGitManager {
+public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommonRemoteGitManager, IRBACManager {
 
 	/**
 	 * Creates a new remote repository with the <code>name</code> and <code>path</code> supplied.
@@ -98,7 +99,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @return
 	 * @throws Exception
 	 */
-	List<User> getProjectMembers(String projectId) throws Exception;
+	List<Member> getProjectMembers(String projectId) throws Exception;
 
 	/**
 	 * Get a Pager to a ProjectReferences
@@ -117,9 +118,17 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 
 	/**
 	 * 
-	 * @return current GitUser
+	 * @return current logged in user
 	 */
-	GitUser getGitUser();
+	User getUser();
 
+	/**
+	 * finds a list of users with a given name or part of a name.
+	 * The implementation is responsible to restrict or limit this 
+	 * @param usernameOrEmail
+	 * @return
+	 * @throws IOException
+	 */
+	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
 
 }

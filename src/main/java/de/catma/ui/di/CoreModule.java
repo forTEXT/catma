@@ -4,8 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.servlet.SessionScoped;
 
+import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
@@ -14,14 +14,15 @@ import de.catma.ui.login.GitlabLoginService;
 import de.catma.ui.login.LocalUserLoginService;
 import de.catma.ui.login.LoginService;
 
-public class GitlabModule extends AbstractModule {
+public class CoreModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
 		super.configure();
 		  install(new FactoryModuleBuilder()
 				.implement(IRemoteGitManagerRestricted.class, GitlabManagerRestricted.class)
-				.build(IRemoteGitManagerFactory.class));
+				.build(IRemoteGitManagerFactory.class)
+				  );
 	}
 	
 	@Provides
@@ -41,8 +42,15 @@ public class GitlabModule extends AbstractModule {
 	@Provides
 	@VaadinUIScoped
 	@Inject
-	@LocalUserLoginType LoginService ProvideFakeLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory){
+	@LocalUserLoginType LoginService provideFakeLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory){
 		return new LocalUserLoginService(iRemoteGitManagerFactory);
+	}
+	
+	@Provides
+	@VaadinUIScoped
+	@Inject
+	IRBACManager provideRBACManager(LoginService loginService){
+		return loginService.getAPI();
 	}
 	
 	

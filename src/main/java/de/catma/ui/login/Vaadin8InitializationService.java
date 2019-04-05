@@ -13,6 +13,7 @@ import com.vaadin.ui.Component;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.modules.main.CatmaHeader;
@@ -87,7 +88,11 @@ public class Vaadin8InitializationService implements InitializationService {
 					api,
 					(projectId) -> {}, //noop deletion handler
 					accuireBackgroundService());
-			return new MainView(projectManager, injector.getInstance(CatmaHeader.class), injector.getInstance(EventBus.class));
+			return new MainView(projectManager, 
+					injector.getInstance(CatmaHeader.class), 
+					injector.getInstance(EventBus.class),
+					api
+					);
 		} else {
 			return new NotLoggedInMainView(this,loginService, injector.getInstance(EventBus.class));
 

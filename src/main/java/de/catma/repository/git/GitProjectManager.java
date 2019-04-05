@@ -34,7 +34,7 @@ public class GitProjectManager implements ProjectManager {
 	private final IDGenerator idGenerator;
     private final BackgroundService backgroundService;
     private String gitBasedRepositoryBasePath;
-	private GitUser user;
+	private User user;
 	private GraphProjectDeletionHandler graphProjectDeletionHandler;
 	private final CredentialsProvider credentialsProvider;
 
@@ -54,7 +54,7 @@ public class GitProjectManager implements ProjectManager {
 		this.remoteGitServerManager = remoteGitServerManager;
 		this.graphProjectDeletionHandler = graphProjectDeletionHandler;
 		this.backgroundService = backgroundService;
-		this.user = remoteGitServerManager.getGitUser();
+		this.user = remoteGitServerManager.getUser();
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
 		this.credentialsProvider = 
 			new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
