@@ -368,30 +368,48 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	}
 
 	private void handleRemoveClickEvent(RendererClickEvent<TreeRowItem> removeClickEvent) {
+		
 		TreeRowItem toRemove = removeClickEvent.getItem();
+		
 		TreeRowItem parent = selectedItemsTreeGridData.getParent(toRemove);
+		
 		List<TreeRowItem> siblingsOne = selectedItemsTreeGridData.getChildren(parent);
 		TreeRowItem parentParent = selectedItemsTreeGridData.getParent(parent);
-		TreeRowItem parentParentParent = selectedItemsTreeGridData.getParent(parentParent);
+		
 		List<TreeRowItem> siblingsTwo = selectedItemsTreeGridData.getChildren(parentParent);
+		TreeRowItem parentParentParent = selectedItemsTreeGridData.getParent(parentParent);
+	
+		
 		List<TreeRowItem> siblingsThree = selectedItemsTreeGridData.getChildren(parentParentParent);
+		TreeRowItem parentParentParentParent = selectedItemsTreeGridData.getParent(parentParentParent);
+		
+		List<TreeRowItem> siblingsFour = selectedItemsTreeGridData.getChildren(parentParentParentParent);
+		
 
 		if (siblingsOne.size() == 1) {
 			if (siblingsTwo.size() == 1) {
 				if (siblingsThree.size() == 1) {
-					
-					selectedItemsTreeGridData.removeItem(parentParentParent);
+					if (siblingsFour.size() == 1) {
+						selectedItemsTreeGridData.removeItem(parentParentParentParent);
+
+					} else {
+						selectedItemsTreeGridData.removeItem(parentParentParent);
+					}
 				} else {
-					
 					selectedItemsTreeGridData.removeItem(parentParent);
 				}
 			} else {
-
 				selectedItemsTreeGridData.removeItem(parent);
 			}
-		}else {
+		}
+		
+		else {
 			selectedItemsTreeGridData.removeItem(toRemove);		
 		}
+		
+		
+		
+		
 	
 		selectedDataProvider.refreshAll();
 	}
