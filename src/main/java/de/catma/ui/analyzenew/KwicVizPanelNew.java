@@ -1011,12 +1011,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 						for (TreeRowItem treeRowItem : childrenTwo) {
 							List<TreeRowItem> childrenThree = selectedItemsTreeGridData.getChildren(treeRowItem);
 
-							QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
+					
 							for (TreeRowItem treeRowItem2 : childrenThree) {
+								QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
 
-							//	List<TreeRowItem> childrenFour = selectedItemsTreeGridData.getChildren(treeRowItem2);
-
-							//	for (TreeRowItem treeRowItem3 : childrenFour) {
 									List<TreeRowItem> childrenFour = selectedItemsTreeGridData
 											.getChildren(treeRowItem2);
 
