@@ -979,8 +979,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	}
 	
 	
-
-	
 	private ArrayList<QueryResultRow> createQueryResultFromTreeGridData() {
 		ArrayList<QueryResultRow> queryResult = new ArrayList<QueryResultRow>();
 		List<TreeRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
@@ -991,25 +989,42 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				children = selectedItemsTreeGridData.getChildren(root);
 				if (!children.isEmpty()) {
 					for (TreeRowItem child : children) {
-						 List <TreeRowItem> childrenTwo=selectedItemsTreeGridData.getChildren(child);
-						 for (TreeRowItem treeRowItem : childrenTwo) {
-							 List <TreeRowItem> childrenThree=selectedItemsTreeGridData.getChildren(treeRowItem);
-							 for (TreeRowItem treeRowItem2 : childrenThree) {
-								 QueryResultRowArray queryResultRow = treeRowItem2.getRows();
-									queryResult.addAll(queryResultRow);
-								
-							}					
-							
-						}	
-						
+						List<TreeRowItem> childrenTwo = selectedItemsTreeGridData.getChildren(child);
+						for (TreeRowItem treeRowItem : childrenTwo) {
+							List<TreeRowItem> childrenThree = selectedItemsTreeGridData.getChildren(treeRowItem);
+
+							QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
+							for (TreeRowItem treeRowItem2 : childrenThree) {
+
+							//	List<TreeRowItem> childrenFour = selectedItemsTreeGridData.getChildren(treeRowItem2);
+
+							//	for (TreeRowItem treeRowItem3 : childrenFour) {
+									List<TreeRowItem> childrenFour = selectedItemsTreeGridData
+											.getChildren(treeRowItem2);
+
+									if (childrenFour.isEmpty()) {
+										QueryResultRow result = treeRowItem2.getRows().get(0);
+										queryResultRowArray.add(result);
+
+									} else {
+										for (TreeRowItem treeRowItem4 : childrenFour) {
+											QueryResultRow result = treeRowItem4.getRows().get(0);
+											queryResultRowArray.add(result);
+
+										}
+									
+								}
+								queryResult.addAll(queryResultRowArray);
+							}
+						}
+
 					}
+
 				}
 			}
 		} else {
 		}
-
 		return queryResult;
-
 	}
 
 	private TreeData<TagRowItem> sortIncomingRowItemsToPhraseTreeData(TagRowItem root, TagRowItem phrase,
