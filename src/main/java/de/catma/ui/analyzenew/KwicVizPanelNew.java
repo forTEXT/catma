@@ -72,6 +72,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeDataProvider<TreeRowItem> tagDataProvider;
 	private TreeData<TreeRowItem> selectedItemsTreeGridData;
 	private TreeGrid<TreeRowItem> selectedItemsTreeGrid;
+	private TreeGrid<TreeRowItem> propertyTreeGrid;
+	private TreeDataProvider<TreeRowItem> propertyDataProvider;
 	private TreeDataProvider<TreeRowItem> selectedDataProvider;
 	private KwicPanelNew kwicNew;
 	private Button arrowLeftBt;
@@ -269,6 +271,47 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		return resultSetTreeGrid;
 	}
 
+
+
+	private TreeGrid<TreeRowItem> addDataPhraseStyle(TreeData<TreeRowItem> treeData) {
+		phraseTreeGrid = new TreeGrid<>();
+		phraseDataProvider = new TreeDataProvider<>(treeData);
+
+		phraseTreeGrid.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
+		phraseTreeGrid.getColumn("phraseID").setExpandRatio(2);
+
+		phraseTreeGrid.addColumn(TreeRowItem::getPosition).setCaption("Position").setId("positionID").setHidable(true)
+				.setHidden(true);
+		phraseTreeGrid.getColumn("positionID").setExpandRatio(1);
+
+		phraseTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
+				.setHidden(true).setWidth(100);
+		phraseTreeGrid.getColumn("contextID").setExpandRatio(5);
+
+		phraseTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
+		phraseTreeGrid.getColumn("freqID").setExpandRatio(1);
+
+		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
+				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
+		selectItemsRenderer.setHtmlContentAllowed(true);
+		phraseTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select")
+				.setId("selectID");
+		phraseTreeGrid.getColumn("selectID").setExpandRatio(1);
+
+
+		phraseDataProvider.refreshAll();
+		phraseTreeGrid.setDataProvider(phraseDataProvider);
+
+	phraseTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
+
+			public void itemExpand(ExpandEvent<TreeRowItem> event) {
+				handleExpandClickEventPhrase(event);
+
+			}
+		});
+
+		return phraseTreeGrid;
+	}
 	private TreeGrid<TreeRowItem> addDataTagStyle(TreeData<TreeRowItem> treeData) {
 		tagTreeGrid = new TreeGrid<>();
 		tagDataProvider = new TreeDataProvider<>(treeData);
@@ -310,60 +353,45 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		return tagTreeGrid;
 	}
 
-	private TreeGrid<TreeRowItem> addDataPhraseStyle(TreeData<TreeRowItem> treeData) {
-		phraseTreeGrid = new TreeGrid<>();
-		phraseDataProvider = new TreeDataProvider<>(treeData);
-
-		phraseTreeGrid.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
-		phraseTreeGrid.getColumn("phraseID").setExpandRatio(2);
-
-		phraseTreeGrid.addColumn(TreeRowItem::getPosition).setCaption("Position").setId("positionID").setHidable(true)
-				.setHidden(true);
-		phraseTreeGrid.getColumn("positionID").setExpandRatio(1);
-
-		phraseTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
-				.setHidden(true).setWidth(100);
-		phraseTreeGrid.getColumn("contextID").setExpandRatio(5);
-
-		phraseTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		phraseTreeGrid.getColumn("freqID").setExpandRatio(1);
+	private TreeGrid<TreeRowItem> addDataPropertyStyle(TreeData<TreeRowItem> treeData) {
+		propertyTreeGrid = new TreeGrid<>();
+		propertyDataProvider = new TreeDataProvider<>(treeData);
+		
+		propertyTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
+		propertyTreeGrid.getColumn("tagID").setExpandRatio(2);
+		
+		
+		propertyTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
+		.setHidden(true).setWidth(100);
+		propertyTreeGrid.getColumn("contextID").setExpandRatio(2);
 
 		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
 				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
 		selectItemsRenderer.setHtmlContentAllowed(true);
-		phraseTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select")
-				.setId("selectID");
-		phraseTreeGrid.getColumn("selectID").setExpandRatio(1);
 
-
-		phraseDataProvider.refreshAll();
-		phraseTreeGrid.setDataProvider(phraseDataProvider);
-
-	phraseTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
+		
+		propertyTreeGrid.addColumn(TreeRowItem::getPropertyName).setCaption("P name").setId("propNameID");
+		propertyTreeGrid.getColumn("propNameID").setExpandRatio(2);
+		propertyTreeGrid.addColumn(TreeRowItem::getPropertyValue).setCaption("P value").setId("propValueID");
+		propertyTreeGrid.getColumn("propValueID").setExpandRatio(2);
+		
+		
+		propertyTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
+		propertyTreeGrid.getColumn("freqID").setExpandRatio(1);
+		propertyTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select").setId("selectIconID");
+		propertyTreeGrid.getColumn("selectIconID").setExpandRatio(1);
+		propertyDataProvider.refreshAll();
+		propertyTreeGrid.setDataProvider(propertyDataProvider);
+		propertyTreeGrid.setWidth("100%");
+		
+		propertyTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
 
 			public void itemExpand(ExpandEvent<TreeRowItem> event) {
-				handleExpandClickEventPhrase(event);
+				handleExpandClickEventProperty(event);
 
 			}
 		});
-
-		return phraseTreeGrid;
-	}
-
-	private TreeGrid<TreeRowItem> addDataPropertyStyle(TreeData<TreeRowItem> treeData) {
-		TreeGrid<TreeRowItem> propertyTreeGrid = new TreeGrid<>();
-		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(treeData);
-		propertyTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
-		propertyTreeGrid.getColumn("tagID").setExpandRatio(3);
-		propertyTreeGrid.addColumn(TreeRowItem::getPropertyName).setCaption("Property name").setId("propNameID");
-		propertyTreeGrid.getColumn("propNameID").setExpandRatio(3);
-		propertyTreeGrid.addColumn(TreeRowItem::getPropertyValue).setCaption("Property value").setId("propValueID");
-		propertyTreeGrid.getColumn("propValueID").setExpandRatio(3);
-		propertyTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		propertyTreeGrid.getColumn("freqID").setExpandRatio(1);
-		dataProvider.refreshAll();
-		propertyTreeGrid.setDataProvider(dataProvider);
-		propertyTreeGrid.setWidth("100%");
+		
 		return propertyTreeGrid;
 	}
 
@@ -401,16 +429,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			} else {
 				selectedItemsTreeGridData.removeItem(parent);
 			}
-		}
-		
+		}	
 		else {
 			selectedItemsTreeGridData.removeItem(toRemove);		
-		}
-		
-		
-		
-		
-	
+		}		
 		selectedDataProvider.refreshAll();
 	}
 
@@ -453,6 +475,24 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		tagDataProvider.refreshAll();
 
 	}
+	private void handleExpandClickEventProperty(ExpandEvent<TreeRowItem> expandClickEvent) {
+
+		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
+		TreeRowItem dummyItem = propertyDataProvider.getTreeData().getChildren(clickedItem).get(0);
+
+		if (clickedItem.getClass().equals(CollectionItem.class) && (dummyItem.getRows() == null)) {
+
+			CollectionItem selectedItem = (CollectionItem) clickedItem;
+			propertyDataProvider.getTreeData().removeItem(dummyItem);
+			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem);
+			propertyDataProvider.getTreeData().addItems(selectedItem, children);
+
+		} else {
+
+		}
+		propertyDataProvider.refreshAll();
+
+	}
 
 	private ArrayList<TreeRowItem> createSingleItemRowsArrayList(TreeRowItem selectedItem) {
 		ArrayList<TreeRowItem> children = new ArrayList<>();
@@ -470,6 +510,13 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			if (queryResultRow.getClass().equals(TagQueryResultRow.class)) {
 				TagQueryResultRow tQRR = (TagQueryResultRow) queryResultRow;
 				item.setTreeKey(tQRR.getTagDefinitionPath());
+				if(selectedGridView==ViewID.property) {
+					SingleItem singleItem= (SingleItem)item;
+					singleItem.setPropertyName(tQRR.getPropertyName());
+					singleItem.setPropertyValue(tQRR.getPropertyValue());
+					item = singleItem;
+									
+				}
 			} else {
 				item.setTreeKey(queryResultRow.getPhrase());
 			}

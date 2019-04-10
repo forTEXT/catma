@@ -60,7 +60,7 @@ public class ResultPanelNew extends Panel {
 	private TreeData<TreeRowItem>phraseData;
 	private TreeGrid<TreeRowItem> treeGridPhrase;
 	
-	private TreeData<TreeRowItem>propertyData;
+	private TreeData<TreeRowItem>propData;
 	private TreeGrid<TreeRowItem> treeGridProperty;
 	
 	private Label queryInfo;
@@ -94,18 +94,13 @@ public class ResultPanelNew extends Panel {
 		}
 
 		if (queryAsString.contains("property=")) {
-
 			setDataPropertyStyle();
 			setCurrentView(ViewID.property);
-
 			treeGridPanel.setContent(treeGridProperty);
 		}
 		if (queryAsString.contains("wild=")) {
-			// setDataPhraseStyleLazy();
-			//setDataPhraseStyle();
 			setDataPhraseStyle();
 			setCurrentView(ViewID.phrase);
-			// treeGridPanel.setContent(treeGridPhrase);
 			treeGridPanel.setContent(treeGridPhrase);
 		}
 
@@ -118,15 +113,11 @@ public class ResultPanelNew extends Panel {
 		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
 	   	TreeData<TreeRowItem> treeData= (TreeData<TreeRowItem>) dataProvider.getTreeData();
          return  copyTreeData( treeData);
-
 	}
-	
-
-		
+			
 
 	private TreeData<TreeRowItem> copyTreeData(TreeData<TreeRowItem> treeData) {
 		TreeData<TreeRowItem> toReturn = new TreeData<TreeRowItem>();
-
 		List<TreeRowItem> roots = treeData.getRootItems();
 		for (TreeRowItem root : roots) {
 			toReturn.addItem(null, root);
@@ -161,7 +152,7 @@ public class ResultPanelNew extends Panel {
 
 	}
 	
-	private TreeData<TreeRowItem> addDummyItemsToTreeData(TreeData<TreeRowItem> treeData) {
+/*	private TreeData<TreeRowItem> addDummyItemsToTreeData(TreeData<TreeRowItem> treeData) {
 
 		if (this.currentView == ViewID.phrase) {
 			List<TreeRowItem> roots = treeData.getRootItems();
@@ -176,7 +167,7 @@ public class ResultPanelNew extends Panel {
 
 		}
 		
-		if (this.currentView == ViewID.tag) {
+		if (this.currentView == ViewID.tag||this.currentView == ViewID.property) {
 			List<TreeRowItem> roots = treeData.getRootItems();
 			for (TreeRowItem treeRowItem : roots) {
 				List<TreeRowItem> docs = treeData.getChildren(treeRowItem);
@@ -195,7 +186,7 @@ public class ResultPanelNew extends Panel {
 		}
 
 		return treeData;
-	}
+	}*/
 
 	private void setCurrentView(ViewID currentView) {
 		this.currentView = currentView;
@@ -391,10 +382,10 @@ public class ResultPanelNew extends Panel {
 
 	private void setDataPropertyStyle() throws Exception {
 		
-		TreeData<TreeRowItem> propData = new TreeData<>();
+		propData = new TreeData<>();
 		propData = populateTreeDataWithProperties(repository, propData, queryResult); // TODO !!!!!!
 
-		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(propData);
+		TreeDataProvider<TreeRowItem> propertyDataProvider = new TreeDataProvider<>(propData);
 
 		treeGridProperty.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
 		treeGridProperty.getColumn("tagID").setExpandRatio(3);
@@ -408,8 +399,8 @@ public class ResultPanelNew extends Panel {
 		treeGridProperty.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridProperty.getColumn("freqID").setExpandRatio(1);
 
-		dataProvider.refreshAll();
-		treeGridProperty.setDataProvider(dataProvider);
+		propertyDataProvider.refreshAll();
+		treeGridProperty.setDataProvider(propertyDataProvider);
 		treeGridProperty.setWidth("100%");
 		treeGridProperty.setCaption(queryAsString);
 
@@ -545,10 +536,9 @@ public class ResultPanelNew extends Panel {
 	
 	private TreeData<TreeRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
-TreeData<TreeRowItem> data=	populateTreeDataWithTags(repository, treeData, queryResult);
+           TreeData<TreeRowItem> data=	populateTreeDataWithTags(repository, treeData, queryResult);
 
-// diesem data die props, single items zukommen lassen , vielleicht erst nach dem clickevent in de kwic ?????????????????????????????
-return data;
+          return data;
 	}
 
 	public String getQueryAsString() {
@@ -565,7 +555,7 @@ return data;
 			break;
 
 		case property:
-			setCurrentView(ViewID.phraseProperty);
+			setCurrentView(ViewID.property);
 			treeGridPanel.setContent(treeGridPhrase);
 			break;
 
