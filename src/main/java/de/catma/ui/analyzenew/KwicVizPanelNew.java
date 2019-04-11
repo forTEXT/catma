@@ -545,6 +545,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
 		item.setBackward(kwic.getBackwardContext());
 		item.setForward(kwic.getForwardContext());
+		item.setPhrase(kwic.getKeyword());
 		Range keyWordRange = kwic.getKeywordRange();
 		int startPoint = keyWordRange.getStartPoint();
 		if (startPoint == 0) {
@@ -1090,7 +1091,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		return queryResult;
 	}
 
-	private TreeData<TagRowItem> sortIncomingRowItemsToPhraseTreeData(TagRowItem root, TagRowItem phrase,
+/*	private TreeData<TagRowItem> sortIncomingRowItemsToPhraseTreeData(TagRowItem root, TagRowItem phrase,
 			TreeData<TagRowItem> treeData, Collection<TagRowItem> items) {
 		// phrase is not first, root ( query) already inside
 		// if(root == null)
@@ -1125,9 +1126,9 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		}
 
 		return treeData;
-	}
+	}*/
 
-	private TreeData<TagRowItem> sortIncomingRowItemsToTagTreeData(TagRowItem root, TreeData<TagRowItem> treeData,
+/*	private TreeData<TagRowItem> sortIncomingRowItemsToTagTreeData(TagRowItem root, TreeData<TagRowItem> treeData,
 			Collection<TagRowItem> items) {
 		Collection<TagRowItem> allItems = items;
 		// adding tags as children for the query
@@ -1162,11 +1163,11 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 						&& (!documentsForATag.stream()
 								.anyMatch(var -> var.getSourceDocName().equalsIgnoreCase(doc.getSourceDocName())))) {
 
-					/*
+					
 					 * if (!(documentsForATag.stream() .anyMatch(var ->
 					 * var.getTagDefinitionPath().equalsIgnoreCase(tag.getTagDefinitionPath())&&
 					 * var.getSourceDocName().equalsIgnoreCase(doc.getSourceDocName())))) {
-					 */
+					 
 
 					// doc.setTagDefinitionPath(item.getTagDefinitionPath());
 					doc.setTreePath(item.getSourceDocName());
@@ -1213,7 +1214,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 		return treeData;
 
-	}
+	}*/
 
 	private void setActionGridComponenet() {
 

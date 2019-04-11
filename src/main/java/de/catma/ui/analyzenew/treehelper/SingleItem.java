@@ -34,6 +34,9 @@ public class SingleItem implements TreeRowItem {
 	public void setTreeKey(String treeKey) {
 		this.treeKey = treeKey;
 	}
+	public void setPhrase(String keyword) {
+	phrase = keyword;
+	}
 
 	@Override
 	public String getTreeKey() {
@@ -82,7 +85,7 @@ public class SingleItem implements TreeRowItem {
 	}
 
 	public String getPhrase() {
-		return queryResultRow.getPhrase();
+		return phrase;
 	}
 
 	public String getPropertyName() {
@@ -150,7 +153,7 @@ public class SingleItem implements TreeRowItem {
 
 	@Override
 	public String getContext() {	
-		return 	getBackward()+getTreeKey()+getForward();
+		return 	getBackward()+getPhrase()+getForward();
 	}
 
 	@Override
@@ -219,6 +222,8 @@ public class SingleItem implements TreeRowItem {
 			return false;
 		return true;
 	}
+
+
 
 
 
