@@ -28,13 +28,14 @@ public class AnalyzeNewManagerView extends  TabbedView{
 		
 						onTabClose(analyzeNewView);
 					}			
-			});		
-			addClosableTab(analyzeNewView, "caption eben");
+			});	
+			String caption="project : "+repository.getName()+" resources :"+corpus.getSourceDocuments().size()+" documents / "+corpus.getUserMarkupCollectionRefs().size()+" collections";
+			addClosableTab(analyzeNewView, caption);
 			
 		}
 		
 		catch (Exception e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError("error initializing Analyze", e);
+			((CatmaApplication)UI.getCurrent()).showAndLogError("error initializing Analyzer", e);
 		}
 		
 		
