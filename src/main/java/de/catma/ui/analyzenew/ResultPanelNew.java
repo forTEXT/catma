@@ -532,8 +532,7 @@ public class ResultPanelNew extends Panel {
 		return queryResultRowArray;
 	
 	}
-	
-	
+		
 	private TreeData<TreeRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
            TreeData<TreeRowItem> data=	populateTreeDataWithTags(repository, treeData, queryResult);
@@ -555,7 +554,7 @@ public class ResultPanelNew extends Panel {
 			break;
 
 		case property:
-			setCurrentView(ViewID.property);
+			setCurrentView(ViewID.phraseProperty);
 			treeGridPanel.setContent(treeGridPhrase);
 			break;
 
