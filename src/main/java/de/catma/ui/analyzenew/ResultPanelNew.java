@@ -65,7 +65,7 @@ public class ResultPanelNew extends Panel {
 	
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
-	private Button caretDownBt;
+	private Button caretLeftBt;
 	private Button caretUpBt;
 	private Button trashBt;
 	private Button optionsBt;
@@ -236,15 +236,16 @@ public class ResultPanelNew extends Panel {
 	private void createButtonBar() {
 		groupedIcons = new HorizontalLayout();
 		groupedIcons.setMargin(false);
-		caretDownBt = new Button(VaadinIcons.CARET_DOWN);
-		caretDownBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		caretLeftBt = new Button(VaadinIcons.CARET_LEFT);
+		caretLeftBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		caretUpBt = new Button(VaadinIcons.CARET_UP);
 		caretUpBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		trashBt = new Button(VaadinIcons.TRASH);
 		trashBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		groupedIcons.addComponents(trashBt, optionsBt, caretDownBt);
+
+		groupedIcons.addComponents(trashBt, optionsBt, caretLeftBt);
 		groupedIcons.setWidthUndefined();
 		contentVerticalLayout.addComponent(groupedIcons);
 		contentVerticalLayout.setComponentAlignment(groupedIcons, Alignment.MIDDLE_RIGHT);
@@ -254,11 +255,11 @@ public class ResultPanelNew extends Panel {
 
 	private void initListeners() {
 
-		caretDownBt.addClickListener(new ClickListener() {
+		caretLeftBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.addComponent(treeGridPanel);
-				groupedIcons.replaceComponent(caretDownBt, caretUpBt);
+				groupedIcons.replaceComponent(caretLeftBt, caretUpBt);
 
 			}
 		});
@@ -267,7 +268,7 @@ public class ResultPanelNew extends Panel {
 
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.removeComponent(treeGridPanel);
-				groupedIcons.replaceComponent(caretUpBt, caretDownBt);
+				groupedIcons.replaceComponent(caretUpBt, caretLeftBt);
 			}
 		});
 

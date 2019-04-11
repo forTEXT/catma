@@ -41,10 +41,12 @@ import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.Corpus;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.IndexedRepository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
@@ -60,6 +62,7 @@ import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
@@ -250,6 +253,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             	"Edit documents / collections",(menuItem) -> handleEditResources());
         documentsGridMoreOptionsContextMenu.addItem(
         	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
+        documentsGridMoreOptionsContextMenu.addItem(
+            	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, resourceGrid));
         
         tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
         	click -> handleAddTagsetRequest());
@@ -897,6 +902,39 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	            eventBus.post(new ResourcesChangedEvent<>(resourceGrid));
     		});
 
+    }
+    
+    private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
+    	ConfirmDialog.show(
+        		UI.getCurrent(), 
+        		"Info", 
+        		"Selected resources for the Analyzer: "
+        		+ resourceGrid.getSelectedItems()
+        			.stream()
+        			.map(resource -> resource.getName())
+        			.collect(Collectors.joining(","))
+        		+ "?", 
+        		"Yes", 
+        		"Cancel", dlg -> {
+        			Corpus corpus = new Corpus("to analyze");
+        	         for (Resource resource: resourceGrid.getSelectedItems()) {
+     	            	try {
+     	            		if(resource.getClass().equals(DocumentResource.class)) {
+     	            		DocumentResource docResource = (DocumentResource) resource;
+     	            		corpus.addSourceDocument(docResource.getDocument());
+     	            		}else {
+     	            			CollectionResource collResource = (CollectionResource) resource;
+         	            		corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
+     	            			
+     	            		}
+     	                } catch (Exception e) {
+     	                    errorHandler.showAndLogError("Error adding resource to analyzer module "+resource, e);
+     	                }
+     	            }
+    	     
+    	            eventBus.post( new RouteToAnalyzeNewEvent((IndexedRepository)project, corpus));
+        		});
+    	
     }
 
 	public void close() {
