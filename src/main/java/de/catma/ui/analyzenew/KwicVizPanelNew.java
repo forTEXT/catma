@@ -521,6 +521,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				item.setTreeKey(queryResultRow.getPhrase());
 			}
 			item.setRows(itemAsQRRA);
+			item.setQuery(comboBox.getValue());
 			SingleItem itemWithContext;
 			try {
 				itemWithContext = setContext(item);

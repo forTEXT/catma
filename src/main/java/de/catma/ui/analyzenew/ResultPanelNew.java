@@ -66,7 +66,7 @@ public class ResultPanelNew extends Panel {
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
 	private Button caretLeftBt;
-	private Button caretUpBt;
+	private Button caretDownBt;
 	private Button trashBt;
 	private Button optionsBt;
 	private Panel treeGridPanel;
@@ -238,8 +238,8 @@ public class ResultPanelNew extends Panel {
 		groupedIcons.setMargin(false);
 		caretLeftBt = new Button(VaadinIcons.CARET_LEFT);
 		caretLeftBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		caretUpBt = new Button(VaadinIcons.CARET_UP);
-		caretUpBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		caretDownBt = new Button(VaadinIcons.CARET_DOWN);
+		caretDownBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		trashBt = new Button(VaadinIcons.TRASH);
@@ -259,16 +259,16 @@ public class ResultPanelNew extends Panel {
 
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.addComponent(treeGridPanel);
-				groupedIcons.replaceComponent(caretLeftBt, caretUpBt);
+				groupedIcons.replaceComponent(caretLeftBt, caretDownBt);
 
 			}
 		});
 
-		caretUpBt.addClickListener(new ClickListener() {
+		caretDownBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.removeComponent(treeGridPanel);
-				groupedIcons.replaceComponent(caretUpBt, caretLeftBt);
+				groupedIcons.replaceComponent(caretDownBt, caretLeftBt);
 			}
 		});
 

@@ -17,6 +17,7 @@ public class SingleItem implements TreeRowItem {
 	private String phrase;
 	private String propertyName;
 	private String propertyValue;
+	private String query;
 	private QueryResultRowArray queryResultRowArray;
 	private  QueryResultRow queryResultRow;
 	private Range range;
@@ -42,6 +43,10 @@ public class SingleItem implements TreeRowItem {
 	public String getTreeKey() {
 		// TODO Auto-generated method stub
 		return treeKey;
+	}
+	
+	public void setQuery(String query) {
+		this.query=query;
 	}
 
 	@Override
@@ -162,7 +167,11 @@ public class SingleItem implements TreeRowItem {
 		int result = 1;
 		result = prime * result + ((backward == null) ? 0 : backward.hashCode());
 		result = prime * result + ((forward == null) ? 0 : forward.hashCode());
+		result = prime * result + ((phrase == null) ? 0 : phrase.hashCode());
 		result = prime * result + position;
+		result = prime * result + ((propertyName == null) ? 0 : propertyName.hashCode());
+		result = prime * result + ((propertyValue == null) ? 0 : propertyValue.hashCode());
+		result = prime * result + ((query == null) ? 0 : query.hashCode());
 		result = prime * result + ((queryResultRow == null) ? 0 : queryResultRow.hashCode());
 		result = prime * result + ((queryResultRowArray == null) ? 0 : queryResultRowArray.hashCode());
 		result = prime * result + ((range == null) ? 0 : range.hashCode());
@@ -191,7 +200,27 @@ public class SingleItem implements TreeRowItem {
 				return false;
 		} else if (!forward.equals(other.forward))
 			return false;
+		if (phrase == null) {
+			if (other.phrase != null)
+				return false;
+		} else if (!phrase.equals(other.phrase))
+			return false;
 		if (position != other.position)
+			return false;
+		if (propertyName == null) {
+			if (other.propertyName != null)
+				return false;
+		} else if (!propertyName.equals(other.propertyName))
+			return false;
+		if (propertyValue == null) {
+			if (other.propertyValue != null)
+				return false;
+		} else if (!propertyValue.equals(other.propertyValue))
+			return false;
+		if (query == null) {
+			if (other.query != null)
+				return false;
+		} else if (!query.equals(other.query))
 			return false;
 		if (queryResultRow == null) {
 			if (other.queryResultRow != null)
@@ -223,6 +252,7 @@ public class SingleItem implements TreeRowItem {
 		return true;
 	}
 
+	
 
 
 
