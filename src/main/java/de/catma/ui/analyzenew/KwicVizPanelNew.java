@@ -794,23 +794,27 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 												
 							}else {
 							if(selectedItemsTreeGridData.contains(doc)) {
+								
 								selectedItemsTreeGridData.addItem(doc, coll);
 								selectedItemsTreeGridData.addItem(coll, selectedItem);
 								
-							}
-							if(selectedItemsTreeGridData.contains(rootTag)) {
-								selectedItemsTreeGridData.addItem(rootTag, doc);				
-								selectedItemsTreeGridData.addItem(doc, coll);
-								selectedItemsTreeGridData.addItem(coll, selectedItem);					
+							}else {
+								if(selectedItemsTreeGridData.contains(rootTag)) {
+									selectedItemsTreeGridData.addItem(rootTag, doc);				
+									selectedItemsTreeGridData.addItem(doc, coll);
+									selectedItemsTreeGridData.addItem(coll, selectedItem);					
+									
+								}
+							else { // tagRoot is not yet inside
+									selectedItemsTreeGridData.addItem(queryRoot,rootTag);
+									selectedItemsTreeGridData.addItem(rootTag, doc);				
+									selectedItemsTreeGridData.addItem(doc, coll);
+									selectedItemsTreeGridData.addItem(coll, selectedItem);
+									
+								}
 								
 							}
-						else { // tagRoot is not yet inside
-								selectedItemsTreeGridData.addItem(queryRoot,rootTag);
-								selectedItemsTreeGridData.addItem(rootTag, doc);				
-								selectedItemsTreeGridData.addItem(doc, coll);
-								selectedItemsTreeGridData.addItem(coll, selectedItem);
-								
-							}
+			
 							}
 							
 					

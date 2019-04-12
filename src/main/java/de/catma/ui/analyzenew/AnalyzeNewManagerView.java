@@ -29,7 +29,7 @@ public class AnalyzeNewManagerView extends  TabbedView{
 						onTabClose(analyzeNewView);
 					}			
 			});	
-			String caption="project : "+repository.getName()+" resources :"+corpus.getSourceDocuments().size()+" documents / "+corpus.getUserMarkupCollectionRefs().size()+" collections";
+			String caption="project: "+repository.getName()+"   resources :"+corpus.getSourceDocuments().size()+" documents / "+corpus.getUserMarkupCollectionRefs().size()+" collections";
 			addClosableTab(analyzeNewView, caption);
 			
 		}
