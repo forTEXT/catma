@@ -65,7 +65,7 @@ public class ResultPanelNew extends Panel {
 	
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
-	private Button caretLeftBt;
+	private Button caretRightBt;
 	private Button caretDownBt;
 	private Button trashBt;
 	private Button optionsBt;
@@ -236,8 +236,8 @@ public class ResultPanelNew extends Panel {
 	private void createButtonBar() {
 		groupedIcons = new HorizontalLayout();
 		groupedIcons.setMargin(false);
-		caretLeftBt = new Button(VaadinIcons.CARET_LEFT);
-		caretLeftBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		caretRightBt = new Button(VaadinIcons.CARET_RIGHT);
+		caretRightBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		caretDownBt = new Button(VaadinIcons.CARET_DOWN);
 		caretDownBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
@@ -245,7 +245,7 @@ public class ResultPanelNew extends Panel {
 		trashBt = new Button(VaadinIcons.TRASH);
 		trashBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 
-		groupedIcons.addComponents(trashBt, optionsBt, caretLeftBt);
+		groupedIcons.addComponents(trashBt, optionsBt, caretRightBt);
 		groupedIcons.setWidthUndefined();
 		contentVerticalLayout.addComponent(groupedIcons);
 		contentVerticalLayout.setComponentAlignment(groupedIcons, Alignment.MIDDLE_RIGHT);
@@ -255,11 +255,11 @@ public class ResultPanelNew extends Panel {
 
 	private void initListeners() {
 
-		caretLeftBt.addClickListener(new ClickListener() {
+		caretRightBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.addComponent(treeGridPanel);
-				groupedIcons.replaceComponent(caretLeftBt, caretDownBt);
+				groupedIcons.replaceComponent(caretRightBt, caretDownBt);
 
 			}
 		});
@@ -268,7 +268,7 @@ public class ResultPanelNew extends Panel {
 
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.removeComponent(treeGridPanel);
-				groupedIcons.replaceComponent(caretDownBt, caretLeftBt);
+				groupedIcons.replaceComponent(caretDownBt, caretRightBt);
 			}
 		});
 

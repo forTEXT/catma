@@ -560,42 +560,44 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 	private void handleSelectClickEvent(RendererClickEvent<TreeRowItem> rendererClickEvent) {
 		TreeRowItem selectedItem = rendererClickEvent.getItem();
+		TreeDataProvider<TreeRowItem>currentTreeGridDataProvider =(TreeDataProvider<TreeRowItem>) resultsTreeGrid.getDataProvider();
 
 		if (comboBox.getValue().contains("wild")) {
 			addPhraseItemsToSelectedPanel(selectedItem);
 		}else{
-			addTagItemsToSelectedPanel(selectedItem);
+			
+			addTagOrPropertyItemsToSelectedPanel(selectedItem, currentTreeGridDataProvider);
 			
 		}
 	}
 
 
-	private void addTagItemsToSelectedPanel(TreeRowItem selectedItem) {
+	private void addTagOrPropertyItemsToSelectedPanel(TreeRowItem selectedItem, TreeDataProvider<TreeRowItem> currentTreeDataProvider) {
 		try {
 			// check if dummy is already removed
-			TreeRowItem dummy = tagDataProvider.getTreeData().getChildren(selectedItem).get(0); 
-			List<TreeRowItem> childrenLevelOne = tagDataProvider.getTreeData().getChildren(selectedItem); 
+			TreeRowItem dummy = currentTreeDataProvider.getTreeData().getChildren(selectedItem).get(0); 
+			List<TreeRowItem> childrenLevelOne = currentTreeDataProvider.getTreeData().getChildren(selectedItem); 
 
 			if (selectedItem.getClass() == CollectionItem.class && dummy.getRows() == null) {
-				replaceDummyWithTagItems(selectedItem, tagDataProvider);
+				replaceDummyWithTagItems(selectedItem, currentTreeDataProvider);
 
 			}
 			if (selectedItem.getClass() == DocumentItem.class) {
 				for (TreeRowItem collection : childrenLevelOne) {
-					TreeRowItem dummy2 = tagDataProvider.getTreeData().getChildren(collection).get(0);
+					TreeRowItem dummy2 = currentTreeDataProvider.getTreeData().getChildren(collection).get(0);
 					if (dummy2.getRows() == null) {
-						replaceDummyWithTagItems(collection, tagDataProvider);
+						replaceDummyWithTagItems(collection, currentTreeDataProvider);
 
 					}
 				}
 			}
 			if (selectedItem.getClass() == RootItem.class) {
 				for (TreeRowItem document : childrenLevelOne) {
-				List<TreeRowItem> collectionsPerDoc=	tagDataProvider.getTreeData().getChildren( document);
+				List<TreeRowItem> collectionsPerDoc=	currentTreeDataProvider.getTreeData().getChildren( document);
 					for(TreeRowItem collection: collectionsPerDoc) {
-						TreeRowItem dummy2 = tagDataProvider.getTreeData().getChildren(collection).get(0);
+						TreeRowItem dummy2 = currentTreeDataProvider.getTreeData().getChildren(collection).get(0);
 						if (dummy2.getRows() == null) {
-							replaceDummyWithTagItems(collection, tagDataProvider);
+							replaceDummyWithTagItems(collection, currentTreeDataProvider);
 						
 					}
 		
