@@ -1,13 +1,6 @@
 package de.catma.ui.analyzenew.treehelper;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
-
-import com.hazelcast.map.impl.querycache.publisher.QueryCacheListenerRegistry;
-
-import de.catma.queryengine.result.GroupedQueryResult;
-import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
@@ -36,8 +29,6 @@ public class RootItem implements TreeRowItem {
 	   
    }
      
-	
-
 	@Override
 	public QueryResultRowArray getRows() {
 		// TODO Auto-generated method stub
@@ -51,8 +42,6 @@ public class RootItem implements TreeRowItem {
 		
 	}
 	
-
-
 	@Override
 	public String getArrowIcon() {
 		
