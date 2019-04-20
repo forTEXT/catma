@@ -21,8 +21,9 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComboBox.NewItemHandler;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HasComponents;
-import com.vaadin.ui.HorizontalLayout;
+//import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
@@ -31,7 +32,7 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.VerticalLayout;
+//import com.vaadin.ui.VerticalLayout;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -52,6 +53,9 @@ import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.analyzer.TagKwicResultsProvider;
 import de.catma.ui.component.HTMLNotification;
+import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
@@ -78,18 +82,21 @@ public class AnalyzeNewView extends VerticalLayout
 	private Button distBt;
 	private Button wordCloudBt;
 	private Button networkBt;
+	private Button optionsBt;
 	private String searchInput = new String();
 	private ComboBox<String> queryComboBox;
 	private ResultPanelNew queryResultPanel;
-	private HorizontalLayout resultAndVizSnapshotsPanel;
+	private HorizontalLayout resultAndMinMaxVizHorizontal;
 	private VerticalLayout resultsPanel;
-	private VerticalLayout snapshotsPanel;
+	private VerticalLayout minMaxPanel;
 	private MarginInfo margin;
 	private Panel resultScrollPanel;
 	private Iterator<Component> allResultPanelsIterator;
 	private VerticalLayout contentPanel;
-	private HorizontalLayout searchAndVisIconsPanel;
+	private HorizontalLayout searchAndVisIconsHorizontal;
 	private HashSet currentResults;
+	private Panel searchFramePanel;
+	private Panel visIconsFramePanel;
 	private Panel resultsFramePanel;
 	private Panel snapshotsFramePanel;
 
@@ -98,6 +105,7 @@ public class AnalyzeNewView extends VerticalLayout
 
 	public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener)
 			throws Exception {
+
 		this.corpus = corpus;
 		this.repository = repository;
 		this.closeListener = closeListener;
@@ -113,50 +121,68 @@ public class AnalyzeNewView extends VerticalLayout
 	}
 
 	private void initComponents() throws Exception {
-		margin = new MarginInfo(true, true, true, true);
+		//margin = new MarginInfo(true, true, true, true);
 		createHeaderInfo();
 
 		searchPanel = createSearchPanel();
+		searchPanel.addStyleName("analyze_search_icon_bar");
+		
+		
+		//searchFramePanel= new Panel();
+		//searchFramePanel.addStyleName("analyze_searchAndVizIconsPanel");
+		//searchPanel.addStyleName("analyze_searchAndVizIconsPanel");
+		//searchFramePanel.setContent(searchPanel);
+		
+		
+		
 		visIconsPanel = createVisIconsPanel();
+		visIconsPanel.addStyleName("analyze_search_icon_bar");
+		//visIconsFramePanel= new Panel();
+		//visIconsFramePanel.addStyleName("analyze_searchAndVizIconsPanel");
+		//visIconsPanel.addStyleName("analyze_searchAndVizIconsPanel");
+		//visIconsFramePanel.setContent(visIconsPanel);
 
-		searchAndVisIconsPanel = new HorizontalLayout();
-		searchAndVisIconsPanel.addComponents(searchPanel, visIconsPanel);
-		searchAndVisIconsPanel.setWidth("100%");
-		searchAndVisIconsPanel.setExpandRatio(searchPanel, 1);
-		searchAndVisIconsPanel.setExpandRatio(visIconsPanel, 1);
-		searchAndVisIconsPanel.setMargin(margin);
+		searchAndVisIconsHorizontal = new HorizontalLayout();
+		
+		searchAndVisIconsHorizontal.addStyleName("analyze_bar");
+		searchAndVisIconsHorizontal.addComponents(searchPanel, visIconsPanel);
+
+		//searchAndVisIconsPanel.setExpandRatio(searchPanel, 1);
+		//searchAndVisIconsPanel.setExpandRatio(visIconsPanel, 1);
+		//searchAndVisIconsPanel.setMargin(margin);
+	
 		// addComponent(searchAndVisIconsPanel);
 
-		resultAndVizSnapshotsPanel = new HorizontalLayout();
-		resultAndVizSnapshotsPanel.setWidth("100%");
-		resultAndVizSnapshotsPanel.setHeight("100%");
-		resultsPanel = new VerticalLayout();
-		resultsPanel.setHeightUndefined();
+		resultAndMinMaxVizHorizontal = new HorizontalLayout();
+		//resultAndMinMaxVizPanel.setWidth("100%");
+		//resultAndMinMaxVizPanel.setHeight("80%");
 
-		// this didnt work for making the resultpanel scrollable
-		// resultScrollPanel = new Panel();
-		// resultScrollPanel.setContent(resultPanel);
-		// resultScrollPanel.setHeightUndefined();
-
+		
+		resultAndMinMaxVizHorizontal.addStyleName("analyze_results");
+		
 		contentPanel = new VerticalLayout();
+	
+		resultsPanel = new VerticalLayout();
+	
+		//resultsPanel.addStyleName("analyze_resultAndMinMaxVizPanel");
 
-		snapshotsPanel = new VerticalLayout();
-		snapshotsPanel.setHeightUndefined();
-		 resultsFramePanel = new Panel();
-		resultsFramePanel.setContent(resultsPanel);
-		resultsFramePanel.setHeight("380px");
-		snapshotsFramePanel = new Panel();
-		snapshotsFramePanel.setContent(snapshotsPanel);
-		snapshotsFramePanel.setHeight("380px");
-		resultAndVizSnapshotsPanel.addComponents(resultsFramePanel, snapshotsFramePanel);
-		resultAndVizSnapshotsPanel.setExpandRatio(resultsFramePanel, 1);
-		resultAndVizSnapshotsPanel.setExpandRatio(snapshotsFramePanel, 1);
 
-		resultAndVizSnapshotsPanel.setMargin(margin);
-		setMargin(true);
+		minMaxPanel = new VerticalLayout();
 
-		contentPanel.addComponent(searchAndVisIconsPanel);
-		contentPanel.addComponent(resultAndVizSnapshotsPanel);
+		//minMaxPanel.addStyleName("analyze_resultAndMinMaxVizPanel");
+		
+
+
+		resultAndMinMaxVizHorizontal.addComponents(resultsPanel, minMaxPanel);
+
+		//resultAndMinMaxVizPanel.setHeight(height);
+
+		//resultAndMinMaxVizPanel.setMargin(margin);
+	
+
+		contentPanel.addComponent(searchAndVisIconsHorizontal);
+		contentPanel.addComponent(resultAndMinMaxVizHorizontal);
+		contentPanel.addStyleName("analyze_content");
 
 		addComponent(contentPanel);
 	}
@@ -229,7 +255,7 @@ public class AnalyzeNewView extends VerticalLayout
 					@Override
 					public void onClose() {
 						VizSnapshot kwivSnapshot = new VizSnapshot("Kwic Snapshot");
-						snapshotsPanel.addComponent(kwivSnapshot);
+						minMaxPanel.addComponent(kwivSnapshot);
 					
 						setContent(contentPanel);
 					}
@@ -274,13 +300,29 @@ public class AnalyzeNewView extends VerticalLayout
 
 	private Component createSearchPanel() {
 		VerticalLayout searchPanel = new VerticalLayout();
+		searchPanel.setAlignContent(AlignContent.CENTER);
+		 
 		Label searchPanelLabel = new Label("Queries");
+        searchPanelLabel.addStyleName("analyze_label");
+		
+		optionsBt = new Button("", VaadinIcons.ELLIPSIS_DOTS_V);
+		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		
+	
+		HorizontalLayout labelLayout = new HorizontalLayout(searchPanelLabel,optionsBt);
+
+		optionsBt.addStyleName("analyze_options_bt");
+		labelLayout.addStyleName("analyze_label_layout");
+		//labelLayout.setAlignItems(AlignItems.CENTER);
+	
 
 		HorizontalLayout searchRow = new HorizontalLayout();
-		searchRow.setWidth("100%");
+		//searchRow.setWidth("100%");
 
-		btQueryBuilder = new Button("+ BUILD QUERY");
-		btQueryBuilder.setStyleName("body");
+		//btQueryBuilder = new Button("+ BUILD QUERY");
+		btQueryBuilder = new Button(" + BUILD QUERY");
+		
+		btQueryBuilder.addStyleName("analyze_querybuilder_bt");
 
 		List<String> predefQueries = new ArrayList<>();
 
@@ -295,23 +337,36 @@ public class AnalyzeNewView extends VerticalLayout
 
 		queryComboBox = new ComboBox<>();
 		queryComboBox.setItems(predefQueries);
+		queryComboBox.addStyleName("analyze_query_comobobox");
+		queryComboBox.setPlaceholder("Select or enter a free query");
 
 		btExecuteSearch = new Button("SEARCH", VaadinIcons.SEARCH);
-		btExecuteSearch.setWidth("100%");
+
 		btExecuteSearch.setStyleName("primary");
 
-		queryComboBox.setWidth("100%");
+		//queryComboBox.setWidth("100%");
 		searchRow.addComponents(btQueryBuilder, queryComboBox);
-		searchRow.setComponentAlignment(queryComboBox, Alignment.MIDDLE_CENTER);
-		searchRow.setExpandRatio(queryComboBox, 0.6f);
-		searchPanel.addComponents(searchPanelLabel, searchRow, btExecuteSearch);
+		searchRow.addStyleName("analyze_search_row");
+		VerticalLayout searchVerticalLayout= new VerticalLayout(searchRow,btExecuteSearch);
+		searchVerticalLayout.addStyleName("analyze_search");
+		//searchRow.setComponentAlignment(queryComboBox, Alignment.MIDDLE_CENTER);
+		//searchRow.setExpandRatio(queryComboBox, 0.6f);
+		searchPanel.addComponents(labelLayout, searchVerticalLayout);
 		return searchPanel;
 	}
 
 	private Component createVisIconsPanel() {
 		VerticalLayout visIconsPanel = new VerticalLayout();
+		visIconsPanel.setAlignContent(AlignContent.CENTER);
 		Label visIconsLabel = new Label("Visualisations");
-		visIconsLabel.setWidth("100%");
+		visIconsLabel.addStyleName("analyze_label");
+		
+		optionsBt = new Button("", VaadinIcons.ELLIPSIS_DOTS_V);
+		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		optionsBt.addStyleName("analyze_options_bt");
+		
+		HorizontalLayout labelLayout = new HorizontalLayout(visIconsLabel,optionsBt);	
+		labelLayout.addStyleName("analyze_label_layout");
 		HorizontalLayout visIconBar = new HorizontalLayout();
 
 		kwicBt = new Button("KWIC", VaadinIcons.SPLIT);
@@ -325,14 +380,7 @@ public class AnalyzeNewView extends VerticalLayout
 		distBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		distBt.setWidth("100%");
 		distBt.setHeight("100%");
-		distBt.setDescription(
-			    "<h2>"+
-			    	    "A richtext tooltip</h2>"+
-			    	    "<ul>"+
-			    	    "  <li>Use rich formatting with HTML</li>"+
-			    	    "  <li>Include images from themes</li>"+
-			    	    "  <li>etc.</li>"+
-			    	    "</ul>",ContentMode.HTML);
+
 
 		wordCloudBt = new Button("WORDCLOUD", VaadinIcons.CLOUD);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
@@ -355,13 +403,13 @@ public class AnalyzeNewView extends VerticalLayout
 		 */
 
 		visIconBar.addComponents(kwicBt, distBt, wordCloudBt, networkBt);
-		visIconBar.setWidth("100%");
-		visIconBar.setHeight("100%");
+		//visIconBar.setWidth("100%");
+		//visIconBar.setHeight("100%");
 
-		visIconsPanel.addComponent(visIconsLabel);
-		visIconsPanel.setComponentAlignment(visIconsLabel, Alignment.MIDDLE_CENTER);
+		visIconsPanel.addComponent(labelLayout);
+		//visIconsPanel.setComponentAlignment(visIconsLabel, Alignment.MIDDLE_CENTER);
 		visIconsPanel.addComponent(visIconBar);
-		visIconsPanel.setHeight("100%");
+		//visIconsPanel.setHeight("100%");
 		return visIconsPanel;
 	}
 
@@ -424,7 +472,7 @@ public class AnalyzeNewView extends VerticalLayout
 							}
 						});
 
-						resultsPanel.setSpacing(true);
+						//resultsPanel.setSpacing(true);
 						resultsPanel.addComponentAsFirst(queryResultPanel);
 						
 

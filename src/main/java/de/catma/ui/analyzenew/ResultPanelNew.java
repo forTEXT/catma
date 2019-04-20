@@ -198,7 +198,9 @@ public class ResultPanelNew extends Panel {
 
 	private void initComponents() {
 		contentVerticalLayout = new VerticalLayout();
-
+		contentVerticalLayout.addStyleName("queryresultpanel__card");
+		
+		addStyleName("queryresultpanel__card");
 		setContent(contentVerticalLayout);
 
 		treeGridTag = new TreeGrid<TreeRowItem>();
@@ -229,7 +231,7 @@ public class ResultPanelNew extends Panel {
 		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
 		int resultSize = resultRowArrayArrayList.size();
 		queryInfo = new Label(queryAsString + "(" + resultSize + ")");
-		queryInfo.setStyleName("body");
+		queryInfo.addStyleName("queryresultpanel_infobar");
 		contentVerticalLayout.addComponent(queryInfo);
 	}
 
@@ -246,7 +248,7 @@ public class ResultPanelNew extends Panel {
 		trashBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 
 		groupedIcons.addComponents(trashBt, optionsBt, caretRightBt);
-		groupedIcons.setWidthUndefined();
+		groupedIcons.addStyleName("queryresultpanel_buttonbar");
 		contentVerticalLayout.addComponent(groupedIcons);
 		contentVerticalLayout.setComponentAlignment(groupedIcons, Alignment.MIDDLE_RIGHT);
 	}
