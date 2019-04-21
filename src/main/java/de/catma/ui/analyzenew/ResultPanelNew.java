@@ -15,14 +15,15 @@ import org.apache.commons.lang3.SerializationUtils;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
+//import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.VerticalLayout;
+//import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.themes.ValoTheme;
@@ -40,6 +41,8 @@ import de.catma.ui.analyzenew.treehelper.DocumentItem;
 import de.catma.ui.analyzenew.treehelper.RootItem;
 import de.catma.ui.analyzenew.treehelper.SingleItem;
 import de.catma.ui.analyzenew.treehelper.TreeRowItem;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
 
 public class ResultPanelNew extends Panel {
 
@@ -197,20 +200,17 @@ public class ResultPanelNew extends Panel {
 	}
 
 	private void initComponents() {
+		this.setWidth(80, Unit.PERCENTAGE);
 		contentVerticalLayout = new VerticalLayout();
-		contentVerticalLayout.addStyleName("queryresultpanel__card");
+		contentVerticalLayout.addStyleName("analyze_queryresultpanel__card");
 		
-		addStyleName("queryresultpanel__card");
+		addStyleName("analyze_queryresultpanel__card_frame");
 		setContent(contentVerticalLayout);
 
 		treeGridTag = new TreeGrid<TreeRowItem>();
 		treeGridTag.addStyleNames(
 				"annotation-details-panel-annotation-details-grid", 
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
-
-	//	treeGridPhrase = new TreeGrid<TreeRowItem>();
-	//	treeGridPhrase.addStyleName( "flat-undecorated-icon-buttonrenderer");
-		
 
 		treeGridPhrase = new TreeGrid<TreeRowItem>();
 		treeGridPhrase.addStyleNames(
@@ -231,26 +231,31 @@ public class ResultPanelNew extends Panel {
 		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
 		int resultSize = resultRowArrayArrayList.size();
 		queryInfo = new Label(queryAsString + "(" + resultSize + ")");
-		queryInfo.addStyleName("queryresultpanel_infobar");
+		queryInfo.addStyleName("analyze_queryresultpanel_infobar");
 		contentVerticalLayout.addComponent(queryInfo);
 	}
 
 	private void createButtonBar() {
 		groupedIcons = new HorizontalLayout();
-		groupedIcons.setMargin(false);
+		//groupedIcons.setMargin(false);
 		caretRightBt = new Button(VaadinIcons.CARET_RIGHT);
 		caretRightBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		
 		caretDownBt = new Button(VaadinIcons.CARET_DOWN);
 		caretDownBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		
 		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		
 		trashBt = new Button(VaadinIcons.TRASH);
 		trashBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 
+	
+
 		groupedIcons.addComponents(trashBt, optionsBt, caretRightBt);
-		groupedIcons.addStyleName("queryresultpanel_buttonbar");
+		groupedIcons.addStyleName("analyze_queryresultpanel_buttonbar");
 		contentVerticalLayout.addComponent(groupedIcons);
-		contentVerticalLayout.setComponentAlignment(groupedIcons, Alignment.MIDDLE_RIGHT);
+		//contentVerticalLayout.setComponentAlignment(groupedIcons, Alignment.MIDDLE_RIGHT);
 	}
 	
 	

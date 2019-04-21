@@ -54,6 +54,7 @@ import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.analyzer.TagKwicResultsProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.layout.FlexLayout.AlignContent;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.repository.MarkupCollectionItem;
@@ -106,6 +107,8 @@ public class AnalyzeNewView extends VerticalLayout
 	public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener)
 			throws Exception {
 
+		//super.addStyleName("analyze_tab");
+		
 		this.corpus = corpus;
 		this.repository = repository;
 		this.closeListener = closeListener;
@@ -121,69 +124,40 @@ public class AnalyzeNewView extends VerticalLayout
 	}
 
 	private void initComponents() throws Exception {
-		//margin = new MarginInfo(true, true, true, true);
+		
+	
+		
 		createHeaderInfo();
 
 		searchPanel = createSearchPanel();
-		searchPanel.addStyleName("analyze_search_icon_bar");
-		
-		
-		//searchFramePanel= new Panel();
-		//searchFramePanel.addStyleName("analyze_searchAndVizIconsPanel");
-		//searchPanel.addStyleName("analyze_searchAndVizIconsPanel");
-		//searchFramePanel.setContent(searchPanel);
-		
-		
-		
+		searchPanel.addStyleName("analyze_search_icon_bar");		
+
 		visIconsPanel = createVisIconsPanel();
 		visIconsPanel.addStyleName("analyze_search_icon_bar");
-		//visIconsFramePanel= new Panel();
-		//visIconsFramePanel.addStyleName("analyze_searchAndVizIconsPanel");
-		//visIconsPanel.addStyleName("analyze_searchAndVizIconsPanel");
-		//visIconsFramePanel.setContent(visIconsPanel);
 
 		searchAndVisIconsHorizontal = new HorizontalLayout();
 		
 		searchAndVisIconsHorizontal.addStyleName("analyze_bar");
 		searchAndVisIconsHorizontal.addComponents(searchPanel, visIconsPanel);
 
-		//searchAndVisIconsPanel.setExpandRatio(searchPanel, 1);
-		//searchAndVisIconsPanel.setExpandRatio(visIconsPanel, 1);
-		//searchAndVisIconsPanel.setMargin(margin);
-	
-		// addComponent(searchAndVisIconsPanel);
-
-		resultAndMinMaxVizHorizontal = new HorizontalLayout();
-		//resultAndMinMaxVizPanel.setWidth("100%");
-		//resultAndMinMaxVizPanel.setHeight("80%");
-
-		
+		resultAndMinMaxVizHorizontal = new HorizontalLayout();	
 		resultAndMinMaxVizHorizontal.addStyleName("analyze_results");
-		
-		contentPanel = new VerticalLayout();
+	
 	
 		resultsPanel = new VerticalLayout();
-	
-		//resultsPanel.addStyleName("analyze_resultAndMinMaxVizPanel");
-
-
+		resultsPanel.addStyleName("analyze_results_list");
 		minMaxPanel = new VerticalLayout();
-
-		//minMaxPanel.addStyleName("analyze_resultAndMinMaxVizPanel");
+		minMaxPanel.addStyleName("analyze_results_minmax");
 		
-
-
 		resultAndMinMaxVizHorizontal.addComponents(resultsPanel, minMaxPanel);
-
-		//resultAndMinMaxVizPanel.setHeight(height);
-
-		//resultAndMinMaxVizPanel.setMargin(margin);
-	
-
+		
+		contentPanel = new VerticalLayout();
+		
 		contentPanel.addComponent(searchAndVisIconsHorizontal);
 		contentPanel.addComponent(resultAndMinMaxVizHorizontal);
 		contentPanel.addStyleName("analyze_content");
-
+		
+		this.addStyleName("analyze_content");
 		addComponent(contentPanel);
 	}
 
@@ -342,7 +316,7 @@ public class AnalyzeNewView extends VerticalLayout
 
 		btExecuteSearch = new Button("SEARCH", VaadinIcons.SEARCH);
 
-		btExecuteSearch.setStyleName("primary");
+		btExecuteSearch.setStyleName("analyze_search_bt");
 
 		//queryComboBox.setWidth("100%");
 		searchRow.addComponents(btQueryBuilder, queryComboBox);
