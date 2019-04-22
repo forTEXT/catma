@@ -12,8 +12,10 @@ import com.vaadin.ui.Button.ClickListener;
 public class VizSnapshot extends Panel {
 	String title;
 	Button btEdit;
+	Button btDelete;
 	private KwicVizPanelNew kwicVizPanel;
 	private EditVizSnapshotListener editVizSnapshotListener;
+	private DeleteVizSnapshotListener deleteVizSnapshotListener;
 	
 	
 	public EditVizSnapshotListener getEditVizSnapshotListener() {
@@ -22,6 +24,16 @@ public class VizSnapshot extends Panel {
 
 	public void setEditVizSnapshotListener(EditVizSnapshotListener editVizSnapshotListener) {
 		this.editVizSnapshotListener = editVizSnapshotListener;
+	}
+	
+	
+
+	public DeleteVizSnapshotListener getDeleteVizSnapshotListener() {
+		return deleteVizSnapshotListener;
+	}
+
+	public void setDeleteVizSnapshotListener(DeleteVizSnapshotListener deleteVizSnapshotListener) {
+		this.deleteVizSnapshotListener = deleteVizSnapshotListener;
 	}
 
 	public KwicVizPanelNew getKwicVizPanel() {
@@ -43,8 +55,9 @@ public class VizSnapshot extends Panel {
 	private void setContent(String title) {
 		VerticalLayout content = new VerticalLayout();
 		Label titleLabel = new Label(title);
+		btDelete = new Button ("DELETE");
 		btEdit = new Button ("EDIT");
-		content.addComponents(titleLabel,btEdit);
+		content.addComponents(titleLabel,btEdit,btDelete);
 		
 		setContent(content);
 	}
@@ -58,7 +71,20 @@ public class VizSnapshot extends Panel {
 				
 			}
 		});
+		
+		
+		
+		btDelete.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+			deleteVizSnapshotListener.deleteSnapshot();
+				
+			}
+		});
 	}
+	
+	
 	
 	
 

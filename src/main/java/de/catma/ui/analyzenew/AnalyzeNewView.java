@@ -228,6 +228,7 @@ public class AnalyzeNewView extends VerticalLayout
 				KwicVizPanelNew kwic = new KwicVizPanelNew(getAllTreeGridDatas(),repository);
 				kwicSnapshot.setKwicVizPanel(kwic);
 				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(kwic));
+				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));
 				minMaxPanel.addComponent(kwicSnapshot);
 				
 				kwic.setLeaveViewListener(new CloseVizViewListener() {
@@ -250,6 +251,17 @@ public class AnalyzeNewView extends VerticalLayout
 			public void reopenKwicView() {
 				setContent(component);
 			
+			}
+		};
+	}
+	
+	private DeleteVizSnapshotListener buildDeleteVizSnapshotListener (Component component) {
+		return new DeleteVizSnapshotListener() {
+			
+			@Override
+			public void deleteSnapshot() {
+				minMaxPanel.removeComponent(component);
+				
 			}
 		};
 	}
