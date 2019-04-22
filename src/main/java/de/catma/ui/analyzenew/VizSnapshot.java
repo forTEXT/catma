@@ -12,9 +12,26 @@ import com.vaadin.ui.Button.ClickListener;
 public class VizSnapshot extends Panel {
 	String title;
 	Button btEdit;
-	//Image snapshot;
+	private KwicVizPanelNew kwicVizPanel;
+	private EditVizSnapshotListener editVizSnapshotListener;
 	
 	
+	public EditVizSnapshotListener getEditVizSnapshotListener() {
+		return editVizSnapshotListener;
+	}
+
+	public void setEditVizSnapshotListener(EditVizSnapshotListener editVizSnapshotListener) {
+		this.editVizSnapshotListener = editVizSnapshotListener;
+	}
+
+	public KwicVizPanelNew getKwicVizPanel() {
+		return kwicVizPanel;
+	}
+
+	public void setKwicVizPanel(KwicVizPanelNew kwicVizPanel) {
+		this.kwicVizPanel = kwicVizPanel;
+	}
+
 	public VizSnapshot(String title) {
 		this.title=title;
 		setHeight("160px");
@@ -37,7 +54,7 @@ public class VizSnapshot extends Panel {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
-				// TODO Auto-generated method stub
+				editVizSnapshotListener.reopenKwicView();
 				
 			}
 		});

@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProviderListener;
@@ -47,6 +49,9 @@ import com.vaadin.ui.Button.ClickListener;
 
 public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
+
+	
+
 	private VerticalLayout leftSide;
 	private Repository repository;
 	private Panel header;
@@ -81,6 +86,18 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private Panel selectedItemsPanel;
 	private int kwicSize = 5;
 
+	
+	public KwicVizPanelNew(ArrayList<CurrentTreeGridData> currentTreeGridDatas,
+			Repository repository) {
+		this.currentTreeGridDatas = currentTreeGridDatas;
+	
+		this.repository = repository;
+		initComponents();
+		initActions();
+		initListeners();
+		
+	}
+	
 	public KwicVizPanelNew(CloseVizViewListener leaveVizListener, ArrayList<CurrentTreeGridData> currentTreeGridDatas,
 			Repository repository) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
@@ -90,8 +107,20 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		initActions();
 		initListeners();
 	}
+	
+	
 
+	public CloseVizViewListener getLeaveViewListener() {
+		return leaveViewListener;
+	}
+
+	public void setLeaveViewListener(CloseVizViewListener leaveViewListener) {
+		this.leaveViewListener = leaveViewListener;
+	}
+	
+	
 	private void initComponents() {
+	
 		leftSide = new VerticalLayout();
 		rightSide = new Panel("KWIC Visualisation");
 		rightSide.addStyleName(ValoTheme.BUTTON_BORDERLESS);

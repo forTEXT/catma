@@ -224,19 +224,34 @@ public class AnalyzeNewView extends VerticalLayout
 			@Override
 			public void buttonClick(ClickEvent event) {
 
-				KwicVizPanelNew kwic = new KwicVizPanelNew(new CloseVizViewListener() {
-
+				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Snapshot");
+				KwicVizPanelNew kwic = new KwicVizPanelNew(getAllTreeGridDatas(),repository);
+				kwicSnapshot.setKwicVizPanel(kwic);
+				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(kwic));
+				minMaxPanel.addComponent(kwicSnapshot);
+				
+				kwic.setLeaveViewListener(new CloseVizViewListener() {
+					
 					@Override
 					public void onClose() {
-						VizSnapshot kwivSnapshot = new VizSnapshot("Kwic Snapshot");
-						minMaxPanel.addComponent(kwivSnapshot);
-					
 						setContent(contentPanel);
 					}
-				},getAllTreeGridDatas(),repository);
+				});
+				
 				setContent(kwic);
 			}
 		});
+	}
+	
+	private EditVizSnapshotListener buildEditVizSnapshotListener (Component component) {
+		return new EditVizSnapshotListener() {
+			
+			@Override
+			public void reopenKwicView() {
+				setContent(component);
+			
+			}
+		};
 	}
 
 	private Component getAnalyzerView() {
