@@ -1112,9 +1112,10 @@
 	 
 	 }
 	 .analyze_results_minmax{
-	 width:50vw;
+	 	width:50vw;
+	 	overflow: auto;
 		 border-right: solid 2px rgba(151, 151, 151, 0.12);
-	 
+	 	padding: 1.5em;
 	 
 	 }
 	 

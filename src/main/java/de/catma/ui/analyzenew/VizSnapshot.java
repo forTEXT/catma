@@ -1,18 +1,25 @@
 package de.catma.ui.analyzenew;
 
+import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.VerticalLayout;
+import de.catma.ui.layout.VerticalLayout;
+
+import de.catma.ui.layout.HorizontalLayout;
+
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.themes.ValoTheme;
 
 
 
 public class VizSnapshot extends Panel {
-	String title;
-	Button btEdit;
-	Button btDelete;
+	private String title;
+	private Button btEdit;
+	private Button btDelete;
+	private HorizontalLayout buttonBar;
 	private KwicVizPanelNew kwicVizPanel;
 	private EditVizSnapshotListener editVizSnapshotListener;
 	private DeleteVizSnapshotListener deleteVizSnapshotListener;
@@ -46,18 +53,32 @@ public class VizSnapshot extends Panel {
 
 	public VizSnapshot(String title) {
 		this.title=title;
-		setHeight("160px");
-		setWidth("100%");
+		//setHeight("160px");
+		//setWidth("100%");
 		setContent(title);
 		initListeners();
 	}
 	
 	private void setContent(String title) {
+
+		this.addStyleName("analyze_queryresultpanel__card_frame");
 		VerticalLayout content = new VerticalLayout();
+		content.addStyleName("analyze_queryresultpanel__card");
+		
 		Label titleLabel = new Label(title);
-		btDelete = new Button ("DELETE");
-		btEdit = new Button ("EDIT");
-		content.addComponents(titleLabel,btEdit,btDelete);
+		titleLabel.addStyleName("analyze_queryresultpanel_infobar");
+		
+		HorizontalLayout buttonBar = new HorizontalLayout();
+		buttonBar.addStyleName("analyze_queryresultpanel_buttonbar");
+
+		btDelete = new Button ("DELETE",VaadinIcons.TRASH);
+		btDelete.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		
+		btEdit = new Button ("EDIT",VaadinIcons.PENCIL);
+		btEdit.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		
+		buttonBar.addComponents(btDelete,btEdit);
+		content.addComponents(titleLabel,buttonBar);
 		
 		setContent(content);
 	}

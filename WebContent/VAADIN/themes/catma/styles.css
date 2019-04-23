@@ -18177,7 +18177,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .analyze_results_minmax {
 	width: 50vw;
+	overflow: auto;
 	border-right: solid 2px rgba(151, 151, 151, 0.12);
+	padding: 1.5em;
 }
 
 .catma .analyze_label {
