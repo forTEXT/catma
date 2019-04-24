@@ -55,11 +55,11 @@ public class VizSnapshot extends Panel {
 		this.title=title;
 		//setHeight("160px");
 		//setWidth("100%");
-		setContent(title);
+		initComponents(title);
 		initListeners();
 	}
 	
-	private void setContent(String title) {
+	private void initComponents(String title) {
 
 		this.addStyleName("analyze_queryresultpanel__card_frame");
 		VerticalLayout content = new VerticalLayout();

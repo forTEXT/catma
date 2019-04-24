@@ -22,13 +22,16 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.themes.ValoTheme;
-import com.vaadin.ui.HorizontalLayout;
+
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.VerticalLayout;
+//import com.vaadin.ui.VerticalLayout;
+//import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.renderers.ButtonRenderer;
 
+import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalLayout;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
@@ -122,7 +125,9 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private void initComponents() {
 	
 		leftSide = new VerticalLayout();
+		leftSide.addStyleName("analyze_viz_left");
 		rightSide = new Panel("KWIC Visualisation");
+		rightSide.addStyleName("analyze_viz_right");
 		rightSide.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		kwicNew = new KwicPanelNew(repository);
 		kwicNew.setHeight("100%");
@@ -142,7 +147,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 		addComponent(mainContentPanel);
 		mainContentPanel.setSizeFull();
-		setSpacing(false);
+		//setSpacing(false);
 
 		comboBox = new ComboBox<String>();
 		comboBox.setWidth("100%");
@@ -198,10 +203,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		setActionGridComponenet();
 
 		mainContentPanel.addComponents(leftSide, rightSide);
-		float left = 0.4f;
-		float right = 0.6f;
-		mainContentPanel.setExpandRatio(leftSide, left);
-		mainContentPanel.setExpandRatio(rightSide, right);
+		//float left = 0.4f;
+		//float right = 0.6f;
+	//	mainContentPanel.setExpandRatio(leftSide, left);
+	//	mainContentPanel.setExpandRatio(rightSide, right);
 		// mainContentSplitPanel.setExpandRatio(leftSide, 0.4f);
 
 	}
@@ -786,7 +791,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					// single items of that collection-branch maybe already inside->update whole  collection_branch  
 					if (selectedItemsTreeGridData.contains(selectedItem)) {	
 						List<TreeRowItem> singleItems=	resultsTreeGridData.getChildren(selectedItem);
+						TreeRowItem parent= selectedItemsTreeGridData.getParent(selectedItem);
 						selectedItemsTreeGridData.removeItem(selectedItem);
+						selectedItemsTreeGridData.addItem(parent, selectedItem);
+						//selectedItemsTreeGridData.getChildren(selectedItem).clear();
 						selectedItemsTreeGridData.addItems( selectedItem,singleItems);	
 
 					}else {

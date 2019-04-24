@@ -18257,3 +18257,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background-color: #ffffff;
 	justify-content: flex-end;
 }
+
+.catma .analyze_viz_left {
+	width: 35vw;
+	overflow: auto;
+	border-right: solid 2px rgba(151, 151, 151, 0.12);
+	padding: 1.5em;
+}
+
+.catma .analyze_viz_right {
+	width: 65vw;
+	overflow: auto;
+	border-right: solid 2px rgba(151, 151, 151, 0.12);
+	padding: 1.5em;
+}

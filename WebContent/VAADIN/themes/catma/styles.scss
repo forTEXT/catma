@@ -1200,6 +1200,21 @@
 
 
            }
+           
+           .analyze_viz_left{
+           	 	width:35vw;
+	 	overflow: auto;
+		 border-right: solid 2px rgba(151, 151, 151, 0.12);
+	 	padding: 1.5em;
+           
+           }
+         .analyze_viz_right{
+         width:65vw;
+	 	overflow: auto;
+		 border-right: solid 2px rgba(151, 151, 151, 0.12);
+	 	padding: 1.5em;
+           
+           }
         
        
 }
