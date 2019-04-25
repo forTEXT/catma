@@ -18271,3 +18271,30 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-right: solid 2px rgba(151, 151, 151, 0.12);
 	padding: 1.5em;
 }
+
+.catma .analyze_kwic_buttonBar {
+	width: 100vw;
+	background-color: #cdcdcd;
+}
+
+.catma .analyze_kwic_header_button {
+	width: 10vw;
+}
+
+.catma .analyze_kwic_header_label {
+	width: 70vw;
+	text-align: center;
+}
+
+.catma .analyzer_kwic_splitpanel {
+	padding: 0px;
+	margin: 0px;
+}
+
+.catma .analyzer_kwic_leftside_vertical {
+	padding: 0;
+}
+
+.catma .analyze_kwic_panel {
+	padding: 0;
+}

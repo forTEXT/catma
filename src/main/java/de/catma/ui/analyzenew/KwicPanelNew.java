@@ -1,63 +1,20 @@
 package de.catma.ui.analyzenew;
 
-import com.vaadin.ui.VerticalLayout;
-import java.text.MessageFormat;
+import de.catma.ui.layout.VerticalLayout;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 
-import com.vaadin.event.dd.DragAndDropEvent;
-import com.vaadin.event.dd.DropHandler;
-import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
-
-import com.vaadin.ui.UI;
-import com.vaadin.v7.data.Container;
-import com.vaadin.v7.data.util.HierarchicalContainer;
-import com.vaadin.v7.event.DataBoundTransferable;
-import com.vaadin.v7.event.ItemClickEvent;
-import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.v7.ui.AbstractSelect.AcceptItem;
-import com.vaadin.v7.ui.Table;
-import com.vaadin.v7.ui.Table.Align;
-import com.vaadin.v7.ui.Table.CellStyleGenerator;
-
-
-
-
-import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
-import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagsetDefinition;
-import de.catma.ui.CatmaApplication;
-import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
-import de.catma.ui.analyzer.TagKwicDialog;
-import de.catma.ui.data.util.PropertyDependentItemSorter;
-import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
-import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.util.IDGenerator;
-import de.catma.util.Pair;
 
 public class KwicPanelNew extends VerticalLayout{
 	
@@ -115,9 +72,10 @@ public class KwicPanelNew extends VerticalLayout{
 		}
 		
 		private void initComponents() {
+			addStyleName("analyze_kwic_panel");
 			kwicGrid= new Grid<KwicItem>();
 	    	kwicItemList= new ArrayList<>(); 
-			kwicGrid.setSelectionMode(SelectionMode.MULTI);
+			//kwicGrid.setSelectionMode(SelectionMode.MULTI);
 			//kwicGrid.setSelectionMode(SelectionMode.SINGLE);
 			kwicGrid.setWidth("100%");
 			kwicGrid.setHeight("100%");
