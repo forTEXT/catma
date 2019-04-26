@@ -58,7 +58,6 @@ public class AnalyzeNewView extends VerticalLayout
 	public static interface CloseListenerNew {
 		public void closeRequest(AnalyzeNewView analyzeNewView);
 	}
-
 	private String userMarkupItemDisplayString = "Markup Collections";
 	private IndexedRepository repository;
 	private Corpus corpus;
