@@ -4,6 +4,7 @@ import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.ui.client.ui.zoomableverticallayout.ZoomableClientRpc;
 
+@Deprecated
 public class ZoomableVerticalLayout extends VerticalLayout {
 
 	public void zoom(double factor) {

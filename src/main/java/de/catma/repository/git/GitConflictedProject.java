@@ -6,19 +6,35 @@ import java.util.List;
 import java.util.function.Function;
 
 import de.catma.document.source.SourceDocument;
+import de.catma.project.ProjectReference;
+import de.catma.project.TagsetConflict;
+import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
+import de.catma.project.conflict.TagConflict;
+import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
 public class GitConflictedProject implements ConflictedProject {
 	
 	private GitProjectHandler gitProjectHandler;
 	private Function<String, URI> documentIdTofileUriMapper;
+	private ProjectReference projectReference;
 	
-	public GitConflictedProject(GitProjectHandler gitProjectHandler, Function<String, URI> documentIdTofileUriMapper) {
+	public GitConflictedProject(
+			ProjectReference projectReference, 
+			GitProjectHandler gitProjectHandler, 
+			Function<String, URI> documentIdTofileUriMapper) {
 		super();
+		this.projectReference = projectReference;
 		this.gitProjectHandler = gitProjectHandler;
 		this.documentIdTofileUriMapper = documentIdTofileUriMapper;
+	}
+
+	@Override
+	public List<TagsetConflict> getTagsetConflicts() throws Exception {
+		return gitProjectHandler.getTagsetConflicts();
 	}
 
 	@Override
@@ -43,5 +59,51 @@ public class GitConflictedProject implements ConflictedProject {
 				.setURI(documentIdTofileUriMapper.apply(doc.getID())));
 		
 		return documents;
+	}
+	
+	@Override
+	public void resolveCollectionConflict(List<CollectionConflict> conflictedCollections, TagLibrary tagLibrary) throws Exception {
+		for (CollectionConflict collectionConflict : conflictedCollections) {
+			if (!collectionConflict.getAnnotationConflicts().isEmpty()) {
+				for (AnnotationConflict annotationConflict : collectionConflict.getAnnotationConflicts()) {
+					gitProjectHandler.resolveAnnotationConflict(
+						collectionConflict.getCollectionId(), annotationConflict, tagLibrary);
+				}
+				gitProjectHandler.addAndCommitCollection(
+					collectionConflict.getCollectionId(), "Auto-committing merged changes");
+				
+				gitProjectHandler.checkoutCollectionDevBranchAndRebase(collectionConflict.getCollectionId());
+			}
+		}
+		
+	}
+	
+	@Override
+	public void resolveTagsetConflicts(List<TagsetConflict> tagsetConflicts) throws Exception {
+		for (TagsetConflict tagsetConflict : tagsetConflicts) {
+			if (!tagsetConflict.getTagConflicts().isEmpty()) {
+				for (TagConflict tagConflict : tagsetConflict.getTagConflicts()) {
+					gitProjectHandler.resolveTagConflict(tagsetConflict.getUuid(), tagConflict);
+				}
+			}
+			
+			gitProjectHandler.addTagsetToStagedAndCommit(
+					tagsetConflict.getUuid(), "Auto-committing merged changes");
+			
+			gitProjectHandler.checkoutTagsetDevBranchAndRebase(tagsetConflict.getUuid());
+
+		}
+		
+	}
+	
+	@Override
+	public ProjectReference getProjectReference() {
+		return projectReference;
+	}
+	
+	@Override
+	public void resolveRootConflicts() throws Exception {
+		gitProjectHandler.resolveRootConflicts();
+		
 	}
 }

@@ -1209,7 +1209,7 @@ public class DBRepository implements IndexedRepository {
 	}
 
 	@Override
-	public void synchronizeWithRemote() {
+	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception {
 		// TODO Auto-generated method stub
 		
 	}

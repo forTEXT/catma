@@ -4,22 +4,26 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.VerticalLayout;
 
 import de.catma.indexer.KwicProvider;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
+import de.catma.project.conflict.Resolution;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.tagger.annotationpanel.AnnotatedTextProvider;
 
-public class AnnotationConflictView extends de.catma.ui.layout.VerticalLayout {
+public class AnnotationConflictView extends VerticalLayout {
+	public static interface ResolutionListener {
+		public void resolved();
+	}
 
 	private AnnotationConflict annotationConflict;
 	private CollectionConflict collectionConflict;
@@ -31,17 +35,32 @@ public class AnnotationConflictView extends de.catma.ui.layout.VerticalLayout {
 	private Button btMine;
 	private Button btBoth;
 	private Button btTheirs;
+	private ResolutionListener resolutionListener;
 
 	public AnnotationConflictView(
 			AnnotationConflict annotationConflict, 
 			CollectionConflict collectionConflict, 
-			TagManager tagManager, KwicProvider kwicProvider) {
+			TagManager tagManager, KwicProvider kwicProvider,
+			ResolutionListener resolutionListener) {
 		this.annotationConflict = annotationConflict;
 		this.collectionConflict = collectionConflict;
 		this.tagManager = tagManager;
 		this.kwicProvider = kwicProvider;
+		this.resolutionListener = resolutionListener;
 		initComponents();
+		initActions();
 		initData();
+	}
+
+	private void initActions() {
+		btMine.addClickListener(event -> handleResolved(Resolution.MINE));
+		btTheirs.addClickListener(event -> handleResolved(Resolution.THEIRS));
+		btBoth.addClickListener(event -> handleResolved(Resolution.BOTH));
+	}
+
+	private void handleResolved(Resolution resolution) {
+		annotationConflict.setResolution(resolution);
+		this.resolutionListener.resolved();
 	}
 
 	private void initData() {
@@ -90,31 +109,38 @@ public class AnnotationConflictView extends de.catma.ui.layout.VerticalLayout {
 	}
 
 	private void initComponents() {
-		setWidth("100%");
-		
+		addStyleName("annotation-conflict-view");
 		this.annotatedKwic = new Label();
 		this.annotatedKwic.setContentMode(ContentMode.HTML);
 		addComponent(this.annotatedKwic);
 		
 		HorizontalLayout comparisonPanel = new HorizontalLayout();
+		comparisonPanel.setJustifyContent(JustifyContent.SPACE_AROUND);
+		comparisonPanel.addStyleName("annotation-conflict-view-comparison-panel");
+		
 		leftPropertyGrid = new TreeGrid<>();
+		leftPropertyGrid.setWidth("100%");
+		
 		leftPropertyGrid.addStyleNames(
+				"annotation-conflict-view-property-grid-left-margin",
 				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
 		leftPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getName()).setCaption("Property");
 		leftPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getValue()).setCaption("Value");
 		
 		comparisonPanel.addComponent(leftPropertyGrid);
 		rightPropertyGrid = new TreeGrid<>();
+		rightPropertyGrid.setWidth("100%");
 		rightPropertyGrid.addStyleNames(
+				"annotation-conflict-view-property-grid-right-margin",
 				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
 
 		rightPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getName()).setCaption("Property");
 		rightPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getValue()).setCaption("Value");
 		comparisonPanel.addComponent(rightPropertyGrid);
 		addComponent(comparisonPanel);
-		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
-		buttonPanel.setWidth("100%");
+		buttonPanel.addStyleName("annotation-conflict-view-button-panel");
+		buttonPanel.setJustifyContent(JustifyContent.SPACE_AROUND);
 		btMine = new Button("Take mine");
 		buttonPanel.addComponent(btMine);
 		btBoth = new Button("Take both");

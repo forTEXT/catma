@@ -1,3 +1,4 @@
+$v-font-family: "Open Sans", sans-serif;
 
 @import "default.scss";
 
@@ -6,6 +7,9 @@
   
   	.menuPanel {
   		border-radius: 0;
+  	}
+  	body, table td, select { 
+  		font-family: "Open Sans", sans-serif;
   	}
   	
   	.catma-menu .v-menubar-menuitem-highlight {
@@ -542,7 +546,7 @@
 
         /* Header */
         .header {
-            background-color: #0c719a;
+            background-color: #093658;
             color: white;
             padding: 0.5em;
             height: 56px;
@@ -591,7 +595,7 @@
         }
         
         .v-button.v-widget.h3.v-button-h3.link.v-button-link.nav-selected-entry.v-button-nav-selected-entry {
-        	background: #0c719a;
+        	background: #5A98A1;
 			color: white;
 		}
         
@@ -719,6 +723,7 @@
         .hugecard__bar + div {
             margin-left: 32px;
     		margin-top: 14px;
+    		margin-right: 32px;
         	overflow: auto;
         	display: flex;
 			flex-grow: 1;
@@ -726,7 +731,7 @@
 
         .hugecard__bar {
             align-items:center;
-            background-color: #23a2cc;
+            background-color: #5A98A1;
             color: white;
             flex-direction: row;
             display: flex;
@@ -1080,4 +1085,27 @@
 	    padding: 0px;
 	
 	}	
+	
+	.annotation-conflict-view-property-grid-left-margin {
+		margin-left:2px;
+		margin-right:5px;
+		margin-bottom:5px;
+	}
+	.annotation-conflict-view-property-grid-right-margin {
+		margin-right:2px;
+		margin-left:5px;
+		margin-bottom:5px;
+	}
+	
+	.annotation-conflict-view {
+		flex-grow: 1;
+	}
+	
+	.annotation-conflict-view-comparison-panel {
+		flex-grow: 1;
+	}
+	
+	.annotation-conflict-view-button-panel {
+		flex-grow: 1;
+	}
 }

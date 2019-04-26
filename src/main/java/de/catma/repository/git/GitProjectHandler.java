@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
@@ -28,7 +29,10 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TermInfo;
+import de.catma.project.TagsetConflict;
+import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
+import de.catma.project.conflict.TagConflict;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
@@ -754,9 +758,9 @@ public class GitProjectHandler {
 	}
 	
 	
-	public String addToStagedAndCommit(TagsetDefinition tagsetDefinition, String commitMsg) throws Exception {
+	public String addTagsetToStagedAndCommit(String tagsetId, String commitMsg) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			Path relativePath = Paths.get(TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetDefinition.getUuid());
+			Path relativePath = Paths.get(TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId);
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
@@ -902,7 +906,7 @@ public class GitProjectHandler {
 			MergeResult mergeResult = gitTagsetHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
 					projectId, tagset.getUuid());
-			
+			//TODO: handle mergeResult
 		}
 	}
 
@@ -1047,5 +1051,169 @@ public class GitProjectHandler {
 		
 		return collectionConflicts;
 	}
-	
+
+	public void resolveAnnotationConflict(
+			String collectionId, 
+			AnnotationConflict annotationConflict,
+			TagLibrary tagLibrary) throws Exception {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+					localRepoManager, 
+					this.remoteGitServerManager,
+					this.credentialsProvider);
+			
+			JsonLdWebAnnotation annotation = 
+					new JsonLdWebAnnotation(
+						RepositoryPropertyKey.GitLabServerUrl.getValue(), 
+						projectId, 
+						annotationConflict.getResolvedTagReferences(),
+						tagLibrary);
+			gitMarkupCollectionHandler.createTagInstance(projectId, collectionId, annotation);
+		}		
+	}
+
+	public void synchronizeWithRemote(UserMarkupCollectionReference collectionReference) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler collectionHandler = 
+					new GitMarkupCollectionHandler(
+						localGitRepoManager, 
+						this.remoteGitServerManager,
+						this.credentialsProvider);
+			
+			MergeResult mergeResult = collectionHandler.synchronizeBranchWithRemoteMaster(
+					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
+					projectId, collectionReference.getId());
+			//TODO: handle mergeResult			
+		}
+	}
+
+	public void resolveRootConflicts() throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			localGitRepoManager.open(
+				 projectId,
+				 GitProjectManager.getProjectRootRepositoryName(projectId));
+			
+			Status status = localGitRepoManager.getStatus();
+			
+			StatusPrinter.print("Project status", status, System.out);
+
+			localGitRepoManager.resolveRootConflicts(this.credentialsProvider);
+				
+			status = localGitRepoManager.getStatus();
+
+			localGitRepoManager.addAllAndCommit(
+					"Auto-committing merged changes",
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
+			
+			localGitRepoManager.push(credentialsProvider);
+			
+		}
+	}
+
+	public List<TagsetConflict> getTagsetConflicts() throws Exception {
+		
+		ArrayList<TagsetConflict> tagsetConflicts = new ArrayList<>();
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			localGitRepoManager.open(
+				 projectId,
+				 GitProjectManager.getProjectRootRepositoryName(projectId));
+			 
+			Path tagsetDirPath = 
+					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+					.resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
+
+			localGitRepoManager.detach();
+
+			if (tagsetDirPath.toFile().exists()) {
+				List<Path> paths = Files
+						.walk(tagsetDirPath, 1)
+						.filter(tagsetPath -> !tagsetDirPath.equals(tagsetPath))
+						.collect(Collectors.toList());
+				
+				GitTagsetHandler gitTagsetHandler = 
+						new GitTagsetHandler(
+								localGitRepoManager, 
+								this.remoteGitServerManager,
+								this.credentialsProvider);
+
+				for (Path tagsetPath : paths) {
+					String tagsetId = tagsetPath.getFileName().toString();
+					Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
+					if (!status.getConflicting().isEmpty()) {
+						tagsetConflicts.add(
+								gitTagsetHandler.getTagsetConflict(
+										projectId, tagsetId));
+					}					
+				}
+				
+			}
+		}
+		
+		return tagsetConflicts;	
+		
+	}
+
+	public void resolveTagConflict(String tagsetId, TagConflict tagConflict) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(
+					localGitRepoManager, 
+					this.remoteGitServerManager,
+					this.credentialsProvider);
+
+			TagDefinition tagDefinition = tagConflict.getResolvedTagDefinition();
+			gitTagsetHandler.createOrUpdateTagDefinition(
+					projectId, tagsetId, tagDefinition);
+			gitTagsetHandler.checkout(
+					projectId, tagsetId, 
+					JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, true);		
+		}		
+	}
+
+	public void synchronizeWithRemote() throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			localGitRepoManager.open(
+				 projectId,
+				 GitProjectManager.getProjectRootRepositoryName(projectId));
+			
+			localGitRepoManager.fetch(credentialsProvider);
+			
+			MergeResult mergeWithOriginMasterResult = 
+				localGitRepoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+			
+			if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
+				localGitRepoManager.push(credentialsProvider);
+			}
+		}	
+	}
+
+	public void checkoutCollectionDevBranchAndRebase(String collectionId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler collectionHandler = 
+					new GitMarkupCollectionHandler(
+						localGitRepoManager, 
+						this.remoteGitServerManager,
+						this.credentialsProvider);
+			collectionHandler.checkout(collectionId, collectionId, JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, false);
+			collectionHandler.rebaseToMaster();
+		}
+	}
+
+	public void checkoutTagsetDevBranchAndRebase(String tagsetId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(
+					localGitRepoManager, 
+					this.remoteGitServerManager,
+					this.credentialsProvider);
+
+			gitTagsetHandler.checkout(tagsetId, tagsetId, JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, false);
+			gitTagsetHandler.rebaseToMaster();
+		}		
+	}
+
 }

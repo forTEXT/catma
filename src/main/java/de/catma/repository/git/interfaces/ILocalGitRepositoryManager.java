@@ -79,4 +79,6 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	Status getStatus() throws IOException;
 
+	void resolveRootConflicts(CredentialsProvider credentialsProvider) throws IOException;
+
 }

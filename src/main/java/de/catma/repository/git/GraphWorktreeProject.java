@@ -146,6 +146,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			if (gitProjectHandler.hasConflicts()) {
 				openProjectListener.conflictResolutionNeeded(
 						new GitConflictedProject(
+							projectReference,
 							gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
 			}
 			else {
@@ -343,8 +344,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
-			tagsetDefinition, 
+		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+			tagsetDefinition.getUuid(), 
 			String.format("Updated metadata of Tagset %1$s with ID %2$s", 
 					tagsetDefinition.getName(), tagsetDefinition.getUuid()));
 		
@@ -376,8 +377,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
-			tagsetDefinition, 
+		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+			tagsetDefinition.getUuid(), 
 			String.format(
 				"Added Property Definition %1$s with %2$s to Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
 				propertyDefinition.getName(),
@@ -485,8 +486,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
-			tagsetDefinition, 
+		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+			tagsetDefinition.getUuid(), 
 			String.format(
 				"Updated Property Definition %1$s with %2$s in Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
 				propertyDefinition.getName(),
@@ -512,8 +513,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
-			tagsetDefinition, 
+		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+			tagsetDefinition.getUuid(), 
 			String.format(
 				"Added Tag %1$s with ID %2$s to Tagset %3$s with ID %4$s",
 				tagDefinition.getName(),
@@ -538,8 +539,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
-			tagsetDefinition, 
+		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+			tagsetDefinition.getUuid(), 
 			String.format(
 				"Updated Tag %1$s with ID %2$s in Tagset %3$s with ID %4$s",
 				tagDefinition.getName(),
@@ -584,8 +585,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 		// commit Project
 		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
-				tagsetDefinition,
+		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+				tagsetDefinition.getUuid(),
 				String.format(
 						"Removed Tag %1$s with ID %2$s "
 								+ "from Tagset %3$s with ID %4$s "
@@ -1199,7 +1200,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 	
 	@Override
-	public void synchronizeWithRemote() throws Exception {
+	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception {
 		if (hasUncommittedChanges()) {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
@@ -1208,5 +1209,19 @@ public class GraphWorktreeProject implements IndexedRepository {
 			gitProjectHandler.synchronizeWithRemote(tagset);
 		}
 		
+		for (SourceDocument document : getSourceDocuments()) {
+			for (UserMarkupCollectionReference collectionReference : document.getUserMarkupCollectionRefs()) {
+				gitProjectHandler.synchronizeWithRemote(collectionReference);
+			}
+		}
+		
+		gitProjectHandler.synchronizeWithRemote();
+		
+		if (gitProjectHandler.hasConflicts()) {
+			openProjectListener.conflictResolutionNeeded(
+					new GitConflictedProject(
+						projectReference,
+						gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
+		}
 	}
 }

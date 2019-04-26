@@ -31,6 +31,7 @@ import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
@@ -545,6 +546,22 @@ public class GitMarkupCollectionHandler {
 			
 			localGitRepoManager.fetch(credentialsProvider);
 			
+			MergeResult mergeWithOriginMasterResult = 
+					localGitRepoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+				
+			if (!mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
+				throw new IllegalStateException(
+					String.format(
+						"Merge of origin/master into master "
+						+ "of Collection with ID %1$s "
+						+ "of Project with ID %2$s "
+						+ "failed. "
+						+ "Merge Status is %3$s",
+					collectionId,
+					projectId,
+					mergeWithOriginMasterResult.getMergeStatus().toString()));
+			}			
+			
 			MergeResult mergeResult = localGitRepoManager.merge(branch);
 			if (mergeResult.getMergeStatus().isSuccessful()) {
 				localGitRepoManager.push(credentialsProvider);
@@ -650,7 +667,7 @@ public class GitMarkupCollectionHandler {
 								projectId, collectionId, serializedConflictingAnnotation);
 					collectionConflict.addAnnotationConflict(annotationConflict);
 				}
-				default: System.out.println("not handled");
+				default: System.out.println("not handled"); //TODO:
 				}
 				
 			}
@@ -687,6 +704,12 @@ public class GitMarkupCollectionHandler {
 					devTagReferences.get(0).getTagInstance(), devTagReferences);
 		
 		return annotationConflict;
+	}
+
+	public void rebaseToMaster() throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.rebase(Constants.MASTER);
+		}
 	}
 
 }

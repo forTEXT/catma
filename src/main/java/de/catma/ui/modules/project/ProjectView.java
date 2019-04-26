@@ -316,7 +316,27 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    			commitMsg -> {
 	    				try {
 		    				project.commitChanges(commitMsg);
-		    				project.synchronizeWithRemote();
+		    				project.synchronizeWithRemote(new OpenProjectListener() {
+
+		    		            @Override
+		    		            public void progress(String msg, Object... params) {
+		    		            }
+
+		    		            @Override
+		    		            public void ready(Repository project) {
+		    						initData();
+		    		            }
+		    		            
+		    		            @Override
+		    		            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
+		    						eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
+		    		            }
+
+		    		            @Override
+		    		            public void failure(Throwable t) {
+		    		                errorHandler.showAndLogError("error opening project", t);
+		    		            }
+		    		        });
 		    				Notification.show(
 		    					"Info", 
 		    					"Your Project has been synchronized!", 
@@ -329,12 +349,37 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    		dlg.show();
 	    	}
 	    	else {
-	    		project.synchronizeWithRemote();
+	    		project.synchronizeWithRemote(new OpenProjectListener() {
+
+	                @Override
+	                public void progress(String msg, Object... params) {
+	                }
+
+	                @Override
+	                public void ready(Repository project) {
+	    				initData();
+	                }
+	                
+	                @Override
+	                public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
+	    				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
+	                }
+
+	                @Override
+	                public void failure(Throwable t) {
+	                    errorHandler.showAndLogError("error opening project", t);
+	                }
+	            });
+				Notification.show(
+					"Info", 
+					"Your Project has been synchronized!", 
+					Type.HUMANIZED_MESSAGE);	    		
 	    	}
     	}
     	catch (Exception e) {
             errorHandler.showAndLogError("error accessing project", e);
-    	}	}
+    	}	
+    }
 
 	private void handleEditResources() {
 		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();

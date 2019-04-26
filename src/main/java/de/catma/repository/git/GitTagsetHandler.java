@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -17,13 +18,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.project.TagsetConflict;
+import de.catma.project.conflict.AnnotationConflict;
+import de.catma.project.conflict.TagConflict;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.GitTagsetHeader;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
@@ -156,6 +163,22 @@ public class GitTagsetHandler {
 			
 			localGitRepoManager.fetch(credentialsProvider);
 			
+			MergeResult mergeWithOriginMasterResult = 
+				localGitRepoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+			
+			if (!mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
+				throw new IllegalStateException(
+					String.format(
+						"Merge of origin/master into master "
+						+ "of Tagset with ID %1$s "
+						+ "of Project with ID %2$s "
+						+ "failed. "
+						+ "Merge Status is %3$s",
+					tagsetId,
+					projectId,
+					mergeWithOriginMasterResult.getMergeStatus().toString()));
+			}
+			
 			MergeResult mergeResult = localGitRepoManager.merge(branch);
 			
 			if (mergeResult.getMergeStatus().isSuccessful()) {
@@ -257,6 +280,40 @@ public class GitTagsetHandler {
 			return tagsetRevision;
 		}
 	}
+	
+	public void createOrUpdateTagDefinition(
+			String projectId,
+			String tagsetId,
+			TagDefinition tagDefinition) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String targetPropertyDefinitionsFileRelativePath =
+				(StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : (tagDefinition.getParentUuid() + "/"))
+				+ tagDefinition.getUuid()
+				+ "/propertydefs.json";
+
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
+			
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			File targetPropertyDefinitionsFileAbsolutePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					targetPropertyDefinitionsFileRelativePath
+			).toFile();
+
+			GitTagDefinition gitTagDefinition = new GitTagDefinition(tagDefinition);
+			String serializedGitTagDefinition = 
+					new SerializationHelper<GitTagDefinition>().serialize(gitTagDefinition);
+
+			localGitRepoManager.add(
+				targetPropertyDefinitionsFileAbsolutePath.getAbsoluteFile(), 
+				serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8));
+		}
+	}	
 
 	public String removeTagDefinition(String projectId, TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) 
 			throws IOException {
@@ -415,4 +472,118 @@ public class GitTagsetHandler {
 		}
 	}
 
+	public TagsetConflict getTagsetConflict(String projectId, String tagsetId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
+
+			String tagsetSubmoduleRelDir = 
+					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME + "/" + tagsetId;
+			
+			File tagsetSubmoduleAbsPath = new File(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					tagsetSubmoduleRelDir
+			);
+
+			localGitRepoManager.detach(); 
+			//TODO: handle header conflict
+			File tagsetHeaderFile = new File(
+					tagsetSubmoduleAbsPath,
+					"header.json"
+			);
+			
+			String serializedTagsetHeaderFile = FileUtils.readFileToString(
+					tagsetHeaderFile, StandardCharsets.UTF_8
+			);
+			
+			GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
+					.deserialize(
+							serializedTagsetHeaderFile,
+							GitTagsetHeader.class
+					);
+			
+			TagsetConflict tagsetConflict = 
+				new TagsetConflict(
+					projectId, 
+					tagsetId, 
+					gitTagsetHeader.getName(), 
+					gitTagsetHeader.getDeletedTags());
+			
+			
+			String tagsetGitRepositoryName =
+					projectRootRepositoryName + "/" + tagsetSubmoduleRelDir;
+
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			Status status = localGitRepositoryManager.getStatus();
+
+			for (Entry<String, StageState> entry : status.getConflictingStageState().entrySet()) {
+				String relativeTagPathname = entry.getKey();
+				String absTagPathname = tagsetSubmoduleAbsPath + "/" + relativeTagPathname;
+
+				StageState stageState = entry.getValue();
+				
+				
+				switch (stageState) {
+				case BOTH_MODIFIED: {
+					String serializedConflictingTag = FileUtils.readFileToString(
+						new File(absTagPathname), StandardCharsets.UTF_8);
+					
+					TagConflict tagConflict = 
+							getBothModifiedAnnotationConflict(
+								projectId, tagsetId, serializedConflictingTag);
+					tagsetConflict.addTagConflict(tagConflict);
+				}
+				default: System.out.println("not handled"); //TODO:
+				}
+				
+			}			
+
+			return tagsetConflict;
+		}
+	}
+
+	private TagConflict getBothModifiedAnnotationConflict(
+			String projectId, String tagsetId, String serializedConflictingTag) throws Exception {
+
+		String masterVersion = serializedConflictingTag
+			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
+			.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> dev\\E(\\r\\n|\\r|\\n)", "");
+		
+		String devVersion = serializedConflictingTag
+			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
+			.replaceAll("\\Q>>>>>>> dev\\E(\\r\\n|\\r|\\n)", "");
+				
+		
+		
+		GitTagDefinition gitMasterTagDefinition = new SerializationHelper<GitTagDefinition>()
+				.deserialize(
+						masterVersion,
+						GitTagDefinition.class
+				);
+
+		TagDefinition masterTagDefinition = gitMasterTagDefinition.getTagDefinition();
+		
+		
+		
+		GitTagDefinition gitDevTagDefinition = new SerializationHelper<GitTagDefinition>()
+				.deserialize(
+						devVersion,
+						GitTagDefinition.class
+				);
+
+		TagDefinition devTagDefinition = gitDevTagDefinition.getTagDefinition();
+		
+		TagConflict tagConflict = new TagConflict(masterTagDefinition, devTagDefinition);
+		
+		return tagConflict;
+	}
+
+	public void rebaseToMaster() throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.rebase(Constants.MASTER);
+		}
+	}
 }

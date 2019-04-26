@@ -362,25 +362,25 @@
 }
 
 @font-face {
-	font-family: "Source Sans Pro";
-	src: url(../valo/fonts/source-sans-pro/sourcesanspro-light.eot);
-	src: url(../valo/fonts/source-sans-pro/sourcesanspro-light.eot?#iefix) format("embedded-opentype"), url(../valo/fonts/source-sans-pro/sourcesanspro-light.woff) format("woff"), url(../valo/fonts/source-sans-pro/sourcesanspro-light.ttf) format("truetype");
+	font-family: "Open Sans";
+	src: url(../valo/fonts/open-sans/OpenSans-Light-webfont.eot);
+	src: url(../valo/fonts/open-sans/OpenSans-Light-webfont.eot?#iefix) format("embedded-opentype"), url(../valo/fonts/open-sans/OpenSans-Light-webfont.woff) format("woff"), url(../valo/fonts/open-sans/OpenSans-Light-webfont.ttf) format("truetype");
 	font-weight: 300;
 	font-style: normal;
 }
 
 @font-face {
-	font-family: "Source Sans Pro";
-	src: url(../valo/fonts/source-sans-pro/sourcesanspro-regular.eot);
-	src: url(../valo/fonts/source-sans-pro/sourcesanspro-regular.eot?#iefix) format("embedded-opentype"), url(../valo/fonts/source-sans-pro/sourcesanspro-regular.woff) format("woff"), url(../valo/fonts/source-sans-pro/sourcesanspro-regular.ttf) format("truetype");
+	font-family: "Open Sans";
+	src: url(../valo/fonts/open-sans/OpenSans-Regular-webfont.eot);
+	src: url(../valo/fonts/open-sans/OpenSans-Regular-webfont.eot?#iefix) format("embedded-opentype"), url(../valo/fonts/open-sans/OpenSans-Regular-webfont.woff) format("woff"), url(../valo/fonts/open-sans/OpenSans-Regular-webfont.ttf) format("truetype");
 	font-weight: 400;
 	font-style: normal;
 }
 
 @font-face {
-	font-family: "Source Sans Pro";
-	src: url(../valo/fonts/source-sans-pro/sourcesanspro-semibold.eot);
-	src: url(../valo/fonts/source-sans-pro/sourcesanspro-semibold.eot?#iefix) format("embedded-opentype"), url(../valo/fonts/source-sans-pro/sourcesanspro-semibold.woff) format("woff"), url(../valo/fonts/source-sans-pro/sourcesanspro-semibold.ttf) format("truetype");
+	font-family: "Open Sans";
+	src: url(../valo/fonts/open-sans/OpenSans-Semibold-webfont.eot);
+	src: url(../valo/fonts/open-sans/OpenSans-Semibold-webfont.eot?#iefix) format("embedded-opentype"), url(../valo/fonts/open-sans/OpenSans-Semibold-webfont.woff) format("woff"), url(../valo/fonts/open-sans/OpenSans-Semibold-webfont.ttf) format("truetype");
 	font-weight: 600;
 	font-style: normal;
 }
@@ -1894,7 +1894,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma.v-app, .catma.v-app-loading {
-	font: 400 16px/1.55 "Source Sans Pro", sans-serif;
+	font: 400 16px/1.55 "Open Sans", sans-serif;
 	color: #464646;
 	background-color: #fafafa;
 	cursor: default;
@@ -17282,6 +17282,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 0;
 }
 
+.catma body, .catma table td, .catma select {
+	font-family: "Open Sans", sans-serif;
+}
+
 .catma .catma-menu .v-menubar-menuitem-highlight {
 	background: #E6E9EB;
 	color: #000;
@@ -17640,7 +17644,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .header {
-	background-color: #0c719a;
+	background-color: #093658;
 	color: white;
 	padding: 0.5em;
 	height: 56px;
@@ -17690,7 +17694,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-button.v-widget.h3.v-button-h3.link.v-button-link.nav-selected-entry.v-button-nav-selected-entry {
-	background: #0c719a;
+	background: #5A98A1;
 	color: white;
 }
 
@@ -17816,6 +17820,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .hugecard__bar + div {
 	margin-left: 32px;
 	margin-top: 14px;
+	margin-right: 32px;
 	overflow: auto;
 	display: flex;
 	flex-grow: 1;
@@ -17823,7 +17828,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .hugecard__bar {
 	align-items: center;
-	background-color: #23a2cc;
+	background-color: #5A98A1;
 	color: white;
 	flex-direction: row;
 	display: flex;
@@ -18145,4 +18150,28 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-verticallayout.v-layout.v-vertical.v-widget.annotation-details-panel.v-verticallayout-annotation-details-panel.v-has-width.v-has-height.v-margin-top.v-margin-right.v-margin-bottom.v-margin-left {
 	padding: 0px;
+}
+
+.catma .annotation-conflict-view-property-grid-left-margin {
+	margin-left: 2px;
+	margin-right: 5px;
+	margin-bottom: 5px;
+}
+
+.catma .annotation-conflict-view-property-grid-right-margin {
+	margin-right: 2px;
+	margin-left: 5px;
+	margin-bottom: 5px;
+}
+
+.catma .annotation-conflict-view {
+	flex-grow: 1;
+}
+
+.catma .annotation-conflict-view-comparison-panel {
+	flex-grow: 1;
+}
+
+.catma .annotation-conflict-view-button-panel {
+	flex-grow: 1;
 }

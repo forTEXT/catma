@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RmCommand;
@@ -27,6 +29,8 @@ import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
@@ -34,10 +38,13 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.util.FS;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -497,14 +504,18 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
-			
-			return this.gitApi
-				.commit()
-				.setMessage(message)
-				.setCommitter(committerName, committerEmail)
-				.setAll(all)
-				.call()
-				.getName();
+			if (gitApi.status().call().hasUncommittedChanges()) {
+				return this.gitApi
+					.commit()
+					.setMessage(message)
+					.setCommitter(committerName, committerEmail)
+					.setAll(all)
+					.call()
+					.getName();
+			}
+			else {
+				return getRevisionHash();
+			}
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to commit", e);
@@ -563,7 +574,13 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		try {
 			PushCommand pushCommand = this.gitApi.push();
 			pushCommand.setCredentialsProvider(credentialsProvider);
-			pushCommand.call();
+			pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
+			Iterable<PushResult> pushResults = pushCommand.call();
+			for (PushResult pushResult : pushResults) {
+				for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
+					System.out.println(remoteRefUpdate);
+				}
+			}
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to push", e);
@@ -797,4 +814,95 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 
+	@Override
+	public void resolveRootConflicts(CredentialsProvider credentialsProvider) throws IOException {
+		
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `resolveRootConflicts` on a detached instance");
+		}
+		DirCache dirCache = gitApi.getRepository().lockDirCache();
+		try {
+			if (dirCache.hasUnmergedPaths()) {
+				
+				for (String conflictingSubmodule : gitApi.status().call().getConflicting()) {
+					
+					int baseIdx = dirCache.findEntry(conflictingSubmodule);
+					DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
+
+					DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2); // TODO: check stage
+					ensureLatestSubmoduleRevision(
+						baseEntry, theirEntry, conflictingSubmodule, credentialsProvider);
+					
+					ObjectId subModuleHeadRevision = 
+							SubmoduleWalk
+							.getSubmoduleRepository(this.gitApi.getRepository(), conflictingSubmodule)
+							.resolve(Constants.HEAD);
+					
+					baseEntry.setObjectId(subModuleHeadRevision);
+				}
+				dirCache.write();
+				dirCache.commit();
+			}
+			else {
+				dirCache.unlock();
+			}
+		}
+		catch (Exception e) {
+			try  {
+				dirCache.unlock();
+			}
+			catch (Exception e2) {
+				e2.printStackTrace();
+			}
+			throw new IOException("Failed to resolve root conflicts", e);
+		}
+		
+	}
+
+	private void ensureLatestSubmoduleRevision(DirCacheEntry baseEntry, 
+			DirCacheEntry theirEntry, String conflictingSubmodule,
+			CredentialsProvider credentialsProvider) throws Exception {
+		
+		try (Git submoduleGitApi = Git.wrap(
+			SubmoduleWalk.getSubmoduleRepository(this.gitApi.getRepository(), conflictingSubmodule))) {
+			boolean foundTheirs = false;
+			while (!foundTheirs) {
+				Iterator<RevCommit> revIterator = submoduleGitApi
+				.log()
+				.call()
+				.iterator();
+				while (revIterator.hasNext()) {
+					RevCommit revCommit = revIterator.next();
+					if (revCommit.getId().equals(theirEntry.getObjectId())) {
+						foundTheirs = true;
+						break;
+					}
+					else if (revCommit.getId().equals(baseEntry.getObjectId())) {
+						break;
+					}
+				}
+				
+				if (!foundTheirs) {
+					submoduleGitApi.checkout()
+					.setName(Constants.MASTER)
+					.setCreateBranch(false)
+					.call();
+					
+					PullResult pullResult = 
+						submoduleGitApi.pull().setCredentialsProvider(credentialsProvider).call();
+					if (!pullResult.isSuccessful()) {
+						throw new IllegalStateException(""); //TODO:
+					}
+					
+					submoduleGitApi.checkout()
+					.setName(ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH)
+					.setCreateBranch(false)
+					.call();
+					
+					submoduleGitApi.rebase().setUpstream(Constants.MASTER).call();
+				}
+				
+			}
+		}
+	}
 }
