@@ -29,16 +29,30 @@ public class AnalyzeNewManagerView extends  TabbedView{
 						onTabClose(analyzeNewView);
 					}			
 			});	
-			String caption="project: "+repository.getName()+"   resources :"+corpus.getSourceDocuments().size()+" documents / "+corpus.getUserMarkupCollectionRefs().size()+" collections";
-			addClosableTab(analyzeNewView, caption);
 			
-		}
-		
+			String caption= null;
+			String substring=null;
+			String substring2= null;
+			int documents=corpus.getSourceDocuments().size();
+			int collections=corpus.getUserMarkupCollectionRefs().size();
+			
+	 if(documents==1) {
+		 substring = "1 document,";
+	 }else {
+		 substring = documents+" documents,";
+	 } 
+	 if(collections==1) {
+		 substring2="1 collection";	 
+	 }else {
+		 substring2= collections+ " collections";
+	 }
+		caption= substring+substring2;
+			addClosableTab(analyzeNewView, caption);		
+		}	
 		catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError("error initializing Analyzer", e);
 		}
-		
-		
+			
 	}
 
 }
