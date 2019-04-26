@@ -18261,7 +18261,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .analyze_viz_left {
 	width: 35vw;
 	overflow: auto;
-	border-right: solid 2px rgba(151, 151, 151, 0.12);
+	border-right: solid 4px rgba(0, 0, 0, 0.12);
 	padding: 1.5em;
 }
 
@@ -18272,17 +18272,25 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 1.5em;
 }
 
+.catma .analyze_kwic_right {
+	overflow: auto;
+	border-left: solid 4px rgba(0, 0, 0, 0.12);
+}
+
 .catma .analyze_kwic_buttonBar {
-	width: 100vw;
 	background-color: #cdcdcd;
 }
 
 .catma .analyze_kwic_header_button {
-	width: 10vw;
+	margin-left: auto;
+}
+
+.catma .analyze_kwic_header_button_download {
+	margin-left: 25%;
 }
 
 .catma .analyze_kwic_header_label {
-	width: 70vw;
+	margin-left: 35%;
 	text-align: center;
 }
 
@@ -18293,8 +18301,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .analyzer_kwic_leftside_vertical {
 	padding: 0;
+	border-right: solid 2px rgba(151, 151, 151, 0.12);
 }
 
 .catma .analyze_kwic_panel {
 	padding: 0;
+}
+
+.catma .analyze_kwic_grid .v-grid-cell {
+	font-size: 12px;
 }

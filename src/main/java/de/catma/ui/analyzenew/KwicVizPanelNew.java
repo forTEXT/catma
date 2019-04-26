@@ -66,6 +66,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 	private HorizontalLayout mainLayout;
 	private Panel left;
 	private Panel right;
+	private Label visualisationName;
 	private Button test;
 	private Button downloadBt;
 	private Button optionsBt;
@@ -132,7 +133,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		leftSide = new VerticalLayout();
 		leftSide.addStyleName("analyzer_kwic_leftside_vertical");
 		rightSide = new Panel();
-		rightSide.addStyleName("analyze_viz_right");
+		rightSide.addStyleName("analyze_kwic_right");
 		rightSide.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		kwicNew = new KwicPanelNew(repository);
 		kwicNew.setHeight("100%");
@@ -143,20 +144,18 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 
 		arrowLeftBt = new Button(VaadinIcons.ARROW_LEFT);
 		arrowLeftBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		arrowLeftBt.addStyleName("analyze_kwic_header_button");
-		Label visualisationName = new Label("KWIC Visualisation");
+		//arrowLeftBt.addStyleName("analyze_kwic_header_button");
+    	 visualisationName = new Label("KWIC Visualisation");
 		visualisationName.addStyleName("analyze_kwic_header_label");
 		
-		downloadBt = new Button(VaadinIcons.DOWNLOAD);
-		downloadBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		downloadBt.addStyleName("analyze_kwic_header_button");
+	
 		
 		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		optionsBt.addStyleName("analyze_kwic_header_button");
 
 
-		headerButtonBar.addComponents(arrowLeftBt,visualisationName,downloadBt,optionsBt);
+		headerButtonBar.addComponents(arrowLeftBt,visualisationName,optionsBt);
 		//headerButtonBar.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		headerButtonBar.addStyleName("analyze_kwic_buttonBar");
 		//leftSide.addComponent(header);
