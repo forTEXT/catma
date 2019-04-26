@@ -18311,3 +18311,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .analyze_kwic_grid .v-grid-cell {
 	font-size: 12px;
 }
+
+.catma .analyze_iconbar_icon {
+	font-size: 20px;
+}

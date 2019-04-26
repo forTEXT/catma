@@ -37,9 +37,9 @@ public class AnalyzeNewManagerView extends  TabbedView{
 			int collections=corpus.getUserMarkupCollectionRefs().size();
 			
 	 if(documents==1) {
-		 substring = "1 document,";
+		 substring = "1 document, ";
 	 }else {
-		 substring = documents+" documents,";
+		 substring = documents+" documents, ";
 	 } 
 	 if(collections==1) {
 		 substring2="1 collection";	 

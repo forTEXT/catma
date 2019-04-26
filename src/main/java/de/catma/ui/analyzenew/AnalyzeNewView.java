@@ -3,27 +3,21 @@ package de.catma.ui.analyzenew;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
 import org.antlr.runtime.RecognitionException;
-
 import com.github.appreciated.material.MaterialTheme;
+
 import com.vaadin.data.TreeData;
 import com.vaadin.event.MouseEvents;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComboBox.NewItemHandler;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HasComponents;
-//import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
@@ -31,8 +25,6 @@ import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.Panel;
-//import com.vaadin.ui.VerticalLayout;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -53,8 +45,6 @@ import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.analyzer.TagKwicResultsProvider;
 import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.component.hugecard.HugeCard;
-import de.catma.ui.layout.FlexLayout.AlignContent;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.repository.MarkupCollectionItem;
@@ -72,7 +62,6 @@ public class AnalyzeNewView extends VerticalLayout
 	private String userMarkupItemDisplayString = "Markup Collections";
 	private IndexedRepository repository;
 	private Corpus corpus;
-	private CloseListenerNew closeListener;
 	private List<String> relevantSourceDocumentIDs;
 	private List<String> relevantUserMarkupCollIDs;
 	private List<String> relevantStaticMarkupCollIDs;
@@ -84,34 +73,22 @@ public class AnalyzeNewView extends VerticalLayout
 	private Button wordCloudBt;
 	private Button networkBt;
 	private Button optionsBt;
-	private String searchInput = new String();
+	private String searchInput;
 	private ComboBox<String> queryComboBox;
 	private ResultPanelNew queryResultPanel;
 	private HorizontalLayout resultAndMinMaxVizHorizontal;
 	private VerticalLayout resultsPanel;
 	private VerticalLayout minMaxPanel;
-	private MarginInfo margin;
-	private Panel resultScrollPanel;
-	private Iterator<Component> allResultPanelsIterator;
 	private VerticalLayout contentPanel;
 	private HorizontalLayout searchAndVisIconsHorizontal;
-	private HashSet currentResults;
-	private Panel searchFramePanel;
-	private Panel visIconsFramePanel;
-	private Panel resultsFramePanel;
-	private Panel snapshotsFramePanel;
-
 	private Component searchPanel;
 	private Component visIconsPanel;
 
 	public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener)
 			throws Exception {
 
-		//super.addStyleName("analyze_tab");
-		
 		this.corpus = corpus;
 		this.repository = repository;
-		this.closeListener = closeListener;
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
@@ -124,39 +101,36 @@ public class AnalyzeNewView extends VerticalLayout
 	}
 
 	private void initComponents() throws Exception {
-		
-	
-		
-		createHeaderInfo();
 
+		addRelevantResources();
+		searchInput = new String();
 		searchPanel = createSearchPanel();
-		searchPanel.addStyleName("analyze_search_icon_bar");		
+		searchPanel.addStyleName("analyze_search_icon_bar");
 
 		visIconsPanel = createVisIconsPanel();
 		visIconsPanel.addStyleName("analyze_search_icon_bar");
 
 		searchAndVisIconsHorizontal = new HorizontalLayout();
-		
+
 		searchAndVisIconsHorizontal.addStyleName("analyze_bar");
 		searchAndVisIconsHorizontal.addComponents(searchPanel, visIconsPanel);
 
-		resultAndMinMaxVizHorizontal = new HorizontalLayout();	
+		resultAndMinMaxVizHorizontal = new HorizontalLayout();
 		resultAndMinMaxVizHorizontal.addStyleName("analyze_results");
-	
-	
+
 		resultsPanel = new VerticalLayout();
 		resultsPanel.addStyleName("analyze_results_list");
 		minMaxPanel = new VerticalLayout();
 		minMaxPanel.addStyleName("analyze_results_minmax");
-		
+
 		resultAndMinMaxVizHorizontal.addComponents(resultsPanel, minMaxPanel);
-		
+
 		contentPanel = new VerticalLayout();
-		
+
 		contentPanel.addComponent(searchAndVisIconsHorizontal);
 		contentPanel.addComponent(resultAndMinMaxVizHorizontal);
 		contentPanel.addStyleName("analyze_content");
-		
+
 		this.addStyleName("analyze_content");
 		addComponent(contentPanel);
 	}
@@ -169,18 +143,8 @@ public class AnalyzeNewView extends VerticalLayout
 			} else {
 				String predefQueryString = event.getSource().getValue();
 				searchInput = predefQueryString;
-				Notification.show("Query", "is : " + searchInput.toString(), Notification.Type.HUMANIZED_MESSAGE);
 			}
 		});
-
-		/*
-		 * queryComboBox.addSelectionListener(new SingleSelectionListener<String>() {
-		 * 
-		 * @Override public void selectionChange(SingleSelectionEvent<String> event) {
-		 * searchInput= (event.getValue().toString());
-		 * 
-		 * } });
-		 */
 
 		queryComboBox.setNewItemHandler(new NewItemHandler() {
 			@Override
@@ -196,79 +160,57 @@ public class AnalyzeNewView extends VerticalLayout
 
 			public void buttonClick(ClickEvent event) {
 				searchInput.toString();
-
-				// String predefQuery= event.getSource().toString();
-				// searchInput.setValue(predefQuery);
 				executeSearch();
 			}
-
 		});
-
-		/*
-		 * kwicBt.addClickListener(new ClickListener() {
-		 * 
-		 * @Override public void buttonClick(ClickEvent event) {
-		 * 
-		 * KwicVizPanel kwicPanel = new KwicVizPanel("KWIC PANEL", getAllTreeGrids(),
-		 * new SaveCancelListener<VizSnapshot>() {
-		 * 
-		 * @Override public void savePressed(VizSnapshot vizSnapshot) {
-		 * visualizationPreviewPanel.addComponent(vizSnapshot); } }); kwicPanel.show();
-		 * }
-		 * 
-		 * });
-		 */
 
 		kwicBt.addClickListener(new ClickListener() {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
 
-				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Snapshot");
-				KwicVizPanelNew kwic = new KwicVizPanelNew(getAllTreeGridDatas(),repository);
+				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Visualisation");
+				KwicVizPanelNew kwic = new KwicVizPanelNew(getAllTreeGridDatas(), repository);
 				kwicSnapshot.setKwicVizPanel(kwic);
 				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(kwic));
 				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));
 				minMaxPanel.addComponent(kwicSnapshot);
-				
+
 				kwic.setLeaveViewListener(new CloseVizViewListener() {
-					
+
 					@Override
 					public void onClose() {
 						setContent(contentPanel);
 					}
 				});
-				
+
 				setContent(kwic);
 			}
 		});
 	}
-	
-	private EditVizSnapshotListener buildEditVizSnapshotListener (Component component) {
+
+	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
 		return new EditVizSnapshotListener() {
-			
+
 			@Override
 			public void reopenKwicView() {
 				setContent(component);
-			
-			}
-		};
-	}
-	
-	private DeleteVizSnapshotListener buildDeleteVizSnapshotListener (Component component) {
-		return new DeleteVizSnapshotListener() {
-			
-			@Override
-			public void deleteSnapshot() {
-				minMaxPanel.removeComponent(component);
-				
+
 			}
 		};
 	}
 
-	private Component getAnalyzerView() {
-		return contentPanel;
+	private DeleteVizSnapshotListener buildDeleteVizSnapshotListener(Component component) {
+		return new DeleteVizSnapshotListener() {
+
+			@Override
+			public void deleteSnapshot() {
+				minMaxPanel.removeComponent(component);
+
+			}
+		};
 	}
+
 
 	private void setContent(Component component) {
 		removeAllComponents();
@@ -278,12 +220,7 @@ public class AnalyzeNewView extends VerticalLayout
 
 	}
 
-	private void createHeaderInfo() throws Exception {
-		// documentsContainer = new HierarchicalContainer();
-		// documentsTree = new Tree();
-		// documentsTree.setContainerDataSource(documentsContainer);
-		// documentsTree.setCaption(
-		// Messages.getString("AnalyzerView.docsConstrainingThisSearch")); //$NON-NLS-1$
+	private void addRelevantResources() throws Exception {
 
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {
@@ -293,8 +230,7 @@ public class AnalyzeNewView extends VerticalLayout
 			for (SourceDocument sd : repository.getSourceDocuments()) {
 				addSourceDocument(sd);
 			}
-			// documentsTree.addItem(Messages.getString("AnalyzerView.AllDocuments"));
-			// //$NON-NLS-1$
+
 		}
 
 	}
@@ -302,27 +238,22 @@ public class AnalyzeNewView extends VerticalLayout
 	private Component createSearchPanel() {
 		VerticalLayout searchPanel = new VerticalLayout();
 		searchPanel.setAlignContent(AlignContent.CENTER);
-		 
+
 		Label searchPanelLabel = new Label("Queries");
-        searchPanelLabel.addStyleName("analyze_label");
-		
+		searchPanelLabel.addStyleName("analyze_label");
+
 		optionsBt = new Button("", VaadinIcons.ELLIPSIS_DOTS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		
-	
-		HorizontalLayout labelLayout = new HorizontalLayout(searchPanelLabel,optionsBt);
+
+		HorizontalLayout labelLayout = new HorizontalLayout(searchPanelLabel, optionsBt);
 
 		optionsBt.addStyleName("analyze_options_bt");
 		labelLayout.addStyleName("analyze_label_layout");
-		//labelLayout.setAlignItems(AlignItems.CENTER);
-	
 
 		HorizontalLayout searchRow = new HorizontalLayout();
-		//searchRow.setWidth("100%");
 
-		//btQueryBuilder = new Button("+ BUILD QUERY");
 		btQueryBuilder = new Button(" + BUILD QUERY");
-		
+
 		btQueryBuilder.addStyleName("analyze_querybuilder_bt");
 
 		List<String> predefQueries = new ArrayList<>();
@@ -345,97 +276,79 @@ public class AnalyzeNewView extends VerticalLayout
 
 		btExecuteSearch.setStyleName("analyze_search_bt");
 
-		//queryComboBox.setWidth("100%");
 		searchRow.addComponents(btQueryBuilder, queryComboBox);
 		searchRow.addStyleName("analyze_search_row");
-		VerticalLayout searchVerticalLayout= new VerticalLayout(searchRow,btExecuteSearch);
+		VerticalLayout searchVerticalLayout = new VerticalLayout(searchRow, btExecuteSearch);
 		searchVerticalLayout.addStyleName("analyze_search");
-		//searchRow.setComponentAlignment(queryComboBox, Alignment.MIDDLE_CENTER);
-		//searchRow.setExpandRatio(queryComboBox, 0.6f);
+
 		searchPanel.addComponents(labelLayout, searchVerticalLayout);
 		return searchPanel;
 	}
 
 	private Component createVisIconsPanel() {
+		
 		VerticalLayout visIconsPanel = new VerticalLayout();
 		visIconsPanel.setAlignContent(AlignContent.CENTER);
 		Label visIconsLabel = new Label("Visualisations");
 		visIconsLabel.addStyleName("analyze_label");
-		
+
 		optionsBt = new Button("", VaadinIcons.ELLIPSIS_DOTS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		optionsBt.addStyleName("analyze_options_bt");
-		
-		HorizontalLayout labelLayout = new HorizontalLayout(visIconsLabel,optionsBt);	
+
+		HorizontalLayout labelLayout = new HorizontalLayout(visIconsLabel, optionsBt);
 		labelLayout.addStyleName("analyze_label_layout");
 		HorizontalLayout visIconBar = new HorizontalLayout();
 
 		kwicBt = new Button("KWIC", VaadinIcons.SPLIT);
 		kwicBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
 		kwicBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		kwicBt.addStyleName("analyze_iconbar_icon");
 		kwicBt.setWidth("100%");
 		kwicBt.setHeight("100%");
 
 		distBt = new Button("DISTRIBUTION", VaadinIcons.CHART_LINE);
 		distBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
 		distBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		distBt.addStyleName("analyze_iconbar_icon");
 		distBt.setWidth("100%");
 		distBt.setHeight("100%");
-
 
 		wordCloudBt = new Button("WORDCLOUD", VaadinIcons.CLOUD);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
+		wordCloudBt.addStyleName("analyze_iconbar_icon");
 		wordCloudBt.setWidth("100%");
 		wordCloudBt.setHeight("100%");
 
 		networkBt = new Button("NETWORK", VaadinIcons.CLUSTER);
 		networkBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
 		networkBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		networkBt.	addStyleName("analyze_iconbar_icon");
+
 		networkBt.setWidth("100%");
 		networkBt.setHeight("100%");
 
-		/*
-		 * VerticalLayout barchartIconLayout = new VerticalLayout(); Label icon = new
-		 * Label(FontAwesome.BAR_CHART.getHtml(), ContentMode.HTML);
-		 * icon.addStyleName(ValoTheme.LABEL_H1); icon.setHeight("100%");
-		 * icon.setWidth("100%"); Label iconText = new Label("barchart");
-		 * barchartIconLayout.addComponents(icon,iconText);
-		 */
-
 		visIconBar.addComponents(kwicBt, distBt, wordCloudBt, networkBt);
-		//visIconBar.setWidth("100%");
-		//visIconBar.setHeight("100%");
 
 		visIconsPanel.addComponent(labelLayout);
-		//visIconsPanel.setComponentAlignment(visIconsLabel, Alignment.MIDDLE_CENTER);
 		visIconsPanel.addComponent(visIconBar);
-		//visIconsPanel.setHeight("100%");
 		return visIconsPanel;
 	}
 
-/*	private ArrayList<TreeGrid<TagRowItem>> getAllTreeGrids() {
-		Iterator<Component> iterator = resultPanel.getComponentIterator();
-		ArrayList<TreeGrid<TagRowItem>> toReturnList = new ArrayList<TreeGrid<TagRowItem>>();
-		while (iterator.hasNext()) {
-			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();
-			toReturnList.add(onePanel.getCurrentTreeGrid());
-		}
-		return toReturnList;
-	}*/
 
 	private ArrayList<CurrentTreeGridData> getAllTreeGridDatas() {
+		
 		Iterator<Component> iterator = resultsPanel.getComponentIterator();
 		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
 		while (iterator.hasNext()) {
 			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();
-			CurrentTreeGridData current= new CurrentTreeGridData(onePanel.getQueryAsString(),  (TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(),onePanel.getCurrentView());
+			CurrentTreeGridData current = new CurrentTreeGridData(onePanel.getQueryAsString(),
+					(TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(), onePanel.getCurrentView());
 			toReturnList.add(current);
 		}
 		return toReturnList;
 	}
-
-
 
 	private void executeSearch() {
 
@@ -460,22 +373,12 @@ public class AnalyzeNewView extends VerticalLayout
 										}
 									});
 						} catch (Exception e) {
-							// TODO Auto-generated catch block
+							
 							e.printStackTrace();
 						}
 
 						queryResultPanel.setWidth("100%");
-						queryResultPanel.addClickListener(new MouseEvents.ClickListener() {
-							@Override
-							public void click(com.vaadin.event.MouseEvents.ClickEvent event) {
-								// Notification.show(
-								// Messages.getString("Clickbares Zeug"), Type.HUMANIZED_MESSAGE);
-							}
-						});
-
-						//resultsPanel.setSpacing(true);
 						resultsPanel.addComponentAsFirst(queryResultPanel);
-						
 
 					};
 
@@ -510,14 +413,8 @@ public class AnalyzeNewView extends VerticalLayout
 
 	private void addSourceDocument(SourceDocument sd) {
 		relevantSourceDocumentIDs.add(sd.getID());
-		// TODO: provide a facility where the user can select between different
-		// IndexInfoSets
 		indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
-
-		// documentsTree.addItem(sd);
 		MarkupCollectionItem umc = new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
-		// documentsTree.addItem(umc);
-		// documentsTree.setParent(umc, sd);
 		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
 			if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
 				addUserMarkupCollection(umcRef, umc);
@@ -531,8 +428,7 @@ public class AnalyzeNewView extends VerticalLayout
 
 	@Override
 	public void tagResults() {
-		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
