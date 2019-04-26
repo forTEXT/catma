@@ -19,45 +19,43 @@ public class SingleItem implements TreeRowItem {
 	private String propertyValue;
 	private String query;
 	private QueryResultRowArray queryResultRowArray;
-	private  QueryResultRow queryResultRow;
+	private QueryResultRow queryResultRow;
 	private Range range;
 	private int rangesHash;
 	private Set<Range> ranges;
+
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;
-	
+
 	public SingleItem() {
 		ranges = new TreeSet<Range>();
-	
 	}
 
 	public void setTreeKey(String treeKey) {
 		this.treeKey = treeKey;
 	}
+
 	public void setPhrase(String keyword) {
-	phrase = keyword;
+		phrase = keyword;
 	}
 
 	@Override
 	public String getTreeKey() {
-		// TODO Auto-generated method stub
 		return treeKey;
 	}
-	
+
 	public void setQuery(String query) {
-		this.query=query;
+		this.query = query;
 	}
 
 	@Override
 	public int getFrequency() {
-		// TODO Auto-generated method stub
 		return 1;
 	}
 
 	@Override
 	public QueryResultRowArray getRows() {
-		// TODO Auto-generated method stub
 		return queryResultRowArray;
 	}
 
@@ -94,21 +92,13 @@ public class SingleItem implements TreeRowItem {
 	}
 
 	public String getPropertyName() {
-		//TagQueryResultRow tRow = (TagQueryResultRow) queryResultRowArray.get(0);
-		//return tRow.getPropertyName();
 		return propertyName;
-
-
 	}
 
 	public String getPropertyValue() {
-		//TagQueryResultRow tRow = (TagQueryResultRow) queryResultRowArray.get(0);
-		//return tRow.getPropertyValue();
 		return propertyValue;
-	
 
 	}
-	
 
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
@@ -148,17 +138,17 @@ public class SingleItem implements TreeRowItem {
 
 	public void setQueryResultRowArray(QueryResultRowArray queryResultRowArray) {
 		this.queryResultRowArray = queryResultRowArray;
-		 queryResultRow=queryResultRowArray.get(0);
-		 if(queryResultRow.getClass()==TagQueryResultRow.class) {
-			 TagQueryResultRow tQRR= (TagQueryResultRow)queryResultRow;	
-			 phrase= tQRR.getPhrase();	
-		 }
-		 
+		queryResultRow = queryResultRowArray.get(0);
+		if (queryResultRow.getClass() == TagQueryResultRow.class) {
+			TagQueryResultRow tQRR = (TagQueryResultRow) queryResultRow;
+			phrase = tQRR.getPhrase();
+		}
+
 	}
 
 	@Override
-	public String getContext() {	
-		return 	getBackward()+getPhrase()+getForward();
+	public String getContext() {
+		return getBackward() + getPhrase() + getForward();
 	}
 
 	@Override
@@ -251,27 +241,5 @@ public class SingleItem implements TreeRowItem {
 			return false;
 		return true;
 	}
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-
-	
-	
 
 }

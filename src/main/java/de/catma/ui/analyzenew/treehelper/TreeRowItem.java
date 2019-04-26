@@ -1,11 +1,7 @@
 package de.catma.ui.analyzenew.treehelper;
 
-import java.util.ArrayList;
-
 import com.vaadin.icons.VaadinIcons;
 
-import de.catma.queryengine.result.GroupedQueryResult;
-import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
 public interface TreeRowItem {

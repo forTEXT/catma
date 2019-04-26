@@ -11,7 +11,7 @@ public class RootItem implements TreeRowItem {
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;
-	private Integer frequency;
+
 	
 
 	@Override
@@ -38,13 +38,9 @@ public class RootItem implements TreeRowItem {
 		this.queryResultRowArray =  queryResultRowArray;
 		
 	}
-	public void setOneRow(QueryResultRow queryResultRow) {
-		
-	}
 	
 	@Override
-	public String getArrowIcon() {
-		
+	public String getArrowIcon() {	
 		return null;
 	}
 	public String getShortenTreeKey(){
