@@ -50,22 +50,21 @@ public class ResultPanelNew extends Panel {
 		caption, frequency, visibleInKwic,;
 	}
 
-
 	public static interface ResultPanelCloseListener {
 		public void closeRequest(ResultPanelNew resultPanelNew);
 	}
 
 	private VerticalLayout contentVerticalLayout;
-	
+
 	private TreeData<TreeRowItem> tagData;
 	private TreeGrid<TreeRowItem> treeGridTag;
-	
-	private TreeData<TreeRowItem>phraseData;
+
+	private TreeData<TreeRowItem> phraseData;
 	private TreeGrid<TreeRowItem> treeGridPhrase;
-	
-	private TreeData<TreeRowItem>propData;
+
+	private TreeData<TreeRowItem> propData;
 	private TreeGrid<TreeRowItem> treeGridProperty;
-	
+
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
 	private Button caretRightBt;
@@ -110,14 +109,13 @@ public class ResultPanelNew extends Panel {
 	}
 
 	@SuppressWarnings("unchecked")
-	public TreeData<TreeRowItem> getCurrentTreeGridData()  {
-		
+	public TreeData<TreeRowItem> getCurrentTreeGridData() {
+
 		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getContent();
 		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
-	   	TreeData<TreeRowItem> treeData= (TreeData<TreeRowItem>) dataProvider.getTreeData();
-         return  copyTreeData( treeData);
+		TreeData<TreeRowItem> treeData = (TreeData<TreeRowItem>) dataProvider.getTreeData();
+		return copyTreeData(treeData);
 	}
-			
 
 	private TreeData<TreeRowItem> copyTreeData(TreeData<TreeRowItem> treeData) {
 		TreeData<TreeRowItem> toReturn = new TreeData<TreeRowItem>();
@@ -154,42 +152,6 @@ public class ResultPanelNew extends Panel {
 		return toReturn;
 
 	}
-	
-/*	private TreeData<TreeRowItem> addDummyItemsToTreeData(TreeData<TreeRowItem> treeData) {
-
-		if (this.currentView == ViewID.phrase) {
-			List<TreeRowItem> roots = treeData.getRootItems();
-			for (TreeRowItem treeRowItem : roots) {
-				List<TreeRowItem> docs = treeData.getChildren(treeRowItem);
-				for (TreeRowItem doc : docs) {
-					SingleItem dummy = new SingleItem();
-					treeData.addItem(doc, dummy);
-
-				}
-			}
-
-		}
-		
-		if (this.currentView == ViewID.tag||this.currentView == ViewID.property) {
-			List<TreeRowItem> roots = treeData.getRootItems();
-			for (TreeRowItem treeRowItem : roots) {
-				List<TreeRowItem> docs = treeData.getChildren(treeRowItem);
-				for (TreeRowItem doc : docs) {
-					List<TreeRowItem> collections=	treeData.getChildren(doc);
-					for (TreeRowItem coll: collections) {
-						SingleItem dummy = new SingleItem();
-						treeData.addItem(coll, dummy);
-
-					}
-				
-
-				}
-			}
-
-		}
-
-		return treeData;
-	}*/
 
 	private void setCurrentView(ViewID currentView) {
 		this.currentView = currentView;
@@ -203,23 +165,20 @@ public class ResultPanelNew extends Panel {
 		this.setWidth(80, Unit.PERCENTAGE);
 		contentVerticalLayout = new VerticalLayout();
 		contentVerticalLayout.addStyleName("analyze_queryresultpanel__card");
-		
+
 		addStyleName("analyze_queryresultpanel__card_frame");
 		setContent(contentVerticalLayout);
 
 		treeGridTag = new TreeGrid<TreeRowItem>();
-		treeGridTag.addStyleNames(
-				"annotation-details-panel-annotation-details-grid", 
+		treeGridTag.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
 		treeGridPhrase = new TreeGrid<TreeRowItem>();
-		treeGridPhrase.addStyleNames(
-				"annotation-details-panel-annotation-details-grid", 
+		treeGridPhrase.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
 		treeGridProperty = new TreeGrid<TreeRowItem>();
-		treeGridProperty.addStyleNames(
-				"annotation-details-panel-annotation-details-grid", 
+		treeGridProperty.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
 		createResultInfoBar();
@@ -237,28 +196,24 @@ public class ResultPanelNew extends Panel {
 
 	private void createButtonBar() {
 		groupedIcons = new HorizontalLayout();
-		//groupedIcons.setMargin(false);
+
 		caretRightBt = new Button(VaadinIcons.CARET_RIGHT);
 		caretRightBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		
+
 		caretDownBt = new Button(VaadinIcons.CARET_DOWN);
 		caretDownBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		
+
 		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		
+
 		trashBt = new Button(VaadinIcons.TRASH);
 		trashBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-
-	
 
 		groupedIcons.addComponents(trashBt, optionsBt, caretRightBt);
 		groupedIcons.addStyleName("analyze_queryresultpanel_buttonbar");
 		contentVerticalLayout.addComponent(groupedIcons);
-		//contentVerticalLayout.setComponentAlignment(groupedIcons, Alignment.MIDDLE_RIGHT);
+
 	}
-	
-	
 
 	private void initListeners() {
 
@@ -296,18 +251,18 @@ public class ResultPanelNew extends Panel {
 				resultPanelCloseListener.closeRequest(ResultPanelNew.this);
 			}
 		});
-	 
+
 	}
 
 	private void setDataTagStyle() throws Exception {
 
 		tagData = new TreeData<>();
-		tagData = populateTreeDataWithTags(repository, tagData,  queryResult);
+		tagData = populateTreeDataWithTags(repository, tagData, queryResult);
 		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(tagData);
 
 		treeGridTag.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
 		treeGridTag.getColumn("tagID").setExpandRatio(5);
-		
+
 		treeGridTag.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridTag.getColumn("freqID").setExpandRatio(1);
 
@@ -318,21 +273,17 @@ public class ResultPanelNew extends Panel {
 		treeGridTag.setCaption(queryAsString);
 
 		treeGridPanel.setContent(treeGridTag);
-		
+
 		setDataPhraseStyle();
-		
+
 	}
 
-
-
-	
-	
 	private void setDataPhraseStyle() {
-	
+
 		phraseData = new TreeData<>();
-	
-		Set<GroupedQueryResult> resultAsSet= queryResult.asGroupedSet();
-	
+
+		Set<GroupedQueryResult> resultAsSet = queryResult.asGroupedSet();
+
 		for (GroupedQueryResult onePhraseGroupedQueryResult : resultAsSet) {
 
 			String phrase = (String) onePhraseGroupedQueryResult.getGroup();
@@ -365,15 +316,9 @@ public class ResultPanelNew extends Panel {
 			}
 
 			phraseData.addItems(rootPhrase, allDocuments);
-			
-/*			for (TreeRowItem doc : allDocuments) {
-				SingleItem dummy = new SingleItem();
-				phraseData.addItems(doc, dummy);
-				
-			}*/
-			
+
 		}
-		
+
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
 		treeGridPhrase.setDataProvider(phraseDataProvider);
 		treeGridPanel.setContent(treeGridPhrase);
@@ -383,13 +328,11 @@ public class ResultPanelNew extends Panel {
 		treeGridPhrase.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
 		treeGridPhrase.setWidth("100%");
-		
-	}
-	
 
+	}
 
 	private void setDataPropertyStyle() throws Exception {
-		
+
 		propData = new TreeData<>();
 		propData = populateTreeDataWithProperties(repository, propData, queryResult); // TODO !!!!!!
 
@@ -415,11 +358,9 @@ public class ResultPanelNew extends Panel {
 		treeGridPanel.setContent(treeGridProperty);
 
 		setDataPhraseStyle();
-		
-	}
-	
 
-	
+	}
+
 	private TreeData<TreeRowItem> populateTreeDataWithTags(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
 
@@ -454,29 +395,29 @@ public class ResultPanelNew extends Panel {
 				for (QueryResultRow queryResultRow : itemsForADoc) {
 
 					TagQueryResultRow tRow = (TagQueryResultRow) queryResultRow;
-					
+
 					QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
 
 					String collID = tRow.getMarkupCollectionId();
-					String collName=sourceDoc.getUserMarkupCollectionReference(collID).getName();
+					String collName = sourceDoc.getUserMarkupCollectionReference(collID).getName();
 
 					if (collectionsForADoc.containsKey(collName)) {
-					 queryResultRowArray = collectionsForADoc.get(collName);
+						queryResultRowArray = collectionsForADoc.get(collName);
 						queryResultRowArray.add(queryResultRow);
-					}else {
+					} else {
 						queryResultRowArray.add(queryResultRow);
 						collectionsForADoc.put(collName, queryResultRowArray);
-						
+
 					}
 				}
-				
+
 				Set<String> collections = collectionsForADoc.keySet();
 				for (String coll : collections) {
 					CollectionItem collItem = new CollectionItem();
 					collItem.setTreeKey(coll);
 					collItem.setRows(collectionsForADoc.get(coll));
 					treeData.addItem(docItem, collItem);
-					
+
 				}
 
 			}
@@ -484,34 +425,33 @@ public class ResultPanelNew extends Panel {
 		}
 
 		return treeData;
-	}	
-	
-	
+	}
+
 	private HashMap<String, QueryResultRowArray> groupDocumentsForRoot(RootItem root) {
 		HashMap<String, QueryResultRowArray> documentsForARoot = new HashMap<String, QueryResultRowArray>();
-		QueryResultRowArray allDocsArray=root.getRows();
-	
-	for(QueryResultRow queryResultRow : allDocsArray) {
-		if (queryResultRow instanceof TagQueryResultRow) {
-			TagQueryResultRow tRow = (TagQueryResultRow) queryResultRow;
-			
-			QueryResultRowArray rows = documentsForARoot.get(tRow.getSourceDocumentId());
-			
-			if (rows == null) {
-				rows = new QueryResultRowArray();
-				documentsForARoot.put(tRow.getSourceDocumentId(), rows);
+		QueryResultRowArray allDocsArray = root.getRows();
+
+		for (QueryResultRow queryResultRow : allDocsArray) {
+			if (queryResultRow instanceof TagQueryResultRow) {
+				TagQueryResultRow tRow = (TagQueryResultRow) queryResultRow;
+
+				QueryResultRowArray rows = documentsForARoot.get(tRow.getSourceDocumentId());
+
+				if (rows == null) {
+					rows = new QueryResultRowArray();
+					documentsForARoot.put(tRow.getSourceDocumentId(), rows);
+				}
+				rows.add(tRow);
 			}
-			rows.add(tRow);
+
 		}
-					
-	}
 		return documentsForARoot;
-		
+
 	}
-	
+
 	private HashMap<String, QueryResultRowArray> groupRootsGroupedByTagDefinitionPath(QueryResult queryResults)
 			throws Exception {
-	
+
 		HashMap<String, QueryResultRowArray> rowsGroupedByTagDefinitionPath = new HashMap<String, QueryResultRowArray>();
 
 		for (QueryResultRow row : queryResult) {
@@ -530,22 +470,21 @@ public class ResultPanelNew extends Panel {
 		return rowsGroupedByTagDefinitionPath;
 	}
 
-	
 	private QueryResultRowArray transformGroupedResultToArray(GroupedQueryResult groupedQueryResult) {
 		QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
-		
+
 		for (QueryResultRow queryResultRow : groupedQueryResult) {
-			queryResultRowArray.add(queryResultRow);		
+			queryResultRowArray.add(queryResultRow);
 		}
 		return queryResultRowArray;
-	
+
 	}
-		
+
 	private TreeData<TreeRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
-           TreeData<TreeRowItem> data=	populateTreeDataWithTags(repository, treeData, queryResult);
+		TreeData<TreeRowItem> data = populateTreeDataWithTags(repository, treeData, queryResult);
 
-          return data;
+		return data;
 	}
 
 	public String getQueryAsString() {

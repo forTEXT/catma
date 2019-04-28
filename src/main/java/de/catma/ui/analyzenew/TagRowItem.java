@@ -21,7 +21,6 @@ public class TagRowItem {
 	private String tagInstanceID;
 	private String tagDefinitionID;
 	private String tagDefinitionPath;
-	private ArrayList <TagRowItem>children;
 	private UUID uuid;
 	private String treePath;
 	private Integer frequency;
@@ -32,9 +31,6 @@ public class TagRowItem {
 
 	
 	public TagRowItem() {
-		//uuid = UUID.randomUUID();
-
-		
 		
 	}
 	public String getTagID() {
@@ -79,12 +75,7 @@ public class TagRowItem {
 	public void setTagDefinitionPath(String tagDefinitionPath) {
 		this.tagDefinitionPath = tagDefinitionPath;
 	}
-/*	public ArrayList<TagRowItem> getChildren() {
-		return children;
-	}*/
-	public void setChildren(ArrayList<TagRowItem> children) {
-		this.children = children;
-	}
+
 	public UUID getUuid() {
 		return uuid;
 	}
@@ -142,34 +133,6 @@ public class TagRowItem {
 	public void setPhrase(String phrase) {
 		this.phrase = 	shorten(phrase, 50);
 	}
-	
-/*	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((treePath == null) ? 0 : treePath.hashCode());
-		return result;
-	}
-	
-
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		TagRowItem other = (TagRowItem) obj;
-		if (treePath == null) {
-			if (other.treePath != null)
-				return false;
-		} else if (!treePath.equals(other.treePath))
-			return false;
-		return true;
-	}*/
 	
 	
 	public String getShortenTreePath(){

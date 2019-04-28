@@ -89,12 +89,6 @@ public class KwicPanelNew extends VerticalLayout{
 			kwicGrid.addColumn(KwicItem::getRangeEndPoint).setCaption("End Point").setId("endPointID");
 			kwicGrid.addColumn(KwicItem::getTagDefinitionPath).setCaption("Tag").setId("tagID");
 			kwicGrid.addStyleNames("analyze_kwic_grid");
-
-		
-			
-			//kwicGrid.getColumn("keyWordID").setExpandRatio(7);
-			
-
 			
 			addComponent(kwicGrid);
 			

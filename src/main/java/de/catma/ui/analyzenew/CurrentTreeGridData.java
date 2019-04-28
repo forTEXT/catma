@@ -6,16 +6,10 @@ import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 
 
 public class CurrentTreeGridData {
+	
 	private String query;
 	private TreeData<TreeRowItem> currentTreeData;
 	private ViewID viewID;
-
-/*	public CurrentTreeGridData( TreeData<TreeRowItem> currentTreeData, ViewID viewID) {
-		this.currentTreeData=currentTreeData;
-		this.query= "random String";
-		this.viewID= viewID;
-		
-	}*/
 
 	public CurrentTreeGridData(String queryString, TreeData<TreeRowItem> currentTreeGridData, ViewID currentView) {
 		this.currentTreeData=currentTreeGridData;

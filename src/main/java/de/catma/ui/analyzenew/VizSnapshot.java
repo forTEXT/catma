@@ -53,8 +53,6 @@ public class VizSnapshot extends Panel {
 
 	public VizSnapshot(String title) {
 		this.title=title;
-		//setHeight("160px");
-		//setWidth("100%");
 		initComponents(title);
 		initListeners();
 	}
@@ -92,9 +90,7 @@ public class VizSnapshot extends Panel {
 				
 			}
 		});
-		
-		
-		
+				
 		btDelete.addClickListener(new ClickListener() {
 			
 			@Override
