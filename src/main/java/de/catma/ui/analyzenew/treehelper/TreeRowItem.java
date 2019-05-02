@@ -15,6 +15,7 @@ public String getPropertyValue();
 public String getContext();
 public String getBackward();
 public String getForward();
+public String getContextDiv();
 
 public int getPosition();
 
@@ -25,6 +26,8 @@ public default String getSelectIcon() {
 public default String getRemoveIcon() {
 	   return VaadinIcons.ERASER.getHtml();
 }
+
+
 
 public  String getArrowIcon();
 

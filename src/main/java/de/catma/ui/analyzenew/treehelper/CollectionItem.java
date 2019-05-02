@@ -107,4 +107,10 @@ public class CollectionItem implements TreeRowItem {
 		return null;
 	}
 
+	@Override
+	public String getContextDiv() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

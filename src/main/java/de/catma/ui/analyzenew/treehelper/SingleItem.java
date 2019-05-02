@@ -1,12 +1,22 @@
 package de.catma.ui.analyzenew.treehelper;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+
+import com.vaadin.ui.UI;
 
 import de.catma.document.Range;
+import de.catma.indexer.KeywordInSpanContext;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.tag.TagDefinition;
+import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.ui.util.Cleaner;
+import de.catma.util.ColorConverter;
 
 public class SingleItem implements TreeRowItem {
 
@@ -23,7 +33,9 @@ public class SingleItem implements TreeRowItem {
 	private Range range;
 	private int rangesHash;
 	private Set<Range> ranges;
-
+	
+	private static final int SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH = 30;
+	private static final int LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH = 300;
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;
@@ -150,6 +162,42 @@ public class SingleItem implements TreeRowItem {
 	public String getContext() {
 		return getBackward() + getPhrase() + getForward();
 	}
+	
+	private String buildKwicString() {
+		String conc ="";
+		
+		StringBuilder builder = new StringBuilder();
+	
+				builder.append(
+						Cleaner.clean(getBackward()));
+				builder.append("<span");
+				builder.append(" class=\"annotation-details-tag-color\"");
+				builder.append(" style=\"");
+				builder.append(" background-color:");
+				builder.append("#ff5733");
+				builder.append(";");
+				builder.append(" color: 33ffe0");
+				builder.append(";");
+				builder.append("\">");
+				
+				builder.append(
+						Cleaner.clean(
+				
+									getPhrase()
+									));
+
+				
+				builder.append(""+getContext());
+				builder.append("</span>");	
+				builder.append(
+						Cleaner.clean(getForward()));
+				return builder.toString();
+			
+			
+			}
+			
+		
+	
 
 	@Override
 	public int hashCode() {
@@ -240,6 +288,12 @@ public class SingleItem implements TreeRowItem {
 		} else if (!treeKey.equals(other.treeKey))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String getContextDiv() {
+		
+		return buildKwicString();
 	}
 
 }

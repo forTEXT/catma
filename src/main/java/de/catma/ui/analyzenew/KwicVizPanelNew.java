@@ -145,6 +145,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		frameLayout.addComponent(mainContentSplitPanel);
 
 		addComponent(frameLayout);
+		addStyleName("analyze_tab");
 		frameLayout.setSizeFull();
 
 		comboBox = new ComboBox<String>();
@@ -347,6 +348,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		tagTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
 				.setHidden(true).setWidth(100);
 		tagTreeGrid.getColumn("contextID").setExpandRatio(5);
+		tagTreeGrid.getColumn("contextID").setDescriptionGenerator(e -> e.getContextDiv(), ContentMode.HTML);
 
 		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
 				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
