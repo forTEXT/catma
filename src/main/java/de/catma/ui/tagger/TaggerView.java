@@ -612,6 +612,7 @@ public class TaggerView extends HorizontalLayout
 				tagChangedListener);
 				
 		sourceDocChangedListener = null;
+		project = null;
 	}
 	
 	public void tagInstanceAdded(

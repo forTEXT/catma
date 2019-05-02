@@ -451,7 +451,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	public void addPropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
 		GraphTraversalSource g = graph.traversal();
-		
+
 		Vertex tagV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
 		.property("revisionHash", rootRevisionHash)
 		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())

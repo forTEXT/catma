@@ -85,9 +85,11 @@ public class GitConflictedProject implements ConflictedProject {
 				for (TagConflict tagConflict : tagsetConflict.getTagConflicts()) {
 					gitProjectHandler.resolveTagConflict(tagsetConflict.getUuid(), tagConflict);
 				}
+				gitProjectHandler.addTagsetToStagedAndCommit(
+						tagsetConflict.getUuid(), "Auto-committing merged changes");
 			}
 			
-			gitProjectHandler.addTagsetToStagedAndCommit(
+			gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 					tagsetConflict.getUuid(), "Auto-committing merged changes");
 			
 			gitProjectHandler.checkoutTagsetDevBranchAndRebase(tagsetConflict.getUuid());

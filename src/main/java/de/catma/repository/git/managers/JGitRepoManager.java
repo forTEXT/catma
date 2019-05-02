@@ -905,4 +905,20 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			}
 		}
 	}
+	
+	@Override
+	public void initAndUpdateSubmodules(CredentialsProvider credentialsProvider) throws Exception {
+		
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `initAndUpdateSubmodules` on a detached instance");
+		}
+
+		this.gitApi.submoduleInit().call();
+		SubmoduleUpdateCommand submoduleUpdateCommand = 
+			jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+		
+		submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
+		submoduleUpdateCommand.call();
+		
+	}
 }

@@ -666,6 +666,7 @@ public class GitMarkupCollectionHandler {
 							getBothModifiedAnnotationConflict(
 								projectId, collectionId, serializedConflictingAnnotation);
 					collectionConflict.addAnnotationConflict(annotationConflict);
+					break;
 				}
 				default: System.out.println("not handled"); //TODO:
 				}

@@ -148,8 +148,8 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
     
 	@Override
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
+		closeViews();
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
-			closeViews();
 			setContent(uiFactory.getDashboardView(projectManager));
 			eventBus.post(new HeaderContextChangeEvent(new Label("")));
 			currentRoute = routeToDashboardEvent.getClass();

@@ -126,8 +126,14 @@ public class ConflictedProjectView extends HugeCard {
 	}
 
 	private void showNextTagConflict() {
-		// TODO Auto-generated method stub
-		
+		TagConflict tagConflict = tagConflictIterator.next();
+		TagConflictView tagConflictView = 
+			new TagConflictView(
+				tagConflict,
+				currentTagsetConflict,
+				()->showNextConflict());
+		mainPanel.removeAllComponents();
+		mainPanel.addComponent(tagConflictView);		
 	}
 
 	private void initData() {

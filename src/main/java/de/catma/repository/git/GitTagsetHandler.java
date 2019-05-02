@@ -535,6 +535,7 @@ public class GitTagsetHandler {
 							getBothModifiedAnnotationConflict(
 								projectId, tagsetId, serializedConflictingTag);
 					tagsetConflict.addTagConflict(tagConflict);
+					break;
 				}
 				default: System.out.println("not handled"); //TODO:
 				}
@@ -550,14 +551,12 @@ public class GitTagsetHandler {
 
 		String masterVersion = serializedConflictingTag
 			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
-			.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> dev\\E(\\r\\n|\\r|\\n)", "");
+			.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
 		
 		String devVersion = serializedConflictingTag
 			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
-			.replaceAll("\\Q>>>>>>> dev\\E(\\r\\n|\\r|\\n)", "");
-				
-		
-		
+			.replaceAll("\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
+
 		GitTagDefinition gitMasterTagDefinition = new SerializationHelper<GitTagDefinition>()
 				.deserialize(
 						masterVersion,
@@ -581,9 +580,39 @@ public class GitTagsetHandler {
 		return tagConflict;
 	}
 
-	public void rebaseToMaster() throws Exception {
+	public void rebaseToMaster(String projectId, String tagsetId, String branch) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
+			
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+			localGitRepoManager.checkout(branch, false);
 			localGitRepoManager.rebase(Constants.MASTER);
+		}
+	}
+
+	public String addAllAndCommit(String projectId, String tagsetId, String commitMsg) throws Exception {
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
+			
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);		
+
+			String tagsetRevision = localGitRepoManager.addAllAndCommit(
+					commitMsg,
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
+				
+			return tagsetRevision;
 		}
 	}
 }

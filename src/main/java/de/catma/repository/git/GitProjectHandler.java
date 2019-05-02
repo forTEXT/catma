@@ -757,8 +757,20 @@ public class GitProjectHandler {
 		}	
 	}
 	
-	
 	public String addTagsetToStagedAndCommit(String tagsetId, String commitMsg) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			GitTagsetHandler gitTagsetHandler = 
+					new GitTagsetHandler(
+						localGitRepoManager, 
+						this.remoteGitServerManager,
+						this.credentialsProvider);
+			
+			return gitTagsetHandler.addAllAndCommit(projectId, tagsetId, commitMsg);
+		}		
+	}
+	
+	public String addTagsetSubmoduleToStagedAndCommit(String tagsetId, String commitMsg) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			Path relativePath = Paths.get(TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId);
 			// open the project root repo
@@ -1167,9 +1179,7 @@ public class GitProjectHandler {
 			TagDefinition tagDefinition = tagConflict.getResolvedTagDefinition();
 			gitTagsetHandler.createOrUpdateTagDefinition(
 					projectId, tagsetId, tagDefinition);
-			gitTagsetHandler.checkout(
-					projectId, tagsetId, 
-					JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, true);		
+
 		}		
 	}
 
@@ -1211,9 +1221,18 @@ public class GitProjectHandler {
 					this.remoteGitServerManager,
 					this.credentialsProvider);
 
-			gitTagsetHandler.checkout(tagsetId, tagsetId, JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, false);
-			gitTagsetHandler.rebaseToMaster();
+			gitTagsetHandler.checkout(projectId, tagsetId, JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, false);
+			gitTagsetHandler.rebaseToMaster(projectId, tagsetId, JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH);
 		}		
+	}
+
+	public void initAndUpdateSubmodules() throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.initAndUpdateSubmodules(credentialsProvider);
+		}		
+		
 	}
 
 }

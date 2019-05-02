@@ -403,23 +403,26 @@ public class TPGraphProjectIndexer implements Indexer {
 			if ((propertyV != null) && (annoPropertyV != null)) {
 				@SuppressWarnings("unchecked")
 				List<String> propertyValues = (List<String>) annoPropertyV.property("values").value();
-				String propertyDefinitionId = (String)annoPropertyV.property("uuid").value();
+				String annoPropertyDefinitionId = (String)annoPropertyV.property("uuid").value();
 				String propertyName = (String)propertyV.property("name").value();
+				String propertyDefinitionId = (String)propertyV.property("uuid").value();
 				
-				for (String propValue : propertyValues) {
-					if (propertyValueFilter.testValue(propValue)) {
-						result.add(
-							new TagQueryResultRow(
-								documentId, 
-								rangeList, 
-								collectionId, 
-								tagId,
-								tagPath,
-								"", //TODO: Version
-								tagInstanceId,
-								propertyDefinitionId,
-								propertyName,
-								propValue));
+				if (annoPropertyDefinitionId.equals(propertyDefinitionId)) {
+					for (String propValue : propertyValues) {
+						if (propertyValueFilter.testValue(propValue)) {
+							result.add(
+								new TagQueryResultRow(
+									documentId, 
+									rangeList, 
+									collectionId, 
+									tagId,
+									tagPath,
+									"", //TODO: Version
+									tagInstanceId,
+									annoPropertyDefinitionId,
+									propertyName,
+									propValue));
+						}
 					}
 				}
 			}

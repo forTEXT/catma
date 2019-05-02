@@ -18175,3 +18175,20 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .annotation-conflict-view-button-panel {
 	flex-grow: 1;
 }
+
+.catma .tag-conflict-view {
+	flex-grow: 1;
+}
+
+.catma .tag-conflict-view-property-grid-margin {
+	margin-bottom: 5px;
+}
+
+.catma .tag-conflict-view-comparison-panel {
+	flex-grow: 1;
+	align-items: center;
+}
+
+.catma .tag-conflict-view-button-panel {
+	flex-grow: 1;
+}

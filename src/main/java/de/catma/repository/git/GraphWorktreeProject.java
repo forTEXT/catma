@@ -157,6 +157,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 						() -> gitProjectHandler.getDocuments(),
 						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
 				printStatus();
+				gitProjectHandler.initAndUpdateSubmodules();
 				gitProjectHandler.ensureDevBranches();			
 				
 				initTagManagerListeners();
@@ -344,7 +345,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 			tagsetDefinition.getUuid(), 
 			String.format("Updated metadata of Tagset %1$s with ID %2$s", 
 					tagsetDefinition.getName(), tagsetDefinition.getUuid()));
@@ -377,7 +378,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 			tagsetDefinition.getUuid(), 
 			String.format(
 				"Added Property Definition %1$s with %2$s to Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
@@ -486,7 +487,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 			tagsetDefinition.getUuid(), 
 			String.format(
 				"Updated Property Definition %1$s with %2$s in Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
@@ -513,7 +514,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 			tagsetDefinition.getUuid(), 
 			String.format(
 				"Added Tag %1$s with ID %2$s to Tagset %3$s with ID %4$s",
@@ -539,7 +540,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 			tagsetDefinition.getUuid(), 
 			String.format(
 				"Updated Tag %1$s with ID %2$s in Tagset %3$s with ID %4$s",
@@ -585,7 +586,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 		// commit Project
 		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.addTagsetToStagedAndCommit(
+		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 				tagsetDefinition.getUuid(),
 				String.format(
 						"Removed Tag %1$s with ID %2$s "
@@ -1180,9 +1181,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 		Function<UserMarkupCollectionReference, String> collectionCcommitMsgProvider, 
 		String projectCommitMsg) {
 		try {
-			for (UserMarkupCollectionReference collectionRef : getSourceDocuments().stream()
+			List<UserMarkupCollectionReference> collectionRefs = 
+					getSourceDocuments().stream()
 					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
-					.collect(Collectors.toList())) {
+					.collect(Collectors.toList());
+			
+			for (UserMarkupCollectionReference collectionRef : collectionRefs) {
 				
 				gitProjectHandler.addAndCommitCollection(
 					collectionRef.getId(), 
@@ -1222,6 +1226,9 @@ public class GraphWorktreeProject implements IndexedRepository {
 					new GitConflictedProject(
 						projectReference,
 						gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
+		}
+		else {
+			gitProjectHandler.initAndUpdateSubmodules();
 		}
 	}
 }

@@ -21,10 +21,6 @@ import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.tagger.annotationpanel.AnnotatedTextProvider;
 
 public class AnnotationConflictView extends VerticalLayout {
-	public static interface ResolutionListener {
-		public void resolved();
-	}
-
 	private AnnotationConflict annotationConflict;
 	private CollectionConflict collectionConflict;
 	private TagManager tagManager;
