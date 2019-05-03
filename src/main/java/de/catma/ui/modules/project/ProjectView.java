@@ -325,6 +325,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    		            @Override
 		    		            public void ready(Repository project) {
 		    						initData();
+				    				Notification.show(
+					    					"Info", 
+					    					"Your Project has been synchronized!", 
+					    					Type.HUMANIZED_MESSAGE);		    						
 		    		            }
 		    		            
 		    		            @Override
@@ -337,10 +341,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    		                errorHandler.showAndLogError("error opening project", t);
 		    		            }
 		    		        });
-		    				Notification.show(
-		    					"Info", 
-		    					"Your Project has been synchronized!", 
-		    					Type.HUMANIZED_MESSAGE);
+
 	    				}
 	    				catch (Exception e) {
 	    					e.printStackTrace(); //TODO
@@ -358,6 +359,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                @Override
 	                public void ready(Repository project) {
 	    				initData();
+	    				Notification.show(
+		    					"Info", 
+		    					"Your Project has been synchronized!", 
+		    					Type.HUMANIZED_MESSAGE);	    				
 	                }
 	                
 	                @Override
@@ -991,6 +996,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	public void close() {
 		try {
+			this.eventBus.unregister(this);
 			if (project != null) {
 				if (collectionChangeListener != null) {
 					project.removePropertyChangeListener(

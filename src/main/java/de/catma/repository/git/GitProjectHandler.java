@@ -1002,12 +1002,14 @@ public class GitProjectHandler {
 								this.credentialsProvider);
 
 				for (Path collectionPath : paths) {
-					String collectionId = collectionPath.getFileName().toString();
-					Status status = gitCollectionHandler.getStatus(projectId, collectionId);
-					if (!status.getConflicting().isEmpty()) {
-						StatusPrinter.print("Collection #" +collectionId , status, System.out); 
-						return true;
-					}					
+					if (collectionPath.toFile().list().length > 0) { // not empty
+						String collectionId = collectionPath.getFileName().toString();
+						Status status = gitCollectionHandler.getStatus(projectId, collectionId);
+						if (!status.getConflicting().isEmpty()) {
+							StatusPrinter.print("Collection #" +collectionId , status, System.out); 
+							return true;
+						}					
+					}
 				}
 				
 			}

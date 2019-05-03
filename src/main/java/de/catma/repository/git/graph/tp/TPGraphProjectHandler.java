@@ -94,38 +94,46 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	public void ensureProjectRevisionIsLoaded(String revisionHash, TagManager tagManager,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
 			CollectionsSupplier collectionsSupplier) throws Exception {
-		logger.info("Start loading " + projectReference.getName() + " " + projectReference.getProjectId());
-		Vertex userV = graph.addVertex(nt(User));
-		userV.property("userId", user.getIdentifier());
 		
-		Vertex projectV = graph.addVertex(nt(Project));
-		projectV.property("propertyId", projectReference.getProjectId());
-		
-		userV.addEdge(rt(hasProject), projectV);
-		
-		Vertex projectRevV = graph.addVertex(nt(ProjectRevision));
-		projectRevV.property("revisionHash", revisionHash);
-		
-		projectV.addEdge(rt(hasRevision), projectRevV);
-		
-		List<TagsetDefinition> tagsets = tagsetsSupplier.get();
-		tagManager.load(tagsets);
-		
-		this.tagManager = tagManager;
-		
-		for (TagsetDefinition tagset : tagsets) {
-			Vertex tagsetV = addTagset(projectRevV, tagset);
-			addHasParentRelations(tagsetV, tagset);
-		}
-		
-		for (SourceDocument document : documentsSupplier.get()) {
-			addDocument(projectRevV, document);
-		}
+		GraphTraversalSource g = graph.traversal();
 
-		for (UserMarkupCollection collection : collectionsSupplier.get(tagManager.getTagLibrary())) {
-			addCollection(revisionHash, revisionHash, collection);
+		if (!g.V().has(nt(ProjectRevision), "revisionHash", revisionHash).hasNext()) {
+			((TinkerGraph)graph).clear();
+			
+			logger.info("Start loading " + projectReference.getName() + " " + projectReference.getProjectId());
+			Vertex userV = graph.addVertex(nt(User));
+			userV.property("userId", user.getIdentifier());
+			
+			Vertex projectV = graph.addVertex(nt(Project));
+			projectV.property("propertyId", projectReference.getProjectId());
+			
+			userV.addEdge(rt(hasProject), projectV);
+			
+			Vertex projectRevV = graph.addVertex(nt(ProjectRevision));
+			projectRevV.property("revisionHash", revisionHash);
+			
+			projectV.addEdge(rt(hasRevision), projectRevV);
+			
+			List<TagsetDefinition> tagsets = tagsetsSupplier.get();
+			tagManager.load(tagsets);
+			
+			this.tagManager = tagManager;
+			
+			for (TagsetDefinition tagset : tagsets) {
+				Vertex tagsetV = addTagset(projectRevV, tagset);
+				addHasParentRelations(tagsetV, tagset);
+			}
+			
+			for (SourceDocument document : documentsSupplier.get()) {
+				addDocument(projectRevV, document);
+			}
+
+			for (UserMarkupCollection collection : collectionsSupplier.get(tagManager.getTagLibrary())) {
+				addCollection(revisionHash, revisionHash, collection);
+			}
+			logger.info("Finished loading " + projectReference.getName() + " " + projectReference.getProjectId());
+			
 		}
-		logger.info("Finished loading " + projectReference.getName() + " " + projectReference.getProjectId());
 	}
 
 	private void addHasParentRelations(Vertex tagsetV, TagsetDefinition tagset) {

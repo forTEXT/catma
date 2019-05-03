@@ -86,8 +86,8 @@
 		<dependency org="javax.annotation" name="javax.annotation-api" rev="1.3.1"/>
 
 		<!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
-		<dependency org="org.eclipse.jgit" name="org.eclipse.jgit" rev="4.8.0.201706111038-r"/> 
-		<!--<dependency org="org.eclipse.jgit" name="org.eclipse.jgit" rev="5.4.0-SNAPSHOT"/>-->
+		<!--<dependency org="org.eclipse.jgit" name="org.eclipse.jgit" rev="4.8.0.201706111038-r"/> --> 
+		<dependency org="org.eclipse.jgit" name="org.eclipse.jgit" rev="4.11.8.201904181247-r"/>
 
 		<!-- https://mvnrepository.com/artifact/org.gitlab4j/gitlab4j-api -->
 		<dependency org="org.gitlab4j" name="gitlab4j-api" rev="4.7.15"/>

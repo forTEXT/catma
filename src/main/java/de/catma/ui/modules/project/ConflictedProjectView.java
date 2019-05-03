@@ -111,7 +111,7 @@ public class ConflictedProjectView extends HugeCard {
 				
 				conflictedProject.resolveRootConflicts();
 				
-				eventBus.post(new RouteToProjectEvent(conflictedProject.getProjectReference()));
+				eventBus.post(new RouteToProjectEvent(conflictedProject.getProjectReference(), true));
 			}
 		}
 		catch (Exception e) {

@@ -160,10 +160,16 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if(isNewTarget(routeToProjectEvent.getClass())) {
 			if (this.projectView == null) {
-				this.projectView = new ProjectView(projectManager, eventBus, remoteGitManagerRestricted );
+				this.projectView = new ProjectView(projectManager, eventBus, remoteGitManagerRestricted);
+				setContent(projectView);
 				this.projectView.setProjectReference(routeToProjectEvent.getProjectReference());
 			}
-	    	setContent(projectView);
+			else {
+				setContent(projectView);
+				if (routeToProjectEvent.isReloadProject()) {
+					this.projectView.setProjectReference(routeToProjectEvent.getProjectReference());
+				}
+			}
 	    	currentRoute = routeToProjectEvent.getClass();
 		}
 	}

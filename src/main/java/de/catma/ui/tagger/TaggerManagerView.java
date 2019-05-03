@@ -116,4 +116,9 @@ public class TaggerManagerView extends TabbedView {
 		taggerView.openUserMarkupCollection(userMarkupCollection);
 	}
 	
+	@Override
+	public void closeClosables() {
+		eventBus.unregister(this);
+		super.closeClosables();
+	}
 }

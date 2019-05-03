@@ -66,7 +66,7 @@ public class ProjectCard extends VerticalLayout  {
         labelDesc.setWidth("100%");
         preview.addComponents(labelDesc);
 
-        preview.addLayoutClickListener(evt -> eventBus.post(new RouteToProjectEvent(projectReference)));
+        preview.addLayoutClickListener(evt -> eventBus.post(new RouteToProjectEvent(projectReference, false)));
         addComponent(preview);
 
         HorizontalLayout descriptionBar = new HorizontalLayout();

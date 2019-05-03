@@ -595,6 +595,7 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	public void close() {
+		this.eventBus.unregister(this);
 		annotationPanel.close();
 		resourcePanel.close();
 		taggerContextMenu.close();

@@ -26,6 +26,7 @@ import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
+import org.eclipse.jgit.api.MergeCommand.FastForwardMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
@@ -38,6 +39,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
@@ -626,7 +628,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			} else {
 				mergeCommand.include(ObjectId.fromString(branch));
 			}
-
+//			mergeCommand.setStrategy(MergeStrategy.RECURSIVE);
+			
 			return mergeCommand.call();
 		}
 		catch (GitAPIException e) {

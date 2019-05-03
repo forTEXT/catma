@@ -43,7 +43,7 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
     }
 
     private void initActions(EventBus eventBus) {
-		btProject.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToProjectEvent(null)));
+		btProject.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToProjectEvent()));
 		btAnnotate.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnnotateEvent(null)));
 		btTags.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, null)); //TODO
 		btAnalyze.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnalyzeEvent(null, null)));

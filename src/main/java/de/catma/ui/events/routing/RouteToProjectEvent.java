@@ -10,12 +10,22 @@ import de.catma.project.ProjectReference;
 public class RouteToProjectEvent {
 
 	private final ProjectReference projectReference;
+	private boolean reloadProject;
 	
-	public RouteToProjectEvent(ProjectReference projectReference) {
+	public RouteToProjectEvent(ProjectReference projectReference, boolean reloadProject) {
 		this.projectReference = projectReference;
+		this.reloadProject = reloadProject;
 	}
 	
+	public RouteToProjectEvent() {
+		this(null, false);
+	}
+
 	public ProjectReference getProjectReference() {
 		return projectReference;
+	}
+	
+	public boolean isReloadProject() {
+		return reloadProject;
 	}
 }

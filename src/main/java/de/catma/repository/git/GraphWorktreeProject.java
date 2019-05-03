@@ -150,15 +150,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 							gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
 			}
 			else {
+				printStatus();
+				gitProjectHandler.initAndUpdateSubmodules();
+				gitProjectHandler.ensureDevBranches();			
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
 						rootRevisionHash,
 						tagManager,
 						() -> gitProjectHandler.getTagsets(),
 						() -> gitProjectHandler.getDocuments(),
 						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
-				printStatus();
-				gitProjectHandler.initAndUpdateSubmodules();
-				gitProjectHandler.ensureDevBranches();			
 				
 				initTagManagerListeners();
 				openProjectListener.ready(this);
@@ -889,20 +889,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 				collectionId, name, umcRevisionHash, 
 				sourceDocument, oldRootRevisionHash);
 			
-			UserMarkupCollectionReference reference = 
-					new UserMarkupCollectionReference(
-							collectionId, 
-							umcRevisionHash,
-							new ContentInfoSet(name),
-							sourceDocument.getID(),
-							sourceDocument.getRevisionHash());
-			
-			sourceDocument.addUserMarkupCollectionReference(reference);
-			
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.userMarkupCollectionChanged.name(),
 					null, new Pair<UserMarkupCollectionReference, SourceDocument>(
-							reference,sourceDocument));
+							sourceDocument.getUserMarkupCollectionReference(collectionId),sourceDocument));
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
@@ -1225,10 +1215,20 @@ public class GraphWorktreeProject implements IndexedRepository {
 			openProjectListener.conflictResolutionNeeded(
 					new GitConflictedProject(
 						projectReference,
-						gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
+						gitProjectHandler, 
+						documentId -> getSourceDocumentURI(documentId)));
 		}
 		else {
 			gitProjectHandler.initAndUpdateSubmodules();
+			gitProjectHandler.ensureDevBranches();		
+			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+			graphProjectHandler.ensureProjectRevisionIsLoaded(
+					rootRevisionHash,
+					tagManager,
+					() -> gitProjectHandler.getTagsets(),
+					() -> gitProjectHandler.getDocuments(),
+					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
+			openProjectListener.ready(this);
 		}
 	}
 }
