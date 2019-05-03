@@ -174,9 +174,9 @@ public class SingleItem implements TreeRowItem {
 				builder.append(" class=\"annotation-details-tag-color\"");
 				builder.append(" style=\"");
 				builder.append(" background-color:");
-				builder.append("#ff5733");
+				builder.append("#cacfd2");
 				builder.append(";");
-				builder.append(" color: 33ffe0");
+				builder.append(" color: cacfd2");
 				builder.append(";");
 				builder.append("\">");
 				
@@ -187,7 +187,7 @@ public class SingleItem implements TreeRowItem {
 									));
 
 				
-				builder.append(""+getContext());
+				
 				builder.append("</span>");	
 				builder.append(
 						Cleaner.clean(getForward()));
