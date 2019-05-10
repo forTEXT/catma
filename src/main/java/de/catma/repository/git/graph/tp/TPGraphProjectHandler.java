@@ -405,6 +405,9 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			throws Exception {
 		GraphTraversalSource g = graph.traversal();
 
+		Vertex v = g.V().hasLabel(nt(ProjectRevision)).next();
+		System.out.println(v);
+		System.out.println(v.property("revisionHash").value());
 		Vertex projectRevV = 
 			g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash).next();
 		projectRevV.property("revisionHash", rootRevisionHash);
@@ -669,7 +672,9 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	public void updateCollection(String rootRevisionHash, UserMarkupCollectionReference collectionRef,
 			String oldRootRevisionHash) throws Exception {
 		GraphTraversalSource g = graph.traversal();
+
 		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		.next()
 		.property("revisionHash", rootRevisionHash);
 		
 		// the collection itself has currently no indexed fields so there is no updated to be done

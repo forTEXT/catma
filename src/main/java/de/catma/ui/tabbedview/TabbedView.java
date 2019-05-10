@@ -134,6 +134,10 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 	public void onTabClose(TabSheet tabsheet, Component tabContent) {
 		tabsheet.removeComponent(tabContent);
 		((ClosableTab) tabContent).close();
+		
+		if ((lastTab != null) && lastTab.equals(tabContent)) {
+			lastTab = null;
+		}
 
 		if (tabsheet.getComponentCount() == 0) {
 			tabSheet.setTabsVisible(false);

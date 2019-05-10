@@ -119,13 +119,17 @@ public class ResourcePanel extends VerticalLayout {
 			TagsetDefinition tagset = (TagsetDefinition)newValue;
 			tagsetData.refreshItem(tagset);
 		}
+		
+    	if (resourceSelectionListener != null) {
+    		resourceSelectionListener.tagsetsSelected(getSelectedTagsets());
+    	}
 	}    
 	@SuppressWarnings("unchecked")
 	private void handleCollectionChange(PropertyChangeEvent evt) {
     	
     	Object oldValue = evt.getOldValue();
     	Object newValue = evt.getNewValue();
-    	
+
     	if (oldValue == null) { // creation
 			Pair<UserMarkupCollectionReference, SourceDocument> creationResult = 
     				(Pair<UserMarkupCollectionReference, SourceDocument>) newValue;
@@ -146,10 +150,10 @@ public class ResourcePanel extends VerticalLayout {
 				Type.TRAY_NOTIFICATION);
     	}
     	else if (newValue == null) { // removal
-    		//TODO:
+    		documentTree.getDataProvider().refreshAll();
     	}
     	else { // metadata update
-    		//TODO:
+    		documentTree.getDataProvider().refreshAll();
     	}
     	
 	}
@@ -343,18 +347,20 @@ public class ResourcePanel extends VerticalLayout {
 	}
 	
 	private void handleVisibilityClicItem(DocumentTreeItem selectedItem) {
-		selectedItem.setSelected(!selectedItem.isSelected());
-		
-		if (selectedItem.isSingleSelection()) {
-			for (DocumentTreeItem item : documentsData.getRootItems()) {
-				if (!item.equals(selectedItem)) {
-					item.setSelected(false);
+		if (!selectedItem.isSelected()) {
+			selectedItem.setSelected(!selectedItem.isSelected());
+			
+			if (selectedItem.isSingleSelection()) {
+				for (DocumentTreeItem item : documentsData.getRootItems()) {
+					if (!item.equals(selectedItem)) {
+						item.setSelected(false);
+					}
 				}
-			}
-		}		
-		documentTree.getDataProvider().refreshAll();
-		
-		selectedItem.fireSelectedEvent(this.resourceSelectionListener);		
+			}		
+			documentTree.getDataProvider().refreshAll();
+			
+			selectedItem.fireSelectedEvent(this.resourceSelectionListener);
+		}
 	}
 	
 	public void selectCollectionVisible(String collectionId) {

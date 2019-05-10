@@ -46,6 +46,7 @@ import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -232,8 +233,29 @@ public class AnnotationPanel extends VerticalLayout {
 			RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);		
 	}
 
+	@SuppressWarnings("unchecked")
 	private void handleCollectionChange(PropertyChangeEvent evt) {
-		//TODO: does this make sense?
+		
+		Object newValue = evt.getNewValue();
+		Object oldValue= evt.getOldValue();
+		
+		if (newValue == null) {
+			removeCollection((UserMarkupCollection) oldValue);
+		}
+		else if (oldValue == null) {
+			try {
+				addCollection(project.getUserMarkupCollection(
+					((Pair<UserMarkupCollectionReference, SourceDocument>)newValue).getFirst()));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else {
+			currentEditableCollectionBox.getDataProvider().refreshAll();				
+		}
+		
+		
 		
 	}
 
@@ -880,6 +902,7 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 	
 	public void close() {
+		annotationDetailsPanel.close();
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged, 
 				propertyDefinitionChangedListener);	
@@ -913,6 +936,48 @@ public class AnnotationPanel extends VerticalLayout {
 		}
 		annotationDetailsPanel.addAnnotations(annotations);
 		
+	}
+	
+	public List<TagReference> getVisibleTagReferences(Collection<TagReference> tagReferences) {
+		return tagReferences.stream().filter(tagRef -> isVisible(tagRef)).collect(Collectors.toList());
+	}
+
+	private boolean isVisible(TagReference tagRef) {
+
+		String tagId = tagRef.getTagDefinitionId();
+		
+		for (TagsetTreeItem tagsetTreeItem : tagsetData.getRootItems()) {
+			if (tagsetTreeItem instanceof TagsetDataItem) {
+				boolean visible = tagsetTreeItem.isVisible();
+				TagsetDefinition tagset = ((TagsetDataItem)tagsetTreeItem).getTagset();
+				if (tagset.hasTagDefinition(tagId)) {
+					if (visible) {
+						return true;
+					}
+					else {
+						TagsetTreeItem tagItem = findTagItem(tagsetTreeItem, tagId);
+						if (tagItem != null) {
+							return tagItem.isVisible();
+						}
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	private TagsetTreeItem findTagItem(TagsetTreeItem parentItem, String tagId) {
+		for (TagsetTreeItem item : tagsetData.getChildren(parentItem)) {
+			if ((item instanceof TagDataItem) && ((TagDataItem)item).getTag().getUuid().equals(tagId)) {
+				return item;
+			}
+			
+			findTagItem(item, tagId);
+		}
+		
+		
+		return null;
 	}
 
 	public void removeAnnotations(Collection<String> annotationIds) {

@@ -408,6 +408,14 @@ public class TaggerView extends HorizontalLayout
 				try {
 					annotationPanel.setTagsets(tagsets);
 					taggerContextMenu.setTagsets(tagsets);
+					for (UserMarkupCollection collection : userMarkupCollectionManager.getUserMarkupCollections()) {
+						tagger.setVisible(collection.getTagReferences(), false);
+						List<TagReference> visibleRefs = 
+								annotationPanel.getVisibleTagReferences(collection.getTagReferences());
+						if (!visibleRefs.isEmpty()) {
+							tagger.setVisible(visibleRefs, true);
+						}						
+					}
 				}
 				catch (Exception e) {
 					errorHandler.showAndLogError("Error handling Tagset!", e);
@@ -435,10 +443,16 @@ public class TaggerView extends HorizontalLayout
 			if (selected) {
 				userMarkupCollectionManager.add(collection);
 				annotationPanel.addCollection(collection);
+				List<TagReference> visibleRefs = 
+					annotationPanel.getVisibleTagReferences(collection.getTagReferences());
+				if (!visibleRefs.isEmpty()) {
+					tagger.setVisible(visibleRefs, true);
+				}
 			}
 			else {
 				userMarkupCollectionManager.remove(collectionReference.getId());
 				annotationPanel.removeCollection(collectionReference.getId());
+				tagger.setVisible(collection.getTagReferences(), false);
 			}
 			
 		}

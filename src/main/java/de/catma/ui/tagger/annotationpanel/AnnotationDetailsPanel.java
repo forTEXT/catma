@@ -181,6 +181,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 
 	public void setDocument(SourceDocument document) throws IOException {
 		this.kwicProvider = new KwicProvider(document);
+		handleClearSelected();
 	}
 	
 	private void initComponents() {
@@ -394,22 +395,26 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	}
 	
 	public void close() {
+		annotationSelectionListener = null;
 		if (project != null) {
 			if (annotationPropertiesChangedListener != null) {
 				project.removePropertyChangeListener(
 					RepositoryChangeEvent.propertyValueChanged, annotationPropertiesChangedListener);
+				annotationPropertiesChangedListener = null;
 			}
 			
 			if (propertyDefinitionChangedListener != null) {
 				project.getTagManager().removePropertyChangeListener(
 						TagManagerEvent.userPropertyDefinitionChanged, 
 						propertyDefinitionChangedListener);					
+				propertyDefinitionChangedListener = null;
 			}
 			
 			if (tagChangedListener != null) {
 				project.getTagManager().removePropertyChangeListener(
 						TagManagerEvent.tagDefinitionChanged, 
-						tagChangedListener);				
+						tagChangedListener);			
+				tagChangedListener = null;
 			}
 		}
 	}

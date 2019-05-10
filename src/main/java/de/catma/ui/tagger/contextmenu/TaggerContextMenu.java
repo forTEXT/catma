@@ -153,7 +153,7 @@ public class TaggerContextMenu {
 				+ tag.getName();
 	}
 
-	public void addTagset(TagsetDefinition tagset) {
+	private void addTagset(TagsetDefinition tagset) {
 		MenuItem tagsetItem = contextMenu.addItem(tagset.getName(), VaadinIcons.TAGS, null);
 		entryToMenuItemMap.put(tagset, tagsetItem);
 		

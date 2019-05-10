@@ -646,6 +646,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		try {
+			for (PropertyChangeListener listener : this.propertyChangeSupport.getPropertyChangeListeners()) {
+				this.propertyChangeSupport.removePropertyChangeListener(listener);
+			}
+			this.propertyChangeSupport = null;
+		}
+		catch (Exception e) {
+			e.printStackTrace(); //TODO:
+		}
 	}
 
 	@Override
