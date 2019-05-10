@@ -980,11 +980,13 @@ public class GitProjectHandler {
 						.filter(tagsetPath -> !tagsetsDirPath.equals(tagsetPath))
 						.collect(Collectors.toList());
 				for (Path tagsetPath : paths) {
-					String tagsetId = tagsetPath.getFileName().toString();						 
-					Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
-					if (!status.getConflicting().isEmpty()) {
-						StatusPrinter.print("Tagset #" +tagsetId , status, System.out); 
-						return true;
+					if (tagsetPath.toFile().list().length > 0) { // empty directories are submodules not yet initialized 
+						String tagsetId = tagsetPath.getFileName().toString();						 
+						Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
+						if (!status.getConflicting().isEmpty()) {
+							StatusPrinter.print("Tagset #" +tagsetId , status, System.out); 
+							return true;
+						}
 					}
 				}
 			}
@@ -1002,7 +1004,7 @@ public class GitProjectHandler {
 								this.credentialsProvider);
 
 				for (Path collectionPath : paths) {
-					if (collectionPath.toFile().list().length > 0) { // not empty
+					if (collectionPath.toFile().list().length > 0) { // empty directories are submodules not yet initialized 
 						String collectionId = collectionPath.getFileName().toString();
 						Status status = gitCollectionHandler.getStatus(projectId, collectionId);
 						if (!status.getConflicting().isEmpty()) {

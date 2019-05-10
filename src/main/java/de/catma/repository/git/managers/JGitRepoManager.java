@@ -628,7 +628,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			} else {
 				mergeCommand.include(ObjectId.fromString(branch));
 			}
-//			mergeCommand.setStrategy(MergeStrategy.RECURSIVE);
 			
 			return mergeCommand.call();
 		}
