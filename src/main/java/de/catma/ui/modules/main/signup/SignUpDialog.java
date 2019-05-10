@@ -138,9 +138,9 @@ public class SignUpDialog extends Window {
 		        qs.addParam("token", token);
 		        
 		        Email email = new SimpleEmail();
-		        email.setHostName("mx.bsdsystems.de");
+		        email.setHostName("hostname-from-props");
 		        email.setSmtpPort(587);
-		        email.setAuthenticator(new DefaultAuthenticator("db", "huk4uisweak"));
+		        email.setAuthenticator(new DefaultAuthenticator("username-from-props", "passwd-from-properties"));
 		        email.setStartTLSEnabled(true);
 		        email.setFrom("catma@nipsi.de");
 		        email.setSubject("Catma activation");
