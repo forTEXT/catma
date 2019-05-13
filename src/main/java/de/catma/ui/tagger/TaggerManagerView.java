@@ -27,6 +27,8 @@ import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.event.ChangeType;
+import de.catma.document.repository.event.DocumentChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
@@ -51,7 +53,26 @@ public class TaggerManagerView extends TabbedView {
 		String caption = taggerView.getSourceDocument()==null?"N/A":taggerView.getSourceDocument().toString();
 		setCaption(taggerView, caption);
 	}
+	
+    @Subscribe
+    public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
 
+		if (documentChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
+				TaggerView taggerView = 
+						getTaggerView(documentChangeEvent.getDocument());
+			if (taggerView != null) {
+				onTabClose(taggerView);
+			}
+		}
+		else if (documentChangeEvent.getChangeType().equals(ChangeType.UPDATED)) {
+			SourceDocument document = documentChangeEvent.getDocument();
+			TaggerView taggerView = getTaggerView(document);
+			if (taggerView != null) {
+				taggerView.setSourceDocument(document);
+			}
+		}    
+    }
+    
 	public TaggerView openSourceDocument(
 			final SourceDocument sourceDocument, Repository repository) {
 
@@ -62,34 +83,6 @@ public class TaggerManagerView extends TabbedView {
 		else {
 			taggerView = new TaggerView(
 					nextTaggerID++, sourceDocument, repository,
-					new PropertyChangeListener() {
-						
-						public void propertyChange(PropertyChangeEvent evt) {
-
-							if (evt.getNewValue() == null) { //remove
-								SourceDocument sd = (SourceDocument) evt.getOldValue();
-								if (sd.getID().equals(sourceDocument.getID())) {
-									TaggerView taggerView = 
-											getTaggerView(sourceDocument);
-									if (taggerView != null) {
-										onTabClose(taggerView);
-									}
-								}
-							}
-							else if (evt.getOldValue() != null) { //update
-								String sdID = (String) evt.getOldValue();
-								if (sdID.equals(sourceDocument.getID())) {
-									TaggerView taggerView = 
-											getTaggerView(sourceDocument);
-									if (taggerView != null) {
-										taggerView.setSourceDocument(
-												(SourceDocument) evt.getNewValue());
-									}
-								}								
-							}
-							
-						}
-					},
 					eventBus);
 			addClosableTab(taggerView, sourceDocument.toString());
 			setSelectedTab(taggerView);

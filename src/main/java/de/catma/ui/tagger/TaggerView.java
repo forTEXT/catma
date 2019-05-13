@@ -107,7 +107,6 @@ public class TaggerView extends HorizontalLayout
 	private Button btAnalyze;
 	private Button btHelp;
 	private Repository project;
-	private PropertyChangeListener sourceDocChangedListener;
 	private PagerComponent pagerComponent;
 	private Slider linesPerPageSlider;
 	private double totalLineCount;
@@ -131,13 +130,11 @@ public class TaggerView extends HorizontalLayout
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, Repository project, 
-			PropertyChangeListener sourceDocChangedListener,
 			EventBus eventBus){
 		this.tagManager = project.getTagManager();
 		this.project = project;
 		this.sourceDocument = sourceDocument;
 		this.eventBus = eventBus;
-		this.sourceDocChangedListener = sourceDocChangedListener;
 		
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 		this.userMarkupCollectionManager = new UserMarkupCollectionManager(project);
@@ -184,10 +181,6 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	private void initListeners() {
-		project.addPropertyChangeListener(
-			RepositoryChangeEvent.sourceDocumentChanged,
-			sourceDocChangedListener);
-		
 		this.tagReferencesChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -575,7 +568,7 @@ public class TaggerView extends HorizontalLayout
 		splitPanel.addListener(SplitterPositionChangedEvent.class,
                 listener, SplitterPositionChangedListener.positionChangedMethod);
 		
-		resourcePanel = new ResourcePanel(project, sourceDocument); 
+		resourcePanel = new ResourcePanel(project, sourceDocument, eventBus); 
 		SliderPanel drawer = new SliderPanelBuilder(resourcePanel)
 				.mode(SliderMode.LEFT).expanded(false).build();
 		
@@ -614,9 +607,6 @@ public class TaggerView extends HorizontalLayout
 		resourcePanel.close();
 		taggerContextMenu.close();
 		project.removePropertyChangeListener(
-				RepositoryChangeEvent.sourceDocumentChanged,
-				sourceDocChangedListener);
-		project.removePropertyChangeListener(
 				RepositoryChangeEvent.tagReferencesChanged, 
 				tagReferencesChangedListener);
 		project.removePropertyChangeListener(
@@ -626,7 +616,6 @@ public class TaggerView extends HorizontalLayout
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);
 				
-		sourceDocChangedListener = null;
 		project = null;
 	}
 	

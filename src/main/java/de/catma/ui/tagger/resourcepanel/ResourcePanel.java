@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
@@ -30,6 +32,9 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.repository.event.ChangeType;
+import de.catma.document.repository.event.CollectionChangeEvent;
+import de.catma.document.repository.event.DocumentChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -50,17 +55,19 @@ public class ResourcePanel extends VerticalLayout {
 	private Grid<TagsetDefinition> tagsetGrid;
 	private ResourceSelectionListener resourceSelectionListener;
 	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
-	private PropertyChangeListener collectionChangeListener;
 	private PropertyChangeListener projectExceptionListener;
 	private ErrorHandler errorHandler;
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent;
+	private EventBus eventBus;
 
-	public ResourcePanel(Repository project, SourceDocument currentlySelectedSourceDocument) {
+	public ResourcePanel(Repository project, SourceDocument currentlySelectedSourceDocument, EventBus eventBus) {
 		super();
 		this.project = project;
         this.errorHandler = (ErrorHandler)UI.getCurrent();
+        this.eventBus = eventBus;
+        eventBus.register(this);
         initProjectListeners();
 		
 		initComponents();
@@ -80,17 +87,6 @@ public class ResourcePanel extends VerticalLayout {
 		};
 		project.addPropertyChangeListener(
 				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
-		
-        this.collectionChangeListener = new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				handleCollectionChange(evt);
-			}
-		};
-		
-		project.addPropertyChangeListener(
-			RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);
 		
 		this.tagsetChangeListener = new PropertyChangeListener() {
 			
@@ -123,19 +119,16 @@ public class ResourcePanel extends VerticalLayout {
     	if (resourceSelectionListener != null) {
     		resourceSelectionListener.tagsetsSelected(getSelectedTagsets());
     	}
-	}    
-	@SuppressWarnings("unchecked")
-	private void handleCollectionChange(PropertyChangeEvent evt) {
-    	
-    	Object oldValue = evt.getOldValue();
-    	Object newValue = evt.getNewValue();
+	} 
+	
+	@Subscribe
+	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
+		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
+			
+    		SourceDocument document = collectionChangeEvent.getDocument();
+    		UserMarkupCollectionReference collectionReference = 
+    				collectionChangeEvent.getCollectionReference();
 
-    	if (oldValue == null) { // creation
-			Pair<UserMarkupCollectionReference, SourceDocument> creationResult = 
-    				(Pair<UserMarkupCollectionReference, SourceDocument>) newValue;
-    		
-    		SourceDocument document = creationResult.getSecond();
-    		UserMarkupCollectionReference collectionReference = creationResult.getFirst();
     		
 			CollectionDataItem collectionDataItem = new CollectionDataItem(collectionReference);
 			DocumentDataItem documentDataItem = new DocumentDataItem(document, true);
@@ -149,14 +142,12 @@ public class ResourcePanel extends VerticalLayout {
 				String.format("Collection %1$s has been created!", collectionReference.toString()),  
 				Type.TRAY_NOTIFICATION);
     	}
-    	else if (newValue == null) { // removal
+    	else {
     		documentTree.getDataProvider().refreshAll();
     	}
-    	else { // metadata update
-    		documentTree.getDataProvider().refreshAll();
-    	}
-    	
 	}
+	
+	
 
 	private void initActions() {
 		documentActionGridComponent.getActionGridBar().addBtnAddClickListener(
@@ -230,10 +221,16 @@ public class ResourcePanel extends VerticalLayout {
 			documentsData = new TreeData<>();
 			
 			Collection<SourceDocument> documents = project.getSourceDocuments(); 
+			if ((currentlySelectedSourceDocument == null) && !documents.isEmpty()){
+				currentlySelectedSourceDocument = documents.iterator().next();
+			}
+			
+			final SourceDocument preselection = currentlySelectedSourceDocument;
+			
 			documentsData.addRootItems(
 				documents
 				.stream()
-				.map(document -> new DocumentDataItem(document, document.equals(currentlySelectedSourceDocument))));
+				.map(document -> new DocumentDataItem(document, document.equals(preselection))));
 			
 			for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
 				for (UserMarkupCollectionReference umcRef : 
@@ -386,17 +383,39 @@ public class ResourcePanel extends VerticalLayout {
 		this.resourceSelectionListener = resourceSelectionListener;
 	}
 	
+    @Subscribe
+    public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
+    	SourceDocument currentlySelectedDocument = getSelectedDocument();
+    	SourceDocument nextSelectedDocument = null;
+    	if ((currentlySelectedDocument != null)
+    			&& !(documentChangeEvent.getChangeType().equals(ChangeType.DELETED)
+    					&& documentChangeEvent.getDocument().equals(currentlySelectedDocument))) {
+    		nextSelectedDocument = currentlySelectedDocument;
+    	}
+    	
+    	initData(nextSelectedDocument);
+    }
+    
+    public SourceDocument getSelectedDocument() {
+    	for (DocumentTreeItem documentTreeItem : documentsData.getRootItems()) {
+    		if ((documentTreeItem instanceof DocumentDataItem) && documentTreeItem.isSelected()) {
+    			return ((DocumentDataItem)documentTreeItem).getDocument();
+    		}
+    	}
+    	
+    	return null;
+    }
+	
 	public void close() {
 		if (project != null) {
 			project.removePropertyChangeListener(
 				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
-		
-			project.removePropertyChangeListener(
-				RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);
-			
+
 	        project.getTagManager().removePropertyChangeListener(
         		TagManagerEvent.tagsetDefinitionChanged,
         		tagsetChangeListener);
 		}
+		
+		eventBus.unregister(this);
 	}
 }

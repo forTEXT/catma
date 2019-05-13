@@ -17,6 +17,7 @@ import org.vaadin.dialogs.ConfirmDialog;
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
@@ -41,6 +42,8 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.repository.event.ChangeType;
+import de.catma.document.repository.event.CollectionChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -83,7 +86,6 @@ public class AnnotationPanel extends VerticalLayout {
 	private Button btMaximizeAnnotationDetailsRibbon;
 	private VerticalSplitPanel rightSplitPanel;
 	private UserMarkupCollectionManager collectionManager;
-	private PropertyChangeListener collectionChangeListener;
 
 	public AnnotationPanel(
 			Repository project, 
@@ -220,44 +222,29 @@ public class AnnotationPanel extends VerticalLayout {
 		project.getTagManager().addPropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged, 
 				propertyDefinitionChangedListener);	
-		
-        this.collectionChangeListener = new PropertyChangeListener() {
 			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				handleCollectionChange(evt);
-			}
-		};
-		
-		project.addPropertyChangeListener(
-			RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);		
 	}
 
-	@SuppressWarnings("unchecked")
-	private void handleCollectionChange(PropertyChangeEvent evt) {
-		
-		Object newValue = evt.getNewValue();
-		Object oldValue= evt.getOldValue();
-		
-		if (newValue == null) {
-			removeCollection((UserMarkupCollection) oldValue);
-		}
-		else if (oldValue == null) {
+	@Subscribe
+	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
+		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
+    		UserMarkupCollectionReference collectionReference = 
+    				collectionChangeEvent.getCollectionReference();
 			try {
-				addCollection(project.getUserMarkupCollection(
-					((Pair<UserMarkupCollectionReference, SourceDocument>)newValue).getFirst()));
+				addCollection(project.getUserMarkupCollection(collectionReference));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		else {
-			currentEditableCollectionBox.getDataProvider().refreshAll();				
+		else if (collectionChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
+			removeCollection(collectionChangeEvent.getCollectionReference().getId());
 		}
-		
-		
-		
+		else {
+			currentEditableCollectionBox.getDataProvider().refreshAll();	
+		}
 	}
+
 
 	private void initData() {
         try {
@@ -908,10 +895,7 @@ public class AnnotationPanel extends VerticalLayout {
 				propertyDefinitionChangedListener);	
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
-				tagChangedListener);
-		project.removePropertyChangeListener(
-				RepositoryChangeEvent.userMarkupCollectionChanged, 
-				collectionChangeListener);				
+				tagChangedListener);			
 	}
 	
 	private void setAnnotationDetailsPanelVisible(boolean visible) {

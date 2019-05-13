@@ -87,7 +87,8 @@ public class Vaadin8InitializationService implements InitializationService {
 					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					api,
 					(projectId) -> {}, //noop deletion handler
-					accuireBackgroundService());
+					accuireBackgroundService(),
+					injector.getInstance(EventBus.class));
 			return new MainView(projectManager, 
 					injector.getInstance(CatmaHeader.class), 
 					injector.getInstance(EventBus.class),

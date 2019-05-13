@@ -371,7 +371,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public Collection<SourceDocument> getDocuments(String rootRevisionHash) throws Exception {
 		GraphTraversalSource g = graph.traversal();
-
+		
 		return g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
 		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
 		.properties("document")
@@ -685,7 +685,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			String oldRootRevisionHash) throws Exception {
 		GraphTraversalSource g = graph.traversal();
 		
-		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
 		.property("revisionHash", rootRevisionHash)
 		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", collectionReference.getSourceDocumentId())
 		.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", collectionReference.getId())
@@ -703,7 +703,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 
 		GraphTraversalSource g = graph.traversal();
 		
-		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
 		.property("revisionHash", rootRevisionHash)
 		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", document.getID())
 		.store("toBeDropped")

@@ -25,11 +25,15 @@ import java.util.stream.Collectors;
 import org.eclipse.jgit.api.Status;
 
 import com.google.common.collect.Multimap;
+import com.google.common.eventbus.EventBus;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.repository.event.ChangeType;
+import de.catma.document.repository.event.CollectionChangeEvent;
+import de.catma.document.repository.event.DocumentChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -43,8 +47,6 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
-import de.catma.project.conflict.CollectionConflict;
-import de.catma.project.conflict.ConflictedProject;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
@@ -93,17 +95,20 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userDefinedPropertyChangedListener;
 	private Indexer indexer;
+	private EventBus eventBus;
 
 	public GraphWorktreeProject(User user,
 								GitProjectHandler gitProjectHandler,
 								ProjectReference projectReference,
 								TagManager tagManager,
-								BackgroundService backgroundService) {
+								BackgroundService backgroundService,
+								EventBus eventBus) {
 		this.user = user;
 		this.gitProjectHandler = gitProjectHandler;
 		this.projectReference = projectReference;
 		this.tagManager = tagManager;
 		this.backgroundService = backgroundService;
+		this.eventBus = eventBus;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = 
 			new TPGraphProjectHandler(
@@ -152,6 +157,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			else {
 				printStatus();
 				gitProjectHandler.initAndUpdateSubmodules();
+				gitProjectHandler.removeStaleSubmoduleDirectories();
 				gitProjectHandler.ensureDevBranches();			
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
 						rootRevisionHash,
@@ -176,14 +182,14 @@ public class GraphWorktreeProject implements IndexedRepository {
 			
 			StatusPrinter.print(projectReference.toString(), status, System.out);
 			
-			for (TagsetDefinition tagset : getTagsets()) {
+			for (TagsetDefinition tagset : gitProjectHandler.getTagsets()) {
 				status = gitProjectHandler.getStatus(tagset);
 				StatusPrinter.print(
 						"Tagset " + tagset.getName() + " #"+tagset.getUuid(), 
 						status, System.out);
 			}
 			
-			for (UserMarkupCollectionReference collectionRef : getSourceDocuments().stream()
+			for (UserMarkupCollectionReference collectionRef : gitProjectHandler.getDocuments().stream()
 					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
 					.collect(Collectors.toList())) {
 				
@@ -651,6 +657,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 				this.propertyChangeSupport.removePropertyChangeListener(listener);
 			}
 			this.propertyChangeSupport = null;
+			this.eventBus = null;
 		}
 		catch (Exception e) {
 			e.printStackTrace(); //TODO:
@@ -781,11 +788,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 				oldRootRevisionHash, this.rootRevisionHash,
 				sourceDocument,
 				getTokenizedSourceDocumentPath(sourceDocument.getID()));
-			
-			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.sourceDocumentChanged.name(),
-					null, sourceDocument.getID());
 
+	        eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.CREATED));
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -799,6 +803,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) {
 		// TODO Auto-generated method stub
 
+        eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.UPDATED));
 	}
 
 	@Override
@@ -826,6 +831,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		gitProjectHandler.removeDocument(sourceDocument);
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
 		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocument, oldRootRevisionHash);	
+        eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.DELETED));
 	}
 
 	@Override
@@ -897,11 +903,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 				rootRevisionHash, 
 				collectionId, name, umcRevisionHash, 
 				sourceDocument, oldRootRevisionHash);
-			
-			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.userMarkupCollectionChanged.name(),
-					null, new Pair<UserMarkupCollectionReference, SourceDocument>(
-							sourceDocument.getUserMarkupCollectionReference(collectionId),sourceDocument));
+
+			eventBus.post(
+				new CollectionChangeEvent(
+					sourceDocument.getUserMarkupCollectionReference(collectionId), 
+					sourceDocument, 
+					ChangeType.CREATED));
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
@@ -1004,9 +1011,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	@Deprecated
 	public void update(List<UserMarkupCollection> userMarkupCollections, TagsetDefinition tagsetDefinition) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -1027,16 +1033,24 @@ public class GraphWorktreeProject implements IndexedRepository {
 		
 		graphProjectHandler.updateCollection(
 			this.rootRevisionHash, collectionReference, oldRootRevisionHash);		
-
+		
+		SourceDocument document = getSourceDocument(collectionReference.getSourceDocumentId());
+		eventBus.post(
+			new CollectionChangeEvent(
+				collectionReference, document, ChangeType.UPDATED));
 	}
 
 	@Override
-	public void delete(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+	public void delete(UserMarkupCollectionReference collectionReference) throws Exception {
 		String oldRootRevisionHash = this.rootRevisionHash;
+		SourceDocument document = getSourceDocument(collectionReference.getSourceDocumentId());
 		
-		this.rootRevisionHash = gitProjectHandler.removeCollection(userMarkupCollectionReference);
+		this.rootRevisionHash = gitProjectHandler.removeCollection(collectionReference);
 		
-		graphProjectHandler.removeCollection(this.rootRevisionHash, userMarkupCollectionReference, oldRootRevisionHash);	
+		graphProjectHandler.removeCollection(this.rootRevisionHash, collectionReference, oldRootRevisionHash);	
+		eventBus.post(
+			new CollectionChangeEvent(
+				collectionReference, document, ChangeType.DELETED));
 	}
 
 	@Deprecated
@@ -1116,8 +1130,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	@Deprecated
 	public boolean isAuthenticationRequired() {
-		// TODO
 		return false;
 	}
 
@@ -1229,6 +1243,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		}
 		else {
 			gitProjectHandler.initAndUpdateSubmodules();
+			gitProjectHandler.removeStaleSubmoduleDirectories();
 			gitProjectHandler.ensureDevBranches();		
 			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			graphProjectHandler.ensureProjectRevisionIsLoaded(

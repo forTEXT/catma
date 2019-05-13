@@ -10,6 +10,8 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import com.google.common.eventbus.EventBus;
+
 import de.catma.Pager;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.Repository;
@@ -37,6 +39,7 @@ public class GitProjectManager implements ProjectManager {
 	private User user;
 	private GraphProjectDeletionHandler graphProjectDeletionHandler;
 	private final CredentialsProvider credentialsProvider;
+	private EventBus eventBus;
 
 	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_root";
 
@@ -48,12 +51,14 @@ public class GitProjectManager implements ProjectManager {
             String gitBasedRepositoryBasePath,
             IRemoteGitManagerRestricted remoteGitServerManager,
             GraphProjectDeletionHandler graphProjectDeletionHandler,
-            BackgroundService backgroundService)
+            BackgroundService backgroundService,
+            EventBus eventBus)
 					throws IOException {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = remoteGitServerManager;
 		this.graphProjectDeletionHandler = graphProjectDeletionHandler;
 		this.backgroundService = backgroundService;
+		this.eventBus = eventBus;
 		this.user = remoteGitServerManager.getUser();
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
 		this.credentialsProvider = 
@@ -175,7 +180,8 @@ public class GitProjectManager implements ProjectManager {
 							this.remoteGitServerManager),
 						projectReference,
 						new TagManager(tagLibrary),
-                        backgroundService);
+                        backgroundService,
+                        eventBus);
 			
 			
 

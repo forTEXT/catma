@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,6 @@ import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
-import org.eclipse.jgit.api.MergeCommand.FastForwardMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
@@ -39,7 +39,6 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
-import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
@@ -302,6 +301,26 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		else {
 			return headRevision.getName();
 		}
+	}
+	
+	@Override
+	public List<String> getSubmodulePaths() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't determine submodules from a detached instance");
+		}
+		try {
+			List<String> paths = new ArrayList<>();
+			SubmoduleWalk submoduleWalk = SubmoduleWalk.forIndex(this.gitApi.getRepository());
+			
+			while (submoduleWalk.next()) {
+				paths.add(submoduleWalk.getModulesPath());
+			}
+			
+			return paths;
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}			
 	}
 	
 	@Override

@@ -42,13 +42,15 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.repository.event.ChangeType;
+import de.catma.document.repository.event.CollectionChangeEvent;
+import de.catma.document.repository.event.DocumentChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
@@ -79,7 +81,6 @@ import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
-import de.catma.util.Pair;
 
 /**
  *
@@ -102,9 +103,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private Grid<TagsetDefinition> tagsetGrid;
 	private Grid<Member> teamGrid;
 	private ActionGridComponent<TreeGrid<Resource>> documentsGridComponent;
-	private PropertyChangeListener collectionChangeListener;
 	private PropertyChangeListener projectExceptionListener;
-	private PropertyChangeListener documentChangeListener;
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent;
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
@@ -134,21 +133,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				
 			}
 		};
-        this.collectionChangeListener = new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				handleCollectionChange(evt);
-			}
-		};
-		
-		this.documentChangeListener = new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				handleDocumentChange(evt);
-			}
-		};
-		
 		this.tagsetChangeListener = new PropertyChangeListener() {
 			
 			@Override
@@ -173,55 +157,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			tagsetData.refreshItem(tagset);
 		}
 	}
-
-	@SuppressWarnings("unchecked")
-	private void handleDocumentChange(PropertyChangeEvent evt) {
-		Object oldValue = evt.getOldValue();
-		Object newValue = evt.getNewValue();
-		try {
-			if (oldValue == null) { // creation
-				String sourceDocumentId = (String)newValue;
-				SourceDocument document = project.getSourceDocument(sourceDocumentId);
-			
-				TreeDataProvider<Resource> resourceDataProvider = 
-	    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
-
-				DocumentResource documentResource = new DocumentResource(document);
-				
-				resourceDataProvider.getTreeData().addItem(null, documentResource);
-				resourceDataProvider.refreshAll();
-				
-				Notification.show(
-					"Info", 
-					String.format("Document %1$s has been added!", document.toString()),  
-					Type.TRAY_NOTIFICATION);
-
-			}
-			else if (newValue == null) { // removal
-				//TODO
-			}
-			else { // metadata update
-				//TODO
-			}
-		}
-		catch (Exception e) {
-			errorHandler.showAndLogError("Error handling Document", e);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private void handleCollectionChange(PropertyChangeEvent evt) {
-    	
-    	Object oldValue = evt.getOldValue();
-    	Object newValue = evt.getNewValue();
-    	
-    	if (oldValue == null) { // creation
-			Pair<UserMarkupCollectionReference, SourceDocument> creationResult = 
-    				(Pair<UserMarkupCollectionReference, SourceDocument>) newValue;
+	
+	@Subscribe
+	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
+		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
+    		SourceDocument document = collectionChangeEvent.getDocument();
+    		UserMarkupCollectionReference collectionReference = 
+    				collectionChangeEvent.getCollectionReference();
     		
-    		SourceDocument document = creationResult.getSecond();
-    		UserMarkupCollectionReference collectionReference = creationResult.getFirst();
-    		
+			@SuppressWarnings("unchecked")
 			TreeDataProvider<Resource> resourceDataProvider = 
     				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
 
@@ -235,15 +179,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			Notification.show(
 				"Info", 
 				String.format("Collection %1$s has been created!", collectionReference.toString()),  
-				Type.TRAY_NOTIFICATION);
-    	}
-    	else if (newValue == null) { // removal
-    		//TODO:
-    	}
-    	else { // metadata update
-    		//TODO:
-    	}
-    	
+				Type.TRAY_NOTIFICATION);			
+		}
+		else {
+			initData();
+		}
 	}
 
 	private void initActions() {
@@ -562,26 +502,26 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
 							final SourceDocument sourceDocument = sdr.getSourceDocument();
 							
-							project.addPropertyChangeListener(
-								RepositoryChangeEvent.sourceDocumentChanged,
-								new PropertyChangeListener() {
-
-									@Override
-									public void propertyChange(PropertyChangeEvent evt) {
-										
-										if ((evt.getNewValue() == null)	|| (evt.getOldValue() != null)) {
-											return; // no insert
-										}
-										
-										String newSdId = (String) evt.getNewValue();
-										if (!sourceDocument.getID().equals(newSdId)) {
-											return;
-										}
-										
-											
-										project.removePropertyChangeListener(
-											RepositoryChangeEvent.sourceDocumentChanged, 
-											this);
+//							project.addPropertyChangeListener(
+//								RepositoryChangeEvent.sourceDocumentChanged,
+//								new PropertyChangeListener() {
+//
+//									@Override
+//									public void propertyChange(PropertyChangeEvent evt) {
+//										
+//										if ((evt.getNewValue() == null)	|| (evt.getOldValue() != null)) {
+//											return; // no insert
+//										}
+//										
+//										String newSdId = (String) evt.getNewValue();
+//										if (!sourceDocument.getID().equals(newSdId)) {
+//											return;
+//										}
+//										
+//											
+//										project.removePropertyChangeListener(
+//											RepositoryChangeEvent.sourceDocumentChanged, 
+//											this);
 										
 										//TODO:
 //										if (currentCorpus != null) {
@@ -611,8 +551,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 //										if (generateStarterKit) {
 //											generateStarterKit(sourceDocument);
 //										}
-									}
-								});
+//									}
+//								});
 
 							project.insert(sourceDocument);
 						}
@@ -831,7 +771,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         );
         membersGridComponent.addStyleName("project-view-action-grid");
         ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
-        addContextMenu.addItem("add member", (click) -> new CreateMemberDialog(
+        addContextMenu.addItem("Add Member", (click) -> new CreateMemberDialog(
         		this.projectReference.getProjectId(),
         		this.remoteGitManager,
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
@@ -839,13 +779,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-        moreOptionsContextMenu.addItem("edit members", (click) -> new EditMemberDialog(
+        moreOptionsContextMenu.addItem("Edit Members", (click) -> new EditMemberDialog(
         		projectReference.getProjectId(),
         		teamGrid.getSelectedItems(),
         		remoteGitManager,
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
-        moreOptionsContextMenu.addItem("remove members", (click) -> new RemoveMemberDialog(
+        moreOptionsContextMenu.addItem("Remove Members", (click) -> new RemoveMemberDialog(
         		projectReference.getProjectId(),
         		teamGrid.getSelectedItems(),
         		remoteGitManager,
@@ -874,12 +814,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 ProjectView.this.project.addPropertyChangeListener(
                 		RepositoryChangeEvent.exceptionOccurred, 
                 		projectExceptionListener);
-                ProjectView.this.project.addPropertyChangeListener(
-                		RepositoryChangeEvent.userMarkupCollectionChanged, 
-                		collectionChangeListener);
-                ProjectView.this.project.addPropertyChangeListener(
-                		RepositoryChangeEvent.sourceDocumentChanged, 
-                		documentChangeListener);
                 
                 ProjectView.this.project.getTagManager().addPropertyChangeListener(
                 		TagManagerEvent.tagsetDefinitionChanged,
@@ -962,6 +896,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
     	initData();
     }
+    
+    @Subscribe
+    public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
+    	initData();
+    }
 
     /**
      * deletes selected resources
@@ -989,7 +928,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
 	                }
 	            }
-	            eventBus.post(new ResourcesChangedEvent<>(resourceGrid));
     		});
 
     }
@@ -998,17 +936,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		try {
 			this.eventBus.unregister(this);
 			if (project != null) {
-				if (collectionChangeListener != null) {
-					project.removePropertyChangeListener(
-						RepositoryChangeEvent.userMarkupCollectionChanged, 
-						collectionChangeListener);
-				}
-				if (documentChangeListener != null) {
-					project.removePropertyChangeListener(
-						RepositoryChangeEvent.sourceDocumentChanged, 
-						documentChangeListener);
-				}
-
 				if (projectExceptionListener != null) {
 					project.removePropertyChangeListener(
 						RepositoryChangeEvent.exceptionOccurred, 

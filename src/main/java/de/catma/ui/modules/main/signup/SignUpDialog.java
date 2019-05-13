@@ -138,11 +138,16 @@ public class SignUpDialog extends Window {
 		        qs.addParam("token", token);
 		        
 		        Email email = new SimpleEmail();
-		        email.setHostName("mx.bsdsystems.de");
-		        email.setSmtpPort(587);
-		        email.setAuthenticator(new DefaultAuthenticator("db", "huk4uisweak"));
-		        email.setStartTLSEnabled(true);
-		        email.setFrom("catma@nipsi.de");
+		        email.setHostName(RepositoryPropertyKey.MailHost.getValue());
+		        email.setSmtpPort(RepositoryPropertyKey.MailPort.getValue(587));
+		        if (RepositoryPropertyKey.MailAuthenticationNeeded.getValue(false)) {
+		        	email.setAuthenticator(
+		        		new DefaultAuthenticator(
+		        			RepositoryPropertyKey.MailUser.getValue(), 
+		        			RepositoryPropertyKey.MailPass.getValue()));
+		        	email.setStartTLSEnabled(true);
+		        }
+		        email.setFrom(RepositoryPropertyKey.MailFrom.getValue());
 		        email.setSubject("Catma activation");
 		        email.setMsg("In order to verify your account please visit the following link.\n"+qs.toString());
 		        email.addTo(user.getEmail(),user.getName());

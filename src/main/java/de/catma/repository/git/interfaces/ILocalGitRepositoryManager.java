@@ -3,6 +3,7 @@ package de.catma.repository.git.interfaces;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
@@ -82,5 +83,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	void resolveRootConflicts(CredentialsProvider credentialsProvider) throws IOException;
 
 	void initAndUpdateSubmodules(CredentialsProvider credentialsProvider) throws Exception;
+
+	List<String> getSubmodulePaths() throws IOException;
 
 }

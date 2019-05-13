@@ -16,6 +16,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
@@ -373,29 +375,28 @@ public class GitProjectHandler {
 		ArrayList<SourceDocument> documents = new ArrayList<>();
 		
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			
+			localRepoManager.open(
+					projectId,
+					GitProjectManager.getProjectRootRepositoryName(projectId));
+		
+			List<Path> paths = localRepoManager.getSubmodulePaths()
+				.stream()
+				.filter(path -> path.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME))
+				.map(path -> 
+					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+						 .resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)
+						 .resolve(path))
+				.collect(Collectors.toList());
+
+			localRepoManager.detach();	
+			
 			GitSourceDocumentHandler gitSourceDocumentHandler = 
 				new GitSourceDocumentHandler(
 					localRepoManager, 
 					this.remoteGitServerManager,
 					this.credentialsProvider);
-			
-			localRepoManager.open(
-					projectId,
-					GitProjectManager.getProjectRootRepositoryName(projectId));
-			 
-			Path sourceDirPath = 
-					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					.resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
-			localRepoManager.detach();
-			if (!sourceDirPath.toFile().exists()) {
-				return documents;
-			}
-			 
-			 
-			List<Path> paths = Files
-				 .walk(sourceDirPath, 1)
-				 .filter(sourceDocPath -> !sourceDocPath.equals(sourceDirPath))
-				 .collect(Collectors.toList());
+
 			for (Path sourceDocPath : paths) {
 				String sourceDocumentId = sourceDocPath.getFileName().toString();
 				try {
@@ -405,7 +406,7 @@ public class GitProjectHandler {
 						Level.SEVERE,
 						String.format(
 							"error loading Document %1$s for project %2$s",
-							sourceDirPath,
+							sourceDocPath,
 							projectId), 
 						e);					
 				}
@@ -422,31 +423,36 @@ public class GitProjectHandler {
 		
 		return documents;
 	}
+	
+	//NEXT: - 
+	//      - deletion handler
+	//		- configurable smptp
 
 	public List<UserMarkupCollectionReference> getCollectionReferences() {
 		ArrayList<UserMarkupCollectionReference> collectionReferences = new ArrayList<>();
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
-					localRepoManager, 
-					this.remoteGitServerManager,
-					this.credentialsProvider);
+
 			try {
 				localRepoManager.open(
-					projectId,
-					GitProjectManager.getProjectRootRepositoryName(projectId));
-				 
-				Path collectionDirPath = 
-					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
-				localRepoManager.detach();
-				 
-				if (!collectionDirPath.toFile().exists()) {
-					return collectionReferences;
-				}
-				List<Path> paths = Files
-						.walk(collectionDirPath, 1)
-						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
-						.collect(Collectors.toList());
+						projectId,
+						GitProjectManager.getProjectRootRepositoryName(projectId));
+			
+				List<Path> paths = localRepoManager.getSubmodulePaths()
+					.stream()
+					.filter(path -> path.startsWith(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME))
+					.map(path -> 
+						Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+							 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME)
+							 .resolve(path))
+					.collect(Collectors.toList());
+
+				localRepoManager.detach();	
+
+				GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+						localRepoManager, 
+						this.remoteGitServerManager,
+						this.credentialsProvider);
+				
 				for (Path collectionPath : paths) {
 					String collectionId = collectionPath.getFileName().toString();
 					try {
@@ -800,29 +806,24 @@ public class GitProjectHandler {
 
 	public List<TagsetDefinition> getTagsets() {
 		ArrayList<TagsetDefinition> result = new ArrayList<>();
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			
-			localGitRepoManager.open(
+			localRepoManager.open(
 					 projectId,
 					 GitProjectManager.getProjectRootRepositoryName(projectId));
-			 
-			 Path tagsetsDirPath = 
-					 Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
-			 localGitRepoManager.detach();
-			 
-			 if (!tagsetsDirPath.toFile().exists()) {
-				 return result;
-			 }			
-			 
-			 List<Path> paths = Files
-			 .walk(tagsetsDirPath, 1)
-			 .filter(tagsetPath -> !tagsetsDirPath.equals(tagsetPath))
-			 .collect(Collectors.toList());
+			List<Path> paths = localRepoManager.getSubmodulePaths()
+				.stream()
+				.filter(path -> path.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME))
+				.map(path -> 
+					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+						 .resolve(TAGSET_SUBMODULES_DIRECTORY_NAME)
+						 .resolve(path))
+				.collect(Collectors.toList());			
+			 localRepoManager.detach();
 			 
 			 GitTagsetHandler gitTagsetHandler = 
 				 new GitTagsetHandler(
-						 localGitRepoManager, 
+						 localRepoManager, 
 						 this.remoteGitServerManager,
 						 this.credentialsProvider);
 			 for (Path tagsetPath : paths) {
@@ -1237,6 +1238,76 @@ public class GitProjectHandler {
 			localGitRepoManager.initAndUpdateSubmodules(credentialsProvider);
 		}		
 		
+	}
+
+	public void removeStaleSubmoduleDirectories() throws Exception {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			localRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			
+			List<String> validSubmodulePaths = localRepoManager.getSubmodulePaths();
+
+			Path collectionDirPath = 
+				 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+				 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+			 
+			if (collectionDirPath.toFile().exists()) {
+				List<Path> paths = Files
+						.walk(collectionDirPath, 1)
+						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
+						.collect(Collectors.toList());
+				
+				for (Path collectionPath : paths) {
+					Path relCollectionPath = 
+						Paths.get(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionPath.getFileName().toString());
+					String relCollectionPathUnix = FilenameUtils.separatorsToUnix(relCollectionPath.toString());
+					if (!validSubmodulePaths.contains(relCollectionPathUnix)) {
+						FileUtils.deleteDirectory(
+								collectionPath.toFile());
+					}
+				}
+			}
+			Path docsDirPath = 
+					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					 .resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
+				 
+			if (docsDirPath.toFile().exists()) {
+				List<Path> paths = Files
+						.walk(docsDirPath, 1)
+						.filter(collectionPath -> !docsDirPath.equals(collectionPath))
+						.collect(Collectors.toList());
+				
+				for (Path docPath : paths) {
+					Path relDocPath = 
+						Paths.get(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, docPath.getFileName().toString());
+					String relDocPathUnix = FilenameUtils.separatorsToUnix(relDocPath.toString());
+					if (!validSubmodulePaths.contains(relDocPathUnix)) {
+						FileUtils.deleteDirectory(
+								docPath.toFile());
+					}
+				}
+			}
+			
+			Path tagsetDirPath = 
+					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					 .resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
+				 
+			if (tagsetDirPath.toFile().exists()) {
+				List<Path> paths = Files
+						.walk(tagsetDirPath, 1)
+						.filter(collectionPath -> !tagsetDirPath.equals(collectionPath))
+						.collect(Collectors.toList());
+				
+				for (Path tagsetPath : paths) {
+					Path relTagsetPath = 
+						Paths.get(TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetPath.getFileName().toString());
+					String relTagsetPathUnix = FilenameUtils.separatorsToUnix(relTagsetPath.toString());
+					if (!validSubmodulePaths.contains(relTagsetPathUnix)) {
+						FileUtils.deleteDirectory(
+								tagsetPath.toFile());
+					}
+				}
+			}			
+		}
 	}
 
 }
