@@ -2,7 +2,7 @@ package de.catma.ui.analyzenew;
 
 
 public class KwicItem {
-	
+	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	private String sourceDocOrMarkupCollectionDisplay;
 	private String backwardContext;
 	private String keyWord;
@@ -38,6 +38,10 @@ public class KwicItem {
 	public String getKeyWord() {
 		return keyWord;
 	}
+	
+	public String getShortenKeyWord() {
+		return shorten(keyWord,12);
+	}
 	public void setKeyWord(String keyWord) {
 		this.keyWord = keyWord;
 	}
@@ -49,6 +53,12 @@ public class KwicItem {
 	}
 	public String getTagDefinitionPath() {
 		return tagDefinitionPath;
+	}
+	
+	public String getShortenTagDefinitionPath() {
+		if(tagDefinitionPath!=null)
+		return shorten(tagDefinitionPath,12);
+		return null;
 	}
 	public void setTagDefinitionPath(String tagDefinitionPath) {
 		this.tagDefinitionPath = tagDefinitionPath;
@@ -90,6 +100,17 @@ public class KwicItem {
 
 	public void setDocCollection(String docCollection) {
 		this.docCollection = docCollection;
+	}
+	
+	private String shorten(String toShortenValue, int maxLength) {
+		if (toShortenValue.length() <= maxLength) {
+			return toShortenValue;
+		}else {
+			return toShortenValue.substring(0, maxLength / 2) + "[" + HORIZONTAL_ELLIPSIS + "]"
+					+ toShortenValue.substring(toShortenValue.length() - ((maxLength / 2) - 2), toShortenValue.length());
+			
+		}
+		
 	}
 	
 	

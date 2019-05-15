@@ -172,19 +172,28 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		selectedDataProvider = new TreeDataProvider<>(selectedItemsTreeGridData);
 		selectedItemsTreeGrid.setDataProvider(selectedDataProvider);
 
-		selectedItemsTreeGrid.addColumn(TreeRowItem::getTreeKey).setCaption("tag/phrase").setId("treeKeyID");
-		selectedItemsTreeGrid.getColumn("treeKeyID").setWidth(200);
+		selectedItemsTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("tag/phrase").setId("treeKeyID");
+		selectedItemsTreeGrid.getColumn("treeKeyID").setWidth(150);
+		 selectedItemsTreeGrid.getColumn("treeKeyID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
 
 		selectedItemsTreeGrid.addColumn(TreeRowItem::getContext).setCaption("context").setId("contextID");
-		selectedItemsTreeGrid.getColumn("contextID").setWidth(200);
+		selectedItemsTreeGrid.getColumn("contextID").setWidth(140);
 	    selectedItemsTreeGrid.getColumn("contextID").setDescriptionGenerator(e -> e.getContextDiv(), ContentMode.HTML);
+	    
+	    selectedItemsTreeGrid.addColumn(TreeRowItem::getPropertyName).setCaption("Property").setId("propName").setHidable(true)
+		.setHidden(true).setWidth(90);
+	    selectedItemsTreeGrid.getColumn("propName").setDescriptionGenerator(e -> e.getPropertyName(), ContentMode.HTML);
+	    
+	    selectedItemsTreeGrid.addColumn(TreeRowItem::getPropertyValue).setCaption("Value").setId("propValue").setHidable(true)
+		.setHidden(true).setWidth(90);
+	    selectedItemsTreeGrid.getColumn("propValue").setDescriptionGenerator(e -> e.getPropertyValue(), ContentMode.HTML);
 
 		ButtonRenderer<TreeRowItem> removeItemsRenderer = new ButtonRenderer<TreeRowItem>(
 				removeClickEvent -> handleRemoveClickEvent(removeClickEvent));
 		removeItemsRenderer.setHtmlContentAllowed(true);
 		selectedItemsTreeGrid.addColumn(TreeRowItem::getRemoveIcon, removeItemsRenderer).setCaption("remove")
 				.setId("removeID");
-		selectedItemsTreeGrid.getColumn("removeID").setWidth(80);
+		selectedItemsTreeGrid.getColumn("removeID").setWidth(70);
 
 		//selectedItemsTreeGrid.setWidth("100%");
 
@@ -300,8 +309,9 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		phraseTreeGrid.setWidth(570, UNITS_PIXELS);
 		phraseDataProvider = new TreeDataProvider<>(treeData);
 
-		phraseTreeGrid.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
+		phraseTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Phrase").setId("phraseID");
 		phraseTreeGrid.getColumn("phraseID").setWidth(200);
+		phraseTreeGrid.getColumn("phraseID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
 
 		phraseTreeGrid.addColumn(TreeRowItem::getPosition).setCaption("Position").setId("positionID").setHidable(true)
 				.setHidden(true);
@@ -338,22 +348,23 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 
 	private TreeGrid<TreeRowItem> addDataTagStyle(TreeData<TreeRowItem> treeData) {
 		tagTreeGrid = new TreeGrid<>();
+		tagTreeGrid.setWidth(570, UNITS_PIXELS);
 		tagDataProvider = new TreeDataProvider<>(treeData);
 
 		tagTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
-		tagTreeGrid.getColumn("tagID").setExpandRatio(2);
+		tagTreeGrid.getColumn("tagID").setWidth(160);
 		tagTreeGrid.getColumn("tagID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
 
 		tagTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		tagTreeGrid.getColumn("freqID").setExpandRatio(2);
+		tagTreeGrid.getColumn("freqID").setWidth(90);
 
 		tagTreeGrid.addColumn(TreeRowItem::getPosition).setCaption("Position").setId("positionID").setHidable(true)
 				.setHidden(true);
-		tagTreeGrid.getColumn("positionID").setExpandRatio(2);
+		tagTreeGrid.getColumn("positionID").setWidth(80);
 
 		tagTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
-				.setHidden(true).setExpandRatio(2);
-		tagTreeGrid.getColumn("contextID").setExpandRatio(2);
+				.setHidden(true).setWidth(150);
+		//tagTreeGrid.getColumn("contextID").setExpandRatio(2);
 		tagTreeGrid.getColumn("contextID").setDescriptionGenerator(e -> e.getContextDiv(), ContentMode.HTML);
 
 		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
@@ -361,11 +372,11 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		selectItemsRenderer.setHtmlContentAllowed(true);
 		tagTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select")
 				.setId("selectIconID");
-		tagTreeGrid.getColumn("selectIconID").setExpandRatio(1);
+		tagTreeGrid.getColumn("selectIconID").setWidth(60);
 
 		tagDataProvider.refreshAll();
 		tagTreeGrid.setDataProvider(tagDataProvider);
-		tagTreeGrid.setWidth("100%");
+		//tagTreeGrid.setWidth("100%");
 
 		tagTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
 			public void itemExpand(ExpandEvent<TreeRowItem> event) {
@@ -379,33 +390,36 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 
 	private TreeGrid<TreeRowItem> addDataPropertyStyle(TreeData<TreeRowItem> treeData) {
 		propertyTreeGrid = new TreeGrid<>();
+		propertyTreeGrid.setWidth(570, UNITS_PIXELS);
 		propertyDataProvider = new TreeDataProvider<>(treeData);
 
 		propertyTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
-		propertyTreeGrid.getColumn("tagID").setExpandRatio(2);
+		propertyTreeGrid.getColumn("tagID").setWidth(140);
+		propertyTreeGrid.getColumn("tagID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
 
 		propertyTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
-				.setHidden(true).setWidth(100);
-		propertyTreeGrid.getColumn("contextID").setExpandRatio(2);
+				.setHidden(true).setWidth(90);
 		propertyTreeGrid.getColumn("contextID").setDescriptionGenerator(e -> e.getContextDiv(), ContentMode.HTML);
 
 		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
 				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
 		selectItemsRenderer.setHtmlContentAllowed(true);
 
-		propertyTreeGrid.addColumn(TreeRowItem::getPropertyName).setCaption("P name").setId("propNameID");
-		propertyTreeGrid.getColumn("propNameID").setExpandRatio(2);
-		propertyTreeGrid.addColumn(TreeRowItem::getPropertyValue).setCaption("P value").setId("propValueID");
-		propertyTreeGrid.getColumn("propValueID").setExpandRatio(2);
+		propertyTreeGrid.addColumn(TreeRowItem::getPropertyName).setCaption("Property").setId("propNameID");
+		propertyTreeGrid.getColumn("propNameID").setWidth(90);
+		propertyTreeGrid.getColumn("propNameID").setDescriptionGenerator(e -> e.getPropertyName(), ContentMode.HTML);
+		propertyTreeGrid.addColumn(TreeRowItem::getPropertyValue).setCaption("Value").setId("propValueID");
+		propertyTreeGrid.getColumn("propValueID").setWidth(80);
+		propertyTreeGrid.getColumn("propValueID").setDescriptionGenerator(e -> e.getPropertyValue(), ContentMode.HTML);
 
 		propertyTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		propertyTreeGrid.getColumn("freqID").setExpandRatio(1);
+		propertyTreeGrid.getColumn("freqID").setWidth(80);
 		propertyTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select")
 				.setId("selectIconID");
-		propertyTreeGrid.getColumn("selectIconID").setExpandRatio(1);
+		propertyTreeGrid.getColumn("selectIconID").setWidth(60);
 		propertyDataProvider.refreshAll();
 		propertyTreeGrid.setDataProvider(propertyDataProvider);
-		propertyTreeGrid.setWidth("100%");
+		//propertyTreeGrid.setWidth("100%");
 
 		propertyTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
 
