@@ -74,11 +74,13 @@ public class SingleItem implements TreeRowItem {
 	public void setRows(QueryResultRowArray queryResultRowArray) {
 		this.queryResultRowArray = queryResultRowArray;
 		queryResultRow = queryResultRowArray.get(0);
+		phrase=queryResultRow.getPhrase();
 		if (queryResultRow.getClass() == TagQueryResultRow.class) {
 			TagQueryResultRow tQRR = (TagQueryResultRow) queryResultRow;
 			range = tQRR.getRange();
 			ranges = tQRR.getRanges();
 			rangesHash = ranges.hashCode();
+			phrase=queryResultRow.getPhrase();
 		}
 	}
 
@@ -164,41 +166,24 @@ public class SingleItem implements TreeRowItem {
 	}
 	
 	private String buildKwicString() {
-		String conc ="";
-		
 		StringBuilder builder = new StringBuilder();
-	
-				builder.append(
-						Cleaner.clean(getBackward()));
+				builder.append(	Cleaner.clean(getBackward()));
 				builder.append("<span");
 				builder.append(" class=\"annotation-details-tag-color\"");
 				builder.append(" style=\"");
 				builder.append(" background-color:");
 				builder.append("#cacfd2");
 				builder.append(";");
-				builder.append(" color: cacfd2");
-				builder.append(";");
 				builder.append("\">");
-				
-				builder.append(
-						Cleaner.clean(
-				
-									getPhrase()
-									));
-
-				
-				
+				String notShorten= Cleaner.clean(getPhrase());
+				builder.append(notShorten);
+			//	String shorted= Cleaner.clean(shorten(getPhrase(),50));
+			//	builder.append(shorted);
 				builder.append("</span>");	
-				builder.append(
-						Cleaner.clean(getForward()));
+				builder.append(	Cleaner.clean(getForward()));
 				return builder.toString();
-			
-			
 			}
 			
-		
-	
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -293,7 +278,8 @@ public class SingleItem implements TreeRowItem {
 	@Override
 	public String getContextDiv() {
 		
-		return buildKwicString();
+		String toReturn= buildKwicString();
+		return toReturn;
 	}
 
 }
