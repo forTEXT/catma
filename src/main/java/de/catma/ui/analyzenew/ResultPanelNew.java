@@ -14,6 +14,7 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.junit.internal.runners.statements.FailOnTimeout;
 import org.neo4j.cypher.internal.compiler.v2_3.planner.logical.plans.SingleRow;
 
+import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
@@ -70,6 +71,8 @@ public class ResultPanelNew extends Panel {
 	
 	private TreeData<TreeRowItem> propDataFlat;
 	private TreeGrid <TreeRowItem> treeGridPropertyFlatTable;
+	
+	private final ContextMenu optionsMenu;
 
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
@@ -91,28 +94,74 @@ public class ResultPanelNew extends Panel {
 		this.queryResult = result;
 		this.queryAsString = queryAsString;
 		this.resultPanelCloseListener = resultPanelCloseListener;
-
 		initComponents();
 		initListeners();
+		optionsMenu = new ContextMenu(optionsBt,true);
 
 		if (queryAsString.contains("tag=")) {
 			setDataTagStyle();
 			setCurrentView(ViewID.tag);
 			treeGridPanel.setContent(treeGridTag);
-		}
-
-		if (queryAsString.contains("property=")) {
-			//setDataPropertyStyle();
-			setDataFlatTableStyle();
-			setCurrentView(ViewID.flatTableProperty);
-			treeGridPanel.setContent(treeGridPropertyFlatTable);
+			optionsMenu.addItem("Swich to Phrase View", clickEvent -> {
+				try {
+					swichView();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+			optionsMenu.addItem("Swich to Tag View", e -> {
+				try {
+					swichView();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+			
 		}
 		if (queryAsString.contains("wild=")) {
 			setDataPhraseStyle();
 			setCurrentView(ViewID.phrase);
 			treeGridPanel.setContent(treeGridPhrase);
+			optionsMenu.addItem("No other View for that query available");
+
 		}
 
+		if (queryAsString.contains("property=")) {
+			setDataPropertyStyle();
+			setCurrentView(ViewID.property);
+			treeGridPanel.setContent(treeGridProperty);
+			
+			optionsMenu.addItem("Swich to Phrase View", clickEvent -> {
+				try {
+					setCurrentView(ViewID.phraseProperty);
+					treeGridPanel.setContent(treeGridPhrase);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+			optionsMenu.addItem("Swich to Tag View", e -> {
+				try {
+					setCurrentView(ViewID.property);
+					treeGridPanel.setContent(treeGridProperty);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+			optionsMenu.addItem("Swich to Flat Table View", e -> {
+				try {
+					setCurrentView(ViewID.flatTableProperty);
+					treeGridPanel.setContent(treeGridPropertyFlatTable);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+		}
+		
 	}
 
 	@SuppressWarnings("unchecked")
@@ -160,10 +209,8 @@ public class ResultPanelNew extends Panel {
 					}
 				}
 			}
-			return toReturn;
-			
+			return toReturn;			
 		}
-
 
 	}
 
@@ -251,8 +298,10 @@ public class ResultPanelNew extends Panel {
 				groupedIcons.replaceComponent(caretDownBt, caretRightBt);
 			}
 		});
+		
+		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
 
-		optionsBt.addClickListener(new ClickListener() {
+/*		optionsBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
 				try {
@@ -261,7 +310,7 @@ public class ResultPanelNew extends Panel {
 					e.printStackTrace();
 				}
 			}
-		});
+		});*/
 
 		trashBt.addClickListener(new ClickListener() {
 
@@ -374,9 +423,8 @@ public class ResultPanelNew extends Panel {
 		treeGridProperty.setCaption(queryAsString);
 
 		treeGridPanel.setContent(treeGridProperty);
-
-	//	setDataPhraseStyle();
 		setDataFlatTableStyle();
+		setDataPhraseStyle();
 
 	}
 	
@@ -401,7 +449,7 @@ public class ResultPanelNew extends Panel {
 
 		ArrayList<TreeRowItem> flatTableList = new ArrayList<>();
 		QueryResultRowArray qrra = queryResult.asQueryResultRowArray();
-		int i = 0;
+
 		
 		for (QueryResultRow queryResultRow : qrra) {
 			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
@@ -421,9 +469,7 @@ public class ResultPanelNew extends Panel {
 		
 		propFlatDataProvider.refreshAll();
 		treeGridPropertyFlatTable.setDataProvider(propFlatDataProvider);
-
-		// propertyGridFlatTable.setItems(flatTableList);
-		treeGridPanel.setContent(treeGridPropertyFlatTable);
+		//treeGridPanel.setContent(treeGridPropertyFlatTable);
 
 	}
 
@@ -566,18 +612,8 @@ public class ResultPanelNew extends Panel {
 			treeGridPanel.setContent(treeGridPhrase);
 			break;
 
-		case property:
-			setCurrentView(ViewID.phraseProperty);
-			treeGridPanel.setContent(treeGridPhrase);
-			break;
-
 		case phrase:
 			Notification.show("no tag view available for that query", Notification.Type.HUMANIZED_MESSAGE);
-			break;
-
-		case phraseProperty:
-			setCurrentView(ViewID.property);
-			treeGridPanel.setContent(treeGridProperty);
 			break;
 
 		case phraseTag:
@@ -585,11 +621,6 @@ public class ResultPanelNew extends Panel {
 			treeGridPanel.setContent(treeGridTag);
 			break;
 			
-		case flatTableProperty:
-			setCurrentView(ViewID.flatTableProperty);
-			treeGridPanel.setContent(treeGridPropertyFlatTable);
-			break;
-
 		default:
 			Notification.show("no view available ", Notification.Type.HUMANIZED_MESSAGE);
 			break;
