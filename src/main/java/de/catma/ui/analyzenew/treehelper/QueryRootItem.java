@@ -118,4 +118,10 @@ public class QueryRootItem implements TreeRowItem {
 		return null;
 	}
 
+	@Override
+	public String getPhrase() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

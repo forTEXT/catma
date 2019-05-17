@@ -16,6 +16,7 @@ public String getContext();
 public String getBackward();
 public String getForward();
 public String getContextDiv();
+public String getPhrase();
 
 public int getPosition();
 

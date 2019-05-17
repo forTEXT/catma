@@ -1,7 +1,7 @@
 package de.catma.ui.analyzenew;
 
 public enum ViewID {
-	phrase, tag, property,phraseTag,phraseProperty;
+	phrase, tag, property,phraseTag,phraseProperty,flatTableProperty;
 
 
 }

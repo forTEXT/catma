@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.SerializationUtils;
+import org.junit.internal.runners.statements.FailOnTimeout;
+import org.neo4j.cypher.internal.compiler.v2_3.planner.logical.plans.SingleRow;
 
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
@@ -26,6 +28,7 @@ import com.vaadin.ui.TreeGrid;
 //import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.themes.ValoTheme;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
@@ -64,6 +67,9 @@ public class ResultPanelNew extends Panel {
 
 	private TreeData<TreeRowItem> propData;
 	private TreeGrid<TreeRowItem> treeGridProperty;
+	
+	private TreeData<TreeRowItem> propDataFlat;
+	private TreeGrid <TreeRowItem> treeGridPropertyFlatTable;
 
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
@@ -96,9 +102,10 @@ public class ResultPanelNew extends Panel {
 		}
 
 		if (queryAsString.contains("property=")) {
-			setDataPropertyStyle();
-			setCurrentView(ViewID.property);
-			treeGridPanel.setContent(treeGridProperty);
+			//setDataPropertyStyle();
+			setDataFlatTableStyle();
+			setCurrentView(ViewID.flatTableProperty);
+			treeGridPanel.setContent(treeGridPropertyFlatTable);
 		}
 		if (queryAsString.contains("wild=")) {
 			setDataPhraseStyle();
@@ -118,38 +125,45 @@ public class ResultPanelNew extends Panel {
 	}
 
 	private TreeData<TreeRowItem> copyTreeData(TreeData<TreeRowItem> treeData) {
-		TreeData<TreeRowItem> toReturn = new TreeData<TreeRowItem>();
-		List<TreeRowItem> roots = treeData.getRootItems();
-		for (TreeRowItem root : roots) {
-			toReturn.addItem(null, root);
-			List<TreeRowItem> childrenOne = treeData.getChildren(root);
-			List<TreeRowItem> copyOfChildrenOne = new ArrayList<>(childrenOne);
-			toReturn.addItems(root, copyOfChildrenOne);
-			// add dummy on doclevel for phrase query
-			if (treeData.getChildren(childrenOne.get(0)).isEmpty()) {
+		if(this.currentView==ViewID.flatTableProperty) {
+			return treeData;
+			
+		}else {
+			TreeData<TreeRowItem> toReturn = new TreeData<TreeRowItem>();
+			List<TreeRowItem> roots = treeData.getRootItems();
+			for (TreeRowItem root : roots) {
+				toReturn.addItem(null, root);
+				List<TreeRowItem> childrenOne = treeData.getChildren(root);
+				List<TreeRowItem> copyOfChildrenOne = new ArrayList<>(childrenOne);
+				toReturn.addItems(root, copyOfChildrenOne);
+				// add dummy on doclevel for phrase query
+				if (treeData.getChildren(childrenOne.get(0)).isEmpty()) {
 
-				for (TreeRowItem childOne : copyOfChildrenOne) {
-					SingleItem dummy = new SingleItem();
-					dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
-					toReturn.addItem(childOne, dummy);
-				}
-
-			} else {
-				for (TreeRowItem childOne : copyOfChildrenOne) {
-					List<TreeRowItem> childrenTwo = treeData.getChildren(childOne);
-					List<TreeRowItem> copyOfChildrenTwo = new ArrayList<>(childrenTwo);
-					toReturn.addItems(childOne, copyOfChildrenTwo);
-					for (TreeRowItem childTwo : copyOfChildrenTwo) {
+					for (TreeRowItem childOne : copyOfChildrenOne) {
 						SingleItem dummy = new SingleItem();
 						dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
-						toReturn.addItem(childTwo, dummy);
-
+						toReturn.addItem(childOne, dummy);
 					}
 
+				} else {
+					for (TreeRowItem childOne : copyOfChildrenOne) {
+						List<TreeRowItem> childrenTwo = treeData.getChildren(childOne);
+						List<TreeRowItem> copyOfChildrenTwo = new ArrayList<>(childrenTwo);
+						toReturn.addItems(childOne, copyOfChildrenTwo);
+						for (TreeRowItem childTwo : copyOfChildrenTwo) {
+							SingleItem dummy = new SingleItem();
+							dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
+							toReturn.addItem(childTwo, dummy);
+
+						}
+
+					}
 				}
 			}
+			return toReturn;
+			
 		}
-		return toReturn;
+
 
 	}
 
@@ -179,6 +193,10 @@ public class ResultPanelNew extends Panel {
 
 		treeGridProperty = new TreeGrid<TreeRowItem>();
 		treeGridProperty.addStyleNames("annotation-details-panel-annotation-details-grid",
+				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
+		
+		treeGridPropertyFlatTable= new TreeGrid<TreeRowItem>();
+		treeGridPropertyFlatTable.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
 		createResultInfoBar();
@@ -357,7 +375,55 @@ public class ResultPanelNew extends Panel {
 
 		treeGridPanel.setContent(treeGridProperty);
 
-		setDataPhraseStyle();
+	//	setDataPhraseStyle();
+		setDataFlatTableStyle();
+
+	}
+	
+	private void setDataFlatTableStyle() {
+		propDataFlat = new TreeData<TreeRowItem>();
+		TreeDataProvider<TreeRowItem> propFlatDataProvider = new TreeDataProvider<>(propDataFlat);
+
+		treeGridPropertyFlatTable.setWidth("100%");
+		treeGridPropertyFlatTable.setHeight("100%");
+		treeGridPropertyFlatTable.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
+		treeGridPropertyFlatTable.getColumn("tagID").setExpandRatio(3);
+		
+		treeGridPropertyFlatTable.addColumn(TreeRowItem::getPhrase).setCaption("Phrase").setId("phraseID");
+		treeGridPropertyFlatTable.getColumn("phraseID").setExpandRatio(3);
+		
+
+		treeGridPropertyFlatTable.addColumn(TreeRowItem::getPropertyName).setCaption("Name").setId("nameID");
+		treeGridPropertyFlatTable.getColumn("nameID").setExpandRatio(3);
+
+		treeGridPropertyFlatTable.addColumn(TreeRowItem::getPropertyValue).setCaption("Value").setId("valueID");
+		treeGridPropertyFlatTable.getColumn("valueID").setExpandRatio(3);
+
+		ArrayList<TreeRowItem> flatTableList = new ArrayList<>();
+		QueryResultRowArray qrra = queryResult.asQueryResultRowArray();
+		int i = 0;
+		
+		for (QueryResultRow queryResultRow : qrra) {
+			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
+			SingleItem propItem = new SingleItem();
+			propItem.setTreeKey(tagQueryResultRow.getTagDefinitionPath());
+			propItem.setPropertyName(tagQueryResultRow.getPropertyName());
+			propItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
+			propItem.setPhrase(tagQueryResultRow.getPhrase());
+	
+			QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
+			queryResultRowArray.add(queryResultRow);
+			propItem.setQueryResultRowArray(queryResultRowArray);
+			flatTableList.add((TreeRowItem) propItem);
+			if (!propDataFlat.contains(propItem))
+				propDataFlat.addItem(null, propItem);
+		}
+		
+		propFlatDataProvider.refreshAll();
+		treeGridPropertyFlatTable.setDataProvider(propFlatDataProvider);
+
+		// propertyGridFlatTable.setItems(flatTableList);
+		treeGridPanel.setContent(treeGridPropertyFlatTable);
 
 	}
 
@@ -517,6 +583,11 @@ public class ResultPanelNew extends Panel {
 		case phraseTag:
 			setCurrentView(ViewID.tag);
 			treeGridPanel.setContent(treeGridTag);
+			break;
+			
+		case flatTableProperty:
+			setCurrentView(ViewID.flatTableProperty);
+			treeGridPanel.setContent(treeGridPropertyFlatTable);
 			break;
 
 		default:
