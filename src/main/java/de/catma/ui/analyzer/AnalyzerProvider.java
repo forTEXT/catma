@@ -27,4 +27,7 @@ public interface AnalyzerProvider {
 			Corpus corpus,
 			IndexedRepository repository);
 
+	public void analyzeNew(
+			Corpus corpus,
+			IndexedRepository repository);
 }

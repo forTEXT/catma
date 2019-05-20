@@ -14,11 +14,14 @@ import de.catma.project.ProjectManager;
 import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
+import de.catma.ui.analyzenew.AnalyzeNewManagerView;
+import de.catma.ui.analyzenew.AnalyzeNewView;
 import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.di.UIFactory;
 import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -89,6 +92,8 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	private AnalyzerManagerView analyzerManagerView;
 
 
+	
+	private AnalyzeNewManagerView analyzeNewManagerView;
 	
 	/**
 	 * 
@@ -218,6 +223,24 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 			currentRoute = routeToAnalyzeEvent.getClass();
 		}
 	}
+	
+	@Override
+	public void handleRouteToAnalyzeNew(RouteToAnalyzeNewEvent routeToAnalyzeNewEvent) {
+		if (isNewTarget(routeToAnalyzeNewEvent.getClass())) {
+			if (this.analyzeNewManagerView == null) {
+				this.analyzeNewManagerView = new AnalyzeNewManagerView(eventBus);
+			}
+			
+			setContent(analyzeNewManagerView);
+			
+			if (routeToAnalyzeNewEvent.getCorpus() != null) {
+				analyzeNewManagerView.analyzeNewDocuments(
+					routeToAnalyzeNewEvent.getCorpus(), routeToAnalyzeNewEvent.getProject());
+			}			
+			currentRoute = routeToAnalyzeNewEvent.getClass();
+		}
+		
+	}
     
 
 	@Override
@@ -229,5 +252,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void close() throws IOException {
 		closeViews();
 	}
+
+
     
 }

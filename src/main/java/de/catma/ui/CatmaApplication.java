@@ -349,6 +349,10 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	public void analyze(Corpus corpus, IndexedRepository repository) {
 //		projectManagerView.analyze(corpus, repository);
 	}
+	@Deprecated
+	public void analyzeNew(Corpus corpus, IndexedRepository repository) {
+		//projectManagerView.analyzeNew(corpus, repository);
+	}
 
 	public void analyzeCurrentlyActiveDocument() {
 		//TODO:

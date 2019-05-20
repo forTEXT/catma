@@ -13,6 +13,7 @@ import com.vaadin.ui.themes.ValoTheme;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.component.LargeLinkButton;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -33,6 +34,7 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	private LargeLinkButton btAnnotate;
 	private LargeLinkButton btTags;
 	private LargeLinkButton btAnalyze;
+	private LargeLinkButton btAnalyzeNew;
 	
 	@Inject
     public CatmaNav(EventBus eventBus){ 
@@ -47,6 +49,7 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 		btAnnotate.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnnotateEvent(null)));
 		btTags.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, null)); //TODO
 		btAnalyze.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnalyzeEvent(null, null)));
+		btAnalyzeNew.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnalyzeNewEvent(null, null)));
 	}
 
 	private void handleNavigationClick(ClickEvent clickEvent, EventBus eventBus, Object routingEvent) {
@@ -60,6 +63,7 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
         btTags = new LargeLinkButton("Tags");
         btAnnotate = new LargeLinkButton("Annotate");
         btAnalyze = new LargeLinkButton("Analyze");
+        btAnalyzeNew = new LargeLinkButton("AnalyzeC6");
     }
 
 	private Label newH3Label(String name){
@@ -103,6 +107,7 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	        addComponent(btTags);
 	        addComponent(btAnnotate);
 	        addComponent(btAnalyze);
+	        addComponent(btAnalyzeNew);
 	        setSelectedStyle(btProject);
 	        currentRoute = routeToProjectEvent.getClass();
 		}
@@ -131,6 +136,11 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	public void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent) {
 		currentRoute = routeToAnalyzeEvent.getClass();
 		setSelectedStyle(btAnalyze);
+	}
+	@Override
+	public void handleRouteToAnalyzeNew(RouteToAnalyzeNewEvent routeToAnalyzeNewEvent) {
+		currentRoute = routeToAnalyzeNewEvent.getClass();
+		setSelectedStyle(btAnalyzeNew);
 	}
 
 	@Override

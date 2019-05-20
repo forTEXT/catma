@@ -79,6 +79,7 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
@@ -105,6 +106,7 @@ public class TaggerView extends HorizontalLayout
 	private TagManager tagManager;
 	private int taggerID;
 	private Button btAnalyze;
+	private Button btAnalyzeNew;
 	private Button btHelp;
 	private Repository project;
 	private PagerComponent pagerComponent;
@@ -320,6 +322,23 @@ public class TaggerView extends HorizontalLayout
 		}
 	}
 
+	public void  analyzeDocumentNew(){
+		Corpus corpus = new Corpus(sourceDocument.toString());
+		corpus.addSourceDocument(sourceDocument);
+		for (UserMarkupCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
+			UserMarkupCollectionReference userMarkupCollRef =
+				sourceDocument.getUserMarkupCollectionReference(
+						umc.getId());
+			if (userMarkupCollRef != null) {
+				corpus.addUserMarkupCollectionReference(
+						userMarkupCollRef);
+			}
+		}	
+		if (project instanceof IndexedRepository) {
+			eventBus.post(new RouteToAnalyzeNewEvent((IndexedRepository)project, corpus));
+		}	
+	}
+
 	private void initActions() {
 		btClearSearchHighlights.addClickListener(new ClickListener() {
 			
@@ -336,12 +355,20 @@ public class TaggerView extends HorizontalLayout
 				tagger.setTraceSelection(traceSelection);
 			}
 		});
+
+		
 		btAnalyze.addClickListener(new ClickListener() {	
 			
 			public void buttonClick(ClickEvent event) {	
 				analyzeDocument();
 			}
 		});
+		btAnalyzeNew.addClickListener(new ClickListener() {	
+		
+		public void buttonClick(ClickEvent event) {	
+			analyzeDocumentNew();
+		}
+	});
 		
 		linesPerPageSlider.addValueListener(new ValueChangeListener<Double>() {
 			
@@ -503,6 +530,11 @@ public class TaggerView extends HorizontalLayout
 		
 		btAnalyze.setEnabled(project instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
+		
+		btAnalyzeNew = new Button("Analyze C 6"); //$NON-NLS-1$
+		btAnalyzeNew.addStyleName("primary-button"); //$NON-NLS-1$
+		btAnalyzeNew.setEnabled(project instanceof IndexedRepository);
+		actionPanel.addComponent(btAnalyzeNew);
 		
 		linesPerPageSlider =  new Slider(null, 1, 100, Messages.getString("TaggerView.percentPageSize")); //$NON-NLS-1$
 		linesPerPageSlider.setWidth("150px"); //$NON-NLS-1$
