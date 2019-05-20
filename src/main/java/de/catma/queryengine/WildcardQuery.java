@@ -22,12 +22,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.WildcardTermExtractor;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.util.StopWatch;
 
 public class WildcardQuery extends Query {
 
@@ -40,7 +47,6 @@ public class WildcardQuery extends Query {
 	@Override
 	protected QueryResult execute() throws Exception {
     	QueryOptions queryOptions = getQueryOptions();
-
         WildcardTermExtractor termExtractor =
         		new WildcardTermExtractor(
         				wildcardPhrase,
@@ -57,14 +63,31 @@ public class WildcardQuery extends Query {
         	queryOptions.getLimit());
         
         Repository repository = queryOptions.getRepository();
-        Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+        final Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
         
+    	LoadingCache<String, SourceDocument> documentCache = 
+    			CacheBuilder.newBuilder()
+    			.maximumSize(10)
+    			.removalListener(new RemovalListener<String, SourceDocument>() {
+    				@Override
+    				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
+    					if (toBeUnloaded.contains(notification.getValue())) {
+    						notification.getValue().unload();
+    					}
+    				}
+				})
+    			.build(new CacheLoader<String, SourceDocument>() {
+    				@Override
+    				public SourceDocument load(String key) throws Exception {
+    					return repository.getSourceDocument(key);
+    				}
+    			});
+    	
+    	
         for (QueryResultRow row  : result) {
-        	SourceDocument sd = 
-        			repository.getSourceDocument(row.getSourceDocumentId());
+        	SourceDocument sd = documentCache.get(row.getSourceDocumentId());
         	
         	if (!sd.isLoaded()) {
-    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
         		toBeUnloaded.add(sd);
         	}
 

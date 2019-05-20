@@ -4,7 +4,6 @@ import de.catma.document.Corpus;
 import de.catma.indexer.IndexedRepository;
 
 public class RouteToAnalyzeEvent {
-	
 	private IndexedRepository project;
 	private Corpus corpus;
 	
@@ -19,7 +18,6 @@ public class RouteToAnalyzeEvent {
 	public Corpus getCorpus() {
 		return corpus;
 	}
-	
 	
 
 }

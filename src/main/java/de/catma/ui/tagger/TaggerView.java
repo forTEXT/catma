@@ -55,6 +55,8 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.RepositoryProperties;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -78,8 +80,8 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeOldEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
-import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
@@ -105,8 +107,8 @@ public class TaggerView extends HorizontalLayout
 	private Pager pager;
 	private TagManager tagManager;
 	private int taggerID;
+	private Button btAnalyzeOld;
 	private Button btAnalyze;
-	private Button btAnalyzeNew;
 	private Button btHelp;
 	private Repository project;
 	private PagerComponent pagerComponent;
@@ -305,6 +307,23 @@ public class TaggerView extends HorizontalLayout
 		return false;
 	}
 
+	public void  analyzeDocumentOld(){
+		Corpus corpus = new Corpus(sourceDocument.toString());
+		corpus.addSourceDocument(sourceDocument);
+		for (UserMarkupCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
+			UserMarkupCollectionReference userMarkupCollRef =
+				sourceDocument.getUserMarkupCollectionReference(
+						umc.getId());
+			if (userMarkupCollRef != null) {
+				corpus.addUserMarkupCollectionReference(
+						userMarkupCollRef);
+			}
+		}	
+		if (project instanceof IndexedRepository) {
+			eventBus.post(new RouteToAnalyzeOldEvent((IndexedRepository)project, corpus));
+		}
+	}
+
 	public void  analyzeDocument(){
 		Corpus corpus = new Corpus(sourceDocument.toString());
 		corpus.addSourceDocument(sourceDocument);
@@ -319,23 +338,6 @@ public class TaggerView extends HorizontalLayout
 		}	
 		if (project instanceof IndexedRepository) {
 			eventBus.post(new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
-		}
-	}
-
-	public void  analyzeDocumentNew(){
-		Corpus corpus = new Corpus(sourceDocument.toString());
-		corpus.addSourceDocument(sourceDocument);
-		for (UserMarkupCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
-			UserMarkupCollectionReference userMarkupCollRef =
-				sourceDocument.getUserMarkupCollectionReference(
-						umc.getId());
-			if (userMarkupCollRef != null) {
-				corpus.addUserMarkupCollectionReference(
-						userMarkupCollRef);
-			}
-		}	
-		if (project instanceof IndexedRepository) {
-			eventBus.post(new RouteToAnalyzeNewEvent((IndexedRepository)project, corpus));
 		}	
 	}
 
@@ -357,16 +359,16 @@ public class TaggerView extends HorizontalLayout
 		});
 
 		
-		btAnalyze.addClickListener(new ClickListener() {	
+		btAnalyzeOld.addClickListener(new ClickListener() {	
 			
 			public void buttonClick(ClickEvent event) {	
-				analyzeDocument();
+				analyzeDocumentOld();
 			}
 		});
-		btAnalyzeNew.addClickListener(new ClickListener() {	
+		btAnalyze.addClickListener(new ClickListener() {	
 		
 		public void buttonClick(ClickEvent event) {	
-			analyzeDocumentNew();
+			analyzeDocument();
 		}
 	});
 		
@@ -524,17 +526,20 @@ public class TaggerView extends HorizontalLayout
 		
 		actionPanel.addComponent(pagerComponent);
 		
-		btAnalyze = new Button(Messages.getString("TaggerView.analyzeDocument")); //$NON-NLS-1$
-		btAnalyze.addStyleName(MaterialTheme.BUTTON_FLAT);
-		btAnalyze.addStyleName(MaterialTheme.BUTTON_PRIMARY);
+		btAnalyzeOld = new Button("Analyzer 5");
+		btAnalyzeOld.addStyleName(MaterialTheme.BUTTON_FLAT);
+		btAnalyzeOld.addStyleName(MaterialTheme.BUTTON_PRIMARY);
 		
+		btAnalyzeOld.setEnabled(project instanceof IndexedRepository);
+        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), 0, false)) {
+
+        	actionPanel.addComponent(btAnalyzeOld);
+        }
+		
+		btAnalyze = new Button(Messages.getString("TaggerView.analyzeDocument")); //$NON-NLS-1$
+		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
 		btAnalyze.setEnabled(project instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
-		
-		btAnalyzeNew = new Button("Analyze C 6"); //$NON-NLS-1$
-		btAnalyzeNew.addStyleName("primary-button"); //$NON-NLS-1$
-		btAnalyzeNew.setEnabled(project instanceof IndexedRepository);
-		actionPanel.addComponent(btAnalyzeNew);
 		
 		linesPerPageSlider =  new Slider(null, 1, 100, Messages.getString("TaggerView.percentPageSize")); //$NON-NLS-1$
 		linesPerPageSlider.setWidth("150px"); //$NON-NLS-1$

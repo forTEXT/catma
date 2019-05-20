@@ -69,7 +69,7 @@ import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.layout.HorizontalLayout;
@@ -965,7 +965,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      	                }
      	            }
     	     
-    	            eventBus.post( new RouteToAnalyzeNewEvent((IndexedRepository)project, corpus));
+    	            eventBus.post( new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
         		});
     	
     }

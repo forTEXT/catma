@@ -24,6 +24,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
@@ -104,12 +110,27 @@ public class PropertyQuery extends Query {
 						propertyName, propertyValue, tagPhrase);
 
         Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-
+    	LoadingCache<String, SourceDocument> documentCache = 
+    			CacheBuilder.newBuilder()
+    			.maximumSize(10)
+    			.removalListener(new RemovalListener<String, SourceDocument>() {
+    				@Override
+    				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
+    					if (toBeUnloaded.contains(notification.getValue())) {
+    						notification.getValue().unload();
+    					}
+    				}
+				})
+    			.build(new CacheLoader<String, SourceDocument>() {
+    				@Override
+    				public SourceDocument load(String key) throws Exception {
+    					return repository.getSourceDocument(key);
+    				}
+    			});
         for (QueryResultRow row  : result) {
         	SourceDocument sd = 
-        			repository.getSourceDocument(row.getSourceDocumentId());
+        			documentCache.get(row.getSourceDocumentId());
         	if (!sd.isLoaded()) {
-    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
         		toBeUnloaded.add(sd);
         	}
         	TagQueryResultRow tRow = (TagQueryResultRow)row;

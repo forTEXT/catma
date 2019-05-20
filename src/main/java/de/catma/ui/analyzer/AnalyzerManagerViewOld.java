@@ -32,12 +32,12 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.AnalyzerView.CloseListener;
 import de.catma.ui.tabbedview.TabbedView;
 
-public class AnalyzerManagerView extends TabbedView {
+public class AnalyzerManagerViewOld extends TabbedView {
 	
 	private Button btnAnalyzeCurrentOpenDoc;
 	
 
-	public AnalyzerManagerView(){
+	public AnalyzerManagerViewOld(){
 		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
 		
 		initComponents();

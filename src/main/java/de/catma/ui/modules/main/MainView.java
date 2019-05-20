@@ -16,12 +16,12 @@ import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.analyzenew.AnalyzeNewManagerView;
 import de.catma.ui.analyzenew.AnalyzeNewView;
-import de.catma.ui.analyzer.AnalyzerManagerView;
+import de.catma.ui.analyzer.AnalyzerManagerViewOld;
 import de.catma.ui.di.UIFactory;
 import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.HeaderContextChangeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeOldEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
-import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -89,7 +89,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 
 	private TaggerManagerView taggerManagerView;
 
-	private AnalyzerManagerView analyzerManagerView;
+	private AnalyzerManagerViewOld analyzerManagerView;
 
 
 	
@@ -208,10 +208,10 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	};
 	
 	@Override
-	public void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent) {
+	public void handleRouteToAnalyzeOld(RouteToAnalyzeOldEvent routeToAnalyzeEvent) {
 		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
 			if (this.analyzerManagerView == null) {
-				this.analyzerManagerView = new AnalyzerManagerView();
+				this.analyzerManagerView = new AnalyzerManagerViewOld();
 			}
 			
 			setContent(analyzerManagerView);
@@ -225,19 +225,19 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	}
 	
 	@Override
-	public void handleRouteToAnalyzeNew(RouteToAnalyzeNewEvent routeToAnalyzeNewEvent) {
-		if (isNewTarget(routeToAnalyzeNewEvent.getClass())) {
+	public void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent) {
+		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
 			if (this.analyzeNewManagerView == null) {
 				this.analyzeNewManagerView = new AnalyzeNewManagerView(eventBus);
 			}
 			
 			setContent(analyzeNewManagerView);
 			
-			if (routeToAnalyzeNewEvent.getCorpus() != null) {
+			if (routeToAnalyzeEvent.getCorpus() != null) {
 				analyzeNewManagerView.analyzeNewDocuments(
-					routeToAnalyzeNewEvent.getCorpus(), routeToAnalyzeNewEvent.getProject());
+					routeToAnalyzeEvent.getCorpus(), routeToAnalyzeEvent.getProject());
 			}			
-			currentRoute = routeToAnalyzeNewEvent.getClass();
+			currentRoute = routeToAnalyzeEvent.getClass();
 		}
 		
 	}
