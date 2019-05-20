@@ -102,7 +102,7 @@ public class ResultPanelNew extends Panel {
 			setDataTagStyle();
 			setCurrentView(ViewID.tag);
 			treeGridPanel.setContent(treeGridTag);
-			optionsMenu.addItem("Swich to Phrase View", clickEvent -> {
+			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
 					swichView();
 				} catch (Exception e1) {
@@ -110,7 +110,7 @@ public class ResultPanelNew extends Panel {
 					e1.printStackTrace();
 				}
 			});
-			optionsMenu.addItem("Swich to Tag View", e -> {
+			optionsMenu.addItem("Switch to Tag View", e -> {
 				try {
 					swichView();
 				} catch (Exception e1) {
@@ -133,7 +133,7 @@ public class ResultPanelNew extends Panel {
 			setCurrentView(ViewID.property);
 			treeGridPanel.setContent(treeGridProperty);
 			
-			optionsMenu.addItem("Swich to Phrase View", clickEvent -> {
+			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
 					setCurrentView(ViewID.phraseProperty);
 					treeGridPanel.setContent(treeGridPhrase);
@@ -142,7 +142,7 @@ public class ResultPanelNew extends Panel {
 					e1.printStackTrace();
 				}
 			});
-			optionsMenu.addItem("Swich to Tag View", e -> {
+			optionsMenu.addItem("Switch to Tag View", e -> {
 				try {
 					setCurrentView(ViewID.property);
 					treeGridPanel.setContent(treeGridProperty);
@@ -151,7 +151,7 @@ public class ResultPanelNew extends Panel {
 					e1.printStackTrace();
 				}
 			});
-			optionsMenu.addItem("Swich to Flat Table View", e -> {
+			optionsMenu.addItem("Switch to Flat Table View", e -> {
 				try {
 					setCurrentView(ViewID.flatTableProperty);
 					treeGridPanel.setContent(treeGridPropertyFlatTable);
@@ -461,6 +461,7 @@ public class ResultPanelNew extends Panel {
 	
 			QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
 			queryResultRowArray.add(queryResultRow);
+			propItem.setRows(queryResultRowArray);
 			propItem.setQueryResultRowArray(queryResultRowArray);
 			flatTableList.add((TreeRowItem) propItem);
 			if (!propDataFlat.contains(propItem))
