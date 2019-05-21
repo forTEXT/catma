@@ -672,20 +672,11 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		String queryString = currentQuery.toString().substring(20, length - 1);
 		QueryRootItem root = new QueryRootItem();
 		root.setTreeKey(queryString);
-		//SingleItem itemWithContext = new SingleItem();
-
-/*		try {
-			itemWithContext = setContext((SingleItem) selectedItem);
-		} catch (Exception e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}*/
 
 		if (selectedItemsTreeGridData.contains(root)) {
 			if (selectedItemsTreeGridData.contains(selectedItem)) {
 				// do nothing
 			} else {
-
 				selectedItemsTreeGridData.addItem(root, selectedItem);
 			}
 		} else {
@@ -693,7 +684,6 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 			selectedItemsTreeGridData.addItem(root, selectedItem);
 		}
 		selectedDataProvider.refreshAll();
-
 	}
 
 	private void addTagOrPropertyItemsToSelectedPanel(TreeRowItem selectedItem,
