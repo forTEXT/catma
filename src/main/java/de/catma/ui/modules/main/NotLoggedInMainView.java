@@ -9,6 +9,7 @@ import com.vaadin.ui.Link;
 import com.vaadin.ui.UI;
 
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.hazelcast.HazelCastService;
 import de.catma.ui.Messages;
 import de.catma.ui.UIHelpWindow;
 import de.catma.ui.component.IconButton;
@@ -32,12 +33,14 @@ public class NotLoggedInMainView extends VerticalLayout {
 	private final InitializationService initService;
 	private final LoginService loginService;
 	private final EventBus eventBus;
+	private final HazelCastService hazelCastService;
 	
 	private IconButton btHelp;
 
-	public NotLoggedInMainView(InitializationService initService, LoginService loginService, EventBus eventBus) {
+	public NotLoggedInMainView(InitializationService initService, LoginService loginService, HazelCastService hazelCastService, EventBus eventBus) {
 		this.initService = initService;
 		this.loginService = loginService;
+		this.hazelCastService = hazelCastService;
 		this.eventBus = eventBus;
 		initComponents();
 	}
@@ -107,6 +110,7 @@ public class NotLoggedInMainView extends VerticalLayout {
 						RepositoryPropertyKey.BaseURL.getDefaultValue()),
 				loginService,
 				initService,
+				hazelCastService,
 				eventBus).show());
 		LabelButton btn_newsletter = new LabelButton("Newsletter");
 

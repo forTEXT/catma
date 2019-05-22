@@ -4,25 +4,23 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Injector;
-import com.vaadin.server.VaadinSession;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 
 import de.catma.project.ProjectManager;
-import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.di.UIFactory;
-import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.HeaderContextChangeEvent;
+import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.modules.dashboard.DashboardView;
 import de.catma.ui.modules.project.ProjectView;
 import de.catma.ui.tagger.TaggerManagerView;
 
@@ -93,10 +91,11 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	 * @param projectManager
 	 * @param eventBus
 	 */
-    public MainView(ProjectManager projectManager, 
+	@Inject
+    public MainView(@Assisted("projectManager")ProjectManager projectManager, 
     		CatmaHeader catmaHeader, 
     		EventBus eventBus,
-    		IRemoteGitManagerRestricted remoteGitManagerRestricted,
+    		@Assisted("iRemoteGitlabManager")IRemoteGitManagerRestricted remoteGitManagerRestricted,
     		UIFactory uiFactory){
         this.projectManager = projectManager;
         this.header = catmaHeader;
@@ -158,7 +157,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if(isNewTarget(routeToProjectEvent.getClass())) {
 			if (this.projectView == null) {
-				this.projectView = new ProjectView(projectManager, eventBus, remoteGitManagerRestricted );
+				this.projectView = new ProjectView(uiFactory, projectManager, eventBus, remoteGitManagerRestricted );
 				this.projectView.setProjectReference(routeToProjectEvent.getProjectReference());
 			}
 	    	setContent(projectView);

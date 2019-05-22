@@ -16,6 +16,7 @@ import de.catma.document.repository.Repository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.RBACPermission;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
@@ -187,6 +188,27 @@ public class GitProjectManager implements ProjectManager {
 		}
 	}
 
+	@Override
+	public void leaveProject(String projectId) throws IOException {
+		List<String> repositoryNames = this.remoteGitServerManager.getGroupRepositoryNames(
+				projectId
+			);
+
+			for (String name : repositoryNames) {
+				FileUtils.deleteDirectory(
+					new File(this.localGitRepositoryManager.getRepositoryBasePath(), name)
+				);
+			}
+
+			this.remoteGitServerManager.leaveGroup(projectId);
+			try {
+				graphProjectDeletionHandler.deleteProject(projectId);
+			} catch (Exception e) {
+				throw new IOException(e);
+			};
+
+	}
+	
 	public boolean existsLocally(ProjectReference projectReference) {
 		return Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
 				.resolve(projectReference.getProjectId())

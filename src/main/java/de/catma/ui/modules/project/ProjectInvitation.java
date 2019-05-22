@@ -1,5 +1,6 @@
 package de.catma.ui.modules.project;
 
+import java.io.Serializable;
 import java.security.SecureRandom;
 
 import com.jsoniter.annotation.JsonCreator;
@@ -13,8 +14,13 @@ import de.catma.rbac.RBACRole;
  * @author db
  *
  */
-public class ProjectInvitation {
+public class ProjectInvitation implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6455694878222463900L;
+	
 	private final String projectId;
 	private final String name;
 	private final String description;

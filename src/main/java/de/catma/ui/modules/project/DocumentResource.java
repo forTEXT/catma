@@ -1,17 +1,22 @@
 package de.catma.ui.modules.project;
 
-import com.aliasi.util.Strings;
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.rbac.RBACRole;
+import de.catma.repository.git.GitSourceDocumentHandler;
 
 public class DocumentResource implements Resource {
 
     private final SourceDocument sourceDocument;
+	private final String projectId;
+	private final RBACRole role;
 
-    public DocumentResource(SourceDocument sourceDocument){
+    public DocumentResource(SourceDocument sourceDocument, String projectId, RBACRole role){
         this.sourceDocument = sourceDocument;
+        this.projectId = projectId;
+        this.role = role;
     }
     
     @Override
@@ -74,6 +79,21 @@ public class DocumentResource implements Resource {
 	@Override
 	public void deleteFrom(Repository project) throws Exception {
 		project.delete(sourceDocument);
+	}
+
+	@Override
+	public String getResourceId() {
+		return GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocument.getID());
+	}
+
+	@Override
+	public String getProjectId() {
+		return projectId;
+	}
+
+	@Override
+	public RBACRole getRole() {
+		return role;
 	}
     
 }

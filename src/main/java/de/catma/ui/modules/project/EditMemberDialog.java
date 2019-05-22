@@ -15,25 +15,31 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.rbac.RBACAssignmentFunction;
 import de.catma.user.Member;
 import de.catma.user.User;
 
-public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
+public class EditMemberDialog<T> extends AbstractMemberDialog<Set<RBACSubject>> {
 
 	private final Set<Member> members;
-	private final String projectId;
+	
+	private final T resourceOrProject;
+	private final RBACAssignmentFunction<T> assignment;
+
 	private final Binder<RBACRole> roleBinder = new Binder<>();
+	
 	
 	private RBACRole accesslevel;
 	private ListSelect<Member> ls_members;
 	
-	public EditMemberDialog(String projectId, 
-			Set<Member> members,
-			IRemoteGitManagerRestricted remoteGitManager, SaveCancelListener<Set<RBACSubject>> saveCancelListener) {
-		super("Updates a member","update the role",remoteGitManager, saveCancelListener);
+	public EditMemberDialog(T resourceOrProject,
+			RBACAssignmentFunction<T> assignment,
+			Set<Member> members, SaveCancelListener<Set<RBACSubject>> saveCancelListener) {
+		super("Updates a member","update the role", saveCancelListener);
 		this.members = members;
-		this.projectId = projectId;
-		this.accesslevel = RBACRole.REPORTER;
+		this.resourceOrProject = resourceOrProject;
+		this.assignment = assignment;
+		this.accesslevel = members.isEmpty() ?  RBACRole.STUDENT : members.iterator().next().getRole();
 	}
 	
 	@Override
@@ -42,7 +48,7 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 		ls_members.setReadOnly(true);
 		ls_members.setWidth("100%");
 		ls_members.setItemCaptionGenerator(User::getIdentifier);
-
+		
 		content.addComponent(l_description);
 		content.addComponent(ls_members);
 		content.addComponent(cb_role);
@@ -68,13 +74,21 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 	protected Set<RBACSubject> getResult() {
 		try {
 			Set<RBACSubject> result = new HashSet<>();
-			for(Member member : ls_members.getValue()){
-				result.add(remoteGitManager.assignOnProject(member, cb_role.getValue(), projectId));
+			for(Member member : members){
+				result.add( assignment.assign(member, cb_role.getValue(), resourceOrProject));
 			}
 			return result;
 		} catch (Exception e) {
 			errorLogger.showAndLogError(e.getMessage(), e);
 			return null;
 		}
+	}
+	
+	@Override
+	protected void layoutWindow() {
+		super.layoutWindow();
+		setWidth("320px");
+		setHeight("550px");
+
 	}
 }

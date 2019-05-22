@@ -109,6 +109,29 @@ public class ProjectCard extends VerticalLayout  {
         });
         descriptionBar.addComponent(btnEdit);
         
+        IconButton btnLeave = new IconButton(VaadinIcons.EXIT);
+        btnLeave.addClickListener(
+        		   (event -> {
+                       ConfirmDialog.show(UI.getCurrent(),"Leave Project",
+                               "Do you want to leave Project: " + projectReference.getName() + "?",
+                               "OK",
+                               "Cancel"
+                       , (evt) -> {
+                           try {
+                               if(evt.isConfirmed()){
+                               	projectManager.leaveProject(projectReference.getProjectId());
+                               }
+                           } catch (Exception e) {
+                               errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
+                           }
+                           eventBus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
+                       });
+                   })
+        		
+        		);
+        
+        descriptionBar.addComponent(btnLeave);
+        
         rbacEnforcer.register(
         		RBACConstraint.ifNotAuthorized((proj) -> 
         			(rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_EDIT, proj.getProjectId())),
@@ -124,6 +147,19 @@ public class ProjectCard extends VerticalLayout  {
         			() -> { 
         				btnRemove.setVisible(false);
         				btnRemove.setEnabled(false);
+        			})
+        		);
+        
+        rbacEnforcer.register(
+        		RBACConstraint.ifNotAuthorized(
+        				(proj) -> 
+        					rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_LEAVE, proj.getProjectId())
+        					&&
+        					! rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_DELETE, proj.getProjectId())	
+        				,
+        			() -> { 
+        				btnLeave.setVisible(false);
+        				btnLeave.setEnabled(false);
         			})
         		);
         

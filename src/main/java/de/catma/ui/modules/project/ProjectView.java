@@ -9,6 +9,8 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -20,6 +22,10 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -52,6 +58,7 @@ import de.catma.project.conflict.ConflictedProject;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
@@ -59,6 +66,7 @@ import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.di.UIFactory;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.UploadDialog;
@@ -95,6 +103,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private final EventBus eventBus;
 	private final IRemoteGitManagerRestricted remoteGitManager;
 	private final RBACConstraintEnforcer<ProjectReference> rbacEnforcer = new RBACConstraintEnforcer<>();
+	private final UIFactory uiFactory;
 	
     private TreeGrid<Resource> resourceGrid;
     private Grid<TagsetDefinition> tagsetGrid;
@@ -106,14 +115,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent;
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
+	private Map<String, RBACRole> permissionsPerResource;
+	private Multimap<Resource,Resource> resourceTree = HashMultimap.create();
+;
 
 	@Inject
-    public ProjectView(ProjectManager projectManager, EventBus eventBus, IRemoteGitManagerRestricted remoteGitManager){
+    public ProjectView(UIFactory uiFactory, ProjectManager projectManager, EventBus eventBus, IRemoteGitManagerRestricted remoteGitManager){
     	super("Project");
     	this.projectManager = projectManager;
         this.eventBus = eventBus;
         this.remoteGitManager = remoteGitManager;
     	this.errorHandler = (ErrorHandler)UI.getCurrent();
+    	this.uiFactory = uiFactory;
         initProjectListeners();
 
         initComponents();
@@ -184,7 +197,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				TreeDataProvider<Resource> resourceDataProvider = 
 	    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
 
-				DocumentResource documentResource = new DocumentResource(document);
+				DocumentResource documentResource = new DocumentResource(document, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
 				
 				resourceDataProvider.getTreeData().addItem(null, documentResource);
 				resourceDataProvider.refreshAll();
@@ -223,8 +236,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			TreeDataProvider<Resource> resourceDataProvider = 
     				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
 
-			CollectionResource collectionResource = new CollectionResource(collectionReference);
-			DocumentResource documentResource = new DocumentResource(document);
+			CollectionResource collectionResource = new CollectionResource(collectionReference, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
+			DocumentResource documentResource = new DocumentResource(document, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
 			
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
@@ -259,6 +272,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         documentsGridMoreOptionsContextMenu.addItem(
         	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
         
+        //TODO: temporary disabled!!!
+//        documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
+//		        new ResourcePermissionView(
+//		        		eventBus,
+//		        		resourceTree,
+//		        		this.remoteGitManager,
+//		        		(rbacsubj) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
+//		        		).show();
+//		        }
+//        );
+//        
+
+  
         tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
         	click -> handleAddTagsetRequest());
         
@@ -652,8 +678,25 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         			(remoteGitManager.isAuthorizedOnProject(remoteGitManager.getUser(), RBACPermission.PROJECT_MEMBERS_EDIT, proj.getProjectId())),
         			() -> { 
         		        getMoreOptionsContextMenu().addItem("invite to project", (click) -> 
-        	        	new ProjectInvitationDialog(this.projectReference).show());
+        	        	uiFactory.getProjectInvitationDialog(projectReference).show());
         		        teamPanel.setVisible(true);
+        			})
+        		);
+        
+        rbacEnforcer.register(
+        		RBACConstraint.ifAuthorized((proj) -> true,
+        			() -> {
+        		        resourceGrid
+        		    	.addColumn(res -> {
+        		    		if(res instanceof DocumentResource && remoteGitManager.hasPermission(res.getRole(), RBACPermission.DOCUMENT_WRITE)
+        		    				||
+        		    		   res instanceof CollectionResource && remoteGitManager.hasPermission(res.getRole(), RBACPermission.COLLECTION_WRITE)){
+        		    			return VaadinIcons.UNLOCK.getHtml();
+        		    			}
+    		    			return VaadinIcons.LOCK.getHtml();
+        		    		} , new HtmlRenderer())
+        		    	.setCaption("Permission")
+        		    	.setWidth(50);
         			})
         		);
     }
@@ -718,6 +761,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
         	.setWidth(300);
+        
+
+    
         //TODO: see MD for when it is appropriate to offer row options
 //        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
 //				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
@@ -768,7 +814,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-        teamGrid.addColumn(User::getName).setExpandRatio(1);
+        teamGrid.addColumn(User::getIdentifier).setExpandRatio(1);
         
         Label membersAnnotations = new Label("Members");
         ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
@@ -777,24 +823,27 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         );
         membersGridComponent.addStyleName("project-view-action-grid");
         ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
-        addContextMenu.addItem("add member", (click) -> new CreateMemberDialog(
+        addContextMenu.addItem("add member", (click) -> 
+        new CreateMemberDialog<>(
         		this.projectReference.getProjectId(),
-        		this.remoteGitManager,
+        		remoteGitManager::assignOnProject,
+        		(query) -> remoteGitManager.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()),
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
         
         ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-        moreOptionsContextMenu.addItem("edit members", (click) -> new EditMemberDialog(
+        moreOptionsContextMenu.addItem("edit members", (click) -> new EditMemberDialog<>(
         		projectReference.getProjectId(),
+        		remoteGitManager::assignOnProject,
         		teamGrid.getSelectedItems(),
-        		remoteGitManager,
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
-        moreOptionsContextMenu.addItem("remove members", (click) -> new RemoveMemberDialog(
+        
+        moreOptionsContextMenu.addItem("remove members", (click) -> new RemoveMemberDialog<>(
         		projectReference.getProjectId(),
+        		remoteGitManager::unassignFromProject,
         		teamGrid.getSelectedItems(),
-        		remoteGitManager,
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
         teamContent.addComponent(membersGridComponent);
@@ -849,6 +898,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private void initData() {
         try {
+        	permissionsPerResource = remoteGitManager.getRolesPerResource(projectReference);
+
         	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
         	resourceGrid.setDataProvider(resourceDataProvider);
         	
@@ -866,21 +917,51 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
         if(project != null){
-            TreeData<Resource> treeData = new TreeData<>();
-            Collection<SourceDocument> srcDocs = project.getSourceDocuments();
-            for(SourceDocument srcDoc : srcDocs){
-                DocumentResource srcDocResource = new DocumentResource(srcDoc);
-                treeData.addItem(null,srcDocResource);
-                List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
-                if(!collections.isEmpty()){
-                    treeData.addItems(srcDocResource,collections.stream().map(CollectionResource::new));
-                }
-            }
+        	resourceTree.clear();
+        	Collection<SourceDocument> srcDocs = project.getSourceDocuments();
+        	
+        	for(SourceDocument srcDoc : srcDocs){
+        		DocumentResource srcDocResource = new DocumentResource(srcDoc, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
+        		List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
+    			resourceTree.putAll(srcDocResource, 
+    					collections.stream()
+    					.map(col -> new CollectionResource(col, project.getProjectId(), permissionsPerResource.get(project.getProjectId()))
+    							)
+    					.collect(Collectors.toList())
+    					);
+        	}
+        	
+        	TreeData<Resource> treeData = new TreeData<>();
+        	for(Entry<Resource,Collection<Resource>> entry : resourceTree.asMap().entrySet()){
+        		if(entry.getValue().isEmpty()){
+        			if(!treeData.contains(entry.getKey())){
+        				treeData.addItem(null, entry.getKey());
+        			}
+        		} else {
+        			if(!treeData.contains(entry.getKey())){
+        				treeData.addItem(null, entry.getKey());
+        			}
+        			treeData.addItems(entry.getKey(), entry.getValue());
+        		}
+        	}
             return new TreeDataProvider<>(treeData);
         }
         return new TreeDataProvider<>(new TreeData<>());
     }
 
+//    private Resource getSelectedResource(){
+//		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
+//		if ((selectedResources.size() != 1) 
+//				&& !selectedResources.iterator().next().isCollection()) {
+//			Notification.show("Info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE);
+//			return null;
+//		}	
+//		else {
+//			final Resource resource = selectedResources.iterator().next();
+//			return resource;
+//		}
+//    }
+    
     /* Event handler */
 
     /**

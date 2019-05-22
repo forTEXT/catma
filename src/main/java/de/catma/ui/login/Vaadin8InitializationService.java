@@ -13,11 +13,10 @@ import com.vaadin.ui.Component;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.hazelcast.HazelCastService;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.di.UIFactory;
-import de.catma.ui.modules.main.CatmaHeader;
-import de.catma.ui.modules.main.MainView;
 import de.catma.ui.modules.main.NotLoggedInMainView;
 
 public class Vaadin8InitializationService implements InitializationService {
@@ -79,7 +78,7 @@ public class Vaadin8InitializationService implements InitializationService {
 
 	@Override
 	@Inject
-	public Component newEntryPage(LoginService loginService) throws IOException {
+	public Component newEntryPage(LoginService loginService, HazelCastService hazelcastService) throws IOException {
 		IRemoteGitManagerRestricted api = loginService.getAPI();
 
 		if(api != null ){
@@ -88,14 +87,10 @@ public class Vaadin8InitializationService implements InitializationService {
 					api,
 					(projectId) -> {}, //noop deletion handler
 					accuireBackgroundService());
-			return new MainView(projectManager, 
-					injector.getInstance(CatmaHeader.class), 
-					injector.getInstance(EventBus.class),
-					api,
-					injector.getInstance(UIFactory.class)
-					);
+			hazelcastService.start();
+			return injector.getInstance(UIFactory.class).getMainview(projectManager, api);
 		} else {
-			return new NotLoggedInMainView(this,loginService, injector.getInstance(EventBus.class));
+			return new NotLoggedInMainView(this, loginService, hazelcastService, injector.getInstance(EventBus.class));
 
 		}
 	}

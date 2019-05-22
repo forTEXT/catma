@@ -88,6 +88,7 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.hazelcast.HazelCastService;
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
@@ -132,6 +133,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	private LoginService loginservice;
 	private InitializationService initService;
 	private EventBus eventBus;
+	private HazelCastService hazelCastService;
 	
 	@Inject
 	public CatmaApplication(Injector injector) throws IOException {
@@ -144,7 +146,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		eventBus = injector.getInstance(EventBus.class);
 		loginservice = injector.getInstance(LoginService.class);
 		initService = injector.getInstance(InitializationService.class);
-		
+		hazelCastService = injector.getInstance(HazelCastService.class);
 		this.eventBus.register(this);
 
 		logger.info("Session: " + request.getWrappedSession().getId());
@@ -184,7 +186,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		Page.getCurrent().setTitle(Version.LATEST.toString()); //$NON-NLS-1$
 		
 		try {
-			Component component = initService.newEntryPage(loginservice);
+			Component component = initService.newEntryPage(loginservice, hazelCastService);
 			setContent(component);
 
 
@@ -238,7 +240,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			handleOauth(request);
 			Component mainView;
 			try {
-				mainView = initService.newEntryPage(loginservice);
+				mainView = initService.newEntryPage(loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				getCurrent().getPage().pushState("/");
@@ -391,6 +393,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		}
 		
 		initService.shutdown();
+		hazelCastService.stop();
 		super.close();
 	}
 

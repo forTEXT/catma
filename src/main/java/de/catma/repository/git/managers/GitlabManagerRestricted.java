@@ -3,6 +3,7 @@ package de.catma.repository.git.managers;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
@@ -16,9 +17,13 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Namespace;
+import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.ProjectAccess;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -27,7 +32,9 @@ import com.google.inject.assistedinject.AssistedInject;
 
 import de.catma.Pager;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.interfaces.IdentifiableResource;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitProjectManager;
@@ -35,6 +42,7 @@ import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IGitUserInformation;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.gitlab4j_api_custom.CustomProjectApi;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
 import elemental.json.Json;
@@ -245,12 +253,16 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	}
 
 	@Override
-	public List<de.catma.user.Member> getProjectMembers(String projectId) throws Exception {
-		Group group = restrictedGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
-		return restrictedGitLabApi.getGroupApi().getMembers(group.getId())
-				.stream()
-				.map(member -> new GitMember(member))
-				.collect(Collectors.toList());
+	public Set<de.catma.user.Member> getProjectMembers(String projectId) throws IOException {
+		try {
+			Group group = restrictedGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
+			return restrictedGitLabApi.getGroupApi().getMembers(group.getId())
+					.stream()
+					.map(member -> new GitMember(member))
+					.collect(Collectors.toSet());
+		} catch (GitLabApiException e) {
+			throw new IOException("group unknown",e);
+		}
 	}
 
 	@Override
@@ -320,6 +332,66 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 		}
 	}
 	
+	@Override 
+	public void leaveGroup(String path) throws IOException {
+		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+		
+		try {
+			Group group = groupApi.getGroup(path);
+			Member member = groupApi.getMember(group.getId(), user.getUserId());
+			if(member != null && 
+					member.getAccessLevel().value >= AccessLevel.GUEST.value && 
+					member.getAccessLevel().value < AccessLevel.OWNER.value 
+					){
+				groupApi.removeMember(group.getId(), user.getUserId());
+			}
+		} catch (GitLabApiException ge){
+			throw new IOException("Couldn't leave group",ge);
+		}
+	}
+	
+	@Override
+	public Set<de.catma.user.Member> getResourceMembers(IdentifiableResource resource) throws IOException {
+		try {
+			Project project = restrictedGitLabApi.getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			if(project != null ){
+				return new CustomProjectApi(restrictedGitLabApi)
+						.getAllMembers(project.getId())
+						.stream()
+						.map(member -> new GitMember(member))
+						.collect(Collectors.toSet());
+			} else {
+				throw new IOException("resource unknown");
+			}	
+		} catch (GitLabApiException e){
+			throw new IOException("resource unknown");
+		}
+	}
+	
+	
+	public Map<String, RBACRole> getRolesPerResource(ProjectReference projectReference) throws IOException {
+		try {
+			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectReference.getProjectId());
+			List<Project> project = restrictedGitLabApi.getGroupApi().getProjects(group.getId());
+			
+			return project.stream()
+			.filter(proj -> proj.getPermissions() != null)
+			.collect(
+					Collectors.toMap((proj) -> proj.getName(), (proj) -> getEffectiveRole(proj.getPermissions()))
+					);
+		} catch (GitLabApiException e){
+			throw new IOException("retrieving permissions failed",e);
+		}
+	}
+	
+	private RBACRole getEffectiveRole(Permissions permissions) {
+		ProjectAccess groupRole = permissions.getGroupAccess();
+		ProjectAccess projectRole = permissions.getProjectAccess();
+		
+		return RBACRole.forValue(
+				Math.max(groupRole.getAccessLevel().value, 
+						projectRole.getAccessLevel().value));
+	}
 	/**
 	 * @deprecated is this old?
 	 * @param projectReference
