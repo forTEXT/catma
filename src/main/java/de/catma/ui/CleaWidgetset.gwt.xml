@@ -25,7 +25,6 @@
 	</replace-with>
  -->
  
-    <inherits name="net.auroris.ColorPicker.client" />
 	<inherits name="com.google.gwt.json.JSON" />
     
     
@@ -50,12 +49,18 @@
     
     <inherits name="com.google.common.collect.Collect"/>
 
-    <inherits name="com.vaadin.v7.Vaadin7WidgetSet" />
+    
 
     <inherits name="com.vaadin.DefaultWidgetSet" />
 
-    <inherits name="com.vaadin.contextmenu.WidgetSet" />
+    
+
+    
+
+
+    <inherits name="com.vaadin.v7.Vaadin7WidgetSet" />
 
     <inherits name="org.vaadin.sliderpanel.WidgetSet" />
 
+    <inherits name="com.vaadin.contextmenu.WidgetSet" />
 </module>

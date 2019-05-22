@@ -18,11 +18,8 @@
  */
 package de.catma.ui.client.ui.tagmanager;
 
-import net.auroris.ColorPicker.client.ColorPicker;
-
 import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.ui.Field;
 
 public class VColorField extends Composite implements Field {
@@ -30,33 +27,33 @@ public class VColorField extends Composite implements Field {
 		public void colorChanged(String hexColor);
 	}
 	
-	private ColorPicker colorPicker;
+//	private ColorPicker colorPicker;
 	private VColorFieldListener colorFieldListener;
 	
 	public VColorField() {
-		colorPicker = new ColorPicker() {
-			@Override
-			public void onChange(Widget sender) {
-				super.onChange(sender);
-				colorFieldListener.colorChanged(getHexColor());
-			}
-		};
-		int [] randomColor = getRandomColor();
-		try {
-			colorPicker.setRGB( randomColor[0], randomColor[1], randomColor[2]);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		initWidget(colorPicker);
+//		colorPicker = new ColorPicker() {
+//			@Override
+//			public void onChange(Widget sender) {
+//				super.onChange(sender);
+//				colorFieldListener.colorChanged(getHexColor());
+//			}
+//		};
+//		int [] randomColor = getRandomColor();
+//		try {
+//			colorPicker.setRGB( randomColor[0], randomColor[1], randomColor[2]);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		
+//		initWidget(colorPicker);
 	}
 	
 	public void setHexColor(String hexColor) {
-		try {
-			colorPicker.setHex(hexColor);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}			
+//		try {
+//			colorPicker.setHex(hexColor);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}			
 	}
 	
 	public void setColorFieldListener(VColorFieldListener colorFieldListener) {
