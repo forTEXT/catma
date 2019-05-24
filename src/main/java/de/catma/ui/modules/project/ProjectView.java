@@ -272,19 +272,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         documentsGridMoreOptionsContextMenu.addItem(
         	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
         
-        //TODO: temporary disabled!!!
-//        documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
-//		        new ResourcePermissionView(
-//		        		eventBus,
-//		        		resourceTree,
-//		        		this.remoteGitManager,
-//		        		(rbacsubj) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
-//		        		).show();
-//		        }
-//        );
-//        
-
-  
+        documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
+		        new ResourcePermissionView(
+		        		eventBus,
+		        		resourceTree,
+		        		this.remoteGitManager,
+		        		(rbacsubj) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
+		        		).show();
+		        }
+        );
+        
         tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
         	click -> handleAddTagsetRequest());
         
@@ -988,7 +985,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     @Subscribe
     public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
-    	initData();
+    //	initData();
     }
 
     /**
