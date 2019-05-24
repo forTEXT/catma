@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -617,7 +618,7 @@ public class GitProjectHandler {
 		}
 	}
 	
-	public List<Member> getProjectMembers() throws Exception {
+	public Set<Member> getProjectMembers() throws IOException {
 		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
 	}
 

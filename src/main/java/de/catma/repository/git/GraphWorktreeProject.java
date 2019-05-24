@@ -1176,7 +1176,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 	
 	@Override
-	public List<Member> getProjectMembers() throws Exception {
+	public Set<Member> getProjectMembers() throws IOException {
 		return gitProjectHandler.getProjectMembers();
 	}
 	

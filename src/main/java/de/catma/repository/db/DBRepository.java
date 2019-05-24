@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
@@ -1215,7 +1216,7 @@ public class DBRepository implements IndexedRepository {
 	}
 
 	@Override
-	public List<Member> getProjectMembers() throws Exception {
+	public Set<Member> getProjectMembers() throws IOException {
 		throw new UnsupportedOperationException();
 	}
 

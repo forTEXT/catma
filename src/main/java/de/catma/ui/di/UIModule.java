@@ -5,11 +5,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.hazelcast.core.HazelcastInstance;
 
+import de.catma.hazelcast.HazelCastService;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.modules.account.EditAccountDialog;
-import de.catma.ui.modules.dashboard.JoinProjectCard;
+import de.catma.ui.modules.dashboard.JoinProjectDialog;
 import de.catma.ui.modules.main.CatmaHeader;
 
 public class UIModule extends AbstractModule {
@@ -36,9 +38,9 @@ public class UIModule extends AbstractModule {
 	
 	@Provides
 	@Inject
-	public JoinProjectCard provideJoinProjectCard(IRemoteGitManagerPrivileged privilegedRBACmanager, 
-			LoginService loginService, EventBus eventBus){
-		return new JoinProjectCard(privilegedRBACmanager, loginService.getAPI().getUser(), eventBus);
-	}	
+	JoinProjectDialog provideJoinProjectDialog(LoginService loginService, EventBus eventBus, HazelCastService hazelcastService){
+		return new JoinProjectDialog(loginService.getAPI().getUser(), eventBus, hazelcastService);
+	}
+
 	
 }

@@ -1,13 +1,14 @@
 package de.catma.ui.modules.dashboard;
 
-import java.io.IOException;
-
 import javax.cache.Cache;
 import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.hazelcast.core.ITopic;
+import com.hazelcast.core.Message;
+import com.hazelcast.core.MessageListener;
 import com.jsoniter.JsonIterator;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.ui.Button;
@@ -23,16 +24,17 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 
 import de.catma.DammAlgorithm;
-import de.catma.config.HazelcastConfiguration;
-import de.catma.rbac.IRBACManager;
+import de.catma.hazelcast.HazelCastService;
+import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.rbac.RBACRole;
-import de.catma.rbac.RBACSubject;
+import de.catma.ui.events.InvitationRequestMessage;
+import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
-import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.modules.project.ProjectInvitation;
+import de.catma.user.User;
 
 /**
  * Dialog that creates a Project
@@ -49,25 +51,42 @@ public class JoinProjectDialog extends Window {
 			Lists.newArrayList(RBACRole.values()));
     private final Cache<Integer, String> invitationCache = 
     		Caching.getCachingProvider().getCacheManager().getCache(HazelcastConfiguration.CACHE_KEY_INVITATIONS);
-    private final ErrorHandler errorLogger;
     private final VerticalLayout content = new VerticalLayout();
-    private final IRBACManager privilegedRBACManager;
-    private final RBACSubject currentUser;
-
+    private final User currentUser;
+    
     private final Button btnJoin = new Button("Join");
     private final Button btnCancel = new Button("Cancel");
     private final EventBus eventBus;
 
+    private final ITopic<InvitationRequestMessage> invitationTopic;
+    private final ITopic<JoinedProjectMessage> joinedTopic;
+
 	private ProjectInvitation invitation;
-		
+	
 	@Inject
-	public JoinProjectDialog(IRBACManager privilegedRBACManager, RBACSubject currentUser, EventBus eventBus) {
+	public JoinProjectDialog(User currentUser, EventBus eventBus, HazelCastService hazelcastService) {
 		super("Join project");
-		this.privilegedRBACManager = privilegedRBACManager;
 		this.currentUser = currentUser;
 		this.eventBus = eventBus;
-	    this.errorLogger = (ErrorHandler) UI.getCurrent();
+	    invitationTopic = hazelcastService.getHazelcastClient().getTopic(HazelcastConfiguration.TOPIC_PROJECT_INVITATIONS);
+	    joinedTopic = hazelcastService.getHazelcastClient().getTopic(HazelcastConfiguration.TOPIC_PROJECT_JOINED);
 		initComponents();
+	}
+	
+	private class ProjectJoinHandler implements MessageListener<JoinedProjectMessage>{
+		
+		@Override
+		public void onMessage(Message<JoinedProjectMessage> message) {
+			if(message.getMessageObject().getInvitation().getKey() == JoinProjectDialog.this.invitation.getKey()) {	
+				JoinProjectDialog.this.eventBus.post(new ResourcesChangedEvent<Component>(null));
+				JoinProjectDialog.this.getUI().access(() -> 
+				Notification.show("Joined successfully", "sucessfully join project " + JoinProjectDialog.this.invitation.getName() , Type.HUMANIZED_MESSAGE)
+						);
+				JoinProjectDialog.this.getUI().push();
+				JoinProjectDialog.this.close();
+			}
+		}
+		
 	}
 	
 	private void initComponents() {		
@@ -90,7 +109,7 @@ public class JoinProjectDialog extends Window {
 		content.addComponent(tfName);
 		
 		cbRole.setWidth("100%");
-		cbRole.setItemCaptionGenerator(RBACRole::name);
+		cbRole.setItemCaptionGenerator(RBACRole::getRolename);
 		cbRole.setEmptySelectionAllowed(false);
 		cbRole.setReadOnly(true);
 		cbRole.setVisible(false);
@@ -121,17 +140,9 @@ public class JoinProjectDialog extends Window {
 
 	private void handleJoinPressed(ClickEvent event) {
 		if(invitation != null) {
-			try {
-				privilegedRBACManager.assignOnProject(currentUser, 
-						RBACRole.forValue(invitation.getDefaultRole()), invitation.getProjectId());
-				
-				Notification.show("Joined successfully", "sucessfully join project " + invitation.getName() , Type.HUMANIZED_MESSAGE);
-				eventBus.post(new ResourcesChangedEvent<Component>(this));
-				this.close();
-				
-			} catch (IOException e) {
-				errorLogger.showAndLogError("Can't join project", e);
-			}
+		    String regid = joinedTopic.addMessageListener(new ProjectJoinHandler());      
+			addCloseListener((evt) -> joinedTopic.removeMessageListener(regid));
+			invitationTopic.publish(new InvitationRequestMessage(currentUser.getUserId(), currentUser.getIdentifier(), invitation.getKey()));
 		}
 	}
 	

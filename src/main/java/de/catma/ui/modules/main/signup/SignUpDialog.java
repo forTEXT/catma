@@ -138,6 +138,7 @@ public class SignUpDialog extends Window {
 		        qs.addParam("token", token);
 		        
 		        Email email = new SimpleEmail();
+
 		        email.setHostName(RepositoryPropertyKey.MailHost.getValue());
 		        email.setSmtpPort(RepositoryPropertyKey.MailPort.getValue(587));
 		        if (RepositoryPropertyKey.MailAuthenticationNeeded.getValue(false)) {
@@ -148,6 +149,7 @@ public class SignUpDialog extends Window {
 		        	email.setStartTLSEnabled(true);
 		        }
 		        email.setFrom(RepositoryPropertyKey.MailFrom.getValue());
+
 		        email.setSubject("Catma activation");
 		        email.setMsg("In order to verify your account please visit the following link.\n"+qs.toString());
 		        email.addTo(user.getEmail(),user.getName());

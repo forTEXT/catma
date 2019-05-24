@@ -3,6 +3,7 @@ package de.catma.rbac;
 import java.io.IOException;
 
 import de.catma.document.source.SourceDocument;
+import de.catma.interfaces.IdentifiableResource;
 import de.catma.models.Project;
 import de.catma.tag.TagsetDefinition;
 
@@ -33,7 +34,7 @@ public interface IRBACManager {
 	 * @param projectId
 	 * @return
 	 */
-	boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, Integer resourceId);
+	boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, IdentifiableResource resource);
 
 	/**
 	 * assigns given role to subject in a given context here a {@link Project}
@@ -50,11 +51,11 @@ public interface IRBACManager {
 	 * assigns given role to subject in a given context here a resource like {@link SourceDocument}, {@link TagsetDefinition} etc...
 	 * @param subject
 	 * @param role
-	 * @param resourceId
+	 * @param resource
 	 * @return
 	 * @throws IOException
 	 */
-	RBACSubject assignOnResource(RBACSubject subject, RBACRole role, Integer resourceId) throws IOException;
+	RBACSubject assignOnResource(RBACSubject subject, RBACRole role, IdentifiableResource resource) throws IOException;
 
 	/**
 	 * unassigns a subject from a project
@@ -63,4 +64,27 @@ public interface IRBACManager {
 	 * @throws IOException
 	 */
 	void unassignFromProject(RBACSubject subject, String projectId) throws IOException;
+	
+	/**
+	 * unassigns a subject from a resource
+	 * @param subject
+	 * @param projectId
+	 * @throws IOException
+	 */
+	void unassignFromResource(RBACSubject subject, IdentifiableResource resource) throws IOException;
+	
+	/**
+	 * checks if a role has a permission assigned
+	 * @param role
+	 * @param permission
+	 * @return
+	 */
+	default boolean hasPermission(RBACRole role, RBACPermission permission) {
+		if(role == null || permission == null) {
+			return false;
+		} else {
+			return role.value >= permission.getRoleRequired().value;
+		}
+	};
+	
 }

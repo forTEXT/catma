@@ -9,7 +9,32 @@ import de.catma.user.Permission;
  */
 public class GitMember implements Member {
 
-    private org.gitlab4j.api.models.Member delegate;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((delegate.getId() == null) ? 0 : delegate.getId().hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		GitMember other = (GitMember) obj;
+		if (delegate.getId() == null) {
+			if (other.delegate.getId() != null)
+				return false;
+		} else if (!delegate.getId().equals(other.delegate.getId()))
+			return false;
+		return true;
+	}
+
+	private final org.gitlab4j.api.models.Member delegate;
 
     public GitMember(org.gitlab4j.api.models.Member member){
         this.delegate = member;
@@ -42,7 +67,7 @@ public class GitMember implements Member {
 
     @Override
     public boolean isGuest() {
-        return delegate.getAccessLevel().value == RBACRole.GUEST.value;
+        return delegate.getAccessLevel().value == RBACRole.TRAINEE.value;
     }
 
     @Override

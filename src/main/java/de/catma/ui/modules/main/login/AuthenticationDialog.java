@@ -46,6 +46,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.hazelcast.HazelCastService;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
 import de.catma.ui.layout.HorizontalLayout;
@@ -77,12 +78,16 @@ public class AuthenticationDialog extends Window {
 	private final LoginService loginservice;
 	private final InitializationService initService;
 	private final EventBus eventBus;
+	private final HazelCastService hazelCastService;
+
+
 	
 	public AuthenticationDialog(
 			String caption, 
 			String baseUrl,
 			LoginService loginService,
 			InitializationService initService,
+			HazelCastService hazelCastService,
 			EventBus eventBus
 			) { 
 		super(caption);
@@ -90,6 +95,7 @@ public class AuthenticationDialog extends Window {
 		this.baseUrl = baseUrl;
 		this.loginservice = loginService;
 		this.initService = initService;
+		this.hazelCastService = hazelCastService;
 		this.eventBus = eventBus;
 		
 	
@@ -105,7 +111,7 @@ public class AuthenticationDialog extends Window {
 			try {
 				
 				loginservice.login(tfUsername.getValue(), pfPassword.getValue());
-				Component mainView = initService.newEntryPage(loginservice);
+				Component mainView = initService.newEntryPage(loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				close();

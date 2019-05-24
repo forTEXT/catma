@@ -11,12 +11,14 @@ import java.util.Map;
  */
 public enum RBACRole {
 
-    NONE(0), GUEST(10), REPORTER(20), DEVELOPER(30), MASTER(40), OWNER(50);
+    NONE(0,"None"), TRAINEE(10,"Trainee"), STUDENT(20,"Student"), ASSISTANT(30,"Assistant"), MAINTAINER(40,"Maintainer"), OWNER(50,"Owner");
 
     public final Integer value;
+    public final String roleName;
 
-    RBACRole(int value) {
+    RBACRole(int value, String roleName) {
         this.value = value;
+        this.roleName = roleName;
     }
 
     private static Map<Integer, RBACRole> valuesMap = new HashMap<Integer, RBACRole>(6);
@@ -34,6 +36,10 @@ public enum RBACRole {
     }
 
     public String toString() {
-        return (value.toString());
+        return roleName;
     }
+    
+    public String getRolename() {
+    	return roleName;
+	}
 }

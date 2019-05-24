@@ -3,6 +3,8 @@ package de.catma.ui.modules.project;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.interfaces.IdentifiableResource;
+import de.catma.rbac.RBACRole;
 
 /**
  * A wrapper interface for {@link SourceDocument}s or {@link UserMarkupCollectionReference}s
@@ -10,7 +12,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
  *
  * @author db
  */
-public interface Resource {
+public interface Resource extends IdentifiableResource {
 
     String getName();
 
@@ -22,6 +24,8 @@ public interface Resource {
 
 	public void deleteFrom(Repository project) throws Exception;
 	
-	public default boolean isCollection() { return false; };
+	public default boolean isCollection() { return false; }
+
+	public RBACRole getRole();
 
 }

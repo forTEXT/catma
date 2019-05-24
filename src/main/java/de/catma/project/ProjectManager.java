@@ -24,4 +24,5 @@ public interface ProjectManager {
 			ProjectReference projectReference,
 			OpenProjectListener openProjectListener);
 
+	void leaveProject(String projectId) throws IOException;
 }

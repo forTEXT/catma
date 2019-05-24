@@ -2,10 +2,13 @@ package de.catma.repository.git.interfaces;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import de.catma.Pager;
+import de.catma.interfaces.IdentifiableResource;
 import de.catma.project.ProjectReference;
-import de.catma.rbac.IRBACManager;
+import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.user.Member;
 import de.catma.user.User;
@@ -99,7 +102,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @return
 	 * @throws Exception
 	 */
-	List<Member> getProjectMembers(String projectId) throws Exception;
+	Set<Member> getProjectMembers(String projectId) throws IOException;
 
 	/**
 	 * Get a Pager to a ProjectReferences
@@ -130,5 +133,12 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @throws IOException
 	 */
 	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
+
+	void leaveGroup(String path) throws IOException;
+
+	Set<Member> getResourceMembers(IdentifiableResource resource) throws IOException;
+	
+	Map<String, RBACRole> getRolesPerResource(ProjectReference projectReference) throws IOException ;
+
 
 }

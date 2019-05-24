@@ -1,20 +1,27 @@
 package de.catma.repository.git.managers;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Member;
+import org.gitlab4j.api.models.Project;
 
+import de.catma.interfaces.IdentifiableResource;
+import de.catma.project.ProjectReference;
 import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitMember;
+import de.catma.repository.git.GitProjectManager;
 
 public interface GitlabManagerCommon extends IRBACManager {
 
@@ -46,14 +53,15 @@ public interface GitlabManagerCommon extends IRBACManager {
 	}
 	
 	@Override
-	public default boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, Integer resourceId) {
+	public default boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, IdentifiableResource resource) {
 		try {
-	//TODO: not working YET 
-//			Project project = restrictedGitLabApi.getProjectApi().getProject(namespace, project)(projectId);
-
-			return isMemberAuthorized(permission,getGitLabApi().getProjectApi().getMember(resourceId, subject.getUserId()));
+			Project project = getGitLabApi().getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			if(project != null){
+				return isMemberAuthorized(permission, getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId()));
+			}
+			return false;
 		} catch (GitLabApiException e) {
-			getLogger().log(Level.WARNING, "Can't retrieve permissions from resource: "+ resourceId,e);
+			getLogger().log(Level.WARNING, "Can't retrieve permissions from resource: "+ resource.getResourceId(),e);
 			return false;
 		}
 	}
@@ -78,7 +86,10 @@ public interface GitlabManagerCommon extends IRBACManager {
 			try {
 				Member member = getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId());
 				if(member.getAccessLevel() != AccessLevel.OWNER && 
-						member.getAccessLevel().value.intValue() != role.value.intValue()){
+						member.getAccessLevel().value.intValue() != role.value.intValue()) {
+					if(role.value < RBACRole.ASSISTANT.value){
+						assignDefaultAccessToRootProject(subject, group.getId());
+					}
 					return updateGroupMember(subject, role, group.getId());
 				} else {
 					// Role is either OWNER which means we would oust the owner, or it is already the same.
@@ -86,6 +97,9 @@ public interface GitlabManagerCommon extends IRBACManager {
 					return subject;
 				}
 			} catch (GitLabApiException e) {
+				if(role.value < RBACRole.ASSISTANT.value){
+					assignDefaultAccessToRootProject(subject, group.getId());
+				}
 				return createGroupMember(subject, role, group.getId());
 			}
 		} catch (GitLabApiException e) {
@@ -107,8 +121,42 @@ public interface GitlabManagerCommon extends IRBACManager {
 	}
 	
 	@Override
-	public default RBACSubject assignOnResource(RBACSubject subject, RBACRole role, Integer resourceId) throws IOException {
-		throw new RuntimeException("not implemented yet");
+	public default void unassignFromResource(RBACSubject subject, IdentifiableResource resource) throws IOException {
+		try {
+			Project project = getGitLabApi().getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			if(project == null) {
+				throw new IOException("Resource unkown "+ resource.getResourceId());
+			}
+			getGitLabApi().getProjectApi().removeMember(project.getId(), subject.getUserId());
+		} catch (GitLabApiException e) {
+			throw new IOException("Project or user unkown: "+ resource.getResourceId() + "subject:" + subject, e);
+		}	
+	}
+	
+	@Override
+	public default RBACSubject assignOnResource(RBACSubject subject, RBACRole role, IdentifiableResource resource) throws IOException {
+		try {
+			Project project = getGitLabApi().getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			
+			if(project == null) {
+				throw new IOException("resource or rootproject unkown "+ resource.getResourceId());
+			}
+			try {
+				Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
+				if(member.getAccessLevel() != AccessLevel.OWNER &&
+						member.getAccessLevel().value.intValue() != role.value.intValue()){
+					return updateProjectMember(subject, role, project.getId());
+				} else {
+					// Role is either OWNER which means we would oust the owner, or it is already the same.
+					// In both cases we refuse to update the role, and simply do nothing.
+					return subject;
+				}
+			} catch (GitLabApiException e) {
+				return createProjectMember(subject, role, project.getId());
+			}
+		} catch (GitLabApiException e) {
+				throw new IOException("Project unkown resourceId: "+ resource.getResourceId() + " groupId: "+ resource.getProjectId(),e);
+		}		
 	};
 	
 	public default de.catma.user.Member createGroupMember(RBACSubject subject, RBACRole role, Integer groupId) throws IOException {
@@ -119,6 +167,27 @@ public interface GitlabManagerCommon extends IRBACManager {
 		}		
 	}
 	
+	public default RBACSubject assignDefaultAccessToRootProject(RBACSubject subject, Integer groupId) throws IOException {
+		try {
+			Group group = getGitLabApi().getGroupApi().getGroup(groupId);
+			Project rootProject = getGitLabApi().getProjectApi().getProject(group.getName(), GitProjectManager.getProjectRootRepositoryName(group.getName()));
+			
+			try {
+				Member member = getGitLabApi().getProjectApi().getMember(rootProject.getId(), subject.getUserId());
+				if(member.getAccessLevel().value < RBACRole.ASSISTANT.value ){
+					return new GitMember(getGitLabApi().getProjectApi().updateMember(rootProject.getId(), subject.getUserId(), AccessLevel.forValue(RBACRole.ASSISTANT.value)));
+				} else {
+					// Role is either OWNER which means we would oust the owner, or it is already the same.
+					// In both cases we refuse to update the role, and simply do nothing.
+					return subject;
+				}
+			} catch (GitLabApiException e) {
+				return new GitMember(getGitLabApi().getProjectApi().addMember(rootProject.getId(), subject.getUserId(), AccessLevel.forValue(RBACRole.ASSISTANT.value)));
+			}
+		} catch (GitLabApiException e) {
+			throw new IOException("Project unkown "+ groupId,e);
+		}	
+	}
 	
 	public default de.catma.user.Member updateGroupMember(RBACSubject subject, RBACRole role, Integer groupId) throws IOException {
 		try {
@@ -127,4 +196,22 @@ public interface GitlabManagerCommon extends IRBACManager {
 			throw new IOException("Project unkown "+ groupId, e);
 		}		
 	}
+	
+	public default de.catma.user.Member createProjectMember(RBACSubject subject, RBACRole role, Integer projectId) throws IOException {
+		try {
+			return new GitMember(getGitLabApi().getProjectApi().addMember(projectId, subject.getUserId(), AccessLevel.forValue(role.value)));
+		} catch (GitLabApiException e) {
+			throw new IOException("Project unkown "+ projectId,e);
+		}		
+	}
+	
+	
+	public default de.catma.user.Member updateProjectMember(RBACSubject subject, RBACRole role, Integer projectId) throws IOException {
+		try {
+			return new GitMember(getGitLabApi().getProjectApi().updateMember(projectId, subject.getUserId(), AccessLevel.forValue(role.value)));
+		} catch (GitLabApiException e) {
+			throw new IOException("Project unkown "+ projectId, e);
+		}		
+	}
+	
 }

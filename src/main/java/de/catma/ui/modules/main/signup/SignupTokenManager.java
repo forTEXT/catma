@@ -15,7 +15,7 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.JsonException;
 
-import de.catma.config.HazelcastConfiguration;
+import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.ui.events.TokenInvalidEvent;
 import de.catma.ui.events.TokenValidEvent;
 

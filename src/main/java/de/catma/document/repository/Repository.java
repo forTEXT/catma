@@ -494,7 +494,7 @@ public interface Repository {
 	
 	public User createIfAbsent(Map<String, String> userIdentification) throws IOException;
 
-	public List<Member> getProjectMembers() throws Exception;
+	public Set<Member> getProjectMembers() throws IOException;
 
 	public boolean hasUncommittedChanges() throws Exception;
 

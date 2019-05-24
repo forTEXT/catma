@@ -3,8 +3,10 @@ package de.catma.ui.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 
+import de.catma.hazelcast.HazelCastService;
 import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
@@ -32,8 +34,15 @@ public class CoreModule extends AbstractModule {
 	@VaadinUIScoped
 	IRemoteGitManagerPrivileged providePrivilegedGitManager(){
 		return new GitlabManagerPrivileged();
-		
 	}
+	
+	@Provides
+	@VaadinUIScoped
+	@Inject
+	IRemoteGitManagerRestricted provideCurrentGitManager(LoginService loginService){
+		return loginService.getAPI();
+	}
+	
 	
 	@Provides
 	@VaadinUIScoped
@@ -43,4 +52,9 @@ public class CoreModule extends AbstractModule {
 	}
 	
 	
+	@Provides
+	@Singleton
+	HazelCastService provideHazelcastService(){
+		return new HazelCastService();
+	}
 }
