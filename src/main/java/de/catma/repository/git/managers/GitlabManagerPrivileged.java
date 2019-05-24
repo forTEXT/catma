@@ -11,17 +11,19 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.gitlab4j.api.Constants.ImpersonationState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Identity;
+import org.gitlab4j.api.models.ImpersonationToken;
+import org.gitlab4j.api.models.ImpersonationToken.Scope;
 import org.gitlab4j.api.models.User;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
-import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
-import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
 import de.catma.util.Pair;
 
 public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, GitlabManagerCommon {
@@ -38,50 +40,41 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 	@Override
 	public Pair<GitUser, String> acquireImpersonationToken(String identifier, String provider, String email, String name)
 			throws IOException {
-		Pair<User, Boolean> userWasCreatedPair = this.acquireUser(identifier,provider,email,name);
-		User user = userWasCreatedPair.getFirst();
-		Boolean wasCreated = userWasCreatedPair.getSecond();
+		User user = this.acquireUser(identifier,provider,email,name);
+		
+		UserApi customUserApi = this.privilegedGitLabApi.getUserApi();
+
+		try {
+			List<ImpersonationToken> impersonationTokens = customUserApi.getImpersonationTokens(
+				user.getId(), ImpersonationState.ACTIVE
+			);
+
+			// revoke the default token if it exists actively
+			for (ImpersonationToken token : impersonationTokens) {
+				if (token.getName().equals(GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
+					privilegedGitLabApi.getUserApi().revokeImpersonationToken(user.getId(), token.getId());
+					break;
+				}
+			}
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+				"Failed to revoke existing impersonation token", e
+			);
+		}
 
 		String impersonationToken = null;
 
-		if (wasCreated) {
-			// if the user was newly created, we need to create an impersonation token
-			impersonationToken = this.createImpersonationToken(
-				user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
-			);
-		}
-		else {
-			// if the user already existed, we expect there to be an impersonation token that we can
-			// fetch
-			CustomUserApi customUserApi = new CustomUserApi(this.privilegedGitLabApi);
-
-			try {
-				List<ImpersonationToken> impersonationTokens = customUserApi.getImpersonationTokens(
-					user.getId(), "active"
-				);
-
-				// strictly speaking a user shouldn't have more than one impersonation token if
-				// created through this class, but this at least allows for special cases
-				for (ImpersonationToken token : impersonationTokens) {
-					if (token.name.equals(GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
-						impersonationToken = token.token;
-						break;
-					}
-				}
-			}
-			catch (GitLabApiException e) {
-				throw new IOException(
-					"Failed to acquire impersonation token", e
-				);
-			}
-		}
+		// if the user was newly created, we need to create an impersonation token
+		impersonationToken = this.createImpersonationToken(
+			user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
+		);
 
 		if (impersonationToken == null) {
 			String errorMessage = String.format(
 				"Failed to acquire impersonation token for CATMA with identifier `%s`. " +
-				"This could be because the associated GitLab user ID `%s` does not have an " +
-				"active impersonation token called `%s`, or has so many tokens that " +
-				"CustomUserApi.getImpersonationTokens(int, String) is not returning it.",
+				"The creation of the token the associated GitLab user ID `%s` failed, no " +
+				"active impersonation token called `%s` can be found!",
 				identifier,
 				user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
 			);
@@ -97,7 +90,7 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 	public int createUser(String email, String identifier, @Nullable String password,
 			   String name, @Nullable Boolean isAdmin)
 					   throws IOException {
-		User user = this._createUser(email, identifier, password, name, null, isAdmin);
+		User user = this.createUser(email, identifier, password, name, null, isAdmin);
 		this.createImpersonationToken(user.getId(),GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
 		return user.getId();
 	}
@@ -108,33 +101,29 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 	 * This action is performed as a GitLab admin.
 	 *
 	 * @param userIdentification 
-	 * @return a {@link Pair} object with the first value being a {@link User} object and the second
-	 *         value being a boolean indicating whether or not the user was newly created
+	 * @return the user
 	 * @throws IOException if something went wrong while acquiring the GitLab
 	 *         user
 	 */
-	private Pair<User, Boolean> acquireUser(String identifier, String provider, String email, String name)
+	private User acquireUser(String identifier, String provider, String email, String name)
 			throws IOException {
-		CustomUserApi customUserApi = new CustomUserApi(this.privilegedGitLabApi);
-
-		Boolean userCreated = false;
+		UserApi customUserApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
-			User user = customUserApi.getUser(identifier, provider);
+			User user = customUserApi.getUser(identifier + provider);
 
 			if (user == null) {
 
-				user = this._createUser(email,
-						identifier,
+				user = this.createUser(email,
+						identifier + provider,
 						null,
 						name,
 						provider,
 						null
 				);
-				userCreated = true;
 			}
 
-			return new Pair<>(user, userCreated);
+			return user;
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to acquire remote user", e);
@@ -154,13 +143,13 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 	 */
 	private String createImpersonationToken(int userId, String tokenName)
 			throws IOException {
-		CustomUserApi customUserApi = new CustomUserApi(this.privilegedGitLabApi);
+		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
-			ImpersonationToken impersonationToken = customUserApi.createImpersonationToken(
-				userId, tokenName, null, null
+			ImpersonationToken impersonationToken = userApi.createImpersonationToken(
+				userId, tokenName, null, new Scope[] {Scope.API}
 			);
-			return impersonationToken.token;
+			return impersonationToken.getToken();
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to create impersonation token", e);
@@ -178,7 +167,7 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 			};
 			fExecIfNotNull.accept(name, user::setName);
 
-			this.privilegedGitLabApi.getUserApi().modifyUser(user, password, user.getProjectsLimit());
+			this.privilegedGitLabApi.getUserApi().updateUser(user, password);
 		} catch(GitLabApiException e){
 			throw new IOException("failed to check for username",e);
 		}
@@ -197,51 +186,51 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 	}
 	
 	// it's more convenient to work with the User class internally, which is why this method exists
-		private User _createUser(String email, String identifier, @Nullable String password, String name, String provider,
-								@Nullable Boolean isAdmin) throws IOException {
-			CustomUserApi userApi = new CustomUserApi(privilegedGitLabApi);
-			if (password == null) {
-				// generate a random password
-				password = RandomStringUtils.random(
-					12, 0, GitlabUtils.PWD_CHARS.length-1,
-					false, false, GitlabUtils.PWD_CHARS, new SecureRandom()
-				);
-			}
+	private User createUser(String email, String identifier, @Nullable String password, String name, String provider,
+							@Nullable Boolean isAdmin) throws IOException {
+		UserApi userApi = privilegedGitLabApi.getUserApi();
+		if (password == null) {
+			// generate a random password
+			password = RandomStringUtils.random(
+				12, 0, GitlabUtils.PWD_CHARS.length-1,
+				false, false, GitlabUtils.PWD_CHARS, new SecureRandom()
+			);
+		}
 
-			if (isAdmin == null) {
-				isAdmin = false;
-			}
-			User user = new User();
-			user.setEmail(email);
-			user.setUsername(identifier);
-			user.setName(name);
-			user.setIsAdmin(isAdmin);
+		if (isAdmin == null) {
+			isAdmin = false;
+		}
+		User user = new User();
+		user.setEmail(email);
+		user.setUsername(identifier);
+		user.setName(name);
+		user.setIsAdmin(isAdmin);
+		
+		if (provider != null) {
+			Identity identity = new Identity();
+			identity.setExternUid(identifier);
+			identity.setProvider(provider);
 			
-			if (provider != null) {
-				Identity identity = new Identity();
-				identity.setExternUid(identifier);
-				identity.setProvider(provider);
-				
-				user.setIdentities(Collections.singletonList(identity));
-			}
-			
-			try {
-				user = userApi.createUser(user, password, null);
-				return user;
-			}
-			catch (GitLabApiException e) {
-				throw new IOException("Failed to create user", e);
-			}
+			user.setIdentities(Collections.singletonList(identity));
 		}
+		
+		try {
+			user = userApi.createUser(user, password, false);//do not send a pwd reset link
+			return user;
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to create user", e);
+		}
+	}
 
-		@Override
-		public GitLabApi getGitLabApi() {
-			return privilegedGitLabApi;
-		}
+	@Override
+	public GitLabApi getGitLabApi() {
+		return privilegedGitLabApi;
+	}
 
-		@Override
-		public Logger getLogger() {
-			return logger;
-		}
+	@Override
+	public Logger getLogger() {
+		return logger;
+	}
 		
 }

@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,8 +22,6 @@ import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -46,8 +43,8 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
-import de.catma.document.repository.Repository;
 import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.repository.event.ChangeType;
 import de.catma.document.repository.event.CollectionChangeEvent;
@@ -173,42 +170,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			tagsetData.refreshItem(tagset);
 		}
 	}
-
-	@SuppressWarnings("unchecked")
-	private void handleDocumentChange(PropertyChangeEvent evt) {
-		Object oldValue = evt.getOldValue();
-		Object newValue = evt.getNewValue();
-		try {
-			if (oldValue == null) { // creation
-				String sourceDocumentId = (String)newValue;
-				SourceDocument document = project.getSourceDocument(sourceDocumentId);
-			
-				TreeDataProvider<Resource> resourceDataProvider = 
-	    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
-
-				DocumentResource documentResource = new DocumentResource(document, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
-				
-				resourceDataProvider.getTreeData().addItem(null, documentResource);
-				resourceDataProvider.refreshAll();
-				
-				Notification.show(
-					"Info", 
-					String.format("Document %1$s has been added!", document.toString()),  
-					Type.TRAY_NOTIFICATION);
-
-			}
-			else if (newValue == null) { // removal
-				//TODO
-			}
-			else { // metadata update
-				//TODO
-			}
-		}
-		catch (Exception e) {
-			errorHandler.showAndLogError("Error handling Document", e);
-		}
-	}
-
+	
 	@Subscribe
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
@@ -792,9 +754,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
         	.setWidth(300);
-        
-
-    
         //TODO: see MD for when it is appropriate to offer row options
 //        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
 //				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
@@ -845,7 +804,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-        teamGrid.addColumn(User::getIdentifier).setExpandRatio(1);
+        teamGrid.addColumn(User::getName).setExpandRatio(1);
         
         Label membersAnnotations = new Label("Members");
         ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
@@ -941,51 +900,37 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
         if(project != null){
-        	resourceTree.clear();
-        	Collection<SourceDocument> srcDocs = project.getSourceDocuments();
-        	
-        	for(SourceDocument srcDoc : srcDocs){
-        		DocumentResource srcDocResource = new DocumentResource(srcDoc, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
-        		List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
-    			resourceTree.putAll(srcDocResource, 
-    					collections.stream()
-    					.map(col -> new CollectionResource(col, project.getProjectId(), permissionsPerResource.get(project.getProjectId()))
-    							)
-    					.collect(Collectors.toList())
-    					);
-        	}
-        	
-        	TreeData<Resource> treeData = new TreeData<>();
-        	for(Entry<Resource,Collection<Resource>> entry : resourceTree.asMap().entrySet()){
-        		if(entry.getValue().isEmpty()){
-        			if(!treeData.contains(entry.getKey())){
-        				treeData.addItem(null, entry.getKey());
-        			}
-        		} else {
-        			if(!treeData.contains(entry.getKey())){
-        				treeData.addItem(null, entry.getKey());
-        			}
-        			treeData.addItems(entry.getKey(), entry.getValue());
-        		}
-        	}
+            TreeData<Resource> treeData = new TreeData<>();
+            Collection<SourceDocument> srcDocs = project.getSourceDocuments();
+            for(SourceDocument srcDoc : srcDocs) {
+            	
+                DocumentResource srcDocResource = 
+                		new DocumentResource(
+                			srcDoc, 
+                			project.getProjectId(), 
+                			permissionsPerResource.get(project.getProjectId()));
+                
+                treeData.addItem(null,srcDocResource);
+                
+                List<UserMarkupCollectionReference> collections = 
+                		srcDoc.getUserMarkupCollectionRefs();
+                if(!collections.isEmpty()){
+                    treeData.addItems(
+                    	srcDocResource,
+                    	collections
+                    		.stream()
+                    		.map(collectionRef -> 
+                    			new CollectionResource(
+                    				collectionRef, 
+                    				project.getProjectId(), 
+                    				permissionsPerResource.get(project.getProjectId()))));
+                }
+            }
             return new TreeDataProvider<>(treeData);
         }
         return new TreeDataProvider<>(new TreeData<>());
     }
 
-//    private Resource getSelectedResource(){
-//		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
-//		if ((selectedResources.size() != 1) 
-//				&& !selectedResources.iterator().next().isCollection()) {
-//			Notification.show("Info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE);
-//			return null;
-//		}	
-//		else {
-//			final Resource resource = selectedResources.iterator().next();
-//			return resource;
-//		}
-//    }
-    
     /* Event handler */
 
     /**
@@ -1012,7 +957,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     @Subscribe
     public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
-    //	initData();
+    	initData();
     }
     
     @Subscribe

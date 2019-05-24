@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -532,9 +533,9 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			// String email = payloadJson.get("email").asText(); //$NON-NLS-1$
 
 			String identifier = payloadJson.get("sub").asText();
-			String name = payloadJson.get("name") == null ? identifier : payloadJson.get("name").asText();
 			String email = payloadJson.get("email").asText();
-			String provider = "google.com";
+			String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
+			String provider = "google_com";
 			loginservice.loggedInFromThirdParty(identifier, provider, email, name);
 			setAttribute("OAUTHTOKEN", null);
 		}
