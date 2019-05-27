@@ -192,7 +192,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
 		if (isNewTarget(routeToAnnotateEvent.getClass())) {
 			if (this.taggerManagerView == null) {
-				this.taggerManagerView = new TaggerManagerView(eventBus);
+				this.taggerManagerView = new TaggerManagerView(eventBus, routeToAnnotateEvent.getProject());
 			}
 			
 			setContent(taggerManagerView);

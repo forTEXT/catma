@@ -21,6 +21,7 @@ package de.catma.ui.tabbedview;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.vaadin.elements.Element;
 import org.vaadin.elements.ElementIntegration;
@@ -28,11 +29,9 @@ import org.vaadin.elements.Elements;
 import org.vaadin.elements.Root;
 
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
@@ -41,18 +40,62 @@ import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
 public class TabbedView extends VerticalLayout implements CloseHandler {
+	public interface CloseableTabFactory extends Supplier<ClosableTab> {
+		@Override
+		default ClosableTab get() {
+			return createCloseableTab();
+		}
 
-	private TabSheet tabSheet;
-	private Label noOpenTabsLabel;
-	private VerticalLayout introPanel;
-	private TabComponent lastTab;
+		ClosableTab createCloseableTab();
 
-	public TabbedView(String noOpenTabsText) {
-	
-		initComponents(noOpenTabsText);
-		initActions();
+		default String getDefaultCaption() { return "No selection yet"; };
 	}
 	
+	@Deprecated
+	private static class SimpleLabelTab extends VerticalLayout implements ClosableTab {
+		
+		public SimpleLabelTab(String noOpenTabsText) {
+			setSpacing(true);
+
+			Label noOpenTabsLabel = new Label(noOpenTabsText);
+
+			noOpenTabsLabel.setSizeFull();
+			addComponent(noOpenTabsLabel);
+			setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
+		}
+		
+		@Override
+		public void addClickshortCuts() {
+		}
+		@Override
+		public void removeClickshortCuts() {
+		}
+		@Override
+		public void close() {
+		}
+	}
+
+	private TabSheet tabSheet;
+	private TabComponent lastTab;
+	private CloseableTabFactory closeableTabFactory;
+
+	@Deprecated
+	public TabbedView(final String noOpenTabsText) {
+		this (new CloseableTabFactory() {
+			
+			@Override
+			public ClosableTab createCloseableTab() {
+				return new SimpleLabelTab(noOpenTabsText);
+			}
+		});
+
+	}
+	
+	public TabbedView(CloseableTabFactory closeableTabFactory) {
+		this.closeableTabFactory = closeableTabFactory;
+		initComponents();
+		initActions();	
+	}
 	
 	
 	private void initActions() {
@@ -70,30 +113,21 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 
 	}
 
-	private void initComponents(String noOpenTabsText) {
+	private void initComponents() {
 		addStyleName("hugecard-tabbed-view");	
+		setMargin(false);
+		setSizeFull();
 		
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
 		tabSheet.addStyleName("hugecard-tabbed-view-tabsheet");
+		tabSheet.setCloseHandler(this);
+		tabSheet.setTabsVisible(true);
+		tabSheet.setSizeFull();
 		
-		introPanel = new VerticalLayout();
-		introPanel.setSpacing(true);
-		addComponent(introPanel);
-
-		noOpenTabsLabel = new Label(noOpenTabsText);
-
-		noOpenTabsLabel.setSizeFull();
-		setMargin(false);
-
-		introPanel.addComponent(noOpenTabsLabel);
-		introPanel.setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
-
 		addComponent(tabSheet);
 		setExpandRatio(tabSheet, 1.0f);
-		tabSheet.setTabsVisible(false);
-		tabSheet.setHeight("0px");
-		tabSheet.setCloseHandler(this);
+		
 	}
 	
 	@Override
@@ -115,17 +149,20 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 				addButtonElement.setInnerHtml(VaadinIcons.PLUS.getHtml());
 
 				addButtonElement.addEventListener("click", args -> {
-		            Notification.show("Clicked");
-		           //TODO: add new tab 
+		           addTab(closeableTabFactory.createCloseableTab(), closeableTabFactory.getDefaultCaption());
 				});
 			}
 		}, tabSheet);
 
-		
-	}
-	public void setHtmlLabel(){
-	    noOpenTabsLabel.setContentMode(ContentMode.HTML);
+		if (tabSheet.getComponentCount() == 0) {
+			addClosableTab(closeableTabFactory.createCloseableTab(), closeableTabFactory.getDefaultCaption());
 		}
+	}
+	
+	@Deprecated
+	public void setHtmlLabel(){
+	   // noOpenTabsLabel.setContentMode(ContentMode.HTML);
+	}
 
 	protected void onTabClose(Component tabContent) {
 		onTabClose(tabSheet, tabContent);
@@ -140,11 +177,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		}
 
 		if (tabsheet.getComponentCount() == 0) {
-			tabSheet.setTabsVisible(false);
-			tabSheet.setHeight("0px");
-			introPanel.setVisible(true);
-			setMargin(true);
-			setSizeUndefined();
+			addClosableTab(closeableTabFactory.createCloseableTab(), closeableTabFactory.getDefaultCaption());
 		}
 
 	}
@@ -155,14 +188,6 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 
 		tab.setClosable(false);
 		tabSheet.setSelectedTab(tab.getComponent());
-
-		if (tabSheet.getComponentCount() != 0) {
-			introPanel.setVisible(false);
-			setMargin(false);
-			tabSheet.setTabsVisible(true);
-			tabSheet.setSizeFull();
-			setSizeFull();
-		}
 
 		return tab;
 	}
@@ -223,7 +248,8 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		}
 	}
 
+	@Deprecated
 	protected VerticalLayout getIntroPanel() {
-		return introPanel;
+		return null;
 	}
 }

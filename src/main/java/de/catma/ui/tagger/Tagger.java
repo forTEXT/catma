@@ -143,7 +143,7 @@ public class Tagger extends AbstractComponent {
 	@Override
 	public void beforeClientResponse(boolean initial) {
 		super.beforeClientResponse(initial);
-		if (initial) {
+		if (initial && pager.hasPages()) {
 			setPage(pager.getCurrentPageNumber());
 		}
 	}

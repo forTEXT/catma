@@ -78,6 +78,10 @@ public class Pager implements Iterable<Page> {
 			}
 		}
 	}
+	
+	public boolean hasPages() {
+		return !pages.isEmpty();
+	}
 
 	private boolean matchChecksum(String text) {
 		

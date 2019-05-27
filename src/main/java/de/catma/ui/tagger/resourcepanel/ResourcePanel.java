@@ -221,16 +221,15 @@ public class ResourcePanel extends VerticalLayout {
 			documentsData = new TreeData<>();
 			
 			Collection<SourceDocument> documents = project.getSourceDocuments(); 
-			if ((currentlySelectedSourceDocument == null) && !documents.isEmpty()){
-				currentlySelectedSourceDocument = documents.iterator().next();
-			}
 			
 			final SourceDocument preselection = currentlySelectedSourceDocument;
 			
 			documentsData.addRootItems(
 				documents
 				.stream()
-				.map(document -> new DocumentDataItem(document, document.equals(preselection))));
+				.map(document -> new DocumentDataItem(
+						document, 
+						preselection != null && document.equals(preselection))));
 			
 			for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
 				for (UserMarkupCollectionReference umcRef : 

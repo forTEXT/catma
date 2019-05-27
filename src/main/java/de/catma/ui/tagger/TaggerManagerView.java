@@ -18,12 +18,8 @@
  */
 package de.catma.ui.tagger;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 
 import de.catma.document.repository.Repository;
@@ -36,12 +32,13 @@ import de.catma.ui.tabbedview.TabbedView;
 
 public class TaggerManagerView extends TabbedView {
 	
-	private int nextTaggerID = 0;
+	private int nextTaggerID = 1;
 	private final EventBus eventBus;
 	
-	public TaggerManagerView(EventBus eventBus) {
-		super(
-			Messages.getString("TaggerManagerView.noOpenDocumentsInfo")); //$NON-NLS-1$
+	public TaggerManagerView(EventBus eventBus, Repository project) {
+		super(() -> new TaggerView(
+				0, null, project,
+				eventBus));
 		this.eventBus = eventBus;
 		this.eventBus.register(this);
 	}

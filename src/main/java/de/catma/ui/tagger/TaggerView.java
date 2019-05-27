@@ -41,7 +41,6 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -55,9 +54,9 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
@@ -80,8 +79,8 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
-import de.catma.ui.events.routing.RouteToAnalyzeOldEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeOldEvent;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
@@ -148,36 +147,43 @@ public class TaggerView extends HorizontalLayout
 		initListeners();
 		pager.setMaxPageLengthInLines(maxPageLengthInLines);
 		initData();
-
 	}
 
 	private void initData() {
 		try {
-			tagger.setText(sourceDocument.getContent());
-			totalLineCount = pager.getTotalLineCount();
-			try {
-				linesPerPageSlider.setValue((100.0/totalLineCount)*maxPageLengthInLines);
-			} catch (ValueOutOfBoundsException toBeIgnored) {}
-			
-			List<UserMarkupCollectionReference> collectionReferences =
-				resourcePanel.getSelectedUserMarkupCollectionReferences();
-			
-			userMarkupCollectionManager.clear();
-			
-			for (UserMarkupCollectionReference collectionRef : collectionReferences) {
-				UserMarkupCollection collection = project.getUserMarkupCollection(collectionRef);
-				userMarkupCollectionManager.add(collection);
+			if (sourceDocument != null) {
+				linesPerPageSlider.setEnabled(true);
+				btAnalyze.setEnabled(true);
+				
+				tagger.setText(sourceDocument.getContent());
+				totalLineCount = pager.getTotalLineCount();
+				try {
+					linesPerPageSlider.setValue((100.0/totalLineCount)*maxPageLengthInLines);
+				} catch (ValueOutOfBoundsException toBeIgnored) {}
+				
+				List<UserMarkupCollectionReference> collectionReferences =
+					resourcePanel.getSelectedUserMarkupCollectionReferences();
+				
+				userMarkupCollectionManager.clear();
+				
+				for (UserMarkupCollectionReference collectionRef : collectionReferences) {
+					UserMarkupCollection collection = project.getUserMarkupCollection(collectionRef);
+					userMarkupCollectionManager.add(collection);
+				}
+				
+				Collection<TagsetDefinition> tagsets = 
+						new HashSet<>(resourcePanel.getSelectedTagsets());
+				
+				annotationPanel.setData(
+						sourceDocument, 
+						tagsets, 
+						new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
+				taggerContextMenu.setTagsets(tagsets);
+			}			
+			else {
+				linesPerPageSlider.setEnabled(false);
+				btAnalyze.setEnabled(false);
 			}
-			
-			Collection<TagsetDefinition> tagsets = 
-					new HashSet<>(resourcePanel.getSelectedTagsets());
-			
-			annotationPanel.setData(
-					sourceDocument, 
-					tagsets, 
-					new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
-			taggerContextMenu.setTagsets(tagsets);
-			
 		} catch (IOException e) {
 			errorHandler.showAndLogError(
 				Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
@@ -367,10 +373,10 @@ public class TaggerView extends HorizontalLayout
 		});
 		btAnalyze.addClickListener(new ClickListener() {	
 		
-		public void buttonClick(ClickEvent event) {	
-			analyzeDocument();
-		}
-	});
+			public void buttonClick(ClickEvent event) {	
+				analyzeDocument();
+			}
+		});
 		
 		linesPerPageSlider.addValueListener(new ValueChangeListener<Double>() {
 			
@@ -494,11 +500,11 @@ public class TaggerView extends HorizontalLayout
 		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button"); //$NON-NLS-1$
 		
-		IndexInfoSet indexInfoSet = 
-			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
+		boolean isRtl = sourceDocument == null?false: 
+			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet().isRightToLeftWriting(); 
 
 		pager = new Pager(taggerID, approxMaxLineLength, maxPageLengthInLines, 
-				indexInfoSet.isRightToLeftWriting());
+				isRtl);
 		
 		tagger = new Tagger(taggerID, pager, this, project);
 		tagger.addStyleName("tagger"); //$NON-NLS-1$
@@ -607,7 +613,7 @@ public class TaggerView extends HorizontalLayout
 		
 		resourcePanel = new ResourcePanel(project, sourceDocument, eventBus); 
 		SliderPanel drawer = new SliderPanelBuilder(resourcePanel)
-				.mode(SliderMode.LEFT).expanded(false).build();
+				.mode(SliderMode.LEFT).expanded(sourceDocument == null).build();
 		
 		addComponent(drawer);
 		

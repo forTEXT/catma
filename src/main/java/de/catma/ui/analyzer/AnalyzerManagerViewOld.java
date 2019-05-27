@@ -58,8 +58,8 @@ public class AnalyzerManagerViewOld extends TabbedView {
 
 	private void initComponents() {
 		btnAnalyzeCurrentOpenDoc = new Button(Messages.getString("AnalyzerManagerView.analyzeCurrentlyOpenDocument")); //$NON-NLS-1$
-		getIntroPanel().addComponent(btnAnalyzeCurrentOpenDoc);
-	    setHtmlLabel();
+//		getIntroPanel().addComponent(btnAnalyzeCurrentOpenDoc);
+//	    setHtmlLabel();
 	  
 	  
 	}

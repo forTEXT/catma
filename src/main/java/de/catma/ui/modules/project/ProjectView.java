@@ -49,6 +49,7 @@ import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.repository.event.ChangeType;
 import de.catma.document.repository.event.CollectionChangeEvent;
 import de.catma.document.repository.event.DocumentChangeEvent;
+import de.catma.document.repository.event.ProjectReadyEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -865,6 +866,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 		tagsetChangeListener);
                 
 				initData();
+				eventBus.post(new ProjectReadyEvent(project));
             }
             
             @Override
