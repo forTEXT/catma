@@ -10,15 +10,12 @@ import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.Grid.SelectionMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 

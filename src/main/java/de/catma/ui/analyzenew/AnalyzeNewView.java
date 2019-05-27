@@ -8,10 +8,13 @@ import java.util.List;
 import java.util.Locale;
 
 import org.antlr.runtime.RecognitionException;
+import org.vaadin.sliderpanel.SliderPanel;
+import org.vaadin.sliderpanel.SliderPanelBuilder;
+import org.vaadin.sliderpanel.client.SliderMode;
+
 import com.github.appreciated.material.MaterialTheme;
 
 import com.vaadin.data.TreeData;
-import com.vaadin.event.MouseEvents;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
@@ -39,6 +42,8 @@ import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
+import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
+import de.catma.ui.analyzenew.resourcepanelanalyze.ResourcePanelAnalyze;
 import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.analyzer.GroupedQueryResultSelectionListener;
 import de.catma.ui.analyzer.Messages;
@@ -51,7 +56,7 @@ import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
 
-public class AnalyzeNewView extends VerticalLayout
+public class AnalyzeNewView extends HorizontalLayout
 		implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider,
 		TagKwicResultsProvider, HasComponents {
 
@@ -82,6 +87,8 @@ public class AnalyzeNewView extends VerticalLayout
 	private HorizontalLayout searchAndVisIconsHorizontal;
 	private Component searchPanel;
 	private Component visIconsPanel;
+	private ResourcePanelAnalyze resourcePanelAnalyze;
+	private QueryOptions queryOptions;
 
 	public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener)
 			throws Exception {
@@ -131,6 +138,13 @@ public class AnalyzeNewView extends VerticalLayout
 		contentPanel.addStyleName("analyze_content");
 
 		this.addStyleName("analyze_content");
+		
+		resourcePanelAnalyze = new ResourcePanelAnalyze(this.repository, this.corpus); 
+		SliderPanel drawer = new SliderPanelBuilder(resourcePanelAnalyze)
+				.mode(SliderMode.LEFT).expanded(false).build();
+		
+		addComponent(drawer);
+		
 		addComponent(contentPanel);
 	}
 
@@ -186,8 +200,33 @@ public class AnalyzeNewView extends VerticalLayout
 				setContent(kwic);
 			}
 		});
+		
+		resourcePanelAnalyze.setSelectionListener(new AnalyzeResourceSelectionListener() {
+
+
+			@Override
+			public void resourceSelected(SourceDocument sd) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void resourceSelected(UserMarkupCollectionReference collectionRef) {
+				// TODO Auto-generated method stub
+				
+			}
+
+		
+		});
 	}
 
+
+	private void setQueryOptionsResources() {
+		// TODO : change resources for the queries
+		//QueryOptions queryOptions = new QueryOptions();
+		Notification.show("new queryoptions", Notification.TYPE_HUMANIZED_MESSAGE);
+	}
+	
 	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
 		return new EditVizSnapshotListener() {
 
@@ -351,7 +390,7 @@ public class AnalyzeNewView extends VerticalLayout
 
 	private void executeSearch() {
 
-		QueryOptions queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
+		 queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
 				relevantStaticMarkupCollIDs, indexInfoSet.getUnseparableCharacterSequences(),
 				indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
 
@@ -411,7 +450,7 @@ public class AnalyzeNewView extends VerticalLayout
 	}
 
 	private void addSourceDocument(SourceDocument sd) {
-		relevantSourceDocumentIDs.add(sd.getID());
+		this.relevantSourceDocumentIDs.add(sd.getID());
 		indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
 		MarkupCollectionItem umc = new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
 		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {

@@ -675,7 +675,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 
 		if (selectedItemsTreeGridData.contains(root)) {
 			if (selectedItemsTreeGridData.contains(selectedItem)) {
-				// do nothing
+				//item already inside- do nothing
 			} else {
 				selectedItemsTreeGridData.addItem(root, selectedItem);
 			}
@@ -848,7 +848,6 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 
 					} else {
 						// add whole new doc_branch to tree
-
 						TreeRowItem rootTag = resultsTreeGridData.getParent(selectedItem);
 						selectedItemsTreeGridData.addItem(queryRoot, rootTag);
 						selectedItemsTreeGridData.addItem(rootTag, selectedItem);
@@ -859,7 +858,6 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 						for (TreeRowItem coll : colls) {
 							List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
 							selectedItemsTreeGridData.addItems(coll, items);
-
 						}
 					}
 

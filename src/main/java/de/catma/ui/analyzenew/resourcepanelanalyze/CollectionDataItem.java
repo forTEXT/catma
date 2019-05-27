@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.resourcepanel;
+package de.catma.ui.analyzenew.resourcepanelanalyze;
 
 import com.vaadin.icons.VaadinIcons;
 
@@ -10,14 +10,15 @@ public class CollectionDataItem implements DocumentTreeItem {
 	private UserMarkupCollectionReference collectionRef;
 	private boolean selected = true;
 
-	public CollectionDataItem(UserMarkupCollectionReference collectionRef) {
+	public CollectionDataItem(UserMarkupCollectionReference collectionRef, boolean selected) {
 		super();
 		this.collectionRef = collectionRef;
+		this.selected = selected;
 	}
 	
 	@Override
 	public String getSelectionIcon() {
-		return selected?VaadinIcons.EYE.getHtml():VaadinIcons.EYE_SLASH.getHtml();
+		return selected?VaadinIcons.DOT_CIRCLE.getHtml():VaadinIcons.CIRCLE_THIN.getHtml();
 	}
 
 	@Override
@@ -49,9 +50,11 @@ public class CollectionDataItem implements DocumentTreeItem {
 		return selected;
 	}
 	
+
 	@Override
-	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener) {
-		resourceSelectionListener.annotationCollectionSelected(collectionRef, isSelected());
+	public void fireSelectedEvent(AnalyzeResourceSelectionListener analyzeResourceSelectionListener) {
+		analyzeResourceSelectionListener.resourceSelected(collectionRef);
+		
 	}
 
 

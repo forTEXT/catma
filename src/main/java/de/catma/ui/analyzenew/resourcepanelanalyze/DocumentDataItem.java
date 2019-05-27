@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.resourcepanel;
+package de.catma.ui.analyzenew.resourcepanelanalyze;
 
 import com.vaadin.icons.VaadinIcons;
 
@@ -76,10 +76,10 @@ public class DocumentDataItem implements DocumentTreeItem {
 		return selected;
 	}
 	
+
 	@Override
-	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener) {
-		resourceSelectionListener.documentSelected(document);
+	public void fireSelectedEvent(AnalyzeResourceSelectionListener analyzeResourceSelectionListener) {
+		analyzeResourceSelectionListener.resourceSelected(document);
 		
 	}
-
 }
