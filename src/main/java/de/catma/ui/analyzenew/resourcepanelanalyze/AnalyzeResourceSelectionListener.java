@@ -5,7 +5,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 
 public interface AnalyzeResourceSelectionListener {
 
-	void resourceSelected(SourceDocument sd);
-	void resourceSelected(UserMarkupCollectionReference collectionRef);
+	void resourceSelected(SourceDocument sd, boolean selected);
+	void resourceSelected(UserMarkupCollectionReference collectionRef, boolean selected);
 
 }

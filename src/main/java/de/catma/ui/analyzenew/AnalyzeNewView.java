@@ -100,6 +100,10 @@ public class AnalyzeNewView extends HorizontalLayout
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
 		this.indexInfoSet = new IndexInfoSet(Collections.<String>emptyList(), Collections.<Character>emptyList(),
 				Locale.ENGLISH);
+		
+		 queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
+					relevantStaticMarkupCollIDs, indexInfoSet.getUnseparableCharacterSequences(),
+					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
 
 		initComponents();
 		initListeners();
@@ -205,14 +209,16 @@ public class AnalyzeNewView extends HorizontalLayout
 
 
 			@Override
-			public void resourceSelected(SourceDocument sd) {
+			public void resourceSelected(SourceDocument sd,boolean selected) {
 				// TODO Auto-generated method stub
+				setQueryOptionsResourcesDocument(sd, selected);
 				
 			}
 
 			@Override
-			public void resourceSelected(UserMarkupCollectionReference collectionRef) {
+			public void resourceSelected(UserMarkupCollectionReference collectionRef, boolean selected) {
 				// TODO Auto-generated method stub
+				setQueryOptionsResourcesUMC(collectionRef, selected);
 				
 			}
 
@@ -221,10 +227,22 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 
-	private void setQueryOptionsResources() {
+	private void setQueryOptionsResourcesDocument(SourceDocument sd, boolean selected) {
+
+		Notification.show("new queryoptions: new doc "+sd.toString()+" selectstatus :"+selected, Notification.TYPE_HUMANIZED_MESSAGE);
+		if(queryOptions.getRelevantSourceDocumentIDs().contains(sd.getID())&&(!selected)) {
+			// remove sd
+			queryOptions.getRelevantSourceDocumentIDs().remove(sd.getID());
+		
+		}if(!queryOptions.getRelevantSourceDocumentIDs().contains(sd.getID())&&(selected)) {
+			queryOptions.getRelevantSourceDocumentIDs().add(sd.getID());
+			
+		}
+	}
+	private void setQueryOptionsResourcesUMC(UserMarkupCollectionReference collectionRef, boolean selected) {
 		// TODO : change resources for the queries
 		//QueryOptions queryOptions = new QueryOptions();
-		Notification.show("new queryoptions", Notification.TYPE_HUMANIZED_MESSAGE);
+		Notification.show("new queryoptions: new umc "+collectionRef.toString()+" selectstatus :"+selected, Notification.TYPE_HUMANIZED_MESSAGE);
 	}
 	
 	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
@@ -389,10 +407,6 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private void executeSearch() {
-
-		 queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
-				relevantStaticMarkupCollIDs, indexInfoSet.getUnseparableCharacterSequences(),
-				indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
 
 		QueryJob job = new QueryJob(searchInput.toString(), queryOptions);
 

@@ -202,11 +202,10 @@ import de.catma.util.Pair;
 			Label documentTreeLabel = new Label("Documents & Annotations");
 			documentTree = new TreeGrid<>();
 			documentTree.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
-			//documentTree.setSelectionMode(SelectionMode.MULTI);
 			
 			ButtonRenderer<DocumentTreeItem> documentSelectionRenderer = 
 					new ButtonRenderer<DocumentTreeItem>(
-						documentSelectionClick -> handleVisibilityClickEvent(documentSelectionClick));
+						documentSelectionClick -> handleSelectClickEvent(documentSelectionClick));
 			documentSelectionRenderer.setHtmlContentAllowed(true);
 
 			Column<DocumentTreeItem, String> selectionColumn = 
@@ -224,39 +223,41 @@ import de.catma.util.Pair;
 			//TODO: shouldn't be fixed size
 			documentTree.setWidth("400px");
 			documentTree.setHeight("450px");
-
-			
+				
 			documentTree
 				.addColumn(documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer());
+			
+			//documentTree.setSelectionMode(SelectionMode.NONE);
 			
 	
 
 			documentActionGridComponent = 
 					new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
+	
+			
+			
 		
 			
 			addComponent(documentActionGridComponent);
 			
 
 		}
-		private void handleVisibilityClickEvent(RendererClickEvent<DocumentTreeItem> documentSelectionClick) {
+		private void handleSelectClickEvent(RendererClickEvent<DocumentTreeItem> documentSelectionClick) {
 			DocumentTreeItem selectedItem = documentSelectionClick.getItem();
-			handleVisibilityClicItem(selectedItem);
+			handleSelectClicItem(selectedItem);
 		}
 		
-		private void handleVisibilityClicItem(DocumentTreeItem selectedItem) {
+		private void handleSelectClicItem(DocumentTreeItem selectedItem) {
 			selectedItem.setSelected(!selectedItem.isSelected());
 			
-			if (selectedItem.isSingleSelection()) {
-				for (DocumentTreeItem item : documentsData.getRootItems()) {
-					if (!item.equals(selectedItem)) {
-						item.setSelected(false);
-					}
-				}
+			if (selectedItem.getClass()==CollectionDataItem.class) {
+			DocumentTreeItem docItem = documentsData.getParent(selectedItem);
+			docItem.setSelected(true);
+
 			}		
 			documentTree.getDataProvider().refreshAll();
 			
-			selectedItem.fireSelectedEvent(this.analyzeResourceSelectionListener);		
+			selectedItem.fireSelectedEvent(this.analyzeResourceSelectionListener,selectedItem.isSelected());		
 		}
 		
 		public void selectCollectionVisible(String collectionId) {
@@ -274,7 +275,7 @@ import de.catma.util.Pair;
 			.stream()
 			.filter(item -> ((CollectionDataItem)item).getCollectionRef().getId().equals(collectionId))
 			.findFirst()
-			.ifPresent(collectionItem -> handleVisibilityClicItem(collectionItem));
+			.ifPresent(collectionItem -> handleSelectClicItem(collectionItem));
 		}
 
 		

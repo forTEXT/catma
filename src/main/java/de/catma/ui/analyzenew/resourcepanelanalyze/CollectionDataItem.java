@@ -52,8 +52,8 @@ public class CollectionDataItem implements DocumentTreeItem {
 	
 
 	@Override
-	public void fireSelectedEvent(AnalyzeResourceSelectionListener analyzeResourceSelectionListener) {
-		analyzeResourceSelectionListener.resourceSelected(collectionRef);
+	public void fireSelectedEvent(AnalyzeResourceSelectionListener analyzeResourceSelectionListener, boolean selected) {
+		analyzeResourceSelectionListener.resourceSelected(collectionRef,selected);
 		
 	}
 

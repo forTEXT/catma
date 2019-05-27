@@ -64,7 +64,7 @@ public class DocumentDataItem implements DocumentTreeItem {
 	
 	@Override
 	public boolean isSingleSelection() {
-		return true;
+		return false;
 	}
 
 	public SourceDocument getDocument() {
@@ -78,8 +78,8 @@ public class DocumentDataItem implements DocumentTreeItem {
 	
 
 	@Override
-	public void fireSelectedEvent(AnalyzeResourceSelectionListener analyzeResourceSelectionListener) {
-		analyzeResourceSelectionListener.resourceSelected(document);
+	public void fireSelectedEvent(AnalyzeResourceSelectionListener analyzeResourceSelectionListener, boolean selected) {
+		analyzeResourceSelectionListener.resourceSelected(document, selected);
 		
 	}
 }
