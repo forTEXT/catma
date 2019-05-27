@@ -1,5 +1,9 @@
 package de.catma.ui.component.actiongrid;
 
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.provider.ConfigurableFilterDataProvider;
+import com.vaadin.data.provider.DataProvider;
+import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
@@ -12,12 +16,39 @@ import de.catma.ui.util.Styles;
  * @param <G> Gridtype e.g. TreeGrid or normal Grid
  */
 public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
+	
+	private static class DefaultSearchFilter implements SerializablePredicate<Object> {
+		
+		private String filterValue;
+		
+		public DefaultSearchFilter(String filterValue) {
+			super();
+			this.filterValue = filterValue;
+		}
 
+		@Override
+		public boolean test(Object arg) {
+			if (arg != null) {
+				return arg.toString().startsWith(filterValue);
+			}
+			return false;
+		}
+		
+	}
+	
+	public static class DefaultSearchFilterProvider implements SearchFilterProvider<Object> {
+		@Override
+		public SerializablePredicate<Object> createSearchFilter(String searchInput) {
+			return new DefaultSearchFilter(searchInput);
+		}
+	}
+	
     private final Component titleCompennt;
     private final G dataGrid;
     private final ActionGridBar actionGridBar;
     private boolean multiselect = false;
 	private boolean headerVisible;
+	private SearchFilterProvider<?> searchFilterProvider = new DefaultSearchFilterProvider();
 
     public ActionGridComponent(Component titleComponent, G dataGrid){
         this.titleCompennt = titleComponent;
@@ -27,9 +58,27 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
                 event -> toggleMultiselect(event));
         this.headerVisible = dataGrid.isHeaderVisible();
         initComponents();
+        initActions();
     }
 
-    private void toggleMultiselect(ClickEvent event) {
+    private void initActions() {
+    	actionGridBar.addSearchValueChangeListener(valueChange -> handleSearchValueChange(valueChange));
+	}
+
+	@SuppressWarnings("unchecked")
+	private void handleSearchValueChange(ValueChangeEvent<String> valueChange) {
+		
+		DataProvider<?, ?> dataProvider = this.dataGrid.getDataProvider();
+		
+		if (dataProvider instanceof ConfigurableFilterDataProvider) {
+			@SuppressWarnings("rawtypes")
+			ConfigurableFilterDataProvider filterableDp = (ConfigurableFilterDataProvider)dataProvider;
+			filterableDp.setFilter(
+				searchFilterProvider.createSearchFilter(valueChange.getValue()));
+		}
+	}
+
+	private void toggleMultiselect(ClickEvent event) {
         if(! multiselect) {
             dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
             multiselect = true;
@@ -60,4 +109,8 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
         return dataGrid;
     }
 
+    public void setSearchFilterProvider(SearchFilterProvider<?> searchFilterProvider) {
+		this.searchFilterProvider = searchFilterProvider;
+		actionGridBar.setSearchInputVisible(searchFilterProvider != null);
+	}
 }

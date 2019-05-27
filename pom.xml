@@ -169,7 +169,7 @@
         </dependency>
 		<!-- external OAUTH login and document loading over HTTP start -->
 		
-		<!-- old API start, jackson might be needed for hazelcast as well -->
+		<!-- old API start, jackson jaxb is needed for recaptch as well -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -195,11 +195,11 @@
             <artifactId>org.restlet.ext.html</artifactId>
             <version>2.3.4</version>
         </dependency>
-        <dependency>
+       <!-- <dependency> conflicts with 2.9.8
             <groupId>org.restlet.jee</groupId>
             <artifactId>org.restlet.ext.jackson</artifactId>
             <version>2.3.4</version>
-        </dependency>
+        </dependency>  --> 
         <dependency>
             <groupId>org.restlet.jee</groupId>
             <artifactId>org.restlet.ext.servlet</artifactId>
@@ -241,7 +241,7 @@
         </dependency>
 		
 		<!-- TODO: to be removed -->
-		<dependency>
+<!--		<dependency>
 			<groupId>org.neo4j</groupId>
 			<artifactId>neo4j-ogm-core</artifactId>
 			<version>3.0.0</version>
@@ -251,7 +251,7 @@
 			<artifactId>neo4j-ogm-bolt-driver</artifactId>
 			<version>3.0.0</version>
 		</dependency>
-<!--        <dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
@@ -268,12 +268,18 @@
 		    <version>3.0.7</version>
 		</dependency>		
 		
-				
+		<!-- recaptcha -->
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 			<version>2.28</version>
 		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.module</groupId>
+			<artifactId>jackson-module-jaxb-annotations</artifactId>
+			<version>2.9.8</version>
+  		</dependency>
+  		
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>

@@ -100,8 +100,6 @@ public class KwicPanelNew extends VerticalLayout{
 		        moreOptionsMenu.addItem("Annotate all selected rows", clickEvent -> handleAnnotateAllRequest());
 		        moreOptionsMenu.addItem("Annotate single row", clickEvent -> handleAnnotateSingleRequest());
 		 
-		        ContextMenu searchMenu =  kwicGridComponent.getActionGridBar().getBtnSearchContextMenu();
-		        
 			}
 			
 			private void handleAnnotateAllRequest() {

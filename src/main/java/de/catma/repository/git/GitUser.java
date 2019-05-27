@@ -26,6 +26,11 @@ public class GitUser implements User {
 	public String getName() {
 		return gitlabUser.getName();
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 
 	@Override
 	public String getEmail() {

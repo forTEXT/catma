@@ -17,6 +17,7 @@ import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
@@ -41,11 +42,11 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.util.IDGenerator;
-import de.catma.util.Pair;
 
 public class ResourcePanel extends VerticalLayout {
 	
@@ -156,6 +157,23 @@ public class ResourcePanel extends VerticalLayout {
 				selectionEvent -> handleTagsetSelectionEvent(selectionEvent));
         tagsetActionGridComponent.getActionGridBar().addBtnAddClickListener(
             	click -> handleAddTagsetRequest());		
+        tagsetActionGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
+        	@Override
+        	public SerializablePredicate<TagsetDefinition> createSearchFilter(final String searchInput) {
+        		return new SerializablePredicate<TagsetDefinition>() {
+        			@Override
+        			public boolean test(TagsetDefinition t) {
+        				if (t != null) {
+        					String name = t.getName();
+        					if (name != null) {
+        						return name.startsWith(searchInput);
+        					}
+        				}
+        				return false;
+        			}
+				};
+        	}
+		});
 	}
 
 	private void handleAddTagsetRequest() {
@@ -403,6 +421,21 @@ public class ResourcePanel extends VerticalLayout {
     	}
     	
     	return null;
+    }
+    
+    public void setSelectedDocument(SourceDocument sourceDocument) {
+    	SourceDocument selected = getSelectedDocument();
+    	if ((selected == null) || !selected.equals(sourceDocument)) {
+    		for (DocumentTreeItem documentTreeItem : documentsData.getRootItems()) {
+    			if (documentTreeItem instanceof DocumentDataItem) {
+    				DocumentDataItem documentDataItem = (DocumentDataItem)documentTreeItem;
+    				if (documentDataItem.getDocument().equals(sourceDocument)) {
+    					documentDataItem.setSelected(true);
+    					documentTree.getDataProvider().refreshItem(documentDataItem);
+    				}
+    			}
+    		}
+    	}
     }
 	
 	public void close() {

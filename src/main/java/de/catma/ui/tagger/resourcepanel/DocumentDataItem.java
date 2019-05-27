@@ -1,5 +1,7 @@
 package de.catma.ui.tagger.resourcepanel;
 
+import org.neo4j.cypher.internal.frontend.v2_3.perty.recipe.Pretty.doc;
+
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.source.SourceDocument;
@@ -73,6 +75,11 @@ public class DocumentDataItem implements DocumentTreeItem {
 	@Override
 	public boolean isSelected() {
 		return selected;
+	}
+	
+	@Override
+	public String toString() {
+		return document.toString();
 	}
 	
 	@Override

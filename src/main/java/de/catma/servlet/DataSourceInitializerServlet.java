@@ -1,19 +1,15 @@
 package de.catma.servlet;
 
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.indexer.IndexBufferManagerName;
-import de.catma.indexer.graph.CatmaGraphDbName;
-import de.catma.indexer.indexbuffer.IndexBufferManager;
-import de.catma.repository.db.CatmaDataSourceName;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import de.catma.indexer.IndexBufferManagerName;
+import de.catma.indexer.indexbuffer.IndexBufferManager;
+import de.catma.repository.db.CatmaDataSourceName;
 
 @WebServlet(name = "CATMADataSource", urlPatterns = "/CATMADataSource", loadOnStartup = 2)
 public class DataSourceInitializerServlet extends HttpServlet {

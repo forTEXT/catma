@@ -52,5 +52,10 @@ public class CollectionDataItem implements DocumentTreeItem {
 	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener) {
 		resourceSelectionListener.annotationCollectionSelected(collectionRef, isSelected());
 	}
+	
+	@Override
+	public String toString() {
+		return collectionRef.getName();
+	}
 
 }

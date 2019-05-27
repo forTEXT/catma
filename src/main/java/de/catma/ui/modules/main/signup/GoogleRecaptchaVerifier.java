@@ -47,7 +47,9 @@ public class GoogleRecaptchaVerifier {
 		logger.log(Level.INFO,"verifying token: " + token );
 		return webtarget
 	            .request(MediaType.APPLICATION_JSON)
-	            .post(Entity.entity(form,MediaType.APPLICATION_FORM_URLENCODED_TYPE), GoogleVerificationResult.class);
+	            .post(
+	            	Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), 
+	            	GoogleVerificationResult.class);
 	}
 
 }

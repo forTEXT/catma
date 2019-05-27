@@ -111,5 +111,10 @@ public class TagsetDataItem implements TagsetTreeItem {
 	public String getPropertySummary() {
 		return null; // no properties for Tagsets
 	}
+	
+	@Override
+	public String toString() {
+		return tagset.getName();
+	}
 
 }

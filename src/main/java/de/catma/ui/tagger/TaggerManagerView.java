@@ -76,6 +76,9 @@ public class TaggerManagerView extends TabbedView {
 		TaggerView taggerView = getTaggerView(sourceDocument);
 		if (taggerView != null) {
 			setSelectedTab(taggerView);
+			if (taggerView.getSourceDocument() == null) {
+				taggerView.setSourceDocument(sourceDocument);
+			}
 		}
 		else {
 			taggerView = new TaggerView(
@@ -92,7 +95,7 @@ public class TaggerManagerView extends TabbedView {
 	private TaggerView getTaggerView(SourceDocument sourceDocument) {
 		for (Component tabContent : this.getTabSheet()) {
 			TaggerView taggerView = (TaggerView)tabContent;
-			if (taggerView.getSourceDocument().getID().equals(
+			if (taggerView.getSourceDocument() == null || taggerView.getSourceDocument().getID().equals(
 					sourceDocument.getID())) {
 				return taggerView;
 			}

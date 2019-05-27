@@ -296,4 +296,7 @@ public class Pager implements Iterable<Page> {
 		return result;
 	}
 
+	public void setRightToLeftWriting(boolean rightToLeftWriting) {
+		this.rightToLeftWriting = rightToLeftWriting;
+	}
 }

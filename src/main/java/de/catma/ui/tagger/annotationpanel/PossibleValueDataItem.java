@@ -80,4 +80,9 @@ public class PossibleValueDataItem implements TagsetTreeItem {
 	public String getPropertyValue() {
 		return value;
 	}
+	
+	@Override
+	public String toString() {
+		return value;
+	}
 }

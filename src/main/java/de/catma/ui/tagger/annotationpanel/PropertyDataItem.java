@@ -136,4 +136,9 @@ public class PropertyDataItem implements TagsetTreeItem {
 		this.valuesExpanded = valuesExpanded;
 	}
 	
+	@Override
+	public String toString() {
+		return propertyDefinition.getName();
+	}
+	
 }

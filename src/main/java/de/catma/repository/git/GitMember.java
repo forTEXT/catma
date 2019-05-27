@@ -83,4 +83,9 @@ public class GitMember implements Member {
     public RBACRole getRole(){
     	return RBACRole.forValue(delegate.getAccessLevel().value);
     }
+    
+    @Override
+	public String toString() {
+		return getName();
+	}
 }

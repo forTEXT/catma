@@ -31,6 +31,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
@@ -68,6 +69,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.di.UIFactory;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -240,6 +242,25 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
         hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
+        
+        tagsetsGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
+        	@Override
+        	public SerializablePredicate<TagsetDefinition> createSearchFilter(final String searchInput) {
+        		
+        		return new SerializablePredicate<TagsetDefinition>() {
+        			@Override
+        			public boolean test(TagsetDefinition t) {
+        				if (t != null) {
+	        				String name = t.getName();
+	        				if (name != null) {
+	        					return name.startsWith(searchInput);
+	        				}
+        				}
+        				return false;
+        			}
+				};
+        	}
+		});
 	}
 
 	private void handleImportTagsetsRequest() {

@@ -23,6 +23,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
@@ -41,7 +42,6 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
-import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.repository.event.ChangeType;
 import de.catma.document.repository.event.CollectionChangeEvent;
 import de.catma.document.source.SourceDocument;
@@ -56,6 +56,7 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.util.IDGenerator;
@@ -345,6 +346,47 @@ public class AnnotationPanel extends VerticalLayout {
 			@Override
 			public String apply(TagsetTreeItem item) {
 				return item.generateStyle();
+			}
+		});
+		
+		tagsetGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetTreeItem>() {
+			@Override
+			public SerializablePredicate<TagsetTreeItem> createSearchFilter(String searchInput) {
+				return new SerializablePredicate<TagsetTreeItem>() {
+					@Override
+					public boolean test(TagsetTreeItem t) {
+						return testWithChildren(t);
+					}
+					
+					private boolean testTagsetTreeItem(TagsetTreeItem t) {
+						String strValue = t.toString();
+						
+						if (strValue != null && strValue.startsWith(searchInput)) {
+							return true;
+						}
+
+						
+						return false;
+					}
+					
+					public boolean testWithChildren(TagsetTreeItem t) {
+						if (t == null) {
+							return false;
+						}
+						
+						if (testTagsetTreeItem(t)) {
+							return true;
+						}
+						
+						for (TagsetTreeItem child : tagsetData.getChildren(t)) {
+							if (testWithChildren(child)) {
+								return true;
+							}
+						}
+						
+						return false;
+					}
+				};
 			}
 		});
 		

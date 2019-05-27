@@ -57,7 +57,6 @@ import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -129,6 +128,7 @@ public class TaggerView extends HorizontalLayout
 	private ErrorHandler errorHandler;
 	private PropertyChangeListener annotationPropertiesChangedListener;
 	private PropertyChangeListener tagChangedListener;
+	private SliderPanel drawer;
 	
 	public TaggerView(
 			int taggerID, 
@@ -612,7 +612,7 @@ public class TaggerView extends HorizontalLayout
                 listener, SplitterPositionChangedListener.positionChangedMethod);
 		
 		resourcePanel = new ResourcePanel(project, sourceDocument, eventBus); 
-		SliderPanel drawer = new SliderPanelBuilder(resourcePanel)
+		drawer = new SliderPanelBuilder(resourcePanel)
 				.mode(SliderMode.LEFT).expanded(sourceDocument == null).build();
 		
 		addComponent(drawer);
@@ -784,8 +784,18 @@ public class TaggerView extends HorizontalLayout
 
 	public void setSourceDocument(SourceDocument sd) {
 		this.sourceDocument = sd;
+		this.resourcePanel.setSelectedDocument(sd);
+		
+		pager.setRightToLeftWriting(
+			this.sourceDocument
+			.getSourceContentHandler()
+			.getSourceDocumentInfo()
+			.getIndexInfoSet()
+			.isRightToLeftWriting());
+		
 		initData();
 		eventBus.post(new TaggerViewSourceDocumentChangedEvent(TaggerView.this));
+		this.drawer.collapse();
 	}
 
 	@Override
