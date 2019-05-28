@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.antlr.runtime.RecognitionException;
 import org.vaadin.sliderpanel.SliderPanel;
@@ -43,6 +44,9 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
 import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
+import de.catma.ui.analyzenew.resourcepanelanalyze.CollectionDataItem;
+import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentTreeItem;
+import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentDataItem;
 import de.catma.ui.analyzenew.resourcepanelanalyze.ResourcePanelAnalyze;
 import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.analyzer.GroupedQueryResultSelectionListener;
@@ -101,7 +105,7 @@ public class AnalyzeNewView extends HorizontalLayout
 		this.indexInfoSet = new IndexInfoSet(Collections.<String>emptyList(), Collections.<Character>emptyList(),
 				Locale.ENGLISH);
 		
-		 queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
+		 this.queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
 					relevantStaticMarkupCollIDs, indexInfoSet.getUnseparableCharacterSequences(),
 					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
 
@@ -207,43 +211,41 @@ public class AnalyzeNewView extends HorizontalLayout
 		
 		resourcePanelAnalyze.setSelectionListener(new AnalyzeResourceSelectionListener() {
 
-
 			@Override
-			public void resourceSelected(SourceDocument sd,boolean selected) {
-				// TODO Auto-generated method stub
-				setQueryOptionsResourcesDocument(sd, selected);
+			public void updateQueryOptions(TreeData<DocumentTreeItem> data) {
+				updateCorpusAndQueryOptions( data);
+				
 				
 			}
-
-			@Override
-			public void resourceSelected(UserMarkupCollectionReference collectionRef, boolean selected) {
-				// TODO Auto-generated method stub
-				setQueryOptionsResourcesUMC(collectionRef, selected);
-				
-			}
-
 		
 		});
 	}
-
-
-	private void setQueryOptionsResourcesDocument(SourceDocument sd, boolean selected) {
-
-		Notification.show("new queryoptions: new doc "+sd.toString()+" selectstatus :"+selected, Notification.TYPE_HUMANIZED_MESSAGE);
-		if(queryOptions.getRelevantSourceDocumentIDs().contains(sd.getID())&&(!selected)) {
-			// remove sd
-			queryOptions.getRelevantSourceDocumentIDs().remove(sd.getID());
+	
+	private void updateCorpusAndQueryOptions(TreeData<DocumentTreeItem> data){
 		
-		}if(!queryOptions.getRelevantSourceDocumentIDs().contains(sd.getID())&&(selected)) {
-			queryOptions.getRelevantSourceDocumentIDs().add(sd.getID());
-			
+		this.corpus= new Corpus("new Corpus");
+		
+		List<SourceDocument> selectedDocuments=	 data.getRootItems().stream().
+				filter(item -> item.isSelected()).
+				map(DocumentDataItem.class::cast).
+				map(documentDataItem->documentDataItem.getDocument()).
+				collect(Collectors.toList());
+		
+		for (SourceDocument sourceDocument : selectedDocuments) {
+		this.corpus.addSourceDocument(sourceDocument);
+		
 		}
+		try {
+			addRelevantResources();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Notification.show("new queryoptions: new doc "+relevantSourceDocumentIDs.toString()+ Notification.TYPE_HUMANIZED_MESSAGE);
+		
 	}
-	private void setQueryOptionsResourcesUMC(UserMarkupCollectionReference collectionRef, boolean selected) {
-		// TODO : change resources for the queries
-		//QueryOptions queryOptions = new QueryOptions();
-		Notification.show("new queryoptions: new umc "+collectionRef.toString()+" selectstatus :"+selected, Notification.TYPE_HUMANIZED_MESSAGE);
-	}
+
+
 	
 	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
 		return new EditVizSnapshotListener() {
@@ -277,6 +279,8 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private void addRelevantResources() throws Exception {
+		this.relevantSourceDocumentIDs.clear();
+		this.indexInfoSet = new IndexInfoSet();
 
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {
@@ -464,7 +468,9 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private void addSourceDocument(SourceDocument sd) {
+	
 		this.relevantSourceDocumentIDs.add(sd.getID());
+
 		indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
 		MarkupCollectionItem umc = new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
 		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {

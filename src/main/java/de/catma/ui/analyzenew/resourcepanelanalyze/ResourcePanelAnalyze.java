@@ -14,6 +14,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
+import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
@@ -227,17 +228,11 @@ import de.catma.util.Pair;
 			documentTree
 				.addColumn(documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer());
 			
-			//documentTree.setSelectionMode(SelectionMode.NONE);
-			
-	
 
 			documentActionGridComponent = 
 					new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
 	
-			
-			
 		
-			
 			addComponent(documentActionGridComponent);
 			
 
@@ -256,8 +251,18 @@ import de.catma.util.Pair;
 
 			}		
 			documentTree.getDataProvider().refreshAll();
+			documentTree.addSelectionListener(new SelectionListener<DocumentTreeItem>() {
+				
+				@Override
+				public void selectionChange(SelectionEvent<DocumentTreeItem> event) {
+					Notification.show("queryoptions updaten jezt"+ Notification.TYPE_HUMANIZED_MESSAGE);
+					analyzeResourceSelectionListener.updateQueryOptions(documentTree.getTreeData());
+					
+					
+				}
+			});
 			
-			selectedItem.fireSelectedEvent(this.analyzeResourceSelectionListener,selectedItem.isSelected());		
+		
 		}
 		
 		public void selectCollectionVisible(String collectionId) {
