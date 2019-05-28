@@ -1,5 +1,9 @@
 package de.catma.ui.modules.main.signup;
 
+import java.util.Arrays;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * reCaptcha verification result bean
  * 
@@ -13,6 +17,7 @@ public class GoogleVerificationResult {
 	private float score = 0f;
 	private String action = "";
 	private String challenge_ts = "";
+	private String[] errorCodes;
 	
 	public String getChallenge_ts() {
 		return challenge_ts;
@@ -45,9 +50,22 @@ public class GoogleVerificationResult {
 		this.score = score;
 	}
 	
+	@JsonProperty("error-codes")
+	public void setErrorCodes(String[] errorCodes) {
+		this.errorCodes = errorCodes;
+	}
+	
+	public String[] getErrorCodes() {
+		return errorCodes == null?new String[] {}:errorCodes;
+	}
+	
 	@Override
 	public String toString() {
-		return "GoogleVerificationResult [success=" + success + ", score=" + score + ", action=" + action + "]";
+		return "GoogleVerificationResult "
+			+ "[success=" + success + ", "
+			+ "score=" + score + ", "
+			+ "action=" + action + ", "
+			+ "error-codes=" + (errorCodes==null?"[]":Arrays.asList(errorCodes)) + "]";
 	}
 	
 	

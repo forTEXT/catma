@@ -1,3 +1,4 @@
+src/main/webapp/catma_*.properties
 src/main/java/catma_*.properties
 WebContent/VAADIN/gwt-unitCache
 WebContent/VAADIN/doubletreejs_debug

@@ -1,6 +1,7 @@
 package de.catma.ui.modules.main.signup;
 
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -68,7 +69,7 @@ public class SignUpDialog extends Window {
 		TextField tfEmail = new TextField("Email address");
 		tfEmail.setSizeFull();
 		tfEmail.setEnabled(false);
-		tfEmail.setDescription("awaiting google recaptcha verification");
+		tfEmail.setDescription("Awaiting Google recaptcha verification...");
 		content.addComponent(tfEmail);
 		
 		TextField hiddenVerification = new TextField();
@@ -77,16 +78,24 @@ public class SignUpDialog extends Window {
 			recaptchaResult = new GoogleRecaptchaVerifier().verify(hiddenVerification.getValue());
 			if(recaptchaResult.isSuccess()){
 				tfEmail.setEnabled(true);
-				tfEmail.setDescription("please enter your email address");
+				tfEmail.setDescription("Please enter your email address");
 				com.vaadin.ui.JavaScript.getCurrent().execute("grecaptcha.reset();");
 			}
+			else {
+				Notification.show(
+					"Error", 
+					"Recaptcha verfication failed: " 
+							+ Arrays.asList(recaptchaResult.getErrorCodes()), 
+					Type.ERROR_MESSAGE);
+			}
 			logger.info(recaptchaResult.toString());
+			
 		});
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.addStyleName("spacing-left-right");
 		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
-		Button btnSignup = new Button("Signup");
+		Button btnSignup = new Button("Sign Up");
 		
 		Button btnCancel = new Button("Cancel");
 		

@@ -11,12 +11,14 @@ public class HazelCastService {
 		return hazelcastClient;
 	}
 
-	public void start(){
+	public void start() {
 		hazelcastClient = HazelcastClient.newHazelcastClient(HazelcastConfiguration.clientConfig);
 	}
 	
-	public void stop(){
-		hazelcastClient.shutdown();
+	public void stop() {
+		if (hazelcastClient != null) {
+			hazelcastClient.shutdown();
+		}
 	}
 	
 }

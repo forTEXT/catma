@@ -1,6 +1,7 @@
 package de.catma.ui.modules.main.signup;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -78,7 +79,7 @@ public class CreateUserDialog extends Window {
 		buttonPanel.setJustifyContent(JustifyContent.SPACE_BETWEEN);
 		Button btnCreate = new Button("Create");
 		btnCreate.setEnabled(false);
-		btnCreate.setDescription("awaiting google verification");
+		btnCreate.setDescription("Awaiting Google recaptcha verification...");
 		Button btnCancel = new Button("Cancel");
 		
 		buttonPanel.addComponent(btnCancel);
@@ -91,10 +92,17 @@ public class CreateUserDialog extends Window {
 
 		hiddenVerification.addValueChangeListener(event -> 		{
 			recaptchaResult = new GoogleRecaptchaVerifier().verify(hiddenVerification.getValue());
-			if(recaptchaResult.isSuccess()){
+			if (recaptchaResult.isSuccess()) {
 				btnCreate.setEnabled(true);
 				btnCreate.setDescription("Create User profile");
 			}
+			else {
+				Notification.show(
+					"Error", 
+					"Recaptcha verfication failed: " 
+							+ Arrays.asList(recaptchaResult.getErrorCodes()), 
+					Type.ERROR_MESSAGE);
+			}			
 			logger.info(recaptchaResult.toString());
 		});
 		
