@@ -406,10 +406,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	public void showAndLogError(String message, Throwable e) {
 		IRemoteGitManagerRestricted api = loginservice.getAPI();
 		
-		if(api != null){
-			logger.log(Level.SEVERE, "[" + api.getUsername() + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
-			
-		}
+		logger.log(Level.SEVERE, "[" + (api==null?"not logged in":api.getUsername()) + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
 
 		if (message == null) {
 			message = Messages.getString("CatmaApplication.internalError"); //$NON-NLS-1$

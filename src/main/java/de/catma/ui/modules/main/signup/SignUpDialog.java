@@ -159,17 +159,17 @@ public class SignUpDialog extends Window {
 		        }
 		        email.setFrom(RepositoryPropertyKey.MailFrom.getValue());
 
-		        email.setSubject("Catma activation");
+		        email.setSubject("CATMA Activation");
 		        email.setMsg("In order to verify your account please visit the following link.\n"+qs.toString());
 		        email.addTo(user.getEmail(),user.getName());
 		        email.send();
 
 		        logger.info("token URL is: "  + qs.toString());
+		        Notification.show("To complete your account please click the link that has been sent to your email",
+		        		Type.TRAY_NOTIFICATION);
 			} catch (Exception e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't create a new user in backend", e);
 			}
-			Notification.show("To complete your account please click the link that has been sent to your email",
-					Type.TRAY_NOTIFICATION);
 			this.close();
 		});
 		setContent(content);

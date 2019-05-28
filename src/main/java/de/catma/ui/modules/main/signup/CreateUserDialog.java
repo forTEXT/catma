@@ -119,7 +119,7 @@ public class CreateUserDialog extends Window {
 	    .bind(UserData::getUsername, UserData::setUsername);
 		
 		userBinder.forField(tfEmail)
-	    .withValidator(new UsernameValidator(gitlabManagerPrivileged))
+//	    .withValidator(new UsernameValidator(gitlabManagerPrivileged))
 	    .bind(UserData::getEmail, UserData::setEmail);
 		
 		userBinder.forField(tfPassword)
