@@ -2,6 +2,7 @@ package de.catma.ui.analyzenew;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -223,7 +224,8 @@ public class AnalyzeNewView extends HorizontalLayout
 	
 	private void updateCorpusAndQueryOptions(TreeData<DocumentTreeItem> data){
 		
-		this.corpus= new Corpus("new Corpus");
+		this.corpus = new Corpus("new Corpus");
+		
 		
 		List<SourceDocument> selectedDocuments=	 data.getRootItems().stream().
 				filter(item -> item.isSelected()).
@@ -232,9 +234,32 @@ public class AnalyzeNewView extends HorizontalLayout
 				collect(Collectors.toList());
 		
 		for (SourceDocument sourceDocument : selectedDocuments) {
-		this.corpus.addSourceDocument(sourceDocument);
+			this.corpus.addSourceDocument(sourceDocument);
+			
+			}
 		
+		List<DocumentTreeItem> selectedCollections = new ArrayList<>();
+		
+		List<DocumentTreeItem> selectedRoots= data.getRootItems().stream().
+				filter(item -> item.isSelected()).
+				collect(Collectors.toList());
+		
+		for (DocumentTreeItem documentTreeItem : selectedRoots) {
+			List<DocumentTreeItem> children=	data.getChildren(documentTreeItem);
+			List<DocumentTreeItem> selectedChildren= children.stream().
+					filter(item -> item.isSelected()).
+					collect(Collectors.toList());
+			
+			selectedCollections.addAll(selectedChildren);
 		}
+			
+		for(DocumentTreeItem item:selectedCollections ) {
+			CollectionDataItem collectionItem=	(CollectionDataItem)item;
+			this.corpus.addUserMarkupCollectionReference(collectionItem.getCollectionRef());
+			
+		}
+		
+		// corpus here updated
 		try {
 			addRelevantResources();
 		} catch (Exception e) {
@@ -279,7 +304,9 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private void addRelevantResources() throws Exception {
-		this.relevantSourceDocumentIDs.clear();
+		
+		this.queryOptions.getRelevantSourceDocumentIDs().clear();
+		this.queryOptions.getRelevantUserMarkupCollIDs().clear();
 		this.indexInfoSet = new IndexInfoSet();
 
 		if (corpus != null) {
@@ -473,6 +500,7 @@ public class AnalyzeNewView extends HorizontalLayout
 
 		indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
 		MarkupCollectionItem umc = new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
+		
 		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
 			if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
 				addUserMarkupCollection(umcRef, umc);
