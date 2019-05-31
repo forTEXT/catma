@@ -13,10 +13,9 @@ import com.vaadin.ui.MenuBar.MenuItem;
 
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager;
-import de.catma.tag.TagsetDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.tagger.Tagger;
-import de.catma.ui.tagger.annotationpanel.TagDataItem;
 import de.catma.ui.tagger.annotationpanel.TagsetDataItem;
 import de.catma.ui.tagger.annotationpanel.TagsetTreeItem;
 import de.catma.util.ColorConverter;
@@ -55,9 +54,13 @@ public class TaggerContextMenu {
 	private Map<Object, MenuItem> entryToMenuItemMap = new HashMap<>();
 	private TagManager tagManager;
 	private PropertyChangeListener tagChangedListener;
+
 	
-	public TaggerContextMenu(Tagger tagger, TagManager tagManager) {
+	public TaggerContextMenu(
+			Tagger tagger, 
+			TagManager tagManager) {
 		this.tagManager = tagManager;
+
 		initComponents(tagger);
 		initListeners();
 	}
@@ -124,7 +127,8 @@ public class TaggerContextMenu {
 	}
 	
 	public void setTagsets(Collection<TagsetDefinition> tagsets) {
-		contextMenu.removeItems(); //TODO: only remove tagsets
+		contextMenu.removeItems();
+		entryToMenuItemMap.clear();
 		for (TagsetDefinition tagset : tagsets) {
 			addTagset(tagset);
 		}
@@ -163,11 +167,15 @@ public class TaggerContextMenu {
 	
 	public void removeTagset(TagsetDefinition tagset) {
 		contextMenu.removeItem(entryToMenuItemMap.get(tagset));
+		entryToMenuItemMap.remove(tagset);
 	}
 
 	public void close() {
+		tagSelectionListener = null;
+		contextMenu.remove();
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);
 	}
+
 }

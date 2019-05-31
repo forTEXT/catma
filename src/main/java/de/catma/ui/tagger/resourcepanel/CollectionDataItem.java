@@ -8,10 +8,12 @@ public class CollectionDataItem implements DocumentTreeItem {
 
 	private UserMarkupCollectionReference collectionRef;
 	private boolean selected = true;
+	private boolean hasWritePermission;
 
-	public CollectionDataItem(UserMarkupCollectionReference collectionRef) {
+	public CollectionDataItem(UserMarkupCollectionReference collectionRef, boolean hasWritePermission) {
 		super();
 		this.collectionRef = collectionRef;
+		this.hasWritePermission = hasWritePermission;
 	}
 	
 	@Override
@@ -58,4 +60,8 @@ public class CollectionDataItem implements DocumentTreeItem {
 		return collectionRef.getName();
 	}
 
+	@Override
+	public String getPermissionIcon() {
+		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
+	}
 }

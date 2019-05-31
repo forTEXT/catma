@@ -1,5 +1,7 @@
 package de.catma.ui.tagger.annotationpanel;
 
+import java.util.function.Supplier;
+
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
@@ -13,12 +15,18 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 	private String keywordInContext;
 	private KwicProvider kwicProvider;
 	private TagsetDefinition tagset;
+	private boolean editable;
+	private Supplier<Boolean> inCurrentCollectionSupplier;
 	
-	public AnnotationDataItem(Annotation annotation,  TagsetDefinition tagset, KwicProvider kwicProvider) {
+	public AnnotationDataItem(
+		Annotation annotation, TagsetDefinition tagset, KwicProvider kwicProvider, 
+		boolean editable, Supplier<Boolean> inCurrentCollectionSupplier) {
 		super();
 		this.annotation = annotation;
 		this.kwicProvider = kwicProvider;
 		this.tagset = tagset;
+		this.editable = editable;
+		this.inCurrentCollectionSupplier = inCurrentCollectionSupplier;
 		TagDefinition tagDefinition = 
 			tagset.getTagDefinition(annotation.getTagInstance().getTagDefinitionId());
 		this.annotatedText = AnnotatedTextProvider.buildAnnotatedText(
@@ -66,12 +74,32 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 
 	@Override
 	public String getEditIcon() {
-		return VaadinIcons.EDIT.getHtml();
+		if (!editable) {
+			return VaadinIcons.LOCK.getHtml();
+		}
+		else {
+			if (inCurrentCollectionSupplier.get()) {
+				return VaadinIcons.EDIT.getHtml();
+			}
+			else {
+				return VaadinIcons.EXCHANGE.getHtml() + VaadinIcons.NOTEBOOK.getHtml();
+			}
+		}		
 	}
 	
 	@Override
 	public String getDeleteIcon() {
-		return VaadinIcons.TRASH.getHtml();
+		if (!editable) {
+			return VaadinIcons.LOCK.getHtml();
+		}
+		else {
+			if (inCurrentCollectionSupplier.get()) {
+				return VaadinIcons.TRASH.getHtml();
+			}
+			else {
+				return null;
+			}
+		}
 	}
 	
 	public Annotation getAnnotation() {

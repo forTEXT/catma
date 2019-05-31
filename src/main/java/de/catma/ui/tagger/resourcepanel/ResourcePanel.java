@@ -38,6 +38,7 @@ import de.catma.document.repository.event.CollectionChangeEvent;
 import de.catma.document.repository.event.DocumentChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -131,12 +132,21 @@ public class ResourcePanel extends VerticalLayout {
     				collectionChangeEvent.getCollectionReference();
 
     		
-			CollectionDataItem collectionDataItem = new CollectionDataItem(collectionReference);
-			DocumentDataItem documentDataItem = new DocumentDataItem(document, true);
-			
-			documentsData.addItem(
-    				documentDataItem, collectionDataItem);
-			documentTree.getDataProvider().refreshAll();
+			CollectionDataItem collectionDataItem = 
+				new CollectionDataItem(
+					collectionReference, 
+					project.hasPermission(
+						project.getRoleForCollection(
+							collectionReference.getId()), 
+							RBACPermission.COLLECTION_WRITE));
+			documentsData.getRootItems()
+			.stream()
+			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
+			.findAny().ifPresent(documentDataItem -> {
+				documentsData.addItem(
+	    				documentDataItem, collectionDataItem);
+				documentTree.getDataProvider().refreshAll();
+			});
 			
 			Notification.show(
 				"Info", 
@@ -249,14 +259,28 @@ public class ResourcePanel extends VerticalLayout {
 						document, 
 						preselection != null && document.equals(preselection))));
 			
+			DocumentTreeItem preselectedItem = null;
+			
 			for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
 				for (UserMarkupCollectionReference umcRef : 
 					((DocumentDataItem)documentDataItem).getDocument().getUserMarkupCollectionRefs()) {
-					documentsData.addItem(documentDataItem, new CollectionDataItem(umcRef));
+					documentsData.addItem(
+						documentDataItem, 
+						new CollectionDataItem(
+							umcRef,
+							project.hasPermission(
+									project.getRoleForCollection(umcRef.getId()),
+									RBACPermission.COLLECTION_WRITE)));
+					if (documentDataItem.isSelected()) {
+						preselectedItem = documentDataItem;
+					}
 				}
 			}
 			
 			documentTree.setDataProvider(new TreeDataProvider<>(documentsData));
+			if (preselectedItem != null) {
+				documentTree.expand(preselectedItem);
+			}
 			
 			tagsetData = new ListDataProvider<TagsetDefinition>(project.getTagsets());
 			tagsetGrid.setDataProvider(tagsetData);
@@ -311,22 +335,27 @@ public class ResourcePanel extends VerticalLayout {
 		Column<DocumentTreeItem, String> selectionColumn = 
 			documentTree.addColumn(
 				documentTreeItem -> documentTreeItem.getSelectionIcon(),
-				documentSelectionRenderer);
+				documentSelectionRenderer)
+			.setWidth(100);
 		
 		documentTree.setHierarchyColumn(selectionColumn);
 		
 		documentTree
 			.addColumn(documentTreeItem -> documentTreeItem.getName())
 			.setCaption("Name")
-			.setExpandRatio(3);
+			.setWidth(150);
 		
 		//TODO: shouldn't be fixed size
 		documentTree.setWidth("400px");
 		documentTree.setHeight("250px");
 
-		
-		documentTree
-			.addColumn(documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer());
+		documentTree.addColumn(
+				documentTreeItem -> documentTreeItem.getPermissionIcon(), new HtmlRenderer())
+		.setWidth(50);
+			
+		documentTree.addColumn(
+				documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer())
+		.setExpandRatio(1);
 
 		documentActionGridComponent = 
 				new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
@@ -344,10 +373,18 @@ public class ResourcePanel extends VerticalLayout {
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")
-			.setExpandRatio(2);
+			.setWidth(150);
+		
+		tagsetGrid.addColumn(
+				tagset -> project.hasPermission(
+					project.getRoleForTagset(tagset.getUuid()),
+					RBACPermission.TAGSET_WRITE)?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
+				new HtmlRenderer())
+		.setWidth(50);
 		
 		tagsetGrid
-			.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer());
+			.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())
+			.setExpandRatio(1);
 		
 		tagsetActionGridComponent = 
 				new ActionGridComponent<Grid<TagsetDefinition>>(tagsetLabel, tagsetGrid);
@@ -357,10 +394,10 @@ public class ResourcePanel extends VerticalLayout {
 
 	private void handleVisibilityClickEvent(RendererClickEvent<DocumentTreeItem> documentSelectionClick) {
 		DocumentTreeItem selectedItem = documentSelectionClick.getItem();
-		handleVisibilityClicItem(selectedItem);
+		handleVisibilityClickItem(selectedItem);
 	}
 	
-	private void handleVisibilityClicItem(DocumentTreeItem selectedItem) {
+	private void handleVisibilityClickItem(DocumentTreeItem selectedItem) {
 		if (!selectedItem.isSelected()) {
 			selectedItem.setSelected(!selectedItem.isSelected());
 			
@@ -368,6 +405,10 @@ public class ResourcePanel extends VerticalLayout {
 				for (DocumentTreeItem item : documentsData.getRootItems()) {
 					if (!item.equals(selectedItem)) {
 						item.setSelected(false);
+						documentTree.collapse(item);
+					}
+					else {
+						documentTree.expand(item);
 					}
 				}
 			}		
@@ -392,7 +433,7 @@ public class ResourcePanel extends VerticalLayout {
 		.stream()
 		.filter(item -> ((CollectionDataItem)item).getCollectionRef().getId().equals(collectionId))
 		.findFirst()
-		.ifPresent(collectionItem -> handleVisibilityClicItem(collectionItem));
+		.ifPresent(collectionItem -> handleVisibilityClickItem(collectionItem));
 	}
 
 	public void setSelectionListener(
@@ -432,6 +473,7 @@ public class ResourcePanel extends VerticalLayout {
     				if (documentDataItem.getDocument().equals(sourceDocument)) {
     					documentDataItem.setSelected(true);
     					documentTree.getDataProvider().refreshItem(documentDataItem);
+    					documentTree.expand(documentDataItem);
     				}
     			}
     		}

@@ -284,7 +284,6 @@ public class Line {
 	}
 
 	public List<String> getTagInstanceIDs(String instancePartID) {
-
 		TextRange range = ClientTagInstance.getTextRangeFromPartId(instancePartID);
 		
 		ArrayList<String> result = new ArrayList<String>();
@@ -299,6 +298,9 @@ public class Line {
 		return result;
 	}
 
+	public String getTagInstanceID(String instancePartID) {
+		return ClientTagInstance.getTagInstanceIDFromPartId(instancePartID);
+	}
 
 	public TextRange getOverlappingRange(TextRange textRange) {
 		return this.textRange.getOverlappingRange(textRange);

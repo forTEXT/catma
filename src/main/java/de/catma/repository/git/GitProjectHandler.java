@@ -36,6 +36,9 @@ import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.TagConflict;
+import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
@@ -64,6 +67,8 @@ public class GitProjectHandler {
 
 	private final IDGenerator idGenerator = new IDGenerator();
 	private final CredentialsProvider credentialsProvider;
+
+	private Map<String, RBACRole> rolesPerResource;
 	
 	public GitProjectHandler(User user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitManagerRestricted remoteGitServerManager) {
@@ -73,6 +78,10 @@ public class GitProjectHandler {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 		this.credentialsProvider = new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
+	}
+	
+	public void loadRolesPerResource() throws Exception {
+		this.rolesPerResource = remoteGitServerManager.getRolesPerResource(projectId);
 	}
 
 	// tagset operations
@@ -123,6 +132,10 @@ public class GitProjectHandler {
 			gitTagsetHandler.checkout(
 				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
+			rolesPerResource.put(
+				GitTagsetHandler.getTagsetRepositoryName(tagsetId), 
+				RBACRole.OWNER);
+			
 			return tagsetRevisionHash;
 		}
 	}
@@ -199,7 +212,9 @@ public class GitProjectHandler {
 			// push the newly created markup collection repo to the server in preparation for adding it to the project
 			// root repo as a submodule
 
-			localGitRepoManager.open(projectId, GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
+			localGitRepoManager.open(
+					projectId, 
+					GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 			localGitRepoManager.push(credentialsProvider);
 			String markupCollectionRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
@@ -231,6 +246,10 @@ public class GitProjectHandler {
 				projectId, markupCollectionId, 
 				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);			
 
+			rolesPerResource.put(
+				GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId), 
+				RBACRole.OWNER);
+			
 			return revisionHash;
 		}
 	}
@@ -315,6 +334,10 @@ public class GitProjectHandler {
 				String.format("Added Document %1$s with ID %2$s", name, sourceDocumentId),
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail());
+			
+			rolesPerResource.put(
+				GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId), 
+				RBACRole.OWNER);
 			
 			return revisionHash;
 		}
@@ -1311,4 +1334,23 @@ public class GitProjectHandler {
 		}
 	}
 
+	public RBACRole getRoleForDocument(String documentId) {
+		return rolesPerResource.get(GitSourceDocumentHandler.getSourceDocumentRepositoryName(documentId));
+	}
+
+	public RBACRole getRoleForCollection(String collectionId) {
+		return rolesPerResource.get(GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(collectionId));
+	}
+	
+	public RBACRole getRoleForTagset(String tagsetId) {
+		return rolesPerResource.get(GitTagsetHandler.getTagsetRepositoryName(tagsetId));
+	}
+
+	public boolean hasPermission(RBACRole role, RBACPermission permission) {
+		return remoteGitServerManager.hasPermission(role, permission);
+	}
+	
+	public boolean isAuthorizedOnProject(RBACPermission permission) {
+		return remoteGitServerManager.isAuthorizedOnProject(remoteGitServerManager.getUser(), permission, projectId);
+	}
 }

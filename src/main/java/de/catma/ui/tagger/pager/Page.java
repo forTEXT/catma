@@ -316,10 +316,10 @@ public class Page {
 
 	public List<String> getTagInstanceIDs(String instancePartID, String lineID) {
 		try {
-			return lines.get(
+			return Collections.singletonList(lines.get(
 				Integer.valueOf(
-					lineID.substring(lineID.indexOf('.')+1))).getTagInstanceIDs(
-							instancePartID);
+					lineID.substring(lineID.indexOf('.')+1))).getTagInstanceID(
+							instancePartID));
 		}
 		catch (NumberFormatException | ArrayIndexOutOfBoundsException | NullPointerException e) {
 			Logger.getLogger(Page.class.getName()).log(

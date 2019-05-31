@@ -50,6 +50,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.rbac.RBACPermission;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -91,11 +92,12 @@ public class AnnotationPanel extends VerticalLayout {
 	public AnnotationPanel(
 			Repository project, 
 			UserMarkupCollectionManager collectionManager, 
-			Consumer<String> annotationSelectionListener) {
+			Consumer<String> annotationSelectionListener,
+			Consumer<UserMarkupCollection> collectionSelectionListener) {
 		this.project = project;
 		this.collectionManager = collectionManager;
 		initComponents(annotationSelectionListener);
-		initActions();
+		initActions(collectionSelectionListener);
 		initListeners();
 	}
 
@@ -263,7 +265,15 @@ public class AnnotationPanel extends VerticalLayout {
             }
             
             currentEditableCollectionBox.setValue(null);
-            currentEditableCollectionBox.setDataProvider(new ListDataProvider<>(collections));
+            currentEditableCollectionBox.setDataProvider(
+            		new ListDataProvider<>(
+            			collections
+            			.stream()
+            			.filter(
+            				collection -> project.hasPermission(
+            					project.getRoleForCollection(collection.getId()), 
+            					RBACPermission.COLLECTION_WRITE))
+            			.collect(Collectors.toList())));
         } catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
         }
@@ -302,7 +312,7 @@ public class AnnotationPanel extends VerticalLayout {
         }
     }
 
-	private void initActions() {
+	private void initActions(Consumer<UserMarkupCollection> collectionSelectionListener) {
 		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Name")
 			.setSortable(false)
@@ -405,7 +415,8 @@ public class AnnotationPanel extends VerticalLayout {
 		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 		
 		currentEditableCollectionBox.setEmptySelectionCaption("Please select or create a Collection...");
-		
+		currentEditableCollectionBox.addValueChangeListener(
+			event -> collectionSelectionListener.accept(event.getValue()));
 		annotationDetailsPanel.addMinimizeButtonClickListener(
 				clickEvent -> setAnnotationDetailsPanelVisible(false));
 		btMaximizeAnnotationDetailsRibbon.addClickListener(
@@ -414,11 +425,11 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handleDeleteTagsetRequest() {
-		// TODO Auto-generated method stub
+		// TODO this should go to the Tags module  
 	}
 
 	private void handleEditTagsetRequest() {
-		// TODO Auto-generated method stub
+		// TODO this should go to the Tags module, too?
 	}
 
 	private void handleEditPropertiesRequest() {
@@ -432,6 +443,20 @@ public class AnnotationPanel extends VerticalLayout {
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
 		
+		for (TagDefinition targetTag : targetTags) {
+			if (!project.hasPermission(
+					project.getRoleForTagset(targetTag.getTagsetDefinitionUuid()), 
+					RBACPermission.TAGSET_WRITE)) {
+				Notification.show(
+					"Info", 
+					String.format(
+						"You do not have the permission to make changes to the Tagset of Tag %1$s, "
+						+ "Please contact the Project maintainer!", 
+						targetTag.getName()), 
+					Type.HUMANIZED_MESSAGE);
+				return;
+			}			
+		}
 		String msg = String.format(
 			"Are you sure you want to delete the following Tags: %1$s?", 
 			targetTags
@@ -467,6 +492,19 @@ public class AnnotationPanel extends VerticalLayout {
 		else {
 			
 			final TagDefinition targetTag = targetTags.get(0);
+			
+			if (!project.hasPermission(
+					project.getRoleForTagset(targetTag.getTagsetDefinitionUuid()), 
+					RBACPermission.TAGSET_WRITE)) {
+				Notification.show(
+					"Info", 
+					String.format(
+						"You do not have the permission to make changes to the Tagset of Tag %1$s, "
+						+ "Please contact the Project maintainer!", 
+						targetTag.getName()), 
+					Type.HUMANIZED_MESSAGE);
+				return;
+			}			
 			
 			EditTagDialog editTagDialog = new EditTagDialog(new TagDefinition(targetTag), 
 					new SaveCancelListener<TagDefinition>() {
@@ -509,6 +547,23 @@ public class AnnotationPanel extends VerticalLayout {
 			Notification.show("Info", "Please select one ore more Tags first!", Type.TRAY_NOTIFICATION);
 		}
 		else {
+			
+			for (TagDefinition targetTag : targetTags) {
+				if (!project.hasPermission(
+						project.getRoleForTagset(targetTag.getTagsetDefinitionUuid()), 
+						RBACPermission.TAGSET_WRITE)) {
+					Notification.show(
+						"Info", 
+						String.format(
+							"You do not have the permission to make changes to the Tagset of Tag %1$s, "
+							+ "Please contact the Project maintainer!", 
+							targetTag.getName()), 
+						Type.HUMANIZED_MESSAGE);
+					return;
+				}
+			}			
+			
+			
 			Multimap<String, PropertyDefinition> propertiesByName = 
 					ArrayListMultimap.create();
 			
@@ -657,6 +712,22 @@ public class AnnotationPanel extends VerticalLayout {
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
 		
+		for (TagDefinition parentTag : parentTags) {
+			if (!project.hasPermission(project.getRoleForTagset(
+					parentTag.getTagsetDefinitionUuid()), 
+					RBACPermission.TAGSET_WRITE)) {
+				
+				Notification.show(
+					"Info", 
+					String.format(
+						"You do not have the permission to make changes to the Tagset of Tag %1$s, "
+						+ "Please contact the Project maintainer!", 
+						parentTag.getName()), 
+					Type.HUMANIZED_MESSAGE);
+				return;
+			}
+		}
+		
 		if (!parentTags.isEmpty()) {
 			AddSubtagDialog addTagDialog =
 				new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
@@ -685,17 +756,57 @@ public class AnnotationPanel extends VerticalLayout {
 
 	private void handleAddTagRequest() {
 		
-		Optional<TagsetDefinition> selectedTagset = tagsetGrid.getSelectedItems()
+		final Optional<TagsetDefinition> selectedTagset = tagsetGrid.getSelectedItems()
 			.stream()
 			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
 			.findFirst()
 			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
 			
-		//TODO: check for available and writable tagsets (permissions!)
+		if (selectedTagset.isPresent() 
+				&& !project.hasPermission(
+						project.getRoleForTagset(selectedTagset.get().getUuid()), 
+						RBACPermission.TAGSET_WRITE)) {
+			Notification.show(
+				"Info", 
+				String.format(
+					"You do not have the permission to make changes to Tagset %1$s, "
+					+ "Please contact the Project maintainer!", 
+					selectedTagset.get().getName()), 
+				Type.HUMANIZED_MESSAGE);
+			return;
+		}
 		
+		
+		if (tagsets.isEmpty()) {
+			if (project.isAuthorizedOnProject(RBACPermission.TAGSET_CREATE_OR_UPLOAD)) {
+				Notification.show(
+					"Info", 
+					"You do not have any Tagsets to add Tags to yet, please create a Tagset first!", 
+					Type.HUMANIZED_MESSAGE);
+			}
+			else {
+				Notification.show(
+					"Info", 
+					"You do not have any Tagsets to add Tags to yet, please contact the Project maintainer!", 
+					Type.HUMANIZED_MESSAGE);
+			}
+			return;
+		}
+	
+		List<TagsetDefinition> editableTagsets = 
+				tagsets.stream()
+				.filter(tagset -> project.hasPermission(project.getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE))
+				.collect(Collectors.toList());
+		if (editableTagsets.isEmpty()) {
+			Notification.show(
+				"Info",
+				"You do not have the permission to make changes to any of the available Tagsets! "
+				+ "Please contact the Project maintainer for changes!",
+				Type.HUMANIZED_MESSAGE);
+		}
 		AddParenttagDialog addTagDialog = 
 			new AddParenttagDialog(
-				tagsets, 
+				editableTagsets, 
 				selectedTagset, 
 				new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
 				
@@ -854,7 +965,9 @@ public class AnnotationPanel extends VerticalLayout {
         annotationDetailsPanel = new AnnotationDetailsPanel(
         		project, 
         		collectionManager,
-        		annotationSelectionListener);
+        		annotationSelectionListener,
+        		collectionId -> currentEditableCollectionBox.getValue() != null 
+        			&& currentEditableCollectionBox.getValue().getUuid().contentEquals(collectionId));
 	}
 
 	public void setData(

@@ -39,6 +39,8 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.OpenProjectListener;
+import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
@@ -504,5 +506,15 @@ public interface Repository {
 	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;
 
 	void printStatus();
+
+	RBACRole getRoleForTagset(String tagsetId);
+
+	RBACRole getRoleForCollection(String collectionId);
+
+	RBACRole getRoleForDocument(String documentId);
+
+	boolean hasPermission(RBACRole role, RBACPermission permission);
+
+	boolean isAuthorizedOnProject(RBACPermission permission);
 
 }

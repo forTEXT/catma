@@ -64,6 +64,8 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
 import de.catma.project.OpenProjectListener;
+import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
 import de.catma.repository.db.executionshield.DBOperation;
 import de.catma.repository.db.executionshield.ExecutionShield;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
@@ -90,6 +92,7 @@ import de.catma.user.UserProperty;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
+@Deprecated
 public class DBRepository implements IndexedRepository {
 	
 	private static final Logger LOG = Logger.getLogger(DBRepository.class.getName());
@@ -1224,5 +1227,35 @@ public class DBRepository implements IndexedRepository {
 	public void printStatus() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public RBACRole getRoleForCollection(String collectionId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public RBACRole getRoleForDocument(String documentId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public RBACRole getRoleForTagset(String tagsetId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public boolean hasPermission(RBACRole role, RBACPermission permission) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	@Override
+	public boolean isAuthorizedOnProject(RBACPermission permission) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

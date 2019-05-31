@@ -46,7 +46,7 @@ public class CustomProjectApi extends AbstractApi {
     			AccessLevel.GUEST.value,
     			AccessLevel.REPORTER.value,
     			AccessLevel.DEVELOPER.value,
-    			AccessLevel.MASTER.value,
+    			AccessLevel.MAINTAINER.value,
     			AccessLevel.OWNER.value
     			);
         for (Integer level: accessLevels){

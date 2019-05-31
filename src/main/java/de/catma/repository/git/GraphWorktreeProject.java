@@ -47,6 +47,8 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
@@ -147,6 +149,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		try {
 			
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+			this.gitProjectHandler.loadRolesPerResource();
 			
 			if (gitProjectHandler.hasConflicts()) {
 				openProjectListener.conflictResolutionNeeded(
@@ -1242,6 +1245,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 						documentId -> getSourceDocumentURI(documentId)));
 		}
 		else {
+			gitProjectHandler.loadRolesPerResource();
 			gitProjectHandler.initAndUpdateSubmodules();
 			gitProjectHandler.removeStaleSubmoduleDirectories();
 			gitProjectHandler.ensureDevBranches();		
@@ -1254,5 +1258,30 @@ public class GraphWorktreeProject implements IndexedRepository {
 					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
 			openProjectListener.ready(this);
 		}
+	}
+	
+	@Override
+	public RBACRole getRoleForDocument(String documentId) {
+		return gitProjectHandler.getRoleForDocument(documentId);
+	}
+	
+	@Override
+	public RBACRole getRoleForCollection(String collectionId) {
+		return gitProjectHandler.getRoleForCollection(collectionId);
+	}
+	
+	@Override
+	public RBACRole getRoleForTagset(String tagsetId) {	
+		return gitProjectHandler.getRoleForTagset(tagsetId);
+	}
+
+	@Override
+	public boolean hasPermission(RBACRole role, RBACPermission permission) {
+		return gitProjectHandler.hasPermission(role, permission);
+	}
+
+	@Override
+	public boolean isAuthorizedOnProject(RBACPermission permission) {
+		return gitProjectHandler.isAuthorizedOnProject(permission);
 	}
 }

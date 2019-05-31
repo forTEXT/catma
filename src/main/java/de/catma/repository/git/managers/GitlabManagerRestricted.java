@@ -386,10 +386,13 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 		}
 	}
 	
-	
 	public Map<String, RBACRole> getRolesPerResource(ProjectReference projectReference) throws IOException {
+		return getRolesPerResource(projectReference.getProjectId());
+	}	
+	
+	public Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException {
 		try {
-			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectReference.getProjectId());
+			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
 			CustomProjectApi customProjectApi = new CustomProjectApi(restrictedGitLabApi,  backgroundService.getExecutorService());			
 			Map<String, AccessLevel> permMap = customProjectApi.getResourcePermissions(group.getId());
 			

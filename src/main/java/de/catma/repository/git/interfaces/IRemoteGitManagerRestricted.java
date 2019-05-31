@@ -139,6 +139,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	Set<Member> getResourceMembers(IdentifiableResource resource) throws IOException;
 	
 	Map<String, RBACRole> getRolesPerResource(ProjectReference projectReference) throws IOException ;
+	Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException ;
 
 
 }

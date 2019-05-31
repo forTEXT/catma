@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.vaadin.dialogs.ConfirmDialog;
@@ -26,6 +27,8 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.DescriptionGenerator;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -39,6 +42,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.indexer.KwicProvider;
+import de.catma.rbac.RBACPermission;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -62,13 +66,16 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	private IconButton btClearSelected;
 	private PropertyChangeListener propertyDefinitionChangedListener;
 	private PropertyChangeListener tagChangedListener;
+	private Function<String, Boolean> isCurrentEditedCollection; //takes a collectionId and returns true if this is the collection currently being edited
 
 	public AnnotationDetailsPanel(
 		Repository project, UserMarkupCollectionManager collectionManager, 
-		Consumer<String> annotationSelectionListener) {
+		Consumer<String> annotationSelectionListener,
+		Function<String, Boolean> isCurrentEditedCollection) {
 		this.project = project;
 		this.collectionManager = collectionManager;
 		this.annotationSelectionListener = annotationSelectionListener;
+		this.isCurrentEditedCollection = isCurrentEditedCollection;
 		initComponents();
 		initActions();
 		initListeners();
@@ -288,17 +295,31 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		final Annotation annotation = item.getAnnotation();
 		
-		ConfirmDialog.show(
-			UI.getCurrent(), 
-			"Info", 
-			"Are you sure you want to delete this Annotation?", 
-			"Delete", 
-			"Cancel", dlg -> {
-				if (dlg.isConfirmed()) {
-					collectionManager.removeTagInstance(annotation.getTagInstance().getUuid());
-				}
-			}	
-		);
+		if (project.hasPermission(project.getRoleForTagset(annotation.getTagInstance().getTagsetId()), RBACPermission.TAGSET_WRITE)) {
+			if (!isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid())) {
+				// TODO: change collection
+			}
+			else {
+				ConfirmDialog.show(
+						UI.getCurrent(), 
+						"Info", 
+						"Are you sure you want to delete this Annotation?", 
+						"Delete", 
+						"Cancel", dlg -> {
+							if (dlg.isConfirmed()) {
+								collectionManager.removeTagInstance(annotation.getTagInstance().getUuid());
+							}
+						}	
+				);
+			}
+		}
+		else {
+			Notification.show(
+				"Info", 
+				"You do not have the permission to make changes to the Collection of this Annotation, "
+				+ "please contact the Project maintainer!",
+				Type.HUMANIZED_MESSAGE);
+		}
 	}
 	
 	
@@ -307,30 +328,36 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		final Annotation annotation = item.getAnnotation();
 		
-		
-		EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-			new EditAnnotationPropertiesDialog(project, annotation, 
-					new SaveCancelListener<List<Property>>() {
-			
-			
-			@Override
-			public void savePressed(List<Property> result) {
-				try {
-					collectionManager.updateProperty(
-						annotation.getUserMarkupCollection(), 
-						annotation.getTagInstance(), result);
-					
-					
-				} catch (IOException e) {
-					
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+		if (annotation.getTagInstance().getUserDefinedProperties().isEmpty()) {
+			Notification.show(
+					"Info", 
+					"There are no Properties defined for the Tag of this Annotation!", 
+					Type.HUMANIZED_MESSAGE);
+		}
+		else {
+			EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
+				new EditAnnotationPropertiesDialog(project, annotation, 
+						new SaveCancelListener<List<Property>>() {
+				
+				
+				@Override
+				public void savePressed(List<Property> result) {
+					try {
+						collectionManager.updateProperty(
+							annotation.getUserMarkupCollection(), 
+							annotation.getTagInstance(), result);
+						
+						
+					} catch (IOException e) {
+						
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
-			}
-		});
-		
-		editAnnotationPropertiesDialog.show();
-
+			});
+			
+			editAnnotationPropertiesDialog.show();
+		}
 	}
 
 	public Registration addMinimizeButtonClickListener(ClickListener listener) {
@@ -357,7 +384,11 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 						annotation, 
 						project.getTagManager().getTagLibrary().getTagsetDefinition(
 							annotation.getTagInstance().getTagsetId()), 
-						kwicProvider);
+						kwicProvider,
+						project.hasPermission(
+							project.getRoleForTagset(annotation.getTagInstance().getTagsetId()), 
+							RBACPermission.COLLECTION_WRITE),
+						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
 			
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());
 			annotationDetailData.addItem(null, annotationDataItem);

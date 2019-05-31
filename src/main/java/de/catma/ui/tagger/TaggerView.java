@@ -47,6 +47,8 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -178,7 +180,9 @@ public class TaggerView extends HorizontalLayout
 						sourceDocument, 
 						tagsets, 
 						new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
-				taggerContextMenu.setTagsets(tagsets);
+				if (taggerContextMenu != null) {
+					taggerContextMenu.setTagsets(tagsets);
+				}
 			}			
 			else {
 				linesPerPageSlider.setEnabled(false);
@@ -435,7 +439,9 @@ public class TaggerView extends HorizontalLayout
 			public void tagsetsSelected(Collection<TagsetDefinition> tagsets) {
 				try {
 					annotationPanel.setTagsets(tagsets);
-					taggerContextMenu.setTagsets(tagsets);
+					if (taggerContextMenu != null) {
+						taggerContextMenu.setTagsets(tagsets);
+					}
 					for (UserMarkupCollection collection : userMarkupCollectionManager.getUserMarkupCollections()) {
 						tagger.setVisible(collection.getTagReferences(), false);
 						List<TagReference> visibleRefs = 
@@ -459,8 +465,6 @@ public class TaggerView extends HorizontalLayout
 					tagger.setVisible(tagReferences, selected);
 				}
 			});
-		//TODO: handle missing collection
-		taggerContextMenu.setTagSelectionListener(tag -> tagger.addTagInstanceWith(tag));
 		
 	}
 
@@ -513,8 +517,6 @@ public class TaggerView extends HorizontalLayout
 		taggerPanel.addComponent(tagger);
 		taggerPanel.setExpandRatio(tagger, 1.0f);
 		
-		taggerContextMenu = new TaggerContextMenu(tagger, this.tagManager);
-		
 		HorizontalLayout actionPanel = new HorizontalLayout();
 		actionPanel.setSpacing(true);
 		
@@ -563,7 +565,8 @@ public class TaggerView extends HorizontalLayout
 		annotationPanel = new AnnotationPanel(
 			project, 
 			userMarkupCollectionManager,
-			selectedAnnotationId -> tagger.setTagInstanceSelected(selectedAnnotationId));
+			selectedAnnotationId -> tagger.setTagInstanceSelected(selectedAnnotationId),
+			collection -> handleCollectionValueChange(collection));
 		
 		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
@@ -621,6 +624,27 @@ public class TaggerView extends HorizontalLayout
 		setExpandRatio(splitPanel, 1.0f);
 	}
 	
+	private void handleCollectionValueChange(UserMarkupCollection collection) {
+		if (collection == null) {
+			if (taggerContextMenu != null) {
+				taggerContextMenu.close();
+				taggerContextMenu = null;
+			}
+		}
+		else if (taggerContextMenu == null) {
+			taggerContextMenu = new TaggerContextMenu(
+					tagger, 
+					this.tagManager);
+				
+			taggerContextMenu.setTagSelectionListener(
+					tag -> tagger.addTagInstanceWith(tag));
+			Collection<TagsetDefinition> tagsets = 
+					new HashSet<>(resourcePanel.getSelectedTagsets());
+			taggerContextMenu.setTagsets(tagsets);
+		}
+		
+	}
+
 	public int getApproximateMaxLineLengthForSplitterPanel(float width){
 		// based on ratio of 80:550
 		int approxMaxLineLength = (int) (width * 0.135);
@@ -648,7 +672,9 @@ public class TaggerView extends HorizontalLayout
 		this.eventBus.unregister(this);
 		annotationPanel.close();
 		resourcePanel.close();
-		taggerContextMenu.close();
+		if (taggerContextMenu != null) {
+			taggerContextMenu.close();
+		}
 		project.removePropertyChangeListener(
 				RepositoryChangeEvent.tagReferencesChanged, 
 				tagReferencesChangedListener);
@@ -666,57 +692,65 @@ public class TaggerView extends HorizontalLayout
 			ClientTagInstance clientTagInstance) {
 		
 		UserMarkupCollection collection = annotationPanel.getSelectedEditableCollection();
-		
-		TagLibrary tagLibrary = collection.getTagLibrary();
-		
-		TagDefinition tagDef = 
-				tagLibrary.getTagDefinition(
-						clientTagInstance.getTagDefinitionID());
-		
-		TagInstance ti = 
-			new TagInstance(
-				clientTagInstance.getInstanceID(), 
-				tagDef.getUuid(),
-				project.getUser().getIdentifier(),
-	        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
-	        	tagDef.getUserDefinedPropertyDefinitions(),
-	        	tagDef.getTagsetDefinitionUuid());
-		
-		List<TagReference> tagReferences = new ArrayList<TagReference>();
-		
-		try {
-			String userMarkupCollectionUuid = collection.getId();
-
-			for (TextRange tr : clientTagInstance.getRanges()) {
-				Range r = new Range(tr.getStartPos(), tr.getEndPos());
-				TagReference ref = 
-						new TagReference(ti, sourceDocument.getID(), r, userMarkupCollectionUuid);
-				tagReferences.add(ref);
-			}
+		if (collection == null) { //shouldn't happen, but just in case
+			Notification.show("Info", 
+					"Please make sure you have a editable Collection available "
+					+ "and select this Collection as 'currently being edited'! "
+					+ "Your Annotation hasn't been saved!",
+					Type.ERROR_MESSAGE);
+		}
+		else {
+			TagLibrary tagLibrary = collection.getTagLibrary();
 			
-			final Annotation annotation = 
-				new Annotation(ti, tagReferences, collection, tagLibrary.getTagPath(tagDef));
-			if (!tagDef.getUserDefinedPropertyDefinitions().isEmpty()) {
-				EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-					new EditAnnotationPropertiesDialog(
-						project, annotation, 
-						new SaveCancelListener<List<Property>>() {
-							
-							@Override
-							public void savePressed(List<Property> result) {
-								userMarkupCollectionManager.addTagReferences(
-										tagReferences, collection);
-							}
-					});
-				editAnnotationPropertiesDialog.show();
-			}
-			else {
-				userMarkupCollectionManager.addTagReferences(tagReferences, collection);
-			}
+			TagDefinition tagDef = 
+					tagLibrary.getTagDefinition(
+							clientTagInstance.getTagDefinitionID());
 			
-		} catch (URISyntaxException e) {
-			errorHandler.showAndLogError(
-				Messages.getString("TaggerView.errorAddingAnnotations"), e); //$NON-NLS-1$
+			TagInstance ti = 
+				new TagInstance(
+					clientTagInstance.getInstanceID(), 
+					tagDef.getUuid(),
+					project.getUser().getIdentifier(),
+		        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+		        	tagDef.getUserDefinedPropertyDefinitions(),
+		        	tagDef.getTagsetDefinitionUuid());
+			
+			List<TagReference> tagReferences = new ArrayList<TagReference>();
+			
+			try {
+				String userMarkupCollectionUuid = collection.getId();
+	
+				for (TextRange tr : clientTagInstance.getRanges()) {
+					Range r = new Range(tr.getStartPos(), tr.getEndPos());
+					TagReference ref = 
+							new TagReference(ti, sourceDocument.getID(), r, userMarkupCollectionUuid);
+					tagReferences.add(ref);
+				}
+				
+				final Annotation annotation = 
+					new Annotation(ti, tagReferences, collection, tagLibrary.getTagPath(tagDef));
+				if (!tagDef.getUserDefinedPropertyDefinitions().isEmpty()) {
+					EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
+						new EditAnnotationPropertiesDialog(
+							project, annotation, 
+							new SaveCancelListener<List<Property>>() {
+								
+								@Override
+								public void savePressed(List<Property> result) {
+									userMarkupCollectionManager.addTagReferences(
+											tagReferences, collection);
+								}
+						});
+					editAnnotationPropertiesDialog.show();
+				}
+				else {
+					userMarkupCollectionManager.addTagReferences(tagReferences, collection);
+				}
+				
+			} catch (URISyntaxException e) {
+				errorHandler.showAndLogError(
+					Messages.getString("TaggerView.errorAddingAnnotations"), e); //$NON-NLS-1$
+			}
 		}
 	}
 
