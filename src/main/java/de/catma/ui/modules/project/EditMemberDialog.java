@@ -39,7 +39,7 @@ public class EditMemberDialog<T> extends AbstractMemberDialog<Set<RBACSubject>> 
 		this.members = members;
 		this.resourceOrProject = resourceOrProject;
 		this.assignment = assignment;
-		this.accesslevel = members.isEmpty() ?  RBACRole.STUDENT : members.iterator().next().getRole();
+		this.accesslevel = members.isEmpty() ?  RBACRole.REPORTER : members.iterator().next().getRole();
 	}
 	
 	@Override

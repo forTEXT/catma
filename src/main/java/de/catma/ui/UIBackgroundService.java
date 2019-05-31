@@ -1,5 +1,6 @@
 package de.catma.ui;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -7,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.hazelcast.spi.ExecutionService;
 import com.vaadin.ui.UI;
 
 import de.catma.backgroundservice.BackgroundService;
@@ -22,7 +24,7 @@ public class UIBackgroundService implements BackgroundService {
 	public UIBackgroundService(boolean background) {
 		this.background = background;
 		if (background) {
-			backgroundThread = Executors.newScheduledThreadPool(2);
+			backgroundThread = Executors.newScheduledThreadPool(5);
 		}
 	}
 
@@ -101,5 +103,10 @@ public class UIBackgroundService implements BackgroundService {
 	
 	public void shutdown() {
 		backgroundThread.shutdown();
+	}
+	
+	@Override
+	public ExecutorService getExecutorService(){
+		return this.backgroundThread;
 	}
 }

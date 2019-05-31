@@ -5,7 +5,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.hazelcast.core.HazelcastInstance;
 
 import de.catma.hazelcast.HazelCastService;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;

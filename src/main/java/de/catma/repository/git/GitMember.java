@@ -35,9 +35,13 @@ public class GitMember implements Member {
 	}
 
 	private final org.gitlab4j.api.models.Member delegate;
+	private final RBACRole role;
+	private final Integer id;
 
     public GitMember(org.gitlab4j.api.models.Member member){
         this.delegate = member;
+        this.role = RBACRole.forValue(delegate.getAccessLevel().value);
+        this.id = delegate.getId();
     }
 
     @Override
@@ -67,7 +71,7 @@ public class GitMember implements Member {
 
     @Override
     public boolean isGuest() {
-        return delegate.getAccessLevel().value == RBACRole.TRAINEE.value;
+        return delegate.getAccessLevel().value == RBACRole.GUEST.value;
     }
 
     @Override

@@ -214,4 +214,42 @@ public interface GitlabManagerCommon extends IRBACManager {
 		}		
 	}
 	
+	@Override
+	public default RBACRole getRoleOnResource(RBACSubject subject, IdentifiableResource resource) throws IOException {
+		try {
+			Project project = getGitLabApi().getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			if(project == null) {
+				throw new IOException("resource or rootproject unkown "+ resource.getResourceId());
+			}
+				Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
+			
+			if(member == null ){
+				throw new IOException("member not found " + subject);
+			}
+			return RBACRole.forValue(member.getAccessLevel().value);
+			
+		} catch (GitLabApiException e) {
+			throw new IOException("resource or rootproject unkown "+ resource, e);
+		}		
+	}
+	
+	@Override
+	public default RBACRole getRoleOnProject(RBACSubject subject, String projectId) throws IOException {
+		try {
+			Group group = getGitLabApi().getGroupApi().getGroup(projectId);
+			if(group == null) {
+				throw new IOException("Project unkown "+ projectId);
+			}
+			Member member = getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId());
+			
+			if(member == null ){
+				throw new IOException("member not found " + subject);
+			}
+			return RBACRole.forValue(member.getAccessLevel().value);
+			
+		} catch (GitLabApiException e) {
+			throw new IOException("Project unkown "+ projectId, e);
+		}	
+	}
+	
 }

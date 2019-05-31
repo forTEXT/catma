@@ -2,10 +2,16 @@ package de.catma.repository.git.managers;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -31,6 +37,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
 import de.catma.Pager;
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.interfaces.IdentifiableResource;
 import de.catma.project.ProjectReference;
@@ -53,25 +60,26 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 
 	private final GitLabApi restrictedGitLabApi;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
-	
+	private final BackgroundService backgroundService;
 	private GitUser user;
 
 	@AssistedInject
-	public GitlabManagerRestricted(EventBus eventBus, @Assisted("token") String userImpersonationToken) throws IOException {
-		this(eventBus, new GitLabApi(RepositoryPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
+	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("token") String userImpersonationToken) throws IOException {
+		this(eventBus, backgroundService, new GitLabApi(RepositoryPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
 	}
 	
 	@AssistedInject
-	public GitlabManagerRestricted(EventBus eventBus, @Assisted("username") String username, @Assisted("password") String password) throws IOException {
-		this(eventBus, oauth2Login(RepositoryPropertyKey.GitLabServerUrl.getValue(), username, password));
+	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("username") String username, @Assisted("password") String password) throws IOException {
+		this(eventBus, backgroundService, oauth2Login(RepositoryPropertyKey.GitLabServerUrl.getValue(), username, password));
 	}
 
-	private GitlabManagerRestricted(EventBus eventBus, GitLabApi api) throws IOException {
+	private GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, GitLabApi api) throws IOException {
 		org.gitlab4j.api.models.User currentUser;
 		try {
 			currentUser = api.getUserApi().getCurrentUser();
 			this.user = new GitUser(currentUser);
 			this.restrictedGitLabApi = api;
+			this.backgroundService = backgroundService;
 			eventBus.register(this);
 		} catch (GitLabApiException e) {
 			throw new IOException(e);
@@ -355,11 +363,21 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 		try {
 			Project project = restrictedGitLabApi.getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
 			if(project != null ){
-				return new CustomProjectApi(restrictedGitLabApi)
+				List<GitMember> allMembers = new CustomProjectApi(restrictedGitLabApi, backgroundService.getExecutorService())
 						.getAllMembers(project.getId())
 						.stream()
 						.map(member -> new GitMember(member))
-						.collect(Collectors.toSet());
+						.collect(Collectors.toList());
+				
+				Map<Integer,de.catma.user.Member> mergedList = new HashMap<>();
+				
+				for(de.catma.user.Member m : allMembers){
+					if(! mergedList.containsKey(m.getUserId()) || mergedList.get(m.getUserId()).getRole().value < m.getRole().value){
+						mergedList.put(m.getUserId(), m);
+					}
+				}
+				return mergedList.values().stream().collect(Collectors.toSet());
+				
 			} else {
 				throw new IOException("resource unknown");
 			}	
@@ -372,17 +390,36 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	public Map<String, RBACRole> getRolesPerResource(ProjectReference projectReference) throws IOException {
 		try {
 			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectReference.getProjectId());
-			List<Project> project = restrictedGitLabApi.getGroupApi().getProjects(group.getId());
+			CustomProjectApi customProjectApi = new CustomProjectApi(restrictedGitLabApi,  backgroundService.getExecutorService());			
+			Map<String, AccessLevel> permMap = customProjectApi.getResourcePermissions(group.getId());
 			
-			return project.stream()
-			.filter(proj -> proj.getPermissions() != null)
-			.collect(
-					Collectors.toMap((proj) -> proj.getName(), (proj) -> getEffectiveRole(proj.getPermissions()))
-					);
+			return permMap.entrySet()
+					.stream()
+					.collect(Collectors.toMap(
+							Map.Entry::getKey,
+							e -> RBACRole.forValue(e.getValue().value)));
+
 		} catch (GitLabApiException e){
 			throw new IOException("retrieving permissions failed",e);
 		}
 	}
+	
+//	public Map<String, RBACRole> getRolesPerProject(ProjectReference projectReference) throws IOException {
+//		try {
+//			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectReference.getProjectId());
+//			CustomProjectApi customProjectApi = new CustomProjectApi(restrictedGitLabApi,  backgroundService.getExecutorService());			
+//			Map<String, AccessLevel> permMap = customProjectApi.getResourcePermissions(group.getId());
+//			
+//			return permMap.entrySet()
+//					.stream()
+//					.collect(Collectors.toMap(
+//							Map.Entry::getKey,
+//							e -> RBACRole.forValue(e.getValue().value)));
+//
+//		} catch (GitLabApiException e){
+//			throw new IOException("retrieving permissions failed",e);
+//		}
+//	}
 	
 	private RBACRole getEffectiveRole(Permissions permissions) {
 		ProjectAccess groupRole = permissions.getGroupAccess();

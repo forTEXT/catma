@@ -59,6 +59,8 @@ import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
+import de.catma.repository.git.GitMarkupCollectionHandler;
+import de.catma.repository.git.GitSourceDocumentHandler;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
@@ -274,11 +276,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
 		        new ResourcePermissionView(
-		        		eventBus,
 		        		resourceTree,
-		        		this.remoteGitManager,
-		        		(rbacsubj) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
-		        		).show();
+		        		this.remoteGitManager).show();
 		        }
         );
         
@@ -689,8 +688,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		    				||
         		    		   res instanceof CollectionResource && remoteGitManager.hasPermission(res.getRole(), RBACPermission.COLLECTION_WRITE)){
         		    			return VaadinIcons.UNLOCK.getHtml();
+        		    			} else {
+        		    				return VaadinIcons.LOCK.getHtml();
         		    			}
-    		    			return VaadinIcons.LOCK.getHtml();
         		    		} , new HtmlRenderer())
         		    	.setCaption("Permission")
         		    	.setWidth(50);
@@ -812,6 +812,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamGrid.setWidth("402px");
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
         teamGrid.addColumn(User::getIdentifier).setExpandRatio(1);
+        teamGrid.addColumn(Member::getRole);
         
         Label membersAnnotations = new Label("Members");
         ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
@@ -918,11 +919,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	Collection<SourceDocument> srcDocs = project.getSourceDocuments();
         	
         	for(SourceDocument srcDoc : srcDocs){
-        		DocumentResource srcDocResource = new DocumentResource(srcDoc, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
+        		DocumentResource srcDocResource = new DocumentResource(srcDoc, project.getProjectId(), permissionsPerResource.get(
+        				GitSourceDocumentHandler.getSourceDocumentRepositoryName(srcDoc.getID())));
         		List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
     			resourceTree.putAll(srcDocResource, 
     					collections.stream()
-    					.map(col -> new CollectionResource(col, project.getProjectId(), permissionsPerResource.get(project.getProjectId()))
+    					.map(col -> new CollectionResource(col, project.getProjectId(), permissionsPerResource.get(
+    							GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(col.getId())
+    							))
     							)
     					.collect(Collectors.toList())
     					);
@@ -985,7 +989,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     @Subscribe
     public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
-    //	initData();
+    	initData();
     }
 
     /**
