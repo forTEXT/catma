@@ -1,5 +1,6 @@
 package de.catma.backgroundservice;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -97,6 +98,11 @@ public class DefaultBackgroundService implements BackgroundService {
 
 	public void shutdown() {
 		backgroundThread.shutdown();
+	}
+
+	@Override
+	public ExecutorService getExecutorService() {
+		return backgroundThread;
 	}
 	
 	

@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public enum RBACRole {
 
-    NONE(0,"None"), TRAINEE(10,"Trainee"), STUDENT(20,"Student"), ASSISTANT(30,"Assistant"), MAINTAINER(40,"Maintainer"), OWNER(50,"Owner");
+    NONE(0,"None"), GUEST(10,"Stundent"), REPORTER(20,"Reporter"), ASSISTANT(30,"Assistant"), MAINTAINER(40,"Maintainer"), OWNER(50,"Owner");
 
     public final Integer value;
     public final String roleName;

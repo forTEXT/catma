@@ -1,5 +1,6 @@
 package de.catma.ui.modules.dashboard;
 
+import java.io.IOException;
 import java.util.Objects;
 
 import org.vaadin.dialogs.ConfirmDialog;
@@ -18,6 +19,7 @@ import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
@@ -42,7 +44,7 @@ public class ProjectCard extends VerticalLayout  {
 
 	private final IRBACManager rbacManager;
 	
-	private final RBACConstraintEnforcer<ProjectReference> rbacEnforcer = new RBACConstraintEnforcer<>();
+	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
 
 	@Inject
     ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){
@@ -52,12 +54,24 @@ public class ProjectCard extends VerticalLayout  {
         this.rbacManager = rbacManager;
         this.errorLogger = (ErrorHandler) UI.getCurrent();
         initComponents();
-        rbacEnforcer.enforceConstraints(projectReference); // normally done in reload();
+        initData();
     }
 
 
 
-    protected void initComponents() {
+    private void initData() {
+    	RBACRole projectRole;
+		try {
+			projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference.getProjectId());
+			rbacEnforcer.enforceConstraints(projectRole); // normally done in reload();
+		} catch (IOException e) {
+            errorLogger.showAndLogError("can't fetch permissions" + projectReference.getName(), e);
+		}
+	}
+
+
+
+	protected void initComponents() {
         addStyleName("projectlist__card");
 
         CssLayout preview = new CssLayout();
@@ -133,8 +147,8 @@ public class ProjectCard extends VerticalLayout  {
         descriptionBar.addComponent(btnLeave);
         
         rbacEnforcer.register(
-        		RBACConstraint.ifNotAuthorized((proj) -> 
-        			(rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_EDIT, proj.getProjectId())),
+        		RBACConstraint.ifNotAuthorized((role) -> 
+        			(rbacManager.hasPermission(role, RBACPermission.PROJECT_EDIT)),
         			() -> { 
         				btnEdit.setVisible(false);
         				btnEdit.setEnabled(false);
@@ -142,8 +156,8 @@ public class ProjectCard extends VerticalLayout  {
         		);
         
         rbacEnforcer.register(
-        		RBACConstraint.ifNotAuthorized((proj) -> 
-        			(rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_DELETE, proj.getProjectId())),
+        		RBACConstraint.ifNotAuthorized((role) -> 
+        			(rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE)),
         			() -> { 
         				btnRemove.setVisible(false);
         				btnRemove.setEnabled(false);
@@ -152,10 +166,10 @@ public class ProjectCard extends VerticalLayout  {
         
         rbacEnforcer.register(
         		RBACConstraint.ifNotAuthorized(
-        				(proj) -> 
-        					rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_LEAVE, proj.getProjectId())
+        				(role) -> 
+        					rbacManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
         					&&
-        					! rbacManager.isAuthorizedOnProject(projectManager.getUser(), RBACPermission.PROJECT_DELETE, proj.getProjectId())	
+        					! rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE)	
         				,
         			() -> { 
         				btnLeave.setVisible(false);

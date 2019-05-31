@@ -87,4 +87,25 @@ public interface IRBACManager {
 		}
 	};
 	
+	/**
+	 * get's the defined Role for a subject on a specific resource
+	 * 
+	 * @param subject
+	 * @param resource
+	 * @return
+	 * @throws IOException 
+	 */
+	RBACRole getRoleOnResource(RBACSubject subject, IdentifiableResource resource) throws IOException;
+	
+	/**
+	 * get's the defined Role for a subject on a specific project
+	 * 
+	 * @param subject
+	 * @param projectId
+	 * @return
+	 * @throws IOException 
+	 */
+	RBACRole getRoleOnProject(RBACSubject subject, String projectId) throws IOException;
+
+	
 }

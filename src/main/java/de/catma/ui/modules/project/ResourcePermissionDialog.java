@@ -4,12 +4,10 @@ import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeGrid;
@@ -33,7 +31,6 @@ public class ResourcePermissionDialog extends Window {
 	private final Resource resource;
 	private final VerticalLayout content = new VerticalLayout();
 	private final Grid<Member> permissionGrid = new Grid<>();
-	private final EventBus eventBus;
 	private final ActionGridComponent<Grid<Member>> permissionGridComponent = new ActionGridComponent<Grid<Member>>(
 			new Label("Permissions"),
 			permissionGrid
@@ -41,16 +38,13 @@ public class ResourcePermissionDialog extends Window {
 
 	private ListDataProvider<Member> permissionData;
 
-	public ResourcePermissionDialog(EventBus eventBus, Resource resource, IRemoteGitManagerRestricted remoteGitManager, Consumer<RBACSubject> onAssignmentCallback ) {
+	public ResourcePermissionDialog(Resource resource, IRemoteGitManagerRestricted remoteGitManager, Consumer<RBACSubject> onAssignmentCallback ) {
 		this.remoteGitManager = remoteGitManager;
 		this.onAssignmentCallback = onAssignmentCallback.
-				andThen((evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this)));
+				andThen((evt) -> initData());
 		this.resource = resource;
     	this.errorHandler = (ErrorHandler)UI.getCurrent();
-        this.eventBus = eventBus;
         
-    	eventBus.register(this);
-
 		initComponents();
 		initActions();
 		initData();
@@ -117,14 +111,14 @@ public class ResourcePermissionDialog extends Window {
 				resource,
 				remoteGitManager::assignOnResource,
 				permissionGrid.getSelectedItems(),
-				(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
+				(evt) -> initData()
 				).show());
 		
 		moreOptionsContextMenu.addItem("remove members", (click) -> new RemoveMemberDialog<>(
 				resource,
 				remoteGitManager::unassignFromResource,
 				permissionGrid.getSelectedItems(),
-				(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
+				(evt) -> initData()
 				).show());
 		
 	}
