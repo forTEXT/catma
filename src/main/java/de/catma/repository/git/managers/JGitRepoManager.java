@@ -632,6 +632,15 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
+	public boolean hasRef(String branch) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `hasRef` on a detached instance");
+		}
+		
+		return this.gitApi.getRepository().findRef(branch) != null;
+	}
+	
+	@Override
 	public MergeResult merge(String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `merge` on a detached instance");
@@ -644,9 +653,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			Ref ref = this.gitApi.getRepository().findRef(branch);
 			if (ref != null) {
 				mergeCommand.include(ref);
-			} else {
-				mergeCommand.include(ObjectId.fromString(branch));
-			}
+			} 
+//			else {
+//				mergeCommand.include(ObjectId.fromString(branch));
+//			}
 			
 			return mergeCommand.call();
 		}

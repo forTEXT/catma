@@ -41,7 +41,6 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
@@ -890,7 +889,7 @@ public class GitProjectHandler {
 			for (TagsetDefinition tagset : getTagsets()) {
 				gitTagsetHandler.checkout(
 					projectId, tagset.getUuid(), 
-					JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 			}
 			
 			GitMarkupCollectionHandler collectionHandler = 
@@ -903,7 +902,7 @@ public class GitProjectHandler {
 				collectionHandler.checkout(
 					projectId, 
 					collectionReference.getId(), 
-					JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 			}
 		}		
 	}
@@ -1221,10 +1220,15 @@ public class GitProjectHandler {
 			
 			localGitRepoManager.fetch(credentialsProvider);
 			
-			MergeResult mergeWithOriginMasterResult = 
-				localGitRepoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
-			
-			if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
+			if (localGitRepoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {
+				MergeResult mergeWithOriginMasterResult = 
+					localGitRepoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+				
+				if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
+					localGitRepoManager.push(credentialsProvider);
+				}
+			}
+			else {
 				localGitRepoManager.push(credentialsProvider);
 			}
 		}	
@@ -1237,7 +1241,7 @@ public class GitProjectHandler {
 						localGitRepoManager, 
 						this.remoteGitServerManager,
 						this.credentialsProvider);
-			collectionHandler.checkout(collectionId, collectionId, JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, false);
+			collectionHandler.checkout(collectionId, collectionId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, false);
 			collectionHandler.rebaseToMaster();
 		}
 	}
@@ -1250,8 +1254,8 @@ public class GitProjectHandler {
 					this.remoteGitServerManager,
 					this.credentialsProvider);
 
-			gitTagsetHandler.checkout(projectId, tagsetId, JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH, false);
-			gitTagsetHandler.rebaseToMaster(projectId, tagsetId, JGitRepoManager.DEFAULT_LOCAL_DEV_BRANCH);
+			gitTagsetHandler.checkout(projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, false);
+			gitTagsetHandler.rebaseToMaster(projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH);
 		}		
 	}
 

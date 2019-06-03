@@ -67,15 +67,18 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	private PropertyChangeListener propertyDefinitionChangedListener;
 	private PropertyChangeListener tagChangedListener;
 	private Function<String, Boolean> isCurrentEditedCollection; //takes a collectionId and returns true if this is the collection currently being edited
+	private Consumer<String> changeCollectionListener; //takes a target collectionId to change to 
 
 	public AnnotationDetailsPanel(
 		Repository project, UserMarkupCollectionManager collectionManager, 
 		Consumer<String> annotationSelectionListener,
-		Function<String, Boolean> isCurrentEditedCollection) {
+		Function<String, Boolean> isCurrentEditedCollection,
+		Consumer<String> changeCollectionListener) {
 		this.project = project;
 		this.collectionManager = collectionManager;
 		this.annotationSelectionListener = annotationSelectionListener;
 		this.isCurrentEditedCollection = isCurrentEditedCollection;
+		this.changeCollectionListener = changeCollectionListener;
 		initComponents();
 		initActions();
 		initListeners();
@@ -257,7 +260,6 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		.setSortable(false)
 		.setWidth(100);
 		
-		//TODO: handle permissions for edit/delete and collection switching
 		ButtonRenderer<AnnotationTreeItem> editAnnotationRenderer = 
 			new ButtonRenderer<AnnotationTreeItem>(clickEvent -> handleEditAnnotationRequest(clickEvent));
 		editAnnotationRenderer.setHtmlContentAllowed(true);
@@ -274,7 +276,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		annotationDetailsTree.addColumn(
 			annotationTreeItem -> annotationTreeItem.getDeleteIcon(),
 			deleteAnnotationRenderer)
-		.setWidth(50);
+		.setExpandRatio(1);
 		
 		annotationDetailsTree.setDescriptionGenerator(new DescriptionGenerator<AnnotationTreeItem>() {
 			@Override
@@ -297,7 +299,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		if (project.hasPermission(project.getRoleForTagset(annotation.getTagInstance().getTagsetId()), RBACPermission.TAGSET_WRITE)) {
 			if (!isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid())) {
-				// TODO: change collection
+				changeCollectionListener.accept(annotation.getUserMarkupCollection().getUuid());
+				annotationDetailsProvider.refreshAll();
 			}
 			else {
 				ConfirmDialog.show(

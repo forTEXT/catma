@@ -967,7 +967,22 @@ public class AnnotationPanel extends VerticalLayout {
         		collectionManager,
         		annotationSelectionListener,
         		collectionId -> currentEditableCollectionBox.getValue() != null 
-        			&& currentEditableCollectionBox.getValue().getUuid().contentEquals(collectionId));
+        			&& currentEditableCollectionBox.getValue().getUuid().contentEquals(collectionId),
+        		collectionId -> handleCollectionChangeRequest(collectionId));
+	}
+
+	private void handleCollectionChangeRequest(String collectionId) {
+		collections.stream()
+		.filter(collection -> collection.getUuid().equals(collectionId))
+		.findFirst()
+		.ifPresent(collection -> {
+			currentEditableCollectionBox.setValue(collection);
+			Notification.show("Info", 
+				String.format(
+					"The Collection currently being edited has changed to '%1$s'!",  
+					collection.getName()),
+				Type.HUMANIZED_MESSAGE);
+		});
 	}
 
 	public void setData(

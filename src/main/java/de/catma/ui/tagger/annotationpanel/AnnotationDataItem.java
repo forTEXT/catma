@@ -82,7 +82,7 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 				return VaadinIcons.EDIT.getHtml();
 			}
 			else {
-				return VaadinIcons.EXCHANGE.getHtml() + VaadinIcons.NOTEBOOK.getHtml();
+				return null;
 			}
 		}		
 	}
@@ -97,7 +97,7 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 				return VaadinIcons.TRASH.getHtml();
 			}
 			else {
-				return null;
+				return VaadinIcons.EXCHANGE.getHtml() + VaadinIcons.NOTEBOOK.getHtml();
 			}
 		}
 	}

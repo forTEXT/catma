@@ -86,4 +86,6 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	List<String> getSubmodulePaths() throws IOException;
 
+	boolean hasRef(String branch) throws IOException;
+
 }
