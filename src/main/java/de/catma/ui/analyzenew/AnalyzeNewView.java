@@ -93,6 +93,7 @@ public class AnalyzeNewView extends HorizontalLayout
 	private Component searchPanel;
 	private Component visIconsPanel;
 	private ResourcePanelAnalyze resourcePanelAnalyze;
+	private SliderPanel drawer;
 	private QueryOptions queryOptions;
 
 	public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener)
@@ -149,8 +150,12 @@ public class AnalyzeNewView extends HorizontalLayout
 		this.addStyleName("analyze_content");
 		
 		resourcePanelAnalyze = new ResourcePanelAnalyze(this.repository, this.corpus); 
-		SliderPanel drawer = new SliderPanelBuilder(resourcePanelAnalyze)
+		
+		 drawer = new SliderPanelBuilder(resourcePanelAnalyze)
 				.mode(SliderMode.LEFT).expanded(false).build();
+		
+		//resourcePanelAnalyze.addStyleName("analyze_resourcePanel");
+		drawer.addStyleName("analyze_resourcePanel");
 		
 		addComponent(drawer);
 		
