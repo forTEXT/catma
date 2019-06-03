@@ -39,6 +39,7 @@ import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
@@ -105,7 +106,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private final ErrorHandler errorHandler;
 	private final EventBus eventBus;
 	private final IRemoteGitManagerRestricted remoteGitManager;
-	private final RBACConstraintEnforcer<ProjectReference> rbacEnforcer = new RBACConstraintEnforcer<>();
+	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
 	private final UIFactory uiFactory;
 	
     private TreeGrid<Resource> resourceGrid;
@@ -265,22 +266,54 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
         ContextMenu addContextMenu = 
         	documentsGridComponent.getActionGridBar().getBtnAddContextMenu();
-        addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
-        addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
+        MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
+        addDocumentBtn.setEnabled(false);
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.DOCUMENT_CREATE_OR_UPLOAD)),
+        		() -> addDocumentBtn.setEnabled(true))
+        		);
 
+        MenuItem addCollectionBtn = addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
+        addCollectionBtn.setEnabled(false);
+        
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.COLLECTION_CREATE)),
+        		() -> addCollectionBtn.setEnabled(true))
+        		);
+        
         ContextMenu documentsGridMoreOptionsContextMenu = 
         	documentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        documentsGridMoreOptionsContextMenu.addItem(
-            	"Edit documents / collections",(menuItem) -> handleEditResources());
-        documentsGridMoreOptionsContextMenu.addItem(
-        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
         
-        documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
+        MenuItem editDocBtn = documentsGridMoreOptionsContextMenu.addItem(
+            	"Edit documents / collections",(menuItem) -> handleEditResources());
+        editDocBtn.setEnabled(false);
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
+        				remoteGitManager.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
+        		() -> editDocBtn.setEnabled(true))
+        		);
+        
+        MenuItem deleteDocsBtn = documentsGridMoreOptionsContextMenu.addItem(
+        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
+        deleteDocsBtn.setEnabled(false);
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
+        				remoteGitManager.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
+        		() -> deleteDocsBtn.setEnabled(true))
+        		);
+
+        MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
 		        new ResourcePermissionView(
 		        		resourceTree,
 		        		this.remoteGitManager).show();
 		        }
         );
+        editResBtn.setEnabled(false);
+        
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
+        		() -> editResBtn.setEnabled(true))
+        		);
         
         tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
         	click -> handleAddTagsetRequest());
@@ -668,11 +701,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
-        
  
         rbacEnforcer.register(
-        		RBACConstraint.ifAuthorized((proj) -> 
-        			(remoteGitManager.isAuthorizedOnProject(remoteGitManager.getUser(), RBACPermission.PROJECT_MEMBERS_EDIT, proj.getProjectId())),
+        		RBACConstraint.ifAuthorized((role) -> 
+        			(remoteGitManager.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
         			() -> { 
         		        getMoreOptionsContextMenu().addItem("invite to project", (click) -> 
         	        	uiFactory.getProjectInvitationDialog(projectReference).show());
@@ -975,7 +1007,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     @Override
     public void reloadAll() {
         initProject(projectReference);
-    	rbacEnforcer.enforceConstraints(projectReference);
+    	try {
+			rbacEnforcer.enforceConstraints(remoteGitManager.getRoleOnProject(remoteGitManager.getUser(), projectReference.getProjectId()));
+		} catch (IOException e) {
+			errorHandler.showAndLogError("Error trying to fetch role", e);
+		}
     }
 
     /**
