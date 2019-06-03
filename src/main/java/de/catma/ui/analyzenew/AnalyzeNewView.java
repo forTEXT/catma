@@ -207,7 +207,10 @@ public class AnalyzeNewView extends HorizontalLayout
 
 					@Override
 					public void onClose() {
+						
 						setContent(contentPanel);
+						setResourcesSlider();
+						
 					}
 				});
 
@@ -219,9 +222,8 @@ public class AnalyzeNewView extends HorizontalLayout
 
 			@Override
 			public void updateQueryOptions(TreeData<DocumentTreeItem> data) {
-				updateCorpusAndQueryOptions( data);
-				
-				
+				updateCorpusAndQueryOptions( data);		
+	
 			}
 		
 		});
@@ -301,11 +303,17 @@ public class AnalyzeNewView extends HorizontalLayout
 
 
 	private void setContent(Component component) {
-		removeAllComponents();
-		addComponent(component);
+		
+		removeAllComponents();		
+		addComponent(component);	
 		component.setHeight("100%");
 		component.setWidth("100%");
 
+	}
+	
+	private void setResourcesSlider() {
+		addComponentAsFirst(drawer);
+		
 	}
 
 	private void addRelevantResources() throws Exception {
