@@ -57,8 +57,8 @@ public class ResourcePermissionView extends Window {
 	
 	private void initComponents() {
 		setCaption("Resource permission editor");
-		setWidth("420px");
-		setHeight("760px");
+		setWidth("85%");
+		setHeightUndefined();
 		setModal(true);
 		content.addStyleName("spacing");
 		content.addStyleName("margin");
@@ -81,10 +81,10 @@ public class ResourcePermissionView extends Window {
         permissionGrid.setWidth("100%");
         permissionGrid.setRowHeight(45);
         permissionGrid.setHeaderVisible(true);
-		permissionGrid
-			.addColumn(entry -> entry.getKey().getName() + " / " + entry.getKey().getClass().getSimpleName().substring(0, 1))
-			.setWidth(150)
-			.setCaption("Resource");
+//		permissionGrid
+//			.addColumn(entry -> entry.getKey().getName() + " / " + entry.getKey().getClass().getSimpleName().substring(0, 1))
+//			.setWidth(150)
+//			.setCaption("Resource");
 				
 //		permissionGridComponent.addStyleName("project-view-action-grid");
 
@@ -96,15 +96,26 @@ public class ResourcePermissionView extends Window {
 	private void initActions(){
 		ContextMenu moreOptionsContextMenu = permissionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-		moreOptionsContextMenu.addItem("Edit permission", (click) -> new ResourcePermissionDialog(
+		moreOptionsContextMenu.addItem("Edit permission", (click) -> {
+			ResourcePermissionDialog rpd = new ResourcePermissionDialog(
 				getSelectedResource() ,
-				remoteGitManager, (evt) -> initData()
-			).show());
+				remoteGitManager, (evt) -> initData());
+				rpd.addCloseListener(event -> initData());
+				rpd.show();
+			}	
+		);
 
 	}
 
 	public void initData() {
     	try {
+    		permissionGrid.removeAllColumns();
+
+    		permissionGrid
+			.addColumn(entry -> entry.getKey().getName() + " / " + entry.getKey().getClass().getSimpleName().substring(0, 1))
+			.setWidth(150)
+			.setCaption("Resource");
+
     		for (Entry<Resource, Resource> entry : resources.entries()) {
     			Set<Resource> res = Sets.newHashSet();
     			res.add(entry.getKey());

@@ -56,9 +56,10 @@ public class CustomProjectApi extends AbstractApi {
 						public Pair<Integer,Set<Project>> call() throws Exception {
 					    	MultivaluedMap<String, String> params = CustomProjectApi.this.getDefaultPerPageParam();
 					    	params.add("min_access_level", level.toString());
-					        Response response = get(Response.Status.OK, params, "groups", projectId, "projects");
+					        Response response = get(Response.Status.OK, params, "projects");
 					        List<Project> projects = response.readEntity(new GenericType<List<Project>>() {});
-							return new Pair<>(level, projects.stream().collect(Collectors.toSet()));		
+					        ;
+							return new Pair<>(level, projects.stream().filter(p -> p.getNamespace().getId() == projectId).collect(Collectors.toSet()));		
 					}
 			});
         }

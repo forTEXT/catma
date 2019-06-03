@@ -55,6 +55,7 @@ import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.project.conflict.ConflictedProject;
+import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
@@ -921,15 +922,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	for(SourceDocument srcDoc : srcDocs){
         		DocumentResource srcDocResource = new DocumentResource(srcDoc, project.getProjectId(), permissionsPerResource.get(
         				GitSourceDocumentHandler.getSourceDocumentRepositoryName(srcDoc.getID())));
-        		List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
-    			resourceTree.putAll(srcDocResource, 
-    					collections.stream()
-    					.map(col -> new CollectionResource(col, project.getProjectId(), permissionsPerResource.get(
-    							GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(col.getId())
-    							))
-    							)
-    					.collect(Collectors.toList())
-    					);
+        		if(remoteGitManager.hasPermission(srcDocResource.getRole(), RBACPermission.DOCUMENT_READ)) {
+	        		List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
+	    			resourceTree.putAll(srcDocResource, 
+	    					collections.stream()
+	    					.map(col -> new CollectionResource(col, project.getProjectId(), permissionsPerResource.get(
+	    							GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(col.getId())
+	    							))
+	    							)
+	    					.filter(colRes -> remoteGitManager.hasPermission(colRes.getRole(), RBACPermission.COLLECTION_READ))
+	    					.collect(Collectors.toList())
+	    					);
+        		}
         	}
         	
         	TreeData<Resource> treeData = new TreeData<>();
