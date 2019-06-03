@@ -17047,7 +17047,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .flexlayout-spacing > * {
-	margin: 10px;
+	padding: 10px;
 }
 
 .catma .flexlayout-spacing-left-right > * {
