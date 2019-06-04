@@ -315,14 +315,35 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		() -> editResBtn.setEnabled(true))
         		);
         
-        tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
-        	click -> handleAddTagsetRequest());
         
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
+        		() ->  tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
+        	        	click -> handleAddTagsetRequest()))
+        		);
+   
         ContextMenu moreOptionsMenu = 
         	tagsetsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
-        moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
-        moreOptionsMenu.addItem("Import Tagsets", clickEvent -> handleImportTagsetsRequest());
+        MenuItem editTagset = moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
+        editTagset.setEnabled(false);
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
+        		() -> editTagset.setEnabled(true))
+        		);
+
+        MenuItem deleteTagSetBtn = moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
+        deleteTagSetBtn.setEnabled(false);
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
+        		() -> deleteTagSetBtn.setEnabled(true))
+        		);
+        
+        MenuItem importTagSetBtn = moreOptionsMenu.addItem("Import Tagsets", clickEvent -> handleImportTagsetsRequest());
+        importTagSetBtn.setEnabled(false);
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (remoteGitManager.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
+        		() -> importTagSetBtn.setEnabled(true))
+        		);
         
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
