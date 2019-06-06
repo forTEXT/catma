@@ -1,32 +1,18 @@
 package de.catma.ui.analyzenew.resourcepanelanalyze;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.vaadin.data.TreeData;
-import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.renderers.ButtonRenderer;
-import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.Corpus;
@@ -35,15 +21,9 @@ import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.tag.TagManager.TagManagerEvent;
-import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
-import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.modules.main.ErrorHandler;
-import de.catma.util.IDGenerator;
-import de.catma.util.Pair;
 
 	public class ResourcePanelAnalyze extends VerticalLayout {
 		
@@ -51,7 +31,6 @@ import de.catma.util.Pair;
 		private Corpus corpus;
 		private TreeGrid<DocumentTreeItem> documentTree;
 		private TreeData<DocumentTreeItem> documentsData;
-		private Grid<TagsetDefinition> tagsetGrid;
 		private AnalyzeResourceSelectionListener analyzeResourceSelectionListener;
 		private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
 		private PropertyChangeListener collectionChangeListener;
@@ -60,161 +39,72 @@ import de.catma.util.Pair;
 		private PropertyChangeListener tagsetChangeListener;
 
 		
-
 		public ResourcePanelAnalyze(Repository project, Corpus corpus) {
 			super();
 			this.project = project;
 			this.corpus=corpus;
 	        this.errorHandler = (ErrorHandler)UI.getCurrent();
-	       //initProjectListeners();
-			
+		
 			initComponents();
 			initData();
+			initListeners();
 		}
 
-
-/*	    private void initProjectListeners() {
-	        this.projectExceptionListener = new PropertyChangeListener() {
-				
-				@Override
-				public void propertyChange(PropertyChangeEvent evt) {
-					Exception e = (Exception) evt.getNewValue();
-					errorHandler.showAndLogError("Error handling Project!", e);
-					
-				}
-			};
-			project.addPropertyChangeListener(
-					RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
-			
-	        this.collectionChangeListener = new PropertyChangeListener() {
-				
-				@Override
-				public void propertyChange(PropertyChangeEvent evt) {
-					handleCollectionChange(evt);
-				}
-			};
-			
-			project.addPropertyChangeListener(
-				RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);
-			
-	
-			
-	        project.getTagManager().addPropertyChangeListener(
-	        		TagManagerEvent.tagsetDefinitionChanged,
-	        		tagsetChangeListener);
-	    }*/
 	    
-   
-/*		@SuppressWarnings("unchecked")
-		private void handleCollectionChange(PropertyChangeEvent evt) {
-	    	
-	    	Object oldValue = evt.getOldValue();
-	    	Object newValue = evt.getNewValue();
-	    	
-	    	if (oldValue == null) { // creation
-				Pair<UserMarkupCollectionReference, SourceDocument> creationResult = 
-	    				(Pair<UserMarkupCollectionReference, SourceDocument>) newValue;
-	    		
-	    		SourceDocument document = creationResult.getSecond();
-	    		UserMarkupCollectionReference collectionReference = creationResult.getFirst();
-	    		
-				CollectionDataItem collectionDataItem = new CollectionDataItem(collectionReference);
-				DocumentDataItem documentDataItem = new DocumentDataItem(document, true);
-				
-				documentsData.addItem(
-	    				documentDataItem, collectionDataItem);
-				documentTree.getDataProvider().refreshAll();
-				
-				Notification.show(
-					"Info", 
-					String.format("Collection %1$s has been created!", collectionReference.toString()),  
-					Type.TRAY_NOTIFICATION);
-	    	}
-	    	else if (newValue == null) { // removal
-	    		//TODO:
-	    	}
-	    	else { // metadata update
-	    		//TODO:
-	    	}
-	    	
-		}*/
+	private void initData() {
+		try {
+			documentsData = new TreeData<>();
 
-	    
-		private void initData() {
-			try {
-				documentsData = new TreeData<>();
-				
-				Collection<SourceDocument> documents = project.getSourceDocuments(); 
-				
-				Collection<SourceDocument> selectedDocuments = corpus.getSourceDocuments(); 
-				Collection<UserMarkupCollectionReference> selectedCollections = corpus.getUserMarkupCollectionRefs();
-				
-				documentsData.addRootItems(
-					documents
-					.stream()
+			Collection<SourceDocument> documents = project.getSourceDocuments();
+
+			Collection<SourceDocument> selectedDocuments = corpus.getSourceDocuments();
+			Collection<UserMarkupCollectionReference> selectedCollections = corpus.getUserMarkupCollectionRefs();
+
+			documentsData.addRootItems(documents.stream()
 					.map(document -> new DocumentDataItem(document, selectedDocuments.contains(document))));
-				
-				for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
-					for (UserMarkupCollectionReference umcRef : ((DocumentDataItem)documentDataItem).getDocument().getUserMarkupCollectionRefs()) {
-						// List<UserMarkupCollectionReference> selectedUMCReferences=corpus.getUserMarkupCollectionRefs();
-			
-							 documentsData.addItem(documentDataItem, new CollectionDataItem(umcRef,selectedCollections.contains(umcRef)));
-		
-					}
+
+			for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
+				for (UserMarkupCollectionReference umcRef : ((DocumentDataItem) documentDataItem).getDocument()
+						.getUserMarkupCollectionRefs()) {
+
+					documentsData.addItem(documentDataItem,
+							new CollectionDataItem(umcRef, selectedCollections.contains(umcRef)));
+
 				}
-				
-				documentTree.setDataProvider(new TreeDataProvider<>(documentsData));
-				documentsData
-					.getRootItems()
-					.stream()
-					.filter(documentItem -> documentItem.isSelected())
-					.findAny()
-					.ifPresent(documentItem -> documentTree.expand(documentItem));
-				
-			} catch (Exception e) {
-				errorHandler.showAndLogError("Error loading data!", e);
 			}
-		}
-		
-		public List<UserMarkupCollectionReference> getSelectedUserMarkupCollectionReferences() {
-			
-			Optional<DocumentTreeItem> optionalDocumentTreeItem = 
-					documentsData.getRootItems()
-					.stream()
-					.filter(documentTreeItem->documentTreeItem.isSelected())
-					.findFirst();
-			
-			if (optionalDocumentTreeItem.isPresent()) {
-				return documentsData.getChildren(optionalDocumentTreeItem.get())
-					.stream()
-					.filter(documentTreeItem -> documentTreeItem.isSelected())
-					.map(CollectionDataItem.class::cast)
-					.map(collectionDataItem -> collectionDataItem.getCollectionRef())
-					.collect(Collectors.toList());
+
+			documentTree.setDataProvider(new TreeDataProvider<>(documentsData));
+			documentsData.getRootItems().stream().filter(documentItem -> selectedDocuments.contains(((DocumentDataItem) documentItem).getDocument()))
+					.forEach(documentTree::select);
+
+
+			for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
+				List<DocumentTreeItem> collectionItems = documentsData.getChildren(documentDataItem);
+				for (DocumentTreeItem oneCollection : collectionItems) {
+					if (selectedCollections.contains(((CollectionDataItem)oneCollection).getCollectionRef())) {
+						documentTree.getSelectionModel().select(oneCollection);
+					}
+
+				}
+
 			}
-			
-			return Collections.emptyList();
+
+		} catch (Exception e) {
+			errorHandler.showAndLogError("Error loading data!", e);
 		}
+	}
+
 		
 
 
 		private void initComponents() {
 			addStyleName("annotate-resource-panel");
 			Label documentTreeLabel = new Label("Documents & Annotations");
+
 			documentTree = new TreeGrid<>();
 			documentTree.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
+		    documentTree.setSelectionMode(SelectionMode.MULTI);
 			
-			ButtonRenderer<DocumentTreeItem> documentSelectionRenderer = 
-					new ButtonRenderer<DocumentTreeItem>(
-						documentSelectionClick -> handleSelectClickEvent(documentSelectionClick));
-			documentSelectionRenderer.setHtmlContentAllowed(true);
-
-			Column<DocumentTreeItem, String> selectionColumn = 
-				documentTree.addColumn(
-					documentTreeItem -> documentTreeItem.getSelectionIcon(),
-					documentSelectionRenderer);
-			
-			documentTree.setHierarchyColumn(selectionColumn);
 			
 			documentTree
 				.addColumn(documentTreeItem -> documentTreeItem.getName())
@@ -228,61 +118,54 @@ import de.catma.util.Pair;
 			documentTree
 				.addColumn(documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer());
 			
-
 			documentActionGridComponent = 
 					new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
-	
-		
+			
 			addComponent(documentActionGridComponent);
 			
 
 		}
-		private void handleSelectClickEvent(RendererClickEvent<DocumentTreeItem> documentSelectionClick) {
-			DocumentTreeItem selectedItem = documentSelectionClick.getItem();
-			handleSelectClicItem(selectedItem);
-		}
-		
-		private void handleSelectClicItem(DocumentTreeItem selectedItem) {
-			selectedItem.setSelected(!selectedItem.isSelected());
-			
-			if (selectedItem.getClass()==CollectionDataItem.class) {
-			DocumentTreeItem docItem = documentsData.getParent(selectedItem);
-			docItem.setSelected(true);
 
-			}		
-			documentTree.getDataProvider().refreshAll();
+
+		private void initListeners() {	
 			documentTree.addSelectionListener(new SelectionListener<DocumentTreeItem>() {
-				
 				@Override
-				public void selectionChange(SelectionEvent<DocumentTreeItem> event) {
-					Notification.show("queryoptions updaten jezt"+ Notification.TYPE_HUMANIZED_MESSAGE);
-					analyzeResourceSelectionListener.updateQueryOptions(documentTree.getTreeData());
-					
+				public void selectionChange(SelectionEvent event) {
+					setBookIconsClosed();
+					handleSelectClicItem( event); 
 					
 				}
 			});
-			
-		
 		}
-		
-		public void selectCollectionVisible(String collectionId) {
-			documentsData.getRootItems()
-			.stream()
-			.filter(documentTreeItem->documentTreeItem.isSelected())
-			.findFirst()
-			.ifPresent(
-				documentItem -> selectCollectionVisible(documentItem, collectionId));
-			
-		}
+	
+		private void setBookIconsClosed() {
+			documentTree.getTreeData().
+			getRootItems().
+			stream().
+			forEach(item->((DocumentDataItem)item).setSelected(false));		
+	}
+	
+		private void handleSelectClicItem(SelectionEvent selectedItems) {
+			Set<DocumentTreeItem> selected = selectedItems.getAllSelectedItems();
 
-		private void selectCollectionVisible(DocumentTreeItem documentItem, String collectionId) {
-			documentsData.getChildren(documentItem)
-			.stream()
-			.filter(item -> ((CollectionDataItem)item).getCollectionRef().getId().equals(collectionId))
-			.findFirst()
-			.ifPresent(collectionItem -> handleSelectClicItem(collectionItem));
-		}
+			for (DocumentTreeItem selectedItem : selected) {
 
+				if (selectedItem.getClass() == CollectionDataItem.class) {
+
+					DocumentTreeItem docItem = documentsData.getParent(selectedItem);
+					documentTree.select(docItem);
+				}
+
+				if (selectedItem.getClass() == DocumentDataItem.class) {
+					((DocumentDataItem) selectedItem).setSelected(true);
+
+				}
+			}
+			
+		documentTree.getDataProvider().refreshAll();		
+		analyzeResourceSelectionListener.updateQueryOptions(documentTree);
+		
+	}
 		
 		
 		public void close() {
@@ -301,8 +184,7 @@ import de.catma.util.Pair;
 
 
 		public void setSelectionListener(AnalyzeResourceSelectionListener analyzeResourceSelectionListener) {
-			this.analyzeResourceSelectionListener = analyzeResourceSelectionListener;
-			// TODO Auto-generated method stub
+			this.analyzeResourceSelectionListener = analyzeResourceSelectionListener;	
 			
 		}
 	}

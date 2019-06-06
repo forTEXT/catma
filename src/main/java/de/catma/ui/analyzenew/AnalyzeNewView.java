@@ -7,6 +7,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.antlr.runtime.RecognitionException;
@@ -25,6 +28,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
@@ -68,6 +72,7 @@ public class AnalyzeNewView extends HorizontalLayout
 	public static interface CloseListenerNew {
 		public void closeRequest(AnalyzeNewView analyzeNewView);
 	}
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private String userMarkupItemDisplayString = "Markup Collections";
 	private IndexedRepository repository;
 	private Corpus corpus;
@@ -218,88 +223,47 @@ public class AnalyzeNewView extends HorizontalLayout
 			}
 		});
 		
-		resourcePanelAnalyze.setSelectionListener(new AnalyzeResourceSelectionListener() {
+		resourcePanelAnalyze.setSelectionListener(new AnalyzeResourceSelectionListener() {	
 
 			@Override
-			public void updateQueryOptions(TreeData<DocumentTreeItem> data) {
-				updateCorpusAndQueryOptions( data);		
-	
+			public void updateQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
+				updateCorpusAndQueryOptions(treeGrid);
+				
 			}
 		
 		});
 	}
 	
-	private void updateCorpusAndQueryOptions(TreeData<DocumentTreeItem> data){
-		
+	private void updateCorpusAndQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
+
 		this.corpus = new Corpus("new Corpus");
-		
-		
-		List<SourceDocument> selectedDocuments=	 data.getRootItems().stream().
-				filter(item -> item.isSelected()).
-				map(DocumentDataItem.class::cast).
-				map(documentDataItem->documentDataItem.getDocument()).
-				collect(Collectors.toList());
-		
-		for (SourceDocument sourceDocument : selectedDocuments) {
-			this.corpus.addSourceDocument(sourceDocument);
-			
+
+		Set<DocumentTreeItem> selecteItems = treeGrid.getSelectedItems();
+
+		for (DocumentTreeItem documentTreeItem : selecteItems) {
+			if (documentTreeItem.getClass()==DocumentDataItem.class) {
+
+				DocumentDataItem documentDataItem = (DocumentDataItem) documentTreeItem;
+				this.corpus.addSourceDocument(documentDataItem.getDocument());
 			}
-		
-		List<DocumentTreeItem> selectedCollections = new ArrayList<>();
-		
-		List<DocumentTreeItem> selectedRoots= data.getRootItems().stream().
-				filter(item -> item.isSelected()).
-				collect(Collectors.toList());
-		
-		for (DocumentTreeItem documentTreeItem : selectedRoots) {
-			List<DocumentTreeItem> children=	data.getChildren(documentTreeItem);
-			List<DocumentTreeItem> selectedChildren= children.stream().
-					filter(item -> item.isSelected()).
-					collect(Collectors.toList());
-			
-			selectedCollections.addAll(selectedChildren);
-		}
-			
-		for(DocumentTreeItem item:selectedCollections ) {
-			CollectionDataItem collectionItem=	(CollectionDataItem)item;
-			this.corpus.addUserMarkupCollectionReference(collectionItem.getCollectionRef());
-			
+			if (documentTreeItem.getClass()==CollectionDataItem.class) {
+				CollectionDataItem collectionDataItem = (CollectionDataItem) documentTreeItem;
+				this.corpus.addUserMarkupCollectionReference(collectionDataItem.getCollectionRef());
+
+			}
+
 		}
 		
-		// corpus here updated
 		try {
 			addRelevantResources();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			logger.log(Level.SEVERE, "error  updating query options", e); 
 			e.printStackTrace();
 		}
-		Notification.show("new queryoptions: new doc "+relevantSourceDocumentIDs.toString()+ Notification.TYPE_HUMANIZED_MESSAGE);
 		
 	}
 
 
-	
-	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
-		return new EditVizSnapshotListener() {
-
-			@Override
-			public void reopenKwicView() {
-				setContent(component);
-
-			}
-		};
-	}
-
-	private DeleteVizSnapshotListener buildDeleteVizSnapshotListener(Component component) {
-		return new DeleteVizSnapshotListener() {
-
-			@Override
-			public void deleteSnapshot() {
-				minMaxPanel.removeComponent(component);
-
-			}
-		};
-	}
 
 
 	private void setContent(Component component) {
@@ -524,6 +488,28 @@ public class AnalyzeNewView extends HorizontalLayout
 	private void addUserMarkupCollection(UserMarkupCollectionReference umcRef, MarkupCollectionItem umc) {
 		this.relevantUserMarkupCollIDs.add(umcRef.getId());
 	}
+	
+	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
+		return new EditVizSnapshotListener() {
+		
+			public void reopenKwicView() {
+				setContent(component);
+
+			}
+		};
+	}
+
+	private DeleteVizSnapshotListener buildDeleteVizSnapshotListener(Component component) {
+		return new DeleteVizSnapshotListener() {
+
+			@Override
+			public void deleteSnapshot() {
+				minMaxPanel.removeComponent(component);
+
+			}
+		};
+	}
+
 
 	@Override
 	public void tagResults() {

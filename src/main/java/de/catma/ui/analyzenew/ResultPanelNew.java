@@ -301,16 +301,6 @@ public class ResultPanelNew extends Panel {
 		
 		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
 
-/*		optionsBt.addClickListener(new ClickListener() {
-
-			public void buttonClick(ClickEvent event) {
-				try {
-					swichView();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});*/
 
 		trashBt.addClickListener(new ClickListener() {
 
@@ -389,7 +379,9 @@ public class ResultPanelNew extends Panel {
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
 		treeGridPhrase.setDataProvider(phraseDataProvider);
 		treeGridPanel.setContent(treeGridPhrase);
+		
 		phraseDataProvider.refreshAll();
+		
 		treeGridPhrase.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
 		treeGridPhrase.getColumn("phraseID").setExpandRatio(7);
 		treeGridPhrase.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");

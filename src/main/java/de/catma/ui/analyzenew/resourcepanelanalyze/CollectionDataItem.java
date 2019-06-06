@@ -35,7 +35,7 @@ public class CollectionDataItem implements DocumentTreeItem {
 		return VaadinIcons.NOTEBOOK.getHtml();
 	}
 
-	@Override
+/*	@Override
 	public void setSelected(boolean value) {
 		this.selected = value;
 	}
@@ -48,7 +48,7 @@ public class CollectionDataItem implements DocumentTreeItem {
 	@Override
 	public boolean isSelected() {
 		return selected;
-	}
+	}*/
 	
 
 
