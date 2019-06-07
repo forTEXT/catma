@@ -728,7 +728,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         			(remoteGitManager.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
         			() -> { 
         		        getMoreOptionsContextMenu().addItem("invite to project", (click) -> 
-        	        	uiFactory.getProjectInvitationDialog(projectReference).show());
+        	        	uiFactory.getProjectInvitationDialog(projectReference, resourceTree.keySet(), this.project::createUserMarkupCollection).show());
         		        teamPanel.setVisible(true);
         			})
         		);
@@ -1050,7 +1050,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     @Subscribe
     public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
-    	initData();
+    	reloadAll();
     }
 
     /**
@@ -1061,7 +1061,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     private void handleDeleteResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
     	
-    	ConfirmDialog.show(
+    	ConfirmDialog.show( 
     		UI.getCurrent(), 
     		"Info", 
     		"Are you sure you want to delete the selected resources: "

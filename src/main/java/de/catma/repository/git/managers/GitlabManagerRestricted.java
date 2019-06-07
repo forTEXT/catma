@@ -7,10 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,12 +27,13 @@ import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectAccess;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
-import de.catma.Pager;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.interfaces.IdentifiableResource;
@@ -49,6 +46,7 @@ import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IGitUserInformation;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.gitlab4j_api_custom.CustomGroupApi;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomProjectApi;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
@@ -62,7 +60,11 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final BackgroundService backgroundService;
 	private GitUser user;
-
+	// Cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
+	private final Cache<String, List<ProjectReference>> projectsCache = CacheBuilder.newBuilder()
+		       .expireAfterWrite(5, TimeUnit.SECONDS)
+		       .build();
+	
 	@AssistedInject
 	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("token") String userImpersonationToken) throws IOException {
 		this(eventBus, backgroundService, new GitLabApi(RepositoryPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
@@ -274,14 +276,16 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	}
 
 	@Override
-	public Pager<ProjectReference> getProjectReferences() throws IOException {
+	public List<ProjectReference> getProjectReferences() throws IOException {
+		CustomGroupApi groupApi = new CustomGroupApi(restrictedGitLabApi);
 		
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 		try {
-			return new GitLabPager<>(
-					groupApi.getGroups(30),
+			return projectsCache.get("projects", () -> 
+			 groupApi.getGroups().stream().map(
 					group -> unmarshallProjectReference(
-							group.getPath(),  group.getDescription()));
+							group.getPath(),  group.getDescription()))
+					.collect(Collectors.toList())
+					);
 		}
 		catch (Exception e) {
 			throw new IOException("Failed to load groups", e);
