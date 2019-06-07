@@ -67,4 +67,8 @@ public interface User extends RBACSubject {
 	 */
 	boolean hasPermission(Permission permission);
 	
+	default String preciseName() {
+		return getName() + " / " + getIdentifier();
+	}
+	
 }

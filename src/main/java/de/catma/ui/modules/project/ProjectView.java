@@ -236,9 +236,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         				remoteGitManager.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
         		() -> editDocBtn.setEnabled(true))
         		);
-        documentsGridMoreOptionsContextMenu.addItem(
-        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
-        
         MenuItem deleteDocsBtn = documentsGridMoreOptionsContextMenu.addItem(
         	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
         deleteDocsBtn.setEnabled(false);
@@ -883,7 +880,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-        teamGrid.addColumn(User::getName).setExpandRatio(1);
+        teamGrid.addColumn(User::getName).setExpandRatio(1).setDescriptionGenerator(User::preciseName);
         teamGrid.addColumn(Member::getRole);
         
         Label membersAnnotations = new Label("Members");

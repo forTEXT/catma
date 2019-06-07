@@ -31,7 +31,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		
 		cb_users.setWidth("100%");
 		cb_users.setPageLength(20);
-		cb_users.setItemCaptionGenerator(User::getIdentifier);
+		cb_users.setItemCaptionGenerator(User::preciseName);
 
 		cb_role.setWidth("100%");
 		cb_role.setItemCaptionGenerator(RBACRole::getRolename);

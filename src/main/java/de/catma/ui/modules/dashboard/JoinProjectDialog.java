@@ -27,6 +27,7 @@ import de.catma.DammAlgorithm;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.rbac.RBACRole;
+import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.events.ResourcesChangedEvent;
@@ -73,15 +74,14 @@ public class JoinProjectDialog extends Window {
 		initComponents();
 	}
 	
-	private class ProjectJoinHandler implements MessageListener<JoinedProjectMessage>{
+	private class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage>{
 		
 		@Override
-		public void onMessage(Message<JoinedProjectMessage> message) {
+		public void uiBlockingOnMessage(Message<JoinedProjectMessage> message) {
 			if(message.getMessageObject().getInvitation().getKey() == JoinProjectDialog.this.invitation.getKey()) {	
 				JoinProjectDialog.this.eventBus.post(new ResourcesChangedEvent<Component>(null));
-				JoinProjectDialog.this.getUI().access(() -> 
-				Notification.show("Joined successfully", "sucessfully join project " + JoinProjectDialog.this.invitation.getName() , Type.HUMANIZED_MESSAGE)
-						);
+				Notification.show("Joined successfully", "sucessfully join project " + 
+						JoinProjectDialog.this.invitation.getName() , Type.HUMANIZED_MESSAGE);
 				JoinProjectDialog.this.getUI().push();
 				JoinProjectDialog.this.close();
 			}
@@ -142,7 +142,7 @@ public class JoinProjectDialog extends Window {
 		if(invitation != null) {
 		    String regid = joinedTopic.addMessageListener(new ProjectJoinHandler());      
 			addCloseListener((evt) -> joinedTopic.removeMessageListener(regid));
-			invitationTopic.publish(new InvitationRequestMessage(currentUser.getUserId(), currentUser.getIdentifier(), invitation.getKey()));
+			invitationTopic.publish(new InvitationRequestMessage(currentUser.getUserId(), currentUser.getName(), invitation.getKey()));
 		}
 	}
 	

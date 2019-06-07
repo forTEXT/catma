@@ -13,13 +13,14 @@ import javax.cache.Cache;
 import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
-import com.hazelcast.core.MessageListener;
 import com.jsoniter.output.JsonStream;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
@@ -31,17 +32,22 @@ import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.document.repository.event.ChangeType;
+import de.catma.document.repository.event.CollectionChangeEvent;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.interfaces.IdentifiableResource;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACRole;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.events.ResourcesChangedEvent;
@@ -80,6 +86,7 @@ public class ProjectInvitationDialog extends Window {
     private final EventBus eventBus;
     private final Set<Resource> resources;
     private final BiConsumer<String, SourceDocument> createCollectionFunction;
+    private final Map<String,Integer> customCollectionToUserMap = Maps.newHashMap();
     
 	private ProjectInvitation projectInvitation;
 
@@ -106,51 +113,57 @@ public class ProjectInvitationDialog extends Window {
 	    this.resourceGrid.setDataProvider(new ListDataProvider<>(resources));
 	    invitationTopic = hazelcast.getTopic(HazelcastConfiguration.TOPIC_PROJECT_INVITATIONS);
 	    joinedTopic = hazelcast.getTopic(HazelcastConfiguration.TOPIC_PROJECT_JOINED);
+	    eventBus.register(this);
 		initComponents();
 	}
 
-	private class ProjectInvitationHandler implements MessageListener<InvitationRequestMessage> {
+	private class ProjectInvitationHandler extends UIMessageListener<InvitationRequestMessage> {
 		
 		private Map<String, Resource> docLookup =  resources.stream().collect(Collectors.toMap(Resource::getResourceId, res -> res));
 		
 		@Override
-		public void onMessage(Message<InvitationRequestMessage> message) {
-			if(message.getMessageObject().getCode() == projectInvitation.getKey()){
-				try {
-					if(projectInvitation.isCreateOwnCollection()) {
+		public void uiBlockingOnMessage(Message<InvitationRequestMessage> message) {
+			UI.getCurrent().access( () -> {
+				if(message.getMessageObject().getCode() == projectInvitation.getKey()){
+					try {
+						if(projectInvitation.isCreateOwnCollection()) {
+							
+							for(String resId : projectInvitation.getResources() ) {
+								gitmanagerRestricted.assignOnResource(() -> message.getMessageObject().getUserid(), RBACRole.REPORTER, new IdentifiableResource() {
+									
+									@Override
+									public String getResourceId() {
+										return resId;
+									}
+									
+									@Override
+									public String getProjectId() {
+										return projectInvitation.getProjectId();
+									}
+								});
+								DocumentResource docResource = (DocumentResource) docLookup.get(resId);
+								if(docResource != null){
+									String collectionName = message.getMessageObject().getName() + "s collection";
+									customCollectionToUserMap.put(collectionName, message.getMessageObject().getUserid());
+									createCollectionFunction.accept(collectionName, docResource.getDocument());
+								}
+							}	
+						}
 						
-						for(String resId : projectInvitation.getResources() ) {
-							gitmanagerRestricted.assignOnResource(() -> message.getMessageObject().getUserid(), RBACRole.REPORTER, new IdentifiableResource() {
-								
-								@Override
-								public String getResourceId() {
-									return resId;
-								}
-								
-								@Override
-								public String getProjectId() {
-									return projectInvitation.getProjectId();
-								}
-							});
-							DocumentResource docResource = (DocumentResource) docLookup.get(resId);
-							if(docResource != null){
-								createCollectionFunction.accept(message.getMessageObject().getUsername() + "s collection", docResource.getDocument());
-							}
-						}	
+						gitmanagerRestricted.assignOnProject(() -> message.getMessageObject().getUserid(), 
+								RBACRole.forValue(projectInvitation.getDefaultRole()), projectInvitation.getProjectId());
+						joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
+						joinedUsers.add(message.getMessageObject().getName());
+						cbConsole.setItems(joinedUsers);
+						cbConsole.markAsDirty();
+						cbConsole.setVisible(true);
+						ProjectInvitationDialog.this.getUI().push();
+					} catch (IOException e) {
+						errorLogger.showAndLogError("Can't assign UserId " + message.getMessageObject().getName() + "to this project", e);
 					}
-					
-					gitmanagerRestricted.assignOnProject(() -> message.getMessageObject().getUserid(), 
-							RBACRole.forValue(projectInvitation.getDefaultRole()), projectInvitation.getProjectId());
-					joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
-					joinedUsers.add(message.getMessageObject().getUsername());
-					cbConsole.setItems(joinedUsers);
-					cbConsole.markAsDirty();
-					cbConsole.setVisible(true);
-					ProjectInvitationDialog.this.getUI().push();
-				} catch (IOException e) {
-					errorLogger.showAndLogError("Can't assign UserId " + message.getMessageObject().getUsername() + "to this project", e);
 				}
-			}			
+			}
+			);
 		}
 	}
 	
@@ -260,9 +273,39 @@ public class ProjectInvitationDialog extends Window {
 		UI.getCurrent().addWindow(this);
 	}
 	
+	@Subscribe
+	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
+		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
+    		UserMarkupCollectionReference collectionReference = 
+    				collectionChangeEvent.getCollectionReference();
+    		
+    		Integer userId = customCollectionToUserMap.get(collectionReference.getName());
+    		
+    		if(userId == null) {
+    			errorLogger.showAndLogError("UserId empty for own collection",
+    					new NullPointerException("UserId null for collection " + collectionReference.getName() ));
+    			return;
+    		}
+
+    		try {
+				gitmanagerRestricted.assignOnResource(() -> userId, 
+						RBACRole.ASSISTANT, new CollectionResource(collectionReference, projectRef.getProjectId(), RBACRole.ASSISTANT));
+			} catch (IOException e) {
+    			errorLogger.showAndLogError("failed to assign permission on collection", e);
+			}
+    		
+			Notification.show(
+				"Info", 
+				String.format("permission on own collection %1$s has been set", collectionReference.toString()),  
+				Type.TRAY_NOTIFICATION);			
+		}
+
+	}
+
 	@Override
 	public void close() {
 		super.close();
+	    eventBus.unregister(this);
 		eventBus.post(new ResourcesChangedEvent<>(this));
 	}
 }
