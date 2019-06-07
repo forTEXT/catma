@@ -122,7 +122,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
 	private Map<String, RBACRole> permissionsPerResource;
-	private Multimap<Resource,Resource> resourceTree = HashMultimap.create();
+	private Multimap<Resource, Resource> resourceTree = HashMultimap.create();
 ;
 
 	@Inject
@@ -924,6 +924,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
         if(project != null){
+            resourceTree.clear();
+
             TreeData<Resource> treeData = new TreeData<>();
             Collection<SourceDocument> srcDocs = project.getSourceDocuments();
             
@@ -941,24 +943,33 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                
 	                List<UserMarkupCollectionReference> collections = 
 	                		srcDoc.getUserMarkupCollectionRefs();
+	                
+	            	List<Resource> readableCollections = collections
+            		.stream()
+            		.map(collectionRef -> 
+            			(Resource)new CollectionResource(
+            				collectionRef, 
+            				project.getProjectId(), 
+            				permissionsPerResource.get(
+        						GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(collectionRef.getId()))
+            			)
+            		)
+            		.filter(colRes -> remoteGitManager.hasPermission(colRes.getRole(), RBACPermission.COLLECTION_READ))
+            		.collect(Collectors.toList());
+            		
+                    
 	                if(!collections.isEmpty()){
 	                	
 	                    treeData.addItems(
 	                    	srcDocResource,
-	                    	collections
-	                    		.stream()
-	                    		.map(collectionRef -> 
-	                    			(Resource)new CollectionResource(
-	                    				collectionRef, 
-	                    				project.getProjectId(), 
-	                    				permissionsPerResource.get(
-	                						GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(collectionRef.getId()))
-	                    			)
-	                    		)
-	                    		.filter(colRes -> remoteGitManager.hasPermission(colRes.getRole(), RBACPermission.COLLECTION_READ))
-
+	                    	readableCollections
 	                    );
 	                }
+	                
+	                resourceTree.putAll(srcDocResource,
+	                		readableCollections
+                            );
+
                 }
             }
 
