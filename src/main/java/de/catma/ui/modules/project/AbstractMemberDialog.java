@@ -17,7 +17,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 
 	protected final ComboBox<User> cb_users = new ComboBox<>("member");
 	protected final ComboBox<RBACRole> cb_role = new ComboBox<RBACRole>("role", 
-			Lists.newArrayList(RBACRole.values())); 
+			Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER)); 
 	protected final Label l_description;
 		
 	protected ErrorHandler errorLogger;

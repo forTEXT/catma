@@ -44,7 +44,7 @@ public class DashboardView extends VerticalLayout {
 		            	int page = (query.getOffset() / query.getLimit()) + 1;
 		            
 		            	return projectManager.getProjectReferences()
-		                    .page(page)
+		                    
 		                    .stream()
 		                    ;
 		            } catch (Exception e) {
@@ -54,7 +54,7 @@ public class DashboardView extends VerticalLayout {
 		        },
 		        query -> {
 		            try {
-		            	return projectManager.getProjectReferences().getTotalItems();
+		            	return projectManager.getProjectReferences().size();
 		            } catch (Exception e) {
 		                errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
 		                return 0;
@@ -73,7 +73,7 @@ public class DashboardView extends VerticalLayout {
                    
         
         try {
-			projectManager.getProjectReferences().page(1); //Fake call to satisfy vaadin 10 and above
+			projectManager.getProjectReferences(); //Fake call to satisfy vaadin 10 and above
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
