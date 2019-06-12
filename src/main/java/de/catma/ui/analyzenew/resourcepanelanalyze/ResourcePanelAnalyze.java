@@ -4,11 +4,12 @@ import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
-import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
@@ -17,13 +18,12 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
-import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.modules.main.ErrorHandler;
+
 
 	public class ResourcePanelAnalyze extends VerticalLayout {
 		
@@ -103,7 +103,7 @@ import de.catma.ui.modules.main.ErrorHandler;
 
 			documentTree = new TreeGrid<>();
 			documentTree.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
-		    documentTree.setSelectionMode(SelectionMode.MULTI);
+		    //sdocumentTree.setSelectionMode(SelectionMode.MULTI);
 			
 			
 			documentTree
@@ -121,6 +121,8 @@ import de.catma.ui.modules.main.ErrorHandler;
 			documentActionGridComponent = 
 					new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
 			
+			documentActionGridComponent.disableToggle();
+			
 			addComponent(documentActionGridComponent);
 			
 
@@ -130,13 +132,17 @@ import de.catma.ui.modules.main.ErrorHandler;
 		private void initListeners() {	
 			documentTree.addSelectionListener(new SelectionListener<DocumentTreeItem>() {
 				@Override
-				public void selectionChange(SelectionEvent event) {
+				public void selectionChange(SelectionEvent<DocumentTreeItem> event) {		
 					setBookIconsClosed();
-					handleSelectClicItem( event); 
+					handleSelectClicItem( event, collectFormerSelectedDocuments()); 
 					
 				}
 			});
+
+			
 		}
+		
+
 	
 		private void setBookIconsClosed() {
 			documentTree.getTreeData().
@@ -144,30 +150,51 @@ import de.catma.ui.modules.main.ErrorHandler;
 			stream().
 			forEach(item->((DocumentDataItem)item).setSelected(false));		
 	}
+		
+		private List<DocumentTreeItem> collectFormerSelectedDocuments() {
+			 return documentTree.getTreeData()
+			.getRootItems()
+			.stream()
+			.filter(documentTreeItem -> documentTreeItem.isSelected())
+			.collect(Collectors.toList());	
+		}
 	
-		private void handleSelectClicItem(SelectionEvent selectedItems) {
-			Set<DocumentTreeItem> selected = selectedItems.getAllSelectedItems();
+	
+	private void handleSelectClicItem(SelectionEvent<DocumentTreeItem> selectedItems,
+			List<DocumentTreeItem> oldListSelectedRootItems) {
+		Set<DocumentTreeItem> selected = selectedItems.getAllSelectedItems();
 
-			for (DocumentTreeItem selectedItem : selected) {
+		for (DocumentTreeItem oldItem : oldListSelectedRootItems) {
 
-				if (selectedItem.getClass() == CollectionDataItem.class) {
+			if (!selected.contains(oldItem)) {
+				List<DocumentTreeItem> toUnselect = documentTree.getTreeData().getChildren(oldItem);
 
-					DocumentTreeItem docItem = documentsData.getParent(selectedItem);
-					documentTree.select(docItem);
-				}
+				toUnselect.stream().forEach(item -> ((CollectionDataItem) item).setSelected(false));
 
-				if (selectedItem.getClass() == DocumentDataItem.class) {
-					((DocumentDataItem) selectedItem).setSelected(true);
-
-				}
 			}
-			
-		documentTree.getDataProvider().refreshAll();		
+		}
+
+		for (DocumentTreeItem selectedItem : selected) {
+
+			if (selectedItem.getClass() == CollectionDataItem.class) {
+
+				DocumentTreeItem docItem = documentsData.getParent(selectedItem);
+				documentTree.select(docItem);
+			}
+
+			if (selectedItem.getClass() == DocumentDataItem.class) {
+				((DocumentDataItem) selectedItem).setSelected(true);
+
+			}
+		}
+
+		documentTree.getDataProvider().refreshAll();
 		analyzeResourceSelectionListener.updateQueryOptions(documentTree);
-		
+
 	}
+	
 		
-		
+/*		
 		public void close() {
 			if (project != null) {
 				project.removePropertyChangeListener(
@@ -180,7 +207,7 @@ import de.catma.ui.modules.main.ErrorHandler;
 	        		TagManagerEvent.tagsetDefinitionChanged,
 	        		tagsetChangeListener);
 			}
-		}
+		}*/
 
 
 		public void setSelectionListener(AnalyzeResourceSelectionListener analyzeResourceSelectionListener) {

@@ -1,5 +1,6 @@
 package de.catma.ui.component.actiongrid;
 
+import com.vaadin.shared.Registration;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
@@ -18,12 +19,13 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
     private final ActionGridBar actionGridBar;
     private boolean multiselect = false;
 	private boolean headerVisible;
+	private Registration registration;
 
     public ActionGridComponent(Component titleComponent, G dataGrid){
         this.titleCompennt = titleComponent;
         this.dataGrid = dataGrid;
         this.actionGridBar = new ActionGridBar(titleCompennt);
-        this.actionGridBar.addBtnToggleListSelect(
+        registration=  this.actionGridBar.addBtnToggleListSelect(
                 event -> toggleMultiselect(event));
         this.headerVisible = dataGrid.isHeaderVisible();
         initComponents();
@@ -44,6 +46,12 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
             	dataGrid.setHeaderVisible(false);
             }
         }
+    }
+    
+    public void disableToggle() {
+    	this.multiselect=true;
+    	dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
+    	registration.remove();
     }
 
 	private void initComponents() {

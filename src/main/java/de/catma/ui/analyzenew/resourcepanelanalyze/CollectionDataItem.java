@@ -35,20 +35,20 @@ public class CollectionDataItem implements DocumentTreeItem {
 		return VaadinIcons.NOTEBOOK.getHtml();
 	}
 
-/*	@Override
+
 	public void setSelected(boolean value) {
 		this.selected = value;
 	}
-	
+	/*
 	@Override
 	public boolean isSingleSelection() {
 		return false;
-	}
+	} */
 	
-	@Override
+
 	public boolean isSelected() {
 		return selected;
-	}*/
+	}
 	
 
 

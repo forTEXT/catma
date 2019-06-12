@@ -3,7 +3,6 @@ package de.catma.ui.analyzenew.resourcepanelanalyze;
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.source.SourceDocument;
-import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
 
 public class DocumentDataItem implements DocumentTreeItem {
 	
@@ -65,16 +64,15 @@ public class DocumentDataItem implements DocumentTreeItem {
 	@Override
 	public boolean isSingleSelection() {
 		return false;
-	}*/
-
+	}
+	*/
 	public SourceDocument getDocument() {
 		return document;
 	}
-/*	
-	@Override
+
 	public boolean isSelected() {
 		return selected;
-	}*/
+	}
 	
 
 }
