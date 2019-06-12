@@ -1,6 +1,7 @@
 package de.catma.ui.analyzenew.resourcepanelanalyze;
 
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -132,9 +133,15 @@ import de.catma.ui.modules.main.ErrorHandler;
 		private void initListeners() {	
 			documentTree.addSelectionListener(new SelectionListener<DocumentTreeItem>() {
 				@Override
-				public void selectionChange(SelectionEvent<DocumentTreeItem> event) {		
+				public void selectionChange(SelectionEvent<DocumentTreeItem> event) {	
+					List<DocumentTreeItem> formerselectedItems=collectFormerSelectedDocuments();
 					setBookIconsClosed();
-					handleSelectClicItem( event, collectFormerSelectedDocuments()); 
+					List<DocumentTreeItem> clearifiedList=deselectCollectionsForDeselectedDocs( event, formerselectedItems); 
+					//documentTree.getDataProvider().refreshAll();
+					selectDocsForSelectedCollections(clearifiedList);
+					documentTree.getDataProvider().refreshAll();
+					
+					analyzeResourceSelectionListener.updateQueryOptions(documentTree);
 					
 				}
 			});
@@ -143,13 +150,12 @@ import de.catma.ui.modules.main.ErrorHandler;
 		}
 		
 
-	
 		private void setBookIconsClosed() {
 			documentTree.getTreeData().
 			getRootItems().
 			stream().
 			forEach(item->((DocumentDataItem)item).setSelected(false));		
-	}
+ 	}
 		
 		private List<DocumentTreeItem> collectFormerSelectedDocuments() {
 			 return documentTree.getTreeData()
@@ -159,20 +165,9 @@ import de.catma.ui.modules.main.ErrorHandler;
 			.collect(Collectors.toList());	
 		}
 	
-	
-	private void handleSelectClicItem(SelectionEvent<DocumentTreeItem> selectedItems,
-			List<DocumentTreeItem> oldListSelectedRootItems) {
-		Set<DocumentTreeItem> selected = selectedItems.getAllSelectedItems();
+	private void selectDocsForSelectedCollections(List<DocumentTreeItem> selectedItemsClearified) {
 
-		for (DocumentTreeItem oldItem : oldListSelectedRootItems) {
-
-			if (!selected.contains(oldItem)) {
-				List<DocumentTreeItem> toUnselect = documentTree.getTreeData().getChildren(oldItem);
-
-				toUnselect.stream().forEach(item -> ((CollectionDataItem) item).setSelected(false));
-
-			}
-		}
+		List<DocumentTreeItem> selected = selectedItemsClearified;
 
 		for (DocumentTreeItem selectedItem : selected) {
 
@@ -188,9 +183,39 @@ import de.catma.ui.modules.main.ErrorHandler;
 			}
 		}
 
-		documentTree.getDataProvider().refreshAll();
-		analyzeResourceSelectionListener.updateQueryOptions(documentTree);
+	}
 
+
+	private List<DocumentTreeItem> deselectCollectionsForDeselectedDocs(SelectionEvent<DocumentTreeItem> selectedItems,
+			List<DocumentTreeItem> oldListSelectedRootItems) {
+		
+		Set<DocumentTreeItem> selected = selectedItems.getAllSelectedItems();
+		
+		List<DocumentTreeItem> clearifiedList = selected.stream().collect(Collectors.toList());
+     	
+		for (DocumentTreeItem oldItem : oldListSelectedRootItems) {
+
+			if (!selected.contains(oldItem)) {
+				List<DocumentTreeItem> toUnselect = documentTree.getTreeData().getChildren(oldItem);
+				
+				toUnselect. stream().forEach(item->  clearifiedList.remove(item));
+
+				toUnselect.stream().forEach(item -> ((CollectionDataItem) item).setSelected(false));
+				toUnselect.stream().forEach(item -> documentTree.deselect(item));
+				documentTree.deselect(oldItem);
+
+			}else {
+				
+			}
+		}
+		
+		selected.stream()
+		.filter(item -> item.getClass().isInstance(DocumentDataItem.class))
+		.forEach(item->((DocumentDataItem)item).setSelected(true));	
+		
+
+		return clearifiedList;
+	
 	}
 	
 		
