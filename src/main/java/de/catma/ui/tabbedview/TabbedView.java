@@ -149,7 +149,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 				addButtonElement.setInnerHtml(VaadinIcons.PLUS.getHtml());
 
 				addButtonElement.addEventListener("click", args -> {
-		           addTab(closeableTabFactory.createCloseableTab(), closeableTabFactory.getDefaultCaption());
+					addClosableTab(closeableTabFactory.createCloseableTab(), closeableTabFactory.getDefaultCaption());
 				});
 			}
 		}, tabSheet);

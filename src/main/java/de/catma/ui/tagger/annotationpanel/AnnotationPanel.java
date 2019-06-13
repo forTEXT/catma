@@ -296,6 +296,10 @@ public class AnnotationPanel extends VerticalLayout {
 				currentEditableCollectionBox.setEmptySelectionCaption(
 						"Please create a Collection...");
     		}
+    		else {
+				currentEditableCollectionBox.setEmptySelectionCaption(
+						"Please select a Collection...");    			
+    		}
     		
     		if (editableCollectionProvider.getItems().size() == 1) {
     			handleCollectionChangeRequest(editableCollectionProvider.getItems().iterator().next().getUuid());

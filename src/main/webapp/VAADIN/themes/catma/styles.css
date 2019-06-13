@@ -1644,7 +1644,7 @@ body:not(.v-touch) .friendly.v-button:not(.v-disabled):not(.borderless):not(.bor
 }
 
 body:not(.v-touch) .custom.v-button:not(.v-disabled):not(.borderless):not(.borderless-colored):hover {
-	background: #0084e5;
+	background: #52b5c3;
 }
 
 body:not(.v-touch) .danger.v-button:not(.v-disabled):not(.borderless):not(.borderless-colored):hover {
@@ -1652,7 +1652,7 @@ body:not(.v-touch) .danger.v-button:not(.v-disabled):not(.borderless):not(.borde
 }
 
 body:not(.v-touch) .primary.v-button:not(.v-disabled):not(.borderless):not(.borderless-colored):hover {
-	background: #0084e5;
+	background: #52b5c3;
 }
 
 body:not(.v-touch) :not(.v-upload) > * > .v-button.borderless:not(.v-disabled):not(.borderless-colored):not(.primary):not(.friendly):not(.danger):not(.custom):hover {
@@ -1660,7 +1660,7 @@ body:not(.v-touch) :not(.v-upload) > * > .v-button.borderless:not(.v-disabled):n
 }
 
 body:not(.v-touch) .v-button:not(.v-disabled).floating-action:hover {
-	background: #0084e5;
+	background: #52b5c3;
 }
 
 body:not(.v-touch) .v-button:not(.v-disabled).floating-action:not(.flat):hover, body.v-touch .v-button.floating-action:not(.flat):active {
@@ -1682,12 +1682,12 @@ body:not(.v-touch) .v-button:not(.v-disabled).border:hover {
 
 body:not(.v-touch) .v-button:not(.v-disabled).border.custom:hover {
 	color: white;
-	background: #0072C6 !important;
+	background: #5A98A1 !important;
 }
 
 body:not(.v-touch) .v-button:not(.v-disabled).border.primary:hover {
 	color: white;
-	background: #0072C6 !important;
+	background: #5A98A1 !important;
 }
 
 body:not(.v-touch) .v-button:not(.v-disabled).border.friendly:hover {
@@ -1701,7 +1701,7 @@ body:not(.v-touch) .v-button:not(.v-disabled).border.danger:hover {
 }
 
 body:not(.v-touch) .v-button:not(.v-disabled).borderless.primary:hover, body:not(.v-touch) .v-button:not(.v-disabled).borderless-colored:hover {
-	background: rgba(0, 132, 229, 0.2) !important;
+	background: rgba(82, 181, 195, 0.2) !important;
 }
 
 body:not(.v-touch) .v-button:not(.v-disabled).borderless.friendly:hover {
@@ -1713,7 +1713,7 @@ body:not(.v-touch) .v-button:not(.v-disabled).borderless.danger:hover {
 }
 
 body:not(.v-touch) .v-button:not(.v-disabled).borderless.custom:hover {
-	background: rgba(0, 132, 229, 0.2) !important;
+	background: rgba(82, 181, 195, 0.2) !important;
 }
 
 body:not(.v-touch) .v-filterselect:not(.v-disabled) > .v-filterselect-button:hover {
@@ -1759,7 +1759,7 @@ body:not(.v-touch) .v-filterselect:not(.v-disabled) > .v-filterselect-button:hov
 	}
 
 body:not(.v-touch) .v-grid-editor-save:hover, body:not(.v-touch) .v-grid-editor-cancel:hover {
-	background: rgba(0, 114, 198, 0.2) !important;
+	background: rgba(90, 152, 161, 0.2) !important;
 }
 
 body.v-ie .v-grid-scroller {
@@ -1801,7 +1801,7 @@ body:not(.v-touch) .friendly.v-upload:not(.v-disabled):not(.borderless):not(.bor
 }
 
 body:not(.v-touch) .custom.v-upload:not(.v-disabled):not(.borderless):not(.borderless-colored):hover {
-	background: #0084e5;
+	background: #52b5c3;
 }
 
 body:not(.v-touch) .danger.v-upload:not(.v-disabled):not(.borderless):not(.borderless-colored):hover {
@@ -1809,7 +1809,7 @@ body:not(.v-touch) .danger.v-upload:not(.v-disabled):not(.borderless):not(.borde
 }
 
 body:not(.v-touch) .primary.v-upload:not(.v-disabled):not(.borderless):not(.borderless-colored):hover {
-	background: #0084e5;
+	background: #52b5c3;
 }
 
 body:not(.v-touch) .v-upload.borderless:not(.v-disabled):not(.borderless-colored):not(.primary):not(.friendly):not(.danger):not(.custom):hover {
@@ -1817,7 +1817,7 @@ body:not(.v-touch) .v-upload.borderless:not(.v-disabled):not(.borderless-colored
 }
 
 body:not(.v-touch) .v-upload:not(.v-disabled).floating-action-upload:hover {
-	background: #0084e5;
+	background: #52b5c3;
 }
 
 body:not(.v-touch) .v-upload:not(.v-disabled).floating-action-upload:not(.flat):hover, body.v-touch .v-upload.floating-action-upload:not(.flat):active {
@@ -1839,12 +1839,12 @@ body:not(.v-touch) .v-upload:not(.v-disabled).border:hover {
 
 body:not(.v-touch) .v-upload:not(.v-disabled).border.custom:hover {
 	color: white;
-	background: #0072C6 !important;
+	background: #5A98A1 !important;
 }
 
 body:not(.v-touch) .v-upload:not(.v-disabled).border.primary:hover {
 	color: white;
-	background: #0072C6 !important;
+	background: #5A98A1 !important;
 }
 
 body:not(.v-touch) .v-upload:not(.v-disabled).border.friendly:hover {
@@ -1858,7 +1858,7 @@ body:not(.v-touch) .v-upload:not(.v-disabled).border.danger:hover {
 }
 
 body:not(.v-touch) .v-upload:not(.v-disabled).borderless.primary:hover, body:not(.v-touch) .v-upload:not(.v-disabled).borderless-colored:hover {
-	background: rgba(0, 132, 229, 0.2) !important;
+	background: rgba(82, 181, 195, 0.2) !important;
 }
 
 body:not(.v-touch) .v-upload:not(.v-disabled).borderless.friendly:hover {
@@ -1870,7 +1870,7 @@ body:not(.v-touch) .v-upload:not(.v-disabled).borderless.danger:hover {
 }
 
 body:not(.v-touch) .v-upload:not(.v-disabled).borderless.custom:hover {
-	background: rgba(0, 132, 229, 0.2) !important;
+	background: rgba(82, 181, 195, 0.2) !important;
 }
 
 .v-colorpicker-popup .v-horizontallayout .v-button:hover {
@@ -1930,7 +1930,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 50%;
 	opacity: 1;
 	height: 3px;
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	pointer-events: none;
 	-webkit-transition: none;
 	-moz-transition: none;
@@ -2233,7 +2233,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	background: #00508b;
+	background: #1f8290;
 	opacity: 0.15;
 	filter: alpha(opacity=15.0) ;
 	pointer-events: none;
@@ -2247,8 +2247,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-contextmenu .gwt-MenuItem-selected {
-	background: #0072C6;
-	color: #e7f1f8;
+	background: #5A98A1;
+	color: #f0f4f4;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -2276,9 +2276,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 24px !important;
 	width: 24px !important;
 	box-sizing: border-box;
-	border: 2px solid rgba(0, 114, 198, 0.2);
-	border-top-color: #0072C6;
-	border-right-color: #0072C6;
+	border: 2px solid rgba(90, 152, 161, 0.2);
+	border-top-color: #5A98A1;
+	border-right-color: #5A98A1;
 	border-radius: 100%;
 	-webkit-animation: v-rotate-360 500ms infinite linear;
 	-moz-animation: v-rotate-360 500ms infinite linear;
@@ -2428,7 +2428,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox > input:focus ~ label:before {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -2477,7 +2477,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox > input:checked ~ label:after {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-checkbox > .v-icon, .catma .v-checkbox > label .v-icon {
@@ -2549,7 +2549,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox-small > input:focus ~ label:before {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -2598,7 +2598,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox-small > input:checked ~ label:after {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-checkbox-small > .v-icon, .catma .v-checkbox-small > label .v-icon {
@@ -2670,7 +2670,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox-large > input:focus ~ label:before {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -2719,7 +2719,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox-large > input:checked ~ label:after {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-checkbox-large > .v-icon, .catma .v-checkbox-large > label .v-icon {
@@ -2810,7 +2810,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: none;
 	-moz-transition: none;
 	transition: none;
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	
 	
 }
@@ -3049,7 +3049,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	background: #00508b;
+	background: #1f8290;
 	opacity: 0.15;
 	filter: alpha(opacity=15.0) ;
 	pointer-events: none;
@@ -3063,8 +3063,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect-suggestpopup .gwt-MenuItem-selected {
-	background: #0072C6;
-	color: #e7f1f8;
+	background: #5A98A1;
+	color: #f0f4f4;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -3203,7 +3203,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: none;
 	-moz-transition: none;
 	transition: none;
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -4015,7 +4015,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: none;
 	-moz-transition: none;
 	transition: none;
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: none;
 	box-shadow: none;
 }
@@ -4228,7 +4228,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid .header-drag-table .v-grid-header  > .v-grid-drop-marker {
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	position: absolute;
 	width: 3px;
 }
@@ -4357,7 +4357,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-row-selected > td {
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 .catma .v-grid-row-focused > td {
@@ -4480,7 +4480,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	display: none;
 	pointer-events: none;
 }
@@ -4656,7 +4656,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	top: 0;
 	left: 0;
 	width: 0;
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	position: absolute;
 	height: 100%;
 	pointer-events: none;
@@ -4710,18 +4710,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-row-selected  > .v-grid-cell {
-	background: #0072C6;
-	color: #b7d8ef;
+	background: #5A98A1;
+	color: #d4e0e1;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
-	border-color: #065a97;
+	border-color: #54797e;
 }
 
 .catma .v-grid-row-selected  > .v-grid-cell-focused:before {
-	border-color: #2da6ff;
+	border-color: #9ac1c7;
 }
 
 .catma .v-grid-editor {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-grid-editor-footer {
@@ -4807,7 +4807,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-editor-save, .catma .v-grid-editor-cancel {
 	cursor: pointer;
-	color: #0072C6;
+	color: #5A98A1;
 	text-decoration: none;
 	font-weight: inherit;
 	-webkit-transition: color 140ms;
@@ -4823,7 +4823,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-editor-save:hover, .catma .v-grid-editor-cancel:hover {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .v-grid-editor-save.v-disabled, .catma .v-grid-editor-cancel.v-disabled {
@@ -4888,7 +4888,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	height: 2px;
 	width: 100%;
-	background: #0072C6;
+	background: #5A98A1;
 	pointer-events: none;
 	border: none;
 }
@@ -4912,16 +4912,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	left: 0;
 	bottom: 0;
 	right: 2px;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	pointer-events: none;
 }
 
 .catma .v-grid-row-selected.v-grid-row-drag-center:after {
-	border-color: #005593;
+	border-color: #487980;
 }
 
 .catma .v-grid-row-selected.v-grid-row-drag-top:before, .catma .v-grid-row-selected.v-grid-row-drag-bottom:after {
-	background: #005593;
+	background: #487980;
 }
 
 .catma .v-grid-body-drag-top:after {
@@ -4932,7 +4932,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	bottom: 0;
 	left: 0;
 	pointer-events: none;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	z-index: 100;
 }
 
@@ -4975,7 +4975,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: none;
 	-moz-transition: none;
 	transition: none;
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	
 	
 }
@@ -5443,7 +5443,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: none;
 	-moz-transition: none;
 	transition: none;
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	
 	
 }
@@ -5668,7 +5668,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: none;
 	-moz-transition: none;
 	transition: none;
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	
 	
 }
@@ -5913,7 +5913,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-day:hover {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-day-offmonth {
@@ -5928,8 +5928,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-day.v-datefield-calendarpanel-day-selected, .catma .v-datefield-popup .v-datefield-calendarpanel-day.v-datefield-calendarpanel-day-selected:hover {
-	color: #b7d8ef;
-	background: #0072C6;
+	color: #d4e0e1;
+	background: #5A98A1;
 	border: none;
 	font-weight: 600;
 }
@@ -5987,7 +5987,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-popup td[class*="year"] button:hover:before, .catma .v-datefield-popup td[class*="month"] button:hover:before {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-datefield-popup td[class*="year"] button.outside-range, .catma .v-datefield-popup td[class*="month"] button.outside-range {
@@ -6022,7 +6022,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-popup td.v-datefield-calendarpanel-month {
 	width: 116px;
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-year td.v-datefield-calendarpanel-month {
@@ -6094,7 +6094,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-calendarpanel-day:hover {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-datefield-calendarpanel-day-offmonth {
@@ -6109,8 +6109,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-calendarpanel-day.v-datefield-calendarpanel-day-selected, .catma .v-datefield-calendarpanel-day.v-datefield-calendarpanel-day-selected:hover {
-	color: #b7d8ef;
-	background: #0072C6;
+	color: #d4e0e1;
+	background: #5A98A1;
 	border: none;
 	font-weight: 600;
 }
@@ -6168,7 +6168,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma td[class*="year"] button:hover:before, .catma td[class*="month"] button:hover:before {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma td[class*="year"] button.outside-range, .catma td[class*="month"] button.outside-range {
@@ -6203,7 +6203,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td.v-datefield-calendarpanel-month {
 	width: 116px;
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-datefield-calendarpanel-year td.v-datefield-calendarpanel-month {
@@ -6745,7 +6745,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-inline-datefield-calendarpanel-day:hover {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-inline-datefield-calendarpanel-day-offmonth {
@@ -6760,8 +6760,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-inline-datefield-calendarpanel-day.v-inline-datefield-calendarpanel-day-selected, .catma .v-inline-datefield-calendarpanel-day.v-inline-datefield-calendarpanel-day-selected:hover {
-	color: #b7d8ef;
-	background: #0072C6;
+	color: #d4e0e1;
+	background: #5A98A1;
 	border: none;
 	font-weight: 600;
 }
@@ -6819,7 +6819,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma td[class*="year"] button:hover:before, .catma td[class*="month"] button:hover:before {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma td[class*="year"] button.outside-range, .catma td[class*="month"] button.outside-range {
@@ -6854,7 +6854,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td.v-inline-datefield-calendarpanel-month {
 	width: 116px;
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-inline-datefield-calendarpanel-year td.v-inline-datefield-calendarpanel-month {
@@ -6986,7 +6986,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar:focus:after {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-menubar  > .v-menubar-menuitem {
@@ -7103,13 +7103,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar > .v-menubar-menuitem-selected {
-	color: #e7f1f8;
+	color: #f0f4f4;
 	
 	
 	
 	border-radius: 0;
-	border: 0 solid #004f8a;
-	background: #0072C6;
+	border: 0 solid #3f6a70;
+	background: #5A98A1;
 	
 	
 	border-top-width: 0;
@@ -7190,7 +7190,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	background: #00508b;
+	background: #1f8290;
 	opacity: 0.15;
 	filter: alpha(opacity=15.0) ;
 	pointer-events: none;
@@ -7216,8 +7216,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-popup .v-menubar-menuitem-selected {
-	background: #0072C6;
-	color: #e7f1f8;
+	background: #5A98A1;
+	color: #f0f4f4;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -7296,7 +7296,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: none;
 	margin-right: 1px;
 	border-radius: 2px;
-	color: #0072C6;
+	color: #5A98A1;
 	padding: 0 10px;
 	-webkit-transition: color 140ms;
 	-moz-transition: color 140ms;
@@ -7312,7 +7312,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-borderless .v-menubar-menuitem:hover {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .v-menubar-borderless .v-menubar-menuitem:active {
@@ -7321,7 +7321,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-menubar-borderless .v-menubar-menuitem-checked, .catma .v-menubar-borderless .v-menubar-menuitem-checked:first-child {
 	border: 0 solid #b2b2b2;
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-menubar-borderless .v-menubar-menuitem-checked .v-menubar-menuitem-caption, .catma .v-menubar-borderless .v-menubar-menuitem-checked:first-child .v-menubar-menuitem-caption {
@@ -7330,12 +7330,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-borderless .v-menubar-menuitem-selected {
-	color: #e7f1f8;
+	color: #f0f4f4;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
 .catma .v-menubar-borderless .v-menubar-menuitem-selected:hover {
-	color: #e7f1f8;
+	color: #f0f4f4;
 }
 
 .catma .v-menubar-borderless .v-menubar-menuitem-disabled, .catma .v-menubar-borderless .v-menubar-menuitem-disabled:hover {
@@ -7373,7 +7373,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-radiobutton > input:focus ~ label:before {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -7422,7 +7422,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-radiobutton > input:checked ~ label:after {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-radiobutton > .v-icon, .catma .v-radiobutton > label .v-icon {
@@ -7467,7 +7467,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 5px;
 	top: 5px;
 	left: 5px;
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 :root .catma .v-radiobutton > input ~ label:before, :root .catma .v-radiobutton > input ~ label:after {
@@ -7527,7 +7527,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-small .v-checkbox > input:focus ~ label:before {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -7576,7 +7576,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-small .v-checkbox > input:checked ~ label:after {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-select-optiongroup-small .v-checkbox > .v-icon, .catma .v-select-optiongroup-small .v-checkbox > label .v-icon {
@@ -7647,7 +7647,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-small .v-radiobutton > input:focus ~ label:before {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -7696,7 +7696,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-small .v-radiobutton > input:checked ~ label:after {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-select-optiongroup-small .v-radiobutton > .v-icon, .catma .v-select-optiongroup-small .v-radiobutton > label .v-icon {
@@ -7741,7 +7741,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 5px;
 	top: 4px;
 	left: 4px;
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 :root .catma .v-select-optiongroup-small .v-radiobutton > input ~ label:before, :root .catma .v-select-optiongroup-small .v-radiobutton > input ~ label:after {
@@ -7801,7 +7801,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-large .v-checkbox > input:focus ~ label:before {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -7850,7 +7850,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-large .v-checkbox > input:checked ~ label:after {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-select-optiongroup-large .v-checkbox > .v-icon, .catma .v-select-optiongroup-large .v-checkbox > label .v-icon {
@@ -7921,7 +7921,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-large .v-radiobutton > input:focus ~ label:before {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -7970,7 +7970,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-large .v-radiobutton > input:checked ~ label:after {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-select-optiongroup-large .v-radiobutton > .v-icon, .catma .v-select-optiongroup-large .v-radiobutton > label .v-icon {
@@ -8015,7 +8015,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 6px;
 	top: 6px;
 	left: 6px;
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 :root .catma .v-select-optiongroup-large .v-radiobutton > input ~ label:before, :root .catma .v-select-optiongroup-large .v-radiobutton > input ~ label:after {
@@ -8058,7 +8058,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-link {
 	cursor: pointer;
-	color: #0072C6;
+	color: #5A98A1;
 	text-decoration: none;
 	font-weight: inherit;
 	-webkit-transition: color 140ms;
@@ -8067,7 +8067,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-link:hover {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .v-link.v-disabled {
@@ -8077,7 +8077,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-link a {
 	cursor: pointer;
-	color: #0072C6;
+	color: #5A98A1;
 	text-decoration: none;
 	font-weight: inherit;
 	-webkit-transition: color 140ms;
@@ -8092,7 +8092,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-link a:hover {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .v-link a.v-disabled {
@@ -8254,7 +8254,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-window-closebox:hover, .catma .v-window-maximizebox:hover, .catma .v-window-restorebox:hover {
 	opacity: 1;
 	filter: none ;
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-window-closebox:active, .catma .v-window-maximizebox:active, .catma .v-window-restorebox:active {
@@ -8576,17 +8576,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tree-node-focused:after {
 	opacity: 1;
-	border: 1px solid #0072C6;
+	border: 1px solid #5A98A1;
 }
 
 .catma .v-tree-node-selected {
-	color: #e7f1f8;
+	color: #f0f4f4;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
 .catma .v-tree-node-selected:after {
 	opacity: 1;
-	background: #0072C6;
+	background: #5A98A1;
 	border: none;
 }
 
@@ -8600,10 +8600,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	height: 2px;
 	width: 100%;
-	background: #0072C6;
+	background: #5A98A1;
 	font-size: 32px;
 	line-height: 2px;
-	color: #0072C6;
+	color: #5A98A1;
 	text-indent: -4px;
 	text-shadow: 0 0 1px white, 0 0 1px white;
 	opacity: 1;
@@ -8615,8 +8615,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree-node-caption-drag-center {
-	-webkit-box-shadow: 0 0 0 2px #0072C6;
-	box-shadow: 0 0 0 2px #0072C6;
+	-webkit-box-shadow: 0 0 0 2px #5A98A1;
+	box-shadow: 0 0 0 2px #5A98A1;
 	position: relative;
 	border-radius: 2px;
 }
@@ -8790,7 +8790,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8 .header-drag-table .v-tree8-header  > .v-tree8-drop-marker {
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	position: absolute;
 	width: 3px;
 }
@@ -8919,7 +8919,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-row-selected > td {
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 .catma .v-tree8-row-focused > td {
@@ -9042,7 +9042,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	display: none;
 	pointer-events: none;
 }
@@ -9218,7 +9218,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	top: 0;
 	left: 0;
 	width: 0;
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	position: absolute;
 	height: 100%;
 	pointer-events: none;
@@ -9272,18 +9272,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-row-selected  > .v-tree8-cell {
-	background: #0072C6;
-	color: #b7d8ef;
+	background: #5A98A1;
+	color: #d4e0e1;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
-	border-color: #065a97;
+	border-color: #54797e;
 }
 
 .catma .v-tree8-row-selected  > .v-tree8-cell-focused:before {
-	border-color: #2da6ff;
+	border-color: #9ac1c7;
 }
 
 .catma .v-tree8-editor {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-tree8-editor-footer {
@@ -9369,7 +9369,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tree8-editor-save, .catma .v-tree8-editor-cancel {
 	cursor: pointer;
-	color: #0072C6;
+	color: #5A98A1;
 	text-decoration: none;
 	font-weight: inherit;
 	-webkit-transition: color 140ms;
@@ -9385,7 +9385,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-editor-save:hover, .catma .v-tree8-editor-cancel:hover {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .v-tree8-editor-save.v-disabled, .catma .v-tree8-editor-cancel.v-disabled {
@@ -9450,7 +9450,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	height: 2px;
 	width: 100%;
-	background: #0072C6;
+	background: #5A98A1;
 	pointer-events: none;
 	border: none;
 }
@@ -9474,16 +9474,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	left: 0;
 	bottom: 0;
 	right: 2px;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	pointer-events: none;
 }
 
 .catma .v-tree8-row-selected.v-tree8-row-drag-center:after {
-	border-color: #005593;
+	border-color: #487980;
 }
 
 .catma .v-tree8-row-selected.v-tree8-row-drag-top:before, .catma .v-tree8-row-selected.v-tree8-row-drag-bottom:after {
-	background: #005593;
+	background: #487980;
 }
 
 .catma .v-tree8-body-drag-top:after {
@@ -9494,7 +9494,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	bottom: 0;
 	left: 0;
 	pointer-events: none;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	z-index: 100;
 }
 
@@ -9666,7 +9666,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	display: none;
 	pointer-events: none;
 }
@@ -9734,12 +9734,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tree8-row-selected::before {
 	display: block;
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 .catma .v-tree8:focus .v-tree8-row-selected.v-tree8-row-focused::before {
 	border-color: transparent;
-	box-shadow: inset 0 0 0 1px #b7d8ef;
+	box-shadow: inset 0 0 0 1px #d4e0e1;
 }
 
 .catma .v-tree8-scroller-vertical {
@@ -9920,7 +9920,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid .header-drag-table .v-treegrid-header  > .v-treegrid-drop-marker {
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	position: absolute;
 	width: 3px;
 }
@@ -10049,7 +10049,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-row-selected > td {
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 .catma .v-treegrid-row-focused > td {
@@ -10172,7 +10172,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	display: none;
 	pointer-events: none;
 }
@@ -10348,7 +10348,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	top: 0;
 	left: 0;
 	width: 0;
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	position: absolute;
 	height: 100%;
 	pointer-events: none;
@@ -10402,18 +10402,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-row-selected  > .v-treegrid-cell {
-	background: #0072C6;
-	color: #b7d8ef;
+	background: #5A98A1;
+	color: #d4e0e1;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
-	border-color: #065a97;
+	border-color: #54797e;
 }
 
 .catma .v-treegrid-row-selected  > .v-treegrid-cell-focused:before {
-	border-color: #2da6ff;
+	border-color: #9ac1c7;
 }
 
 .catma .v-treegrid-editor {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-treegrid-editor-footer {
@@ -10499,7 +10499,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-editor-save, .catma .v-treegrid-editor-cancel {
 	cursor: pointer;
-	color: #0072C6;
+	color: #5A98A1;
 	text-decoration: none;
 	font-weight: inherit;
 	-webkit-transition: color 140ms;
@@ -10515,7 +10515,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-editor-save:hover, .catma .v-treegrid-editor-cancel:hover {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .v-treegrid-editor-save.v-disabled, .catma .v-treegrid-editor-cancel.v-disabled {
@@ -10580,7 +10580,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	height: 2px;
 	width: 100%;
-	background: #0072C6;
+	background: #5A98A1;
 	pointer-events: none;
 	border: none;
 }
@@ -10604,16 +10604,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	left: 0;
 	bottom: 0;
 	right: 2px;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	pointer-events: none;
 }
 
 .catma .v-treegrid-row-selected.v-treegrid-row-drag-center:after {
-	border-color: #005593;
+	border-color: #487980;
 }
 
 .catma .v-treegrid-row-selected.v-treegrid-row-drag-top:before, .catma .v-treegrid-row-selected.v-treegrid-row-drag-bottom:after {
-	background: #005593;
+	background: #487980;
 }
 
 .catma .v-treegrid-body-drag-top:after {
@@ -10624,7 +10624,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	bottom: 0;
 	left: 0;
 	pointer-events: none;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	z-index: 100;
 }
 
@@ -10796,7 +10796,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: 0;
 	left: 0;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 	display: none;
 	pointer-events: none;
 }
@@ -10968,23 +10968,23 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table [class*="-row"].v-selected {
-	background: #0072C6;
+	background: #5A98A1;
 	background-origin: border-box;
-	color: #e7f1f8;
+	color: #f0f4f4;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
 .catma .v-table [class*="-row"].v-selected  + .v-selected {
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 .catma .v-table [class*="-row"].v-selected  + .v-selected td {
-	border-top-color: #0072C6;
+	border-top-color: #5A98A1;
 }
 
 .catma .v-table [class*="-row"].v-selected .v-table-cell-content {
 	border-color: transparent;
-	border-left-color: #065a97;
+	border-left-color: #54797e;
 }
 
 .catma .v-table [class*="-row"].v-selected .v-table-cell-content:first-child {
@@ -11020,7 +11020,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-focus {
-	outline: 1px solid #0072C6;
+	outline: 1px solid #5A98A1;
 	outline-offset: -1px;
 }
 
@@ -11038,14 +11038,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-focus-slot-right {
-	border-right: 2px solid #0072C6;
+	border-right: 2px solid #5A98A1;
 	right: -1px;
 	margin-left: -8px !important;
 }
 
 .catma .v-table-focus-slot-left {
 	float: left;
-	border-left: 2px solid #0072C6;
+	border-left: 2px solid #5A98A1;
 	left: 0;
 	right: auto;
 	margin-left: 0 !important;
@@ -11097,7 +11097,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-column-selector:focus:after {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-table-column-selector:active:after {
@@ -11194,9 +11194,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-drag .v-table-body {
-	-webkit-box-shadow: 0 0 0 2px rgba(0, 114, 198, 0.5);
-	box-shadow: 0 0 0 2px rgba(0, 114, 198, 0.5);
-	border-color: #0072C6;
+	-webkit-box-shadow: 0 0 0 2px rgba(90, 152, 161, 0.5);
+	box-shadow: 0 0 0 2px rgba(90, 152, 161, 0.5);
+	border-color: #5A98A1;
 }
 
 .catma .v-table-drag .v-table-body .v-table-focus {
@@ -11204,12 +11204,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-row-drag-middle .v-table-cell-content {
-	background-color: #cce2f3;
-	color: #264257;
+	background-color: #deeaec;
+	color: #35484b;
 }
 
 .catma .v-table-row-drag-bottom td.v-table-cell-content {
-	border-bottom: 2px solid #0072C6;
+	border-bottom: 2px solid #5A98A1;
 	height: 27px;
 }
 
@@ -11218,7 +11218,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-row-drag-top td.v-table-cell-content {
-	border-top: 2px solid #0072C6;
+	border-top: 2px solid #5A98A1;
 	height: 27px;
 }
 
@@ -11444,7 +11444,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-horizontal  > div > .v-splitpanel-hsplitter div:before:focus:after {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-splitpanel-horizontal  > div > .v-splitpanel-hsplitter div:before:active:after {
@@ -11494,7 +11494,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-vertical  > div > .v-splitpanel-vsplitter div:before:focus:after {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-splitpanel-vertical  > div > .v-splitpanel-vsplitter div:before:active:after {
@@ -11541,7 +11541,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-horizontal.large  > div > .v-splitpanel-hsplitter div:before:focus:after {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-splitpanel-horizontal.large  > div > .v-splitpanel-hsplitter div:before:active:after {
@@ -11605,7 +11605,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-vertical.large  > div > .v-splitpanel-vsplitter div:before:focus:after {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-splitpanel-vertical.large  > div > .v-splitpanel-vsplitter div:before:active:after {
@@ -11637,10 +11637,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-progressbar-indicator {
 	border-radius: 2px;
 	height: inherit;
-	background: #0072C6;
+	background: #5A98A1;
 	
 	
-	border: 0 solid #004f8a;
+	border: 0 solid #3f6a70;
 	box-sizing: border-box;
 	max-width: 100%;
 	min-width: 4px;
@@ -11663,10 +11663,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: inline-block;
 	border-radius: 2px;
 	height: inherit;
-	background: #0072C6;
+	background: #5A98A1;
 	
 	
-	border: 0 solid #004f8a;
+	border: 0 solid #3f6a70;
 	box-sizing: border-box;
 	max-width: 100%;
 	width: 7px;
@@ -11677,9 +11677,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 24px !important;
 	width: 24px !important;
 	box-sizing: border-box;
-	border: 2px solid rgba(0, 114, 198, 0.2);
-	border-top-color: #0072C6;
-	border-right-color: #0072C6;
+	border: 2px solid rgba(90, 152, 161, 0.2);
+	border-top-color: #5A98A1;
+	border-right-color: #5A98A1;
 	border-radius: 100%;
 	-webkit-animation: v-rotate-360 500ms infinite linear;
 	-moz-animation: v-rotate-360 500ms infinite linear;
@@ -11729,16 +11729,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	left: 8px;
 	width: 4px;
 	border-radius: 2px;
-	border-left: 0 solid #004f8a;
+	border-left: 0 solid #3f6a70;
 }
 
 .catma .v-slider-base:after {
 	border-radius: 2px;
 	height: inherit;
-	background: #0072C6;
+	background: #5A98A1;
 	
 	
-	border: 0 solid #004f8a;
+	border: 0 solid #3f6a70;
 	box-sizing: border-box;
 	max-width: 100%;
 	content: "";
@@ -11786,7 +11786,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-slider-handle:before:focus:after {
-	border-color: #0072C6;
+	border-color: #5A98A1;
 }
 
 .catma .v-slider-handle:before:active:after {
@@ -11795,7 +11795,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-slider-handle:after {
 	border: 0 solid #b2b2b2;
-	border-color: #0072C6;
+	border-color: #5A98A1;
 	opacity: 0;
 	-webkit-transition: opacity 200ms;
 	-moz-transition: opacity 200ms;
@@ -11848,13 +11848,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: auto;
 	height: 4px;
 	border-left: none;
-	border-bottom: 0 solid #004f8a;
+	border-bottom: 0 solid #3f6a70;
 }
 
 .catma .v-slider-vertical .v-slider-base:after {
 	height: 101%;
 	margin-left: 0;
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 .catma .v-slider-vertical .v-slider-handle {
@@ -11940,7 +11940,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-tabitemcell .v-caption:hover {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-tabsheet-tabitemcell .v-caption.v-disabled {
@@ -11959,12 +11959,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-tabitemcell:focus .v-caption {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-tabsheet-tabitemcell .v-tabsheet-tabitem-selected .v-caption.v-caption {
-	border-bottom-color: #0072C6;
-	color: #0072C6;
+	border-bottom-color: #5A98A1;
+	color: #5A98A1;
 }
 
 .catma .v-tabsheet-tabitemcell .v-caption-closable {
@@ -11990,12 +11990,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tabsheet-tabitemcell .v-tabsheet-caption-close:hover {
 	background: rgba(0, 0, 0, 0.03);
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-tabsheet-tabitemcell .v-tabsheet-caption-close:active {
-	background: #0072C6;
-	color: #b7d8ef;
+	background: #5A98A1;
+	color: #d4e0e1;
 }
 
 .catma .v-tabsheet-scroller {
@@ -12046,13 +12046,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-tabsheet-scroller button:hover {
 	opacity: 1;
 	filter: none ;
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-tabsheet-scroller button:active {
 	opacity: 0.7;
 	filter: alpha(opacity=70) ;
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-tabsheet-scroller button::-moz-focus-inner {
@@ -12095,9 +12095,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 16px !important;
 	width: 16px !important;
 	box-sizing: border-box;
-	border: 2px solid rgba(0, 114, 198, 0.2);
-	border-top-color: #0072C6;
-	border-right-color: #0072C6;
+	border: 2px solid rgba(90, 152, 161, 0.2);
+	border-top-color: #5A98A1;
+	border-right-color: #5A98A1;
 	border-radius: 100%;
 	-webkit-animation: v-rotate-360 500ms infinite linear;
 	-moz-animation: v-rotate-360 500ms infinite linear;
@@ -12738,7 +12738,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar-bottom-spacer:hover {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-calendar-day-number {
@@ -12752,24 +12752,24 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar-day-number:hover {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-calendar-month-day-today {
-	background: #f2f7fc;
+	background: #f6f9fa;
 }
 
 .catma .v-calendar-month-day-today .v-calendar-day-number {
 	font-weight: 500;
-	color: #0072C6;
-	border-top: 2px solid #0072C6;
+	color: #5A98A1;
+	border-top: 2px solid #5A98A1;
 	line-height: 18px;
 	margin: 0;
 	padding: 0 4px;
 }
 
 .catma .v-calendar-month-day-selected {
-	background-color: #e5f0f9;
+	background-color: #eef4f5;
 }
 
 .catma .v-calendar-month-day-dragemphasis {
@@ -12839,7 +12839,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar-current-time {
-	background: #0072C6;
+	background: #5A98A1;
 	line-height: 1px;
 	pointer-events: none;
 	opacity: 0.5;
@@ -12848,7 +12848,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-calendar-current-time:before {
 	content: "\2022";
-	color: #0072C6;
+	color: #5A98A1;
 	font-size: 22px;
 	margin-left: -0.07em;
 }
@@ -12864,7 +12864,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	bottom: -1px;
 	left: 0;
-	background: #0072C6;
+	background: #5A98A1;
 	opacity: 0.5;
 	filter: alpha(opacity=50) ;
 	border-radius: 2px 2px 0 0;
@@ -13151,7 +13151,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-label-colored {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-label-large {
@@ -13190,9 +13190,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 24px !important;
 	width: 24px !important;
 	box-sizing: border-box;
-	border: 2px solid rgba(0, 114, 198, 0.2);
-	border-top-color: #0072C6;
-	border-right-color: #0072C6;
+	border: 2px solid rgba(90, 152, 161, 0.2);
+	border-top-color: #5A98A1;
+	border-right-color: #5A98A1;
 	border-radius: 100%;
 	-webkit-animation: v-rotate-360 500ms infinite linear;
 	-moz-animation: v-rotate-360 500ms infinite linear;
@@ -13244,7 +13244,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: -1px;
 	bottom: -1px;
 	left: -1px;
-	border: 0 solid #0072C6;
+	border: 0 solid #5A98A1;
 }
 
 .catma .v-ddwrapper-over-top:before {
@@ -13272,7 +13272,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 2px;
 	opacity: 0.3;
 	filter: alpha(opacity=30.0) ;
-	background: #63bdff;
+	background: #acccd1;
 }
 
 .catma .no-vertical-drag-hints .v-ddwrapper-over-bottom:before, .catma .no-vertical-drag-hints.v-ddwrapper-over-bottom:before {
@@ -13284,7 +13284,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 2px;
 	opacity: 0.3;
 	filter: alpha(opacity=30.0) ;
-	background: #63bdff;
+	background: #acccd1;
 }
 
 .catma .no-horizontal-drag-hints.v-ddwrapper-over-left:before, .catma .no-horizontal-drag-hints .v-ddwrapper-over-left:before {
@@ -13296,7 +13296,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 2px;
 	opacity: 0.3;
 	filter: alpha(opacity=30.0) ;
-	background: #63bdff;
+	background: #acccd1;
 }
 
 .catma .no-horizontal-drag-hints.v-ddwrapper-over-right:before, .catma .no-horizontal-drag-hints .v-ddwrapper-over-right:before {
@@ -13308,7 +13308,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 2px;
 	opacity: 0.3;
 	filter: alpha(opacity=30.0) ;
-	background: #63bdff;
+	background: #acccd1;
 }
 
 .catma .v-ddwrapper-over-middle:after, .catma .v-ddwrapper-over-center:after {
@@ -13316,7 +13316,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 2px;
 	opacity: 0.3;
 	filter: alpha(opacity=30.0) ;
-	background: #63bdff;
+	background: #acccd1;
 }
 
 .catma .no-box-drag-hints.v-ddwrapper:after, .catma .no-box-drag-hints .v-ddwrapper:after {
@@ -13366,7 +13366,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-popupview {
 	cursor: pointer;
-	color: #0072C6;
+	color: #5A98A1;
 	text-decoration: none;
 	font-weight: inherit;
 	-webkit-transition: color 140ms;
@@ -13375,7 +13375,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-popupview:hover {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .v-popupview.v-disabled {
@@ -13429,9 +13429,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 24px !important;
 	width: 24px !important;
 	box-sizing: border-box;
-	border: 2px solid rgba(0, 114, 198, 0.2);
-	border-top-color: #0072C6;
-	border-right-color: #0072C6;
+	border: 2px solid rgba(90, 152, 161, 0.2);
+	border-top-color: #5A98A1;
+	border-right-color: #5A98A1;
 	border-radius: 100%;
 	-webkit-animation: v-rotate-360 500ms infinite linear;
 	-moz-animation: v-rotate-360 500ms infinite linear;
@@ -13689,7 +13689,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-Notification .v-Notification-caption {
-	color: #0072C6;
+	color: #5A98A1;
 	font-size: 19px;
 	line-height: 1;
 }
@@ -14063,13 +14063,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu {
 	height: 100%;
-	background-color: #0072C6;
-	background-image: -webkit-linear-gradient(right, #0072c6 0%, #0072C6 7px);
-	background-image: linear-gradient(to left,#0072c6 0%, #0072C6 7px);
-	color: #77baeb;
+	background-color: #5A98A1;
+	background-image: -webkit-linear-gradient(right, #5a98a1 0%, #5A98A1 7px);
+	background-image: linear-gradient(to left,#5a98a1 0%, #5A98A1 7px);
+	color: #b1c9cc;
 	font-size: 14px;
 	line-height: 23px;
-	border-right: 0 solid #004f8a;
+	border-right: 0 solid #3f6a70;
 	white-space: nowrap;
 }
 
@@ -14083,7 +14083,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-part {
-	border-left: 0 solid #005da2;
+	border-left: 0 solid #497c84;
 	height: 100%;
 	padding-bottom: 29px;
 	overflow: auto;
@@ -14107,12 +14107,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-title {
 	line-height: 1.2;
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
 	padding: 10px 15px;
 	font-size: 14px;
-	border-bottom: 0 solid #004f8a;
+	border-bottom: 0 solid #3f6a70;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	text-align: center;
@@ -14120,7 +14120,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-title .v-menubar.v-menubar {
 	background: transparent;
-	border-color: #004f8a;
+	border-color: #3f6a70;
 	color: inherit;
 	-webkit-box-shadow: none;
 	box-shadow: none;
@@ -14169,7 +14169,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: none;
 	margin-right: 1px;
 	border-radius: 2px;
-	color: #0072C6;
+	color: #5A98A1;
 	padding: 0 10px;
 	-webkit-transition: color 140ms;
 	-moz-transition: color 140ms;
@@ -14185,7 +14185,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-user-menu .v-menubar-menuitem:hover {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .v-menubar-user-menu .v-menubar-menuitem:active {
@@ -14194,7 +14194,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-menubar-user-menu .v-menubar-menuitem-checked, .catma .v-menubar-user-menu .v-menubar-menuitem-checked:first-child {
 	border: 0 solid #b2b2b2;
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-menubar-user-menu .v-menubar-menuitem-checked .v-menubar-menuitem-caption, .catma .v-menubar-user-menu .v-menubar-menuitem-checked:first-child .v-menubar-menuitem-caption {
@@ -14203,12 +14203,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-user-menu .v-menubar-menuitem-selected {
-	color: #e7f1f8;
+	color: #f0f4f4;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
 .catma .v-menubar-user-menu .v-menubar-menuitem-selected:hover {
-	color: #e7f1f8;
+	color: #f0f4f4;
 }
 
 .catma .v-menubar-user-menu .v-menubar-menuitem-disabled, .catma .v-menubar-user-menu .v-menubar-menuitem-disabled:hover {
@@ -14244,13 +14244,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-subtitle {
-	color: #3fa4ee;
+	color: #94b8bd;
 	margin: 6px 0 6px 15px;
-	border-bottom: 0 solid #2687ce;
+	border-bottom: 0 solid #72a7af;
 }
 
 .catma .valo-menu-subtitle [class*="badge"] {
-	color: #5ba5da;
+	color: #97bcc1;
 }
 
 .catma .valo-menuitems {
@@ -14281,20 +14281,20 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-item [class*="badge"] {
-	color: #5ba5da;
+	color: #97bcc1;
 }
 
 .catma .valo-menu-item.selected {
-	background: #0069b7;
+	background: #558f97;
 }
 
 .catma .valo-menu-item.selected .v-icon {
-	color: #008ff9;
+	color: #7aadb4;
 }
 
 .catma .valo-menu-item.selected [class*="badge"] {
-	background: #008ff9;
-	color: #c3def2;
+	background: #7aadb4;
+	color: #233032;
 }
 
 .catma .valo-menu-item:focus, .catma .valo-menu-item:hover, .catma .valo-menu-item.selected {
@@ -14313,7 +14313,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-item [class*="badge"] {
-	background-color: #0081e0;
+	background-color: #69a3ab;
 	-webkit-transition: background-color 300ms;
 	-moz-transition: background-color 300ms;
 	transition: background-color 300ms;
@@ -14326,7 +14326,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-part.large-icons {
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	min-width: 58px;
 	max-width: 87px;
 }
@@ -14357,7 +14357,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: none;
 	text-overflow: ellipsis;
 	overflow: hidden;
-	background: #0060a7;
+	background: #4f858d;
 	font-size: 13px;
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -14376,7 +14376,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	line-height: 1;
 	padding: 10px;
 	text-align: center;
-	border-top: 0 solid #0f7ac9;
+	border-top: 0 solid #639ea6;
 }
 
 .catma .valo-menu-part.large-icons .valo-menu-item:first-child {
@@ -14401,7 +14401,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-part.large-icons .valo-menu-item.selected {
-	background: #0069b7;
+	background: #558f97;
 }
 
 .catma .valo-menu-part.large-icons .valo-menu-item.selected .v-icon {
@@ -14409,7 +14409,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-part.large-icons .valo-menu-item.selected [class*="badge"] {
-	border-color: #0069b7;
+	border-color: #558f97;
 }
 
 .catma .valo-menu-part.large-icons .valo-menu-item [class*="badge"] {
@@ -14417,7 +14417,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 3px;
 	top: 6px;
 	right: 6px;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 }
 
 .catma .valo-menu-logo {
@@ -14427,7 +14427,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 35px;
 	border-radius: 2px;
 	text-align: center;
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 	font-size: 19px;
 	line-height: 35px;
@@ -14441,7 +14441,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part {
-	background-color: #0072C6;
+	background-color: #5A98A1;
 	min-width: 58px;
 	max-width: 87px;
 }
@@ -14472,7 +14472,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: none;
 	text-overflow: ellipsis;
 	overflow: hidden;
-	background: #0060a7;
+	background: #4f858d;
 	font-size: 13px;
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -14491,7 +14491,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	line-height: 1;
 	padding: 10px;
 	text-align: center;
-	border-top: 0 solid #0f7ac9;
+	border-top: 0 solid #639ea6;
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-item:first-child {
@@ -14516,7 +14516,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-item.selected {
-	background: #0069b7;
+	background: #558f97;
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-item.selected .v-icon {
@@ -14524,7 +14524,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-item.selected [class*="badge"] {
-	border-color: #0069b7;
+	border-color: #558f97;
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-item [class*="badge"] {
@@ -14532,7 +14532,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 3px;
 	top: 6px;
 	right: 6px;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] {
@@ -14581,7 +14581,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin: 0;
 	padding: 0;
 	height: 29px;
-	color: #77baeb;
+	color: #b1c9cc;
 	max-width: 30%;
 	-webkit-backface-visibility: hidden;
 }
@@ -14602,13 +14602,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .valo-menuitems {
 	height: 100%;
-	background-color: #0072C6;
-	background-image: -webkit-linear-gradient(right, #0072c6 0%, #0072C6 7px);
-	background-image: linear-gradient(to left,#0072c6 0%, #0072C6 7px);
-	color: #77baeb;
+	background-color: #5A98A1;
+	background-image: -webkit-linear-gradient(right, #5a98a1 0%, #5A98A1 7px);
+	background-image: linear-gradient(to left,#5a98a1 0%, #5A98A1 7px);
+	color: #b1c9cc;
 	font-size: 14px;
 	line-height: 23px;
-	border-right: 0 solid #004f8a;
+	border-right: 0 solid #3f6a70;
 	white-space: nowrap;
 	position: fixed;
 	z-index: 9000;
@@ -14945,7 +14945,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma :not(.v-upload) > * > .v-button:not(.borderless):not(.border).primary {
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 }
 
@@ -14960,7 +14960,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma :not(.v-upload) > * > .v-button:not(.borderless):not(.border).custom {
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 }
 
@@ -14973,7 +14973,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-button.borderless-colored, .catma .v-button.link {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-button.round {
@@ -14988,12 +14988,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-button.border.primary {
-	border: 1px solid #0072C6;
-	color: #0072C6;
+	border: 1px solid #5A98A1;
+	color: #5A98A1;
 }
 
 .catma .v-button.border:after {
-	border: 0px solid #0072C6;
+	border: 0px solid #5A98A1;
 }
 
 .catma .v-button.border.friendly {
@@ -15007,8 +15007,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-button.border.custom {
-	border: 1px solid #0072C6;
-	color: #0072C6;
+	border: 1px solid #5A98A1;
+	color: #5A98A1;
 }
 
 .catma .v-button.borderless {
@@ -15020,7 +15020,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-button.borderless.primary {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-button.borderless.friendly {
@@ -15032,7 +15032,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-button.borderless.custom {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-button.floating-action {
@@ -15040,7 +15040,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 36.25px;
 	padding: 0px;
 	border-radius: 100%;
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 }
 
@@ -15070,7 +15070,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-button.floating-action.custom {
 	color: white;
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 .catma .v-button.v-disabled {
@@ -15117,8 +15117,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma :not(.v-component-group) > .v-textfield:not(.v-datefield-textfield):not(.v-textfield-readonly):not(.v-textfield-error):not(.v-colorpicker-preview-textfield):not(.borderless):not(.floating):not(.custom):focus {
-	border-bottom: 1px solid #0072C6;
-	box-shadow: 0 1px 0 0 #0072C6;
+	border-bottom: 1px solid #5A98A1;
+	box-shadow: 0 1px 0 0 #5A98A1;
 }
 
 .catma :not(.v-component-group) > .v-textfield-error:not(.borderless):not(.floating):not(.custom):focus {
@@ -15127,20 +15127,20 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma :not(.v-component-group) > .v-textfield.custom {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-textfield.custom::-webkit-input-placeholder {
-	color: rgba(0, 114, 198, 0.4);
+	color: rgba(90, 152, 161, 0.4);
 }
 
 .catma .v-caption-custom.v-caption-inline-icon {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma :not(.v-component-group) > .v-textfield.custom:focus {
-	border-bottom: 1px solid #0072C6;
-	box-shadow: 0 1px 0 0 #0072C6;
+	border-bottom: 1px solid #5A98A1;
+	box-shadow: 0 1px 0 0 #5A98A1;
 }
 
 .catma .v-component-group > .v-textfield {
@@ -15162,17 +15162,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect-focus:not(.borderless):not(.floating):not(.custom):not(.v-readonly) [class*="input"] {
-	border-bottom: 1px solid #0072C6;
-	box-shadow: 0 1px 0 0 #0072C6;
+	border-bottom: 1px solid #5A98A1;
+	box-shadow: 0 1px 0 0 #5A98A1;
 }
 
 .catma .v-filterselect.custom [class*="input"] {
-	color: #0072C6 !important;
+	color: #5A98A1 !important;
 }
 
 .catma .v-filterselect-focus.custom [class*="input"] {
-	border-bottom: 1px solid #0072C6 !important;
-	box-shadow: 0 1px 0 0 #0072C6 !important;
+	border-bottom: 1px solid #5A98A1 !important;
+	box-shadow: 0 1px 0 0 #5A98A1 !important;
 }
 
 .catma .v-filterselect.custom .v-filterselect-button {
@@ -15180,7 +15180,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect.custom [class$="button"]:before {
-	color: #0072C6 !important;
+	color: #5A98A1 !important;
 }
 
 .catma .v-filterselect .v-filterselect-button:hover {
@@ -15309,7 +15309,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 30px !important;
 	height: 30px !important;
 	border-radius: 2px;
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 	animation: valo-animate-in-fade 0.3s ease;
 }
@@ -15320,7 +15320,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-slider-handle:before {
-	background: #0072C6;
+	background: #5A98A1;
 	box-shadow: none;
 }
 
@@ -15365,8 +15365,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-label-spinner {
 	border: 2px solid #e1e1e1;
-	border-top-color: #0072C6;
-	border-right-color: #0072C6;
+	border-top-color: #5A98A1;
+	border-right-color: #5A98A1;
 	-webkit-animation: v-rotate-360 750ms infinite linear;
 	-moz-animation: v-rotate-360 750ms infinite linear;
 	animation: v-rotate-360 750ms infinite linear;
@@ -15432,12 +15432,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar.primary:not(.borderless) {
-	background: #0072C6;
+	background: #5A98A1;
 	color: white !important;
 }
 
 .catma .v-menubar-borderless.primary .v-menubar-menuitem {
-	color: #0072C6 !important;
+	color: #5A98A1 !important;
 }
 
 .catma .v-menubar.primary > .v-menubar-menuitem:not(.v-menubar-menuitem-disabled):hover, .catma .v-menubar.primary > .v-menubar-menuitem-selected, .catma .v-menubar.primary > .v-menubar-menuitem-checked {
@@ -15446,16 +15446,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar.primary.borderless > .v-menubar-menuitem:not(.v-menubar-menuitem-disabled):hover, .catma .v-menubar.primary.borderless > .v-menubar-menuitem-selected, .catma .v-menubar.primary.borderless > .v-menubar-menuitem-checked {
-	background: rgba(0, 114, 198, 0.2);
+	background: rgba(90, 152, 161, 0.2);
 }
 
 .catma .v-menubar.custom:not(.borderless) {
-	background: #0072C6;
+	background: #5A98A1;
 	color: white !important;
 }
 
 .catma .v-menubar-borderless.custom .v-menubar-menuitem {
-	color: #0072C6 !important;
+	color: #5A98A1 !important;
 }
 
 .catma .v-menubar.custom > .v-menubar-menuitem:not(.v-menubar-menuitem-disabled):hover, .catma .v-menubar.custom > .v-menubar-menuitem-selected, .catma .v-menubar.custom > .v-menubar-menuitem-checked {
@@ -15464,7 +15464,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar.custom.borderless > .v-menubar-menuitem:not(.v-menubar-menuitem-disabled):hover, .catma .v-menubar.custom.borderless > .v-menubar-menuitem-selected, .catma .v-menubar.custom.borderless > .v-menubar-menuitem-checked {
-	background: rgba(0, 114, 198, 0.2);
+	background: rgba(90, 152, 161, 0.2);
 }
 
 .catma .v-menubar > .v-menubar-menuitem {
@@ -15538,25 +15538,25 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma :not(.v-component-group) > .v-datefield:not(.borderless):not(.floating):not(.custom) [class*="textfield"]:not(.v-textfield-readonly):focus {
-	border-bottom: 1px solid #0072C6;
-	box-shadow: 0 1px 0 0 #0072C6;
+	border-bottom: 1px solid #5A98A1;
+	box-shadow: 0 1px 0 0 #5A98A1;
 }
 
 .catma :not(.v-component-group) > .v-datefield.custom [class*="textfield"] {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma :not(.v-component-group) > .v-datefield.custom [class*="textfield"]:focus {
-	border-bottom: 1px solid #0072C6 !important;
-	box-shadow: 0 1px 0 0 #0072C6 !important;
+	border-bottom: 1px solid #5A98A1 !important;
+	box-shadow: 0 1px 0 0 #5A98A1 !important;
 }
 
 .catma .v-datefield.custom .v-datefield-button {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-datefield.custom .v-datefield-button:hover {
-	color: #0683df;
+	color: #6ba2aa;
 }
 
 .catma .v-datefield-error:not(.borderless):not(.floating) [class*="textfield"]:focus {
@@ -15816,7 +15816,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-editor-save, .catma .v-grid-editor-cancel {
 	height: 25px;
-	color: #0072C6;
+	color: #5A98A1;
 	transition: box-shadow 0.3s ease-out, background 0.3s;
 	padding: 0 20px;
 	border-radius: 2px;
@@ -15900,8 +15900,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-select-all-checkbox input[type="checkbox"]:checked + label, .catma .v-grid-selection-checkbox input[type="checkbox"]:checked + label {
-	background: #0072C6;
-	border-color: #0072C6;
+	background: #5A98A1;
+	border-color: #5A98A1;
 }
 
 .catma .v-grid-scroller, .catma .v-grid-horizontal-scrollbar-deco {
@@ -15948,9 +15948,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-checkbox > input:checked ~ label:after {
-	background: #0072C6;
+	background: #5A98A1;
 	color: white !important;
-	border: 2px solid #0072C6;
+	border: 2px solid #5A98A1;
 }
 
 .catma .v-select-optiongroup:not(.large):not(.small) .v-checkbox > input:checked ~ label:after, .catma .v-checkbox:not(.large):not(.small) > input:checked ~ label:after {
@@ -16011,7 +16011,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-radiobutton > input ~ label:after {
-	background: #0072C6 !important;
+	background: #5A98A1 !important;
 	transform: scale(0);
 	transition: transform 0.2s ease-out !important;
 }
@@ -16021,7 +16021,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-radiobutton > input:checked ~ label:before {
-	border: 2px solid #0072C6 !important;
+	border: 2px solid #5A98A1 !important;
 }
 
 .catma .v-radiobutton > input ~ label:before {
@@ -16427,7 +16427,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload:not(.borderless):not(.border).primary {
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 }
 
@@ -16442,7 +16442,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload:not(.borderless):not(.border).custom {
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 }
 
@@ -16451,12 +16451,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload:not(.borderless):not(.border).primary {
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 }
 
 .catma .v-upload.borderless-colored, .catma .v-upload.link {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-upload.round {
@@ -16470,12 +16470,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload.border.primary {
-	border: 1px solid #0072C6;
-	color: #0072C6;
+	border: 1px solid #5A98A1;
+	color: #5A98A1;
 }
 
 .catma .v-upload.border:after {
-	border: 0px solid #0072C6;
+	border: 0px solid #5A98A1;
 }
 
 .catma .v-upload.border.friendly {
@@ -16489,8 +16489,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload.border.custom {
-	border: 1px solid #0072C6;
-	color: #0072C6;
+	border: 1px solid #5A98A1;
+	color: #5A98A1;
 }
 
 .catma .v-upload.borderless {
@@ -16498,7 +16498,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload.borderless.primary {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-upload.borderless.friendly {
@@ -16510,7 +16510,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload.borderless.custom {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .v-upload.floating-action-upload {
@@ -16518,7 +16518,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 56px;
 	padding: 0px;
 	border-radius: 100%;
-	background: #0072C6;
+	background: #5A98A1;
 	color: white;
 }
 
@@ -16540,7 +16540,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-upload.floating-action-upload.custom {
 	color: white;
-	background: #0072C6;
+	background: #5A98A1;
 }
 
 .catma .v-upload.v-disabled {
@@ -16640,7 +16640,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	left: 0px;
 	line-height: 35px !important;
 	height: 35px !important;
-	color: #b7d8ef;
+	color: #d4e0e1;
 	z-index: 9002 !important;
 }
 
@@ -16671,7 +16671,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-menubar-user-menu .v-menubar-menuitem:hover {
 	color: inherit !important;
-	background: rgba(183, 216, 239, 0.1);
+	background: rgba(212, 224, 225, 0.1);
 }
 
 .catma .valo-menu-part {
@@ -16679,7 +16679,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-user-menu .v-menubar-menuitem-selected:hover {
-	color: #0072C6;
+	color: #5A98A1;
 }
 
 .catma .valo-menu-item:focus, .catma .valo-menu-item:hover, .catma .valo-menu-item.selected {
@@ -16706,7 +16706,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .valo-menu-item [class*="badge"] {
-	color: #b7d8ef !important;
+	color: #d4e0e1 !important;
 	border-radius: 30px !important;
 	padding: 4px 7px;
 	top: 11px !important;
@@ -16719,8 +16719,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	pointer-events: none;
 	border: 3px solid #e1e1e1;
 	background: #fafafa;
-	border-top-color: #0072C6;
-	border-right-color: #0072C6;
+	border-top-color: #5A98A1;
+	border-right-color: #5A98A1;
 	border-radius: 100%;
 	-webkit-animation: v-rotate-360 750ms infinite linear;
 	-moz-animation: v-rotate-360 750ms infinite linear;
@@ -17155,7 +17155,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-editor-save, .catma .v-treegrid-editor-cancel {
 	height: 25px;
-	color: #0072C6;
+	color: #5A98A1;
 	transition: box-shadow 0.3s ease-out, background 0.3s;
 	padding: 0 20px;
 	border-radius: 2px;
@@ -17251,8 +17251,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-select-all-checkbox input[type="checkbox"]:checked + label, .catma .v-treegrid-selection-checkbox input[type="checkbox"]:checked + label {
-	background: #0072C6;
-	border-color: #0072C6;
+	background: #5A98A1;
+	border-color: #5A98A1;
 }
 
 .catma .v-treegrid-scroller, .catma .v-treegrid-horizontal-scrollbar-deco {

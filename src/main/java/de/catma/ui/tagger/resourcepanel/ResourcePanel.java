@@ -404,7 +404,7 @@ public class ResourcePanel extends VerticalLayout {
 	}
 	
 	private void handleVisibilityClickItem(DocumentTreeItem selectedItem) {
-		if (!selectedItem.isSelected()) {
+		if (!selectedItem.isSelected() || !selectedItem.isSingleSelection()) {
 			selectedItem.setSelected(!selectedItem.isSelected());
 			
 			if (selectedItem.isSingleSelection()) {

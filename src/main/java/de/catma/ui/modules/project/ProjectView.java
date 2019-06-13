@@ -740,32 +740,38 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamPanel.addComponent(initTeamContent());
  
         rbacEnforcer.register(
-        		RBACConstraint.ifAuthorized((role) -> 
-        			(remoteGitManager.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
-        			() -> { 
-        		        getMoreOptionsContextMenu().addItem("invite to project", (click) -> 
-        	        	uiFactory.getProjectInvitationDialog(projectReference, resourceTree.keySet(), this.project::createUserMarkupCollection).show());
-        		        teamPanel.setVisible(true);
-        			})
-        		);
+    		RBACConstraint.ifAuthorized((role) -> 
+    			(remoteGitManager.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
+    			() -> { 
+    		        getMoreOptionsContextMenu().addItem(
+    		        	"Invite someone to the Project", click -> 
+	    	        		uiFactory.getProjectInvitationDialog(
+	    	        			projectReference, 
+	    	        			resourceTree.keySet(), 
+	    	        			this.project::createUserMarkupCollection).show());
+    		        teamPanel.setVisible(true);
+    			})
+    		);
         
         rbacEnforcer.register(
-        		RBACConstraint.ifAuthorized((proj) -> true,
-        			() -> {
-        		        resourceGrid
-        		    	.addColumn(res -> {
-        		    		if(res instanceof DocumentResource && remoteGitManager.hasPermission(res.getRole(), RBACPermission.DOCUMENT_WRITE)
-        		    				||
-        		    		   res instanceof CollectionResource && remoteGitManager.hasPermission(res.getRole(), RBACPermission.COLLECTION_WRITE)){
-        		    			return VaadinIcons.UNLOCK.getHtml();
-        		    			} else {
-        		    				return VaadinIcons.LOCK.getHtml();
-        		    			}
-        		    		} , new HtmlRenderer())
-        		    	.setCaption("Permission")
-        		    	.setWidth(50);
-        			})
-        		);
+    		RBACConstraint.ifAuthorized(proj -> true,
+    			() -> {
+    		        resourceGrid
+    		    	.addColumn(res -> {
+    		    		if((res instanceof DocumentResource 
+    		    				&& remoteGitManager.hasPermission(res.getRole(), RBACPermission.DOCUMENT_WRITE))
+    		    				||
+    		    		   (res instanceof CollectionResource 
+    		    		   		&& remoteGitManager.hasPermission(res.getRole(), RBACPermission.COLLECTION_WRITE))) {
+    		    			return VaadinIcons.UNLOCK.getHtml();
+		    			} else {
+		    				return VaadinIcons.LOCK.getHtml();
+		    			}
+    		    	} , new HtmlRenderer())
+    		    	.setCaption("Permission")
+    		    	.setExpandRatio(1);
+    			})
+    		);
     }
 
     private void handleCommitRequest() {
@@ -880,8 +886,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-        teamGrid.addColumn(User::getName).setExpandRatio(1).setDescriptionGenerator(User::preciseName);
-        teamGrid.addColumn(Member::getRole);
+        teamGrid.addColumn(User::getName).setWidth(200).setDescriptionGenerator(User::preciseName);
+        teamGrid.addColumn(Member::getRole).setExpandRatio(1);
         
         Label membersAnnotations = new Label("Members");
         ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
