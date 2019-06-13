@@ -2,6 +2,7 @@ package de.catma.ui.modules.project;
 
 import java.io.Serializable;
 import java.security.SecureRandom;
+import java.util.Set;
 
 import com.jsoniter.annotation.JsonCreator;
 import com.jsoniter.annotation.JsonProperty;
@@ -26,6 +27,8 @@ public class ProjectInvitation implements Serializable {
 	private final String description;
 	private final int defaultRole;
 	private final int key;
+	private final boolean createOwnCollection;
+	private final Set<String> resources;
 	
 	public static int generate(){
 		return DammAlgorithm.padChecksum(new SecureRandom().nextInt(99999));
@@ -35,8 +38,11 @@ public class ProjectInvitation implements Serializable {
 			@JsonProperty("projectId") String projectId, 
 			@JsonProperty("defaultRole") int defaultRole,
 			@JsonProperty("name") String name,
-			@JsonProperty("desfription") String description){
-		this(projectId, defaultRole, name, description, generate());
+			@JsonProperty("desfription") String description,
+			@JsonProperty("createowncollection") boolean createOwnCollection,
+			@JsonProperty("resources") Set<String> resources
+			){
+		this(projectId, defaultRole, name, description, createOwnCollection,resources, generate());
 	}
 	
 	@JsonCreator
@@ -45,12 +51,16 @@ public class ProjectInvitation implements Serializable {
 			@JsonProperty("defaultRole") int defaultRole,
 			@JsonProperty("name") String name,
 			@JsonProperty("desfription") String description,
+			@JsonProperty("createowncollection") boolean createOwnCollection,
+			@JsonProperty("resources") Set<String> resources,
 			@JsonProperty("key") int key) {
 		this.projectId = projectId;
 		this.defaultRole = defaultRole;
 		this.name = name;
 		this.description = description;
 		this.key = key;
+		this.createOwnCollection = createOwnCollection;
+		this.resources = resources;
 	}
 
 	public String getProjectId() {
@@ -71,6 +81,14 @@ public class ProjectInvitation implements Serializable {
 
 	public int getKey() {
 		return key;
+	}
+
+	public boolean isCreateOwnCollection() {
+		return createOwnCollection;
+	}
+
+	public Set<String> getResources() {
+		return resources;
 	}
 
 	@Override

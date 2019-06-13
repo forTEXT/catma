@@ -47,7 +47,8 @@ public class EditMemberDialog<T> extends AbstractMemberDialog<Set<RBACSubject>> 
 		ls_members = new ListSelect<>("Members", members);
 		ls_members.setReadOnly(true);
 		ls_members.setWidth("100%");
-		ls_members.setItemCaptionGenerator(User::getIdentifier);
+		ls_members.setItemCaptionGenerator(User::preciseName);
+		
 		
 		content.addComponent(l_description);
 		content.addComponent(ls_members);

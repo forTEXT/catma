@@ -1,11 +1,9 @@
 package de.catma.project;
 
-import de.catma.Pager;
-import de.catma.backgroundservice.BackgroundServiceProvider;
-import de.catma.user.User;
-
 import java.io.IOException;
 import java.util.List;
+
+import de.catma.user.User;
 
 public interface ProjectManager {
 	String create(String name, String description) throws Exception;
@@ -14,7 +12,7 @@ public interface ProjectManager {
 
 	public User getUser();
 
-	public Pager<ProjectReference> getProjectReferences() throws Exception;
+	public List<ProjectReference> getProjectReferences() throws Exception;
 
 	ProjectReference findProjectReferenceById(String projectId) throws IOException;
 

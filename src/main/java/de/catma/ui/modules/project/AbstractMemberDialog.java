@@ -17,7 +17,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 
 	protected final ComboBox<User> cb_users = new ComboBox<>("member");
 	protected final ComboBox<RBACRole> cb_role = new ComboBox<RBACRole>("role", 
-			Lists.newArrayList(RBACRole.values())); 
+			Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER)); 
 	protected final Label l_description;
 		
 	protected ErrorHandler errorLogger;
@@ -31,7 +31,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		
 		cb_users.setWidth("100%");
 		cb_users.setPageLength(20);
-		cb_users.setItemCaptionGenerator(User::getIdentifier);
+		cb_users.setItemCaptionGenerator(User::preciseName);
 
 		cb_role.setWidth("100%");
 		cb_role.setItemCaptionGenerator(RBACRole::getRolename);

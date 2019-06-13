@@ -10,12 +10,12 @@ public class InvitationRequestMessage implements Serializable {
 	private static final long serialVersionUID = 6959708701334863307L;
 	
 	private final int code;
-	private final String username;
+	private final String name;
 	private final int userid;
 
-	public InvitationRequestMessage(int userid, String username, int code){
+	public InvitationRequestMessage(int userid, String name, int code){
 		this.code = code;
-		this.username = username;
+		this.name = name;
 		this.userid = userid;
 	}
 
@@ -23,8 +23,8 @@ public class InvitationRequestMessage implements Serializable {
 		return code;
 	}
 
-	public String getUsername() {
-		return username;
+	public String getName() {
+		return name;
 	}
 
 	public int getUserid() {

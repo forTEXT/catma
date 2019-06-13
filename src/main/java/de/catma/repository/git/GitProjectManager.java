@@ -12,13 +12,11 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.google.common.eventbus.EventBus;
 
-import de.catma.Pager;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.Repository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.rbac.RBACPermission;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
@@ -145,7 +143,7 @@ public class GitProjectManager implements ProjectManager {
 	}
 
 	@Override
-	public Pager<ProjectReference> getProjectReferences() throws Exception {
+	public List<ProjectReference> getProjectReferences() throws Exception {
 		return remoteGitServerManager.getProjectReferences();
 	}
 

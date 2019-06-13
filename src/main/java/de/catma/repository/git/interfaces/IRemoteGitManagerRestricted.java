@@ -109,7 +109,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @return
 	 * @throws IOException
 	 */
-	Pager<ProjectReference> getProjectReferences() throws IOException;
+	List<ProjectReference> getProjectReferences() throws IOException;
 
 	/**
 	 * finds the root project and constructs the URL
