@@ -65,6 +65,7 @@ public class SignUpDialog extends Window {
 		description.setValue("Please signup using only your valid email address. <br /> "
 				+ "We'll send you an activation link back to your address.<br />"
 				+ "After successful activation you'll need to complete your profile with username and password.");
+		description.setWidth("100%");
 		content.addComponent(description);
 		TextField tfEmail = new TextField("Email address");
 		tfEmail.setSizeFull();

@@ -67,7 +67,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	private PropertyChangeListener propertyDefinitionChangedListener;
 	private PropertyChangeListener tagChangedListener;
 	private Function<String, Boolean> isCurrentEditedCollection; //takes a collectionId and returns true if this is the collection currently being edited
-	private Consumer<String> changeCollectionListener; //takes a target collectionId to change to 
+	private Consumer<String> changeCollectionListener; //takes a target collectionId to switch to 
 
 	public AnnotationDetailsPanel(
 		Repository project, UserMarkupCollectionManager collectionManager, 
@@ -297,7 +297,9 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		final Annotation annotation = item.getAnnotation();
 		
-		if (project.hasPermission(project.getRoleForTagset(annotation.getTagInstance().getTagsetId()), RBACPermission.TAGSET_WRITE)) {
+		if (project.hasPermission(project.getRoleForCollection(
+				annotation.getUserMarkupCollection().getUuid()), 
+				RBACPermission.COLLECTION_WRITE)) {
 			if (!isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid())) {
 				changeCollectionListener.accept(annotation.getUserMarkupCollection().getUuid());
 				annotationDetailsProvider.refreshAll();
@@ -331,36 +333,48 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		final Annotation annotation = item.getAnnotation();
 		
-		if (annotation.getTagInstance().getUserDefinedProperties().isEmpty()) {
-			Notification.show(
-					"Info", 
-					"There are no Properties defined for the Tag of this Annotation!", 
-					Type.HUMANIZED_MESSAGE);
+		if (project.hasPermission(project.getRoleForCollection(
+				annotation.getUserMarkupCollection().getUuid()), 
+				RBACPermission.COLLECTION_WRITE)) {
+
+			if (annotation.getTagInstance().getUserDefinedProperties().isEmpty()) {
+				Notification.show(
+						"Info", 
+						"There are no Properties defined for the Tag of this Annotation!", 
+						Type.HUMANIZED_MESSAGE);
+			}
+			else {
+				EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
+					new EditAnnotationPropertiesDialog(project, annotation, 
+							new SaveCancelListener<List<Property>>() {
+					
+					
+					@Override
+					public void savePressed(List<Property> result) {
+						try {
+							collectionManager.updateProperty(
+								annotation.getUserMarkupCollection(), 
+								annotation.getTagInstance(), result);
+							
+							
+						} catch (IOException e) {
+							
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				});
+				
+				editAnnotationPropertiesDialog.show();
+			}
 		}
 		else {
-			EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-				new EditAnnotationPropertiesDialog(project, annotation, 
-						new SaveCancelListener<List<Property>>() {
-				
-				
-				@Override
-				public void savePressed(List<Property> result) {
-					try {
-						collectionManager.updateProperty(
-							annotation.getUserMarkupCollection(), 
-							annotation.getTagInstance(), result);
-						
-						
-					} catch (IOException e) {
-						
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			});
-			
-			editAnnotationPropertiesDialog.show();
-		}
+			Notification.show(
+				"Info", 
+				"You do not have the permission to make changes to the Collection of this Annotation, "
+				+ "please contact the Project maintainer!",
+				Type.HUMANIZED_MESSAGE);
+		}			
 	}
 
 	public Registration addMinimizeButtonClickListener(ClickListener listener) {
