@@ -122,12 +122,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent;
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
-	private Map<String, RBACRole> permissionsPerResource;
-	private Multimap<Resource, Resource> resourceTree = HashMultimap.create();
-;
+	private Map<String, RBACRole> permissionsPerResourceId;
+	private Multimap<Resource, Resource> docResourceToReadableCollectionResourceMap = HashMultimap.create();
+
 
 	@Inject
-    public ProjectView(UIFactory uiFactory, ProjectManager projectManager, EventBus eventBus, IRemoteGitManagerRestricted remoteGitManager){
+    public ProjectView(
+    		UIFactory uiFactory, ProjectManager projectManager, 
+    		EventBus eventBus, IRemoteGitManagerRestricted remoteGitManager) {
     	super("Project");
     	this.projectManager = projectManager;
         this.eventBus = eventBus;
@@ -188,8 +190,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			TreeDataProvider<Resource> resourceDataProvider = 
     				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
 
-			CollectionResource collectionResource = new CollectionResource(collectionReference, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
-			DocumentResource documentResource = new DocumentResource(document, project.getProjectId(), permissionsPerResource.get(project.getProjectId()));
+			CollectionResource collectionResource = new CollectionResource(collectionReference, project.getProjectId(), permissionsPerResourceId.get(project.getProjectId()));
+			DocumentResource documentResource = new DocumentResource(document, project.getProjectId(), permissionsPerResourceId.get(project.getProjectId()));
 			
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
@@ -251,7 +253,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
 		        new ResourcePermissionView(
-		        		resourceTree,
+		        		docResourceToReadableCollectionResourceMap,
 		        		this.remoteGitManager).show();
 		        }
         );
@@ -747,7 +749,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		        	"Invite someone to the Project", click -> 
 	    	        		uiFactory.getProjectInvitationDialog(
 	    	        			projectReference, 
-	    	        			resourceTree.keySet(), 
+	    	        			docResourceToReadableCollectionResourceMap.keySet(), 
 	    	        			this.project::createUserMarkupCollection).show());
     		        teamPanel.setVisible(true);
     			})
@@ -965,7 +967,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private void initData() {
         try {
-        	permissionsPerResource = remoteGitManager.getRolesPerResource(projectReference);
+        	permissionsPerResourceId = remoteGitManager.getRolesPerResource(projectReference);
 
         	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
         	resourceGrid.setDataProvider(resourceDataProvider);
@@ -984,33 +986,33 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
         if(project != null){
-            resourceTree.clear();
+            docResourceToReadableCollectionResourceMap.clear();
 
             TreeData<Resource> treeData = new TreeData<>();
             Collection<SourceDocument> srcDocs = project.getSourceDocuments();
             
             for(SourceDocument srcDoc : srcDocs) {
             	
-                DocumentResource srcDocResource = 
+                DocumentResource docResource = 
                 		new DocumentResource(
                 			srcDoc, 
                 			project.getProjectId(), 
-                			permissionsPerResource.get(
+                			permissionsPerResourceId.get(
                     				GitSourceDocumentHandler.getSourceDocumentRepositoryName(srcDoc.getID())));
                 
-                if(remoteGitManager.hasPermission(srcDocResource.getRole(), RBACPermission.DOCUMENT_READ)) {
-	                treeData.addItem(null,srcDocResource);
+                if(remoteGitManager.hasPermission(docResource.getRole(), RBACPermission.DOCUMENT_READ)) {
+	                treeData.addItem(null,docResource);
 	                
 	                List<UserMarkupCollectionReference> collections = 
 	                		srcDoc.getUserMarkupCollectionRefs();
 	                
-	            	List<Resource> readableCollections = collections
+	            	List<Resource> readableCollectionResources = collections
             		.stream()
             		.map(collectionRef -> 
             			(Resource)new CollectionResource(
             				collectionRef, 
             				project.getProjectId(), 
-            				permissionsPerResource.get(
+            				permissionsPerResourceId.get(
         						GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(collectionRef.getId()))
             			)
             		)
@@ -1021,14 +1023,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                if(!collections.isEmpty()){
 	                	
 	                    treeData.addItems(
-	                    	srcDocResource,
-	                    	readableCollections
+	                    	docResource,
+	                    	readableCollectionResources
 	                    );
 	                }
 	                
-	                resourceTree.putAll(srcDocResource,
-	                		readableCollections
-                            );
+	                docResourceToReadableCollectionResourceMap.putAll(
+	                		docResource, readableCollectionResources);
 
                 }
             }

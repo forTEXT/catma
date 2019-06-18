@@ -16,8 +16,6 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.tagger.Tagger;
-import de.catma.ui.tagger.annotationpanel.TagsetDataItem;
-import de.catma.ui.tagger.annotationpanel.TagsetTreeItem;
 import de.catma.util.ColorConverter;
 import de.catma.util.Pair;
 
@@ -102,7 +100,6 @@ public class TaggerContextMenu {
 				else { //update
 					TagDefinition tag = (TagDefinition) newValue;
 					TagsetDefinition tagset = (TagsetDefinition)oldValue;
-	            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
 
 	            	MenuItem menuItem = entryToMenuItemMap.get(tag);
 	            	

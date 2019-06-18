@@ -24,8 +24,10 @@ import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
+import de.catma.ui.events.routing.RouteToTagsEvent;
 import de.catma.ui.modules.project.ConflictedProjectView;
 import de.catma.ui.modules.project.ProjectView;
+import de.catma.ui.modules.tags.TagsView;
 import de.catma.ui.tagger.TaggerManagerView;
 
 /**
@@ -41,28 +43,28 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 
     private final CatmaHeader header;
 
-    /**
+    /*
      * mainSection is the combined section (nav and content) of catma
      */
 
     private final CssLayout mainSection = new CssLayout();
 
-    /**
+    /*
      * layoutSection is the content section
      */
     private final CssLayout viewSection = new CssLayout();
 
-    /**
+    /*
      * left side main navigation
      */
     private final CatmaNav navigation;
 
-    /**
+    /*
      * global communication via eventbus
      */
 	private final EventBus eventBus;
 
-    /**
+    /*
      * projectmanager
      */
 	private final ProjectManager projectManager;
@@ -72,25 +74,19 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	 */
 	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
 
-	/**
+	/*
 	 * Factory to generate Views
 	 */
 	private final UIFactory uiFactory;
 
-	/**
-	 * current route
-	 */
+
 	private Class<?> currentRoute;
-
 	private ProjectView projectView;
-
+	private TagsView tagsView;
 	private TaggerManagerView taggerManagerView;
-
 	private AnalyzerManagerViewOld analyzerManagerView;
-
-
-	
 	private AnalyzeNewManagerView analyzeNewManagerView;
+
 	
 	/**
 	 * 
@@ -138,6 +134,10 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 		if (this.projectView != null) {
 			this.projectView.close();
 			this.projectView = null;
+		}
+		if (this.tagsView != null) {
+			this.tagsView.close();
+			this.tagsView = null;
 		}
 		if (this.taggerManagerView != null) {
 			this.taggerManagerView.closeClosables();
@@ -204,6 +204,20 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 			currentRoute = routeToAnnotateEvent.getClass();
 		}
 	};
+	
+	@Override
+	public void handleRouteToTags(RouteToTagsEvent routeToTagsEvent) {
+		if (isNewTarget(routeToTagsEvent.getClass())) {
+			if (this.tagsView == null) {
+				this.tagsView = new TagsView(eventBus, routeToTagsEvent.getProject());
+			}
+			
+			setContent(tagsView);
+			
+			currentRoute = routeToTagsEvent.getClass();
+		}
+		
+	}
 	
 	@Override
 	public void handleRouteToAnalyzeOld(RouteToAnalyzeOldEvent routeToAnalyzeEvent) {

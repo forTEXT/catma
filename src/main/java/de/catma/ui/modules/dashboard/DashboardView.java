@@ -26,14 +26,14 @@ public class DashboardView extends VerticalLayout {
 
     private final ErrorHandler errorLogger;
 	
-	private final ProjectList projects;
+	private final ProjectListView projects;
 
 	private final EventBus eventBus;
 
 	private final DataProvider<ProjectReference,Void> projectDataProvider;
 
 	@Inject
-    public DashboardView(@Assisted("projectManager")ProjectManager projectManager, ProjectList projectList, EventBus eventBus){ 
+    public DashboardView(@Assisted("projectManager")ProjectManager projectManager, ProjectListView projectList, EventBus eventBus){ 
         this.projectManager = projectManager;
         this.errorLogger = (ErrorHandler)(UI.getCurrent());
         this.projects = projectList;

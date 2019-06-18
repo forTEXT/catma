@@ -32,7 +32,7 @@ import de.catma.ui.modules.main.ErrorHandler;
  * Displays a list of all projects in a card style layout.
  * @author db
  */
-public class ProjectList extends VerticalLayout implements
+public class ProjectListView extends VerticalLayout implements
         HasDataProvider<ProjectReference> {
 
     private final ProjectManager projectManager;
@@ -45,7 +45,7 @@ public class ProjectList extends VerticalLayout implements
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 
 	@Inject
-    ProjectList(@Assisted("projectManager")ProjectManager projectManager, 
+    ProjectListView(@Assisted("projectManager")ProjectManager projectManager, 
     		EventBus eventBus, 
     		IRBACManager rbacManager, 
     		Provider<JoinProjectCard> joinProjectCardProvider){ 

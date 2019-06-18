@@ -19,8 +19,7 @@ public class UIModule extends AbstractModule {
 	protected void configure() {
 		super.configure();
 		  install(new FactoryModuleBuilder()
-				.build(UIFactory.class)
-				  );
+				.build(UIFactory.class));
 	}
 	@Provides
 	@Inject

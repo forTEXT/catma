@@ -16,11 +16,11 @@ public class HugeCard extends FlexLayout {
 
     public HugeCard(String title) {
         this.hugeCardBar = new HugeCardBar(title);
-        initComponents();
+        initCardComponents();
     }
 
    
-    private void initComponents() {
+    private void initCardComponents() {
         addStyleNames(Styles.hugecard);
         addComponent(hugeCardBar);
     }

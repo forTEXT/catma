@@ -15,6 +15,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.event.ProjectReadyEvent;
+import de.catma.indexer.IndexedRepository;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.component.LargeLinkButton;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
@@ -23,6 +24,7 @@ import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
+import de.catma.ui.events.routing.RouteToTagsEvent;
 
 /**
  * Stateful Catma navigation
@@ -51,11 +53,24 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
     }
 
     private void initActions(EventBus eventBus) {
-		btProject.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToProjectEvent()));
-		btAnnotate.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnnotateEvent(currentProject)));
-		btTags.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, null)); //TODO
-		btAnalyzeOld.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnalyzeOldEvent(null, null)));
-		btAnalyze.addClickListener(clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnalyzeEvent(null, null)));
+		btProject.addClickListener(
+			clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToProjectEvent()));
+		btAnnotate.addClickListener(
+			clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToAnnotateEvent(currentProject)));
+		btTags.addClickListener(
+			clickEvent -> handleNavigationClick(clickEvent, eventBus, new RouteToTagsEvent(currentProject))); 
+		btAnalyzeOld.addClickListener(
+			clickEvent -> 
+				handleNavigationClick(
+					clickEvent, 
+					eventBus, 
+					new RouteToAnalyzeOldEvent((IndexedRepository)currentProject, null)));
+		btAnalyze.addClickListener(
+			clickEvent -> 
+				handleNavigationClick(
+					clickEvent, 
+					eventBus, 
+					new RouteToAnalyzeEvent((IndexedRepository)currentProject, null)));
 	}
 
 	private void handleNavigationClick(ClickEvent clickEvent, EventBus eventBus, Object routingEvent) {
@@ -144,6 +159,12 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
 		currentRoute = routeToAnnotateEvent.getClass();
 		setSelectedStyle(btAnnotate);
+	}
+	
+	@Override
+	public void handleRouteToTags(RouteToTagsEvent routeToTagsEvent) {
+		currentRoute= routeToTagsEvent.getClass();
+		setSelectedStyle(btTags);
 	}
 
 	@Override
