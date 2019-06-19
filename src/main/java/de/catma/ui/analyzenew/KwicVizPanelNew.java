@@ -274,6 +274,9 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		resultsTreeGrid.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
+		//resultsTreeGrid.setWidth("800px");
+		//resultsTreeGrid.setHeight("830px");
+
 		queryResultsPanel.setContent(resultsTreeGrid);
 			
 	}
@@ -648,7 +651,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		TreeDataProvider<TreeRowItem> currentTreeGridDataProvider = (TreeDataProvider<TreeRowItem>) resultsTreeGrid
 				.getDataProvider();
 
-		if (comboBox.getValue().contains("wild")) {
+		if (selectedGridViewID== ViewID.phrase) {
 			addPhraseItemsToSelectedPanel(selectedItem);
 		} else {
 			
