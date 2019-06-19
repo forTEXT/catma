@@ -195,7 +195,8 @@ public class AnalyzeNewView extends HorizontalLayout
 		predefQueries.add("tag=\"%\"");
 		predefQueries.add("tag= \"Tag1\"");
 		predefQueries.add("wild= \"und\"");
-		predefQueries.add("wild= \"Blumen%\"");
+		predefQueries.add("wild= \"Blumen%\",tag=\"%\"");
+		predefQueries.add("wild= \"%\"");
 		predefQueries.add("wild= \"%\"");
 		predefQueries.add("freq>0");
 

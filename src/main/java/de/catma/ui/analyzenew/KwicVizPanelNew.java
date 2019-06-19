@@ -82,7 +82,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 	private TreeDataProvider<TreeRowItem> selectedDataProvider;
 	private KwicPanelNew kwicNew;
 	private Button arrowLeftBt;
-	private ViewID selectedGridView;
+	private ViewID selectedGridViewID;
 	private Panel selectedItemsPanel;
 	private int kwicSize = 5;
 
@@ -261,25 +261,21 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 	private void swichToResultTree(String queryAsString) {
 		Iterator<CurrentTreeGridData> allResultsIterator = currentTreeGridDatas.iterator();
 		resultsTreeGridData = new TreeData<TreeRowItem>();
-		selectedGridView = null;
+		selectedGridViewID = null;
 		while (allResultsIterator.hasNext()) {
 			CurrentTreeGridData currentData = allResultsIterator.next();
 			if (currentData.getQuery().equalsIgnoreCase(queryAsString)) {
 				resultsTreeGridData = currentData.getCurrentTreeData();
-				selectedGridView = currentData.getViewID();
+				selectedGridViewID = currentData.getViewID();
 			}
 		}
-		resultsTreeGrid = createResultsTreeGridFromData(resultsTreeGridData, selectedGridView);
+		resultsTreeGrid = createResultsTreeGridFromData(resultsTreeGridData, selectedGridViewID);
 
 		resultsTreeGrid.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
-		//resultsTreeGrid.setWidth("800px");
-		//resultsTreeGrid.setHeight("830px");
-
 		queryResultsPanel.setContent(resultsTreeGrid);
-		
-		
+			
 	}
 
 	private TreeGrid<TreeRowItem> createResultsTreeGridFromData(TreeData<TreeRowItem> resultsTreeGridData2,
@@ -585,7 +581,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 			if (queryResultRow.getClass().equals(TagQueryResultRow.class)) {
 				TagQueryResultRow tQRR = (TagQueryResultRow) queryResultRow;
 				item.setTreeKey(tQRR.getTagDefinitionPath());
-				if (selectedGridView == ViewID.property) {
+				if (selectedGridViewID == ViewID.property) {
 					SingleItem singleItem = (SingleItem) item;
 					singleItem.setPropertyName(tQRR.getPropertyName());
 					singleItem.setPropertyValue(tQRR.getPropertyValue());
@@ -656,7 +652,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 			addPhraseItemsToSelectedPanel(selectedItem);
 		} else {
 			
-			if(selectedGridView== ViewID.flatTableProperty) {
+			if(selectedGridViewID== ViewID.flatTableProperty) {
 				addPropertyAsFlatTable(selectedItem, currentTreeGridDataProvider);
 			}else {
 				addTagOrPropertyItemsToSelectedPanel(selectedItem, currentTreeGridDataProvider);

@@ -134,10 +134,11 @@ import de.catma.ui.modules.main.ErrorHandler;
 			documentTree.addSelectionListener(new SelectionListener<DocumentTreeItem>() {
 				@Override
 				public void selectionChange(SelectionEvent<DocumentTreeItem> event) {	
+					
 					List<DocumentTreeItem> formerselectedItems=collectFormerSelectedDocuments();
 					setBookIconsClosed();
 					List<DocumentTreeItem> clearifiedList=deselectCollectionsForDeselectedDocs( event, formerselectedItems); 
-					//documentTree.getDataProvider().refreshAll();
+				
 					selectDocsForSelectedCollections(clearifiedList);
 					documentTree.getDataProvider().refreshAll();
 					
@@ -210,14 +211,14 @@ import de.catma.ui.modules.main.ErrorHandler;
 		}
 		
 		selected.stream()
-		.filter(item -> item.getClass().isInstance(DocumentDataItem.class))
-		.forEach(item->((DocumentDataItem)item).setSelected(true));	
+		.filter(item -> item.getClass()
+		.isInstance(DocumentDataItem.class))
+		.forEach(item->((DocumentDataItem)item)
+		.setSelected(true));	
 		
-
 		return clearifiedList;
 	
 	}
-	
 		
 /*		
 		public void close() {
@@ -233,7 +234,6 @@ import de.catma.ui.modules.main.ErrorHandler;
 	        		tagsetChangeListener);
 			}
 		}*/
-
 
 		public void setSelectionListener(AnalyzeResourceSelectionListener analyzeResourceSelectionListener) {
 			this.analyzeResourceSelectionListener = analyzeResourceSelectionListener;	
