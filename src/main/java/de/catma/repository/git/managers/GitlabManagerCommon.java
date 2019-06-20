@@ -1,11 +1,8 @@
 package de.catma.repository.git.managers;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -15,7 +12,6 @@ import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Project;
 
 import de.catma.interfaces.IdentifiableResource;
-import de.catma.project.ProjectReference;
 import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -121,25 +117,25 @@ public interface GitlabManagerCommon extends IRBACManager {
 	}
 	
 	@Override
-	public default void unassignFromResource(RBACSubject subject, IdentifiableResource resource) throws IOException {
+	public default void unassignFromResource(RBACSubject subject, String projectId, String resourceId) throws IOException {
 		try {
-			Project project = getGitLabApi().getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			Project project = getGitLabApi().getProjectApi().getProject(projectId, resourceId);
 			if(project == null) {
-				throw new IOException("Resource unkown "+ resource.getResourceId());
+				throw new IOException("Resource unkown "+ resourceId);
 			}
 			getGitLabApi().getProjectApi().removeMember(project.getId(), subject.getUserId());
 		} catch (GitLabApiException e) {
-			throw new IOException("Project or user unkown: "+ resource.getResourceId() + "subject:" + subject, e);
+			throw new IOException("Project or user unkown: "+ resourceId + "subject:" + subject, e);
 		}	
 	}
 	
 	@Override
-	public default RBACSubject assignOnResource(RBACSubject subject, RBACRole role, IdentifiableResource resource) throws IOException {
+	public default RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String projectId, String resourceId) throws IOException {
 		try {
-			Project project = getGitLabApi().getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			Project project = getGitLabApi().getProjectApi().getProject(projectId, resourceId);
 			
 			if(project == null) {
-				throw new IOException("resource or rootproject unkown "+ resource.getResourceId());
+				throw new IOException("resource or rootproject unkown "+ resourceId);
 			}
 			try {
 				Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
@@ -155,7 +151,7 @@ public interface GitlabManagerCommon extends IRBACManager {
 				return createProjectMember(subject, role, project.getId());
 			}
 		} catch (GitLabApiException e) {
-				throw new IOException("Project unkown resourceId: "+ resource.getResourceId() + " groupId: "+ resource.getProjectId(),e);
+				throw new IOException("Project unkown resourceId: "+ resourceId + " groupId: "+ projectId, e);
 		}		
 	};
 	

@@ -10,20 +10,18 @@ import de.catma.ui.rbac.RBACUnAssignmentFunction;
 import de.catma.user.Member;
 import de.catma.user.User;
 
-public class RemoveMemberDialog<T> extends AbstractMemberDialog<Void> {
+public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
 
 	private final Set<Member> members;
 	
-	private final RBACUnAssignmentFunction<T> unassignment;	
-	private final T resourceOrProject;
+	private final RBACUnAssignmentFunction unassignment;	
 	
 	private ListSelect<Member> ls_members;
 	
-	public RemoveMemberDialog(T resourceOrProject, RBACUnAssignmentFunction<T> unassignment,
+	public RemoveMemberDialog(RBACUnAssignmentFunction unassignment,
 			Set<Member> members, SaveCancelListener<Void> saveCancelListener) {
 		super("Remove member","Removes the selected memeber from current project", saveCancelListener);
 		this.members = members;
-		this.resourceOrProject = resourceOrProject;
 		this.unassignment = unassignment;
 	}
 	
@@ -40,7 +38,7 @@ public class RemoveMemberDialog<T> extends AbstractMemberDialog<Void> {
 	protected Void getResult() {
 		try {
 			for(Member member : members){
-				unassignment.unassign(member, resourceOrProject);
+				unassignment.unassign(member);
 			}
 			return null;
 		} catch (Exception e) {

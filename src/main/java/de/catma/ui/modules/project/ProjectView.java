@@ -9,7 +9,6 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -64,9 +63,6 @@ import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
-import de.catma.repository.git.GitMarkupCollectionHandler;
-import de.catma.repository.git.GitSourceDocumentHandler;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -110,7 +106,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private final ErrorHandler errorHandler;
 	private final EventBus eventBus;
-	private final IRemoteGitManagerRestricted remoteGitManager;
+//	private final IRemoteGitManagerRestricted remoteGitManager;
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
 	private final UIFactory uiFactory;
 	
@@ -122,18 +118,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent;
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
-	private Map<String, RBACRole> permissionsPerResourceId;
+//	private Map<String, RBACRole> permissionsPerResourceId;
 	private Multimap<Resource, Resource> docResourceToReadableCollectionResourceMap = HashMultimap.create();
-
+	private MenuItem miInvite;
+	private VerticalLayout teamPanel;
 
 	@Inject
     public ProjectView(
     		UIFactory uiFactory, ProjectManager projectManager, 
-    		EventBus eventBus, IRemoteGitManagerRestricted remoteGitManager) {
+    		EventBus eventBus) {
     	super("Project");
     	this.projectManager = projectManager;
         this.eventBus = eventBus;
-        this.remoteGitManager = remoteGitManager;
     	this.errorHandler = (ErrorHandler)UI.getCurrent();
     	this.uiFactory = uiFactory;
         initProjectListeners();
@@ -190,8 +186,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			TreeDataProvider<Resource> resourceDataProvider = 
     				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
 
-			CollectionResource collectionResource = new CollectionResource(collectionReference, project.getProjectId(), permissionsPerResourceId.get(project.getProjectId()));
-			DocumentResource documentResource = new DocumentResource(document, project.getProjectId(), permissionsPerResourceId.get(project.getProjectId()));
+			CollectionResource collectionResource = 
+				new CollectionResource(
+					collectionReference, 
+					project.getProjectId(), 
+					project.hasPermission(project.getRoleForCollection(collectionReference.getId()), RBACPermission.COLLECTION_WRITE));
+			
+			DocumentResource documentResource = 
+				new DocumentResource(
+					document, 
+					project.getProjectId(), 
+					project.hasPermission(project.getRoleForDocument(document.getID()), RBACPermission.DOCUMENT_WRITE));
 			
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
@@ -215,7 +220,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
         addDocumentBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.DOCUMENT_CREATE_OR_UPLOAD)),
+        		role -> (project.hasPermission(role, RBACPermission.DOCUMENT_CREATE_OR_UPLOAD)),
         		() -> addDocumentBtn.setEnabled(true))
         		);
 
@@ -223,7 +228,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         addCollectionBtn.setEnabled(false);
         
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.COLLECTION_CREATE)),
+        		role -> (project.hasPermission(role, RBACPermission.COLLECTION_CREATE)),
         		() -> addCollectionBtn.setEnabled(true))
         		);
         
@@ -234,16 +239,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             	"Edit documents / collections",(menuItem) -> handleEditResources());
         editDocBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
-        				remoteGitManager.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
+        		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
+        				project.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
         		() -> editDocBtn.setEnabled(true))
         		);
         MenuItem deleteDocsBtn = documentsGridMoreOptionsContextMenu.addItem(
         	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
         deleteDocsBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
-        				remoteGitManager.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
+        		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
+        				project.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
         		() -> deleteDocsBtn.setEnabled(true))
         		);
         
@@ -254,19 +259,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
 		        new ResourcePermissionView(
 		        		docResourceToReadableCollectionResourceMap,
-		        		this.remoteGitManager).show();
+		        		this.project).show();
 		        }
         );
         editResBtn.setEnabled(false);
         
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
+        		role -> (project.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
         		() -> editResBtn.setEnabled(true))
         		);
         
         
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
+        		role -> (project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
         		() ->  tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
         	        	click -> handleAddTagsetRequest()))
         		);
@@ -276,21 +281,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         MenuItem editTagset = moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
         editTagset.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
+        		role -> (project.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
         		() -> editTagset.setEnabled(true))
         		);
 
         MenuItem deleteTagSetBtn = moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
         deleteTagSetBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
+        		role -> (project.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
         		() -> deleteTagSetBtn.setEnabled(true))
         		);
         
         MenuItem importTagSetBtn = moreOptionsMenu.addItem("Import Tagsets", clickEvent -> handleImportTagsetsRequest());
         importTagSetBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (remoteGitManager.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
+        		role -> (project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
         		() -> importTagSetBtn.setEnabled(true))
         		);
         
@@ -733,7 +738,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         resourcePanel.addComponent(initResourceContent());
         
-        VerticalLayout teamPanel = new VerticalLayout();
+        teamPanel = new VerticalLayout();
         teamPanel.setSizeUndefined(); // don't set width 100%
         teamPanel.setVisible(false);
         teamPanel.addComponent(new Label("Team"));
@@ -741,39 +746,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
  
-        rbacEnforcer.register(
-    		RBACConstraint.ifAuthorized((role) -> 
-    			(remoteGitManager.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
-    			() -> { 
-    		        getMoreOptionsContextMenu().addItem(
-    		        	"Invite someone to the Project", click -> 
-	    	        		uiFactory.getProjectInvitationDialog(
-	    	        			projectReference, 
-	    	        			docResourceToReadableCollectionResourceMap.keySet(), 
-	    	        			this.project::createUserMarkupCollection).show());
-    		        teamPanel.setVisible(true);
-    			})
-    		);
-        
-        rbacEnforcer.register(
-    		RBACConstraint.ifAuthorized(proj -> true,
-    			() -> {
-    		        resourceGrid
-    		    	.addColumn(res -> {
-    		    		if((res instanceof DocumentResource 
-    		    				&& remoteGitManager.hasPermission(res.getRole(), RBACPermission.DOCUMENT_WRITE))
-    		    				||
-    		    		   (res instanceof CollectionResource 
-    		    		   		&& remoteGitManager.hasPermission(res.getRole(), RBACPermission.COLLECTION_WRITE))) {
-    		    			return VaadinIcons.UNLOCK.getHtml();
-		    			} else {
-		    				return VaadinIcons.LOCK.getHtml();
-		    			}
-    		    	} , new HtmlRenderer())
-    		    	.setCaption("Permission")
-    		    	.setExpandRatio(1);
-    			})
-    		);
+        miInvite = getMoreOptionsContextMenu().addItem(
+        	"Invite someone to the Project", click -> 
+        		uiFactory.getProjectInvitationDialog(
+        			project, 
+        			docResourceToReadableCollectionResourceMap.keySet()).show());
     }
 
     private void handleCommitRequest() {
@@ -838,6 +815,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
         	.setWidth(300);
+        
+        resourceGrid
+    	.addColumn(res -> res.getPermissionIcon() , new HtmlRenderer())
+    	.setCaption("Permission")
+    	.setExpandRatio(1);      
+        
         //TODO: see MD for when it is appropriate to offer row options
 //        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
 //				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
@@ -900,24 +883,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
 
         addContextMenu.addItem("Add Member", (click) -> 
-        	new CreateMemberDialog<>(
-        		this.projectReference.getProjectId(),
-        		remoteGitManager::assignOnProject,
-        		(query) -> remoteGitManager.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()),
+        	new CreateMemberDialog(
+        		project::assignOnProject,
+        		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()),
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
         
         ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-        moreOptionsContextMenu.addItem("Edit Members", (click) -> new EditMemberDialog<>(
-        		projectReference.getProjectId(),
-        		remoteGitManager::assignOnProject,
+        moreOptionsContextMenu.addItem("Edit Members", (click) -> new EditMemberDialog(
+        		project::assignOnProject,
         		teamGrid.getSelectedItems(),
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
-        moreOptionsContextMenu.addItem("Remove Members", (click) -> new RemoveMemberDialog<>(
-        		projectReference.getProjectId(),
-        		remoteGitManager::unassignFromProject,
+        moreOptionsContextMenu.addItem("Remove Members", (click) -> new RemoveMemberDialog(
+        		project::unassignFromProject,
         		teamGrid.getSelectedItems(),
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
@@ -948,6 +928,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 ProjectView.this.project.getTagManager().addPropertyChangeListener(
                 		TagManagerEvent.tagsetDefinitionChanged,
                 		tagsetChangeListener);
+
+                boolean membersEditAllowed = 
+                		projectManager.isAuthorizedOnProject(RBACPermission.PROJECT_MEMBERS_EDIT, projectReference.getProjectId());
+		        miInvite.setVisible(membersEditAllowed);
+		        teamPanel.setVisible(membersEditAllowed);
                 
 				initData();
 				eventBus.post(new ProjectReadyEvent(project));
@@ -967,8 +952,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private void initData() {
         try {
-        	permissionsPerResourceId = remoteGitManager.getRolesPerResource(projectReference);
-
+        	
         	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
         	resourceGrid.setDataProvider(resourceDataProvider);
         	
@@ -997,10 +981,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 		new DocumentResource(
                 			srcDoc, 
                 			project.getProjectId(), 
-                			permissionsPerResourceId.get(
-                    				GitSourceDocumentHandler.getSourceDocumentRepositoryName(srcDoc.getID())));
+                			project.hasPermission(project.getRoleForDocument(srcDoc.getID()), RBACPermission.DOCUMENT_WRITE));
                 
-                if(remoteGitManager.hasPermission(docResource.getRole(), RBACPermission.DOCUMENT_READ)) {
+                if(project.hasPermission(project.getRoleForDocument(srcDoc.getID()), RBACPermission.DOCUMENT_READ)) {
 	                treeData.addItem(null,docResource);
 	                
 	                List<UserMarkupCollectionReference> collections = 
@@ -1011,12 +994,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             		.map(collectionRef -> 
             			(Resource)new CollectionResource(
             				collectionRef, 
-            				project.getProjectId(), 
-            				permissionsPerResourceId.get(
-        						GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(collectionRef.getId()))
-            			)
+            				project.getProjectId(),
+            				project.hasPermission(project.getRoleForCollection(collectionRef.getId()), RBACPermission.COLLECTION_WRITE))
             		)
-            		.filter(colRes -> remoteGitManager.hasPermission(colRes.getRole(), RBACPermission.COLLECTION_READ))
+            		.filter(colRes -> project.hasPermission(
+            			project.getRoleForCollection(colRes.getResourceId()), RBACPermission.COLLECTION_READ))
             		.collect(Collectors.toList());
             		
                     
@@ -1048,7 +1030,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     public void reloadAll() {
         initProject(projectReference);
     	try {
-			rbacEnforcer.enforceConstraints(remoteGitManager.getRoleOnProject(remoteGitManager.getUser(), projectReference.getProjectId()));
+			rbacEnforcer.enforceConstraints(project.getRoleOnProject());
 		} catch (IOException e) {
 			errorHandler.showAndLogError("Error trying to fetch role", e);
 		}

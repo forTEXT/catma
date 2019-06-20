@@ -94,7 +94,7 @@ import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
-import de.catma.ui.tagger.resourcepanel.ResourcePanel;
+import de.catma.ui.tagger.resourcepanel.AnnotateResourcePanel;
 import de.catma.ui.tagger.resourcepanel.ResourceSelectionListener;
 import de.catma.util.Pair;
 
@@ -122,7 +122,7 @@ public class TaggerView extends HorizontalLayout
 	private TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	private CheckBox cbTraceSelection;
 	private Button btClearSearchHighlights;
-	private ResourcePanel resourcePanel;
+	private AnnotateResourcePanel resourcePanel;
 	private AnnotationPanel annotationPanel;
 	private UserMarkupCollectionManager userMarkupCollectionManager;
 	private final EventBus eventBus;
@@ -615,7 +615,7 @@ public class TaggerView extends HorizontalLayout
 		splitPanel.addListener(SplitterPositionChangedEvent.class,
                 listener, SplitterPositionChangedListener.positionChangedMethod);
 		
-		resourcePanel = new ResourcePanel(project, sourceDocument, eventBus); 
+		resourcePanel = new AnnotateResourcePanel(project, sourceDocument, eventBus); 
 		drawer = new SliderPanelBuilder(resourcePanel)
 				.mode(SliderMode.LEFT).expanded(sourceDocument == null).build();
 		

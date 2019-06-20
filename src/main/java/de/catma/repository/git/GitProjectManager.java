@@ -17,6 +17,8 @@ import de.catma.document.repository.Repository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
@@ -250,5 +252,8 @@ public class GitProjectManager implements ProjectManager {
 		obj.put("description", description);
 		return obj.toString();
 	}
-	
+
+	public boolean isAuthorizedOnProject(RBACPermission permission, String projectId) {
+		return remoteGitServerManager.isAuthorizedOnProject(user, permission, projectId);
+	}
 }

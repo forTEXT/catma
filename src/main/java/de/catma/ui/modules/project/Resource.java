@@ -26,6 +26,6 @@ public interface Resource extends IdentifiableResource {
 	
 	public default boolean isCollection() { return false; }
 
-	public RBACRole getRole();
+	public String getPermissionIcon();
 
 }

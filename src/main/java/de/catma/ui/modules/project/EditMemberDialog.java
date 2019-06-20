@@ -13,18 +13,16 @@ import com.vaadin.ui.Notification;
 
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.rbac.RBACAssignmentFunction;
 import de.catma.user.Member;
 import de.catma.user.User;
 
-public class EditMemberDialog<T> extends AbstractMemberDialog<Set<RBACSubject>> {
+public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 
 	private final Set<Member> members;
 	
-	private final T resourceOrProject;
-	private final RBACAssignmentFunction<T> assignment;
+	private final RBACAssignmentFunction assignment;
 
 	private final Binder<RBACRole> roleBinder = new Binder<>();
 	
@@ -32,12 +30,11 @@ public class EditMemberDialog<T> extends AbstractMemberDialog<Set<RBACSubject>> 
 	private RBACRole accesslevel;
 	private ListSelect<Member> ls_members;
 	
-	public EditMemberDialog(T resourceOrProject,
-			RBACAssignmentFunction<T> assignment,
+	public EditMemberDialog(
+			RBACAssignmentFunction assignment,
 			Set<Member> members, SaveCancelListener<Set<RBACSubject>> saveCancelListener) {
 		super("Updates a member","update the role", saveCancelListener);
 		this.members = members;
-		this.resourceOrProject = resourceOrProject;
 		this.assignment = assignment;
 		this.accesslevel = members.isEmpty() ?  RBACRole.REPORTER : members.iterator().next().getRole();
 	}
@@ -76,7 +73,7 @@ public class EditMemberDialog<T> extends AbstractMemberDialog<Set<RBACSubject>> 
 		try {
 			Set<RBACSubject> result = new HashSet<>();
 			for(Member member : members){
-				result.add( assignment.assign(member, cb_role.getValue(), resourceOrProject));
+				result.add( assignment.assign(member, cb_role.getValue()));
 			}
 			return result;
 		} catch (Exception e) {

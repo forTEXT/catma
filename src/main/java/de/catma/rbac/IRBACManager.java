@@ -55,7 +55,7 @@ public interface IRBACManager {
 	 * @return
 	 * @throws IOException
 	 */
-	RBACSubject assignOnResource(RBACSubject subject, RBACRole role, IdentifiableResource resource) throws IOException;
+	RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String projectId, String resourceId) throws IOException;
 
 	/**
 	 * unassigns a subject from a project
@@ -71,7 +71,7 @@ public interface IRBACManager {
 	 * @param projectId
 	 * @throws IOException
 	 */
-	void unassignFromResource(RBACSubject subject, IdentifiableResource resource) throws IOException;
+	void unassignFromResource(RBACSubject subject, String projectId, String resourceId) throws IOException;
 	
 	/**
 	 * checks if a role has a permission assigned

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -37,16 +36,13 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.document.repository.Repository;
 import de.catma.document.repository.event.ChangeType;
 import de.catma.document.repository.event.CollectionChangeEvent;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
-import de.catma.interfaces.IdentifiableResource;
-import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACRole;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
@@ -67,7 +63,6 @@ public class ProjectInvitationDialog extends Window {
     		Caching.getCachingProvider().getCacheManager().getCache(HazelcastConfiguration.CACHE_KEY_INVITATIONS);
     
 
-	private final ProjectReference projectRef;
 	private final ComboBox<RBACRole> cb_role = new ComboBox<RBACRole>("role", 
 			Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 	private final CheckBox chbOwnCollection = new CheckBox("create own collection", false);
@@ -78,35 +73,32 @@ public class ProjectInvitationDialog extends Window {
 	private final Grid<Resource> resourceGrid = new Grid<>();
 	private final List<String> joinedUsers = new ArrayList<>();
 	private final ListSelect<String> cbConsole = new ListSelect<>("joined users", joinedUsers);
-	private final IRemoteGitManagerRestricted gitmanagerRestricted;
     private final ErrorHandler errorLogger;
     private final HazelcastInstance hazelcast;
     private final ITopic<InvitationRequestMessage> invitationTopic;
     private final ITopic<JoinedProjectMessage> joinedTopic;
     private final EventBus eventBus;
     private final Set<Resource> resources;
-    private final BiConsumer<String, SourceDocument> createCollectionFunction;
     private final Map<String,Integer> customCollectionToUserMap = Maps.newHashMap();
     
 	private ProjectInvitation projectInvitation;
 
 
+	private final Repository project;
+
+
 
 	@Inject
 	public ProjectInvitationDialog(
-			@Assisted("projectref") ProjectReference projectRef,
+			@Assisted("project") Repository project,
 			@Assisted("resources") Set<Resource> resources,
-			@Assisted("createColFunc") BiConsumer<String,SourceDocument> createCollectionFunction,
-			IRemoteGitManagerRestricted gitmanagerRestricted,
 			EventBus eventBus,
 			HazelCastService hazelcastService){
 		super("Invite to project");
 		setDescription("Invite user to project");
 		setModal(true);
-		this.projectRef = projectRef;
+		this.project = project;
 		this.resources = resources;
-		this.createCollectionFunction = createCollectionFunction;
-		this.gitmanagerRestricted = gitmanagerRestricted;
 	    this.errorLogger = (ErrorHandler) UI.getCurrent();
 	    this.eventBus = eventBus;
 	    this.hazelcast = hazelcastService.getHazelcastClient();
@@ -129,29 +121,18 @@ public class ProjectInvitationDialog extends Window {
 						if(projectInvitation.isCreateOwnCollection()) {
 							
 							for(String resId : projectInvitation.getResources() ) {
-								gitmanagerRestricted.assignOnResource(() -> message.getMessageObject().getUserid(), RBACRole.REPORTER, new IdentifiableResource() {
-									
-									@Override
-									public String getResourceId() {
-										return resId;
-									}
-									
-									@Override
-									public String getProjectId() {
-										return projectInvitation.getProjectId();
-									}
-								});
+								project.assignOnResource(() -> message.getMessageObject().getUserid(), RBACRole.REPORTER, resId);
 								DocumentResource docResource = (DocumentResource) docLookup.get(resId);
 								if(docResource != null){
 									String collectionName = message.getMessageObject().getName() + "s collection";
 									customCollectionToUserMap.put(collectionName, message.getMessageObject().getUserid());
-									createCollectionFunction.accept(collectionName, docResource.getDocument());
+									project.createUserMarkupCollection(collectionName, docResource.getDocument());
 								}
 							}	
 						}
 						
-						gitmanagerRestricted.assignOnProject(() -> message.getMessageObject().getUserid(), 
-								RBACRole.forValue(projectInvitation.getDefaultRole()), projectInvitation.getProjectId());
+						project.assignOnProject(() -> message.getMessageObject().getUserid(), 
+								RBACRole.forValue(projectInvitation.getDefaultRole()));
 						joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
 						joinedUsers.add(message.getMessageObject().getName());
 						cbConsole.setItems(joinedUsers);
@@ -254,11 +235,11 @@ public class ProjectInvitationDialog extends Window {
 		}
 		setDescription("Invitation running... keep this Dialog open");
 		projectInvitation = new ProjectInvitation(
-				projectRef.getProjectId(), 
+				project.getProjectId(), 
 				cb_role.getValue(). 
 				value, 
-				projectRef.getName(), 
-				projectRef.getDescription(),
+				project.getName(), 
+				project.getDescription(),
 				chbOwnCollection.getValue(),
 				resourceGrid.getSelectedItems().stream().map(Resource::getResourceId).collect(Collectors.toSet()));
 		invitationCache.put(projectInvitation.getKey(), JsonStream.serialize(projectInvitation));
@@ -288,8 +269,8 @@ public class ProjectInvitationDialog extends Window {
     		}
 
     		try {
-				gitmanagerRestricted.assignOnResource(() -> userId, 
-						RBACRole.ASSISTANT, new CollectionResource(collectionReference, projectRef.getProjectId(), RBACRole.ASSISTANT));
+				project.assignOnResource(() -> userId, 
+						RBACRole.ASSISTANT, collectionReference.getId());
 			} catch (IOException e) {
     			errorLogger.showAndLogError("failed to assign permission on collection", e);
 			}

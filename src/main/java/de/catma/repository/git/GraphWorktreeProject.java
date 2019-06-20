@@ -49,6 +49,7 @@ import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
@@ -687,6 +688,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 	public String getName() {
 		return projectReference.getName();
 	}
+	
+	@Override
+	public String getDescription() {
+		return projectReference.getDescription();
+	}
 
 	@Override
 	public String getProjectId() {
@@ -1284,4 +1290,40 @@ public class GraphWorktreeProject implements IndexedRepository {
 	public boolean isAuthorizedOnProject(RBACPermission permission) {
 		return gitProjectHandler.isAuthorizedOnProject(permission);
 	}
+
+	@Override
+	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {
+		return gitProjectHandler.assignOnProject(subject, role);
+	}
+
+	@Override
+	public void unassignFromProject(RBACSubject subject) throws IOException {
+		gitProjectHandler.unassignFromProject(subject);
+	}
+
+	@Override
+	public RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String resourceId) throws IOException {
+		return gitProjectHandler.assignOnResource(subject, role, resourceId);
+	}
+
+	@Override
+	public void unassignFromResource(RBACSubject subject, String resourceId) throws IOException {
+		gitProjectHandler.unassignFromResource(subject, resourceId);
+	}
+
+	@Override
+	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
+		return gitProjectHandler.findUser(usernameOrEmail, offset, limit);
+	}
+
+	@Override
+	public Set<Member> getResourceMembers(String resourceId) throws IOException {
+		return gitProjectHandler.getResourceMembers(resourceId);
+	}
+
+	@Override
+	public RBACRole getRoleOnProject() throws IOException {
+		return gitProjectHandler.getRoleOnProject(user);
+	}
+	
 }

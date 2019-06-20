@@ -3,7 +3,6 @@ package de.catma.ui.modules.project;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -16,12 +15,10 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.rbac.RBACAssignmentFunction;
 import de.catma.user.User;
 
-public  class CreateMemberDialog<T> extends AbstractMemberDialog<RBACSubject> {
+public  class CreateMemberDialog extends AbstractMemberDialog<RBACSubject> {
 
-	private final RBACAssignmentFunction<T> assignment;
+	private final RBACAssignmentFunction assignment;
 	
-	private final T resourceOrProject;
-
 	private final QueryFunction<User> getUserQuery;
 
 	private final LoadingCache<Query<User,String>, List<User>> users = CacheBuilder.newBuilder()
@@ -61,13 +58,11 @@ public  class CreateMemberDialog<T> extends AbstractMemberDialog<RBACSubject> {
 
 	
 	public CreateMemberDialog(
-			T resourceOrProject, 
-			RBACAssignmentFunction<T> assignment, 
+			RBACAssignmentFunction assignment, 
 			QueryFunction<User> getUserQuery, 
 			SaveCancelListener<RBACSubject> saveCancelListener) {
 		super("Adds a new member","Add a new team member and select his role", saveCancelListener);
 		this.assignment = assignment;
-		this.resourceOrProject = resourceOrProject;
 		this.getUserQuery = getUserQuery;
 		this.cb_users.setDataProvider(userDataProvider);
 	}
@@ -75,8 +70,7 @@ public  class CreateMemberDialog<T> extends AbstractMemberDialog<RBACSubject> {
 	@Override
 	protected RBACSubject getResult() {
 		try {
-//			return remoteGitManager.assignOnProject(cb_users.getValue(), cb_role.getValue(), projectId);
-			return assignment.assign(cb_users.getValue(), cb_role.getValue(), resourceOrProject);
+			return assignment.assign(cb_users.getValue(), cb_role.getValue());
 		} catch (Exception e) {
 			errorLogger.showAndLogError(e.getMessage(),e);
 			return null;

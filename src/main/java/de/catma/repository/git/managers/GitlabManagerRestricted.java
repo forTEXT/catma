@@ -363,9 +363,9 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	}
 	
 	@Override
-	public Set<de.catma.user.Member> getResourceMembers(IdentifiableResource resource) throws IOException {
+	public Set<de.catma.user.Member> getResourceMembers(String projectId, String resourceId) throws IOException {
 		try {
-			Project project = restrictedGitLabApi.getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			Project project = restrictedGitLabApi.getProjectApi().getProject(projectId, resourceId);
 			if(project != null ){
 				List<GitMember> allMembers = new CustomProjectApi(restrictedGitLabApi, backgroundService.getExecutorService())
 						.getAllMembers(project.getId())

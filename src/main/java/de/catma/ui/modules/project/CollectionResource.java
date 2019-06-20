@@ -11,12 +11,12 @@ public class CollectionResource implements Resource {
 
     private final UserMarkupCollectionReference collectionReference;
 	private final String projectId;
-	private final RBACRole role;
+	private boolean hasWritePermission;
 
-    CollectionResource(UserMarkupCollectionReference userMarkupCollectionReference, String projectId, RBACRole role){
+    CollectionResource(UserMarkupCollectionReference userMarkupCollectionReference, String projectId, boolean hasWritePermission){
         this.collectionReference = userMarkupCollectionReference;
         this.projectId = projectId;
-        this.role = role;
+        this.hasWritePermission = hasWritePermission;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class CollectionResource implements Resource {
 
 	@Override
 	public String getResourceId() {
-		return GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(collectionReference.getId());
+		return collectionReference.getId();
 	}
 
 	@Override
@@ -69,7 +69,8 @@ public class CollectionResource implements Resource {
 	}
 
 	@Override
-	public RBACRole getRole() {
-		return role;
+	public String getPermissionIcon() {
+		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
 	}
+
 }

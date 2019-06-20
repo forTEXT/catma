@@ -4,7 +4,7 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
-public class CollectionDataItem implements DocumentTreeItem {
+class CollectionDataItem implements DocumentTreeItem {
 
 	private UserMarkupCollectionReference collectionRef;
 	private boolean selected = true;

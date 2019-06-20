@@ -3,6 +3,7 @@ package de.catma.project;
 import java.io.IOException;
 import java.util.List;
 
+import de.catma.rbac.RBACPermission;
 import de.catma.user.User;
 
 public interface ProjectManager {
@@ -23,4 +24,6 @@ public interface ProjectManager {
 			OpenProjectListener openProjectListener);
 
 	void leaveProject(String projectId) throws IOException;
+
+	boolean isAuthorizedOnProject(RBACPermission permission, String projectId);
 }

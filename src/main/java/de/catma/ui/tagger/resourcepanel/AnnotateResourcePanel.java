@@ -49,7 +49,7 @@ import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 
-public class ResourcePanel extends VerticalLayout {
+public class AnnotateResourcePanel extends VerticalLayout {
 	
 	private Repository project;
 	private TreeGrid<DocumentTreeItem> documentTree;
@@ -64,7 +64,7 @@ public class ResourcePanel extends VerticalLayout {
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent;
 	private EventBus eventBus;
 
-	public ResourcePanel(Repository project, SourceDocument currentlySelectedSourceDocument, EventBus eventBus) {
+	public AnnotateResourcePanel(Repository project, SourceDocument currentlySelectedSourceDocument, EventBus eventBus) {
 		super();
 		this.project = project;
         this.errorHandler = (ErrorHandler)UI.getCurrent();
@@ -188,7 +188,7 @@ public class ResourcePanel extends VerticalLayout {
 
 	private void handleAddTagsetRequest() {
     	
-    	SingleTextInputDialog collectionNameDlg = 
+    	SingleTextInputDialog tagsetNameDlg = 
     		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
     				new SaveCancelListener<String>() {
 						
@@ -202,9 +202,9 @@ public class ResourcePanel extends VerticalLayout {
 						}
 					});
         	
-        collectionNameDlg.show();
-    	
+        tagsetNameDlg.show();
 	}
+	
     private void handleTagsetSelectionEvent(SelectionEvent<TagsetDefinition> selectionEvent) {
     	if (resourceSelectionListener != null) {
     		resourceSelectionListener.tagsetsSelected(selectionEvent.getAllSelectedItems());

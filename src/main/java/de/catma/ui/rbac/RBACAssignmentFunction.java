@@ -5,7 +5,6 @@ import java.io.IOException;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 
-//	private final String projectId;
-public interface RBACAssignmentFunction<D> {
-	RBACSubject assign(RBACSubject subject, RBACRole role, D resourceOrProject) throws IOException ;
+public interface RBACAssignmentFunction {
+	RBACSubject assign(RBACSubject subject, RBACRole role) throws IOException ;
 }

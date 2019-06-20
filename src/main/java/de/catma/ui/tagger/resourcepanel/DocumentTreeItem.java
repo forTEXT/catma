@@ -1,6 +1,6 @@
 package de.catma.ui.tagger.resourcepanel;
 
-public interface DocumentTreeItem {
+interface DocumentTreeItem {
 	public String getSelectionIcon();
 	public String getName();
 	public String getIcon();

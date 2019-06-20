@@ -21,8 +21,8 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.document.repository.Repository;
 import de.catma.rbac.RBACRole;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
@@ -31,7 +31,6 @@ import de.catma.user.Member;
 public class ResourcePermissionView extends Window {
 
     private final ErrorHandler errorHandler;
-	private final IRemoteGitManagerRestricted remoteGitManager;
 	private final Multimap<Resource,Resource> resources;
 	private final VerticalLayout content = new VerticalLayout();
 	private final Grid<Map.Entry<Resource, Map<String, RBACRole>>> permissionGrid = new Grid<>();
@@ -43,9 +42,10 @@ public class ResourcePermissionView extends Window {
 			);
 	
 	private ListDataProvider<Map.Entry<Resource, Map<String, RBACRole>>> permissionData;
+	private Repository project;
 
-	public ResourcePermissionView(Multimap<Resource,Resource> resources, IRemoteGitManagerRestricted remoteGitManager) {
-		this.remoteGitManager = remoteGitManager;
+	public ResourcePermissionView(Multimap<Resource,Resource> resources, Repository project) {
+		this.project = project;
 		this.resources = resources;
     	this.errorHandler = (ErrorHandler)UI.getCurrent();
         
@@ -96,13 +96,15 @@ public class ResourcePermissionView extends Window {
 	private void initActions(){
 		ContextMenu moreOptionsContextMenu = permissionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-		moreOptionsContextMenu.addItem("Edit permission", (click) -> {
-			ResourcePermissionDialog rpd = new ResourcePermissionDialog(
-				getSelectedResource() ,
-				remoteGitManager, (evt) -> initData());
-				rpd.addCloseListener(event -> initData());
-				rpd.show();
-			}	
+		moreOptionsContextMenu.addItem(
+				"Edit permission", 
+				(click) -> {
+					ResourcePermissionDialog rpd = new ResourcePermissionDialog(
+							getSelectedResource(),
+							project, (evt) -> initData());
+					rpd.addCloseListener(event -> initData());
+					rpd.show();
+				}	
 		);
 
 	}
@@ -123,7 +125,7 @@ public class ResourcePermissionView extends Window {
     				res.add(entry.getValue());
     			}
     			for(Resource r : res) {
-	    			Set<Member> members = remoteGitManager.getResourceMembers(r);
+	    			Set<Member> members = project.getResourceMembers(r.getResourceId());
 	    			for(Member member : members){    				
 	    				permissionMatrix.put(r, member.getIdentifier(), member.getRole());
 	    			}

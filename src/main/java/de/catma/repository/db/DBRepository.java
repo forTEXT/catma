@@ -66,6 +66,7 @@ import de.catma.indexer.IndexerFactory;
 import de.catma.project.OpenProjectListener;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
 import de.catma.repository.db.executionshield.DBOperation;
 import de.catma.repository.db.executionshield.ExecutionShield;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
@@ -1257,5 +1258,53 @@ public class DBRepository implements IndexedRepository {
 	public boolean isAuthorizedOnProject(RBACPermission permission) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public void unassignFromResource(RBACSubject subject, String resourceId) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String resourceId) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void unassignFromProject(RBACSubject subject) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<Member> getResourceMembers(String resourceId) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getDescription() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public RBACRole getRoleOnProject() throws IOException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

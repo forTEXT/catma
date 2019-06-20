@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.catma.Pager;
-import de.catma.interfaces.IdentifiableResource;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
@@ -136,7 +134,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 
 	void leaveGroup(String path) throws IOException;
 
-	Set<Member> getResourceMembers(IdentifiableResource resource) throws IOException;
+	Set<Member> getResourceMembers(String projectId, String resourceId) throws IOException;
 	
 	Map<String, RBACRole> getRolesPerResource(ProjectReference projectReference) throws IOException ;
 	Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException ;

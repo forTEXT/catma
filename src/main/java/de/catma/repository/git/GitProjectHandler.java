@@ -1357,4 +1357,32 @@ public class GitProjectHandler {
 	public boolean isAuthorizedOnProject(RBACPermission permission) {
 		return remoteGitServerManager.isAuthorizedOnProject(remoteGitServerManager.getUser(), permission, projectId);
 	}
+	
+	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {
+		return remoteGitServerManager.assignOnProject(subject, role, projectId);
+	}
+	
+	public void unassignFromProject(RBACSubject subject) throws IOException {
+		remoteGitServerManager.unassignFromProject(subject, projectId);
+	}
+	
+	public RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String resourceId) throws IOException {
+		return remoteGitServerManager.assignOnResource(subject, role, projectId, resourceId);
+	}
+	
+	public void unassignFromResource(RBACSubject subject, String resourceId) throws IOException {
+		remoteGitServerManager.unassignFromResource(subject, projectId, resourceId);
+	}
+
+	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
+		return remoteGitServerManager.findUser(usernameOrEmail, offset, limit);
+	}
+
+	public Set<Member> getResourceMembers(String resourceId) throws IOException {
+		return remoteGitServerManager.getResourceMembers(projectId, resourceId);
+	}
+	
+	public RBACRole getRoleOnProject(RBACSubject subject) throws IOException {
+		return remoteGitServerManager.getRoleOnProject(subject, projectId);
+	}
 }

@@ -4,7 +4,7 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.source.SourceDocument;
 
-public class DocumentDataItem implements DocumentTreeItem {
+class DocumentDataItem implements DocumentTreeItem {
 	
 	private SourceDocument document;
 	private boolean selected;

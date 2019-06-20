@@ -15,18 +15,20 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.document.repository.Repository;
+import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.ui.rbac.RBACAssignmentFunction;
+import de.catma.ui.rbac.RBACUnAssignmentFunction;
 import de.catma.user.Member;
 
 public class ResourcePermissionDialog extends Window {
 
     private final ErrorHandler errorHandler;
-	private final IRemoteGitManagerRestricted remoteGitManager;
 	private final Consumer<RBACSubject> onAssignmentCallback;
 	private final Resource resource;
 	private final VerticalLayout content = new VerticalLayout();
@@ -37,9 +39,10 @@ public class ResourcePermissionDialog extends Window {
 			);
 
 	private ListDataProvider<Member> permissionData;
+	private Repository project;
 
-	public ResourcePermissionDialog(Resource resource, IRemoteGitManagerRestricted remoteGitManager, Consumer<RBACSubject> onAssignmentCallback ) {
-		this.remoteGitManager = remoteGitManager;
+	public ResourcePermissionDialog(Resource resource, Repository project, Consumer<RBACSubject> onAssignmentCallback ) {
+		this.project = project;
 		this.onAssignmentCallback = onAssignmentCallback.
 				andThen((evt) -> initData());
 		this.resource = resource;
@@ -98,35 +101,53 @@ public class ResourcePermissionDialog extends Window {
 	private void initActions(){
 		ContextMenu addContextMenu = permissionGridComponent.getActionGridBar().getBtnAddContextMenu();
 		
-		addContextMenu.addItem("add member", (click) -> 
-		new CreateMemberDialog<>(
-				resource,
-				remoteGitManager::assignOnResource,
-        		(query) -> remoteGitManager.getProjectMembers(resource.getProjectId()).stream().collect(Collectors.toList()),
-				(rbacsubj) -> onAssignmentCallback.accept(rbacsubj)
+		addContextMenu.addItem(
+			"Add Member", 
+			(click) -> 
+				new CreateMemberDialog(
+						new RBACAssignmentFunction() {
+							@Override
+							public RBACSubject assign(RBACSubject subject, RBACRole role) throws IOException {
+								return project.assignOnResource(subject, role, resource.getResourceId());
+							}
+						},        		
+						(query) -> project.getProjectMembers().stream().collect(Collectors.toList()),
+						(rbacsubj) -> onAssignmentCallback.accept(rbacsubj)
 				).show());
 		
 		ContextMenu moreOptionsContextMenu = permissionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		
-		moreOptionsContextMenu.addItem("edit members", (click) -> new EditMemberDialog<>(
-				resource,
-				remoteGitManager::assignOnResource,
-				permissionGrid.getSelectedItems(),
-				(evt) -> initData()
+		moreOptionsContextMenu.addItem(
+				"Edit Members", 
+				click -> new EditMemberDialog(
+					new RBACAssignmentFunction() {
+						@Override
+						public RBACSubject assign(RBACSubject subject, RBACRole role) throws IOException {
+							return project.assignOnResource(subject, role, resource.getResourceId());
+						}
+					},
+					permissionGrid.getSelectedItems(),
+					(evt) -> initData()
 				).show());
 		
-		moreOptionsContextMenu.addItem("remove members", (click) -> new RemoveMemberDialog<>(
-				resource,
-				remoteGitManager::unassignFromResource,
-				permissionGrid.getSelectedItems(),
-				(evt) -> initData()
+		moreOptionsContextMenu.addItem(
+				"Remove Members", 
+				(click) -> new RemoveMemberDialog(
+					new RBACUnAssignmentFunction() {
+						@Override
+						public void unassign(RBACSubject subject) throws IOException {
+							project.unassignFromResource(subject, resource.getResourceId());
+						}
+						
+					},				
+					permissionGrid.getSelectedItems(),
+					(evt) -> initData()
 				).show());
-		
 	}
 
 	public void initData() {
     	try {
-			permissionData = new ListDataProvider<>(remoteGitManager.getResourceMembers(resource));
+			permissionData = new ListDataProvider<>(project.getResourceMembers(resource.getResourceId()));
 			permissionGrid.setDataProvider(permissionData);
 		} catch (IOException e) {
 			errorHandler.showAndLogError("Failed to fetch permissions", e);

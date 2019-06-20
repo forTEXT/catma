@@ -1,13 +1,11 @@
 package de.catma.ui.di;
 
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 import com.google.inject.assistedinject.Assisted;
 
-import de.catma.document.source.SourceDocument;
+import de.catma.document.repository.Repository;
 import de.catma.project.ProjectManager;
-import de.catma.project.ProjectReference;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.modules.dashboard.DashboardView;
 import de.catma.ui.modules.dashboard.ProjectListView;
@@ -26,7 +24,6 @@ public interface UIFactory {
 			@Assisted("iRemoteGitlabManager") IRemoteGitManagerRestricted gitmanagerRestricted);
 	
 	ProjectInvitationDialog getProjectInvitationDialog(
-			@Assisted("projectref") ProjectReference projectRef, 
-			@Assisted("resources")  Set<Resource> resources,
-			@Assisted("createColFunc") BiConsumer<String,SourceDocument> createCollectionFunction);
+			@Assisted("project") Repository project, 
+			@Assisted("resources")  Set<Resource> resources);
 }

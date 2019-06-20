@@ -41,6 +41,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.project.OpenProjectListener;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
@@ -516,5 +517,21 @@ public interface Repository {
 	boolean hasPermission(RBACRole role, RBACPermission permission);
 
 	boolean isAuthorizedOnProject(RBACPermission permission);
+
+	void unassignFromResource(RBACSubject subject, String resourceId) throws IOException;
+
+	RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String resourceId) throws IOException;
+
+	void unassignFromProject(RBACSubject subject) throws IOException;
+
+	RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException;
+
+	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
+
+	Set<Member> getResourceMembers(String resourceId) throws IOException;
+
+	String getDescription();
+
+	RBACRole getRoleOnProject() throws IOException;
 
 }
