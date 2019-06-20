@@ -97,14 +97,10 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
         }
     }
 	
-	public void setSelectionModeFixed(boolean multiSelect) {
-		this.multiselect = multiSelect;
+	public void setSelectionModeFixed(Grid.SelectionMode selectionMode) {
+		this.multiselect = selectionMode.equals(Grid.SelectionMode.MULTI);
 		actionGridBar.getBtnToggleMultiselect().setEnabled(false);
-		if (this.multiselect) {
-			dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
-		} else {
-			dataGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
-		}
+		dataGrid.setSelectionMode(selectionMode);
 	}
     
 	private void initComponents() {

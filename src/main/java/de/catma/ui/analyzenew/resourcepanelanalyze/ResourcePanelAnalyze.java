@@ -11,6 +11,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
@@ -122,7 +123,7 @@ import de.catma.ui.modules.main.ErrorHandler;
 			documentActionGridComponent = 
 					new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
 			
-			documentActionGridComponent.disableToggle();
+			documentActionGridComponent.setSelectionModeFixed(Grid.SelectionMode.MULTI);
 			
 			addComponent(documentActionGridComponent);
 			
