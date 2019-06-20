@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.resourcepanel;
+package de.catma.ui.analyzenew.resourcepanelanalyze;
 
 import com.vaadin.icons.VaadinIcons;
 
@@ -56,38 +56,23 @@ public class DocumentDataItem implements DocumentTreeItem {
 		return true;
 	}
 
-	@Override
+
 	public void setSelected(boolean value) {
 		this.selected = value;
 	}
-	
+	/*
 	@Override
 	public boolean isSingleSelection() {
-		return true;
+		return false;
 	}
-
+	*/
 	public SourceDocument getDocument() {
 		return document;
 	}
-	
-	@Override
+
 	public boolean isSelected() {
 		return selected;
 	}
 	
-	@Override
-	public String toString() {
-		return document.toString();
-	}
-	
-	@Override
-	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener) {
-		resourceSelectionListener.documentSelected(document);
-	}
-	
-	@Override
-	public String getPermissionIcon() {
-		return null; //writable Documents not supported yet
-	}
 
 }

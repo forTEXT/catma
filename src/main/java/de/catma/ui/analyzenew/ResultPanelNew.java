@@ -91,7 +91,7 @@ public class ResultPanelNew extends Panel {
 			setDataTagStyle();
 			setCurrentView(ViewID.tag);
 			treeGridPanel.setContent(treeGridTag);
-			optionsMenu.addItem("Swich to Phrase View", clickEvent -> {
+			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
 					swichView();
 				} catch (Exception e1) {
@@ -99,7 +99,7 @@ public class ResultPanelNew extends Panel {
 					e1.printStackTrace();
 				}
 			});
-			optionsMenu.addItem("Swich to Tag View", e -> {
+			optionsMenu.addItem("Switch to Tag View", e -> {
 				try {
 					swichView();
 				} catch (Exception e1) {
@@ -122,7 +122,7 @@ public class ResultPanelNew extends Panel {
 			setCurrentView(ViewID.property);
 			treeGridPanel.setContent(treeGridProperty);
 			
-			optionsMenu.addItem("Swich to Phrase View", clickEvent -> {
+			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
 					setCurrentView(ViewID.phraseProperty);
 					treeGridPanel.setContent(treeGridPhrase);
@@ -131,7 +131,7 @@ public class ResultPanelNew extends Panel {
 					e1.printStackTrace();
 				}
 			});
-			optionsMenu.addItem("Swich to Tag View", e -> {
+			optionsMenu.addItem("Switch to Tag View", e -> {
 				try {
 					setCurrentView(ViewID.property);
 					treeGridPanel.setContent(treeGridProperty);
@@ -140,7 +140,7 @@ public class ResultPanelNew extends Panel {
 					e1.printStackTrace();
 				}
 			});
-			optionsMenu.addItem("Swich to Flat Table View", e -> {
+			optionsMenu.addItem("Switch to Flat Table View", e -> {
 				try {
 					setCurrentView(ViewID.flatTableProperty);
 					treeGridPanel.setContent(treeGridPropertyFlatTable);
@@ -290,16 +290,6 @@ public class ResultPanelNew extends Panel {
 		
 		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
 
-/*		optionsBt.addClickListener(new ClickListener() {
-
-			public void buttonClick(ClickEvent event) {
-				try {
-					swichView();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});*/
 
 		trashBt.addClickListener(new ClickListener() {
 
@@ -378,7 +368,9 @@ public class ResultPanelNew extends Panel {
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
 		treeGridPhrase.setDataProvider(phraseDataProvider);
 		treeGridPanel.setContent(treeGridPhrase);
+		
 		phraseDataProvider.refreshAll();
+		
 		treeGridPhrase.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
 		treeGridPhrase.getColumn("phraseID").setExpandRatio(7);
 		treeGridPhrase.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
@@ -450,6 +442,7 @@ public class ResultPanelNew extends Panel {
 	
 			QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
 			queryResultRowArray.add(queryResultRow);
+			propItem.setRows(queryResultRowArray);
 			propItem.setQueryResultRowArray(queryResultRowArray);
 			flatTableList.add((TreeRowItem) propItem);
 			if (!propDataFlat.contains(propItem))

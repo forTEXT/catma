@@ -81,4 +81,8 @@ public class ActionGridBar extends FlexLayout {
 	public void setSearchInputVisible(boolean visible) {
 		searchField.setVisible(visible);
 	}
+	
+	IconButton getBtnToggleMultiselect() {
+		return btnToggleMultiselect;
+	}
 }

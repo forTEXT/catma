@@ -1128,6 +1128,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      	            		}else {
      	            			CollectionResource collResource = (CollectionResource) resource;
          	            		corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
+         	            		DocumentResource docParent =(DocumentResource) resourceGrid.getTreeData().getParent(collResource);
+         	            		if(!corpus.getSourceDocuments().contains(docParent.getDocument())) {
+         	            			corpus.addSourceDocument(docParent.getDocument());
+         	            		}
      	            			
      	            		}
      	                } catch (Exception e) {

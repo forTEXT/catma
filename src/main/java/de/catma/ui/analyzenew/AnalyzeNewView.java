@@ -2,16 +2,24 @@ package de.catma.ui.analyzenew;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.antlr.runtime.RecognitionException;
+import org.vaadin.sliderpanel.SliderPanel;
+import org.vaadin.sliderpanel.SliderPanelBuilder;
+import org.vaadin.sliderpanel.client.SliderMode;
+
 import com.github.appreciated.material.MaterialTheme;
 
 import com.vaadin.data.TreeData;
-import com.vaadin.event.MouseEvents;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
@@ -20,6 +28,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
@@ -39,6 +48,11 @@ import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
+import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
+import de.catma.ui.analyzenew.resourcepanelanalyze.CollectionDataItem;
+import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentTreeItem;
+import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentDataItem;
+import de.catma.ui.analyzenew.resourcepanelanalyze.ResourcePanelAnalyze;
 import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.analyzer.GroupedQueryResultSelectionListener;
 import de.catma.ui.analyzer.Messages;
@@ -51,13 +65,14 @@ import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
 
-public class AnalyzeNewView extends VerticalLayout
+public class AnalyzeNewView extends HorizontalLayout
 		implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider,
 		TagKwicResultsProvider, HasComponents {
 
 	public static interface CloseListenerNew {
 		public void closeRequest(AnalyzeNewView analyzeNewView);
 	}
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private String userMarkupItemDisplayString = "Markup Collections";
 	private IndexedRepository repository;
 	private Corpus corpus;
@@ -82,6 +97,9 @@ public class AnalyzeNewView extends VerticalLayout
 	private HorizontalLayout searchAndVisIconsHorizontal;
 	private Component searchPanel;
 	private Component visIconsPanel;
+	private ResourcePanelAnalyze resourcePanelAnalyze;
+	private SliderPanel drawer;
+	private QueryOptions queryOptions;
 
 	public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener)
 			throws Exception {
@@ -93,6 +111,10 @@ public class AnalyzeNewView extends VerticalLayout
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
 		this.indexInfoSet = new IndexInfoSet(Collections.<String>emptyList(), Collections.<Character>emptyList(),
 				Locale.ENGLISH);
+		
+		 this.queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
+					relevantStaticMarkupCollIDs, indexInfoSet.getUnseparableCharacterSequences(),
+					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
 
 		initComponents();
 		initListeners();
@@ -131,110 +153,22 @@ public class AnalyzeNewView extends VerticalLayout
 		contentPanel.addStyleName("analyze_content");
 
 		this.addStyleName("analyze_content");
+		
+		resourcePanelAnalyze = new ResourcePanelAnalyze(this.repository, this.corpus); 
+		
+		 drawer = new SliderPanelBuilder(resourcePanelAnalyze)
+				.mode(SliderMode.LEFT).expanded(false).build();
+		
+		//resourcePanelAnalyze.addStyleName("analyze_resourcePanel");
+		drawer.addStyleName("analyze_resourcePanel");
+		
+		addComponent(drawer);
+		
 		addComponent(contentPanel);
 	}
-
-	private void initListeners() {
-
-		queryComboBox.addValueChangeListener(event -> {
-			if (event.getSource().isEmpty()) {
-				Notification.show("Error", "query field is empty", Notification.Type.HUMANIZED_MESSAGE);
-			} else {
-				String predefQueryString = event.getSource().getValue();
-				searchInput = predefQueryString;
-			}
-		});
-
-		queryComboBox.setNewItemHandler(new NewItemHandler() {
-			@Override
-			public void accept(String t) {
-				searchInput = t;
-			}
-		});
-
-	}
-
-	private void initActions() {
-		btExecuteSearch.addClickListener(new ClickListener() {
-
-			public void buttonClick(ClickEvent event) {
-				searchInput.toString();
-				executeSearch();
-			}
-		});
-
-		kwicBt.addClickListener(new ClickListener() {
-
-			@Override
-			public void buttonClick(ClickEvent event) {
-
-				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Visualisation");
-				KwicVizPanelNew kwic = new KwicVizPanelNew(getAllTreeGridDatas(), repository);
-				kwicSnapshot.setKwicVizPanel(kwic);
-				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(kwic));
-				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));
-				minMaxPanel.addComponent(kwicSnapshot);
-
-				kwic.setLeaveViewListener(new CloseVizViewListener() {
-
-					@Override
-					public void onClose() {
-						setContent(contentPanel);
-					}
-				});
-
-				setContent(kwic);
-			}
-		});
-	}
-
-	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
-		return new EditVizSnapshotListener() {
-
-			@Override
-			public void reopenKwicView() {
-				setContent(component);
-
-			}
-		};
-	}
-
-	private DeleteVizSnapshotListener buildDeleteVizSnapshotListener(Component component) {
-		return new DeleteVizSnapshotListener() {
-
-			@Override
-			public void deleteSnapshot() {
-				minMaxPanel.removeComponent(component);
-
-			}
-		};
-	}
-
-
-	private void setContent(Component component) {
-		removeAllComponents();
-		addComponent(component);
-		component.setHeight("100%");
-		component.setWidth("100%");
-
-	}
-
-	private void addRelevantResources() throws Exception {
-
-		if (corpus != null) {
-			for (SourceDocument sd : corpus.getSourceDocuments()) {
-				addSourceDocument(sd);
-			}
-		} else {
-			for (SourceDocument sd : repository.getSourceDocuments()) {
-				addSourceDocument(sd);
-			}
-
-		}
-
-	}
-
+	
 	private Component createSearchPanel() {
+		
 		VerticalLayout searchPanel = new VerticalLayout();
 		searchPanel.setAlignContent(AlignContent.CENTER);
 
@@ -258,12 +192,11 @@ public class AnalyzeNewView extends VerticalLayout
 		List<String> predefQueries = new ArrayList<>();
 
 		predefQueries.add("property= \"%\"");
-		predefQueries.add("tag=\"Tag%\"");
+		predefQueries.add("tag=\"%\"");
 		predefQueries.add("tag= \"Tag1\"");
 		predefQueries.add("wild= \"und\"");
 		predefQueries.add("wild= \"Blumen%\"");
 		predefQueries.add("wild= \"%\"");
-
 		predefQueries.add("freq>0");
 
 		queryComboBox = new ComboBox<>();
@@ -334,26 +267,109 @@ public class AnalyzeNewView extends VerticalLayout
 		visIconsPanel.addComponent(visIconBar);
 		return visIconsPanel;
 	}
-
-
-	private ArrayList<CurrentTreeGridData> getAllTreeGridDatas() {
+	
+	private void setContent(Component component) {
 		
-		Iterator<Component> iterator = resultsPanel.getComponentIterator();
-		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
-		while (iterator.hasNext()) {
-			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();
-			CurrentTreeGridData current = new CurrentTreeGridData(onePanel.getQueryAsString(),
-					(TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(), onePanel.getCurrentView());
-			toReturnList.add(current);
+		removeAllComponents();		
+		addComponent(component);	
+		component.setHeight("100%");
+		component.setWidth("100%");
+
+	}
+	
+	private void setResourcesSlider() {
+		addComponentAsFirst(drawer);
+		
+	}
+
+	private void initListeners() {
+
+		queryComboBox.addValueChangeListener(event -> {
+			if (event.getSource().isEmpty()) {
+				Notification.show("Error", "query field is empty", Notification.Type.HUMANIZED_MESSAGE);
+			} else {
+				String predefQueryString = event.getSource().getValue();
+				searchInput = predefQueryString;
+			}
+		});
+
+		queryComboBox.setNewItemHandler(new NewItemHandler() {
+			@Override
+			public void accept(String t) {
+				searchInput = t;
+			}
+		});
+
+	}
+
+	private void initActions() {
+		btExecuteSearch.addClickListener(new ClickListener() {
+
+			public void buttonClick(ClickEvent event) {
+				searchInput.toString();
+				executeSearch();
+			}
+		});
+
+		kwicBt.addClickListener(new ClickListener() {
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+
+				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Visualisation");
+				KwicVizPanelNew kwic = new KwicVizPanelNew(getAllTreeGridDatas(), repository);
+				kwicSnapshot.setKwicVizPanel(kwic);
+				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(kwic));
+				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));
+				minMaxPanel.addComponent(kwicSnapshot);
+
+				kwic.setLeaveViewListener(new CloseVizViewListener() {
+
+					@Override
+					public void onClose() {
+						
+						setContent(contentPanel);
+						setResourcesSlider();
+						
+					}
+				});
+
+				setContent(kwic);
+			}
+		});
+		
+		resourcePanelAnalyze.setSelectionListener(new AnalyzeResourceSelectionListener() {	
+
+			@Override
+			public void updateQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
+				updateCorpusAndQueryOptions(treeGrid);
+				
+			}
+		
+		});
+	}
+	
+
+	private void addRelevantResources() throws Exception {
+		
+		this.queryOptions.getRelevantSourceDocumentIDs().clear();
+		this.queryOptions.getRelevantUserMarkupCollIDs().clear();
+		this.indexInfoSet = new IndexInfoSet();
+
+		if (corpus != null) {
+			for (SourceDocument sd : corpus.getSourceDocuments()) {
+				addSourceDocument(sd);
+			}
+		} else {
+			for (SourceDocument sd : repository.getSourceDocuments()) {
+				addSourceDocument(sd);
+			}
+
 		}
-		return toReturnList;
+
 	}
 
 	private void executeSearch() {
-
-		QueryOptions queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
-				relevantStaticMarkupCollIDs, indexInfoSet.getUnseparableCharacterSequences(),
-				indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
 
 		QueryJob job = new QueryJob(searchInput.toString(), queryOptions);
 
@@ -410,10 +426,26 @@ public class AnalyzeNewView extends VerticalLayout
 
 	}
 
+	private ArrayList<CurrentTreeGridData> getAllTreeGridDatas() {
+		
+		Iterator<Component> iterator = resultsPanel.getComponentIterator();
+		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
+		while (iterator.hasNext()) {
+			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();
+			CurrentTreeGridData current = new CurrentTreeGridData(onePanel.getQueryAsString(),
+					(TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(), onePanel.getCurrentView());
+			toReturnList.add(current);
+		}
+		return toReturnList;
+	}
+
 	private void addSourceDocument(SourceDocument sd) {
-		relevantSourceDocumentIDs.add(sd.getID());
+	
+		this.relevantSourceDocumentIDs.add(sd.getID());
+
 		indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
 		MarkupCollectionItem umc = new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
+		
 		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
 			if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
 				addUserMarkupCollection(umcRef, umc);
@@ -424,6 +456,57 @@ public class AnalyzeNewView extends VerticalLayout
 	private void addUserMarkupCollection(UserMarkupCollectionReference umcRef, MarkupCollectionItem umc) {
 		this.relevantUserMarkupCollIDs.add(umcRef.getId());
 	}
+	
+	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
+		return new EditVizSnapshotListener() {
+		
+			public void reopenKwicView() {
+				setContent(component);
+
+			}
+		};
+	}
+
+	private DeleteVizSnapshotListener buildDeleteVizSnapshotListener(Component component) {
+		return new DeleteVizSnapshotListener() {
+
+			@Override
+			public void deleteSnapshot() {
+				minMaxPanel.removeComponent(component);
+
+			}
+		};
+	}
+	
+	private void updateCorpusAndQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
+
+		this.corpus = new Corpus("new Corpus");
+
+		Set<DocumentTreeItem> selecteItems = treeGrid.getSelectedItems();
+
+		for (DocumentTreeItem documentTreeItem : selecteItems) {
+			if (documentTreeItem.getClass()==DocumentDataItem.class) {
+
+				DocumentDataItem documentDataItem = (DocumentDataItem) documentTreeItem;
+				this.corpus.addSourceDocument(documentDataItem.getDocument());
+			}
+			if (documentTreeItem.getClass()==CollectionDataItem.class) {
+				CollectionDataItem collectionDataItem = (CollectionDataItem) documentTreeItem;
+				this.corpus.addUserMarkupCollectionReference(collectionDataItem.getCollectionRef());
+
+			}
+
+		}
+		
+		try {
+			addRelevantResources();
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, "error  updating query options", e); 
+			e.printStackTrace();
+		}
+		
+	}
+
 
 	@Override
 	public void tagResults() {

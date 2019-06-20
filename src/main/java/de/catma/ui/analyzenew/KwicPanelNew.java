@@ -10,15 +10,12 @@ import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.Grid.SelectionMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzenew.treehelper.TreeRowItem;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 
@@ -76,24 +73,6 @@ public class KwicPanelNew extends VerticalLayout{
 
 
 			private void initActions() {
-/*		    	kwicGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
-		    	
-		        ContextMenu addContextMenu = 
-		        	documentsGridComponent.getActionGridBar().getBtnAddContextMenu();
-		        addContextMenu.addItem("Annotate selected rows", clickEvent -> handleAddDocumentRequest());
-		        addContextMenu.addItem("Annotate single rows", e -> handleAddCollectionRequest());
-
-		        ContextMenu documentsGridMoreOptionsContextMenu = 
-		        	documentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		        documentsGridMoreOptionsContextMenu.addItem(
-		            	"Edit documents / collections",(menuItem) -> handleEditResources());
-		        documentsGridMoreOptionsContextMenu.addItem(
-		        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
-		        documentsGridMoreOptionsContextMenu.addItem(
-		            	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, resourceGrid));
-		        
-		        tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
-		        	click -> handleAddTagsetRequest());*/
 		        
 		        ContextMenu moreOptionsMenu = 
 		        	kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
@@ -111,15 +90,13 @@ public class KwicPanelNew extends VerticalLayout{
 			}
 		
 			
-		
-		
+
 		private void initComponents() {
 		//	addStyleName("analyze_kwic_panel");
 	
 			kwicGrid= new Grid<KwicItem>();
 	    	kwicItemList= new ArrayList<>(); 
-			//kwicGrid.setSelectionMode(SelectionMode.MULTI);
-			//kwicGrid.setSelectionMode(SelectionMode.SINGLE);
+
 			kwicGrid.setWidth("100%");
 			kwicGrid.setHeight("100%");
 			

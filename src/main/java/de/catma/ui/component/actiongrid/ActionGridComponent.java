@@ -4,6 +4,7 @@ import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.Registration;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
@@ -49,13 +50,14 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
     private boolean multiselect = false;
 	private boolean headerVisible;
 	private SearchFilterProvider<?> searchFilterProvider = new DefaultSearchFilterProvider();
+	private Registration btnToggleListSelectReg;
 
     public ActionGridComponent(Component titleComponent, G dataGrid){
         this.titleCompennt = titleComponent;
         this.dataGrid = dataGrid;
         this.actionGridBar = new ActionGridBar(titleCompennt);
-        this.actionGridBar.addBtnToggleListSelect(
-                event -> toggleMultiselect(event));
+        this.btnToggleListSelectReg = this.actionGridBar.addBtnToggleListSelect(
+                event -> handleToggleMultiselectRequest(event));
         this.headerVisible = dataGrid.isHeaderVisible();
         initComponents();
         initActions();
@@ -78,14 +80,14 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
 		}
 	}
 
-	private void toggleMultiselect(ClickEvent event) {
+	private void handleToggleMultiselectRequest(ClickEvent event) {
         if(! multiselect) {
             dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
             multiselect = true;
             if (!headerVisible) {
             	dataGrid.setHeaderVisible(true);
             }
-        }else {
+        } else {
             dataGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
             multiselect = false;
             
@@ -94,7 +96,17 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
             }
         }
     }
-
+	
+	public void setSelectionModeFixed(boolean multiSelect) {
+		this.multiselect = multiSelect;
+		actionGridBar.getBtnToggleMultiselect().setEnabled(false);
+		if (this.multiselect) {
+			dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
+		} else {
+			dataGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+		}
+	}
+    
 	private void initComponents() {
         addStyleName(Styles.actiongrid);
         setHeight("100%");
