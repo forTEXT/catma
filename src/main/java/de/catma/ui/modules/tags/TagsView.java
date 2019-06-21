@@ -23,12 +23,14 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.StyleGenerator;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -41,8 +43,8 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.component.hugecard.HugeCardBar;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tagger.annotationpanel.AddEditPropertyDialog;
 import de.catma.ui.tagger.annotationpanel.AddParenttagDialog;
@@ -63,6 +65,7 @@ public class TagsView extends HugeCard {
 	private Collection<TagsetDefinition> tagsets = Collections.emptyList();
 	private TagResourcePanel resourcePanel;
 	private SliderPanel drawer;
+//	private HugeCardBar hugeCardBar;
 
 	public TagsView(EventBus eventBus, Repository project) {
 		super("Manage Tags");
@@ -168,8 +171,11 @@ public class TagsView extends HugeCard {
 	}
 
 	private void initComponents() {
+        addStyleName("tags-view");
+        
 		HorizontalLayout content = new HorizontalLayout();
-
+		content.addStyleName("tags-content");
+		
 		tagsetGrid = new TreeGrid<>();
 		tagsetGrid.addStyleNames(
 				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
@@ -185,13 +191,13 @@ public class TagsView extends HugeCard {
         
 		resourcePanel = new TagResourcePanel(project); 
 		drawer = new SliderPanelBuilder(resourcePanel)
-				.mode(SliderMode.LEFT).expanded(false).build();
+				.mode(SliderMode.LEFT).expanded(false).zIndex(12000).style("tags-slider").build();
 		
-		addComponent(drawer);
 		addComponent(content);
 
+        content.addComponent(drawer);
 		content.addComponent(tagsetGridComponent);
-		
+		content.setExpandRatio(tagsetGridComponent, 1.0f);
 	}
 	
 	public void close() {

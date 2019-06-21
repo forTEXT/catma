@@ -18107,9 +18107,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: none;
 }
 
+.catma .tags-content {
+	background: white;
+	margin-left: 0px !important;
+}
+
 .catma .tags-resource-panel {
 	overflow: auto;
 	height: inherit;
+}
+
+.catma .tags-slider {
+	margin-top: 30px;
+	height: 420px;
 }
 
 .catma .v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {

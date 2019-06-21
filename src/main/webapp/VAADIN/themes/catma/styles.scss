@@ -1036,9 +1036,19 @@ $v-focus-color: #5A98A1;
 		display:none;
 	}
 	
+	.tags-content {
+		background: white;
+		margin-left: 0px !important;
+	}
+	
 	.tags-resource-panel {
 		overflow: auto;
 		height: inherit;
+    }
+    
+    .tags-slider {
+    	margin-top: 30px;
+    	height: 420px;
     }
 	
 	.v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {

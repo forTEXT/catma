@@ -12,6 +12,7 @@ import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
@@ -24,7 +25,6 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
-import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 
@@ -166,7 +166,6 @@ public class TagResourcePanel extends VerticalLayout {
 
 	private void initComponents() {
 		addStyleName("tags-resource-panel");
-		
 		Label tagsetLabel = new Label("Tagsets");
 		
 		tagsetGrid = new Grid<>();
