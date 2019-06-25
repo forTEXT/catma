@@ -515,7 +515,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		if (!tagsets.isEmpty()) {
 			final TagsetDefinition tagset = tagsets.iterator().next();
 	    	SingleTextInputDialog tagsetNameDlg = 
-	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:",
+	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:", tagset.getName(),
 	        				new SaveCancelListener<String>() {
 	    						@Override
 	    						public void savePressed(String result) {

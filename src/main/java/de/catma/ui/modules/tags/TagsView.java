@@ -318,7 +318,30 @@ public class TagsView extends HugeCard {
 	}
 
 	private void handleEditTagsetRequest() {
-		// TODO this should go to the Tags module, too?
+		Collection<TagsetDefinition> selectedTagsets = 
+				tagsetGrid.getSelectedItems().stream()
+				.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
+				.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
+				.collect(Collectors.toList());
+		
+		if (!selectedTagsets.isEmpty()) {
+			final TagsetDefinition tagset = selectedTagsets.iterator().next();
+	    	SingleTextInputDialog tagsetNameDlg = 
+	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:", tagset.getName(),
+	        				new SaveCancelListener<String>() {
+	    						@Override
+	    						public void savePressed(String result) {
+	    							project.getTagManager().setTagsetDefinitionName(tagset, result);
+	    						}
+	    					});
+	            	
+	            tagsetNameDlg.show();			
+		}
+		else {
+			Notification.show(
+				"Info", "Please select a Tagset first!", 
+				Type.HUMANIZED_MESSAGE);
+		}	
 	}
 
 	private void handleEditPropertiesRequest() {

@@ -445,8 +445,6 @@ public class AnnotationPanel extends VerticalLayout {
 		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
 		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
 		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
-		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
-		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 		
 		currentEditableCollectionBox.addValueChangeListener(
 			event -> collectionSelectionListener.accept(event.getValue()));
@@ -478,14 +476,6 @@ public class AnnotationPanel extends VerticalLayout {
 		else {
 			Notification.show("Info", "Please select a Document first!", Type.HUMANIZED_MESSAGE);
 		}
-	}
-
-	private void handleDeleteTagsetRequest() {
-		// TODO this should go to the Tags module  
-	}
-
-	private void handleEditTagsetRequest() {
-		// TODO this should go to the Tags module, too?
 	}
 
 	private void handleEditPropertiesRequest() {
