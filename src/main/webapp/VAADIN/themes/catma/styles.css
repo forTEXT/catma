@@ -18110,6 +18110,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .tags-content {
 	background: white;
 	margin-left: 0px !important;
+	overflow: hidden !important;
 }
 
 .catma .tags-resource-panel {
@@ -18120,6 +18121,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .tags-slider {
 	margin-top: 30px;
 	height: 420px;
+}
+
+.catma .tags-view-tagset-grid-component {
+	height: 100%;
+	width: 100%;
 }
 
 .catma .v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {

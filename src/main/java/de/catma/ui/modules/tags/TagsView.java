@@ -3,7 +3,6 @@ package de.catma.ui.modules.tags;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -23,14 +22,12 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Grid.SelectionMode;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.StyleGenerator;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -40,11 +37,13 @@ import de.catma.rbac.RBACPermission;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
-import de.catma.ui.component.hugecard.HugeCardBar;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tagger.annotationpanel.AddEditPropertyDialog;
 import de.catma.ui.tagger.annotationpanel.AddParenttagDialog;
@@ -62,10 +61,9 @@ public class TagsView extends HugeCard {
 	private TreeData<TagsetTreeItem> tagsetData;
 	private TreeDataProvider<TagsetTreeItem> tagsetDataProvider;
 	private IDGenerator idGenerator = new IDGenerator();
-	private Collection<TagsetDefinition> tagsets = Collections.emptyList();
+	private Collection<TagsetDefinition> tagsets;
 	private TagResourcePanel resourcePanel;
 	private SliderPanel drawer;
-//	private HugeCardBar hugeCardBar;
 
 	public TagsView(EventBus eventBus, Repository project) {
 		super("Manage Tags");
@@ -74,18 +72,20 @@ public class TagsView extends HugeCard {
 		eventBus.register(this);
 		initComponents();
 		initActions();
+		this.tagsets = new ArrayList<>(resourcePanel.getSelectedTagsets());
+		initData();
 	}
 
 	private void initActions() {
 		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Tagsets")
 			.setSortable(false)
-			.setWidth(100);
+			.setWidth(200);
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
 			.setCaption("Tags")
 			.setSortable(false)
-			.setWidth(200));
+			.setWidth(300));
 		
 		ButtonRenderer<TagsetTreeItem> propertySummaryRenderer = 
 				new ButtonRenderer<>(rendererClickEvent -> handlePropertySummaryClickEvent(rendererClickEvent));
@@ -97,14 +97,14 @@ public class TagsView extends HugeCard {
 		.setCaption("Properties")
 		.setSortable(false)
 		.setHidable(true)
-		.setWidth(100);
+		.setWidth(300);
 		
 		tagsetGrid.addColumn(
 			tagsetTreeItem -> tagsetTreeItem.getPropertyValue())
 		.setCaption("Values")
 		.setSortable(false)
 		.setHidable(true)
-		.setWidth(100);
+		.setExpandRatio(1);
 		
 		tagsetGrid.setStyleGenerator(new StyleGenerator<TagsetTreeItem>() {
 			
@@ -157,6 +157,7 @@ public class TagsView extends HugeCard {
 		
 	    ContextMenu addContextMenu = 
 	    		tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
+	    addContextMenu.addItem("Add Tagset", clickEvent -> handleAddTagsetRequest());
 	    addContextMenu.addItem("Add Tag", clickEvent -> handleAddTagRequest());
 	    addContextMenu.addItem("Add Subtag", clickEvent -> handleAddSubtagRequest());
 	    addContextMenu.addItem("Add Property", clickEvent -> handleAddPropertyRequest());
@@ -168,7 +169,15 @@ public class TagsView extends HugeCard {
 		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
 		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
 		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
+		
+		resourcePanel.setTagsetSelectionListener(selectedTagsets -> {
+			tagsets.clear();
+			tagsets.addAll(selectedTagsets);
+			initData();
+		});
 	}
+
+
 
 	private void initComponents() {
         addStyleName("tags-view");
@@ -188,16 +197,16 @@ public class TagsView extends HugeCard {
                 tagsetsLabel,
                 tagsetGrid
         );
+        tagsetGridComponent.addStyleName("tags-view-tagset-grid-component");
         
 		resourcePanel = new TagResourcePanel(project); 
 		drawer = new SliderPanelBuilder(resourcePanel)
-				.mode(SliderMode.LEFT).expanded(false).zIndex(12000).style("tags-slider").build();
+				.mode(SliderMode.LEFT).expanded(false).style("tags-slider").build();
 		
 		addComponent(content);
 
         content.addComponent(drawer);
 		content.addComponent(tagsetGridComponent);
-		content.setExpandRatio(tagsetGridComponent, 1.0f);
 	}
 	
 	public void close() {
@@ -283,7 +292,29 @@ public class TagsView extends HugeCard {
 	}
 
 	private void handleDeleteTagsetRequest() {
-		// TODO this should go to the Tags module  
+		Collection<TagsetDefinition> selectedTagsets = 
+			tagsetGrid.getSelectedItems().stream()
+			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
+			.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
+			.collect(Collectors.toList());
+		if (selectedTagsets.isEmpty()) {
+			Notification.show("Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
+		}
+		else {
+			for (TagsetDefinition tagset : selectedTagsets) {
+				ConfirmDialog.show(
+					UI.getCurrent(), 
+					"Warning", 
+					String.format("Are you sure you want to delete Tagset %1$s and all related data?", tagset.getName()),
+					"Yes",
+					"Cancel",
+					dlg -> {
+						if (dlg.isConfirmed()) {
+							project.getTagManager().removeTagsetDefinition(tagset);
+						}
+					});
+			}
+		}
 	}
 
 	private void handleEditTagsetRequest() {
@@ -710,6 +741,24 @@ public class TagsView extends HugeCard {
     		}
     	}
 	}
+    
+	private void handleAddTagsetRequest() {
+    	SingleTextInputDialog tagsetNameDlg = 
+        		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+        				new SaveCancelListener<String>() {
+    						
+    						@Override
+    						public void savePressed(String result) {
+    							IDGenerator idGenerator = new IDGenerator();
+    							project.getTagManager().addTagsetDefinition(
+    								new TagsetDefinition(
+    									null, 
+    									idGenerator.generate(), result, new Version()));
+    						}
+    					});
+            	
+    	tagsetNameDlg.show();
+	}
 
 	private void addTags(
 			TagsetDataItem tagsetItem, 
@@ -736,7 +785,18 @@ public class TagsView extends HugeCard {
 	
 	public void setTagsets(
 			Collection<TagsetDefinition> tagsets) throws IOException {
-		this.tagsets = tagsets;
-		initData();
+		this.tagsets.clear();
+		this.tagsets.addAll(tagsets);
+        
+		tagsetData.clear();
+        for (TagsetDefinition tagset : tagsets) {
+        	TagsetDataItem tagsetItem = new TagsetDataItem(tagset);
+        	tagsetData.addItem(null, tagsetItem);
+        	addTags(tagsetItem, tagset);
+        }
+        tagsetDataProvider.refreshAll();
+        for (TagsetDefinition tagset : this.tagsets) {
+        	expandTagsetDefinition(tagset);
+        }
 	}	
 }

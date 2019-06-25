@@ -139,6 +139,7 @@ public class TagResourcePanel extends VerticalLayout {
 		
 		if (oldValue == null) { // creation
 			tagsetData.refreshAll();
+			tagsetGrid.select((TagsetDefinition)newValue);
 		}
 		else if (newValue == null) { // removal
 			tagsetData.refreshAll();
@@ -147,6 +148,14 @@ public class TagResourcePanel extends VerticalLayout {
 			TagsetDefinition tagset = (TagsetDefinition)newValue;
 			tagsetData.refreshItem(tagset);
 		}
+		
+		Collection<TagsetDefinition> selection = getSelectedTagsets();
+		tagsetGrid.deselectAll();
+		selection.forEach(tagset -> {
+			if (tagsetData.getItems().contains(tagset)) {
+				tagsetGrid.select(tagset);
+			}
+		});
 		
     	if (tagsetSelectionListener != null) {
     		tagsetSelectionListener.tagsetsSelected(getSelectedTagsets());
@@ -210,5 +219,9 @@ public class TagResourcePanel extends VerticalLayout {
         		tagsetChangeListener);
 		}
 		
+	}
+	
+	public void setTagsetSelectionListener(TagsetSelectionListener tagsetSelectionListener) {
+		this.tagsetSelectionListener = tagsetSelectionListener;
 	}
 }
