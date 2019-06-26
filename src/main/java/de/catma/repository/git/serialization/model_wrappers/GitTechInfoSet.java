@@ -42,7 +42,7 @@ public class GitTechInfoSet {
 	}
 
 	public String getCharset() {
-		return this.techInfoSet.getCharset().name();
+		return this.techInfoSet.getCharset() != null?this.techInfoSet.getCharset().name():null;
 	}
 
 	public void setCharset(String charsetName) {

@@ -3,6 +3,7 @@ package de.catma.repository.git;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 
 import com.google.common.collect.Maps;
 
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.SourceContentHandler;
@@ -145,6 +148,10 @@ public class GitSourceDocumentHandler {
 			File targetHeaderFile = new File(
 				localGitRepoManager.getRepositoryWorkTree(), "header.json"
 			);
+			sourceDocumentInfo.getTechInfoSet().setCharset(Charset.forName("UTF-8"));
+			sourceDocumentInfo.getTechInfoSet().setFileType(FileType.TEXT);
+			sourceDocumentInfo.getTechInfoSet().setFileOSType(FileOSType.getFileOSType(new String(bytes, "UTF-8")));
+			sourceDocumentInfo.getTechInfoSet().setMimeType("text/plain");
 			GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 			String serializedGitSourceDocumentInfo = new SerializationHelper<GitSourceDocumentInfo>()
 					.serialize(gitSourceDocumentInfo);

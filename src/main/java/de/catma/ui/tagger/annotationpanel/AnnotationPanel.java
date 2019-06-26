@@ -77,8 +77,8 @@ public class AnnotationPanel extends VerticalLayout {
 	private Button btAddCollection;
 	private TreeGrid<TagsetTreeItem> tagsetGrid;
 	private Repository project;
-	private Collection<TagsetDefinition> tagsets = Collections.emptyList();
-	private List<UserMarkupCollection> collections = Collections.emptyList();
+	private Collection<TagsetDefinition> tagsets = new ArrayList<>();
+	private List<UserMarkupCollection> collections = new ArrayList<>();
 	private TagReferenceSelectionChangeListener selectionListener;
 	private ActionGridComponent<TreeGrid<TagsetTreeItem>> tagsetGridComponent;
 	private TreeData<TagsetTreeItem> tagsetData;
@@ -101,9 +101,11 @@ public class AnnotationPanel extends VerticalLayout {
 		this.project = project;
 		this.collectionManager = collectionManager;
 		this.currentDocumentProvider = currentDocumentProvider;
+		this.tagsetData = new TreeData<TagsetTreeItem>();
 		initComponents(annotationSelectionListener);
 		initActions(collectionSelectionListener);
 		initListeners();
+		initData();
 	}
 
 	private void initListeners() {
@@ -256,7 +258,7 @@ public class AnnotationPanel extends VerticalLayout {
 
 	private void initData() {
         try {
-            tagsetData = new TreeData<TagsetTreeItem>();
+            tagsetData.clear();
             
             for (TagsetDefinition tagset : tagsets) {
             	TagsetDataItem tagsetItem = new TagsetDataItem(tagset);

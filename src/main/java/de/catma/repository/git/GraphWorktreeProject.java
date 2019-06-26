@@ -36,6 +36,7 @@ import de.catma.document.repository.event.CollectionChangeEvent;
 import de.catma.document.repository.event.DocumentChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -785,6 +786,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 					sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
 	
 				sourceDocument.unload();
+				StandardContentHandler contentHandler = new StandardContentHandler();
+				contentHandler.setSourceDocumentInfo(
+					sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
+				sourceDocument.setSourceContentHandler(contentHandler);
 				sourceDocument.setRevisionHash(sourceDocRevisionHash);
 			}
 			
