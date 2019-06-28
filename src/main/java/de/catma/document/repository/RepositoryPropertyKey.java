@@ -155,6 +155,15 @@ public enum RepositoryPropertyKey {
 		}
 	}
 	
+	public boolean isTrue(Properties properties, boolean defaultValue) {
+		if (properties.containsKey(this.name())) {
+			return isTrue(properties);
+		}
+		else {
+			return defaultValue;
+		}
+	}
+	
 	/**
 	 * @param properties the key/value store
 	 * @param index the index of this property
@@ -162,6 +171,10 @@ public enum RepositoryPropertyKey {
 	 */
 	public boolean isTrue(Properties properties, int index) {
 		return Boolean.parseBoolean(properties.getProperty(this.name()+index));
+	}
+
+	public boolean isTrue(Properties properties) {
+		return Boolean.parseBoolean(properties.getProperty(this.name()));
 	}
 	
 	/**
@@ -207,10 +220,6 @@ public enum RepositoryPropertyKey {
 
 	public int getValue(int defaultValue) {
 		return Integer.valueOf(RepositoryProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValue)));
-	}
-	
-	public boolean isTrueIndexed(int index, boolean defaultValue) {
-		return isTrue(RepositoryProperties.INSTANCE.getProperties(), index, defaultValue);
 	}
 
 	public boolean getValue(boolean defaultValue) {

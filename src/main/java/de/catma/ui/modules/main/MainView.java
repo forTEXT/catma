@@ -223,7 +223,7 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 	public void handleRouteToAnalyzeOld(RouteToAnalyzeOldEvent routeToAnalyzeEvent) {
 		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
 			if (this.analyzerManagerView == null) {
-				this.analyzerManagerView = new AnalyzerManagerViewOld();
+				this.analyzerManagerView = new AnalyzerManagerViewOld(eventBus);
 			}
 			
 			setContent(analyzerManagerView);

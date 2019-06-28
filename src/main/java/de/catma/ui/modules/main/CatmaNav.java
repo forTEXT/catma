@@ -128,7 +128,7 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	        addComponent(btProject);
 	        addComponent(btTags);
 	        addComponent(btAnnotate);
-	        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), 0, false)) {
+	        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), false)) {
 	        	addComponent(btAnalyzeOld);
 	        }
 	        addComponent(btAnalyze);
@@ -169,7 +169,7 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 
 	@Override
 	public void handleRouteToAnalyzeOld(RouteToAnalyzeOldEvent routeToAnalyzeEvent) {
-        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), 0, false)) {
+        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), false)) {
 			currentRoute = routeToAnalyzeEvent.getClass();
 			setSelectedStyle(btAnalyzeOld);
         }

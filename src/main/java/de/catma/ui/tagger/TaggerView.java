@@ -539,7 +539,7 @@ public class TaggerView extends HorizontalLayout
 		btAnalyzeOld.addStyleName(MaterialTheme.BUTTON_PRIMARY);
 		
 		btAnalyzeOld.setEnabled(project instanceof IndexedRepository);
-        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), 0, false)) {
+        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), false)) {
 
         	actionPanel.addComponent(btAnalyzeOld);
         }

@@ -20,6 +20,8 @@ package de.catma.ui.analyzer;
 
 import java.util.HashSet;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -31,15 +33,19 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.AnalyzerView.CloseListener;
 import de.catma.ui.tabbedview.TabbedView;
+import de.catma.ui.visualizer.vega.VegaEvent;
+import de.catma.ui.visualizer.vega.VegaView;
 
 public class AnalyzerManagerViewOld extends TabbedView {
 	
 	private Button btnAnalyzeCurrentOpenDoc;
+	private EventBus eventBus;
 	
 
-	public AnalyzerManagerViewOld(){
+	public AnalyzerManagerViewOld(EventBus eventBus){
 		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
-		
+		this.eventBus = eventBus;
+		eventBus.register(this);
 		initComponents();
 		initAnalyzerAction();	
 	}
@@ -55,6 +61,13 @@ public class AnalyzerManagerViewOld extends TabbedView {
 		
 	}
 	
+	@Subscribe
+	public void handleVegaRequest(VegaEvent vegaEvent) {
+		VegaView vegaView = new VegaView(vegaEvent.getQueryResult(), vegaEvent.getQueryOptionsProvider());
+		
+		addClosableTab(vegaView, vegaView.toString());
+		
+	}
 
 	private void initComponents() {
 		btnAnalyzeCurrentOpenDoc = new Button(Messages.getString("AnalyzerManagerView.analyzeCurrentlyOpenDocument")); //$NON-NLS-1$
@@ -95,5 +108,9 @@ public class AnalyzerManagerViewOld extends TabbedView {
 		}
 	}
 	
-
+	@Override
+	public void closeClosables() {
+		super.closeClosables();
+		eventBus.unregister(this);
+	}
 }

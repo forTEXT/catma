@@ -113,6 +113,7 @@ import de.catma.ui.repository.Messages;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.ui.util.Version;
+import de.catma.ui.visualizer.vega.VegaEvent;
 
 @Theme("catma")
 @PreserveOnRefresh
@@ -430,6 +431,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	}
 
 	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider) {
+		eventBus.post(new VegaEvent(queryResult, queryOptionsProvider));
 		//TODO:
 //		menu.executeEntry(visualizationManagerView);
 //		visualizationManagerView.addVega(queryResult, queryOptionsProvider);
