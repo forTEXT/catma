@@ -28,8 +28,6 @@ public default String getRemoveIcon() {
 	   return VaadinIcons.ERASER.getHtml();
 }
 
-
-
 public  String getArrowIcon();
 
 }

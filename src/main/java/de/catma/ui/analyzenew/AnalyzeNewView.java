@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,10 +21,16 @@ import org.vaadin.sliderpanel.client.SliderMode;
 import com.github.appreciated.material.MaterialTheme;
 
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.event.ShortcutListener;
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComboBox.NewItemHandler;
+//import com.vaadin.ui.ComboBox.NewItemHandler;
+import com.vaadin.ui.ComboBox.NewItemProvider;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Label;
@@ -33,6 +40,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Button.ClickShortcut;
 import com.vaadin.ui.Notification.Type;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
@@ -66,8 +74,7 @@ import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
 
 public class AnalyzeNewView extends HorizontalLayout
-		implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider,
-		TagKwicResultsProvider, HasComponents {
+		implements ClosableTab, TabComponent, HasComponents {
 
 	public static interface CloseListenerNew {
 		public void closeRequest(AnalyzeNewView analyzeNewView);
@@ -79,6 +86,7 @@ public class AnalyzeNewView extends HorizontalLayout
 	private List<String> relevantSourceDocumentIDs;
 	private List<String> relevantUserMarkupCollIDs;
 	private List<String> relevantStaticMarkupCollIDs;
+	private List<String> predefQueries;
 	private IndexInfoSet indexInfoSet;
 	private Button btExecuteSearch;
 	private Button btQueryBuilder;
@@ -93,13 +101,17 @@ public class AnalyzeNewView extends HorizontalLayout
 	private HorizontalLayout resultAndMinMaxVizHorizontal;
 	private VerticalLayout resultsPanel;
 	private VerticalLayout minMaxPanel;
+	private VerticalLayout searchPanel;
+	private HorizontalLayout labelLayout;
 	private VerticalLayout contentPanel;
+	private HorizontalLayout searchRow;
 	private HorizontalLayout searchAndVisIconsHorizontal;
-	private Component searchPanel;
+
 	private Component visIconsPanel;
 	private ResourcePanelAnalyze resourcePanelAnalyze;
 	private SliderPanel drawer;
 	private QueryOptions queryOptions;
+	private boolean newItem= false;
 
 	public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener)
 			throws Exception {
@@ -119,20 +131,19 @@ public class AnalyzeNewView extends HorizontalLayout
 		initComponents();
 		initListeners();
 		initActions();
+		addClickshortCuts();
 	}
 
 	private void initComponents() throws Exception {
-
 		addRelevantResources();
-		searchInput = new String();
-		searchPanel = createSearchPanel();
+		searchInput = "";
+		searchPanel = (VerticalLayout) createSearchPanel();
 		searchPanel.addStyleName("analyze_search_icon_bar");
 
 		visIconsPanel = createVisIconsPanel();
 		visIconsPanel.addStyleName("analyze_search_icon_bar");
 
 		searchAndVisIconsHorizontal = new HorizontalLayout();
-
 		searchAndVisIconsHorizontal.addStyleName("analyze_bar");
 		searchAndVisIconsHorizontal.addComponents(searchPanel, visIconsPanel);
 
@@ -147,7 +158,6 @@ public class AnalyzeNewView extends HorizontalLayout
 		resultAndMinMaxVizHorizontal.addComponents(resultsPanel, minMaxPanel);
 
 		contentPanel = new VerticalLayout();
-
 		contentPanel.addComponent(searchAndVisIconsHorizontal);
 		contentPanel.addComponent(resultAndMinMaxVizHorizontal);
 		contentPanel.addStyleName("analyze_content");
@@ -156,20 +166,16 @@ public class AnalyzeNewView extends HorizontalLayout
 		
 		resourcePanelAnalyze = new ResourcePanelAnalyze(this.repository, this.corpus); 
 		
-		 drawer = new SliderPanelBuilder(resourcePanelAnalyze)
+		drawer = new SliderPanelBuilder(resourcePanelAnalyze)
 				.mode(SliderMode.LEFT).expanded(false).build();
-		
-		//resourcePanelAnalyze.addStyleName("analyze_resourcePanel");
 		drawer.addStyleName("analyze_resourcePanel");
 		
 		addComponent(drawer);
-		
 		addComponent(contentPanel);
 	}
 	
-	private Component createSearchPanel() {
-		
-		VerticalLayout searchPanel = new VerticalLayout();
+	private Component createSearchPanel() {	
+		searchPanel = new VerticalLayout();
 		searchPanel.setAlignContent(AlignContent.CENTER);
 
 		Label searchPanelLabel = new Label("Queries");
@@ -177,40 +183,33 @@ public class AnalyzeNewView extends HorizontalLayout
 
 		optionsBt = new Button("", VaadinIcons.ELLIPSIS_DOTS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-
-		HorizontalLayout labelLayout = new HorizontalLayout(searchPanelLabel, optionsBt);
-
 		optionsBt.addStyleName("analyze_options_bt");
+
+	    labelLayout = new HorizontalLayout(searchPanelLabel, optionsBt);
 		labelLayout.addStyleName("analyze_label_layout");
 
-		HorizontalLayout searchRow = new HorizontalLayout();
-
 		btQueryBuilder = new Button(" + BUILD QUERY");
-
 		btQueryBuilder.addStyleName("analyze_querybuilder_bt");
 
-		List<String> predefQueries = new ArrayList<>();
-
+		predefQueries = new ArrayList<>();
 		predefQueries.add("property= \"%\"");
 		predefQueries.add("tag=\"%\"");
-		predefQueries.add("tag= \"Tag1\"");
-		predefQueries.add("wild= \"und\"");
 		predefQueries.add("wild= \"Blumen%\",tag=\"%\"");
-		predefQueries.add("wild= \"%\"");
 		predefQueries.add("wild= \"%\"");
 		predefQueries.add("freq>0");
 
 		queryComboBox = new ComboBox<>();
-		queryComboBox.setItems(predefQueries);
+		queryComboBox.setDataProvider(new ListDataProvider<>(predefQueries));
 		queryComboBox.addStyleName("analyze_query_comobobox");
-		queryComboBox.setPlaceholder("Select or enter a free query");
+		queryComboBox.setEmptySelectionCaption("Select or enter a free query");
 
-		btExecuteSearch = new Button("SEARCH", VaadinIcons.SEARCH);
-
+		btExecuteSearch = new Button("SEARCH", VaadinIcons.SEARCH);	
 		btExecuteSearch.setStyleName("analyze_search_bt");
-
+	
+		searchRow = new HorizontalLayout();
 		searchRow.addComponents(btQueryBuilder, queryComboBox);
 		searchRow.addStyleName("analyze_search_row");
+		
 		VerticalLayout searchVerticalLayout = new VerticalLayout(searchRow, btExecuteSearch);
 		searchVerticalLayout.addStyleName("analyze_search");
 
@@ -218,8 +217,7 @@ public class AnalyzeNewView extends HorizontalLayout
 		return searchPanel;
 	}
 
-	private Component createVisIconsPanel() {
-		
+	private Component createVisIconsPanel() {		
 		VerticalLayout visIconsPanel = new VerticalLayout();
 		visIconsPanel.setAlignContent(AlignContent.CENTER);
 		Label visIconsLabel = new Label("Visualisations");
@@ -269,46 +267,29 @@ public class AnalyzeNewView extends HorizontalLayout
 		return visIconsPanel;
 	}
 	
-	private void setContent(Component component) {
-		
+	private void setContent(Component component) {	
 		removeAllComponents();		
 		addComponent(component);	
 		component.setHeight("100%");
 		component.setWidth("100%");
-
 	}
 	
 	private void setResourcesSlider() {
 		addComponentAsFirst(drawer);
-		
 	}
-
-	private void initListeners() {
-
-		queryComboBox.addValueChangeListener(event -> {
-			if (event.getSource().isEmpty()) {
-				Notification.show("Error", "query field is empty", Notification.Type.HUMANIZED_MESSAGE);
-			} else {
-				String predefQueryString = event.getSource().getValue();
-				searchInput = predefQueryString;
-			}
-		});
-
-		queryComboBox.setNewItemHandler(new NewItemHandler() {
-			@Override
-			public void accept(String t) {
-				searchInput = t;
-			}
-		});
-
-	}
-
+	
 	private void initActions() {
+		
 		btExecuteSearch.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
-				searchInput.toString();
-				executeSearch();
+				if(newItem) {
+					queryComboBox.setValue(searchInput);
+					executeSearch();			
+				}else {
+					searchInput= queryComboBox.getValue();	
+					executeSearch();	
+				}			
 			}
 		});
 
@@ -330,8 +311,7 @@ public class AnalyzeNewView extends HorizontalLayout
 					public void onClose() {
 						
 						setContent(contentPanel);
-						setResourcesSlider();
-						
+						setResourcesSlider();		
 					}
 				});
 
@@ -345,14 +325,12 @@ public class AnalyzeNewView extends HorizontalLayout
 			public void updateQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
 				updateCorpusAndQueryOptions(treeGrid);
 				
-			}
-		
+			}		
 		});
 	}
 	
 
-	private void addRelevantResources() throws Exception {
-		
+	private void addRelevantResources() throws Exception {		
 		this.queryOptions.getRelevantSourceDocumentIDs().clear();
 		this.queryOptions.getRelevantUserMarkupCollIDs().clear();
 		this.indexInfoSet = new IndexInfoSet();
@@ -370,7 +348,47 @@ public class AnalyzeNewView extends HorizontalLayout
 
 	}
 
+	private void initListeners() {
+
+		
+		queryComboBox.setNewItemHandler(new NewItemHandler() {
+			public void accept(String t) {
+				newItem = true;
+			searchInput = t;
+			btExecuteSearch.click();
+			
+			}
+		});
+		
+
+		
+/*	 this newItemProvider provider ,even though is the newer one  is triggered too late...
+		queryComboBox.setNewItemProvider(inputString -> {
+
+			searchInput= inputString;
+			queryComboBox.setValue(inputString);
+		
+		    return Optional.of(inputString);
+		
+		});*/
+		
+/* 	
+ 	queryComboBox.addShortcutListener(new ShortcutListener() {
+			
+			@Override
+			public void handleAction(Object sender, Object target) {
+				// TODO Auto-generated method stub
+				
+			}
+		});*/
+
+	}
+
+
+
 	private void executeSearch() {
+	
+		newItem= false;
 
 		QueryJob job = new QueryJob(searchInput.toString(), queryOptions);
 
@@ -480,7 +498,6 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 	
 	private void updateCorpusAndQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
-
 		this.corpus = new Corpus("new Corpus");
 
 		Set<DocumentTreeItem> selecteItems = treeGrid.getSelectedItems();
@@ -494,47 +511,24 @@ public class AnalyzeNewView extends HorizontalLayout
 			if (documentTreeItem.getClass()==CollectionDataItem.class) {
 				CollectionDataItem collectionDataItem = (CollectionDataItem) documentTreeItem;
 				this.corpus.addUserMarkupCollectionReference(collectionDataItem.getCollectionRef());
-
 			}
-
 		}
-		
 		try {
 			addRelevantResources();
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "error  updating query options", e); 
 			e.printStackTrace();
-		}
-		
+		}	
 	}
 
 
-	@Override
-	public void tagResults() {
-		
-	}
-
-	@Override
-	public List<String> getRelevantUserMarkupCollectionIDs() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Corpus getCorpus() {
 		return corpus;
 	}
 
 	@Override
-	public void resultsSelected(GroupedQueryResultSet groupedQueryResultSet) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void addClickshortCuts() {
-		// TODO Auto-generated method stub
-
+		btExecuteSearch.setClickShortcut(KeyCode.ENTER);	
 	}
 
 	@Override

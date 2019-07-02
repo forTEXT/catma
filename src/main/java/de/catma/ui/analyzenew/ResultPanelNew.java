@@ -135,14 +135,11 @@ public class ResultPanelNew extends Panel {
 
 		if (currentView == ViewID.property) {
 			setDataPropertyStyle();
-			//setCurrentView(ViewID.property);
 			treeGridPanel.setContent(treeGridProperty);
 			
 			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
 					switchToPhraseView();
-					//setCurrentView(ViewID.phraseProperty);
-					//treeGridPanel.setContent(treeGridPhrase);
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -189,14 +186,12 @@ public class ResultPanelNew extends Panel {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-			});
-			
+			});	
 		}
 		
 		if (currentView == ViewID.mixedPropertyPhrase) {
 			setDataPropertyStyle();
 			currentView = ViewID.property;
-
 			treeGridPanel.setContent(treeGridProperty);
 			
 			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
@@ -216,8 +211,7 @@ public class ResultPanelNew extends Panel {
 				}
 			});
 			optionsMenu.addItem("Switch to Tag/Property View", e -> {
-				try {
-				
+				try {	
 					switchToPropertyView();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
@@ -286,13 +280,10 @@ public class ResultPanelNew extends Panel {
 		groupedIcons.addComponents(trashBt, optionsBt, caretRightBt);
 		groupedIcons.addStyleName("analyze_queryresultpanel_buttonbar");
 		contentVerticalLayout.addComponent(groupedIcons);
-
 	}
 
 	private void initListeners() {
-
 		caretRightBt.addClickListener(new ClickListener() {
-
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.addComponent(treeGridPanel);
 				groupedIcons.replaceComponent(caretRightBt, caretDownBt);
@@ -301,7 +292,6 @@ public class ResultPanelNew extends Panel {
 		});
 
 		caretDownBt.addClickListener(new ClickListener() {
-
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.removeComponent(treeGridPanel);
 				groupedIcons.replaceComponent(caretDownBt, caretRightBt);
@@ -310,9 +300,7 @@ public class ResultPanelNew extends Panel {
 		
 		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
 
-
 		trashBt.addClickListener(new ClickListener() {
-
 			public void buttonClick(ClickEvent event) {
 				resultPanelCloseListener.closeRequest(ResultPanelNew.this);
 			}
@@ -379,9 +367,8 @@ public class ResultPanelNew extends Panel {
 	
 	private void detectViewFromQueryResult(QueryResult queryResult) {
 		ViewID Viewid = null;
-
 		for (QueryResultRow queryResultRow : queryResult) {
-
+			
 			if (queryResultRow instanceof TagQueryResultRow) {
 
 				tagBased = true;
@@ -394,26 +381,21 @@ public class ResultPanelNew extends Panel {
 					Viewid = ViewID.property;
 				}
 			}
-
 			if (!(queryResultRow instanceof TagQueryResultRow)) {
 				phraseBased = true;
 				Viewid = ViewID.phrase;
 			}
 		}
-
 		if (tagBased && phraseBased) {
 			Viewid = ViewID.mixedTagPhrase;
-		}
-		
+		}		
 		if (propertyBased && phraseBased) {
 			Viewid = ViewID.mixedPropertyPhrase;
 		}
-
 		currentView = Viewid;
 	}
 
 	private void setDataTagStyle() throws Exception {
-
 		tagData = new TreeData<>();
 		tagData = populateTreeDataWithTags(repository, tagData, queryResult);
 		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(tagData);
@@ -433,11 +415,9 @@ public class ResultPanelNew extends Panel {
 		treeGridPanel.setContent(treeGridTag);
 
 		setDataPhraseStyle();
-
 	}
 
 	private void setDataPhraseStyle() {
-
 		phraseData = new TreeData<>();
 
 		Set<GroupedQueryResult> resultAsSet = queryResult.asGroupedSet();
@@ -465,16 +445,12 @@ public class ResultPanelNew extends Panel {
 					String docName = repository.getSourceDocument(docID).toString();
 					docItem.setTreeKey(docName);
 				} catch (Exception e) {
-
 					e.printStackTrace();
 				}
-
 				docItem.setRows(transformGroupedResultToArray(oneDocGroupedQueryResult));
 				allDocuments.add(docItem);
 			}
-
 			phraseData.addItems(rootPhrase, allDocuments);
-
 		}
 
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
@@ -488,11 +464,9 @@ public class ResultPanelNew extends Panel {
 		treeGridPhrase.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
 		treeGridPhrase.setWidth("100%");
-
 	}
 
 	private void setDataPropertyStyle() throws Exception {
-
 		propData = new TreeData<>();
 		propData = populateTreeDataWithProperties(repository, propData, queryResult); // TODO !!!!!!
 
@@ -518,7 +492,6 @@ public class ResultPanelNew extends Panel {
 		treeGridPanel.setContent(treeGridProperty);
 		setDataFlatTableStyle();
 		setDataPhraseStyle();
-
 	}
 	
 	private void setDataFlatTableStyle() {
@@ -543,7 +516,6 @@ public class ResultPanelNew extends Panel {
 		ArrayList<TreeRowItem> flatTableList = new ArrayList<>();
 		QueryResultRowArray qrra = queryResult.asQueryResultRowArray();
 
-		
 		for (QueryResultRow queryResultRow : qrra) {
 			if(queryResultRow instanceof TagQueryResultRow) {
 				TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
@@ -559,19 +531,12 @@ public class ResultPanelNew extends Panel {
 				propItem.setQueryResultRowArray(queryResultRowArray);
 				flatTableList.add((TreeRowItem) propItem);
 				if (!propDataFlat.contains(propItem))
-					propDataFlat.addItem(null, propItem);
-				
-			}else {
-				
+					propDataFlat.addItem(null, propItem);				
+			}else {			
 			}
-			
-	
-		}
-		
+		}	
 		propFlatDataProvider.refreshAll();
 		treeGridPropertyFlatTable.setDataProvider(propFlatDataProvider);
-		//treeGridPanel.setContent(treeGridPropertyFlatTable);
-
 	}
 
 	private TreeData<TreeRowItem> populateTreeDataWithTags(Repository repository, TreeData<TreeRowItem> treeData,
@@ -690,13 +655,12 @@ public class ResultPanelNew extends Panel {
 			queryResultRowArray.add(queryResultRow);
 		}
 		return queryResultRowArray;
-
 	}
 
 	private TreeData<TreeRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
+		
 		TreeData<TreeRowItem> data = populateTreeDataWithTags(repository, treeData, queryResult);
-
 		return data;
 	}
 		
@@ -706,18 +670,19 @@ public class ResultPanelNew extends Panel {
 	
 	private void switchToPhraseView() {
 		setCurrentView(ViewID.phrase);
-		treeGridPanel.setContent(treeGridPhrase);
-		
+		treeGridPanel.setContent(treeGridPhrase);	
 	}
+	
 	private void switchToTagView() {
 		setCurrentView(ViewID.tag);
-		treeGridPanel.setContent(treeGridTag);
-		
+		treeGridPanel.setContent(treeGridTag);	
 	}
+	
 	private void switchToFlatTableView() {
 		setCurrentView(ViewID.flatTableProperty);
 		treeGridPanel.setContent(treeGridPropertyFlatTable);		
 	}
+	
 	private void switchToPropertyView() {
 		setCurrentView(ViewID.property);
 		treeGridPanel.setContent(treeGridProperty);		

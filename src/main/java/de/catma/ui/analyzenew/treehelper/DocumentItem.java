@@ -6,13 +6,13 @@ import de.catma.queryengine.result.QueryResultRowArray;
 
 public class DocumentItem implements TreeRowItem {
 
+	static final String HORIZONTAL_ELLIPSIS = "\u2026";
+	static final int MAX_VALUE_LENGTH = 10;
+	static final int maxLength = 50;
 	public QueryResultRowArray queryResultRowArray;
 	public String treeKey;
 	public ArrayList<TreeRowItem> singleItemsArray;
 	public boolean unfold = false;
-	static final String HORIZONTAL_ELLIPSIS = "\u2026";
-	static final int MAX_VALUE_LENGTH = 10;
-	static final int maxLength = 50;
 
 	public String getTreeKey() {
 		return treeKey;

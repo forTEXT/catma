@@ -19,9 +19,6 @@ public class KwicItem {
 		
 	}
 
-	
-	
-	
 	public String getSourceDocOrMarkupCollectionDisplay() {
 		return sourceDocOrMarkupCollectionDisplay;
 	}
@@ -87,21 +84,12 @@ public class KwicItem {
 	public void setRangeEndPoint(int rangeEndPoint) {
 		this.rangeEndPoint = rangeEndPoint;
 	}
-
-
-
-
 	public String getDocCollection() {
 		return docCollection;
 	}
-
-
-
-
 	public void setDocCollection(String docCollection) {
 		this.docCollection = docCollection;
 	}
-	
 	private String shorten(String toShortenValue, int maxLength) {
 		if (toShortenValue.length() <= maxLength) {
 			return toShortenValue;

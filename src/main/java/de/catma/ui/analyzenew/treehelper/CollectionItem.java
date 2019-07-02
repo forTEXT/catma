@@ -53,8 +53,6 @@ public class CollectionItem implements TreeRowItem {
 		}
 	}
 
-
-
 	public String getArrowIcon() {
 		return null;
 	}

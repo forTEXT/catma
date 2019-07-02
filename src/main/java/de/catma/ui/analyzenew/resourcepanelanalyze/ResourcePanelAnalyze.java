@@ -94,9 +94,7 @@ import de.catma.ui.modules.main.ErrorHandler;
 			errorHandler.showAndLogError("Error loading data!", e);
 		}
 	}
-
 		
-
 
 		private void initComponents() {
 			addStyleName("annotate-resource-panel");
@@ -104,8 +102,6 @@ import de.catma.ui.modules.main.ErrorHandler;
 
 			documentTree = new TreeGrid<>();
 			documentTree.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
-		    //sdocumentTree.setSelectionMode(SelectionMode.MULTI);
-			
 			
 			documentTree
 				.addColumn(documentTreeItem -> documentTreeItem.getName())
@@ -128,7 +124,6 @@ import de.catma.ui.modules.main.ErrorHandler;
 			
 
 		}
-
 
 		private void initListeners() {	
 			documentTree.addSelectionListener(new SelectionListener<DocumentTreeItem>() {

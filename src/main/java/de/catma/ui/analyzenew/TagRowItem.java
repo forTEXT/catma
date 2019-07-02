@@ -30,111 +30,121 @@ public class TagRowItem {
 	private String phrase;
 
 	
-	public TagRowItem() {
-		
+	public TagRowItem() {		
 	}
+	
 	public String getTagID() {
 		return tagID;
 	}
+	
 	public void setTagID(String tagID) {
 		this.tagID = tagID;
 	}
+	
 	public String getSourceDocumentID() {
 		return sourceDocumentID;
 	}
+	
 	public void setSourceDocumentID(String sourceDocumentID) {
 		this.sourceDocumentID = sourceDocumentID;
 	}
+	
 	public String getSourceDocName() {
 		return sourceDocName;
 	}
+	
 	public void setSourceDocName(String sourceDocName) {
 		this.sourceDocName = sourceDocName;
 	}
+	
 	public String getCollectionID() {
 		return collectionID;
 	}
+	
 	public void setCollectionID(String collectionID) {
 		this.collectionID = collectionID;
 	}
+	
 	public String getTagInstanceID() {
 		return tagInstanceID;
 	}
+	
 	public void setTagInstanceID(String tagInstanceID) {
 		this.tagInstanceID = tagInstanceID;
 	}
+	
 	public String getTagDefinitionID() {
 		return tagDefinitionID;
 	}
+	
 	public void setTagDefinitionID(String tagDefinitionID) {
 		this.tagDefinitionID = tagDefinitionID;
-	}	
+	}
+	
 	public String getTagDefinitionPath() {
 		return tagDefinitionPath;
 	}
+	
 	public void setTagDefinitionPath(String tagDefinitionPath) {
 		this.tagDefinitionPath = tagDefinitionPath;
 	}
 
-	public UUID getUuid() {
-		return uuid;
-	}
-	public void setUuid(UUID uuid) {
-		this.uuid = uuid;
-	}
 	public Integer getFrequency() {
 		return frequency;
 	}
+	
 	public void setFrequency(int frequency) {	
 		this.frequency = new Integer(frequency);
 	}
+	
 	public String getCollectionName() {
 		return collectionName;
 	}
+	
 	public void setCollectionName(String collectionName) {
 		this.collectionName = collectionName;
 	}
+	
 	public String getTreePath() {
 		return treePath;
 	}
+	
 	public void setTreePath(String treePath) {
 		this.treePath = treePath;
 	}
-	public boolean setFrequencyOneUp() {
-		if(frequency==null) {
-			frequency= new Integer(1);	
-		}else {
-			frequency=frequency.intValue()+1;
-		}
-		return true;
-	}
-
+	
 	public String getPropertyName() {
 		return propertyName;
 	}
+	
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
 	}
+	
 	public Object getPropertyValue() {
 		return propertyValue;
 	}
+	
 	public void setPropertyValue(Object propertyValue) {
 		this.propertyValue = propertyValue;
 	}
+	
 	public QueryResultRow getQueryResultRow() {
 		return queryResultRow;
 	}
+	
 	public void setQueryResultRow(QueryResultRow queryResultRow) {
 		this.queryResultRow = queryResultRow;
 	}
+	
 	public String getPhrase() {
 		return phrase;
 	}
+	
 	public void setPhrase(String phrase) {
 		this.phrase = 	shorten(phrase, 50);
 	}
-	
-	
+		
 	public String getShortenTreePath(){
 		return shorten(this.treePath,26);
 	}
@@ -148,7 +158,6 @@ public class TagRowItem {
 				+"["+HORIZONTAL_ELLIPSIS+"]"
 				+ toShortenValue.substring(toShortenValue.length()-((maxLength/2)-2), toShortenValue.length());
 	}
-   
    
    public String getSelectIcon() {
 	   return VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml();
