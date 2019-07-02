@@ -1,43 +1,60 @@
-package de.catma.ui.analyzenew.treehelper;
+package de.catma.ui.analyzenew.treegridhelper;
 
 import java.util.ArrayList;
-import com.vaadin.icons.VaadinIcons;
+import java.util.Iterator;
+
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class DocumentItem implements TreeRowItem {
+public class CollectionItem implements TreeRowItem {
 
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;
-	public QueryResultRowArray queryResultRowArray;
-	public String treeKey;
-	public ArrayList<TreeRowItem> singleItemsArray;
-	public boolean unfold = false;
+	private String treeKey;
+	private QueryResultRowArray queryResultRowArray;
+	private ArrayList<TreeRowItem> singleItemsArray;
 
-	public String getTreeKey() {
-		return treeKey;
+	public CollectionItem() {
 	}
 
-	public void setTreeKey(String documentID) {
-		this.treeKey = documentID;
+	public String getTreeKey() {
+		return this.treeKey;
+	}
+
+	public void setTreeKey(String treeKey) {
+		this.treeKey = treeKey;
 	}
 
 	public int getFrequency() {
-		return queryResultRowArray.size();
-
+		return queryResultRowArray.getTotalFrequency();
 	}
 
 	public QueryResultRowArray getRows() {
-		return this.queryResultRowArray;
+		return queryResultRowArray;
 	}
 
-	public void setRows(QueryResultRowArray queryResultRowArray) {
-		this.queryResultRowArray = queryResultRowArray;
+	public void setRows(QueryResultRowArray resultArray) {
+		this.queryResultRowArray = resultArray;
 	}
 
+	public void setRowsAsArray(QueryResultRowArray queryResultArray) {
+
+		Iterator<QueryResultRow> resultIterator = queryResultArray.iterator();
+		ArrayList<QueryResultRow> rowList = new ArrayList<>();
+		singleItemsArray = new ArrayList<TreeRowItem>();
+
+		while (resultIterator.hasNext()) {
+			QueryResultRow queryResultRow = (QueryResultRow) resultIterator.next();
+			rowList.add(queryResultRow);
+			SingleItem item = new SingleItem();
+			item.setTreeKey(queryResultRow.getPhrase());
+			singleItemsArray.add(item);
+		}
+	}
 
 	public String getArrowIcon() {
-		return unfold ? VaadinIcons.CARET_DOWN.getHtml() : VaadinIcons.CARET_RIGHT.getHtml();
+		return null;
 	}
 
 	public String getShortenTreeKey() {
@@ -50,15 +67,6 @@ public class DocumentItem implements TreeRowItem {
 		}
 		return toShortenValue.substring(0, maxLength / 2) + "[" + HORIZONTAL_ELLIPSIS + "]"
 				+ toShortenValue.substring(toShortenValue.length() - ((maxLength / 2) - 2), toShortenValue.length());
-	}
-
-	public void setUnfold(boolean unfold) {
-		this.unfold = unfold;
-
-	}
-
-	public boolean isUnfold() {
-		return this.unfold;
 	}
 
 	@Override

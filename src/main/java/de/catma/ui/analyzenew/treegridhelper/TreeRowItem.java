@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew.treehelper;
+package de.catma.ui.analyzenew.treegridhelper;
 
 import com.vaadin.icons.VaadinIcons;
 

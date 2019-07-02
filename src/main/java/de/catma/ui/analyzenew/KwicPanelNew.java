@@ -35,7 +35,6 @@ public class KwicPanelNew extends VerticalLayout {
 		initComponents();
 		initActions();
 		setHeight("100%");
-
 	}
 
 	public KwicPanelNew(Repository repository,
@@ -54,24 +53,13 @@ public class KwicPanelNew extends VerticalLayout {
 	}
 
 	private void initActions() {
-
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		moreOptionsMenu.addItem("Annotate all selected rows", clickEvent -> handleAnnotateAllRequest());
 		moreOptionsMenu.addItem("Annotate single row", clickEvent -> handleAnnotateSingleRequest());
-
 		kwicGridComponent.getActionGridBar().getBtnSearchContextMenu();
 	}
 
-	private void handleAnnotateAllRequest() {
-
-	}
-
-	private void handleAnnotateSingleRequest() {
-
-	}
-
 	private void initComponents() {
-
 		kwicGrid = new Grid<KwicItem>();
 		kwicItemList = new ArrayList<>();
 
@@ -95,16 +83,13 @@ public class KwicPanelNew extends VerticalLayout {
 
 		kwicGridComponent = new ActionGridComponent<>(new Label("key word in context visualization"), kwicGrid);
 		addComponent(kwicGridComponent);
-
 	}
 
 	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
-
 		if (kwicGrid.getColumn("propValueID") != null) {
 			kwicGrid.removeColumn("propValueID");
 			kwicGrid.removeColumn("propNameID");
 		}
-
 		HashMap<String, KwicProvider> kwicProviders = new HashMap<String, KwicProvider>();
 		kwicItemList.removeAll(kwicItemList);
 
@@ -112,7 +97,6 @@ public class KwicPanelNew extends VerticalLayout {
 		boolean markupBased = true;
 
 		for (QueryResultRow row : queryResult) {
-
 			SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
 
 			if (!kwicProviders.containsKey(sourceDocument.getID())) {
@@ -129,15 +113,14 @@ public class KwicPanelNew extends VerticalLayout {
 			}
 
 			itemDirCache.put(row, kwic.isRightToLeft());
-
 			KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic, showPropertyColumns);
-
 			kwicItemList.add(kwicItem);
 		}
 		if (showPropertyColumns) {
 			kwicGrid.addColumn(KwicItem::getPropertyName).setCaption("Property Name").setId("propNameID");
 			kwicGrid.addColumn(KwicItem::getPropertyValue).setCaption("Property Value").setId("propValueID");
 		}
+		
 		kwicGrid.setItems(kwicItemList);
 	}
 
@@ -166,11 +149,8 @@ public class KwicPanelNew extends VerticalLayout {
 				kwicItem.setPropertyName(tagQueryResultRow.getPropertyName());
 				kwicItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
 			}
-
 			return kwicItem;
-
 		} else {
-
 			String sourceDocName = repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString();
 
 			kwicItem.setDocCollection(sourceDocName);
@@ -179,9 +159,15 @@ public class KwicPanelNew extends VerticalLayout {
 			kwicItem.setForewardContext(kwic.getForwardContext());
 			kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
 			kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
-
 			return kwicItem;
 		}
+	}
+	
+	private void handleAnnotateAllRequest() {
+
+	}
+
+	private void handleAnnotateSingleRequest() {
 
 	}
 }

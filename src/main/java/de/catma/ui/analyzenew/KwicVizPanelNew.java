@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProviderListener;
@@ -20,18 +18,15 @@ import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.themes.ValoTheme;
-
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
-//import com.vaadin.ui.VerticalLayout;
-//import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.renderers.ButtonRenderer;
-
 import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.document.Range;
@@ -42,30 +37,28 @@ import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzenew.treehelper.CollectionItem;
-import de.catma.ui.analyzenew.treehelper.DocumentItem;
-import de.catma.ui.analyzenew.treehelper.QueryRootItem;
-import de.catma.ui.analyzenew.treehelper.RootItem;
-import de.catma.ui.analyzenew.treehelper.SingleItem;
-import de.catma.ui.analyzenew.treehelper.TreeRowItem;
+import de.catma.ui.analyzenew.treegridhelper.CollectionItem;
+import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
+import de.catma.ui.analyzenew.treegridhelper.QueryRootItem;
+import de.catma.ui.analyzenew.treegridhelper.RootItem;
+import de.catma.ui.analyzenew.treegridhelper.SingleItem;
+import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 
-public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
+public class KwicVizPanelNew extends VerticalLayout implements VisualisationResources {
 
 	private Repository repository;
 	private HorizontalLayout headerButtonBar;
+	private VerticalLayout frameLayout;
+	private VerticalLayout leftSide;
 	private HorizontalSplitPanel mainContentSplitPanel;
-	private Panel selectedItemsPanel;
 	private CloseVizViewListener leaveViewListener;
 	private Label visualisationName;
 	private Button optionsBt;
 	private Button arrowLeftBt;
 	private ComboBox<String> comboBox;
 	private List<String> availableResultSets;
-	private VerticalLayout frameLayout;
-	private VerticalLayout leftSide;
+	private Panel selectedItemsPanel;
 	private Panel queryResultsPanel;
 	private Panel rightSide;
 	private ArrayList<CurrentTreeGridData> currentTreeGridDatas;
@@ -225,12 +218,12 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		selectedDataProvider.addDataProviderListener(new DataProviderListener<TreeRowItem>() {
 			@Override
 			public void onDataChange(DataChangeEvent<TreeRowItem> event) {
-				updateKwicView();
+				updateVisualisation();
 			}
 		});
 	}
 
-	private void updateKwicView() {
+	public  void updateVisualisation() {
 		ArrayList<QueryResultRow> queryResult = createQueryResultFromTreeGridData();
 		try {
 			kwicNew.addQueryResultRows(queryResult);
@@ -1161,10 +1154,5 @@ public class KwicVizPanelNew extends VerticalLayout implements VizPanel {
 		
 	}
 
-	@Override
-	public void setQueryResults() {
-		// TODO Auto-generated method stub
-
-	}
 
 }

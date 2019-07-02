@@ -40,11 +40,11 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzenew.treehelper.CollectionItem;
-import de.catma.ui.analyzenew.treehelper.DocumentItem;
-import de.catma.ui.analyzenew.treehelper.RootItem;
-import de.catma.ui.analyzenew.treehelper.SingleItem;
-import de.catma.ui.analyzenew.treehelper.TreeRowItem;
+import de.catma.ui.analyzenew.treegridhelper.CollectionItem;
+import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
+import de.catma.ui.analyzenew.treegridhelper.RootItem;
+import de.catma.ui.analyzenew.treegridhelper.SingleItem;
+import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
 

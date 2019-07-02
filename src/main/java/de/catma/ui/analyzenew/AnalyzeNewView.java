@@ -61,7 +61,7 @@ import de.catma.ui.analyzenew.resourcepanelanalyze.CollectionDataItem;
 import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentTreeItem;
 import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentDataItem;
 import de.catma.ui.analyzenew.resourcepanelanalyze.ResourcePanelAnalyze;
-import de.catma.ui.analyzenew.treehelper.TreeRowItem;
+import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.analyzer.GroupedQueryResultSelectionListener;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
