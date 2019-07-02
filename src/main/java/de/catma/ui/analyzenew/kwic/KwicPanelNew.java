@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew;
+package de.catma.ui.analyzenew.kwic;
 
 import de.catma.ui.layout.VerticalLayout;
 import java.util.ArrayList;

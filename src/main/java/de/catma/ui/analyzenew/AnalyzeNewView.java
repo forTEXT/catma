@@ -56,6 +56,7 @@ import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
+import de.catma.ui.analyzenew.kwic.KwicVizPanelNew;
 import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
 import de.catma.ui.analyzenew.resourcepanelanalyze.CollectionDataItem;
 import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentTreeItem;

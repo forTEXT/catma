@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew;
+package de.catma.ui.analyzenew.kwic;
 
 
 public class KwicItem {

@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew;
+package de.catma.ui.analyzenew.kwic;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +37,11 @@ import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzenew.CloseVizViewListener;
+import de.catma.ui.analyzenew.CurrentTreeGridData;
+import de.catma.ui.analyzenew.ViewID;
+import de.catma.ui.analyzenew.VisualisationResources;
+import de.catma.ui.analyzenew.VizSnapshot;
 import de.catma.ui.analyzenew.treegridhelper.CollectionItem;
 import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
 import de.catma.ui.analyzenew.treegridhelper.QueryRootItem;
