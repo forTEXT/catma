@@ -60,12 +60,7 @@ public class DocumentDataItem implements DocumentTreeItem {
 	public void setSelected(boolean value) {
 		this.selected = value;
 	}
-	/*
-	@Override
-	public boolean isSingleSelection() {
-		return false;
-	}
-	*/
+
 	public SourceDocument getDocument() {
 		return document;
 	}

@@ -1,43 +1,43 @@
-package de.catma.ui.analyzenew.treehelper;
+package de.catma.ui.analyzenew.treegridhelper;
 
 import java.util.ArrayList;
-import com.vaadin.icons.VaadinIcons;
+
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class DocumentItem implements TreeRowItem {
+public class QueryRootItem implements TreeRowItem {
 
-	public QueryResultRowArray queryResultRowArray;
+	public QueryResultRowArray queryResulutRowArray;
+	public ArrayList<TreeRowItem> singleItemsArrayList;
 	public String treeKey;
-	public ArrayList<TreeRowItem> singleItemsArray;
-	public boolean unfold = false;
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;
 
+	@Override
 	public String getTreeKey() {
 		return treeKey;
 	}
 
-	public void setTreeKey(String documentID) {
-		this.treeKey = documentID;
+	public void setTreeKey(String treeKey) {
+		this.treeKey = treeKey;
 	}
 
+	@Override
 	public int getFrequency() {
-		return queryResultRowArray.size();
-
+		return (Integer) null;
 	}
 
-	public QueryResultRowArray getRows() {
-		return this.queryResultRowArray;
+	@Override
+	public QueryResultRowArray getRows() {		
+		return queryResulutRowArray;
 	}
 
-	public void setRows(QueryResultRowArray queryResultRowArray) {
-		this.queryResultRowArray = queryResultRowArray;
+	public void setRows(QueryResultRowArray groupedQueryResult) {
+		this.queryResulutRowArray = groupedQueryResult;
 	}
-
 
 	public String getArrowIcon() {
-		return unfold ? VaadinIcons.CARET_DOWN.getHtml() : VaadinIcons.CARET_RIGHT.getHtml();
+		return null;
 	}
 
 	public String getShortenTreeKey() {
@@ -52,15 +52,6 @@ public class DocumentItem implements TreeRowItem {
 				+ toShortenValue.substring(toShortenValue.length() - ((maxLength / 2) - 2), toShortenValue.length());
 	}
 
-	public void setUnfold(boolean unfold) {
-		this.unfold = unfold;
-
-	}
-
-	public boolean isUnfold() {
-		return this.unfold;
-	}
-
 	@Override
 	public String getPropertyName() {
 		// TODO Auto-generated method stub
@@ -68,9 +59,33 @@ public class DocumentItem implements TreeRowItem {
 	}
 
 	@Override
-	public String getPropertyValue() {
-		// TODO Auto-generated method stub
+	public String getPropertyValue() {		
 		return null;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((treeKey == null) ? 0 : treeKey.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		QueryRootItem other = (QueryRootItem) obj;
+		if (treeKey == null) {
+			if (other.treeKey != null)
+				return false;
+		} else if (!treeKey.equals(other.treeKey))
+			return false;
+		return true;
 	}
 
 	@Override

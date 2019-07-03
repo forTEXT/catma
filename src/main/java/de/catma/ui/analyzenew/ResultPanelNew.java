@@ -29,11 +29,11 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzenew.treehelper.CollectionItem;
-import de.catma.ui.analyzenew.treehelper.DocumentItem;
-import de.catma.ui.analyzenew.treehelper.RootItem;
-import de.catma.ui.analyzenew.treehelper.SingleItem;
-import de.catma.ui.analyzenew.treehelper.TreeRowItem;
+import de.catma.ui.analyzenew.treegridhelper.CollectionItem;
+import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
+import de.catma.ui.analyzenew.treegridhelper.RootItem;
+import de.catma.ui.analyzenew.treegridhelper.SingleItem;
+import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
 
@@ -75,6 +75,9 @@ public class ResultPanelNew extends Panel {
 	private Repository repository;
 	private ViewID currentView;
 	private ResultPanelCloseListener resultPanelCloseListener;
+	private boolean phraseBased= false;
+	private boolean tagBased= false;
+	private boolean	propertyBased=false;
 
 	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString,
 			ResultPanelCloseListener resultPanelCloseListener) throws Exception {
@@ -86,14 +89,16 @@ public class ResultPanelNew extends Panel {
 		initComponents();
 		initListeners();
 		optionsMenu = new ContextMenu(optionsBt,true);
+		
+		detectViewFromQueryResult(result);
 
-		if (queryAsString.contains("tag=")) {
+		if (currentView == ViewID.tag) {
 			setDataTagStyle();
-			setCurrentView(ViewID.tag);
+			//setCurrentView(ViewID.tag);
 			treeGridPanel.setContent(treeGridTag);
 			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
-					swichView();
+					switchToPhraseView();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -101,7 +106,7 @@ public class ResultPanelNew extends Panel {
 			});
 			optionsMenu.addItem("Switch to Tag View", e -> {
 				try {
-					swichView();
+					switchToTagView();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -109,30 +114,29 @@ public class ResultPanelNew extends Panel {
 			});
 			
 		}
-		if (queryAsString.contains("wild=")) {
+		if (currentView == ViewID.phrase) {
 			setDataPhraseStyle();
-			setCurrentView(ViewID.phrase);
+			//setCurrentView(ViewID.phrase);
 			treeGridPanel.setContent(treeGridPhrase);
 			optionsMenu.addItem("No other View for that query available");
 
 		}
 
-		if (queryAsString.contains("property=")) {
+		if (currentView == ViewID.property) {
 			setDataPropertyStyle();
-			setCurrentView(ViewID.property);
 			treeGridPanel.setContent(treeGridProperty);
 			
 			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
-					setCurrentView(ViewID.phraseProperty);
-					treeGridPanel.setContent(treeGridPhrase);
+					switchToPhraseView();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			});
-			optionsMenu.addItem("Switch to Tag View", e -> {
+			optionsMenu.addItem("Switch to Tag/Property View", e -> {
 				try {
+					//switchToTagView();
 					setCurrentView(ViewID.property);
 					treeGridPanel.setContent(treeGridProperty);
 				} catch (Exception e1) {
@@ -151,65 +155,64 @@ public class ResultPanelNew extends Panel {
 			});
 		}
 		
-	}
-
-	@SuppressWarnings("unchecked")
-	public TreeData<TreeRowItem> getCurrentTreeGridData() {
-
-		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getContent();
-		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
-		TreeData<TreeRowItem> treeData = (TreeData<TreeRowItem>) dataProvider.getTreeData();
-		return copyTreeData(treeData);
-	}
-
-	private TreeData<TreeRowItem> copyTreeData(TreeData<TreeRowItem> treeData) {
-		if(this.currentView==ViewID.flatTableProperty) {
-			return treeData;
+		if (currentView == ViewID.mixedTagPhrase) {
+			setDataTagStyle();
+			currentView = ViewID.tag;
+			treeGridPanel.setContent(treeGridTag);
 			
-		}else {
-			TreeData<TreeRowItem> toReturn = new TreeData<TreeRowItem>();
-			List<TreeRowItem> roots = treeData.getRootItems();
-			for (TreeRowItem root : roots) {
-				toReturn.addItem(null, root);
-				List<TreeRowItem> childrenOne = treeData.getChildren(root);
-				List<TreeRowItem> copyOfChildrenOne = new ArrayList<>(childrenOne);
-				toReturn.addItems(root, copyOfChildrenOne);
-				// add dummy on doclevel for phrase query
-				if (treeData.getChildren(childrenOne.get(0)).isEmpty()) {
-
-					for (TreeRowItem childOne : copyOfChildrenOne) {
-						SingleItem dummy = new SingleItem();
-						dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
-						toReturn.addItem(childOne, dummy);
-					}
-
-				} else {
-					for (TreeRowItem childOne : copyOfChildrenOne) {
-						List<TreeRowItem> childrenTwo = treeData.getChildren(childOne);
-						List<TreeRowItem> copyOfChildrenTwo = new ArrayList<>(childrenTwo);
-						toReturn.addItems(childOne, copyOfChildrenTwo);
-						for (TreeRowItem childTwo : copyOfChildrenTwo) {
-							SingleItem dummy = new SingleItem();
-							dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
-							toReturn.addItem(childTwo, dummy);
-
-						}
-
-					}
+			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
+				try {
+					switchToPhraseView();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
 				}
-			}
-			return toReturn;			
+			});
+			optionsMenu.addItem("Switch to Tag View", e -> {
+				try {
+					switchToTagView();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});	
 		}
-
+		
+		if (currentView == ViewID.mixedPropertyPhrase) {
+			setDataPropertyStyle();
+			currentView = ViewID.property;
+			treeGridPanel.setContent(treeGridProperty);
+			
+			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
+				try {
+					switchToPhraseView();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+			optionsMenu.addItem("Switch to Flat Table View", e -> {
+				try {
+					switchToFlatTableView();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+			optionsMenu.addItem("Switch to Tag/Property View", e -> {
+				try {	
+					switchToPropertyView();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+			
+		}
+		
 	}
 
-	private void setCurrentView(ViewID currentView) {
-		this.currentView = currentView;
-	}
 
-	public ViewID getCurrentView() {
-		return this.currentView;
-	}
 
 	private void initComponents() {
 		this.setWidth(80, Unit.PERCENTAGE);
@@ -266,13 +269,10 @@ public class ResultPanelNew extends Panel {
 		groupedIcons.addComponents(trashBt, optionsBt, caretRightBt);
 		groupedIcons.addStyleName("analyze_queryresultpanel_buttonbar");
 		contentVerticalLayout.addComponent(groupedIcons);
-
 	}
 
 	private void initListeners() {
-
 		caretRightBt.addClickListener(new ClickListener() {
-
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.addComponent(treeGridPanel);
 				groupedIcons.replaceComponent(caretRightBt, caretDownBt);
@@ -281,7 +281,6 @@ public class ResultPanelNew extends Panel {
 		});
 
 		caretDownBt.addClickListener(new ClickListener() {
-
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.removeComponent(treeGridPanel);
 				groupedIcons.replaceComponent(caretDownBt, caretRightBt);
@@ -290,18 +289,102 @@ public class ResultPanelNew extends Panel {
 		
 		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
 
-
 		trashBt.addClickListener(new ClickListener() {
-
 			public void buttonClick(ClickEvent event) {
 				resultPanelCloseListener.closeRequest(ResultPanelNew.this);
 			}
 		});
+	}
+	
+	@SuppressWarnings("unchecked")
+	public TreeData<TreeRowItem> getCurrentTreeGridData() {
+
+		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getContent();
+		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
+		TreeData<TreeRowItem> treeData = (TreeData<TreeRowItem>) dataProvider.getTreeData();
+		return copyTreeData(treeData);
+	}
+
+	private TreeData<TreeRowItem> copyTreeData(TreeData<TreeRowItem> treeData) {
+		if(this.currentView==ViewID.flatTableProperty) { // need no dummies
+			return treeData;
+			
+		}else {
+			TreeData<TreeRowItem> toReturn = new TreeData<TreeRowItem>();
+			List<TreeRowItem> roots = treeData.getRootItems();
+			for (TreeRowItem root : roots) {
+				toReturn.addItem(null, root);
+				List<TreeRowItem> childrenOne = treeData.getChildren(root);
+				List<TreeRowItem> copyOfChildrenOne = new ArrayList<>(childrenOne);
+				toReturn.addItems(root, copyOfChildrenOne);
+				// add dummy on doclevel for phrase query
+				if (treeData.getChildren(childrenOne.get(0)).isEmpty()) {
+
+					for (TreeRowItem childOne : copyOfChildrenOne) {
+						SingleItem dummy = new SingleItem();
+						dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
+						toReturn.addItem(childOne, dummy);
+					}
+
+				} else {
+					for (TreeRowItem childOne : copyOfChildrenOne) {
+						List<TreeRowItem> childrenTwo = treeData.getChildren(childOne);
+						List<TreeRowItem> copyOfChildrenTwo = new ArrayList<>(childrenTwo);
+						toReturn.addItems(childOne, copyOfChildrenTwo);
+						for (TreeRowItem childTwo : copyOfChildrenTwo) {
+							SingleItem dummy = new SingleItem();
+							dummy.setTreeKey(RandomStringUtils.randomAlphanumeric(7));
+							toReturn.addItem(childTwo, dummy);
+
+						}
+
+					}
+				}
+			}
+			return toReturn;			
+		}
 
 	}
 
-	private void setDataTagStyle() throws Exception {
+	private void setCurrentView(ViewID currentView) {
+		this.currentView = currentView;
+	}
 
+	public ViewID getCurrentView() {
+		return this.currentView;
+	}
+	
+	private void detectViewFromQueryResult(QueryResult queryResult) {
+		ViewID Viewid = null;
+		for (QueryResultRow queryResultRow : queryResult) {
+			
+			if (queryResultRow instanceof TagQueryResultRow) {
+
+				tagBased = true;
+				Viewid = ViewID.tag;
+				TagQueryResultRow tagQRR = (TagQueryResultRow) queryResultRow;
+
+				if (tagQRR.getPropertyDefinitionId() != null) {
+					propertyBased=true;
+					tagBased=false;
+					Viewid = ViewID.property;
+				}
+			}
+			if (!(queryResultRow instanceof TagQueryResultRow)) {
+				phraseBased = true;
+				Viewid = ViewID.phrase;
+			}
+		}
+		if (tagBased && phraseBased) {
+			Viewid = ViewID.mixedTagPhrase;
+		}		
+		if (propertyBased && phraseBased) {
+			Viewid = ViewID.mixedPropertyPhrase;
+		}
+		currentView = Viewid;
+	}
+
+	private void setDataTagStyle() throws Exception {
 		tagData = new TreeData<>();
 		tagData = populateTreeDataWithTags(repository, tagData, queryResult);
 		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(tagData);
@@ -321,11 +404,9 @@ public class ResultPanelNew extends Panel {
 		treeGridPanel.setContent(treeGridTag);
 
 		setDataPhraseStyle();
-
 	}
 
 	private void setDataPhraseStyle() {
-
 		phraseData = new TreeData<>();
 
 		Set<GroupedQueryResult> resultAsSet = queryResult.asGroupedSet();
@@ -353,16 +434,12 @@ public class ResultPanelNew extends Panel {
 					String docName = repository.getSourceDocument(docID).toString();
 					docItem.setTreeKey(docName);
 				} catch (Exception e) {
-
 					e.printStackTrace();
 				}
-
 				docItem.setRows(transformGroupedResultToArray(oneDocGroupedQueryResult));
 				allDocuments.add(docItem);
 			}
-
 			phraseData.addItems(rootPhrase, allDocuments);
-
 		}
 
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
@@ -376,11 +453,9 @@ public class ResultPanelNew extends Panel {
 		treeGridPhrase.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
 		treeGridPhrase.setWidth("100%");
-
 	}
 
 	private void setDataPropertyStyle() throws Exception {
-
 		propData = new TreeData<>();
 		propData = populateTreeDataWithProperties(repository, propData, queryResult); // TODO !!!!!!
 
@@ -406,7 +481,6 @@ public class ResultPanelNew extends Panel {
 		treeGridPanel.setContent(treeGridProperty);
 		setDataFlatTableStyle();
 		setDataPhraseStyle();
-
 	}
 	
 	private void setDataFlatTableStyle() {
@@ -431,28 +505,27 @@ public class ResultPanelNew extends Panel {
 		ArrayList<TreeRowItem> flatTableList = new ArrayList<>();
 		QueryResultRowArray qrra = queryResult.asQueryResultRowArray();
 
-		
 		for (QueryResultRow queryResultRow : qrra) {
-			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-			SingleItem propItem = new SingleItem();
-			propItem.setTreeKey(tagQueryResultRow.getTagDefinitionPath());
-			propItem.setPropertyName(tagQueryResultRow.getPropertyName());
-			propItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
-			propItem.setPhrase(tagQueryResultRow.getPhrase());
-	
-			QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
-			queryResultRowArray.add(queryResultRow);
-			propItem.setRows(queryResultRowArray);
-			propItem.setQueryResultRowArray(queryResultRowArray);
-			flatTableList.add((TreeRowItem) propItem);
-			if (!propDataFlat.contains(propItem))
-				propDataFlat.addItem(null, propItem);
-		}
+			if(queryResultRow instanceof TagQueryResultRow) {
+				TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
+				SingleItem propItem = new SingleItem();
+				propItem.setTreeKey(tagQueryResultRow.getTagDefinitionPath());
+				propItem.setPropertyName(tagQueryResultRow.getPropertyName());
+				propItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
+				propItem.setPhrase(tagQueryResultRow.getPhrase());
 		
+				QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
+				queryResultRowArray.add(queryResultRow);
+				propItem.setRows(queryResultRowArray);
+				propItem.setQueryResultRowArray(queryResultRowArray);
+				flatTableList.add((TreeRowItem) propItem);
+				if (!propDataFlat.contains(propItem))
+					propDataFlat.addItem(null, propItem);				
+			}else {			
+			}
+		}	
 		propFlatDataProvider.refreshAll();
 		treeGridPropertyFlatTable.setDataProvider(propFlatDataProvider);
-		//treeGridPanel.setContent(treeGridPropertyFlatTable);
-
 	}
 
 	private TreeData<TreeRowItem> populateTreeDataWithTags(Repository repository, TreeData<TreeRowItem> treeData,
@@ -571,43 +644,37 @@ public class ResultPanelNew extends Panel {
 			queryResultRowArray.add(queryResultRow);
 		}
 		return queryResultRowArray;
-
 	}
 
 	private TreeData<TreeRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
+		
 		TreeData<TreeRowItem> data = populateTreeDataWithTags(repository, treeData, queryResult);
-
 		return data;
 	}
-
+		
 	public String getQueryAsString() {
 		return this.queryAsString;
 	}
-
-	private void swichView() throws Exception {
-
-		switch (currentView) {
-
-		case tag:
-			setCurrentView(ViewID.phraseTag);
-			treeGridPanel.setContent(treeGridPhrase);
-			break;
-
-		case phrase:
-			Notification.show("no tag view available for that query", Notification.Type.HUMANIZED_MESSAGE);
-			break;
-
-		case phraseTag:
-			setCurrentView(ViewID.tag);
-			treeGridPanel.setContent(treeGridTag);
-			break;
-			
-		default:
-			Notification.show("no view available ", Notification.Type.HUMANIZED_MESSAGE);
-			break;
-
-		}
+	
+	private void switchToPhraseView() {
+		setCurrentView(ViewID.phrase);
+		treeGridPanel.setContent(treeGridPhrase);	
+	}
+	
+	private void switchToTagView() {
+		setCurrentView(ViewID.tag);
+		treeGridPanel.setContent(treeGridTag);	
+	}
+	
+	private void switchToFlatTableView() {
+		setCurrentView(ViewID.flatTableProperty);
+		treeGridPanel.setContent(treeGridPropertyFlatTable);		
+	}
+	
+	private void switchToPropertyView() {
+		setCurrentView(ViewID.property);
+		treeGridPanel.setContent(treeGridProperty);		
 	}
 
 }

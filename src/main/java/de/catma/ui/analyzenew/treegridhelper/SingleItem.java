@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew.treehelper;
+package de.catma.ui.analyzenew.treegridhelper;
 
 import java.io.IOException;
 import java.util.List;
@@ -177,8 +177,6 @@ public class SingleItem implements TreeRowItem {
 				builder.append("\">");
 				String notShorten= Cleaner.clean(getPhrase());
 				builder.append(notShorten);
-			//	String shorted= Cleaner.clean(shorten(getPhrase(),50));
-			//	builder.append(shorted);
 				builder.append("</span>");	
 				builder.append(	Cleaner.clean(getForward()));
 				return builder.toString();
@@ -276,8 +274,7 @@ public class SingleItem implements TreeRowItem {
 	}
 
 	@Override
-	public String getContextDiv() {
-		
+	public String getContextDiv() {	
 		String toReturn= buildKwicString();
 		return toReturn;
 	}

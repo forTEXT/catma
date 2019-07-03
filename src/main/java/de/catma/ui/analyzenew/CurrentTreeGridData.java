@@ -2,7 +2,7 @@ package de.catma.ui.analyzenew;
 
 import com.vaadin.data.TreeData;
 
-import de.catma.ui.analyzenew.treehelper.TreeRowItem;
+import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 
 
 public class CurrentTreeGridData {

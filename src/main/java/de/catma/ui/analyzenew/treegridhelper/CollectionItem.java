@@ -1,59 +1,72 @@
-package de.catma.ui.analyzenew.treehelper;
+package de.catma.ui.analyzenew.treegridhelper;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class RootItem implements TreeRowItem {
-	public QueryResultRowArray queryResultRowArray;
-	public ArrayList<TreeRowItem> singleItemsArrayList;
-    public 	String treeKey;
+public class CollectionItem implements TreeRowItem {
+
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;
+	private String treeKey;
+	private QueryResultRowArray queryResultRowArray;
+	private ArrayList<TreeRowItem> singleItemsArray;
 
-	
+	public CollectionItem() {
+	}
 
-	@Override
 	public String getTreeKey() {
-		return treeKey;
-	}
-	
-	public void setTreeKey(String treeKey) {
-		this.treeKey= treeKey;
+		return this.treeKey;
 	}
 
-	@Override
+	public void setTreeKey(String treeKey) {
+		this.treeKey = treeKey;
+	}
+
 	public int getFrequency() {
-	return	queryResultRowArray.size();
-	   
-   }
-     
-	@Override
+		return queryResultRowArray.getTotalFrequency();
+	}
+
 	public QueryResultRowArray getRows() {
-		// TODO Auto-generated method stub
 		return queryResultRowArray;
 	}
-	public void setRows(QueryResultRowArray queryResultRowArray) {
-		this.queryResultRowArray =  queryResultRowArray;
-		
+
+	public void setRows(QueryResultRowArray resultArray) {
+		this.queryResultRowArray = resultArray;
 	}
-	
-	@Override
-	public String getArrowIcon() {	
+
+	public void setRowsAsArray(QueryResultRowArray queryResultArray) {
+
+		Iterator<QueryResultRow> resultIterator = queryResultArray.iterator();
+		ArrayList<QueryResultRow> rowList = new ArrayList<>();
+		singleItemsArray = new ArrayList<TreeRowItem>();
+
+		while (resultIterator.hasNext()) {
+			QueryResultRow queryResultRow = (QueryResultRow) resultIterator.next();
+			rowList.add(queryResultRow);
+			SingleItem item = new SingleItem();
+			item.setTreeKey(queryResultRow.getPhrase());
+			singleItemsArray.add(item);
+		}
+	}
+
+	public String getArrowIcon() {
 		return null;
 	}
-	public String getShortenTreeKey(){
-		return shorten(this.treeKey,26);
+
+	public String getShortenTreeKey() {
+		return shorten(this.treeKey, 26);
 	}
 
 	private String shorten(String toShortenValue, int maxLength) {
 		if (toShortenValue.length() <= maxLength) {
 			return toShortenValue;
-		}	
-		return toShortenValue.substring(0, maxLength/2) 
-				+"["+HORIZONTAL_ELLIPSIS+"]"
-				+ toShortenValue.substring(toShortenValue.length()-((maxLength/2)-2), toShortenValue.length());
+		}
+		return toShortenValue.substring(0, maxLength / 2) + "[" + HORIZONTAL_ELLIPSIS + "]"
+				+ toShortenValue.substring(toShortenValue.length() - ((maxLength / 2) - 2), toShortenValue.length());
 	}
 
 	@Override
@@ -103,6 +116,5 @@ public class RootItem implements TreeRowItem {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 
 }

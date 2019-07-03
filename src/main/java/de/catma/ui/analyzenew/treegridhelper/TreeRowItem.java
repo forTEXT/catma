@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew.treehelper;
+package de.catma.ui.analyzenew.treegridhelper;
 
 import com.vaadin.icons.VaadinIcons;
 
@@ -27,8 +27,6 @@ public default String getSelectIcon() {
 public default String getRemoveIcon() {
 	   return VaadinIcons.ERASER.getHtml();
 }
-
-
 
 public  String getArrowIcon();
 
