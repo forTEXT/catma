@@ -1,71 +1,335 @@
 {
-   "$schema":"https://vega.github.io/schema/vega-lite/v2.0.json",
-   "description":"A simple phrase based distribution chart with phrase start offsets binned to 10 percent chunks and facets for each Source Document",
-   "data":{
-      "url":"CATMA_QUERY_URL"
-   },
-   "facet":{
-      "row":{
-         "field":"sourceDocumentTitle",
-         "type":"nominal"
-      }
-   },
-   "spec":{
-      "transform":[
-         {
-            "calculate":"datum.startOffset/datum.sourceDocumentSize*100",
-            "as":"relStartOffset"
-         }
-      ],
-      "layer":[
-         {
-            "mark":"line",
-            "encoding":{
-               "x":{
-                  "field":"relStartOffset",
-                  "bin":{
-                     "maxbins":10
-                  },
-                  "type":"quantitative",
-                  "axis":{
-                     "title":"relative startoffset binned in 10 steps"
-                  }
-               },
-               "y":{
-                  "aggregate":"count",
-                  "field":"phrase",
-                  "type":"quantitative",
-                  "axis":{
-                     "title":"Occurrences"
-                  }
-               },
-               "color":{
-                  "field":"phrase",
-                  "type":"nominal"
-               }
-            }
-         },
-         {
-            "mark":"point",
-            "encoding":{
-               "x":{
-                  "field":"relStartOffset",
-                  "bin":{
-                     "maxbins":10
-                  },
-                  "type":"quantitative"
-               },
-               "y":{
-                  "aggregate":"count",
-                  "field":"phrase",
-                  "type":"quantitative"
-               },
-               "color":{
-                  "field":"phrase",
-                  "type":"nominal"
-               }
-            }
-         }
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "A simple phrase based distribution chart with phrase start offsets binned to 10 percent chunks and facets for each Document",
+  "autosize": {
+    "type": "pad",
+    "resize": true
+  },
+  "data": [
+    {
+      "name": "queryresult",
+      "url": "CATMA_QUERY_URL"
+    },
+    {
+      "name": "binnedQueryResult",
+      "source": "queryresult",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "binStart",
+            "binEnd",
+            "phrase",
+            "sourceDocumentTitle",
+            "sourceDocumentId"
+          ],
+          "ops": [
+            "count"
+          ],
+          "as": [
+            "countPerBin"
+          ]
+        },
+        {
+          "type": "collect",
+          "sort": {
+            "field": ["sourceDocumentTitle", "phrase", "binStart"],
+            "order": ["ascending", "ascending", "ascending"]
+          }
+        }          
       ]
-   }
+    },
+    {
+      "name": "selectedBin",
+      "source": "queryresult",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.binStart===binStartClick && datum.phrase===phraseClick && datum.sourceDocumentId===documentClick"
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "zoom",
+      "value": 5,
+      "bind": {
+        "input": "range",
+        "min": 1,
+        "max": 10
+      }
+    },
+    {
+      "name": "child_width",
+      "value": 200,
+      "update": "40*zoom"
+    },
+    {
+      "name": "child_height",
+      "value": 200,
+      "update": "40*zoom"
+    },
+    {
+      "name": "binStartClick"
+    },
+    {
+      "name": "phraseClick"
+    },
+    {
+      "name": "documentClick"
+    },    
+    {
+      "name": "userselection",
+      "update": "data(\"selectedBin\")" 
+    }
+  ],
+  "layout": {
+    "padding": 20,
+    "columns": 2,
+    "bounds": "full"
+  },
+  "marks": [
+    {
+      "name": "cell",
+      "type": "group",
+      "style": "cell",
+      "from": {
+        "facet": {
+          "name": "binnedQueryResultPerDoc",
+          "data": "binnedQueryResult",
+          "groupby": [
+            "sourceDocumentTitle",
+            "sourceDocumentId"
+          ]
+        }
+      },
+      "sort": {
+        "field": [
+          "datum.sourceDocumentTitle"
+        ],
+        "order": [
+          "ascending"
+        ]
+      },
+      "encode": {
+        "update": {
+          "width": {
+            "signal": "child_width"
+          },
+          "height": {
+            "signal": "child_height"
+          }
+        }
+      },
+      "marks": [
+        {
+          "name": "perDocumentCell",
+          "type": "group",
+          "from": {
+            "facet": {
+              "name": "binnedQueryResultPerDocPerPhrase",
+              "data": "binnedQueryResultPerDoc",
+              "groupby": [
+                "phrase"
+              ]
+            }
+          },
+          "encode": {
+            "update": {
+              "width": {
+                "field": {
+                  "group": "width"
+                }
+              },
+              "height": {
+                "field": {
+                  "group": "height"
+                }
+              }
+            }
+          },
+          "marks": [
+            {
+              "name": "linesPerPhrase",
+              "type": "line",
+              "style": [
+                "line"
+              ],
+              "sort": {
+                "field": "datum.binStart",
+                "order": "descending"
+              },
+              "from": {
+                "data": "binnedQueryResultPerDocPerPhrase"
+              },
+              "encode": {
+                "update": {
+                  "stroke": {
+                    "scale": "color",
+                    "field": "phrase"
+                  },
+                  "x": {
+                    "signal": "scale(\"x\", (datum.binStart + datum.binEnd) / 2)"
+                  },
+                  "y": {
+                    "scale": "y",
+                    "field": "countPerBin"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "countPerBinDot",
+          "type": "symbol",
+          "style": [
+            "point"
+          ],
+          "from": {
+            "data": "binnedQueryResultPerDoc"
+          },
+          "encode": {
+            "update": {
+              "fill": {
+                "value": "transparent"
+              },
+              "stroke": {
+                "scale": "color",
+                "field": "phrase"
+              },
+              "x": 
+                {
+                  "signal": "scale(\"x\", (datum.binStart + datum.binEnd) / 2)"
+                }
+              ,
+              "y": {
+                "scale": "y",
+                "field": "countPerBin"
+              }
+            }
+          }          
+        }
+      ],
+      "axes": [
+        {
+          "scale": "y",
+          "orient": "left",
+          "gridScale": "x",
+          "grid": true,
+          "title": "Occurrences",
+          "domain": true,
+          "labels": true,
+          "ticks": true
+        },
+        {
+          "scale": "x",
+          "orient": "bottom",
+          "grid": false,
+          "title": "relative startoffset binned in 10 steps"
+        }
+      ],
+      "title": {
+        "style": "guide-label",
+        "encode": {
+          "enter": {
+            "text": {
+              "signal": "parent.sourceDocumentTitle"
+            }
+          }
+        } 
+      },
+      "signals": [
+        {
+          "name": "binStartClick",
+          "on": [
+            {
+              "events": "@countPerBinDot:click",
+              "update": "datum.binStart"
+            }
+          ],
+          "push": "outer"
+        },
+        {
+          "name": "phraseClick",
+          "on": [
+            {
+              "events": "@countPerBinDot:click",
+              "update": "datum.phrase"
+            }
+          ],
+          "push": "outer"
+        },
+        {
+          "name": "documentClick",
+          "on": [
+            {
+              "events": "@countPerBinDot:click",
+              "update": "parent.sourceDocumentId"
+            }
+          ],
+          "push": "outer"
+        }                   
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "domain": {
+        "signal": "[0, 100]"
+      },
+      "range": [
+        0,
+        {
+          "signal": "child_width"
+        }
+      ]
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "domain": {
+        "fields": [
+          {
+            "data": "binnedQueryResult",
+            "field": "countPerBin"
+          }
+        ]
+      },
+      "range": [
+        {
+          "signal": "child_height"
+        },
+        0
+      ],
+      "nice": true
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": {
+        "fields": [
+          {
+            "data": "binnedQueryResult",
+            "field": "phrase"
+          }
+        ],
+        "sort": true
+      },
+      "range": "category"
+    }
+  ],
+  "legends": [
+    {
+      "stroke": "color",
+      "symbolType": "circle",
+      "title": "phrase"
+    }
+  ],
+  "usermeta": {
+    "Author": "Marco Petris"
+  }
 }

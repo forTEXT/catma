@@ -76,7 +76,7 @@ import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeOldEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.layout.HorizontalLayout;
@@ -106,7 +106,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private final ErrorHandler errorHandler;
 	private final EventBus eventBus;
-//	private final IRemoteGitManagerRestricted remoteGitManager;
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
 	private final UIFactory uiFactory;
 	
@@ -118,7 +117,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent;
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
-//	private Map<String, RBACRole> permissionsPerResourceId;
 	private Multimap<Resource, Resource> docResourceToReadableCollectionResourceMap = HashMultimap.create();
 	private MenuItem miInvite;
 	private VerticalLayout teamPanel;
@@ -1121,7 +1119,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      	                }
      	            }
     	     
-    	            eventBus.post( new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
+    	            eventBus.post( new RouteToAnalyzeOldEvent((IndexedRepository)project, corpus));
         		});
     	
     }

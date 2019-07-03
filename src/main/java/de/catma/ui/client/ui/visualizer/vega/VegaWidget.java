@@ -23,9 +23,11 @@ public class VegaWidget extends FocusWidget {
 	
 	public native void vegaEmbed(String elementId, JavaScriptObject vegaSpec) /*-{
 		$wnd.vegaEmbed("#"+elementId, vegaSpec).then(function(result) {
-			result.view.addEventListener('click', function(event, item) {
-			  console.log('CLICK', event, item);
+
+			result.view.addSignalListener('userselection', function(name, value) {
+			  console.log('userselection', name, value);
 			});
+			
 		});
 	}-*/;
 
