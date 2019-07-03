@@ -8,7 +8,25 @@
   "data": [
     {
       "name": "queryresult",
-      "url": "CATMA_QUERY_URL"
+      "url": "CATMA_QUERY_URL",
+	  "transform": 
+	      [
+	        {
+	          "type": "formula",
+	          "expr": "datum.startOffset/datum.sourceDocumentSize*100",
+	          "as": "relStartOffset"
+	        },
+	        {
+	          "type": "bin",
+	          "field": "relStartOffset", 
+	          "as": [
+	            "binStart",
+	            "binEnd"
+	          ],
+	          "extent": [0, 100],
+	          "maxbins": 10
+	        }
+	      ]		      
     },
     {
       "name": "binnedQueryResult",

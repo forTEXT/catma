@@ -2,11 +2,17 @@ package de.catma.ui.analyzenew;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
@@ -408,7 +414,28 @@ public class ResultPanelNew extends Panel {
 
 	private void setDataPhraseStyle() {
 		phraseData = new TreeData<>();
-
+      
+		
+		Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+    	LoadingCache<String, SourceDocument> documentCache = 
+    			CacheBuilder.newBuilder()
+    			.maximumSize(10)
+    			.removalListener(new RemovalListener<String, SourceDocument>() {
+    				@Override
+    				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
+    					if (toBeUnloaded.contains(notification.getValue())) {
+    						notification.getValue().unload();
+    					}
+    				}
+				})
+    			.build(new CacheLoader<String, SourceDocument>() {
+    				@Override
+    				public SourceDocument load(String key) throws Exception {
+    					return repository.getSourceDocument(key);
+    				}
+    			});
+    	
+    	
 		Set<GroupedQueryResult> resultAsSet = queryResult.asGroupedSet();
 
 		for (GroupedQueryResult onePhraseGroupedQueryResult : resultAsSet) {
@@ -428,10 +455,17 @@ public class ResultPanelNew extends Panel {
 
 			for (String docID : allDocsForThatPhrase) {
 				GroupedQueryResult oneDocGroupedQueryResult = onePhraseGroupedQueryResult.getSubResult(docID);
+				
 				DocumentItem docItem = new DocumentItem();
 
 				try {
-					String docName = repository.getSourceDocument(docID).toString();
+		        	SourceDocument sd = 
+		        			documentCache.get(docID);
+		        	if (!sd.isLoaded()) {
+		        		toBeUnloaded.add(sd);
+		        	}
+		        	String docName = sd.toString();
+//					String docName = repository.getSourceDocument(docID).toString();
 					docItem.setTreeKey(docName);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -441,6 +475,10 @@ public class ResultPanelNew extends Panel {
 			}
 			phraseData.addItems(rootPhrase, allDocuments);
 		}
+		
+        for (SourceDocument sd : toBeUnloaded) {
+        	sd.unload();
+        }
 
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
 		treeGridPhrase.setDataProvider(phraseDataProvider);
