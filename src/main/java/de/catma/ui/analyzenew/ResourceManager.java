@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew.kwic;
+package de.catma.ui.analyzenew;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,11 +37,7 @@ import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzenew.CloseVizViewListener;
-import de.catma.ui.analyzenew.CurrentTreeGridData;
-import de.catma.ui.analyzenew.ViewID;
-import de.catma.ui.analyzenew.VisualisationResources;
-import de.catma.ui.analyzenew.VizSnapshot;
+import de.catma.ui.analyzenew.kwic.KwicPanelNew;
 import de.catma.ui.analyzenew.treegridhelper.CollectionItem;
 import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
 import de.catma.ui.analyzenew.treegridhelper.QueryRootItem;
@@ -50,7 +46,7 @@ import de.catma.ui.analyzenew.treegridhelper.SingleItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 
-public class KwicVizPanelNew extends VerticalLayout implements VisualisationResources {
+public class ResourceManager extends VerticalLayout implements VisualisationResources {
 
 	private Repository repository;
 	private HorizontalLayout headerButtonBar;
@@ -84,7 +80,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VisualisationReso
 	private ViewID selectedGridViewID;
 	private int kwicSize = 5;
 
-	public KwicVizPanelNew(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository) {
+	public ResourceManager(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 
 		this.repository = repository;
@@ -94,7 +90,7 @@ public class KwicVizPanelNew extends VerticalLayout implements VisualisationReso
 
 	}
 
-	public KwicVizPanelNew(CloseVizViewListener leaveVizListener, ArrayList<CurrentTreeGridData> currentTreeGridDatas,
+	public ResourceManager(CloseVizViewListener leaveVizListener, ArrayList<CurrentTreeGridData> currentTreeGridDatas,
 			Repository repository) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 		this.leaveViewListener = leaveVizListener;

@@ -56,7 +56,6 @@ import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
-import de.catma.ui.analyzenew.kwic.KwicVizPanelNew;
 import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
 import de.catma.ui.analyzenew.resourcepanelanalyze.CollectionDataItem;
 import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentTreeItem;
@@ -300,7 +299,7 @@ public class AnalyzeNewView extends HorizontalLayout
 			public void buttonClick(ClickEvent event) {
 
 				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Visualisation");
-				KwicVizPanelNew kwic = new KwicVizPanelNew(getAllTreeGridDatas(), repository);
+				ResourceManager kwic = new ResourceManager(getAllTreeGridDatas(), repository);
 				kwicSnapshot.setKwicVizPanel(kwic);
 				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(kwic));
 				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));

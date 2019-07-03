@@ -6,7 +6,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import de.catma.ui.layout.VerticalLayout;
-import de.catma.ui.analyzenew.kwic.KwicVizPanelNew;
 import de.catma.ui.layout.HorizontalLayout;
 
 import com.vaadin.ui.Button.ClickEvent;
@@ -18,7 +17,7 @@ import com.vaadin.ui.themes.ValoTheme;
 public class VizSnapshot extends Panel {
 	private Button btEdit;
 	private Button btDelete;
-	private KwicVizPanelNew kwicVizPanel;
+	private ResourceManager kwicVizPanel;
 	private EditVizSnapshotListener editVizSnapshotListener;
 	private DeleteVizSnapshotListener deleteVizSnapshotListener;
 	
@@ -39,11 +38,11 @@ public class VizSnapshot extends Panel {
 		this.deleteVizSnapshotListener = deleteVizSnapshotListener;
 	}
 
-	public KwicVizPanelNew getKwicVizPanel() {
+	public ResourceManager getKwicVizPanel() {
 		return kwicVizPanel;
 	}
 
-	public void setKwicVizPanel(KwicVizPanelNew kwicVizPanel) {
+	public void setKwicVizPanel(ResourceManager kwicVizPanel) {
 		this.kwicVizPanel = kwicVizPanel;
 	}
 
