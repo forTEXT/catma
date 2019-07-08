@@ -46,7 +46,7 @@ import de.catma.ui.analyzenew.treegridhelper.SingleItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 
-public class ResourceManager extends VerticalLayout implements VisualisationResources {
+public class ResourceOrganiserPanel extends VerticalLayout implements VisualisationResources {
 
 	private Repository repository;
 	private HorizontalLayout headerButtonBar;
@@ -80,7 +80,7 @@ public class ResourceManager extends VerticalLayout implements VisualisationReso
 	private ViewID selectedGridViewID;
 	private int kwicSize = 5;
 
-	public ResourceManager(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository) {
+	public ResourceOrganiserPanel(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 
 		this.repository = repository;
@@ -90,7 +90,7 @@ public class ResourceManager extends VerticalLayout implements VisualisationReso
 
 	}
 
-	public ResourceManager(CloseVizViewListener leaveVizListener, ArrayList<CurrentTreeGridData> currentTreeGridDatas,
+	public ResourceOrganiserPanel(CloseVizViewListener leaveVizListener, ArrayList<CurrentTreeGridData> currentTreeGridDatas,
 			Repository repository) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 		this.leaveViewListener = leaveVizListener;

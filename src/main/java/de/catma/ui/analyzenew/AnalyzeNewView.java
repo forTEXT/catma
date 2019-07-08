@@ -299,7 +299,7 @@ public class AnalyzeNewView extends HorizontalLayout
 			public void buttonClick(ClickEvent event) {
 
 				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Visualisation");
-				ResourceManager kwic = new ResourceManager(getAllTreeGridDatas(), repository);
+				ResourceOrganiserPanel kwic = new ResourceOrganiserPanel(getAllTreeGridDatas(), repository);
 				kwicSnapshot.setKwicVizPanel(kwic);
 				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(kwic));
 				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));

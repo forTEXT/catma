@@ -17,7 +17,7 @@ import com.vaadin.ui.themes.ValoTheme;
 public class VizSnapshot extends Panel {
 	private Button btEdit;
 	private Button btDelete;
-	private ResourceManager kwicVizPanel;
+	private ResourceOrganiserPanel kwicVizPanel;
 	private EditVizSnapshotListener editVizSnapshotListener;
 	private DeleteVizSnapshotListener deleteVizSnapshotListener;
 	
@@ -38,11 +38,11 @@ public class VizSnapshot extends Panel {
 		this.deleteVizSnapshotListener = deleteVizSnapshotListener;
 	}
 
-	public ResourceManager getKwicVizPanel() {
+	public ResourceOrganiserPanel getKwicVizPanel() {
 		return kwicVizPanel;
 	}
 
-	public void setKwicVizPanel(ResourceManager kwicVizPanel) {
+	public void setKwicVizPanel(ResourceOrganiserPanel kwicVizPanel) {
 		this.kwicVizPanel = kwicVizPanel;
 	}
 
