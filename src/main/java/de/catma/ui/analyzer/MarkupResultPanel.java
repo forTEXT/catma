@@ -273,7 +273,7 @@ public class MarkupResultPanel extends VerticalLayout {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
-				((CatmaApplication)UI.getCurrent()).addVega(curQueryResult, queryOptionsProvider);
+				((CatmaApplication)UI.getCurrent()).addVega(curQueryResult, queryOptionsProvider, repository);
 			}
 		});
 		

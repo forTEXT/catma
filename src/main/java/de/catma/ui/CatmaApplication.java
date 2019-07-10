@@ -245,7 +245,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 				mainView = initService.newEntryPage(loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
-				getCurrent().getPage().pushState("/");
+				getCurrent().getPage().pushState("/catma/");
 			} catch (IOException e) {
 				showAndLogError("can't login properly", e);
 			}
@@ -430,8 +430,8 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 //		visualizationManagerView.addDoubleTree(kwics);
 	}
 
-	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider) {
-		eventBus.post(new VegaEvent(queryResult, queryOptionsProvider));
+	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider, Repository project) {
+		eventBus.post(new VegaEvent(queryResult, queryOptionsProvider, project));
 		//TODO:
 //		menu.executeEntry(visualizationManagerView);
 //		visualizationManagerView.addVega(queryResult, queryOptionsProvider);

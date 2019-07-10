@@ -2,6 +2,8 @@ package de.catma.queryengine.result.json;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -17,6 +19,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.util.ColorConverter;
 
 public class JSONQueryResultBuilder {
 	
@@ -45,17 +48,18 @@ public class JSONQueryResultBuilder {
 		propertyId,
 		propertyName,
 		propertyValue, 
-		sourceDocumentTitle,
+		sourceDocumentTitle, 
+		tagColor,
 	}
 	
-	public ArrayNode createJSONQueryResult(final QueryResult queryResult, final Repository repository) throws IOException {
+	public ArrayNode createJSONQueryResult(final QueryResult queryResult, final Repository project) throws IOException {
 
 		LoadingCache<String, SourceDocInfo> sourceDocInfoCache = 
 				CacheBuilder.newBuilder().maximumSize(10).build(new CacheLoader<String, SourceDocInfo>() {
 					
 			@Override
 			public SourceDocInfo load(String key) throws Exception {
-				SourceDocument sd = repository.getSourceDocument(key);
+				SourceDocument sd = project.getSourceDocument(key);
 				
 				boolean unload = !sd.isLoaded();
 				try {
@@ -69,7 +73,15 @@ public class JSONQueryResultBuilder {
 				}
 			}
 		});
-
+		
+		LoadingCache<String, String> colorCache = 
+				CacheBuilder.newBuilder().build(new CacheLoader<String, String>() {
+					@Override
+					public String load(String tagDefinitionId) throws Exception {
+						return "#"+ColorConverter.toHex(project.getTagManager().getTagLibrary().getTagDefinition(tagDefinitionId).getColor());
+					}
+				});
+		
 		JsonNodeFactory factory = JsonNodeFactory.instance;
 
 		ArrayNode valuesArray = factory.arrayNode();
@@ -79,7 +91,7 @@ public class JSONQueryResultBuilder {
 			addQueryResultRowFields(rowNode, row);
 			if (row instanceof TagQueryResultRow) {
 				for (Range range : ((TagQueryResultRow) row).getRanges()) {
-					addTagQueryResultRowFields(rowNode, (TagQueryResultRow)row, range);
+					addTagQueryResultRowFields(rowNode, (TagQueryResultRow)row, range, colorCache);
 				}
 			}
 			else {
@@ -103,11 +115,16 @@ public class JSONQueryResultBuilder {
 		
 	}
 
-	private void addTagQueryResultRowFields(ObjectNode rowNode, TagQueryResultRow row, Range range) {
+	private void addTagQueryResultRowFields(ObjectNode rowNode, TagQueryResultRow row, Range range, LoadingCache<String,String> colorCache) {
 		rowNode.put(Field.annotationCollectionId.name(), row.getMarkupCollectionId());
 		rowNode.put(Field.tagId.name(),  row.getTagDefinitionId());
 		rowNode.put(Field.tagPath.name(), row.getTagDefinitionPath());
 		rowNode.put(Field.tagVersion.name(), row.getTagDefinitionVersion());
+		try {
+			rowNode.put(Field.tagColor.name(), colorCache.get(row.getTagDefinitionId()));
+		} catch (ExecutionException e) {
+			Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Could not load Tag Color for JSON export!", e);
+		}
 		rowNode.put(Field.annotationId.name(),  row.getTagInstanceId());
 		rowNode.put(Field.propertyId.name(),  row.getPropertyDefinitionId());
 		rowNode.put(Field.propertyName.name(),  row.getPropertyName());
@@ -120,15 +137,6 @@ public class JSONQueryResultBuilder {
 	private void addQueryResultRowFields(ObjectNode rowNode, QueryResultRow row) {
 		rowNode.put(Field.sourceDocumentId.name(), row.getSourceDocumentId());
 		rowNode.put(Field.phrase.name(), row.getPhrase());
-//		rowNode.put(Field.markupCollectionId.name(), (String)null);
-//		rowNode.put(Field.tagDefinitionId.name(),  (String)null);
-//		rowNode.put(Field.tagDefinitionPath.name(), (String)null);
-//		rowNode.put(Field.tagDefinitionVersion.name(), (String)null);
-//		rowNode.put(Field.tagInstanceId.name(),  (String)null);
-//		rowNode.put(Field.propertyDefinitionId.name(),  (String)null);
-//		rowNode.put(Field.propertyName.name(),  (String)null);
-//		rowNode.put(Field.propertyValue.name(),  (String)null);
-
 	}
 	
 }
