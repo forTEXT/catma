@@ -1,10 +1,19 @@
 package de.catma.ui.analyzenew;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProviderListener;
@@ -224,10 +233,10 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		});
 	}
 
-	public  void updateVisualisation() {
+	public void updateVisualisation() {
 		ArrayList<QueryResultRow> queryResult = createQueryResultFromTreeGridData();
 		try {
-			kwicNew.addQueryResultRows(queryResult);
+			//kwicNew.addQueryResultRows(queryResult);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -529,10 +538,33 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		propertyDataProvider.refreshAll();
 	}
 
+	/**
+	 * @param selectedItem
+	 * @return
+	 */
 	private ArrayList<TreeRowItem> createSingleItemRowsArrayList(TreeRowItem selectedItem) {
+		
+	
+
+    				
 		ArrayList<TreeRowItem> children = new ArrayList<>();
 		QueryResultRowArray groupedChildren = selectedItem.getRows();
 		Iterator<QueryResultRow> resultIterator = groupedChildren.iterator();
+		 String docID=groupedChildren.get(0).getSourceDocumentId();
+		SourceDocument sourceDocument= null;
+		KwicProvider kwicProvider= null;
+		int doclength=0;
+		try {
+			sourceDocument = repository.getSourceDocument(docID);
+			doclength = sourceDocument.getLength();
+			kwicProvider = new KwicProvider(sourceDocument);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		
+
 
 		while (resultIterator.hasNext()) {
 			QueryResultRow queryResultRow = (QueryResultRow) resultIterator.next();
@@ -556,7 +588,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			item.setQuery(comboBox.getValue());
 			SingleItem itemWithContext;
 			try {
-				itemWithContext = setContext(item);
+				itemWithContext = setContext(item, kwicProvider,doclength);
 				if (!children.contains(itemWithContext)) {
 					children.add((TreeRowItem) itemWithContext);
 				}
@@ -568,11 +600,11 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		return children;
 	}
 
-	private SingleItem setContext(SingleItem item) throws Exception {
+	private SingleItem setContext(SingleItem item, KwicProvider kwicProvider,int doclength) throws Exception {
 		QueryResultRow row = item.getQueryResultRowArray().get(0);
-		SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
+	
 
-		KwicProvider kwicProvider = new KwicProvider(sourceDocument);
+		
 		KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
 		item.setBackward(kwic.getBackwardContext());
 		item.setForward(kwic.getForwardContext());
@@ -582,23 +614,24 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		if (startPoint == 0) {
 			startPoint = 1;
 		}
-		int doclength = sourceDocument.getLength();
+		
 		int position = (100 * startPoint) / doclength;
 		item.setPosition(position);
 		return item;
 	}
+	
 	 private TreeData<TreeRowItem> setContextToDataObject(TreeData<TreeRowItem> treeData){
-		List<TreeRowItem> allItems=  treeData.getRootItems();
+		List<TreeRowItem> allItems=  treeData.getRootItems();		
 
 		allItems.forEach(e->{
 			try {
-				setContext((SingleItem) e);
+							
+			//	setContext((SingleItem) e);
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-		});
-		 
+		});	 
 		 return treeData;
 	 }
 
@@ -612,14 +645,14 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		} else {
 			
 			if(selectedGridViewID== ViewID.flatTableProperty) {
-				addPropertyAsFlatTable(selectedItem, currentTreeGridDataProvider);
+				addPropertyAsFlatTableToSelectedPanel(selectedItem, currentTreeGridDataProvider);
 			}else {
 				addTagOrPropertyItemsToSelectedPanel(selectedItem, currentTreeGridDataProvider);
 			}
 		}
 	}
 	
-	private void addPropertyAsFlatTable(TreeRowItem selectedItem,
+	private void addPropertyAsFlatTableToSelectedPanel(TreeRowItem selectedItem,
 			TreeDataProvider<TreeRowItem> currentTreeDataProvider) {
 
 		Optional<String> currentQuery = comboBox.getSelectedItem();
@@ -891,7 +924,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 				for (TreeRowItem treeRowItem : childrenLevelOne) {
 					TreeRowItem dummy2 = phraseDataProvider.getTreeData().getChildren(treeRowItem).get(0);
 					if (dummy2.getRows() == null) {
-						replaceDummyWithPhraseItems(selectedItem, phraseDataProvider);
+						replaceDummyWithPhraseItems(treeRowItem, phraseDataProvider);
 
 					}
 
@@ -1080,16 +1113,39 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 
 			List<TreeRowItem> docList = phraseDataProvider2.getTreeData().getChildren(selectedItem);
 			for (TreeRowItem doc : docList) {
-
 				TreeRowItem dummy2 = phraseDataProvider2.getTreeData().getChildren(doc).get(0);
-				// TreeRowItem parent= phraseDataProvider2.getTreeData().getParent(treeRowItem);
+				
+				
 				List<TreeRowItem> children2 = createSingleItemRowsArrayList(doc);
 				phraseDataProvider2.getTreeData().removeItem(dummy2);
 				phraseDataProvider2.getTreeData().addItems(doc, children2);
 			}
 		}
 	}
-
+	/*
+	 * private KwicProvider getKwicProviderFromCache(String sID) { KwicProvider
+	 * toReturn = null;
+	 * 
+	 * Set<KwicProvider> toBeUnloaded = new HashSet<KwicProvider>();
+	 * LoadingCache<String, KwicProvider> kwicProviderCache =
+	 * CacheBuilder.newBuilder() .maximumSize(10) .removalListener(new
+	 * RemovalListener<String, KwicProvider>() {
+	 * 
+	 * @Override public void onRemoval(RemovalNotification<String, KwicProvider>
+	 * notification) { if (toBeUnloaded.contains(notification.getValue())) {
+	 * //notification.getValue().unload(); } } }) .build(new CacheLoader<String,
+	 * KwicProvider>() {
+	 * 
+	 * @Override public KwicProvider load(String key) throws Exception { return new
+	 * KwicProvider(repository.getSourceDocument(key)); } });
+	 * 
+	 * KwicProvider kp= kwicProviderCache.get(docID);
+	 * 
+	 * 
+	 * 
+	 * return toReturn; }
+	 */
+	
 	private ArrayList<QueryResultRow> createQueryResultFromTreeGridData() {
 		ArrayList<QueryResultRow> queryResult = new ArrayList<QueryResultRow>();
 		List<TreeRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
