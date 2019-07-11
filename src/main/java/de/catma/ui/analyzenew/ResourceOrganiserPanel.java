@@ -1161,7 +1161,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 								selectedItemsTreeGridData.addItem(document, selectedItem);
 							}
 						} else {
-							// insert new phrase and new document before inserting the singleitem
+							// insert new phrase and new document before inserting the single item
 							selectedItemsTreeGridData.addItem(queryRoot, phrase);
 							selectedItemsTreeGridData.addItem(phrase, document);
 							selectedItemsTreeGridData.addItem(document, selectedItem);
@@ -1201,17 +1201,6 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			TreeDataProvider<TreeRowItem> phraseDataProvider2, KwicProvider kwicProvider, int doclength) {
 		QueryResultRowArray groupedChildren = selectedItem.getRows();
 		
-		//---------------externalize this later
-		
-		/*
-		 * String docID=groupedChildren.get(0).getSourceDocumentId(); SourceDocument
-		 * sourceDocument= null; KwicProvider kwicProvider= null; int doclength=0; try {
-		 * sourceDocument = repository.getSourceDocument(docID); doclength =
-		 * sourceDocument.getLength(); kwicProvider = new KwicProvider(sourceDocument);
-		 * } catch (Exception e1) { // TODO Auto-generated catch block
-		 * e1.printStackTrace(); }
-		 */
-		//----------------------
 		List<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider, doclength);
 
 		TreeRowItem dummy = phraseDataProvider2.getTreeData().getChildren(selectedItem).get(0);
@@ -1223,14 +1212,13 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			
 			List<TreeRowItem> docList = phraseDataProvider2.getTreeData().getChildren(selectedItem);
 			
-			//******************************* create cache ****************
 			LoadingCache<String, KwicProvider> kwicProviderCache = CacheBuilder.newBuilder().maximumSize(10)
 					.removalListener(new RemovalListener<String, KwicProvider>() {
 
 						@Override
 						public void onRemoval(RemovalNotification<String, KwicProvider> notification) {
 						
-							System.out.println(notification.getValue().toString());	// notification getValue returnt einen KwicProvider
+							System.out.println(notification.getValue().toString());
 						
 						}
 					}).build(new CacheLoader<String, KwicProvider>() {
@@ -1240,22 +1228,18 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 							return new KwicProvider(repository.getSourceDocument(key));
 						}
 					});		
-			//******************************************+ ende create cache***************
 			
 			for (TreeRowItem doc : docList) {
 				TreeRowItem dummy2 = phraseDataProvider2.getTreeData().getChildren(doc).get(0);
 				String sdID=groupedChildren.get(0).getSourceDocumentId();
 				KwicProvider kwicProvider1 =null;
-				
-				
-				// **********use cache***********************		
+										
 				try {
 					kwicProvider1 = kwicProviderCache.get(sdID);
 				} catch (ExecutionException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}														
-				//**************** ende use chache **********
 				
 				List<TreeRowItem> children2 = createSingleItemRowsArrayList(doc, kwicProvider1,doclength);
 				phraseDataProvider2.getTreeData().removeItem(dummy2);

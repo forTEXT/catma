@@ -29,16 +29,8 @@ public class CurrentTreeGridData {
 		return currentTreeData;
 	}
 
-	private void setCurrentTreeData(TreeData<TreeRowItem> currentTreeData) {
-		this.currentTreeData = currentTreeData;
-	}
-
 	public ViewID getViewID() {
 		return viewID;
-	}
-
-	private void setViewID(ViewID viewID) {
-		this.viewID = viewID;
 	}
 
 

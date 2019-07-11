@@ -1,5 +1,6 @@
 package de.catma.ui.analyzenew;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,11 +74,12 @@ public class ResultPanelNew extends Panel {
 	private HorizontalLayout groupedIcons;
 	private Button caretRightBt;
 	private Button caretDownBt;
-	private Button trashBt;
+	private Button removeBt;
 	private Button optionsBt;
 	private Panel treeGridPanel;
 	private QueryResult queryResult;
 	private String queryAsString;
+	private String creationTime;
 	private Repository repository;
 	private ViewID currentView;
 	private ResultPanelCloseListener resultPanelCloseListener;
@@ -252,7 +254,9 @@ public class ResultPanelNew extends Panel {
 	private void createResultInfoBar() {
 		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
 		int resultSize = resultRowArrayArrayList.size();
-		queryInfo = new Label(queryAsString + "(" + resultSize + ")");
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+		creationTime = timestamp.toString().substring(0, 19);
+		queryInfo = new Label(queryAsString + "(" + resultSize + ")"+" created: "+creationTime);
 		queryInfo.addStyleName("analyze_queryresultpanel_infobar");
 		contentVerticalLayout.addComponent(queryInfo);
 	}
@@ -269,10 +273,10 @@ public class ResultPanelNew extends Panel {
 		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 
-		trashBt = new Button(VaadinIcons.TRASH);
-		trashBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		removeBt = new Button(VaadinIcons.ERASER);
+		removeBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 
-		groupedIcons.addComponents(trashBt, optionsBt, caretRightBt);
+		groupedIcons.addComponents(removeBt, optionsBt, caretRightBt);
 		groupedIcons.addStyleName("analyze_queryresultpanel_buttonbar");
 		contentVerticalLayout.addComponent(groupedIcons);
 	}
@@ -295,7 +299,7 @@ public class ResultPanelNew extends Panel {
 		
 		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
 
-		trashBt.addClickListener(new ClickListener() {
+		removeBt.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				resultPanelCloseListener.closeRequest(ResultPanelNew.this);
 			}
@@ -692,7 +696,7 @@ public class ResultPanelNew extends Panel {
 	}
 		
 	public String getQueryAsString() {
-		return this.queryAsString;
+		return this.queryAsString+ "("+ creationTime+")";
 	}
 	
 	private void switchToPhraseView() {
