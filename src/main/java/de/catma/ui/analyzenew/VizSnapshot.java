@@ -16,8 +16,8 @@ import com.vaadin.ui.themes.ValoTheme;
 
 public class VizSnapshot extends Panel {
 	private Button btEdit;
-	private Button btDelete;
-	private ResourceManager kwicVizPanel;
+	private Button btRemove;
+	private ResourceOrganiserPanel kwicVizPanel;
 	private EditVizSnapshotListener editVizSnapshotListener;
 	private DeleteVizSnapshotListener deleteVizSnapshotListener;
 	
@@ -38,11 +38,11 @@ public class VizSnapshot extends Panel {
 		this.deleteVizSnapshotListener = deleteVizSnapshotListener;
 	}
 
-	public ResourceManager getKwicVizPanel() {
+	public ResourceOrganiserPanel getKwicVizPanel() {
 		return kwicVizPanel;
 	}
 
-	public void setKwicVizPanel(ResourceManager kwicVizPanel) {
+	public void setKwicVizPanel(ResourceOrganiserPanel kwicVizPanel) {
 		this.kwicVizPanel = kwicVizPanel;
 	}
 
@@ -63,13 +63,13 @@ public class VizSnapshot extends Panel {
 		HorizontalFlexLayout buttonBar = new HorizontalFlexLayout();
 		buttonBar.addStyleName("analyze_queryresultpanel_buttonbar");
 
-		btDelete = new Button ("DELETE",VaadinIcons.TRASH);
-		btDelete.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		btRemove = new Button ("",VaadinIcons.ERASER);
+		btRemove.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		
-		btEdit = new Button ("EDIT",VaadinIcons.PENCIL);
+		btEdit = new Button ("",VaadinIcons.ARROW_RIGHT);
 		btEdit.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		
-		buttonBar.addComponents(btDelete,btEdit);
+		buttonBar.addComponents(btRemove,btEdit);
 		content.addComponents(titleLabel,buttonBar);
 		
 		setContent(content);
@@ -85,7 +85,7 @@ public class VizSnapshot extends Panel {
 			}
 		});
 				
-		btDelete.addClickListener(new ClickListener() {
+		btRemove.addClickListener(new ClickListener() {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {

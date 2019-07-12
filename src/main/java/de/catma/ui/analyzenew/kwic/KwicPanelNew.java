@@ -56,6 +56,7 @@ public class KwicPanelNew extends VerticalFlexLayout {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		moreOptionsMenu.addItem("Annotate all selected rows", clickEvent -> handleAnnotateAllRequest());
 		moreOptionsMenu.addItem("Annotate single row", clickEvent -> handleAnnotateSingleRequest());
+		moreOptionsMenu.addItem("Export Visualisation", clickEvent -> handleExportVisualizationRequest());
 	}
 
 	private void initComponents() {
@@ -168,5 +169,9 @@ public class KwicPanelNew extends VerticalFlexLayout {
 
 	private void handleAnnotateSingleRequest() {
 
+	}
+	
+	private void handleExportVisualizationRequest() {
+		
 	}
 }

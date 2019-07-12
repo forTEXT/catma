@@ -299,13 +299,13 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 			public void buttonClick(ClickEvent event) {
 
 				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Visualisation");
-				ResourceManager kwic = new ResourceManager(getAllTreeGridDatas(), repository);
-				kwicSnapshot.setKwicVizPanel(kwic);
-				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(kwic));
+				ResourceOrganiserPanel resourceOrganiserPanel = new ResourceOrganiserPanel(getAllTreeGridDatas(), repository);
+				kwicSnapshot.setKwicVizPanel(resourceOrganiserPanel);
+				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(resourceOrganiserPanel));
 				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));
 				minMaxPanel.addComponent(kwicSnapshot);
 
-				kwic.setLeaveViewListener(new CloseVizViewListener() {
+				resourceOrganiserPanel.setLeaveViewListener(new CloseVizViewListener() {
 
 					@Override
 					public void onClose() {
@@ -315,7 +315,7 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 					}
 				});
 
-				setContent(kwic);
+				setContent(resourceOrganiserPanel);
 			}
 		});
 		
