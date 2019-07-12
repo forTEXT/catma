@@ -17617,7 +17617,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .home__content__btns {
 	margin-top: 60px;
-	justify-content: space-evenly;
+	justify-content: space-around;
 	padding-left: 80px;
 	padding-right: 80px;
 }
