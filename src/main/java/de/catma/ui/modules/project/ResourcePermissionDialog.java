@@ -20,7 +20,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.rbac.RBACAssignmentFunction;
 import de.catma.ui.rbac.RBACUnAssignmentFunction;
@@ -31,7 +31,7 @@ public class ResourcePermissionDialog extends Window {
     private final ErrorHandler errorHandler;
 	private final Consumer<RBACSubject> onAssignmentCallback;
 	private final Resource resource;
-	private final VerticalLayout content = new VerticalLayout();
+	private final VerticalFlexLayout content = new VerticalFlexLayout();
 	private final Grid<Member> permissionGrid = new Grid<>();
 	private final ActionGridComponent<Grid<Member>> permissionGridComponent = new ActionGridComponent<Grid<Member>>(
 			new Label("Permissions"),

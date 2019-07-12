@@ -49,8 +49,8 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.modules.main.ErrorHandler;
@@ -169,7 +169,7 @@ public class AuthenticationDialog extends Window {
 
 
 	private void initComponents() {
-		VerticalLayout content = new VerticalLayout();
+		VerticalFlexLayout content = new VerticalFlexLayout();
 		content.addStyleName("spacing");
 		content.addStyleName("margin");
 		
@@ -198,7 +198,7 @@ public class AuthenticationDialog extends Window {
 		
 		content.addComponent(termsOfUse);
 		
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
 		buttonPanel.addStyleName("spacing-left-right");
 		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
 

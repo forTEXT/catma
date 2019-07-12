@@ -24,8 +24,8 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -33,7 +33,7 @@ import de.catma.ui.modules.main.ErrorHandler;
  *
  * @author db
  */
-public class ProjectCard extends VerticalLayout  {
+public class ProjectCard extends VerticalFlexLayout  {
 
     private ProjectReference projectReference;
 
@@ -83,7 +83,7 @@ public class ProjectCard extends VerticalLayout  {
         preview.addLayoutClickListener(evt -> eventBus.post(new RouteToProjectEvent(projectReference, false)));
         addComponent(preview);
 
-        HorizontalLayout descriptionBar = new HorizontalLayout();
+        HorizontalFlexLayout descriptionBar = new HorizontalFlexLayout();
         descriptionBar.addStyleName("projectlist__card__descriptionbar");
         descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
         descriptionBar.setWidth("100%");

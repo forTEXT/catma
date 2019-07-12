@@ -22,8 +22,8 @@ import com.vaadin.ui.Window;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.modules.main.signup.ChangePasswordValidator;
@@ -65,7 +65,7 @@ public class EditAccountDialog extends Window {
 		setWidth("400px");
 		setModal(true);
 		
-		VerticalLayout content = new VerticalLayout();
+		VerticalFlexLayout content = new VerticalFlexLayout();
 		content.addStyleName("spacing");
 		content.addStyleName("margin");
 		Label lDescription = new Label("description", ContentMode.HTML);
@@ -94,7 +94,7 @@ public class EditAccountDialog extends Window {
 		PasswordField tfVerifyPassword = new PasswordField("Verify Password");
 		tfVerifyPassword.setSizeFull();
 		
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
 		buttonPanel.setJustifyContent(JustifyContent.SPACE_BETWEEN);
 		Button btnSave = new Button("Save");
 		btnSave.setDescription("awaiting google verification");

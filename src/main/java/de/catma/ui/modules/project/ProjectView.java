@@ -79,8 +79,9 @@ import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.FlexLayout.FlexWrap;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.CanReloadAll;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.repository.Messages;
@@ -119,7 +120,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private ListDataProvider<TagsetDefinition> tagsetData;
 	private Multimap<Resource, Resource> docResourceToReadableCollectionResourceMap = HashMultimap.create();
 	private MenuItem miInvite;
-	private VerticalLayout teamPanel;
+	private VerticalFlexLayout teamPanel;
 
 	@Inject
     public ProjectView(
@@ -721,10 +722,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	/* build the GUI */
 
 	private void initComponents() {
-		HorizontalLayout mainPanel = new HorizontalLayout();
+		HorizontalFlexLayout mainPanel = new HorizontalFlexLayout();
     	mainPanel.setFlexWrap(FlexWrap.WRAP);
-    	
-    	VerticalLayout resourcePanel = new VerticalLayout();
+    	mainPanel.addStyleName("project-view-main-panel");
+    	VerticalFlexLayout resourcePanel = new VerticalFlexLayout();
     	
         resourcePanel.setSizeUndefined(); // don't set width 100%
         resourcePanel.addComponent(new Label("Resources"));
@@ -733,10 +734,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 
         addComponent(mainPanel);
+        setExpandRatio(mainPanel, 1.f);
         
         resourcePanel.addComponent(initResourceContent());
         
-        teamPanel = new VerticalLayout();
+        teamPanel = new VerticalFlexLayout();
         teamPanel.setSizeUndefined(); // don't set width 100%
         teamPanel.setVisible(false);
         teamPanel.addComponent(new Label("Team"));
@@ -780,7 +782,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @return
      */
     private Component initResourceContent() {
-    	HorizontalLayout resourceContent = new HorizontalLayout();
+    	HorizontalFlexLayout resourceContent = new HorizontalFlexLayout();
     	resourceGrid = new TreeGrid<>();
         resourceGrid.addStyleNames(
 				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
@@ -864,7 +866,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
 	private Component initTeamContent() {
-		HorizontalLayout teamContent = new HorizontalLayout();
+		HorizontalFlexLayout teamContent = new HorizontalFlexLayout();
         teamGrid = new Grid<>();
         teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
@@ -1039,7 +1041,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     public void setProjectReference(ProjectReference projectReference) {
         this.projectReference = projectReference;
-        eventBus.post(new HeaderContextChangeEvent(new Label(projectReference.getName())));
+        eventBus.post(new HeaderContextChangeEvent(projectReference.getName()));
         reloadAll();
     }
 

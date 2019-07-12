@@ -27,8 +27,8 @@ import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.renderers.ButtonRenderer;
-import de.catma.ui.layout.VerticalLayout;
-import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
@@ -46,12 +46,12 @@ import de.catma.ui.analyzenew.treegridhelper.SingleItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 
-public class ResourceManager extends VerticalLayout implements VisualisationResources {
+public class ResourceManager extends VerticalFlexLayout implements VisualisationResources {
 
 	private Repository repository;
-	private HorizontalLayout headerButtonBar;
-	private VerticalLayout frameLayout;
-	private VerticalLayout leftSide;
+	private HorizontalFlexLayout headerButtonBar;
+	private VerticalFlexLayout frameLayout;
+	private VerticalFlexLayout leftSide;
 	private HorizontalSplitPanel mainContentSplitPanel;
 	private CloseVizViewListener leaveViewListener;
 	private Label visualisationName;
@@ -109,8 +109,8 @@ public class ResourceManager extends VerticalLayout implements VisualisationReso
 	}
 
 	private void initComponents() {
-		frameLayout = new VerticalLayout();
-		leftSide = new VerticalLayout();
+		frameLayout = new VerticalFlexLayout();
+		leftSide = new VerticalFlexLayout();
 		leftSide.addStyleName("analyzer_kwic_leftside_vertical");
 		rightSide = new Panel();
 		rightSide.addStyleName("analyze_kwic_right");
@@ -120,7 +120,7 @@ public class ResourceManager extends VerticalLayout implements VisualisationReso
 		kwicNew.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		rightSide.setContent(kwicNew);
 		rightSide.setHeight("100%");
-		headerButtonBar = new HorizontalLayout();
+		headerButtonBar = new HorizontalFlexLayout();
 
 		arrowLeftBt = new Button(VaadinIcons.ARROW_LEFT);
 		arrowLeftBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);

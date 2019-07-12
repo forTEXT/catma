@@ -18,11 +18,11 @@ import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.Resolution;
 import de.catma.project.conflict.TagConflict;
 import de.catma.tag.PropertyDefinition;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.util.ColorConverter;
 
-public class TagConflictView extends VerticalLayout {
+public class TagConflictView extends VerticalFlexLayout {
 
 	private TagConflict tagConflict;
 	private TagsetConflict tagsetConflict;
@@ -129,7 +129,7 @@ public class TagConflictView extends VerticalLayout {
 		this.tagsetLabel = new Label();
 		addComponent(this.tagsetLabel);
 
-		HorizontalLayout comparisonPanel = new HorizontalLayout();
+		HorizontalFlexLayout comparisonPanel = new HorizontalFlexLayout();
 		addComponent(comparisonPanel);
 		comparisonPanel.setJustifyContent(JustifyContent.SPACE_AROUND);
 		comparisonPanel.addStyleName("tag-conflict-view-comparison-panel");
@@ -164,7 +164,7 @@ public class TagConflictView extends VerticalLayout {
 		
 		addComponent(propertyGrid);
 
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
 		buttonPanel.addStyleName("tag-conflict-view-button-panel");
 		buttonPanel.setJustifyContent(JustifyContent.SPACE_AROUND);
 		btMine = new Button("Take mine");

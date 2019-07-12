@@ -527,21 +527,10 @@ $v-focus-color: #5A98A1;
     		display: none !important;
 	    }
       /* main views */
-        .main-view {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-            min-height: 100vh;
-            max-width: 1960px;
-            margin: 0 auto;
-        }
 
-        .main-section {
-            flex-direction: row;
-            display: flex;
-            flex-grow: 1;
-            min-height: 0px; /* ugly FF height problem fix */
+        
+        .main-view {
+        	padding: 0px;
         }
 
         /* Header */
@@ -550,8 +539,6 @@ $v-focus-color: #5A98A1;
             color: white;
             padding: 0.5em;
             height: 56px;
-            display: flex;
-            align-items: center;
         }
 
         .header .v-button, .header .button__icon {
@@ -572,32 +559,36 @@ $v-focus-color: #5A98A1;
 		.header .h3 { font-size: 1.5em; }
         
         .header__context {
-            display: flex;
-            justify-content: center;
-		    flex-grow: 1;
 		    font-size: 1.5em;
         }
 
-        .header__version {
-            width: 160px;
-        }
-
         /* Navigation */
-        .nav {
-            flex-direction: column;
-            display: flex;
-            align-items: center;
+        
+         .nav {
             background-color: #e0e0e0;
             color: rgba(0, 0, 0, 0.87);
-            flex-grow: 1;
-            width: 160px;
-            justify-content: center;
         }
         
         .v-button.v-widget.h3.v-button-h3.link.v-button-link.nav-selected-entry.v-button-nav-selected-entry {
         	background: #5A98A1;
 			color: white;
 		}
+        
+        .v-label-catma-nav-top-entry {
+        	vertical-align: bottom;
+        }
+        
+        .v-label-catma-nav-bottom-entry {
+        	vertical-align: top;
+        }        
+        
+        .v-button-catma-nav-top-entry {
+        	vertical-align: bottom;
+        }
+        
+        .v-button-catma-nav-bottom-entry {
+        	vertical-align: top;
+        }  
         
 		.nav .v-label {
 			margin-left: 20px;
@@ -624,16 +615,14 @@ $v-focus-color: #5A98A1;
         .nav .v-button:hover {
             text-decoration: none;
         }
-
-
+        
         .view-section {
-            flex-direction: row;
-            display: flex;
-            flex-grow: 1;
-            width: 100%;
-            background-color: #808080;
-            overflow: auto;
+			background-color: #808080;
         }
+        
+       .no-margin-view-section {
+       		padding: 0px;
+       }
 
         .dialog__bg {
           border-radius: 2px;
@@ -699,145 +688,40 @@ $v-focus-color: #5A98A1;
             border: none; 
     		box-shadow: none;
         }
-                
-        /* Huge card */
+
         .hugecard {
-          flex-direction: column;
-          display: flex;
-          flex-grow: 1;
-          margin: 20px;
     	  background-color: white;
+    	  overflow: auto;
         }
         
         .hugecard-tabbed-view {
-          margin: 20px;
     	  background-color: white;
-    	  height: unset !important;
     	  overflow: auto;
         } 
         
         .hugecard-tabbed-view-tabsheet {
           overflow: hidden !important;
         }
-             
-        .hugecard__bar + div {
-            margin-left: 32px;
-    		margin-top: 14px;
-    		margin-right: 32px;
-        	overflow: auto;
-        	display: flex;
-			flex-grow: 1;
-        }
-
-        .hugecard__bar {
-            align-items:center;
+        
+        .hugecard-bar {
             background-color: #5A98A1;
             color: white;
-            flex-direction: row;
-            display: flex;
-            padding: 0.75em;
             font-weight: 500;
+            padding: 0.75em;
         }
         
-		.hugecard__bar > .v-label {
+       	.hugecard-bar .v-label {
 		    font-size: 1.2em;
 		    font-weight: 500;
 		}
-
-        .hugecard__bar__moreoptions {
-            width: 100%;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .v-button.hugecard__bar__moreoptions__btn {
-            color: white;
-            background-color: transparent;
-            border:none;
-            cursor: pointer;
-            box-shadow: none;
-		    background-image: none;
-		    font-size: 16px;
-		    opacity: inherit;
-        }
-
-
+             
         /* actiongrid */
-
-        .actiongrid {
-            min-width: 300px;
-            display: flex;
-            flex-direction: column;
-            font-size: 16px;
-        }
-
-		.actiongrid .v-grid button.v-nativebutton {
-            border: none;
-            background: transparent;
-            opacity: 0.54;
-            cursor: pointer;
-            justify-content: center;
-            box-shadow: none;
-            font-size: 16px;
-            color: rgb(0, 0, 0);
-            display:flex;
-        }
-
-        .actiongrid .v-grid  button.v-nativebutton:focus {
-            outline: none;
-            background-color:none
-        }
-        
-        .actiongrid .v-grid  button.v-nativebutton:focus:after,.v-grid  button.v-nativebutton:after {
-            border: none; 
-    		box-shadow: none;
-        }
-		
-        /* .actiongrid .v-grid-cell {
-            padding: 0px;
-            display: flex;
-            align-items: center;
-            height: 100%;
-        }*/
-
-		/* remove border in actiongrids */
-		.actiongrid .v-grid-row > td, .actiongrid .v-grid-editor-cells > div, .actiongrid .v-grid-cell.frozen {
-			border-left: none;
-			border-bottom: none;
-			display: flex;
-			align-items: center;
-		}
-		
-		.actiongrid .v-grid-cell div.component-wrap {
-		    display: flex;
-		    align-items: center;
-		    justify-content: center;
-		}
-		
-        .actiongrid flow-component-renderer {
-            flex-grow: 1;
-        }
-
-        .actiongrid vaadin-grid-tree-toggle {
-            margin-left: 0;
-        }
-
-        .actiongrid combined-cell {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
 
         .actiongrid__bar {
         	background-color: #e0e0e0;
         	color: rgba(0, 0, 0, 0.87);
 			padding-top: 14px;
 			padding-bottom: 14px;
-        }
-
-        centered-icon {
-            display: flex;
-            justify-content: center;
         }
 
         div.documentsgrid__doc {
@@ -858,12 +742,16 @@ $v-focus-color: #5A98A1;
 		.project-view-action-grid {
 			margin: 10px;
 		}
+		
+		.project-view-main-panel {
+			padding-top: 10px;
+    		padding-left: 25px;		
+		}
 
         /* dashboard */
 
         .dashboard-view {
             background-color: white;
-            width: 100%;
             overflow: auto;
         }
 
@@ -1029,7 +917,6 @@ $v-focus-color: #5A98A1;
     .c-tabbed-view-plus {
 	    float: right;
 	    margin-top: 10px;
-	    margin-right: 20px;
 	}
 
 	.abstract-ok-cancel-dialog-hide-maximize-restore-icon .v-window-maximizebox {
@@ -1047,16 +934,6 @@ $v-focus-color: #5A98A1;
 		height: inherit;
     }
     
-    .tags-slider {
-    	margin-top: 30px;
-    	height: 420px;
-    }
-    
-    .tags-view-tagset-grid-component {
-    	height: 100%;
-    	width: 100%;
-    }
-	
 	.v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {
     	border-bottom: 1px solid;
 	}

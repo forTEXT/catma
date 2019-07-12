@@ -24,7 +24,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.repository.Repository;
 import de.catma.rbac.RBACRole;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.user.Member;
 
@@ -32,7 +32,7 @@ public class ResourcePermissionView extends Window {
 
     private final ErrorHandler errorHandler;
 	private final Multimap<Resource,Resource> resources;
-	private final VerticalLayout content = new VerticalLayout();
+	private final VerticalFlexLayout content = new VerticalFlexLayout();
 	private final Grid<Map.Entry<Resource, Map<String, RBACRole>>> permissionGrid = new Grid<>();
 	private final Table<Resource,String,RBACRole> permissionMatrix = HashBasedTable.<Resource, String, RBACRole>create();
 	private final ActionGridComponent<Grid<Map.Entry<Resource, Map<String, RBACRole>>>> permissionGridComponent = 

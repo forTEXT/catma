@@ -1,7 +1,5 @@
 package de.catma.ui.events;
 
-import com.vaadin.ui.Component;
-
 /**
  * fired when header context needs to be changed
  *
@@ -9,13 +7,13 @@ import com.vaadin.ui.Component;
  */
 public class HeaderContextChangeEvent  {
 
-    private final Component value;
+    private final String value;
 
-    public HeaderContextChangeEvent(Component value){
+    public HeaderContextChangeEvent(String value){
         this.value = value;
     }
 
-    public Component getValue() {
+    public String getValue() {
         return value;
     }
 }

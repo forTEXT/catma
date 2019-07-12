@@ -4,19 +4,20 @@ import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.Registration;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TextField;
 
 import de.catma.ui.component.IconButton;
-import de.catma.ui.layout.FlexLayout;
 
 /**
  * An action bar with a description component and control buttons used by ActionGridComponent
  *
  * @author db
  */
-public class ActionGridBar extends FlexLayout {
+public class ActionGridBar extends HorizontalLayout {
 
     private final Component titleComponent;
     private final IconButton btnAdd;
@@ -44,16 +45,17 @@ public class ActionGridBar extends FlexLayout {
     }
 
     protected void initComponents() {
-        setAlignItems(FlexLayout.AlignItems.CENTER);
-        addStyleName("actiongrid__bar");
+    	setWidth("100%");
+    	addStyleName("actiongrid__bar");
 
         addComponent(btnToggleMultiselect);
         addComponent(titleComponent);
+        setExpandRatio(titleComponent, 1f);
         addComponent(searchField);
         addComponent(btnAdd);
+        setComponentAlignment(btnAdd, Alignment.MIDDLE_RIGHT);
         addComponent(btnMoreOptions);
-
-        titleComponent.setWidth("100%");
+        setComponentAlignment(btnMoreOptions, Alignment.MIDDLE_RIGHT);
     }
 
     public ContextMenu getBtnAddContextMenu() {

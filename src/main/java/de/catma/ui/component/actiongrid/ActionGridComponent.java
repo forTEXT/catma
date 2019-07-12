@@ -8,15 +8,13 @@ import com.vaadin.shared.Registration;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
-
-import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.util.Styles;
+import com.vaadin.ui.VerticalLayout;
 
 /**
  * Component that renders an action bar with a grid
  * @param <G> Gridtype e.g. TreeGrid or normal Grid
  */
-public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
+public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
 	
 	private static class DefaultSearchFilter implements SerializablePredicate<Object> {
 		
@@ -104,9 +102,11 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
 	}
     
 	private void initComponents() {
-        addStyleName(Styles.actiongrid);
         setHeight("100%");
+		
         addComponents(actionGridBar, dataGrid);
+        setExpandRatio(dataGrid, 1f);
+        setSpacing(false);
     }
 
     public ActionGridBar getActionGridBar() {

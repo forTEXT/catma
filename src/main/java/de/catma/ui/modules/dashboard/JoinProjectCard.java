@@ -6,8 +6,8 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 
 import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 
 /**
  * Renders a new Project link styled as a card.
@@ -15,7 +15,7 @@ import de.catma.ui.layout.VerticalLayout;
  * @author db
  *
  */
-public class JoinProjectCard extends VerticalLayout {
+public class JoinProjectCard extends VerticalFlexLayout {
 
 	private final Provider<JoinProjectDialog> joinProjectProvider;
 	
@@ -39,7 +39,7 @@ public class JoinProjectCard extends VerticalLayout {
         });
         addComponent(newproject);
 
-        HorizontalLayout descriptionBar = new HorizontalLayout();
+        HorizontalFlexLayout descriptionBar = new HorizontalFlexLayout();
         descriptionBar.addStyleName("projectlist__card__descriptionbar");
         descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
         descriptionBar.setWidth("100%");

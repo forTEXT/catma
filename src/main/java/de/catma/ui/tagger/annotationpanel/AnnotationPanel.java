@@ -5,7 +5,6 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -996,11 +995,12 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetGrid.setSizeFull();
 		tagsetGrid.setSelectionMode(SelectionMode.SINGLE);
 		tagsetGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
-
+		
         tagsetGridComponent = new ActionGridComponent<TreeGrid<TagsetTreeItem>>(
                 tagsetsLabel,
                 tagsetGrid
         );
+        tagsetGridComponent.setMargin(false);
         
         rightSplitPanel = new VerticalSplitPanel();
         rightSplitPanel.setSizeFull();

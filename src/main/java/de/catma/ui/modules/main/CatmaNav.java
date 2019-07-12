@@ -5,10 +5,11 @@ import java.util.Iterator;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
 import de.catma.document.repository.Repository;
@@ -33,7 +34,7 @@ import de.catma.ui.events.routing.RouteToTagsEvent;
  *
  * @author db
  */
-public class CatmaNav extends CssLayout implements CatmaRouter {
+public class CatmaNav extends VerticalLayout implements CatmaRouter {
 	
 
 	private Class<?> currentRoute;
@@ -49,7 +50,6 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
         eventBus.register(this);
         initComponents();
         initActions(eventBus);
-        setStyleName("nav");
     }
 
     private void initActions(EventBus eventBus) {
@@ -80,11 +80,17 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	}
 
 	private void initComponents() {
+        addStyleName("nav");
+        setHeight("100%");
+        setWidth("160px");
+        setSpacing(false);
         btProject = new LargeLinkButton("Project");
+        btProject.addStyleName("catma-nav-top-entry");
         btTags = new LargeLinkButton("Tags");
         btAnnotate = new LargeLinkButton("Annotate");
         btAnalyzeOld = new LargeLinkButton("Analyze5");
         btAnalyze = new LargeLinkButton("Analyze");
+        btAnalyze.addStyleName("catma-nav-bottom-entry");
     }
 
 	private Label newH3Label(String name){
@@ -93,28 +99,42 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
     	return result;
     }
 
+	
+	private void centerComponents() {
+		Iterator<Component> compIter = iterator();
+		while(compIter.hasNext()) {
+			setComponentAlignment(compIter.next(), Alignment.MIDDLE_CENTER);
+		}
+	}
+	
 	@Override
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
-			removeAllComponents();
-			addComponent(newH3Label("Project"));
-			addComponent(newH3Label("Tags"));
-			addComponent(newH3Label("Annotate"));
-			addComponent(newH3Label("Analyze"));
-			
+			addLabels();
 			currentRoute = routeToDashboardEvent.getClass();
 			currentProject = null;
 		}
 	}
 	
+	private void addLabels() {
+		removeAllComponents();
+		Label pLabel = newH3Label("Project");
+		pLabel.addStyleName("catma-nav-top-entry");
+		addComponent(pLabel);
+		setExpandRatio(pLabel, 1.0f);
+		addComponent(newH3Label("Tags"));
+		addComponent(newH3Label("Annotate"));
+		Label anaLabel = newH3Label("Analyze");
+		anaLabel.addStyleName("catma-nav-bottom-entry");
+		addComponent(anaLabel);
+		setExpandRatio(anaLabel, 1.0f);
+		centerComponents();
+	}
+
 	@Override
 	public void handleRouteToConflictedProject(RouteToConflictedProjectEvent routeToConflictedProjectEvent) {
 		if(isNewTarget(routeToConflictedProjectEvent.getClass())) {
-			removeAllComponents();
-			addComponent(newH3Label("Project"));
-			addComponent(newH3Label("Tags"));
-			addComponent(newH3Label("Annotate"));
-			addComponent(newH3Label("Analyze"));
+			addLabels();
 			
 			currentRoute = routeToConflictedProjectEvent.getClass();
 		}
@@ -124,19 +144,26 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	@Override
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if(isNewTarget(routeToProjectEvent.getClass())) {
-	        removeAllComponents();
-	        addComponent(btProject);
-	        addComponent(btTags);
-	        addComponent(btAnnotate);
-	        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), false)) {
-	        	addComponent(btAnalyzeOld);
-	        }
-	        addComponent(btAnalyze);
+			addButtons();
 	        setSelectedStyle(btProject);
 	        currentRoute = routeToProjectEvent.getClass();
 		}
 	}
 	
+	private void addButtons() {
+        removeAllComponents();
+        addComponent(btProject);
+        setExpandRatio(btProject, 1f);
+        addComponent(btTags);
+        addComponent(btAnnotate);
+        if (RepositoryPropertyKey.ShowAnalyzer5.isTrue(RepositoryProperties.INSTANCE.getProperties(), false)) {
+        	addComponent(btAnalyzeOld);
+        }
+        addComponent(btAnalyze);
+        setExpandRatio(btAnalyze, 1f);
+        centerComponents();
+	}
+
 	@Subscribe
 	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
 		this.currentProject = projectReadyEvent.getProject();

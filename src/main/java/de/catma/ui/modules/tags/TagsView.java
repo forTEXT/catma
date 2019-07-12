@@ -22,6 +22,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -43,7 +44,6 @@ import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
-import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tagger.annotationpanel.AddEditPropertyDialog;
 import de.catma.ui.tagger.annotationpanel.AddParenttagDialog;
@@ -180,10 +180,9 @@ public class TagsView extends HugeCard {
 
 
 	private void initComponents() {
-        addStyleName("tags-view");
         
 		HorizontalLayout content = new HorizontalLayout();
-		content.addStyleName("tags-content");
+		content.setSizeFull();
 		
 		tagsetGrid = new TreeGrid<>();
 		tagsetGrid.addStyleNames(
@@ -197,16 +196,16 @@ public class TagsView extends HugeCard {
                 tagsetsLabel,
                 tagsetGrid
         );
-        tagsetGridComponent.addStyleName("tags-view-tagset-grid-component");
         
 		resourcePanel = new TagResourcePanel(project); 
 		drawer = new SliderPanelBuilder(resourcePanel)
-				.mode(SliderMode.LEFT).expanded(false).style("tags-slider").build();
+				.mode(SliderMode.LEFT).expanded(false).build();
 		
 		addComponent(content);
-
+		setExpandRatio(content, 1f);
         content.addComponent(drawer);
 		content.addComponent(tagsetGridComponent);
+		content.setExpandRatio(tagsetGridComponent, 1f);
 	}
 	
 	public void close() {

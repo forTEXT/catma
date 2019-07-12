@@ -2,14 +2,14 @@ package de.catma.ui.layout;
 
 import com.vaadin.ui.Component;
 
-public class VerticalLayout extends FlexLayout {
+public class VerticalFlexLayout extends FlexLayout {
 
-	public VerticalLayout(Component... components) {
+	public VerticalFlexLayout(Component... components) {
 		super(components);
 		addStyle();
 	}
 
-	public VerticalLayout(FlexDirection flexDirection, Component... components) {
+	public VerticalFlexLayout(FlexDirection flexDirection, Component... components) {
 		super(flexDirection, components);
 		addStyle();
 	}

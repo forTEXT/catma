@@ -190,21 +190,21 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		try {
 			Component component = initService.newEntryPage(loginservice, hazelCastService);
 			setContent(component);
-
-
-	        // implement a custom resize propagation for all Layouts including CSSLayouts
-	        JavaScript.getCurrent().addFunction("browserWindowResized", e -> {
-	        	this.markAsDirtyRecursive();
-	        });
-	        Page.getCurrent().getJavaScript().execute(
-	        		"var timeout = null;"
-	        				+ "window.onresize = function() { "
-	        				+ "  if (timeout != null) clearTimeout(timeout); "
-	        				+ "  timeout = setTimeout(function() {"
-	        				+ "    browserWindowResized(); "
-	        				+ "  }, 250);"
-	        				+ "}");
-	                
+//
+//
+//	        // implement a custom resize propagation for all Layouts including CSSLayouts
+//	        JavaScript.getCurrent().addFunction("browserWindowResized", e -> {
+//	        	this.markAsDirtyRecursive();
+//	        });
+//	        Page.getCurrent().getJavaScript().execute(
+//	        		"var timeout = null;"
+//	        				+ "window.onresize = function() { "
+//	        				+ "  if (timeout != null) clearTimeout(timeout); "
+//	        				+ "  timeout = setTimeout(function() {"
+//	        				+ "    browserWindowResized(); "
+//	        				+ "  }, 250);"
+//	        				+ "}");
+//	                
 
 		} catch (IOException e) {
 			showAndLogError("error creating landing page",e);			

@@ -174,8 +174,9 @@ public class TagResourcePanel extends VerticalLayout {
     }
 
 	private void initComponents() {
-		addStyleName("tags-resource-panel");
+//		addStyleName("tags-resource-panel");
 		Label tagsetLabel = new Label("Tagsets");
+		setSizeFull();
 		
 		tagsetGrid = new Grid<>();
 		tagsetGrid.addStyleNames(
@@ -183,9 +184,9 @@ public class TagResourcePanel extends VerticalLayout {
 				"flat-undecorated-icon-buttonrenderer",
 				"no-focused-before-border");
 		tagsetGrid.setSelectionMode(SelectionMode.MULTI);
-		//TODO: shouldn't be fixed size
-		tagsetGrid.setWidth("400px");
-		tagsetGrid.setHeight("230px");
+
+		tagsetGrid.setSizeFull();
+		
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")

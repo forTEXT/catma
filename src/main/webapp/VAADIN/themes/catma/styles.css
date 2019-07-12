@@ -17627,20 +17627,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .main-view {
-	display: flex;
-	flex-direction: column;
-	width: 100%;
-	height: 100%;
-	min-height: 100vh;
-	max-width: 1960px;
-	margin: 0 auto;
-}
-
-.catma .main-section {
-	flex-direction: row;
-	display: flex;
-	flex-grow: 1;
-	min-height: 0px;
+	padding: 0px;
 }
 
 .catma .header {
@@ -17648,8 +17635,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: white;
 	padding: 0.5em;
 	height: 56px;
-	display: flex;
-	align-items: center;
 }
 
 .catma .header .v-button, .catma .header .button__icon {
@@ -17672,30 +17657,33 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .header__context {
-	display: flex;
-	justify-content: center;
-	flex-grow: 1;
 	font-size: 1.5em;
 }
 
-.catma .header__version {
-	width: 160px;
-}
-
 .catma .nav {
-	flex-direction: column;
-	display: flex;
-	align-items: center;
 	background-color: #e0e0e0;
 	color: rgba(0, 0, 0, 0.87);
-	flex-grow: 1;
-	width: 160px;
-	justify-content: center;
 }
 
 .catma .v-button.v-widget.h3.v-button-h3.link.v-button-link.nav-selected-entry.v-button-nav-selected-entry {
 	background: #5A98A1;
 	color: white;
+}
+
+.catma .v-label-catma-nav-top-entry {
+	vertical-align: bottom;
+}
+
+.catma .v-label-catma-nav-bottom-entry {
+	vertical-align: top;
+}
+
+.catma .v-button-catma-nav-top-entry {
+	vertical-align: bottom;
+}
+
+.catma .v-button-catma-nav-bottom-entry {
+	vertical-align: top;
 }
 
 .catma .nav .v-label {
@@ -17726,12 +17714,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .view-section {
-	flex-direction: row;
-	display: flex;
-	flex-grow: 1;
-	width: 100%;
 	background-color: #808080;
-	overflow: auto;
+}
+
+.catma .no-margin-view-section {
+	padding: 0px;
 }
 
 .catma .dialog__bg {
@@ -17799,17 +17786,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .hugecard {
-	flex-direction: column;
-	display: flex;
-	flex-grow: 1;
-	margin: 20px;
 	background-color: white;
+	overflow: auto;
 }
 
 .catma .hugecard-tabbed-view {
-	margin: 20px;
 	background-color: white;
-	height: unset !important;
 	overflow: auto;
 }
 
@@ -17817,101 +17799,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	overflow: hidden !important;
 }
 
-.catma .hugecard__bar + div {
-	margin-left: 32px;
-	margin-top: 14px;
-	margin-right: 32px;
-	overflow: auto;
-	display: flex;
-	flex-grow: 1;
-}
-
-.catma .hugecard__bar {
-	align-items: center;
+.catma .hugecard-bar {
 	background-color: #5A98A1;
 	color: white;
-	flex-direction: row;
-	display: flex;
-	padding: 0.75em;
 	font-weight: 500;
+	padding: 0.75em;
 }
 
-.catma .hugecard__bar > .v-label {
+.catma .hugecard-bar .v-label {
 	font-size: 1.2em;
 	font-weight: 500;
-}
-
-.catma .hugecard__bar__moreoptions {
-	width: 100%;
-	display: flex;
-	justify-content: flex-end;
-}
-
-.catma .v-button.hugecard__bar__moreoptions__btn {
-	color: white;
-	background-color: transparent;
-	border: none;
-	cursor: pointer;
-	box-shadow: none;
-	background-image: none;
-	font-size: 16px;
-	opacity: inherit;
-}
-
-.catma .actiongrid {
-	min-width: 300px;
-	display: flex;
-	flex-direction: column;
-	font-size: 16px;
-}
-
-.catma .actiongrid .v-grid button.v-nativebutton {
-	border: none;
-	background: transparent;
-	opacity: 0.54;
-	cursor: pointer;
-	justify-content: center;
-	box-shadow: none;
-	font-size: 16px;
-	color: black;
-	display: flex;
-}
-
-.catma .actiongrid .v-grid button.v-nativebutton:focus {
-	outline: none;
-	background-color: none;
-}
-
-.catma .actiongrid .v-grid button.v-nativebutton:focus:after, .catma .v-grid button.v-nativebutton:after {
-	border: none;
-	box-shadow: none;
-}
-
-.catma .actiongrid .v-grid-row > td, .catma .actiongrid .v-grid-editor-cells > div, .catma .actiongrid .v-grid-cell.frozen {
-	border-left: none;
-	border-bottom: none;
-	display: flex;
-	align-items: center;
-}
-
-.catma .actiongrid .v-grid-cell div.component-wrap {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.catma .actiongrid flow-component-renderer {
-	flex-grow: 1;
-}
-
-.catma .actiongrid vaadin-grid-tree-toggle {
-	margin-left: 0;
-}
-
-.catma .actiongrid combined-cell {
-	display: flex;
-	justify-content: center;
-	align-items: center;
 }
 
 .catma .actiongrid__bar {
@@ -17919,11 +17816,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: rgba(0, 0, 0, 0.87);
 	padding-top: 14px;
 	padding-bottom: 14px;
-}
-
-.catma centered-icon {
-	display: flex;
-	justify-content: center;
 }
 
 .catma div.documentsgrid__doc {
@@ -17942,9 +17834,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin: 10px;
 }
 
+.catma .project-view-main-panel {
+	padding-top: 10px;
+	padding-left: 25px;
+}
+
 .catma .dashboard-view {
 	background-color: white;
-	width: 100%;
 	overflow: auto;
 }
 
@@ -18100,7 +17996,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .c-tabbed-view-plus {
 	float: right;
 	margin-top: 10px;
-	margin-right: 20px;
 }
 
 .catma .abstract-ok-cancel-dialog-hide-maximize-restore-icon .v-window-maximizebox {
@@ -18116,16 +18011,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .tags-resource-panel {
 	overflow: auto;
 	height: inherit;
-}
-
-.catma .tags-slider {
-	margin-top: 30px;
-	height: 420px;
-}
-
-.catma .tags-view-tagset-grid-component {
-	height: 100%;
-	width: 100%;
 }
 
 .catma .v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {

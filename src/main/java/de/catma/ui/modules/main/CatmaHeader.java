@@ -7,8 +7,10 @@ import com.google.inject.Provider;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Page;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.CssLayout;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
 
 import de.catma.document.repository.RepositoryPropertyKey;
@@ -25,11 +27,12 @@ import de.catma.ui.util.Version;
  *
  * @author db
  */
-public class CatmaHeader extends CssLayout {
+public class CatmaHeader extends HorizontalLayout {
 
 	private final EventBus eventBus;
 	private final Provider<EditAccountDialog> accountDialogProvider;
 	private final LoginService loginService;
+	private final Label contextInformation = new Label();
 
 	@Inject
 	public CatmaHeader(Provider<EditAccountDialog> accountDialogProvider, EventBus eventBus, LoginService loginService){
@@ -41,18 +44,22 @@ public class CatmaHeader extends CssLayout {
         initComponents();
     }
 
-    private final CssLayout contextInformation = new CssLayout();
 
     private void initComponents() {
-    	setStyleName("header");
+    	addStyleName("header");
+    	setWidth("100%");
     	
 		Button home = new Button("Catma " + Version.LATEST);
 		home.addClickListener((evt) -> eventBus.post(new RouteToDashboardEvent()));
 		home.addStyleNames(ValoTheme.BUTTON_LINK, ValoTheme.LABEL_H3);
 		
         addComponent(home);
+        setComponentAlignment(home, Alignment.MIDDLE_LEFT);
+        
         contextInformation.addStyleName("header__context");
         addComponent(contextInformation);
+        setComponentAlignment(contextInformation, Alignment.MIDDLE_CENTER);
+        setExpandRatio(contextInformation, 1f);
         
         IconButton btnAccount = new IconButton( VaadinIcons.USER);
 
@@ -70,13 +77,12 @@ public class CatmaHeader extends CssLayout {
         btnAccount.addClickListener((evt) ->  ctxAccount.open(evt.getClientX(), evt.getClientY()));
         
         addComponent(btnAccount);
-
+        setComponentAlignment(home, Alignment.MIDDLE_RIGHT);
     }
 
     @Subscribe
     public void headerChangeEvent(HeaderContextChangeEvent headerContextChangeEvent){
-        contextInformation.removeAllComponents();
-        contextInformation.addComponent(headerContextChangeEvent.getValue());
+        contextInformation.setValue(headerContextChangeEvent.getValue());
     }
 
 }

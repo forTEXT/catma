@@ -1,6 +1,6 @@
 package de.catma.ui.analyzenew.kwic;
 
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +19,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 
-public class KwicPanelNew extends VerticalLayout {
+public class KwicPanelNew extends VerticalFlexLayout {
 
 	private Repository repository;
 	private Grid<KwicItem> kwicGrid;

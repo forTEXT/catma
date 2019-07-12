@@ -14,18 +14,19 @@ import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.IRBACManager;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -62,7 +63,7 @@ public class ProjectListView extends VerticalLayout implements
     private DataProvider<ProjectReference, ?> dataProvider = DataProvider.ofItems();;
 
     //ui elements
-    private HorizontalLayout projectsLayout = new HorizontalLayout();
+    private HorizontalFlexLayout projectsLayout = new HorizontalFlexLayout();
 
     @Override
     public void setDataProvider(final DataProvider<ProjectReference, ?> dataProvider) {
@@ -90,10 +91,12 @@ public class ProjectListView extends VerticalLayout implements
 
     protected void initComponents() {
     	addStyleName("projectlist");
+    	projectsLayout.addStyleNames("projectlist__list");
+    	
+    	setSizeFull();
     	
     	HorizontalLayout descriptionBar = new HorizontalLayout();
         Label description = new Label("All Projects");
-        description.setWidth("100%");
 
         Label title = new Label("Title");
 
@@ -111,19 +114,17 @@ public class ProjectListView extends VerticalLayout implements
         });
 
         descriptionBar.addComponent(description);
+        descriptionBar.setExpandRatio(description, 1f);
         descriptionBar.addComponent(title);
         descriptionBar.addComponent(sortButton);
+        descriptionBar.setComponentAlignment(sortButton, Alignment.MIDDLE_RIGHT);
 
         descriptionBar.setWidth("100%");
 
-        descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
-        descriptionBar.setJustifyContent(FlexLayout.JustifyContent.FLEX_END);
-
         addComponent(descriptionBar);
 
-        projectsLayout.addStyleName("projectlist__list");
-     
         addComponent(projectsLayout);
+        setExpandRatio(projectsLayout, 1f);
     }
 
 	@Override

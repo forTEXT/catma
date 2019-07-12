@@ -14,8 +14,8 @@ import de.catma.ui.Messages;
 import de.catma.ui.UIHelpWindow;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.LabelButton;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.modules.main.login.AuthenticationDialog;
@@ -27,7 +27,7 @@ import de.catma.ui.modules.main.signup.SignUpDialog;
  * @author db
  *
  */
-public class NotLoggedInMainView extends VerticalLayout {
+public class NotLoggedInMainView extends VerticalFlexLayout {
 
 	private final UIHelpWindow uiHelpWindow = new UIHelpWindow();
 	private final InitializationService initService;
@@ -51,7 +51,7 @@ public class NotLoggedInMainView extends VerticalLayout {
 		addStyleName("home");
 		
 
-		HorizontalLayout menuLayout = new HorizontalLayout();
+		HorizontalFlexLayout menuLayout = new HorizontalFlexLayout();
 		menuLayout.setWidth("100%");
 		menuLayout.setJustifyContent(JustifyContent.FLEX_END);
 		menuLayout.setAlignItems(AlignItems.CENTER);
@@ -96,7 +96,7 @@ public class NotLoggedInMainView extends VerticalLayout {
 		menuLayout.addComponent(btHelp);
 
 
-		VerticalLayout contentPanel = new VerticalLayout();
+		VerticalFlexLayout contentPanel = new VerticalFlexLayout();
 		contentPanel.setHeight("100%"); //$NON-NLS-1$
 		contentPanel.addStyleName("home__content"); //$NON-NLS-1$
 	
@@ -114,7 +114,7 @@ public class NotLoggedInMainView extends VerticalLayout {
 				eventBus).show());
 		LabelButton btn_newsletter = new LabelButton("Newsletter");
 
-		HorizontalLayout buttonPanel = new HorizontalLayout(btn_signup,btn_login,btn_newsletter);
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout(btn_signup,btn_login,btn_newsletter);
 		buttonPanel.addStyleName("home__content__btns");
 		buttonPanel.setJustifyContent(JustifyContent.CENTER);
 		contentPanel.addComponent(buttonPanel);

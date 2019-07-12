@@ -24,8 +24,8 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -54,7 +54,7 @@ public class CreateUserDialog extends Window {
 
 	private void initComponents() {
 		setModal(true);
-		VerticalLayout content = new VerticalLayout();
+		VerticalFlexLayout content = new VerticalFlexLayout();
 		content.addStyleName("spacing");
 		content.addStyleName("margin");
 		Label lDescription = new Label("description", ContentMode.HTML);
@@ -75,7 +75,7 @@ public class CreateUserDialog extends Window {
 		hiddenVerification.addStyleName("g-recaptcha-response");
 		
 
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
 		buttonPanel.setJustifyContent(JustifyContent.SPACE_BETWEEN);
 		Button btnCreate = new Button("Create");
 		btnCreate.setEnabled(false);

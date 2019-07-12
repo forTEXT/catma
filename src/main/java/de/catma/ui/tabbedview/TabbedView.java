@@ -123,7 +123,6 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		tabSheet.addStyleName("hugecard-tabbed-view-tabsheet");
 		tabSheet.setCloseHandler(this);
 		tabSheet.setTabsVisible(true);
-		tabSheet.setSizeFull();
 		
 		addComponent(tabSheet);
 		setExpandRatio(tabSheet, 1.0f);
