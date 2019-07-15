@@ -19,7 +19,6 @@
 package de.catma.ui.repository.wizard;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -30,19 +29,19 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.v7.ui.ProgressIndicator;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.Upload;
-import com.vaadin.v7.ui.Upload.FailedEvent;
-import com.vaadin.v7.ui.Upload.FailedListener;
-import com.vaadin.v7.ui.Upload.ProgressListener;
-import com.vaadin.v7.ui.Upload.Receiver;
-import com.vaadin.v7.ui.Upload.StartedEvent;
-import com.vaadin.v7.ui.Upload.StartedListener;
-import com.vaadin.v7.ui.Upload.SucceededEvent;
-import com.vaadin.v7.ui.Upload.SucceededListener;
+import com.vaadin.ui.Upload;
+import com.vaadin.ui.Upload.FailedEvent;
+import com.vaadin.ui.Upload.FailedListener;
+import com.vaadin.ui.Upload.ProgressListener;
+import com.vaadin.ui.Upload.Receiver;
+import com.vaadin.ui.Upload.StartedEvent;
+import com.vaadin.ui.Upload.StartedListener;
+import com.vaadin.ui.Upload.SucceededEvent;
+import com.vaadin.ui.Upload.SucceededListener;
 
 import de.catma.ui.CatmaApplication;
 import de.catma.util.IDGenerator;
@@ -50,7 +49,7 @@ import de.catma.util.IDGenerator;
 class UploadPanel extends HorizontalLayout {
 
 	private Upload upload;
-	private ProgressIndicator pi;
+	private ProgressBar pi;
 	private Button btCancelUpload;
 	private Label fileLabel;
 	private URI uploadedFileUri;
@@ -66,7 +65,6 @@ class UploadPanel extends HorizontalLayout {
 			public void uploadStarted(StartedEvent event) {
 				pi.setValue(0f);
 				pi.setVisible(true);
-				pi.setPollingInterval(500);
 				btCancelUpload.setVisible(true);
 				fileLabel.setVisible(false);
 			}
@@ -136,10 +134,10 @@ class UploadPanel extends HorizontalLayout {
 		setSpacing(true);
 		upload = new Upload();
 		upload.setButtonCaption(Messages.getString("UploadPanel.uploadLocalFile")); //$NON-NLS-1$
-		upload.setImmediate(true);
+		upload.setImmediateMode(true);
 		addComponent(upload);
 
-		pi = new ProgressIndicator();
+		pi = new ProgressBar();
 		pi.setVisible(false);
 		addComponent(pi);
 		setComponentAlignment(pi, Alignment.MIDDLE_CENTER);

@@ -21,22 +21,22 @@ package de.catma.ui.repository.wizard;
 import java.io.File;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
 
-import com.vaadin.v7.data.util.BeanItem;
-import com.vaadin.v7.data.util.BeanItemContainer;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.ui.Component;
-import com.vaadin.v7.ui.Form;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Table;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.TextField;
 
-import de.catma.document.source.ContentInfoSet;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
 
 class ContentInfoPanel extends HorizontalLayout implements
 		DynamicWizardStep {
 	
-	private Table table;
+	private Grid<SourceDocumentResult> table;
 	
 	private AddSourceDocWizardResult wizardResult;
 	@SuppressWarnings("unused")
@@ -44,7 +44,6 @@ class ContentInfoPanel extends HorizontalLayout implements
 	
 	public ContentInfoPanel(WizardStepListener wizardStepListener,
 			AddSourceDocWizardResult wizardResult) {
-		super();
 		this.wizardStepListener = wizardStepListener;
 		this.wizardResult = wizardResult;
 		
@@ -56,28 +55,45 @@ class ContentInfoPanel extends HorizontalLayout implements
 		setMargin(true);
 		setSizeFull();
 		
-		BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
-		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName"); //$NON-NLS-1$
-		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.title"); //$NON-NLS-1$
-		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.author"); //$NON-NLS-1$
-		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.description"); //$NON-NLS-1$
-		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.publisher"); //$NON-NLS-1$
+		table = new Grid<>(Messages.getString("ContentInfoPanel.Documents"), new ListDataProvider<>(Collections.emptyList())); //$NON-NLS-1$
+		table.setSizeFull();
 		
-		table = new Table(Messages.getString("ContentInfoPanel.Documents"), container); //$NON-NLS-1$
+		TextField titleEditor = new TextField();
+		TextField authorEditor = new TextField();
+		TextField descEditor = new TextField();
+		TextField publisherEditor = new TextField();
 		
-		table.setVisibleColumns(new Object[]{
-				"sourceDocumentInfo.techInfoSet.fileName", //$NON-NLS-1$
-				"sourceDocumentInfo.contentInfoSet.title", //$NON-NLS-1$
-				"sourceDocumentInfo.contentInfoSet.author", //$NON-NLS-1$
-				"sourceDocumentInfo.contentInfoSet.description", //$NON-NLS-1$
-				"sourceDocumentInfo.contentInfoSet.publisher" //$NON-NLS-1$
-		});
-		table.setColumnHeaders(new String[]{Messages.getString("ContentInfoPanel.Filename"), Messages.getString("ContentInfoPanel.title"), Messages.getString("ContentInfoPanel.author"), Messages.getString("ContentInfoPanel.description"), Messages.getString("ContentInfoPanel.publisher")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getTechInfoSet().getFileName())
+			.setCaption(Messages.getString("ContentInfoPanel.Filename"))
+			.setWidth(200);
 		
-		table.setSelectable(true);
-		table.setNullSelectionAllowed(false);
-		table.setImmediate(true);
-		table.setEditable(true);
+		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getTitle())
+			.setCaption(Messages.getString("ContentInfoPanel.title"))
+			.setEditorComponent(
+				titleEditor, 
+				(docResult,title) -> docResult.getSourceDocumentInfo().getContentInfoSet().setTitle(title))
+			.setWidth(200);		
+		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getAuthor())
+			.setCaption(Messages.getString("ContentInfoPanel.author"))
+			.setEditorComponent(
+				authorEditor, 
+				(docResult,author) -> docResult.getSourceDocumentInfo().getContentInfoSet().setAuthor(author))
+			.setWidth(200);		
+		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getDescription())
+			.setCaption(Messages.getString("ContentInfoPanel.description"))
+			.setEditorComponent(
+				descEditor, 
+				(docResult,desc) -> docResult.getSourceDocumentInfo().getContentInfoSet().setDescription(desc))
+			.setWidth(200);		
+		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getPublisher())
+			.setCaption(Messages.getString("ContentInfoPanel.publisher"))
+			.setEditorComponent(
+				publisherEditor, 
+				(docResult,publisher) -> docResult.getSourceDocumentInfo().getContentInfoSet().setPublisher(publisher))
+			.setExpandRatio(1);
+		
+		table.setSelectionMode(SelectionMode.SINGLE);
+		table.getEditor().setEnabled(true);
 		
 		addComponent(table);
 		
@@ -110,27 +126,24 @@ class ContentInfoPanel extends HorizontalLayout implements
 		
 	}
 
+	@SuppressWarnings("unchecked")
 	public void stepActivated(boolean forward) {
-		
-		BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
-		if(container.size() > 0) {
-			return;
+		if (((ListDataProvider<SourceDocumentResult>)table.getDataProvider()).getItems().isEmpty()) {
+			Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.getSourceDocumentResults();
+			
+			for (SourceDocumentResult sdr : sourceDocumentResults) {
+				String fileName = sdr.getSourceDocumentInfo().getTechInfoSet().getFileName();
+				String title = makeTitleFromFileName(fileName);
+				sdr.getSourceDocumentInfo().getContentInfoSet().setTitle(title);
+			}
+			
+			ListDataProvider<SourceDocumentResult> dataProvider = new ListDataProvider<SourceDocumentResult>(sourceDocumentResults);
+			table.setDataProvider(dataProvider);
+			
+			if(sourceDocumentResults.size() > 0){
+				table.select(sourceDocumentResults.iterator().next());
+			}
 		}
-	
-		Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.getSourceDocumentResults();
-		
-		for (SourceDocumentResult sdr : sourceDocumentResults) {
-			String fileName = sdr.getSourceDocumentInfo().getTechInfoSet().getFileName();
-			String title = makeTitleFromFileName(fileName);
-			sdr.getSourceDocumentInfo().getContentInfoSet().setTitle(title);
-		}
-		
-		container.addAll(sourceDocumentResults);
-		
-		if(sourceDocumentResults.size() > 0){
-			table.select(sourceDocumentResults.toArray()[0]);
-		}
-		
 	}
 
 	public boolean onFinish() {

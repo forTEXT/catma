@@ -39,18 +39,20 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FilenameUtils;
 
+import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.event.selection.SelectionEvent;
+import com.vaadin.event.selection.SelectionListener;
+import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.GridLayout;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
-import com.vaadin.v7.data.util.BeanItemContainer;
-import com.vaadin.v7.shared.ui.label.ContentMode;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.v7.ui.Table;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
@@ -69,37 +71,9 @@ import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
 import de.catma.util.IDGenerator;
 
-class FileTypePanel extends GridLayout implements DynamicWizardStep {
+class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 	
-	class FileTypeCharsetValueChangeListener implements ValueChangeListener {
-		@Override
-		public void valueChange(ValueChangeEvent event) {
-			SourceDocumentResult sdr = (SourceDocumentResult) table.getValue();
-			if (sdr != null) {
-				FileType fileType = sdr.getSourceDocumentInfo().getTechInfoSet().getFileType();
-				
-				if(!fileType.isCharsetSupported()){
-					sdr.getSourceDocumentInfo().getTechInfoSet().setCharset(null);
-				}					
-
-				if (fileType.isCharsetSupported() 
-						&& sdr.getSourceDocumentInfo().getTechInfoSet().getCharset() == null) {
-					return;
-				}
-				
-				if (loadSourceDocumentAndContent(sdr)) {
-					onAdvance = canAdvance();
-					
-					showSourceDocumentPreview(sdr);
-				}
-				else {
-					taPreview.setValue(""); //$NON-NLS-1$
-				}
-			}
-		}
-	}
-
-	private Table table;
+	private Grid<SourceDocumentResult> table;
 	private boolean onAdvance = false;
 	private Label taPreview;
 	private Panel previewPanel;
@@ -111,7 +85,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	public FileTypePanel(
 			WizardStepListener wizardStepListener, AddSourceDocWizardResult wizardResult, 
 			Repository repository) {
-		super(2,4);
 		this.wizardResult = wizardResult;
 		this.wizardStepListener = wizardStepListener;
 		this.repository = repository;
@@ -139,18 +112,15 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}
 		
 		wizardResult.clearAllSourceDocumentResults();
-		table.removeAllItems();
 		
 		try {
 			
 			final TechInfoSet inputTechInfoSet = wizardResult.getInputTechInfoSet();
 
 			ArrayList<SourceDocumentResult> sourceDocumentResults = makeSourceDocumentResultsFromInputFile(inputTechInfoSet);
-			
-			@SuppressWarnings("unchecked")
-			BeanItemContainer<SourceDocumentResult> container = 
-				(BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
-			container.addAll(sourceDocumentResults);
+
+			ListDataProvider<SourceDocumentResult> dataProvider = new ListDataProvider<SourceDocumentResult>(sourceDocumentResults);
+			table.setDataProvider(dataProvider);
 			
 			wizardResult.addSourceDocumentResults(sourceDocumentResults);
 			
@@ -360,39 +330,59 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		setSpacing(true);
 		setSizeFull();
 		setMargin(true);
-		
-		BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
-		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName"); //$NON-NLS-1$
-		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileType"); //$NON-NLS-1$
-		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.charset"); //$NON-NLS-1$
-		
-		table = new Table(Messages.getString("FileTypePanel.documents"), container); //$NON-NLS-1$
 
-		table.setTableFieldFactory(new FileTypeFieldFactory(new FileTypeCharsetValueChangeListener(), new ValueChangeListener() {
-			
-			@Override
-			public void valueChange(ValueChangeEvent event) {
-				Object itemId = event.getProperty().getValue();
+		ComboBox<FileType> fileTypeEditor = new ComboBox<FileType>(null, FileType.getActiveFileTypes());
+		ComboBox<Charset> charsetEditor = new ComboBox<Charset>(null, Charset.availableCharsets().values());
+		fileTypeEditor.addValueChangeListener(
+			valueChangeEvent -> 
+			charsetEditor.setEnabled(valueChangeEvent.getValue().isCharsetSupported()));
+		
+		table = new Grid<>(Messages.getString("FileTypePanel.documents")); //$NON-NLS-1$
+		table.setSizeFull();
+		
+		table.addColumn(
+				sourceDocumentResult -> 
+					sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().getFileName())
+			.setWidth(200)
+			.setCaption(Messages.getString("FileTypePanel.Filename"));  //$NON-NLS-1$
+		table.addColumn(
+				sourceDocumentResult -> 
+					sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().getFileType())
+			.setEditorComponent(
+					fileTypeEditor, 
+					(sourceDocumentResult, fileType) -> {
+						sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().setFileType(fileType);
+						if (!fileType.isCharsetSupported()) {
+							sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().setCharset(null);
+						}
+					})
+			.setWidth(200)
+			.setCaption(Messages.getString("FileTypePanel.Filetype")); //$NON-NLS-1$
+		table.addColumn(
+				sourceDocumentResult -> 
+					sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().getCharset())
+			.setEditorComponent(
+				charsetEditor, 
+				(sourceDocumentResult, charset) -> 
+					sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().setCharset(charset))
+			.setWidth(200)
+			.setCaption(Messages.getString("FileTypePanel.Encoding")); //$NON-NLS-1$
+		
+		table.getEditor().setEnabled(true);
+		table.getEditor().addSaveListener(event -> {
+			if (loadSourceDocumentAndContent(event.getBean())) {
+				onAdvance = canAdvance();
 				
-				if (itemId != null) {
-					loadSourceDocumentAndContent((SourceDocumentResult)itemId);
-				}
+				showSourceDocumentPreview(event.getBean());
 			}
-		}));
-		
-		table.setVisibleColumns(new Object[]{
-				"sourceDocumentInfo.techInfoSet.fileName", //$NON-NLS-1$
-				"sourceDocumentInfo.techInfoSet.fileType", //$NON-NLS-1$
-				"sourceDocumentInfo.techInfoSet.charset" //$NON-NLS-1$
+			else {
+				taPreview.setValue(""); //$NON-NLS-1$
+			}			
 		});
-		table.setColumnHeaders(new String[]{Messages.getString("FileTypePanel.Filename"), Messages.getString("FileTypePanel.Filetype"), Messages.getString("FileTypePanel.Encoding")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
-		table.setSelectable(true);
-		table.setNullSelectionAllowed(false);
-		table.setImmediate(true);
-		table.setEditable(true);
+		table.setSelectionMode(SelectionMode.SINGLE);
 		
-		addComponent(table, 0, 0);
+		addComponent(table);
 		
 		VerticalLayout previewContent = new VerticalLayout();
 		previewContent.setMargin(true);
@@ -405,21 +395,15 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		this.taPreview.setContentMode(ContentMode.HTML);
 		previewContent.addComponent(taPreview);
 		
-		addComponent(previewPanel, 1, 0);
-		
-		setColumnExpandRatio(1, 1);
+		addComponent(previewPanel);
 	}
 	
 	private void initActions() {
-		table.addValueChangeListener(new ValueChangeListener() {
-			public void valueChange(ValueChangeEvent event) {
-				if(table.getValue() == null){
-					return;
-				}
-				
-				SourceDocumentResult sdr = (SourceDocumentResult)table.getValue();
-				
-				handleFileType(sdr);
+		table.addSelectionListener(new SelectionListener<SourceDocumentResult>() {
+			
+			@Override
+			public void selectionChange(SelectionEvent<SourceDocumentResult> event) {
+				event.getFirstSelectedItem().ifPresent(item -> handleFileType(item));
 			}
 		});
 		
@@ -468,7 +452,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	public void stepDeactivated(boolean forward){
 		if (!forward) {
 			wizardResult.clearAllSourceDocumentResults();
-			table.removeAllItems();
 		}
 	}
 

@@ -77,6 +77,7 @@ import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeOldEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.layout.FlexLayout.FlexWrap;
@@ -200,6 +201,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
 			resourceDataProvider.refreshAll();
+			
+			resourceGrid.expand(documentResource);
 			
 			Notification.show(
 				"Info", 
@@ -1090,40 +1093,35 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
     
     private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-    	ConfirmDialog.show(
-        		UI.getCurrent(), 
-        		"Info", 
-        		"Selected resources for the Analyzer: "
-        		+ resourceGrid.getSelectedItems()
-        			.stream()
-        			.map(resource -> resource.getName())
-        			.collect(Collectors.joining(","))
-        		+ "?", 
-        		"Yes", 
-        		"Cancel", dlg -> {
-        			Corpus corpus = new Corpus("to analyze");
-        	         for (Resource resource: resourceGrid.getSelectedItems()) {
-     	            	try {
-     	            		if(resource.getClass().equals(DocumentResource.class)) {
-     	            		DocumentResource docResource = (DocumentResource) resource;
-     	            		corpus.addSourceDocument(docResource.getDocument());
-     	            		}else {
-     	            			CollectionResource collResource = (CollectionResource) resource;
-         	            		corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
-         	            		DocumentResource docParent =(DocumentResource) resourceGrid.getTreeData().getParent(collResource);
-         	            		if(!corpus.getSourceDocuments().contains(docParent.getDocument())) {
-         	            			corpus.addSourceDocument(docParent.getDocument());
-         	            		}
-     	            			
-     	            		}
-     	                } catch (Exception e) {
-     	                    errorHandler.showAndLogError("Error adding resource to analyzer module "+resource, e);
-     	                }
-     	            }
-    	     
-    	            eventBus.post( new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
-        		});
-    	
+    	if (resourceGrid.getSelectedItems().isEmpty()) {
+    		Notification.show("Info", "Please select something first!", Type.HUMANIZED_MESSAGE);
+    	}
+    	else {
+			Corpus corpus = new Corpus("to analyze");
+			
+	         for (Resource resource: resourceGrid.getSelectedItems()) {
+            	try {
+            		if(resource.getClass().equals(DocumentResource.class)) {
+            		DocumentResource docResource = (DocumentResource) resource;
+            		corpus.addSourceDocument(docResource.getDocument());
+            		}else {
+            			CollectionResource collResource = (CollectionResource) resource;
+	            		corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
+	            		DocumentResource docParent =(DocumentResource) resourceGrid.getTreeData().getParent(collResource);
+	            		if(!corpus.getSourceDocuments().contains(docParent.getDocument())) {
+	            			corpus.addSourceDocument(docParent.getDocument());
+	            		}
+            			
+            		}
+                } catch (Exception e) {
+                    errorHandler.showAndLogError("Error adding resource to analyzer module "+resource, e);
+                }
+            }
+    
+           eventBus.post( new RouteToAnalyzeOldEvent((IndexedRepository)project, corpus));
+           eventBus.post( new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
+    	}
+
     }
 
 	public void close() {

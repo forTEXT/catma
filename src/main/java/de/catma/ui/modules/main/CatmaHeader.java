@@ -62,13 +62,13 @@ public class CatmaHeader extends HorizontalLayout {
         setExpandRatio(contextInformation, 1f);
         
         IconButton btnAccount = new IconButton( VaadinIcons.USER);
-
+        btnAccount.setDescription(loginService.getAPI().getUser().getName());
         ContextMenu ctxAccount = new ContextMenu(btnAccount, true);
-        ctxAccount.addItem("edit account", (item) -> {
+        ctxAccount.addItem("Edit Account", (item) -> {
         	EditAccountDialog editAccount = accountDialogProvider.get();
         	editAccount.show();
         });
-        ctxAccount.addItem("logout", (item) -> {
+        ctxAccount.addItem("Logout", (item) -> {
         	loginService.logout();
         	Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
     	});
