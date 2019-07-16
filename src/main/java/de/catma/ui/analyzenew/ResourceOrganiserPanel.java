@@ -59,9 +59,11 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 public class ResourceOrganiserPanel extends VerticalLayout implements VisualisationResources {
 
 	private Repository repository;
+	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	private HorizontalLayout headerButtonBar;
 	private VerticalLayout frameLayout;
 	private VerticalLayout leftSide;
+	private HorizontalLayout comboboxPanel;
 	private HorizontalSplitPanel mainContentSplitPanel;
 	private CloseVizViewListener leaveViewListener;
 	private Label visualisationName;
@@ -90,10 +92,12 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 	private ViewID selectedGridViewID;
 	private int kwicSize = 5;
 
-	public ResourceOrganiserPanel(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository) {
+	public ResourceOrganiserPanel(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository,
+			LoadingCache<String, KwicProvider> kwicProviderCache) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 
 		this.repository = repository;
+		this.kwicProviderCache= kwicProviderCache;
 		initComponents();
 		initActions();
 		initListeners();
@@ -119,6 +123,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 	}
 
 	private void initComponents() {
+		comboboxPanel = new HorizontalLayout();
 		frameLayout = new VerticalLayout();
 		leftSide = new VerticalLayout();
 		leftSide.addStyleName("analyzer_kwic_leftside_vertical");
@@ -143,7 +148,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 
 		headerButtonBar.addComponents(arrowLeftBt, visualisationName, optionsBt);
 		headerButtonBar.addStyleName("analyze_kwic_buttonBar");
-		frameLayout.addComponent(headerButtonBar);
+		//frameLayout.addComponent(headerButtonBar);
 		mainContentSplitPanel = new HorizontalSplitPanel();
 		mainContentSplitPanel.setSplitPosition(40, Sizeable.UNITS_PERCENTAGE);
 		mainContentSplitPanel.addStyleName("analyzer_kwic_splitpanel");
@@ -156,7 +161,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 
 		comboBox = new ComboBox<String>();
 		comboBox.setWidth("100%");
-		comboBox.setPlaceholder("Select one resultset");
+		comboBox.setEmptySelectionCaption("Select one resultset");
 		availableResultSets = new ArrayList<>();
 		availableResultSets = getQueriesForAvailableResults();
 		comboBox.setItems(availableResultSets);
@@ -208,7 +213,8 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		selectedItemsPanel.setHeight("200px");
 
 		selectedItemsPanel.setContent(selectedItemsTreeGrid);
-		leftSide.addComponent(comboBox);
+		comboboxPanel.addComponents(arrowLeftBt,comboBox);
+		leftSide.addComponent(comboboxPanel);
 		leftSide.addComponent(queryResultsPanel);
 		setActionGridComponenet();
 
@@ -229,7 +235,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		selectedDataProvider.addDataProviderListener(new DataProviderListener<TreeRowItem>() {
 			@Override
 			public void onDataChange(DataChangeEvent<TreeRowItem> event) {
-				updateVisualisation();
+				//updateVisualisation();
 			}
 		});
 	}
@@ -494,7 +500,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
 		TreeRowItem dummyItem = phraseDataProvider.getTreeData().getChildren(clickedItem).get(0);
 
-		if (clickedItem.getClass().equals(DocumentItem.class) && (dummyItem.getForward() == null)) {
+		if (clickedItem instanceof DocumentItem && (dummyItem.getForward() == null)) {
 
 			DocumentItem selectedItem = (DocumentItem) clickedItem;
 			phraseDataProvider.getTreeData()
@@ -502,20 +508,19 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			
 			QueryResultRowArray groupedChildren = selectedItem.getRows();
 			String docID=groupedChildren.get(0).getSourceDocumentId();
-			SourceDocument sourceDocument= null;
+	
 			KwicProvider kwicProvider= null;
-			int doclength=0;
-			try {
-				sourceDocument = repository.getSourceDocument(docID);
-				doclength = sourceDocument.getLength();
-				kwicProvider = new KwicProvider(sourceDocument);
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+	
+				try {
+					kwicProvider = kwicProviderCache.get(docID);
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	
 					
 			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, 
-					kwicProvider,doclength);
+					kwicProvider);
 			phraseDataProvider.getTreeData().addItems(selectedItem, children);
 
 		} else {
@@ -530,7 +535,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
 		TreeRowItem dummyItem = tagDataProvider.getTreeData().getChildren(clickedItem).get(0);
 
-		if (clickedItem.getClass().equals(CollectionItem.class) && (dummyItem.getRows() == null)) {
+		if (clickedItem instanceof CollectionItem && (dummyItem.getRows() == null)) {
 
 			CollectionItem selectedItem = (CollectionItem) clickedItem;
 			tagDataProvider.getTreeData().removeItem(dummyItem);
@@ -538,19 +543,17 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			
 			QueryResultRowArray groupedChildren = selectedItem.getRows();
 			String docID=groupedChildren.get(0).getSourceDocumentId();
-			SourceDocument sourceDocument= null;
+	
 			KwicProvider kwicProvider= null;
-			int doclength=0;
 			try {
-				sourceDocument = repository.getSourceDocument(docID);
-				doclength = sourceDocument.getLength();
-				kwicProvider = new KwicProvider(sourceDocument);
-			} catch (Exception e1) {
+				kwicProvider = kwicProviderCache.get(docID);
+			} catch (ExecutionException e) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				e.printStackTrace();
 			}
+
 				
-			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider, doclength);
+			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider);
 			tagDataProvider.getTreeData().addItems(selectedItem, children);
 		} else {
 		}
@@ -568,20 +571,18 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			
 			QueryResultRowArray groupedChildren = selectedItem.getRows();
 			String docID=groupedChildren.get(0).getSourceDocumentId();
-			SourceDocument sourceDocument= null;
+
 			KwicProvider kwicProvider= null;
-			int doclength=0;
 			try {
-				sourceDocument = repository.getSourceDocument(docID);
-				doclength = sourceDocument.getLength();
-				kwicProvider = new KwicProvider(sourceDocument);
-			} catch (Exception e1) {
+				kwicProvider = kwicProviderCache.get(docID);
+			} catch (ExecutionException e) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				e.printStackTrace();
 			}
+
 			
 			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem,
-					kwicProvider,doclength);
+					kwicProvider);
 			propertyDataProvider.getTreeData().addItems(selectedItem, children);
 		} else {
 		}
@@ -593,7 +594,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 	 * @return
 	 */
 	private ArrayList<TreeRowItem> createSingleItemRowsArrayList(TreeRowItem selectedItem,
-			KwicProvider kwicProvider, int doclength) {
+			KwicProvider kwicProvider) {
 						
 		ArrayList<TreeRowItem> children = new ArrayList<>();
 		QueryResultRowArray groupedChildren = selectedItem.getRows();
@@ -622,7 +623,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			SingleItem itemWithContext;
 		
 			try {
-				itemWithContext = setContext(item, kwicProvider,doclength);
+				itemWithContext = setContext(item, kwicProvider);
 				if (!children.contains(itemWithContext)) {
 					children.add((TreeRowItem) itemWithContext);
 				}
@@ -634,8 +635,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		return children;
 	}
 
-	private SingleItem setContext(SingleItem item, KwicProvider kwicProvider,
-			int doclength) throws Exception {
+	private SingleItem setContext(SingleItem item, KwicProvider kwicProvider) throws Exception {
 		
 		QueryResultRow row = item.getQueryResultRowArray().get(0);	
 		KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
@@ -648,7 +648,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			startPoint = 1;
 		}
 		
-		int position = (100 * startPoint) / doclength;
+		int position = (100 * startPoint) / kwicProvider.getDocumentLength();
 		item.setPosition(position);
 		return item;
 	}
@@ -714,11 +714,11 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			TreeRowItem dummy = currentTreeDataProvider.getTreeData().getChildren(selectedItem).get(0);
 			List<TreeRowItem> childrenLevelOne = currentTreeDataProvider.getTreeData().getChildren(selectedItem);
 
-			if (selectedItem.getClass() == CollectionItem.class && dummy.getRows() == null) {
+			if (selectedItem instanceof CollectionItem && dummy.getRows() == null) {
 				replaceDummyWithTagItems(selectedItem, currentTreeDataProvider);
 
 			}
-			if (selectedItem.getClass() == DocumentItem.class) {
+			if (selectedItem instanceof  DocumentItem) {
 				for (TreeRowItem collection : childrenLevelOne) {
 					TreeRowItem dummy2 = currentTreeDataProvider.getTreeData().getChildren(collection).get(0);
 					if (dummy2.getRows() == null) {
@@ -726,7 +726,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 					}
 				}
 			}
-			if (selectedItem.getClass() == RootItem.class) {
+			if (selectedItem instanceof RootItem) {
 				for (TreeRowItem document : childrenLevelOne) {
 					List<TreeRowItem> collectionsPerDoc = currentTreeDataProvider.getTreeData().getChildren(document);
 					for (TreeRowItem collection : collectionsPerDoc) {
@@ -752,7 +752,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		if ((allRootItems.isEmpty()) || (!allRootItems.contains(queryRoot))) {
 			selectedItemsTreeGridData.addItem(null, queryRoot);
 
-			if (selectedItem.getClass().equals(RootItem.class)) {
+			if (selectedItem instanceof RootItem) {
 				selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
 				List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
 				for (TreeRowItem doc : documents) {
@@ -765,7 +765,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 					}
 				}
 			}
-			if (selectedItem.getClass().equals(DocumentItem.class)) {
+			if (selectedItem instanceof DocumentItem) {
 				TreeRowItem root = resultsTreeGridData.getParent(selectedItem);
 				selectedItemsTreeGridData.addItem(queryRoot, root);
 				selectedItemsTreeGridData.addItem(root, selectedItem);
@@ -776,7 +776,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 					selectedItemsTreeGridData.addItems(coll, items);
 				}
 			}
-			if (selectedItem.getClass().equals(CollectionItem.class)) {
+			if (selectedItem instanceof CollectionItem) {
 				TreeRowItem doc = resultsTreeGridData.getParent(selectedItem);
 				TreeRowItem root = resultsTreeGridData.getParent(doc);
 				selectedItemsTreeGridData.addItem(queryRoot, root);
@@ -786,7 +786,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 				selectedItemsTreeGridData.addItems(selectedItem, items);
 
 			}
-			if (selectedItem.getClass().equals(SingleItem.class)) {
+			if (selectedItem instanceof SingleItem) {
 				TreeRowItem collection = resultsTreeGridData.getParent(selectedItem);
 				TreeRowItem document = resultsTreeGridData.getParent(collection);
 				TreeRowItem root = resultsTreeGridData.getParent(document);
@@ -803,7 +803,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 
 			if (allRootItems.contains(queryRoot)) {
 
-				if (selectedItem.getClass().equals(RootItem.class)) {
+				if (selectedItem instanceof RootItem) {
 					// single items of that branch maybe already inside->update whole branch
 					if (selectedItemsTreeGridData.contains(selectedItem)) {
 						selectedItemsTreeGridData.removeItem(selectedItem);
@@ -841,7 +841,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 					}
 				}
 				// update branch on doc level
-				if (selectedItem.getClass().equals(DocumentItem.class)) {
+				if (selectedItem instanceof DocumentItem) {
 					// single items of that doc-branch maybe already inside->update whole doc_branch
 					if (selectedItemsTreeGridData.contains(selectedItem)) {
 						TreeRowItem rootTag = resultsTreeGridData.getParent(selectedItem);
@@ -859,9 +859,12 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 					} else {
 						// add whole new doc_branch to tree
 						TreeRowItem rootTag = resultsTreeGridData.getParent(selectedItem);
-						selectedItemsTreeGridData.addItem(queryRoot, rootTag);
+						if(!selectedItemsTreeGridData.contains(rootTag)) {
+							selectedItemsTreeGridData.addItem(queryRoot,rootTag);
+							
+						}
+							
 						selectedItemsTreeGridData.addItem(rootTag, selectedItem);
-
 						List<TreeRowItem> colls = resultsTreeGridData.getChildren(selectedItem);
 						selectedItemsTreeGridData.addItems(selectedItem, colls);
 
@@ -873,35 +876,50 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 
 				}
 				// update tree-branch on collection level
-				if (selectedItem.getClass().equals(CollectionItem.class)) {
+				if (selectedItem  instanceof CollectionItem) {
+				TreeRowItem parentDocument=	resultsTreeGridData.getParent(selectedItem);
+					// with new document as parent for that collection
+					if(!selectedItemsTreeGridData.contains(parentDocument)) {
+						TreeRowItem tagItem=resultsTreeGridData.getParent(parentDocument);
+						
+						if(!selectedItemsTreeGridData.contains(tagItem)) {
+							selectedItemsTreeGridData.addItem(queryRoot,tagItem);	
+						}
+						selectedItemsTreeGridData.addItem(tagItem, parentDocument);
+						selectedItemsTreeGridData.addItem( parentDocument,selectedItem);	
+						List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
+						selectedItemsTreeGridData.addItems(selectedItem, items);
+					}
 					// single items of that collection-branch maybe already inside->update whole
 					// collection_branch
+					else {
+						if (selectedItemsTreeGridData.contains(selectedItem)) {
+							List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
+							selectedItemsTreeGridData.removeItem(selectedItem);
+							selectedItemsTreeGridData.addItems(selectedItem, singleItems);
 
-					if (selectedItemsTreeGridData.contains(selectedItem)) {
-						List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
-						TreeRowItem parent = selectedItemsTreeGridData.getParent(selectedItem);
-						selectedItemsTreeGridData.removeItem(selectedItem);
-						selectedItemsTreeGridData.addItems(selectedItem, singleItems);
-
-					} else {
-						// add whole new collection branch to tree
-
-						TreeRowItem doc = resultsTreeGridData.getParent(selectedItem);
-						TreeRowItem rootTag = resultsTreeGridData.getParent(doc);
-						List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
-						if (selectedItemsTreeGridData.contains(doc)) {
-							selectedItemsTreeGridData.addItem(doc, selectedItem);
-							selectedItemsTreeGridData.addItems(selectedItem, items);
 						} else {
-							selectedItemsTreeGridData.addItem(queryRoot, rootTag);
-							selectedItemsTreeGridData.addItem(rootTag, doc);
-							selectedItemsTreeGridData.addItem(doc, selectedItem);
-							selectedItemsTreeGridData.addItems(selectedItem, items);
+							// add whole new collection branch to tree
+
+							TreeRowItem doc = resultsTreeGridData.getParent(selectedItem);
+							TreeRowItem rootTag = resultsTreeGridData.getParent(doc);
+							List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
+							if (selectedItemsTreeGridData.contains(doc)) {
+								selectedItemsTreeGridData.addItem(doc, selectedItem);
+								selectedItemsTreeGridData.addItems(selectedItem, items);
+							} else {
+								selectedItemsTreeGridData.addItem(queryRoot, rootTag);
+								selectedItemsTreeGridData.addItem(rootTag, doc);
+								selectedItemsTreeGridData.addItem(doc, selectedItem);
+								selectedItemsTreeGridData.addItems(selectedItem, items);
+							}
 						}
+						
 					}
+			
 				}
 				// update branch on singleItem level
-				if (selectedItem.getClass().equals(SingleItem.class)) {
+				if (selectedItem instanceof SingleItem) {
 					// single item already inside, do nothing
 					if (selectedItemsTreeGridData.contains(selectedItem)) {
 						// do nothing, item already inside
@@ -949,62 +967,25 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 							
 			//item is on declevel then no deeper iteration and no cache needed
 			
-			if (selectedItem.getClass() == DocumentItem.class && dummy.getRows() == null) {			
+			if ((selectedItem instanceof DocumentItem) && dummy.getRows() == null) {	// instance of	
 				QueryResultRowArray groupedChildren = selectedItem.getRows();
 				String docID=groupedChildren.get(0).getSourceDocumentId();
-				SourceDocument sourceDocument= null;
 				KwicProvider kwicProvider= null;
-				int doclength=0;
-				
-				try {
-					sourceDocument = repository.getSourceDocument(docID);
-					doclength = sourceDocument.getLength();
-					kwicProvider = new KwicProvider(sourceDocument);
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-					
-				replaceDummyWithPhraseItems(selectedItem, phraseDataProvider,kwicProvider,doclength);
+				kwicProvider = this.kwicProviderCache.get(docID);		
+				replaceDummyWithPhraseItems(selectedItem,phraseDataProvider,kwicProvider);
 
 			}
 			
-		//item is a phrase,(means root in that tree)we need to go down to document level and store all documents -> kwicprovider_cache needed
-					
-		//create cache
-			LoadingCache<String, KwicProvider> kwicProviderCache = CacheBuilder.newBuilder().maximumSize(10)
-					.removalListener(new RemovalListener<String, KwicProvider>() {
-
-						@Override
-						public void onRemoval(RemovalNotification<String, KwicProvider> notification) {
-						
-							System.out.println("KWICPROVIDER :"+notification.getValue().toString()+
-									" HAS BEEN REMOVED FROM CACHE");	
-						
-						}
-					}).build(new CacheLoader<String, KwicProvider>() {
-
-						@Override
-						public KwicProvider load(String key) throws Exception {
-							return new KwicProvider(repository.getSourceDocument(key));
-						}
-					});		
+			// items on phrase level -> iteration on child(=document) level needed
 			
-			
-			if (selectedItem.getClass() == RootItem.class) {
+			if (selectedItem instanceof RootItem) { // instance of
 				for (TreeRowItem documentItem : childrenLevelOne) {
 					TreeRowItem dummy2 = phraseDataProvider.getTreeData().getChildren(documentItem).get(0);
-					if (dummy2.getRows() == null) {
-		// use cache 
-						String sdID=	documentItem.getRows().get(0).getSourceDocumentId();
-						KwicProvider kwicProvider1 =null;
-						try {
-							kwicProvider1 = kwicProviderCache.get(sdID);
-						} catch (ExecutionException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}					
-						replaceDummyWithPhraseItems(documentItem, phraseDataProvider,kwicProvider1,12000000);
+					if (dummy2.getRows() == null) { 
+						String sdID=documentItem.getRows().get(0).getSourceDocumentId();
+						KwicProvider kwicProvider =null;					
+						kwicProvider=	(KwicProvider) this.kwicProviderCache.get(sdID);					
+						replaceDummyWithPhraseItems(documentItem, phraseDataProvider,kwicProvider);
 
 					}else {
 						// do nothing, dummy already replaced by real items
@@ -1012,8 +993,6 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 
 				}
 			}
-		// clear cache 	
-			kwicProviderCache.invalidateAll();
 
 		} catch (Exception e) {
 			e.getMessage();
@@ -1180,28 +1159,25 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 		
 		QueryResultRowArray groupedChildren = selectedItem.getRows();
 		String docID=groupedChildren.get(0).getSourceDocumentId();
-		SourceDocument sourceDocument= null;
 		KwicProvider kwicProvider= null;
-		int doclength=0;
 		try {
-			sourceDocument = repository.getSourceDocument(docID);
-			doclength = sourceDocument.getLength();
-			kwicProvider = new KwicProvider(sourceDocument);
-		} catch (Exception e1) {
+			kwicProvider = kwicProviderCache.get(docID);
+		} catch (ExecutionException e) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			e.printStackTrace();
 		}
-		List<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider,doclength);
+
+		List<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider);
 		TreeRowItem dummy = tagDataProvider.getTreeData().getChildren(selectedItem).get(0);
 		tagDataProvider.getTreeData().removeItem(dummy);
 		tagDataProvider.getTreeData().addItems(selectedItem, children);
 	}
 
 	private void replaceDummyWithPhraseItems(TreeRowItem selectedItem,
-			TreeDataProvider<TreeRowItem> phraseDataProvider2, KwicProvider kwicProvider, int doclength) {
+			TreeDataProvider<TreeRowItem> phraseDataProvider2, KwicProvider kwicProvider) {
 		QueryResultRowArray groupedChildren = selectedItem.getRows();
 		
-		List<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider, doclength);
+		List<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider);
 
 		TreeRowItem dummy = phraseDataProvider2.getTreeData().getChildren(selectedItem).get(0);
 		if (selectedItem.getClass() == DocumentItem.class) {
@@ -1212,22 +1188,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 			
 			List<TreeRowItem> docList = phraseDataProvider2.getTreeData().getChildren(selectedItem);
 			
-			LoadingCache<String, KwicProvider> kwicProviderCache = CacheBuilder.newBuilder().maximumSize(10)
-					.removalListener(new RemovalListener<String, KwicProvider>() {
-
-						@Override
-						public void onRemoval(RemovalNotification<String, KwicProvider> notification) {
-						
-							System.out.println(notification.getValue().toString());
-						
-						}
-					}).build(new CacheLoader<String, KwicProvider>() {
-
-						@Override
-						public KwicProvider load(String key) throws Exception {
-							return new KwicProvider(repository.getSourceDocument(key));
-						}
-					});		
+	
 			
 			for (TreeRowItem doc : docList) {
 				TreeRowItem dummy2 = phraseDataProvider2.getTreeData().getChildren(doc).get(0);
@@ -1241,7 +1202,7 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 					e.printStackTrace();
 				}														
 				
-				List<TreeRowItem> children2 = createSingleItemRowsArrayList(doc, kwicProvider1,doclength);
+				List<TreeRowItem> children2 = createSingleItemRowsArrayList(doc, kwicProvider1);
 				phraseDataProvider2.getTreeData().removeItem(dummy2);
 				phraseDataProvider2.getTreeData().addItems(doc, children2);
 			}
@@ -1249,12 +1210,6 @@ public class ResourceOrganiserPanel extends VerticalLayout implements Visualisat
 	}
 	
 	
-	
-	  
-
-	  
-
-	 
 	 
 	
 	private ArrayList<QueryResultRow> createQueryResultFromTreeGridData() {

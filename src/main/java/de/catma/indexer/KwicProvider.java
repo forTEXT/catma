@@ -34,11 +34,15 @@ public class KwicProvider {
 	
 	private String content;
 	private String sourceDocumentId;
+	private String sourceDocumentName;
+	private SourceDocument sourceDocument;
 	private IndexInfoSet indexInfoSet;
 	
 	public KwicProvider(SourceDocument sourceDocument) throws IOException {
 		this.sourceDocumentId = sourceDocument.getID();
 		this.content = sourceDocument.getContent();
+		this.sourceDocumentName = sourceDocument.toString();
+		this.sourceDocument= sourceDocument;
 		indexInfoSet = 
 				sourceDocument.getSourceContentHandler()
 					.getSourceDocumentInfo().getIndexInfoSet();
@@ -264,4 +268,23 @@ public class KwicProvider {
 		
 		return false;
 	}
+	
+	public int getDocumentLength() {
+		return content.length();
+	}
+	
+	public String getContent() {
+		return content;
+	}
+	
+	public String getSourceDocumentName() {
+		return sourceDocumentName;
+	}
+
+	public SourceDocument getSourceDocument() {
+		return sourceDocument;
+	}
+
+	
+	
 }

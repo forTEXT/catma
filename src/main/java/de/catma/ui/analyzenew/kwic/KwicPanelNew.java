@@ -90,7 +90,7 @@ public class KwicPanelNew extends VerticalLayout {
 			kwicGrid.removeColumn("propValueID");
 			kwicGrid.removeColumn("propNameID");
 		}
-		HashMap<String, KwicProvider> kwicProviders = new HashMap<String, KwicProvider>();
+		HashMap<String, KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); // loading cache hier
 		kwicItemList.removeAll(kwicItemList);
 
 		showPropertyColumns = false;

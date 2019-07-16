@@ -19,7 +19,7 @@ import org.vaadin.sliderpanel.SliderPanelBuilder;
 import org.vaadin.sliderpanel.client.SliderMode;
 
 import com.github.appreciated.material.MaterialTheme;
-
+import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.event.ShortcutListener;
@@ -49,6 +49,7 @@ import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.QueryJob.QueryException;
@@ -83,6 +84,7 @@ public class AnalyzeNewView extends HorizontalLayout
 	private String userMarkupItemDisplayString = "Markup Collections";
 	private IndexedRepository repository;
 	private Corpus corpus;
+	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	private List<String> relevantSourceDocumentIDs;
 	private List<String> relevantUserMarkupCollIDs;
 	private List<String> relevantStaticMarkupCollIDs;
@@ -113,11 +115,12 @@ public class AnalyzeNewView extends HorizontalLayout
 	private QueryOptions queryOptions;
 	private boolean newItem= false;
 
-	public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener)
+	public AnalyzeNewView(Corpus corpus, IndexedRepository repository,LoadingCache<String, KwicProvider> kwicProviderCache, CloseListenerNew closeListener )
 			throws Exception {
 
 		this.corpus = corpus;
 		this.repository = repository;
+		this.kwicProviderCache = kwicProviderCache;
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
@@ -299,7 +302,7 @@ public class AnalyzeNewView extends HorizontalLayout
 			public void buttonClick(ClickEvent event) {
 
 				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Visualisation");
-				ResourceOrganiserPanel resourceOrganiserPanel = new ResourceOrganiserPanel(getAllTreeGridDatas(), repository);
+				ResourceOrganiserPanel resourceOrganiserPanel = new ResourceOrganiserPanel(getAllTreeGridDatas(), repository, kwicProviderCache);
 				kwicSnapshot.setKwicVizPanel(resourceOrganiserPanel);
 				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(resourceOrganiserPanel));
 				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));
@@ -398,7 +401,7 @@ public class AnalyzeNewView extends HorizontalLayout
 
 						try {
 							queryResultPanel = new ResultPanelNew(repository, result,
-									"result for query: " + searchInput.toString(), new ResultPanelCloseListener() {
+									"result for query: " + searchInput.toString(),kwicProviderCache, new ResultPanelCloseListener() {
 
 										@Override
 										public void closeRequest(ResultPanelNew queryResultPanel) {
@@ -447,7 +450,7 @@ public class AnalyzeNewView extends HorizontalLayout
 
 	private ArrayList<CurrentTreeGridData> getAllTreeGridDatas() {
 		
-		Iterator<Component> iterator = resultsPanel.getComponentIterator();
+		Iterator<Component> iterator = resultsPanel.iterator();
 		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
 		while (iterator.hasNext()) {
 			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();

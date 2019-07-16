@@ -1,10 +1,16 @@
 package de.catma.ui.analyzenew;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.UI;
 
 import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.SourceDocument;
 import de.catma.indexer.IndexedRepository;
+import de.catma.indexer.KwicProvider;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.AnalyzeNewView.CloseListenerNew;
 import de.catma.ui.analyzer.Messages;
@@ -12,6 +18,7 @@ import de.catma.ui.tabbedview.TabbedView;
 
 public class AnalyzeNewManagerView extends  TabbedView{
 	EventBus eventBus;
+
 	
 	public AnalyzeNewManagerView(EventBus eventBus) {
 		super(
@@ -20,9 +27,9 @@ public class AnalyzeNewManagerView extends  TabbedView{
 					
 	}
 	
-	public void analyzeNewDocuments(Corpus corpus, IndexedRepository repository) {
+	public void analyzeNewDocuments(Corpus corpus, IndexedRepository repository ) {
 		try {
-			AnalyzeNewView analyzeNewView = new AnalyzeNewView(corpus, repository,new CloseListenerNew() {
+			AnalyzeNewView analyzeNewView = new AnalyzeNewView(corpus, repository, getKwicProviderCache(repository), new CloseListenerNew() {
 				@Override
 				public void closeRequest(AnalyzeNewView analyzeNewView) {
 		
@@ -53,6 +60,24 @@ public class AnalyzeNewManagerView extends  TabbedView{
 			((CatmaApplication)UI.getCurrent()).showAndLogError("error initializing Analyzer", e);
 		}
 			
+	}
+	
+	private LoadingCache<String, KwicProvider> getKwicProviderCache(Repository repository) {
+		LoadingCache<String, KwicProvider> kwicProviderCache = CacheBuilder.newBuilder().maximumSize(10)
+				.build(new CacheLoader<String, KwicProvider>() {
+
+					@Override
+					public KwicProvider load(String key) throws Exception {
+	
+						 SourceDocument sd= repository.getSourceDocument(key);
+						 KwicProvider kwicProvider =  new KwicProvider(sd);
+						 sd.unload();
+						 return kwicProvider;
+								 
+								 
+					}
+				});	
+		return kwicProviderCache;
 	}
 
 }

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -31,6 +32,7 @@ import com.vaadin.ui.themes.ValoTheme;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -71,6 +73,7 @@ public class ResultPanelNew extends Panel {
 	private final ContextMenu optionsMenu;
 
 	private Label queryInfo;
+	private LoadingCache<String , KwicProvider> kwicProviderCache;
 	private HorizontalLayout groupedIcons;
 	private Button caretRightBt;
 	private Button caretDownBt;
@@ -87,12 +90,14 @@ public class ResultPanelNew extends Panel {
 	private boolean tagBased= false;
 	private boolean	propertyBased=false;
 
-	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString,
+	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString, 
+			LoadingCache<String, KwicProvider> kwicProviderCache,
 			ResultPanelCloseListener resultPanelCloseListener) throws Exception {
 
 		this.repository = repository;
 		this.queryResult = result;
 		this.queryAsString = queryAsString;
+		this.kwicProviderCache= kwicProviderCache;
 		this.resultPanelCloseListener = resultPanelCloseListener;
 		initComponents();
 		initListeners();
@@ -417,27 +422,22 @@ public class ResultPanelNew extends Panel {
 	}
 
 	private void setDataPhraseStyle() {
-		phraseData = new TreeData<>();
-      
+		phraseData = new TreeData<>();    
 		
-		Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-    	LoadingCache<String, SourceDocument> documentCache = 
-    			CacheBuilder.newBuilder()
-    			.maximumSize(10)
-    			.removalListener(new RemovalListener<String, SourceDocument>() {
-    				@Override
-    				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
-    					if (toBeUnloaded.contains(notification.getValue())) {
-    						notification.getValue().unload();
-    					}
-    				}
-				})
-    			.build(new CacheLoader<String, SourceDocument>() {
-    				@Override
-    				public SourceDocument load(String key) throws Exception {
-    					return repository.getSourceDocument(key);
-    				}
-    			});
+		/*
+		 * Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+		 * LoadingCache<String, SourceDocument> documentCache =
+		 * CacheBuilder.newBuilder() .maximumSize(10) .removalListener(new
+		 * RemovalListener<String, SourceDocument>() {
+		 * 
+		 * @Override public void onRemoval(RemovalNotification<String, SourceDocument>
+		 * notification) { if (toBeUnloaded.contains(notification.getValue())) {
+		 * notification.getValue().unload(); } } }) .build(new CacheLoader<String,
+		 * SourceDocument>() {
+		 * 
+		 * @Override public SourceDocument load(String key) throws Exception { return
+		 * repository.getSourceDocument(key); } });
+		 */
     	
     	
 		Set<GroupedQueryResult> resultAsSet = queryResult.asGroupedSet();
@@ -461,28 +461,29 @@ public class ResultPanelNew extends Panel {
 				GroupedQueryResult oneDocGroupedQueryResult = onePhraseGroupedQueryResult.getSubResult(docID);
 				
 				DocumentItem docItem = new DocumentItem();
-
+				KwicProvider kwicProvider= null;
 				try {
-		        	SourceDocument sd = 
-		        			documentCache.get(docID);
-		        	if (!sd.isLoaded()) {
-		        		toBeUnloaded.add(sd);
-		        	}
-		        	String docName = sd.toString();
-//					String docName = repository.getSourceDocument(docID).toString();
-					docItem.setTreeKey(docName);
-				} catch (Exception e) {
+				kwicProvider=	kwicProviderCache.get(docID);
+				docItem.setTreeKey(kwicProvider.getSourceDocumentName());
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+
+				/*
+				 * try { SourceDocument sd = documentCache.get(docID); if (!sd.isLoaded()) {
+				 * toBeUnloaded.add(sd); } String docName = sd.toString(); //
+				 * docItem.setTreeKey(docName); } catch (Exception e) { e.printStackTrace(); }
+				 */
 				docItem.setRows(transformGroupedResultToArray(oneDocGroupedQueryResult));
 				allDocuments.add(docItem);
 			}
 			phraseData.addItems(rootPhrase, allDocuments);
 		}
 		
-        for (SourceDocument sd : toBeUnloaded) {
-        	sd.unload();
-        }
+		/*
+		 * for (SourceDocument sd : toBeUnloaded) { sd.unload(); }
+		 */
 
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
 		treeGridPhrase.setDataProvider(phraseDataProvider);
@@ -587,13 +588,15 @@ public class ResultPanelNew extends Panel {
 			docsForARoot = groupDocumentsForRoot(root);
 			Set<String> sourceDocs = root.getRows().getSourceDocumentIDs();
 
-			for (String doc : sourceDocs) {
+			for (String docID : sourceDocs) {
 
-				QueryResultRowArray oneDocArray = docsForARoot.get(doc);
+				QueryResultRowArray oneDocArray = docsForARoot.get(docID);
 
 				DocumentItem docItem = new DocumentItem();
-				SourceDocument sourceDoc = repository.getSourceDocument(doc);
-				docItem.setTreeKey(sourceDoc.toString());
+						
+				KwicProvider kwicProvider=kwicProviderCache.get(docID);
+				String sourceDocName=kwicProvider.getSourceDocumentName()
+;				docItem.setTreeKey(sourceDocName);
 				docItem.setRows(oneDocArray);
 				treeData.addItem(root, docItem);
 				// adding collections
@@ -608,7 +611,11 @@ public class ResultPanelNew extends Panel {
 					QueryResultRowArray queryResultRowArray = new QueryResultRowArray();
 
 					String collID = tRow.getMarkupCollectionId();
+					SourceDocument sourceDoc=kwicProvider.getSourceDocument();
+					
+					
 					String collName = sourceDoc.getUserMarkupCollectionReference(collID).getName();
+				
 
 					if (collectionsForADoc.containsKey(collName)) {
 						queryResultRowArray = collectionsForADoc.get(collName);
