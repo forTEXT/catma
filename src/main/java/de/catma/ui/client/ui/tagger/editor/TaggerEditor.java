@@ -29,6 +29,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Text;
@@ -131,9 +132,11 @@ public class TaggerEditor extends FocusWidget
 	}
 
 	public void onMouseUp(MouseUpEvent event) {
-		lastRangeList = impl.getRangeList();
-		logger.info("Ranges: " + lastRangeList.size());
-		showTagInstancesFromSelection();
+		if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+			lastRangeList = impl.getRangeList();
+			logger.info("Ranges: " + lastRangeList.size());
+			showTagInstancesFromSelection();
+		}
 	}
 
  	public void setHTML(HTML pageHtmlContent, int lineCount) {
@@ -460,13 +463,13 @@ public class TaggerEditor extends FocusWidget
 	}
 
 	public void onFocus(FocusEvent event) {
-		for (Line line : lineIdToLineMap.values()) {
+		/*for (Line line : lineIdToLineMap.values()) {
 			if (line.hasSelectedTextRanges()) {
 				line.removeSelectedTextRanges();
 				line.updateLineElement();
 			}
 		}
-		lastTextRanges = null;
+		lastTextRanges = null;*/
 	}
 	
 	public void onKeyUp(KeyUpEvent event) {
@@ -479,9 +482,20 @@ public class TaggerEditor extends FocusWidget
 	}
 
 	public void onMouseDown(MouseDownEvent event) {
-		lastClientX = event.getClientX();
-		lastClientY = event.getClientY();
-		logger.info("mouse down at: " + lastClientX + "," + lastClientY);
+		if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+			if (!traceSelection) {
+				for (Line line : lineIdToLineMap.values()) {
+					if (line.hasSelectedTextRanges()) {
+						line.removeSelectedTextRanges();
+						line.updateLineElement();
+					}
+				}
+				lastTextRanges = null;
+			}
+			lastClientX = event.getClientX();
+			lastClientY = event.getClientY();
+			logger.info("mouse down at: " + lastClientX + "," + lastClientY);
+		}
 	}
 	
 
@@ -533,14 +547,16 @@ public class TaggerEditor extends FocusWidget
 	
 	@Override
 	public void onClick(ClickEvent event) {
-		if (traceSelection) {
-			highlightSelection();
-		}
-		
-		EventTarget eventTarget = event.getNativeEvent().getEventTarget();
-		if (Element.is(eventTarget)) {
-			Element targetElement = Element.as(eventTarget);
-			fireTagsSelected(targetElement);
+		if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+			if (traceSelection) {
+				highlightSelection();
+			}
+			
+			EventTarget eventTarget = event.getNativeEvent().getEventTarget();
+			if (Element.is(eventTarget)) {
+				Element targetElement = Element.as(eventTarget);
+				fireTagsSelected(targetElement);
+			}
 		}
 	}
 

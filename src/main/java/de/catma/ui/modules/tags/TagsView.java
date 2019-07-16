@@ -1,5 +1,7 @@
 package de.catma.ui.modules.tags;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +39,7 @@ import de.catma.document.repository.Repository;
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
@@ -45,10 +48,6 @@ import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.modules.main.ErrorHandler;
-import de.catma.ui.tagger.annotationpanel.AddEditPropertyDialog;
-import de.catma.ui.tagger.annotationpanel.AddParenttagDialog;
-import de.catma.ui.tagger.annotationpanel.AddSubtagDialog;
-import de.catma.ui.tagger.annotationpanel.EditTagDialog;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -64,6 +63,8 @@ public class TagsView extends HugeCard {
 	private Collection<TagsetDefinition> tagsets;
 	private TagResourcePanel resourcePanel;
 	private SliderPanel drawer;
+	private PropertyChangeListener tagChangedListener;
+	private PropertyChangeListener propertyDefinitionChangedListener;
 
 	public TagsView(EventBus eventBus, Repository project) {
 		super("Manage Tags");
@@ -73,7 +74,135 @@ public class TagsView extends HugeCard {
 		initComponents();
 		initActions();
 		this.tagsets = new ArrayList<>(resourcePanel.getSelectedTagsets());
+		initListeners();
 		initData();
+	}
+	
+	private void initListeners() {
+		tagChangedListener = new PropertyChangeListener() {
+			
+			@SuppressWarnings("unchecked")
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				
+				Object newValue = evt.getNewValue();
+				Object oldValue = evt.getOldValue();
+				
+				if (oldValue == null) { //created
+					Pair<TagsetDefinition, TagDefinition> value = 
+							(Pair<TagsetDefinition, TagDefinition>)newValue;
+					
+					TagsetDefinition tagset = value.getFirst();
+					TagDefinition tag = value.getSecond();
+		            if (tag.getParentUuid().isEmpty()) {
+		            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+		            	tagsetData.addItem(
+		            		tagsetItem, new TagDataItem(tag));
+		            	
+		            	tagsetGrid.expand(tagsetItem);
+		            }
+		            else {
+		            	TagDefinition parentTag = 
+		            		project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid());
+		            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag);
+		            	tagsetData.addItem(parentTagItem, new TagDataItem(tag));
+		            	
+		            	tagsetGrid.expand(parentTagItem);
+		            }
+		            
+					tagsetDataProvider.refreshAll();
+		            
+				}
+				else if (newValue == null) { //removed
+					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
+					
+					TagDefinition deletedTag = deleted.getSecond();
+					
+					tagsetData.removeItem(new TagDataItem(deletedTag));
+					tagsetDataProvider.refreshAll();
+					
+				}
+				else { //update
+					TagDefinition tag = (TagDefinition) newValue;
+					TagsetDefinition tagset = (TagsetDefinition)oldValue;
+	            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+
+					tagsetData.removeItem(new TagDataItem(tag));
+					TagDataItem tagDataItem = new TagDataItem(tag);
+					tagDataItem.setPropertiesExpanded(true);
+					tagsetData.addItem(tagsetItem, tagDataItem);
+					//TODO: sort
+					
+					showExpandedProperties(tagDataItem);
+					
+					tagsetDataProvider.refreshAll();
+				}
+				
+			}
+		};
+		project.getTagManager().addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);
+		
+		propertyDefinitionChangedListener = new PropertyChangeListener() {
+			
+			@SuppressWarnings("unchecked")
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				Object newValue = evt.getNewValue();
+				Object oldValue = evt.getOldValue();
+				
+				TagDefinition tag = null;
+				
+				if (oldValue == null) { //created
+					Pair<PropertyDefinition, TagDefinition> newData =
+							(Pair<PropertyDefinition, TagDefinition>) newValue;
+					
+					tag = newData.getSecond();
+					
+				}
+				else if (newValue == null) { // removed
+					Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>> oldData =
+							(Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>>) oldValue;
+					
+					tag = oldData.getSecond().getFirst();
+				}
+				else { //update
+					tag = (TagDefinition) oldValue;
+				}
+				
+				TagsetTreeItem parentItem = null;
+				if (tag.getParentUuid().isEmpty()) {
+					parentItem = new TagsetDataItem(
+						project.getTagManager().getTagLibrary()
+							.getTagsetDefinition(tag.getTagsetDefinitionUuid()));
+				}
+				else {
+					parentItem = new TagDataItem(
+						project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid()));
+				}
+				
+				final String tagId = tag.getUuid();
+				tagsetData.getChildren(parentItem)
+				.stream()
+				.map(tagsetTreeItem -> (TagDataItem)tagsetTreeItem)
+				.filter(tagDataItem -> tagDataItem.getTag().getUuid().equals(tagId))
+				.findFirst()
+				.ifPresent(tagDataItem -> {
+					tagDataItem.setPropertiesExpanded(false);
+					hideExpandedProperties(tagDataItem);
+					tagDataItem.setPropertiesExpanded(true);
+					showExpandedProperties(tagDataItem);
+				});
+				
+				tagsetDataProvider.refreshAll();
+			}
+		};
+		
+		project.getTagManager().addPropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged, 
+				propertyDefinitionChangedListener);	
+			
 	}
 
 	private void initActions() {
@@ -210,6 +339,12 @@ public class TagsView extends HugeCard {
 	
 	public void close() {
 		eventBus.unregister(this);
+		project.getTagManager().removePropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged, 
+				propertyDefinitionChangedListener);	
+		project.getTagManager().removePropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);	
 	}
 
 	private void handlePropertySummaryClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {

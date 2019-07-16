@@ -406,7 +406,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider,
 						project.hasPermission(
-							project.getRoleForTagset(annotation.getTagInstance().getTagsetId()), 
+							project.getRoleForCollection(annotation.getUserMarkupCollection().getId()), 
 							RBACPermission.COLLECTION_WRITE),
 						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
 			

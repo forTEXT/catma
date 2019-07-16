@@ -409,6 +409,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                @Override
 	                public void ready(Repository project) {
 	    				initData();
+	    				//TODO: post event to other views needed
 	    				Notification.show(
 		    					"Info", 
 		    					"Your Project has been synchronized!", 

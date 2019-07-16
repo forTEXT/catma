@@ -61,6 +61,10 @@ import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.ui.modules.tags.AddEditPropertyDialog;
+import de.catma.ui.modules.tags.AddParenttagDialog;
+import de.catma.ui.modules.tags.AddSubtagDialog;
+import de.catma.ui.modules.tags.EditTagDialog;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 

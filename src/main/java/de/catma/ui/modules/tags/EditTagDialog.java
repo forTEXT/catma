@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.annotationpanel;
+package de.catma.ui.modules.tags;
 
 import com.vaadin.shared.ui.colorpicker.Color;
 

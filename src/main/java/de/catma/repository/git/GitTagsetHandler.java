@@ -7,8 +7,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -21,19 +21,19 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.project.TagsetConflict;
-import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.TagConflict;
+import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.GitTagsetHeader;
-import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
+import de.catma.user.User;
 
 public class GitTagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -149,7 +149,7 @@ public class GitTagsetHandler {
 	}
 	
 	public MergeResult synchronizeBranchWithRemoteMaster(
-			String branch, String projectId, String tagsetId) throws IOException {
+			String branch, String projectId, String tagsetId, boolean canPushToRemote) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			String tagsetGitRepositoryName = 
@@ -183,7 +183,9 @@ public class GitTagsetHandler {
 			
 			if (mergeResult.getMergeStatus().isSuccessful()) {
 				
-				localGitRepoManager.push(credentialsProvider);
+				if (canPushToRemote) {
+					localGitRepoManager.push(credentialsProvider);
+				}
 				
 				localGitRepoManager.checkout(branch, false);
 				
@@ -216,7 +218,7 @@ public class GitTagsetHandler {
 					);
 
 			TagsetDefinition tagsetdefinition = new TagsetDefinition(
-				null, tagsetId, gitTagsetHeader.getName(), null, gitTagsetHeader.getDeletedTags()
+				null, tagsetId, gitTagsetHeader.getName(), null, gitTagsetHeader.getDeletedDefinitions()
 			);
 			String tagsetDefinitionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(tagsetSubmoduleName);
 			tagsetdefinition.setRevisionHash(tagsetDefinitionRevisionHash);
@@ -509,7 +511,7 @@ public class GitTagsetHandler {
 					projectId, 
 					tagsetId, 
 					gitTagsetHeader.getName(), 
-					gitTagsetHeader.getDeletedTags());
+					gitTagsetHeader.getDeletedDefinitions());
 			
 			
 			String tagsetGitRepositoryName =

@@ -644,9 +644,9 @@ public class GitProjectHandler {
 		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
 	}
 
-	public void removeTagset(TagsetDefinition tagsetDefinition) throws Exception {
+	public void removeTagset(TagsetDefinition tagset) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String tagsetId = tagsetDefinition.getUuid();
+			String tagsetId = tagset.getUuid();
 			
 			GitTagsetHandler gitTagsetHandler = 
 					new GitTagsetHandler(
@@ -656,7 +656,8 @@ public class GitProjectHandler {
 
 			MergeResult mergeResult = gitTagsetHandler.synchronizeBranchWithRemoteMaster(
 				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
-				projectId, tagsetId);
+				projectId, tagsetId, hasPermission(
+						getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE));
 			//TODO: handle mergeresult
 			
 			
@@ -676,8 +677,8 @@ public class GitProjectHandler {
 					targetSubmodulePath,
 					String.format(
 						"Removed Tagset %1$s with ID %2$s", 
-						tagsetDefinition.getName(), 
-						tagsetDefinition.getUuid()),
+						tagset.getName(), 
+						tagset.getUuid()),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail());
 		}		
@@ -711,7 +712,8 @@ public class GitProjectHandler {
 
 			MergeResult mergeResult = collectionHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
-					projectId, collectionId);
+					projectId, collectionId, 
+					hasPermission(getRoleForCollection(collectionId), RBACPermission.COLLECTION_WRITE));
 			//TODO: handle merge result
 			
 			localGitRepoManager.detach();			
@@ -941,7 +943,8 @@ public class GitProjectHandler {
 			
 			MergeResult mergeResult = gitTagsetHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
-					projectId, tagset.getUuid());
+					projectId, tagset.getUuid(), hasPermission(
+								getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE));
 			//TODO: handle mergeResult
 		}
 	}
@@ -1122,7 +1125,8 @@ public class GitProjectHandler {
 			
 			MergeResult mergeResult = collectionHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
-					projectId, collectionReference.getId());
+					projectId, collectionReference.getId(),
+					hasPermission(getRoleForCollection(collectionReference.getId()), RBACPermission.COLLECTION_WRITE));
 			//TODO: handle mergeResult			
 		}
 	}

@@ -48,6 +48,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
@@ -217,20 +218,25 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			collectionV.addEdge(rt(hasInstance), tagInstanceV);
 			
 			GraphTraversalSource g = graph.traversal();
-
-			Vertex tagV = 
+			GraphTraversal<Vertex, Vertex> traversal = 
 				g.V().has(nt(ProjectRevision), "revisionHash", revisionHash)
 				.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagsetId)
-				.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tagId).next();
-
-			tagV.addEdge(rt(hasInstance), tagInstanceV);
-			
-			for (Property property : ti.getUserDefinedProperties()) {
-				Vertex annoPropertyV = graph.addVertex(nt(AnnotationProperty));
-				annoPropertyV.property("uuid", property.getPropertyDefinitionId());
-				annoPropertyV.property("values", property.getPropertyValueList());
+				.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tagId);
+			if (traversal.hasNext()) {
+				Vertex tagV = traversal.next();
+	
+				tagV.addEdge(rt(hasInstance), tagInstanceV);
 				
-				tagInstanceV.addEdge(rt(hasProperty), annoPropertyV);
+				for (Property property : ti.getUserDefinedProperties()) {
+					Vertex annoPropertyV = graph.addVertex(nt(AnnotationProperty));
+					annoPropertyV.property("uuid", property.getPropertyDefinitionId());
+					annoPropertyV.property("values", property.getPropertyValueList());
+					
+					tagInstanceV.addEdge(rt(hasProperty), annoPropertyV);
+				}
+			}
+			else {
+				//TODO: check if deleted -> delete annotation/offer alternative, else do nothing and wait for next sync
 			}
 		}		
 	}
@@ -577,10 +583,29 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	
 
 	@Override
-	public Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tagDefinition)
+	public Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tag)
 			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		GraphTraversalSource g = graph.traversal();
+		
+		List<Map<String,Object>> resultMap = g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tag.getTagsetDefinitionUuid())
+		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid())
+		.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
+		.as("annotationId")
+		.inE(rt(hasInstance)).outV().hasLabel(nt(MarkupCollection))
+		.as("collectionId")
+		.select("annotationId", "collectionId")
+		.by("tagInstanceId").by("collectionId")
+		.toList();
+		
+		
+		Multimap<String, String> result = HashMultimap.create();
+		
+		for (Map<String,Object> entry : resultMap) {
+			result.put((String)entry.get("collectionId"), (String)entry.get("annotationId"));
+		}
+		
+		return result;
 	}
 
 	@Override
