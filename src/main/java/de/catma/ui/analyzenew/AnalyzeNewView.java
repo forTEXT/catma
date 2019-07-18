@@ -2,17 +2,13 @@ package de.catma.ui.analyzenew;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
 import org.antlr.runtime.RecognitionException;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -22,25 +18,19 @@ import com.github.appreciated.material.MaterialTheme;
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.event.ShortcutListener;
-import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComboBox.NewItemHandler;
-//import com.vaadin.ui.ComboBox.NewItemHandler;
-import com.vaadin.ui.ComboBox.NewItemProvider;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Button.ClickShortcut;
 import com.vaadin.ui.Notification.Type;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
@@ -53,7 +43,6 @@ import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.QueryJob.QueryException;
-import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
@@ -63,10 +52,7 @@ import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentTreeItem;
 import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentDataItem;
 import de.catma.ui.analyzenew.resourcepanelanalyze.ResourcePanelAnalyze;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
-import de.catma.ui.analyzer.GroupedQueryResultSelectionListener;
 import de.catma.ui.analyzer.Messages;
-import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
-import de.catma.ui.analyzer.TagKwicResultsProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.layout.HorizontalLayout;
 import de.catma.ui.layout.VerticalLayout;
@@ -523,7 +509,6 @@ public class AnalyzeNewView extends HorizontalLayout
 			e.printStackTrace();
 		}	
 	}
-
 
 	public Corpus getCorpus() {
 		return corpus;

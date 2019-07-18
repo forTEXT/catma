@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutionException;
 
+import com.google.common.cache.LoadingCache;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Grid;
@@ -16,12 +18,14 @@ import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzenew.Visualisation;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 
-public class KwicPanelNew extends VerticalLayout {
+public class KwicPanelNew extends VerticalLayout implements Visualisation{
 
 	private Repository repository;
+	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	private Grid<KwicItem> kwicGrid;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 	private int kwicSize = 5;
@@ -29,8 +33,8 @@ public class KwicPanelNew extends VerticalLayout {
 	private boolean showPropertyColumns;
 	private ActionGridComponent<Grid<KwicItem>> kwicGridComponent;
 
-	public KwicPanelNew(Repository repository) {
-		this.repository = repository;
+	public KwicPanelNew(LoadingCache<String, KwicProvider> kwicProviderCache ) {
+		this.kwicProviderCache = kwicProviderCache;
 
 		initComponents();
 		initActions();
@@ -80,51 +84,64 @@ public class KwicPanelNew extends VerticalLayout {
 		kwicGrid.getColumn("tagID").setDescriptionGenerator(e -> e.getTagDefinitionPath(), ContentMode.HTML);
 
 		kwicGrid.addStyleNames("analyze_kwic_grid");
+		
+		kwicGrid.setItems(kwicItemList);
 
 		kwicGridComponent = new ActionGridComponent<>(new Label("key word in context visualization"), kwicGrid);
 		addComponent(kwicGridComponent);
 	}
 
 	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
-		if (kwicGrid.getColumn("propValueID") != null) {
-			kwicGrid.removeColumn("propValueID");
-			kwicGrid.removeColumn("propNameID");
-		}
-		HashMap<String, KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); // loading cache hier
-		kwicItemList.removeAll(kwicItemList);
-
+		
+		/*
+		 * if (kwicGrid.getColumn("propValueID") != null) {
+		 * kwicGrid.removeColumn("propValueID"); kwicGrid.removeColumn("propNameID"); }
+		 */
+		
+		//HashMap<String, KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); // loading cache hier
+			
 		showPropertyColumns = false;
-		boolean markupBased = true;
+		//boolean markupBased = true;
 
 		for (QueryResultRow row : queryResult) {
-			SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
+			
+			
+			//SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
 
-			if (!kwicProviders.containsKey(sourceDocument.getID())) {
-				kwicProviders.put(sourceDocument.getID(), new KwicProvider(sourceDocument));
-			}
-
-			KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
+			//if (!kwicProviders.containsKey(sourceDocument.getID())) {
+			//	kwicProviders.put(sourceDocument.getID(), new KwicProvider(sourceDocument));
+			//}
+			
+			KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
+			
+			//KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
 			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
-			sourceDocument.toString();
+		
 
-			if (markupBased && (row instanceof TagQueryResultRow)) {
-				sourceDocument.getUserMarkupCollectionReference(((TagQueryResultRow) row).getMarkupCollectionId())
-						.getName();
-			}
+		//	if (markupBased && (row instanceof TagQueryResultRow)) {
+		//		sourceDocument.getUserMarkupCollectionReference(((TagQueryResultRow) row).getMarkupCollectionId())
+		//				.getName();
+		//	}
 
 			itemDirCache.put(row, kwic.isRightToLeft());
-			KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic, showPropertyColumns);
-			kwicItemList.add(kwicItem);
+			KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
+			
+			if(!kwicItemList.contains(kwicItem)) {
+				kwicItemList.add(kwicItem);
+				
+			}
+			
 		}
 		if (showPropertyColumns) {
 			kwicGrid.addColumn(KwicItem::getPropertyName).setCaption("Property Name").setId("propNameID");
 			kwicGrid.addColumn(KwicItem::getPropertyValue).setCaption("Property Value").setId("propValueID");
 		}
+		kwicGrid.getDataProvider().refreshAll();
 		
-		kwicGrid.setItems(kwicItemList);
+		
 	}
 
-	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic,
+	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic, KwicProvider kwicProvider,
 			boolean showPropertyColumns) throws Exception {
 		
 		KwicItem kwicItem = new KwicItem();
@@ -133,7 +150,8 @@ public class KwicPanelNew extends VerticalLayout {
 
 			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
 
-			SourceDocument sourceDoc = repository.getSourceDocument(queryResultRow.getSourceDocumentId());
+			//SourceDocument sourceDoc = repository.getSourceDocument(queryResultRow.getSourceDocumentId());
+			SourceDocument sourceDoc=kwicProvider.getSourceDocument();
 			kwicItem.setDocCollection(
 					sourceDoc.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
 
@@ -151,7 +169,8 @@ public class KwicPanelNew extends VerticalLayout {
 			}
 			return kwicItem;
 		} else {
-			String sourceDocName = repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString();
+			String sourceDocName=kwicProvider.getSourceDocumentName();
+			//String sourceDocName = repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString();
 
 			kwicItem.setDocCollection(sourceDocName);
 			kwicItem.setKeyWord(queryResultRow.getPhrase());
@@ -161,6 +180,26 @@ public class KwicPanelNew extends VerticalLayout {
 			kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
 			return kwicItem;
 		}
+	}
+	
+	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
+		
+		for (QueryResultRow row : queryResult) {
+				
+			KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
+			
+			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
+		
+			itemDirCache.put(row, kwic.isRightToLeft());
+			KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
+			
+			if(kwicItemList.contains(kwicItem)) {
+				kwicItemList.remove(kwicItem);
+				
+			}
+	
+	}
+		kwicGrid.getDataProvider().refreshAll();
 	}
 	
 	private void handleAnnotateAllRequest() {
@@ -174,4 +213,7 @@ public class KwicPanelNew extends VerticalLayout {
 	private void handleExportVisualizationRequest() {
 		
 	}
+
+
+
 }

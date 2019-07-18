@@ -5,9 +5,9 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
 public class RootItem implements TreeRowItem {
-	public QueryResultRowArray queryResultRowArray;
-	public ArrayList<TreeRowItem> singleItemsArrayList;
-    public 	String treeKey;
+	private QueryResultRowArray queryResultRowArray;
+	private ArrayList<TreeRowItem> singleItemsArrayList;
+    private String treeKey;
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 10;
 	static final int maxLength = 50;

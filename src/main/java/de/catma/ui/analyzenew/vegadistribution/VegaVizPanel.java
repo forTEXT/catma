@@ -1,13 +1,27 @@
 package de.catma.ui.analyzenew.vegadistribution;
 
-import de.catma.ui.analyzenew.VisualisationResources;
+import java.util.ArrayList;
 
-public class VegaVizPanel implements VisualisationResources {
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.ui.analyzenew.Visualisation;
+
+
+public class VegaVizPanel implements Visualisation {
 
 	@Override
-	public void updateVisualisation() {
+	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+	
 
 }
