@@ -3,18 +3,13 @@ package de.catma.ui.analyzenew;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
@@ -25,7 +20,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 //import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.themes.ValoTheme;
@@ -401,7 +395,7 @@ public class ResultPanelNew extends Panel {
 
 	private void setDataTagStyle() throws Exception {
 		tagData = new TreeData<>();
-		tagData = populateTreeDataWithTags(repository, tagData, queryResult);
+		tagData = populateTreeDataWithTags(tagData, queryResult);
 		TreeDataProvider<TreeRowItem> dataProvider = new TreeDataProvider<>(tagData);
 
 		treeGridTag.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
@@ -425,18 +419,18 @@ public class ResultPanelNew extends Panel {
 		phraseData = new TreeData<>();    
 		
 		/*
-		 * Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-		 * LoadingCache<String, SourceDocument> documentCache =
-		 * CacheBuilder.newBuilder() .maximumSize(10) .removalListener(new
-		 * RemovalListener<String, SourceDocument>() {
-		 * 
-		 * @Override public void onRemoval(RemovalNotification<String, SourceDocument>
-		 * notification) { if (toBeUnloaded.contains(notification.getValue())) {
-		 * notification.getValue().unload(); } } }) .build(new CacheLoader<String,
-		 * SourceDocument>() {
-		 * 
-		 * @Override public SourceDocument load(String key) throws Exception { return
-		 * repository.getSourceDocument(key); } });
+		  Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+		  LoadingCache<String, SourceDocument> documentCache =
+		  CacheBuilder.newBuilder() .maximumSize(10) .removalListener(new
+		  RemovalListener<String, SourceDocument>() {
+		  
+		  @Override public void onRemoval(RemovalNotification<String, SourceDocument>
+		  notification) { if (toBeUnloaded.contains(notification.getValue())) {
+		  notification.getValue().unload(); } } }) .build(new CacheLoader<String,
+		  SourceDocument>() {
+		  
+		  @Override public SourceDocument load(String key) throws Exception { return
+		  repository.getSourceDocument(key); } });
 		 */
     	
     	
@@ -500,7 +494,7 @@ public class ResultPanelNew extends Panel {
 
 	private void setDataPropertyStyle() throws Exception {
 		propData = new TreeData<>();
-		propData = populateTreeDataWithProperties(repository, propData, queryResult); // TODO !!!!!!
+		propData = populateTreeDataWithProperties(propData, queryResult); 
 
 		TreeDataProvider<TreeRowItem> propertyDataProvider = new TreeDataProvider<>(propData);
 
@@ -571,7 +565,7 @@ public class ResultPanelNew extends Panel {
 		treeGridPropertyFlatTable.setDataProvider(propFlatDataProvider);
 	}
 
-	private TreeData<TreeRowItem> populateTreeDataWithTags(Repository repository, TreeData<TreeRowItem> treeData,
+	private TreeData<TreeRowItem> populateTreeDataWithTags(TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
 
 		HashMap<String, QueryResultRowArray> allRoots = groupRootsGroupedByTagDefinitionPath(queryResult);
@@ -695,10 +689,10 @@ public class ResultPanelNew extends Panel {
 		return queryResultRowArray;
 	}
 
-	private TreeData<TreeRowItem> populateTreeDataWithProperties(Repository repository, TreeData<TreeRowItem> treeData,
+	private TreeData<TreeRowItem> populateTreeDataWithProperties(TreeData<TreeRowItem> treeData,
 			QueryResult queryResult) throws Exception {
 		
-		TreeData<TreeRowItem> data = populateTreeDataWithTags(repository, treeData, queryResult);
+		TreeData<TreeRowItem> data = populateTreeDataWithTags(treeData, queryResult);
 		return data;
 	}
 		

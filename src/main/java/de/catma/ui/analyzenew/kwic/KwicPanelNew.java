@@ -150,7 +150,6 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation{
 
 			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
 
-			//SourceDocument sourceDoc = repository.getSourceDocument(queryResultRow.getSourceDocumentId());
 			SourceDocument sourceDoc=kwicProvider.getSourceDocument();
 			kwicItem.setDocCollection(
 					sourceDoc.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
@@ -170,8 +169,6 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation{
 			return kwicItem;
 		} else {
 			String sourceDocName=kwicProvider.getSourceDocumentName();
-			//String sourceDocName = repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString();
-
 			kwicItem.setDocCollection(sourceDocName);
 			kwicItem.setKeyWord(queryResultRow.getPhrase());
 			kwicItem.setBackwardContext(kwic.getBackwardContext());

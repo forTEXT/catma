@@ -1,23 +1,14 @@
 package de.catma.ui.analyzenew;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.vaadin.data.TreeData;
-import com.vaadin.data.provider.DataChangeEvent;
-import com.vaadin.data.provider.DataProviderListener;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.event.ExpandEvent.ExpandListener;
@@ -25,7 +16,6 @@ import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Sizeable;
-import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
@@ -43,9 +33,7 @@ import de.catma.ui.layout.HorizontalLayout;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
-import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
-import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -148,9 +136,6 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		optionsBt.addStyleName("analyze_kwic_header_button");
 
-		headerButtonBar.addComponents(arrowLeftBt, visualisationName, optionsBt);
-		headerButtonBar.addStyleName("analyze_kwic_buttonBar");
-		//frameLayout.addComponent(headerButtonBar);
 		mainContentSplitPanel = new HorizontalSplitPanel();
 		mainContentSplitPanel.setSplitPosition(40, Sizeable.Unit.PERCENTAGE);
 		mainContentSplitPanel.addStyleName("analyzer_kwic_splitpanel");
@@ -234,14 +219,7 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 	}
 
 	private void initListeners() {
-		/*
-		 * selectedDataProvider.addDataProviderListener(new
-		 * DataProviderListener<TreeRowItem>() {
-		 * 
-		 * @Override public void onDataChange(DataChangeEvent<TreeRowItem> event) {
-		 * 
-		 * updateVisualisation(); } });
-		 */
+
 		
 	}
 	
@@ -262,13 +240,6 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		}
 		
 	}
-
-	/*
-	 * public void updateVisualisation() { ArrayList<QueryResultRow> queryResult =
-	 * createQueryResultFromTreeGridData(); try {
-	 * kwicNew.addQueryResultRows(queryResult); } catch (Exception e) {
-	 * e.printStackTrace(); } }
-	 */
 
 	private ArrayList<String> getQueriesForAvailableResults() {
 		ArrayList<String> allQueries = new ArrayList<>();
@@ -480,52 +451,100 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 
 	private void handleRemoveClickEvent(RendererClickEvent<TreeRowItem> removeClickEvent) {
 
+		//TreeRowItem toRemove = removeClickEvent.getItem();
+
+	//	TreeRowItem parent = selectedItemsTreeGridData.getParent(toRemove);
+
+		
+		/*
+		 * if(toRemove instanceof SingleItem) { List<TreeRowItem> itemsToRemove= new
+		 * ArrayList<TreeRowItem>(); itemsToRemove.add(toRemove);
+		 * 
+		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
+		 * itemsToRemove)); } // tag items 1 level under collection if(toRemove
+		 * instanceof CollectionItem) {
+		 * 
+		 * List <TreeRowItem>
+		 * singleItemsToRemove=selectedItemsTreeGridData.getChildren(toRemove);
+		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
+		 * singleItemsToRemove)); } // phrase Items 1 level under document if(toRemove
+		 * instanceof DocumentItem) {
+		 * 
+		 * List <TreeRowItem>
+		 * singleItemsToRemove=selectedItemsTreeGridData.getChildren(toRemove);
+		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
+		 * singleItemsToRemove)); } // tag kenn 2 unter document if(toRemove instanceof
+		 * DocumentItem) {
+		 * 
+		 * List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
+		 * List<TreeRowItem> parentItemsToRemove =
+		 * selectedItemsTreeGridData.getChildren(toRemove); for (TreeRowItem treeRowItem
+		 * : parentItemsToRemove) { List<TreeRowItem> singleItemsToRemove =
+		 * selectedItemsTreeGridData.getChildren(treeRowItem);
+		 * itemsToRemove.addAll(singleItemsToRemove); }
+		 * 
+		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
+		 * itemsToRemove)); } // depends on tag / phrase how deep that loop goes
+		 * if(toRemove instanceof RootItem) {
+		 * 
+		 * List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
+		 * List<TreeRowItem> parentItemsToRemove =
+		 * selectedItemsTreeGridData.getChildren(toRemove); for (TreeRowItem treeRowItem
+		 * : parentItemsToRemove) { List<TreeRowItem> singleItemsToRemove =
+		 * selectedItemsTreeGridData.getChildren(treeRowItem);
+		 * itemsToRemove.addAll(singleItemsToRemove); }
+		 * 
+		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
+		 * itemsToRemove)); }
+		 * 
+		 * if(toRemove instanceof QueryRootItem) { List<TreeRowItem> itemsToRemove = new
+		 * ArrayList<TreeRowItem>(); List<TreeRowItem> parentItemsToRemove =
+		 * selectedItemsTreeGridData.getChildren(toRemove); for (TreeRowItem treeRowItem
+		 * : parentItemsToRemove) { List<TreeRowItem> singleItemsToRemove =
+		 * selectedItemsTreeGridData.getChildren(treeRowItem); for (TreeRowItem
+		 * treeRowItem2 : singleItemsToRemove) { List<TreeRowItem> singleItemsToRemove2
+		 * = selectedItemsTreeGridData.getChildren(treeRowItem2);
+		 * itemsToRemove.addAll(singleItemsToRemove2); }
+		 * 
+		 * }
+		 * 
+		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
+		 * itemsToRemove)); }
+		 * 
+		 * if(toRemove instanceof QueryRootItem) { List<TreeRowItem> itemsToRemove = new
+		 * ArrayList<TreeRowItem>(); List<TreeRowItem> parentItemsToRemove =
+		 * selectedItemsTreeGridData.getChildren(toRemove); for (TreeRowItem treeRowItem
+		 * : parentItemsToRemove) { List<TreeRowItem> singleItemsToRemove =
+		 * selectedItemsTreeGridData.getChildren(treeRowItem); for (TreeRowItem
+		 * treeRowItem2 : singleItemsToRemove) { List<TreeRowItem> singleItemsToRemove2
+		 * = selectedItemsTreeGridData.getChildren(treeRowItem2); for (TreeRowItem
+		 * treeRowItem3 : singleItemsToRemove2) { List<TreeRowItem> singleItemsToRemove3
+		 * = selectedItemsTreeGridData.getChildren(treeRowItem3);
+		 * itemsToRemove.addAll(singleItemsToRemove3); }
+		 * 
+		 * 
+		 * }
+		 * 
+		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
+		 * itemsToRemove)); } }
+		 */
+		
+		
 		TreeRowItem toRemove = removeClickEvent.getItem();
 
 		TreeRowItem parent = selectedItemsTreeGridData.getParent(toRemove);
-
-		
-		if(toRemove  instanceof  SingleItem) {
-			List<TreeRowItem> itemsToRemove= new ArrayList<TreeRowItem>();
-			itemsToRemove.add(toRemove);	
-			removeQueryResultsFromVisualisation(createQueryResultFromItemList(itemsToRemove));		
-		}	
-		if(toRemove  instanceof  DocumentItem) {		
-			List <TreeRowItem> singleItemsToRemove=selectedItemsTreeGridData.getChildren(toRemove);		
-			removeQueryResultsFromVisualisation(createQueryResultFromItemList(singleItemsToRemove));
-		}
-		if(toRemove  instanceof  RootItem) {	
-
+				
 			List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
-			List<TreeRowItem> parentItemsToRemove = selectedItemsTreeGridData.getChildren(toRemove);
-			for (TreeRowItem treeRowItem : parentItemsToRemove) {
-				List<TreeRowItem> singleItemsToRemove = selectedItemsTreeGridData.getChildren(treeRowItem);
-				itemsToRemove.addAll(singleItemsToRemove);
-			}
-
-			removeQueryResultsFromVisualisation(createQueryResultFromItemList(itemsToRemove));
-		}
-		
-		if(toRemove  instanceof  QueryRootItem) {		
-			List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
-			List<TreeRowItem> parentItemsToRemove = selectedItemsTreeGridData.getChildren(toRemove);
-			for (TreeRowItem treeRowItem : parentItemsToRemove) {
-				List<TreeRowItem> singleItemsToRemove = selectedItemsTreeGridData.getChildren(treeRowItem);
-				for (TreeRowItem treeRowItem2 : singleItemsToRemove) {
-					List<TreeRowItem> singleItemsToRemove2 = selectedItemsTreeGridData.getChildren(treeRowItem2);
-					itemsToRemove.addAll(singleItemsToRemove2);
-				}
-
-			}
-
-			removeQueryResultsFromVisualisation(createQueryResultFromItemList(itemsToRemove));
-		}
-		
-		if(toRemove  instanceof  QueryRootItem) {				
-				List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
-				List<TreeRowItem> parentItemsToRemove = selectedItemsTreeGridData.getChildren(toRemove);
-				for (TreeRowItem treeRowItem : parentItemsToRemove) {
+			List<TreeRowItem> singleItemsToRemove0 = selectedItemsTreeGridData.getChildren(toRemove);
+			
+			if(!singleItemsToRemove0.isEmpty()) {
+				for (TreeRowItem treeRowItem : singleItemsToRemove0) {
+					if(treeRowItem.)
 					List<TreeRowItem> singleItemsToRemove = selectedItemsTreeGridData.getChildren(treeRowItem);
+					
+					itemsToRemove.addAll(singleItemsToRemove0)
+			}
+			
 					for (TreeRowItem treeRowItem2 : singleItemsToRemove) {
 						List<TreeRowItem> singleItemsToRemove2 = selectedItemsTreeGridData.getChildren(treeRowItem2);
 						for (TreeRowItem treeRowItem3 : singleItemsToRemove2) {
@@ -538,7 +557,10 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 
 				removeQueryResultsFromVisualisation(createQueryResultFromItemList(itemsToRemove));
 			}
-		}
+				
+	
+
+	
 		
 
 		
@@ -843,6 +865,8 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 						selectedItemsTreeGridData.addItem(doc, coll);
 						List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
 						selectedItemsTreeGridData.addItems(coll, items);
+						
+						addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 					}
 				}
 			}
@@ -855,6 +879,8 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 					selectedItemsTreeGridData.addItem(selectedItem, coll);
 					List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
 					selectedItemsTreeGridData.addItems(coll, items);
+					
+					addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 				}
 			}
 			if (selectedItem instanceof CollectionItem) {
@@ -865,6 +891,8 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 				selectedItemsTreeGridData.addItem(doc, selectedItem);
 				List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
 				selectedItemsTreeGridData.addItems(selectedItem, items);
+				
+				addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 
 			}
 			if (selectedItem instanceof SingleItem) {
@@ -875,6 +903,10 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 				selectedItemsTreeGridData.addItem(root, document);
 				selectedItemsTreeGridData.addItem(document, collection);
 				selectedItemsTreeGridData.addItem(collection, selectedItem);
+				
+				List<TreeRowItem> items= new ArrayList<TreeRowItem>();
+				items.add(selectedItem);
+				addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 
 			}
 
@@ -899,6 +931,8 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 								selectedItemsTreeGridData.addItem(doc, coll);
 								List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
 								selectedItemsTreeGridData.addItems(coll, items);
+								
+								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 							}
 						}
 
@@ -915,6 +949,8 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 								selectedItemsTreeGridData.addItem(doc, coll);
 								List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
 								selectedItemsTreeGridData.addItems(coll, items);
+								
+								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 							}
 
 						}
@@ -936,6 +972,8 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 						for (TreeRowItem coll : colls) {
 							List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
 							selectedItemsTreeGridData.addItems(coll, items);
+							
+							addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 						}
 					} else {
 						// add whole new doc_branch to tree
@@ -952,6 +990,8 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 						for (TreeRowItem coll : colls) {
 							List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
 							selectedItemsTreeGridData.addItems(coll, items);
+							
+							addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 						}
 					}
 
@@ -970,14 +1010,18 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 						selectedItemsTreeGridData.addItem( parentDocument,selectedItem);	
 						List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
 						selectedItemsTreeGridData.addItems(selectedItem, items);
+						
+						addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 					}
 					// single items of that collection-branch maybe already inside->update whole
 					// collection_branch
 					else {
 						if (selectedItemsTreeGridData.contains(selectedItem)) {
-							List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
+							List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
 							selectedItemsTreeGridData.removeItem(selectedItem);
-							selectedItemsTreeGridData.addItems(selectedItem, singleItems);
+							selectedItemsTreeGridData.addItems(selectedItem, items);
+							
+							addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 
 						} else {
 							// add whole new collection branch to tree
@@ -988,11 +1032,15 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 							if (selectedItemsTreeGridData.contains(doc)) {
 								selectedItemsTreeGridData.addItem(doc, selectedItem);
 								selectedItemsTreeGridData.addItems(selectedItem, items);
+								
+								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 							} else {
 								selectedItemsTreeGridData.addItem(queryRoot, rootTag);
 								selectedItemsTreeGridData.addItem(rootTag, doc);
 								selectedItemsTreeGridData.addItem(doc, selectedItem);
 								selectedItemsTreeGridData.addItems(selectedItem, items);
+								
+								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 							}
 						}
 						
@@ -1013,20 +1061,36 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 
 						if (selectedItemsTreeGridData.contains(coll)) {
 							selectedItemsTreeGridData.addItem(coll, selectedItem);
+							
+							List<TreeRowItem> items= new ArrayList<TreeRowItem>();
+							items.add(selectedItem);
+							addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 						} else {
 							if (selectedItemsTreeGridData.contains(doc)) {
 								selectedItemsTreeGridData.addItem(doc, coll);
 								selectedItemsTreeGridData.addItem(coll, selectedItem);
+								
+								List<TreeRowItem> items= new ArrayList<TreeRowItem>();
+								items.add(selectedItem);
+								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 							} else {
 								if (selectedItemsTreeGridData.contains(rootTag)) {
 									selectedItemsTreeGridData.addItem(rootTag, doc);
 									selectedItemsTreeGridData.addItem(doc, coll);
 									selectedItemsTreeGridData.addItem(coll, selectedItem);
+									
+									List<TreeRowItem> items= new ArrayList<TreeRowItem>();
+									items.add(selectedItem);
+									addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 								} else { // tagRoot is not yet inside
 									selectedItemsTreeGridData.addItem(queryRoot, rootTag);
 									selectedItemsTreeGridData.addItem(rootTag, doc);
 									selectedItemsTreeGridData.addItem(doc, coll);
 									selectedItemsTreeGridData.addItem(coll, selectedItem);
+									
+									List<TreeRowItem> items= new ArrayList<TreeRowItem>();
+									items.add(selectedItem);
+									addQueryResultsToVisualisation(createQueryResultFromItemList(items));
 
 								}
 							}
@@ -1048,7 +1112,7 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 							
 			//item is on declevel then no deeper iteration and no cache needed
 			
-			if ((selectedItem instanceof DocumentItem) && dummy.getRows() == null) {	// instance of	
+			if ((selectedItem instanceof DocumentItem) && dummy.getRows() == null) {
 				QueryResultRowArray groupedChildren = selectedItem.getRows();
 				String docID=groupedChildren.get(0).getSourceDocumentId();
 				KwicProvider kwicProvider= null;
