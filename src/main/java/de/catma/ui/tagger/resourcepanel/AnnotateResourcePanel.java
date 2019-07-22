@@ -152,6 +152,10 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				"Info", 
 				String.format("Collection %1$s has been created!", collectionReference.toString()),  
 				Type.TRAY_NOTIFICATION);
+			
+			if (getSelectedDocument().equals(document)) {
+				collectionDataItem.fireSelectedEvent(this.resourceSelectionListener);
+			}
     	}
     	else {
     		documentTree.getDataProvider().refreshAll();

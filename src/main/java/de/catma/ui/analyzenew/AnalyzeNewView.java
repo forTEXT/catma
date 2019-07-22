@@ -72,6 +72,7 @@ import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
+import de.catma.util.StopWatch;
 
 public class AnalyzeNewView extends HorizontalFlexLayout
 		implements ClosableTab, TabComponent, HasComponents {
@@ -395,7 +396,8 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 		((BackgroundServiceProvider) UI.getCurrent()).submit(Messages.getString("AnalyzerView.Searching"), //$NON-NLS-1$
 				job, new ExecutionListener<QueryResult>() {
 					public void done(QueryResult result) {
-
+						StopWatch watch = new StopWatch();
+						System.out.println(watch);
 						try {
 							queryResultPanel = new ResultPanelNew(repository, result,
 									"result for query: " + searchInput.toString(), new ResultPanelCloseListener() {
@@ -413,7 +415,7 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 
 						queryResultPanel.setWidth("100%");
 						resultsPanel.addComponentAsFirst(queryResultPanel);
-
+						System.out.println(watch);
 					};
 
 					public void error(Throwable t) {

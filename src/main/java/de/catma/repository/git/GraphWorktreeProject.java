@@ -712,9 +712,18 @@ public class GraphWorktreeProject implements IndexedRepository {
 		}
 	}
 
+	/**
+	 * @deprecated still necessary for Source Document Wizard 
+	 */
 	@Override
+	@Deprecated
 	public String getFileURL(String sourceDocumentID, String... path) {
-		return null; //TODO
+		StringBuilder builder = new StringBuilder("file://");
+		for (String folder : path) {
+			builder.append(folder);
+		}
+		builder.append(sourceDocumentID);
+		return builder.toString();
 	}
 	
 	private URI getSourceDocumentURI(String sourceDocumentId) {
