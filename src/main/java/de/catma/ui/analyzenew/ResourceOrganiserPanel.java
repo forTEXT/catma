@@ -34,6 +34,7 @@ import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.indexer.KwicProvider;
+import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -222,7 +223,7 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 
 		
 	}
-	
+	//TODO: replace concrete class kwicNew with interface
 	public void addQueryResultsToVisualisation(ArrayList<QueryResultRow> queryResultRows) {
 		try {
 			kwicNew.addQueryResultRows(queryResultRows);
@@ -231,7 +232,7 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		}
 		
 	}
-	
+	//TODO: replace concrete class kwicNew with interface
 	public void removeQueryResultsFromVisualisation(ArrayList<QueryResultRow> queryResultRows) {
 		try {
 			kwicNew.removeQueryResultRows(queryResultRows);
@@ -451,121 +452,17 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 
 	private void handleRemoveClickEvent(RendererClickEvent<TreeRowItem> removeClickEvent) {
 
-		//TreeRowItem toRemove = removeClickEvent.getItem();
-
-	//	TreeRowItem parent = selectedItemsTreeGridData.getParent(toRemove);
-
-		
-		/*
-		 * if(toRemove instanceof SingleItem) { List<TreeRowItem> itemsToRemove= new
-		 * ArrayList<TreeRowItem>(); itemsToRemove.add(toRemove);
-		 * 
-		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
-		 * itemsToRemove)); } // tag items 1 level under collection if(toRemove
-		 * instanceof CollectionItem) {
-		 * 
-		 * List <TreeRowItem>
-		 * singleItemsToRemove=selectedItemsTreeGridData.getChildren(toRemove);
-		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
-		 * singleItemsToRemove)); } // phrase Items 1 level under document if(toRemove
-		 * instanceof DocumentItem) {
-		 * 
-		 * List <TreeRowItem>
-		 * singleItemsToRemove=selectedItemsTreeGridData.getChildren(toRemove);
-		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
-		 * singleItemsToRemove)); } // tag kenn 2 unter document if(toRemove instanceof
-		 * DocumentItem) {
-		 * 
-		 * List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
-		 * List<TreeRowItem> parentItemsToRemove =
-		 * selectedItemsTreeGridData.getChildren(toRemove); for (TreeRowItem treeRowItem
-		 * : parentItemsToRemove) { List<TreeRowItem> singleItemsToRemove =
-		 * selectedItemsTreeGridData.getChildren(treeRowItem);
-		 * itemsToRemove.addAll(singleItemsToRemove); }
-		 * 
-		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
-		 * itemsToRemove)); } // depends on tag / phrase how deep that loop goes
-		 * if(toRemove instanceof RootItem) {
-		 * 
-		 * List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
-		 * List<TreeRowItem> parentItemsToRemove =
-		 * selectedItemsTreeGridData.getChildren(toRemove); for (TreeRowItem treeRowItem
-		 * : parentItemsToRemove) { List<TreeRowItem> singleItemsToRemove =
-		 * selectedItemsTreeGridData.getChildren(treeRowItem);
-		 * itemsToRemove.addAll(singleItemsToRemove); }
-		 * 
-		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
-		 * itemsToRemove)); }
-		 * 
-		 * if(toRemove instanceof QueryRootItem) { List<TreeRowItem> itemsToRemove = new
-		 * ArrayList<TreeRowItem>(); List<TreeRowItem> parentItemsToRemove =
-		 * selectedItemsTreeGridData.getChildren(toRemove); for (TreeRowItem treeRowItem
-		 * : parentItemsToRemove) { List<TreeRowItem> singleItemsToRemove =
-		 * selectedItemsTreeGridData.getChildren(treeRowItem); for (TreeRowItem
-		 * treeRowItem2 : singleItemsToRemove) { List<TreeRowItem> singleItemsToRemove2
-		 * = selectedItemsTreeGridData.getChildren(treeRowItem2);
-		 * itemsToRemove.addAll(singleItemsToRemove2); }
-		 * 
-		 * }
-		 * 
-		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
-		 * itemsToRemove)); }
-		 * 
-		 * if(toRemove instanceof QueryRootItem) { List<TreeRowItem> itemsToRemove = new
-		 * ArrayList<TreeRowItem>(); List<TreeRowItem> parentItemsToRemove =
-		 * selectedItemsTreeGridData.getChildren(toRemove); for (TreeRowItem treeRowItem
-		 * : parentItemsToRemove) { List<TreeRowItem> singleItemsToRemove =
-		 * selectedItemsTreeGridData.getChildren(treeRowItem); for (TreeRowItem
-		 * treeRowItem2 : singleItemsToRemove) { List<TreeRowItem> singleItemsToRemove2
-		 * = selectedItemsTreeGridData.getChildren(treeRowItem2); for (TreeRowItem
-		 * treeRowItem3 : singleItemsToRemove2) { List<TreeRowItem> singleItemsToRemove3
-		 * = selectedItemsTreeGridData.getChildren(treeRowItem3);
-		 * itemsToRemove.addAll(singleItemsToRemove3); }
-		 * 
-		 * 
-		 * }
-		 * 
-		 * removeQueryResultsFromVisualisation(createQueryResultFromItemList(
-		 * itemsToRemove)); } }
-		 */
-		
-		
 		TreeRowItem toRemove = removeClickEvent.getItem();
 
 		TreeRowItem parent = selectedItemsTreeGridData.getParent(toRemove);
-				
-			List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
-			List<TreeRowItem> singleItemsToRemove0 = selectedItemsTreeGridData.getChildren(toRemove);
-			
-			if(!singleItemsToRemove0.isEmpty()) {
-				for (TreeRowItem treeRowItem : singleItemsToRemove0) {
-					if(treeRowItem.)
-					List<TreeRowItem> singleItemsToRemove = selectedItemsTreeGridData.getChildren(treeRowItem);
-					
-					itemsToRemove.addAll(singleItemsToRemove0)
-			}
-			
-					for (TreeRowItem treeRowItem2 : singleItemsToRemove) {
-						List<TreeRowItem> singleItemsToRemove2 = selectedItemsTreeGridData.getChildren(treeRowItem2);
-						for (TreeRowItem treeRowItem3 : singleItemsToRemove2) {
-							List<TreeRowItem> singleItemsToRemove3 = selectedItemsTreeGridData.getChildren(treeRowItem3);
-							itemsToRemove.addAll(singleItemsToRemove3);
-						}
-						
-
-				}
-
-				removeQueryResultsFromVisualisation(createQueryResultFromItemList(itemsToRemove));
-			}
-				
-	
-
-	
 		
-
+		List <TreeRowItem> itemsToRemove =collectChildrenRecursively(toRemove);
 		
+		ArrayList<QueryResultRow> compoundQueryResult=createQueryResultFromItemList(itemsToRemove);
 		
+		removeQueryResultsFromVisualisation(compoundQueryResult);
 
+		// check on every level: if toRemove has no siblings delete parent too
 		List<TreeRowItem> siblingsOne = selectedItemsTreeGridData.getChildren(parent);
 		TreeRowItem parentParent = selectedItemsTreeGridData.getParent(parent);
 
@@ -597,7 +494,47 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		}
 		selectedDataProvider.refreshAll();
 	}
+	
+	private List<TreeRowItem> collectChildrenRecursively(TreeRowItem toRemove) {
 
+		List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
+
+		List<TreeRowItem> singleItemsToRemove = selectedItemsTreeGridData.getChildren(toRemove);
+		if (singleItemsToRemove.isEmpty()) {
+			itemsToRemove.add(toRemove);
+		} else {
+			for (TreeRowItem treeRowItem : singleItemsToRemove) {
+				List<TreeRowItem> singleItemsToRemove1 = selectedItemsTreeGridData.getChildren(treeRowItem);
+				if (singleItemsToRemove1.isEmpty()) {
+					itemsToRemove.add(treeRowItem);
+				} else {
+					for (TreeRowItem treeRowItem2 : singleItemsToRemove1) {
+						List<TreeRowItem> singleItemsToRemove2 = selectedItemsTreeGridData.getChildren(treeRowItem2);
+						if (singleItemsToRemove2.isEmpty()) {
+							itemsToRemove.add(treeRowItem2);
+						} else {
+							for (TreeRowItem treeRowItem3 : singleItemsToRemove2) {
+								List<TreeRowItem> singleItemsToRemove3 = selectedItemsTreeGridData
+										.getChildren(treeRowItem3);
+								if (singleItemsToRemove3.isEmpty()) {
+									itemsToRemove.add(treeRowItem3);
+								}
+								itemsToRemove.addAll(singleItemsToRemove3);
+							}
+
+						}
+
+					}
+				}
+			}
+
+		}
+		return itemsToRemove;
+		
+	}
+	
+	
+	
 	private void handleExpandClickEventPhrase(ExpandEvent<TreeRowItem> expandClickEvent) {
 
 		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
@@ -654,8 +591,7 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-				
+			
 			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider);
 			tagDataProvider.getTreeData().addItems(selectedItem, children);
 		} else {
