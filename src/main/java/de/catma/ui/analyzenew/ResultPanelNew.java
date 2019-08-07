@@ -417,23 +417,7 @@ public class ResultPanelNew extends Panel {
 
 	private void setDataPhraseStyle() {
 		phraseData = new TreeData<>();    
-		
-		/*
-		  Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-		  LoadingCache<String, SourceDocument> documentCache =
-		  CacheBuilder.newBuilder() .maximumSize(10) .removalListener(new
-		  RemovalListener<String, SourceDocument>() {
-		  
-		  @Override public void onRemoval(RemovalNotification<String, SourceDocument>
-		  notification) { if (toBeUnloaded.contains(notification.getValue())) {
-		  notification.getValue().unload(); } } }) .build(new CacheLoader<String,
-		  SourceDocument>() {
-		  
-		  @Override public SourceDocument load(String key) throws Exception { return
-		  repository.getSourceDocument(key); } });
-		 */
-    	
-    	
+		    	
 		Set<GroupedQueryResult> resultAsSet = queryResult.asGroupedSet();
 
 		for (GroupedQueryResult onePhraseGroupedQueryResult : resultAsSet) {
@@ -464,21 +448,12 @@ public class ResultPanelNew extends Panel {
 					e.printStackTrace();
 				}
 
-				/*
-				 * try { SourceDocument sd = documentCache.get(docID); if (!sd.isLoaded()) {
-				 * toBeUnloaded.add(sd); } String docName = sd.toString(); //
-				 * docItem.setTreeKey(docName); } catch (Exception e) { e.printStackTrace(); }
-				 */
 				docItem.setRows(transformGroupedResultToArray(oneDocGroupedQueryResult));
 				allDocuments.add(docItem);
 			}
 			phraseData.addItems(rootPhrase, allDocuments);
 		}
 		
-		/*
-		 * for (SourceDocument sd : toBeUnloaded) { sd.unload(); }
-		 */
-
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
 		treeGridPhrase.setDataProvider(phraseDataProvider);
 		treeGridPanel.setContent(treeGridPhrase);
@@ -501,12 +476,6 @@ public class ResultPanelNew extends Panel {
 		treeGridProperty.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
 		treeGridProperty.getColumn("tagID").setExpandRatio(3);
 
-		treeGridProperty.addColumn(TreeRowItem::getPropertyName).setCaption("Property name").setId("propNameID");
-		treeGridProperty.getColumn("propNameID").setExpandRatio(3);
-
-		treeGridProperty.addColumn(TreeRowItem::getPropertyValue).setCaption("Property value").setId("propValueID");
-		treeGridProperty.getColumn("propValueID").setExpandRatio(3);
-
 		treeGridProperty.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridProperty.getColumn("freqID").setExpandRatio(1);
 
@@ -526,8 +495,15 @@ public class ResultPanelNew extends Panel {
 
 		treeGridPropertyFlatTable.setWidth("100%");
 		treeGridPropertyFlatTable.setHeight("100%");
+		
 		treeGridPropertyFlatTable.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
 		treeGridPropertyFlatTable.getColumn("tagID").setExpandRatio(3);
+		
+		treeGridPropertyFlatTable.addColumn(TreeRowItem::getDocumentName).setCaption("Document").setId("docID");
+		treeGridPropertyFlatTable.getColumn("docID").setExpandRatio(3);
+		
+		treeGridPropertyFlatTable.addColumn(TreeRowItem::getCollectionName).setCaption("Collection").setId("collID");
+		treeGridPropertyFlatTable.getColumn("collID").setExpandRatio(3);
 		
 		treeGridPropertyFlatTable.addColumn(TreeRowItem::getPhrase).setCaption("Phrase").setId("phraseID");
 		treeGridPropertyFlatTable.getColumn("phraseID").setExpandRatio(3);
@@ -547,6 +523,22 @@ public class ResultPanelNew extends Panel {
 				TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
 				SingleItem propItem = new SingleItem();
 				propItem.setTreeKey(tagQueryResultRow.getTagDefinitionPath());
+				String collId=tagQueryResultRow.getMarkupCollectionId();
+	
+				
+				KwicProvider kwicProvider;
+				try {
+					
+					kwicProvider = kwicProviderCache.get(tagQueryResultRow.getSourceDocumentId());
+					String docName = kwicProvider.getSourceDocumentName();
+					String collName = kwicProvider.getSourceDocument().getUserMarkupCollectionReference(collId).getName();		
+					propItem.setDocumentName(docName);
+					propItem.setCollectionName(collName);
+					
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}		
+	
 				propItem.setPropertyName(tagQueryResultRow.getPropertyName());
 				propItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
 				propItem.setPhrase(tagQueryResultRow.getPhrase());

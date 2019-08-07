@@ -91,54 +91,33 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation{
 		addComponent(kwicGridComponent);
 	}
 
-	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
-		
+	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {	
 		/*
 		 * if (kwicGrid.getColumn("propValueID") != null) {
 		 * kwicGrid.removeColumn("propValueID"); kwicGrid.removeColumn("propNameID"); }
 		 */
 		
-		//HashMap<String, KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); // loading cache hier
-			
 		showPropertyColumns = false;
 		//boolean markupBased = true;
 
 		for (QueryResultRow row : queryResult) {
 			
-			
-			//SourceDocument sourceDocument = repository.getSourceDocument(row.getSourceDocumentId());
-
-			//if (!kwicProviders.containsKey(sourceDocument.getID())) {
-			//	kwicProviders.put(sourceDocument.getID(), new KwicProvider(sourceDocument));
-			//}
-			
 			KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
 			
-			//KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
 			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
 		
-
-		//	if (markupBased && (row instanceof TagQueryResultRow)) {
-		//		sourceDocument.getUserMarkupCollectionReference(((TagQueryResultRow) row).getMarkupCollectionId())
-		//				.getName();
-		//	}
-
 			itemDirCache.put(row, kwic.isRightToLeft());
 			KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
 			
 			if(!kwicItemList.contains(kwicItem)) {
-				kwicItemList.add(kwicItem);
-				
-			}
-			
+				kwicItemList.add(kwicItem);	
+			}	
 		}
-		if (showPropertyColumns) {
+		if (showPropertyColumns && (kwicGrid.getColumn("propNameID")==null)){
 			kwicGrid.addColumn(KwicItem::getPropertyName).setCaption("Property Name").setId("propNameID");
 			kwicGrid.addColumn(KwicItem::getPropertyValue).setCaption("Property Value").setId("propValueID");
 		}
 		kwicGrid.getDataProvider().refreshAll();
-		
-		
 	}
 
 	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic, KwicProvider kwicProvider,

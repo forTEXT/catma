@@ -17,6 +17,8 @@ public String getBackward();
 public String getForward();
 public String getContextDiv();
 public String getPhrase();
+public String getCollectionName();
+public String getDocumentName();
 
 public int getPosition();
 

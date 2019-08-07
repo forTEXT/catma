@@ -49,7 +49,6 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 
 public class ResourceOrganiserPanel extends VerticalLayout  {
 
-	private Repository repository;
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	private HorizontalLayout headerButtonBar;
 	private VerticalLayout frameLayout;
@@ -87,11 +86,10 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 			LoadingCache<String, KwicProvider> kwicProviderCache) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 
-		this.repository = repository;
 		this.kwicProviderCache= kwicProviderCache;
 		initComponents();
 		initActions();
-		initListeners();
+
 
 	}
 
@@ -99,10 +97,9 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 			Repository repository) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 		this.leaveViewListener = leaveVizListener;
-		this.repository = repository;
 		initComponents();
 		initActions();
-		initListeners();
+
 	}
 
 	public CloseVizViewListener getLeaveViewListener() {
@@ -219,10 +216,6 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		});
 	}
 
-	private void initListeners() {
-
-		
-	}
 	//TODO: replace concrete class kwicNew with interface
 	public void addQueryResultsToVisualisation(ArrayList<QueryResultRow> queryResultRows) {
 		try {
@@ -414,8 +407,9 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 
 		return propertyTreeGrid;
 	}
-	private TreeGrid<TreeRowItem> addDataFlatTableStyle(TreeData<TreeRowItem> treeData) {
-		
+	
+	
+	private TreeGrid<TreeRowItem> addDataFlatTableStyle(TreeData<TreeRowItem> treeData) {	
 		TreeData <TreeRowItem> dataWithContext=setContextToDataObject(treeData);
 		propertyFlatTreeGrid = new TreeGrid<TreeRowItem>();
 		propertyFlatTreeGrid.setWidth(570, Unit.PIXELS);
@@ -450,16 +444,12 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		return propertyFlatTreeGrid;
 	}
 
+	
 	private void handleRemoveClickEvent(RendererClickEvent<TreeRowItem> removeClickEvent) {
-
 		TreeRowItem toRemove = removeClickEvent.getItem();
-
 		TreeRowItem parent = selectedItemsTreeGridData.getParent(toRemove);
-		
 		List <TreeRowItem> itemsToRemove =collectChildrenRecursively(toRemove);
-		
 		ArrayList<QueryResultRow> compoundQueryResult=createQueryResultFromItemList(itemsToRemove);
-		
 		removeQueryResultsFromVisualisation(compoundQueryResult);
 
 		// check on every level: if toRemove has no siblings delete parent too
@@ -495,8 +485,8 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		selectedDataProvider.refreshAll();
 	}
 	
+	
 	private List<TreeRowItem> collectChildrenRecursively(TreeRowItem toRemove) {
-
 		List<TreeRowItem> itemsToRemove = new ArrayList<TreeRowItem>();
 
 		List<TreeRowItem> singleItemsToRemove = selectedItemsTreeGridData.getChildren(toRemove);
@@ -692,20 +682,26 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		return item;
 	}
 	
-	 private TreeData<TreeRowItem> setContextToDataObject(TreeData<TreeRowItem> treeData){
-		List<TreeRowItem> allItems=  treeData.getRootItems();		
+	private TreeData<TreeRowItem> setContextToDataObject(TreeData<TreeRowItem> treeData) {
+		List<TreeRowItem> allItems = treeData.getRootItems();
 
-		allItems.forEach(e->{
+		allItems.forEach(e -> {
+
+			KwicProvider kwicProvider = null;
+
+			String docID = e.getRows().get(0).getSourceDocumentId();
 			try {
-							
-			//	setContext((SingleItem) e);
+				kwicProvider = kwicProviderCache.get(docID);
+				setContext((SingleItem) e, kwicProvider);
 			} catch (Exception e1) {
-				// TODO Auto-generated catch block
+			
 				e1.printStackTrace();
 			}
-		});	 
-		 return treeData;
-	 }
+
+		});
+		return treeData;
+	}
+	 
 
 	private void handleSelectClickEvent(RendererClickEvent<TreeRowItem> rendererClickEvent) {
 		TreeRowItem selectedItem = rendererClickEvent.getItem();
@@ -738,10 +734,18 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 				//item already inside- do nothing
 			} else {
 				selectedItemsTreeGridData.addItem(root, selectedItem);
+				ArrayList<TreeRowItem> items= new ArrayList<TreeRowItem>();
+				items.add(selectedItem);
+				addQueryResultsToVisualisation(createQueryResultFromItemList(items));
+
 			}
 		} else {
 			selectedItemsTreeGridData.addItem(null, root);
 			selectedItemsTreeGridData.addItem(root, selectedItem);
+			ArrayList<TreeRowItem> items= new ArrayList<TreeRowItem>();
+			items.add(selectedItem);
+			addQueryResultsToVisualisation(createQueryResultFromItemList(items));
+
 		}
 		selectedDataProvider.refreshAll();
 	}

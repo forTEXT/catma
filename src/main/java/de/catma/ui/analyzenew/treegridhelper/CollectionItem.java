@@ -117,4 +117,16 @@ public class CollectionItem implements TreeRowItem {
 		return null;
 	}
 
+	@Override
+	public String getCollectionName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getDocumentName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

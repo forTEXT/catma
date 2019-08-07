@@ -24,6 +24,8 @@ public class SingleItem implements TreeRowItem {
 	private String backward;
 	private int position;
 	private String treeKey;
+	private String documentName;
+	private String collectionName;
 	private String phrase;
 	private String propertyName;
 	private String propertyValue;
@@ -72,9 +74,11 @@ public class SingleItem implements TreeRowItem {
 	}
 
 	public void setRows(QueryResultRowArray queryResultRowArray) {
+		
 		this.queryResultRowArray = queryResultRowArray;
 		queryResultRow = queryResultRowArray.get(0);
 		phrase=queryResultRow.getPhrase();
+		
 		if (queryResultRow.getClass() == TagQueryResultRow.class) {
 			TagQueryResultRow tQRR = (TagQueryResultRow) queryResultRow;
 			range = tQRR.getRange();
@@ -158,6 +162,22 @@ public class SingleItem implements TreeRowItem {
 			phrase = tQRR.getPhrase();
 		}
 
+	}
+	
+	public String getDocumentName() {
+		return documentName;
+	}
+
+	public void setDocumentName(String documentName) {
+		this.documentName = documentName;
+	}
+
+	public String getCollectionName() {
+		return collectionName;
+	}
+
+	public void setCollectionName(String collectionName) {
+		this.collectionName = collectionName;
 	}
 
 	@Override
