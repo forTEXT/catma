@@ -16,11 +16,11 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.tagger.annotationpanel.AnnotatedTextProvider;
 
-public class AnnotationConflictView extends VerticalLayout {
+public class AnnotationConflictView extends VerticalFlexLayout {
 	private AnnotationConflict annotationConflict;
 	private CollectionConflict collectionConflict;
 	private TagManager tagManager;
@@ -110,7 +110,7 @@ public class AnnotationConflictView extends VerticalLayout {
 		this.annotatedKwic.setContentMode(ContentMode.HTML);
 		addComponent(this.annotatedKwic);
 		
-		HorizontalLayout comparisonPanel = new HorizontalLayout();
+		HorizontalFlexLayout comparisonPanel = new HorizontalFlexLayout();
 		comparisonPanel.setJustifyContent(JustifyContent.SPACE_AROUND);
 		comparisonPanel.addStyleName("annotation-conflict-view-comparison-panel");
 		
@@ -134,7 +134,7 @@ public class AnnotationConflictView extends VerticalLayout {
 		rightPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getValue()).setCaption("Value");
 		comparisonPanel.addComponent(rightPropertyGrid);
 		addComponent(comparisonPanel);
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
 		buttonPanel.addStyleName("annotation-conflict-view-button-panel");
 		buttonPanel.setJustifyContent(JustifyContent.SPACE_AROUND);
 		btMine = new Button("Take mine");

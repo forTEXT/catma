@@ -4,7 +4,7 @@ import com.vaadin.server.Resource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.themes.ValoTheme;
 
-public class LinkButton extends Button{
+public class LinkButton extends Button {
 
 	public LinkButton() {
 		super();

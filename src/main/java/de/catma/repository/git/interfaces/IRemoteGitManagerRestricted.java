@@ -85,7 +85,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 *         group
 	 */
 	void deleteGroup(String path) throws IOException;
-
+	
 	/**
 	 * finds a Project by id
 	 * @param projectId
@@ -138,6 +138,8 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	
 	Map<String, RBACRole> getRolesPerResource(ProjectReference projectReference) throws IOException ;
 	Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException ;
+
+	void updateGroup(String name, String path, String description) throws IOException;
 
 
 }

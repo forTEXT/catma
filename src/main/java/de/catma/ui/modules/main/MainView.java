@@ -7,11 +7,10 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.analyzenew.AnalyzeNewManagerView;
 import de.catma.ui.analyzer.AnalyzerManagerViewOld;
@@ -35,7 +34,7 @@ import de.catma.ui.tagger.TaggerManagerView;
  *
  * @author db
  */
-public class MainView extends CssLayout implements CatmaRouter, Closeable {
+public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 
     /**
      * Header part
@@ -47,12 +46,12 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
      * mainSection is the combined section (nav and content) of catma
      */
 
-    private final CssLayout mainSection = new CssLayout();
+    private final HorizontalLayout mainSection = new HorizontalLayout();
 
     /*
      * layoutSection is the content section
      */
-    private final CssLayout viewSection = new CssLayout();
+    private final VerticalLayout viewSection = new VerticalLayout();
 
     /*
      * left side main navigation
@@ -68,11 +67,6 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
      * projectmanager
      */
 	private final ProjectManager projectManager;
-
-	/**
-	 * restricted gitmanager
-	 */
-	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	/*
 	 * Factory to generate Views
@@ -97,16 +91,13 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
     public MainView(@Assisted("projectManager")ProjectManager projectManager, 
     		CatmaHeader catmaHeader, 
     		EventBus eventBus,
-    		@Assisted("iRemoteGitlabManager")IRemoteGitManagerRestricted remoteGitManagerRestricted,
     		UIFactory uiFactory){
         this.projectManager = projectManager;
         this.header = catmaHeader;
         this.eventBus = eventBus;
         this.navigation = new CatmaNav(eventBus);
-        this.remoteGitManagerRestricted = remoteGitManagerRestricted;
         this.uiFactory = uiFactory;
         initComponents();
-        addStyleName("main-view");
         eventBus.register(this);
         eventBus.post(new RegisterCloseableEvent(this));
         
@@ -116,16 +107,25 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
      * initialize all components
      */
     private void initComponents() {
+    	addStyleName("main-view");
+    	setSizeFull();
+    	setSpacing(false);
         addComponent(header);
-       
+        addComponent(mainSection);
+        setExpandRatio(mainSection, 1.0f);
+        mainSection.setSizeFull();
+        mainSection.setSpacing(false);
+        viewSection.setSizeFull();
+        
         mainSection.addComponent(navigation);
         mainSection.addComponent(viewSection);
+        mainSection.setExpandRatio(viewSection, 1f);
         mainSection.addStyleName("main-section");
         viewSection.addStyleName("view-section");
-        addComponent(mainSection);
     }
 
     private void setContent(Component component){
+    	viewSection.removeStyleName("no-margin-view-section");
     	this.viewSection.removeAllComponents();
     	this.viewSection.addComponent(component);
     }
@@ -154,7 +154,8 @@ public class MainView extends CssLayout implements CatmaRouter, Closeable {
 		closeViews();
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
 			setContent(uiFactory.getDashboardView(projectManager));
-			eventBus.post(new HeaderContextChangeEvent(new Label("")));
+			viewSection.addStyleName("no-margin-view-section");
+			eventBus.post(new HeaderContextChangeEvent(""));
 			currentRoute = routeToDashboardEvent.getClass();
 		}
 	}

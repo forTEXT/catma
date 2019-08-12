@@ -190,21 +190,21 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		try {
 			Component component = initService.newEntryPage(loginservice, hazelCastService);
 			setContent(component);
-
-
-	        // implement a custom resize propagation for all Layouts including CSSLayouts
-	        JavaScript.getCurrent().addFunction("browserWindowResized", e -> {
-	        	this.markAsDirtyRecursive();
-	        });
-	        Page.getCurrent().getJavaScript().execute(
-	        		"var timeout = null;"
-	        				+ "window.onresize = function() { "
-	        				+ "  if (timeout != null) clearTimeout(timeout); "
-	        				+ "  timeout = setTimeout(function() {"
-	        				+ "    browserWindowResized(); "
-	        				+ "  }, 250);"
-	        				+ "}");
-	                
+//
+//
+//	        // implement a custom resize propagation for all Layouts including CSSLayouts
+//	        JavaScript.getCurrent().addFunction("browserWindowResized", e -> {
+//	        	this.markAsDirtyRecursive();
+//	        });
+//	        Page.getCurrent().getJavaScript().execute(
+//	        		"var timeout = null;"
+//	        				+ "window.onresize = function() { "
+//	        				+ "  if (timeout != null) clearTimeout(timeout); "
+//	        				+ "  timeout = setTimeout(function() {"
+//	        				+ "    browserWindowResized(); "
+//	        				+ "  }, 250);"
+//	        				+ "}");
+//	                
 
 		} catch (IOException e) {
 			showAndLogError("error creating landing page",e);			
@@ -245,7 +245,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 				mainView = initService.newEntryPage(loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
-				getCurrent().getPage().pushState("/");
+				getCurrent().getPage().pushState("/catma/");
 			} catch (IOException e) {
 				showAndLogError("can't login properly", e);
 			}
@@ -430,8 +430,8 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 //		visualizationManagerView.addDoubleTree(kwics);
 	}
 
-	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider) {
-		eventBus.post(new VegaEvent(queryResult, queryOptionsProvider));
+	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider, Repository project) {
+		eventBus.post(new VegaEvent(queryResult, queryOptionsProvider, project));
 		//TODO:
 //		menu.executeEntry(visualizationManagerView);
 //		visualizationManagerView.addVega(queryResult, queryOptionsProvider);

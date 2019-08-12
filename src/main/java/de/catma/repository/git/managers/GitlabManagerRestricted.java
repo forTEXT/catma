@@ -26,6 +26,7 @@ import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectAccess;
+import org.gitlab4j.api.models.Visibility;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -36,7 +37,6 @@ import com.google.inject.assistedinject.AssistedInject;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.interfaces.IdentifiableResource;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
@@ -189,7 +189,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 			// none of the addGroup overloads accept a Group object parameter
 			groupApi.addGroup(
 				name, path, description,
-				null, null, null, null,
+				Visibility.PRIVATE,
 				null, null, null
 			);
 
@@ -197,6 +197,19 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to create remote group", e);
+		}
+	}
+	
+	@Override
+	public void updateGroup(String name, String path, String description) throws IOException {
+		try {
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			groupApi.updateGroup(path, name, path, description, null, null, null, null);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+				"Failed to update name/description for group", e
+			);
 		}
 	}
 

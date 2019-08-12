@@ -54,13 +54,14 @@ import de.catma.ui.analyzenew.resourcepanelanalyze.ResourcePanelAnalyze;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
+import de.catma.util.StopWatch;
 
-public class AnalyzeNewView extends HorizontalLayout
+public class AnalyzeNewView extends HorizontalFlexLayout
 		implements ClosableTab, TabComponent, HasComponents {
 
 	public static interface CloseListenerNew {
@@ -86,14 +87,14 @@ public class AnalyzeNewView extends HorizontalLayout
 	private String searchInput;
 	private ComboBox<String> queryComboBox;
 	private ResultPanelNew queryResultPanel;
-	private HorizontalLayout resultAndMinMaxVizHorizontal;
-	private VerticalLayout resultsPanel;
-	private VerticalLayout minMaxPanel;
-	private VerticalLayout searchPanel;
-	private HorizontalLayout labelLayout;
-	private VerticalLayout contentPanel;
-	private HorizontalLayout searchRow;
-	private HorizontalLayout searchAndVisIconsHorizontal;
+	private HorizontalFlexLayout resultAndMinMaxVizHorizontal;
+	private VerticalFlexLayout resultsPanel;
+	private VerticalFlexLayout minMaxPanel;
+	private VerticalFlexLayout searchPanel;
+	private HorizontalFlexLayout labelLayout;
+	private VerticalFlexLayout contentPanel;
+	private HorizontalFlexLayout searchRow;
+	private HorizontalFlexLayout searchAndVisIconsHorizontal;
 
 	private Component visIconsPanel;
 	private ResourcePanelAnalyze resourcePanelAnalyze;
@@ -126,27 +127,27 @@ public class AnalyzeNewView extends HorizontalLayout
 	private void initComponents() throws Exception {
 		addRelevantResources();
 		searchInput = "";
-		searchPanel = (VerticalLayout) createSearchPanel();
+		searchPanel = (VerticalFlexLayout) createSearchPanel();
 		searchPanel.addStyleName("analyze_search_icon_bar");
 
 		visIconsPanel = createVisIconsPanel();
 		visIconsPanel.addStyleName("analyze_search_icon_bar");
 
-		searchAndVisIconsHorizontal = new HorizontalLayout();
+		searchAndVisIconsHorizontal = new HorizontalFlexLayout();
 		searchAndVisIconsHorizontal.addStyleName("analyze_bar");
 		searchAndVisIconsHorizontal.addComponents(searchPanel, visIconsPanel);
 
-		resultAndMinMaxVizHorizontal = new HorizontalLayout();
+		resultAndMinMaxVizHorizontal = new HorizontalFlexLayout();
 		resultAndMinMaxVizHorizontal.addStyleName("analyze_results");
 
-		resultsPanel = new VerticalLayout();
+		resultsPanel = new VerticalFlexLayout();
 		resultsPanel.addStyleName("analyze_results_list");
-		minMaxPanel = new VerticalLayout();
+		minMaxPanel = new VerticalFlexLayout();
 		minMaxPanel.addStyleName("analyze_results_minmax");
 
 		resultAndMinMaxVizHorizontal.addComponents(resultsPanel, minMaxPanel);
 
-		contentPanel = new VerticalLayout();
+		contentPanel = new VerticalFlexLayout();
 		contentPanel.addComponent(searchAndVisIconsHorizontal);
 		contentPanel.addComponent(resultAndMinMaxVizHorizontal);
 		contentPanel.addStyleName("analyze_content");
@@ -164,7 +165,7 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 	
 	private Component createSearchPanel() {	
-		searchPanel = new VerticalLayout();
+		searchPanel = new VerticalFlexLayout();
 		searchPanel.setAlignContent(AlignContent.CENTER);
 
 		Label searchPanelLabel = new Label("Queries");
@@ -174,7 +175,7 @@ public class AnalyzeNewView extends HorizontalLayout
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		optionsBt.addStyleName("analyze_options_bt");
 
-	    labelLayout = new HorizontalLayout(searchPanelLabel, optionsBt);
+	    labelLayout = new HorizontalFlexLayout(searchPanelLabel, optionsBt);
 		labelLayout.addStyleName("analyze_label_layout");
 
 		btQueryBuilder = new Button(" + BUILD QUERY");
@@ -195,11 +196,11 @@ public class AnalyzeNewView extends HorizontalLayout
 		btExecuteSearch = new Button("SEARCH", VaadinIcons.SEARCH);	
 		btExecuteSearch.setStyleName("analyze_search_bt");
 	
-		searchRow = new HorizontalLayout();
+		searchRow = new HorizontalFlexLayout();
 		searchRow.addComponents(btQueryBuilder, queryComboBox);
 		searchRow.addStyleName("analyze_search_row");
 		
-		VerticalLayout searchVerticalLayout = new VerticalLayout(searchRow, btExecuteSearch);
+		VerticalFlexLayout searchVerticalLayout = new VerticalFlexLayout(searchRow, btExecuteSearch);
 		searchVerticalLayout.addStyleName("analyze_search");
 
 		searchPanel.addComponents(labelLayout, searchVerticalLayout);
@@ -207,7 +208,7 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private Component createVisIconsPanel() {		
-		VerticalLayout visIconsPanel = new VerticalLayout();
+		VerticalFlexLayout visIconsPanel = new VerticalFlexLayout();
 		visIconsPanel.setAlignContent(AlignContent.CENTER);
 		Label visIconsLabel = new Label("Visualisations");
 		visIconsLabel.addStyleName("analyze_label");
@@ -216,9 +217,9 @@ public class AnalyzeNewView extends HorizontalLayout
 		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		optionsBt.addStyleName("analyze_options_bt");
 
-		HorizontalLayout labelLayout = new HorizontalLayout(visIconsLabel, optionsBt);
+		HorizontalFlexLayout labelLayout = new HorizontalFlexLayout(visIconsLabel, optionsBt);
 		labelLayout.addStyleName("analyze_label_layout");
-		HorizontalLayout visIconBar = new HorizontalLayout();
+		HorizontalFlexLayout visIconBar = new HorizontalFlexLayout();
 
 		kwicBt = new Button("KWIC", VaadinIcons.SPLIT);
 		kwicBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
@@ -384,7 +385,8 @@ public class AnalyzeNewView extends HorizontalLayout
 		((BackgroundServiceProvider) UI.getCurrent()).submit(Messages.getString("AnalyzerView.Searching"), //$NON-NLS-1$
 				job, new ExecutionListener<QueryResult>() {
 					public void done(QueryResult result) {
-
+						StopWatch watch = new StopWatch();
+						System.out.println(watch);
 						try {
 							queryResultPanel = new ResultPanelNew(repository, result,
 									"result for query: " + searchInput.toString(),kwicProviderCache, new ResultPanelCloseListener() {
@@ -402,7 +404,7 @@ public class AnalyzeNewView extends HorizontalLayout
 
 						queryResultPanel.setWidth("100%");
 						resultsPanel.addComponentAsFirst(queryResultPanel);
-
+						System.out.println(watch);
 					};
 
 					public void error(Throwable t) {

@@ -152,6 +152,10 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				"Info", 
 				String.format("Collection %1$s has been created!", collectionReference.toString()),  
 				Type.TRAY_NOTIFICATION);
+			
+			if (getSelectedDocument().equals(document)) {
+				collectionDataItem.fireSelectedEvent(this.resourceSelectionListener);
+			}
     	}
     	else {
     		documentTree.getDataProvider().refreshAll();
@@ -348,8 +352,6 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			.setCaption("Name")
 			.setWidth(150);
 		
-		//TODO: shouldn't be fixed size
-		documentTree.setWidth("400px");
 		documentTree.setHeight("250px");
 
 		documentTree.addColumn(
@@ -369,13 +371,12 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		
 		tagsetGrid = new Grid<>();
 		tagsetGrid.addStyleNames(
-				"annotate-resource-grid", 
+				"annotate-resource-grid", 				
 				"flat-undecorated-icon-buttonrenderer",
 				"no-focused-before-border");
 		tagsetGrid.setSelectionMode(SelectionMode.MULTI);
-		//TODO: shouldn't be fixed size
-		tagsetGrid.setWidth("400px");
-		tagsetGrid.setHeight("230px");
+
+		tagsetGrid.setHeight("250px");
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")
@@ -394,7 +395,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		
 		tagsetActionGridComponent = 
 				new ActionGridComponent<Grid<TagsetDefinition>>(tagsetLabel, tagsetGrid);
-		
+
 		addComponent(tagsetActionGridComponent);
 	}
 

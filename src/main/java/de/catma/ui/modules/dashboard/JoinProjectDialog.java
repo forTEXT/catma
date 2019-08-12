@@ -32,8 +32,8 @@ import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.project.ProjectInvitation;
 import de.catma.user.User;
 
@@ -52,7 +52,7 @@ public class JoinProjectDialog extends Window {
 			Lists.newArrayList(RBACRole.values()));
     private final Cache<Integer, String> invitationCache = 
     		Caching.getCachingProvider().getCacheManager().getCache(HazelcastConfiguration.CACHE_KEY_INVITATIONS);
-    private final VerticalLayout content = new VerticalLayout();
+    private final VerticalFlexLayout content = new VerticalFlexLayout();
     private final User currentUser;
     
     private final Button btnJoin = new Button("Join");
@@ -121,7 +121,7 @@ public class JoinProjectDialog extends Window {
 		
 		content.addComponent(taDescription);
 		
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
 		buttonPanel.addStyleName("spacing-left-right");
 		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
 		

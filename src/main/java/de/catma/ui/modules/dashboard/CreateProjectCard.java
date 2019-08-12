@@ -12,8 +12,8 @@ import com.vaadin.ui.UI;
 import de.catma.project.ProjectManager;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -22,7 +22,7 @@ import de.catma.ui.modules.main.ErrorHandler;
  * @author db
  *
  */
-public class CreateProjectCard extends VerticalLayout {
+public class CreateProjectCard extends VerticalFlexLayout {
 
 	private final ErrorHandler errorLogger;
 	private final ProjectManager projectManager;
@@ -53,7 +53,7 @@ public class CreateProjectCard extends VerticalLayout {
         });
         addComponent(newproject);
 
-        HorizontalLayout descriptionBar = new HorizontalLayout();
+        HorizontalFlexLayout descriptionBar = new HorizontalFlexLayout();
         descriptionBar.addStyleName("projectlist__card__descriptionbar");
         descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
         descriptionBar.setWidth("100%");

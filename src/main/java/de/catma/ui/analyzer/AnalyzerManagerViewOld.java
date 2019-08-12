@@ -63,7 +63,7 @@ public class AnalyzerManagerViewOld extends TabbedView {
 	
 	@Subscribe
 	public void handleVegaRequest(VegaEvent vegaEvent) {
-		VegaView vegaView = new VegaView(vegaEvent.getQueryResult(), vegaEvent.getQueryOptionsProvider());
+		VegaView vegaView = new VegaView(vegaEvent.getQueryResult(), vegaEvent.getQueryOptionsProvider(), vegaEvent.getProject());
 		
 		addClosableTab(vegaView, vegaView.toString());
 		

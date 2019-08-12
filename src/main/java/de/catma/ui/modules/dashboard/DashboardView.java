@@ -7,11 +7,11 @@ import com.vaadin.data.provider.DataProvider;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -41,12 +41,7 @@ public class DashboardView extends VerticalLayout {
         this.projectDataProvider = DataProvider.fromCallbacks(
 		        (query) -> {
 		            try {
-		            	int page = (query.getOffset() / query.getLimit()) + 1;
-		            
-		            	return projectManager.getProjectReferences()
-		                    
-		                    .stream()
-		                    ;
+		            	return projectManager.getProjectReferences().stream();
 		            } catch (Exception e) {
 		                errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
 		                return null;
@@ -65,22 +60,14 @@ public class DashboardView extends VerticalLayout {
         initComponents();
     }
 
-    protected <T> void initComponents() {
+    private void initComponents() {
+    	setSizeFull();
+    	setMargin(false);
     	addStyleName("dashboard-view");
-        
-        CssLayout receivedResources = new CssLayout();
-        receivedResources.setStyleName("flexlayout");
-                   
-        
-        try {
-			projectManager.getProjectReferences(); //Fake call to satisfy vaadin 10 and above
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
+
         projects.setDataProvider(projectDataProvider);
 
-        addComponents(projects, receivedResources);
+        addComponent(projects);
     }
 
     public void handleResourceChangedEvent(ResourcesChangedEvent<Component> event){

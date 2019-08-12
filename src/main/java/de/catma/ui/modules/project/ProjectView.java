@@ -77,10 +77,12 @@ import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeOldEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.FlexLayout.FlexWrap;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.CanReloadAll;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.repository.Messages;
@@ -119,7 +121,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private ListDataProvider<TagsetDefinition> tagsetData;
 	private Multimap<Resource, Resource> docResourceToReadableCollectionResourceMap = HashMultimap.create();
 	private MenuItem miInvite;
-	private VerticalLayout teamPanel;
+	private VerticalFlexLayout teamPanel;
 
 	@Inject
     public ProjectView(
@@ -199,6 +201,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
 			resourceDataProvider.refreshAll();
+			
+			resourceGrid.expand(documentResource);
 			
 			Notification.show(
 				"Info", 
@@ -405,6 +409,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                @Override
 	                public void ready(Repository project) {
 	    				initData();
+	    				//TODO: post event to other views needed
 	    				Notification.show(
 		    					"Info", 
 		    					"Your Project has been synchronized!", 
@@ -721,10 +726,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	/* build the GUI */
 
 	private void initComponents() {
-		HorizontalLayout mainPanel = new HorizontalLayout();
+		HorizontalFlexLayout mainPanel = new HorizontalFlexLayout();
     	mainPanel.setFlexWrap(FlexWrap.WRAP);
-    	
-    	VerticalLayout resourcePanel = new VerticalLayout();
+    	mainPanel.addStyleName("project-view-main-panel");
+    	VerticalFlexLayout resourcePanel = new VerticalFlexLayout();
     	
         resourcePanel.setSizeUndefined(); // don't set width 100%
         resourcePanel.addComponent(new Label("Resources"));
@@ -733,10 +738,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 
         addComponent(mainPanel);
+        setExpandRatio(mainPanel, 1.f);
         
         resourcePanel.addComponent(initResourceContent());
         
-        teamPanel = new VerticalLayout();
+        teamPanel = new VerticalFlexLayout();
         teamPanel.setSizeUndefined(); // don't set width 100%
         teamPanel.setVisible(false);
         teamPanel.addComponent(new Label("Team"));
@@ -780,7 +786,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @return
      */
     private Component initResourceContent() {
-    	HorizontalLayout resourceContent = new HorizontalLayout();
+    	HorizontalFlexLayout resourceContent = new HorizontalFlexLayout();
     	resourceGrid = new TreeGrid<>();
         resourceGrid.addStyleNames(
 				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
@@ -864,7 +870,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
 	private Component initTeamContent() {
-		HorizontalLayout teamContent = new HorizontalLayout();
+		HorizontalFlexLayout teamContent = new HorizontalFlexLayout();
         teamGrid = new Grid<>();
         teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
@@ -1039,7 +1045,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     public void setProjectReference(ProjectReference projectReference) {
         this.projectReference = projectReference;
-        eventBus.post(new HeaderContextChangeEvent(new Label(projectReference.getName())));
+        eventBus.post(new HeaderContextChangeEvent(projectReference.getName()));
         reloadAll();
     }
 
@@ -1088,40 +1094,35 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
     
     private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-    	ConfirmDialog.show(
-        		UI.getCurrent(), 
-        		"Info", 
-        		"Selected resources for the Analyzer: "
-        		+ resourceGrid.getSelectedItems()
-        			.stream()
-        			.map(resource -> resource.getName())
-        			.collect(Collectors.joining(","))
-        		+ "?", 
-        		"Yes", 
-        		"Cancel", dlg -> {
-        			Corpus corpus = new Corpus("to analyze");
-        	         for (Resource resource: resourceGrid.getSelectedItems()) {
-     	            	try {
-     	            		if(resource.getClass().equals(DocumentResource.class)) {
-     	            		DocumentResource docResource = (DocumentResource) resource;
-     	            		corpus.addSourceDocument(docResource.getDocument());
-     	            		}else {
-     	            			CollectionResource collResource = (CollectionResource) resource;
-         	            		corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
-         	            		DocumentResource docParent =(DocumentResource) resourceGrid.getTreeData().getParent(collResource);
-         	            		if(!corpus.getSourceDocuments().contains(docParent.getDocument())) {
-         	            			corpus.addSourceDocument(docParent.getDocument());
-         	            		}
-     	            			
-     	            		}
-     	                } catch (Exception e) {
-     	                    errorHandler.showAndLogError("Error adding resource to analyzer module "+resource, e);
-     	                }
-     	            }
-    	     
-    	            eventBus.post( new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
-        		});
-    	
+    	if (resourceGrid.getSelectedItems().isEmpty()) {
+    		Notification.show("Info", "Please select something first!", Type.HUMANIZED_MESSAGE);
+    	}
+    	else {
+			Corpus corpus = new Corpus("to analyze");
+			
+	         for (Resource resource: resourceGrid.getSelectedItems()) {
+            	try {
+            		if(resource.getClass().equals(DocumentResource.class)) {
+            		DocumentResource docResource = (DocumentResource) resource;
+            		corpus.addSourceDocument(docResource.getDocument());
+            		}else {
+            			CollectionResource collResource = (CollectionResource) resource;
+	            		corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
+	            		DocumentResource docParent =(DocumentResource) resourceGrid.getTreeData().getParent(collResource);
+	            		if(!corpus.getSourceDocuments().contains(docParent.getDocument())) {
+	            			corpus.addSourceDocument(docParent.getDocument());
+	            		}
+            			
+            		}
+                } catch (Exception e) {
+                    errorHandler.showAndLogError("Error adding resource to analyzer module "+resource, e);
+                }
+            }
+    
+           eventBus.post( new RouteToAnalyzeOldEvent((IndexedRepository)project, corpus));
+           eventBus.post( new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
+    	}
+
     }
 
 	public void close() {

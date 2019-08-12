@@ -5,7 +5,6 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -18,6 +17,7 @@ import org.vaadin.dialogs.ConfirmDialog;
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
@@ -62,6 +62,10 @@ import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.ui.modules.tags.AddEditPropertyDialog;
+import de.catma.ui.modules.tags.AddParenttagDialog;
+import de.catma.ui.modules.tags.AddSubtagDialog;
+import de.catma.ui.modules.tags.EditTagDialog;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -79,6 +83,7 @@ public class AnnotationPanel extends VerticalLayout {
 	private Repository project;
 	private Collection<TagsetDefinition> tagsets = new ArrayList<>();
 	private List<UserMarkupCollection> collections = new ArrayList<>();
+	private List<UserMarkupCollection> editableCollections = new ArrayList<>();
 	private TagReferenceSelectionChangeListener selectionListener;
 	private ActionGridComponent<TreeGrid<TagsetTreeItem>> tagsetGridComponent;
 	private TreeData<TagsetTreeItem> tagsetData;
@@ -91,16 +96,20 @@ public class AnnotationPanel extends VerticalLayout {
 	private VerticalSplitPanel rightSplitPanel;
 	private UserMarkupCollectionManager collectionManager;
 	private Supplier<SourceDocument> currentDocumentProvider;
+	private EventBus eventBus;
 
 	public AnnotationPanel(
 			Repository project, 
 			UserMarkupCollectionManager collectionManager, 
 			Consumer<String> annotationSelectionListener,
 			Consumer<UserMarkupCollection> collectionSelectionListener,
-			Supplier<SourceDocument> currentDocumentProvider) {
+			Supplier<SourceDocument> currentDocumentProvider,
+			EventBus eventBus) {
 		this.project = project;
 		this.collectionManager = collectionManager;
 		this.currentDocumentProvider = currentDocumentProvider;
+		this.eventBus = eventBus;
+		this.eventBus.register(this);
 		this.tagsetData = new TreeData<TagsetTreeItem>();
 		initComponents(annotationSelectionListener);
 		initActions(collectionSelectionListener);
@@ -271,15 +280,19 @@ public class AnnotationPanel extends VerticalLayout {
             	expandTagsetDefinition(tagset);
             }
             
+            editableCollections.clear();
+            editableCollections.addAll(
+            		collections
+            		.stream()
+            		.filter(
+            				collection -> project.hasPermission(
+            						project.getRoleForCollection(collection.getId()), 
+            						RBACPermission.COLLECTION_WRITE))
+            		.collect(Collectors.toList()));
+            	
+            
             ListDataProvider<UserMarkupCollection> editableCollectionProvider = 
-            		new ListDataProvider<>(
-                			collections
-                			.stream()
-                			.filter(
-                				collection -> project.hasPermission(
-                					project.getRoleForCollection(collection.getId()), 
-                					RBACPermission.COLLECTION_WRITE))
-                			.collect(Collectors.toList()));
+            		new ListDataProvider<>(editableCollections);
             currentEditableCollectionBox.setValue(null);
             currentEditableCollectionBox.setDataProvider(editableCollectionProvider);
             
@@ -996,11 +1009,12 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetGrid.setSizeFull();
 		tagsetGrid.setSelectionMode(SelectionMode.SINGLE);
 		tagsetGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
-
+		
         tagsetGridComponent = new ActionGridComponent<TreeGrid<TagsetTreeItem>>(
                 tagsetsLabel,
                 tagsetGrid
         );
+        tagsetGridComponent.setMargin(false);
         
         rightSplitPanel = new VerticalSplitPanel();
         rightSplitPanel.setSizeFull();
@@ -1059,7 +1073,17 @@ public class AnnotationPanel extends VerticalLayout {
 
 	public void addCollection(UserMarkupCollection collection) {
 		this.collections.add(collection);
-		currentEditableCollectionBox.getDataProvider().refreshAll();	
+		if (project.hasPermission(
+			project.getRoleForCollection(collection.getId()), 
+			RBACPermission.COLLECTION_WRITE)) {
+			this.editableCollections.add(collection);
+			currentEditableCollectionBox.getDataProvider().refreshAll();	
+			if ((currentEditableCollectionBox.getValue() == null) 
+					&& !this.editableCollections.isEmpty()) {
+				currentEditableCollectionBox.setValue(collection);
+				
+			}
+		}			
 		//TODO: show Annotations from this collection and selected Tagsets
 	}
 	
@@ -1069,6 +1093,8 @@ public class AnnotationPanel extends VerticalLayout {
 			currentEditableCollectionBox.setValue(null);
 		}
 		collections.remove(collection);
+		editableCollections.remove(collection);
+		
 		currentEditableCollectionBox.getDataProvider().refreshAll();	
 		//TODO: hide annotations from selected tagsets and this collection
 		annotationDetailsPanel.removeAnnotations(
@@ -1113,6 +1139,7 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 	
 	public void close() {
+		eventBus.unregister(this);
 		annotationDetailsPanel.close();
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged, 

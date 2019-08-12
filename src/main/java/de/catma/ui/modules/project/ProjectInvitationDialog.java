@@ -48,8 +48,8 @@ import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -68,7 +68,7 @@ public class ProjectInvitationDialog extends Window {
 	private final CheckBox chbOwnCollection = new CheckBox("create own collection", false);
 	private final Button btnInvite = new Button("Invite");
 	private final Button btnStopInvite = new Button("Stop invitation");
-	private final VerticalLayout content = new VerticalLayout();
+	private final VerticalFlexLayout content = new VerticalFlexLayout();
 	private final Label lInvitationCode = new Label("",ContentMode.HTML); 
 	private final Grid<Resource> resourceGrid = new Grid<>();
 	private final List<String> joinedUsers = new ArrayList<>();
@@ -213,7 +213,7 @@ public class ProjectInvitationDialog extends Window {
 
 		content.addComponent(cbConsole);
 		
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
 		buttonPanel.addStyleName("spacing-left-right");
 		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
 		

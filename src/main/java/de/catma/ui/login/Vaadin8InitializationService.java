@@ -90,7 +90,7 @@ public class Vaadin8InitializationService implements InitializationService {
 					injector.getInstance(EventBus.class));
 
 			hazelcastService.start();
-			return injector.getInstance(UIFactory.class).getMainview(projectManager, api);
+			return injector.getInstance(UIFactory.class).getMainview(projectManager);
 		} else {
 			return new NotLoggedInMainView(this, loginService, hazelcastService, injector.getInstance(EventBus.class));
 

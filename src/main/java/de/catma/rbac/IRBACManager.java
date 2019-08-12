@@ -34,7 +34,7 @@ public interface IRBACManager {
 	 * @param projectId
 	 * @return
 	 */
-	boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, IdentifiableResource resource);
+	boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, String projectId, String resourceId);
 
 	/**
 	 * assigns given role to subject in a given context here a {@link Project}
@@ -95,7 +95,7 @@ public interface IRBACManager {
 	 * @return
 	 * @throws IOException 
 	 */
-	RBACRole getRoleOnResource(RBACSubject subject, IdentifiableResource resource) throws IOException;
+	RBACRole getRoleOnResource(RBACSubject subject, String projectId, String resourceId) throws IOException;
 	
 	/**
 	 * get's the defined Role for a subject on a specific project

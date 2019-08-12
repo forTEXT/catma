@@ -37,8 +37,8 @@ import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
 import de.catma.ui.analyzenew.treegridhelper.RootItem;
 import de.catma.ui.analyzenew.treegridhelper.SingleItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 
 public class ResultPanelNew extends Panel {
 
@@ -50,7 +50,7 @@ public class ResultPanelNew extends Panel {
 		public void closeRequest(ResultPanelNew resultPanelNew);
 	}
 
-	private VerticalLayout contentVerticalLayout;
+	private VerticalFlexLayout contentVerticalLayout;
 
 	private TreeData<TreeRowItem> tagData;
 	private TreeGrid<TreeRowItem> treeGridTag;
@@ -67,8 +67,10 @@ public class ResultPanelNew extends Panel {
 	private final ContextMenu optionsMenu;
 
 	private Label queryInfo;
+
 	private LoadingCache<String , KwicProvider> kwicProviderCache;
-	private HorizontalLayout groupedIcons;
+	private HorizontalFlexLayout groupedIcons;
+
 	private Button caretRightBt;
 	private Button caretDownBt;
 	private Button removeBt;
@@ -223,7 +225,7 @@ public class ResultPanelNew extends Panel {
 
 	private void initComponents() {
 		this.setWidth(80, Unit.PERCENTAGE);
-		contentVerticalLayout = new VerticalLayout();
+		contentVerticalLayout = new VerticalFlexLayout();
 		contentVerticalLayout.addStyleName("analyze_queryresultpanel__card");
 
 		addStyleName("analyze_queryresultpanel__card_frame");
@@ -261,7 +263,7 @@ public class ResultPanelNew extends Panel {
 	}
 
 	private void createButtonBar() {
-		groupedIcons = new HorizontalLayout();
+		groupedIcons = new HorizontalFlexLayout();
 
 		caretRightBt = new Button(VaadinIcons.CARET_RIGHT);
 		caretRightBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);

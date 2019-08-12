@@ -30,6 +30,7 @@ public class SingleTextInputDialog extends AbstractOkCancelDialog<String> {
 	protected void addContent(ComponentContainer content) {
 		this.textInput = new TextField(inputLabel);
 		this.textInput.focus();
+		this.textInput.setWidth("100%");
 		if (initialValue != null) {
 			this.textInput.setValue(initialValue);
 		}

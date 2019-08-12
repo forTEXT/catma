@@ -16,7 +16,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
@@ -29,14 +28,14 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
+import de.catma.rbac.RBACPermission;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagManager;
+import de.catma.user.User;
 
 public class GitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -532,7 +531,7 @@ public class GitMarkupCollectionHandler {
 	}	
 	
 	public MergeResult synchronizeBranchWithRemoteMaster(
-			String branch, String projectId, String collectionId) throws IOException {
+			String branch, String projectId, String collectionId, boolean canPushToRemote) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			String collectionGitRepositoryName =
@@ -564,7 +563,9 @@ public class GitMarkupCollectionHandler {
 			
 			MergeResult mergeResult = localGitRepoManager.merge(branch);
 			if (mergeResult.getMergeStatus().isSuccessful()) {
-				localGitRepoManager.push(credentialsProvider);
+				if (canPushToRemote) {
+					localGitRepoManager.push(credentialsProvider);
+				}
 				
 				localGitRepoManager.checkout(branch, false);
 				

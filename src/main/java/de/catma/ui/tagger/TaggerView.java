@@ -567,7 +567,8 @@ public class TaggerView extends HorizontalLayout
 			userMarkupCollectionManager,
 			selectedAnnotationId -> tagger.setTagInstanceSelected(selectedAnnotationId),
 			collection -> handleCollectionValueChange(collection),
-			() -> sourceDocument);
+			() -> sourceDocument,
+			eventBus);
 		
 		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);

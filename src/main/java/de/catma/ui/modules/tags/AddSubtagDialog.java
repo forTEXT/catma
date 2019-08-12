@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.annotationpanel;
+package de.catma.ui.modules.tags;
 
 import java.util.Collections;
 

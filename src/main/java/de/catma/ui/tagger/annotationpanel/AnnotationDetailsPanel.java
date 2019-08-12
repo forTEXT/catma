@@ -196,6 +196,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	
 	private void initComponents() {
 		setSpacing(true);
+		setMargin(false);
+		
 		setSizeFull();
 		addStyleName("annotation-details-panel");
 		
@@ -287,6 +289,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		ActionGridComponent<TreeGrid<AnnotationTreeItem>> annotationDetailsGridComponent = 
 				new ActionGridComponent<>(new Label("Selected Annotations"), annotationDetailsTree);
+		annotationDetailsGridComponent.setMargin(false);
 		
 		addComponent(annotationDetailsGridComponent);
 		setExpandRatio(annotationDetailsGridComponent, 1.0f);
@@ -403,7 +406,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider,
 						project.hasPermission(
-							project.getRoleForTagset(annotation.getTagInstance().getTagsetId()), 
+							project.getRoleForCollection(annotation.getUserMarkupCollection().getId()), 
 							RBACPermission.COLLECTION_WRITE),
 						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
 			

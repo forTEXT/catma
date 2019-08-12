@@ -24,8 +24,8 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -33,7 +33,7 @@ import de.catma.ui.modules.main.ErrorHandler;
  *
  * @author db
  */
-public class ProjectCard extends VerticalLayout  {
+public class ProjectCard extends VerticalFlexLayout  {
 
     private ProjectReference projectReference;
 
@@ -45,6 +45,9 @@ public class ProjectCard extends VerticalLayout  {
 	private final IRBACManager rbacManager;
 	
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
+
+	private Label descriptionLabel;
+	private Label nameLabel;
 
 	@Inject
     ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){
@@ -76,23 +79,23 @@ public class ProjectCard extends VerticalLayout  {
 
         CssLayout preview = new CssLayout();
         preview.addStyleName("projectlist__card__preview");
-        Label labelDesc = new Label(projectReference.getDescription());
-        labelDesc.setWidth("100%");
-        preview.addComponents(labelDesc);
+        descriptionLabel = new Label(projectReference.getDescription());
+        descriptionLabel.setWidth("100%");
+        preview.addComponents(descriptionLabel);
 
         preview.addLayoutClickListener(evt -> eventBus.post(new RouteToProjectEvent(projectReference, false)));
         addComponent(preview);
 
-        HorizontalLayout descriptionBar = new HorizontalLayout();
+        HorizontalFlexLayout descriptionBar = new HorizontalFlexLayout();
         descriptionBar.addStyleName("projectlist__card__descriptionbar");
         descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
         descriptionBar.setWidth("100%");
         
         
-        Label name = new Label(projectReference.getName());
-        name.setWidth("100%");
+        nameLabel = new Label(projectReference.getName());
+        nameLabel.setWidth("100%");
         
-        descriptionBar.addComponent(name);
+        descriptionBar.addComponent(nameLabel);
 //        descriptionBar.setExpandRatio(name,1.0f);
 
         IconButton btnRemove = new IconButton(VaadinIcons.TRASH);
@@ -119,7 +122,19 @@ public class ProjectCard extends VerticalLayout  {
         
         IconButton btnEdit = new IconButton(VaadinIcons.PENCIL);
         btnEdit.addClickListener(click -> {
-        	new EditProjectDialog(projectReference, projectManager, result -> eventBus.post(new ResourcesChangedEvent<Component>(this))).show();
+        	new EditProjectDialog(
+        			projectReference, 
+        			projectManager,
+        			result -> {
+        				try {
+							projectManager.updateProject(result);
+							descriptionLabel.setValue(result.getDescription());
+							nameLabel.setValue(result.getName());
+						} catch (IOException e) {
+							errorLogger.showAndLogError("Failed to update Project", e);
+							eventBus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
+						}
+        			}).show();
         });
         descriptionBar.addComponent(btnEdit);
         

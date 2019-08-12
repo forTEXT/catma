@@ -1,16 +1,14 @@
 package de.catma.ui.component.hugecard;
 
 import com.vaadin.contextmenu.ContextMenu;
-
-import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.util.Styles;
+import com.vaadin.ui.VerticalLayout;
 
 /**
  * Renders one huge card with action bar in the main view section
  *
  * @author db
  */
-public class HugeCard extends FlexLayout {
+public class HugeCard extends VerticalLayout {
 
     private final HugeCardBar hugeCardBar;
 
@@ -21,7 +19,9 @@ public class HugeCard extends FlexLayout {
 
    
     private void initCardComponents() {
-        addStyleNames(Styles.hugecard);
+    	setSizeFull();
+    	setMargin(false);
+        addStyleNames("hugecard");
         addComponent(hugeCardBar);
     }
 

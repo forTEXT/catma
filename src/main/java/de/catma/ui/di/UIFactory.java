@@ -6,7 +6,6 @@ import com.google.inject.assistedinject.Assisted;
 
 import de.catma.document.repository.Repository;
 import de.catma.project.ProjectManager;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.modules.dashboard.DashboardView;
 import de.catma.ui.modules.dashboard.ProjectListView;
 import de.catma.ui.modules.main.MainView;
@@ -20,8 +19,7 @@ public interface UIFactory {
 	DashboardView getDashboardView(@Assisted("projectManager") ProjectManager projectManager);
 
 	MainView getMainview(
-			@Assisted("projectManager") ProjectManager projectManager, 
-			@Assisted("iRemoteGitlabManager") IRemoteGitManagerRestricted gitmanagerRestricted);
+			@Assisted("projectManager") ProjectManager projectManager);
 	
 	ProjectInvitationDialog getProjectInvitationDialog(
 			@Assisted("project") Repository project, 

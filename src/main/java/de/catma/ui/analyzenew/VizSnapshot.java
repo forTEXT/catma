@@ -5,8 +5,8 @@ import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
-import de.catma.ui.layout.VerticalLayout;
-import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -54,13 +54,13 @@ public class VizSnapshot extends Panel {
 	private void initComponents(String title) {
 
 		this.addStyleName("analyze_queryresultpanel__card_frame");
-		VerticalLayout content = new VerticalLayout();
+		VerticalFlexLayout content = new VerticalFlexLayout();
 		content.addStyleName("analyze_queryresultpanel__card");
 		
 		Label titleLabel = new Label(title);
 		titleLabel.addStyleName("analyze_queryresultpanel_infobar");
 		
-		HorizontalLayout buttonBar = new HorizontalLayout();
+		HorizontalFlexLayout buttonBar = new HorizontalFlexLayout();
 		buttonBar.addStyleName("analyze_queryresultpanel_buttonbar");
 
 		btRemove = new Button ("",VaadinIcons.ERASER);

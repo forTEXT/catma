@@ -130,7 +130,7 @@ public class PhraseResultPanel extends VerticalLayout {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
-				((CatmaApplication)UI.getCurrent()).addVega(queryResult, queryOptionsProvider);
+				((CatmaApplication)UI.getCurrent()).addVega(queryResult, queryOptionsProvider, repository);
 			}
 		});
 		

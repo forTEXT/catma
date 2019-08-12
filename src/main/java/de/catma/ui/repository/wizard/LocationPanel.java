@@ -22,22 +22,20 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import com.vaadin.v7.event.FieldEvents.TextChangeEvent;
-import com.vaadin.v7.event.FieldEvents.TextChangeListener;
-import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.v7.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
+import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.ui.Component;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
-import com.vaadin.v7.ui.TextField;
-import com.vaadin.v7.ui.Upload.FailedEvent;
-import com.vaadin.v7.ui.Upload.FailedListener;
-import com.vaadin.v7.ui.Upload.StartedEvent;
-import com.vaadin.v7.ui.Upload.StartedListener;
-import com.vaadin.v7.ui.Upload.SucceededEvent;
-import com.vaadin.v7.ui.Upload.SucceededListener;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.Upload.FailedEvent;
+import com.vaadin.ui.Upload.FailedListener;
+import com.vaadin.ui.Upload.StartedEvent;
+import com.vaadin.ui.Upload.StartedListener;
+import com.vaadin.ui.Upload.SucceededEvent;
+import com.vaadin.ui.Upload.SucceededListener;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.TechInfoSet;
@@ -90,12 +88,14 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 			}
 		});
 		
-		remoteURIInput.addTextChangeListener(new TextChangeListener() {
+		remoteURIInput.addValueChangeListener(new ValueChangeListener<String>() {
 			
-			public void textChange(TextChangeEvent event) {
+			@Override
+			public void valueChange(ValueChangeEvent<String> event) {
 				
 				try {
-					String urlText = event.getText();
+					String urlText = event.getValue();
+					
 					if (urlText.toLowerCase().startsWith("www")) { //TODO: better scheme detection //$NON-NLS-1$
 						urlText = "http://" + urlText; //$NON-NLS-1$
 					}
@@ -137,7 +137,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		remoteURIInput = new TextField();
 		remoteURIInput.setCaption(Messages.getString("LocationPanel.enterURL")); //$NON-NLS-1$
 		remoteURIInput.setWidth("100%"); //$NON-NLS-1$
-		remoteURIInput.setTextChangeEventMode(TextChangeEventMode.EAGER);
+		remoteURIInput.setValueChangeMode(ValueChangeMode.EAGER);
 		remoteLayout.addComponent(remoteURIInput);
 		remoteLayout.setExpandRatio(remoteURIInput, 2);
 		

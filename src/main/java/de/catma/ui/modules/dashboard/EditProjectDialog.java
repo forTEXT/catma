@@ -11,7 +11,7 @@ public class EditProjectDialog extends AbstractProjectDialog {
 	private final ProjectReference projectReference;
 	
 	public EditProjectDialog(ProjectReference projectReference, ProjectManager projectManager, SaveCancelListener<ProjectReference> saveCancelListener) {
-		super("Updates a Project",projectManager, saveCancelListener);
+		super("Edit Project",projectManager, saveCancelListener);
 		this.projectReference = projectReference;
 	}
 	
@@ -24,15 +24,9 @@ public class EditProjectDialog extends AbstractProjectDialog {
 
 	@Override
 	protected ProjectReference getResult() {
-		try {
-			projectReference.setName(name.getValue());
-			projectReference.setDescription(description.getValue());
-			return projectReference; // TODO: currently just a fake. Not saved!
-									//	TODO: marco implement		return projectManager.updateProject(projectReference);
-		} catch (Exception e) {
-			errorLogger.showAndLogError(e.getMessage(),e);
-			return null;
-		}
+		projectReference.setName(name.getValue());
+		projectReference.setDescription(description.getValue());
+		return projectReference; 
 	}
 
 }

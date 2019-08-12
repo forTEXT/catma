@@ -256,4 +256,14 @@ public class GitProjectManager implements ProjectManager {
 	public boolean isAuthorizedOnProject(RBACPermission permission, String projectId) {
 		return remoteGitServerManager.isAuthorizedOnProject(user, permission, projectId);
 	}
+	
+	@Override
+	public void updateProject(ProjectReference projectReference) throws IOException {
+		String marshalledDescription = marshallProjectMetadata(projectReference.getName(), projectReference.getDescription());
+		
+		String projectId = projectReference.getProjectId();
+		
+		remoteGitServerManager.updateGroup(projectId, projectId, marshalledDescription);
+		
+	}
 }

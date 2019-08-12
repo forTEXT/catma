@@ -18,18 +18,17 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
-import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.renderers.ButtonRenderer;
-import de.catma.ui.layout.VerticalLayout;
-import de.catma.ui.layout.HorizontalLayout;
+import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
+import com.vaadin.ui.themes.ValoTheme;
+
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
@@ -46,14 +45,17 @@ import de.catma.ui.analyzenew.treegridhelper.RootItem;
 import de.catma.ui.analyzenew.treegridhelper.SingleItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 
-public class ResourceOrganiserPanel extends VerticalLayout  {
+public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
-	private HorizontalLayout headerButtonBar;
-	private VerticalLayout frameLayout;
-	private VerticalLayout leftSide;
-	private HorizontalLayout comboboxPanel;
+	private HorizontalFlexLayout headerButtonBar;
+	private VerticalFlexLayout frameLayout;
+	private VerticalFlexLayout leftSide;
+	private HorizontalFlexLayout comboboxPanel;
+
 	private HorizontalSplitPanel mainContentSplitPanel;
 	private CloseVizViewListener leaveViewListener;
 	private Label visualisationName;
@@ -111,9 +113,10 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 	}
 
 	private void initComponents() {
-		comboboxPanel = new HorizontalLayout();
-		frameLayout = new VerticalLayout();
-		leftSide = new VerticalLayout();
+		comboboxPanel = new HorizontalFlexLayout();
+		frameLayout = new VerticalFlexLayout();
+		leftSide = new VerticalFlexLayout();
+
 		leftSide.addStyleName("analyzer_kwic_leftside_vertical");
 		rightSide = new Panel();
 		rightSide.addStyleName("analyze_kwic_right");
@@ -123,7 +126,7 @@ public class ResourceOrganiserPanel extends VerticalLayout  {
 		kwicNew.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		rightSide.setContent(kwicNew);
 		rightSide.setHeight("100%");
-		headerButtonBar = new HorizontalLayout();
+		headerButtonBar = new HorizontalFlexLayout();
 
 		arrowLeftBt = new Button(VaadinIcons.ARROW_LEFT);
 		arrowLeftBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);

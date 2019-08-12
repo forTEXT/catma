@@ -20,11 +20,11 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 
 public class ConflictedProjectView extends HugeCard {
 	
-	private VerticalLayout mainPanel;
+	private VerticalFlexLayout mainPanel;
 	private ConflictedProject conflictedProject;
 	private Iterator<CollectionConflict> collectionConflictIterator;
 	private Iterator<AnnotationConflict> annotationConflictIterator;
@@ -153,7 +153,7 @@ public class ConflictedProjectView extends HugeCard {
 	
 
 	private void initComponents() {
-		mainPanel = new VerticalLayout();
+		mainPanel = new VerticalFlexLayout();
 		addComponent(mainPanel);
 		
 		

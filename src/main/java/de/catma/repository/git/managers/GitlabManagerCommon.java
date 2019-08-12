@@ -11,7 +11,6 @@ import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Project;
 
-import de.catma.interfaces.IdentifiableResource;
 import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -49,15 +48,15 @@ public interface GitlabManagerCommon extends IRBACManager {
 	}
 	
 	@Override
-	public default boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, IdentifiableResource resource) {
+	public default boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, String projectId, String resourceId) {
 		try {
-			Project project = getGitLabApi().getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			Project project = getGitLabApi().getProjectApi().getProject(projectId, resourceId);
 			if(project != null){
 				return isMemberAuthorized(permission, getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId()));
 			}
 			return false;
 		} catch (GitLabApiException e) {
-			getLogger().log(Level.WARNING, "Can't retrieve permissions from resource: "+ resource.getResourceId(),e);
+			getLogger().log(Level.WARNING, "Can't retrieve permissions from resource: "+ resourceId,e);
 			return false;
 		}
 	}
@@ -211,11 +210,11 @@ public interface GitlabManagerCommon extends IRBACManager {
 	}
 	
 	@Override
-	public default RBACRole getRoleOnResource(RBACSubject subject, IdentifiableResource resource) throws IOException {
+	public default RBACRole getRoleOnResource(RBACSubject subject, String projectId, String resourceId) throws IOException {
 		try {
-			Project project = getGitLabApi().getProjectApi().getProject(resource.getProjectId(), resource.getResourceId());
+			Project project = getGitLabApi().getProjectApi().getProject(projectId, resourceId);
 			if(project == null) {
-				throw new IOException("resource or rootproject unkown "+ resource.getResourceId());
+				throw new IOException("resource or rootproject unkown "+ resourceId);
 			}
 				Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
 			
@@ -225,7 +224,7 @@ public interface GitlabManagerCommon extends IRBACManager {
 			return RBACRole.forValue(member.getAccessLevel().value);
 			
 		} catch (GitLabApiException e) {
-			throw new IOException("resource or rootproject unkown "+ resource, e);
+			throw new IOException("resource or rootproject unkown "+ resourceId, e);
 		}		
 	}
 	

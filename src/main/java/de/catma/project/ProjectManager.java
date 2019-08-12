@@ -26,4 +26,6 @@ public interface ProjectManager {
 	void leaveProject(String projectId) throws IOException;
 
 	boolean isAuthorizedOnProject(RBACPermission permission, String projectId);
+
+	void updateProject(ProjectReference projectReference) throws IOException;
 }

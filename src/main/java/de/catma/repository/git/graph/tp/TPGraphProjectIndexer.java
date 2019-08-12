@@ -169,6 +169,8 @@ public class TPGraphProjectIndexer implements Indexer {
 	@Override
 	public QueryResult searchTagDefinitionPath(List<String> collectionIdList, String tagPath)
 			throws Exception {
+		QueryResultRowArray result = new QueryResultRowArray();
+		
 		if (!tagPath.startsWith("/")) {
 			tagPath = "%"+tagPath;
 		}
@@ -183,67 +185,66 @@ public class TPGraphProjectIndexer implements Indexer {
 		.outV().hasLabel(nt(Tag))
 		.toSet();
 		
-		List<Path> tagPaths  = g.V(tagVs)
-		.optional(__.repeat(__.out(rt(hasParent))).until(__.outE(rt(hasParent)).count().is(0)))
-		.path()
-		.toList();
-		
-		Map<String, String> validTagIdToTagPathMapping = new HashMap<>();
-
-		for (Path path : tagPaths) {
-			Vertex tag = path.get(0);
-			String tagId = (String) tag.properties("tagId").next().orElse(null);
+		if (!tagVs.isEmpty()) {
+			List<Path> tagPaths  = g.V(tagVs)
+			.optional(__.repeat(__.out(rt(hasParent))).until(__.outE(rt(hasParent)).count().is(0)))
+			.path()
+			.toList();
+			
+			Map<String, String> validTagIdToTagPathMapping = new HashMap<>();
 	
-			StringBuilder builder = new StringBuilder();
-			String conc = "/";
-			
-			path.forEach(
-				tagVertex -> {
-					builder.append(conc);
-					builder.append(
-						((Vertex)tagVertex).properties("name").next().orElse(null));
-				});
-			
-			String tagPathStr = builder.toString();
-			
-			if (Pattern.matches(tagPathRegex, tagPathStr)) {
-				validTagIdToTagPathMapping.put(tagId, tagPathStr);
+			for (Path path : tagPaths) {
+				Vertex tag = path.get(0);
+				String tagId = (String) tag.properties("tagId").next().orElse(null);
+		
+				StringBuilder builder = new StringBuilder();
+				String conc = "/";
+				
+				path.forEach(
+					tagVertex -> {
+						builder.append(conc);
+						builder.append(
+							((Vertex)tagVertex).properties("name").next().orElse(null));
+					});
+				
+				String tagPathStr = builder.toString();
+				
+				if (Pattern.matches(tagPathRegex, tagPathStr)) {
+					validTagIdToTagPathMapping.put(tagId, tagPathStr);
+				}
 			}
-		}
-		
-		List<Map<String,Object>> resultMap = g.V().hasLabel(nt(ProjectRevision))
-		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
-		.as("doc")
-		.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", P.within(collectionIdList))
-		.as("collection")
-		.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
-		.as("anno", "ranges")
-		.inE(rt(hasInstance)).outV().has(nt(Tag), "tagId", P.within(validTagIdToTagPathMapping.keySet()))
-		.as("tag")
-		.select("doc", "collection", "anno", "ranges", "tag")
-		.by("documentId").by("collectionId").by("tagInstanceId").by("ranges").by("tagId")
-		.toList();
-		
-		QueryResultRowArray result = new QueryResultRowArray();
-		
-		for (Map<String,Object> entry : resultMap) {
-			@SuppressWarnings("unchecked")
-			List<Integer> ranges = (List<Integer>)entry.get("ranges");
-			List<Range> rangeList = new ArrayList<>();
-			for (int i=0; i<ranges.size()-1; i+=2) {
-				rangeList.add(new Range(ranges.get(i), ranges.get(i+1)));
+			
+			List<Map<String,Object>> resultMap = g.V().hasLabel(nt(ProjectRevision))
+			.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
+			.as("doc")
+			.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", P.within(collectionIdList))
+			.as("collection")
+			.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
+			.as("anno", "ranges")
+			.inE(rt(hasInstance)).outV().has(nt(Tag), "tagId", P.within(validTagIdToTagPathMapping.keySet()))
+			.as("tag")
+			.select("doc", "collection", "anno", "ranges", "tag")
+			.by("documentId").by("collectionId").by("tagInstanceId").by("ranges").by("tagId")
+			.toList();
+			
+			for (Map<String,Object> entry : resultMap) {
+				@SuppressWarnings("unchecked")
+				List<Integer> ranges = (List<Integer>)entry.get("ranges");
+				List<Range> rangeList = new ArrayList<>();
+				for (int i=0; i<ranges.size()-1; i+=2) {
+					rangeList.add(new Range(ranges.get(i), ranges.get(i+1)));
+				}
+				result.add(
+					new TagQueryResultRow(
+						(String)entry.get("doc"), 
+						rangeList, 
+						(String)entry.get("collection"), 
+						(String)entry.get("tag"),
+						validTagIdToTagPathMapping.get((String)entry.get("tag")),
+						"", //TODO: version
+						(String)entry.get("anno")));
 			}
-			result.add(
-				new TagQueryResultRow(
-					(String)entry.get("doc"), 
-					rangeList, 
-					(String)entry.get("collection"), 
-					(String)entry.get("tag"),
-					validTagIdToTagPathMapping.get((String)entry.get("tag")),
-					"", //TODO: version
-					(String)entry.get("anno")));
-		}
-		
+		}		
 		
 		return result;
 	}

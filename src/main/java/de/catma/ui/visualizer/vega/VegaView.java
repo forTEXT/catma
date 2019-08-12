@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
@@ -13,25 +14,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.v7.ui.TextArea;
-import com.vaadin.v7.ui.TextField;
+import com.vaadin.ui.TextArea;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzer.KwicPanel;
+import de.catma.ui.analyzer.KwicWindow;
+import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.QueryOptionsProvider;
+import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.util.IDGenerator;
 
@@ -55,7 +63,9 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 
 	private String queryResultUrl;
 
-	public VegaView(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider) {
+	private Repository repository;
+
+	public VegaView(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider, Repository repository) {
 		
 		this.vegaViewId = new IDGenerator().generate().toLowerCase();
 		String queryResultPath = vegaViewId+"/queryresult/default.json";
@@ -63,12 +73,14 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 
 		this.queryResultRequestHandler = new JSONQueryResultRequestHandler(queryResult, queryOptionsProvider, queryResultPath, vegaViewId);
 		VaadinSession.getCurrent().addRequestHandler(queryResultRequestHandler);
-		
+		this.repository = repository;
 		initComponents();
 		initActions();
 	}
 
 	private void initActions() {
+		vega.setValueChangeListener(changeEvent -> handleVegaValueChange(changeEvent.getValue()));
+		
 		btUpdate.addClickListener(new ClickListener() {
 			
 			@Override
@@ -96,7 +108,6 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 						}
 						
 						vega.setVegaSpec(specNode.toString());
-						
 					}
 					catch (Exception e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError("error updating vega viz", e);
@@ -154,6 +165,37 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 		});
 	}
 
+	private void handleVegaValueChange(QueryResult rows) {
+		
+		try {
+			boolean markupBased = false;
+			if (!rows.iterator().hasNext()) {
+				markupBased = (rows.iterator().next() instanceof TagQueryResultRow);
+			}
+			KwicPanel kwicPanel = 
+					new KwicPanel(repository, new RelevantUserMarkupCollectionProvider() {
+						
+						@Override
+						public List<String> getRelevantUserMarkupCollectionIDs() {
+							return null;
+						}
+						
+						@Override
+						public Corpus getCorpus() {
+							return null;
+						}
+					}, markupBased);
+			kwicPanel.addQueryResultRows(rows);
+			new KwicWindow(
+					"Test", //TODO:
+					kwicPanel).show(); 
+		}
+		catch (Exception e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+					Messages.getString("AnalyzerView.errorAccessingRepo"), e); //$NON-NLS-1$
+		}			
+	}
+
 	private void setQueryUrl(ObjectNode dataNode) throws UnsupportedEncodingException {
 		if (dataNode.has("url")) {
 			String catmaQuery = dataNode.get("url").asText();
@@ -178,7 +220,8 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 		leftPanel.setSpacing(true);
 		leftPanel.setMargin(true);
 		
-		leftPanel.setSizeFull();
+		leftPanel.setWidth("100%");
+		leftPanel.setHeight("600px");
 		addComponent(leftPanel);
 		
 		HorizontalLayout queryResultInfoPanel = new HorizontalLayout();
@@ -200,7 +243,7 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 		queryResultInfoPanel.addComponent(queryResultUrlField);
 		queryResultInfoPanel.setExpandRatio(queryResultUrlField, 1f);
 
-		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
+		btHelp = new Button(VaadinIcons.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button"); //$NON-NLS-1$
 		queryResultInfoPanel.addComponent(btHelp);
 		queryResultInfoPanel.setComponentAlignment(btHelp, Alignment.TOP_LEFT);
@@ -214,9 +257,11 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		leftPanel.addComponent(buttonPanel);
+		
 		buttonPanel.addStyleName("vega-view-left-panel-component");
 		buttonPanel.setSpacing(true);
 		buttonPanel.setWidth("100%");
+		buttonPanel.setHeight("30px");
 		
 		btPhraseExample = new Button("Phrase distribution example");
 		btPhraseExample.setDescription("A specificaton for a phrase distribution chart");

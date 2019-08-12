@@ -21,8 +21,6 @@ package de.catma.ui.repository.wizard;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import de.catma.document.source.SourceDocument;
-import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 
 public class AddSourceDocWizardResult {

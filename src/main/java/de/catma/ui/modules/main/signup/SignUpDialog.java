@@ -29,8 +29,8 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalLayout;
-import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -58,7 +58,7 @@ public class SignUpDialog extends Window {
 	private void initComponents() {
 		setModal(true);
 		
-		VerticalLayout content = new VerticalLayout();
+		VerticalFlexLayout content = new VerticalFlexLayout();
 		content.addStyleName("spacing");
 		content.addStyleName("margin");
 		Label description = new Label("Description", ContentMode.HTML);
@@ -93,7 +93,7 @@ public class SignUpDialog extends Window {
 			
 		});
 		
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
 		buttonPanel.addStyleName("spacing-left-right");
 		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
 		Button btnSignup = new Button("Sign Up");
