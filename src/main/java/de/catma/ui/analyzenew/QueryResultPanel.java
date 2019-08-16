@@ -14,15 +14,14 @@ import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-//import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-//import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.themes.ValoTheme;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
@@ -37,20 +36,17 @@ import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
 import de.catma.ui.analyzenew.treegridhelper.RootItem;
 import de.catma.ui.analyzenew.treegridhelper.SingleItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.component.IconButton;
 
-public class ResultPanelNew extends Panel {
+public class QueryResultPanel extends VerticalLayout {
 
 	private static enum TreePropertyName {
 		caption, frequency, visibleInKwic,;
 	}
 
-	public static interface ResultPanelCloseListener {
-		public void closeRequest(ResultPanelNew resultPanelNew);
+	static interface CloseListener {
+		public void closeRequest(QueryResultPanel resultPanel);
 	}
-
-	private VerticalFlexLayout contentVerticalLayout;
 
 	private TreeData<TreeRowItem> tagData;
 	private TreeGrid<TreeRowItem> treeGridTag;
@@ -69,26 +65,26 @@ public class ResultPanelNew extends Panel {
 	private Label queryInfo;
 
 	private LoadingCache<String , KwicProvider> kwicProviderCache;
-	private HorizontalFlexLayout groupedIcons;
 
 	private Button caretRightBt;
 	private Button caretDownBt;
 	private Button removeBt;
 	private Button optionsBt;
-	private Panel treeGridPanel;
+
 	private QueryResult queryResult;
 	private String queryAsString;
 	private String creationTime;
 	private Repository repository;
 	private ViewID currentView;
-	private ResultPanelCloseListener resultPanelCloseListener;
+	private CloseListener resultPanelCloseListener;
 	private boolean phraseBased= false;
 	private boolean tagBased= false;
 	private boolean	propertyBased=false;
+	private VerticalLayout treeGridPanel;
 
-	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString, 
+	public QueryResultPanel(Repository repository, QueryResult result, String queryAsString, 
 			LoadingCache<String, KwicProvider> kwicProviderCache,
-			ResultPanelCloseListener resultPanelCloseListener) throws Exception {
+			CloseListener resultPanelCloseListener) throws Exception {
 
 		this.repository = repository;
 		this.queryResult = result;
@@ -99,12 +95,13 @@ public class ResultPanelNew extends Panel {
 		initListeners();
 		optionsMenu = new ContextMenu(optionsBt,true);
 		
+		//TODO: try to get away with a single loop
 		detectViewFromQueryResult(result);
 
 		if (currentView == ViewID.tag) {
 			setDataTagStyle();
 			//setCurrentView(ViewID.tag);
-			treeGridPanel.setContent(treeGridTag);
+			setContent(treeGridTag);
 			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
 					switchToPhraseView();
@@ -126,14 +123,14 @@ public class ResultPanelNew extends Panel {
 		if (currentView == ViewID.phrase) {
 			setDataPhraseStyle();
 			//setCurrentView(ViewID.phrase);
-			treeGridPanel.setContent(treeGridPhrase);
+			setContent(treeGridPhrase);
 			optionsMenu.addItem("No other View for that query available");
 
 		}
 
 		if (currentView == ViewID.property) {
 			setDataPropertyStyle();
-			treeGridPanel.setContent(treeGridProperty);
+			setContent(treeGridProperty);
 			
 			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
@@ -147,7 +144,7 @@ public class ResultPanelNew extends Panel {
 				try {
 					//switchToTagView();
 					setCurrentView(ViewID.property);
-					treeGridPanel.setContent(treeGridProperty);
+					setContent(treeGridProperty);
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -156,7 +153,7 @@ public class ResultPanelNew extends Panel {
 			optionsMenu.addItem("Switch to Flat Table View", e -> {
 				try {
 					setCurrentView(ViewID.flatTableProperty);
-					treeGridPanel.setContent(treeGridPropertyFlatTable);
+					setContent(treeGridPropertyFlatTable);
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -167,7 +164,7 @@ public class ResultPanelNew extends Panel {
 		if (currentView == ViewID.mixedTagPhrase) {
 			setDataTagStyle();
 			currentView = ViewID.tag;
-			treeGridPanel.setContent(treeGridTag);
+			setContent(treeGridTag);
 			
 			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
@@ -190,7 +187,7 @@ public class ResultPanelNew extends Panel {
 		if (currentView == ViewID.mixedPropertyPhrase) {
 			setDataPropertyStyle();
 			currentView = ViewID.property;
-			treeGridPanel.setContent(treeGridProperty);
+			setContent(treeGridProperty);
 			
 			optionsMenu.addItem("Switch to Phrase View", clickEvent -> {
 				try {
@@ -221,20 +218,20 @@ public class ResultPanelNew extends Panel {
 		
 	}
 
-
+	private void setContent(TreeGrid<TreeRowItem> treeGrid) {
+		treeGridPanel.removeAllComponents();
+		treeGridPanel.addComponent(treeGrid);
+	}
 
 	private void initComponents() {
-		this.setWidth(80, Unit.PERCENTAGE);
-		contentVerticalLayout = new VerticalFlexLayout();
-		contentVerticalLayout.addStyleName("analyze_queryresultpanel__card");
-
-		addStyleName("analyze_queryresultpanel__card_frame");
-		setContent(contentVerticalLayout);
-
+		addStyleName("analyze-card");
+		setMargin(false);
+		setSpacing(false);
+		
 		treeGridTag = new TreeGrid<TreeRowItem>();
 		treeGridTag.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
-
+		
 		treeGridPhrase = new TreeGrid<TreeRowItem>();
 		treeGridPhrase.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
@@ -249,52 +246,59 @@ public class ResultPanelNew extends Panel {
 
 		createResultInfoBar();
 		createButtonBar();
-		treeGridPanel = new Panel();
+		treeGridPanel = new VerticalLayout();
+		treeGridPanel.setMargin(false);
+		treeGridPanel.addStyleName("analyze-queryresult-panel");
 	}
 
 	private void createResultInfoBar() {
 		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
-		int resultSize = resultRowArrayArrayList.size();
+		int resultSize = resultRowArrayArrayList.size(); //TODO: analyze during loop
+		//TODO: use java.util.time
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		creationTime = timestamp.toString().substring(0, 19);
 		queryInfo = new Label(queryAsString + "(" + resultSize + ")"+" created: "+creationTime);
-		queryInfo.addStyleName("analyze_queryresultpanel_infobar");
-		contentVerticalLayout.addComponent(queryInfo);
+		
+		queryInfo.addStyleName("analyze-card-infobar");
+		
+		addComponent(queryInfo);
 	}
 
 	private void createButtonBar() {
-		groupedIcons = new HorizontalFlexLayout();
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setWidth("100%");
+		
+		caretRightBt = new IconButton(VaadinIcons.CARET_RIGHT);
 
-		caretRightBt = new Button(VaadinIcons.CARET_RIGHT);
-		caretRightBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		caretDownBt = new IconButton(VaadinIcons.CARET_DOWN);
 
-		caretDownBt = new Button(VaadinIcons.CARET_DOWN);
-		caretDownBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		optionsBt = new IconButton(VaadinIcons.ELLIPSIS_V);
 
-		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
-		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		removeBt = new IconButton(VaadinIcons.ERASER);
 
-		removeBt = new Button(VaadinIcons.ERASER);
-		removeBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-
-		groupedIcons.addComponents(removeBt, optionsBt, caretRightBt);
-		groupedIcons.addStyleName("analyze_queryresultpanel_buttonbar");
-		contentVerticalLayout.addComponent(groupedIcons);
+		buttonPanel.addComponents(removeBt, optionsBt, caretRightBt);
+		buttonPanel.setComponentAlignment(caretRightBt, Alignment.MIDDLE_RIGHT);
+		buttonPanel.setComponentAlignment(optionsBt, Alignment.MIDDLE_RIGHT);
+		buttonPanel.setComponentAlignment(removeBt, Alignment.MIDDLE_RIGHT);
+		buttonPanel.setExpandRatio(removeBt, 1f);
+		
+		buttonPanel.addStyleName("analyze-card-buttonbar");
+		addComponent(buttonPanel);
 	}
 
 	private void initListeners() {
 		caretRightBt.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
-				contentVerticalLayout.addComponent(treeGridPanel);
-				groupedIcons.replaceComponent(caretRightBt, caretDownBt);
+				addComponent(treeGridPanel);
+				((HorizontalLayout)caretRightBt.getParent()).replaceComponent(caretRightBt, caretDownBt);
 
 			}
 		});
 
 		caretDownBt.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
-				contentVerticalLayout.removeComponent(treeGridPanel);
-				groupedIcons.replaceComponent(caretDownBt, caretRightBt);
+				removeComponent(treeGridPanel);
+				((HorizontalLayout)caretDownBt.getParent()).replaceComponent(caretDownBt, caretRightBt);
 			}
 		});
 		
@@ -302,7 +306,7 @@ public class ResultPanelNew extends Panel {
 
 		removeBt.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
-				resultPanelCloseListener.closeRequest(ResultPanelNew.this);
+				resultPanelCloseListener.closeRequest(QueryResultPanel.this);
 			}
 		});
 	}
@@ -310,7 +314,7 @@ public class ResultPanelNew extends Panel {
 	@SuppressWarnings("unchecked")
 	public TreeData<TreeRowItem> getCurrentTreeGridData() {
 
-		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getContent();
+		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getComponent(0);
 		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
 		TreeData<TreeRowItem> treeData = (TreeData<TreeRowItem>) dataProvider.getTreeData();
 		return copyTreeData(treeData);
@@ -412,7 +416,7 @@ public class ResultPanelNew extends Panel {
 		treeGridTag.setWidth("100%");
 		treeGridTag.setCaption(queryAsString);
 
-		treeGridPanel.setContent(treeGridTag);
+		setContent(treeGridTag);
 
 		setDataPhraseStyle();
 	}
@@ -458,12 +462,12 @@ public class ResultPanelNew extends Panel {
 		
 		TreeDataProvider<TreeRowItem> phraseDataProvider = new TreeDataProvider<>(phraseData);
 		treeGridPhrase.setDataProvider(phraseDataProvider);
-		treeGridPanel.setContent(treeGridPhrase);
+		setContent(treeGridPhrase);
 		
 		phraseDataProvider.refreshAll();
 		
 		treeGridPhrase.addColumn(TreeRowItem::getTreeKey).setCaption("Phrase").setId("phraseID");
-		treeGridPhrase.getColumn("phraseID").setExpandRatio(7);
+		treeGridPhrase.getColumn("phraseID").setWidth(400);
 		treeGridPhrase.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
 		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
 		treeGridPhrase.setWidth("100%");
@@ -486,7 +490,7 @@ public class ResultPanelNew extends Panel {
 		treeGridProperty.setWidth("100%");
 		treeGridProperty.setCaption(queryAsString);
 
-		treeGridPanel.setContent(treeGridProperty);
+		setContent(treeGridProperty);
 		setDataFlatTableStyle();
 		setDataPhraseStyle();
 	}
@@ -696,22 +700,22 @@ public class ResultPanelNew extends Panel {
 	
 	private void switchToPhraseView() {
 		setCurrentView(ViewID.phrase);
-		treeGridPanel.setContent(treeGridPhrase);	
+		setContent(treeGridPhrase);	
 	}
 	
 	private void switchToTagView() {
 		setCurrentView(ViewID.tag);
-		treeGridPanel.setContent(treeGridTag);	
+		setContent(treeGridTag);	
 	}
 	
 	private void switchToFlatTableView() {
 		setCurrentView(ViewID.flatTableProperty);
-		treeGridPanel.setContent(treeGridPropertyFlatTable);		
+		setContent(treeGridPropertyFlatTable);		
 	}
 	
 	private void switchToPropertyView() {
 		setCurrentView(ViewID.property);
-		treeGridPanel.setContent(treeGridProperty);		
+		setContent(treeGridProperty);		
 	}
 
 }

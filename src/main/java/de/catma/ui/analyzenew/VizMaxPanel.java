@@ -16,15 +16,16 @@ import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Sizeable;
+import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.VerticalSplitPanel;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.themes.ValoTheme;
@@ -33,7 +34,6 @@ import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.indexer.KwicProvider;
-import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -48,20 +48,21 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 
-public class ResourceOrganiserPanel extends VerticalFlexLayout  {
+public class VizMaxPanel extends VerticalLayout  {
+	
+	interface LeaveListener {
+		public void onLeave(VizMaxPanel vizMaxPanel);
+	}
 
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	private HorizontalFlexLayout headerButtonBar;
-	private VerticalFlexLayout frameLayout;
 	private VerticalFlexLayout leftSide;
 	private HorizontalFlexLayout comboboxPanel;
 
 	private HorizontalSplitPanel mainContentSplitPanel;
-	private CloseVizViewListener leaveViewListener;
 	private Label visualisationName;
-	private Button optionsBt;
 	private Button arrowLeftBt;
-	private ComboBox<String> comboBox;
+	private ComboBox<String> queryResultBox;
 	private List<String> availableResultSets;
 	private Panel selectedItemsPanel;
 	private Panel queryResultsPanel;
@@ -71,50 +72,64 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 	private TreeGrid<TreeRowItem> resultsTreeGrid;
 	private TreeGrid<TreeRowItem> phraseTreeGrid;
 	private TreeGrid<TreeRowItem> tagTreeGrid;
+	
 	private TreeDataProvider<TreeRowItem> phraseDataProvider;
 	private TreeDataProvider<TreeRowItem> tagDataProvider;
 	private TreeDataProvider<TreeRowItem> propertyFlatDataProvider;
+	
 	private TreeData<TreeRowItem> selectedItemsTreeGridData;
 	private TreeGrid<TreeRowItem> selectedItemsTreeGrid;
 	private TreeGrid<TreeRowItem> propertyTreeGrid;
 	private TreeGrid <TreeRowItem> propertyFlatTreeGrid;
 	private TreeDataProvider<TreeRowItem> propertyDataProvider;
 	private TreeDataProvider<TreeRowItem> selectedDataProvider;
+	
 	private KwicPanelNew kwicNew;
 	private ViewID selectedGridViewID;
 	private int kwicSize = 5;
 
-	public ResourceOrganiserPanel(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository,
-			LoadingCache<String, KwicProvider> kwicProviderCache) {
+	public VizMaxPanel(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository,
+			LoadingCache<String, KwicProvider> kwicProviderCache, LeaveListener leaveListener) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 
-		this.kwicProviderCache= kwicProviderCache;
+		this.kwicProviderCache = kwicProviderCache;
 		initComponents();
-		initActions();
+		initActions(leaveListener);
 
 
-	}
-
-	public ResourceOrganiserPanel(CloseVizViewListener leaveVizListener, ArrayList<CurrentTreeGridData> currentTreeGridDatas,
-			Repository repository) {
-		this.currentTreeGridDatas = currentTreeGridDatas;
-		this.leaveViewListener = leaveVizListener;
-		initComponents();
-		initActions();
-
-	}
-
-	public CloseVizViewListener getLeaveViewListener() {
-		return leaveViewListener;
-	}
-
-	public void setLeaveViewListener(CloseVizViewListener leaveViewListener) {
-		this.leaveViewListener = leaveViewListener;
 	}
 
 	private void initComponents() {
+		setSizeFull();
+		
+		mainContentSplitPanel = new HorizontalSplitPanel();
+		mainContentSplitPanel.setSplitPosition(40, Sizeable.Unit.PERCENTAGE);
+		
+		addComponent(mainContentSplitPanel);
+		
+		// left column
+		
+		VerticalSplitPanel resultSelectionSplitPanel = new VerticalSplitPanel();
+		mainContentSplitPanel.addComponent(resultSelectionSplitPanel);
+		
+		// top left 
+		
+		VerticalLayout topLeftPanel = new VerticalLayout();
+		topLeftPanel.setSizeFull();
+		
+		queryResultBox = new ComboBox<String>();
+		queryResultBox.setWidth("100%");
+		queryResultBox.setEmptySelectionCaption("Select a resultset");
+		
+		//TODO: move to initData, work with data directly
+		availableResultSets = new ArrayList<>();
+		availableResultSets = getQueriesForAvailableResults();
+		
+		queryResultBox.setItems(availableResultSets);
+		topLeftPanel.addComponent(queryResultBox);
+		
+		
 		comboboxPanel = new HorizontalFlexLayout();
-		frameLayout = new VerticalFlexLayout();
 		leftSide = new VerticalFlexLayout();
 
 		leftSide.addStyleName("analyzer_kwic_leftside_vertical");
@@ -133,33 +148,8 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 		visualisationName = new Label("KWIC Visualisation");
 		visualisationName.addStyleName("analyze_kwic_header_label");
 
-		optionsBt = new Button(VaadinIcons.ELLIPSIS_V);
-		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		optionsBt.addStyleName("analyze_kwic_header_button");
 
-		mainContentSplitPanel = new HorizontalSplitPanel();
-		mainContentSplitPanel.setSplitPosition(40, Sizeable.Unit.PERCENTAGE);
-		mainContentSplitPanel.addStyleName("analyzer_kwic_splitpanel");
 
-		frameLayout.addComponent(mainContentSplitPanel);
-
-		addComponent(frameLayout);
-		addStyleName("analyze_tab");
-		frameLayout.setSizeFull();
-
-		comboBox = new ComboBox<String>();
-		comboBox.setWidth("100%");
-		comboBox.setEmptySelectionCaption("Select one resultset");
-		availableResultSets = new ArrayList<>();
-		availableResultSets = getQueriesForAvailableResults();
-		comboBox.setItems(availableResultSets);
-		comboBox.addSelectionListener(new SingleSelectionListener<String>() {
-			@Override
-			public void selectionChange(SingleSelectionEvent<String> event) {
-				String queryAsString = event.getSource().getValue();
-				swichToResultTree(queryAsString);
-			}
-		});
 		queryResultsPanel = new Panel();
 		queryResultsPanel.setHeight("230px");
 		resultsTreeGrid = new TreeGrid<>();
@@ -201,7 +191,7 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 		selectedItemsPanel.setHeight("200px");
 
 		selectedItemsPanel.setContent(selectedItemsTreeGrid);
-		comboboxPanel.addComponents(arrowLeftBt,comboBox);
+		comboboxPanel.addComponents(arrowLeftBt,queryResultBox);
 		leftSide.addComponent(comboboxPanel);
 		leftSide.addComponent(queryResultsPanel);
 		setActionGridComponenet();
@@ -209,12 +199,13 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 		mainContentSplitPanel.addComponents(leftSide, rightSide);
 	}
 
-	private void initActions() {
-		arrowLeftBt.addClickListener(new ClickListener() {
+	private void initActions(LeaveListener leaveListener) {
+		arrowLeftBt.addClickListener(clickEvent -> leaveListener.onLeave(this));
+		queryResultBox.addSelectionListener(new SingleSelectionListener<String>() {
 			@Override
-			public void buttonClick(ClickEvent event) {
-				leaveViewListener.onClose();
-				new VizSnapshot("KWIC Snapshot");
+			public void selectionChange(SingleSelectionEvent<String> event) {
+				String queryAsString = event.getSource().getValue();
+				swichToResultTree(queryAsString);
 			}
 		});
 	}
@@ -239,6 +230,7 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 	}
 
 	private ArrayList<String> getQueriesForAvailableResults() {
+		//TODO: refactor to work with TreeGridData directly
 		ArrayList<String> allQueries = new ArrayList<>();
 		Iterator<CurrentTreeGridData> queriesIterator = currentTreeGridDatas.iterator();
 		while (queriesIterator.hasNext()) {
@@ -651,7 +643,7 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 				item.setTreeKey(queryResultRow.getPhrase());
 			}
 			item.setRows(itemAsQRRA);
-			item.setQuery(comboBox.getValue());
+			item.setQuery(queryResultBox.getValue());
 			SingleItem itemWithContext;
 		
 			try {
@@ -726,7 +718,7 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 	private void addPropertyAsFlatTableToSelectedPanel(TreeRowItem selectedItem,
 			TreeDataProvider<TreeRowItem> currentTreeDataProvider) {
 
-		Optional<String> currentQuery = comboBox.getSelectedItem();
+		Optional<String> currentQuery = queryResultBox.getSelectedItem();
 		int length = currentQuery.toString().length();
 		String queryString = currentQuery.toString().substring(20, length - 1);
 		QueryRootItem root = new QueryRootItem();
@@ -788,7 +780,7 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 		}
 
 		Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
-		Optional<String> currentQuery = comboBox.getSelectedItem();
+		Optional<String> currentQuery = queryResultBox.getSelectedItem();
 
 		int length = currentQuery.toString().length();
 		String queryString = currentQuery.toString().substring(20, length - 1);
@@ -1083,12 +1075,12 @@ public class ResourceOrganiserPanel extends VerticalFlexLayout  {
 			}
 
 		} catch (Exception e) {
-			e.getMessage();
+			e.getMessage(); //TODO
 		}
 		
 		
 		Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
-		Optional<String> currentQuery = comboBox.getSelectedItem();
+		Optional<String> currentQuery = queryResultBox.getSelectedItem();
 
 		int length = currentQuery.toString().length();
 		String queryString = currentQuery.toString().substring(20, length - 1);

@@ -376,7 +376,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		QueryOptions queryOptions = new QueryOptions(
 				relevantSourceDocumentIDs,
 				relevantUserMarkupCollIDs,
-				relevantStaticMarkupCollIDs,
 				indexInfoSet.getUnseparableCharacterSequences(),
 				indexInfoSet.getUserDefinedSeparatingCharacters(),
 				indexInfoSet.getLocale(),
@@ -419,7 +418,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		QueryOptions queryOptions = new QueryOptions(
 				relevantSourceDocumentIDs,
 				relevantUserMarkupCollIDs,
-				relevantStaticMarkupCollIDs,
 				indexInfoSet.getUnseparableCharacterSequences(),
 				indexInfoSet.getUserDefinedSeparatingCharacters(),
 				indexInfoSet.getLocale(),
@@ -569,7 +567,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				return new QueryOptions(
 						relevantSourceDocumentIDs,
 						relevantUserMarkupCollIDs,
-						relevantStaticMarkupCollIDs,
 						indexInfoSet.getUnseparableCharacterSequences(),
 						indexInfoSet.getUserDefinedSeparatingCharacters(),
 						indexInfoSet.getLocale(),
@@ -587,7 +584,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				return new QueryOptions(
 						relevantSourceDocumentIDs,
 						relevantUserMarkupCollIDs,
-						relevantStaticMarkupCollIDs,
 						indexInfoSet.getUnseparableCharacterSequences(),
 						indexInfoSet.getUserDefinedSeparatingCharacters(),
 						indexInfoSet.getLocale(),

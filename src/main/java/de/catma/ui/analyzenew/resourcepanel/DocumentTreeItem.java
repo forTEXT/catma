@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew.resourcepanelanalyze;
+package de.catma.ui.analyzenew.resourcepanel;
 
 public interface DocumentTreeItem {
 	public String getSelectionIcon();

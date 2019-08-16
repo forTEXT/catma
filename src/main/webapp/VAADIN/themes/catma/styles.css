@@ -18099,103 +18099,31 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	flex-grow: 1;
 }
 
-.catma .analyze_search_icon_bar {
-	width: 50vw;
-	border-right: 2px solid gray;
+.catma .analyze-search-panel {
+	padding-right: 20px;
 }
 
-.catma .analyze_bar {
-	height: 20%;
-	max-height: 152px;
-	border-bottom: 2px solid gray;
-}
-
-.catma .analyze_results {
-	height: 100%;
-}
-
-.catma .analyze_results_list {
-	width: 50vw;
-	overflow: auto;
-	border-right: 2px solid gray;
-	padding: 1.5em;
-}
-
-.catma .analyze_results_minmax {
-	width: 50vw;
-	overflow: auto;
-	border-right: 2px solid gray;
-	padding: 1.5em;
-}
-
-.catma .analyze_label {
-	margin-left: 50%;
-}
-
-.catma .analyze_content {
-	height: 100%;
-	overflow: hidden;
-}
-
-.catma .analyze_options_bt {
-	margin-left: auto;
-}
-
-.catma .analyze_querybuilder_bt {
-	width: 200px;
-	color: #23a2cc !important;
-	background-color: #e0e0e0 !important;
+.catma .analyze-card {
+	background-color: #cdcdcd;
+	padding: 1px;
 	border-radius: 4px;
-	border: solid 3px #23a2cc;
 }
 
-.catma .analyze_search_bt {
-	background-color: #23a2cc !important;
-	color: #ffffff !important;
-	padding: 0px;
-	margin-bottom: 15px;
-}
-
-.catma .analyze_query_comobobox {
-	width: 100%;
-	background-color: #ffffff;
-	color: #bdbdbd;
-	border-radius: 4px;
-	margin-left: 15px;
-}
-
-.catma .analyze_search {
+.catma .analyze-card-infobar {
+	background-color: #cdcdcd;
+	margin-bottom: 20px;
 	margin-top: 15px;
-	margin-left: 30px;
-	margin-right: 30px;
+	margin-left: 5px;
+	margin-right: 5px;
+	padding: 5px;
 }
 
-.catma .analyze_search_row {
-	margin-bottom: 8px;
-}
-
-.catma .analyze_queryresultpanel__card_frame {
-	background-color: #cdcdcd;
-	margin-top: 0.5em;
-	margin-bottom: 0.5em;
-	border-radius: 4px;
-}
-
-.catma .analyze_queryresultpanel__card {
-	background-color: #cdcdcd;
-	border-radius: 4px;
-}
-
-.catma .analyze_queryresultpanel_infobar {
-	margin-top: 15px;
-	margin-left: 10px;
-	margin-bottom: 35px;
-	background-color: #cdcdcd;
-}
-
-.catma .analyze_queryresultpanel_buttonbar {
+.catma .analyze-card-buttonbar {
 	background-color: #ffffff;
-	justify-content: flex-end;
+}
+
+.catma .analyze-queryresult-panel {
+	padding: 1px;
 }
 
 .catma .analyze_viz_left {
@@ -18221,10 +18149,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background-color: #cdcdcd;
 }
 
-.catma .analyze_kwic_header_button {
-	margin-left: auto;
-}
-
 .catma .analyze_kwic_header_button_download {
 	margin-left: 25%;
 }
@@ -18232,11 +18156,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .analyze_kwic_header_label {
 	margin-left: 35%;
 	text-align: center;
-}
-
-.catma .analyzer_kwic_splitpanel {
-	padding: 0px;
-	margin: 0px;
 }
 
 .catma .analyzer_kwic_leftside_vertical {
@@ -18252,6 +18171,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 12px;
 }
 
-.catma .analyze_iconbar_icon {
+.catma .analyze_viz_icon {
 	font-size: 20px;
 }

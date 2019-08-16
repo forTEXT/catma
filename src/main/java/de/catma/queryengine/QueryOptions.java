@@ -29,7 +29,6 @@ public class QueryOptions {
 	
 	private List<String> relevantSourceDocumentIDs;
 	private List<String> relevantUserMarkupCollIDs;
-	private List<String> relevantStaticMarkupCollIDs;
 	private List<String> unseparableCharacterSequences;
 	private List<Character> userDefinedSeparatingCharacters;
 	private Locale locale;
@@ -38,13 +37,11 @@ public class QueryOptions {
 	
 	public QueryOptions(List<String> relevantSourceDocumentIDs,
 			List<String> relevantUserMarkupCollIDs,
-			List<String> relevantStaticMarkupCollIDs,
 			List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale,
 			IndexedRepository repository) {
 		this.relevantSourceDocumentIDs = relevantSourceDocumentIDs;
 		this.relevantUserMarkupCollIDs = relevantUserMarkupCollIDs;
-		this.relevantStaticMarkupCollIDs = relevantStaticMarkupCollIDs;
 		this.unseparableCharacterSequences = unseparableCharacterSequences;
 		this.userDefinedSeparatingCharacters = userDefinedSeparatingCharacters;
 		this.locale = locale;
@@ -65,10 +62,6 @@ public class QueryOptions {
 
 	public Locale getLocale() {
 		return locale;
-	}
-	
-	public List<String> getRelevantStaticMarkupCollIDs() {
-		return relevantStaticMarkupCollIDs;
 	}
 	
 	public List<String> getRelevantUserMarkupCollIDs() {

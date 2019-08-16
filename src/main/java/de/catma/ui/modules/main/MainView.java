@@ -241,7 +241,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	public void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent) {
 		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
 			if (this.analyzeNewManagerView == null) {
-				this.analyzeNewManagerView = new AnalyzeNewManagerView(eventBus);
+				this.analyzeNewManagerView = new AnalyzeNewManagerView(eventBus, routeToAnalyzeEvent.getProject());
 			}
 			
 			setContent(analyzeNewManagerView);

@@ -12,24 +12,24 @@ import de.catma.document.source.SourceDocument;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.KwicProvider;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.analyzenew.AnalyzeNewView.CloseListenerNew;
+import de.catma.ui.analyzenew.AnalyzeNewView.CloseListener;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.tabbedview.TabbedView;
 
-public class AnalyzeNewManagerView extends  TabbedView{
+public class AnalyzeNewManagerView extends TabbedView {
 	EventBus eventBus;
 
 	
-	public AnalyzeNewManagerView(EventBus eventBus) {
+	public AnalyzeNewManagerView(EventBus eventBus, IndexedRepository repository) {
 		super(
 				Messages.getString("temporary caption"));	
 		this.eventBus = eventBus;
 					
 	}
 	
-	public void analyzeNewDocuments(Corpus corpus, IndexedRepository repository ) {
+	public void analyzeNewDocuments(Corpus corpus, IndexedRepository repository) {
 		try {
-			AnalyzeNewView analyzeNewView = new AnalyzeNewView(corpus, repository, getKwicProviderCache(repository), new CloseListenerNew() {
+			AnalyzeNewView analyzeNewView = new AnalyzeNewView(corpus, repository, getKwicProviderCache(repository), new CloseListener() {
 				@Override
 				public void closeRequest(AnalyzeNewView analyzeNewView) {
 		

@@ -6,9 +6,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.antlr.runtime.RecognitionException;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -18,20 +20,22 @@ import com.github.appreciated.material.MaterialTheme;
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.ComboBox.NewItemHandler;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.HasComponents;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -41,30 +45,27 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.QueryJob;
-import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.QueryJob.QueryException;
+import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
-import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
-import de.catma.ui.analyzenew.resourcepanelanalyze.CollectionDataItem;
-import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentTreeItem;
-import de.catma.ui.analyzenew.resourcepanelanalyze.DocumentDataItem;
-import de.catma.ui.analyzenew.resourcepanelanalyze.ResourcePanelAnalyze;
+import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourcePanel;
+import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourceSelectionListener;
+import de.catma.ui.analyzenew.resourcepanel.CollectionDataItem;
+import de.catma.ui.analyzenew.resourcepanel.DocumentDataItem;
+import de.catma.ui.analyzenew.resourcepanel.DocumentTreeItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.component.IconButton;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
-import de.catma.ui.tabbedview.TabComponent;
 import de.catma.util.StopWatch;
 
-public class AnalyzeNewView extends HorizontalFlexLayout
-		implements ClosableTab, TabComponent, HasComponents {
+public class AnalyzeNewView extends HorizontalLayout
+		implements ClosableTab {
 
-	public static interface CloseListenerNew {
+	public static interface CloseListener {
 		public void closeRequest(AnalyzeNewView analyzeNewView);
 	}
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -74,7 +75,6 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	private List<String> relevantSourceDocumentIDs;
 	private List<String> relevantUserMarkupCollIDs;
-	private List<String> relevantStaticMarkupCollIDs;
 	private List<String> predefQueries;
 	private IndexInfoSet indexInfoSet;
 	private Button btExecuteSearch;
@@ -83,26 +83,22 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 	private Button distBt;
 	private Button wordCloudBt;
 	private Button networkBt;
-	private Button optionsBt;
-	private String searchInput;
-	private ComboBox<String> queryComboBox;
-	private ResultPanelNew queryResultPanel;
-	private HorizontalFlexLayout resultAndMinMaxVizHorizontal;
-	private VerticalFlexLayout resultsPanel;
-	private VerticalFlexLayout minMaxPanel;
-	private VerticalFlexLayout searchPanel;
-	private HorizontalFlexLayout labelLayout;
-	private VerticalFlexLayout contentPanel;
-	private HorizontalFlexLayout searchRow;
-	private HorizontalFlexLayout searchAndVisIconsHorizontal;
+	private Button btQueryOptions;
+	private Button btVizOptions;
+	private ComboBox<String> queryBox;
+	private VerticalLayout resultsPanel;
+	private VerticalLayout vizCardsPanel;
+	private HorizontalLayout contentPanel;
 
-	private Component visIconsPanel;
-	private ResourcePanelAnalyze resourcePanelAnalyze;
+	private AnalyzeResourcePanel analyzeResourcePanel;
 	private SliderPanel drawer;
 	private QueryOptions queryOptions;
-	private boolean newItem= false;
 
-	public AnalyzeNewView(Corpus corpus, IndexedRepository repository,LoadingCache<String, KwicProvider> kwicProviderCache, CloseListenerNew closeListener )
+	public AnalyzeNewView(
+			Corpus corpus, 
+			IndexedRepository repository,
+			LoadingCache<String, KwicProvider> kwicProviderCache, 
+			CloseListener closeListener)
 			throws Exception {
 
 		this.corpus = corpus;
@@ -110,77 +106,119 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 		this.kwicProviderCache = kwicProviderCache;
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
-		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
 		this.indexInfoSet = new IndexInfoSet(Collections.<String>emptyList(), Collections.<Character>emptyList(),
 				Locale.ENGLISH);
 		
 		 this.queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
-					relevantStaticMarkupCollIDs, indexInfoSet.getUnseparableCharacterSequences(),
+					indexInfoSet.getUnseparableCharacterSequences(),
 					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
 
 		initComponents();
-		initListeners();
 		initActions();
-		addClickshortCuts();
+		addRelevantResources();
 	}
 
 	private void initComponents() throws Exception {
-		addRelevantResources();
-		searchInput = "";
-		searchPanel = (VerticalFlexLayout) createSearchPanel();
-		searchPanel.addStyleName("analyze_search_icon_bar");
-
-		visIconsPanel = createVisIconsPanel();
-		visIconsPanel.addStyleName("analyze_search_icon_bar");
-
-		searchAndVisIconsHorizontal = new HorizontalFlexLayout();
-		searchAndVisIconsHorizontal.addStyleName("analyze_bar");
-		searchAndVisIconsHorizontal.addComponents(searchPanel, visIconsPanel);
-
-		resultAndMinMaxVizHorizontal = new HorizontalFlexLayout();
-		resultAndMinMaxVizHorizontal.addStyleName("analyze_results");
-
-		resultsPanel = new VerticalFlexLayout();
-		resultsPanel.addStyleName("analyze_results_list");
-		minMaxPanel = new VerticalFlexLayout();
-		minMaxPanel.addStyleName("analyze_results_minmax");
-
-		resultAndMinMaxVizHorizontal.addComponents(resultsPanel, minMaxPanel);
-
-		contentPanel = new VerticalFlexLayout();
-		contentPanel.addComponent(searchAndVisIconsHorizontal);
-		contentPanel.addComponent(resultAndMinMaxVizHorizontal);
-		contentPanel.addStyleName("analyze_content");
-
-		this.addStyleName("analyze_content");
+		setSizeFull();
+		setSpacing(true);
 		
-		resourcePanelAnalyze = new ResourcePanelAnalyze(this.repository, this.corpus); 
+		// left column Queries
 		
-		drawer = new SliderPanelBuilder(resourcePanelAnalyze)
-				.mode(SliderMode.LEFT).expanded(false).build();
-		drawer.addStyleName("analyze_resourcePanel");
-		
-		addComponent(drawer);
-		addComponent(contentPanel);
-	}
-	
-	private Component createSearchPanel() {	
-		searchPanel = new VerticalFlexLayout();
-		searchPanel.setAlignContent(AlignContent.CENTER);
+		VerticalLayout queryPanel = new VerticalLayout();
+		queryPanel.setSizeFull();
 
 		Label searchPanelLabel = new Label("Queries");
-		searchPanelLabel.addStyleName("analyze_label");
+		
+		btQueryOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
 
-		optionsBt = new Button("", VaadinIcons.ELLIPSIS_DOTS_V);
-		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		optionsBt.addStyleName("analyze_options_bt");
+	    HorizontalLayout queryHeaderPanel = new HorizontalLayout(searchPanelLabel, btQueryOptions);
+	    queryHeaderPanel.setWidth("100%");
 
-	    labelLayout = new HorizontalFlexLayout(searchPanelLabel, optionsBt);
-		labelLayout.addStyleName("analyze_label_layout");
+	    queryHeaderPanel.setExpandRatio(searchPanelLabel, 1.0f);
+	    queryHeaderPanel.setComponentAlignment(searchPanelLabel, Alignment.MIDDLE_CENTER);
+	    queryHeaderPanel.setComponentAlignment(btQueryOptions, Alignment.MIDDLE_RIGHT);
+	    queryPanel.addComponent(queryHeaderPanel);
+	    
+		VerticalLayout searchPanel = createSearchPanel();
+		queryPanel.addComponent(searchPanel);
+		
+		
+		resultsPanel = new VerticalLayout();
+		resultsPanel.setMargin(new MarginInfo(false, true, false, false));
+		resultsPanel.setWidth("100%");
 
-		btQueryBuilder = new Button(" + BUILD QUERY");
-		btQueryBuilder.addStyleName("analyze_querybuilder_bt");
+		Panel resultsScrollPanel = new Panel();
+		resultsScrollPanel.setSizeFull();
+		resultsScrollPanel.addStyleName(MaterialTheme.PANEL_BORDERLESS);
+		
+		resultsScrollPanel.setContent(resultsPanel);
+		
+		queryPanel.addComponent(resultsScrollPanel);
+		queryPanel.setExpandRatio(resultsScrollPanel, 1f);
+		
+		// right column Visualizations
+		
+		VerticalLayout vizPanel = new VerticalLayout();
+		vizPanel.setSizeFull();
+		
+		Label vizPanelLabel = new Label("Visualisations");
 
+		btVizOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
+
+	    HorizontalLayout vizHeaderPanel = new HorizontalLayout(vizPanelLabel, btVizOptions);
+	    vizHeaderPanel.setWidth("100%");
+	    vizHeaderPanel.setExpandRatio(vizPanelLabel, 1.0f);
+	    vizHeaderPanel.setComponentAlignment(vizPanelLabel, Alignment.MIDDLE_CENTER);
+	    vizHeaderPanel.setComponentAlignment(btVizOptions, Alignment.MIDDLE_RIGHT);
+	    vizPanel.addComponent(vizHeaderPanel);
+		
+		HorizontalLayout vizIconsPanel = createVizIconsPanel();
+		vizIconsPanel.setWidth("100%");
+		vizPanel.addComponent(vizIconsPanel);
+		
+		vizCardsPanel = new VerticalLayout();
+		vizCardsPanel.setWidth("100%");
+		
+		Panel vizCardsScrollPanel = new Panel();
+		vizCardsScrollPanel.setSizeFull();
+		vizCardsScrollPanel.addStyleName(MaterialTheme.PANEL_BORDERLESS);
+		
+		vizCardsScrollPanel.setContent(vizCardsPanel);
+
+		vizPanel.addComponent(vizCardsScrollPanel);
+		vizPanel.setExpandRatio(vizCardsScrollPanel, 1.0f);
+		
+		// Drawer
+		
+		analyzeResourcePanel = new AnalyzeResourcePanel(this.repository, this.corpus); 
+		drawer = new SliderPanelBuilder(analyzeResourcePanel)
+				.mode(SliderMode.LEFT).expanded(false).build();
+		
+		addComponent(drawer);
+
+		// content
+		contentPanel = new HorizontalLayout();
+		contentPanel.setSpacing(false);
+		contentPanel.setMargin(false);
+		contentPanel.setSizeFull();
+		
+		contentPanel.addComponent(queryPanel);
+		contentPanel.setExpandRatio(queryPanel, 0.5f);
+		contentPanel.addComponent(vizPanel);
+		contentPanel.setExpandRatio(vizPanel, 0.5f);
+		addComponent(contentPanel);
+		setExpandRatio(contentPanel, 1f);
+	}
+	
+	private VerticalLayout createSearchPanel() {	
+		VerticalLayout searchPanel = new VerticalLayout();
+		searchPanel.setWidth("100%");
+		searchPanel.addStyleName("analyze-search-panel");
+		searchPanel.setMargin(new MarginInfo(false, true, true, false));
+
+		btQueryBuilder = new Button("Build Query");
+
+		//TODO: add Queries with descriptive names
 		predefQueries = new ArrayList<>();
 		predefQueries.add("property= \"%\"");
 		predefQueries.add("tag=\"%\"");
@@ -188,128 +226,91 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 		predefQueries.add("wild= \"%\"");
 		predefQueries.add("freq>0");
 
-		queryComboBox = new ComboBox<>();
-		queryComboBox.setDataProvider(new ListDataProvider<>(predefQueries));
-		queryComboBox.addStyleName("analyze_query_comobobox");
-		queryComboBox.setEmptySelectionCaption("Select or enter a free query");
-
-		btExecuteSearch = new Button("SEARCH", VaadinIcons.SEARCH);	
-		btExecuteSearch.setStyleName("analyze_search_bt");
-	
-		searchRow = new HorizontalFlexLayout();
-		searchRow.addComponents(btQueryBuilder, queryComboBox);
-		searchRow.addStyleName("analyze_search_row");
+		queryBox = new ComboBox<>();
+		queryBox.setDataProvider(new ListDataProvider<>(predefQueries));
+		queryBox.setEmptySelectionCaption("Select or enter a free query");
+		queryBox.setWidth("100%");
 		
-		VerticalFlexLayout searchVerticalLayout = new VerticalFlexLayout(searchRow, btExecuteSearch);
-		searchVerticalLayout.addStyleName("analyze_search");
+		btExecuteSearch = new Button("Search", VaadinIcons.SEARCH);	
+		btExecuteSearch.addStyleName(MaterialTheme.BUTTON_PRIMARY);
+		btExecuteSearch.setWidth("100%");
+		
+		HorizontalLayout queryPanel = new HorizontalLayout();
+		queryPanel.setSizeFull();
+		queryPanel.addComponents(btQueryBuilder, queryBox);
+		queryPanel.setExpandRatio(queryBox, 1.0f);
+		
+		searchPanel.addComponents(queryPanel, btExecuteSearch);
 
-		searchPanel.addComponents(labelLayout, searchVerticalLayout);
 		return searchPanel;
 	}
 
-	private Component createVisIconsPanel() {		
-		VerticalFlexLayout visIconsPanel = new VerticalFlexLayout();
-		visIconsPanel.setAlignContent(AlignContent.CENTER);
-		Label visIconsLabel = new Label("Visualisations");
-		visIconsLabel.addStyleName("analyze_label");
+	private HorizontalLayout createVizIconsPanel() {		
+		kwicBt = new Button("Kwic", VaadinIcons.SPLIT);
+		kwicBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
+		kwicBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
+		kwicBt.addStyleName("analyze_viz_icon");
+		kwicBt.setSizeFull();
 
-		optionsBt = new Button("", VaadinIcons.ELLIPSIS_DOTS_V);
-		optionsBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		optionsBt.addStyleName("analyze_options_bt");
+		distBt = new Button("Distribution", VaadinIcons.CHART_LINE);
+		distBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
+		distBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
+		distBt.addStyleName("analyze_viz_icon");
+		distBt.setSizeFull();
 
-		HorizontalFlexLayout labelLayout = new HorizontalFlexLayout(visIconsLabel, optionsBt);
-		labelLayout.addStyleName("analyze_label_layout");
-		HorizontalFlexLayout visIconBar = new HorizontalFlexLayout();
-
-		kwicBt = new Button("KWIC", VaadinIcons.SPLIT);
-		kwicBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
-		kwicBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		kwicBt.addStyleName("analyze_iconbar_icon");
-		kwicBt.setWidth("100%");
-		kwicBt.setHeight("100%");
-
-		distBt = new Button("DISTRIBUTION", VaadinIcons.CHART_LINE);
-		distBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
-		distBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		distBt.addStyleName("analyze_iconbar_icon");
-		distBt.setWidth("100%");
-		distBt.setHeight("100%");
-
-		wordCloudBt = new Button("WORDCLOUD", VaadinIcons.CLOUD);
+		wordCloudBt = new Button("Wordcloud", VaadinIcons.CLOUD);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
-		wordCloudBt.addStyleName("analyze_iconbar_icon");
-		wordCloudBt.setWidth("100%");
-		wordCloudBt.setHeight("100%");
+		wordCloudBt.addStyleName("analyze_viz_icon");
+		wordCloudBt.setSizeFull();
 
 		networkBt = new Button("NETWORK", VaadinIcons.CLUSTER);
-		networkBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
-		networkBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		networkBt.	addStyleName("analyze_iconbar_icon");
+		networkBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
+		networkBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
+		networkBt.addStyleName("analyze_viz_icon");
+		networkBt.setSizeFull();
 
-		networkBt.setWidth("100%");
-		networkBt.setHeight("100%");
-
-		visIconBar.addComponents(kwicBt, distBt, wordCloudBt, networkBt);
-
-		visIconsPanel.addComponent(labelLayout);
-		visIconsPanel.addComponent(visIconBar);
-		return visIconsPanel;
+		return new HorizontalLayout(kwicBt, distBt, wordCloudBt, networkBt);
 	}
 	
-	private void setContent(Component component) {	
-		removeAllComponents();		
-		addComponent(component);	
-		component.setHeight("100%");
-		component.setWidth("100%");
-	}
-	
-	private void setResourcesSlider() {
-		addComponentAsFirst(drawer);
+	private void setContent(Component newContent, Component oldContent) {	
+		replaceComponent(oldContent, newContent);		
 	}
 	
 	private void initActions() {
-		
-		btExecuteSearch.addClickListener(new ClickListener() {
-
-			public void buttonClick(ClickEvent event) {
-				if(newItem) {
-					queryComboBox.setValue(searchInput);
-					executeSearch();			
-				}else {
-					searchInput= queryComboBox.getValue();	
-					executeSearch();	
-				}			
-			}
+		queryBox.setNewItemProvider(inputString -> {
+		    return Optional.of(inputString);
 		});
+		
+		btExecuteSearch.addClickListener(clickEvent -> executeSearch());	
+		queryBox.addValueChangeListener(valueChange -> btExecuteSearch.click());
 
 		kwicBt.addClickListener(new ClickListener() {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
 
-				VizSnapshot kwicSnapshot = new VizSnapshot("Kwic Visualisation");
-				ResourceOrganiserPanel resourceOrganiserPanel = new ResourceOrganiserPanel(getAllTreeGridDatas(), repository, kwicProviderCache);
-				kwicSnapshot.setKwicVizPanel(resourceOrganiserPanel);
-				kwicSnapshot.setEditVizSnapshotListener(buildEditVizSnapshotListener(resourceOrganiserPanel));
-				kwicSnapshot.setDeleteVizSnapshotListener(buildDeleteVizSnapshotListener(kwicSnapshot));
-				minMaxPanel.addComponent(kwicSnapshot);
+				VizMaxPanel vizMaxPanel = 
+						new VizMaxPanel(
+								getAllTreeGridDatas(), 
+								repository, 
+								kwicProviderCache,
+								closedVizMaxPanel -> setContent(contentPanel, closedVizMaxPanel));
+				
+				VizMinPanel vizMinPanel = 
+						new VizMinPanel(
+							"Kwic Visualisation", 
+							vizMaxPanel,
+							toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
+							() -> setContent(vizMaxPanel, contentPanel));
+				
 
-				resourceOrganiserPanel.setLeaveViewListener(new CloseVizViewListener() {
-
-					@Override
-					public void onClose() {
-						
-						setContent(contentPanel);
-						setResourcesSlider();		
-					}
-				});
-
-				setContent(resourceOrganiserPanel);
+				vizCardsPanel.addComponent(vizMinPanel);
+				setContent(vizMaxPanel, contentPanel);
 			}
 		});
 		
-		resourcePanelAnalyze.setSelectionListener(new AnalyzeResourceSelectionListener() {	
+		analyzeResourcePanel.setSelectionListener(new AnalyzeResourceSelectionListener() {	
 
 			@Override
 			public void updateQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
@@ -338,48 +339,8 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 
 	}
 
-	private void initListeners() {
-
-		
-		queryComboBox.setNewItemHandler(new NewItemHandler() {
-			public void accept(String t) {
-				newItem = true;
-			searchInput = t;
-			btExecuteSearch.click();
-			
-			}
-		});
-		
-
-		
-/*	 this newItemProvider provider ,even though is the newer one  is triggered too late...
-		queryComboBox.setNewItemProvider(inputString -> {
-
-			searchInput= inputString;
-			queryComboBox.setValue(inputString);
-		
-		    return Optional.of(inputString);
-		
-		});*/
-		
-/* 	
- 	queryComboBox.addShortcutListener(new ShortcutListener() {
-			
-			@Override
-			public void handleAction(Object sender, Object target) {
-				// TODO Auto-generated method stub
-				
-			}
-		});*/
-
-	}
-
-
-
 	private void executeSearch() {
-	
-		newItem= false;
-
+		String searchInput = queryBox.getValue();
 		QueryJob job = new QueryJob(searchInput.toString(), queryOptions);
 
 		((BackgroundServiceProvider) UI.getCurrent()).submit(Messages.getString("AnalyzerView.Searching"), //$NON-NLS-1$
@@ -388,22 +349,17 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 						StopWatch watch = new StopWatch();
 						System.out.println(watch);
 						try {
-							queryResultPanel = new ResultPanelNew(repository, result,
-									"result for query: " + searchInput.toString(),kwicProviderCache, new ResultPanelCloseListener() {
-
-										@Override
-										public void closeRequest(ResultPanelNew queryResultPanel) {
-											resultsPanel.removeComponent(queryResultPanel);
-
-										}
-									});
-						} catch (Exception e) {
+							QueryResultPanel queryResultPanel = new QueryResultPanel(repository, result,
+									"result for query: " + searchInput.toString(),
+									kwicProviderCache, 
+									closingPanel -> resultsPanel.removeComponent(closingPanel));
 							
+							resultsPanel.addComponentAsFirst(queryResultPanel);
+						} catch (Exception e) {
+							//TODO: error handling
 							e.printStackTrace();
 						}
 
-						queryResultPanel.setWidth("100%");
-						resultsPanel.addComponentAsFirst(queryResultPanel);
 						System.out.println(watch);
 					};
 
@@ -441,7 +397,7 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 		Iterator<Component> iterator = resultsPanel.iterator();
 		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
 		while (iterator.hasNext()) {
-			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();
+			QueryResultPanel onePanel = (QueryResultPanel) iterator.next();
 			CurrentTreeGridData current = new CurrentTreeGridData(onePanel.getQueryAsString(),
 					(TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(), onePanel.getCurrentView());
 			toReturnList.add(current);
@@ -465,27 +421,6 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 
 	private void addUserMarkupCollection(UserMarkupCollectionReference umcRef, MarkupCollectionItem umc) {
 		this.relevantUserMarkupCollIDs.add(umcRef.getId());
-	}
-	
-	private EditVizSnapshotListener buildEditVizSnapshotListener(Component component) {
-		return new EditVizSnapshotListener() {
-		
-			public void reopenKwicView() {
-				setContent(component);
-
-			}
-		};
-	}
-
-	private DeleteVizSnapshotListener buildDeleteVizSnapshotListener(Component component) {
-		return new DeleteVizSnapshotListener() {
-
-			@Override
-			public void deleteSnapshot() {
-				minMaxPanel.removeComponent(component);
-
-			}
-		};
 	}
 	
 	private void updateCorpusAndQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
@@ -518,13 +453,12 @@ public class AnalyzeNewView extends HorizontalFlexLayout
 
 	@Override
 	public void addClickshortCuts() {
-		btExecuteSearch.setClickShortcut(KeyCode.ENTER);	
+		// noop
 	}
 
 	@Override
 	public void removeClickshortCuts() {
-		// TODO Auto-generated method stub
-
+		// noop
 	}
 
 	@Override

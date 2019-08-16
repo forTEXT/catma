@@ -1,9 +1,9 @@
-package de.catma.ui.analyzenew.resourcepanelanalyze;
+package de.catma.ui.analyzenew.resourcepanel;
 
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.ui.analyzenew.resourcepanelanalyze.AnalyzeResourceSelectionListener;
+import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourceSelectionListener;
 
 public class CollectionDataItem implements DocumentTreeItem {
 
