@@ -6,30 +6,42 @@ import de.catma.queryengine.result.QueryResultRowArray;
 
 public interface TreeRowItem {
 
-public String 	getTreeKey(); 
-public int 	getFrequency();
-public QueryResultRowArray getRows();
-public String getShortenTreeKey();
-public String getPropertyName();
-public String getPropertyValue();
-public String getContext();
-public String getBackward();
-public String getForward();
-public String getContextDiv();
-public String getPhrase();
-public String getCollectionName();
-public String getDocumentName();
+	public String getTreeKey();
 
-public int getPosition();
+	public int getFrequency();
 
-public default String getSelectIcon() {
-	   return VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml();
-}
+	public QueryResultRowArray getRows();
 
-public default String getRemoveIcon() {
-	   return VaadinIcons.ERASER.getHtml();
-}
+	public String getShortenTreeKey();
 
-public  String getArrowIcon();
+	public String getPropertyName();
+
+	public String getPropertyValue();
+
+	public String getContext();
+
+	public String getBackward();
+
+	public String getForward();
+
+	public String getContextDiv();
+
+	public String getPhrase();
+
+	public String getCollectionName();
+
+	public String getDocumentName();
+
+	public int getPosition();
+
+	public default String getSelectIcon() {
+		return VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml();
+	}
+
+	public default String getRemoveIcon() {
+		return VaadinIcons.ERASER.getHtml();
+	}
+
+	public String getArrowIcon();
 
 }

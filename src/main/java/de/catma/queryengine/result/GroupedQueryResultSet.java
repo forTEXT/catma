@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Function;
 
 public class GroupedQueryResultSet implements QueryResult {
 	private static class GroupedQueryResultListIterator 
@@ -92,6 +93,11 @@ public class GroupedQueryResultSet implements QueryResult {
 	
 	public Set<GroupedQueryResult> asGroupedSet() {
 		return groupedQueryResults;
+	}
+	
+	@Override
+	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, String> groupingKeyProvider) {
+		return asQueryResultRowArray().asGroupedSet(groupingKeyProvider);
 	}
 	
 	public void add(GroupedQueryResult groupedQueryResult) {

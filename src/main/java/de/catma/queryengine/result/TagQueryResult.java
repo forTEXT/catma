@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * @author marco.petris@web.de
@@ -59,6 +60,11 @@ public class TagQueryResult implements GroupedQueryResult, QueryResult {
 	
 	public Set<GroupedQueryResult> asGroupedSet() {
 		return rows.asGroupedSet();
+	}
+	
+	@Override
+	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, String> groupingKeyProvider) {
+		return rows.asGroupedSet(groupingKeyProvider);
 	}
 	
 	public QueryResultRowArray asQueryResultRowArray() {

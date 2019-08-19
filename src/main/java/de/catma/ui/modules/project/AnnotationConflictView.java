@@ -66,7 +66,7 @@ public class AnnotationConflictView extends VerticalFlexLayout {
 				tagManager.getTagLibrary().getTagDefinition(devTagInstance.getTagDefinitionId());
 		String tagPath = tagManager.getTagLibrary().getTagPath(tag);
 		
-		String annotatedKwicText = AnnotatedTextProvider.buildKeywordInContext(
+		String annotatedKwicText = AnnotatedTextProvider.buildAnnotatedKeywordInContext(
 				this.annotationConflict.getDevTagReferences(), kwicProvider, tag, tagPath);
 		annotatedKwic.setValue(annotatedKwicText);
 		

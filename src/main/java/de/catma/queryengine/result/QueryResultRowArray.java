@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 public class QueryResultRowArray extends ArrayList<QueryResultRow> implements QueryResult {
 
@@ -61,23 +62,20 @@ public class QueryResultRowArray extends ArrayList<QueryResultRow> implements Qu
 	public int getTotalFrequency() {
 		return size();
 	}
-	
-	public Set<GroupedQueryResult> asGroupedSet() {
+
+	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, String> groupingKeyProvider) {
 		HashMap<String, PhraseResult> phraseResultMapping = 
 				new HashMap<String, PhraseResult>();
 		
 		for (QueryResultRow row : this) {
-			if (row.getPhrase() == null) {
-				throw new UnsupportedOperationException(
-					"The rows in this Iterable are not phrase based, " +
-					"don't know how to group!");
-			}
-			if (!phraseResultMapping.containsKey(row.getPhrase())) {
+			String key = groupingKeyProvider.apply(row); 
+
+			if (!phraseResultMapping.containsKey(key)) {
 				phraseResultMapping.put(
-					row.getPhrase(), new PhraseResult(row.getPhrase()));
+					key, new PhraseResult(key));
 			}
 			
-			phraseResultMapping.get(row.getPhrase()).addQueryResultRow(row);
+			phraseResultMapping.get(key).addQueryResultRow(row);
 		}
 		
 		Set<GroupedQueryResult> groupedQueryResults = 
@@ -86,6 +84,11 @@ public class QueryResultRowArray extends ArrayList<QueryResultRow> implements Qu
 		groupedQueryResults.addAll(phraseResultMapping.values());
 		
 		return groupedQueryResults;	
+		
+	}
+
+	public Set<GroupedQueryResult> asGroupedSet() {
+		return asGroupedSet(QueryResultRow::getPhrase);
 	}
 
 	public QueryResultRowArray asQueryResultRowArray() {

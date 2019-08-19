@@ -38,14 +38,14 @@ import de.catma.ui.analyzenew.treegridhelper.SingleItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.component.IconButton;
 
-public class QueryResultPanel extends VerticalLayout {
+public class QueryResultPanel3 extends VerticalLayout {
 
 	private static enum TreePropertyName {
 		caption, frequency, visibleInKwic,;
 	}
 
 	static interface CloseListener {
-		public void closeRequest(QueryResultPanel resultPanel);
+		public void closeRequest(QueryResultPanel3 resultPanel);
 	}
 
 	private TreeData<TreeRowItem> tagData;
@@ -82,7 +82,7 @@ public class QueryResultPanel extends VerticalLayout {
 	private boolean	propertyBased=false;
 	private VerticalLayout treeGridPanel;
 
-	public QueryResultPanel(Repository repository, QueryResult result, String queryAsString, 
+	public QueryResultPanel3(Repository repository, QueryResult result, String queryAsString, 
 			LoadingCache<String, KwicProvider> kwicProviderCache,
 			CloseListener resultPanelCloseListener) throws Exception {
 
@@ -92,7 +92,7 @@ public class QueryResultPanel extends VerticalLayout {
 		this.kwicProviderCache= kwicProviderCache;
 		this.resultPanelCloseListener = resultPanelCloseListener;
 		initComponents();
-		initListeners();
+		initActions();
 		optionsMenu = new ContextMenu(optionsBt,true);
 		
 		//TODO: try to get away with a single loop
@@ -286,7 +286,7 @@ public class QueryResultPanel extends VerticalLayout {
 		addComponent(buttonPanel);
 	}
 
-	private void initListeners() {
+	private void initActions() {
 		caretRightBt.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				addComponent(treeGridPanel);
@@ -306,7 +306,7 @@ public class QueryResultPanel extends VerticalLayout {
 
 		removeBt.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
-				resultPanelCloseListener.closeRequest(QueryResultPanel.this);
+				resultPanelCloseListener.closeRequest(QueryResultPanel3.this);
 			}
 		});
 	}

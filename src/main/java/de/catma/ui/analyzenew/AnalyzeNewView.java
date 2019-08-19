@@ -18,7 +18,6 @@ import org.vaadin.sliderpanel.client.SliderMode;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.cache.LoadingCache;
-import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
@@ -49,12 +48,13 @@ import de.catma.queryengine.QueryJob.QueryException;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanel;
+import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourcePanel;
 import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourceSelectionListener;
 import de.catma.ui.analyzenew.resourcepanel.CollectionDataItem;
 import de.catma.ui.analyzenew.resourcepanel.DocumentDataItem;
 import de.catma.ui.analyzenew.resourcepanel.DocumentTreeItem;
-import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.IconButton;
@@ -293,6 +293,7 @@ public class AnalyzeNewView extends HorizontalLayout
 				VizMaxPanel vizMaxPanel = 
 						new VizMaxPanel(
 								getAllTreeGridDatas(), 
+								getQueryResultPanelSettings(),
 								repository, 
 								kwicProviderCache,
 								closedVizMaxPanel -> setContent(contentPanel, closedVizMaxPanel));
@@ -319,7 +320,16 @@ public class AnalyzeNewView extends HorizontalLayout
 			}		
 		});
 	}
-	
+
+	private List<QueryResultPanelSetting> getQueryResultPanelSettings() {
+		List<QueryResultPanelSetting> settings = new ArrayList<QueryResultPanelSetting>();
+		for (Iterator<Component> iter = resultsPanel.iterator(); iter.hasNext(); ) {
+		    QueryResultPanel queryResultPanel = (QueryResultPanel)iter.next();
+		    settings.add(queryResultPanel.getQueryResultPanelSetting());
+		}
+		    
+		return settings;
+	}
 
 	private void addRelevantResources() throws Exception {		
 		this.queryOptions.getRelevantSourceDocumentIDs().clear();
@@ -396,12 +406,13 @@ public class AnalyzeNewView extends HorizontalLayout
 		
 		Iterator<Component> iterator = resultsPanel.iterator();
 		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
-		while (iterator.hasNext()) {
-			QueryResultPanel onePanel = (QueryResultPanel) iterator.next();
-			CurrentTreeGridData current = new CurrentTreeGridData(onePanel.getQueryAsString(),
-					(TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(), onePanel.getCurrentView());
-			toReturnList.add(current);
-		}
+		//TODO:
+//		while (iterator.hasNext()) {
+//			QueryResultPanel onePanel = (QueryResultPanel) iterator.next();
+//			CurrentTreeGridData current = new CurrentTreeGridData(onePanel.getQueryAsString(),
+//					(TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(), onePanel.getCurrentView());
+//			toReturnList.add(current);
+//		}
 		return toReturnList;
 	}
 

@@ -33,19 +33,74 @@ public class AnnotatedTextProvider {
 				+"["+HORIZONTAL_ELLIPSIS+"]"
 				+ keyword.substring(keyword.length()-((maxLength/2)-2), keyword.length());
 	}
-	
-	public static String buildKeywordInContext(
-		Collection<TagReference> tagReferences, KwicProvider kwicProvider, 
-		TagDefinition tagDefinition, String tagPath) {
+
+	private static String buildKeywordInContext(
+			String keyword, Range range, KwicProvider kwicProvider, int keywordLength) {
 
 		StringBuilder builder = new StringBuilder();
+
+		try {
+			KeywordInSpanContext kwic = kwicProvider.getKwic(range, 5);
+			builder.append(Cleaner.clean(kwic.getBackwardContext()));
+
+			builder.append("<span");
+			builder.append(" class=\"annotation-details-tag-color\"");
+			builder.append(" style=\"");
+			builder.append(" background-color:");
+			builder.append("#cacfd2");
+			builder.append(";");
+			builder.append("\">");
+			builder.append(
+				Cleaner.clean(
+					shorten(
+							kwic.getKeyword(), 
+							keywordLength)));
+			builder.append("</span>");	
 		
-		List<Range> ranges = Range.mergeRanges(
+			builder.append(Cleaner.clean(kwic.getForwardContext()));
+		}
+		catch (IOException e) {
+			((ErrorHandler)UI.getCurrent()).showAndLogError(
+					"Error loading keyword in context!", e);
+		}		
+		
+		return builder.toString();
+	}
+	
+	public static String buildKeywordInContext(
+		String keyword, Range range, KwicProvider kwicProvider) {
+		
+		return buildKeywordInContext(
+			keyword, range, kwicProvider, SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH);
+	}
+	
+	public static String buildKeywordInContextLarge(
+			String keyword, Range range, KwicProvider kwicProvider) {
+		
+		return buildKeywordInContext(
+			keyword, range, kwicProvider, LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH);
+	}
+
+	public static String buildAnnotatedKeywordInContext(
+			Collection<TagReference> tagReferences, KwicProvider kwicProvider, 
+			TagDefinition tagDefinition, String tagPath) {
+		return buildAnnotatedKeywordInContext(Range.mergeRanges(
 				new TreeSet<>(
 					tagReferences
 					.stream()
 					.map(tagRef -> tagRef.getRange())
-					.collect(Collectors.toList())));
+					.collect(Collectors.toList()))), 
+				kwicProvider, 
+				tagDefinition, 
+				tagPath);
+	}
+	
+	public static String buildAnnotatedKeywordInContext(
+		List<Range> ranges, KwicProvider kwicProvider, 
+		TagDefinition tagDefinition, String tagPath) {
+
+		StringBuilder builder = new StringBuilder();
+		
 		try {
 			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(ranges, 5);
 			String conc = "";
@@ -89,9 +144,18 @@ public class AnnotatedTextProvider {
 		return builder.toString();
 	}
 
-	
+
 	public static String buildAnnotatedText(
 			Collection<TagReference> tagReferences, KwicProvider kwicProvider, TagDefinition tagDefinition) {
+		return buildAnnotatedText(Range.mergeRanges(
+				new TreeSet<>(
+					tagReferences
+					.stream()
+					.map(tagRef -> tagRef.getRange())
+					.collect(Collectors.toList()))), kwicProvider, tagDefinition);
+	}
+	public static String buildAnnotatedText(
+			List<Range> ranges, KwicProvider kwicProvider, TagDefinition tagDefinition) {
 		StringBuilder builder = new StringBuilder();
 		builder.append("<div");
 		builder.append(" class=\"annotation-details-tag-color\"");
@@ -106,12 +170,6 @@ public class AnnotatedTextProvider {
 		builder.append(";");
 		builder.append("\">");
 		
-		List<Range> ranges = Range.mergeRanges(
-				new TreeSet<>(
-					tagReferences
-					.stream()
-					.map(tagRef -> tagRef.getRange())
-					.collect(Collectors.toList())));
 		try {
 			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(ranges, 5);
 

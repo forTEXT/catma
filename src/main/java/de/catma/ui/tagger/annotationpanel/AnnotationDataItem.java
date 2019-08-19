@@ -33,7 +33,7 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 				annotation.getTagReferences(), 
 				kwicProvider, 
 				tagDefinition);
-		this.keywordInContext = AnnotatedTextProvider.buildKeywordInContext(
+		this.keywordInContext = AnnotatedTextProvider.buildAnnotatedKeywordInContext(
 			annotation.getTagReferences(), kwicProvider, tagDefinition, tagset.getTagPath(tagDefinition));
 	}
 	

@@ -20,6 +20,7 @@
 package de.catma.queryengine.result;
 
 import java.util.Set;
+import java.util.function.Function;
 
 
 /**
@@ -31,4 +32,5 @@ import java.util.Set;
 public interface QueryResult extends Iterable<QueryResultRow> {
 	public QueryResultRowArray asQueryResultRowArray();
 	public Set<GroupedQueryResult> asGroupedSet();
+	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, String> groupingKeyProvider);
 }

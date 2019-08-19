@@ -18140,11 +18140,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 1.5em;
 }
 
-.catma .analyze_kwic_right {
-	overflow: auto;
-	border-left: solid 4px rgba(0, 0, 0, 0.12);
-}
-
 .catma .analyze_kwic_buttonBar {
 	background-color: #cdcdcd;
 }
@@ -18156,11 +18151,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .analyze_kwic_header_label {
 	margin-left: 35%;
 	text-align: center;
-}
-
-.catma .analyzer_kwic_leftside_vertical {
-	padding: 0;
-	border-right: solid 2px rgba(151, 151, 151, 0.12);
 }
 
 .catma .analyze_kwic_panel {

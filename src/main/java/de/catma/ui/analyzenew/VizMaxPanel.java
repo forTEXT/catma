@@ -16,13 +16,12 @@ import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Sizeable;
-import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
@@ -38,35 +37,45 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.analyzenew.kwic.KwicPanelNew;
+import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanel;
+import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.analyzenew.treegridhelper.CollectionItem;
 import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
 import de.catma.ui.analyzenew.treegridhelper.QueryRootItem;
 import de.catma.ui.analyzenew.treegridhelper.RootItem;
 import de.catma.ui.analyzenew.treegridhelper.SingleItem;
 import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
+import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
 
 public class VizMaxPanel extends VerticalLayout  {
+	
+	private static class QuerySelection {
+		private QueryResultPanelSetting setting;
+		private QueryResultPanel panel;
+		public QuerySelection(QueryResultPanelSetting setting) {
+			super();
+			this.setting = setting;
+		}
+		
+		public void setPanel(QueryResultPanel panel) {
+			this.panel = panel;
+		}
+		
+		public QueryResultPanel getPanel() {
+			return panel;
+		}
+	}
 	
 	interface LeaveListener {
 		public void onLeave(VizMaxPanel vizMaxPanel);
 	}
 
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
-	private HorizontalFlexLayout headerButtonBar;
-	private VerticalFlexLayout leftSide;
-	private HorizontalFlexLayout comboboxPanel;
 
 	private HorizontalSplitPanel mainContentSplitPanel;
-	private Label visualisationName;
 	private Button arrowLeftBt;
-	private ComboBox<String> queryResultBox;
-	private List<String> availableResultSets;
-	private Panel selectedItemsPanel;
-	private Panel queryResultsPanel;
-	private Panel rightSide;
+	private ComboBox<QuerySelection> queryResultBox;
 	private ArrayList<CurrentTreeGridData> currentTreeGridDatas;
 	private TreeData<TreeRowItem> resultsTreeGridData;
 	private TreeGrid<TreeRowItem> resultsTreeGrid;
@@ -88,15 +97,20 @@ public class VizMaxPanel extends VerticalLayout  {
 	private ViewID selectedGridViewID;
 	private int kwicSize = 5;
 
-	public VizMaxPanel(ArrayList<CurrentTreeGridData> currentTreeGridDatas, Repository repository,
+	public VizMaxPanel(ArrayList<CurrentTreeGridData> currentTreeGridDatas, 
+			List<QueryResultPanelSetting> queryResultPanelSettings, Repository repository,
 			LoadingCache<String, KwicProvider> kwicProviderCache, LeaveListener leaveListener) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 
 		this.kwicProviderCache = kwicProviderCache;
 		initComponents();
 		initActions(leaveListener);
+		initData(queryResultPanelSettings);
+		
+	}
 
-
+	private void initData(List<QueryResultPanelSetting> queryResultPanelSettings) {
+		queryResultBox.setItems(queryResultPanelSettings.stream().map(settings -> new QuerySelection(settings)));
 	}
 
 	private void initComponents() {
@@ -116,46 +130,32 @@ public class VizMaxPanel extends VerticalLayout  {
 		
 		VerticalLayout topLeftPanel = new VerticalLayout();
 		topLeftPanel.setSizeFull();
+		resultSelectionSplitPanel.addComponent(topLeftPanel);
 		
-		queryResultBox = new ComboBox<String>();
+		HorizontalLayout buttonAndBoxPanel = new HorizontalLayout();
+		buttonAndBoxPanel.setWidth("100%");
+		buttonAndBoxPanel.setMargin(false);
+		topLeftPanel.addComponent(buttonAndBoxPanel);
+		
+		arrowLeftBt = new IconButton(VaadinIcons.ARROW_LEFT);
+		buttonAndBoxPanel.addComponent(arrowLeftBt);
+		
+		queryResultBox = new ComboBox<QuerySelection>();
 		queryResultBox.setWidth("100%");
 		queryResultBox.setEmptySelectionCaption("Select a resultset");
 		
-		//TODO: move to initData, work with data directly
-		availableResultSets = new ArrayList<>();
-		availableResultSets = getQueriesForAvailableResults();
+		buttonAndBoxPanel.addComponent(queryResultBox);
 		
-		queryResultBox.setItems(availableResultSets);
-		topLeftPanel.addComponent(queryResultBox);
-		
-		
-		comboboxPanel = new HorizontalFlexLayout();
-		leftSide = new VerticalFlexLayout();
-
-		leftSide.addStyleName("analyzer_kwic_leftside_vertical");
-		rightSide = new Panel();
-		rightSide.addStyleName("analyze_kwic_right");
-		rightSide.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		kwicNew = new KwicPanelNew(kwicProviderCache);
-		kwicNew.setHeight("100%");
-		kwicNew.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		rightSide.setContent(kwicNew);
-		rightSide.setHeight("100%");
-		headerButtonBar = new HorizontalFlexLayout();
-
-		arrowLeftBt = new Button(VaadinIcons.ARROW_LEFT);
-		arrowLeftBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		visualisationName = new Label("KWIC Visualisation");
-		visualisationName.addStyleName("analyze_kwic_header_label");
-
-
-
-		queryResultsPanel = new Panel();
-		queryResultsPanel.setHeight("230px");
 		resultsTreeGrid = new TreeGrid<>();
+		topLeftPanel.addComponent(resultsTreeGrid);
+		topLeftPanel.setExpandRatio(resultsTreeGrid, 1f);
 
+		
+		// bottom left
+
+		
 		selectedItemsTreeGrid = new TreeGrid<TreeRowItem>();
-		selectedItemsTreeGrid.setWidth(570, Unit.PIXELS);
+		selectedItemsTreeGrid.setSizeFull();
 
 		selectedItemsTreeGridData = new TreeData<TreeRowItem>();
 		selectedDataProvider = new TreeDataProvider<>(selectedItemsTreeGridData);
@@ -163,7 +163,7 @@ public class VizMaxPanel extends VerticalLayout  {
 
 		selectedItemsTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("tag/phrase").setId("treeKeyID");
 		selectedItemsTreeGrid.getColumn("treeKeyID").setWidth(150);
-		 selectedItemsTreeGrid.getColumn("treeKeyID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
+		selectedItemsTreeGrid.getColumn("treeKeyID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
 
 		selectedItemsTreeGrid.addColumn(TreeRowItem::getContext).setCaption("context").setId("contextID");
 		selectedItemsTreeGrid.getColumn("contextID").setWidth(140);
@@ -184,19 +184,23 @@ public class VizMaxPanel extends VerticalLayout  {
 				.setId("removeID");
 		selectedItemsTreeGrid.getColumn("removeID").setWidth(70);
 
-		selectedItemsPanel = new Panel();
-		selectedItemsPanel.setCaption("selected items for the kwic visualization");
+		//TODO: make annotation-details-panel-annotation-details-grid generic 
+		selectedItemsTreeGrid.addStyleNames("annotation-details-panel-annotation-details-grid",
+				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
-		selectedItemsPanel.setWidth("100%");
-		selectedItemsPanel.setHeight("200px");
+		ActionGridComponent<TreeGrid<TreeRowItem>> selectedGridComponent = new ActionGridComponent<>(
+				new Label("Selected resultrows for the kwic visualization"), selectedItemsTreeGrid);
 
-		selectedItemsPanel.setContent(selectedItemsTreeGrid);
-		comboboxPanel.addComponents(arrowLeftBt,queryResultBox);
-		leftSide.addComponent(comboboxPanel);
-		leftSide.addComponent(queryResultsPanel);
-		setActionGridComponenet();
-
-		mainContentSplitPanel.addComponents(leftSide, rightSide);
+		resultSelectionSplitPanel.addComponent(selectedGridComponent);
+		
+		// right column
+		
+		//TODO: should be passed in as "Visualization"
+		kwicNew = new KwicPanelNew(kwicProviderCache);
+		kwicNew.setHeight("100%");
+		kwicNew.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		
+		mainContentSplitPanel.addComponent(kwicNew);
 	}
 
 	private void initActions(LeaveListener leaveListener) {
@@ -205,7 +209,7 @@ public class VizMaxPanel extends VerticalLayout  {
 			@Override
 			public void selectionChange(SingleSelectionEvent<String> event) {
 				String queryAsString = event.getSource().getValue();
-				swichToResultTree(queryAsString);
+				switchToResultTree(queryAsString);
 			}
 		});
 	}
@@ -240,7 +244,7 @@ public class VizMaxPanel extends VerticalLayout  {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void swichToResultTree(String queryAsString) {
+	private void switchToResultTree(String queryAsString) {
 		Iterator<CurrentTreeGridData> allResultsIterator = currentTreeGridDatas.iterator();
 		resultsTreeGridData = new TreeData<TreeRowItem>();
 		selectedGridViewID = null;
@@ -254,7 +258,7 @@ public class VizMaxPanel extends VerticalLayout  {
 		resultsTreeGrid = createResultsTreeGridFromData(resultsTreeGridData, selectedGridViewID);
 		resultsTreeGrid.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
-		queryResultsPanel.setContent(resultsTreeGrid);			
+//		queryResultsPanel.setContent(resultsTreeGrid);			
 	}
 
 	private TreeGrid<TreeRowItem> createResultsTreeGridFromData(TreeData<TreeRowItem> resultsTreeGridData2,
@@ -1395,18 +1399,5 @@ public class VizMaxPanel extends VerticalLayout  {
 	 * 
 	 * } } } else { } return queryResult; }
 	 */
-
-	private void setActionGridComponenet() {
-
-		selectedItemsTreeGrid.addStyleNames("annotation-details-panel-annotation-details-grid",
-				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
-
-		ActionGridComponent<TreeGrid<TreeRowItem>> selectedGridComponent = new ActionGridComponent<>(
-				new Label("Selected resultrows for the kwic visualization"), selectedItemsTreeGrid);
-		leftSide.addComponent(selectedGridComponent);
-		
-	}
-
-
 
 }
