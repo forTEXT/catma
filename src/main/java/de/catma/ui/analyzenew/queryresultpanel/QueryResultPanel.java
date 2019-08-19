@@ -27,6 +27,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
@@ -37,7 +38,6 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
-import de.catma.ui.analyzenew.treegridhelper.TreeRowItem;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.tagger.annotationpanel.AnnotatedTextProvider;
 
@@ -45,6 +45,10 @@ public class QueryResultPanel extends VerticalLayout {
 	
 	public static interface CloseListener {
 		public void closeRequest(QueryResultPanel resultPanel);
+	}
+	
+	public static interface ItemSelectionListener {
+		public void itemSelected(QueryResultRowItem item);
 	}
 	
 	private ContextMenu optionsMenu;
@@ -81,22 +85,43 @@ public class QueryResultPanel extends VerticalLayout {
 	private MenuItem miPropertiesAsColumns;
 	
 	private DisplaySetting displaySetting;
+
+	private boolean cardStyle;
+
+	private ItemSelectionListener itemSelectionListener;
+
+	public QueryResultPanel(Repository project, QueryResult result, String query, 
+			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
+			ItemSelectionListener itemSelectionListener) {
+		this(project, result, query, kwicProviderCache, null, displaySetting, itemSelectionListener, false);
+	}
 	
 	public QueryResultPanel(Repository project, QueryResult result, String query, 
 			LoadingCache<String, KwicProvider> kwicProviderCache,
-			CloseListener resultPanelCloseListener) throws Exception {
+			CloseListener resultPanelCloseListener) {
+		this(project, result, query, kwicProviderCache, resultPanelCloseListener, 
+				DisplaySetting.GROUPED_BY_PHRASE, null, true);
+	}
+	
+	public QueryResultPanel(Repository project, QueryResult result, String query, 
+			LoadingCache<String, KwicProvider> kwicProviderCache,
+			CloseListener resultPanelCloseListener, DisplaySetting displaySetting,
+			ItemSelectionListener itemSelectionListener,
+			boolean cardStyle) {
 
 		this.project = project;
 		this.queryResult = result;
 		this.query = query;
 		this.kwicProviderCache= kwicProviderCache;
+		this.itemSelectionListener = itemSelectionListener;
+		this.cardStyle = cardStyle;
 
 		initComponents();
 		initActions(resultPanelCloseListener);
-		initPhraseBasedData();
+		displaySetting.initQueryResultPanel(this);
 	}
 
-	private void initPhraseBasedData() {
+	void initPhraseBasedData() {
 		displaySetting = DisplaySetting.GROUPED_BY_PHRASE;
 		
 		miGroupByTagPath.setEnabled(true);
@@ -118,6 +143,18 @@ public class QueryResultPanel extends VerticalLayout {
 			.addColumn(QueryResultRowItem::getFrequency)
 			.setCaption("Frequency")
 			.setExpandRatio(1);
+		
+		if (itemSelectionListener != null) {
+			ButtonRenderer<QueryResultRowItem> selectItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
+					rendererClickEvent -> itemSelectionListener.itemSelected(rendererClickEvent.getItem()));
+			selectItemsRenderer.setHtmlContentAllowed(true);
+
+			queryResultGrid
+			.addColumn((item) -> VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml())
+			.setCaption("Select")
+			.setRenderer(selectItemsRenderer)
+			.setWidth(70);			
+		}
 		
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getPhraseBasedTreeData());
@@ -144,7 +181,7 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 	
 
-	private void initPropertiesAsColumnsTagBasedData() {
+	void initPropertiesAsColumnsTagBasedData() {
 		displaySetting = DisplaySetting.PROPERTIES_AS_COLUMNS;
 		
 		miGroupByTagPath.setEnabled(true);
@@ -186,6 +223,16 @@ public class QueryResultPanel extends VerticalLayout {
 			.setCaption("Collection")
 			.setWidth(200);
 		
+		if (itemSelectionListener != null) {
+			ButtonRenderer<QueryResultRowItem> selectItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
+					rendererClickEvent -> itemSelectionListener.itemSelected(rendererClickEvent.getItem()));
+			selectItemsRenderer.setHtmlContentAllowed(true);
+			queryResultGrid
+			.addColumn((item) -> VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml())
+			.setCaption("Select")
+			.setRenderer(selectItemsRenderer)
+			.setWidth(70);			
+		}
 
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 		
@@ -199,7 +246,7 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 
-	private void initFlatTagBasedData() {
+	void initFlatTagBasedData() {
 		displaySetting = DisplaySetting.ANNOTATIONS_AS_FLAT_TABLE;
 		
 		miGroupByTagPath.setEnabled(true);
@@ -244,6 +291,17 @@ public class QueryResultPanel extends VerticalLayout {
 			.setWidth(300);
 		}
 
+		if (itemSelectionListener != null) {
+			ButtonRenderer<QueryResultRowItem> selectItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
+					rendererClickEvent -> itemSelectionListener.itemSelected(rendererClickEvent.getItem()));
+			selectItemsRenderer.setHtmlContentAllowed(true);
+			queryResultGrid
+			.addColumn((item) -> VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml())
+			.setCaption("Select")
+			.setRenderer(selectItemsRenderer)
+			.setWidth(70);			
+		}
+
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 		
 		treeGridPanel.addComponent(queryResultGrid);
@@ -255,7 +313,7 @@ public class QueryResultPanel extends VerticalLayout {
 
 	}
 
-	private void initTagBasedData() {
+	void initTagBasedData() {
 		displaySetting = DisplaySetting.GROUPED_BY_TAG;
 		
 		miGroupByTagPath.setEnabled(false);
@@ -292,6 +350,17 @@ public class QueryResultPanel extends VerticalLayout {
 			.setCaption("Frequency")
 			.setExpandRatio(1);
 		
+		if (itemSelectionListener != null) {
+			ButtonRenderer<QueryResultRowItem> selectItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
+					rendererClickEvent -> itemSelectionListener.itemSelected(rendererClickEvent.getItem()));
+			selectItemsRenderer.setHtmlContentAllowed(true);
+			queryResultGrid
+			.addColumn((item) -> VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml())
+			.setCaption("Select")
+			.setRenderer(selectItemsRenderer)
+			.setWidth(70);			
+		}
+
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 		
 		treeGridPanel.addComponent(queryResultGrid);
@@ -458,20 +527,27 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	private void initComponents() {
-		addStyleName("analyze-card");
+		if (cardStyle) {
+			addStyleName("analyze-card");
+		}
 		setMargin(false);
 		setSpacing(false);
 
 		initQueryResultGrid();
 		
-		createResultInfoBar();
-		createButtonBar();
+		if (cardStyle) {
+			createResultInfoBar();
+		}
+		createButtonBar(cardStyle);
 		treeGridPanel = new VerticalLayout();
 		treeGridPanel.setSizeFull();
 		treeGridPanel.setMargin(false);
 		treeGridPanel.addStyleName("analyze-queryresult-panel");
 		
-		treeGridPanel.addComponent(queryResultGrid);
+		if (!cardStyle) {
+			addComponent(treeGridPanel);	
+			setExpandRatio(treeGridPanel, 1f);
+		}
 	}
 
 	private void createResultInfoBar() {
@@ -487,13 +563,14 @@ public class QueryResultPanel extends VerticalLayout {
 		addComponent(queryInfo);
 	}
 
-	private void createButtonBar() {
+	private void createButtonBar(boolean cardStyle) {
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setWidth("100%");
 		
 		caretRightBt = new IconButton(VaadinIcons.CARET_RIGHT);
-
+		caretRightBt.setVisible(cardStyle);
 		caretDownBt = new IconButton(VaadinIcons.CARET_DOWN);
+		caretDownBt.setVisible(cardStyle);
 
 		optionsBt = new IconButton(VaadinIcons.ELLIPSIS_V);
 		optionsMenu = new ContextMenu(optionsBt,true);
@@ -511,19 +588,21 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	private void initActions(CloseListener resultPanelCloseListener) {
-		caretRightBt.addClickListener(new ClickListener() {
-			public void buttonClick(ClickEvent event) {
-				addComponent(treeGridPanel);
-				((HorizontalLayout)caretRightBt.getParent()).replaceComponent(caretRightBt, caretDownBt);
-			}
-		});
-
-		caretDownBt.addClickListener(new ClickListener() {
-			public void buttonClick(ClickEvent event) {
-				removeComponent(treeGridPanel);
-				((HorizontalLayout)caretDownBt.getParent()).replaceComponent(caretDownBt, caretRightBt);
-			}
-		});
+		if (cardStyle) {
+			caretRightBt.addClickListener(new ClickListener() {
+				public void buttonClick(ClickEvent event) {
+					addComponent(treeGridPanel);
+					((HorizontalLayout)caretRightBt.getParent()).replaceComponent(caretRightBt, caretDownBt);
+				}
+			});
+	
+			caretDownBt.addClickListener(new ClickListener() {
+				public void buttonClick(ClickEvent event) {
+					removeComponent(treeGridPanel);
+					((HorizontalLayout)caretDownBt.getParent()).replaceComponent(caretDownBt, caretRightBt);
+				}
+			});
+		}
 		
 		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
 		
@@ -532,8 +611,13 @@ public class QueryResultPanel extends VerticalLayout {
 		miGroupByTagPath = optionsMenu.addItem("Group by Tag Path", mi -> initTagBasedData());
 		miFlatTable = optionsMenu.addItem("Display Annotations as flat table", mi -> initFlatTagBasedData());
 		miPropertiesAsColumns = optionsMenu.addItem("Display Properties as columns", mi -> initPropertiesAsColumnsTagBasedData());
-
-		removeBt.addClickListener(clickEvent -> resultPanelCloseListener.closeRequest(QueryResultPanel.this));
+		
+		if (resultPanelCloseListener != null) {
+			removeBt.addClickListener(clickEvent -> resultPanelCloseListener.closeRequest(QueryResultPanel.this));
+		}
+		else {
+			removeBt.setVisible(false);
+		}
 	}
 
 
@@ -552,16 +636,6 @@ public class QueryResultPanel extends VerticalLayout {
 		queryResultGrid.getDataProvider().refreshAll();
 	}
 
-	@SuppressWarnings("unchecked")
-	public TreeData<TreeRowItem> getCurrentTreeGridData() {
-
-//		TreeGrid<TreeRowItem> currentTreeGrid = (TreeGrid<TreeRowItem>) treeGridPanel.getComponent(0);
-//		TreeDataProvider<TreeRowItem> dataProvider = (TreeDataProvider<TreeRowItem>) currentTreeGrid.getDataProvider();
-//		TreeData<TreeRowItem> treeData = (TreeData<TreeRowItem>) dataProvider.getTreeData();
-//		return copyTreeData(treeData);
-		return null;
-	}
-	
 	public QueryResultPanelSetting getQueryResultPanelSetting() {
 		return new QueryResultPanelSetting(query, queryResult, displaySetting);
 	}
@@ -569,5 +643,4 @@ public class QueryResultPanel extends VerticalLayout {
 	public String getQueryAsString() {
 		return this.query+ "("+ creationTime+")";
 	}
-
 }

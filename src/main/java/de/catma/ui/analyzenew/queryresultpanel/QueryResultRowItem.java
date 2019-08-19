@@ -6,7 +6,7 @@ import com.vaadin.data.TreeData;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-interface QueryResultRowItem {
+public interface QueryResultRowItem {
 	public String getKey();
 	public int getFrequency();
 	public QueryResultRowArray getRows();

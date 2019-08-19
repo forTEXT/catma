@@ -292,7 +292,6 @@ public class AnalyzeNewView extends HorizontalLayout
 
 				VizMaxPanel vizMaxPanel = 
 						new VizMaxPanel(
-								getAllTreeGridDatas(), 
 								getQueryResultPanelSettings(),
 								repository, 
 								kwicProviderCache,
@@ -400,20 +399,6 @@ public class AnalyzeNewView extends HorizontalLayout
 					}
 				});
 
-	}
-
-	private ArrayList<CurrentTreeGridData> getAllTreeGridDatas() {
-		
-		Iterator<Component> iterator = resultsPanel.iterator();
-		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
-		//TODO:
-//		while (iterator.hasNext()) {
-//			QueryResultPanel onePanel = (QueryResultPanel) iterator.next();
-//			CurrentTreeGridData current = new CurrentTreeGridData(onePanel.getQueryAsString(),
-//					(TreeData<TreeRowItem>) onePanel.getCurrentTreeGridData(), onePanel.getCurrentView());
-//			toReturnList.add(current);
-//		}
-		return toReturnList;
 	}
 
 	private void addSourceDocument(SourceDocument sd) {

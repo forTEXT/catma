@@ -19,6 +19,7 @@ import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
@@ -39,6 +40,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.analyzenew.kwic.KwicPanelNew;
 import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanel;
 import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanelSetting;
+import de.catma.ui.analyzenew.queryresultpanel.QueryResultRowItem;
 import de.catma.ui.analyzenew.treegridhelper.CollectionItem;
 import de.catma.ui.analyzenew.treegridhelper.DocumentItem;
 import de.catma.ui.analyzenew.treegridhelper.QueryRootItem;
@@ -65,6 +67,10 @@ public class VizMaxPanel extends VerticalLayout  {
 		public QueryResultPanel getPanel() {
 			return panel;
 		}
+		
+		public QueryResultPanelSetting getSetting() {
+			return setting;
+		}
 	}
 	
 	interface LeaveListener {
@@ -76,37 +82,57 @@ public class VizMaxPanel extends VerticalLayout  {
 	private HorizontalSplitPanel mainContentSplitPanel;
 	private Button arrowLeftBt;
 	private ComboBox<QuerySelection> queryResultBox;
-	private ArrayList<CurrentTreeGridData> currentTreeGridDatas;
-	private TreeData<TreeRowItem> resultsTreeGridData;
-	private TreeGrid<TreeRowItem> resultsTreeGrid;
-	private TreeGrid<TreeRowItem> phraseTreeGrid;
-	private TreeGrid<TreeRowItem> tagTreeGrid;
-	
-	private TreeDataProvider<TreeRowItem> phraseDataProvider;
-	private TreeDataProvider<TreeRowItem> tagDataProvider;
-	private TreeDataProvider<TreeRowItem> propertyFlatDataProvider;
 	
 	private TreeData<TreeRowItem> selectedItemsTreeGridData;
 	private TreeGrid<TreeRowItem> selectedItemsTreeGrid;
-	private TreeGrid<TreeRowItem> propertyTreeGrid;
-	private TreeGrid <TreeRowItem> propertyFlatTreeGrid;
-	private TreeDataProvider<TreeRowItem> propertyDataProvider;
 	private TreeDataProvider<TreeRowItem> selectedDataProvider;
 	
 	private KwicPanelNew kwicNew;
 	private ViewID selectedGridViewID;
 	private int kwicSize = 5;
+	
+	private QueryResultPanel currentQueryResultPanel;
 
-	public VizMaxPanel(ArrayList<CurrentTreeGridData> currentTreeGridDatas, 
-			List<QueryResultPanelSetting> queryResultPanelSettings, Repository repository,
+	private VerticalLayout topLeftPanel;
+
+	private Repository project;
+
+	public VizMaxPanel( 
+			List<QueryResultPanelSetting> queryResultPanelSettings, Repository project,
 			LoadingCache<String, KwicProvider> kwicProviderCache, LeaveListener leaveListener) {
-		this.currentTreeGridDatas = currentTreeGridDatas;
-
+		this.project = project;
 		this.kwicProviderCache = kwicProviderCache;
 		initComponents();
 		initActions(leaveListener);
 		initData(queryResultPanelSettings);
 		
+	}
+	
+	private void setQueryResultPanel(QuerySelection querySelection) {
+		if (currentQueryResultPanel != null) {
+			((ComponentContainer)currentQueryResultPanel.getParent()).removeComponent(currentQueryResultPanel);
+		}
+		
+		if (querySelection.getPanel() == null) {
+			QueryResultPanel queryResultPanel = 
+					new QueryResultPanel(
+						project, 
+						querySelection.getSetting().getQueryResult(), 
+						querySelection.getSetting().getQuery(), 
+						kwicProviderCache,
+						querySelection.getSetting().getDisplaySetting(),
+						item -> handleItemSelection(item));
+			queryResultPanel.setSizeFull();
+			
+			querySelection.setPanel(queryResultPanel);
+		}
+
+		topLeftPanel.addComponent(querySelection.getPanel());
+		topLeftPanel.setExpandRatio(querySelection.getPanel(), 1f);
+	}
+
+	private void handleItemSelection(QueryResultRowItem item) {
+		// TODO Auto-generated method stub
 	}
 
 	private void initData(List<QueryResultPanelSetting> queryResultPanelSettings) {
@@ -128,7 +154,7 @@ public class VizMaxPanel extends VerticalLayout  {
 		
 		// top left 
 		
-		VerticalLayout topLeftPanel = new VerticalLayout();
+		topLeftPanel = new VerticalLayout();
 		topLeftPanel.setSizeFull();
 		resultSelectionSplitPanel.addComponent(topLeftPanel);
 		
@@ -143,14 +169,12 @@ public class VizMaxPanel extends VerticalLayout  {
 		queryResultBox = new ComboBox<QuerySelection>();
 		queryResultBox.setWidth("100%");
 		queryResultBox.setEmptySelectionCaption("Select a resultset");
+		queryResultBox.setEmptySelectionAllowed(false);
+		
+		queryResultBox.setItemCaptionGenerator(querySelection -> querySelection.getSetting().getQuery());
 		
 		buttonAndBoxPanel.addComponent(queryResultBox);
-		
-		resultsTreeGrid = new TreeGrid<>();
-		topLeftPanel.addComponent(resultsTreeGrid);
-		topLeftPanel.setExpandRatio(resultsTreeGrid, 1f);
-
-		
+		buttonAndBoxPanel.setExpandRatio(queryResultBox, 1f);
 		// bottom left
 
 		
@@ -189,7 +213,7 @@ public class VizMaxPanel extends VerticalLayout  {
 				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
 
 		ActionGridComponent<TreeGrid<TreeRowItem>> selectedGridComponent = new ActionGridComponent<>(
-				new Label("Selected resultrows for the kwic visualization"), selectedItemsTreeGrid);
+				new Label("Selected resultrows"), selectedItemsTreeGrid);
 
 		resultSelectionSplitPanel.addComponent(selectedGridComponent);
 		
@@ -205,11 +229,10 @@ public class VizMaxPanel extends VerticalLayout  {
 
 	private void initActions(LeaveListener leaveListener) {
 		arrowLeftBt.addClickListener(clickEvent -> leaveListener.onLeave(this));
-		queryResultBox.addSelectionListener(new SingleSelectionListener<String>() {
+		queryResultBox.addSelectionListener(new SingleSelectionListener<QuerySelection>() {
 			@Override
-			public void selectionChange(SingleSelectionEvent<String> event) {
-				String queryAsString = event.getSource().getValue();
-				switchToResultTree(queryAsString);
+			public void selectionChange(SingleSelectionEvent<QuerySelection> event) {
+				setQueryResultPanel(event.getValue());
 			}
 		});
 	}
@@ -233,215 +256,6 @@ public class VizMaxPanel extends VerticalLayout  {
 		
 	}
 
-	private ArrayList<String> getQueriesForAvailableResults() {
-		//TODO: refactor to work with TreeGridData directly
-		ArrayList<String> allQueries = new ArrayList<>();
-		Iterator<CurrentTreeGridData> queriesIterator = currentTreeGridDatas.iterator();
-		while (queriesIterator.hasNext()) {
-			allQueries.add(queriesIterator.next().getQuery());
-		}
-		return allQueries;
-	}
-
-	@SuppressWarnings("unchecked")
-	private void switchToResultTree(String queryAsString) {
-		Iterator<CurrentTreeGridData> allResultsIterator = currentTreeGridDatas.iterator();
-		resultsTreeGridData = new TreeData<TreeRowItem>();
-		selectedGridViewID = null;
-		while (allResultsIterator.hasNext()) {
-			CurrentTreeGridData currentData = allResultsIterator.next();
-			if (currentData.getQuery().equalsIgnoreCase(queryAsString)) {
-				resultsTreeGridData = currentData.getCurrentTreeData();
-				selectedGridViewID = currentData.getViewID();
-			}
-		}
-		resultsTreeGrid = createResultsTreeGridFromData(resultsTreeGridData, selectedGridViewID);
-		resultsTreeGrid.addStyleNames("annotation-details-panel-annotation-details-grid",
-				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
-//		queryResultsPanel.setContent(resultsTreeGrid);			
-	}
-
-	private TreeGrid<TreeRowItem> createResultsTreeGridFromData(TreeData<TreeRowItem> resultsTreeGridData2,
-			ViewID currentView) {
-		TreeGrid<TreeRowItem> resultSetTreeGrid = new TreeGrid<>();
-		switch (currentView) {
-		case flatTableProperty:
-			resultSetTreeGrid = addDataFlatTableStyle(resultsTreeGridData2);
-			break;
-		case phrase:
-			resultSetTreeGrid = addDataPhraseStyle(resultsTreeGridData2);
-			break;
-		case phraseProperty:
-			resultSetTreeGrid = addDataPhraseStyle(resultsTreeGridData2);
-			break;
-		case phraseTag:
-			resultSetTreeGrid = addDataPhraseStyle(resultsTreeGridData2);
-			break;
-		case tag:
-			resultSetTreeGrid = addDataTagStyle(resultsTreeGridData2);
-			break;
-		case property:
-			resultSetTreeGrid = addDataPropertyStyle(resultsTreeGridData2);
-			break;
-		}
-		return resultSetTreeGrid;
-	}
-
-	private TreeGrid<TreeRowItem> addDataPhraseStyle(TreeData<TreeRowItem> treeData) {
-		phraseTreeGrid = new TreeGrid<>();
-		phraseTreeGrid.setWidth(570, Unit.PIXELS);
-		phraseDataProvider = new TreeDataProvider<>(treeData);
-
-		phraseTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Phrase").setId("phraseID");
-		phraseTreeGrid.getColumn("phraseID").setWidth(200);
-		phraseTreeGrid.getColumn("phraseID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
-
-		phraseTreeGrid.addColumn(TreeRowItem::getPosition).setCaption("Position").setId("positionID").setHidable(true)
-				.setHidden(true);
-		phraseTreeGrid.getColumn("positionID").setWidth(80);
-
-		phraseTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
-				.setHidden(true).setWidth(100);
-		phraseTreeGrid.getColumn("contextID").setDescriptionGenerator(e -> e.getContextDiv(), ContentMode.HTML);
-
-		phraseTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		phraseTreeGrid.getColumn("freqID").setWidth(85);
-
-		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
-				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
-		selectItemsRenderer.setHtmlContentAllowed(true);
-		phraseTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select")
-				.setId("selectID");
-		phraseTreeGrid.getColumn("selectID").setWidth(70);
-
-		phraseDataProvider.refreshAll();
-		phraseTreeGrid.setDataProvider(phraseDataProvider);
-
-		phraseTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
-
-			public void itemExpand(ExpandEvent<TreeRowItem> event) {
-				handleExpandClickEventPhrase(event);
-
-			}
-		});
-		return phraseTreeGrid;
-	}
-
-	private TreeGrid<TreeRowItem> addDataTagStyle(TreeData<TreeRowItem> treeData) {
-		tagTreeGrid = new TreeGrid<>();
-		tagTreeGrid.setWidth(570, Unit.PIXELS);
-		tagDataProvider = new TreeDataProvider<>(treeData);
-
-		tagTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
-		tagTreeGrid.getColumn("tagID").setWidth(160);
-		tagTreeGrid.getColumn("tagID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
-
-		tagTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		tagTreeGrid.getColumn("freqID").setWidth(90);
-
-		tagTreeGrid.addColumn(TreeRowItem::getPosition).setCaption("Position").setId("positionID").setHidable(true)
-				.setHidden(true);
-		tagTreeGrid.getColumn("positionID").setWidth(80);
-
-		tagTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
-				.setHidden(true).setWidth(150);
-		tagTreeGrid.getColumn("contextID").setDescriptionGenerator(e -> e.getContextDiv(), ContentMode.HTML);
-
-		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
-				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
-		selectItemsRenderer.setHtmlContentAllowed(true);
-		tagTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select")
-				.setId("selectIconID");
-		tagTreeGrid.getColumn("selectIconID").setWidth(60);
-
-		tagDataProvider.refreshAll();
-		tagTreeGrid.setDataProvider(tagDataProvider);
-		tagTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
-			public void itemExpand(ExpandEvent<TreeRowItem> event) {
-				handleExpandClickEventTag(event);
-
-			}
-		});
-		return tagTreeGrid;
-	}
-
-	private TreeGrid<TreeRowItem> addDataPropertyStyle(TreeData<TreeRowItem> treeData) {
-		propertyTreeGrid = new TreeGrid<>();
-		propertyTreeGrid.setWidth(570, Unit.PIXELS);
-		propertyDataProvider = new TreeDataProvider<>(treeData);
-
-		propertyTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
-		propertyTreeGrid.getColumn("tagID").setWidth(140);
-		propertyTreeGrid.getColumn("tagID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
-
-		propertyTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
-				.setHidden(true).setWidth(90);
-		propertyTreeGrid.getColumn("contextID").setDescriptionGenerator(e -> e.getContextDiv(), ContentMode.HTML);
-
-		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
-				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
-		selectItemsRenderer.setHtmlContentAllowed(true);
-
-		propertyTreeGrid.addColumn(TreeRowItem::getPropertyName).setCaption("Property").setId("propNameID");
-		propertyTreeGrid.getColumn("propNameID").setWidth(90);
-		propertyTreeGrid.getColumn("propNameID").setDescriptionGenerator(e -> e.getPropertyName(), ContentMode.HTML);
-		propertyTreeGrid.addColumn(TreeRowItem::getPropertyValue).setCaption("Value").setId("propValueID");
-		propertyTreeGrid.getColumn("propValueID").setWidth(80);
-		propertyTreeGrid.getColumn("propValueID").setDescriptionGenerator(e -> e.getPropertyValue(), ContentMode.HTML);
-
-		propertyTreeGrid.addColumn(TreeRowItem::getFrequency).setCaption("Frequency").setId("freqID");
-		propertyTreeGrid.getColumn("freqID").setWidth(80);
-		propertyTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select")
-				.setId("selectIconID");
-		propertyTreeGrid.getColumn("selectIconID").setWidth(60);
-		propertyDataProvider.refreshAll();
-		propertyTreeGrid.setDataProvider(propertyDataProvider);
-		propertyTreeGrid.addExpandListener(new ExpandListener<TreeRowItem>() {
-
-			public void itemExpand(ExpandEvent<TreeRowItem> event) {
-				handleExpandClickEventProperty(event);
-
-			}
-		});
-
-		return propertyTreeGrid;
-	}
-	
-	
-	private TreeGrid<TreeRowItem> addDataFlatTableStyle(TreeData<TreeRowItem> treeData) {	
-		TreeData <TreeRowItem> dataWithContext=setContextToDataObject(treeData);
-		propertyFlatTreeGrid = new TreeGrid<TreeRowItem>();
-		propertyFlatTreeGrid.setWidth(570, Unit.PIXELS);
-		propertyFlatDataProvider = new TreeDataProvider<>(dataWithContext);
-
-		propertyFlatTreeGrid.addColumn(TreeRowItem::getShortenTreeKey).setCaption("Tag").setId("tagID");
-		propertyFlatTreeGrid.getColumn("tagID").setWidth(140);
-		propertyFlatTreeGrid.getColumn("tagID").setDescriptionGenerator(e -> e.getTreeKey(), ContentMode.HTML);
-
-		propertyFlatTreeGrid.addColumn(TreeRowItem::getContext).setCaption("Context").setId("contextID").setHidable(true)
-				.setHidden(true).setWidth(90);
-		propertyFlatTreeGrid.getColumn("contextID").setDescriptionGenerator(e -> e.getContextDiv(), ContentMode.HTML);
-
-		ButtonRenderer<TreeRowItem> selectItemsRenderer = new ButtonRenderer<TreeRowItem>(
-				rendererClickEvent -> handleSelectClickEvent(rendererClickEvent));
-		selectItemsRenderer.setHtmlContentAllowed(true);
-
-		propertyFlatTreeGrid.addColumn(TreeRowItem::getPropertyName).setCaption("Property").setId("propNameID");
-		propertyFlatTreeGrid.getColumn("propNameID").setWidth(90);
-		propertyFlatTreeGrid.getColumn("propNameID").setDescriptionGenerator(e -> e.getPropertyName(), ContentMode.HTML);
-		propertyFlatTreeGrid.addColumn(TreeRowItem::getPropertyValue).setCaption("Value").setId("propValueID");
-		propertyFlatTreeGrid.getColumn("propValueID").setWidth(80);
-		propertyFlatTreeGrid.getColumn("propValueID").setDescriptionGenerator(e -> e.getPropertyValue(), ContentMode.HTML);
-
-
-		propertyFlatTreeGrid.addColumn(TreeRowItem::getSelectIcon, selectItemsRenderer).setCaption("select")
-				.setId("selectIconID");
-		propertyFlatTreeGrid.getColumn("selectIconID").setWidth(60);
-		propertyFlatDataProvider.refreshAll();
-		propertyFlatTreeGrid.setDataProvider(propertyFlatDataProvider);
-
-		return propertyFlatTreeGrid;
-	}
 
 	
 	private void handleRemoveClickEvent(RendererClickEvent<TreeRowItem> removeClickEvent) {
@@ -524,98 +338,6 @@ public class VizMaxPanel extends VerticalLayout  {
 	
 	
 	
-	private void handleExpandClickEventPhrase(ExpandEvent<TreeRowItem> expandClickEvent) {
-
-		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
-		TreeRowItem dummyItem = phraseDataProvider.getTreeData().getChildren(clickedItem).get(0);
-
-		if (clickedItem instanceof DocumentItem && (dummyItem.getForward() == null)) {
-
-			DocumentItem selectedItem = (DocumentItem) clickedItem;
-			phraseDataProvider.getTreeData()
-					.removeItem(phraseDataProvider.getTreeData().getChildren(selectedItem).get(0));
-			
-			QueryResultRowArray groupedChildren = selectedItem.getRows();
-			String docID=groupedChildren.get(0).getSourceDocumentId();
-	
-			KwicProvider kwicProvider= null;
-	
-				try {
-					kwicProvider = kwicProviderCache.get(docID);
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-	
-					
-			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, 
-					kwicProvider);
-			phraseDataProvider.getTreeData().addItems(selectedItem, children);
-
-		} else {
-			// do nothing , item already expanded and dummy is replaced with real items
-		}
-		phraseDataProvider.refreshAll();
-
-	}
-
-	private void handleExpandClickEventTag(ExpandEvent<TreeRowItem> expandClickEvent) {
-
-		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
-		TreeRowItem dummyItem = tagDataProvider.getTreeData().getChildren(clickedItem).get(0);
-
-		if (clickedItem instanceof CollectionItem && (dummyItem.getRows() == null)) {
-
-			CollectionItem selectedItem = (CollectionItem) clickedItem;
-			tagDataProvider.getTreeData().removeItem(dummyItem);
-			
-			
-			QueryResultRowArray groupedChildren = selectedItem.getRows();
-			String docID=groupedChildren.get(0).getSourceDocumentId();
-	
-			KwicProvider kwicProvider= null;
-			try {
-				kwicProvider = kwicProviderCache.get(docID);
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem, kwicProvider);
-			tagDataProvider.getTreeData().addItems(selectedItem, children);
-		} else {
-		}
-		tagDataProvider.refreshAll();
-	}
-
-	private void handleExpandClickEventProperty(ExpandEvent<TreeRowItem> expandClickEvent) {
-		TreeRowItem clickedItem = expandClickEvent.getExpandedItem();
-		TreeRowItem dummyItem = propertyDataProvider.getTreeData().getChildren(clickedItem).get(0);
-
-		if (clickedItem.getClass().equals(CollectionItem.class) && (dummyItem.getRows() == null)) {
-			CollectionItem selectedItem = (CollectionItem) clickedItem;
-			propertyDataProvider.getTreeData().removeItem(dummyItem);
-			
-			
-			QueryResultRowArray groupedChildren = selectedItem.getRows();
-			String docID=groupedChildren.get(0).getSourceDocumentId();
-
-			KwicProvider kwicProvider= null;
-			try {
-				kwicProvider = kwicProviderCache.get(docID);
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			
-			ArrayList<TreeRowItem> children = createSingleItemRowsArrayList(selectedItem,
-					kwicProvider);
-			propertyDataProvider.getTreeData().addItems(selectedItem, children);
-		} else {
-		}
-		propertyDataProvider.refreshAll();
-	}
 
 	/**
 	 * @param selectedItem
@@ -647,7 +369,7 @@ public class VizMaxPanel extends VerticalLayout  {
 				item.setTreeKey(queryResultRow.getPhrase());
 			}
 			item.setRows(itemAsQRRA);
-			item.setQuery(queryResultBox.getValue());
+//			item.setQuery(queryResultBox.getValue());
 			SingleItem itemWithContext;
 		
 			try {
@@ -702,595 +424,24 @@ public class VizMaxPanel extends VerticalLayout  {
 	}
 	 
 
-	private void handleSelectClickEvent(RendererClickEvent<TreeRowItem> rendererClickEvent) {
-		TreeRowItem selectedItem = rendererClickEvent.getItem();
-		TreeDataProvider<TreeRowItem> currentTreeGridDataProvider = (TreeDataProvider<TreeRowItem>) resultsTreeGrid
-				.getDataProvider();
-
-		if (selectedGridViewID== ViewID.phrase) {
-			addPhraseItemsToSelectedPanel(selectedItem);
-		} else {
-			
-			if(selectedGridViewID== ViewID.flatTableProperty) {
-				addPropertyAsFlatTableToSelectedPanel(selectedItem, currentTreeGridDataProvider);
-			}else {
-				addTagOrPropertyItemsToSelectedPanel(selectedItem, currentTreeGridDataProvider);
-			}
-		}
+	private void handleSelectClickEvent(RendererClickEvent<QueryResultRowItem> rendererClickEvent) {
+//		TreeRowItem selectedItem = rendererClickEvent.getItem();
+//		TreeDataProvider<TreeRowItem> currentTreeGridDataProvider = (TreeDataProvider<TreeRowItem>) resultsTreeGrid
+//				.getDataProvider();
+//
+//		if (selectedGridViewID== ViewID.phrase) {
+//			addPhraseItemsToSelectedPanel(selectedItem);
+//		} else {
+//			
+//			if(selectedGridViewID== ViewID.flatTableProperty) {
+//				addPropertyAsFlatTableToSelectedPanel(selectedItem, currentTreeGridDataProvider);
+//			}else {
+//				addTagOrPropertyItemsToSelectedPanel(selectedItem, currentTreeGridDataProvider);
+//			}
+//		}
 	}
 	
-	private void addPropertyAsFlatTableToSelectedPanel(TreeRowItem selectedItem,
-			TreeDataProvider<TreeRowItem> currentTreeDataProvider) {
 
-		Optional<String> currentQuery = queryResultBox.getSelectedItem();
-		int length = currentQuery.toString().length();
-		String queryString = currentQuery.toString().substring(20, length - 1);
-		QueryRootItem root = new QueryRootItem();
-		root.setTreeKey(queryString);
-
-		if (selectedItemsTreeGridData.contains(root)) {
-			if (selectedItemsTreeGridData.contains(selectedItem)) {
-				//item already inside- do nothing
-			} else {
-				selectedItemsTreeGridData.addItem(root, selectedItem);
-				ArrayList<TreeRowItem> items= new ArrayList<TreeRowItem>();
-				items.add(selectedItem);
-				addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-
-			}
-		} else {
-			selectedItemsTreeGridData.addItem(null, root);
-			selectedItemsTreeGridData.addItem(root, selectedItem);
-			ArrayList<TreeRowItem> items= new ArrayList<TreeRowItem>();
-			items.add(selectedItem);
-			addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-
-		}
-		selectedDataProvider.refreshAll();
-	}
-
-	private void addTagOrPropertyItemsToSelectedPanel(TreeRowItem selectedItem,
-			TreeDataProvider<TreeRowItem> currentTreeDataProvider) {
-		try {
-			// check if dummy is already removed
-			TreeRowItem dummy = currentTreeDataProvider.getTreeData().getChildren(selectedItem).get(0);
-			List<TreeRowItem> childrenLevelOne = currentTreeDataProvider.getTreeData().getChildren(selectedItem);
-
-			if (selectedItem instanceof CollectionItem && dummy.getRows() == null) {
-				replaceDummyWithTagItems(selectedItem, currentTreeDataProvider);
-
-			}
-			if (selectedItem instanceof  DocumentItem) {
-				for (TreeRowItem collection : childrenLevelOne) {
-					TreeRowItem dummy2 = currentTreeDataProvider.getTreeData().getChildren(collection).get(0);
-					if (dummy2.getRows() == null) {
-						replaceDummyWithTagItems(collection, currentTreeDataProvider);
-					}
-				}
-			}
-			if (selectedItem instanceof RootItem) {
-				for (TreeRowItem document : childrenLevelOne) {
-					List<TreeRowItem> collectionsPerDoc = currentTreeDataProvider.getTreeData().getChildren(document);
-					for (TreeRowItem collection : collectionsPerDoc) {
-						TreeRowItem dummy2 = currentTreeDataProvider.getTreeData().getChildren(collection).get(0);
-						if (dummy2.getRows() == null) {
-							replaceDummyWithTagItems(collection, currentTreeDataProvider);
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.getMessage();
-		}
-
-		Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
-		Optional<String> currentQuery = queryResultBox.getSelectedItem();
-
-		int length = currentQuery.toString().length();
-		String queryString = currentQuery.toString().substring(20, length - 1);
-		QueryRootItem queryRoot = new QueryRootItem();
-		queryRoot.setTreeKey(queryString);
-
-		if ((allRootItems.isEmpty()) || (!allRootItems.contains(queryRoot))) {
-			selectedItemsTreeGridData.addItem(null, queryRoot);
-
-			if (selectedItem instanceof RootItem) {
-				selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
-				List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
-				for (TreeRowItem doc : documents) {
-					selectedItemsTreeGridData.addItem(selectedItem, doc);
-					List<TreeRowItem> collections = resultsTreeGridData.getChildren(doc);
-					for (TreeRowItem coll : collections) {
-						selectedItemsTreeGridData.addItem(doc, coll);
-						List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
-						selectedItemsTreeGridData.addItems(coll, items);
-						
-						addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-					}
-				}
-			}
-			if (selectedItem instanceof DocumentItem) {
-				TreeRowItem root = resultsTreeGridData.getParent(selectedItem);
-				selectedItemsTreeGridData.addItem(queryRoot, root);
-				selectedItemsTreeGridData.addItem(root, selectedItem);
-				List<TreeRowItem> collections = resultsTreeGridData.getChildren(selectedItem);
-				for (TreeRowItem coll : collections) {
-					selectedItemsTreeGridData.addItem(selectedItem, coll);
-					List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
-					selectedItemsTreeGridData.addItems(coll, items);
-					
-					addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-				}
-			}
-			if (selectedItem instanceof CollectionItem) {
-				TreeRowItem doc = resultsTreeGridData.getParent(selectedItem);
-				TreeRowItem root = resultsTreeGridData.getParent(doc);
-				selectedItemsTreeGridData.addItem(queryRoot, root);
-				selectedItemsTreeGridData.addItem(root, doc);
-				selectedItemsTreeGridData.addItem(doc, selectedItem);
-				List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
-				selectedItemsTreeGridData.addItems(selectedItem, items);
-				
-				addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-
-			}
-			if (selectedItem instanceof SingleItem) {
-				TreeRowItem collection = resultsTreeGridData.getParent(selectedItem);
-				TreeRowItem document = resultsTreeGridData.getParent(collection);
-				TreeRowItem root = resultsTreeGridData.getParent(document);
-				selectedItemsTreeGridData.addItem(queryRoot, root);
-				selectedItemsTreeGridData.addItem(root, document);
-				selectedItemsTreeGridData.addItem(document, collection);
-				selectedItemsTreeGridData.addItem(collection, selectedItem);
-				
-				List<TreeRowItem> items= new ArrayList<TreeRowItem>();
-				items.add(selectedItem);
-				addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-
-			}
-
-		}
-
-		else {
-
-			if (allRootItems.contains(queryRoot)) {
-
-				if (selectedItem instanceof RootItem) {
-					// single items of that branch maybe already inside->update whole branch
-					if (selectedItemsTreeGridData.contains(selectedItem)) {
-						selectedItemsTreeGridData.removeItem(selectedItem);
-						selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
-
-						List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
-						selectedItemsTreeGridData.addItems(selectedItem, documents);
-
-						for (TreeRowItem doc : documents) {
-							List<TreeRowItem> collections = resultsTreeGridData.getChildren(doc);
-							for (TreeRowItem coll : collections) {
-								selectedItemsTreeGridData.addItem(doc, coll);
-								List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
-								selectedItemsTreeGridData.addItems(coll, items);
-								
-								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-							}
-						}
-
-					} else {
-						// add whole new branch to tree
-						selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
-
-						List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
-						selectedItemsTreeGridData.addItems(selectedItem, documents);
-
-						for (TreeRowItem doc : documents) {
-							List<TreeRowItem> collections = resultsTreeGridData.getChildren(doc);
-							for (TreeRowItem coll : collections) {
-								selectedItemsTreeGridData.addItem(doc, coll);
-								List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
-								selectedItemsTreeGridData.addItems(coll, items);
-								
-								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-							}
-
-						}
-
-					}
-				}
-				// update branch on doc level
-				if (selectedItem instanceof DocumentItem) {
-					// single items of that doc-branch maybe already inside->update whole doc_branch
-					if (selectedItemsTreeGridData.contains(selectedItem)) {
-						TreeRowItem rootTag = resultsTreeGridData.getParent(selectedItem);
-
-						selectedItemsTreeGridData.removeItem(selectedItem);
-						selectedItemsTreeGridData.addItem(rootTag, selectedItem);
-
-						List<TreeRowItem> colls = resultsTreeGridData.getChildren(selectedItem);
-						selectedItemsTreeGridData.addItems(selectedItem, colls);
-
-						for (TreeRowItem coll : colls) {
-							List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
-							selectedItemsTreeGridData.addItems(coll, items);
-							
-							addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-						}
-					} else {
-						// add whole new doc_branch to tree
-						TreeRowItem rootTag = resultsTreeGridData.getParent(selectedItem);
-						if(!selectedItemsTreeGridData.contains(rootTag)) {
-							selectedItemsTreeGridData.addItem(queryRoot,rootTag);
-							
-						}
-							
-						selectedItemsTreeGridData.addItem(rootTag, selectedItem);
-						List<TreeRowItem> colls = resultsTreeGridData.getChildren(selectedItem);
-						selectedItemsTreeGridData.addItems(selectedItem, colls);
-
-						for (TreeRowItem coll : colls) {
-							List<TreeRowItem> items = resultsTreeGridData.getChildren(coll);
-							selectedItemsTreeGridData.addItems(coll, items);
-							
-							addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-						}
-					}
-
-				}
-				// update tree-branch on collection level
-				if (selectedItem  instanceof CollectionItem) {
-				TreeRowItem parentDocument=	resultsTreeGridData.getParent(selectedItem);
-					// with new document as parent for that collection
-					if(!selectedItemsTreeGridData.contains(parentDocument)) {
-						TreeRowItem tagItem=resultsTreeGridData.getParent(parentDocument);
-						
-						if(!selectedItemsTreeGridData.contains(tagItem)) {
-							selectedItemsTreeGridData.addItem(queryRoot,tagItem);	
-						}
-						selectedItemsTreeGridData.addItem(tagItem, parentDocument);
-						selectedItemsTreeGridData.addItem( parentDocument,selectedItem);	
-						List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
-						selectedItemsTreeGridData.addItems(selectedItem, items);
-						
-						addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-					}
-					// single items of that collection-branch maybe already inside->update whole
-					// collection_branch
-					else {
-						if (selectedItemsTreeGridData.contains(selectedItem)) {
-							List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
-							selectedItemsTreeGridData.removeItem(selectedItem);
-							selectedItemsTreeGridData.addItems(selectedItem, items);
-							
-							addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-
-						} else {
-							// add whole new collection branch to tree
-
-							TreeRowItem doc = resultsTreeGridData.getParent(selectedItem);
-							TreeRowItem rootTag = resultsTreeGridData.getParent(doc);
-							List<TreeRowItem> items = resultsTreeGridData.getChildren(selectedItem);
-							if (selectedItemsTreeGridData.contains(doc)) {
-								selectedItemsTreeGridData.addItem(doc, selectedItem);
-								selectedItemsTreeGridData.addItems(selectedItem, items);
-								
-								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-							} else {
-								selectedItemsTreeGridData.addItem(queryRoot, rootTag);
-								selectedItemsTreeGridData.addItem(rootTag, doc);
-								selectedItemsTreeGridData.addItem(doc, selectedItem);
-								selectedItemsTreeGridData.addItems(selectedItem, items);
-								
-								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-							}
-						}
-						
-					}
-			
-				}
-				// update branch on singleItem level
-				if (selectedItem instanceof SingleItem) {
-					// single item already inside, do nothing
-					if (selectedItemsTreeGridData.contains(selectedItem)) {
-						// do nothing, item already inside
-					} else {
-						// item not inside -> check which hierarchy level already inside
-
-						TreeRowItem coll = resultsTreeGridData.getParent(selectedItem);
-						TreeRowItem doc = resultsTreeGridData.getParent(coll);
-						TreeRowItem rootTag = resultsTreeGridData.getParent(doc);
-
-						if (selectedItemsTreeGridData.contains(coll)) {
-							selectedItemsTreeGridData.addItem(coll, selectedItem);
-							
-							List<TreeRowItem> items= new ArrayList<TreeRowItem>();
-							items.add(selectedItem);
-							addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-						} else {
-							if (selectedItemsTreeGridData.contains(doc)) {
-								selectedItemsTreeGridData.addItem(doc, coll);
-								selectedItemsTreeGridData.addItem(coll, selectedItem);
-								
-								List<TreeRowItem> items= new ArrayList<TreeRowItem>();
-								items.add(selectedItem);
-								addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-							} else {
-								if (selectedItemsTreeGridData.contains(rootTag)) {
-									selectedItemsTreeGridData.addItem(rootTag, doc);
-									selectedItemsTreeGridData.addItem(doc, coll);
-									selectedItemsTreeGridData.addItem(coll, selectedItem);
-									
-									List<TreeRowItem> items= new ArrayList<TreeRowItem>();
-									items.add(selectedItem);
-									addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-								} else { // tagRoot is not yet inside
-									selectedItemsTreeGridData.addItem(queryRoot, rootTag);
-									selectedItemsTreeGridData.addItem(rootTag, doc);
-									selectedItemsTreeGridData.addItem(doc, coll);
-									selectedItemsTreeGridData.addItem(coll, selectedItem);
-									
-									List<TreeRowItem> items= new ArrayList<TreeRowItem>();
-									items.add(selectedItem);
-									addQueryResultsToVisualisation(createQueryResultFromItemList(items));
-
-								}
-							}
-						}
-					}
-				}
-
-			}
-
-		}
-		selectedDataProvider.refreshAll();
-	}
-
-	private void addPhraseItemsToSelectedPanel(TreeRowItem selectedItem) {
-		try {
-	
-			TreeRowItem dummy = phraseDataProvider.getTreeData().getChildren(selectedItem).get(0);
-			List<TreeRowItem> childrenLevelOne = phraseDataProvider.getTreeData().getChildren(selectedItem);
-							
-			//item is on declevel then no deeper iteration and no cache needed
-			
-			if ((selectedItem instanceof DocumentItem) && dummy.getRows() == null) {
-				QueryResultRowArray groupedChildren = selectedItem.getRows();
-				String docID=groupedChildren.get(0).getSourceDocumentId();
-				KwicProvider kwicProvider= null;
-				kwicProvider = this.kwicProviderCache.get(docID);		
-				replaceDummyWithPhraseItems(selectedItem,phraseDataProvider,kwicProvider);
-
-			}
-			
-			// items on phrase level -> iteration on child(=document) level needed
-			
-			if (selectedItem instanceof RootItem) { // instance of
-				for (TreeRowItem documentItem : childrenLevelOne) {
-					TreeRowItem dummy2 = phraseDataProvider.getTreeData().getChildren(documentItem).get(0);
-					if (dummy2.getRows() == null) { 
-						String sdID=documentItem.getRows().get(0).getSourceDocumentId();
-						KwicProvider kwicProvider =null;					
-						kwicProvider=	(KwicProvider) this.kwicProviderCache.get(sdID);					
-						replaceDummyWithPhraseItems(documentItem, phraseDataProvider,kwicProvider);
-
-					}else {
-						// do nothing, dummy already replaced by real items
-					}
-
-				}
-			}
-
-		} catch (Exception e) {
-			e.getMessage(); //TODO
-		}
-		
-		
-		Collection<TreeRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
-		Optional<String> currentQuery = queryResultBox.getSelectedItem();
-
-		int length = currentQuery.toString().length();
-		String queryString = currentQuery.toString().substring(20, length - 1);
-		QueryRootItem queryRoot = new QueryRootItem();
-		queryRoot.setTreeKey(queryString);
-
-		if (allRootItems.isEmpty()) {
-			selectedItemsTreeGridData.addItem(null, queryRoot);
-
-			if (selectedItem.getClass().equals(DocumentItem.class)) {
-				TreeRowItem rootPhrase = resultsTreeGridData.getParent(selectedItem);
-				selectedItemsTreeGridData.addItem(queryRoot, rootPhrase);
-				selectedItemsTreeGridData.addItem(rootPhrase, selectedItem);
-				List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
-				selectedItemsTreeGridData.addItems(selectedItem, singleItems);
-				
-				addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-
-			}
-			if (selectedItem.getClass().equals(RootItem.class)) {
-				List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
-				selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
-				selectedItemsTreeGridData.addItems(selectedItem, documents);
-				for (TreeRowItem doc : documents) {
-					List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(doc);
-					selectedItemsTreeGridData.addItems(doc, singleItems);
-					
-					addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-
-				}
-			}
-			if (selectedItem.getClass().equals(SingleItem.class)) {
-				TreeRowItem document = resultsTreeGridData.getParent(selectedItem);
-				TreeRowItem phrase = resultsTreeGridData.getParent(document);
-				selectedItemsTreeGridData.addItem(queryRoot, phrase);
-				selectedItemsTreeGridData.addItems(phrase, document);
-				selectedItemsTreeGridData.addItems(document, selectedItem);
-				
-				ArrayList<TreeRowItem> itemList = new ArrayList<TreeRowItem>();
-						
-				itemList.add(selectedItem);
-					
-				addQueryResultsToVisualisation(createQueryResultFromItemList(itemList));
-			}
-
-		} else {
-			if (!allRootItems.contains(queryRoot)) {
-				selectedItemsTreeGridData.addItem(null, queryRoot);
-
-				if (selectedItem.getClass().equals(DocumentItem.class)) {
-					TreeRowItem root = resultsTreeGridData.getParent(selectedItem);
-					selectedItemsTreeGridData.addItem(queryRoot, root);
-					selectedItemsTreeGridData.addItem(root, selectedItem);
-					
-					List<TreeRowItem> singleItems=resultsTreeGridData.getChildren(selectedItem);
-					addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-					
-					
-				}
-				if (selectedItem.getClass().equals(RootItem.class)) {
-					List<TreeRowItem> childrenDocs = resultsTreeGridData.getChildren(selectedItem);
-					selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
-					selectedItemsTreeGridData.addItems(selectedItem, childrenDocs);
-
-					for (TreeRowItem doc : childrenDocs) {
-						List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(doc);
-						selectedItemsTreeGridData.addItems(doc, singleItems);
-						
-						addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-									
-
-					}
-
-				}
-				if (selectedItem.getClass().equals(SingleItem.class)) {
-					TreeRowItem document = resultsTreeGridData.getParent(selectedItem);
-					TreeRowItem phrase = resultsTreeGridData.getParent(document);
-					selectedItemsTreeGridData.addItem(queryRoot, phrase);
-					selectedItemsTreeGridData.addItems(phrase, document);
-					selectedItemsTreeGridData.addItems(document, selectedItem);
-					
-					
-					ArrayList<TreeRowItem> itemList = new ArrayList<TreeRowItem>();
-					
-					itemList.add(selectedItem);
-						
-					addQueryResultsToVisualisation(createQueryResultFromItemList(itemList));
-				}
-			} else {
-				if (allRootItems.contains(queryRoot)) {
-
-					if (selectedItem.getClass().equals(DocumentItem.class)) {
-
-						if (selectedItemsTreeGridData.contains(selectedItem)) {
-							TreeRowItem phraseRoot = resultsTreeGridData.getParent(selectedItem);
-							selectedItemsTreeGridData.removeItem(selectedItem);
-							selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
-
-							List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
-							selectedItemsTreeGridData.addItems(selectedItem, singleItems);
-							
-							addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-
-						} else {
-							TreeRowItem phraseRoot = resultsTreeGridData.getParent(selectedItem);
-							if (selectedItemsTreeGridData.contains(phraseRoot)) {
-								// phrase already inside
-								selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
-								List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
-								selectedItemsTreeGridData.addItems(selectedItem, singleItems);
-								
-								addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-							} else {
-								// phrase not inside
-								selectedItemsTreeGridData.addItem(queryRoot, phraseRoot);
-								selectedItemsTreeGridData.addItem(phraseRoot, selectedItem);
-								List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(selectedItem);
-								selectedItemsTreeGridData.addItems(selectedItem, singleItems);
-								
-								addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-
-							}
-
-						}
-
-					}
-					if (selectedItem.getClass().equals(RootItem.class)) {
-
-						if (selectedItemsTreeGridData.contains(selectedItem)) {
-							List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
-							selectedItemsTreeGridData.removeItem(selectedItem);
-							selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
-							selectedItemsTreeGridData.addItems(selectedItem, documents);
-
-							for (TreeRowItem oneDoc : documents) {
-								List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(oneDoc);
-								selectedItemsTreeGridData.addItems(oneDoc, singleItems);
-								
-								addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-							}
-						} else {
-							List<TreeRowItem> documents = resultsTreeGridData.getChildren(selectedItem);
-							selectedItemsTreeGridData.addItem(queryRoot, selectedItem);
-							selectedItemsTreeGridData.addItems(selectedItem, documents);
-
-							for (TreeRowItem oneDoc : documents) {
-								List<TreeRowItem> singleItems = resultsTreeGridData.getChildren(oneDoc);
-								selectedItemsTreeGridData.addItems(oneDoc, singleItems);
-								
-								addQueryResultsToVisualisation(createQueryResultFromItemList(singleItems));
-							}
-
-						}
-					}
-
-					if (selectedItem.getClass().equals(SingleItem.class)) {
-
-						TreeRowItem document = resultsTreeGridData.getParent(selectedItem);
-						TreeRowItem phrase = resultsTreeGridData.getParent(document);
-
-						if (selectedItemsTreeGridData.contains(phrase)) {
-							// doc already inside -> check if item inside and if not insert
-							if (selectedItemsTreeGridData.contains(document)) {
-
-								if (!selectedItemsTreeGridData.getChildren(document).contains(selectedItem)) {
-									selectedItemsTreeGridData.addItem(document, selectedItem);
-									
-									
-									ArrayList<TreeRowItem> itemList = new ArrayList<TreeRowItem>();
-									
-									itemList.add(selectedItem);
-										
-									addQueryResultsToVisualisation(createQueryResultFromItemList(itemList));
-								} else {
-									// do nothing because item already inside
-								}
-							} else {
-								selectedItemsTreeGridData.addItem(phrase, document);
-								selectedItemsTreeGridData.addItem(document, selectedItem);
-								
-								ArrayList<TreeRowItem> itemList = new ArrayList<TreeRowItem>();
-								
-								itemList.add(selectedItem);
-									
-								addQueryResultsToVisualisation(createQueryResultFromItemList(itemList));
-							}
-						} else {
-							// insert new phrase and new document before inserting the single item
-							selectedItemsTreeGridData.addItem(queryRoot, phrase);
-							selectedItemsTreeGridData.addItem(phrase, document);
-							selectedItemsTreeGridData.addItem(document, selectedItem);
-							
-							ArrayList<TreeRowItem> itemList = new ArrayList<TreeRowItem>();
-							
-							itemList.add(selectedItem);
-								
-							addQueryResultsToVisualisation(createQueryResultFromItemList(itemList));
-						}
-
-					}
-				}
-			}
-		}
-		selectedDataProvider.refreshAll();
-
-	}
 
 	private void replaceDummyWithTagItems(TreeRowItem selectedItem,
 			TreeDataProvider<TreeRowItem> tagDataProvider) {
@@ -1359,45 +510,4 @@ public class VizMaxPanel extends VerticalLayout  {
 			return queryResult;
 	 }
 	
-	/*
-	 * private ArrayList<QueryResultRow> createQueryResultFromTreeGridData() {
-	 * ArrayList<QueryResultRow> queryResult = new ArrayList<QueryResultRow>();
-	 * List<TreeRowItem> rootElements =
-	 * selectedDataProvider.getTreeData().getRootItems(); if
-	 * (!rootElements.isEmpty()) { for (TreeRowItem root : rootElements) { //
-	 * List<TreeRowItem> children = new ArrayList<TreeRowItem>(); children =
-	 * selectedItemsTreeGridData.getChildren(root); if (!children.isEmpty()) { for
-	 * (TreeRowItem child : children) {
-	 * 
-	 * List<TreeRowItem> childrenTwo = selectedItemsTreeGridData.getChildren(child);
-	 * if(childrenTwo.isEmpty()) { // flat table items QueryResultRowArray qrrArray=
-	 * child.getRows(); QueryResultRow qrr = qrrArray.get(0); queryResult.add(qrr);
-	 * 
-	 * }else { for (TreeRowItem treeRowItem : childrenTwo) { List<TreeRowItem>
-	 * childrenThree = selectedItemsTreeGridData.getChildren(treeRowItem);
-	 * 
-	 * for (TreeRowItem treeRowItem2 : childrenThree) { QueryResultRowArray
-	 * queryResultRowArray = new QueryResultRowArray();
-	 * 
-	 * List<TreeRowItem> childrenFour =
-	 * selectedItemsTreeGridData.getChildren(treeRowItem2);
-	 * 
-	 * if (childrenFour.isEmpty()) { QueryResultRow result =
-	 * treeRowItem2.getRows().get(0); queryResultRowArray.add(result);
-	 * 
-	 * } else { for (TreeRowItem treeRowItem4 : childrenFour) { QueryResultRow
-	 * result = treeRowItem4.getRows().get(0); queryResultRowArray.add(result);
-	 * 
-	 * }
-	 * 
-	 * } queryResult.addAll(queryResultRowArray); } }
-	 * 
-	 * }
-	 * 
-	 * 
-	 * }
-	 * 
-	 * } } } else { } return queryResult; }
-	 */
-
 }
