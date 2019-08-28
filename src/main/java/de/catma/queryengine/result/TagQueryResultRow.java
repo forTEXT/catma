@@ -24,6 +24,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import de.catma.document.Range;
+import de.catma.queryengine.QueryId;
 
 public class TagQueryResultRow extends QueryResultRow {
 	
@@ -37,20 +38,20 @@ public class TagQueryResultRow extends QueryResultRow {
 	private String propertyName;
 	private String propertyValue;
 
-	public TagQueryResultRow(String sourceDocumentId, List<Range> ranges,
+	public TagQueryResultRow(QueryId queryId, String sourceDocumentId, List<Range> ranges,
 			String markupCollectionId, String tagDefinitionId, String tagDefinitionPath, String tagDefinitionVersion,
 			String tagInstanceId, String propertyDefinitionId, String propertyName, String propertyValue) {
-		this(sourceDocumentId, ranges, markupCollectionId, tagDefinitionId, tagDefinitionPath, tagDefinitionVersion, tagInstanceId);
+		this(queryId, sourceDocumentId, ranges, markupCollectionId, tagDefinitionId, tagDefinitionPath, tagDefinitionVersion, tagInstanceId);
 		
 		this.propertyDefinitionId = propertyDefinitionId;
 		this.propertyName = propertyName;
 		this.propertyValue = propertyValue;
 	}
 	
-	public TagQueryResultRow(String sourceDocumentId, List<Range> ranges,
+	public TagQueryResultRow(QueryId queryId, String sourceDocumentId, List<Range> ranges,
 			String markupCollectionId, String tagDefinitionId, String tagDefinitionPath, 
 			String tagDefinitionVersion, String tagInstanceId) {
-		super(sourceDocumentId, Range.getEnclosingRange(ranges));
+		super(queryId, sourceDocumentId, Range.getEnclosingRange(ranges));
 		this.markupCollectionId = markupCollectionId;
 		this.tagDefinitionId = tagDefinitionId;
 		this.tagDefinitionPath = tagDefinitionPath;

@@ -2,6 +2,7 @@ package de.catma.ui.client.ui.visualizer.vega.shared;
 
 public class SelectedQueryResultRow {
 	
+	private String queryId;
 	private String sourceDocumentId;
 	private int startOffset;
 	private int endOffset;
@@ -90,5 +91,11 @@ public class SelectedQueryResultRow {
 	}
 	public void setPropertyValue(String propertyValue) {
 		this.propertyValue = propertyValue;
+	}
+	public void setQueryId(String queryId) {
+		this.queryId = queryId;
+	}
+	public String getQueryId() {
+		return queryId;
 	}
 }

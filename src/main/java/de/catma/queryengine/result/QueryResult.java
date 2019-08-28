@@ -32,5 +32,5 @@ import java.util.function.Function;
 public interface QueryResult extends Iterable<QueryResultRow> {
 	public QueryResultRowArray asQueryResultRowArray();
 	public Set<GroupedQueryResult> asGroupedSet();
-	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, String> groupingKeyProvider);
+	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, Object> groupingKeyProvider);
 }

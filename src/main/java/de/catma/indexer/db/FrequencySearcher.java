@@ -34,6 +34,7 @@ import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
 import de.catma.queryengine.CompareOperator;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.repository.db.CatmaDataSourceName;
@@ -49,7 +50,7 @@ class FrequencySearcher {
 	}
 
 	public QueryResult search(
-			List<String> documentIdList, CompareOperator comp1, int freq1,
+			QueryId queryId, List<String> documentIdList, CompareOperator comp1, int freq1,
 			CompareOperator comp2, int freq2) {
 		
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
@@ -111,7 +112,7 @@ class FrequencySearcher {
 			LazyDBPhraseQueryResult qr = null;
 			String term = r.getValue(TERM.TERM_);
 			if (!phraseResultMapping.containsKey(term)) {
-				qr = new LazyDBPhraseQueryResult(term);
+				qr = new LazyDBPhraseQueryResult(queryId, term);
 				phraseResultMapping.put(term, qr);
 			}
 			else {

@@ -17,13 +17,12 @@ public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowI
 
 	private Repository project;
 
-	public AnnotatedDocumentQueryResultRowItem(String documentName, int freq, String documentId,
+	public AnnotatedDocumentQueryResultRowItem(String parentIdentity, String documentName, String documentId,
 			GroupedQueryResult groupedQueryResult, Repository project) {
-		super(documentName, freq, documentId, groupedQueryResult);
+		super(parentIdentity, documentName, documentId, groupedQueryResult);
 		this.project = project;
 	}
 
-	
 	@Override
 	public void addChildRowItems(TreeData<QueryResultRowItem> treeData,
 			LoadingCache<String, KwicProvider> kwicProviderCache) {
@@ -31,38 +30,48 @@ public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowI
 			HashMap<String, QueryResultRowArray> rowsByCollectionId = new HashMap<String, QueryResultRowArray>();
 	
 			for (QueryResultRow row : groupedQueryResult) {
-	
-				TagQueryResultRow tRow = (TagQueryResultRow) row;
-	
-				String collectionId = tRow.getMarkupCollectionId();
-			
-				QueryResultRowArray rows = null;
-				if (!rowsByCollectionId.containsKey(collectionId)) {
-					rows = new QueryResultRowArray();
-					rowsByCollectionId.put(collectionId, rows);
-					
-				} else {
-					rows = rowsByCollectionId.get(collectionId);
-				}
 				
-				rows.add(tRow);
+				if (row instanceof TagQueryResultRow) {
+					TagQueryResultRow tRow = (TagQueryResultRow) row;
+		
+					String collectionId = tRow.getMarkupCollectionId();
+					
+					QueryResultRowArray rows = null;
+					if (!rowsByCollectionId.containsKey(collectionId)) {
+						rows = new QueryResultRowArray();
+						rowsByCollectionId.put(collectionId, rows);
+						
+					} else {
+						rows = rowsByCollectionId.get(collectionId);
+					}
+					
+					rows.add(row);
+				}
 			}
 			
 			for (String collectionId : rowsByCollectionId.keySet()) {
 				SourceDocument document = kwicProviderCache.get(getDocumentId()).getSourceDocument();
-				String collectionName = document.getUserMarkupCollectionReference(collectionId).getName();
+				String collectionName = 
+					document.getUserMarkupCollectionReference(collectionId).getName();
 				QueryResultRowArray rows = rowsByCollectionId.get(collectionId);
-				CollectionQueryResultRowItem item = new CollectionQueryResultRowItem(
-						collectionName, rows.size(), getDocumentId(), collectionId, rows, project);
-				treeData.addItem(this, item);
-				treeData.addItem(item, new DummyQueryResultRowItem());
+				CollectionQueryResultRowItem item = 
+					new CollectionQueryResultRowItem(
+						identity,
+						collectionName,
+						getDocumentId(), collectionId, 
+						rows, project);
+				
+				if (!treeData.contains(item)) {
+					treeData.addItem(this, item);
+					treeData.addItem(item, new DummyQueryResultRowItem());
+				}
 			}
 		}
 		catch (Exception e) {
 			e.printStackTrace(); //TODO:
 		}
-		
-		
 	}
+	
+	
 	
 }

@@ -30,4 +30,10 @@ public interface GroupedQueryResult extends Iterable<QueryResultRow> {
 	public Set<String> getSourceDocumentIDs();
 
 	public GroupedQueryResult getSubResult(String... sourceDocumentID);
+
+	public void add(QueryResultRow row);
+
+	public boolean contains(QueryResultRow row);
+	
+	public boolean remove(QueryResultRow row);
 }

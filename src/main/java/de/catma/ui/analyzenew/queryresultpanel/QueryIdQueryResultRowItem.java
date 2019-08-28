@@ -5,30 +5,28 @@ import java.util.ArrayList;
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
 
-import de.catma.document.repository.Repository;
 import de.catma.indexer.KwicProvider;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
-import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.util.Cleaner;
 
-public class TagQueryResultRowItem implements QueryResultRowItem {
-
+public class QueryIdQueryResultRowItem implements QueryResultRowItem {
+	
+	private final QueryId queryId;
 	private final String identity;
 	private GroupedQueryResult groupedQueryResult;
 	private QueryResultRowArray rows;
-	private Repository project;
 
-	public TagQueryResultRowItem(GroupedQueryResult groupedQueryResult, Repository project) {
+	public QueryIdQueryResultRowItem(String parentIdentity, GroupedQueryResult groupedQueryResult) {
+		this.queryId = (QueryId)groupedQueryResult.getGroup();
+		this.identity = parentIdentity + queryId.toSerializedString();
 		this.groupedQueryResult = groupedQueryResult;
-		this.project = project;
-		this.identity = groupedQueryResult.getGroup().toString();
 	}
 
 	@Override
 	public String getKey() {
-		return Cleaner.clean(groupedQueryResult.getGroup().toString());
+		return queryId.getName();
 	}
 
 	@Override
@@ -55,8 +53,7 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 	public Integer getEndOffset() {
 		return null; //no endoffset on grouped entry
 	}
-
-
+	
 	@Override
 	public String getDetailedKeyInContext() {
 		return null; //no detaileKeyInContext on grouped entry
@@ -68,15 +65,15 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 	}
 
 	@Override
-	public void addChildRowItems(TreeData<QueryResultRowItem> treeData, LoadingCache<String, KwicProvider> kwicProviderCache) {
+	public void addChildRowItems(TreeData<QueryResultRowItem> treeData,
+			LoadingCache<String, KwicProvider> kwicProviderCache) {
 		try {
 			for (String documentId : groupedQueryResult.getSourceDocumentIDs()) {
 				String documentName = kwicProviderCache.get(documentId).getSourceDocumentName();
-				AnnotatedDocumentQueryResultRowItem item = new AnnotatedDocumentQueryResultRowItem(
-						identity,
-						documentName, documentId, 
-						groupedQueryResult.getSubResult(documentId), 
-						project);
+				DocumentQueryResultRowItem item = 
+						new DocumentQueryResultRowItem(
+							identity,
+							documentName, documentId, groupedQueryResult.getSubResult(documentId));
 				if (!treeData.contains(item)) {
 					treeData.addItem(this, item);
 					treeData.addItem(item, new DummyQueryResultRowItem());
@@ -85,6 +82,30 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 		}
 		catch (Exception e) {
 			e.printStackTrace(); //TODO:
+		}
+	}
+	
+	@Override
+	public void addQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData,
+			LoadingCache<String, KwicProvider> kwicProviderCache) {
+		if (this.queryId.equals(row.getQueryId())) {
+			groupedQueryResult.add(row);
+
+			if (rows != null) {
+				rows.add(row);
+			}
+			
+			// update existing
+			treeData.getChildren(this).forEach(child -> {
+				if (!child.isExpansionDummy()) {
+					child.addQueryResultRow(row, treeData, kwicProviderCache);
+				}
+			});
+			
+			if (!treeData.getChildren(this).get(0).isExpansionDummy()) {
+				// check for missing child row
+				addChildRowItems(treeData, kwicProviderCache);
+			}
 		}
 	}
 
@@ -102,9 +123,9 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 			return true;
 		if (obj == null)
 			return false;
-		if (!(obj instanceof TagQueryResultRowItem))
+		if (!(obj instanceof QueryIdQueryResultRowItem))
 			return false;
-		TagQueryResultRowItem other = (TagQueryResultRowItem) obj;
+		QueryIdQueryResultRowItem other = (QueryIdQueryResultRowItem) obj;
 		if (identity == null) {
 			if (other.identity != null)
 				return false;
@@ -112,32 +133,7 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 			return false;
 		return true;
 	}
-	
-	@Override
-	public void addQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData,
-			LoadingCache<String, KwicProvider> kwicProviderCache) {
-		
-		if (row instanceof TagQueryResultRow 
-				&& groupedQueryResult.getGroup().toString().equals(
-						((TagQueryResultRow)row).getTagDefinitionPath())) {
-			groupedQueryResult.add(row);
-			
-			//update existing rows
-			treeData.getChildren(this).forEach(child -> {
-				if (!child.isExpansionDummy()) {
-					child.addQueryResultRow(row, treeData, kwicProviderCache);
-				}
-			});
-			
-			if (rows != null) {
-				rows.add(row);
-				
-				// check for missing child row
-				addChildRowItems(treeData, kwicProviderCache);
-			}
-		}
-	}
-	
+
 	@Override
 	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData) {
 		if (groupedQueryResult.remove(row)) {
@@ -156,4 +152,5 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 			});			
 		}
 	}	
+	
 }

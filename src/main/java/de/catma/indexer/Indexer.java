@@ -28,6 +28,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.queryengine.CompareOperator;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinitionPathInfo;
@@ -56,6 +57,7 @@ public interface Indexer {
 
 	
 	/**
+	 * @param queryId the ID of the Query
 	 * @param documentIdList a list of SourceDocument {@link SourceDocument#getID() IDs}
 	 * @param phrase the phrase to search for
 	 * @param termList the terms of that phrase in writing order
@@ -64,21 +66,27 @@ public interface Indexer {
 	 * @throws Exception 
 	 */
 	public QueryResult searchPhrase(
+			QueryId queryId, 
 			List<String> documentIdList, 
 			String phrase, List<String> termList, int limit) throws Exception;
 	
-	public QueryResult searchWildcardPhrase(List<String> documentIdList,
+	public QueryResult searchWildcardPhrase(
+			QueryId queryId, 
+			List<String> documentIdList,
 			List<String> termList, int limit) throws Exception;
 	
 	public QueryResult searchTagDefinitionPath(
+			QueryId queryId, 
 			List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws Exception;
 	
 	public QueryResult searchProperty(
+			QueryId queryId, 
 			List<String> userMarkupCollectionIdList,
 			String propertyName, String propertyValue, String tagValue) throws Exception;
 	
 	public QueryResult searchFreqency(
+			QueryId queryId, 
 			List<String> documentIdList, 
 			CompareOperator comp1, int freq1, 
 			CompareOperator comp2, int freq2) throws IOException;
@@ -87,6 +95,7 @@ public interface Indexer {
 	            int spanContextSize, SpanDirection direction) throws IOException;
 	    	
 	public QueryResult searchCollocation(
+			QueryId queryId, 
 			QueryResult baseResult, QueryResult collocationConditionResult,
 			int spanContextSize, SpanDirection direction) throws IOException;
 	
@@ -101,7 +110,7 @@ public interface Indexer {
 	public List<TagDefinitionPathInfo> getTagDefinitionPathInfos(
 			List<String> userMarkupCollectionIDs) throws IOException;
 
-	public QueryResult searchTagDiff(List<String> relevantUserMarkupCollIDs,
+	public QueryResult searchTagDiff(QueryId queryId, List<String> relevantUserMarkupCollIDs,
 			String propertyName, String tagPhrase) throws IOException;
 
 

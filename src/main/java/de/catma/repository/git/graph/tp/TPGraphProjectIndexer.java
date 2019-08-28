@@ -50,6 +50,7 @@ import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.TermInfo;
 import de.catma.indexer.wildcard2regex.SQLWildcard2RegexConverter;
 import de.catma.queryengine.CompareOperator;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -108,13 +109,13 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchPhrase(List<String> documentIdList, String phrase, List<String> termList, int limit)
+	public QueryResult searchPhrase(QueryId queryId, List<String> documentIdList, String phrase, List<String> termList, int limit)
 			throws Exception {
 
-		return searchPhrase(documentIdList, phrase, termList, limit, (term1, term2) -> term1.equals(term2));
+		return searchPhrase(queryId, documentIdList, phrase, termList, limit, (term1, term2) -> term1.equals(term2));
 	}
 
-	private QueryResult searchPhrase(List<String> documentIdList, String phrase, List<String> termList, int limit,
+	private QueryResult searchPhrase(QueryId queryId, List<String> documentIdList, String phrase, List<String> termList, int limit,
 			BiPredicate<String, String> termTestFunction) {
 		
 		GraphTraversalSource g = graph.traversal();
@@ -144,6 +145,7 @@ public class TPGraphProjectIndexer implements Indexer {
 			.by("documentId").by("startOffset").by("endOffset")
 			.map(resultMap -> 
 				new QueryResultRow(
+					queryId,
 					(String)resultMap.get().get("doc"),
 					new Range(
 						(Integer)resultMap.get().get("startPos"), 
@@ -155,10 +157,11 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchWildcardPhrase(List<String> documentIdList, List<String> termList, int limit)
+	public QueryResult searchWildcardPhrase(QueryId queryId, List<String> documentIdList, List<String> termList, int limit)
 			throws Exception {
 		
 		return searchPhrase(
+			queryId,
 			documentIdList, 
 			"", // phrase is added later in the processing
 			termList, 
@@ -167,7 +170,7 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchTagDefinitionPath(List<String> collectionIdList, String tagPath)
+	public QueryResult searchTagDefinitionPath(QueryId queryId, List<String> collectionIdList, String tagPath)
 			throws Exception {
 		QueryResultRowArray result = new QueryResultRowArray();
 		
@@ -236,6 +239,7 @@ public class TPGraphProjectIndexer implements Indexer {
 				}
 				result.add(
 					new TagQueryResultRow(
+						queryId,
 						(String)entry.get("doc"), 
 						rangeList, 
 						(String)entry.get("collection"), 
@@ -250,7 +254,7 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchProperty(List<String> collectionIdList, String propertyNamePattern,
+	public QueryResult searchProperty(QueryId queryId, List<String> collectionIdList, String propertyNamePattern,
 			String propertyValuePattern, String tagPathPattern) throws Exception {
 		
 		PropertyNameFilter propertyNameFilter = new PropertyNameFilter(propertyNamePattern);
@@ -364,6 +368,7 @@ public class TPGraphProjectIndexer implements Indexer {
 			}
 			// try to add rows for matching system properties
 			addTagQueryResultRowForSystemProperty(
+				queryId,
 				result, 
 				PropertyDefinition.SystemPropertyName.catma_markupauthor, 
 				annoAuthor,
@@ -376,6 +381,7 @@ public class TPGraphProjectIndexer implements Indexer {
 				tagInstanceId,
 				rangeList);
 			addTagQueryResultRowForSystemProperty(
+				queryId,
 				result, 
 				PropertyDefinition.SystemPropertyName.catma_markuptimestamp, 
 				annoTimestamp,
@@ -388,6 +394,7 @@ public class TPGraphProjectIndexer implements Indexer {
 				tagInstanceId,
 				rangeList);		
 			addTagQueryResultRowForSystemProperty(
+				queryId,
 				result, 
 				PropertyDefinition.SystemPropertyName.catma_displaycolor, 
 				color,
@@ -413,6 +420,7 @@ public class TPGraphProjectIndexer implements Indexer {
 						if (propertyValueFilter.testValue(propValue)) {
 							result.add(
 								new TagQueryResultRow(
+									queryId,
 									documentId, 
 									rangeList, 
 									collectionId, 
@@ -434,6 +442,7 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	private void addTagQueryResultRowForSystemProperty(
+			QueryId queryId, 
 			QueryResultRowArray result, 
 			SystemPropertyName systemPropertyName, String value, 
 			PropertyNameFilter propertyNameFilter, PropertyValueFilter propertyValueFilter,
@@ -445,6 +454,7 @@ public class TPGraphProjectIndexer implements Indexer {
 				&& propertyValueFilter.testValue(value)) {
 			result.add(
 				new TagQueryResultRow(
+					queryId,
 					documentId, 
 					rangeList, 
 					collectionId, 
@@ -459,7 +469,7 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchFreqency(List<String> documentIdList, CompareOperator comp1, int freq1,
+	public QueryResult searchFreqency(QueryId queryId, List<String> documentIdList, CompareOperator comp1, int freq1,
 			CompareOperator comp2, int freq2) throws IOException {
 		GraphTraversalSource g = graph.traversal();
 
@@ -475,6 +485,7 @@ public class TPGraphProjectIndexer implements Indexer {
 			.by("documentId").by("literal").by("startOffset").by("endOffset")
 			.map(resultMap -> 
 				new QueryResultRow(
+					queryId,
 					(String)resultMap.get().get("doc"),
 					new Range(
 						(Integer)resultMap.get().get("startPos"), 
@@ -492,7 +503,7 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchCollocation(QueryResult baseResult, QueryResult collocationConditionResult,
+	public QueryResult searchCollocation(QueryId queryId, QueryResult baseResult, QueryResult collocationConditionResult,
 			int spanContextSize, SpanDirection direction) throws IOException {
 		// TODO Auto-generated method stub
 		return null;
@@ -530,7 +541,7 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchTagDiff(List<String> relevantUserMarkupCollIDs, String propertyName, String tagPhrase)
+	public QueryResult searchTagDiff(QueryId queryId, List<String> relevantUserMarkupCollIDs, String propertyName, String tagPhrase)
 			throws IOException {
 		// TODO Auto-generated method stub
 		return null;

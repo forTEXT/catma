@@ -96,7 +96,7 @@ public class GroupedQueryResultSet implements QueryResult {
 	}
 	
 	@Override
-	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, String> groupingKeyProvider) {
+	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, Object> groupingKeyProvider) {
 		return asQueryResultRowArray().asGroupedSet(groupingKeyProvider);
 	}
 	

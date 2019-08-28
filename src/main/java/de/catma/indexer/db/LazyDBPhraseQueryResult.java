@@ -26,19 +26,23 @@ import java.util.Map;
 import java.util.Set;
 
 import de.catma.indexer.db.model.Term;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
+@Deprecated
 class LazyDBPhraseQueryResult implements GroupedQueryResult {
 	
 	private Map<String, Term> termsByDocument;
 	private String term;
 	private QueryResultRowArray queryResultRowArray;
 	private Map<String,Integer> freqByDocument;
+	private QueryId queryId;
 
-	public LazyDBPhraseQueryResult(String term) {
+	public LazyDBPhraseQueryResult(QueryId queryId, String term) {
+		this.queryId = queryId;
 		this.term = term;
 		termsByDocument = new HashMap<String, Term>();
 	}
@@ -57,6 +61,7 @@ class LazyDBPhraseQueryResult implements GroupedQueryResult {
 		for (String sourceDocumentID : getSourceDocumentIDs()) {
 			QueryResultRowArray positions =
 					phraseSearcher.getPositionsForTerm(
+							queryId,
 							term, 
 							sourceDocumentID);
 			queryResultRowArray.addAll(positions);
@@ -120,9 +125,27 @@ class LazyDBPhraseQueryResult implements GroupedQueryResult {
 		PhraseResult subResult = new PhraseResult(term);
 		for (QueryResultRow row : this) {
 			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
-				subResult.addQueryResultRow(row);
+				subResult.add(row);
 			}
 		}
 		return subResult;
+	}
+	
+	@Override
+	public void add(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public boolean contains(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	@Override
+	public boolean remove(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

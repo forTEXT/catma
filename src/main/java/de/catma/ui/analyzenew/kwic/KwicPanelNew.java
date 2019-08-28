@@ -1,17 +1,16 @@
 package de.catma.ui.analyzenew.kwic;
 
-import de.catma.ui.layout.VerticalFlexLayout;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutionException;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
+
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
@@ -23,8 +22,7 @@ import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 
 
-public class KwicPanelNew extends VerticalFlexLayout implements Visualisation {
-
+public class KwicPanelNew extends VerticalLayout implements Visualisation {
 
 	private Repository repository;
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
@@ -85,15 +83,15 @@ public class KwicPanelNew extends VerticalFlexLayout implements Visualisation {
 		kwicGrid.addColumn(KwicItem::getShortenTagDefinitionPath).setCaption("Tag").setId("tagID");
 		kwicGrid.getColumn("tagID").setDescriptionGenerator(e -> e.getTagDefinitionPath(), ContentMode.HTML);
 
-		kwicGrid.addStyleNames("analyze_kwic_grid");
-		
 		kwicGrid.setItems(kwicItemList);
 
 		kwicGridComponent = new ActionGridComponent<>(new Label("key word in context visualization"), kwicGrid);
 		addComponent(kwicGridComponent);
 	}
 
-	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {	
+	public void addQueryResultRows(Iterable<QueryResultRow> queryResult)  {	
+		
+		//TODO:
 		/*
 		 * if (kwicGrid.getColumn("propValueID") != null) {
 		 * kwicGrid.removeColumn("propValueID"); kwicGrid.removeColumn("propNameID"); }
@@ -101,19 +99,23 @@ public class KwicPanelNew extends VerticalFlexLayout implements Visualisation {
 		
 		showPropertyColumns = false;
 		//boolean markupBased = true;
-
-		for (QueryResultRow row : queryResult) {
+		try {
+			for (QueryResultRow row : queryResult) {
+				
+				KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
+				
+				KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
 			
-			KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
-			
-			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
-		
-			itemDirCache.put(row, kwic.isRightToLeft());
-			KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
-			
-			if(!kwicItemList.contains(kwicItem)) {
-				kwicItemList.add(kwicItem);	
-			}	
+				itemDirCache.put(row, kwic.isRightToLeft());
+				KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
+				
+				if(!kwicItemList.contains(kwicItem)) {
+					kwicItemList.add(kwicItem);	
+				}	
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 		if (showPropertyColumns && (kwicGrid.getColumn("propNameID")==null)){
 			kwicGrid.addColumn(KwicItem::getPropertyName).setCaption("Property Name").setId("propNameID");
@@ -160,23 +162,28 @@ public class KwicPanelNew extends VerticalFlexLayout implements Visualisation {
 		}
 	}
 	
-	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
-		
-		for (QueryResultRow row : queryResult) {
+	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {
+		//TODO:
+		try {
+			for (QueryResultRow row : queryResult) {
+					
+				KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
 				
-			KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
+				KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
 			
-			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
-		
-			itemDirCache.put(row, kwic.isRightToLeft());
-			KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
-			
-			if(kwicItemList.contains(kwicItem)) {
-				kwicItemList.remove(kwicItem);
+				itemDirCache.put(row, kwic.isRightToLeft());
+				KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
 				
+				if(kwicItemList.contains(kwicItem)) {
+					kwicItemList.remove(kwicItem);
+					
+				}
+		
 			}
-	
-	}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 		kwicGrid.getDataProvider().refreshAll();
 	}
 	

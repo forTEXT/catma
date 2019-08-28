@@ -63,19 +63,19 @@ public class QueryResultRowArray extends ArrayList<QueryResultRow> implements Qu
 		return size();
 	}
 
-	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, String> groupingKeyProvider) {
-		HashMap<String, PhraseResult> phraseResultMapping = 
-				new HashMap<String, PhraseResult>();
+	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, Object> groupingKeyProvider) {
+		HashMap<Object, PhraseResult> phraseResultMapping = 
+				new HashMap<>();
 		
 		for (QueryResultRow row : this) {
-			String key = groupingKeyProvider.apply(row); 
+			Object key = groupingKeyProvider.apply(row); 
 
 			if (!phraseResultMapping.containsKey(key)) {
 				phraseResultMapping.put(
 					key, new PhraseResult(key));
 			}
 			
-			phraseResultMapping.get(key).addQueryResultRow(row);
+			phraseResultMapping.get(key).add(row);
 		}
 		
 		Set<GroupedQueryResult> groupedQueryResults = 

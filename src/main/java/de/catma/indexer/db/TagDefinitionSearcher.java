@@ -49,6 +49,7 @@ import org.jooq.impl.DSL;
 import com.google.common.base.Function;
 
 import de.catma.document.Range;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -104,13 +105,13 @@ public class TagDefinitionSearcher {
 	}
 
 	public QueryResult search(
-			List<String> userMarkupCollectionIdList, String tagDefinitionPath) {
-		return searchInUserMarkupCollection(userMarkupCollectionIdList, tagDefinitionPath);
+			QueryId queryId, List<String> userMarkupCollectionIdList, String tagDefinitionPath) {
+		return searchInUserMarkupCollection(queryId, userMarkupCollectionIdList, tagDefinitionPath);
 	}
 	
 
 	private QueryResult searchInUserMarkupCollection(
-			List<String> userMarkupCollectionIdList, 
+			QueryId queryId, List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) {
 		
 		if (!tagDefinitionPath.startsWith("/")) {
@@ -130,12 +131,12 @@ public class TagDefinitionSearcher {
 						.in(userMarkupCollectionIdList))
 				.fetch());
 		
-		return createTagQueryResult(recordsGroupedByInstanceUUID, tagDefinitionPath, false);
+		return createTagQueryResult(queryId, recordsGroupedByInstanceUUID, tagDefinitionPath, false);
 		
 	}
 
 	private QueryResult createTagQueryResult(
-			Map<String, List<Record>> recordsGroupedByInstanceUUID, 
+			QueryId queryId, Map<String, List<Record>> recordsGroupedByInstanceUUID, 
 			String resultGroupKey, boolean keepProperties) {
 		TagQueryResult result = new TagQueryResult(resultGroupKey);
 		
@@ -160,6 +161,7 @@ public class TagDefinitionSearcher {
 			if (keepProperties) {
 				result.add(
 					new TagQueryResultRow(
+						queryId,
 						masterRecord.getValue(TAGREFERENCE.DOCUMENTID),
 						mergedRanges, 
 						masterRecord.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),
@@ -178,6 +180,7 @@ public class TagDefinitionSearcher {
 			else {
 				result.add(
 					new TagQueryResultRow(
+						queryId,
 						masterRecord.getValue(TAGREFERENCE.DOCUMENTID),
 						mergedRanges, 
 						masterRecord.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),
@@ -195,6 +198,7 @@ public class TagDefinitionSearcher {
 
 	
 	public QueryResult searchTagDiff(
+			QueryId queryId,
 			List<String> userMarkupCollectionIdList, 
 			String propertyName, String tagDefinitionPath) {
 		
@@ -290,12 +294,14 @@ public class TagDefinitionSearcher {
 		}
 		
 		return createTagQueryResult(
+			queryId,
 			allRecordsGroupedByInstanceUUID, 
 			propertyName, true);
 	}
 	
 	
 	public QueryResult searchProperties(
+			QueryId queryId,
 			List<String> userMarkupCollectionIdList, 
 			String propertyName,
 			String propertyValue, String tagDefinitionPath) {
@@ -334,6 +340,7 @@ public class TagDefinitionSearcher {
 					selectQuery.fetch());
 		
 		return createTagQueryResult(
+			queryId,
 			recordsGroupedByInstanceUUID, 
 			propertyName + 
 					(((propertyValue==null)||propertyValue.isEmpty())?"":

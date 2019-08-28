@@ -34,12 +34,16 @@ public class QueryOptions {
 	private Locale locale;
 	private IndexedRepository repository;
 	private int limit = 0;
+	private QueryId queryId;
 	
-	public QueryOptions(List<String> relevantSourceDocumentIDs,
+	public QueryOptions(
+			QueryId queryId, 
+			List<String> relevantSourceDocumentIDs,
 			List<String> relevantUserMarkupCollIDs,
 			List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale,
 			IndexedRepository repository) {
+		this.queryId = queryId;
 		this.relevantSourceDocumentIDs = relevantSourceDocumentIDs;
 		this.relevantUserMarkupCollIDs = relevantUserMarkupCollIDs;
 		this.unseparableCharacterSequences = unseparableCharacterSequences;
@@ -82,5 +86,9 @@ public class QueryOptions {
 	
 	public void setLimit(int limit) {
 		this.limit = limit;
+	}
+	
+	public QueryId getQueryId() {
+		return queryId;
 	}
 }

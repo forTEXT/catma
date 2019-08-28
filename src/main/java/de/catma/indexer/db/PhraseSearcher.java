@@ -34,6 +34,7 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
 import de.catma.document.Range;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -65,7 +66,7 @@ class PhraseSearcher {
 	 * @return a query result
 	 * @throws IOException failure
 	 */
-	public QueryResult search(List<String> documentIdList,
+	public QueryResult search(QueryId queryId, List<String> documentIdList,
 			String phrase, List<String> termList, int limit) throws IOException {
 		
 		if (documentIdList.isEmpty()) {
@@ -81,6 +82,7 @@ class PhraseSearcher {
 				if  (limit >= 0) {
 					queryResult.addAll(
 						searchPhrase(
+							queryId,
 							documentId, phrase, termList, false, limit));
 				}
 			}
@@ -89,6 +91,7 @@ class PhraseSearcher {
 			for (String documentId : documentIdList) {
 				queryResult.addAll(
 					searchPhrase(
+						queryId,
 						documentId, phrase, termList, false, limit));
 			}
 		}
@@ -106,7 +109,7 @@ class PhraseSearcher {
 	 * @return  a query result 
 	 * @throws IOException failure
 	 */
-	private QueryResultRowArray searchPhrase(String documentId,
+	private QueryResultRowArray searchPhrase(QueryId queryId, String documentId,
 			String phrase, List<String> termList, boolean withWildcards, int limit) throws IOException {
 
 		QueryResultRowArray result = new QueryResultRowArray();
@@ -156,6 +159,7 @@ class PhraseSearcher {
 						// yes, ok then add to query result
 						result.add(
 							new QueryResultRow(
+								queryId,
 								documentId,
 								new Range(
 									(Integer)r.getValue(
@@ -170,6 +174,7 @@ class PhraseSearcher {
 				else {
 					result.add(
 						new QueryResultRow(
+							queryId,
 							documentId, 
 							new Range(
 								(Integer)r.getValue(
@@ -259,6 +264,7 @@ class PhraseSearcher {
 	 * @return a list of positions for the given term in the given document
 	 */
 	public QueryResultRowArray getPositionsForTerm(
+			QueryId queryId, 
 			String term, String documentId) {
 		
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
@@ -272,7 +278,7 @@ class PhraseSearcher {
 				.on(TERM.TERMID.eq(POSITION.TERMID))
 				.and(TERM.DOCUMENTID.eq(documentId))
 				.and(TERM.TERM_.eq(term))
-			.fetch().map(new QueryResultRowMapper(documentId)));		
+			.fetch().map(new QueryResultRowMapper(queryId, documentId)));		
 				
 		return result;
 	}
@@ -285,13 +291,13 @@ class PhraseSearcher {
 	 * @return a query result
 	 * @throws IOException failure
 	 */
-	public QueryResult searchWildcard(List<String> documentIdList,
+	public QueryResult searchWildcard(QueryId queryId, List<String> documentIdList,
 			List<String> termList, int limit) throws IOException {
 		
 		QueryResultRowArray queryResult = null;
 		
 		if ((documentIdList==null) || documentIdList.isEmpty()) {
-			queryResult = searchPhrase(null, null, termList, true, limit);
+			queryResult = searchPhrase(queryId, null, null, termList, true, limit);
 		}
 		else {
 			queryResult = new QueryResultRowArray();
@@ -302,6 +308,7 @@ class PhraseSearcher {
 					if  (limit >= 0) {
 						queryResult.addAll(
 							searchPhrase(
+								queryId,
 								documentId, null, 
 								termList, true, limit));
 					}
@@ -311,6 +318,7 @@ class PhraseSearcher {
 				for (String documentId : documentIdList) {
 					queryResult.addAll(
 						searchPhrase(
+							queryId,
 							documentId, null, 
 							termList, true, limit));
 				}

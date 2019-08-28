@@ -78,7 +78,9 @@ public class CollocQuery extends Query {
     	QueryResult collocCondition = query2.execute();
     	
     	Indexer indexer = getQueryOptions().getIndexer();
-    	return indexer.searchCollocation(baseResult, collocCondition, spanContextSize, direction);
+    	return indexer.searchCollocation(
+    			getQueryOptions().getQueryId(), 
+    			baseResult, collocCondition, spanContextSize, direction);
     }
 
     @Override

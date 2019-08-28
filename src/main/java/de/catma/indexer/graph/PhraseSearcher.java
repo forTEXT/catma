@@ -26,6 +26,7 @@ import de.catma.indexer.SQLWildcardMatcher;
 import de.catma.indexer.TermMatcher;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.indexer.indexbuffer.SourceDocumentIndexBuffer;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -223,12 +224,12 @@ public class PhraseSearcher {
 				IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
 	}
 
-	public QueryResult search(List<String> documentIdList, String phrase,
+	public QueryResult search(QueryId queryId, List<String> documentIdList, String phrase,
 			List<String> termList, int limit) throws IOException {
-		return search(documentIdList, phrase, termList, limit, false);
+		return search(queryId, documentIdList, phrase, termList, limit, false);
 	}
 	
-	private QueryResult search(List<String> documentIdList, String phrase,
+	private QueryResult search(QueryId queryId, List<String> documentIdList, String phrase,
 			List<String> termList, int limit, boolean withWildcards) throws IOException {
 		
 		ArrayList<SourceDocumentIndexBuffer> sourceDocumentIndexBuffers = new ArrayList<>();
@@ -283,7 +284,7 @@ public class PhraseSearcher {
 						int end = (Integer) p.endNode().getProperty(PositionProperty.end.name());
 						Range range = new Range(start, end);
 						
-						searchResult.add(new QueryResultRow(localUri, range, phrase));
+						searchResult.add(new QueryResultRow(queryId, localUri, range, phrase));
 						
 						if ((limit != 0) && (limit==searchResult.size())) {
 							break;
@@ -299,6 +300,7 @@ public class PhraseSearcher {
 				int curSize = searchResult.size();
 				for (QueryResultRow row : 
 					buffer.search(
+							queryId,
 							phrase, 
 							termList, 
 							(limit==0)?0:limit-curSize, withWildcards)) {
@@ -312,9 +314,9 @@ public class PhraseSearcher {
 
 
 
-	public QueryResult searchWildcard(List<String> documentIdList,
+	public QueryResult searchWildcard(QueryId queryId, List<String> documentIdList,
 			List<String> termList, int limit) throws IOException {
-		return search(documentIdList, null, termList, limit, true);
+		return search(queryId, documentIdList, null, termList, limit, true);
 	}
 
 }

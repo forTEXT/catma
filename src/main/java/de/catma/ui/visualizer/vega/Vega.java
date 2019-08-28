@@ -10,6 +10,7 @@ import com.vaadin.shared.Registration;
 import com.vaadin.ui.AbstractComponent;
 
 import de.catma.document.Range;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -75,6 +76,7 @@ public class Vega extends AbstractComponent {
 					if (row.getAnnotationId() != null) {
 						result.add(
 							new TagQueryResultRow(
+									QueryId.fromString(row.getQueryId()),
 									row.getSourceDocumentId(), 
 									Lists.newArrayList(new Range(row.getStartOffset(), row.getEndOffset())),
 									row.getAnnotationCollectionId(),
@@ -89,6 +91,7 @@ public class Vega extends AbstractComponent {
 					else {
 						result.add(
 							new QueryResultRow(
+									QueryId.fromString(row.getQueryId()),
 									row.getSourceDocumentId(), 
 									new Range(row.getStartOffset(), row.getEndOffset()), 
 									row.getPhrase()));

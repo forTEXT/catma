@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+@Deprecated
 public class AccumulativeGroupedQueryResult implements GroupedQueryResult {
 	
 	private Set<QueryResultRow> rows;
@@ -99,10 +100,27 @@ public class AccumulativeGroupedQueryResult implements GroupedQueryResult {
 		PhraseResult subResult = new PhraseResult(group);
 		for (QueryResultRow row : this) {
 			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
-				subResult.addQueryResultRow(row);
+				subResult.add(row);
 			}
 		}
 		return subResult;
 	}
+	
+	@Override
+	public void add(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public boolean contains(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
+	@Override
+	public boolean remove(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

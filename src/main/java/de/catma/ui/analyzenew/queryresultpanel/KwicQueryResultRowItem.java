@@ -10,11 +10,12 @@ import de.catma.queryengine.result.TagQueryResultRow;
 
 public class KwicQueryResultRowItem implements QueryResultRowItem {
 
-	private QueryResultRow row;
+	private final QueryResultRow row;
 	private String kwic;
 	private String detailedKwic;
 	private String documentName;
 	private String collectionName;
+	private boolean removed = false;
 
 	public KwicQueryResultRowItem(QueryResultRow row, String kwic, String detailedKwic) {
 		this.row = row;
@@ -42,7 +43,9 @@ public class KwicQueryResultRowItem implements QueryResultRowItem {
 	@Override
 	public QueryResultRowArray getRows() {
 		QueryResultRowArray array = new QueryResultRowArray();
-		array.add(row);
+		if (!removed) {
+			array.add(row);
+		}
 		return array;
 	}
 
@@ -104,5 +107,44 @@ public class KwicQueryResultRowItem implements QueryResultRowItem {
 			return ((TagQueryResultRow) row).getTagDefinitionPath();
 		}
 		return QueryResultRowItem.super.getTagPath();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((row == null) ? 0 : row.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		KwicQueryResultRowItem other = (KwicQueryResultRowItem) obj;
+		if (row == null) {
+			if (other.row != null)
+				return false;
+		} else if (!row.equals(other.row))
+			return false;
+		return true;
+	}
+	
+	@Override
+	public void addQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData,
+			LoadingCache<String, KwicProvider> kwicProviderCache) {
+		// noop
+	}
+	
+	@Override
+	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData) {
+		if ((this.row != null) && this.row.equals(row)) {
+			this.removed = true;
+		}
+		
 	}
 }

@@ -47,7 +47,7 @@ public class VegaConnector extends AbstractComponentConnector {
 					JavaScriptObject row = rows.get(i);
 					
 					SelectedQueryResultRow selectedQueryResultRow = new SelectedQueryResultRow();
-					
+					selectedQueryResultRow.setQueryId(getWidget().getQueryId(row));
 					selectedQueryResultRow.setSourceDocumentId(getWidget().getSourceDocumentId(row));
 					selectedQueryResultRow.setStartOffset(getWidget().getStartOffset(row));
 					selectedQueryResultRow.setEndOffset(getWidget().getEndOffset(row));

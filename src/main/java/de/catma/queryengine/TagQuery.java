@@ -71,6 +71,7 @@ public class TagQuery extends Query {
         
         QueryResult result = 
 				indexer.searchTagDefinitionPath(
+						queryOptions.getQueryId(),
 						relevantUserMarkupCollIDs,
 						tagPhrase);
         

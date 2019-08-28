@@ -28,19 +28,23 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 
+@Deprecated
 class LazyGraphDBPhraseQueryResult implements GroupedQueryResult {
 	
 	private String term;
 	private QueryResult queryResult;
 	private Map<String,Integer> freqByDocument;
 	private Integer sum;
+	private QueryId queryId;
 
-	public LazyGraphDBPhraseQueryResult(String term) {
+	public LazyGraphDBPhraseQueryResult(QueryId queryId, String term) {
+		this.queryId = queryId;
 		this.term = term;
 		freqByDocument = new HashMap<String, Integer>();
 	}
@@ -60,6 +64,7 @@ class LazyGraphDBPhraseQueryResult implements GroupedQueryResult {
 	private void loadQueryResultRows() throws IOException {
 		PhraseSearcher phraseSearcher = new PhraseSearcher();
 		queryResult = phraseSearcher.search(
+			queryId,
 			new ArrayList<>(getSourceDocumentIDs()), 
 			term, 
 			Collections.singletonList(term), 
@@ -100,9 +105,27 @@ class LazyGraphDBPhraseQueryResult implements GroupedQueryResult {
 		PhraseResult subResult = new PhraseResult(term);
 		for (QueryResultRow row : this) {
 			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
-				subResult.addQueryResultRow(row);
+				subResult.add(row);
 			}
 		}
 		return subResult;
+	}
+	
+	@Override
+	public void add(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public boolean contains(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	@Override
+	public boolean remove(QueryResultRow row) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

@@ -4,6 +4,7 @@ import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
 
 import de.catma.indexer.KwicProvider;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
 public class DummyQueryResultRowItem implements QueryResultRowItem {
@@ -46,5 +47,16 @@ public class DummyQueryResultRowItem implements QueryResultRowItem {
 	@Override
 	public void addChildRowItems(TreeData<QueryResultRowItem> treeData, LoadingCache<String, KwicProvider> kwicProviderCache) {
 		// no children to add
+	}
+	
+	@Override
+	public void addQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData,
+			LoadingCache<String, KwicProvider> kwicProviderCache) {
+		// noop
+	}
+	
+	@Override
+	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData) {
+		// noop
 	}
 }

@@ -74,6 +74,7 @@ public class FreqQuery extends Query {
     protected QueryResult execute() throws Exception {
     	QueryOptions options = getQueryOptions();
     	return options.getIndexer().searchFreqency(
+    			options.getQueryId(),
     			options.getRelevantSourceDocumentIDs(), operator1, freq1, operator2, freq2);
     }
     

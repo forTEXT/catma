@@ -89,4 +89,8 @@ public class VegaWidget extends FocusWidget {
 	public native final String getPropertyValue(JavaScriptObject row) /*-{
 		return row.propertyValue;
 	}-*/;
+
+	public native final String getQueryId(JavaScriptObject row) /*-{
+		return row.queryId;
+	}-*/;
 }

@@ -1,5 +1,7 @@
 package de.catma.ui.analyzenew.queryresultpanel;
 
+import java.util.ArrayList;
+
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
 
@@ -12,18 +14,19 @@ import de.catma.ui.util.Cleaner;
 
 public class DocumentQueryResultRowItem implements QueryResultRowItem {
 
+	protected final String identity;
 	private String documentName;
-	private int freq;
 	private String documentId;
 	protected GroupedQueryResult groupedQueryResult;
 	private QueryResultRowArray rows;
 	
 	public DocumentQueryResultRowItem(
-			String documentName, int freq, String documentId, GroupedQueryResult groupedQueryResult) {
+			String parentKey, String documentName, String documentId, GroupedQueryResult groupedQueryResult) {
 		this.documentName = documentName;
-		this.freq = freq;
 		this.documentId = documentId;
 		this.groupedQueryResult = groupedQueryResult;
+		this.identity = parentKey + documentId;
+		
 	}
 	
 	protected String getDocumentId() {
@@ -37,7 +40,7 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 
 	@Override
 	public int getFrequency() {
-		return freq;
+		return groupedQueryResult.getTotalFrequency();
 	}
 
 	@Override
@@ -73,13 +76,15 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 	public void addChildRowItems(TreeData<QueryResultRowItem> treeData, LoadingCache<String, KwicProvider> kwicProviderCache) {
 		try {
 			for (QueryResultRow row : getRows()) {
-				treeData.addItem(
-					this, new KwicQueryResultRowItem(
+				KwicQueryResultRowItem item = new KwicQueryResultRowItem(
 						row, 
 						AnnotatedTextProvider.buildKeywordInContext(
 							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())),
 						AnnotatedTextProvider.buildKeywordInContextLarge(
-							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()))));
+							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())));
+				if (!treeData.contains(item)) {
+					treeData.addItem(this, item);
+				}
 			}
 		}
 		catch (Exception e) {
@@ -87,4 +92,72 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 		}
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((identity == null) ? 0 : identity.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof DocumentQueryResultRowItem))
+			return false;
+		DocumentQueryResultRowItem other = (DocumentQueryResultRowItem) obj;
+		if (identity == null) {
+			if (other.identity != null)
+				return false;
+		} else if (!identity.equals(other.identity))
+			return false;
+		return true;
+	}
+	
+	@Override
+	public void addQueryResultRow(
+			QueryResultRow row, TreeData<QueryResultRowItem> treeData, 
+			LoadingCache<String, KwicProvider> kwicProviderCache) {
+		
+		if (this.documentId.equals(row.getSourceDocumentId())) {
+			groupedQueryResult.add(row);
+
+			if (rows != null) {
+				rows.add(row);
+			}
+			// update existing
+			treeData.getChildren(this).forEach(child -> {
+				if (!child.isExpansionDummy()) {
+					child.addQueryResultRow(row, treeData, kwicProviderCache);
+				}
+			});
+			
+			if (!treeData.getChildren(this).get(0).isExpansionDummy()) {
+				// check for missing child row
+				addChildRowItems(treeData, kwicProviderCache);
+			}
+		}
+	}
+	
+	@Override
+	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData) {
+		if (groupedQueryResult.remove(row)) {
+			if (rows != null) {
+				rows.remove(row);
+			}
+
+			//update existing rows
+			new ArrayList<>(treeData.getChildren(this)).forEach(child -> {
+				if (!child.isExpansionDummy()) {
+					child.removeQueryResultRow(row, treeData);
+					if (child.getRows().isEmpty()) {
+						treeData.removeItem(child);
+					}
+				}
+			});			
+		}
+	}
 }

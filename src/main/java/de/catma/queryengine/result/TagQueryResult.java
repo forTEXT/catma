@@ -63,7 +63,7 @@ public class TagQueryResult implements GroupedQueryResult, QueryResult {
 	}
 	
 	@Override
-	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, String> groupingKeyProvider) {
+	public Set<GroupedQueryResult> asGroupedSet(Function<QueryResultRow, Object> groupingKeyProvider) {
 		return rows.asGroupedSet(groupingKeyProvider);
 	}
 	
@@ -82,10 +82,24 @@ public class TagQueryResult implements GroupedQueryResult, QueryResult {
 		PhraseResult subResult = new PhraseResult(group);
 		for (QueryResultRow row : this) {
 			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
-				subResult.addQueryResultRow(row);
+				subResult.add(row);
 			}
 		}
 		return subResult;
 	}
 
+	@Override
+	public void add(QueryResultRow row) {
+		rows.add(row);
+	}
+	
+	@Override
+	public boolean contains(QueryResultRow row) {
+		return rows.contains(row);
+	}
+	
+	@Override
+	public boolean remove(QueryResultRow row) {
+		return rows.remove(row);
+	}
 }

@@ -37,6 +37,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.db.TagDefinitionSearcher;
 import de.catma.indexer.db.TagReferenceIndexer;
 import de.catma.queryengine.CompareOperator;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinitionPathInfo;
@@ -97,54 +98,57 @@ public class GraphDBIndexer implements Indexer {
 				userMarkupCollection);
 	}
 	
-	public QueryResult searchPhrase(List<String> documentIdList,
+	public QueryResult searchPhrase(QueryId queryId, List<String> documentIdList,
 			String phrase, List<String> termList, int limit) throws IOException {
 		try {
 			PhraseSearcher phraseSearcher = new PhraseSearcher();
 			
-			return phraseSearcher.search(documentIdList, phrase, termList, limit);
+			return phraseSearcher.search(queryId, documentIdList, phrase, termList, limit);
 		}
 		catch(Exception e) {
 			throw new IOException(e);
 		}
 	}
 	
-	public QueryResult searchWildcardPhrase(List<String> documentIdList,
+	public QueryResult searchWildcardPhrase(QueryId queryId, List<String> documentIdList,
 			List<String> termList, int limit) throws IOException {
 		try {
 			PhraseSearcher phraseSearcher = new PhraseSearcher();
 			
-			return phraseSearcher.searchWildcard(documentIdList, termList, limit);
+			return phraseSearcher.searchWildcard(queryId, documentIdList, termList, limit);
 		}
 		catch(Exception e) {
 			throw new IOException(e);
 		}
 	}
 
-	public QueryResult searchTagDefinitionPath(List<String> userMarkupCollectionIdList, 
+	public QueryResult searchTagDefinitionPath(QueryId queryId, List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws IOException {
 		
 		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
 	
-		return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
+		return tagSearcher.search(queryId, userMarkupCollectionIdList, tagDefinitionPath);
 	}
 	
 	public QueryResult searchProperty(
+			QueryId queryId, 
 			List<String> userMarkupCollectionIdList,
 			String propertyName, String propertyValue, String tagValue) throws IOException {
 
 		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
 		return tagSearcher.searchProperties(
+				queryId,
 				userMarkupCollectionIdList, 
 				propertyName, propertyValue, tagValue);
 	}
 
 	public QueryResult searchFreqency(
+			QueryId queryId, 
 			List<String> documentIdList, 
 			CompareOperator comp1, int freq1,
 			CompareOperator comp2, int freq2) throws IOException {
 		FrequencySearcher freqSearcher = new FrequencySearcher();
-		return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
+		return freqSearcher.search(queryId, documentIdList, comp1, freq1, comp2, freq2);
 	}
 
 	public SpanContext getSpanContextFor(
@@ -157,7 +161,7 @@ public class GraphDBIndexer implements Indexer {
 				sourceDocumentId, range, spanContextSize, direction);
 	}
 	
-	public QueryResult searchCollocation(QueryResult baseResult,
+	public QueryResult searchCollocation(QueryId queryId, QueryResult baseResult,
 			QueryResult collocationConditionResult, int spanContextSize,
 			SpanDirection direction) throws IOException {
 		try {
@@ -208,11 +212,12 @@ public class GraphDBIndexer implements Indexer {
 	}
 	
 	@Override
-	public QueryResult searchTagDiff(List<String> relevantUserMarkupCollIDs,
+	public QueryResult searchTagDiff(QueryId queryId, List<String> relevantUserMarkupCollIDs,
 			String propertyName, String tagPhrase) throws IOException {
 
 		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
 		return tagSearcher.searchTagDiff(
+				queryId,
 				relevantUserMarkupCollIDs, 
 				propertyName, tagPhrase);
 	}

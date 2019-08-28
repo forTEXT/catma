@@ -13,6 +13,7 @@ import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -59,13 +60,13 @@ public class SourceDocumentIndexBuffer {
 		return result;
 	}
 	
-	public QueryResult search(String phrase,
+	public QueryResult search(QueryId queryId, String phrase,
 			List<String> termList, int limit, boolean withWildcards) throws IOException {
 		QueryResultRowArray result = new QueryResultRowArray();
 		if (!withWildcards) {
 			for (String term : termList) {
 				for (TermInfo ti : termInfos.get(term)) {
-					result.add(new QueryResultRow(sourceDocumentId, ti.getRange(), term));
+					result.add(new QueryResultRow(queryId, sourceDocumentId, ti.getRange(), term));
 					if ((limit > 0) && (result.size() == limit)) {
 						return result;
 					}
@@ -81,6 +82,7 @@ public class SourceDocumentIndexBuffer {
 						for (TermInfo ti : entry.getValue()) {
 							result.add(
 								new QueryResultRow(
+										queryId,
 										sourceDocumentId, ti.getRange(), ti.getTerm()));
 							if ((limit > 0) && (result.size() == limit)) {
 								return result;

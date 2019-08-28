@@ -51,6 +51,10 @@ public class QueryResultPanel extends VerticalLayout {
 		public void itemSelected(QueryResultRowItem item);
 	}
 	
+	public static interface ItemRemovedListener {
+		public void itemRemoved(QueryResultRowItem item);
+	}
+	
 	private ContextMenu optionsMenu;
 
 	private Label queryInfo;
@@ -90,35 +94,51 @@ public class QueryResultPanel extends VerticalLayout {
 
 	private ItemSelectionListener itemSelectionListener;
 
+	private ItemRemovedListener itemRemovedListener;
+
+	private boolean includeQueryId;
+	private boolean resetOnDisplaySettingSwitch = false;
+
 	public QueryResultPanel(Repository project, QueryResult result, String query, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
 			ItemSelectionListener itemSelectionListener) {
-		this(project, result, query, kwicProviderCache, null, displaySetting, itemSelectionListener, false);
+		this(project, result, query, kwicProviderCache, null, displaySetting, 
+				itemSelectionListener, null, false, false);
+	}
+
+	public QueryResultPanel(
+			Repository project,
+			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
+			ItemRemovedListener itemRemovedListener) {
+		this(project, new QueryResultRowArray(), ""/*no query*/, kwicProviderCache, 
+				null, displaySetting, null, itemRemovedListener, false, true);
 	}
 	
 	public QueryResultPanel(Repository project, QueryResult result, String query, 
 			LoadingCache<String, KwicProvider> kwicProviderCache,
 			CloseListener resultPanelCloseListener) {
 		this(project, result, query, kwicProviderCache, resultPanelCloseListener, 
-				DisplaySetting.GROUPED_BY_PHRASE, null, true);
+				DisplaySetting.GROUPED_BY_PHRASE, null, null, true, false);
 	}
 	
-	public QueryResultPanel(Repository project, QueryResult result, String query, 
+	protected QueryResultPanel(Repository project, QueryResult result, String query, 
 			LoadingCache<String, KwicProvider> kwicProviderCache,
 			CloseListener resultPanelCloseListener, DisplaySetting displaySetting,
-			ItemSelectionListener itemSelectionListener,
-			boolean cardStyle) {
+			ItemSelectionListener itemSelectionListener, ItemRemovedListener itemRemovedListener,
+			boolean cardStyle, boolean includeQueryId) {
 
 		this.project = project;
 		this.queryResult = result;
 		this.query = query;
 		this.kwicProviderCache= kwicProviderCache;
 		this.itemSelectionListener = itemSelectionListener;
+		this.itemRemovedListener = itemRemovedListener;
 		this.cardStyle = cardStyle;
+		this.includeQueryId = includeQueryId;
 
 		initComponents();
 		initActions(resultPanelCloseListener);
-		displaySetting.initQueryResultPanel(this);
+		displaySetting.init(this);
 	}
 
 	void initPhraseBasedData() {
@@ -139,10 +159,15 @@ public class QueryResultPanel extends VerticalLayout {
 			.setRenderer(new HtmlRenderer())
 			.setWidth(400);
 
-		queryResultGrid
+		Column<QueryResultRowItem, Integer> freqColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getFrequency)
-			.setCaption("Frequency")
-			.setExpandRatio(1);
+			.setCaption("Frequency");
+		if ((itemSelectionListener == null) && (itemRemovedListener==null)) {
+			freqColumn.setExpandRatio(1);
+		}
+		else {
+			freqColumn.setWidth(100);
+		}
 		
 		if (itemSelectionListener != null) {
 			ButtonRenderer<QueryResultRowItem> selectItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
@@ -153,8 +178,20 @@ public class QueryResultPanel extends VerticalLayout {
 			.addColumn((item) -> VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml())
 			.setCaption("Select")
 			.setRenderer(selectItemsRenderer)
-			.setWidth(70);			
+			.setExpandRatio(1);		
 		}
+
+		if (itemRemovedListener != null) {
+			ButtonRenderer<QueryResultRowItem> removeItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
+					rendererClickEvent -> itemRemovedListener.itemRemoved(rendererClickEvent.getItem()));
+			removeItemsRenderer.setHtmlContentAllowed(true);
+
+			queryResultGrid
+			.addColumn((item) -> VaadinIcons.ERASER.getHtml())
+			.setCaption("Remove")
+			.setRenderer(removeItemsRenderer)
+			.setExpandRatio(1);		
+		}		
 		
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getPhraseBasedTreeData());
@@ -165,17 +202,11 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 	
 	private TreeData<QueryResultRowItem> getPhraseBasedTreeData() {
-		if (phraseBasedTreeData == null) {
+		if (phraseBasedTreeData == null || resetOnDisplaySettingSwitch) {
 			phraseBasedTreeData = new TreeData<QueryResultRowItem>();
 			
-			Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
-			
-			for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
-				PhraseQueryResultRowItem phraseQueryResultRowItem = 
-						new PhraseQueryResultRowItem(groupedQueryResult);
-				phraseBasedTreeData.addItem(null, phraseQueryResultRowItem);
-				phraseBasedTreeData.addItem(phraseQueryResultRowItem, new DummyQueryResultRowItem());
-			}
+			addPhraseBasedRootItems(queryResult);
+			resetOnDisplaySettingSwitch = false;
 		}
 		return phraseBasedTreeData;
 	}
@@ -374,67 +405,11 @@ public class QueryResultPanel extends VerticalLayout {
 	
 	private TreeData<QueryResultRowItem> getPropertiesAsColumnsTagBasedTreeData() {
 		
-		if (propertiesAsColumnsTagBasedTreeData == null) {
+		if (propertiesAsColumnsTagBasedTreeData == null || resetOnDisplaySettingSwitch) {
 			propertiesAsColumnsTagBasedTreeData = new TreeData<QueryResultRowItem>();
-			try {
-				
-				HashMap<String, QueryResultRowArray> rowsGroupedByTagInstance = 
-						new HashMap<String, QueryResultRowArray>();
-				
-				propertyNames = new TreeSet<String>();
-				for (QueryResultRow row : queryResult) {
-					
-					if (row instanceof TagQueryResultRow) {
-						TagQueryResultRow tRow = (TagQueryResultRow) row;
-						QueryResultRowArray rows = 
-								rowsGroupedByTagInstance.get(tRow.getTagInstanceId());
-						
-						if (rows == null) {
-							rows = new QueryResultRowArray();
-							rowsGroupedByTagInstance.put(tRow.getTagInstanceId(), rows);
-						}
-						rows.add(tRow);
-						propertyNames.add(tRow.getPropertyName());
-					}
-				}
-				
-				
-				for (Map.Entry<String, QueryResultRowArray> entry : rowsGroupedByTagInstance.entrySet()) {
-					
-					QueryResultRowArray rows = entry.getValue();
-					TagQueryResultRow masterRow = (TagQueryResultRow) rows.get(0);
-					
-					KwicProvider kwicProvider = 
-							kwicProviderCache.get(masterRow.getSourceDocumentId());
-					TagDefinition tagDefinition = 
-							project.getTagManager().getTagLibrary().getTagDefinition(
-									masterRow.getTagDefinitionId());
-					
-					propertiesAsColumnsTagBasedTreeData.addItem(
-							null, 
-							new KwicPropertiesAsColumnsQueryResultRowItem(
-								rows, 
-								AnnotatedTextProvider.buildAnnotatedText(
-										new ArrayList<>(masterRow.getRanges()), 
-										kwicProvider, 
-										tagDefinition),
-								AnnotatedTextProvider.buildAnnotatedKeywordInContext(
-										new ArrayList<>(masterRow.getRanges()), 
-										kwicProvider, 
-										tagDefinition, 
-										masterRow.getTagDefinitionPath()),
-								kwicProvider.getSourceDocumentName(),
-								kwicProvider
-									.getSourceDocument()
-									.getUserMarkupCollectionReference(masterRow.getMarkupCollectionId())
-									.getName()
-							)
-						);
-				}				
-			}
-			catch (Exception e) {
-				e.printStackTrace(); //TODO:
-			}			
+			propertyNames = new TreeSet<String>();
+			addPropertiesAsColumnsTagBasedRootItems(queryResult);
+			resetOnDisplaySettingSwitch = false;
 		}
 		
 		return propertiesAsColumnsTagBasedTreeData;
@@ -442,66 +417,21 @@ public class QueryResultPanel extends VerticalLayout {
 	
 	
 	private TreeData<QueryResultRowItem> getFlatTagBasedTreeData() {
-		if (flatTagBasedTreeData == null) {
+		if (flatTagBasedTreeData == null || resetOnDisplaySettingSwitch) {
 			flatTagBasedTreeData = new TreeData<QueryResultRowItem>();
-			try {
-				for (QueryResultRow row : queryResult) {
-					if (row instanceof TagQueryResultRow) {
-						TagQueryResultRow tRow = (TagQueryResultRow)row;
-						
-						KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
-						TagDefinition tagDefinition = 
-							project.getTagManager().getTagLibrary().getTagDefinition(tRow.getTagDefinitionId());
-							
-						flatTagBasedTreeData.addItem(
-							null, new KwicQueryResultRowItem(
-								tRow, 
-								AnnotatedTextProvider.buildAnnotatedText(
-										new ArrayList<>(tRow.getRanges()), 
-										kwicProvider, 
-										tagDefinition),
-								AnnotatedTextProvider.buildAnnotatedKeywordInContext(
-										new ArrayList<>(tRow.getRanges()), 
-										kwicProvider, 
-										tagDefinition, 
-										tRow.getTagDefinitionPath()),
-								kwicProvider.getSourceDocumentName(),
-								kwicProvider
-									.getSourceDocument()
-									.getUserMarkupCollectionReference(tRow.getMarkupCollectionId())
-									.getName()
-							)
-						);
-					}
-				}
-			}
-			catch (Exception e) {
-				e.printStackTrace(); //TODO:
-			}
+			addFlatTagBasedRootItems(queryResult);
+			resetOnDisplaySettingSwitch = false;
 		}
 		return flatTagBasedTreeData;
 	}
 
 	private TreeData<QueryResultRowItem> getTagBasedTreeData() {
-		if (tagBasedTreeData == null) {
+		if (tagBasedTreeData == null ||  resetOnDisplaySettingSwitch) {
 			resultContainsProperties = false;
 			tagBasedTreeData = new TreeData<QueryResultRowItem>();
-			Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet(row -> {
-				if (row instanceof TagQueryResultRow) {
-					if (((TagQueryResultRow) row).getPropertyDefinitionId() != null) {
-						resultContainsProperties = true;
-					}
-					return ((TagQueryResultRow) row).getTagDefinitionPath();
-				}
-				return "no Tag available / not annotated";
-			});
 			
-			for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
-				TagQueryResultRowItem tagQueryResultRowItem = 
-						new TagQueryResultRowItem(groupedQueryResult, project);
-				tagBasedTreeData.addItem(null, tagQueryResultRowItem);
-				tagBasedTreeData.addItem(tagQueryResultRowItem, new DummyQueryResultRowItem());
-			}
+			addTagBasedRootItems(queryResult);
+			resetOnDisplaySettingSwitch = false;
 		}
 		
 		return tagBasedTreeData;
@@ -553,7 +483,7 @@ public class QueryResultPanel extends VerticalLayout {
 	private void createResultInfoBar() {
 		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
 		int resultSize = resultRowArrayArrayList.size(); //TODO: analyze during loop
-		//TODO: use java.util.time
+		//TODO: use QueryId
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		creationTime = timestamp.toString().substring(0, 19);
 		queryInfo = new Label(query + "(" + resultSize + ")"+" created: "+creationTime);
@@ -643,4 +573,179 @@ public class QueryResultPanel extends VerticalLayout {
 	public String getQueryAsString() {
 		return this.query+ "("+ creationTime+")";
 	}
+
+	public void addQueryResultRows(QueryResultRowArray rows) {
+		@SuppressWarnings("unchecked")
+		final TreeDataProvider<QueryResultRowItem> dataProvider = 
+				((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider());
+		rows.forEach(row -> {
+			if (!((QueryResultRowArray)queryResult).contains(row)) {
+				((QueryResultRowArray)queryResult).add(row);
+				resetOnDisplaySettingSwitch = true;
+				
+				// update existing items
+				dataProvider.getTreeData().getRootItems().forEach(
+					item -> item.addQueryResultRow(row, dataProvider.getTreeData(), kwicProviderCache));
+			}
+		});
+		// add new root items
+		displaySetting.addQueryResultRootItems(this, rows);
+		dataProvider.refreshAll();
+	}
+
+	void addPhraseBasedRootItems(QueryResult result) {
+		Set<GroupedQueryResult> groupedQueryResults = result.asGroupedSet();
+
+		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
+			
+			PhraseQueryResultRowItem phraseQueryResultRowItem = 
+					new PhraseQueryResultRowItem(includeQueryId, groupedQueryResult);
+			if (!phraseBasedTreeData.contains(phraseQueryResultRowItem)) {
+				phraseBasedTreeData.addItem(null, phraseQueryResultRowItem);
+				phraseBasedTreeData.addItem(phraseQueryResultRowItem, new DummyQueryResultRowItem());
+			}
+		}
+	}
+
+	void addTagBasedRootItems(QueryResult result) {
+		Set<GroupedQueryResult> groupedQueryResults = result.asGroupedSet(row -> {
+			if (row instanceof TagQueryResultRow) {
+				if (((TagQueryResultRow) row).getPropertyDefinitionId() != null) {
+					resultContainsProperties = true;
+				}
+				return ((TagQueryResultRow) row).getTagDefinitionPath();
+			}
+			return "no Tag available / not annotated";
+		});
+		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
+			TagQueryResultRowItem tagQueryResultRowItem = 
+					new TagQueryResultRowItem(groupedQueryResult, project);
+			if (!tagBasedTreeData.contains(tagQueryResultRowItem)) {
+				tagBasedTreeData.addItem(null, tagQueryResultRowItem);
+				tagBasedTreeData.addItem(tagQueryResultRowItem, new DummyQueryResultRowItem());
+			}
+		}
+	}
+	
+	void addFlatTagBasedRootItems(QueryResult result) {
+		try {
+			for (QueryResultRow row : result) {
+				if (row instanceof TagQueryResultRow) {
+					TagQueryResultRow tRow = (TagQueryResultRow)row;
+					
+					KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
+					TagDefinition tagDefinition = 
+						project.getTagManager().getTagLibrary().getTagDefinition(tRow.getTagDefinitionId());
+					KwicQueryResultRowItem item =
+						new KwicQueryResultRowItem(
+							tRow, 
+							AnnotatedTextProvider.buildAnnotatedText(
+									new ArrayList<>(tRow.getRanges()), 
+									kwicProvider, 
+									tagDefinition),
+							AnnotatedTextProvider.buildAnnotatedKeywordInContext(
+									new ArrayList<>(tRow.getRanges()), 
+									kwicProvider, 
+									tagDefinition, 
+									tRow.getTagDefinitionPath()),
+							kwicProvider.getSourceDocumentName(),
+							kwicProvider
+								.getSourceDocument()
+								.getUserMarkupCollectionReference(tRow.getMarkupCollectionId())
+								.getName()
+						);
+					flatTagBasedTreeData.addItem(null, item);
+				}
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace(); //TODO:
+		}
+	}
+
+	void addPropertiesAsColumnsTagBasedRootItems(QueryResult result) {
+		try {
+			
+			HashMap<String, QueryResultRowArray> rowsGroupedByTagInstance = 
+					new HashMap<String, QueryResultRowArray>();
+			for (QueryResultRow row : result) {
+				
+				if (row instanceof TagQueryResultRow) {
+					TagQueryResultRow tRow = (TagQueryResultRow) row;
+					QueryResultRowArray rows = 
+							rowsGroupedByTagInstance.get(tRow.getTagInstanceId());
+					
+					if (rows == null) {
+						rows = new QueryResultRowArray();
+						rowsGroupedByTagInstance.put(tRow.getTagInstanceId(), rows);
+					}
+					rows.add(tRow);
+					if (tRow.getPropertyName() != null) {
+						propertyNames.add(tRow.getPropertyName());
+					}
+				}
+			}
+			
+			
+			for (Map.Entry<String, QueryResultRowArray> entry : rowsGroupedByTagInstance.entrySet()) {
+				
+				QueryResultRowArray rows = entry.getValue();
+				TagQueryResultRow masterRow = (TagQueryResultRow) rows.get(0);
+				
+				KwicProvider kwicProvider = 
+						kwicProviderCache.get(masterRow.getSourceDocumentId());
+				TagDefinition tagDefinition = 
+						project.getTagManager().getTagLibrary().getTagDefinition(
+								masterRow.getTagDefinitionId());
+				KwicPropertiesAsColumnsQueryResultRowItem item = 
+					new KwicPropertiesAsColumnsQueryResultRowItem(
+						rows, 
+						AnnotatedTextProvider.buildAnnotatedText(
+								new ArrayList<>(masterRow.getRanges()), 
+								kwicProvider, 
+								tagDefinition),
+						AnnotatedTextProvider.buildAnnotatedKeywordInContext(
+								new ArrayList<>(masterRow.getRanges()), 
+								kwicProvider, 
+								tagDefinition, 
+								masterRow.getTagDefinitionPath()),
+						kwicProvider.getSourceDocumentName(),
+						kwicProvider
+							.getSourceDocument()
+							.getUserMarkupCollectionReference(masterRow.getMarkupCollectionId())
+							.getName()
+					);
+				propertiesAsColumnsTagBasedTreeData.addItem(null, item);
+			}				
+		}
+		catch (Exception e) {
+			e.printStackTrace(); //TODO:
+		}			
+	}
+
+	public void removeQueryResultRows(QueryResultRowArray rows) {
+		if (((QueryResultRowArray)queryResult).removeAll(rows)) {
+			resetOnDisplaySettingSwitch = true;
+		}
+
+		@SuppressWarnings("unchecked")
+		final TreeDataProvider<QueryResultRowItem> dataProvider = 
+				((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider());
+		
+		new ArrayList<>(rows).forEach(row -> {
+			// update existing items
+			dataProvider.getTreeData().getRootItems().forEach(
+				item -> item.removeQueryResultRow(row, dataProvider.getTreeData()));
+		});
+		
+		new ArrayList<>(dataProvider.getTreeData().getRootItems()).forEach(item -> {
+			if (item.getRows().isEmpty()) {
+				dataProvider.getTreeData().removeItem(item);
+			}
+		});
+
+		dataProvider.refreshAll();
+	}
+
+	
 }

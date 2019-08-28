@@ -4,6 +4,7 @@ import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
 
 import de.catma.indexer.KwicProvider;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
 public interface QueryResultRowItem {
@@ -16,6 +17,10 @@ public interface QueryResultRowItem {
 	public boolean isExpansionDummy();
 	public void addChildRowItems(
 			TreeData<QueryResultRowItem> treeData, LoadingCache<String, KwicProvider> kwicProviderCache);
+	public void addQueryResultRow(
+		QueryResultRow row, 
+		TreeData<QueryResultRowItem> treeData, 
+		LoadingCache<String, KwicProvider> kwicProviderCache);
 
 	// used when result contains properties and user drills down to Kwic leafs
 	public default String getPropertyName() { return null; }
@@ -27,5 +32,6 @@ public interface QueryResultRowItem {
 	public default String getTagPath() { return null; }
 	
 	// used for 'properties as columns' display
-	public default String getPropertyValue(String propertyName) { return null; };
+	public default String getPropertyValue(String propertyName) { return null; }
+	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData);
 }

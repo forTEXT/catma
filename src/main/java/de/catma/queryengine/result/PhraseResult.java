@@ -72,15 +72,15 @@ public class PhraseResult implements GroupedQueryResult {
 		}
 	}
 
-	private String phrase;
+	private Object group;
 	private Map<String, List<QueryResultRow>> sourceDocumentResults;
 	
-	public PhraseResult(String phrase) {
-		this.phrase = phrase;
+	public PhraseResult(Object group) {
+		this.group = group;
 		sourceDocumentResults = new HashMap<String, List<QueryResultRow>>();
 	}
 	
-	public void addQueryResultRow(QueryResultRow row) {
+	public void add(QueryResultRow row) {
 		if (!sourceDocumentResults.containsKey(row.getSourceDocumentId())) {
 			sourceDocumentResults.put(
 				row.getSourceDocumentId(), new ArrayList<QueryResultRow>());
@@ -90,11 +90,11 @@ public class PhraseResult implements GroupedQueryResult {
 	}
 	
 	public String getPhrase() {
-		return getGroup();
+		return getGroup().toString();
 	}
 	
-	public String getGroup() {
-		return phrase;
+	public Object getGroup() {
+		return group;
 	}
 	
 	public int getTotalFrequency() {
@@ -124,7 +124,7 @@ public class PhraseResult implements GroupedQueryResult {
 
 	@Override
 	public String toString() {
-		return "PhraseResult [phrase=" + phrase + ", sourceDocumentResults="
+		return "PhraseResult [phrase=" + getPhrase() + ", sourceDocumentResults="
 				+ Arrays.toString(sourceDocumentResults.keySet().toArray()) + "]";
 	}
 	
@@ -133,13 +133,29 @@ public class PhraseResult implements GroupedQueryResult {
 		Set<String> filterSourceDocumentIds = new HashSet<String>(); 
 		filterSourceDocumentIds.addAll(Arrays.asList(sourceDocumentID));
 		
-		PhraseResult subResult = new PhraseResult(phrase);
+		PhraseResult subResult = new PhraseResult(group);
 		for (QueryResultRow row : this) {
 			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
-				subResult.addQueryResultRow(row);
+				subResult.add(row);
 			}
 		}
 		return subResult;
 	}
 	
+	@Override
+	public boolean contains(QueryResultRow row) {
+		if (sourceDocumentResults.containsKey(row.getSourceDocumentId())) {
+			return sourceDocumentResults.get(row.getSourceDocumentId()).contains(row);
+		}
+		return false;
+	}
+	
+	@Override
+	public boolean remove(QueryResultRow row) {
+		if (sourceDocumentResults.containsKey(row.getSourceDocumentId())) {
+			return sourceDocumentResults.get(row.getSourceDocumentId()).remove(row);
+		}
+
+		return false;
+	}
 }

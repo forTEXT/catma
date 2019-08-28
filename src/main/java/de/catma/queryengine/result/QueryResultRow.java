@@ -21,22 +21,25 @@ package de.catma.queryengine.result;
 import java.util.Comparator;
 
 import de.catma.document.Range;
+import de.catma.queryengine.QueryId;
 
 public class QueryResultRow {
 
+	private QueryId queryId;
 	private String sourceDocumentId;
 	private Range range;
 	private String phrase;
 
-	public QueryResultRow(String sourceDocumentId, Range range, String phrase) {
+	public QueryResultRow(QueryId queryId, String sourceDocumentId, Range range, String phrase) {
 		super();
+		this.queryId = queryId;
 		this.sourceDocumentId = sourceDocumentId;
 		this.range = range;
 		this.phrase = phrase;
 	}
 	
-	public QueryResultRow(String sourceDocumentId, Range range) {
-		this(sourceDocumentId, range, null);
+	public QueryResultRow(QueryId queryId, String sourceDocumentId, Range range) {
+		this(queryId, sourceDocumentId, range, null);
 	}
 
 	public String getSourceDocumentId() {
@@ -114,5 +117,9 @@ public class QueryResultRow {
 
         return false;
     }
+    
+    public QueryId getQueryId() {
+		return queryId;
+	}
 	
 }

@@ -67,6 +67,7 @@ import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryJob.QueryException;
 import de.catma.queryengine.QueryOptions;
@@ -374,6 +375,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 
 	private void showQueryBuilder() {
 		QueryOptions queryOptions = new QueryOptions(
+				new QueryId("N/A"),
 				relevantSourceDocumentIDs,
 				relevantUserMarkupCollIDs,
 				indexInfoSet.getUnseparableCharacterSequences(),
@@ -416,6 +418,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private void executeSearch() {
 
 		QueryOptions queryOptions = new QueryOptions(
+				new QueryId(searchInput.getValue().toString()),
 				relevantSourceDocumentIDs,
 				relevantUserMarkupCollIDs,
 				indexInfoSet.getUnseparableCharacterSequences(),
@@ -565,6 +568,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			@Override
 			public QueryOptions getQueryOptions() {
 				return new QueryOptions(
+						new QueryId("N/A"),
 						relevantSourceDocumentIDs,
 						relevantUserMarkupCollIDs,
 						indexInfoSet.getUnseparableCharacterSequences(),
@@ -582,6 +586,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			@Override
 			public QueryOptions getQueryOptions() {
 				return new QueryOptions(
+						new QueryId("N/A"),
 						relevantSourceDocumentIDs,
 						relevantUserMarkupCollIDs,
 						indexInfoSet.getUnseparableCharacterSequences(),

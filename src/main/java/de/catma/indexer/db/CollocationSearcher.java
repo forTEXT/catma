@@ -41,6 +41,7 @@ import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.indexer.db.model.Position;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -166,7 +167,7 @@ class CollocationSearcher {
 	//TODO: this is way too slow, huge union query solutions are a bit faster but 
 	// vulnerable if the size of the union query grows. 
 	// Maybe parallelization of the baserow-for-loop could help, needs more investigation
-	public QueryResult search(QueryResult baseResult,
+	public QueryResult search(QueryId queryId, QueryResult baseResult,
 				QueryResult collocationConditionResult, int spanContextSize,
 				SpanDirection direction) throws IOException {
 		

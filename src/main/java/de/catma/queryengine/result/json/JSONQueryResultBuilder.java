@@ -35,6 +35,7 @@ public class JSONQueryResultBuilder {
 	}
 	
 	public enum Field {
+		queryId,
 		sourceDocumentId,
 		sourceDocumentSize,
 		startOffset,
@@ -49,7 +50,7 @@ public class JSONQueryResultBuilder {
 		propertyName,
 		propertyValue, 
 		sourceDocumentTitle, 
-		tagColor,
+		tagColor, 
 	}
 	
 	public ArrayNode createJSONQueryResult(final QueryResult queryResult, final Repository project) throws IOException {
@@ -135,6 +136,7 @@ public class JSONQueryResultBuilder {
 	
 
 	private void addQueryResultRowFields(ObjectNode rowNode, QueryResultRow row) {
+		rowNode.put(Field.queryId.name(), row.getQueryId().toSerializedString());
 		rowNode.put(Field.sourceDocumentId.name(), row.getSourceDocumentId());
 		rowNode.put(Field.phrase.name(), row.getPhrase());
 	}

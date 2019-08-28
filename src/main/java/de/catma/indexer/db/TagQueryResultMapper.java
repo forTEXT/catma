@@ -8,6 +8,7 @@ import org.jooq.Record;
 import org.jooq.RecordMapper;
 
 import de.catma.document.Range;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.util.IDGenerator;
 
@@ -15,14 +16,17 @@ public class TagQueryResultMapper implements RecordMapper<Record, TagQueryResult
 
 	private IDGenerator idGenerator;
 	private List<Range> ranges;
+	private QueryId queryId;
 	
-	public TagQueryResultMapper(List<Range> ranges) {
+	public TagQueryResultMapper(QueryId queryId, List<Range> ranges) {
 		this.idGenerator = new IDGenerator();
+		this.queryId = queryId;
 		this.ranges = ranges;
 	}
 	
 	public TagQueryResultRow map(Record record) {
 		return new TagQueryResultRow(
+				queryId,
 				record.getValue(TAGREFERENCE.DOCUMENTID),
 				ranges, 
 				record.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),

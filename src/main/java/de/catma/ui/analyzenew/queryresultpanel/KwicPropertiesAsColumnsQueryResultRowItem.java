@@ -1,5 +1,6 @@
 package de.catma.ui.analyzenew.queryresultpanel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 
 public class KwicPropertiesAsColumnsQueryResultRowItem implements QueryResultRowItem {
 
-	private QueryResultRow masterRow;
+	private final QueryResultRow masterRow;
 	private String kwic;
 	private String detailedKwic;
 	private String documentName;
@@ -30,6 +31,10 @@ public class KwicPropertiesAsColumnsQueryResultRowItem implements QueryResultRow
 		this.detailedKwic = detailedKwic;
 		this.documentName = documentName;
 		this.collectionName = collectionName;
+		initPropertyValueByName();
+	}
+
+	private void initPropertyValueByName() {
 		this.propertyValueByName = new HashMap<String, String>();
 		for (QueryResultRow row : rows) {
 			if (row instanceof TagQueryResultRow) {
@@ -104,5 +109,48 @@ public class KwicPropertiesAsColumnsQueryResultRowItem implements QueryResultRow
 	@Override
 	public String getPropertyValue(String propertyName) {
 		return propertyValueByName.get(propertyName);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((masterRow == null) ? 0 : masterRow.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof KwicPropertiesAsColumnsQueryResultRowItem))
+			return false;
+		KwicPropertiesAsColumnsQueryResultRowItem other = (KwicPropertiesAsColumnsQueryResultRowItem) obj;
+		if (masterRow == null) {
+			if (other.masterRow != null)
+				return false;
+		} else if (!masterRow.equals(other.masterRow))
+			return false;
+		return true;
+	}
+	
+	@Override
+	public void addQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData,
+			LoadingCache<String, KwicProvider> kwicProviderCache) {
+
+		if (row instanceof TagQueryResultRow) {
+			TagQueryResultRow tRow = (TagQueryResultRow) row;
+			if (tRow.getTagInstanceId().equals(((TagQueryResultRow) masterRow).getTagInstanceId())) {
+				rows.add(tRow);
+				initPropertyValueByName();
+			}
+		}
+	}
+	
+	@Override
+	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData) {
+		rows.remove(row);
 	}
 }

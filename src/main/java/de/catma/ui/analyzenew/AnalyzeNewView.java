@@ -43,6 +43,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.KwicProvider;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryJob.QueryException;
 import de.catma.queryengine.QueryOptions;
@@ -76,7 +77,6 @@ public class AnalyzeNewView extends HorizontalLayout
 	private List<String> relevantSourceDocumentIDs;
 	private List<String> relevantUserMarkupCollIDs;
 	private List<String> predefQueries;
-	private IndexInfoSet indexInfoSet;
 	private Button btExecuteSearch;
 	private Button btQueryBuilder;
 	private Button kwicBt;
@@ -92,7 +92,7 @@ public class AnalyzeNewView extends HorizontalLayout
 
 	private AnalyzeResourcePanel analyzeResourcePanel;
 	private SliderPanel drawer;
-	private QueryOptions queryOptions;
+	private IndexInfoSet indexInfoSet;
 
 	public AnalyzeNewView(
 			Corpus corpus, 
@@ -109,10 +109,6 @@ public class AnalyzeNewView extends HorizontalLayout
 		this.indexInfoSet = new IndexInfoSet(Collections.<String>emptyList(), Collections.<Character>emptyList(),
 				Locale.ENGLISH);
 		
-		 this.queryOptions = new QueryOptions(relevantSourceDocumentIDs, relevantUserMarkupCollIDs,
-					indexInfoSet.getUnseparableCharacterSequences(),
-					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
-
 		initComponents();
 		initActions();
 		addRelevantResources();
@@ -122,6 +118,7 @@ public class AnalyzeNewView extends HorizontalLayout
 		setSizeFull();
 		setSpacing(true);
 		
+
 		// left column Queries
 		
 		VerticalLayout queryPanel = new VerticalLayout();
@@ -331,10 +328,6 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private void addRelevantResources() throws Exception {		
-		this.queryOptions.getRelevantSourceDocumentIDs().clear();
-		this.queryOptions.getRelevantUserMarkupCollIDs().clear();
-		this.indexInfoSet = new IndexInfoSet();
-
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {
 				addSourceDocument(sd);
@@ -349,7 +342,14 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private void executeSearch() {
+
 		String searchInput = queryBox.getValue();
+		QueryOptions queryOptions = new QueryOptions(
+				new QueryId(searchInput),
+				relevantSourceDocumentIDs, 
+				relevantUserMarkupCollIDs,
+				indexInfoSet.getUnseparableCharacterSequences(),
+				indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
 		QueryJob job = new QueryJob(searchInput.toString(), queryOptions);
 
 		((BackgroundServiceProvider) UI.getCurrent()).submit(Messages.getString("AnalyzerView.Searching"), //$NON-NLS-1$
@@ -404,8 +404,10 @@ public class AnalyzeNewView extends HorizontalLayout
 	private void addSourceDocument(SourceDocument sd) {
 	
 		this.relevantSourceDocumentIDs.add(sd.getID());
-
+		//TODO: provide a facility where the user can select between different IndexInfoSets
 		indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
+
+		//TODO: should not being used here
 		MarkupCollectionItem umc = new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
 		
 		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
@@ -420,6 +422,9 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 	
 	private void updateCorpusAndQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
+		
+		//TODO:
+		
 		this.corpus = new Corpus("new Corpus");
 
 		Set<DocumentTreeItem> selecteItems = treeGrid.getSelectedItems();
@@ -438,6 +443,7 @@ public class AnalyzeNewView extends HorizontalLayout
 		try {
 			addRelevantResources();
 		} catch (Exception e) {
+			//TODO:
 			logger.log(Level.SEVERE, "error  updating query options", e); 
 			e.printStackTrace();
 		}	

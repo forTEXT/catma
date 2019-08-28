@@ -93,6 +93,7 @@ public class TagDiffQuery extends Query {
         
         QueryResult result = 
 				indexer.searchTagDiff(
+						queryOptions.getQueryId(),
 						relevantUserMarkupCollIDs,
 						propertyName, tagPhrase);
 

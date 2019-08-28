@@ -22,6 +22,7 @@ import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.indexer.indexbuffer.SourceDocumentIndexBuffer;
 import de.catma.indexer.indexbuffer.TermFrequencyInfo;
 import de.catma.queryengine.CompareOperator;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 
@@ -80,7 +81,7 @@ public class FrequencySearcher {
 			IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
 	}
 
-	public QueryResult search(List<String> documentIdList,
+	public QueryResult search(QueryId queryId, List<String> documentIdList,
 			CompareOperator comp1, int freq1, CompareOperator comp2, int freq2) throws IOException {
 		
 		ArrayList<SourceDocumentIndexBuffer> sourceDocumentIndexBuffers = new ArrayList<>();
@@ -137,7 +138,7 @@ public class FrequencySearcher {
 						int freq = (Integer)termNode.getProperty(TermProperty.freq.name());
 						
 						if (!phraseResultMapping.containsKey(term)) {
-							qr = new LazyGraphDBPhraseQueryResult(term);
+							qr = new LazyGraphDBPhraseQueryResult(queryId, term);
 							phraseResultMapping.put(term, qr);
 						}
 						else {
@@ -157,7 +158,7 @@ public class FrequencySearcher {
 			for (TermFrequencyInfo tfi : buffer.search(comp1, freq1, comp2, freq2)) {
 				LazyGraphDBPhraseQueryResult qr = null;
 				if (!phraseResultMapping.containsKey(tfi.getTerm())) {
-					qr = new LazyGraphDBPhraseQueryResult(tfi.getTerm());
+					qr = new LazyGraphDBPhraseQueryResult(queryId, tfi.getTerm());
 					phraseResultMapping.put(tfi.getTerm(), qr);
 				}
 				else {

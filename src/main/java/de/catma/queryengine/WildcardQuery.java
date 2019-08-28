@@ -59,6 +59,7 @@ public class WildcardQuery extends Query {
         Indexer indexer = queryOptions.getIndexer();
         
         QueryResult result = indexer.searchWildcardPhrase(
+        	queryOptions.getQueryId(),
         	queryOptions.getRelevantSourceDocumentIDs(), termList,
         	queryOptions.getLimit());
         

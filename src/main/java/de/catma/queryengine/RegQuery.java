@@ -93,6 +93,7 @@ public class RegQuery extends Query {
 	        while(matcher.find()) {
 	            result.add(
 	            	new QueryResultRow(
+	            		queryOptions.getQueryId(),
 	            		sourceDoc.getID(), 
 	            		new Range(matcher.start(), matcher.end()), 
 	            		matcher.group()));

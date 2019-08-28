@@ -1050,43 +1050,4 @@ $v-focus-color: #5A98A1;
     .analyze-queryresult-panel {
     	padding: 1px;
     }
-           
-       .analyze_viz_left {
-          width:35vw;
-	      overflow: auto;
-		  border-right: solid 4px rgba(0,0,0,0.12);
-	 	  padding: 1.5em;       
-       }
-       
-     .analyze_viz_right {
-         width:65vw;
-	 	 overflow: auto;
-		 border-right: solid 2px rgba(151, 151, 151, 0.12);
-	     padding: 1.5em;       
-      }
-           
-	.analyze_kwic_buttonBar {
-	   background-color: #cdcdcd; 
-	}
-	
-	.analyze_kwic_header_button_download {
-	    margin-left: 25%;
-	}
-	
-	.analyze_kwic_header_label {
-	    margin-left: 35%;
-	    text-align: center;
-	}
-
-	.analyze_kwic_panel {
-	    padding: 0;
-	}
-	
-	.analyze_kwic_grid .v-grid-cell {
-	    font-size: 12px;
-	}
-	
-	.analyze_viz_icon {
-		font-size:20px;
-	}
 }

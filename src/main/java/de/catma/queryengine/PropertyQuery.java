@@ -106,6 +106,7 @@ public class PropertyQuery extends Query {
         
         QueryResult result = 
 				indexer.searchProperty(
+						queryOptions.getQueryId(),
 						relevantUserMarkupCollIDs,
 						propertyName, propertyValue, tagPhrase);
 
