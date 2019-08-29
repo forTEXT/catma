@@ -45,4 +45,9 @@ public class QueryId {
 	public String toSerializedString() {
 		return query + "@" + this.timestamp.format(DateTimeFormatter.ISO_DATE_TIME);
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

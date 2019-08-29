@@ -156,4 +156,9 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 			});			
 		}
 	}	
+	
+	@Override
+	public boolean startsWith(String searchValue) {
+		return groupedQueryResult.getGroup().toString().startsWith(searchValue);
+	}
 }

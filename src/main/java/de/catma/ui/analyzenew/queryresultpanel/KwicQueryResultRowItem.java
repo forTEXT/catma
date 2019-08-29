@@ -16,16 +16,18 @@ public class KwicQueryResultRowItem implements QueryResultRowItem {
 	private String documentName;
 	private String collectionName;
 	private boolean removed = false;
+	private boolean matchTag;
 
-	public KwicQueryResultRowItem(QueryResultRow row, String kwic, String detailedKwic) {
+	public KwicQueryResultRowItem(QueryResultRow row, String kwic, String detailedKwic, boolean matchTag) {
 		this.row = row;
 		this.kwic = kwic;
 		this.detailedKwic = detailedKwic;
+		this.matchTag = matchTag;
 	}
 	
 	public KwicQueryResultRowItem(QueryResultRow row, String kwic, String detailedKwic, 
-			String documentName, String collectionName) {
-		this(row, kwic, detailedKwic);
+			String documentName, String collectionName, boolean matchTag) {
+		this(row, kwic, detailedKwic, matchTag);
 		this.documentName = documentName;
 		this.collectionName = collectionName;
 	}
@@ -146,5 +148,10 @@ public class KwicQueryResultRowItem implements QueryResultRowItem {
 			this.removed = true;
 		}
 		
+	}
+	
+	@Override
+	public boolean startsWith(String searchValue) {
+		return matchTag?((TagQueryResultRow)row).getTagDefinitionPath().startsWith(searchValue):row.getPhrase().startsWith(searchValue);
 	}
 }

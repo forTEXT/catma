@@ -1,6 +1,5 @@
 package de.catma.ui.analyzenew.queryresultpanel;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -152,5 +151,11 @@ public class KwicPropertiesAsColumnsQueryResultRowItem implements QueryResultRow
 	@Override
 	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData) {
 		rows.remove(row);
+	}
+	
+	@Override
+	public boolean startsWith(String searchValue) {
+		return masterRow instanceof TagQueryResultRow?
+				((TagQueryResultRow)masterRow).getTagDefinitionPath().startsWith(searchValue):false;
 	}
 }

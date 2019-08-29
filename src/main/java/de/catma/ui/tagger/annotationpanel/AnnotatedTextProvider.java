@@ -18,13 +18,17 @@ import de.catma.ui.util.Cleaner;
 import de.catma.util.ColorConverter;
 
 public class AnnotatedTextProvider {
-	private static final int SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH = 30;
-	private static final int LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH = 300;
+	public static final int SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH = 30;
+	public static final int LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH = 300;
 
 	static final String HORIZONTAL_ELLIPSIS = "\u2026";
 	static final int MAX_VALUE_LENGTH = 100;
 
 	public static String shorten(String keyword, int maxLength) {
+		if (keyword == null) {
+			return "";
+		}
+		
 		if (keyword.length() <= maxLength) {
 			return keyword;
 		}

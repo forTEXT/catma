@@ -72,6 +72,17 @@ public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowI
 		}
 	}
 	
-	
+	@Override
+	public boolean startsWith(String searchValue) {
+		for (QueryResultRow row : groupedQueryResult) {
+			if (row instanceof TagQueryResultRow) {
+				if (((TagQueryResultRow) row).getTagDefinitionPath().startsWith(searchValue)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
 	
 }

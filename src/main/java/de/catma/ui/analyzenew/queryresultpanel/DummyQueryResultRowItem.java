@@ -59,4 +59,9 @@ public class DummyQueryResultRowItem implements QueryResultRowItem {
 	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData) {
 		// noop
 	}
+	
+	@Override
+	public boolean startsWith(String searchValue) {
+		return true;
+	}
 }

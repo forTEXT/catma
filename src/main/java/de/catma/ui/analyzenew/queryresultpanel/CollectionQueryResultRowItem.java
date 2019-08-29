@@ -93,7 +93,8 @@ public class CollectionQueryResultRowItem implements QueryResultRowItem {
 											new ArrayList<>(tRow.getRanges()), 
 											kwicProvider, 
 											tagDefinition, 
-											tRow.getTagDefinitionPath())
+											tRow.getTagDefinitionPath()),
+									true
 								);
 					if (!treeData.contains(item)) {
 						treeData.addItem(this, item);
@@ -169,4 +170,16 @@ public class CollectionQueryResultRowItem implements QueryResultRowItem {
 		}
 	}
 
+
+	@Override
+	public boolean startsWith(String searchValue) {
+		for (QueryResultRow row : rows) {
+			if (row instanceof TagQueryResultRow) {
+				if (((TagQueryResultRow) row).getTagDefinitionPath().startsWith(searchValue)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

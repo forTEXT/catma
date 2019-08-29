@@ -81,7 +81,8 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 						AnnotatedTextProvider.buildKeywordInContext(
 							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())),
 						AnnotatedTextProvider.buildKeywordInContextLarge(
-							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())));
+							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())),
+						false);
 				if (!treeData.contains(item)) {
 					treeData.addItem(this, item);
 				}
@@ -159,5 +160,15 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 				}
 			});			
 		}
+	}
+	
+	@Override
+	public boolean startsWith(String searchValue) {
+		for (QueryResultRow row : groupedQueryResult) {
+			if (row.getPhrase().startsWith(searchValue)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

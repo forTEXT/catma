@@ -1,22 +1,23 @@
 package de.catma.ui.analyzenew.queryresultpanel;
 
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
 
 public class QueryResultPanelSetting {
 	
-	private String query;
+	private QueryId queryId;
 	private QueryResult queryResult;
 	private DisplaySetting displaySetting;
 	
-	public QueryResultPanelSetting(String query, QueryResult queryResult, DisplaySetting displaySetting) {
+	public QueryResultPanelSetting(QueryId queryId, QueryResult queryResult, DisplaySetting displaySetting) {
 		super();
-		this.query = query;
+		this.queryId = queryId;
 		this.queryResult = queryResult;
 		this.displaySetting = displaySetting;
 	}
 
-	public String getQuery() {
-		return query;
+	public QueryId getQueryId() {
+		return queryId;
 	}
 
 	public QueryResult getQueryResult() {

@@ -359,7 +359,7 @@ public class AnalyzeNewView extends HorizontalLayout
 						System.out.println(watch);
 						try {
 							QueryResultPanel queryResultPanel = new QueryResultPanel(repository, result,
-									"result for query: " + searchInput.toString(),
+									new QueryId(searchInput.toString()),
 									kwicProviderCache, 
 									closingPanel -> resultsPanel.removeComponent(closingPanel));
 							
@@ -404,7 +404,7 @@ public class AnalyzeNewView extends HorizontalLayout
 	private void addSourceDocument(SourceDocument sd) {
 	
 		this.relevantSourceDocumentIDs.add(sd.getID());
-		//TODO: provide a facility where the user can select between different IndexInfoSets
+		//TODO: provide a facility where the user can select between different IndexInfoSets -> AnalyzeResourcePanel
 		indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
 
 		//TODO: should not being used here

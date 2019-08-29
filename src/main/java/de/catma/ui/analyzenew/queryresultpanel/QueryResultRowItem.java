@@ -21,6 +21,8 @@ public interface QueryResultRowItem {
 		QueryResultRow row, 
 		TreeData<QueryResultRowItem> treeData, 
 		LoadingCache<String, KwicProvider> kwicProviderCache);
+	
+	public boolean startsWith(String searchValue);
 
 	// used when result contains properties and user drills down to Kwic leafs
 	public default String getPropertyName() { return null; }

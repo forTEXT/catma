@@ -8,6 +8,7 @@ import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Sizeable;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComponentContainer;
@@ -91,7 +92,7 @@ public class VizMaxPanel extends VerticalLayout  {
 				new QueryResultPanel(
 					project, 
 					querySelection.getSetting().getQueryResult(), 
-					querySelection.getSetting().getQuery(), 
+					querySelection.getSetting().getQueryId(), 
 					kwicProviderCache,
 					querySelection.getSetting().getDisplaySetting(),
 					item -> handleItemSelection(item));
@@ -132,6 +133,7 @@ public class VizMaxPanel extends VerticalLayout  {
 		
 		topLeftPanel = new VerticalLayout();
 		topLeftPanel.setSizeFull();
+		topLeftPanel.setMargin(new MarginInfo(false, false, false, false));
 		resultSelectionSplitPanel.addComponent(topLeftPanel);
 		
 		HorizontalLayout buttonAndBoxPanel = new HorizontalLayout();
@@ -147,7 +149,8 @@ public class VizMaxPanel extends VerticalLayout  {
 		queryResultBox.setEmptySelectionCaption("Select a resultset");
 		queryResultBox.setEmptySelectionAllowed(false);
 		
-		queryResultBox.setItemCaptionGenerator(querySelection -> querySelection.getSetting().getQuery());
+		queryResultBox.setItemCaptionGenerator(
+			querySelection -> querySelection.getSetting().getQueryId().toString());
 		
 		buttonAndBoxPanel.addComponent(queryResultBox);
 		buttonAndBoxPanel.setExpandRatio(queryResultBox, 1f);
@@ -157,7 +160,6 @@ public class VizMaxPanel extends VerticalLayout  {
 		selectedResultsPanel = new QueryResultPanel(
 			project, kwicProviderCache, DisplaySetting.GROUPED_BY_PHRASE,
 			item -> handleItemRemoval(item));
-		
 		selectedResultsPanel.setSizeFull();
 		
 		resultSelectionSplitPanel.addComponent(selectedResultsPanel);
@@ -173,8 +175,8 @@ public class VizMaxPanel extends VerticalLayout  {
 	}
 
 	private void handleItemRemoval(QueryResultRowItem item) {
-		selectedResultsPanel.removeQueryResultRows(item.getRows());
 		kwicNew.removeQueryResultRows(item.getRows());
+		selectedResultsPanel.removeQueryResultRows(item.getRows());
 	}
 
 	private void initActions(LeaveListener leaveListener) {
@@ -185,23 +187,5 @@ public class VizMaxPanel extends VerticalLayout  {
 				setQueryResultPanel(event.getValue());
 			}
 		});
-	}
-
-	//TODO: replace concrete class kwicNew with interface
-	public void addQueryResultsToVisualisation(ArrayList<QueryResultRow> queryResultRows) {
-		try {
-			kwicNew.addQueryResultRows(queryResultRows);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-	}
-	//TODO: replace concrete class kwicNew with interface
-	public void removeQueryResultsFromVisualisation(ArrayList<QueryResultRow> queryResultRows) {
-		try {
-			kwicNew.removeQueryResultRows(queryResultRows);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }

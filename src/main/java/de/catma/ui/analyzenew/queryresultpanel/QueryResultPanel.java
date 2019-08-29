@@ -1,6 +1,5 @@
 package de.catma.ui.analyzenew.queryresultpanel;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +9,7 @@ import java.util.TreeSet;
 import com.google.common.cache.LoadingCache;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.GridSortOrderBuilder;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.icons.VaadinIcons;
@@ -25,6 +25,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ButtonRenderer;
@@ -32,6 +33,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
 import de.catma.indexer.KwicProvider;
+import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -67,8 +69,7 @@ public class QueryResultPanel extends VerticalLayout {
 	private Button optionsBt;
 
 	private QueryResult queryResult;
-	private String query;
-	private String creationTime;
+
 	private Repository project;
 
 	private VerticalLayout treeGridPanel;
@@ -97,12 +98,18 @@ public class QueryResultPanel extends VerticalLayout {
 	private ItemRemovedListener itemRemovedListener;
 
 	private boolean includeQueryId;
-	private boolean resetOnDisplaySettingSwitch = false;
+//	private boolean resetOnDisplaySettingSwitch = false;
 
-	public QueryResultPanel(Repository project, QueryResult result, String query, 
+	private TextField searchField;
+
+	private QueryId queryId;
+
+	private int tokenCount;
+
+	public QueryResultPanel(Repository project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
 			ItemSelectionListener itemSelectionListener) {
-		this(project, result, query, kwicProviderCache, null, displaySetting, 
+		this(project, result, queryId, kwicProviderCache, null, displaySetting, 
 				itemSelectionListener, null, false, false);
 	}
 
@@ -110,18 +117,18 @@ public class QueryResultPanel extends VerticalLayout {
 			Repository project,
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
 			ItemRemovedListener itemRemovedListener) {
-		this(project, new QueryResultRowArray(), ""/*no query*/, kwicProviderCache, 
+		this(project, new QueryResultRowArray(), new QueryId("")/*no query*/, kwicProviderCache, 
 				null, displaySetting, null, itemRemovedListener, false, true);
 	}
 	
-	public QueryResultPanel(Repository project, QueryResult result, String query, 
+	public QueryResultPanel(Repository project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache,
 			CloseListener resultPanelCloseListener) {
-		this(project, result, query, kwicProviderCache, resultPanelCloseListener, 
+		this(project, result, queryId, kwicProviderCache, resultPanelCloseListener, 
 				DisplaySetting.GROUPED_BY_PHRASE, null, null, true, false);
 	}
 	
-	protected QueryResultPanel(Repository project, QueryResult result, String query, 
+	protected QueryResultPanel(Repository project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache,
 			CloseListener resultPanelCloseListener, DisplaySetting displaySetting,
 			ItemSelectionListener itemSelectionListener, ItemRemovedListener itemRemovedListener,
@@ -129,12 +136,12 @@ public class QueryResultPanel extends VerticalLayout {
 
 		this.project = project;
 		this.queryResult = result;
-		this.query = query;
 		this.kwicProviderCache= kwicProviderCache;
 		this.itemSelectionListener = itemSelectionListener;
 		this.itemRemovedListener = itemRemovedListener;
 		this.cardStyle = cardStyle;
 		this.includeQueryId = includeQueryId;
+		this.queryId = queryId; 
 
 		initComponents();
 		initActions(resultPanelCloseListener);
@@ -157,7 +164,7 @@ public class QueryResultPanel extends VerticalLayout {
 			.addColumn(QueryResultRowItem::getKey)
 			.setCaption("Phrase")
 			.setRenderer(new HtmlRenderer())
-			.setWidth(400);
+			.setWidth(360);
 
 		Column<QueryResultRowItem, Integer> freqColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getFrequency)
@@ -199,14 +206,23 @@ public class QueryResultPanel extends VerticalLayout {
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 
 		treeGridPanel.addComponent(queryResultGrid);
+		
+		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenDesc(freqColumn).build());
+		
+		initInfoLabel();
 	}
 	
+	private void initInfoLabel() {
+		if (cardStyle) {
+			this.queryInfo.setValue(queryId + " (" + tokenCount + ")");
+		}
+	}
+
 	private TreeData<QueryResultRowItem> getPhraseBasedTreeData() {
-		if (phraseBasedTreeData == null || resetOnDisplaySettingSwitch) {
+		if (phraseBasedTreeData == null) {
 			phraseBasedTreeData = new TreeData<QueryResultRowItem>();
 			
 			addPhraseBasedRootItems(queryResult);
-			resetOnDisplaySettingSwitch = false;
 		}
 		return phraseBasedTreeData;
 	}
@@ -227,7 +243,7 @@ public class QueryResultPanel extends VerticalLayout {
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getPropertiesAsColumnsTagBasedTreeData());
 		
-		queryResultGrid
+		Column<QueryResultRowItem, ?> tagPathColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getTagPath)
 			.setCaption("Tag Path")
 			.setWidth(200);
@@ -273,7 +289,10 @@ public class QueryResultPanel extends VerticalLayout {
 			Notification.show(
 				"Info", "Your query result does not contain annotated occurrences!", Type.HUMANIZED_MESSAGE);
 		}
+
+		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenAsc(tagPathColumn).build());
 		
+		initInfoLabel();
 	}
 
 
@@ -292,7 +311,7 @@ public class QueryResultPanel extends VerticalLayout {
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getFlatTagBasedTreeData());
 		
-		queryResultGrid
+		Column<QueryResultRowItem, ?> tagPathColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getTagPath)
 			.setCaption("Tag Path")
 			.setWidth(200);
@@ -341,7 +360,10 @@ public class QueryResultPanel extends VerticalLayout {
 			Notification.show(
 				"Info", "Your query result does not contain annotated occurrences!", Type.HUMANIZED_MESSAGE);
 		}
-
+		
+		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenAsc(tagPathColumn).build());
+		
+		initInfoLabel();
 	}
 
 	void initTagBasedData() {
@@ -363,7 +385,7 @@ public class QueryResultPanel extends VerticalLayout {
 			.addColumn(QueryResultRowItem::getKey)
 			.setCaption("Tag Path")
 			.setRenderer(new HtmlRenderer())
-			.setWidth(400);
+			.setWidth(360);
 		
 		if (resultContainsProperties) {
 			queryResultGrid.addColumn(QueryResultRowItem::getPropertyName)
@@ -376,7 +398,7 @@ public class QueryResultPanel extends VerticalLayout {
 			tagPathColumn.setWidth(200);
 		}
 
-		queryResultGrid
+		Column<QueryResultRowItem, ?> freqColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getFrequency)
 			.setCaption("Frequency")
 			.setExpandRatio(1);
@@ -400,16 +422,19 @@ public class QueryResultPanel extends VerticalLayout {
 			Notification.show(
 				"Info", "Your query result does not contain annotated occurrences!", Type.HUMANIZED_MESSAGE);
 		}
+		
+		initInfoLabel();
+		
+		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenDesc(freqColumn).build());
 	}
 	
 	
 	private TreeData<QueryResultRowItem> getPropertiesAsColumnsTagBasedTreeData() {
 		
-		if (propertiesAsColumnsTagBasedTreeData == null || resetOnDisplaySettingSwitch) {
+		if (propertiesAsColumnsTagBasedTreeData == null) {
 			propertiesAsColumnsTagBasedTreeData = new TreeData<QueryResultRowItem>();
 			propertyNames = new TreeSet<String>();
 			addPropertiesAsColumnsTagBasedRootItems(queryResult);
-			resetOnDisplaySettingSwitch = false;
 		}
 		
 		return propertiesAsColumnsTagBasedTreeData;
@@ -417,21 +442,19 @@ public class QueryResultPanel extends VerticalLayout {
 	
 	
 	private TreeData<QueryResultRowItem> getFlatTagBasedTreeData() {
-		if (flatTagBasedTreeData == null || resetOnDisplaySettingSwitch) {
+		if (flatTagBasedTreeData == null) {
 			flatTagBasedTreeData = new TreeData<QueryResultRowItem>();
 			addFlatTagBasedRootItems(queryResult);
-			resetOnDisplaySettingSwitch = false;
 		}
 		return flatTagBasedTreeData;
 	}
 
 	private TreeData<QueryResultRowItem> getTagBasedTreeData() {
-		if (tagBasedTreeData == null ||  resetOnDisplaySettingSwitch) {
+		if (tagBasedTreeData == null) {
 			resultContainsProperties = false;
 			tagBasedTreeData = new TreeData<QueryResultRowItem>();
 			
 			addTagBasedRootItems(queryResult);
-			resetOnDisplaySettingSwitch = false;
 		}
 		
 		return tagBasedTreeData;
@@ -481,12 +504,7 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	private void createResultInfoBar() {
-		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
-		int resultSize = resultRowArrayArrayList.size(); //TODO: analyze during loop
-		//TODO: use QueryId
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		creationTime = timestamp.toString().substring(0, 19);
-		queryInfo = new Label(query + "(" + resultSize + ")"+" created: "+creationTime);
+		queryInfo = new Label();
 		
 		queryInfo.addStyleName("analyze-card-infobar");
 		
@@ -497,6 +515,11 @@ public class QueryResultPanel extends VerticalLayout {
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setWidth("100%");
 		
+		searchField = new TextField();
+        searchField.setPlaceholder("\u2315");
+        buttonPanel.addComponent(searchField);
+        buttonPanel.setComponentAlignment(searchField, Alignment.MIDDLE_RIGHT);
+        buttonPanel.setExpandRatio(searchField, 1f);
 		caretRightBt = new IconButton(VaadinIcons.CARET_RIGHT);
 		caretRightBt.setVisible(cardStyle);
 		caretDownBt = new IconButton(VaadinIcons.CARET_DOWN);
@@ -511,7 +534,6 @@ public class QueryResultPanel extends VerticalLayout {
 		buttonPanel.setComponentAlignment(caretRightBt, Alignment.MIDDLE_RIGHT);
 		buttonPanel.setComponentAlignment(optionsBt, Alignment.MIDDLE_RIGHT);
 		buttonPanel.setComponentAlignment(removeBt, Alignment.MIDDLE_RIGHT);
-		buttonPanel.setExpandRatio(removeBt, 1f);
 		
 		buttonPanel.addStyleName("analyze-card-buttonbar");
 		addComponent(buttonPanel);
@@ -548,8 +570,22 @@ public class QueryResultPanel extends VerticalLayout {
 		else {
 			removeBt.setVisible(false);
 		}
+		
+		searchField.addValueChangeListener(event -> handleSearchValueInput(event.getValue()));
 	}
 
+
+	private void handleSearchValueInput(String searchValue) {
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<QueryResultRowItem> dataProvider = 
+				(TreeDataProvider<QueryResultRowItem>) this.queryResultGrid.getDataProvider();
+		if ((searchValue == null) || searchValue.isEmpty()) {
+			dataProvider.setFilter(null);
+		}
+		else {
+			dataProvider.setFilter(row -> row.startsWith(searchValue));
+		}
+	}
 
 	private void handleExpandRequest(ExpandEvent<QueryResultRowItem> event) {
 		QueryResultRowItem expandedItem = event.getExpandedItem();
@@ -567,27 +603,43 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	public QueryResultPanelSetting getQueryResultPanelSetting() {
-		return new QueryResultPanelSetting(query, queryResult, displaySetting);
+		return new QueryResultPanelSetting(queryId, queryResult, displaySetting);
 	}
 	
-	public String getQueryAsString() {
-		return this.query+ "("+ creationTime+")";
+	public QueryId getQueryId() {
+		return queryId;
 	}
 
 	public void addQueryResultRows(QueryResultRowArray rows) {
 		@SuppressWarnings("unchecked")
 		final TreeDataProvider<QueryResultRowItem> dataProvider = 
 				((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider());
-		rows.forEach(row -> {
+		boolean rowsAdded = false;
+		for (QueryResultRow row : rows) {
 			if (!((QueryResultRowArray)queryResult).contains(row)) {
 				((QueryResultRowArray)queryResult).add(row);
-				resetOnDisplaySettingSwitch = true;
-				
+				rowsAdded = true;
 				// update existing items
 				dataProvider.getTreeData().getRootItems().forEach(
 					item -> item.addQueryResultRow(row, dataProvider.getTreeData(), kwicProviderCache));
 			}
-		});
+		};
+		
+		if (rowsAdded) {
+			if (!dataProvider.getTreeData().equals(phraseBasedTreeData)) {
+				phraseBasedTreeData = null;
+			}
+			if (!dataProvider.getTreeData().equals(tagBasedTreeData)) {
+				tagBasedTreeData = null;
+			}
+			if (!dataProvider.getTreeData().equals(flatTagBasedTreeData)) {
+				flatTagBasedTreeData = null;
+			}
+			if (!dataProvider.getTreeData().equals(propertiesAsColumnsTagBasedTreeData)) {
+				propertiesAsColumnsTagBasedTreeData = null;
+			}
+		}
+		
 		// add new root items
 		displaySetting.addQueryResultRootItems(this, rows);
 		dataProvider.refreshAll();
@@ -595,9 +647,9 @@ public class QueryResultPanel extends VerticalLayout {
 
 	void addPhraseBasedRootItems(QueryResult result) {
 		Set<GroupedQueryResult> groupedQueryResults = result.asGroupedSet();
-
+		tokenCount = 0;
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
-			
+			tokenCount += groupedQueryResult.getTotalFrequency();
 			PhraseQueryResultRowItem phraseQueryResultRowItem = 
 					new PhraseQueryResultRowItem(includeQueryId, groupedQueryResult);
 			if (!phraseBasedTreeData.contains(phraseQueryResultRowItem)) {
@@ -608,6 +660,7 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	void addTagBasedRootItems(QueryResult result) {
+		tokenCount = 0;
 		Set<GroupedQueryResult> groupedQueryResults = result.asGroupedSet(row -> {
 			if (row instanceof TagQueryResultRow) {
 				if (((TagQueryResultRow) row).getPropertyDefinitionId() != null) {
@@ -618,6 +671,7 @@ public class QueryResultPanel extends VerticalLayout {
 			return "no Tag available / not annotated";
 		});
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
+			tokenCount += groupedQueryResult.getTotalFrequency();
 			TagQueryResultRowItem tagQueryResultRowItem = 
 					new TagQueryResultRowItem(groupedQueryResult, project);
 			if (!tagBasedTreeData.contains(tagQueryResultRowItem)) {
@@ -652,11 +706,14 @@ public class QueryResultPanel extends VerticalLayout {
 							kwicProvider
 								.getSourceDocument()
 								.getUserMarkupCollectionReference(tRow.getMarkupCollectionId())
-								.getName()
+								.getName(),
+							true
 						);
 					flatTagBasedTreeData.addItem(null, item);
 				}
 			}
+			
+			tokenCount = flatTagBasedTreeData.getRootItems().size();
 		}
 		catch (Exception e) {
 			e.printStackTrace(); //TODO:
@@ -717,6 +774,8 @@ public class QueryResultPanel extends VerticalLayout {
 					);
 				propertiesAsColumnsTagBasedTreeData.addItem(null, item);
 			}				
+			
+			tokenCount = propertiesAsColumnsTagBasedTreeData.getRootItems().size();
 		}
 		catch (Exception e) {
 			e.printStackTrace(); //TODO:
@@ -724,13 +783,25 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	public void removeQueryResultRows(QueryResultRowArray rows) {
-		if (((QueryResultRowArray)queryResult).removeAll(rows)) {
-			resetOnDisplaySettingSwitch = true;
-		}
 
 		@SuppressWarnings("unchecked")
 		final TreeDataProvider<QueryResultRowItem> dataProvider = 
 				((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider());
+		
+		if (((QueryResultRowArray)queryResult).removeAll(rows)) {
+			if (!dataProvider.getTreeData().equals(phraseBasedTreeData)) {
+				phraseBasedTreeData = null;
+			}
+			if (!dataProvider.getTreeData().equals(tagBasedTreeData)) {
+				tagBasedTreeData = null;
+			}
+			if (!dataProvider.getTreeData().equals(flatTagBasedTreeData)) {
+				flatTagBasedTreeData = null;
+			}
+			if (!dataProvider.getTreeData().equals(propertiesAsColumnsTagBasedTreeData)) {
+				propertiesAsColumnsTagBasedTreeData = null;
+			}
+		}
 		
 		new ArrayList<>(rows).forEach(row -> {
 			// update existing items
@@ -747,5 +818,4 @@ public class QueryResultPanel extends VerticalLayout {
 		dataProvider.refreshAll();
 	}
 
-	
 }

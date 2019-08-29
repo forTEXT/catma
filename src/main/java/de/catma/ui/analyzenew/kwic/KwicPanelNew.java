@@ -1,56 +1,53 @@
 package de.catma.ui.analyzenew.kwic;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.WeakHashMap;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.contextmenu.ContextMenu;
-import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
-import de.catma.document.source.KeywordInContext;
-import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.analyzenew.Visualisation;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.component.actiongrid.SearchFilterProvider;
 
 
 public class KwicPanelNew extends VerticalLayout implements Visualisation {
+	private enum ColumnId {
+		COLLECION_NAME, TAG, PROPERTY_NAME, PROPERTY_VALUE,
+		;
+	}
 
-	private Repository repository;
+	private Grid<QueryResultRow> kwicGrid;
+	private ActionGridComponent<Grid<QueryResultRow>> kwicGridComponent;
+	private ListDataProvider<QueryResultRow> kwicDataProvider;
+	private KwicItemHandler kwicItemHandler;
+
+	//TODO:
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
-	private Grid<KwicItem> kwicGrid;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
-	private int kwicSize = 5;
-	private List<KwicItem> kwicItemList;
-	private boolean showPropertyColumns;
-	private ActionGridComponent<Grid<KwicItem>> kwicGridComponent;
+	private Repository project;
 
 	public KwicPanelNew(LoadingCache<String, KwicProvider> kwicProviderCache ) {
 		this.kwicProviderCache = kwicProviderCache;
-
+		this.kwicItemHandler = new KwicItemHandler(kwicProviderCache);
 		initComponents();
 		initActions();
-		setHeight("100%");
 	}
 
-	public KwicPanelNew(Repository repository,
+	public KwicPanelNew(Repository project,
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
-
-		this(repository, relevantUserMarkupCollectionProvider, false);
-	}
-
-	public KwicPanelNew(Repository repository,
-			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider, boolean markupBased) {
-
-		this.repository = repository;
+		this.project = project;
 		initComponents();
 		initActions();
 
@@ -58,147 +55,120 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 
 	private void initActions() {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		moreOptionsMenu.addItem("Annotate all selected rows", clickEvent -> handleAnnotateAllRequest());
-		moreOptionsMenu.addItem("Annotate single row", clickEvent -> handleAnnotateSingleRequest());
-		moreOptionsMenu.addItem("Export Visualisation", clickEvent -> handleExportVisualizationRequest());
+		//TODO:
+//		moreOptionsMenu.addItem("Annotate all selected rows", clickEvent -> handleAnnotateAllRequest());
+//		moreOptionsMenu.addItem("Annotate single row", clickEvent -> handleAnnotateSingleRequest());
+//		moreOptionsMenu.addItem("Export Visualisation", clickEvent -> handleExportVisualizationRequest());
+		
+		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
+			@Override
+			public SerializablePredicate<QueryResultRow> createSearchFilter(String searchInput) {
+				return (row) -> kwicItemHandler.containsSearchInput(row, searchInput);
+			}
+		});
 	}
 
 	private void initComponents() {
-		kwicGrid = new Grid<KwicItem>();
-		kwicItemList = new ArrayList<>();
+		setSizeFull();
+		
+		kwicDataProvider = new ListDataProvider<>(new HashSet<>());
+		kwicGrid = new Grid<QueryResultRow>(kwicDataProvider);
 
-		kwicGrid.setWidth("100%");
-		kwicGrid.setHeight("100%");
+		kwicGrid.setSizeFull();
 
-		kwicGrid.addColumn(KwicItem::getDocCollection).setCaption("Document/Collection").setId("docCollectionID");
-		kwicGrid.addColumn(KwicItem::getBackwardContext).setCaption("Left Context").setId("backwardID");
+		kwicGrid.addColumn(row -> kwicItemHandler.getDocumentName(row)).setCaption("Document")
+			.setWidth(200)
+			.setHidable(true);
+		kwicGrid.addColumn(row -> kwicItemHandler.getCollectionName(row))
+			.setCaption("Collection")
+			.setWidth(200)
+			.setId(ColumnId.COLLECION_NAME.name())
+			.setHidable(true)
+			.setHidden(true);
+		
+		kwicGrid.addColumn(row -> kwicItemHandler.getBackwardContext(row))
+			.setCaption("Left Context")
+			.setWidth(200);
 
-		kwicGrid.addColumn(KwicItem::getShortenKeyWord).setCaption("KeyWord").setId("keyWordID");
-		kwicGrid.getColumn("keyWordID").setDescriptionGenerator(e -> e.getKeyWord(), ContentMode.HTML);
+		Column<QueryResultRow, ?> keywordColumn = kwicGrid.addColumn(row -> kwicItemHandler.getKeyword(row))
+			.setCaption("Keyword")
+			.setWidth(200)
+			.setDescriptionGenerator(row -> kwicItemHandler.getKeywordDescription(row));
 
-		kwicGrid.addColumn(KwicItem::getForewardContext).setCaption("Right Context").setId("forewardID");
-		kwicGrid.addColumn(KwicItem::getRangeStartPoint).setCaption("Start Point").setId("startPointID");
-		kwicGrid.addColumn(KwicItem::getRangeEndPoint).setCaption("End Point").setId("endPointID");
+		kwicGrid.addColumn(row -> kwicItemHandler.getForwardContext(row))
+			.setCaption("Right Context")
+			.setWidth(200);
+		
+		kwicGrid.addColumn(row -> row.getRange().getStartPoint())
+			.setCaption("Start Point")
+			.setWidth(100)
+			.setHidable(true);
+		kwicGrid.addColumn(row -> row.getRange().getEndPoint())
+			.setCaption("End Point")
+			.setWidth(100)
+			.setHidable(true);
 
-		kwicGrid.addColumn(KwicItem::getShortenTagDefinitionPath).setCaption("Tag").setId("tagID");
-		kwicGrid.getColumn("tagID").setDescriptionGenerator(e -> e.getTagDefinitionPath(), ContentMode.HTML);
+		kwicGrid.addColumn(row -> kwicItemHandler.getTagPath(row))
+			.setCaption("Tag")
+			.setHidable(true)
+			.setHidden(true)
+			.setId(ColumnId.TAG.name())
+			.setWidth(200);
+		
+		kwicGrid.addColumn(row -> kwicItemHandler.getPropertyName(row))
+			.setCaption("Property")
+			.setHidable(true)
+			.setHidden(true)
+			.setId(ColumnId.PROPERTY_NAME.name())
+			.setWidth(200);
+		
+		kwicGrid.addColumn(row -> kwicItemHandler.getPropertyValue(row))
+			.setCaption("Value")
+			.setHidable(true)
+			.setHidden(true)
+			.setId(ColumnId.PROPERTY_VALUE.name())
+			.setWidth(200);
 
-		kwicGrid.setItems(kwicItemList);
-
-		kwicGridComponent = new ActionGridComponent<>(new Label("key word in context visualization"), kwicGrid);
+		kwicGrid.sort(keywordColumn);
+		
+		kwicGridComponent = new ActionGridComponent<>(new Label("Keyword in context"), kwicGrid);
 		addComponent(kwicGridComponent);
 	}
 
 	public void addQueryResultRows(Iterable<QueryResultRow> queryResult)  {	
 		
-		//TODO:
-		/*
-		 * if (kwicGrid.getColumn("propValueID") != null) {
-		 * kwicGrid.removeColumn("propValueID"); kwicGrid.removeColumn("propNameID"); }
-		 */
+		boolean showTagColumns = false;
+		boolean showPropertyColumns = false;
 		
-		showPropertyColumns = false;
-		//boolean markupBased = true;
-		try {
-			for (QueryResultRow row : queryResult) {
-				
-				KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
-				
-				KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
-			
-				itemDirCache.put(row, kwic.isRightToLeft());
-				KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
-				
-				if(!kwicItemList.contains(kwicItem)) {
-					kwicItemList.add(kwicItem);	
-				}	
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		if (showPropertyColumns && (kwicGrid.getColumn("propNameID")==null)){
-			kwicGrid.addColumn(KwicItem::getPropertyName).setCaption("Property Name").setId("propNameID");
-			kwicGrid.addColumn(KwicItem::getPropertyValue).setCaption("Property Value").setId("propValueID");
-		}
-		kwicGrid.getDataProvider().refreshAll();
-	}
-
-	private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic, KwicProvider kwicProvider,
-			boolean showPropertyColumns) throws Exception {
-		
-		KwicItem kwicItem = new KwicItem();
-
-		if (queryResultRow instanceof TagQueryResultRow) {
-
-			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
-
-			SourceDocument sourceDoc=kwicProvider.getSourceDocument();
-			kwicItem.setDocCollection(
-					sourceDoc.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
-
-			kwicItem.setKeyWord(tagQueryResultRow.getPhrase());
-			kwicItem.setBackwardContext(kwic.getBackwardContext());
-			kwicItem.setForewardContext(kwic.getForwardContext());
-			kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
-			kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
-			kwicItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
-
-			if (tagQueryResultRow.getPropertyName() != null) {
-				this.showPropertyColumns = true;
-				kwicItem.setPropertyName(tagQueryResultRow.getPropertyName());
-				kwicItem.setPropertyValue(tagQueryResultRow.getPropertyValue());
-			}
-			return kwicItem;
-		} else {
-			String sourceDocName=kwicProvider.getSourceDocumentName();
-			kwicItem.setDocCollection(sourceDocName);
-			kwicItem.setKeyWord(queryResultRow.getPhrase());
-			kwicItem.setBackwardContext(kwic.getBackwardContext());
-			kwicItem.setForewardContext(kwic.getForwardContext());
-			kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
-			kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
-			return kwicItem;
-		}
-	}
-	
-	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {
-		//TODO:
-		try {
-			for (QueryResultRow row : queryResult) {
+		for (QueryResultRow row : queryResult) {
+			if (kwicDataProvider.getItems().add(row)) {
+				if (row instanceof TagQueryResultRow) {
+					showTagColumns = true;
 					
-				KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
-				
-				KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
-			
-				itemDirCache.put(row, kwic.isRightToLeft());
-				KwicItem kwicItem = createKwicItemFromQueryResultRow(row, kwic,kwicProvider, showPropertyColumns);
-				
-				if(kwicItemList.contains(kwicItem)) {
-					kwicItemList.remove(kwicItem);
-					
+					if (((TagQueryResultRow) row).getPropertyDefinitionId() != null) {
+						showPropertyColumns = true;
+					}
 				}
-		
 			}
 		}
-		catch (Exception e) {
-			e.printStackTrace();
+
+		if (showTagColumns) {
+			kwicGrid.getColumn(ColumnId.COLLECION_NAME.name()).setHidden(false);
+			kwicGrid.getColumn(ColumnId.TAG.name()).setHidden(false);
+			if (showPropertyColumns) {
+				kwicGrid.getColumn(ColumnId.PROPERTY_NAME.name()).setHidden(false);
+				kwicGrid.getColumn(ColumnId.PROPERTY_VALUE.name()).setHidden(false);
+			}
+		}
+		
+		kwicGrid.getDataProvider().refreshAll();
+	}
+
+	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {
+		for (QueryResultRow row : queryResult) {
+			kwicDataProvider.getItems().remove(row);
 		}
 		kwicGrid.getDataProvider().refreshAll();
 	}
-	
-	private void handleAnnotateAllRequest() {
-
-	}
-
-	private void handleAnnotateSingleRequest() {
-
-	}
-	
-	private void handleExportVisualizationRequest() {
-		
-	}
-
-
 
 }

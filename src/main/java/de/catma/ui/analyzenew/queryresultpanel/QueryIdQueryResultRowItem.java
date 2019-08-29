@@ -10,6 +10,7 @@ import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.queryengine.result.TagQueryResultRow;
 
 public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 	
@@ -151,6 +152,19 @@ public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 				}
 			});			
 		}
+	}	
+	
+	@Override
+	public boolean startsWith(String searchValue) {
+		for (QueryResultRow row : groupedQueryResult) {
+			if (row instanceof TagQueryResultRow) {
+				if (((TagQueryResultRow) row).getTagDefinitionPath().startsWith(searchValue)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}	
 	
 }

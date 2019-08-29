@@ -3,8 +3,6 @@ package de.catma.rbac;
 import java.io.IOException;
 
 import de.catma.document.source.SourceDocument;
-import de.catma.interfaces.IdentifiableResource;
-import de.catma.models.Project;
 import de.catma.tag.TagsetDefinition;
 
 /**
@@ -16,7 +14,7 @@ import de.catma.tag.TagsetDefinition;
 public interface IRBACManager {
 	
 	/**
-	 * Authorized a <code>RBACPermission</code> on <code>RBACSubject</code> for a {@link Project}
+	 * Authorized a <code>RBACPermission</code> on <code>RBACSubject</code> for a projectId
 	 *
 	 * @param subject
 	 * @param permission
@@ -37,7 +35,7 @@ public interface IRBACManager {
 	boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, String projectId, String resourceId);
 
 	/**
-	 * assigns given role to subject in a given context here a {@link Project}
+	 * assigns given role to subject in a given context here a projectId}
 	 * 
 	 * @param subject
 	 * @param role
