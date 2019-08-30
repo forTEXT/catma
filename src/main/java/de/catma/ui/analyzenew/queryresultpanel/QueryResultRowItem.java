@@ -26,7 +26,7 @@ public interface QueryResultRowItem {
 
 	// used when result contains properties and user drills down to Kwic leafs
 	public default String getPropertyName() { return null; }
-	public default String getPropertyValue() { return null; }
+	public default String getPropertyValue() { return null; } //TODO: split up in short value and description, see KwicItemHandler
 	
 	// used for 'flat table' and 'properties as columns' display
 	public default String getDocumentName() { return null; }
@@ -34,6 +34,6 @@ public interface QueryResultRowItem {
 	public default String getTagPath() { return null; }
 	
 	// used for 'properties as columns' display
-	public default String getPropertyValue(String propertyName) { return null; }
+	public default String getPropertyValue(String propertyName) { return null; } //TODO: split up in short value and description, see KwicItemHandler
 	public void removeQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData);
 }

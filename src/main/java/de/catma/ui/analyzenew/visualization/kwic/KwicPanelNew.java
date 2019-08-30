@@ -1,12 +1,13 @@
-package de.catma.ui.analyzenew.kwic;
+package de.catma.ui.analyzenew.visualization.kwic;
 
 import java.util.HashSet;
-import java.util.WeakHashMap;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Label;
@@ -16,8 +17,10 @@ import de.catma.document.repository.Repository;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzenew.Visualisation;
+import de.catma.ui.analyzenew.visualization.ExpansionListener;
+import de.catma.ui.analyzenew.visualization.Visualisation;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
+import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 
@@ -33,24 +36,15 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 	private ListDataProvider<QueryResultRow> kwicDataProvider;
 	private KwicItemHandler kwicItemHandler;
 
-	//TODO:
-	private LoadingCache<String, KwicProvider> kwicProviderCache;
-	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 	private Repository project;
+	private IconButton btExpandCompress;
+	private boolean expanded = false;
+	private ExpansionListener expansionListener;
 
-	public KwicPanelNew(LoadingCache<String, KwicProvider> kwicProviderCache ) {
-		this.kwicProviderCache = kwicProviderCache;
+	public KwicPanelNew(Repository project, LoadingCache<String, KwicProvider> kwicProviderCache ) {
 		this.kwicItemHandler = new KwicItemHandler(kwicProviderCache);
 		initComponents();
 		initActions();
-	}
-
-	public KwicPanelNew(Repository project,
-			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
-		this.project = project;
-		initComponents();
-		initActions();
-
 	}
 
 	private void initActions() {
@@ -66,11 +60,38 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 				return (row) -> kwicItemHandler.containsSearchInput(row, searchInput);
 			}
 		});
+		
+		btExpandCompress.addClickListener(clickEvent -> handleMaxMinRequest());
+	}
+
+	private void handleMaxMinRequest() {
+		expanded = !expanded;
+		
+		if (expanded) {
+			btExpandCompress.setIcon(VaadinIcons.COMPRESS_SQUARE);
+			if (expansionListener != null) {
+				expansionListener.expand();
+			}
+		}
+		else {
+			btExpandCompress.setIcon(VaadinIcons.EXPAND_SQUARE);
+			if (expansionListener != null) {
+				expansionListener.compress();
+			}
+		}
 	}
 
 	private void initComponents() {
 		setSizeFull();
+		setMargin(false);
+		setSpacing(false);
 		
+		btExpandCompress = new IconButton(VaadinIcons.EXPAND_SQUARE);
+//		addComponent(btExpandCompress);
+		btExpandCompress.setVisible(false);
+//		
+//		setComponentAlignment(btExpandCompress, Alignment.TOP_RIGHT);
+//		
 		kwicDataProvider = new ListDataProvider<>(new HashSet<>());
 		kwicGrid = new Grid<QueryResultRow>(kwicDataProvider);
 
@@ -86,17 +107,21 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 			.setHidable(true)
 			.setHidden(true);
 		
-		kwicGrid.addColumn(row -> kwicItemHandler.getBackwardContext(row))
+		Column<QueryResultRow, ?> backwardCtxColumn = 
+			kwicGrid.addColumn(row -> kwicItemHandler.getBackwardContext(row))
 			.setCaption("Left Context")
+			.setStyleGenerator(row -> kwicItemHandler.getBackwardContextStyle(row))
 			.setWidth(200);
 
 		Column<QueryResultRow, ?> keywordColumn = kwicGrid.addColumn(row -> kwicItemHandler.getKeyword(row))
 			.setCaption("Keyword")
 			.setWidth(200)
+			.setStyleGenerator(row -> kwicItemHandler.getKeywordStyle(row))
 			.setDescriptionGenerator(row -> kwicItemHandler.getKeywordDescription(row));
 
 		kwicGrid.addColumn(row -> kwicItemHandler.getForwardContext(row))
 			.setCaption("Right Context")
+			.setStyleGenerator(row -> kwicItemHandler.getForwardContextStyle(row))
 			.setWidth(200);
 		
 		kwicGrid.addColumn(row -> row.getRange().getStartPoint())
@@ -131,8 +156,14 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 
 		kwicGrid.sort(keywordColumn);
 		
+		kwicGrid.getDefaultHeaderRow().getCell(keywordColumn).setStyleName("kwic-panel-keyword-header");
+		kwicGrid.getDefaultHeaderRow().getCell(backwardCtxColumn).setStyleName("kwic-panel-backwardctx-header");
+		
 		kwicGridComponent = new ActionGridComponent<>(new Label("Keyword in context"), kwicGrid);
+		kwicGridComponent.getActionGridBar().setAddBtnVisible(false);
+		kwicGridComponent.getActionGridBar().addButtonRight(btExpandCompress);
 		addComponent(kwicGridComponent);
+		setExpandRatio(kwicGridComponent, 1f);
 	}
 
 	public void addQueryResultRows(Iterable<QueryResultRow> queryResult)  {	
@@ -171,4 +202,8 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 		kwicGrid.getDataProvider().refreshAll();
 	}
 
+	public void setExpansionListener(ExpansionListener expansionListener) {
+		this.expansionListener = expansionListener;
+		btExpandCompress.setVisible(true);
+	}
 }

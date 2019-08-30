@@ -24,6 +24,11 @@ import java.util.stream.Collectors;
 
 import org.eclipse.jgit.api.Status;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 
@@ -100,6 +105,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private PropertyChangeListener userDefinedPropertyChangedListener;
 	private Indexer indexer;
 	private EventBus eventBus;
+	
+	private LoadingCache<String, SourceDocument> documentCache;
 
 	public GraphWorktreeProject(User user,
 								GitProjectHandler gitProjectHandler,
@@ -132,8 +139,27 @@ public class GraphWorktreeProject implements IndexedRepository {
 				});
 		this.tempDir = RepositoryPropertyKey.TempDir.getValue();
 		this.indexer = ((TPGraphProjectHandler)this.graphProjectHandler).createIndexer();
+    	this.documentCache = 
+			CacheBuilder.newBuilder()
+			.maximumSize(10)
+			.removalListener(new RemovalListener<String, SourceDocument>() {
+				@Override
+				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
+					notification.getValue().unload();
+				}
+			})
+			.build(new CacheLoader<String, SourceDocument>() {
+				@Override
+				public SourceDocument load(String key) throws Exception {
+					return getUncachedSourceDocument(key);
+				}
+			});
 	}
 	
+	public SourceDocument getUncachedSourceDocument(String sourceDocumentId) throws Exception {
+		return graphProjectHandler.getSourceDocument(this.rootRevisionHash, sourceDocumentId);
+	}
+
 	private Path getTokenizedSourceDocumentPath(String documentId) {
 		return Paths
 			.get(new File(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue()).toURI())
@@ -841,7 +867,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public SourceDocument getSourceDocument(String sourceDocumentId) throws Exception {
-		return graphProjectHandler.getSourceDocument(this.rootRevisionHash, sourceDocumentId);
+		return documentCache.get(sourceDocumentId);
 	}
 
 	@Override
@@ -849,7 +875,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		for (UserMarkupCollectionReference collectionRef : sourceDocument.getUserMarkupCollectionRefs()) {
 			delete(collectionRef);
 		}
-		
+		documentCache.invalidate(sourceDocument.getID());
 		String oldRootRevisionHash = this.rootRevisionHash;
 		gitProjectHandler.removeDocument(sourceDocument);
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 

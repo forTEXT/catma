@@ -21,6 +21,7 @@ package de.catma.document;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -44,6 +45,7 @@ public class Corpus {
 	 * @param id identifier (depends on the repository)
 	 * @param corpusName
 	 */
+	@Deprecated
 	public Corpus(String id, String corpusName) {
 		this.id = id;
 		this.name = corpusName;
@@ -55,8 +57,13 @@ public class Corpus {
 	 * Corpus with a <code>null</code>-identifier for non persistent corpora.
 	 * @param corpusName
 	 */
+	@Deprecated
 	public Corpus(String corpusName) {
 		this(null, corpusName);
+	}
+	
+	public Corpus() {
+		this(null, null);
 	}
 
 	public void addSourceDocument(SourceDocument sourceDocument) {
@@ -66,11 +73,6 @@ public class Corpus {
 	public void addUserMarkupCollectionReference(
 			UserMarkupCollectionReference userMarkupCollRef) {
 		userMarkupCollectionRefs.add(userMarkupCollRef);
-	}
-	
-	@Override
-	public String toString() {
-		return name;
 	}
 
 	/**
@@ -90,10 +92,12 @@ public class Corpus {
 	/**
 	 * @return the identifier or <code>null</code> if the corpus is not persistent
 	 */
+	@Deprecated
 	public String getId() {
 		return id;
 	}
 	
+	@Deprecated
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -115,5 +119,21 @@ public class Corpus {
 			}
 		}
 		return result;
+	}
+	
+	public boolean isEmpty() {
+		return getSourceDocuments().isEmpty();
+	}
+
+	public List<String> getDocumentIds() {
+		return sourceDocuments.stream()
+				.map(SourceDocument::getID)
+				.collect(Collectors.toList());
+	}
+
+	public List<String> getCollectionIds() {
+		return userMarkupCollectionRefs.stream()
+				.map(UserMarkupCollectionReference::getId)
+				.collect(Collectors.toList());
 	}
 }

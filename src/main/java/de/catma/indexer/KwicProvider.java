@@ -26,7 +26,12 @@ import java.util.List;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
 import de.catma.document.Range;
+import de.catma.document.repository.Repository;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 
@@ -285,6 +290,16 @@ public class KwicProvider {
 		return sourceDocument;
 	}
 
-	
-	
+	public static LoadingCache<String, KwicProvider> buildKwicProviderByDocumentIdCache(Repository project) {
+		return CacheBuilder.newBuilder().maximumSize(10)
+		.build(new CacheLoader<String, KwicProvider>() {
+
+			@Override
+			public KwicProvider load(String key) throws Exception {
+				 SourceDocument sd = project.getSourceDocument(key);
+				 KwicProvider kwicProvider = new KwicProvider(sd);
+				 return kwicProvider;
+			}
+		});		
+	}
 }

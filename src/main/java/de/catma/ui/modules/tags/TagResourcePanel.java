@@ -174,13 +174,12 @@ public class TagResourcePanel extends VerticalLayout {
     }
 
 	private void initComponents() {
-//		addStyleName("tags-resource-panel");
 		Label tagsetLabel = new Label("Tagsets");
 		setSizeFull();
 		
 		tagsetGrid = new Grid<>();
 		tagsetGrid.addStyleNames(
-				"annotate-resource-grid", 
+				"resource-grid", 
 				"flat-undecorated-icon-buttonrenderer",
 				"no-focused-before-border");
 		tagsetGrid.setSelectionMode(SelectionMode.MULTI);

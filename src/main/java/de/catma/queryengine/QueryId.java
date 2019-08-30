@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
+import de.catma.ui.tagger.annotationpanel.AnnotatedTextProvider;
+
 public class QueryId {
 	private final String query;
 	private String name;
@@ -49,5 +51,11 @@ public class QueryId {
 	@Override
 	public String toString() {
 		return getName();
+	}
+
+	public String getShortName() {
+		return AnnotatedTextProvider.shorten(
+				getName(), 
+				AnnotatedTextProvider.SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH);
 	}
 }

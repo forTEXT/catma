@@ -1,24 +1,21 @@
 package de.catma.ui.analyzenew.resourcepanel;
 
+import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.ui.TreeGrid;
 
+import de.catma.document.Corpus;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourceSelectionListener;
 
 public class CollectionDataItem implements DocumentTreeItem {
 
 	private UserMarkupCollectionReference collectionRef;
-	private boolean selected = true;
+	private boolean hasWritePermission;
 
-	public CollectionDataItem(UserMarkupCollectionReference collectionRef, boolean selected) {
+	public CollectionDataItem(UserMarkupCollectionReference collectionRef, boolean hasWritePermission) {
 		super();
 		this.collectionRef = collectionRef;
-		this.selected = selected;
-	}
-	
-	@Override
-	public String getSelectionIcon() {
-		return selected?VaadinIcons.DOT_CIRCLE.getHtml():VaadinIcons.CIRCLE_THIN.getHtml();
+		this.hasWritePermission = hasWritePermission;
 	}
 
 	@Override
@@ -34,16 +31,23 @@ public class CollectionDataItem implements DocumentTreeItem {
 	public String getIcon() {
 		return VaadinIcons.NOTEBOOK.getHtml();
 	}
+	
+	@Override
+	public String getPermissionIcon() {
+		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
+	}
 
-	public void setSelected(boolean value) {
-		this.selected = value;
+	@Override
+	public void addToCorpus(Corpus corpus) {
+		corpus.addUserMarkupCollectionReference(collectionRef);
 	}
 	
-	public boolean isSelected() {
-		return selected;
+	@Override
+	public void ensureSelectedParent(TreeGrid<DocumentTreeItem> documentTree) {
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<DocumentTreeItem> dataProvider = 
+			(TreeDataProvider<DocumentTreeItem>) documentTree.getDataProvider();
+		
+		documentTree.select(dataProvider.getTreeData().getParent(this));
 	}
-	
-
-
-
 }

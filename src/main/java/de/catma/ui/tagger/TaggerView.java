@@ -317,8 +317,9 @@ public class TaggerView extends HorizontalLayout
 		return false;
 	}
 
+	//TODO: remove
 	public void  analyzeDocumentOld(){
-		Corpus corpus = new Corpus(sourceDocument.toString());
+		Corpus corpus = new Corpus();
 		corpus.addSourceDocument(sourceDocument);
 		for (UserMarkupCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
 			UserMarkupCollectionReference userMarkupCollRef =
@@ -335,7 +336,7 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	public void  analyzeDocument(){
-		Corpus corpus = new Corpus(sourceDocument.toString());
+		Corpus corpus = new Corpus();
 		corpus.addSourceDocument(sourceDocument);
 		for (UserMarkupCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
 			UserMarkupCollectionReference userMarkupCollRef =

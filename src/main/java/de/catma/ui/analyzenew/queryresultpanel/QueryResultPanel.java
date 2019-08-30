@@ -14,11 +14,12 @@ import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.DescriptionGenerator;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -98,13 +99,14 @@ public class QueryResultPanel extends VerticalLayout {
 	private ItemRemovedListener itemRemovedListener;
 
 	private boolean includeQueryId;
-//	private boolean resetOnDisplaySettingSwitch = false;
 
 	private TextField searchField;
 
 	private QueryId queryId;
 
 	private int tokenCount;
+
+	private HorizontalLayout buttonPanel;
 
 	public QueryResultPanel(Repository project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
@@ -163,6 +165,7 @@ public class QueryResultPanel extends VerticalLayout {
 		queryResultGrid
 			.addColumn(QueryResultRowItem::getKey)
 			.setCaption("Phrase")
+			.setDescriptionGenerator(item -> item.getDetailedKeyInContext(), ContentMode.HTML)			
 			.setRenderer(new HtmlRenderer())
 			.setWidth(360);
 
@@ -248,9 +251,14 @@ public class QueryResultPanel extends VerticalLayout {
 			.setCaption("Tag Path")
 			.setWidth(200);
 
+		if (includeQueryId) {
+			//TODO: add a queryId column
+		}
+
 		queryResultGrid
 			.addColumn(QueryResultRowItem::getKey)
 			.setCaption("Annotation")
+			.setDescriptionGenerator(item -> item.getDetailedKeyInContext(), ContentMode.HTML)
 			.setRenderer(new HtmlRenderer())
 			.setWidth(200);
 		
@@ -314,7 +322,12 @@ public class QueryResultPanel extends VerticalLayout {
 		Column<QueryResultRowItem, ?> tagPathColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getTagPath)
 			.setCaption("Tag Path")
+			.setDescriptionGenerator(item -> item.getDetailedKeyInContext(), ContentMode.HTML)			
 			.setWidth(200);
+		
+		if (includeQueryId) {
+			//TODO: add a queryId column
+		}
 
 		queryResultGrid
 			.addColumn(QueryResultRowItem::getDocumentName)
@@ -385,6 +398,7 @@ public class QueryResultPanel extends VerticalLayout {
 			.addColumn(QueryResultRowItem::getKey)
 			.setCaption("Tag Path")
 			.setRenderer(new HtmlRenderer())
+			.setDescriptionGenerator(item -> item.getDetailedKeyInContext(), ContentMode.HTML)
 			.setWidth(360);
 		
 		if (resultContainsProperties) {
@@ -471,12 +485,6 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		
 		queryResultGrid.addExpandListener(event -> handleExpandRequest(event));
-		queryResultGrid.setDescriptionGenerator(new DescriptionGenerator<QueryResultRowItem>() {
-			@Override
-			public String apply(QueryResultRowItem item) {
-				return item.getDetailedKeyInContext();
-			}
-		}, ContentMode.HTML);
 	}
 
 	private void initComponents() {
@@ -512,7 +520,7 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	private void createButtonBar(boolean cardStyle) {
-		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel = new HorizontalLayout();
 		buttonPanel.setWidth("100%");
 		
 		searchField = new TextField();
@@ -525,7 +533,7 @@ public class QueryResultPanel extends VerticalLayout {
 		caretDownBt = new IconButton(VaadinIcons.CARET_DOWN);
 		caretDownBt.setVisible(cardStyle);
 
-		optionsBt = new IconButton(VaadinIcons.ELLIPSIS_V);
+		optionsBt = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
 		optionsMenu = new ContextMenu(optionsBt,true);
 
 		removeBt = new IconButton(VaadinIcons.ERASER);
@@ -535,7 +543,14 @@ public class QueryResultPanel extends VerticalLayout {
 		buttonPanel.setComponentAlignment(optionsBt, Alignment.MIDDLE_RIGHT);
 		buttonPanel.setComponentAlignment(removeBt, Alignment.MIDDLE_RIGHT);
 		
-		buttonPanel.addStyleName("analyze-card-buttonbar");
+		if (cardStyle) {
+			buttonPanel.addStyleName("analyze-card-buttonbar");
+			searchField.setEnabled(false);
+		}
+		else {
+			buttonPanel.addStyleName("analyze-query-result-panel-buttonbar");
+			buttonPanel.setMargin(new MarginInfo(true, false, true, true));
+		}
 		addComponent(buttonPanel);
 	}
 
@@ -545,6 +560,7 @@ public class QueryResultPanel extends VerticalLayout {
 				public void buttonClick(ClickEvent event) {
 					addComponent(treeGridPanel);
 					((HorizontalLayout)caretRightBt.getParent()).replaceComponent(caretRightBt, caretDownBt);
+					searchField.setEnabled(true);
 				}
 			});
 	
@@ -552,6 +568,7 @@ public class QueryResultPanel extends VerticalLayout {
 				public void buttonClick(ClickEvent event) {
 					removeComponent(treeGridPanel);
 					((HorizontalLayout)caretDownBt.getParent()).replaceComponent(caretDownBt, caretRightBt);
+					searchField.setEnabled(false);
 				}
 			});
 		}
@@ -818,4 +835,7 @@ public class QueryResultPanel extends VerticalLayout {
 		dataProvider.refreshAll();
 	}
 
+	public void addToButtonBarLeft(Component component) {
+		buttonPanel.addComponent(component, 0);
+	}
 }

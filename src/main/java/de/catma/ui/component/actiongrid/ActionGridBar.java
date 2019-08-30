@@ -5,6 +5,7 @@ import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.Registration;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
@@ -86,5 +87,14 @@ public class ActionGridBar extends HorizontalLayout {
 	
 	IconButton getBtnToggleMultiselect() {
 		return btnToggleMultiselect;
+	}
+	
+	public void setAddBtnVisible(boolean visible) {
+		btnAdd.setVisible(visible);
+	}
+	
+	public void addButtonRight(Button button) {
+        addComponent(button);
+        setComponentAlignment(button, Alignment.MIDDLE_RIGHT);		
 	}
 }

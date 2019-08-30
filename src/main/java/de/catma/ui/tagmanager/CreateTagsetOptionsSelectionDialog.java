@@ -30,6 +30,7 @@ import de.catma.ui.tagger.CurrentWritableUserMarkupCollectionProvider;
 import de.catma.ui.tagger.TagsetSelectionDialog;
 import de.catma.util.IDGenerator;
 
+@Deprecated
 public class CreateTagsetOptionsSelectionDialog extends Window {
 
 	private Button btOpenTagset;

@@ -70,6 +70,7 @@ import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
+@Deprecated
 public class TagsetTree extends HorizontalLayout {
 
 	private static enum TagTreePropertyName {

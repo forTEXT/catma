@@ -331,7 +331,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		Label documentTreeLabel = new Label("Documents & Annotations");
 		documentTree = new TreeGrid<>();
 		documentTree.addStyleNames(
-				"annotate-resource-grid", 
+				"resource-grid", 
 				"flat-undecorated-icon-buttonrenderer", 
 				"no-focused-before-border");
 		
@@ -371,7 +371,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		
 		tagsetGrid = new Grid<>();
 		tagsetGrid.addStyleNames(
-				"annotate-resource-grid", 				
+				"resource-grid", 				
 				"flat-undecorated-icon-buttonrenderer",
 				"no-focused-before-border");
 		tagsetGrid.setSelectionMode(SelectionMode.MULTI);

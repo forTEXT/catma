@@ -17975,7 +17975,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: inherit;
 }
 
-.catma .annotate-resource-grid {
+.catma .resource-grid {
 	background: #FFFFFF;
 	color: #000000;
 }
@@ -18122,6 +18122,41 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background-color: #ffffff;
 }
 
+.catma .analyze-query-result-panel-buttonbar {
+	background-color: #e0e0e0;
+	color: rgba(0, 0, 0, 0.87);
+}
+
 .catma .analyze-queryresult-panel {
-	padding: 1px;
+	border: solid 1px rgba(151, 151, 151, 0.12);
+}
+
+.catma .kwic-panel-keyword {
+	text-align: center;
+}
+
+.catma .kwic-panel-keyword-rtl {
+	text-align: center;
+	direction: rtl;
+}
+
+.catma .kwic-panel-backwardctx {
+	text-align: right;
+}
+
+.catma .kwic-panel-backwardctx-rtl {
+	text-align: right;
+	direction: rtl;
+}
+
+.catma .kwic-panel-forwardctx-rtl {
+	direction: rtl;
+}
+
+.catma .kwic-panel-keyword-header {
+	text-align: center !important;
+}
+
+.catma .kwic-panel-backwardctx-header {
+	text-align: right !important;
 }

@@ -1,6 +1,5 @@
 package de.catma.ui.analyzenew;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.cache.LoadingCache;
@@ -14,18 +13,18 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
-import com.vaadin.ui.themes.ValoTheme;
 
 import de.catma.document.repository.Repository;
 import de.catma.indexer.KwicProvider;
-import de.catma.queryengine.result.QueryResultRow;
-import de.catma.ui.analyzenew.kwic.KwicPanelNew;
 import de.catma.ui.analyzenew.queryresultpanel.DisplaySetting;
 import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanel;
 import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.analyzenew.queryresultpanel.QueryResultRowItem;
+import de.catma.ui.analyzenew.visualization.ExpansionListener;
+import de.catma.ui.analyzenew.visualization.Visualisation;
 import de.catma.ui.component.IconButton;
 
 public class VizMaxPanel extends VerticalLayout  {
@@ -61,7 +60,7 @@ public class VizMaxPanel extends VerticalLayout  {
 	private Button arrowLeftBt;
 	private ComboBox<QuerySelection> queryResultBox;
 	
-	private KwicPanelNew kwicNew;
+	private Visualisation visualization;
 
 	private QueryResultPanel currentQueryResultPanel;
 
@@ -72,8 +71,10 @@ public class VizMaxPanel extends VerticalLayout  {
 	private QueryResultPanel selectedResultsPanel;
 
 	public VizMaxPanel( 
+			Visualisation visualization,
 			List<QueryResultPanelSetting> queryResultPanelSettings, Repository project,
 			LoadingCache<String, KwicProvider> kwicProviderCache, LeaveListener leaveListener) {
+		this.visualization = visualization;
 		this.project = project;
 		this.kwicProviderCache = kwicProviderCache;
 		initComponents();
@@ -97,7 +98,9 @@ public class VizMaxPanel extends VerticalLayout  {
 					querySelection.getSetting().getDisplaySetting(),
 					item -> handleItemSelection(item));
 			queryResultPanel.setSizeFull();
-			
+			Label label = new Label(querySelection.getSetting().getQueryId().getShortName());
+			label.setDescription(querySelection.getSetting().getQueryId().getName());
+			queryResultPanel.addToButtonBarLeft(label);
 			querySelection.setPanel(queryResultPanel);
 		}
 
@@ -108,7 +111,7 @@ public class VizMaxPanel extends VerticalLayout  {
 
 	private void handleItemSelection(QueryResultRowItem item) {
 		selectedResultsPanel.addQueryResultRows(item.getRows());
-		kwicNew.addQueryResultRows(item.getRows());
+		visualization.addQueryResultRows(item.getRows());
 	}
 
 	private void initData(List<QueryResultPanelSetting> queryResultPanelSettings) {
@@ -160,22 +163,20 @@ public class VizMaxPanel extends VerticalLayout  {
 		selectedResultsPanel = new QueryResultPanel(
 			project, kwicProviderCache, DisplaySetting.GROUPED_BY_PHRASE,
 			item -> handleItemRemoval(item));
+		
+		selectedResultsPanel.addToButtonBarLeft(new Label("Selection"));
+		
 		selectedResultsPanel.setSizeFull();
 		
 		resultSelectionSplitPanel.addComponent(selectedResultsPanel);
 		
 		// right column
-		
-		//TODO: should be passed in as "Visualization"
-		kwicNew = new KwicPanelNew(kwicProviderCache);
-		kwicNew.setHeight("100%");
-		kwicNew.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		
-		mainContentSplitPanel.addComponent(kwicNew);
+
+		mainContentSplitPanel.addComponent(visualization);
 	}
 
 	private void handleItemRemoval(QueryResultRowItem item) {
-		kwicNew.removeQueryResultRows(item.getRows());
+		visualization.removeQueryResultRows(item.getRows());
 		selectedResultsPanel.removeQueryResultRows(item.getRows());
 	}
 
@@ -185,6 +186,19 @@ public class VizMaxPanel extends VerticalLayout  {
 			@Override
 			public void selectionChange(SingleSelectionEvent<QuerySelection> event) {
 				setQueryResultPanel(event.getValue());
+			}
+		});
+		
+		visualization.setExpansionListener(new ExpansionListener() {
+			
+			@Override
+			public void expand() {
+				mainContentSplitPanel.setSplitPosition(0);
+			}
+			
+			@Override
+			public void compress() {
+				mainContentSplitPanel.setSplitPosition(50);
 			}
 		});
 	}

@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.antlr.runtime.RecognitionException;
@@ -29,9 +27,9 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -39,8 +37,6 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.source.IndexInfoSet;
-import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.QueryId;
@@ -52,31 +48,23 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanel;
 import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourcePanel;
-import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourceSelectionListener;
-import de.catma.ui.analyzenew.resourcepanel.CollectionDataItem;
-import de.catma.ui.analyzenew.resourcepanel.DocumentDataItem;
-import de.catma.ui.analyzenew.resourcepanel.DocumentTreeItem;
+import de.catma.ui.analyzenew.visualization.kwic.KwicPanelNew;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.IconButton;
-import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.util.StopWatch;
 
 public class AnalyzeNewView extends HorizontalLayout
 		implements ClosableTab {
 
-	public static interface CloseListener {
-		public void closeRequest(AnalyzeNewView analyzeNewView);
-	}
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private String userMarkupItemDisplayString = "Markup Collections";
-	private IndexedRepository repository;
-	private Corpus corpus;
+	private IndexedRepository project;
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
-	private List<String> relevantSourceDocumentIDs;
-	private List<String> relevantUserMarkupCollIDs;
-	private List<String> predefQueries;
+	
+	private Corpus currentCorpus;
+	private List<String> queryProposals;
+	
 	private Button btExecuteSearch;
 	private Button btQueryBuilder;
 	private Button kwicBt;
@@ -85,7 +73,9 @@ public class AnalyzeNewView extends HorizontalLayout
 	private Button networkBt;
 	private Button btQueryOptions;
 	private Button btVizOptions;
+	
 	private ComboBox<String> queryBox;
+	
 	private VerticalLayout resultsPanel;
 	private VerticalLayout vizCardsPanel;
 	private HorizontalLayout contentPanel;
@@ -96,25 +86,21 @@ public class AnalyzeNewView extends HorizontalLayout
 
 	public AnalyzeNewView(
 			Corpus corpus, 
-			IndexedRepository repository,
-			LoadingCache<String, KwicProvider> kwicProviderCache, 
-			CloseListener closeListener)
-			throws Exception {
+			IndexedRepository project) {
 
-		this.corpus = corpus;
-		this.repository = repository;
-		this.kwicProviderCache = kwicProviderCache;
-		this.relevantSourceDocumentIDs = new ArrayList<String>();
-		this.relevantUserMarkupCollIDs = new ArrayList<String>();
+		this.project = project;
+		this.kwicProviderCache = KwicProvider.buildKwicProviderByDocumentIdCache(project);
+		
 		this.indexInfoSet = new IndexInfoSet(Collections.<String>emptyList(), Collections.<Character>emptyList(),
 				Locale.ENGLISH);
 		
-		initComponents();
+		initComponents(corpus);
 		initActions();
-		addRelevantResources();
+		
+		corpusChanged();
 	}
 
-	private void initComponents() throws Exception {
+	private void initComponents(Corpus corpus) {
 		setSizeFull();
 		setSpacing(true);
 		
@@ -153,6 +139,7 @@ public class AnalyzeNewView extends HorizontalLayout
 		queryPanel.addComponent(resultsScrollPanel);
 		queryPanel.setExpandRatio(resultsScrollPanel, 1f);
 		
+		
 		// right column Visualizations
 		
 		VerticalLayout vizPanel = new VerticalLayout();
@@ -185,14 +172,19 @@ public class AnalyzeNewView extends HorizontalLayout
 		vizPanel.addComponent(vizCardsScrollPanel);
 		vizPanel.setExpandRatio(vizCardsScrollPanel, 1.0f);
 		
-		// Drawer
 		
-		analyzeResourcePanel = new AnalyzeResourcePanel(this.repository, this.corpus); 
+		// drawer
+		
+		analyzeResourcePanel = new AnalyzeResourcePanel(
+				this.project, 
+				corpus,
+				() -> corpusChanged()); 
 		drawer = new SliderPanelBuilder(analyzeResourcePanel)
-				.mode(SliderMode.LEFT).expanded(false).build();
+				.mode(SliderMode.LEFT).expanded(corpus.isEmpty()).build();
 		
 		addComponent(drawer);
 
+		
 		// content
 		contentPanel = new HorizontalLayout();
 		contentPanel.setSpacing(false);
@@ -207,6 +199,22 @@ public class AnalyzeNewView extends HorizontalLayout
 		setExpandRatio(contentPanel, 1f);
 	}
 	
+	private void corpusChanged() {
+
+		Corpus corpus = analyzeResourcePanel.getCorpus();
+		
+		if (!corpus.isEmpty()) {
+			
+			//TODO: provide a facility where the user can select between different IndexInfoSets -> AnalyzeResourcePanel
+			indexInfoSet = corpus.getSourceDocuments().get(0).getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
+		}
+		
+		
+		//TODO: update queries and vizs
+		
+		currentCorpus = corpus;
+	}
+
 	private VerticalLayout createSearchPanel() {	
 		VerticalLayout searchPanel = new VerticalLayout();
 		searchPanel.setWidth("100%");
@@ -216,15 +224,15 @@ public class AnalyzeNewView extends HorizontalLayout
 		btQueryBuilder = new Button("Build Query");
 
 		//TODO: add Queries with descriptive names
-		predefQueries = new ArrayList<>();
-		predefQueries.add("property= \"%\"");
-		predefQueries.add("tag=\"%\"");
-		predefQueries.add("wild= \"Blumen%\",tag=\"%\"");
-		predefQueries.add("wild= \"%\"");
-		predefQueries.add("freq>0");
+		queryProposals = new ArrayList<>();
+		queryProposals.add("property= \"%\"");
+		queryProposals.add("tag=\"%\"");
+		queryProposals.add("wild= \"Blumen%\",tag=\"%\"");
+		queryProposals.add("wild= \"%\"");
+		queryProposals.add("freq>0");
 
 		queryBox = new ComboBox<>();
-		queryBox.setDataProvider(new ListDataProvider<>(predefQueries));
+		queryBox.setDataProvider(new ListDataProvider<>(queryProposals));
 		queryBox.setEmptySelectionCaption("Select or enter a free query");
 		queryBox.setWidth("100%");
 		
@@ -289,8 +297,9 @@ public class AnalyzeNewView extends HorizontalLayout
 
 				VizMaxPanel vizMaxPanel = 
 						new VizMaxPanel(
+								new KwicPanelNew(project, kwicProviderCache),
 								getQueryResultPanelSettings(),
-								repository, 
+								project, 
 								kwicProviderCache,
 								closedVizMaxPanel -> setContent(contentPanel, closedVizMaxPanel));
 				
@@ -306,15 +315,7 @@ public class AnalyzeNewView extends HorizontalLayout
 				setContent(vizMaxPanel, contentPanel);
 			}
 		});
-		
-		analyzeResourcePanel.setSelectionListener(new AnalyzeResourceSelectionListener() {	
 
-			@Override
-			public void updateQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
-				updateCorpusAndQueryOptions(treeGrid);
-				
-			}		
-		});
 	}
 
 	private List<QueryResultPanelSetting> getQueryResultPanelSettings() {
@@ -327,38 +328,30 @@ public class AnalyzeNewView extends HorizontalLayout
 		return settings;
 	}
 
-	private void addRelevantResources() throws Exception {		
-		if (corpus != null) {
-			for (SourceDocument sd : corpus.getSourceDocuments()) {
-				addSourceDocument(sd);
-			}
-		} else {
-			for (SourceDocument sd : repository.getSourceDocuments()) {
-				addSourceDocument(sd);
-			}
-
-		}
-
-	}
-
 	private void executeSearch() {
 
 		String searchInput = queryBox.getValue();
+		if (searchInput == null || searchInput.trim().isEmpty()) {
+			Notification.show("Info", "Please enter or select a query first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
 		QueryOptions queryOptions = new QueryOptions(
 				new QueryId(searchInput),
-				relevantSourceDocumentIDs, 
-				relevantUserMarkupCollIDs,
+				currentCorpus.getDocumentIds(), 
+				currentCorpus.getCollectionIds(),
 				indexInfoSet.getUnseparableCharacterSequences(),
-				indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), repository);
-		QueryJob job = new QueryJob(searchInput.toString(), queryOptions);
-
+				indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), project);
+		QueryJob job = new QueryJob(searchInput, queryOptions);
+		
+		//TODO: show progress
 		((BackgroundServiceProvider) UI.getCurrent()).submit(Messages.getString("AnalyzerView.Searching"), //$NON-NLS-1$
 				job, new ExecutionListener<QueryResult>() {
 					public void done(QueryResult result) {
 						StopWatch watch = new StopWatch();
 						System.out.println(watch);
 						try {
-							QueryResultPanel queryResultPanel = new QueryResultPanel(repository, result,
+							QueryResultPanel queryResultPanel = new QueryResultPanel(project, result,
 									new QueryId(searchInput.toString()),
 									kwicProviderCache, 
 									closingPanel -> resultsPanel.removeComponent(closingPanel));
@@ -401,58 +394,6 @@ public class AnalyzeNewView extends HorizontalLayout
 
 	}
 
-	private void addSourceDocument(SourceDocument sd) {
-	
-		this.relevantSourceDocumentIDs.add(sd.getID());
-		//TODO: provide a facility where the user can select between different IndexInfoSets -> AnalyzeResourcePanel
-		indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
-
-		//TODO: should not being used here
-		MarkupCollectionItem umc = new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
-		
-		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
-			if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
-				addUserMarkupCollection(umcRef, umc);
-			}
-		}
-	}
-
-	private void addUserMarkupCollection(UserMarkupCollectionReference umcRef, MarkupCollectionItem umc) {
-		this.relevantUserMarkupCollIDs.add(umcRef.getId());
-	}
-	
-	private void updateCorpusAndQueryOptions(TreeGrid<DocumentTreeItem> treeGrid) {
-		
-		//TODO:
-		
-		this.corpus = new Corpus("new Corpus");
-
-		Set<DocumentTreeItem> selecteItems = treeGrid.getSelectedItems();
-
-		for (DocumentTreeItem documentTreeItem : selecteItems) {
-			if (documentTreeItem.getClass()==DocumentDataItem.class) {
-
-				DocumentDataItem documentDataItem = (DocumentDataItem) documentTreeItem;
-				this.corpus.addSourceDocument(documentDataItem.getDocument());
-			}
-			if (documentTreeItem.getClass()==CollectionDataItem.class) {
-				CollectionDataItem collectionDataItem = (CollectionDataItem) documentTreeItem;
-				this.corpus.addUserMarkupCollectionReference(collectionDataItem.getCollectionRef());
-			}
-		}
-		try {
-			addRelevantResources();
-		} catch (Exception e) {
-			//TODO:
-			logger.log(Level.SEVERE, "error  updating query options", e); 
-			e.printStackTrace();
-		}	
-	}
-
-	public Corpus getCorpus() {
-		return corpus;
-	}
-
 	@Override
 	public void addClickshortCuts() {
 		// noop
@@ -465,6 +406,7 @@ public class AnalyzeNewView extends HorizontalLayout
 
 	@Override
 	public void close() {
+		analyzeResourcePanel.close();
 		// TODO Auto-generated method stub
 
 	}

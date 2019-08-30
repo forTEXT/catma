@@ -1,6 +1,7 @@
 package de.catma.ui.analyzenew;
 
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -52,6 +53,10 @@ public class VizMinPanel extends VerticalLayout {
 		btMaximize = new IconButton (VaadinIcons.ARROW_RIGHT);
 		
 		buttonBar.addComponents(btRemove,btMaximize);
+		buttonBar.setComponentAlignment(btRemove, Alignment.MIDDLE_RIGHT);
+		buttonBar.setComponentAlignment(btMaximize, Alignment.MIDDLE_RIGHT);
+		buttonBar.setExpandRatio(btRemove, 1f);
+		
 		addComponents(titleLabel, buttonBar);
 	}
 

@@ -19,15 +19,7 @@
 
 package de.catma.queryengine;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
@@ -76,31 +68,10 @@ public class TagQuery extends Query {
 						tagPhrase);
         
         
-        Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-    	LoadingCache<String, SourceDocument> documentCache = 
-    			CacheBuilder.newBuilder()
-    			.maximumSize(10)
-    			.removalListener(new RemovalListener<String, SourceDocument>() {
-    				@Override
-    				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
-    					if (toBeUnloaded.contains(notification.getValue())) {
-    						notification.getValue().unload();
-    					}
-    				}
-				})
-    			.build(new CacheLoader<String, SourceDocument>() {
-    				@Override
-    				public SourceDocument load(String key) throws Exception {
-    					return repository.getSourceDocument(key);
-    				}
-    			});
-    	
         for (QueryResultRow row  : result) {
         	SourceDocument sd = 
-        			documentCache.get(row.getSourceDocumentId());
-        	if (!sd.isLoaded()) {
-        		toBeUnloaded.add(sd);
-        	}
+        			repository.getSourceDocument(row.getSourceDocumentId());
+
         	TagQueryResultRow tRow = (TagQueryResultRow)row;
         	
         	if (tRow.getRanges().size() > 1) {
@@ -117,11 +88,7 @@ public class TagQuery extends Query {
         		row.setPhrase(sd.getContent(row.getRange()));
         	}
         }
-        
-        for (SourceDocument sd : toBeUnloaded) {
-        	sd.unload();
-        }
-        
+
         return result;
     }
 

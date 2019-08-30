@@ -1,4 +1,4 @@
-package de.catma.ui.analyzenew.kwic;
+package de.catma.ui.analyzenew.visualization.kwic;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -167,5 +167,44 @@ public class KwicItemHandler {
 		}
 		
 		return false;
-	}	
+	}
+
+	public String getKeywordStyle(QueryResultRow row) {
+		try {
+			if (spanContextCache.get(row).isRightToLeft()) {
+				return "kwic-panel-keyword-rtl";
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return "kwic-panel-keyword";
+	}
+
+	public String getBackwardContextStyle(QueryResultRow row) {
+		try {
+			if (spanContextCache.get(row).isRightToLeft()) {
+				return "kwic-panel-backwardctx-rtl";
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return "kwic-panel-backwardctx";
+	}
+	
+	public String getForwardContextStyle(QueryResultRow row) {
+		try {
+			if (spanContextCache.get(row).isRightToLeft()) {
+				return "kwic-panel-forwardctx-rtl";
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return "kwic-panel-forwardctx";
+	}
 }
