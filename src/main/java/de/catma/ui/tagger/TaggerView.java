@@ -84,6 +84,7 @@ import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeOldEvent;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tabbedview.TabCaptionChangeListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
@@ -838,5 +839,10 @@ public class TaggerView extends HorizontalLayout
 	@Override
 	public Annotation getTagInstanceInfo(String tagInstanceId) {
 		return userMarkupCollectionManager.getAnnotation(tagInstanceId);
+	}
+	
+	@Override
+	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		//noop tabname is not changeable
 	}
 }

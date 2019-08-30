@@ -3,6 +3,7 @@ package de.catma.ui.analyzenew;
 import java.util.List;
 
 import com.google.common.cache.LoadingCache;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
@@ -201,5 +202,11 @@ public class VizMaxPanel extends VerticalLayout  {
 				mainContentSplitPanel.setSplitPosition(50);
 			}
 		});
+	}
+
+	@SuppressWarnings("unchecked")
+	public void addQueryResultPanelSetting(QueryResultPanelSetting setting) {
+		((ListDataProvider<QuerySelection>)queryResultBox.getDataProvider()).getItems().add(new QuerySelection(setting));
+		queryResultBox.getDataProvider().refreshAll();
 	}
 }

@@ -41,6 +41,7 @@ import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tabbedview.TabCaptionChangeListener;
 import de.catma.util.IDGenerator;
 
 public class VegaView extends HorizontalSplitPanel implements ClosableTab {
@@ -304,5 +305,11 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 	@Override
 	public String toString() {
 		return "Vega";
+	}
+	
+	@Override
+	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		// TODO Auto-generated method stub
+		
 	}
 }

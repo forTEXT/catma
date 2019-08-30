@@ -16,6 +16,7 @@ import org.vaadin.sliderpanel.client.SliderMode;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.cache.LoadingCache;
+import com.google.common.eventbus.EventBus;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
@@ -53,6 +54,7 @@ import de.catma.ui.analyzer.Messages;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tabbedview.TabCaptionChangeListener;
 import de.catma.util.StopWatch;
 
 public class AnalyzeNewView extends HorizontalLayout
@@ -83,21 +85,28 @@ public class AnalyzeNewView extends HorizontalLayout
 	private AnalyzeResourcePanel analyzeResourcePanel;
 	private SliderPanel drawer;
 	private IndexInfoSet indexInfoSet;
+	private TabCaptionChangeListener tabCaptionChangeListener;
+	private AnalyzeCaption analyzeCaption;
 
 	public AnalyzeNewView(
 			Corpus corpus, 
-			IndexedRepository project) {
+			IndexedRepository project, EventBus eventBus) {
 
 		this.project = project;
 		this.kwicProviderCache = KwicProvider.buildKwicProviderByDocumentIdCache(project);
 		
 		this.indexInfoSet = new IndexInfoSet(Collections.<String>emptyList(), Collections.<Character>emptyList(),
 				Locale.ENGLISH);
-		
+		this.analyzeCaption = new AnalyzeCaption(corpus);
 		initComponents(corpus);
 		initActions();
 		
 		corpusChanged();
+	}
+	
+	@Override
+	public String getCaption() {
+		return analyzeCaption.getCaption();
 	}
 
 	private void initComponents(Corpus corpus) {
@@ -213,6 +222,13 @@ public class AnalyzeNewView extends HorizontalLayout
 		//TODO: update queries and vizs
 		
 		currentCorpus = corpus;
+		
+		if (!analyzeCaption.isSetManually()) {
+			analyzeCaption.setCaption(currentCorpus);
+			if (tabCaptionChangeListener != null) {
+				tabCaptionChangeListener.tabCaptionChange(this);
+			}
+		}
 	}
 
 	private VerticalLayout createSearchPanel() {	
@@ -357,6 +373,7 @@ public class AnalyzeNewView extends HorizontalLayout
 									closingPanel -> resultsPanel.removeComponent(closingPanel));
 							
 							resultsPanel.addComponentAsFirst(queryResultPanel);
+							addQueryResultPanelSetting(queryResultPanel.getQueryResultPanelSetting());
 						} catch (Exception e) {
 							//TODO: error handling
 							e.printStackTrace();
@@ -394,6 +411,14 @@ public class AnalyzeNewView extends HorizontalLayout
 
 	}
 
+	private void addQueryResultPanelSetting(QueryResultPanelSetting queryResultPanelSetting) {
+		for (Iterator<Component> compIter=vizCardsPanel.iterator(); compIter.hasNext();) {
+			VizMinPanel vizMinPanel = (VizMinPanel)compIter.next();
+			vizMinPanel.addQueryResultPanelSetting(queryResultPanelSetting);
+		}
+		
+	}
+
 	@Override
 	public void addClickshortCuts() {
 		// noop
@@ -409,6 +434,11 @@ public class AnalyzeNewView extends HorizontalLayout
 		analyzeResourcePanel.close();
 		// TODO Auto-generated method stub
 
+	}
+	
+	@Override
+	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		this.tabCaptionChangeListener = tabNameChangeListener;
 	}
 
 }

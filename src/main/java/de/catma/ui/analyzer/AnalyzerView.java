@@ -84,6 +84,7 @@ import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
+import de.catma.ui.tabbedview.TabCaptionChangeListener;
 import de.catma.util.Equal;
 
 public class AnalyzerView extends VerticalLayout 
@@ -781,5 +782,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		});
 
 		tagResultsDialog.show(lastTagResultsDialogHeight, lastTagResultsDialogWidth, lastTagResultsDialogUnit);
+	}
+	
+	@Override
+	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		// TODO Auto-generated method stub
+		
 	}
 }

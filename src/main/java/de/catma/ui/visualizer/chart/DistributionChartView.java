@@ -38,6 +38,7 @@ import de.catma.queryengine.result.computation.XYValues;
 import de.catma.ui.Slider;
 import de.catma.ui.component.ZoomableVerticalLayout;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tabbedview.TabCaptionChangeListener;
 
 public class DistributionChartView extends VerticalLayout implements ClosableTab {
 	
@@ -168,5 +169,11 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 	@Override
 	public String toString() {
 		return MessageFormat.format(Messages.getString("DistributionChartView.distAnalysisFor"), label); //$NON-NLS-1$
+	}
+	
+	@Override
+	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -17,6 +17,7 @@ import de.catma.document.repository.Repository;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzenew.annotation.AnnotationWizard;
 import de.catma.ui.analyzenew.visualization.ExpansionListener;
 import de.catma.ui.analyzenew.visualization.Visualisation;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
@@ -42,6 +43,7 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 	private ExpansionListener expansionListener;
 
 	public KwicPanelNew(Repository project, LoadingCache<String, KwicProvider> kwicProviderCache ) {
+		this.project = project;
 		this.kwicItemHandler = new KwicItemHandler(kwicProviderCache);
 		initComponents();
 		initActions();
@@ -49,9 +51,8 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 
 	private void initActions() {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		//TODO:
-//		moreOptionsMenu.addItem("Annotate all selected rows", clickEvent -> handleAnnotateAllRequest());
-//		moreOptionsMenu.addItem("Annotate single row", clickEvent -> handleAnnotateSingleRequest());
+
+		moreOptionsMenu.addItem("Annotate selected rows", clickEvent -> handleAnnotateSelectedRequest());
 //		moreOptionsMenu.addItem("Export Visualisation", clickEvent -> handleExportVisualizationRequest());
 		
 		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
@@ -62,6 +63,15 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 		});
 		
 		btExpandCompress.addClickListener(clickEvent -> handleMaxMinRequest());
+	}
+
+	private void handleAnnotateSelectedRequest() {
+		// TODO Auto-generated method stub
+		
+		
+		AnnotationWizard wizard = new AnnotationWizard(project);
+		wizard.show();
+		
 	}
 
 	private void handleMaxMinRequest() {

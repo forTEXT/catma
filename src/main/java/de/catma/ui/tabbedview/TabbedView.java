@@ -40,17 +40,20 @@ import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
 public class TabbedView extends VerticalLayout implements CloseHandler {
-	public interface CloseableTabFactory extends Supplier<ClosableTab> {
+	public interface ClosableTabFactory extends Supplier<ClosableTab> {
 		@Override
 		default ClosableTab get() {
-			return createCloseableTab();
+			return createClosableTab();
 		}
 
-		ClosableTab createCloseableTab();
-
-		default String getDefaultCaption() { return "No selection yet"; };
+		ClosableTab createClosableTab();
 	}
-	
+
+
+	private TabSheet tabSheet;
+	private TabComponent lastTab;
+	private ClosableTabFactory closeableTabFactory;
+
 	@Deprecated
 	private static class SimpleLabelTab extends VerticalLayout implements ClosableTab {
 		
@@ -73,25 +76,26 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		@Override
 		public void close() {
 		}
+
+		@Override
+		public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		}
+		
+		
 	}
-
-	private TabSheet tabSheet;
-	private TabComponent lastTab;
-	private CloseableTabFactory closeableTabFactory;
-
 	@Deprecated
 	public TabbedView(final String noOpenTabsText) {
-		this (new CloseableTabFactory() {
+		this (new ClosableTabFactory() {
 			
 			@Override
-			public ClosableTab createCloseableTab() {
+			public ClosableTab createClosableTab() {
 				return new SimpleLabelTab(noOpenTabsText);
 			}
 		});
 
 	}
 	
-	public TabbedView(CloseableTabFactory closeableTabFactory) {
+	public TabbedView(ClosableTabFactory closeableTabFactory) {
 		this.closeableTabFactory = closeableTabFactory;
 		initComponents();
 		initActions();	
@@ -148,19 +152,18 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 				addButtonElement.setInnerHtml(VaadinIcons.PLUS.getHtml());
 
 				addButtonElement.addEventListener("click", args -> {
-					addClosableTab(closeableTabFactory.createCloseableTab(), closeableTabFactory.getDefaultCaption());
+					addClosableTab(closeableTabFactory.createClosableTab());
 				});
 			}
 		}, tabSheet);
 
 		if (tabSheet.getComponentCount() == 0) {
-			addClosableTab(closeableTabFactory.createCloseableTab(), closeableTabFactory.getDefaultCaption());
+			addClosableTab(closeableTabFactory.createClosableTab());
 		}
 	}
-	
-	@Deprecated
-	public void setHtmlLabel(){
-	   // noOpenTabsLabel.setContentMode(ContentMode.HTML);
+
+	private void handleTabCaptionChange(Component tabComp) {
+		tabSheet.getTab(tabComp).setCaption(tabComp.getCaption());
 	}
 
 	protected void onTabClose(Component tabContent) {
@@ -176,7 +179,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		}
 
 		if (tabsheet.getComponentCount() == 0) {
-			addClosableTab(closeableTabFactory.createCloseableTab(), closeableTabFactory.getDefaultCaption());
+			addClosableTab(closeableTabFactory.createClosableTab());
 		}
 
 	}
@@ -191,7 +194,13 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		return tab;
 	}
 
+	protected Tab addClosableTab(ClosableTab closableTab) {
+		return addClosableTab(closableTab, closableTab.getCaption());
+	}
+	
 	protected Tab addClosableTab(ClosableTab closableTab, String caption) {
+		closableTab.setTabNameChangeListener(tabComp -> handleTabCaptionChange(tabComp));
+
 		Tab tab = addTab(closableTab, caption);
 		tab.setClosable(true);
 		return tab;

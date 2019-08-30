@@ -78,8 +78,8 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	private ProjectView projectView;
 	private TagsView tagsView;
 	private TaggerManagerView taggerManagerView;
-	private AnalyzerManagerViewOld analyzerManagerView;
-	private AnalyzeNewManagerView analyzeNewManagerView;
+	private AnalyzerManagerViewOld analyzerOldManagerView;
+	private AnalyzeNewManagerView analyzeManagerView;
 
 	
 	/**
@@ -143,9 +143,9 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			this.taggerManagerView.closeClosables();
 			this.taggerManagerView = null;
 		}
-		if (this.analyzerManagerView != null) {
-			this.analyzerManagerView.closeClosables();
-			this.analyzerManagerView = null;
+		if (this.analyzeManagerView != null) {
+			this.analyzeManagerView.closeClosables();
+			this.analyzeManagerView = null;
 		}	    	
     }
     
@@ -223,14 +223,14 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	@Override
 	public void handleRouteToAnalyzeOld(RouteToAnalyzeOldEvent routeToAnalyzeEvent) {
 		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
-			if (this.analyzerManagerView == null) {
-				this.analyzerManagerView = new AnalyzerManagerViewOld(eventBus);
+			if (this.analyzerOldManagerView == null) {
+				this.analyzerOldManagerView = new AnalyzerManagerViewOld(eventBus);
 			}
 			
-			setContent(analyzerManagerView);
+			setContent(analyzerOldManagerView);
 			
 			if (routeToAnalyzeEvent.getCorpus() != null) {
-				analyzerManagerView.analyzeDocuments(
+				analyzerOldManagerView.analyzeDocuments(
 					routeToAnalyzeEvent.getCorpus(), routeToAnalyzeEvent.getProject());
 			}			
 			currentRoute = routeToAnalyzeEvent.getClass();
@@ -240,16 +240,18 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	@Override
 	public void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent) {
 		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
-			if (this.analyzeNewManagerView == null) {
-				this.analyzeNewManagerView = new AnalyzeNewManagerView(eventBus, routeToAnalyzeEvent.getProject());
+			if (this.analyzeManagerView == null) {
+				this.analyzeManagerView = new AnalyzeNewManagerView(eventBus, routeToAnalyzeEvent.getProject());
 			}
 			
-			setContent(analyzeNewManagerView);
 			
 			if (routeToAnalyzeEvent.getCorpus() != null) {
-				analyzeNewManagerView.analyzeNewDocuments(
+				analyzeManagerView.analyzeNewDocuments(
 					routeToAnalyzeEvent.getCorpus(), routeToAnalyzeEvent.getProject());
-			}			
+			}		
+			
+			setContent(analyzeManagerView);
+			
 			currentRoute = routeToAnalyzeEvent.getClass();
 		}
 		

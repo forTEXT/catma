@@ -246,41 +246,7 @@ public class TagsView extends HugeCard {
 		tagsetGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetTreeItem>() {
 			@Override
 			public SerializablePredicate<TagsetTreeItem> createSearchFilter(String searchInput) {
-				return new SerializablePredicate<TagsetTreeItem>() {
-					@Override
-					public boolean test(TagsetTreeItem t) {
-						return testWithChildren(t);
-					}
-					
-					private boolean testTagsetTreeItem(TagsetTreeItem t) {
-						String strValue = t.toString();
-						
-						if (strValue != null && strValue.startsWith(searchInput)) {
-							return true;
-						}
-	
-						
-						return false;
-					}
-					
-					public boolean testWithChildren(TagsetTreeItem t) {
-						if (t == null) {
-							return false;
-						}
-						
-						if (testTagsetTreeItem(t)) {
-							return true;
-						}
-						
-						for (TagsetTreeItem child : tagsetData.getChildren(t)) {
-							if (testWithChildren(child)) {
-								return true;
-							}
-						}
-						
-						return false;
-					}
-				};
+				return new TagsetSearchFilterProvider(searchInput, tagsetData);
 			}
 		});
 		

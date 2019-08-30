@@ -25,6 +25,7 @@ import com.vaadin.v7.ui.Table.TableDragMode;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tabbedview.TabCaptionChangeListener;
 
 public class TagLibraryView extends HorizontalLayout implements ClosableTab {
 	
@@ -77,4 +78,9 @@ public class TagLibraryView extends HorizontalLayout implements ClosableTab {
 	
 	public void removeClickshortCuts() { /* noop*/ }
 
+	@Override
+	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		// TODO Auto-generated method stub
+		
+	}
 }

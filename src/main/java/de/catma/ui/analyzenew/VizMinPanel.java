@@ -7,6 +7,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.component.IconButton;
 
 
@@ -60,4 +61,7 @@ public class VizMinPanel extends VerticalLayout {
 		addComponents(titleLabel, buttonBar);
 	}
 
+	public void addQueryResultPanelSetting(QueryResultPanelSetting queryResultPanelSetting) {
+		vizMaxPanel.addQueryResultPanelSetting(queryResultPanelSetting);
+	}
 }

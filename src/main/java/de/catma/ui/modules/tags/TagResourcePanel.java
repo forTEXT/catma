@@ -33,7 +33,7 @@ public class TagResourcePanel extends VerticalLayout {
 	private Repository project;
 	private Grid<TagsetDefinition> tagsetGrid;
 	private PropertyChangeListener tagsetChangeListener;
-	private ListDataProvider<TagsetDefinition> tagsetData;
+	private ListDataProvider<TagsetDefinition> tagsetDataProvider;
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent;
 	private PropertyChangeListener projectExceptionListener;
 	private ErrorHandler errorHandler;
@@ -51,9 +51,9 @@ public class TagResourcePanel extends VerticalLayout {
 	
     private void initData() {
     	try {
-			tagsetData = new ListDataProvider<TagsetDefinition>(project.getTagsets());
-			tagsetGrid.setDataProvider(tagsetData);
-			tagsetData.getItems().forEach(tagsetGrid::select);
+			tagsetDataProvider = new ListDataProvider<TagsetDefinition>(project.getTagsets());
+			tagsetGrid.setDataProvider(tagsetDataProvider);
+			tagsetDataProvider.getItems().forEach(tagsetGrid::select);
     	}
     	catch (Exception e) {
 			errorHandler.showAndLogError("Error loading data!", e);
@@ -138,21 +138,21 @@ public class TagResourcePanel extends VerticalLayout {
 		Object newValue = evt.getNewValue();
 		
 		if (oldValue == null) { // creation
-			tagsetData.refreshAll();
+			tagsetDataProvider.refreshAll();
 			tagsetGrid.select((TagsetDefinition)newValue);
 		}
 		else if (newValue == null) { // removal
-			tagsetData.refreshAll();
+			tagsetDataProvider.refreshAll();
 		}
 		else { // metadata update
 			TagsetDefinition tagset = (TagsetDefinition)newValue;
-			tagsetData.refreshItem(tagset);
+			tagsetDataProvider.refreshItem(tagset);
 		}
 		
 		Collection<TagsetDefinition> selection = getSelectedTagsets();
 		tagsetGrid.deselectAll();
 		selection.forEach(tagset -> {
-			if (tagsetData.getItems().contains(tagset)) {
+			if (tagsetDataProvider.getItems().contains(tagset)) {
 				tagsetGrid.select(tagset);
 			}
 		});

@@ -47,6 +47,7 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.admin.AdminWindow;
 import de.catma.ui.repository.RepositoryHelpWindow;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tabbedview.TabCaptionChangeListener;
 import de.catma.user.Permission;
 import de.catma.user.Role;
 
@@ -240,6 +241,12 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	public void addClickshortCuts() { /* noop*/	}
 	
 	public void removeClickshortCuts() { /* noop*/ }
+	
+	@Override
+	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
 

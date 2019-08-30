@@ -14,6 +14,7 @@ import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.source.KeywordInContext;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tabbedview.TabCaptionChangeListener;
 
 public class DoubleTreeView  extends Panel implements ClosableTab {
 	
@@ -85,5 +86,11 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 	@Override
 	public String toString() {
 		return Messages.getString("DoubleTreeView.kwicAsDoubleTree"); //$NON-NLS-1$
+	}
+	
+	@Override
+	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+		// TODO Auto-generated method stub
+		
 	}
 }
