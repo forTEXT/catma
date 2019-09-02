@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Grid;
@@ -119,5 +120,9 @@ public class EditPropertyTab extends HorizontalLayout {
 	
 	public Property getProperty() {
 		return property;
+	}
+	
+	public void addSelectionListener(SelectionListener<String> selectionListener) {
+		valueGrid.addSelectionListener(selectionListener);
 	}
 }

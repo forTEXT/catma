@@ -27,6 +27,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
@@ -34,6 +35,7 @@ import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
@@ -111,17 +113,20 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
 	private final UIFactory uiFactory;
 	
-    private TreeGrid<Resource> resourceGrid;
+    private TreeGrid<Resource> documentGrid;
+    private ActionGridComponent<TreeGrid<Resource>> documentGridComponent;
+
     private Grid<TagsetDefinition> tagsetGrid;
-	private Grid<Member> teamGrid;
-	private ActionGridComponent<TreeGrid<Resource>> documentsGridComponent;
-	private PropertyChangeListener projectExceptionListener;
-	private ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent;
-	private PropertyChangeListener tagsetChangeListener;
-	private ListDataProvider<TagsetDefinition> tagsetData;
+    private ActionGridComponent<Grid<TagsetDefinition>> tagsetGridComponent;
+
+    private Grid<Member> teamGrid;
+    private VerticalFlexLayout teamPanel;
+    private ListDataProvider<TagsetDefinition> tagsetData;
+    private PropertyChangeListener tagsetChangeListener;
+
+    private PropertyChangeListener projectExceptionListener;
 	private Multimap<Resource, Resource> docResourceToReadableCollectionResourceMap = HashMultimap.create();
 	private MenuItem miInvite;
-	private VerticalFlexLayout teamPanel;
 
 	@Inject
     public ProjectView(
@@ -184,7 +189,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		
 			@SuppressWarnings("unchecked")
 			TreeDataProvider<Resource> resourceDataProvider = 
-    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
+    				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
 
 			CollectionResource collectionResource = 
 				new CollectionResource(
@@ -202,7 +207,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     				documentResource, collectionResource);
 			resourceDataProvider.refreshAll();
 			
-			resourceGrid.expand(documentResource);
+			documentGrid.expand(documentResource);
 			
 			Notification.show(
 				"Info", 
@@ -215,10 +220,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void initActions() {
-    	resourceGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
+		documentGridComponent.setSearchFilterProvider(searchInput -> createSearchFilter(searchInput));
+
+    	documentGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
     	
         ContextMenu addContextMenu = 
-        	documentsGridComponent.getActionGridBar().getBtnAddContextMenu();
+        	documentGridComponent.getActionGridBar().getBtnAddContextMenu();
         MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
         addDocumentBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
@@ -235,7 +242,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		);
         
         ContextMenu documentsGridMoreOptionsContextMenu = 
-        	documentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+        	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         
         MenuItem editDocBtn = documentsGridMoreOptionsContextMenu.addItem(
             	"Edit documents / collections",(menuItem) -> handleEditResources());
@@ -246,7 +253,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		() -> editDocBtn.setEnabled(true))
         		);
         MenuItem deleteDocsBtn = documentsGridMoreOptionsContextMenu.addItem(
-        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
+        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, documentGrid));
         deleteDocsBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
@@ -255,7 +262,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		);
         
         documentsGridMoreOptionsContextMenu.addItem(
-            	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, resourceGrid));
+            	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
 
 
         MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
@@ -266,6 +273,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         );
         editResBtn.setEnabled(false);
         
+        documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
+        
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
         		() -> editResBtn.setEnabled(true))
@@ -274,12 +283,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
-        		() ->  tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
+        		() ->  tagsetGridComponent.getActionGridBar().addBtnAddClickListener(
         	        	click -> handleAddTagsetRequest()))
         		);
    
         ContextMenu moreOptionsMenu = 
-        	tagsetsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+        	tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         MenuItem editTagset = moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
         editTagset.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
@@ -306,7 +315,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
         hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
         
-        tagsetsGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
+        tagsetGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
         	@Override
         	public SerializablePredicate<TagsetDefinition> createSearchFilter(final String searchInput) {
         		
@@ -323,6 +332,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         			}
 				};
         	}
+		});
+	}
+
+	private void handleSelectFilteredDocuments() {
+		documentGridComponent.setSelectionModeFixed(SelectionMode.MULTI);
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<Resource> dataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+		dataProvider.fetch(
+				new HierarchicalQuery<>(dataProvider.getFilter(), null))
+		.forEach(resource -> {
+			documentGrid.select(resource);
+			dataProvider.fetch(new HierarchicalQuery<>(dataProvider.getFilter(), resource))
+			.forEach(child -> documentGrid.select(child));
 		});
 	}
 
@@ -438,7 +460,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
 	private void handleEditResources() {
-		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
+		final Set<Resource> selectedResources = documentGrid.getSelectedItems();
 		if ((selectedResources.size() != 1) 
 				&& !selectedResources.iterator().next().isCollection()) {
 			Notification.show("Info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE);
@@ -459,7 +481,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     							collectionRef.getContentInfoSet().setTitle(result);
     							try {
 									project.update(collectionRef, collectionRef.getContentInfoSet());
-									resourceGrid.getDataProvider().refreshItem(resource);
+									documentGrid.getDataProvider().refreshItem(resource);
 								} catch (Exception e) {
 									errorHandler.showAndLogError("error updating Collection", e);
 								}
@@ -558,9 +580,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void handleAddCollectionRequest() {
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<Resource> resourceDataProvider = 
-				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
+				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
 		
-    	Set<Resource> selectedResources = resourceGrid.getSelectedItems();
+    	Set<Resource> selectedResources = documentGrid.getSelectedItems();
     	
     	Set<SourceDocument> selectedDocuments = new HashSet<>();
     	
@@ -578,7 +600,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
     	if (!selectedDocuments.isEmpty()) {
 	    	SingleTextInputDialog collectionNameDlg = 
-	    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+	    		new SingleTextInputDialog("Add Annotation Collection(s)", "Please enter the Collection name:",
 	    				new SaveCancelListener<String>() {
 							
 							@Override
@@ -701,7 +723,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		
     		@SuppressWarnings("unchecked")
 			TreeDataProvider<Resource> resourceDataProvider = 
-    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
+    				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
     		
     		Resource root = 
     			resourceDataProvider.getTreeData().getParent(resource);
@@ -787,14 +809,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     private Component initResourceContent() {
     	HorizontalFlexLayout resourceContent = new HorizontalFlexLayout();
-    	resourceGrid = new TreeGrid<>();
-        resourceGrid.addStyleNames(
+    	documentGrid = new TreeGrid<>();
+        documentGrid.addStyleNames(
 				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
 
-        resourceGrid.setHeaderVisible(false);
-        resourceGrid.setRowHeight(45);
+        documentGrid.setHeaderVisible(false);
+        documentGrid.setRowHeight(45);
 
-		resourceGrid
+		documentGrid
 			.addColumn(resource -> resource.getIcon(), new HtmlRenderer())
 			.setWidth(100);
         
@@ -815,36 +837,25 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    return sb.toString();
 		};
       
-        resourceGrid
+        documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
         	.setWidth(300);
         
-        resourceGrid
+        documentGrid
     	.addColumn(res -> res.getPermissionIcon() , new HtmlRenderer())
     	.setCaption("Permission")
     	.setExpandRatio(1);      
         
-        //TODO: see MD for when it is appropriate to offer row options
-//        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
-//				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
-//        resourceOptionsRenderer.setHtmlContentAllowed(true);
-        
-//		resourceGrid.addColumn(
-//			(nan) -> VaadinIcons.ELLIPSIS_DOTS_V.getHtml(), 
-//			resourceOptionsRenderer);
-        
-        
-        
         Label documentsAnnotations = new Label("Documents & Annotations");
 
-        documentsGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
+        documentGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
-                resourceGrid
+                documentGrid
         );
-        documentsGridComponent.addStyleName("project-view-action-grid");
+        documentGridComponent.addStyleName("project-view-action-grid");
 
-        resourceContent.addComponent(documentsGridComponent);
+        resourceContent.addComponent(documentGridComponent);
 
         tagsetGrid = new Grid<>();
         tagsetGrid.setHeaderVisible(false);
@@ -858,14 +869,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 
         Label tagsetsAnnotations = new Label("Tagsets");
-        tagsetsGridComponent = new ActionGridComponent<Grid<TagsetDefinition>> (
+        tagsetGridComponent = new ActionGridComponent<Grid<TagsetDefinition>> (
                 tagsetsAnnotations,
                 tagsetGrid
         );
 
-        tagsetsGridComponent.addStyleName("project-view-action-grid");
+        tagsetGridComponent.addStyleName("project-view-action-grid");
         
-        resourceContent.addComponent(tagsetsGridComponent);
+        resourceContent.addComponent(tagsetGridComponent);
         return resourceContent;
     }
 
@@ -958,9 +969,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         try {
         	
         	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
-        	resourceGrid.setDataProvider(resourceDataProvider);
+        	documentGrid.setDataProvider(resourceDataProvider);
         	
-        	resourceGrid.expand(resourceDataProvider.getTreeData().getRootItems());
+        	documentGrid.expand(resourceDataProvider.getTreeData().getRootItems());
         	
         	tagsetData = new ListDataProvider<>(project.getTagsets());
         	tagsetGrid.setDataProvider(tagsetData);
@@ -1150,4 +1161,32 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			errorHandler.showAndLogError("Error closing ProjectView", e);
 		}
 	}
+	
+	private SerializablePredicate<Object> createSearchFilter(String searchInput) {
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<Resource> documentDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+		TreeData<Resource> documentData = documentDataProvider.getTreeData();
+		
+		return new SerializablePredicate<Object>() {
+			@Override
+			public boolean test(Object r) {
+				if (r instanceof CollectionResource) {
+					return r.toString().startsWith(searchInput);
+				}
+				else {
+					if (r.toString().startsWith(searchInput)) {
+						return true;
+					}
+					else {
+						return documentData.getChildren((Resource)r)
+								.stream()
+								.filter(child -> child.toString().startsWith(searchInput))
+								.findAny()
+								.isPresent();
+					}
+				}
+			}
+		};
+	}
+
  }

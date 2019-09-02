@@ -55,7 +55,7 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
         this.dataGrid = dataGrid;
         this.actionGridBar = new ActionGridBar(titleCompennt);
         this.btnToggleListSelectReg = this.actionGridBar.addBtnToggleListSelect(
-                event -> handleToggleMultiselectRequest(event));
+                event -> handleToggleMultiselectRequest());
         this.headerVisible = dataGrid.isHeaderVisible();
         initComponents();
         initActions();
@@ -78,8 +78,16 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
 		}
 	}
 
-	private void handleToggleMultiselectRequest(ClickEvent event) {
+	private void handleToggleMultiselectRequest() {
         if(! multiselect) {
+           setMultiselect(true);
+        } else {
+        	setMultiselect(false);
+        }
+    }
+	
+	private void setMultiselect(boolean enabled) {
+        if(enabled) {
             dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
             multiselect = true;
             if (!headerVisible) {
@@ -92,8 +100,13 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
             if (!headerVisible) {
             	dataGrid.setHeaderVisible(false);
             }
-        }
-    }
+        }		
+	}
+	
+	public void setSelectionMode(Grid.SelectionMode selectionMode) {
+		boolean enabled = selectionMode.equals(Grid.SelectionMode.MULTI);
+		setMultiselect(enabled);
+	}
 	
 	public void setSelectionModeFixed(Grid.SelectionMode selectionMode) {
 		this.multiselect = selectionMode.equals(Grid.SelectionMode.MULTI);

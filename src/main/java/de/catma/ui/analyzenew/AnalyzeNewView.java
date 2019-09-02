@@ -87,11 +87,13 @@ public class AnalyzeNewView extends HorizontalLayout
 	private IndexInfoSet indexInfoSet;
 	private TabCaptionChangeListener tabCaptionChangeListener;
 	private AnalyzeCaption analyzeCaption;
+	
+	private EventBus eventBus;
 
 	public AnalyzeNewView(
 			Corpus corpus, 
 			IndexedRepository project, EventBus eventBus) {
-
+		this.eventBus = eventBus;
 		this.project = project;
 		this.kwicProviderCache = KwicProvider.buildKwicProviderByDocumentIdCache(project);
 		
@@ -313,7 +315,11 @@ public class AnalyzeNewView extends HorizontalLayout
 
 				VizMaxPanel vizMaxPanel = 
 						new VizMaxPanel(
-								new KwicPanelNew(project, kwicProviderCache),
+								new KwicPanelNew(
+										eventBus,
+										project, 
+										kwicProviderCache, 
+										() -> analyzeResourcePanel.getCorpus()),
 								getQueryResultPanelSettings(),
 								project, 
 								kwicProviderCache,

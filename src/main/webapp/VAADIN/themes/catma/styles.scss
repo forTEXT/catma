@@ -939,4 +939,36 @@ $v-focus-color: #5A98A1;
     .kwic-panel-backwardctx-header {
     	text-align: right !important;
     }
+    
+	.progress-step-number {
+	    background: #5A98A1;
+	    color: white;
+	    border-radius: 50%;
+	    width: 30px;
+	    height: 30px;
+	    text-align: center;
+	    padding-top: 2px;
+	}    
+	
+	.progress-step-number-faded-out {
+	    background: rgb(128, 128, 128);
+	    color: white;
+	    border-radius: 50%;
+	    width: 30px;
+	    height: 30px;
+	    text-align: center;
+	    padding-top: 2px;	
+	}
+	
+	.progress-step-description {
+	    padding: 3px;
+	}	
+	
+	.progress-step-divider {
+		color:  rgb(70, 70, 70);
+		border: solid 1px;
+		height: 1px;
+		border-bottom: solid 1px;
+		width: 50px;
+	}
 }

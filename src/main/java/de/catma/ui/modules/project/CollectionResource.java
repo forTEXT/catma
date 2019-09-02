@@ -4,8 +4,6 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.rbac.RBACRole;
-import de.catma.repository.git.GitMarkupCollectionHandler;
 
 public class CollectionResource implements Resource {
 
@@ -13,7 +11,7 @@ public class CollectionResource implements Resource {
 	private final String projectId;
 	private boolean hasWritePermission;
 
-    CollectionResource(UserMarkupCollectionReference userMarkupCollectionReference, String projectId, boolean hasWritePermission){
+    public CollectionResource(UserMarkupCollectionReference userMarkupCollectionReference, String projectId, boolean hasWritePermission){
         this.collectionReference = userMarkupCollectionReference;
         this.projectId = projectId;
         this.hasWritePermission = hasWritePermission;

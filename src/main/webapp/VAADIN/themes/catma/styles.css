@@ -18160,3 +18160,35 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .kwic-panel-backwardctx-header {
 	text-align: right !important;
 }
+
+.catma .progress-step-number {
+	background: #5A98A1;
+	color: white;
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	text-align: center;
+	padding-top: 2px;
+}
+
+.catma .progress-step-number-faded-out {
+	background: gray;
+	color: white;
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	text-align: center;
+	padding-top: 2px;
+}
+
+.catma .progress-step-description {
+	padding: 3px;
+}
+
+.catma .progress-step-divider {
+	color: #464646;
+	border: solid 1px;
+	height: 1px;
+	border-bottom: solid 1px;
+	width: 50px;
+}

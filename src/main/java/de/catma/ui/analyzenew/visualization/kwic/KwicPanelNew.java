@@ -1,29 +1,35 @@
 package de.catma.ui.analyzenew.visualization.kwic;
 
 import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
+import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzenew.annotation.AnnotationWizard;
 import de.catma.ui.analyzenew.visualization.ExpansionListener;
 import de.catma.ui.analyzenew.visualization.Visualisation;
-import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
+import de.catma.ui.analyzenew.visualization.kwic.annotation.AnnotationWizard;
+import de.catma.ui.analyzenew.visualization.kwic.annotation.AnnotationWizardContextKey;
+import de.catma.ui.analyzenew.visualization.kwic.annotation.WizardContext;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
+import de.catma.ui.dialog.SaveCancelListener;
 
 
 public class KwicPanelNew extends VerticalLayout implements Visualisation {
@@ -41,18 +47,24 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 	private IconButton btExpandCompress;
 	private boolean expanded = false;
 	private ExpansionListener expansionListener;
+	private Supplier<Corpus> corpusProvider;
 
-	public KwicPanelNew(Repository project, LoadingCache<String, KwicProvider> kwicProviderCache ) {
+	public KwicPanelNew(
+			EventBus eventBus,
+			Repository project, 
+			LoadingCache<String, KwicProvider> kwicProviderCache, 
+			Supplier<Corpus> corpusProvider) {
 		this.project = project;
 		this.kwicItemHandler = new KwicItemHandler(kwicProviderCache);
+		this.corpusProvider = corpusProvider;
 		initComponents();
-		initActions();
+		initActions(eventBus);
 	}
 
-	private void initActions() {
+	private void initActions(EventBus eventBus) {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-		moreOptionsMenu.addItem("Annotate selected rows", clickEvent -> handleAnnotateSelectedRequest());
+		moreOptionsMenu.addItem("Annotate selected rows", clickEvent -> handleAnnotateSelectedRequest(eventBus));
 //		moreOptionsMenu.addItem("Export Visualisation", clickEvent -> handleExportVisualizationRequest());
 		
 		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
@@ -65,11 +77,27 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 		btExpandCompress.addClickListener(clickEvent -> handleMaxMinRequest());
 	}
 
-	private void handleAnnotateSelectedRequest() {
-		// TODO Auto-generated method stub
+	private void handleAnnotateSelectedRequest(EventBus eventBus) {
 		
+		Set<String> sourceDocumentId = kwicDataProvider.getItems()
+			.stream()
+			.map(row -> row.getSourceDocumentId()).collect(Collectors.toSet());
 		
-		AnnotationWizard wizard = new AnnotationWizard(project);
+		WizardContext wizardContext = new WizardContext();
+		wizardContext.put(AnnotationWizardContextKey.DOCUMENTIDS, sourceDocumentId);
+		wizardContext.put(AnnotationWizardContextKey.CORPUS, corpusProvider.get());
+		
+		AnnotationWizard wizard = new AnnotationWizard(
+				eventBus, project, wizardContext, 
+				new SaveCancelListener<WizardContext>() {
+		
+					@Override
+					public void savePressed(WizardContext result) {
+						
+						
+					}
+					
+				});
 		wizard.show();
 		
 	}
