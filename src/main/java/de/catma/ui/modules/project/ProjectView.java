@@ -207,12 +207,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     				documentResource, collectionResource);
 			resourceDataProvider.refreshAll();
 			
-			documentGrid.expand(documentResource);
-			
-			Notification.show(
-				"Info", 
-				String.format("Collection %1$s has been created!", collectionReference.toString()),  
-				Type.TRAY_NOTIFICATION);			
+			if (isAttached()) {
+				documentGrid.expand(documentResource);
+				
+				Notification.show(
+						"Info", 
+						String.format("Collection %1$s has been created!", collectionReference.toString()),  
+						Type.TRAY_NOTIFICATION);			
+			}
 		}
 		else {
 			initData();
@@ -1109,7 +1111,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		Notification.show("Info", "Please select something first!", Type.HUMANIZED_MESSAGE);
     	}
     	else {
-			Corpus corpus = new Corpus("to analyze");
+			Corpus corpus = new Corpus();
 			
 	         for (Resource resource: resourceGrid.getSelectedItems()) {
             	try {

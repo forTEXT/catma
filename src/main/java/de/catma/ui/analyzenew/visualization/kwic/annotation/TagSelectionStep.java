@@ -42,12 +42,12 @@ public class TagSelectionStep extends VerticalLayout implements WizardStep {
 				nextStep.getProgressStep().setCompleted("no Properties available");
 			}
 			else {
-				nextStep.getProgressStep().reset();
+				nextStep.getProgressStep().resetCurrent();
 			}
 		}
 		else {
-			progressStep.reset();
-			nextStep.getProgressStep().reset();
+			progressStep.resetCurrent();
+			nextStep.getProgressStep().resetCurrent();
 		}
 		
 		if (stepChangeListener != null) {
@@ -95,6 +95,12 @@ public class TagSelectionStep extends VerticalLayout implements WizardStep {
 	
 	@Override
 	public void setFinished() {
-		progressStep.setFadedOut();
+		context.put(AnnotationWizardContextKey.TAG, selectedTag);
+		progressStep.setFinished();
+	}
+	
+	@Override
+	public void setCurrent() {
+		progressStep.setCurrent();
 	}
 }

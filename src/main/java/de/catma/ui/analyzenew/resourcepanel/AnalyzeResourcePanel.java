@@ -1,20 +1,32 @@
 package de.catma.ui.analyzenew.resourcepanel;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import com.vaadin.data.SelectionModel;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.event.ChangeType;
+import de.catma.document.repository.event.CollectionChangeEvent;
+import de.catma.document.repository.event.DocumentChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.rbac.RBACPermission;
@@ -26,33 +38,37 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	private Corpus corpus;
 	
 	private TreeGrid<DocumentTreeItem> documentTree;
-	private TreeData<DocumentTreeItem> documentsData;
+	private TreeData<DocumentTreeItem> documentData;
 	
 	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
+	private EventBus eventBus;
+	private CorpusChangedListener corpusChangedListener;
 
-	public AnalyzeResourcePanel(Repository project, Corpus corpus, CorpusChangedListener corpusChangedListener) {
-		super();
+	public AnalyzeResourcePanel(EventBus eventBus, Repository project, Corpus corpus, CorpusChangedListener corpusChangedListener) {
+		this.eventBus = eventBus;
+		eventBus.register(this);
 		this.project = project;
 		this.corpus = corpus;
+		this.corpusChangedListener = corpusChangedListener;
 		initComponents();
 		initData();
-		initActions(corpusChangedListener);
+		initActions();
 	}
 
 	private void initData() {
-		documentsData = new TreeData<>();
+		documentData = new TreeData<>();
 		try {
 			Collection<SourceDocument> documents = project.getSourceDocuments(); 
 			
-			documentsData.addRootItems(
+			documentData.addRootItems(
 				documents
 				.stream()
 				.map(document -> new DocumentDataItem(document)));
 						
-			for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
+			for (DocumentTreeItem documentDataItem : documentData.getRootItems()) {
 				for (UserMarkupCollectionReference umcRef : 
 					((DocumentDataItem)documentDataItem).getDocument().getUserMarkupCollectionRefs()) {
-					documentsData.addItem(
+					documentData.addItem(
 						documentDataItem, 
 						new CollectionDataItem(
 							umcRef,
@@ -62,19 +78,19 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 				}
 			}
 			
-			documentTree.setDataProvider(new TreeDataProvider<>(documentsData));			
+			documentTree.setDataProvider(new TreeDataProvider<>(documentData));			
 			
 			Collection<SourceDocument> selectedDocuments = corpus.getSourceDocuments();
 			Collection<UserMarkupCollectionReference> selectedCollections = 
 					corpus.getUserMarkupCollectionRefs();
 			
-			documentsData.getRootItems().stream()
+			documentData.getRootItems().stream()
 					.filter(documentItem -> 
 						selectedDocuments.contains(((DocumentDataItem) documentItem).getDocument()))
 					.forEach(documentTree::select);
 	
-			for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
-				List<DocumentTreeItem> collectionItems = documentsData.getChildren(documentDataItem);
+			for (DocumentTreeItem documentDataItem : documentData.getRootItems()) {
+				List<DocumentTreeItem> collectionItems = documentData.getChildren(documentDataItem);
 				for (DocumentTreeItem oneCollection : collectionItems) {
 					if (selectedCollections.contains(((CollectionDataItem) oneCollection).getCollectionRef())) {
 						documentTree.getSelectionModel().select(oneCollection);
@@ -82,16 +98,123 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 				}
 			}
 			
-			documentTree.expand(documentsData.getRootItems());
+			documentTree.expand(documentData.getRootItems());
 		}
 		catch (Exception e) {
 			//TODO:
 			e.printStackTrace();
 		}
 	}
+	
+    @SuppressWarnings("unchecked")
+	@Subscribe
+    public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
+    	if (documentChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
+    		SourceDocument document = documentChangeEvent.getDocument();
+			documentData.addItem(null, new DocumentDataItem(document));    		
+    	}
+    	else if (documentChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
+    		Optional<DocumentTreeItem> optionalDocItem = 
+    			documentData.getRootItems()
+    			.stream()
+    			.filter(item -> ((DocumentDataItem)item).getDocument().equals(documentChangeEvent.getDocument()))
+    			.findAny();
+    		if (optionalDocItem.isPresent()) {
+    			
+    			DocumentTreeItem docItem = optionalDocItem.get();
+    			
+    			List<DocumentTreeItem> children = documentData.getChildren(docItem);
+    			
+    			documentData.removeItem(docItem);
+    			Set<DocumentTreeItem> updated = new HashSet<>(children);
+    			updated.add(docItem);
+				
+    			// selections needs manual update...
+				((SelectionModel.Multi<DocumentTreeItem>)documentTree.getSelectionModel()).updateSelection(
+					Collections.emptySet(), updated);
+
+    			corpusChangedListener.corpusChanged();
+    		}
+    	}
+    	else {
+    		documentData.getRootItems()
+    		.stream()
+    		.filter(item -> ((DocumentDataItem)item).getDocument().equals(documentChangeEvent.getDocument()))
+    		.findAny()
+    		.ifPresent(item -> documentTree.getDataProvider().refreshItem(item));
+    		corpusChangedListener.corpusChanged();
+    	}
+    	
+    }
+	
+	@SuppressWarnings("unchecked")
+	@Subscribe
+	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
+		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
+			
+    		SourceDocument document = collectionChangeEvent.getDocument();
+    		UserMarkupCollectionReference collectionReference = 
+    				collectionChangeEvent.getCollectionReference();
+
+    		
+			CollectionDataItem collectionDataItem = 
+				new CollectionDataItem(
+					collectionReference, 
+					project.hasPermission(
+						project.getRoleForCollection(
+							collectionReference.getId()), 
+							RBACPermission.COLLECTION_WRITE));
+			documentData.getRootItems()
+			.stream()
+			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
+			.findAny().ifPresent(documentDataItem -> {
+				documentData.addItem(
+	    				documentDataItem, collectionDataItem);
+				documentTree.getDataProvider().refreshAll();
+			});
+			
+			if (isAttached()) {
+				documentTree.expand(documentData.getParent(collectionDataItem));
+				Notification.show(
+					"Info", 
+					String.format("Collection %1$s has been created!", collectionReference.toString()),  
+					Type.TRAY_NOTIFICATION);
+			}
+    		
+    	}
+		else if (collectionChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
+			Optional<DocumentTreeItem> optionalDocResource = documentData.getRootItems()
+			.stream()
+			.filter(item -> ((DocumentDataItem)item).getDocument().equals(collectionChangeEvent.getDocument()))
+			.findAny();
+			
+			if (optionalDocResource.isPresent()) {
+				Optional<DocumentTreeItem> optionalCollectionResource = 
+						documentData.getChildren(optionalDocResource.get()).stream()
+						.filter(item -> 
+							((CollectionDataItem)item).getCollectionRef().equals(
+									collectionChangeEvent.getCollectionReference()))
+						.findAny();
+				if (optionalCollectionResource.isPresent()) {
+					DocumentTreeItem collectionItem = optionalCollectionResource.get();
+					documentData.removeItem(collectionItem);
+					documentTree.getDataProvider().refreshAll();
+					// selections needs manual update...
+					((SelectionModel.Multi<DocumentTreeItem>)documentTree.getSelectionModel()).updateSelection(
+						Collections.emptySet(), Collections.singleton(collectionItem));
+				}
+				
+				corpusChangedListener.corpusChanged();
+			}
+		}
+    	else {
+    		documentTree.getDataProvider().refreshAll();
+    		corpusChangedListener.corpusChanged();
+    	}	
+		
+	}	
 
 	private void initComponents() {
-//		addStyleName("annotate-resource-panel");
 		Label documentTreeLabel = new Label("Documents & Annotations");
 
 		documentTree = new TreeGrid<>();
@@ -124,7 +247,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 
 	}
 
-	private void initActions(CorpusChangedListener corpusChangedListener) {
+	private void initActions() {
 		documentTree.addSelectionListener(new SelectionListener<DocumentTreeItem>() {
 			@Override
 			public void selectionChange(SelectionEvent<DocumentTreeItem> event) {
@@ -145,6 +268,8 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	}
 	
 	public void close() {
-		//TODO
+		eventBus.unregister(this);
+		eventBus = null;
+		project = null;
 	}
 }

@@ -990,6 +990,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	@Deprecated
 	public UserMarkupCollection getUserMarkupCollection(UserMarkupCollectionReference userMarkupCollectionReference,
 			boolean refresh) throws IOException {
 		return getUserMarkupCollection(userMarkupCollectionReference);
@@ -1097,6 +1098,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 		this.rootRevisionHash = gitProjectHandler.removeCollection(collectionReference);
 		
 		graphProjectHandler.removeCollection(this.rootRevisionHash, collectionReference, oldRootRevisionHash);	
+		document.removeUserMarkupCollectionReference(collectionReference);
+		
 		eventBus.post(
 			new CollectionChangeEvent(
 				collectionReference, document, ChangeType.DELETED));
@@ -1109,9 +1112,9 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	@Deprecated
 	public List<UserMarkupCollectionReference> getWritableUserMarkupCollectionRefs(SourceDocument sd)
 			throws IOException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

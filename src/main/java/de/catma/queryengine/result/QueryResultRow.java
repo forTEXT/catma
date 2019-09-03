@@ -18,7 +18,9 @@
  */
 package de.catma.queryengine.result;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Set;
 
 import de.catma.document.Range;
 import de.catma.queryengine.QueryId;
@@ -122,4 +124,7 @@ public class QueryResultRow {
 		return queryId;
 	}
 	
+	public Set<Range> getRanges() {
+		return Collections.singleton(range);
+	}
 }

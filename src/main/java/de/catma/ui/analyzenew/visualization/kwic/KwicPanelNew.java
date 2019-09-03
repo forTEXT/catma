@@ -1,11 +1,19 @@
 package de.catma.ui.analyzenew.visualization.kwic;
 
+import java.net.URISyntaxException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
@@ -14,13 +22,24 @@ import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.Corpus;
+import de.catma.document.Range;
 import de.catma.document.repository.Repository;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.tag.Property;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.Version;
 import de.catma.ui.analyzenew.visualization.ExpansionListener;
 import de.catma.ui.analyzenew.visualization.Visualisation;
 import de.catma.ui.analyzenew.visualization.kwic.annotation.AnnotationWizard;
@@ -30,6 +49,7 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.util.IDGenerator;
 
 
 public class KwicPanelNew extends VerticalLayout implements Visualisation {
@@ -48,6 +68,7 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 	private boolean expanded = false;
 	private ExpansionListener expansionListener;
 	private Supplier<Corpus> corpusProvider;
+	private IDGenerator idGenerator = new IDGenerator();
 
 	public KwicPanelNew(
 			EventBus eventBus,
@@ -79,6 +100,16 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 
 	private void handleAnnotateSelectedRequest(EventBus eventBus) {
 		
+		final Set<QueryResultRow> selectedRows = kwicGrid.getSelectedItems();
+		
+		if (selectedRows.isEmpty()) {
+			Notification.show(
+				"Info", 
+				"Please select one ore more rows to annotate!", 
+				Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
 		Set<String> sourceDocumentId = kwicDataProvider.getItems()
 			.stream()
 			.map(row -> row.getSourceDocumentId()).collect(Collectors.toSet());
@@ -93,13 +124,63 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 		
 					@Override
 					public void savePressed(WizardContext result) {
-						
-						
+						try {
+							annotateSelection(selectedRows, result);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}						
 					}
 					
 				});
 		wizard.show();
 		
+	}
+
+	@SuppressWarnings("unchecked")
+	private void annotateSelection(Set<QueryResultRow> selectedRows, WizardContext result) throws Exception {
+		List<Property> properties = (List<Property>) result.get(AnnotationWizardContextKey.PROPERTIES);
+		Map<String, UserMarkupCollectionReference> collectionRefsByDocId = 
+				(Map<String, UserMarkupCollectionReference>) result.get(AnnotationWizardContextKey.COLLECTIONREFS_BY_DOCID);
+		TagDefinition tag = (TagDefinition) result.get(AnnotationWizardContextKey.TAG);
+		
+		UserMarkupCollectionManager collectionManager = new UserMarkupCollectionManager(project);
+		for (UserMarkupCollectionReference ref : collectionRefsByDocId.values()) {
+			collectionManager.add(project.getUserMarkupCollection(ref));
+		}
+
+		for (QueryResultRow row : selectedRows) {
+			UserMarkupCollectionReference collectionRef = collectionRefsByDocId.get(row.getSourceDocumentId());
+			
+			TagInstance tagInstance = 
+					new TagInstance(
+						idGenerator.generate(), 
+						tag.getUuid(),
+						project.getUser().getIdentifier(),
+			        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+			        	tag.getUserDefinedPropertyDefinitions(),
+			        	tag.getTagsetDefinitionUuid());
+			
+			List<TagReference> tagReferences = new ArrayList<TagReference>();
+			
+			for (Property protoProp : properties) {
+				tagInstance.getUserDefinedPropetyByUuid(
+					protoProp.getPropertyDefinitionId()).setPropertyValueList(
+							protoProp.getPropertyValueList());
+			}
+
+
+			Set<Range> ranges = row.getRanges();
+			
+			for (Range range : ranges) {
+				TagReference tagReference = 
+						new TagReference(tagInstance, row.getSourceDocumentId(), range, collectionRef.getId());
+				tagReferences.add(tagReference);
+			}
+			collectionManager.addTagReferences(
+					tagReferences,
+					collectionRef.getId());
+		}
 	}
 
 	private void handleMaxMinRequest() {

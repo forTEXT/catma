@@ -47,7 +47,8 @@ public class CollectionDataItem implements DocumentTreeItem {
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<DocumentTreeItem> dataProvider = 
 			(TreeDataProvider<DocumentTreeItem>) documentTree.getDataProvider();
-		
-		documentTree.select(dataProvider.getTreeData().getParent(this));
+		if (dataProvider.getTreeData().contains(this)) {
+			documentTree.select(dataProvider.getTreeData().getParent(this));
+		}
 	}
 }

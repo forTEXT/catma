@@ -187,6 +187,7 @@ public class AnalyzeNewView extends HorizontalLayout
 		// drawer
 		
 		analyzeResourcePanel = new AnalyzeResourcePanel(
+				this.eventBus,
 				this.project, 
 				corpus,
 				() -> corpusChanged()); 

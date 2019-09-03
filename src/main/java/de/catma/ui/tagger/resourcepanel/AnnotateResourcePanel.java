@@ -53,7 +53,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	
 	private Repository project;
 	private TreeGrid<DocumentTreeItem> documentTree;
-	private TreeData<DocumentTreeItem> documentsData;
+	private TreeData<DocumentTreeItem> documentData;
 	private Grid<TagsetDefinition> tagsetGrid;
 	private ResourceSelectionListener resourceSelectionListener;
 	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
@@ -139,24 +139,39 @@ public class AnnotateResourcePanel extends VerticalLayout {
 						project.getRoleForCollection(
 							collectionReference.getId()), 
 							RBACPermission.COLLECTION_WRITE));
-			documentsData.getRootItems()
+			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
 			.findAny().ifPresent(documentDataItem -> {
-				documentsData.addItem(
+				documentData.addItem(
 	    				documentDataItem, collectionDataItem);
 				documentTree.getDataProvider().refreshAll();
 			});
 			
-			Notification.show(
-				"Info", 
-				String.format("Collection %1$s has been created!", collectionReference.toString()),  
-				Type.TRAY_NOTIFICATION);
+			if (isAttached()) {
+				Notification.show(
+					"Info", 
+					String.format("Collection %1$s has been created!", collectionReference.toString()),  
+					Type.TRAY_NOTIFICATION);
+			}
 			
 			if (getSelectedDocument().equals(document)) {
 				collectionDataItem.fireSelectedEvent(this.resourceSelectionListener);
 			}
     	}
+		else if (collectionChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
+			Optional<DocumentTreeItem> optionalDocResource = documentData.getRootItems()
+			.stream()
+			.filter(item -> ((DocumentDataItem)item).getDocument().equals(collectionChangeEvent.getDocument()))
+			.findAny();
+			
+			if (optionalDocResource.isPresent()) {
+				documentData.getChildren(optionalDocResource.get()).stream()
+				.filter(item -> ((CollectionDataItem)item).getCollectionRef().equals(collectionChangeEvent.getCollectionReference()))
+				.findAny()
+				.ifPresent(item -> documentData.removeItem(item));
+			}
+		}
     	else {
     		documentTree.getDataProvider().refreshAll();
     	}
@@ -222,7 +237,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	Set<SourceDocument> selectedDocuments = new HashSet<>();
     	
     	for (DocumentTreeItem resource : selectedItems) {
-    		DocumentTreeItem root = documentsData.getParent(resource);
+    		DocumentTreeItem root = documentData.getParent(resource);
 
     		if (root == null) {
     			root = resource;
@@ -250,13 +265,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
     
 	private void initData(SourceDocument currentlySelectedSourceDocument) {
 		try {
-			documentsData = new TreeData<>();
+			documentData = new TreeData<>();
 			
 			Collection<SourceDocument> documents = project.getSourceDocuments(); 
 			
 			final SourceDocument preselection = currentlySelectedSourceDocument;
 			
-			documentsData.addRootItems(
+			documentData.addRootItems(
 				documents
 				.stream()
 				.map(document -> new DocumentDataItem(
@@ -265,10 +280,10 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			
 			DocumentTreeItem preselectedItem = null;
 			
-			for (DocumentTreeItem documentDataItem : documentsData.getRootItems()) {
+			for (DocumentTreeItem documentDataItem : documentData.getRootItems()) {
 				for (UserMarkupCollectionReference umcRef : 
 					((DocumentDataItem)documentDataItem).getDocument().getUserMarkupCollectionRefs()) {
-					documentsData.addItem(
+					documentData.addItem(
 						documentDataItem, 
 						new CollectionDataItem(
 							umcRef,
@@ -281,7 +296,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				}
 			}
 			
-			documentTree.setDataProvider(new TreeDataProvider<>(documentsData));
+			documentTree.setDataProvider(new TreeDataProvider<>(documentData));
 			if (preselectedItem != null) {
 				documentTree.expand(preselectedItem);
 			}
@@ -290,7 +305,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			tagsetGrid.setDataProvider(tagsetData);
 			tagsetData.getItems().forEach(tagsetGrid::select);
 			
-			documentsData
+			documentData
 				.getRootItems()
 				.stream()
 				.filter(documentItem -> documentItem.isSelected())
@@ -305,13 +320,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	public List<UserMarkupCollectionReference> getSelectedUserMarkupCollectionReferences() {
 		
 		Optional<DocumentTreeItem> optionalDocumentTreeItem = 
-				documentsData.getRootItems()
+				documentData.getRootItems()
 				.stream()
 				.filter(documentTreeItem->documentTreeItem.isSelected())
 				.findFirst();
 		
 		if (optionalDocumentTreeItem.isPresent()) {
-			return documentsData.getChildren(optionalDocumentTreeItem.get())
+			return documentData.getChildren(optionalDocumentTreeItem.get())
 				.stream()
 				.filter(documentTreeItem -> documentTreeItem.isSelected())
 				.map(CollectionDataItem.class::cast)
@@ -409,7 +424,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			selectedItem.setSelected(!selectedItem.isSelected());
 			
 			if (selectedItem.isSingleSelection()) {
-				for (DocumentTreeItem item : documentsData.getRootItems()) {
+				for (DocumentTreeItem item : documentData.getRootItems()) {
 					if (!item.equals(selectedItem)) {
 						item.setSelected(false);
 						documentTree.collapse(item);
@@ -426,7 +441,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	}
 	
 	public void selectCollectionVisible(String collectionId) {
-		documentsData.getRootItems()
+		documentData.getRootItems()
 		.stream()
 		.filter(documentTreeItem->documentTreeItem.isSelected())
 		.findFirst()
@@ -436,7 +451,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	}
 
 	private void selectCollectionVisible(DocumentTreeItem documentItem, String collectionId) {
-		documentsData.getChildren(documentItem)
+		documentData.getChildren(documentItem)
 		.stream()
 		.filter(item -> ((CollectionDataItem)item).getCollectionRef().getId().equals(collectionId))
 		.findFirst()
@@ -462,7 +477,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     }
     
     public SourceDocument getSelectedDocument() {
-    	for (DocumentTreeItem documentTreeItem : documentsData.getRootItems()) {
+    	for (DocumentTreeItem documentTreeItem : documentData.getRootItems()) {
     		if ((documentTreeItem instanceof DocumentDataItem) && documentTreeItem.isSelected()) {
     			return ((DocumentDataItem)documentTreeItem).getDocument();
     		}
@@ -474,7 +489,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     public void setSelectedDocument(SourceDocument sourceDocument) {
     	SourceDocument selected = getSelectedDocument();
     	if ((selected == null) || !selected.equals(sourceDocument)) {
-    		for (DocumentTreeItem documentTreeItem : documentsData.getRootItems()) {
+    		for (DocumentTreeItem documentTreeItem : documentData.getRootItems()) {
     			if (documentTreeItem instanceof DocumentDataItem) {
     				DocumentDataItem documentDataItem = (DocumentDataItem)documentTreeItem;
     				if (documentDataItem.getDocument().equals(sourceDocument)) {

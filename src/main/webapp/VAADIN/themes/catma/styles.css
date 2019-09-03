@@ -18161,7 +18161,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-align: right !important;
 }
 
-.catma .progress-step-number {
+.catma .progress-step-number-current {
 	background: #5A98A1;
 	color: white;
 	border-radius: 50%;

@@ -287,6 +287,7 @@ public interface Repository {
 	 * @param accessMode
 	 * @throws IOException
 	 */
+	@Deprecated
 	public void share(
 			SourceDocument sourceDocument, 
 			String userIdentification,
@@ -378,6 +379,7 @@ public interface Repository {
 	 * @return the corresponding collection
 	 * @throws IOException
 	 */
+	@Deprecated
 	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference, boolean refresh) throws IOException;
 	/**
@@ -423,6 +425,7 @@ public interface Repository {
 	 * @param accessMode
 	 * @throws IOException
 	 */
+	@Deprecated
 	public void share(UserMarkupCollectionReference userMarkupCollectionRef, 
 			String userIdentification, AccessMode accessMode) throws IOException;
 	
@@ -432,6 +435,7 @@ public interface Repository {
 	 * with {@link AccessMode#WRITE write} access mode. 
 	 * @throws IOException
 	 */
+	@Deprecated
 	public List<UserMarkupCollectionReference> getWritableUserMarkupCollectionRefs(SourceDocument sd) throws IOException;
 
 	/**

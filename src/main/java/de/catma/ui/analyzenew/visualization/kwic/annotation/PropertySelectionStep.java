@@ -1,7 +1,9 @@
 package de.catma.ui.analyzenew.visualization.kwic.annotation;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.Component;
@@ -93,7 +95,26 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 
 	@Override
 	public void setFinished() {
-		progressStep.setFadedOut();
+		List<Property> result = new ArrayList<>();
+		Iterator<Component> componentIterator = propertyTabSheet.iterator();
+		while (componentIterator.hasNext()) {
+			EditPropertyTab tab = (EditPropertyTab)componentIterator.next();
+			
+			if (tab.isChanged()) {
+				Property property = tab.getProperty();
+				
+				property.setPropertyValueList(tab.getPropertyValues());
+				result.add(property);
+			}
+		}
+		context.put(AnnotationWizardContextKey.PROPERTIES, result);
+		progressStep.setFinished();
+	}
+	
+	
+	@Override
+	public void setCurrent() {
+		progressStep.setCurrent();
 	}
 
 }

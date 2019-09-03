@@ -8,4 +8,5 @@ public interface WizardStep extends Component {
 	public boolean isValid();
 	public void setStepChangeListener(StepChangeListener stepChangeListener);
 	public void setFinished();
+	public void setCurrent();
 }

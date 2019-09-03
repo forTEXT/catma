@@ -53,6 +53,7 @@ public class AnnotationWizard extends Window {
 			content.replaceComponent(this.currentStep, step);
 			this.currentStep = step;
 			this.currentStep.setStepChangeListener(changedStep -> handleStepChange(changedStep));
+			this.currentStep.setCurrent();
 		}
 		else {
 			UI.getCurrent().removeWindow(this);

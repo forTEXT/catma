@@ -31,13 +31,11 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import de.catma.document.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
-import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.Pair;
 
@@ -51,19 +49,17 @@ import de.catma.util.Pair;
 public class UserMarkupCollectionManager implements Iterable<UserMarkupCollection>{
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private TagManager tagManager;
 	private Repository repository;
 			
-	private List<UserMarkupCollection> userMarkupCollections;
+	private Map<String, UserMarkupCollection> collectionById;
 
 	/**
 	 * @param repository the underlying repository (addition and removal of content 
 	 * of a UserMarkupCollection is passed through up to the repository 
 	 */
 	public UserMarkupCollectionManager(Repository repository) {
-		this.tagManager = repository.getTagManager();
 		this.repository = repository;
-		userMarkupCollections = new ArrayList<UserMarkupCollection>();
+		collectionById = new HashMap<String, UserMarkupCollection>();
 	}
 	
 	/**
@@ -89,20 +85,26 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 	
 
 	public void add(UserMarkupCollection userMarkupCollection) {
-		if (!this.userMarkupCollections.contains(userMarkupCollection)) {
+		if (!this.collectionById.containsValue(userMarkupCollection)) {
 			logger.info(
 					"Adding UMC " + userMarkupCollection + "#" 
 					+ ((userMarkupCollection == null)?"N/A":userMarkupCollection.getId())
 					+ " to UserMarkupCollectionManager " + this.hashCode());
-			this.userMarkupCollections.add(userMarkupCollection);
+			this.collectionById.put(userMarkupCollection.getId(), userMarkupCollection);
 		}
 	}
 	
 	@Override
 	public Iterator<UserMarkupCollection> iterator() {
-		return userMarkupCollections.iterator();
+		return collectionById.values().iterator();
 	}
 
+	public void addTagReferences(
+			List<TagReference> tagReferences,
+			String collectionId) {
+		addTagReferences(tagReferences, collectionById.get(collectionId));
+	}
+	
 	/**
 	 * Updates the UserMarkupCollection. Persistence part is handled by {@link 
 	 * Repository#update(UserMarkupCollection, List)}
@@ -124,7 +126,7 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 	 * @return non modifiable list of the contained UserMarkupCollections
 	 */
 	public List<UserMarkupCollection> getUserMarkupCollections() {
-		return Collections.unmodifiableList(userMarkupCollections);
+		return Collections.unmodifiableList(new ArrayList<>(collectionById.values()));
 	}
 
 
@@ -209,7 +211,7 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 	 */
 	private UserMarkupCollection getUserMarkupCollectionForTagInstance(
 			String instanceID) {
-		for (UserMarkupCollection userMarkupCollection : userMarkupCollections) {
+		for (UserMarkupCollection userMarkupCollection : collectionById.values()) {
 			if (userMarkupCollection.hasTagInstance(instanceID)) {
 				return userMarkupCollection;
 			}
@@ -224,13 +226,8 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 	 */
 	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
-		for (UserMarkupCollection umc : userMarkupCollections) {
-			if (umc.getId().equals(userMarkupCollectionReference.getId())) {
-				return umc;
-			}
-		}
 		
-		return null;
+		return collectionById.get(userMarkupCollectionReference.getId());
 	}
 
 	public void remove(UserMarkupCollection userMarkupCollection) {
@@ -238,7 +235,7 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 				"Removing UMC " + userMarkupCollection + "#" 
 				+ ((userMarkupCollection == null)?"N/A":userMarkupCollection.getId())
 				+ " from UserMarkupCollectionManager " + this.hashCode());
-		userMarkupCollections.remove(userMarkupCollection);
+		collectionById.remove(userMarkupCollection.getId());
 	}
 
 	/**
@@ -281,7 +278,7 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 
 
 	public Annotation getAnnotation(String instanceID) {
-		for (UserMarkupCollection umc : userMarkupCollections) {
+		for (UserMarkupCollection umc : collectionById.values()) {
 			if (umc.hasTagInstance(instanceID)) {
 				return umc.getAnnotation(instanceID);
 			}
@@ -302,7 +299,7 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 	 */
 	public Collection<TagReference> getTagReferences(String tagInstanceID) {
 		Set<TagReference> result = new HashSet<TagReference>();
-		for (UserMarkupCollection umc : userMarkupCollections) {
+		for (UserMarkupCollection umc : collectionById.values()) {
 			if (umc.hasTagInstance(tagInstanceID)) {
 				result.addAll(umc.getTagReferences(tagInstanceID));
 			}
@@ -324,12 +321,7 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 	 * @return <code>true</code> if this manager contains the given collection
 	 */
 	public boolean contains(String userMarkupCollectionId) {
-		for (UserMarkupCollection umc : userMarkupCollections) {
-			if (umc.getId().equals(userMarkupCollectionId)) {
-				return true;
-			}
-		}
-		return false;
+		return collectionById.containsKey(userMarkupCollectionId);
 	}
 
 	/**
@@ -339,13 +331,7 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 	 */
 	public UserMarkupCollection getUserMarkupCollection(
 			String userMarkupCollectionId) {
-		for (UserMarkupCollection umc : userMarkupCollections) {
-			if (umc.getId().equals(userMarkupCollectionId)) {
-				return umc;
-			}
-		}
-		
-		return null;
+		return collectionById.get(userMarkupCollectionId);
 	}
 
 	/**
@@ -361,20 +347,15 @@ public class UserMarkupCollectionManager implements Iterable<UserMarkupCollectio
 	}
 
 	public void remove(String collectionId) {
-		userMarkupCollections
-			.stream()
-			.filter(collection -> collection.getUuid().equals(collectionId))
-			.findFirst()
-			.ifPresent(collection -> remove(collection));
+		collectionById.remove(collectionId);
 	}
 
 	public void clear() {
-		userMarkupCollections.clear();
-		
+		collectionById.clear();
 	}
 
 	public Collection<UserMarkupCollectionReference> getCollections(TagDefinition tag) {
-		return userMarkupCollections
+		return collectionById.values()
 			.stream()
 			.filter(collection -> collection.containsTag(tag))
 			.map(collection -> new UserMarkupCollectionReference(

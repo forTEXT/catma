@@ -1,7 +1,9 @@
 package de.catma.ui.analyzenew.visualization.kwic.annotation;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -142,6 +144,12 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
         	"Select filtered Documents", mi-> handleSelectFilteredDocuments());
         documentsGridMoreOptionsContextMenu.addItem(
         	"Select filtered Collections", mi-> handleSelectFilteredCollections());
+        
+        documentGrid.addSelectionListener(event -> {
+        	if (stepChangeListener != null) {
+        		stepChangeListener.stepChanged(this);
+        	}
+        });
 	}
 
 	private SerializablePredicate<Object> createSearchFilter(String searchInput) {
@@ -280,7 +288,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
     	.setCaption("Permission")
     	.setExpandRatio(1);      
 
-        Label documentsAnnotations = new Label("Documents & Annotations");
+        Label documentsAnnotations = new Label("Select one Collection per Document");
 
         documentGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
@@ -303,8 +311,28 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 
 	@Override
 	public boolean isValid() {
-		// TODO Auto-generated method stub
-		return false;
+        @SuppressWarnings("unchecked")
+		Set<String> documentIds = (Set<String>) context.get(AnnotationWizardContextKey.DOCUMENTIDS);
+
+        Map<String, UserMarkupCollectionReference> collectionsByDocumentId = 
+        		getCollectionRefsByDocumentId();
+		
+		return collectionsByDocumentId.keySet().containsAll(documentIds);
+	}
+
+	private Map<String, UserMarkupCollectionReference> getCollectionRefsByDocumentId() {
+		Set<Resource> selectedItems = documentGrid.getSelectedItems();
+		
+		Map<String, UserMarkupCollectionReference> collectionsByDocumentId = 
+				new HashMap<>();
+		for (Resource resource : selectedItems) {
+			if (resource instanceof CollectionResource) {
+				collectionsByDocumentId.put(
+					((CollectionResource) resource).getCollectionReference().getSourceDocumentId(), 
+					((CollectionResource) resource).getCollectionReference());
+			}
+		}
+		return collectionsByDocumentId;
 	}
 
 	@Override
@@ -314,8 +342,17 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 
 	@Override
 	public void setFinished() {
-		// TODO Auto-generated method stub
-
+        Map<String, UserMarkupCollectionReference> collectionsByDocumentId = 
+        		getCollectionRefsByDocumentId();
+        
+        context.put(AnnotationWizardContextKey.COLLECTIONREFS_BY_DOCID, collectionsByDocumentId);
+        
+		eventBus.unregister(this);
+	}
+	
+	@Override
+	public void setCurrent() {
+		progressStep.setCurrent();
 	}
 
 }

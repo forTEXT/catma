@@ -21,7 +21,7 @@ public class ProgressStep extends HorizontalLayout {
 	private void initComponents() {
 		setMargin(false);
 		stepLabel = new Label(String.valueOf(number));
-		stepLabel.addStyleName("progress-step-number");
+		stepLabel.addStyleName("progress-step-number-faded-out");
 		addComponent(stepLabel);
 		stepDescription = new Label(description);
 		stepDescription.addStyleName("progress-step-description");
@@ -33,14 +33,19 @@ public class ProgressStep extends HorizontalLayout {
 		stepLabel.setValue(VaadinIcons.CHECK.getHtml());
 		stepLabel.setContentMode(ContentMode.HTML);
 	}
+	
+	public void setCurrent() {
+		stepLabel.removeStyleName("progress-step-number-faded-out");
+		stepLabel.addStyleName("progress-step-number-current");
+	}
 
-	public void reset() {
+	public void resetCurrent() {
 		stepDescription.setValue(description);
 		stepLabel.setValue(String.valueOf(number));
 	}
 	
-	public void setFadedOut() {
-		stepLabel.removeStyleName("progress-step-number");
+	public void setFinished() {
+		stepLabel.removeStyleName("progress-step-number-current");
 		stepLabel.addStyleName("progress-step-number-faded-out");
 	}
 }
