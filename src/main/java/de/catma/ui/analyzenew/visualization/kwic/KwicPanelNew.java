@@ -1,6 +1,5 @@
 package de.catma.ui.analyzenew.visualization.kwic;
 
-import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -12,8 +11,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
@@ -29,7 +26,6 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -40,6 +36,7 @@ import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.Version;
+import de.catma.ui.analyzenew.queryresultpanel.DisplaySetting;
 import de.catma.ui.analyzenew.visualization.ExpansionListener;
 import de.catma.ui.analyzenew.visualization.Visualisation;
 import de.catma.ui.analyzenew.visualization.kwic.annotation.AnnotationWizard;
@@ -324,5 +321,20 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 	public void setExpansionListener(ExpansionListener expansionListener) {
 		this.expansionListener = expansionListener;
 		btExpandCompress.setVisible(true);
+	}
+	
+	@Override
+	public void close() {
+		// noop
+	}
+	
+	@Override
+	public void setSelectedQueryResultRow(QueryResultRow row) {
+		// noop
+	}
+	
+	@Override
+	public void setDisplaySetting(DisplaySetting displaySettings) {
+		// noop
 	}
 }

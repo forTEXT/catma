@@ -1,4 +1,4 @@
-package de.catma.ui.analyzer;
+package de.catma.ui.analyzenew;
 
 import de.catma.queryengine.QueryOptions;
 

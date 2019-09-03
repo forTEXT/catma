@@ -1,4 +1,4 @@
-package de.catma.ui.visualizer.vega;
+package de.catma.ui.analyzenew.visualization.vega;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,20 +13,23 @@ import com.vaadin.server.VaadinSession;
 import de.catma.backgroundservice.LogProgressListener;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.json.JSONQueryResultBuilder;
-import de.catma.ui.analyzer.QueryOptionsProvider;
+import de.catma.ui.analyzenew.QueryOptionsProvider;
 
 public class JSONQueryResultRequestHandler implements RequestHandler {
 	
-	private QueryResult defaultQueryResult;
+	private QueryResultRowArray queryResult;
 	private String queryResultUrlPath;
 	private QueryOptionsProvider queryOptionsProvider;
 	private String vegaViewIdPath;
 	private String queryUrlPath;
 	
-	public JSONQueryResultRequestHandler(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider, String queryResultUrlPath, String vegaViewId) {
-		super();
-		this.defaultQueryResult = queryResult;
+	public JSONQueryResultRequestHandler(
+			QueryOptionsProvider queryOptionsProvider, 
+			String queryResultUrlPath, String vegaViewId) {
+		this.queryResult = new QueryResultRowArray();
 		this.queryOptionsProvider = queryOptionsProvider;
 		this.queryResultUrlPath = "/"+queryResultUrlPath.toLowerCase();
 		this.vegaViewIdPath = "/"+vegaViewId.toLowerCase();
@@ -40,7 +43,7 @@ public class JSONQueryResultRequestHandler implements RequestHandler {
 		if (request.getPathInfo().toLowerCase().startsWith(vegaViewIdPath)) {
 			if (request.getPathInfo().toLowerCase().equals(queryResultUrlPath)) {
 
-				writeResponse(defaultQueryResult, response);
+				writeResponse(queryResult, response);
 				
 				return true;
 			}
@@ -74,10 +77,16 @@ public class JSONQueryResultRequestHandler implements RequestHandler {
 				new JSONQueryResultBuilder().createJSONQueryResult(
 						queryResult, 
 						queryOptionsProvider.getQueryOptions().getRepository());
-		
+		response.setCacheTime(-1);
 		outputStream.write(jsonValues.toString().getBytes("UTF-8"));
 	}
 
-	
+	public void addQuerResultRows(Iterable<QueryResultRow> rows) {
+		rows.forEach(row -> queryResult.add(row));
+	}
+
+	public void removeQuerResultRows(Iterable<QueryResultRow> rows) {
+		rows.forEach(row -> queryResult.remove(row));
+	}
 
 }

@@ -1,4 +1,4 @@
-package de.catma.ui.visualizer.vega;
+package de.catma.ui.analyzenew.visualization.vega;
 
 import java.util.List;
 
@@ -15,6 +15,8 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.client.ui.tagger.TaggerClientRpc;
+import de.catma.ui.client.ui.visualizer.vega.VegaClientRpc;
 import de.catma.ui.client.ui.visualizer.vega.VegaServerRpc;
 import de.catma.ui.client.ui.visualizer.vega.VegaState;
 import de.catma.ui.client.ui.visualizer.vega.shared.SelectedQueryResultRow;
@@ -123,5 +125,9 @@ public class Vega extends AbstractComponent {
 	
 	public void setValueChangeListener(ValueChangeListener<QueryResult> valueChangeListener) {
 		this.valueChangeListener = valueChangeListener;
+	}
+	
+	public void reloadData() {
+		getRpcProxy(VegaClientRpc.class).reloadData();
 	}
 }

@@ -31,10 +31,10 @@ import com.vaadin.ui.UI;
 import de.catma.document.Corpus;
 import de.catma.indexer.IndexedRepository;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzenew.visualization.vega.VegaEvent;
+import de.catma.ui.analyzenew.visualization.vega.VegaPanel;
 import de.catma.ui.analyzer.AnalyzerView.CloseListener;
 import de.catma.ui.tabbedview.TabbedView;
-import de.catma.ui.visualizer.vega.VegaEvent;
-import de.catma.ui.visualizer.vega.VegaView;
 
 public class AnalyzerManagerViewOld extends TabbedView {
 	
@@ -63,10 +63,10 @@ public class AnalyzerManagerViewOld extends TabbedView {
 	
 	@Subscribe
 	public void handleVegaRequest(VegaEvent vegaEvent) {
-		VegaView vegaView = new VegaView(vegaEvent.getQueryResult(), vegaEvent.getQueryOptionsProvider(), vegaEvent.getProject());
-		
-		addClosableTab(vegaView, vegaView.toString());
-		
+//		VegaPanel vegaView = new VegaPanel(vegaEvent.getQueryResult(), vegaEvent.getQueryOptionsProvider(), vegaEvent.getProject());
+//		
+//		addClosableTab(vegaView, vegaView.toString());
+//		
 	}
 
 	private void initComponents() {

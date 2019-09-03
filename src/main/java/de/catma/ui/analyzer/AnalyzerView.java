@@ -79,6 +79,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzenew.QueryOptionsProvider;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.repository.MarkupCollectionItem;

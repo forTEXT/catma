@@ -11,13 +11,23 @@ import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.shared.ui.Connect;
 
+import de.catma.ui.analyzenew.visualization.vega.Vega;
 import de.catma.ui.client.ui.visualizer.vega.shared.SelectedQueryResultRow;
-import de.catma.ui.visualizer.vega.Vega;
 
 @Connect(Vega.class)
 public class VegaConnector extends AbstractComponentConnector {
 	
 	private VegaServerRpc vegaServerRpc = RpcProxy.create(VegaServerRpc.class, this);
+	
+	public VegaConnector() {
+		registerRpc(VegaClientRpc.class, new VegaClientRpc() {
+			
+			@Override
+			public void reloadData() {
+				setVegaSpec();
+			}
+		});
+	}
 	
 	@Override
 	protected Widget createWidget() {

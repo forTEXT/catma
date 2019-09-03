@@ -66,6 +66,7 @@ import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
+import de.catma.ui.analyzenew.QueryOptionsProvider;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.user.Permission;

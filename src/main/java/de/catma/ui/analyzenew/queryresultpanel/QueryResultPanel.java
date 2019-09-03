@@ -107,6 +107,8 @@ public class QueryResultPanel extends VerticalLayout {
 	private int tokenCount;
 
 	private HorizontalLayout buttonPanel;
+	
+	private DisplaySettingChangeListener displaySettingChangeListener;
 
 	public QueryResultPanel(Repository project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
@@ -213,6 +215,7 @@ public class QueryResultPanel extends VerticalLayout {
 		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenDesc(freqColumn).build());
 		
 		initInfoLabel();
+		fireDisplaySettingChanged();
 	}
 	
 	private void initInfoLabel() {
@@ -301,6 +304,8 @@ public class QueryResultPanel extends VerticalLayout {
 		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenAsc(tagPathColumn).build());
 		
 		initInfoLabel();
+		
+		fireDisplaySettingChanged();
 	}
 
 
@@ -377,6 +382,8 @@ public class QueryResultPanel extends VerticalLayout {
 		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenAsc(tagPathColumn).build());
 		
 		initInfoLabel();
+		
+		fireDisplaySettingChanged();
 	}
 
 	void initTagBasedData() {
@@ -440,6 +447,8 @@ public class QueryResultPanel extends VerticalLayout {
 		initInfoLabel();
 		
 		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenDesc(freqColumn).build());
+		
+		fireDisplaySettingChanged();
 	}
 	
 	
@@ -838,4 +847,20 @@ public class QueryResultPanel extends VerticalLayout {
 	public void addToButtonBarLeft(Component component) {
 		buttonPanel.addComponent(component, 0);
 	}
+	
+	public void setDisplaySettingChangeListener(DisplaySettingChangeListener displaySettingChangeListener) {
+		this.displaySettingChangeListener = displaySettingChangeListener;
+	}
+	
+	private void fireDisplaySettingChanged() {
+		if (this.displaySettingChangeListener != null) {
+			this.displaySettingChangeListener.displaySettingChanged(displaySetting);
+		}
+	}
+
+	public DisplaySetting getDisplaySetting() {
+		return displaySetting;
+	}
+
+
 }

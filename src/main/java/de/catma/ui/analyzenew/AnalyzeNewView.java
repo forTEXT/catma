@@ -22,8 +22,6 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
@@ -50,6 +48,8 @@ import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanel;
 import de.catma.ui.analyzenew.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.analyzenew.resourcepanel.AnalyzeResourcePanel;
 import de.catma.ui.analyzenew.visualization.kwic.KwicPanelNew;
+import de.catma.ui.analyzenew.visualization.vega.DistributionDisplaySettingHandler;
+import de.catma.ui.analyzenew.visualization.vega.VegaPanel;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.IconButton;
@@ -309,36 +309,69 @@ public class AnalyzeNewView extends HorizontalLayout
 		btExecuteSearch.addClickListener(clickEvent -> executeSearch());	
 		queryBox.addValueChangeListener(valueChange -> btExecuteSearch.click());
 
-		kwicBt.addClickListener(new ClickListener() {
+		kwicBt.addClickListener(event -> addKwicViz());
 
-			@Override
-			public void buttonClick(ClickEvent event) {
+		distBt.addClickListener(event -> addDistViz());
+	}
 
-				VizMaxPanel vizMaxPanel = 
-						new VizMaxPanel(
-								new KwicPanelNew(
-										eventBus,
-										project, 
-										kwicProviderCache, 
-										() -> analyzeResourcePanel.getCorpus()),
-								getQueryResultPanelSettings(),
+	private void addKwicViz() {
+		VizMaxPanel vizMaxPanel = 
+				new VizMaxPanel(
+						new KwicPanelNew(
+								eventBus,
 								project, 
-								kwicProviderCache,
-								closedVizMaxPanel -> setContent(contentPanel, closedVizMaxPanel));
-				
-				VizMinPanel vizMinPanel = 
-						new VizMinPanel(
-							"Kwic Visualisation", 
-							vizMaxPanel,
-							toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
-							() -> setContent(vizMaxPanel, contentPanel));
-				
+								kwicProviderCache, 
+								() -> analyzeResourcePanel.getCorpus()),
+						getQueryResultPanelSettings(),
+						project, 
+						kwicProviderCache,
+						closedVizMaxPanel -> setContent(contentPanel, closedVizMaxPanel));
+		
+		VizMinPanel vizMinPanel = 
+				new VizMinPanel(
+					"KWIC - KeyWord In Context", 
+					vizMaxPanel,
+					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
+					() -> setContent(vizMaxPanel, contentPanel));
+		
 
-				vizCardsPanel.addComponent(vizMinPanel);
-				setContent(vizMaxPanel, contentPanel);
-			}
-		});
+		vizCardsPanel.addComponent(vizMinPanel);
+		setContent(vizMaxPanel, contentPanel);
+	}
 
+	private void addDistViz() {
+		VegaPanel vegaPanel = 
+			new VegaPanel(
+				eventBus,
+				project, 
+				kwicProviderCache, 
+				() -> analyzeResourcePanel.getCorpus(),
+				() -> new QueryOptions(
+					new QueryId(""), //TODO: ok?
+					currentCorpus.getDocumentIds(), 
+					currentCorpus.getCollectionIds(),
+					indexInfoSet.getUnseparableCharacterSequences(),
+					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), project),
+				new DistributionDisplaySettingHandler());
+		
+		VizMaxPanel vizMaxPanel = 
+			new VizMaxPanel(
+					vegaPanel,
+					getQueryResultPanelSettings(),
+					project, 
+					kwicProviderCache,
+					closedVizMaxPanel -> setContent(contentPanel, closedVizMaxPanel));
+		
+		VizMinPanel vizMinPanel = 
+				new VizMinPanel(
+					"Distribution", 
+					vizMaxPanel,
+					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
+					() -> setContent(vizMaxPanel, contentPanel));
+		
+
+		vizCardsPanel.addComponent(vizMinPanel);
+		setContent(vizMaxPanel, contentPanel);
 	}
 
 	private List<QueryResultPanelSetting> getQueryResultPanelSettings() {

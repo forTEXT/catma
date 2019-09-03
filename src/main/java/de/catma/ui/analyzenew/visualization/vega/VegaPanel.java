@@ -1,19 +1,19 @@
-package de.catma.ui.visualizer.vega;
+package de.catma.ui.analyzenew.visualization.vega;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.List;
-
-import org.apache.commons.io.IOUtils;
+import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.cache.LoadingCache;
+import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
@@ -28,23 +28,29 @@ import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzenew.QueryOptionsProvider;
+import de.catma.ui.analyzenew.queryresultpanel.DisplaySetting;
+import de.catma.ui.analyzenew.visualization.ExpansionListener;
+import de.catma.ui.analyzenew.visualization.Visualisation;
+import de.catma.ui.analyzenew.visualization.kwic.KwicPanelNew;
 import de.catma.ui.analyzer.KwicPanel;
 import de.catma.ui.analyzer.KwicWindow;
 import de.catma.ui.analyzer.Messages;
-import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
-import de.catma.ui.tabbedview.ClosableTab;
-import de.catma.ui.tabbedview.TabCaptionChangeListener;
+import de.catma.ui.component.IconButton;
 import de.catma.util.IDGenerator;
 
-public class VegaView extends HorizontalSplitPanel implements ClosableTab {
+public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 	
 	private static String CATMA_QUERY_URL = "CATMA_QUERY_URL";
 	
@@ -56,66 +62,42 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 
 	private Button btHelp;
 
-	private Button btPhraseExample;
-
-	private Button btTagExample;
-
 	private String vegaViewId;
 
 	private String queryResultUrl;
 
-	private Repository repository;
+	private Repository project;
 
-	public VegaView(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider, Repository repository) {
+	private KwicPanelNew kwicPanel;
+
+	private DisplaySettingHandler displaySettingsHandler;
+	private DisplaySettingHandler defaultDisplaySettingHandler;
+
+	public VegaPanel(EventBus eventBus, Repository project, LoadingCache<String, KwicProvider> kwicProviderCache, 
+			Supplier<Corpus> corpusProvider, QueryOptionsProvider queryOptionsProvider, 
+			DisplaySettingHandler displaySettingsHandler) {
 		
 		this.vegaViewId = new IDGenerator().generate().toLowerCase();
 		String queryResultPath = vegaViewId+"/queryresult/default.json";
 		this.queryResultUrl = RepositoryPropertyKey.BaseURL.getValue() + queryResultPath;
 
-		this.queryResultRequestHandler = new JSONQueryResultRequestHandler(queryResult, queryOptionsProvider, queryResultPath, vegaViewId);
+		this.queryResultRequestHandler = 
+				new JSONQueryResultRequestHandler(
+						queryOptionsProvider, queryResultPath, vegaViewId);
 		VaadinSession.getCurrent().addRequestHandler(queryResultRequestHandler);
-		this.repository = repository;
-		initComponents();
+		
+		this.project = project;
+		this.displaySettingsHandler = displaySettingsHandler;
+		this.defaultDisplaySettingHandler = displaySettingsHandler;
+		initComponents(eventBus, kwicProviderCache, corpusProvider);
 		initActions();
 	}
+
 
 	private void initActions() {
 		vega.setValueChangeListener(changeEvent -> handleVegaValueChange(changeEvent.getValue()));
 		
-		btUpdate.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-				
-				String spec = specEditor.getValue();
-				if ((spec == null) || spec.trim().isEmpty()) {
-					Notification.show("Info", "Vega Specification must not be empty!", Type.TRAY_NOTIFICATION);
-				}
-				else {
-					ObjectMapper mapper = new ObjectMapper();
-					try {
-						ObjectNode specNode = mapper.readValue(spec, ObjectNode.class);
-						
-						JsonNode dataNode = specNode.get("data");
-						if (dataNode.isArray()) {
-							ArrayNode dataArray = (ArrayNode)dataNode;
-							for (int i=0; i<dataArray.size(); i++) {
-								ObjectNode curDataNode = (ObjectNode)dataArray.get(i);
-								setQueryUrl(curDataNode);
-							}
-						}
-						else {
-							setQueryUrl((ObjectNode)dataNode);
-						}
-						
-						vega.setVegaSpec(specNode.toString());
-					}
-					catch (Exception e) {
-						((CatmaApplication)UI.getCurrent()).showAndLogError("error updating vega viz", e);
-					}
-				}
-			}
-		});
+		btUpdate.addClickListener(event -> handleScriptUpdate(true));
 		
 		btHelp.addClickListener(new ClickListener() {
 			
@@ -129,42 +111,42 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 				
 			}
 		});
-		
-		btPhraseExample.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-		
-				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-				
-				try {
-					IOUtils.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream(
-							"/de/catma/ui/visualizer/vega/resources/phrase_dist_chart.json"), buffer);
-					specEditor.setValue(buffer.toString("UTF-8"));
-					
-				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError("error loading vega example", e);
-				}				
-			}
-		});
-		btTagExample.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-		
-				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-				
-				try {
-					IOUtils.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream(
-							"/de/catma/ui/visualizer/vega/resources/tag_dist_chart.json"), buffer);
-					specEditor.setValue(buffer.toString("UTF-8"));
-					
-				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError("error loading vega example", e);
-				}				
-			}
-		});
 	}
+
+	private void handleScriptUpdate(boolean changeDisplaySettingHandler) {
+		if (changeDisplaySettingHandler) {
+			displaySettingsHandler = (displaySetting, vegaPanel) -> {}; // noop handler
+		}
+		
+		String spec = specEditor.getValue();
+		if ((spec == null) || spec.trim().isEmpty()) {
+			Notification.show("Info", "Vega Specification must not be empty!", Type.TRAY_NOTIFICATION);
+		}
+		else {
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				ObjectNode specNode = mapper.readValue(spec, ObjectNode.class);
+				
+				JsonNode dataNode = specNode.get("data");
+				if (dataNode.isArray()) {
+					ArrayNode dataArray = (ArrayNode)dataNode;
+					for (int i=0; i<dataArray.size(); i++) {
+						ObjectNode curDataNode = (ObjectNode)dataArray.get(i);
+						setQueryUrl(curDataNode);
+					}
+				}
+				else {
+					setQueryUrl((ObjectNode)dataNode);
+				}
+				
+				vega.setVegaSpec(specNode.toString());
+			}
+			catch (Exception e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError("error updating vega viz", e);
+			}
+		}
+	}
+
 
 	private void handleVegaValueChange(QueryResult rows) {
 		
@@ -174,7 +156,7 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 				markupBased = (rows.iterator().next() instanceof TagQueryResultRow);
 			}
 			KwicPanel kwicPanel = 
-					new KwicPanel(repository, new RelevantUserMarkupCollectionProvider() {
+					new KwicPanel(project, new RelevantUserMarkupCollectionProvider() {
 						
 						@Override
 						public List<String> getRelevantUserMarkupCollectionIDs() {
@@ -215,28 +197,39 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 		}
 	}
 
-	private void initComponents() {
+	private void initComponents(
+			EventBus eventBus, LoadingCache<String, KwicProvider> kwicProviderCache, 
+			Supplier<Corpus> corpusProvider) {
 		
-		VerticalLayout leftPanel = new VerticalLayout();
-		leftPanel.setSpacing(true);
-		leftPanel.setMargin(true);
+		VerticalSplitPanel leftSplitPanel = new VerticalSplitPanel();
+		addComponent(leftSplitPanel);
 		
-		leftPanel.setWidth("100%");
-		leftPanel.setHeight("600px");
-		addComponent(leftPanel);
+		this.vega = new Vega();
+		this.vega.addStyleName("catma-embedded-vega");
+		this.vega.setSizeFull();
+		
+		leftSplitPanel.addComponent(vega);		
+		leftSplitPanel.setSplitPosition(100);
+		
+		kwicPanel = new KwicPanelNew(eventBus, project, kwicProviderCache, corpusProvider);
+		
+		leftSplitPanel.addComponent(kwicPanel);
+
+		
+		
+		VerticalLayout codePanel = new VerticalLayout();
+		codePanel.setSizeFull();
+		addComponent(codePanel);
+		
 		
 		HorizontalLayout queryResultInfoPanel = new HorizontalLayout();
 		queryResultInfoPanel.setWidth("100%");
 		queryResultInfoPanel.setSpacing(true);
-		queryResultInfoPanel.addStyleName("vega-view-left-panel-component");
-
+		codePanel.addComponent(queryResultInfoPanel);
 		
-		leftPanel.addComponent(queryResultInfoPanel);
-		
-		//TODO: show query
 		TextField queryResultUrlField = new TextField(
 				MessageFormat.format(
-					"data URL of your query result or use {0} placeholder", 
+					"data URL of your selection or use {0} placeholder for custom queries", 
 					CATMA_QUERY_URL), queryResultUrl);
 		
 		queryResultUrlField.setReadOnly(true);
@@ -251,50 +244,19 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 		
 		specEditor = new TextArea("Vega Specification");
 		specEditor.setSizeFull();
-		specEditor.addStyleName("vega-view-left-panel-component");
 
-		leftPanel.addComponent(specEditor);
-		leftPanel.setExpandRatio(specEditor, 1f);
+		codePanel.addComponent(specEditor);
+		codePanel.setExpandRatio(specEditor, 1f);
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
-		leftPanel.addComponent(buttonPanel);
+		codePanel.addComponent(buttonPanel);
 		
-		buttonPanel.addStyleName("vega-view-left-panel-component");
 		buttonPanel.setSpacing(true);
 		buttonPanel.setWidth("100%");
-		buttonPanel.setHeight("30px");
 		
-		btPhraseExample = new Button("Phrase distribution example");
-		btPhraseExample.setDescription("A specificaton for a phrase distribution chart");
-		buttonPanel.addComponent(btPhraseExample);
-		buttonPanel.setComponentAlignment(btPhraseExample, Alignment.BOTTOM_RIGHT);
-		buttonPanel.setExpandRatio(btPhraseExample, 1f);
-		
-		btTagExample = new Button("Tag distribution example");
-		btTagExample.setDescription("A specificaton for a Tag distribution chart (needs a Tag based query).");
-		buttonPanel.addComponent(btTagExample);
-		buttonPanel.setComponentAlignment(btTagExample, Alignment.BOTTOM_RIGHT);
-		
-		btUpdate = new Button("Update");
+		btUpdate = new IconButton(VaadinIcons.REFRESH);
 		buttonPanel.addComponent(btUpdate);
 		buttonPanel.setComponentAlignment(btUpdate, Alignment.BOTTOM_RIGHT);
-		
-		this.vega = new Vega();
-		this.vega.addStyleName("catma-embedded-vega");
-		
-		addComponent(vega);
-	}
-
-	@Override
-	public void addClickshortCuts() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void removeClickshortCuts() {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -303,13 +265,41 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 	}
 
 	@Override
-	public String toString() {
-		return "Vega";
+	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) {
+		queryResultRequestHandler.addQuerResultRows(queryResult);
+		vega.reloadData();
 	}
-	
+
 	@Override
-	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
+	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {
+		queryResultRequestHandler.removeQuerResultRows(queryResult);
+		vega.reloadData();
+	}
+
+	@Override
+	public void setExpansionListener(ExpansionListener expansionListener) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void setSelectedQueryResultRow(QueryResultRow row) {
+		// noop
+	}
+
+	@Override
+	public void setDisplaySetting(DisplaySetting displaySetting) {
+		try {
+			displaySettingsHandler.handleDisplaySetting(displaySetting, this);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+
+	public void setVegaScript(String vegaScript) {
+		specEditor.setValue(vegaScript);
+		handleScriptUpdate(false);
 	}
 }

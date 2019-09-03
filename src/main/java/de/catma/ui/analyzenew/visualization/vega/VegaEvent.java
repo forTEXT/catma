@@ -1,8 +1,8 @@
-package de.catma.ui.visualizer.vega;
+package de.catma.ui.analyzenew.visualization.vega;
 
 import de.catma.document.repository.Repository;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.ui.analyzer.QueryOptionsProvider;
+import de.catma.ui.analyzenew.QueryOptionsProvider;
 
 public class VegaEvent {
 	

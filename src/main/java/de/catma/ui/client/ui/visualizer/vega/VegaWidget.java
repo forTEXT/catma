@@ -34,7 +34,6 @@ public class VegaWidget extends FocusWidget {
 			  userSelectionListener.@de.catma.ui.client.ui.visualizer.vega.UserSelectionListener::userSelection(
 			  	Lcom/google/gwt/core/client/JavaScriptObject;)(value);
 			});
-
 		});
 	}-*/;
 

@@ -17600,11 +17600,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 5px;
 }
 
-.catma .vega-view-left-panel-component {
-	padding-left: 1px;
-	padding-right: 1px;
-}
-
 .catma .home__menu {
 	margin-top: 10px;
 	margin-bottom: 10px;

@@ -81,6 +81,7 @@ public class VizMaxPanel extends VerticalLayout  {
 		initComponents();
 		initActions(leaveListener);
 		initData(queryResultPanelSettings);
+		visualization.setDisplaySetting(selectedResultsPanel.getDisplaySetting());
 		
 	}
 	
@@ -202,6 +203,8 @@ public class VizMaxPanel extends VerticalLayout  {
 				mainContentSplitPanel.setSplitPosition(50);
 			}
 		});
+		
+		selectedResultsPanel.setDisplaySettingChangeListener(displaySettings -> visualization.setDisplaySetting(displaySettings));
 	}
 
 	@SuppressWarnings("unchecked")

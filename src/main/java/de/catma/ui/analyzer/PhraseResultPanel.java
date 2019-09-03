@@ -64,6 +64,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.serialization.xls.QueryResultExcelExporter;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
+import de.catma.ui.analyzenew.QueryOptionsProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;

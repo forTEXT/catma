@@ -97,8 +97,9 @@ import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.analyzenew.QueryOptionsProvider;
+import de.catma.ui.analyzenew.visualization.vega.VegaEvent;
 import de.catma.ui.analyzer.AnalyzerProvider;
-import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.TokenInvalidEvent;
@@ -113,7 +114,6 @@ import de.catma.ui.repository.Messages;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.ui.util.Version;
-import de.catma.ui.visualizer.vega.VegaEvent;
 
 @Theme("catma")
 @PreserveOnRefresh
