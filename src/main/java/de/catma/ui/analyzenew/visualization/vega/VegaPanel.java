@@ -73,6 +73,20 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 	private DisplaySettingHandler displaySettingsHandler;
 	private DisplaySettingHandler defaultDisplaySettingHandler;
 
+	private IconButton btExpandCompressTopLeft;
+
+	private IconButton btShowCode;
+
+	private IconButton btHideCode;
+
+	private IconButton btExpandCompressRight;
+
+	private ExpansionListener expansionListener;
+	
+	private boolean expanded = false;
+
+	private VerticalSplitPanel leftSplitPanel;
+
 	public VegaPanel(EventBus eventBus, Repository project, LoadingCache<String, KwicProvider> kwicProviderCache, 
 			Supplier<Corpus> corpusProvider, QueryOptionsProvider queryOptionsProvider, 
 			DisplaySettingHandler displaySettingsHandler) {
@@ -111,7 +125,51 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 				
 			}
 		});
+		
+		btShowCode.addClickListener(event -> toggleSpecView(true));
+		btHideCode.addClickListener(event -> toggleSpecView(false));
+		
+		btExpandCompressTopLeft.addClickListener(clickEvent -> handleMaxMinRequest());
+		btExpandCompressRight.addClickListener(clickEvent -> handleMaxMinRequest());
+		
+		kwicPanel.setExpansionListener(new ExpansionListener() {
+			
+			@Override
+			public void expand() {
+				toggleKwicVisible(true);
+			}
+			
+			@Override
+			public void compress() {
+				toggleKwicVisible(false);
+			}
+		});
+
 	}
+
+	private void toggleKwicVisible(boolean visible) {
+		if (visible) {
+			leftSplitPanel.setSplitPosition(50);
+		}
+		else {
+			leftSplitPanel.setSplitPosition(100);
+		}
+	}
+
+
+	private void toggleSpecView(boolean specViewVisible) {
+		if (specViewVisible) {
+			setSplitPosition(50);
+		}
+		else {
+			setSplitPosition(100);
+		}
+		btShowCode.setVisible(!specViewVisible);
+		btHideCode.setVisible(specViewVisible);
+		btExpandCompressTopLeft.setVisible(!specViewVisible);
+		btExpandCompressRight.setVisible(specViewVisible);
+	}
+
 
 	private void handleScriptUpdate(boolean changeDisplaySettingHandler) {
 		if (changeDisplaySettingHandler) {
@@ -149,34 +207,9 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 
 
 	private void handleVegaValueChange(QueryResult rows) {
-		
-		try {
-			boolean markupBased = false;
-			if (!rows.iterator().hasNext()) {
-				markupBased = (rows.iterator().next() instanceof TagQueryResultRow);
-			}
-			KwicPanel kwicPanel = 
-					new KwicPanel(project, new RelevantUserMarkupCollectionProvider() {
-						
-						@Override
-						public List<String> getRelevantUserMarkupCollectionIDs() {
-							return null;
-						}
-						
-						@Override
-						public Corpus getCorpus() {
-							return null;
-						}
-					}, markupBased);
-			kwicPanel.addQueryResultRows(rows);
-			new KwicWindow(
-					"Test", //TODO:
-					kwicPanel).show(); 
-		}
-		catch (Exception e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					Messages.getString("AnalyzerView.errorAccessingRepo"), e); //$NON-NLS-1$
-		}			
+		kwicPanel.clear();
+		kwicPanel.addQueryResultRows(rows);
+		kwicPanel.expand();
 	}
 
 	private void setQueryUrl(ObjectNode dataNode) throws UnsupportedEncodingException {
@@ -200,27 +233,65 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 	private void initComponents(
 			EventBus eventBus, LoadingCache<String, KwicProvider> kwicProviderCache, 
 			Supplier<Corpus> corpusProvider) {
+		setSizeFull();
+		setSplitPosition(100);
 		
-		VerticalSplitPanel leftSplitPanel = new VerticalSplitPanel();
+		leftSplitPanel = new VerticalSplitPanel();
 		addComponent(leftSplitPanel);
+		
+		HorizontalLayout leftTopPanel = new HorizontalLayout();
+		leftTopPanel.setSizeFull();
+		leftSplitPanel.addComponent(leftTopPanel);		
+		leftSplitPanel.setSplitPosition(100);
 		
 		this.vega = new Vega();
 		this.vega.addStyleName("catma-embedded-vega");
-		this.vega.setSizeFull();
+		leftTopPanel.addComponent(this.vega);
+		leftTopPanel.setExpandRatio(this.vega, 1f);
 		
-		leftSplitPanel.addComponent(vega);		
-		leftSplitPanel.setSplitPosition(100);
+		btShowCode = new IconButton(VaadinIcons.CODE);
+		leftTopPanel.addComponent(btShowCode);
+		
+		btExpandCompressTopLeft = new IconButton(VaadinIcons.EXPAND_SQUARE);
+		leftTopPanel.addComponent(btExpandCompressTopLeft);
+		
+		VerticalLayout leftBottomPanel = new VerticalLayout();
+		leftBottomPanel.setMargin(false);
+		leftBottomPanel.setSizeFull();
+		leftSplitPanel.addComponent(leftBottomPanel);
 		
 		kwicPanel = new KwicPanelNew(eventBus, project, kwicProviderCache, corpusProvider);
-		
-		leftSplitPanel.addComponent(kwicPanel);
-
-		
+		leftBottomPanel.addComponent(kwicPanel);
+		kwicPanel.setExpandResource(VaadinIcons.ANGLE_DOUBLE_UP);
+		kwicPanel.setCompressResource(VaadinIcons.ANGLE_DOUBLE_DOWN);
 		
 		VerticalLayout codePanel = new VerticalLayout();
 		codePanel.setSizeFull();
 		addComponent(codePanel);
 		
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		codePanel.addComponent(buttonPanel);
+		buttonPanel.setMargin(false);
+		buttonPanel.setSpacing(true);
+		buttonPanel.setWidth("100%");
+		
+		btHideCode = new IconButton(VaadinIcons.ANGLE_DOUBLE_RIGHT);
+		buttonPanel.addComponent(btHideCode);
+		buttonPanel.setComponentAlignment(btHideCode, Alignment.TOP_LEFT);
+		buttonPanel.setExpandRatio(btHideCode, 1f);
+		
+		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE);
+		buttonPanel.addComponent(btHelp);
+		buttonPanel.setComponentAlignment(btHelp, Alignment.TOP_RIGHT);
+		
+		btUpdate = new IconButton(VaadinIcons.REFRESH);
+		buttonPanel.addComponent(btUpdate);
+		buttonPanel.setComponentAlignment(btUpdate, Alignment.TOP_RIGHT);
+		
+		
+		btExpandCompressRight = new IconButton(VaadinIcons.EXPAND_SQUARE);
+		buttonPanel.addComponent(btExpandCompressRight);
+		buttonPanel.setComponentAlignment(btExpandCompressRight, Alignment.TOP_RIGHT);
 		
 		HorizontalLayout queryResultInfoPanel = new HorizontalLayout();
 		queryResultInfoPanel.setWidth("100%");
@@ -237,26 +308,12 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 		queryResultInfoPanel.addComponent(queryResultUrlField);
 		queryResultInfoPanel.setExpandRatio(queryResultUrlField, 1f);
 
-		btHelp = new Button(VaadinIcons.QUESTION_CIRCLE);
-		btHelp.addStyleName("help-button"); //$NON-NLS-1$
-		queryResultInfoPanel.addComponent(btHelp);
-		queryResultInfoPanel.setComponentAlignment(btHelp, Alignment.TOP_LEFT);
-		
 		specEditor = new TextArea("Vega Specification");
 		specEditor.setSizeFull();
 
 		codePanel.addComponent(specEditor);
 		codePanel.setExpandRatio(specEditor, 1f);
 		
-		HorizontalLayout buttonPanel = new HorizontalLayout();
-		codePanel.addComponent(buttonPanel);
-		
-		buttonPanel.setSpacing(true);
-		buttonPanel.setWidth("100%");
-		
-		btUpdate = new IconButton(VaadinIcons.REFRESH);
-		buttonPanel.addComponent(btUpdate);
-		buttonPanel.setComponentAlignment(btUpdate, Alignment.BOTTOM_RIGHT);
 	}
 
 	@Override
@@ -278,8 +335,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 
 	@Override
 	public void setExpansionListener(ExpansionListener expansionListener) {
-		// TODO Auto-generated method stub
-		
+		this.expansionListener = expansionListener;
 	}
 
 	@Override
@@ -301,5 +357,24 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 	public void setVegaScript(String vegaScript) {
 		specEditor.setValue(vegaScript);
 		handleScriptUpdate(false);
+	}
+	
+	private void handleMaxMinRequest() {
+		expanded = !expanded;
+		
+		if (expanded) {
+			btExpandCompressTopLeft.setIcon(VaadinIcons.COMPRESS_SQUARE);
+			btExpandCompressRight.setIcon(VaadinIcons.COMPRESS_SQUARE);
+			if (expansionListener != null) {
+				expansionListener.expand();
+			}
+		}
+		else {
+			btExpandCompressTopLeft.setIcon(VaadinIcons.EXPAND_SQUARE);
+			btExpandCompressRight.setIcon(VaadinIcons.EXPAND_SQUARE);
+			if (expansionListener != null) {
+				expansionListener.compress();
+			}
+		}
 	}
 }

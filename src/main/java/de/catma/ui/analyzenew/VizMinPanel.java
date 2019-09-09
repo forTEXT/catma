@@ -51,7 +51,7 @@ public class VizMinPanel extends VerticalLayout {
 
 		btRemove = new IconButton (VaadinIcons.ERASER);
 		
-		btMaximize = new IconButton (VaadinIcons.ARROW_RIGHT);
+		btMaximize = new IconButton (VaadinIcons.EXPAND_SQUARE);
 		
 		buttonBar.addComponents(btRemove,btMaximize);
 		buttonBar.setComponentAlignment(btRemove, Alignment.MIDDLE_RIGHT);

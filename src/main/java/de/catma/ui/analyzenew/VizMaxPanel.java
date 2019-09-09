@@ -1,5 +1,6 @@
 package de.catma.ui.analyzenew;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.cache.LoadingCache;
@@ -9,12 +10,12 @@ import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
@@ -58,7 +59,7 @@ public class VizMaxPanel extends VerticalLayout  {
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
 
 	private HorizontalSplitPanel mainContentSplitPanel;
-	private Button arrowLeftBt;
+	private Button btMinViz;
 	private ComboBox<QuerySelection> queryResultBox;
 	
 	private Visualisation visualization;
@@ -70,6 +71,8 @@ public class VizMaxPanel extends VerticalLayout  {
 	private Repository project;
 
 	private QueryResultPanel selectedResultsPanel;
+
+	private HorizontalLayout buttonAndBoxPanel;
 
 	public VizMaxPanel( 
 			Visualisation visualization,
@@ -100,12 +103,18 @@ public class VizMaxPanel extends VerticalLayout  {
 					querySelection.getSetting().getDisplaySetting(),
 					item -> handleItemSelection(item));
 			queryResultPanel.setSizeFull();
-			Label label = new Label(querySelection.getSetting().getQueryId().getShortName());
-			label.setDescription(querySelection.getSetting().getQueryId().getName());
-			queryResultPanel.addToButtonBarLeft(label);
 			querySelection.setPanel(queryResultPanel);
 		}
-
+		AbstractOrderedLayout buttonAndBoxPanelContainer = 
+				(AbstractOrderedLayout)buttonAndBoxPanel.getParent();
+		if (buttonAndBoxPanelContainer != null) {
+			buttonAndBoxPanelContainer.removeComponent(buttonAndBoxPanel);
+		}
+		querySelection.getPanel().addToButtonBarLeft(buttonAndBoxPanel);
+		buttonAndBoxPanelContainer = 
+				(AbstractOrderedLayout)buttonAndBoxPanel.getParent();
+		buttonAndBoxPanelContainer.setExpandRatio(buttonAndBoxPanel, 1f);
+		
 		topLeftPanel.addComponent(querySelection.getPanel());
 		topLeftPanel.setExpandRatio(querySelection.getPanel(), 1f);
 		currentQueryResultPanel = querySelection.getPanel();
@@ -118,16 +127,23 @@ public class VizMaxPanel extends VerticalLayout  {
 
 	private void initData(List<QueryResultPanelSetting> queryResultPanelSettings) {
 		queryResultBox.setItems(queryResultPanelSettings.stream().map(settings -> new QuerySelection(settings)));
+		@SuppressWarnings("unchecked")
+		Collection<QuerySelection> items = 
+			((ListDataProvider<QuerySelection>)queryResultBox.getDataProvider()).getItems();
+		if (!items.isEmpty()) {
+			queryResultBox.setValue(items.iterator().next());
+		}
 	}
 
 	private void initComponents() {
 		setSizeFull();
 		setMargin(false);
-		
+
 		mainContentSplitPanel = new HorizontalSplitPanel();
 		mainContentSplitPanel.setSplitPosition(40, Sizeable.Unit.PERCENTAGE);
 		
 		addComponent(mainContentSplitPanel);
+		setExpandRatio(mainContentSplitPanel, 1f);
 		
 		// left column
 		
@@ -141,13 +157,12 @@ public class VizMaxPanel extends VerticalLayout  {
 		topLeftPanel.setMargin(new MarginInfo(false, false, false, false));
 		resultSelectionSplitPanel.addComponent(topLeftPanel);
 		
-		HorizontalLayout buttonAndBoxPanel = new HorizontalLayout();
+		buttonAndBoxPanel = new HorizontalLayout();
 		buttonAndBoxPanel.setWidth("100%");
 		buttonAndBoxPanel.setMargin(false);
-		topLeftPanel.addComponent(buttonAndBoxPanel);
 		
-		arrowLeftBt = new IconButton(VaadinIcons.ARROW_LEFT);
-		buttonAndBoxPanel.addComponent(arrowLeftBt);
+		btMinViz = new IconButton(VaadinIcons.COMPRESS_SQUARE);
+		buttonAndBoxPanel.addComponent(btMinViz);
 		
 		queryResultBox = new ComboBox<QuerySelection>();
 		queryResultBox.setWidth("100%");
@@ -166,9 +181,10 @@ public class VizMaxPanel extends VerticalLayout  {
 			project, kwicProviderCache, DisplaySetting.GROUPED_BY_PHRASE,
 			item -> handleItemRemoval(item));
 		
-		selectedResultsPanel.addToButtonBarLeft(new Label("Selection"));
+		selectedResultsPanel.addToButtonBarLeft(buttonAndBoxPanel);
 		
 		selectedResultsPanel.setSizeFull();
+		selectedResultsPanel.setMargin(new MarginInfo(false, false, false, false));
 		
 		resultSelectionSplitPanel.addComponent(selectedResultsPanel);
 		
@@ -183,7 +199,7 @@ public class VizMaxPanel extends VerticalLayout  {
 	}
 
 	private void initActions(LeaveListener leaveListener) {
-		arrowLeftBt.addClickListener(clickEvent -> leaveListener.onLeave(this));
+		btMinViz.addClickListener(clickEvent -> leaveListener.onLeave(this));
 		queryResultBox.addSelectionListener(new SingleSelectionListener<QuerySelection>() {
 			@Override
 			public void selectionChange(SingleSelectionEvent<QuerySelection> event) {

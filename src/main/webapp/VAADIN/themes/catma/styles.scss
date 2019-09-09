@@ -1,5 +1,10 @@
 $v-font-family: "Open Sans", sans-serif;
 $v-focus-color: #5A98A1;
+
+.catma.v-app, .catma.v-app-loading {
+	cursor: unset !important;
+}
+
 @import "default.scss";
 
 .catma {
@@ -897,6 +902,9 @@ $v-focus-color: #5A98A1;
     .analyze-query-result-panel-buttonbar {
     	background-color: #e0e0e0;
 		color: rgba(0, 0, 0, 0.87);
+		padding-top: 14px;
+		padding-bottom: 14px;
+		padding-left: 10px;
     }
     
     .analyze-queryresult-panel {

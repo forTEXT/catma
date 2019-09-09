@@ -315,6 +315,10 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private void addKwicViz() {
+		if (getQueryResultPanelSettings().isEmpty()) {
+			Notification.show("Info", "Please query some data first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
 		VizMaxPanel vizMaxPanel = 
 				new VizMaxPanel(
 						new KwicPanelNew(
@@ -340,6 +344,10 @@ public class AnalyzeNewView extends HorizontalLayout
 	}
 
 	private void addDistViz() {
+		if (getQueryResultPanelSettings().isEmpty()) {
+			Notification.show("Info", "Please query some data first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
 		VegaPanel vegaPanel = 
 			new VegaPanel(
 				eventBus,

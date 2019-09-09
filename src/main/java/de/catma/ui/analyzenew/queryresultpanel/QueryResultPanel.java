@@ -14,7 +14,6 @@ import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -289,8 +288,20 @@ public class QueryResultPanel extends VerticalLayout {
 			.addColumn((item) -> VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml())
 			.setCaption("Select")
 			.setRenderer(selectItemsRenderer)
-			.setWidth(70);			
+			.setExpandRatio(1);		
 		}
+		
+		if (itemRemovedListener != null) {
+			ButtonRenderer<QueryResultRowItem> removeItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
+					rendererClickEvent -> itemRemovedListener.itemRemoved(rendererClickEvent.getItem()));
+			removeItemsRenderer.setHtmlContentAllowed(true);
+
+			queryResultGrid
+			.addColumn((item) -> VaadinIcons.ERASER.getHtml())
+			.setCaption("Remove")
+			.setRenderer(removeItemsRenderer)
+			.setExpandRatio(1);		
+		}		
 
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 		
@@ -367,8 +378,20 @@ public class QueryResultPanel extends VerticalLayout {
 			.addColumn((item) -> VaadinIcons.ARROW_CIRCLE_DOWN_O.getHtml())
 			.setCaption("Select")
 			.setRenderer(selectItemsRenderer)
-			.setWidth(70);			
+			.setExpandRatio(1);
 		}
+
+		if (itemRemovedListener != null) {
+			ButtonRenderer<QueryResultRowItem> removeItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
+					rendererClickEvent -> itemRemovedListener.itemRemoved(rendererClickEvent.getItem()));
+			removeItemsRenderer.setHtmlContentAllowed(true);
+
+			queryResultGrid
+			.addColumn((item) -> VaadinIcons.ERASER.getHtml())
+			.setCaption("Remove")
+			.setRenderer(removeItemsRenderer)
+			.setExpandRatio(1);		
+		}			
 
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 		
@@ -421,8 +444,13 @@ public class QueryResultPanel extends VerticalLayout {
 
 		Column<QueryResultRowItem, ?> freqColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getFrequency)
-			.setCaption("Frequency")
-			.setExpandRatio(1);
+			.setCaption("Frequency");
+		if ((itemSelectionListener == null) && (itemRemovedListener==null)) {
+			freqColumn.setExpandRatio(1);
+		}
+		else {
+			freqColumn.setWidth(100);
+		}
 		
 		if (itemSelectionListener != null) {
 			ButtonRenderer<QueryResultRowItem> selectItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
@@ -434,6 +462,18 @@ public class QueryResultPanel extends VerticalLayout {
 			.setRenderer(selectItemsRenderer)
 			.setWidth(70);			
 		}
+		
+		if (itemRemovedListener != null) {
+			ButtonRenderer<QueryResultRowItem> removeItemsRenderer = new ButtonRenderer<QueryResultRowItem>(
+					rendererClickEvent -> itemRemovedListener.itemRemoved(rendererClickEvent.getItem()));
+			removeItemsRenderer.setHtmlContentAllowed(true);
+
+			queryResultGrid
+			.addColumn((item) -> VaadinIcons.ERASER.getHtml())
+			.setCaption("Remove")
+			.setRenderer(removeItemsRenderer)
+			.setExpandRatio(1);		
+		}	
 
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 		
@@ -558,7 +598,6 @@ public class QueryResultPanel extends VerticalLayout {
 		}
 		else {
 			buttonPanel.addStyleName("analyze-query-result-panel-buttonbar");
-			buttonPanel.setMargin(new MarginInfo(true, false, true, true));
 		}
 		addComponent(buttonPanel);
 	}

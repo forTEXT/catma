@@ -225,7 +225,8 @@
                 "scale": "y",
                 "field": "countPerBin"
               }
-            }
+            },
+            "hover": {"cursor": {"value": "pointer"}}
           }          
         }
       ],

@@ -16,6 +16,7 @@ import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Label;
@@ -46,6 +47,7 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.modules.project.Resource;
 import de.catma.util.IDGenerator;
 
 
@@ -66,6 +68,8 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 	private ExpansionListener expansionListener;
 	private Supplier<Corpus> corpusProvider;
 	private IDGenerator idGenerator = new IDGenerator();
+	private VaadinIcons expandResource = VaadinIcons.EXPAND_SQUARE;
+	private VaadinIcons compressResource = VaadinIcons.COMPRESS_SQUARE;
 
 	public KwicPanelNew(
 			EventBus eventBus,
@@ -184,13 +188,13 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 		expanded = !expanded;
 		
 		if (expanded) {
-			btExpandCompress.setIcon(VaadinIcons.COMPRESS_SQUARE);
+			btExpandCompress.setIcon(compressResource);
 			if (expansionListener != null) {
 				expansionListener.expand();
 			}
 		}
 		else {
-			btExpandCompress.setIcon(VaadinIcons.EXPAND_SQUARE);
+			btExpandCompress.setIcon(expandResource);
 			if (expansionListener != null) {
 				expansionListener.compress();
 			}
@@ -202,12 +206,9 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 		setMargin(false);
 		setSpacing(false);
 		
-		btExpandCompress = new IconButton(VaadinIcons.EXPAND_SQUARE);
-//		addComponent(btExpandCompress);
+		btExpandCompress = new IconButton(expandResource);
 		btExpandCompress.setVisible(false);
-//		
-//		setComponentAlignment(btExpandCompress, Alignment.TOP_RIGHT);
-//		
+
 		kwicDataProvider = new ListDataProvider<>(new HashSet<>());
 		kwicGrid = new Grid<QueryResultRow>(kwicDataProvider);
 
@@ -278,6 +279,7 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 		kwicGridComponent = new ActionGridComponent<>(new Label("Keyword in context"), kwicGrid);
 		kwicGridComponent.getActionGridBar().setAddBtnVisible(false);
 		kwicGridComponent.getActionGridBar().addButtonRight(btExpandCompress);
+		kwicGridComponent.setMargin(new MarginInfo(false, false, false, true));
 		addComponent(kwicGridComponent);
 		setExpandRatio(kwicGridComponent, 1f);
 	}
@@ -321,6 +323,31 @@ public class KwicPanelNew extends VerticalLayout implements Visualisation {
 	public void setExpansionListener(ExpansionListener expansionListener) {
 		this.expansionListener = expansionListener;
 		btExpandCompress.setVisible(true);
+	}
+	
+	public void setExpandResource(VaadinIcons expandResource) {
+		this.expandResource = expandResource;
+		if (!expanded) {
+			btExpandCompress.setIcon(expandResource);
+		}
+	}
+	
+	public void setCompressResource(VaadinIcons compressResource) {
+		this.compressResource = compressResource;
+		if (expanded) {
+			btExpandCompress.setIcon(compressResource);
+		}
+	}
+	
+	public void expand() {
+		if (!expanded) {
+			handleMaxMinRequest();
+		}
+	}
+	
+	public void clear() {
+		kwicDataProvider.getItems().clear();
+		kwicGrid.getDataProvider().refreshAll();
 	}
 	
 	@Override

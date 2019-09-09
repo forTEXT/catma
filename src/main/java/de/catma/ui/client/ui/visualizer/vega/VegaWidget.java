@@ -6,6 +6,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsonUtils;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.FocusWidget;
 
 public class VegaWidget extends FocusWidget {
