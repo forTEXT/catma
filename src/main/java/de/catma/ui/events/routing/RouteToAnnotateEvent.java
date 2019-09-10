@@ -1,30 +1,30 @@
 package de.catma.ui.events.routing;
 
-import de.catma.document.repository.Repository;
+import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.project.Project;
 
 
 public class RouteToAnnotateEvent {
 
-	private final Repository project;
+	private final Project project;
 	private SourceDocument document;
-	private UserMarkupCollectionReference collectionReference;
+	private AnnotationCollectionReference collectionReference;
 	
 
-	public RouteToAnnotateEvent(Repository project, SourceDocument document,
-			UserMarkupCollectionReference collectionReference) {
+	public RouteToAnnotateEvent(Project project, SourceDocument document,
+			AnnotationCollectionReference collectionReference) {
 		super();
 		this.project = project;
 		this.document = document;
 		this.collectionReference = collectionReference;
 	}
 
-	public RouteToAnnotateEvent(Repository project) {
+	public RouteToAnnotateEvent(Project project) {
 		this(project, null, null);
 	}
 	
-	public Repository getProject() {
+	public Project getProject() {
 		return project;
 	}
 
@@ -32,7 +32,7 @@ public class RouteToAnnotateEvent {
 		return document;
 	}
 
-	public UserMarkupCollectionReference getCollectionReference() {
+	public AnnotationCollectionReference getCollectionReference() {
 		return collectionReference;
 	}
 	

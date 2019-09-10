@@ -21,9 +21,9 @@ package de.catma.queryengine;
 import java.util.List;
 import java.util.Locale;
 
-import de.catma.document.repository.Repository;
-import de.catma.indexer.IndexedRepository;
+import de.catma.indexer.IndexedProject;
 import de.catma.indexer.Indexer;
+import de.catma.project.Project;
 
 public class QueryOptions {
 	
@@ -32,7 +32,7 @@ public class QueryOptions {
 	private List<String> unseparableCharacterSequences;
 	private List<Character> userDefinedSeparatingCharacters;
 	private Locale locale;
-	private IndexedRepository repository;
+	private IndexedProject repository;
 	private int limit = 0;
 	private QueryId queryId;
 	
@@ -42,7 +42,7 @@ public class QueryOptions {
 			List<String> relevantUserMarkupCollIDs,
 			List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale,
-			IndexedRepository repository) {
+			IndexedProject repository) {
 		this.queryId = queryId;
 		this.relevantSourceDocumentIDs = relevantSourceDocumentIDs;
 		this.relevantUserMarkupCollIDs = relevantUserMarkupCollIDs;
@@ -72,7 +72,7 @@ public class QueryOptions {
 		return relevantUserMarkupCollIDs;
 	}
 	
-	public Repository getRepository() {
+	public Project getRepository() {
 		return repository;
 	}
 	

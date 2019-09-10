@@ -63,7 +63,7 @@ public class TeiSourceDocumentInfoSerializationHandler implements
 			TeiDocumentFactory factory = new TeiDocumentFactory();
 			
 			TeiDocument teiDocument = factory.createEmptyDocument(
-					sourceDocument.getID());
+					sourceDocument.getUuid());
 			SourceDocumentInfo sourceDocumentInfo = 
 					sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
 			

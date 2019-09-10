@@ -36,7 +36,6 @@ import de.catma.document.source.ContentInfoSet;
  */
 public class TagLibrary implements Iterable<TagsetDefinition> {
 
-	private String id;
 	private ContentInfoSet contentInfoSet;
 	private Map<String,TagsetDefinition> tagsetDefinitionsByID;
 	
@@ -44,18 +43,17 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 	 * @param id identifier, repository dependent
 	 * @param name name of the library
 	 */
-	public TagLibrary(String id, String name) {
-		this(id, new ContentInfoSet(name));
+	public TagLibrary(String name) {
+		this(new ContentInfoSet(name));
 	}
 	
-	private TagLibrary(String id, ContentInfoSet contentInfoSet) {
-		this.id = id;
+	private TagLibrary(ContentInfoSet contentInfoSet) {
 		this.contentInfoSet = contentInfoSet; 
 		tagsetDefinitionsByID = new HashMap<String, TagsetDefinition>();
 	}
 
 	public TagLibrary(TagLibrary tagLibraryToCopy) {
-		this(null,new ContentInfoSet(tagLibraryToCopy.contentInfoSet));
+		this(new ContentInfoSet(tagLibraryToCopy.contentInfoSet));
 		for (TagsetDefinition tagsetDef : tagLibraryToCopy) {
 			add(new TagsetDefinition(tagsetDef));
 		}
@@ -108,11 +106,7 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 	public void setName(String name) {
 		this.contentInfoSet.setTitle(name);
 	}
-	
-	public void setId(String id) {
-		this.id = id;
-	}
-	
+
 	/**
 	 * @param tagDefinition
 	 * @return all child definitions of the given tag definition 
@@ -148,13 +142,6 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 	public void remove(TagsetDefinition tagsetDefinition) {
 		tagsetDefinitionsByID.remove(tagsetDefinition.getUuid());
 	}
-	
-	/**
-	 * @return repository dependent identifier
-	 */
-	public String getId() {
-		return id;
-	}
 
 	/**
 	 * @param tagsetDefinition the tagsetDefinition is tested by {@link TagsetDefinition#getUuid()} only,
@@ -182,11 +169,6 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 		return tagsetDefinition.getTagPath(tagDefinition);
 	}
 	
-	@Override
-	public String toString() {
-		return (contentInfoSet.getTitle()==null) ? id : contentInfoSet.getTitle();
-	}
-	
 	/**
 	 * @return bibliographical meta data
 	 */
@@ -199,36 +181,6 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 		this.contentInfoSet = contentInfoSet;
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		TagLibrary other = (TagLibrary) obj;
-		if (id == null) {
-			if (other.id != null) {
-				return false;
-			}
-		} else if (!id.equals(other.id)) {
-			return false;
-		}
-		return true;
-	}
-	
 	void clear() {
 		tagsetDefinitionsByID.clear();
 	}

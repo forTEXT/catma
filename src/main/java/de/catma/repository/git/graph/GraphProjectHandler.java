@@ -7,10 +7,10 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.Multimap;
 
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -22,7 +22,7 @@ import de.catma.tag.TagsetDefinition;
 public interface GraphProjectHandler {
 	
 	public interface CollectionsSupplier {
-		public List<UserMarkupCollection> get(TagLibrary tagLibrary);
+		public List<AnnotationCollection> get(TagLibrary tagLibrary);
 	}
 
 	void ensureProjectRevisionIsLoaded(String revisionHash, 
@@ -60,19 +60,19 @@ public interface GraphProjectHandler {
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
 
-	UserMarkupCollection getCollection(String rootRevisionHash, TagLibrary tagLibrary,
-			UserMarkupCollectionReference collectionReference) throws Exception;
+	AnnotationCollection getCollection(String rootRevisionHash, TagLibrary tagLibrary,
+			AnnotationCollectionReference collectionReference) throws Exception;
 
-	void addTagReferences(String rootRevisionHash, UserMarkupCollection collection, List<TagReference> tagReferences)
+	void addTagReferences(String rootRevisionHash, AnnotationCollection collection, List<TagReference> tagReferences)
 			throws Exception;
 
-	void removeTagReferences(String rootRevisionHash, UserMarkupCollection collection, List<TagReference> tagReferences)
+	void removeTagReferences(String rootRevisionHash, AnnotationCollection collection, List<TagReference> tagReferences)
 			throws Exception;
 
 	void removeProperties(String rootRevisionHash, String collectionId, String collectionRevisionHash,
 			String propertyDefId) throws Exception;
 
-	void updateProperties(String rootRevisionHash, UserMarkupCollection collection, TagInstance tagInstance, Collection<Property> properties)
+	void updateProperties(String rootRevisionHash, AnnotationCollection collection, TagInstance tagInstance, Collection<Property> properties)
 			throws Exception;
 
 	Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tag)
@@ -97,10 +97,10 @@ public interface GraphProjectHandler {
 	void updateTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
 
-	void updateCollection(String rootRevisionHash, UserMarkupCollectionReference collectionRef,
+	void updateCollection(String rootRevisionHash, AnnotationCollectionReference collectionRef,
 			String oldRootRevisionHash) throws Exception;
 
-	void removeCollection(String rootRevisionHash, UserMarkupCollectionReference collectionReference,
+	void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference,
 			String oldRootRevisionHash) throws Exception;
 
 	void removeDocument(String rootRevisionHash, SourceDocument document, String oldRootRevisionHash)

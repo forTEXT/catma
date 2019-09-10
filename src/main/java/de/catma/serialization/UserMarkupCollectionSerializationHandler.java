@@ -22,15 +22,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 
 public interface UserMarkupCollectionSerializationHandler {
 
-	public void serialize(UserMarkupCollection userMarkupCollection, 
+	public void serialize(AnnotationCollection userMarkupCollection, 
 		SourceDocument sourceDocument, OutputStream outputStream) throws IOException;
 	
-	public UserMarkupCollection deserialize(
+	public AnnotationCollection deserialize(
 			SourceDocument sourceDocument,
 			String id, InputStream inputStream) throws IOException;
 	

@@ -38,7 +38,7 @@ import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.UIProvider;
 import com.vaadin.server.VaadinServlet;
 
-import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.properties.CATMAPropertyKey;
 
 @Singleton
 public class CatmaApplicationServlet extends VaadinServlet implements SessionInitListener {
@@ -161,8 +161,8 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
 				CustomizedSystemMessages messages = new CustomizedSystemMessages();
 				try {
 					String problemRedirectURL = 
-							RepositoryPropertyKey.BaseURL.getValue( 
-									RepositoryPropertyKey.BaseURL.getDefaultValue());
+							CATMAPropertyKey.BaseURL.getValue( 
+									CATMAPropertyKey.BaseURL.getDefaultValue());
 
 					messages.setAuthenticationErrorURL(problemRedirectURL);
 					messages.setInternalErrorURL(problemRedirectURL);

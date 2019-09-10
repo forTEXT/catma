@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Set;
 
 import de.catma.document.Range;
-import de.catma.document.repository.Repository;
+import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.Indexer;
+import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -69,7 +69,7 @@ public class TagDiffQuery extends Query {
     protected QueryResult execute() throws Exception {
     	
     	QueryOptions queryOptions = getQueryOptions();
-    	Repository repository = queryOptions.getRepository();
+    	Project repository = queryOptions.getRepository();
     	
         Indexer indexer = queryOptions.getIndexer();
         List<String> relevantUserMarkupCollIDs = 
@@ -80,7 +80,7 @@ public class TagDiffQuery extends Query {
         	relevantUserMarkupCollIDs = new ArrayList<String>();
         	for (String sourceDocumentId 
         			: queryOptions.getRelevantSourceDocumentIDs()) {
-        		for (UserMarkupCollectionReference umcRef : 
+        		for (AnnotationCollectionReference umcRef : 
         			repository.getSourceDocument(sourceDocumentId).getUserMarkupCollectionRefs()) {
         			relevantUserMarkupCollIDs.add(umcRef.getId());
         		}

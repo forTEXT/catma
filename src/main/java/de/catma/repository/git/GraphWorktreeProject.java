@@ -13,7 +13,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,26 +32,22 @@ import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 
 import de.catma.backgroundservice.BackgroundService;
-import de.catma.document.AccessMode;
-import de.catma.document.Corpus;
-import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.document.repository.event.ChangeType;
-import de.catma.document.repository.event.CollectionChangeEvent;
-import de.catma.document.repository.event.DocumentChangeEvent;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.StandardContentHandler;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.indexer.IndexBufferManagerName;
-import de.catma.indexer.IndexedRepository;
+import de.catma.indexer.IndexedProject;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
-import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
+import de.catma.project.event.ChangeType;
+import de.catma.project.event.CollectionChangeEvent;
+import de.catma.project.event.DocumentChangeEvent;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
@@ -68,17 +63,15 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
-public class GraphWorktreeProject implements IndexedRepository {
+public class GraphWorktreeProject implements IndexedProject {
 	
 	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
 	private static final String ORIG_INFIX = "_orig";
@@ -137,7 +130,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 						return getSourceDocumentURI(documentId);
 					}
 				});
-		this.tempDir = RepositoryPropertyKey.TempDir.getValue();
+		this.tempDir = CATMAPropertyKey.TempDir.getValue();
 		this.indexer = ((TPGraphProjectHandler)this.graphProjectHandler).createIndexer();
     	this.documentCache = 
 			CacheBuilder.newBuilder()
@@ -162,7 +155,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	private Path getTokenizedSourceDocumentPath(String documentId) {
 		return Paths
-			.get(new File(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue()).toURI())
+			.get(new File(CATMAPropertyKey.GraphDbGitMountBasePath.getValue()).toURI())
 			.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(documentId))
 			.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
@@ -220,7 +213,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 						status, System.out);
 			}
 			
-			for (UserMarkupCollectionReference collectionRef : gitProjectHandler.getDocuments().stream()
+			for (AnnotationCollectionReference collectionRef : gitProjectHandler.getDocuments().stream()
 					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
 					.collect(Collectors.toList())) {
 				
@@ -754,7 +747,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	
 	private URI getSourceDocumentURI(String sourceDocumentId) {
 		return Paths
-		.get(new File(RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+		.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
 		.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(sourceDocumentId))
 		.resolve(sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION)
 		.toUri();
@@ -763,14 +756,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Override
 	public void insert(SourceDocument sourceDocument) throws IOException {
 		try {
-			File sourceTempFile = Paths.get(new File(this.tempDir).toURI()).resolve(sourceDocument.getID()).toFile();
+			File sourceTempFile = Paths.get(new File(this.tempDir).toURI()).resolve(sourceDocument.getUuid()).toFile();
 	
 			String convertedFilename = 
-					sourceDocument.getID() + "." + UTF8_CONVERSION_FILE_EXTENSION;
-			
-			final IndexBufferManager indexBufferManager = 
-					IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
-	
+					sourceDocument.getUuid() + "." + UTF8_CONVERSION_FILE_EXTENSION;
+
 			logger.info("start tokenizing sourcedocument");
 			
 			List<String> unseparableCharacterSequences = 
@@ -794,17 +784,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 			
 			logger.info("tokenization finished");
 			
-			
-			indexBufferManager.add(sourceDocument, terms);
-			
-			logger.info("buffering tokens finished");	
-			
 			try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
 				
 				String sourceDocRevisionHash = gitProjectHandler.createSourceDocument(
-					sourceDocument.getID(), 
+					sourceDocument.getUuid(), 
 					originalFileInputStream,
-					sourceDocument.getID() 
+					sourceDocument.getUuid() 
 						+ ORIG_INFIX 
 						+ "." 
 						+ sourceDocument
@@ -817,7 +802,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 						sourceDocument.getContent().getBytes(Charset.forName("UTF-8"))), 
 					convertedFilename, 
 					terms,
-					sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION,
+					sourceDocument.getUuid() + "." + TOKENIZED_FILE_EXTENSION,
 					sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
 	
 				sourceDocument.unload();
@@ -836,7 +821,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			graphProjectHandler.addSourceDocument(
 				oldRootRevisionHash, this.rootRevisionHash,
 				sourceDocument,
-				getTokenizedSourceDocumentPath(sourceDocument.getID()));
+				getTokenizedSourceDocumentPath(sourceDocument.getUuid()));
 
 	        eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.CREATED));
 		}
@@ -872,10 +857,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public void delete(SourceDocument sourceDocument) throws Exception {
-		for (UserMarkupCollectionReference collectionRef : sourceDocument.getUserMarkupCollectionRefs()) {
+		for (AnnotationCollectionReference collectionRef : sourceDocument.getUserMarkupCollectionRefs()) {
 			delete(collectionRef);
 		}
-		documentCache.invalidate(sourceDocument.getID());
+		documentCache.invalidate(sourceDocument.getUuid());
 		String oldRootRevisionHash = this.rootRevisionHash;
 		gitProjectHandler.removeDocument(sourceDocument);
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
@@ -884,54 +869,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
+	public SourceDocument getSourceDocument(AnnotationCollectionReference umcRef) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Deprecated
-	@Override
-	public void share(SourceDocument sourceDocument, String userIdentification, AccessMode accessMode)
-			throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Deprecated
-	@Override
-	public Collection<Corpus> getCorpora() {
-		return null;
-	}
-
-	@Deprecated
-	@Override
-	public void createCorpus(String name) throws IOException {
-	}
-
-	@Deprecated
-	@Override
-	public void update(Corpus corpus, SourceDocument sourceDocument) throws IOException {
-	}
-
-	@Deprecated
-	@Override
-	public void update(Corpus corpus, UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
-	}
-
-	@Deprecated
-	@Override
-	public void delete(Corpus corpus) throws IOException {
-	}
-
-	@Deprecated
-	@Override
-	public void update(Corpus corpus, String name) throws IOException {
-	}
-
-	@Deprecated
-	@Override
-	public void share(Corpus corpus, String userIdentification, AccessMode accessMode) throws IOException {
-	}
 
 	@Override
 	public void createUserMarkupCollection(String name, SourceDocument sourceDocument) {
@@ -942,7 +884,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 						collectionId, 
 						name, 
 						null, //description
-						sourceDocument.getID(), 
+						sourceDocument.getUuid(), 
 						sourceDocument.getRevisionHash());
 			
 			String oldRootRevisionHash = this.rootRevisionHash;
@@ -980,7 +922,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public UserMarkupCollection getUserMarkupCollection(UserMarkupCollectionReference userMarkupCollectionReference)
+	public AnnotationCollection getUserMarkupCollection(AnnotationCollectionReference userMarkupCollectionReference)
 			throws IOException {
 		try {
 			return graphProjectHandler.getCollection(rootRevisionHash, getTagLibrary(), userMarkupCollectionReference);
@@ -990,14 +932,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	@Deprecated
-	public UserMarkupCollection getUserMarkupCollection(UserMarkupCollectionReference userMarkupCollectionReference,
-			boolean refresh) throws IOException {
-		return getUserMarkupCollection(userMarkupCollectionReference);
-	}
-
-	@Override
-	public void update(UserMarkupCollection userMarkupCollection, List<TagReference> tagReferences) {
+	public void update(AnnotationCollection userMarkupCollection, List<TagReference> tagReferences) {
 		try {
 			if (userMarkupCollection.getTagReferences().containsAll(
 					tagReferences)) {
@@ -1038,7 +973,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public void update(
-			UserMarkupCollection collection, 
+			AnnotationCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
 		try {
 			gitProjectHandler.addOrUpdate(
@@ -1062,12 +997,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	@Deprecated
-	public void update(List<UserMarkupCollection> userMarkupCollections, TagsetDefinition tagsetDefinition) {
+	public void update(List<AnnotationCollection> userMarkupCollections, TagsetDefinition tagsetDefinition) {
 	}
 
 	@Override
 	public void update(
-			UserMarkupCollectionReference collectionReference, 
+			AnnotationCollectionReference collectionReference, 
 			ContentInfoSet contentInfoSet) throws Exception {
 		String collectionRevision = 
 			gitProjectHandler.updateCollection(collectionReference);
@@ -1091,7 +1026,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public void delete(UserMarkupCollectionReference collectionReference) throws Exception {
+	public void delete(AnnotationCollectionReference collectionReference) throws Exception {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		SourceDocument document = getSourceDocument(collectionReference.getSourceDocumentId());
 		
@@ -1105,29 +1040,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 				collectionReference, document, ChangeType.DELETED));
 	}
 
-	@Deprecated
-	@Override
-	public void share(UserMarkupCollectionReference userMarkupCollectionRef, String userIdentification,
-			AccessMode accessMode) throws IOException {
-	}
-
-	@Override
-	@Deprecated
-	public List<UserMarkupCollectionReference> getWritableUserMarkupCollectionRefs(SourceDocument sd)
-			throws IOException {
-		return null;
-	}
-
-	@Override
-	@Deprecated
-	public void createTagLibrary(String name) throws IOException {
-
-	}
-
 	@Override
 	public void importTagLibrary(InputStream inputStream) throws IOException {
 		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory();
-		factory.setTagManager(new TagManager(new TagLibrary(null, "import")));
+		factory.setTagManager(new TagManager(new TagLibrary("import")));
 		TagLibrarySerializationHandler tagLibrarySerializationHandler = 
 				factory.getTagLibrarySerializationHandler();
 		TagLibrary importedLibrary =
@@ -1152,33 +1068,9 @@ public class GraphWorktreeProject implements IndexedRepository {
 		}
 	}
 
-	@Override
-	@Deprecated
-	public Collection<TagLibraryReference> getTagLibraryReferences() {
-
-		return Collections.emptyList();
-	}
-
 	@Deprecated
 	private TagLibrary getTagLibrary() {
 		return tagManager.getTagLibrary();
-	}
-	
-	@Override
-	@Deprecated
-	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) throws IOException {
-		return getTagLibrary();
-	}
-
-	@Override
-	@Deprecated
-	public void delete(TagLibraryReference tagLibraryReference) throws IOException {
-	}
-
-	@Deprecated
-	@Override
-	public void share(TagLibraryReference tagLibraryReference, String userIdentification, AccessMode accessMode)
-			throws IOException {
 	}
 
 	@Override
@@ -1204,30 +1096,6 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	@Deprecated
-	public int getNewUserMarkupCollectionRefs(Corpus corpus) {
-		return 0;
-	}
-
-	@Override
-	public void spawnContentFrom(String userIdentifier, boolean copyCorpora, boolean copyTagLibs) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	@Deprecated
-	public TagLibrary getTagLibraryFor(String uuid, Version version) throws IOException {
-		return null;
-	}
-
-	@Override
-	@Deprecated
-	public User createIfAbsent(Map<String, String> userIdentification) throws IOException {
-		return null;
-	}
-	
-	@Override
 	public Set<Member> getProjectMembers() throws IOException {
 		return gitProjectHandler.getProjectMembers();
 	}
@@ -1243,15 +1111,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	private void commitAllChanges(
-		Function<UserMarkupCollectionReference, String> collectionCcommitMsgProvider, 
+		Function<AnnotationCollectionReference, String> collectionCcommitMsgProvider, 
 		String projectCommitMsg) {
 		try {
-			List<UserMarkupCollectionReference> collectionRefs = 
+			List<AnnotationCollectionReference> collectionRefs = 
 					getSourceDocuments().stream()
 					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
 					.collect(Collectors.toList());
 			
-			for (UserMarkupCollectionReference collectionRef : collectionRefs) {
+			for (AnnotationCollectionReference collectionRef : collectionRefs) {
 				
 				gitProjectHandler.addAndCommitCollection(
 					collectionRef.getId(), 
@@ -1279,7 +1147,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		}
 		
 		for (SourceDocument document : getSourceDocuments()) {
-			for (UserMarkupCollectionReference collectionReference : document.getUserMarkupCollectionRefs()) {
+			for (AnnotationCollectionReference collectionReference : document.getUserMarkupCollectionRefs()) {
 				gitProjectHandler.synchronizeWithRemote(collectionReference);
 			}
 		}

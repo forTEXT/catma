@@ -25,17 +25,17 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
-import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TermInfo;
 import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.TagConflict;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
@@ -451,8 +451,8 @@ public class GitProjectHandler {
 	//      - deletion handler
 	//		- configurable smptp
 
-	public List<UserMarkupCollectionReference> getCollectionReferences() {
-		ArrayList<UserMarkupCollectionReference> collectionReferences = new ArrayList<>();
+	public List<AnnotationCollectionReference> getCollectionReferences() {
+		ArrayList<AnnotationCollectionReference> collectionReferences = new ArrayList<>();
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 
 			try {
@@ -502,8 +502,8 @@ public class GitProjectHandler {
 		return collectionReferences;
 	}
 
-	public List<UserMarkupCollection> getCollections(TagLibrary tagLibrary) {
-		ArrayList<UserMarkupCollection> collections = new ArrayList<>();
+	public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) {
+		ArrayList<AnnotationCollection> collections = new ArrayList<>();
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			try {
 				localRepoManager.open(
@@ -561,7 +561,7 @@ public class GitProjectHandler {
 			
 			JsonLdWebAnnotation annotation = 
 					new JsonLdWebAnnotation(
-						RepositoryPropertyKey.GitLabServerUrl.getValue(), 
+						CATMAPropertyKey.GitLabServerUrl.getValue(), 
 						projectId, 
 						tagReferenceList,
 						tagLibrary);
@@ -700,7 +700,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public String removeCollection(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+	public String removeCollection(AnnotationCollectionReference userMarkupCollectionReference) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String collectionId = userMarkupCollectionReference.getId();
 			
@@ -740,7 +740,7 @@ public class GitProjectHandler {
 
 	public void removeDocument(SourceDocument sourceDocument) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String documentId = sourceDocument.getID();
+			String documentId = sourceDocument.getUuid();
 			
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
@@ -757,7 +757,7 @@ public class GitProjectHandler {
 				String.format(
 					"Removed Document %1$s with ID %2$s", 
 					sourceDocument.toString(), 
-					sourceDocument.getID()), 
+					sourceDocument.getUuid()), 
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail());
 		}	
@@ -773,7 +773,7 @@ public class GitProjectHandler {
 		}	
 	}
 	
-	public String addToStagedAndCommit(UserMarkupCollectionReference collectionRef, String commitMsg) throws Exception {
+	public String addToStagedAndCommit(AnnotationCollectionReference collectionRef, String commitMsg) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			Path relativePath = Paths.get(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionRef.getId());
 			// open the project root repo
@@ -816,7 +816,7 @@ public class GitProjectHandler {
 		}		
 	}
 
-	public String updateCollection(UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+	public String updateCollection(AnnotationCollectionReference userMarkupCollectionReference) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler collectionHandler = 
 				new GitMarkupCollectionHandler(
@@ -900,7 +900,7 @@ public class GitProjectHandler {
 						this.remoteGitServerManager,
 						this.credentialsProvider);
 			
-			for (UserMarkupCollectionReference collectionReference : getCollectionReferences()) {
+			for (AnnotationCollectionReference collectionReference : getCollectionReferences()) {
 				collectionHandler.checkout(
 					projectId, 
 					collectionReference.getId(), 
@@ -917,7 +917,7 @@ public class GitProjectHandler {
 							this.remoteGitServerManager,
 							this.credentialsProvider);
 
-			for (UserMarkupCollectionReference collectionRef : getDocuments().stream()
+			for (AnnotationCollectionReference collectionRef : getDocuments().stream()
 					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
 					.collect(Collectors.toList())) {
 				
@@ -957,7 +957,7 @@ public class GitProjectHandler {
 		}		
 	}
 	
-	public Status getStatus(UserMarkupCollectionReference collectionReference) throws IOException {
+	public Status getStatus(AnnotationCollectionReference collectionReference) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler collectionHandler = 
 					new GitMarkupCollectionHandler(
@@ -1107,7 +1107,7 @@ public class GitProjectHandler {
 			
 			JsonLdWebAnnotation annotation = 
 					new JsonLdWebAnnotation(
-						RepositoryPropertyKey.GitLabServerUrl.getValue(), 
+						CATMAPropertyKey.GitLabServerUrl.getValue(), 
 						projectId, 
 						annotationConflict.getResolvedTagReferences(),
 						tagLibrary);
@@ -1115,7 +1115,7 @@ public class GitProjectHandler {
 		}		
 	}
 
-	public void synchronizeWithRemote(UserMarkupCollectionReference collectionReference) throws Exception {
+	public void synchronizeWithRemote(AnnotationCollectionReference collectionReference) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler collectionHandler = 
 					new GitMarkupCollectionHandler(

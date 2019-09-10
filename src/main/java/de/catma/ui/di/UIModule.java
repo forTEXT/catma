@@ -9,9 +9,9 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.login.LoginService;
-import de.catma.ui.modules.account.EditAccountDialog;
-import de.catma.ui.modules.dashboard.JoinProjectDialog;
-import de.catma.ui.modules.main.CatmaHeader;
+import de.catma.ui.module.account.EditAccountDialog;
+import de.catma.ui.module.dashboard.JoinProjectDialog;
+import de.catma.ui.module.main.CatmaHeader;
 
 public class UIModule extends AbstractModule {
 

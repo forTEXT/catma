@@ -36,8 +36,8 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
 import de.catma.backgroundservice.BackgroundService;
-import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.project.ProjectReference;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitMember;
@@ -67,12 +67,12 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	
 	@AssistedInject
 	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("token") String userImpersonationToken) throws IOException {
-		this(eventBus, backgroundService, new GitLabApi(RepositoryPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
+		this(eventBus, backgroundService, new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
 	}
 	
 	@AssistedInject
 	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("username") String username, @Assisted("password") String password) throws IOException {
-		this(eventBus, backgroundService, oauth2Login(RepositoryPropertyKey.GitLabServerUrl.getValue(), username, password));
+		this(eventBus, backgroundService, oauth2Login(CATMAPropertyKey.GitLabServerUrl.getValue(), username, password));
 	}
 
 	private GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, GitLabApi api) throws IOException {
@@ -98,7 +98,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	 */
 	private static GitLabApi oauth2Login(String url, String username, String password) throws IOException {
 		try {
-			return GitLabApi.oauth2Login(RepositoryPropertyKey.GitLabServerUrl.getValue(), username, password);
+			return GitLabApi.oauth2Login(CATMAPropertyKey.GitLabServerUrl.getValue(), username, password);
 		} catch (GitLabApiException e) {
 			throw new IOException(e);
 		}

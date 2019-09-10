@@ -22,9 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.catma.document.AccessMode;
+import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.serialization.DocumentSerializer;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.TagLibrary;
@@ -44,7 +43,7 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 	}
 
 	public void serialize(
-		UserMarkupCollection userMarkupCollection,
+		AnnotationCollection userMarkupCollection,
 		SourceDocument sourceDocument,
 		OutputStream outputStream) throws IOException {
 		try {
@@ -70,7 +69,7 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 		}
 	}
 
-	public UserMarkupCollection deserialize(
+	public AnnotationCollection deserialize(
 			SourceDocument sourceDocument,
 			String id, InputStream inputStream) throws IOException {
 		try {
@@ -84,10 +83,10 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 			TeiUserMarkupCollectionDeserializer deserializer = 
 					new TeiUserMarkupCollectionDeserializer(
 							teiDocument, tagLibrary, id);
-			return new UserMarkupCollection(
+			return new AnnotationCollection(
 				id, teiDocument.getContentInfoSet(),
 				tagLibrary, deserializer.getTagReferences(),
-				sourceDocument.getID(),
+				sourceDocument.getUuid(),
 				sourceDocument.getRevisionHash());
 			
 		} catch (Exception exc) {

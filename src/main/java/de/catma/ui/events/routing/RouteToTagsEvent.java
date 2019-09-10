@@ -1,18 +1,18 @@
 package de.catma.ui.events.routing;
 
-import de.catma.document.repository.Repository;
+import de.catma.project.Project;
 
 
 public class RouteToTagsEvent {
 
-	private final Repository project;
+	private final Project project;
 	
-	public RouteToTagsEvent(Repository project) {
+	public RouteToTagsEvent(Project project) {
 		super();
 		this.project = project;
 	}
 
-	public Repository getProject() {
+	public Project getProject() {
 		return project;
 	}
 

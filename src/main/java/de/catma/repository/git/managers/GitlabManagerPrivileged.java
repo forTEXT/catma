@@ -20,7 +20,7 @@ import org.gitlab4j.api.models.ImpersonationToken;
 import org.gitlab4j.api.models.ImpersonationToken.Scope;
 import org.gitlab4j.api.models.User;
 
-import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
@@ -31,7 +31,7 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 	public static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
 	private final GitLabApi privilegedGitLabApi = new GitLabApi(
-			 RepositoryPropertyKey.GitLabServerUrl.getValue(), RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue()
+			 CATMAPropertyKey.GitLabServerUrl.getValue(), CATMAPropertyKey.GitLabAdminPersonalAccessToken.getValue()
 	);
 	
 	private final Logger logger = Logger.getLogger(this.getClass().getName());

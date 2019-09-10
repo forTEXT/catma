@@ -218,7 +218,7 @@ public class GitTagsetHandler {
 					);
 
 			TagsetDefinition tagsetdefinition = new TagsetDefinition(
-				null, tagsetId, gitTagsetHeader.getName(), null, gitTagsetHeader.getDeletedDefinitions()
+				tagsetId, gitTagsetHeader.getName(), null, gitTagsetHeader.getDeletedDefinitions()
 			);
 			String tagsetDefinitionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(tagsetSubmoduleName);
 			tagsetdefinition.setRevisionHash(tagsetDefinitionRevisionHash);

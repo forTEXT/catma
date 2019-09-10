@@ -3,7 +3,7 @@ package de.catma.repository.git;
 import java.io.IOException;
 import java.net.URL;
 
-import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.properties.CATMAPropertyKey;
 
 /**
  * Gitlab utility functions
@@ -27,7 +27,7 @@ public class GitlabUtils {
 	public static String rewriteGitLabServerUrl(String url) {
 		try {
 			URL currentUrl = new URL(url);
-			URL gitLabServerUrl = new URL(RepositoryPropertyKey.GitLabServerUrl.getValue());
+			URL gitLabServerUrl = new URL(CATMAPropertyKey.GitLabServerUrl.getValue());
 			URL newUrl = new URL(
 					gitLabServerUrl.getProtocol(), gitLabServerUrl.getHost(), gitLabServerUrl.getPort(),
 					currentUrl.getFile()

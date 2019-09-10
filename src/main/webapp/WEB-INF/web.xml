@@ -26,44 +26,6 @@
 		<servlet-class>de.catma.servlet.PropertiesInitializerServlet</servlet-class> 
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	
-	<servlet> 
-		<servlet-name>CATMADataSource</servlet-name> 
-		<servlet-class>de.catma.servlet.DataSourceInitializerServlet</servlet-class> 
-		<load-on-startup>2</load-on-startup>
-	</servlet>
- <!-- 
-	<servlet>
-		<servlet-name>Clea</servlet-name>
-		<servlet-class>de.catma.ui.CatmaApplicationServlet</servlet-class>
-		-->
-		<!-- <servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>  -->
-	    <!-- 
-	     <init-param>
-			<param-name>UI</param-name>
-			<param-value>de.catma.ui.CatmaApplication</param-value>
-		</init-param>
-		
-		<init-param>
-			<description>
-			Application widgetset</description>
-			<param-name>widgetset</param-name>
-			<param-value>de.catma.ui.CleaWidgetset</param-value>
-		</init-param>
-		<init-param>
-			<param-name>closeIdleSessions</param-name>
-			<param-value>true</param-value>
-		</init-param>
-		<init-param>
-			<param-name>legacyPropertyToString</param-name>
-			<param-value>true</param-value>
-		</init-param>
-			-->
-		<!-- <async-supported>true</async-supported>  --> 
-		 <!-- 
-		<load-on-startup>3</load-on-startup>
-	</servlet>
-	-->
 	<servlet> 
 		<servlet-name>QuartzInitializer</servlet-name> 
 		<servlet-class>org.quartz.ee.servlet.QuartzInitializerServlet</servlet-class> 
@@ -81,47 +43,6 @@
          </init-param>
    		<load-on-startup>3</load-on-startup>
 	</servlet>
-	
-	<servlet>  
-    	<servlet-name>CatmaAPI</servlet-name>  
-    	<servlet-class>org.restlet.ext.servlet.ServerServlet</servlet-class>
-    	<init-param>
-        	<!-- Application class name -->
-        	<param-name>org.restlet.application</param-name>
-        	<param-value>de.catma.api.CatmaApiApplication</param-value>
-		</init-param>
-		<load-on-startup>3</load-on-startup>
-	</servlet>  
-
-<!-- deprecated:
-	<servlet> 
-		<servlet-name>HeurecleaPeriodicExportInitializerServlet</servlet-name> 
-		<servlet-class>de.catma.heureclea.HeurecleaPeriodicExportInitializerServlet</servlet-class> 
-		<load-on-startup>4</load-on-startup>
-	</servlet>
-
-	<servlet> 
-		<servlet-name>DBMaintenanceInitializerServlet</servlet-name> 
-		<servlet-class>de.catma.repository.db.maintenance.DBMaintenanceInitializerServlet</servlet-class> 
-		<load-on-startup>4</load-on-startup>
-	</servlet>
-
-	<servlet> 
-		<servlet-name>UserManagerMaintenanceServlet</servlet-name> 
-		<servlet-class>de.catma.servlet.UserManagerMaintenanceServlet</servlet-class> 
-		<load-on-startup>4</load-on-startup>
-	</servlet>
-	-->
-	<servlet-mapping>  
-    	<servlet-name>CatmaAPI</servlet-name>  
-		<url-pattern>/api/*</url-pattern>  
-	</servlet-mapping>  
-	 <!-- 
-	<servlet-mapping>
-		<servlet-name>Clea</servlet-name>
-		<url-pattern>/*</url-pattern>
-	</servlet-mapping>
-	-->
 	<servlet-mapping>
     	<servlet-name>default</servlet-name>
     	<url-pattern>/manual/*</url-pattern>

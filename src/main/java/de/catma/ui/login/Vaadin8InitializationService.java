@@ -12,12 +12,12 @@ import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 
 import de.catma.backgroundservice.BackgroundService;
-import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.hazelcast.HazelCastService;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.di.UIFactory;
-import de.catma.ui.modules.main.NotLoggedInMainView;
+import de.catma.ui.module.main.NotLoggedInMainView;
 
 public class Vaadin8InitializationService implements InitializationService {
 
@@ -53,7 +53,7 @@ public class Vaadin8InitializationService implements InitializationService {
 		String tmpdir = (String)VaadinSession.getCurrent().getAttribute("TempDir");
 		if(tmpdir == null){
 			String result;
-			String tempDirProp = RepositoryPropertyKey.TempDir.getValue();
+			String tempDirProp = CATMAPropertyKey.TempDir.getValue();
 			File tempDir = new File(tempDirProp);
 	
 			if (!tempDir.isAbsolute()) {
@@ -83,7 +83,7 @@ public class Vaadin8InitializationService implements InitializationService {
 
 		if(api != null ){
 			GitProjectManager projectManager = new GitProjectManager(
-					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					api,
 					(projectId) -> {}, //noop deletion handler
 					accuireBackgroundService(),

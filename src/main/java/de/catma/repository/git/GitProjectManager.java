@@ -13,8 +13,8 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import com.google.common.eventbus.EventBus;
 
 import de.catma.backgroundservice.BackgroundService;
-import de.catma.document.repository.Repository;
 import de.catma.project.OpenProjectListener;
+import de.catma.project.Project;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
@@ -169,9 +169,9 @@ public class GitProjectManager implements ProjectManager {
 			
 			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
 
-			TagLibrary tagLibrary = new TagLibrary(projectReference.getProjectId(), projectReference.getName());
+			TagLibrary tagLibrary = new TagLibrary(projectReference.getName());
 
-			Repository project =
+			Project project =
 				new GraphWorktreeProject(
 						this.user,
 						new GitProjectHandler(

@@ -1,6 +1,6 @@
 package de.catma.ui.events;
 
-import de.catma.ui.modules.main.signup.SignupToken;
+import de.catma.ui.module.main.signup.SignupToken;
 
 /**
  * Event fired when a valid token has been submitted.

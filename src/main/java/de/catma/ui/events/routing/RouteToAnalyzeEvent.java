@@ -1,18 +1,18 @@
 package de.catma.ui.events.routing;
 
-import de.catma.document.Corpus;
-import de.catma.indexer.IndexedRepository;
+import de.catma.document.corpus.Corpus;
+import de.catma.indexer.IndexedProject;
 
 public class RouteToAnalyzeEvent {
-	private IndexedRepository project;
+	private IndexedProject project;
 	private Corpus corpus;
 	
-	public RouteToAnalyzeEvent(IndexedRepository project, Corpus corpus) {
+	public RouteToAnalyzeEvent(IndexedProject project, Corpus corpus) {
 		super();
 		this.project = project;
 		this.corpus = corpus;
 	}
-	public IndexedRepository getProject() {
+	public IndexedProject getProject() {
 		return project;
 	}
 	public Corpus getCorpus() {

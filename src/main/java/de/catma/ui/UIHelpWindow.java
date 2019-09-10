@@ -1,14 +1,14 @@
 package de.catma.ui;
 
-import com.vaadin.v7.shared.ui.label.ContentMode;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 public class UIHelpWindow extends Window {
 		
 	public UIHelpWindow() {
-		super(Messages.getString("UIHelpWindow.helpTitle"));  //$NON-NLS-1$
+		super("Help | CATMA");  
 		initComponents();
 		setHeight("500px"); //$NON-NLS-1$
 		setWidth("400px"); //$NON-NLS-1$
@@ -21,7 +21,7 @@ public class UIHelpWindow extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		
-		Label helpText = new Label(Messages.getString("UIHelpWindow.helpText"), ContentMode.HTML); //$NON-NLS-1$
+		Label helpText = new Label("<p>Watch out for these little question mark icons while navigating through CATMA. They provide useful hints for managing the firststeps within a CATMA component.</p><h4>Login</h4>Once you're logged in, you will see the Repository Manager, which will explain the first steps to you. If you ever get stuck, you can just click on the question mark icons!", ContentMode.HTML); 
 		content.addComponent( helpText);
 		setContent(content);
 		

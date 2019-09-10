@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.annotation.TagReference;
 
 /**
  * Represents a Web Annotation Data Model conformant annotation target of type 'List'.

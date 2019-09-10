@@ -20,10 +20,10 @@ package de.catma.queryengine;
 
 import java.util.List;
 
-import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.WildcardTermExtractor;
+import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 
@@ -54,7 +54,7 @@ public class WildcardQuery extends Query {
         	queryOptions.getRelevantSourceDocumentIDs(), termList,
         	queryOptions.getLimit());
         
-        Repository repository = queryOptions.getRepository();
+        Project repository = queryOptions.getRepository();
     	
     	
         for (QueryResultRow row  : result) {

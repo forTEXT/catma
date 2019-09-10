@@ -9,7 +9,7 @@ import com.vaadin.shared.ui.Connect;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerState;
-import de.catma.ui.tagger.Tagger;
+import de.catma.ui.module.annotate.Tagger;
 
 @Connect(Tagger.class)
 public class TaggerConnector extends AbstractComponentConnector {

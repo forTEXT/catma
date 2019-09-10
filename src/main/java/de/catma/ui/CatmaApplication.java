@@ -68,7 +68,6 @@ import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.JavaScript;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -82,24 +81,17 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.LogProgressListener;
 import de.catma.backgroundservice.ProgressCallable;
-import de.catma.document.Corpus;
 import de.catma.document.Range;
-import de.catma.document.repository.Repository;
-import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.hazelcast.HazelCastService;
-import de.catma.indexer.IndexedRepository;
+import de.catma.project.Project;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagsetDefinition;
-import de.catma.ui.analyzenew.QueryOptionsProvider;
-import de.catma.ui.analyzenew.visualization.vega.VegaEvent;
-import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.TokenInvalidEvent;
@@ -107,19 +99,19 @@ import de.catma.ui.events.TokenValidEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
-import de.catma.ui.modules.main.ErrorHandler;
-import de.catma.ui.modules.main.signup.CreateUserDialog;
-import de.catma.ui.modules.main.signup.SignupTokenManager;
-import de.catma.ui.repository.Messages;
-import de.catma.ui.tagger.TaggerView;
-import de.catma.ui.tagmanager.TagsetSelectionListener;
+import de.catma.ui.module.analyze.QueryOptionsProvider;
+import de.catma.ui.module.analyze.visualization.vega.VegaEvent;
+import de.catma.ui.module.annotate.TaggerView;
+import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.main.signup.CreateUserDialog;
+import de.catma.ui.module.main.signup.SignupTokenManager;
 import de.catma.ui.util.Version;
 
 @Theme("catma")
 @PreserveOnRefresh
 @Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET_XHR )
 public class CatmaApplication extends UI implements KeyValueStorage,
-	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, ParameterProvider, FocusHandler {
+	BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler {
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String, String[]> parameters = new HashMap<String, String[]>();
@@ -282,25 +274,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		return parameters.get(key);
 	}
 
-	
-	@Deprecated
-	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener) {
-		
-		//TODO: not needed anymore
-	}
-	
-	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition) {
-		addTagsetToActiveDocument(tagsetDefinition, null);
-	}
-
-	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
-		openTagLibrary(repository, tagLibrary, true);
-	}
-
-	@Deprecated
-	public void openTagLibrary(Repository repository, TagLibrary tagLibrary, boolean switchToTagManagerView) {
-	}
-
 	public TaggerView openSourceDocument(String sourceDocumentId) {
 		//TODO:
 //		RepositoryManager repositoryManager = repositoryManagerView.getRepositoryManager();
@@ -318,7 +291,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	}
 
 	@Deprecated
-	public TaggerView openSourceDocument(SourceDocument sourceDocument, Repository repository) {
+	public TaggerView openSourceDocument(SourceDocument sourceDocument, Project repository) {
 		return null;
 	}
 
@@ -344,26 +317,10 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	}
 
 	@Deprecated
-	public void openUserMarkupCollection(SourceDocument sourceDocument, UserMarkupCollection userMarkupCollection,
-			Repository repository) {
+	public void openUserMarkupCollection(SourceDocument sourceDocument, AnnotationCollection userMarkupCollection,
+			Project repository) {
 		//projectManagerView.openUserMarkupCollection(sourceDocument, userMarkupCollection, repository);
 	}
-
-	@Deprecated
-	public void analyze(Corpus corpus, IndexedRepository repository) {
-//		projectManagerView.analyze(corpus, repository);
-	}
-	@Deprecated
-	public void analyzeNew(Corpus corpus, IndexedRepository repository) {
-		//projectManagerView.analyzeNew(corpus, repository);
-	}
-
-	public void analyzeCurrentlyActiveDocument() {
-		//TODO:
-//		projectManagerView.analyzeCurrentlyActiveDocument(repository);
-	}
-	
-	
 
 	public int addVisualization(Integer visualizationId, String caption,
 			DistributionComputation distributionComputation,
@@ -410,16 +367,18 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		logger.log(Level.SEVERE, "[" + (api==null?"not logged in":api.getUsername()) + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
 
 		if (message == null) {
-			message = Messages.getString("CatmaApplication.internalError"); //$NON-NLS-1$
+			message = "Internal Error"; 
 		}
 		if (Page.getCurrent() != null) {
-			HTMLNotification.show(Messages.getString("CatmaApplication.error"), //$NON-NLS-1$
-					MessageFormat.format(Messages.getString("CatmaApplication.errorOccurred"), message, e.getMessage()), //$NON-NLS-1$
+			HTMLNotification.show("Error", 
+					MessageFormat.format(
+							"An error has occurred!<br />We''ve been notified about this error and it will be fixed soon.<br />The underlying error message is:<br /> {0} <br /> {1}", 
+							message, e.getMessage()),
 					Type.ERROR_MESSAGE);
 		}
 	}
 
-	public void openSourceDocument(SourceDocument sd, Repository repository, Range range) {
+	public void openSourceDocument(SourceDocument sd, Project repository, Range range) {
 		TaggerView tv = openSourceDocument(sd, repository);
 		tv.show(range);
 	}
@@ -430,7 +389,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 //		visualizationManagerView.addDoubleTree(kwics);
 	}
 
-	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider, Repository project) {
+	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider, Project project) {
 		eventBus.post(new VegaEvent(queryResult, queryOptionsProvider, project));
 		//TODO:
 //		menu.executeEntry(visualizationManagerView);
@@ -465,90 +424,90 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	
 	public void handleOauth(VaadinRequest request){
 		try {
-		// extract answer
-		String authorizationCode = request.getParameter("code"); //$NON-NLS-1$
-
-		String state = request.getParameter("state"); //$NON-NLS-1$
-
-		String error = request.getParameter("error"); //$NON-NLS-1$
-
-		String token = (String)VaadinSession.getCurrent().getAttribute("OAUTHTOKEN");
+			// extract answer
+			String authorizationCode = request.getParameter("code"); //$NON-NLS-1$
 		
-		// do we have a authorization request error?
-		if (error == null) {
-			// no, so we validate the state token
-			Totp totp = new Totp(
-					RepositoryPropertyKey.otpSecret.getValue()+token, 
-					new Clock(Integer.valueOf(
-						RepositoryPropertyKey.otpDuration.getValue())));
-			if (!totp.verify(state)) {
-				error = "state token verification failed"; //$NON-NLS-1$
+			String state = request.getParameter("state"); //$NON-NLS-1$
+		
+			String error = request.getParameter("error"); //$NON-NLS-1$
+		
+			String token = (String)VaadinSession.getCurrent().getAttribute("OAUTHTOKEN");
+			
+			// do we have a authorization request error?
+			if (error == null) {
+				// no, so we validate the state token
+				Totp totp = new Totp(
+						CATMAPropertyKey.otpSecret.getValue()+token, 
+						new Clock(Integer.valueOf(
+							CATMAPropertyKey.otpDuration.getValue())));
+				if (!totp.verify(state)) {
+					error = "state token verification failed"; //$NON-NLS-1$
+				}
 			}
-		}
+			
+			// state token get validation success?	
+			if (error == null) {
+				CloseableHttpClient httpclient = HttpClients.createDefault();
+				HttpPost httpPost = 
+					new HttpPost(CATMAPropertyKey.Google_oauthAccessTokenRequestURL.getValue());
+				List <NameValuePair> data = new ArrayList <NameValuePair>();
+				data.add(new BasicNameValuePair("code", authorizationCode)); //$NON-NLS-1$
+				data.add(new BasicNameValuePair("grant_type", "authorization_code")); //$NON-NLS-1$ //$NON-NLS-2$
+				data.add(new BasicNameValuePair(
+					"client_id", CATMAPropertyKey.Google_oauthClientId.getValue())); //$NON-NLS-1$
+				data.add(new BasicNameValuePair(
+					"client_secret", CATMAPropertyKey.Google_oauthClientSecret.getValue())); //$NON-NLS-1$
+				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BaseURL.getValue(
+						CATMAPropertyKey.BaseURL.getDefaultValue()))); //$NON-NLS-1$
+				httpPost.setEntity(new UrlEncodedFormEntity(data));
+				CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
+				HttpEntity entity = tokenRequestResponse.getEntity();
+				InputStream content = entity.getContent();
+				ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
+				IOUtils.copy(content, bodyBuffer);
+				
+				logger.info("access token request result: " + bodyBuffer.toString("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
+				
+				ObjectMapper mapper = new ObjectMapper();
 		
-		// state token get validation success?	
-		if (error == null) {
-			CloseableHttpClient httpclient = HttpClients.createDefault();
-			HttpPost httpPost = 
-				new HttpPost(RepositoryPropertyKey.Google_oauthAccessTokenRequestURL.getValue());
-			List <NameValuePair> data = new ArrayList <NameValuePair>();
-			data.add(new BasicNameValuePair("code", authorizationCode)); //$NON-NLS-1$
-			data.add(new BasicNameValuePair("grant_type", "authorization_code")); //$NON-NLS-1$ //$NON-NLS-2$
-			data.add(new BasicNameValuePair(
-				"client_id", RepositoryPropertyKey.Google_oauthClientId.getValue())); //$NON-NLS-1$
-			data.add(new BasicNameValuePair(
-				"client_secret", RepositoryPropertyKey.Google_oauthClientSecret.getValue())); //$NON-NLS-1$
-			data.add(new BasicNameValuePair("redirect_uri", RepositoryPropertyKey.BaseURL.getValue(
-					RepositoryPropertyKey.BaseURL.getDefaultValue()))); //$NON-NLS-1$
-			httpPost.setEntity(new UrlEncodedFormEntity(data));
-			CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
-			HttpEntity entity = tokenRequestResponse.getEntity();
-			InputStream content = entity.getContent();
-			ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
-			IOUtils.copy(content, bodyBuffer);
-			
-			logger.info("access token request result: " + bodyBuffer.toString("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
-			
-			ObjectMapper mapper = new ObjectMapper();
-
-			ObjectNode accessTokenResponseJSon = 
-					mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
-
-			// we're actually not interested in the access token 
-			// but we want the email information from the id token
-			String idToken = accessTokenResponseJSon.get("id_token").asText(); //$NON-NLS-1$
-			
-			String[] pieces = idToken.split("\\."); //$NON-NLS-1$
-			// we skip the header and go ahead with the payload
-			String payload = pieces[1];
-
-			String decodedPayload = 
-					new String(Base64.decodeBase64(payload), "UTF-8"); //$NON-NLS-1$
-			ObjectNode payloadJson = mapper.readValue(decodedPayload, ObjectNode.class);
-			
-			logger.info("decodedPayload: " + decodedPayload); //$NON-NLS-1$
-			
-			// finally the email address
-			// String email = payloadJson.get("email").asText(); //$NON-NLS-1$
-
-			String identifier = payloadJson.get("sub").asText();
-			String email = payloadJson.get("email").asText();
-			String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
-			String provider = "google_com";
-			loginservice.loggedInFromThirdParty(identifier, provider, email, name);
-			setAttribute("OAUTHTOKEN", null);
-		}
-		else {
-            logger.info("authentication failure: " + error); //$NON-NLS-1$
-			new Notification(
-                Messages.getString("AuthenticationDialog.authFailureTitle"), //$NON-NLS-1$
-                Messages.getString("AuthenticationDialog.authFailureMessage"), //$NON-NLS-1$
-                Type.ERROR_MESSAGE).show(getPage());
-		}
+				ObjectNode accessTokenResponseJSon = 
+						mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
+		
+				// we're actually not interested in the access token 
+				// but we want the email information from the id token
+				String idToken = accessTokenResponseJSon.get("id_token").asText(); //$NON-NLS-1$
+				
+				String[] pieces = idToken.split("\\."); //$NON-NLS-1$
+				// we skip the header and go ahead with the payload
+				String payload = pieces[1];
+		
+				String decodedPayload = 
+						new String(Base64.decodeBase64(payload), "UTF-8"); //$NON-NLS-1$
+				ObjectNode payloadJson = mapper.readValue(decodedPayload, ObjectNode.class);
+				
+				logger.info("decodedPayload: " + decodedPayload); //$NON-NLS-1$
+				
+				// finally the email address
+				// String email = payloadJson.get("email").asText(); //$NON-NLS-1$
+		
+				String identifier = payloadJson.get("sub").asText();
+				String email = payloadJson.get("email").asText();
+				String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
+				String provider = "google_com";
+				loginservice.loggedInFromThirdParty(identifier, provider, email, name);
+				setAttribute("OAUTHTOKEN", null);
+			}
+			else {
+		        logger.info("authentication failure: " + error); //$NON-NLS-1$
+				new Notification(
+		            "Authentication failure",
+		            "The authentication failed, you are not allowed to access this repository!",
+		            Type.ERROR_MESSAGE).show(getPage());
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			((ErrorHandler)this).showAndLogError(
-					Messages.getString("AuthenticationDialog.errorOpeningRepo"), e); //$NON-NLS-1$
+					"Error during login", e);
 		}
 	}
 	

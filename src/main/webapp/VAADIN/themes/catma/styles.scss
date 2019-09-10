@@ -344,7 +344,10 @@ $v-focus-color: #5A98A1;
     
     .catma-embedded-vega {
     	margin-left: 10px;
-    	margin-top: 10px;    
+    	margin-top: 10px;   
+	    overflow: auto;
+	    height: 98%;
+	    width: 100%; 
     }
     
     .catma-embedded-vega > .vega-actions a {

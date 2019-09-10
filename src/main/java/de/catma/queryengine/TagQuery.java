@@ -22,9 +22,9 @@ package de.catma.queryengine;
 import java.util.List;
 
 import de.catma.document.Range;
-import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.Indexer;
+import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -51,7 +51,7 @@ public class TagQuery extends Query {
     protected QueryResult execute() throws Exception {
 
     	QueryOptions queryOptions = getQueryOptions();
-    	Repository repository = queryOptions.getRepository();
+    	Project repository = queryOptions.getRepository();
     	
         Indexer indexer = queryOptions.getIndexer();
         List<String> relevantUserMarkupCollIDs = 

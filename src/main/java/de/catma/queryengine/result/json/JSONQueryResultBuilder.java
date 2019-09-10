@@ -13,9 +13,9 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import de.catma.document.Range;
-import de.catma.document.repository.Repository;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -53,7 +53,7 @@ public class JSONQueryResultBuilder {
 		tagColor, 
 	}
 	
-	public ArrayNode createJSONQueryResult(final QueryResult queryResult, final Repository project) throws IOException {
+	public ArrayNode createJSONQueryResult(final QueryResult queryResult, final Project project) throws IOException {
 
 		LoadingCache<String, SourceDocInfo> sourceDocInfoCache = 
 				CacheBuilder.newBuilder().maximumSize(10).build(new CacheLoader<String, SourceDocInfo>() {

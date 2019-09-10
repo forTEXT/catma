@@ -1,7 +1,7 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
 import de.catma.document.Range;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.annotation.TagReference;
 
 import java.util.Objects;
 

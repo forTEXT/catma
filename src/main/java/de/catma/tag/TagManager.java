@@ -211,20 +211,6 @@ public class TagManager {
 				tag);
 	}
 
-	/**
-	 * Synchronizes td1 with td2 via {@link TagsetDefinition#synchronizeWith(TagsetDefinition)}}
-	 * @param td1
-	 * @param td2
-	 */
-	@Deprecated
-	public void synchronize(TagsetDefinition td1, TagsetDefinition td2) {
-		logger.info("synching " + td1 + " with " + td2);
-		td1.synchronizeWith(td2);
-		// no event needed, since synchronization goes always along with
-		// modifications of UserMarkupCollections, we handle the two
-		// things together in the UserMarkupCollectionManager
-	}
-
 	public void removeUserDefinedPropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) {
 		tagsetDefinition.remove(propertyDefinition, tagDefinition);

@@ -21,9 +21,7 @@ package de.catma.tag;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -35,10 +33,7 @@ import java.util.logging.Logger;
 public class TagDefinition implements Versionable {
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	@Deprecated
-	private Integer id;
-	@Deprecated
-	private Integer parentId;
+
 	
 	private String uuid;
 	private String name;
@@ -64,11 +59,9 @@ public class TagDefinition implements Versionable {
 			String name, Version version,  
 			Integer parentId, String parentUuid, String tagsetDefinitionUuid) {
 		this();
-		this.id = id;
 		this.uuid = uuid;
 		this.name = name;
 		this.version = version;
-		this.parentId = parentId;
 		this.parentUuid = parentUuid;
 		if (this.parentUuid == null) {
 			this.parentUuid = "";
@@ -113,7 +106,7 @@ public class TagDefinition implements Versionable {
 	@Override
 	public String toString() {
 		return "TAG_DEF[" + name 
-				+ ",#"+id+"u#" + uuid +","
+				+ ",u#" + uuid +","
 				+version
 				+((parentUuid.isEmpty()) ? "]" : (",#"+parentUuid+"]"));
 	}
@@ -228,127 +221,6 @@ public class TagDefinition implements Versionable {
 		getPropertyDefinition(
 			PropertyDefinition.SystemPropertyName.catma_markupauthor.name()).
 				setValue(author);
-	}
-	
-	public void setId(Integer id) {
-		this.id = id;
-	}
-	
-	/**
-	 * @return repositoy dependent identifier
-	 */
-	public Integer getId() {
-		return id;
-	}
-	
-	public void setParentId(Integer parentId) {
-		this.parentId = parentId;
-	}
-	
-	/**
-	 * @return the identifier of the parent or <code>null</code> if this is
-	 * a toplevel definition
-	 */
-	public Integer getParentId() {
-		return parentId;
-	}
-
-	/**
-	 * Synchronizes this definition with the incoming definition. Deletions due 
-	 * to the synch can be retrieved via {@link #getDeletedPropertyDefinitions()}.
-	 * 
-	 * @param other
-	 * @param thisTagsetDefinition the tagset definition of this tag definition 
-	 * is used to lookup the new {@link #getParentId() parent id} if the
-	 * {@link #getParentUuid() uuid} of the parent has changed 
-	 */
-	@Deprecated
-	void synchronizeWith(TagDefinition other, TagsetDefinition thisTagsetDefinition) {
-		if (!this.getVersion().equals(other.getVersion())) {
-			this.name = other.name;
-			this.version = new Version(other.getVersion());
-			if (!this.parentUuid.equals(other.uuid)) {
-				this.parentId = null;
-			}
-			this.parentUuid = other.parentUuid;
-			if (!parentUuid.isEmpty()) {
-				TagDefinition parentDefinition = 
-						thisTagsetDefinition.getTagDefinition(this.parentUuid);
-				if (parentDefinition != null) {
-					this.parentId = parentDefinition.getId();
-				}
-			}
-			
-			synchSystemPropertyDefinitions(systemPropertyDefinitions.values(), other);
-			synchPropertyDefinitions(userDefinedPropertyDefinitions.values(), other);
-
-			for (PropertyDefinition pd : other.getSystemPropertyDefinitions()) {
-				if (this.getPropertyDefinition(pd.getName()) == null) {
-					logger.info("adding system property " + pd + " to " + this + " because of synch");
-					addSystemPropertyDefinition(
-							new PropertyDefinition(pd));
-				}
-			}
-
-			for (PropertyDefinition pd : other.getUserDefinedPropertyDefinitions()) {
-				if (this.getPropertyDefinition(pd.getName()) == null) {
-					logger.info("adding user property " + pd + " to " + this + " because of synch");
-					addUserDefinedPropertyDefinition(
-							new PropertyDefinition(pd));
-				}
-			}
-			
-		}
-	}
-
-	/**
-	 * Synchs the given property definitions of this TagDefinition with the 
-	 * property definitions of the other TagDefinition  
-	 * @param propertyDefinitions
-	 * @param other
-	 */
-	private void synchPropertyDefinitions(
-			Collection<PropertyDefinition> propertyDefinitions,
-			TagDefinition other) {
-		
-		Iterator<PropertyDefinition> pdIterator =
-				propertyDefinitions.iterator();
-		
-		while (pdIterator.hasNext()) {
-			PropertyDefinition pd  = pdIterator.next();
-			PropertyDefinition otherPd = other.getPropertyDefinition(pd.getName());
-			
-			if (otherPd != null) {
-				logger.info("synching " + pd + " with "  + otherPd);
-				pd.synchronizeWith(otherPd);
-			}
-			else {
-				logger.info("deleting " + pd + " from " + this);
-				pdIterator.remove();
-			}
-		}	
-	}
-	
-	private void synchSystemPropertyDefinitions(
-			Collection<PropertyDefinition> propertyDefinitions,
-			TagDefinition other) {
-		
-		Iterator<PropertyDefinition> pdIterator =
-				propertyDefinitions.iterator();
-		
-		while (pdIterator.hasNext()) {
-			PropertyDefinition pd  = pdIterator.next();
-			PropertyDefinition otherPd = other.getPropertyDefinition(pd.getName());
-			
-			if (otherPd != null) {
-				logger.info("synching " + pd + " with "  + otherPd);
-				pd.synchronizeWith(otherPd);
-			}
-			else {
-				logger.info("deleting " + pd + " from " + this);
-				pdIterator.remove();
-			}
-		}	
 	}
 
 	public void removeUserDefinedPropertyDefinition(PropertyDefinition propertyDefinition) {

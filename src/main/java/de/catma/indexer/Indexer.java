@@ -24,9 +24,9 @@ import java.util.List;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
@@ -50,15 +50,11 @@ public interface Indexer {
 	public void removeSourceDocument(String sourceDocumentID) throws IOException;
 	public void removeUserMarkupCollection(String userMarkupCollectionID) throws IOException;
 	public void removeTagReferences(List<TagReference> tagReferences) throws IOException;
-	public void reindex(
-			TagsetDefinition tagsetDefinition, 
-			TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog,
-			UserMarkupCollection userMarkupCollection) throws IOException;
 
 	
 	/**
 	 * @param queryId the ID of the Query
-	 * @param documentIdList a list of SourceDocument {@link SourceDocument#getID() IDs}
+	 * @param documentIdList a list of SourceDocument {@link SourceDocument#getUuid() IDs}
 	 * @param phrase the phrase to search for
 	 * @param termList the terms of that phrase in writing order
 	 * @param limit a limit for the amount of result rows

@@ -5,7 +5,7 @@ import java.util.List;
 import com.vaadin.ui.AbstractComponent;
 
 import de.catma.document.source.KeywordInContext;
-import de.catma.ui.client.ui.visualizer.doubletree.DoubleTreeState;
+import de.catma.ui.client.ui.visualization.doubletree.DoubleTreeState;
 
 public class DoubleTree extends AbstractComponent {
 

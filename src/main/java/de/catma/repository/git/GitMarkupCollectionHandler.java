@@ -22,10 +22,10 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.rbac.RBACPermission;
@@ -265,7 +265,7 @@ public class GitMarkupCollectionHandler {
 		return tagReferences;
 	}
 
-	public UserMarkupCollectionReference getCollectionReference(String projectId, String markupCollectionId) throws Exception {
+	public AnnotationCollectionReference getCollectionReference(String projectId, String markupCollectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
@@ -304,7 +304,7 @@ public class GitMarkupCollectionHandler {
 					markupCollectionHeader.getName()
 			);
 
-			return  new UserMarkupCollectionReference(
+			return  new AnnotationCollectionReference(
 					markupCollectionId, markupCollectionRevisionHash,
 					contentInfoSet, 
 					markupCollectionHeader.getSourceDocumentId(),
@@ -313,7 +313,7 @@ public class GitMarkupCollectionHandler {
 
 	}
 
-	public UserMarkupCollection getCollection(
+	public AnnotationCollection getCollection(
 			@Nonnull String projectId, @Nonnull String markupCollectionId, TagLibrary tagLibrary)
 			throws Exception {
 
@@ -358,7 +358,7 @@ public class GitMarkupCollectionHandler {
 					markupCollectionHeader.getName()
 			);
 
-			UserMarkupCollection userMarkupCollection = new UserMarkupCollection(
+			AnnotationCollection userMarkupCollection = new AnnotationCollection(
 					markupCollectionId, contentInfoSet, tagLibrary, tagReferences,
 					markupCollectionHeader.getSourceDocumentId(), 
 					markupCollectionHeader.getSourceDocumentVersion()
@@ -490,7 +490,7 @@ public class GitMarkupCollectionHandler {
 		}		
 	}	
 	
-	public String updateCollection(String projectId, UserMarkupCollectionReference collectionRef) throws Exception {
+	public String updateCollection(String projectId, AnnotationCollectionReference collectionRef) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 

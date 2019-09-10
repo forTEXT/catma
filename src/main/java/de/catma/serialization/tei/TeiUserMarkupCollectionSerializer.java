@@ -27,10 +27,10 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import de.catma.document.Range;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 
@@ -47,7 +47,7 @@ public class TeiUserMarkupCollectionSerializer {
 	
 	
 	public void serialize(
-			UserMarkupCollection userMarkupCollection, 
+			AnnotationCollection userMarkupCollection, 
 			SourceDocument sourceDocument) throws IOException {
 		
 		String targetURI = makeTargetURI(sourceDocument);
@@ -248,11 +248,11 @@ public class TeiUserMarkupCollectionSerializer {
 	private String makeTargetURI(SourceDocument sourceDocument) {
 		if ((!sourceDocument.getSourceContentHandler().getSourceDocumentInfo().
 				getTechInfoSet().getFileType().equals(FileType.TEXT)) 
-			&& (sourceDocument.getID().startsWith("http"))) {
-			return sourceDocument.getID().replaceFirst("http", "catma");
+			&& (sourceDocument.getUuid().startsWith("http"))) {
+			return sourceDocument.getUuid().replaceFirst("http", "catma");
 			
 		}
-		return sourceDocument.getID();
+		return sourceDocument.getUuid();
 	}
 
 	private void writePointer(String uri, Range range, TeiElement abElement) {

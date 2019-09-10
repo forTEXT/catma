@@ -54,12 +54,12 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 
 import de.catma.document.Range;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.Indexer;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.FileInfoProvider;
@@ -129,7 +129,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 				addDocument(projectRevV, document);
 			}
 
-			for (UserMarkupCollection collection : collectionsSupplier.get(tagManager.getTagLibrary())) {
+			for (AnnotationCollection collection : collectionsSupplier.get(tagManager.getTagLibrary())) {
 				addCollection(revisionHash, revisionHash, collection);
 			}
 			logger.info("Finished loading " + projectReference.getName() + " " + projectReference.getProjectId());
@@ -154,7 +154,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		}
 	}
 
-	private void addCollection(String oldRevisionHash, String revisionHash, UserMarkupCollection collection) {
+	private void addCollection(String oldRevisionHash, String revisionHash, AnnotationCollection collection) {
 		GraphTraversalSource g = graph.traversal();
 		
 		Vertex documentV = 
@@ -166,7 +166,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.ifPresent(
 			doc -> 
 				((SourceDocument)doc).addUserMarkupCollectionReference(
-					new UserMarkupCollectionReference(
+					new AnnotationCollectionReference(
 							collection.getUuid(),  
 							collection.getRevisionHash(),  
 							collection.getContentInfoSet(),  
@@ -246,8 +246,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		Vertex documentV = graph.addVertex(nt(SourceDocument));
 		SourceDocumentInfo info = 
 			document.getSourceContentHandler().getSourceDocumentInfo();
-		info.getTechInfoSet().setURI(fileInfoProvider.getSourceDocumentFileURI(document.getID()));
-		documentV.property("documentId", document.getID());
+		info.getTechInfoSet().setURI(fileInfoProvider.getSourceDocumentFileURI(document.getUuid()));
+		documentV.property("documentId", document.getUuid());
 //		documentV.property("author", info.getContentInfoSet().getAuthor());
 //		documentV.property("description", info.getContentInfoSet().getDescription());
 //		documentV.property("publisher", info.getContentInfoSet().getPublisher());
@@ -267,7 +267,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		projectRevV.addEdge(rt(hasDocument), documentV);
 		
 		try {
-			Path tokensPath = fileInfoProvider.getTokenizedSourceDocumentPath(document.getID());
+			Path tokensPath = fileInfoProvider.getTokenizedSourceDocumentPath(document.getUuid());
 			Any content = JsonIterator.deserialize(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"));
 			Map<Integer, Vertex> adjacencyMap = new HashMap<>();
 			for (Map.Entry<String, Any> entry : content.asMap().entrySet()) {
@@ -307,7 +307,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 				Level.SEVERE, 
 				String.format(
 					"error loading tokens for Document %1$s in project %2$s", 
-					document.getID(), 
+					document.getUuid(), 
 					projectReference.getProjectId()), 
 				e);
 		}
@@ -402,8 +402,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		addCollection(
 			oldRootRevisionHash,
 			rootRevisionHash,
-			new UserMarkupCollection(collectionId, new ContentInfoSet(name), tagManager.getTagLibrary(), 
-					document.getID(), document.getRevisionHash()));
+			new AnnotationCollection(collectionId, new ContentInfoSet(name), tagManager.getTagLibrary(), 
+					document.getUuid(), document.getRevisionHash()));
 	}
 
 	@Override
@@ -494,8 +494,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public UserMarkupCollection getCollection(String rootRevisionHash, TagLibrary tagLibrary,
-			UserMarkupCollectionReference collectionReference) throws Exception {
+	public AnnotationCollection getCollection(String rootRevisionHash, TagLibrary tagLibrary,
+			AnnotationCollectionReference collectionReference) throws Exception {
 		GraphTraversalSource g = graph.traversal();
 		
 		return 
@@ -504,12 +504,12 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 				collectionReference.getSourceDocumentId())
 			.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", collectionReference.getId())
 			.properties("collection")
-			.map(prop -> (UserMarkupCollection)prop.get().orElse(null))
+			.map(prop -> (AnnotationCollection)prop.get().orElse(null))
 			.next();
 	}
 
 	@Override
-	public void addTagReferences(String rootRevisionHash, UserMarkupCollection collection,
+	public void addTagReferences(String rootRevisionHash, AnnotationCollection collection,
 			List<TagReference> tagReferences) throws Exception {
 		System.out.println(graph);
 		GraphTraversalSource g = graph.traversal();
@@ -525,7 +525,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void removeTagReferences(String rootRevisionHash, UserMarkupCollection collection,
+	public void removeTagReferences(String rootRevisionHash, AnnotationCollection collection,
 			List<TagReference> tagReferences) throws Exception {
 		
 		System.out.println(graph);
@@ -564,7 +564,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public void updateProperties(
 			String rootRevisionHash, 
-			UserMarkupCollection collection, 
+			AnnotationCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws Exception {
 	
 		GraphTraversalSource g = graph.traversal();
@@ -619,7 +619,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
 		.outE(rt(hasCollection)).inV().hasLabel(nt(MarkupCollection))
 		.properties("collection")
-		.map(prop -> (UserMarkupCollection)prop.get().orElse(null))
+		.map(prop -> (AnnotationCollection)prop.get().orElse(null))
 		.toList()
 		.forEach(collection -> result.putAll(collection.getId(), collection.getTagReferences(tag)));
 		
@@ -694,7 +694,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void updateCollection(String rootRevisionHash, UserMarkupCollectionReference collectionRef,
+	public void updateCollection(String rootRevisionHash, AnnotationCollectionReference collectionRef,
 			String oldRootRevisionHash) throws Exception {
 		GraphTraversalSource g = graph.traversal();
 
@@ -706,7 +706,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void removeCollection(String rootRevisionHash, UserMarkupCollectionReference collectionReference,
+	public void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference,
 			String oldRootRevisionHash) throws Exception {
 		GraphTraversalSource g = graph.traversal();
 		
@@ -730,7 +730,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		
 		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
 		.property("revisionHash", rootRevisionHash)
-		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", document.getID())
+		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", document.getUuid())
 		.store("toBeDropped")
 		.inE(rt(isPartOf)).outV().hasLabel(nt(Term))
 		.store("toBeDropped")

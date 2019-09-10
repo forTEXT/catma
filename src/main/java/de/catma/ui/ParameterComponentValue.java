@@ -5,11 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.tagger.TaggerView;
+import de.catma.ui.module.annotate.TaggerView;
 
 public enum ParameterComponentValue {
 	TAGGER( catmaApplication -> {

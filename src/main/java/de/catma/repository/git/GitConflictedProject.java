@@ -56,7 +56,7 @@ public class GitConflictedProject implements ConflictedProject {
 				.getSourceContentHandler()
 				.getSourceDocumentInfo()
 				.getTechInfoSet()
-				.setURI(documentIdTofileUriMapper.apply(doc.getID())));
+				.setURI(documentIdTofileUriMapper.apply(doc.getUuid())));
 		
 		return documents;
 	}

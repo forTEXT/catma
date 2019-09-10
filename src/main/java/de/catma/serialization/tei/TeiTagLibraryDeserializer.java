@@ -61,7 +61,6 @@ public class TeiTagLibraryDeserializer {
 
 			TagsetDefinition tagsetDefinition = 
 					new TagsetDefinition(
-							null,
 							tagsetDefinitionElement.getID(),tagsetName, 
 							new Version(versionString));
 			

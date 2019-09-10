@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import de.catma.Pager;
+import de.catma.repository.Pager;
 
 public class GitLabPager<T, S> implements Pager<T> {
 

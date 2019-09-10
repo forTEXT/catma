@@ -31,9 +31,9 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import de.catma.document.Range;
-import de.catma.document.repository.Repository;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.project.Project;
 
 public class KwicProvider {
 	
@@ -44,7 +44,7 @@ public class KwicProvider {
 	private IndexInfoSet indexInfoSet;
 	
 	public KwicProvider(SourceDocument sourceDocument) throws IOException {
-		this.sourceDocumentId = sourceDocument.getID();
+		this.sourceDocumentId = sourceDocument.getUuid();
 		this.content = sourceDocument.getContent();
 		this.sourceDocumentName = sourceDocument.toString();
 		this.sourceDocument= sourceDocument;
@@ -290,7 +290,7 @@ public class KwicProvider {
 		return sourceDocument;
 	}
 
-	public static LoadingCache<String, KwicProvider> buildKwicProviderByDocumentIdCache(Repository project) {
+	public static LoadingCache<String, KwicProvider> buildKwicProviderByDocumentIdCache(Project project) {
 		return CacheBuilder.newBuilder().maximumSize(10)
 		.build(new CacheLoader<String, KwicProvider>() {
 

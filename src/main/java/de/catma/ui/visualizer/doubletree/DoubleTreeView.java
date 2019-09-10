@@ -13,8 +13,8 @@ import com.vaadin.ui.Panel;
 import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.source.KeywordInContext;
-import de.catma.ui.tabbedview.ClosableTab;
-import de.catma.ui.tabbedview.TabCaptionChangeListener;
+import de.catma.ui.component.tabbedview.ClosableTab;
+import de.catma.ui.component.tabbedview.TabCaptionChangeListener;
 
 public class DoubleTreeView  extends Panel implements ClosableTab {
 	

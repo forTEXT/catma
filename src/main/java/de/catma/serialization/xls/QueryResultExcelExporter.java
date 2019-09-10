@@ -9,15 +9,15 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.project.Project;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
 
 public class QueryResultExcelExporter {
 	
 	public void export(
-			Repository repository,
+			Project repository,
 			QueryResult queryResult, String sheetName, OutputStream outputStream) 
 					throws Exception {
 

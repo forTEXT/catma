@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 

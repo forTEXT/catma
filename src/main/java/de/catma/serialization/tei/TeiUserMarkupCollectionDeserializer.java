@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import de.catma.ExceptionHandler;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.serialization.tei.PtrValueHandler.TargetValues;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;

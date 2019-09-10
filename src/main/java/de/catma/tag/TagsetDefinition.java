@@ -30,18 +30,15 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import de.catma.interfaces.ISourceControlVersionable;
-
 /**
  * A set of {@link TagDefinition}s.
  * 
  * @author marco.petris@web.de
  *
  */
-public class TagsetDefinition implements Versionable, ISourceControlVersionable, Iterable<TagDefinition> {
+public class TagsetDefinition implements Versionable, Iterable<TagDefinition> {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private Integer id;
 	private String uuid;
 	private String name;
 	private Version version;
@@ -57,17 +54,16 @@ public class TagsetDefinition implements Versionable, ISourceControlVersionable,
 	 * @param version the version of the tagset
 	 */
 	public TagsetDefinition(
-			Integer id, String uuid, String tagsetName, Version version) {
-		this(id, uuid, tagsetName, version, new HashSet<>());
+			String uuid, String tagsetName, Version version) {
+		this(uuid, tagsetName, version, new HashSet<>());
 	}
 	
 	public TagsetDefinition(
-			Integer id, String uuid, String tagsetName, Version version, 
+			String uuid, String tagsetName, Version version, 
 			Set<String> deletedDefinitions) {
 		this.tagDefinitions = new HashMap<String, TagDefinition>();
 		this.tagDefinitionChildren = new HashMap<String, Set<String>>();
 		this.deletedDefinitions = deletedDefinitions;
-		this.id = id;
 		this.uuid = uuid;
 		this.name = tagsetName;
 		this.version = version;
@@ -78,7 +74,7 @@ public class TagsetDefinition implements Versionable, ISourceControlVersionable,
 	 * @param toCopy
 	 */
 	public TagsetDefinition(TagsetDefinition toCopy) {
-		this (null, toCopy.uuid, toCopy.name, new Version(toCopy.version));
+		this (toCopy.uuid, toCopy.name, new Version(toCopy.version));
 		for (TagDefinition tagDefinition : toCopy) {
 			addTagDefinition(new TagDefinition(tagDefinition));
 		}
@@ -264,68 +260,6 @@ public class TagsetDefinition implements Versionable, ISourceControlVersionable,
 		
 		return builder.toString();
 	}
-
-	/**
-	 * @return repository dependent identifier
-	 */
-	public Integer getId() {
-		return id;
-	}
-	
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	
-	/**
-	 * Synchronizes this definition with the given definition. Deletions resulting
-	 * from this synch can be retrieved via {@link #getDeletedDefinitions()}.
-	 * @param tagsetDefinition
-	 * @throws IllegalArgumentException if the {@link #getUuid() uuids} of the
-	 * definitions are not equal
-	 */
-	@Deprecated
-	void synchronizeWith(
-			TagsetDefinition tagsetDefinition) throws IllegalArgumentException {
-		if (!this.getUuid().equals(tagsetDefinition.getUuid())) {
-			throw new IllegalArgumentException(
-				"can only synch between different versions of the same uuid, this! uuid #" 
-				+ this.getUuid() + " incoming uuid #" + tagsetDefinition.getUuid());
-		}
-		
-		if (!tagsetDefinition.getVersion().equals(this.getVersion())) {
-			this.setName(tagsetDefinition.getName());
-			this.version = new Version(tagsetDefinition.getVersion());
-		}
-		
-		Iterator<Map.Entry<String,TagDefinition>> iterator = 
-				tagDefinitions.entrySet().iterator();
-		
-		while(iterator.hasNext()) {
-			TagDefinition td = iterator.next().getValue();
-			
-			if (tagsetDefinition.hasTagDefinition(td.getUuid())) {
-				TagDefinition other = 
-						tagsetDefinition.getTagDefinition(td.getUuid());
-				if (!td.getVersion().equals(other.getVersion())) {
-					logger.info("synching " + td + " with " + other);
-					td.synchronizeWith(other, this);
-				}
-			}
-			else {
-				logger.info("marking " + td + " in " + this + " as deleted");
-				iterator.remove();
-				removeFromChildrenCache(td);
-			}
-			
-		}
-		for (TagDefinition td : tagsetDefinition) {
-			if (!this.hasTagDefinition(td.getUuid())) {
-				logger.info("adding " + td + " to " + this + " because of synch");
-				addTagDefinition(new TagDefinition(td));
-			}
-		}
-	}
 	
 	void setVersion() {
 		this.version = new Version();
@@ -335,12 +269,10 @@ public class TagsetDefinition implements Versionable, ISourceControlVersionable,
 		return tagDefinitions.isEmpty();
 	}
 
-	@Override
 	public String getRevisionHash() {
 		return this.revisionHash;
 	}
 
-	@Override
 	public void setRevisionHash(String revisionHash) {
 		this.revisionHash = revisionHash;
 	}

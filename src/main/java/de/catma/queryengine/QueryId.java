@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
-import de.catma.ui.tagger.annotationpanel.AnnotatedTextProvider;
+import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
 
 public class QueryId {
 	private final String query;

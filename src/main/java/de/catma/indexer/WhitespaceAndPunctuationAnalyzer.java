@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.standard.StandardFilter;
 
 import de.catma.indexer.unseparablecharactersequence.CharTree;
 import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
@@ -83,7 +82,7 @@ public class WhitespaceAndPunctuationAnalyzer extends Analyzer {
 	protected TokenStreamComponents createComponents(String fieldName) {
 		Tokenizer source = new CatmaWhitespaceTokenizer(unseparableCharacterSequences);
 		TokenStream result = new PunctuationTokenizer(
-				new StandardFilter(source), 
+				source, 
 				unseparableCharacterSequences,
 				userDefSeparatingPunctuationPattern, locale);
 		

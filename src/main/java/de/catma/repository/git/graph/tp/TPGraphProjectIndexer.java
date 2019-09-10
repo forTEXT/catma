@@ -40,13 +40,11 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
-import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.TermInfo;
 import de.catma.indexer.wildcard2regex.SQLWildcard2RegexConverter;
 import de.catma.queryengine.CompareOperator;
@@ -62,7 +60,6 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
 
 public class TPGraphProjectIndexer implements Indexer {
@@ -99,12 +96,6 @@ public class TPGraphProjectIndexer implements Indexer {
 
 	@Override
 	public void removeTagReferences(List<TagReference> tagReferences) throws IOException {
-		//noop
-	}
-
-	@Override
-	public void reindex(TagsetDefinition tagsetDefinition, TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog,
-			UserMarkupCollection userMarkupCollection) throws IOException {
 		//noop
 	}
 

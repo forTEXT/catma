@@ -4,13 +4,13 @@ import java.util.Set;
 
 import com.google.inject.assistedinject.Assisted;
 
-import de.catma.document.repository.Repository;
+import de.catma.project.Project;
 import de.catma.project.ProjectManager;
-import de.catma.ui.modules.dashboard.DashboardView;
-import de.catma.ui.modules.dashboard.ProjectListView;
-import de.catma.ui.modules.main.MainView;
-import de.catma.ui.modules.project.ProjectInvitationDialog;
-import de.catma.ui.modules.project.Resource;
+import de.catma.ui.module.dashboard.DashboardView;
+import de.catma.ui.module.dashboard.ProjectListView;
+import de.catma.ui.module.main.MainView;
+import de.catma.ui.module.project.ProjectInvitationDialog;
+import de.catma.ui.module.project.Resource;
 
 public interface UIFactory {
 	
@@ -22,6 +22,6 @@ public interface UIFactory {
 			@Assisted("projectManager") ProjectManager projectManager);
 	
 	ProjectInvitationDialog getProjectInvitationDialog(
-			@Assisted("project") Repository project, 
+			@Assisted("project") Project project, 
 			@Assisted("resources")  Set<Resource> resources);
 }

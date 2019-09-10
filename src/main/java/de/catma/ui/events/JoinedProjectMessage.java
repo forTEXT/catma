@@ -2,7 +2,7 @@ package de.catma.ui.events;
 
 import java.io.Serializable;
 
-import de.catma.ui.modules.project.ProjectInvitation;
+import de.catma.ui.module.project.ProjectInvitation;
 
 public class JoinedProjectMessage implements Serializable {
 

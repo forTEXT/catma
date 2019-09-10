@@ -20,6 +20,7 @@
 package de.catma.indexer.unseparablecharactersequence;
 
 import org.apache.lucene.util.AttributeImpl;
+import org.apache.lucene.util.AttributeReflector;
 
 /**
  *  An attribute that states if a sequence is separable or not.
@@ -77,5 +78,11 @@ public class UnseparableCharacterSequenceAttributeImpl
                     "must implement inteface " +
                             UnseparableCharacterSequenceAttribute.class.getName()); 
         }
+    }
+    
+    @Override
+    public void reflectWith(AttributeReflector reflector) {
+    	reflector.reflect(UnseparableCharacterSequenceAttribute.class, "isUnseparable", isUnseparable);
+    	
     }
 }

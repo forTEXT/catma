@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.catma.document.source.KeywordInContext;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.TermInfo;
-import de.catma.ui.client.ui.visualizer.doubletree.shared.KwicSerializationField;
+import de.catma.ui.client.ui.visualization.doubletree.shared.KwicSerializationField;
 
 public class KwicListJSONSerializer {
 	

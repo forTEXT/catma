@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Stack;
 
 import de.catma.document.Range;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -55,7 +55,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	}
 
 	@Override
-	public void serialize(UserMarkupCollection userMarkupCollection,
+	public void serialize(AnnotationCollection userMarkupCollection,
 			SourceDocument sourceDocument, OutputStream outputStream)
 			throws IOException {
 		throw new UnsupportedOperationException(
@@ -64,7 +64,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	}
 
 	@Override
-	public UserMarkupCollection deserialize(SourceDocument sourceDocument, String id, InputStream inputStream)
+	public AnnotationCollection deserialize(SourceDocument sourceDocument, String id, InputStream inputStream)
 			throws IOException {
 		
 		try {
@@ -73,18 +73,18 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        StringBuilder contentBuilder = new StringBuilder();
 	        TagsetDefinition tagsetDefinition = 
 	        		new TagsetDefinition(
-	        			null, idGenerator.generate(), 
+	        			idGenerator.generate(), 
 	        			"Intrinsic Markup", new Version());
 	        
 	        tagManager.addTagsetDefinition(tagsetDefinition);
 	        Stack<String> elementStack = new Stack<String>();
-	        UserMarkupCollection userMarkupCollection = 
-	        	new UserMarkupCollection(
+	        AnnotationCollection userMarkupCollection = 
+	        	new AnnotationCollection(
 	        		new IDGenerator().generate(),
 	        		new ContentInfoSet(
 	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
 	        		tagManager.getTagLibrary(),
-	        		sourceDocument.getID(),
+	        		sourceDocument.getUuid(),
 	        		sourceDocument.getRevisionHash());
 	        
 	        scanElements(
@@ -107,7 +107,7 @@ public class XmlMarkupCollectionSerializationHandler implements
     		Stack<String> elementStack, TagManager tagManager, 
     		TagLibrary tagLibrary, 
     		TagsetDefinition tagsetDefinition,
-    		UserMarkupCollection userMarkupCollection) throws Exception {
+    		AnnotationCollection userMarkupCollection) throws Exception {
     	
 		int start = contentBuilder.length();
 
@@ -231,7 +231,7 @@ public class XmlMarkupCollectionSerializationHandler implements
         }
         														
         TagReference tagReference = new TagReference(
-        	tagInstance, sourceDocument.getID(), range, userMarkupCollection.getId());
+        	tagInstance, sourceDocument.getUuid(), range, userMarkupCollection.getId());
         userMarkupCollection.addTagReference(tagReference);
      
         elementStack.pop();	

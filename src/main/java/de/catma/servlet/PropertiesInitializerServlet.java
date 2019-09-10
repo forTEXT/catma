@@ -8,7 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
-import de.catma.document.repository.RepositoryProperties;
+import de.catma.properties.CATMAProperties;
 import de.catma.util.NonModifiableProperties;
 
 @WebServlet(loadOnStartup = 1, name="PropertiesInitializer", urlPatterns="/PropertiesInitializer")
@@ -31,7 +31,7 @@ public class PropertiesInitializerServlet extends HttpServlet {
 				new FileInputStream(
 					cfg.getServletContext().getRealPath(propertiesFile)));
 			
-			RepositoryProperties.INSTANCE.setProperties( 
+			CATMAProperties.INSTANCE.setProperties( 
 				new NonModifiableProperties(properties));
 			
 			log("CATMA Properties initialized.");

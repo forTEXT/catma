@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Set;
 
 import de.catma.document.Range;
-import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.project.Project;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResultRow;
@@ -35,14 +35,14 @@ import de.catma.queryengine.result.QueryResultRow;
 public class DistributionComputation {
 	
 	private GroupedQueryResultSet groupedQueryResultSet;
-	private Repository repository;
+	private Project repository;
 	private List<String> relevantSourceDocumentIDs;
 	private double segmentSizeInPercent = 10.0;
 	private HashMap<String, Distribution> documentDistributions;
 	private int maxOccurrences = 0;
 	
 	public DistributionComputation(GroupedQueryResultSet groupedQueryResultSet,
-			Repository repository, List<String> relevantSourceDocumentIDs) throws IOException {
+			Project repository, List<String> relevantSourceDocumentIDs) throws IOException {
 		this.groupedQueryResultSet = groupedQueryResultSet;
 		this.repository = repository;
 		this.relevantSourceDocumentIDs = relevantSourceDocumentIDs;
@@ -59,7 +59,7 @@ public class DistributionComputation {
 				}
 				documentDistributions.put(sourceDocId, 
 					new Distribution(
-						sd.getID(),
+						sd.getUuid(),
 						sd.toString(),
 						Double.valueOf(sd.getLength())/100.0*segmentSizeInPercent,
 						segmentSizeInPercent));		

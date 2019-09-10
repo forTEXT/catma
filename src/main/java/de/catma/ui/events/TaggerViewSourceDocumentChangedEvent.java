@@ -1,6 +1,6 @@
 package de.catma.ui.events;
 
-import de.catma.ui.tagger.TaggerView;
+import de.catma.ui.module.annotate.TaggerView;
 
 public class TaggerViewSourceDocumentChangedEvent {
 	

@@ -21,7 +21,7 @@ import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 
 import de.catma.document.Range;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.tag.Property;

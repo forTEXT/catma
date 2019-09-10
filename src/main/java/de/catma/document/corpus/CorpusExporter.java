@@ -12,24 +12,23 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
-import de.catma.document.Corpus;
-import de.catma.document.repository.Repository;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.SourceContentHandler;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.project.Project;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 
 public class CorpusExporter {
 	private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("yyMMddhhmm");
 
-	private Repository repo;
+	private Project repo;
 
 	private String date;
 
 	private boolean simpleEntryStyle;
 	
-	public CorpusExporter(Repository repo, boolean simpleEntryStyle) {
+	public CorpusExporter(Project repo, boolean simpleEntryStyle) {
 		this.repo = repo;
 		this.simpleEntryStyle = simpleEntryStyle;
 		this.date = FORMATTER.format(new Date());
@@ -65,10 +64,10 @@ public class CorpusExporter {
 					
 					taOut.closeArchiveEntry();
 					
-					for (UserMarkupCollectionReference umcRef 
+					for (AnnotationCollectionReference umcRef 
 							: corpus.getUserMarkupCollectionRefs(sd)) {
 						
-						UserMarkupCollection umc = 
+						AnnotationCollection umc = 
 								repo.getUserMarkupCollection(umcRef);
 
 						TeiUserMarkupCollectionSerializationHandler handler =
@@ -105,7 +104,7 @@ public class CorpusExporter {
 		
 	}
 	
-	private String getUmcEntryName(String exportName, String corpusName, UserMarkupCollection umc, SourceDocument sd) {
+	private String getUmcEntryName(String exportName, String corpusName, AnnotationCollection umc, SourceDocument sd) {
 		if (simpleEntryStyle) {
 			return corpusName 
 					+ "/" 
@@ -120,7 +119,7 @@ public class CorpusExporter {
 				+ date 
 				+ "/"
 				+ corpusName 										 
-				+ "/" + cleanupName(sd.getID()) 
+				+ "/" + cleanupName(sd.getUuid()) 
 				+ "/annotationcollections/" 
 				+ cleanupName(umc.getName())
 				+ ".xml";
@@ -141,7 +140,7 @@ public class CorpusExporter {
 				+ "/" 
 				+ corpusName 
 				+ "/" 
-				+ cleanupName(sd.getID()) 
+				+ cleanupName(sd.getUuid()) 
 				+ "/" 
 				+ cleanupName(getFilename(sd, true));
 	}
@@ -163,7 +162,7 @@ public class CorpusExporter {
 		if (simpleEntryStyle) {
 			return sourceDocument.toString() + (withFileExtension?".txt":"");
 		}
-		return sourceDocument.getID() 
+		return sourceDocument.getUuid() 
 			+ (((title==null)||title.isEmpty())?"":("_"+title)) 
 			+ (withFileExtension?".txt":"");
 	};

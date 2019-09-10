@@ -26,8 +26,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.catma.document.Range;
-import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -63,7 +63,7 @@ public class RegQuery extends Query {
     	QueryResultRowArray result = new QueryResultRowArray();
     	
     	QueryOptions queryOptions = getQueryOptions();
-    	Repository repository = queryOptions.getRepository();
+    	Project repository = queryOptions.getRepository();
     	
     	List<String> relevantSourceDocIDs = 
     			queryOptions.getRelevantSourceDocumentIDs();
@@ -94,7 +94,7 @@ public class RegQuery extends Query {
 	            result.add(
 	            	new QueryResultRow(
 	            		queryOptions.getQueryId(),
-	            		sourceDoc.getID(), 
+	            		sourceDoc.getUuid(), 
 	            		new Range(matcher.start(), matcher.end()), 
 	            		matcher.group()));
 	        }
