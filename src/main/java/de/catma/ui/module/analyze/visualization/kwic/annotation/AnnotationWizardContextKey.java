@@ -1,7 +1,7 @@
 package de.catma.ui.module.analyze.visualization.kwic.annotation;
 
 public enum AnnotationWizardContextKey {
-	CORPUS,
+//	CORPUS,
 	DOCUMENTIDS,
 	TAG,
 	PROPERTIES,

@@ -251,6 +251,7 @@ public class Tagger extends AbstractComponent {
 
 	public void highlight(Range absoluteRange) {
 		pager.highlight(absoluteRange);
+		setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
 	}
 
 	public void setTagInstanceSelected(String annotationId) {

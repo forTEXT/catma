@@ -245,4 +245,8 @@ public class KwicItemHandler {
 		
 		return "kwic-panel-forwardctx";
 	}
+	
+	public LoadingCache<String, KwicProvider> getKwicProviderCache() {
+		return kwicProviderCache;
+	}
 }

@@ -14,6 +14,7 @@ import de.catma.project.ProjectManager;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.di.UIFactory;
 import de.catma.ui.events.HeaderContextChangeEvent;
+import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
@@ -23,6 +24,7 @@ import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.events.routing.RouteToTagsEvent;
 import de.catma.ui.module.analyze.AnalyzeManagerView;
 import de.catma.ui.module.annotate.TaggerManagerView;
+import de.catma.ui.module.annotate.TaggerView;
 import de.catma.ui.module.project.ConflictedProjectView;
 import de.catma.ui.module.project.ProjectView;
 import de.catma.ui.module.tags.TagsView;
@@ -200,6 +202,32 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 					routeToAnnotateEvent.getDocument(), routeToAnnotateEvent.getProject());
 			}			
 			currentRoute = routeToAnnotateEvent.getClass();
+		}
+	};
+
+	@Override
+	public void handleRouteToAnnotate(QueryResultRowInAnnotateEvent queryResultRowInAnnotateEvent) {
+		if (isNewTarget(queryResultRowInAnnotateEvent.getClass())) {
+			if (this.taggerManagerView == null) {
+				this.taggerManagerView = new TaggerManagerView(eventBus, queryResultRowInAnnotateEvent.getProject());
+			}
+			
+			setContent(taggerManagerView);
+			
+			try {
+				TaggerView view = taggerManagerView.openSourceDocument(
+					queryResultRowInAnnotateEvent.getProject().getSourceDocument(
+							queryResultRowInAnnotateEvent.getDocumentId()),
+					queryResultRowInAnnotateEvent.getProject());
+				view.showQueryResultRows(
+						queryResultRowInAnnotateEvent.getSelection(), 
+						queryResultRowInAnnotateEvent.getRows());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			currentRoute = queryResultRowInAnnotateEvent.getClass();
+
 		}
 	};
 	

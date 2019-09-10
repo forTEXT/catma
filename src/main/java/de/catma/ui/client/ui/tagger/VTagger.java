@@ -162,5 +162,4 @@ public class VTagger extends Composite {
 		taggerEditor.removeHighlights();
 		
 	}
-
 }

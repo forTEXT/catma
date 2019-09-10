@@ -608,5 +608,6 @@ public class TaggerEditor extends FocusWidget
 		}
 		
 	}
+
 }
 

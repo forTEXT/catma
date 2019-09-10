@@ -51,6 +51,7 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.document.Range;
 import de.catma.document.annotation.Annotation;
@@ -61,8 +62,10 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.IndexedProject;
+import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -80,6 +83,8 @@ import de.catma.ui.component.tabbedview.TabCaptionChangeListener;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.module.analyze.visualization.ExpansionListener;
+import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.annotate.Tagger.TaggerListener;
 import de.catma.ui.module.annotate.TaggerSplitPanel.SplitterPositionChangedEvent;
 import de.catma.ui.module.annotate.TaggerSplitPanel.SplitterPositionChangedListener;
@@ -127,6 +132,8 @@ public class TaggerView extends HorizontalLayout
 	private PropertyChangeListener annotationPropertiesChangedListener;
 	private PropertyChangeListener tagChangedListener;
 	private SliderPanel drawer;
+	private KwicPanel kwicPanel;
+	private VerticalSplitPanel rightSplitPanel;
 	
 	public TaggerView(
 			int taggerID, 
@@ -436,6 +443,27 @@ public class TaggerView extends HorizontalLayout
 				}
 			});
 		
+		
+		kwicPanel.setExpansionListener(new ExpansionListener() {
+
+			@Override
+			public void expand() {
+				hideKwicPanel(); // we hide on expand and on compress since both is considered a "close"
+			}
+
+			@Override
+			public void compress() {
+				hideKwicPanel(); // we hide on expand and on compress since both is considered a "close"
+			}
+			
+		});
+		
+		kwicPanel.addItemClickListener(itemClick -> {
+			if (itemClick.getMouseEventDetails().isDoubleClick()) {
+				show(itemClick.getItem().getRange());
+			}
+		});
+		
 	}
 
 	private void setAnnotationCollectionSelected(AnnotationCollectionReference collectionReference,
@@ -461,6 +489,13 @@ public class TaggerView extends HorizontalLayout
 		catch (Exception e) {
 			errorHandler.showAndLogError("Error handling Annotation Collection!", e);
 		}
+
+	}
+
+	private void hideKwicPanel() {
+		kwicPanel.setVisible(false);
+		rightSplitPanel.setSplitPosition(0);
+		rightSplitPanel.setLocked(true);
 	}
 
 	private void initComponents() {
@@ -522,6 +557,17 @@ public class TaggerView extends HorizontalLayout
 		btClearSearchHighlights = new IconButton(VaadinIcons.ERASER);
 		btClearSearchHighlights.setDescription("Clear all search highlights");
 		actionPanel.addComponent(btClearSearchHighlights);
+		
+		rightSplitPanel = new VerticalSplitPanel();
+		rightSplitPanel.setSizeFull();
+		
+		kwicPanel = new KwicPanel(eventBus, project, KwicProvider.buildKwicProviderByDocumentIdCache(project));
+		kwicPanel.setExpandResource(VaadinIcons.CLOSE);
+		kwicPanel.setCompressResource(VaadinIcons.CLOSE);
+		
+		rightSplitPanel.addComponent(kwicPanel);
+		hideKwicPanel();
+		
 		annotationPanel = new AnnotationPanel(
 			project, 
 			userMarkupCollectionManager,
@@ -529,10 +575,11 @@ public class TaggerView extends HorizontalLayout
 			collection -> handleCollectionValueChange(collection),
 			() -> sourceDocument,
 			eventBus);
+		rightSplitPanel.addComponent(annotationPanel);
 		
 		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
-		splitPanel.addComponent(annotationPanel);
+		splitPanel.addComponent(rightSplitPanel);
 		
 		splitPanel.setSplitPosition(initialSplitterPositionInPixels, Unit.PIXELS);
 		splitPanel.addStyleName("catma-tab-spacing"); //$NON-NLS-1$
@@ -714,6 +761,19 @@ public class TaggerView extends HorizontalLayout
 		}
 	}
 
+	public void showQueryResultRows(QueryResultRow selectedRow, List<QueryResultRow> rows) {
+		kwicPanel.setVisible(true);
+		kwicPanel.clear();
+		kwicPanel.addQueryResultRows(rows);
+		kwicPanel.sortByStartPosAsc();
+		kwicPanel.setSelectedItem(selectedRow);
+		
+		rightSplitPanel.setSplitPosition(50);
+		rightSplitPanel.setLocked(false);
+		
+		show(selectedRow.getRange());
+	}
+	
 	public void show(Range range) {
 		try {
 			int startPage = pager.getPageNumberFor(range.getStartPoint());

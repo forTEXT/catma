@@ -17,6 +17,7 @@ import de.catma.project.Project;
 import de.catma.project.event.ProjectReadyEvent;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.component.LargeLinkButton;
+import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
@@ -168,6 +169,12 @@ public class CatmaNav extends VerticalLayout implements CatmaRouter {
 		}
 	}
 
+	@Override
+	public void handleRouteToAnnotate(QueryResultRowInAnnotateEvent queryResultRowInAnnotateEvent) {
+		currentRoute = queryResultRowInAnnotateEvent.getClass();
+		setSelectedStyle(btAnnotate);
+	}
+	
 	@Override
 	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
 		currentRoute = routeToAnnotateEvent.getClass();

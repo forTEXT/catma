@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
-import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +28,6 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
-import de.catma.document.corpus.Corpus;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.properties.CATMAPropertyKey;
@@ -65,7 +63,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 	private KwicPanel kwicPanel;
 
 	private DisplaySettingHandler displaySettingsHandler;
-	private DisplaySettingHandler defaultDisplaySettingHandler;
+	private DisplaySettingHandler defaultDisplaySettingHandler; //TODO:
 
 	private IconButton btExpandCompressTopLeft;
 
@@ -81,8 +79,8 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 
 	private VerticalSplitPanel leftSplitPanel;
 
-	public VegaPanel(EventBus eventBus, Project project, LoadingCache<String, KwicProvider> kwicProviderCache, 
-			Supplier<Corpus> corpusProvider, QueryOptionsProvider queryOptionsProvider, 
+	public VegaPanel(EventBus eventBus, Project project, LoadingCache<String, KwicProvider> kwicProviderCache,
+			QueryOptionsProvider queryOptionsProvider, 
 			DisplaySettingHandler displaySettingsHandler) {
 		
 		this.vegaViewId = new IDGenerator().generate().toLowerCase();
@@ -97,7 +95,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 		this.project = project;
 		this.displaySettingsHandler = displaySettingsHandler;
 		this.defaultDisplaySettingHandler = displaySettingsHandler;
-		initComponents(eventBus, kwicProviderCache, corpusProvider);
+		initComponents(eventBus, kwicProviderCache);
 		initActions();
 	}
 
@@ -225,8 +223,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 	}
 
 	private void initComponents(
-			EventBus eventBus, LoadingCache<String, KwicProvider> kwicProviderCache, 
-			Supplier<Corpus> corpusProvider) {
+			EventBus eventBus, LoadingCache<String, KwicProvider> kwicProviderCache) {
 		setSizeFull();
 		setSplitPosition(100);
 		
@@ -254,7 +251,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
 		leftBottomPanel.setSizeFull();
 		leftSplitPanel.addComponent(leftBottomPanel);
 		
-		kwicPanel = new KwicPanel(eventBus, project, kwicProviderCache, corpusProvider);
+		kwicPanel = new KwicPanel(eventBus, project, kwicProviderCache);
 		leftBottomPanel.addComponent(kwicPanel);
 		kwicPanel.setExpandResource(VaadinIcons.ANGLE_DOUBLE_UP);
 		kwicPanel.setCompressResource(VaadinIcons.ANGLE_DOUBLE_DOWN);

@@ -323,8 +323,7 @@ public class AnalyzeView extends HorizontalLayout
 						new KwicPanel(
 								eventBus,
 								project, 
-								kwicProviderCache, 
-								() -> analyzeResourcePanel.getCorpus()),
+								kwicProviderCache),
 						getQueryResultPanelSettings(),
 						project, 
 						kwicProviderCache,
@@ -352,7 +351,6 @@ public class AnalyzeView extends HorizontalLayout
 				eventBus,
 				project, 
 				kwicProviderCache, 
-				() -> analyzeResourcePanel.getCorpus(),
 				() -> new QueryOptions(
 					new QueryId(""), //TODO: ok?
 					currentCorpus.getDocumentIds(), 

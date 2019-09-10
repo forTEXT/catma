@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
@@ -16,21 +15,24 @@ import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
+import com.vaadin.ui.Grid.ItemClick;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.renderers.HtmlRenderer;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.components.grid.ItemClickListener;
+import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
-import de.catma.document.corpus.Corpus;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResultRow;
@@ -43,6 +45,7 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualisation;
@@ -54,7 +57,7 @@ import de.catma.util.IDGenerator;
 
 public class KwicPanel extends VerticalLayout implements Visualisation {
 	private enum ColumnId {
-		COLLECION_NAME, TAG, PROPERTY_NAME, PROPERTY_VALUE,
+		COLLECION_NAME, TAG, PROPERTY_NAME, PROPERTY_VALUE, START_POS,
 		;
 	}
 
@@ -67,19 +70,17 @@ public class KwicPanel extends VerticalLayout implements Visualisation {
 	private IconButton btExpandCompress;
 	private boolean expanded = false;
 	private ExpansionListener expansionListener;
-	private Supplier<Corpus> corpusProvider;
 	private IDGenerator idGenerator = new IDGenerator();
 	private VaadinIcons expandResource = VaadinIcons.EXPAND_SQUARE;
 	private VaadinIcons compressResource = VaadinIcons.COMPRESS_SQUARE;
+	private Registration defaultDoubleClickRegistration;
 
 	public KwicPanel(
 			EventBus eventBus,
 			Project project, 
-			LoadingCache<String, KwicProvider> kwicProviderCache, 
-			Supplier<Corpus> corpusProvider) {
+			LoadingCache<String, KwicProvider> kwicProviderCache) {
 		this.project = project;
 		this.kwicItemHandler = new KwicItemHandler(project, kwicProviderCache);
-		this.corpusProvider = corpusProvider;
 		initComponents();
 		initActions(eventBus);
 	}
@@ -98,6 +99,23 @@ public class KwicPanel extends VerticalLayout implements Visualisation {
 		});
 		
 		btExpandCompress.addClickListener(clickEvent -> handleMaxMinRequest());
+		defaultDoubleClickRegistration = 
+		kwicGrid.addItemClickListener(clickEvent -> handleKwicItemClick(clickEvent, eventBus));
+	}
+
+	private void handleKwicItemClick(ItemClick<QueryResultRow> clickEvent, EventBus eventBus) {
+		if (clickEvent.getMouseEventDetails().isDoubleClick()) {
+			QueryResultRow selectedRow = clickEvent.getItem();
+			final String documentId = selectedRow.getSourceDocumentId();
+			List<QueryResultRow> documentRows = 
+					kwicDataProvider.getItems()
+					.parallelStream()
+					.filter(row -> row.getSourceDocumentId().equals(documentId))
+					.collect(Collectors.toList());
+			
+			eventBus.post(new QueryResultRowInAnnotateEvent(
+				documentId, selectedRow, documentRows, project));
+		}
 	}
 
 	private void handleAnnotateSelectedRequest(EventBus eventBus) {
@@ -107,18 +125,17 @@ public class KwicPanel extends VerticalLayout implements Visualisation {
 		if (selectedRows.isEmpty()) {
 			Notification.show(
 				"Info", 
-				"Please select one ore more rows to annotate!", 
+				"Please select one or more rows to annotate!", 
 				Type.HUMANIZED_MESSAGE);
 			return;
 		}
 		
-		Set<String> sourceDocumentId = kwicDataProvider.getItems()
+		Set<String> documentIds = kwicDataProvider.getItems()
 			.stream()
 			.map(row -> row.getSourceDocumentId()).collect(Collectors.toSet());
 		
 		WizardContext wizardContext = new WizardContext();
-		wizardContext.put(AnnotationWizardContextKey.DOCUMENTIDS, sourceDocumentId);
-		wizardContext.put(AnnotationWizardContextKey.CORPUS, corpusProvider.get());
+		wizardContext.put(AnnotationWizardContextKey.DOCUMENTIDS, documentIds);
 		
 		AnnotationWizard wizard = new AnnotationWizard(
 				eventBus, project, wizardContext, 
@@ -246,6 +263,7 @@ public class KwicPanel extends VerticalLayout implements Visualisation {
 		kwicGrid.addColumn(row -> row.getRange().getStartPoint())
 			.setCaption("Start Point")
 			.setWidth(100)
+			.setId(ColumnId.START_POS.name())
 			.setHidable(true);
 		kwicGrid.addColumn(row -> row.getRange().getEndPoint())
 			.setCaption("End Point")
@@ -365,5 +383,18 @@ public class KwicPanel extends VerticalLayout implements Visualisation {
 	@Override
 	public void setDisplaySetting(DisplaySetting displaySettings) {
 		// noop
+	}
+	
+	public void addItemClickListener(ItemClickListener<QueryResultRow> itemClickListener) {
+		defaultDoubleClickRegistration.remove();
+		kwicGrid.addItemClickListener(itemClickListener);
+	}
+	
+	public void setSelectedItem(QueryResultRow row) {
+		kwicGrid.setSelectionMode(SelectionMode.SINGLE).select(row);
+	}
+	
+	public void sortByStartPosAsc() {
+		kwicGrid.sort(ColumnId.START_POS.name());
 	}
 }

@@ -59,38 +59,23 @@ import com.google.inject.Injector;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
-import com.vaadin.data.TreeData;
-import com.vaadin.data.provider.TreeDataProvider;
-import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.renderers.ButtonRenderer;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.LogProgressListener;
 import de.catma.backgroundservice.ProgressCallable;
-import de.catma.document.Range;
-import de.catma.document.annotation.AnnotationCollection;
-import de.catma.document.source.KeywordInContext;
-import de.catma.document.source.SourceDocument;
 import de.catma.hazelcast.HazelCastService;
-import de.catma.project.Project;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.computation.DistributionComputation;
-import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.events.RegisterCloseableEvent;
@@ -99,9 +84,6 @@ import de.catma.ui.events.TokenValidEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
-import de.catma.ui.module.analyze.QueryOptionsProvider;
-import de.catma.ui.module.analyze.visualization.vega.VegaEvent;
-import de.catma.ui.module.annotate.TaggerView;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.signup.CreateUserDialog;
 import de.catma.ui.module.main.signup.SignupTokenManager;
@@ -145,59 +127,13 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
-		
-		boolean nase = false;
-		//TODO: remove test code
-		
-		if (nase) {
-			VerticalLayout nasenPanel = new VerticalLayout();
-			nasenPanel.addComponent(new Label("Nase1"));
-			nasenPanel.addComponent(new Label("Nase2"));
-			nasenPanel.addComponent(new Label("Nase3"));
-			
-			
-			TreeData<String> treeData = new TreeData<>();
-			for (int i=0; i<8;i++) {
-				treeData.addItem(null, "item"+i);
-			}
-			
-			for (int i=0; i<10; i++) {
-				treeData.addItem("item5", "child"+i);
-			}
-			TreeDataProvider<String> dp = new TreeDataProvider<>(treeData);
-			TreeGrid<String> grid = new TreeGrid<String>(dp);
-			grid.setHierarchyColumn(
-					grid.addColumn(item -> item.toString()).setCaption("Name"));
-			ButtonRenderer<String> buttonRenderer = new ButtonRenderer<>(clickEvent -> System.out.println("clicked"));
-			buttonRenderer.setHtmlContentAllowed(true);
-			grid.addColumn(item->VaadinIcons.ABACUS.getHtml(), buttonRenderer).setCaption("Click").setHidable(true);
-			nasenPanel.addComponent(grid);
-			
-			setContent(nasenPanel);
-			return;
-		}
 
-		Page.getCurrent().setTitle(Version.LATEST.toString()); //$NON-NLS-1$
+
+		Page.getCurrent().setTitle(Version.LATEST.toString());
 		
 		try {
 			Component component = initService.newEntryPage(loginservice, hazelCastService);
 			setContent(component);
-//
-//
-//	        // implement a custom resize propagation for all Layouts including CSSLayouts
-//	        JavaScript.getCurrent().addFunction("browserWindowResized", e -> {
-//	        	this.markAsDirtyRecursive();
-//	        });
-//	        Page.getCurrent().getJavaScript().execute(
-//	        		"var timeout = null;"
-//	        				+ "window.onresize = function() { "
-//	        				+ "  if (timeout != null) clearTimeout(timeout); "
-//	        				+ "  timeout = setTimeout(function() {"
-//	        				+ "    browserWindowResized(); "
-//	        				+ "  }, 250);"
-//	        				+ "}");
-//	                
-
 		} catch (IOException e) {
 			showAndLogError("error creating landing page",e);			
 		}
@@ -274,27 +210,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		return parameters.get(key);
 	}
 
-	public TaggerView openSourceDocument(String sourceDocumentId) {
-		//TODO:
-//		RepositoryManager repositoryManager = repositoryManagerView.getRepositoryManager();
-//
-//		if (repositoryManager.hasOpenRepository()) {
-//			Repository repository = repositoryManager.getFirstOpenRepository();
-//
-//			SourceDocument sourceDocument = repository.getSourceDocument(sourceDocumentId);
-//			if (sourceDocument != null) {
-//				return openSourceDocument(sourceDocument, repository);
-//			}
-//		}
-
-		return null;
-	}
-
-	@Deprecated
-	public TaggerView openSourceDocument(SourceDocument sourceDocument, Project repository) {
-		return null;
-	}
-
 	public String accquirePersonalTempFolder() throws IOException {
 		return initService.accquirePersonalTempFolder();
 	}
@@ -314,25 +229,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 				listener.error(t);
 			}
 		}, new LogProgressListener());
-	}
-
-	@Deprecated
-	public void openUserMarkupCollection(SourceDocument sourceDocument, AnnotationCollection userMarkupCollection,
-			Project repository) {
-		//projectManagerView.openUserMarkupCollection(sourceDocument, userMarkupCollection, repository);
-	}
-
-	public int addVisualization(Integer visualizationId, String caption,
-			DistributionComputation distributionComputation,
-			DistributionSelectionListener distributionSelectionListener) {
-
-		//TODO:
-//		menu.executeEntry(visualizationManagerView);
-//
-//		return visualizationManagerView.addVisualization(visualizationId, caption, distributionComputation,
-//				distributionSelectionListener);
-		
-		return 0;
 	}
 
 	@Override
@@ -378,24 +274,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		}
 	}
 
-	public void openSourceDocument(SourceDocument sd, Project repository, Range range) {
-		TaggerView tv = openSourceDocument(sd, repository);
-		tv.show(range);
-	}
-
-	public void addDoubleTree(List<KeywordInContext> kwics) {
-		//TODO:
-//		menu.executeEntry(visualizationManagerView);
-//		visualizationManagerView.addDoubleTree(kwics);
-	}
-
-	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider, Project project) {
-		eventBus.post(new VegaEvent(queryResult, queryOptionsProvider, project));
-		//TODO:
-//		menu.executeEntry(visualizationManagerView);
-//		visualizationManagerView.addVega(queryResult, queryOptionsProvider);
-	}
-	
 	@Override
 	public void focusDeferred(Focusable focusable) {
 		schedule(() -> {
