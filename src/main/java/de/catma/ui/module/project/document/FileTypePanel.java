@@ -132,7 +132,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 		}
 		catch (Exception exc) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				Messages.getString("FileTypePanel.errorDetectingFileType"), exc); //$NON-NLS-1$
+				"Error detecting file type", exc); 
 		}
 	}
 	
@@ -266,7 +266,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 					"<pre>" + currentPreviewDocument.getContent(new Range(0, 2000)) + "</pre>");			 //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				Messages.getString("FileTypePanel.errorLoadingPreview"), e); //$NON-NLS-1$
+				"Error loading preview", e);
 		}		
 	}
 	
@@ -313,11 +313,11 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 			}
 			else {
 				Notification.show(
-					Messages.getString("FileTypePanel.infoTitle"),  //$NON-NLS-1$
-					MessageFormat.format(Messages.getString("FileTypePanel.unableToProcessfile"),   //$NON-NLS-1$
+					"Info",
+					MessageFormat.format("Sorry, CATMA wasn''t able to process the file as {0} with charset {1}\\n\\nThe original error message is: {2}", 
 							techInfoSet.getFileType(), 
 							(techInfoSet.getFileType().isCharsetSupported()?
-									((techInfoSet.getCharset()==null)?Messages.getString("FileTypePanel.unknown"):techInfoSet.getCharset()) //$NON-NLS-1$
+									((techInfoSet.getCharset()==null)?"unknown":techInfoSet.getCharset())
 									:""), //$NON-NLS-1$
 							e.getLocalizedMessage()),
 					Notification.Type.WARNING_MESSAGE);
@@ -337,14 +337,14 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 			valueChangeEvent -> 
 			charsetEditor.setEnabled(valueChangeEvent.getValue().isCharsetSupported()));
 		
-		table = new Grid<>(Messages.getString("FileTypePanel.documents")); //$NON-NLS-1$
+		table = new Grid<>("Documents");
 		table.setSizeFull();
 		
 		table.addColumn(
 				sourceDocumentResult -> 
 					sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().getFileName())
 			.setWidth(200)
-			.setCaption(Messages.getString("FileTypePanel.Filename"));  //$NON-NLS-1$
+			.setCaption("File Name");
 		table.addColumn(
 				sourceDocumentResult -> 
 					sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().getFileType())
@@ -357,7 +357,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 						}
 					})
 			.setWidth(200)
-			.setCaption(Messages.getString("FileTypePanel.Filetype")); //$NON-NLS-1$
+			.setCaption("File Type");
 		table.addColumn(
 				sourceDocumentResult -> 
 					sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().getCharset())
@@ -366,7 +366,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 				(sourceDocumentResult, charset) -> 
 					sourceDocumentResult.getSourceDocumentInfo().getTechInfoSet().setCharset(charset))
 			.setWidth(200)
-			.setCaption(Messages.getString("FileTypePanel.Encoding")); //$NON-NLS-1$
+			.setCaption("Encoding");
 		
 		table.getEditor().setEnabled(true);
 		table.getEditor().addSaveListener(event -> {
@@ -386,7 +386,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 		
 		VerticalLayout previewContent = new VerticalLayout();
 		previewContent.setMargin(true);
-		previewPanel = new Panel(Messages.getString("FileTypePanel.preview"), previewContent); //$NON-NLS-1$
+		previewPanel = new Panel("Preview", previewContent);
 		previewPanel.getContent().setSizeUndefined();
 		previewPanel.setHeight("100%"); //$NON-NLS-1$
 		previewPanel.setStyleName("preview-panel"); //$NON-NLS-1$
@@ -438,7 +438,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 	
 	@Override
 	public String getCaption() {
-		return Messages.getString("FileTypePanel.sourceDocfiletype"); //$NON-NLS-1$
+		return "Document File Type";
 	}
 	
 	public boolean onFinish() {

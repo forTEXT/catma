@@ -53,9 +53,9 @@ import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.indexer.IndexedProject;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
+import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
@@ -82,14 +82,13 @@ import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.layout.FlexLayout.FlexWrap;
-import de.catma.ui.legacy.repository.Messages;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.CanReloadAll;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.document.AddSourceDocWizardFactory;
 import de.catma.ui.module.project.document.AddSourceDocWizardResult;
 import de.catma.ui.module.project.document.SourceDocumentResult;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.CloseSafe;
@@ -131,7 +130,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     public ProjectView(
     		UIFactory uiFactory, ProjectManager projectManager, 
     		EventBus eventBus) {
-    	super("Project");
+    	super("Project"); //$NON-NLS-1$
     	this.projectManager = projectManager;
         this.eventBus = eventBus;
     	this.errorHandler = (ErrorHandler)UI.getCurrent();
@@ -150,7 +149,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				Exception e = (Exception) evt.getNewValue();
-				errorHandler.showAndLogError("Error handling Project!", e);
+				errorHandler.showAndLogError("Error handling Project!", e); //$NON-NLS-1$
 				
 			}
 		};
@@ -210,8 +209,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				documentGrid.expand(documentResource);
 				
 				Notification.show(
-						"Info", 
-						String.format("Collection %1$s has been created!", collectionReference.toString()),  
+						"Info",  //$NON-NLS-1$
+						String.format("Collection %1$s has been created!", collectionReference.toString()),   //$NON-NLS-1$
 						Type.TRAY_NOTIFICATION);			
 			}
 		}
@@ -227,14 +226,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
         ContextMenu addContextMenu = 
         	documentGridComponent.getActionGridBar().getBtnAddContextMenu();
-        MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
+        MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest()); //$NON-NLS-1$
         addDocumentBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.DOCUMENT_CREATE_OR_UPLOAD)),
         		() -> addDocumentBtn.setEnabled(true))
         		);
 
-        MenuItem addCollectionBtn = addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
+        MenuItem addCollectionBtn = addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest()); //$NON-NLS-1$
         addCollectionBtn.setEnabled(false);
         
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
@@ -246,7 +245,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         
         MenuItem editDocBtn = documentsGridMoreOptionsContextMenu.addItem(
-            	"Edit documents / collections",(menuItem) -> handleEditResources());
+            	"Edit documents / collections",(menuItem) -> handleEditResources()); //$NON-NLS-1$
         editDocBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
@@ -254,7 +253,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		() -> editDocBtn.setEnabled(true))
         		);
         MenuItem deleteDocsBtn = documentsGridMoreOptionsContextMenu.addItem(
-        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, documentGrid));
+        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, documentGrid)); //$NON-NLS-1$
         deleteDocsBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
@@ -263,10 +262,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		);
         
         documentsGridMoreOptionsContextMenu.addItem(
-            	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
+            	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid)); //$NON-NLS-1$
 
 
-        MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
+        MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> { //$NON-NLS-1$
 		        new ResourcePermissionView(
 		        		docResourceToReadableCollectionResourceMap,
 		        		this.project).show();
@@ -274,7 +273,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         );
         editResBtn.setEnabled(false);
         
-        documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
+        documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments()); //$NON-NLS-1$
         
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
@@ -290,21 +289,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
    
         ContextMenu moreOptionsMenu = 
         	tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        MenuItem editTagset = moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
+        MenuItem editTagset = moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest()); //$NON-NLS-1$
         editTagset.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
         		() -> editTagset.setEnabled(true))
         		);
 
-        MenuItem deleteTagSetBtn = moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
+        MenuItem deleteTagSetBtn = moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest()); //$NON-NLS-1$
         deleteTagSetBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
         		() -> deleteTagSetBtn.setEnabled(true))
         		);
         
-        MenuItem importTagSetBtn = moreOptionsMenu.addItem("Import Tagsets", clickEvent -> handleImportTagsetsRequest());
+        MenuItem importTagSetBtn = moreOptionsMenu.addItem("Import Tagsets", clickEvent -> handleImportTagsetsRequest()); //$NON-NLS-1$
         importTagSetBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
@@ -312,9 +311,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		);
         
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
-        hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
-        hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
-        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
+        hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest()); //$NON-NLS-1$
+        hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest()); //$NON-NLS-1$
+        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus()); //$NON-NLS-1$
         
         tagsetGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
         	@Override
@@ -351,7 +350,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleImportTagsetsRequest() {
 		UploadDialog uploadDialog =
-				new UploadDialog("Upload Tagsets",
+				new UploadDialog("Upload Tagsets", //$NON-NLS-1$
 						new SaveCancelListener<byte[]>() {
 			
 			public void cancelPressed() {}
@@ -369,7 +368,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error importing Tagsets", e);
+						"Error importing Tagsets", e); //$NON-NLS-1$
 				}
 				finally {
 					CloseSafe.close(is);
@@ -384,8 +383,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	try {
 	    	if (project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit all changes", 
-	    			"You have uncommited changes, please enter a short description for this commit:", 
+	    			"Commit all changes",  //$NON-NLS-1$
+	    			"You have uncommited changes, please enter a short description for this commit:",  //$NON-NLS-1$
 	    			commitMsg -> {
 	    				try {
 		    				project.commitChanges(commitMsg);
@@ -399,8 +398,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    		            public void ready(Project project) {
 		    						initData();
 				    				Notification.show(
-					    					"Info", 
-					    					"Your Project has been synchronized!", 
+					    					"Info",  //$NON-NLS-1$
+					    					"Your Project has been synchronized!",  //$NON-NLS-1$
 					    					Type.HUMANIZED_MESSAGE);		    						
 		    		            }
 		    		            
@@ -411,7 +410,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		    		            @Override
 		    		            public void failure(Throwable t) {
-		    		                errorHandler.showAndLogError("error opening project", t);
+		    		                errorHandler.showAndLogError("error opening project", t); //$NON-NLS-1$
 		    		            }
 		    		        });
 
@@ -434,8 +433,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    				initData();
 	    				//TODO: post event to other views needed
 	    				Notification.show(
-		    					"Info", 
-		    					"Your Project has been synchronized!", 
+		    					"Info",  //$NON-NLS-1$
+		    					"Your Project has been synchronized!",  //$NON-NLS-1$
 		    					Type.HUMANIZED_MESSAGE);	    				
 	                }
 	                
@@ -446,17 +445,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	                @Override
 	                public void failure(Throwable t) {
-	                    errorHandler.showAndLogError("error opening project", t);
+	                    errorHandler.showAndLogError("error opening project", t); //$NON-NLS-1$
 	                }
 	            });
 				Notification.show(
-					"Info", 
-					"Your Project has been synchronized!", 
+					"Info",  //$NON-NLS-1$
+					"Your Project has been synchronized!",  //$NON-NLS-1$
 					Type.HUMANIZED_MESSAGE);	    		
 	    	}
     	}
     	catch (Exception e) {
-            errorHandler.showAndLogError("error accessing project", e);
+            errorHandler.showAndLogError("error accessing project", e); //$NON-NLS-1$
     	}	
     }
 
@@ -464,7 +463,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		final Set<Resource> selectedResources = documentGrid.getSelectedItems();
 		if ((selectedResources.size() != 1) 
 				&& !selectedResources.iterator().next().isCollection()) {
-			Notification.show("Info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
 		}	
 		else {
 			final Resource resource = selectedResources.iterator().next();
@@ -475,7 +474,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				final AnnotationCollectionReference collectionRef = 
 						((CollectionResource)selectedResources.iterator().next()).getCollectionReference();
 		    	SingleTextInputDialog collectionNameDlg = 
-	        		new SingleTextInputDialog("Edit Collection", "Please enter the new Collection name:",
+	        		new SingleTextInputDialog("Edit Collection", "Please enter the new Collection name:", //$NON-NLS-1$ //$NON-NLS-2$
         				new SaveCancelListener<String>() {
     						@Override
     						public void savePressed(String result) {
@@ -484,7 +483,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									project.update(collectionRef, collectionRef.getContentInfoSet());
 									documentGrid.getDataProvider().refreshItem(resource);
 								} catch (Exception e) {
-									errorHandler.showAndLogError("error updating Collection", e);
+									errorHandler.showAndLogError("error updating Collection", e); //$NON-NLS-1$
 								}
     						}
     					});
@@ -495,7 +494,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				final SourceDocument document = 
 						((DocumentResource)selectedResources.iterator().next()).getDocument();
 		    	SingleTextInputDialog collectionNameDlg = 
-	        		new SingleTextInputDialog("Edit Document", "Please enter the new Document name:",
+	        		new SingleTextInputDialog("Edit Document", "Please enter the new Document name:", //$NON-NLS-1$ //$NON-NLS-2$
         				new SaveCancelListener<String>() {
     						@Override
     						public void savePressed(String result) {
@@ -517,10 +516,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		if (!tagsets.isEmpty()) {
 			ConfirmDialog.show(
 					UI.getCurrent(), 
-					"Warnung", 
-					"Are you sure you want to delete the selected Tagsets with all their contents?", 
-					"Delete",
-					"Cancel", 
+					"Warnung",  //$NON-NLS-1$
+					"Are you sure you want to delete the selected Tagsets with all their contents?",  //$NON-NLS-1$
+					"Delete", //$NON-NLS-1$
+					"Cancel",  //$NON-NLS-1$
 					dlg -> {
 						for (TagsetDefinition tagset : tagsets) {
 							project.getTagManager().removeTagsetDefinition(tagset);
@@ -530,7 +529,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 		else {
 			Notification.show(
-				"Info", "Please select one or more Tagsets first!", 
+				"Info", "Please select one or more Tagsets first!",  //$NON-NLS-1$ //$NON-NLS-2$
 				Type.HUMANIZED_MESSAGE);
 		}
 		
@@ -541,7 +540,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		if (!tagsets.isEmpty()) {
 			final TagsetDefinition tagset = tagsets.iterator().next();
 	    	SingleTextInputDialog tagsetNameDlg = 
-	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:", tagset.getName(),
+	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:", tagset.getName(), //$NON-NLS-1$ //$NON-NLS-2$
 	        				new SaveCancelListener<String>() {
 	    						@Override
 	    						public void savePressed(String result) {
@@ -553,7 +552,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 		else {
 			Notification.show(
-				"Info", "Please select a Tagset first!", 
+				"Info", "Please select a Tagset first!",  //$NON-NLS-1$ //$NON-NLS-2$
 				Type.HUMANIZED_MESSAGE);
 		}		
 	}
@@ -561,7 +560,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void handleAddTagsetRequest() {
     	
     	SingleTextInputDialog collectionNameDlg = 
-    		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+    		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:", //$NON-NLS-1$ //$NON-NLS-2$
     				new SaveCancelListener<String>() {
 						
 						@Override
@@ -600,7 +599,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
     	if (!selectedDocuments.isEmpty()) {
 	    	SingleTextInputDialog collectionNameDlg = 
-	    		new SingleTextInputDialog("Add Annotation Collection(s)", "Please enter the Collection name:",
+	    		new SingleTextInputDialog("Add Annotation Collection(s)", "Please enter the Collection name:", //$NON-NLS-1$ //$NON-NLS-2$
 	    				new SaveCancelListener<String>() {
 							
 							@Override
@@ -614,7 +613,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	collectionNameDlg.show();
     	}
     	else {
-    		Notification.show("Info", "Please select one or more Documents first!", Type.HUMANIZED_MESSAGE);
+    		Notification.show("Info", "Please select one or more Documents first!", Type.HUMANIZED_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     }
 
@@ -692,7 +691,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						
 					} catch (Exception e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-							Messages.getString("SourceDocumentPanel.errorAddingSourceDoc"), e); //$NON-NLS-1$
+							"Error adding the Source Document!", e); //$NON-NLS-1$
 					}
 				}
 
@@ -709,7 +708,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		
 		Window sourceDocCreationWizardWindow = 
 				factory.createWizardWindow(
-						Messages.getString("SourceDocumentPanel.addNewSourceDoc"), "85%",  "98%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						"Add new Source Document", "85%",  "98%");  //$NON-NLS-2$ //$NON-NLS-3$
 		
 		UI.getCurrent().addWindow(
 				sourceDocCreationWizardWindow);
@@ -750,11 +749,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void initComponents() {
 		HorizontalFlexLayout mainPanel = new HorizontalFlexLayout();
     	mainPanel.setFlexWrap(FlexWrap.WRAP);
-    	mainPanel.addStyleName("project-view-main-panel");
+    	mainPanel.addStyleName("project-view-main-panel"); //$NON-NLS-1$
     	VerticalFlexLayout resourcePanel = new VerticalFlexLayout();
     	
         resourcePanel.setSizeUndefined(); // don't set width 100%
-        resourcePanel.addComponent(new Label("Resources"));
+        resourcePanel.addComponent(new Label("Resources")); //$NON-NLS-1$
 
         mainPanel.addComponent(resourcePanel);
 
@@ -767,13 +766,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamPanel = new VerticalFlexLayout();
         teamPanel.setSizeUndefined(); // don't set width 100%
         teamPanel.setVisible(false);
-        teamPanel.addComponent(new Label("Team"));
+        teamPanel.addComponent(new Label("Team")); //$NON-NLS-1$
         
         mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
  
         miInvite = getMoreOptionsContextMenu().addItem(
-        	"Invite someone to the Project", click -> 
+        	"Invite someone to the Project", click ->  //$NON-NLS-1$
         		uiFactory.getProjectInvitationDialog(
         			project, 
         			docResourceToReadableCollectionResourceMap.keySet()).show());
@@ -783,23 +782,23 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	try {
 	    	if (project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit all changes", 
-	    			"Please enter a short description for this commit:", 
+	    			"Commit all changes",  //$NON-NLS-1$
+	    			"Please enter a short description for this commit:",  //$NON-NLS-1$
 	    			commitMsg -> {
 	    				project.commitChanges(commitMsg);
 	    				Notification.show(
-	    					"Info", 
-	    					"Your changes have been committed!", 
+	    					"Info",  //$NON-NLS-1$
+	    					"Your changes have been committed!",  //$NON-NLS-1$
 	    					Type.HUMANIZED_MESSAGE);
 	    			});
 	    		dlg.show();
 	    	}
 	    	else {
-	    		Notification.show("Info", "There are no uncommitted changes!", Type.HUMANIZED_MESSAGE);
+	    		Notification.show("Info", "There are no uncommitted changes!", Type.HUMANIZED_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
 	    	}
     	}
     	catch (Exception e) {
-            errorHandler.showAndLogError("error accessing project", e);
+            errorHandler.showAndLogError("error accessing project", e); //$NON-NLS-1$
     	}
 	}
 
@@ -811,7 +810,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	HorizontalFlexLayout resourceContent = new HorizontalFlexLayout();
     	documentGrid = new TreeGrid<>();
         documentGrid.addStyleNames(
-				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
+				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer"); //$NON-NLS-1$ //$NON-NLS-2$
 
         documentGrid.setHeaderVisible(false);
         documentGrid.setRowHeight(45);
@@ -822,59 +821,59 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
 		Function<Resource,String> buildNameFunction = (resource) -> {
 			StringBuilder sb = new StringBuilder()
-			  .append("<div class='documentsgrid__doc'> ")
-		      .append("<div class='documentsgrid__doc__title'> ")
+			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
+		      .append("<div class='documentsgrid__doc__title'> ") //$NON-NLS-1$
 		      .append(resource.getName())
-		      .append("</div>");
+		      .append("</div>"); //$NON-NLS-1$
 			if(resource.hasDetail()){
 		        sb
-		        .append("<span class='documentsgrid__doc__author'> ")
+		        .append("<span class='documentsgrid__doc__author'> ") //$NON-NLS-1$
 		        .append(resource.getDetail())
-		        .append("</span>");
+		        .append("</span>"); //$NON-NLS-1$
 			}
-			sb.append("</div>");
+			sb.append("</div>"); //$NON-NLS-1$
 				        
 		    return sb.toString();
 		};
       
         documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
-        	.setCaption("Name")
+        	.setCaption("Name") //$NON-NLS-1$
         	.setWidth(300);
         
         documentGrid
     	.addColumn(res -> res.getPermissionIcon() , new HtmlRenderer())
-    	.setCaption("Permission")
+    	.setCaption("Permission") //$NON-NLS-1$
     	.setExpandRatio(1);      
         
-        Label documentsAnnotations = new Label("Documents & Annotations");
+        Label documentsAnnotations = new Label("Documents & Annotations"); //$NON-NLS-1$
 
         documentGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
                 documentGrid
         );
-        documentGridComponent.addStyleName("project-view-action-grid");
+        documentGridComponent.addStyleName("project-view-action-grid"); //$NON-NLS-1$
 
         resourceContent.addComponent(documentGridComponent);
 
         tagsetGrid = new Grid<>();
         tagsetGrid.setHeaderVisible(false);
-        tagsetGrid.setWidth("400px");
+        tagsetGrid.setWidth("400px"); //$NON-NLS-1$
 
         tagsetGrid.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer()).setWidth(100);
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
-			.setCaption("Name")
+			.setCaption("Name") //$NON-NLS-1$
 			.setWidth(300);
 	
 
-        Label tagsetsAnnotations = new Label("Tagsets");
+        Label tagsetsAnnotations = new Label("Tagsets"); //$NON-NLS-1$
         tagsetGridComponent = new ActionGridComponent<Grid<TagsetDefinition>> (
                 tagsetsAnnotations,
                 tagsetGrid
         );
 
-        tagsetGridComponent.addStyleName("project-view-action-grid");
+        tagsetGridComponent.addStyleName("project-view-action-grid"); //$NON-NLS-1$
         
         resourceContent.addComponent(tagsetGridComponent);
         return resourceContent;
@@ -884,34 +883,34 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		HorizontalFlexLayout teamContent = new HorizontalFlexLayout();
         teamGrid = new Grid<>();
         teamGrid.setHeaderVisible(false);
-        teamGrid.setWidth("402px");
+        teamGrid.setWidth("402px"); //$NON-NLS-1$
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
         teamGrid.addColumn(User::getName).setWidth(200).setDescriptionGenerator(User::preciseName);
         teamGrid.addColumn(Member::getRole).setExpandRatio(1);
         
-        Label membersAnnotations = new Label("Members");
+        Label membersAnnotations = new Label("Members"); //$NON-NLS-1$
         ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
                 membersAnnotations,
                 teamGrid
         );
-        membersGridComponent.addStyleName("project-view-action-grid");
+        membersGridComponent.addStyleName("project-view-action-grid"); //$NON-NLS-1$
         ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
 
-        addContextMenu.addItem("Add Member", (click) -> 
+        addContextMenu.addItem("Add Member", (click) ->  //$NON-NLS-1$
         	new CreateMemberDialog(
         		project::assignOnProject,
-        		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()),
+        		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()), //$NON-NLS-1$
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
         
         ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-        moreOptionsContextMenu.addItem("Edit Members", (click) -> new EditMemberDialog(
+        moreOptionsContextMenu.addItem("Edit Members", (click) -> new EditMemberDialog( //$NON-NLS-1$
         		project::assignOnProject,
         		teamGrid.getSelectedItems(),
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
         		).show());
-        moreOptionsContextMenu.addItem("Remove Members", (click) -> new RemoveMemberDialog(
+        moreOptionsContextMenu.addItem("Remove Members", (click) -> new RemoveMemberDialog( //$NON-NLS-1$
         		project::unassignFromProject,
         		teamGrid.getSelectedItems(),
         		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
@@ -960,7 +959,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
             @Override
             public void failure(Throwable t) {
-                errorHandler.showAndLogError("error opening project", t);
+                errorHandler.showAndLogError("error opening project", t); //$NON-NLS-1$
             }
         });
     }
@@ -979,7 +978,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	ListDataProvider<Member> memberData = new ListDataProvider<>(project.getProjectMembers());
         	teamGrid.setDataProvider(memberData);
 		} catch (Exception e) {
-			errorHandler.showAndLogError("error initializing data", e);
+			errorHandler.showAndLogError("error initializing data", e); //$NON-NLS-1$
 		}
 	}
 
@@ -1047,7 +1046,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	try {
 			rbacEnforcer.enforceConstraints(project.getRoleOnProject());
 		} catch (IOException e) {
-			errorHandler.showAndLogError("Error trying to fetch role", e);
+			errorHandler.showAndLogError("Error trying to fetch role", e); //$NON-NLS-1$
 		}
     }
 
@@ -1084,20 +1083,20 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
     	ConfirmDialog.show( 
     		UI.getCurrent(), 
-    		"Info", 
-    		"Are you sure you want to delete the selected resources: "
+    		"Info",  //$NON-NLS-1$
+    		"Are you sure you want to delete the selected resources: " //$NON-NLS-1$
     		+ resourceGrid.getSelectedItems()
     			.stream()
     			.map(resource -> resource.getName())
-    			.collect(Collectors.joining(","))
-    		+ "?", 
-    		"Yes", 
-    		"Cancel", dlg -> {
+    			.collect(Collectors.joining(",")) //$NON-NLS-1$
+    		+ "?",  //$NON-NLS-1$
+    		"Yes",  //$NON-NLS-1$
+    		"Cancel", dlg -> { //$NON-NLS-1$
 	            for (Resource resource: resourceGrid.getSelectedItems()) {
 	            	try {
 	            		resource.deleteFrom(project);
 	                } catch (Exception e) {
-	                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
+	                    errorHandler.showAndLogError("Error deleting resource "+resource, e); //$NON-NLS-1$
 	                }
 	            }
     		});
@@ -1106,7 +1105,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     
     private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
     	if (resourceGrid.getSelectedItems().isEmpty()) {
-    		Notification.show("Info", "Please select something first!", Type.HUMANIZED_MESSAGE);
+    		Notification.show("Info", "Please select something first!", Type.HUMANIZED_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	else {
 			Corpus corpus = new Corpus();
@@ -1126,7 +1125,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             			
             		}
                 } catch (Exception e) {
-                    errorHandler.showAndLogError("Error adding resource to analyzer module "+resource, e);
+                    errorHandler.showAndLogError("Error adding resource to analyzer module "+resource, e); //$NON-NLS-1$
                 }
             }
     
@@ -1157,7 +1156,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			}
 		}
 		catch (Exception e) {
-			errorHandler.showAndLogError("Error closing ProjectView", e);
+			errorHandler.showAndLogError("Error closing ProjectView", e); //$NON-NLS-1$
 		}
 	}
 	

@@ -135,14 +135,14 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		remoteURIInputPanel = new Panel(remoteLayout);
 		
 		remoteURIInput = new TextField();
-		remoteURIInput.setCaption(Messages.getString("LocationPanel.enterURL")); //$NON-NLS-1$
+		remoteURIInput.setCaption("Enter an URL that is accessible over the internet:");
 		remoteURIInput.setWidth("100%"); //$NON-NLS-1$
 		remoteURIInput.setValueChangeMode(ValueChangeMode.EAGER);
 		remoteLayout.addComponent(remoteURIInput);
 		remoteLayout.setExpandRatio(remoteURIInput, 2);
 		
 		addComponent(remoteURIInputPanel);
-		remoteLayout.addComponent(new Label(Messages.getString("LocationPanel.contentProviderHint"))); //$NON-NLS-1$
+		remoteLayout.addComponent(new Label("Please note that some content providers like gutenberg.org block access to their documents by third party tools like CATMA. If you encounter any errors loading a file via URL please consider using a mirror of that site."));
 		
 		Label localFileLabel = new Label("or upload a local file from your computer:"); //$NON-NLS-1$
 		addComponent(localFileLabel);
@@ -153,7 +153,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	}
 	
 	public String getCaption() {
-		return Messages.getString("LocationPanel.SourceDocLocation"); //$NON-NLS-1$
+		return "Document location";
 	}
 
 	public Component getContent() {

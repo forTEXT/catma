@@ -24,6 +24,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
 
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.GridLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.UI;
 import com.vaadin.v7.data.Container.ItemSetChangeEvent;
 import com.vaadin.v7.data.Container.ItemSetChangeListener;
 import com.vaadin.v7.data.Property;
@@ -34,23 +44,13 @@ import com.vaadin.v7.event.FieldEvents.TextChangeEvent;
 import com.vaadin.v7.event.FieldEvents.TextChangeListener;
 import com.vaadin.v7.shared.ui.label.ContentMode;
 import com.vaadin.v7.ui.AbstractTextField.TextChangeEventMode;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.v7.ui.CheckBox;
 import com.vaadin.v7.ui.ComboBox;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.GridLayout;
 import com.vaadin.v7.ui.HorizontalLayout;
 import com.vaadin.v7.ui.Label;
 import com.vaadin.v7.ui.ListSelect;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.Panel;
 import com.vaadin.v7.ui.Table;
 import com.vaadin.v7.ui.TextField;
-import com.vaadin.ui.UI;
 import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.v7.ui.themes.Reindeer;
 
@@ -247,7 +247,7 @@ class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName"); //$NON-NLS-1$
 		container.addNestedContainerProperty("sourceDocumentInfo.indexInfoSet.language"); //$NON-NLS-1$
 		
-		table = new Table(Messages.getString("IndexerOptionsPanel.Documents"), container); //$NON-NLS-1$
+		table = new Table("Documents", container); 
 		
 		//TODO: investigate whether using a FieldFactory would make things easier..
 		table.addGeneratedColumn("sourceDocumentInfo.indexInfoSet.language",  //$NON-NLS-1$
@@ -258,7 +258,7 @@ class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 				"sourceDocumentInfo.techInfoSet.fileName", //$NON-NLS-1$
 				"sourceDocumentInfo.indexInfoSet.language" //$NON-NLS-1$
 		});
-		table.setColumnHeaders(new String[]{Messages.getString("IndexerOptionsPanel.Filename"), Messages.getString("IndexerOptionsPanel.Language")}); //$NON-NLS-1$ //$NON-NLS-2$
+		table.setColumnHeaders(new String[]{"File Name", "Language"});
 		
 		table.setSelectable(true);
 		table.setNullSelectionAllowed(false);
@@ -285,19 +285,19 @@ class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 			
 		infoLabel.setContentMode(ContentMode.HTML);
 		infoLabel.setValue(
-			Messages.getString("IndexerOptionsPanel.indexerOptionsIntro"));  //$NON-NLS-1$
+			"<p>This section allows you to finetune the creation of the word list of the selected Source Document.</p><p>If you are unsure what to do, just select the language Click below for Expert Features:</p>");
 		
 		expertLayout.addComponent(infoLabel);
 		
-		cbAdvanceOptions = new CheckBox(Messages.getString("IndexerOptionsPanel.advancedOptions")); //$NON-NLS-1$
+		cbAdvanceOptions = new CheckBox("Advanced Options");
 		
 		expertLayout.addComponent(cbAdvanceOptions);
 		
-		cbUseApostrophe = new CheckBox(Messages.getString("IndexerOptionsPanel.apostropheWordSeparator")); //$NON-NLS-1$
+		cbUseApostrophe = new CheckBox("always use the apostrophe as a word separator");
 		
 		expertLayout.addComponent(cbUseApostrophe);
 		
-        unseparableCharacterSequencesListSelect = new ListSelect(Messages.getString("IndexerOptionsPanel.unseparableCharacterSequences")); //$NON-NLS-1$
+        unseparableCharacterSequencesListSelect = new ListSelect("Unseparable character sequences:"); 
         unseparableCharacterSequencesListSelect.setNullSelectionAllowed(false);
         unseparableCharacterSequencesListSelect.setSizeFull();
         unseparableCharacterSequencesListSelect.setImmediate(true);
@@ -311,19 +311,19 @@ class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
         ucsAddRemoveLayout.setSpacing(true);
         ucsAddRemoveLayout.setSizeFull();
         
-        btAddUcs = new Button(Messages.getString("IndexerOptionsPanel.addEntry")); //$NON-NLS-1$
+        btAddUcs = new Button("Add entry");
         btAddUcs.setEnabled(false);
         ucsAddRemoveLayout.addComponent(btAddUcs);
         
         tfUcs = new TextField();
-        tfUcs.setInputPrompt(Messages.getString("IndexerOptionsPanel.ucsExamples")); //$NON-NLS-1$
+        tfUcs.setInputPrompt("Add things like 'e.g.' as you see fit.");
         tfUcs.setImmediate(true);
         tfUcs.setTextChangeEventMode(TextChangeEventMode.EAGER);
         tfUcs.setWidth("100%");         //$NON-NLS-1$
         ucsAddRemoveLayout.addComponent(tfUcs);        
         ucsAddRemoveLayout.setExpandRatio(tfUcs, 2);
         
-        btRemoveUcs = new Button(Messages.getString("IndexerOptionsPanel.removeEntry")); //$NON-NLS-1$
+        btRemoveUcs = new Button("Remove entry");
         btRemoveUcs.setEnabled(false);
         ucsAddRemoveLayout.addComponent(btRemoveUcs);
         
@@ -333,11 +333,11 @@ class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
         loadSavePanel.setSpacing(true);
         loadSavePanel.setWidth("80px"); //$NON-NLS-1$
         
-        btLoadUcsList = new Button(Messages.getString("IndexerOptionsPanel.loadList")); //$NON-NLS-1$
+        btLoadUcsList = new Button("Load list");
         btLoadUcsList.setVisible(false); // no handler
         loadSavePanel.addComponent(btLoadUcsList);
         
-        btSaveUcsList = new Button(Messages.getString("IndexerOptionsPanel.saveList")); //$NON-NLS-1$
+        btSaveUcsList = new Button("Save list");
         btSaveUcsList.setVisible(false); // no handler
         loadSavePanel.addComponent(btSaveUcsList);
 
@@ -386,7 +386,7 @@ class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 	
 	@Override
 	public String getCaption() {
-		return Messages.getString("IndexerOptionsPanel.wordListOptions"); //$NON-NLS-1$
+		return "Wordlist options";
 	}
 
 	public void stepActivated(boolean forward) {
@@ -446,7 +446,7 @@ class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 			
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				Messages.getString("IndexerOptionsPanel.errorLangDetect"), e); //$NON-NLS-1$
+				"Error during language detection!", e);
 		}
 	}
 	

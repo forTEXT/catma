@@ -81,7 +81,7 @@ class UploadPanel extends HorizontalLayout {
 			public void uploadFailed(FailedEvent event) {
 				pi.setVisible(false);
 				btCancelUpload.setVisible(false);
-				fileLabel.setValue(Messages.getString("UploadPanel.uploadCancelled")); //$NON-NLS-1$
+				fileLabel.setValue("Upload cancelled");
 				fileLabel.setVisible(true);
 			}
 		});
@@ -91,7 +91,7 @@ class UploadPanel extends HorizontalLayout {
 			public void uploadSucceeded(SucceededEvent event) {
 				pi.setVisible(false);
 				btCancelUpload.setVisible(false);
-				fileLabel.setValue(MessageFormat.format(Messages.getString("uploadedFeedback"), event.getFilename())); //$NON-NLS-1$
+				fileLabel.setValue(MessageFormat.format("{0} uploaded!", event.getFilename()));
 				fileLabel.setVisible(true);
 			}
 		});
@@ -133,7 +133,7 @@ class UploadPanel extends HorizontalLayout {
 	private void initComponents() {
 		setSpacing(true);
 		upload = new Upload();
-		upload.setButtonCaption(Messages.getString("UploadPanel.uploadLocalFile")); //$NON-NLS-1$
+		upload.setButtonCaption("Upload local file");
 		upload.setImmediateMode(true);
 		addComponent(upload);
 
@@ -142,7 +142,7 @@ class UploadPanel extends HorizontalLayout {
 		addComponent(pi);
 		setComponentAlignment(pi, Alignment.MIDDLE_CENTER);
 		
-		btCancelUpload = new Button(Messages.getString("UploadPanel.Cancel")); //$NON-NLS-1$
+		btCancelUpload = new Button("Cancel");
 		addComponent(btCancelUpload);
 		btCancelUpload.setVisible(false);
 		

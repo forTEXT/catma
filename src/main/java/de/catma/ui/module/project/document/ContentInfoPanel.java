@@ -55,7 +55,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 		setMargin(true);
 		setSizeFull();
 		
-		table = new Grid<>(Messages.getString("ContentInfoPanel.Documents"), new ListDataProvider<>(Collections.emptyList())); //$NON-NLS-1$
+		table = new Grid<>("Documents", new ListDataProvider<>(Collections.emptyList()));
 		table.setSizeFull();
 		
 		TextField titleEditor = new TextField();
@@ -64,29 +64,29 @@ class ContentInfoPanel extends HorizontalLayout implements
 		TextField publisherEditor = new TextField();
 		
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getTechInfoSet().getFileName())
-			.setCaption(Messages.getString("ContentInfoPanel.Filename"))
+			.setCaption("File Name")
 			.setWidth(200);
 		
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getTitle())
-			.setCaption(Messages.getString("ContentInfoPanel.title"))
+			.setCaption("Title")
 			.setEditorComponent(
 				titleEditor, 
 				(docResult,title) -> docResult.getSourceDocumentInfo().getContentInfoSet().setTitle(title))
 			.setWidth(200);		
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getAuthor())
-			.setCaption(Messages.getString("ContentInfoPanel.author"))
+			.setCaption("Author")
 			.setEditorComponent(
 				authorEditor, 
 				(docResult,author) -> docResult.getSourceDocumentInfo().getContentInfoSet().setAuthor(author))
 			.setWidth(200);		
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getDescription())
-			.setCaption(Messages.getString("ContentInfoPanel.description"))
+			.setCaption("Description")
 			.setEditorComponent(
 				descEditor, 
 				(docResult,desc) -> docResult.getSourceDocumentInfo().getContentInfoSet().setDescription(desc))
 			.setWidth(200);		
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getPublisher())
-			.setCaption(Messages.getString("ContentInfoPanel.publisher"))
+			.setCaption("Publisher")
 			.setEditorComponent(
 				publisherEditor, 
 				(docResult,publisher) -> docResult.getSourceDocumentInfo().getContentInfoSet().setPublisher(publisher))
@@ -105,7 +105,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 	
 	@Override
 	public String getCaption() {
-		return Messages.getString("ContentInfoPanel.contentDetails"); //$NON-NLS-1$
+		return "Content details";
 	}
 
 	public boolean onAdvance() {
