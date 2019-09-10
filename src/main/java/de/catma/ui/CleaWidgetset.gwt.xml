@@ -39,4 +39,5 @@
     <inherits name="org.vaadin.sliderpanel.WidgetSet" />
 
     <inherits name="com.vaadin.contextmenu.WidgetSet" />
+
 </module>

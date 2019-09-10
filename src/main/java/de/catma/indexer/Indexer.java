@@ -24,7 +24,6 @@ import java.util.List;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
-import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.CompareOperator;
@@ -34,7 +33,6 @@ import de.catma.tag.Property;
 import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagsetDefinition;
 
 public interface Indexer {
 
