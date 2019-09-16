@@ -45,17 +45,17 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
-import de.catma.ui.module.analyze.visualization.Visualisation;
+import de.catma.ui.module.analyze.visualization.Visualization;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.AnnotationWizard;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.AnnotationWizardContextKey;
-import de.catma.ui.module.analyze.visualization.kwic.annotation.WizardContext;
 import de.catma.util.IDGenerator;
 
 
-public class KwicPanel extends VerticalLayout implements Visualisation {
+public class KwicPanel extends VerticalLayout implements Visualization {
 	private enum ColumnId {
 		COLLECION_NAME, TAG, PROPERTY_NAME, PROPERTY_VALUE, START_POS,
 		;

@@ -88,23 +88,6 @@ $v-focus-color: #5A98A1;
 		user-select: text; 
 	}
 
-	.distributionchartviewpanel .v-slot {
-		height: 100%;
-	}
-	
-	.distributionchartviewpanel .v-expand {
-		height: auto;
-	}
-	
-	.distributionchartviewpanel .v-scrollable > .v-widget {
- 	 	overflow: visible;
-	}
-	
-	.distributionchartviewpanelzoom {
-	/*	zoom: 50%;*/
-	    -moz-transform: scale(0.5);
-	}
-	
 	.v-table-cell-content-rtl-field {
 		direction: rtl;
 	}
@@ -115,6 +98,11 @@ $v-focus-color: #5A98A1;
 	
 	.c-slider {
 		padding: unset;
+	}
+	
+		
+	.slider-centered-text {
+		text-align: center;
 	}
 
 	.help-padding-fix {
@@ -163,11 +151,7 @@ $v-focus-color: #5A98A1;
 	.help-windows .v-window-header {
 		color: #fff;
 	}
-	
-		
-	.similarity-slider .v-expand .v-align-center {
-		text-align: inherit;
-	}
+
 	
 	table.taggerline-table {
 		border-spacing: 0;
@@ -336,10 +320,6 @@ $v-focus-color: #5A98A1;
     .application-loginlink:focus::after {
     	border-color: none;
     	box-shadow: none;
-    }
-    
-    .tagsetselection-dialog-create-tag-libary {
-    	margin-top: 25px;
     }
     
     .catma-embedded-vega {

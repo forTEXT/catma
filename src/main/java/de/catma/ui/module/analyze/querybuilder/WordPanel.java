@@ -16,29 +16,31 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.ui.legacy.analyzer.querybuilder;
+package de.catma.ui.module.analyze.querybuilder;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.v7.ui.ComboBox;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.FormLayout;
-import com.vaadin.v7.ui.TextField;
+import com.vaadin.ui.TextField;
 
 import de.catma.queryengine.querybuilder.WildcardBuilder;
+import de.catma.ui.component.IconButton;
 
 public class WordPanel extends FormLayout {
 	
-	public static interface WordChangeListener {
-		public void wordChanged();
+	public static interface WordConfigurationChangedListener {
+		public void wordConfigurationChanged(WordPanel wordPanel);
 	}
 
 	private static class PositionItem {
@@ -62,40 +64,40 @@ public class WordPanel extends FormLayout {
 	private TextField containsField;
 	private TextField endsWithField;
 	private TextField exactField;
-	private ComboBox positionBox;
+	private ComboBox<PositionItem> positionBox;
 	private Button btRemove;
 	private WildcardBuilder wildcardBuilder;
 	private boolean withPositionBox;
 
-	public WordPanel(ValueChangeListener valueChangeListener) {
-		this(false, null, valueChangeListener);
+	public WordPanel(WordConfigurationChangedListener wordConfigurationChangedListener) {
+		this(false, wordConfigurationChangedListener);
 	}
 	
 	public WordPanel(
-			boolean withPositionBox, List<WordPanel> wordPanelList, 
-			ValueChangeListener valueChangeListener) {
+			boolean withPositionBox, 
+			WordConfigurationChangedListener wordConfigurationChangedListener) {
 		this.wildcardBuilder = new WildcardBuilder();
 		this.withPositionBox = withPositionBox;
 		initComponents();
-		initActions(wordPanelList, valueChangeListener);
+		initActions(wordConfigurationChangedListener);
 	}
 
 	private void initActions(
-			final List<WordPanel> wordPanelList, ValueChangeListener valueChangeListener) {
+			WordConfigurationChangedListener wordConfigurationChangedListener) {
 		if (withPositionBox) {
 			btRemove.addClickListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
 					((ComponentContainer)WordPanel.this.getParent()).removeComponent(
 							WordPanel.this);
-					wordPanelList.remove(WordPanel.this);
+					wordConfigurationChangedListener.wordConfigurationChanged(WordPanel.this);
 				}
 			});
 		}
-		exactField.addValueChangeListener(new ValueChangeListener() {
+		exactField.addValueChangeListener(new ValueChangeListener<String>() {
 			
-			public void valueChange(ValueChangeEvent event) {
-				String value = (String)event.getProperty().getValue();
+			public void valueChange(ValueChangeEvent<String> event) {
+				String value = event.getValue();
 				if ((value != null) && (!value.isEmpty())){
 					setWildcardInputFieldsEnabled(false);
 				}
@@ -104,10 +106,13 @@ public class WordPanel extends FormLayout {
 				}
 			}
 		});
-		startsWithField.addValueChangeListener(valueChangeListener);
-		containsField.addValueChangeListener(valueChangeListener);
-		endsWithField.addValueChangeListener(valueChangeListener);
-		exactField.addValueChangeListener(valueChangeListener);
+		startsWithField.addValueChangeListener(event -> wordConfigurationChangedListener.wordConfigurationChanged(this));
+		containsField.addValueChangeListener(event -> wordConfigurationChangedListener.wordConfigurationChanged(this));
+		endsWithField.addValueChangeListener(event -> wordConfigurationChangedListener.wordConfigurationChanged(this));
+		exactField.addValueChangeListener(event -> wordConfigurationChangedListener.wordConfigurationChanged(this));
+		if (positionBox != null) {
+			positionBox.addValueChangeListener(event -> wordConfigurationChangedListener.wordConfigurationChanged(this));
+		}
 	}
 
 	private void setWildcardInputFieldsEnabled(boolean enabled) {
@@ -121,29 +126,25 @@ public class WordPanel extends FormLayout {
 		setMargin(true);
 		setSizeFull();
 		
-		String next = Messages.getString("WordPanel.first");  //$NON-NLS-1$
+		String next = "first ";  
 		if (withPositionBox) {
-			next = Messages.getString("WordPanel.next"); //$NON-NLS-1$
+			next = "next "; 
 		}
 
 		startsWithField = new TextField();
-		startsWithField.setImmediate(true);
-		startsWithField.setCaption(MessageFormat.format(Messages.getString("WordPanel.TheNWordStartsWith"), next)); //$NON-NLS-1$
+		startsWithField.setCaption(MessageFormat.format("The {0} word starts with", next)); 
 		addComponent(startsWithField);
 		
 		containsField = new TextField();
-		containsField.setImmediate(true);
-		containsField.setCaption(MessageFormat.format(Messages.getString("WordPanel.TheNWordContains"), next)); //$NON-NLS-1$
+		containsField.setCaption(MessageFormat.format("The {0} word contains", next)); 
 		addComponent(containsField);
 		
 		endsWithField = new TextField();
-		endsWithField.setImmediate(true);
-		endsWithField.setCaption(MessageFormat.format(Messages.getString("WordPanel.TheNWordEndsWith"), next)); //$NON-NLS-1$
+		endsWithField.setCaption(MessageFormat.format("The {0} word ends with", next)); 
 		addComponent(endsWithField);
 		
 		exactField = new TextField();
-		exactField.setImmediate(true);
-		exactField.setCaption(MessageFormat.format(Messages.getString("WordPanel.TheNWordIsExactly"), next)); //$NON-NLS-1$
+		exactField.setCaption(MessageFormat.format("The {0} word is exactly", next)); 
 		addComponent(exactField);
 		
 		if (withPositionBox) {
@@ -151,20 +152,19 @@ public class WordPanel extends FormLayout {
 			for (int i=1; i<=10; i++) {
 				options.add(
 					new PositionItem(
-						i, MessageFormat.format(Messages.getString("WordPanel.NWordsAfterThePrevious"),  //$NON-NLS-1$  
+						i, MessageFormat.format("{0,number,integer} {1} after the previous word",    
 							i, 
-							((i==1)?Messages.getString("WordPanel.word"):Messages.getString("WordPanel.words")))));//$NON-NLS-1$ //$NON-NLS-2$
+							((i==1)?"word":"words")))); 
 			}
 			
 			positionBox =
-					new ComboBox(Messages.getString("WordPanel.PositionOfWord"), options); //$NON-NLS-1$
-			positionBox.setImmediate(true);
+					new ComboBox<PositionItem>("The position of this word is", options); 
+			
 			addComponent(positionBox);
-			positionBox.setNullSelectionAllowed(false);
-			positionBox.setNewItemsAllowed(false);
+			positionBox.setEmptySelectionAllowed(false);
 			positionBox.setValue(options.get(0));
 			
-			btRemove = new Button(Messages.getString("WordPanel.Remove")); //$NON-NLS-1$
+			btRemove = new IconButton(VaadinIcons.ERASER); 
 			addComponent(btRemove);
 			setComponentAlignment(btRemove, Alignment.MIDDLE_CENTER);
 		}

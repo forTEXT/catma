@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.dialog.wizard;
 
 public interface StepChangeListener {
 	public void stepChanged(WizardStep step);

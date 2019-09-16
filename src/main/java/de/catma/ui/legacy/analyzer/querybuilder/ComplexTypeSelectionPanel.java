@@ -30,7 +30,7 @@ import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.queryengine.MatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
+import de.catma.ui.legacy.wizard.DynamicWizardStep;
 
 public class ComplexTypeSelectionPanel extends VerticalLayout implements
 		DynamicWizardStep {

@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.dialog.wizard;
 
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;

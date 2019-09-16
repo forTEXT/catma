@@ -22,8 +22,8 @@ import org.vaadin.teemu.wizards.Wizard;
 import org.vaadin.teemu.wizards.event.WizardProgressListener;
 
 import de.catma.project.Project;
-import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
-import de.catma.ui.dialog.wizard.WizardFactory;
+import de.catma.ui.legacy.wizard.ToggleButtonStateListener;
+import de.catma.ui.legacy.wizard.WizardFactory;
 
 public class AddSourceDocWizardFactory extends WizardFactory {
 	

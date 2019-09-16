@@ -38,11 +38,11 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.module.analyze.QueryOptionsProvider;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
-import de.catma.ui.module.analyze.visualization.Visualisation;
+import de.catma.ui.module.analyze.visualization.Visualization;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.util.IDGenerator;
 
-public class VegaPanel extends HorizontalSplitPanel implements Visualisation {
+public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 	
 	private static String CATMA_QUERY_URL = "CATMA_QUERY_URL";
 	

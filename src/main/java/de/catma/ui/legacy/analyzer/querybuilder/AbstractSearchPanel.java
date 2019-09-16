@@ -21,7 +21,6 @@ package de.catma.ui.legacy.analyzer.querybuilder;
 
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
-import com.vaadin.v7.data.Property.ValueChangeEvent;
 import com.vaadin.v7.data.Property.ValueChangeListener;
 import com.vaadin.v7.ui.CheckBox;
 import com.vaadin.v7.ui.VerticalLayout;
@@ -29,8 +28,8 @@ import com.vaadin.v7.ui.VerticalLayout;
 import de.catma.document.corpus.Corpus;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
-import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
+import de.catma.ui.legacy.wizard.DynamicWizardStep;
+import de.catma.ui.legacy.wizard.ToggleButtonStateListener;
 
 public abstract class AbstractSearchPanel extends VerticalLayout implements DynamicWizardStep {
 
@@ -40,7 +39,6 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	protected QueryOptions queryOptions;
 	
 	private ComplexTypeSelectionPanel complexTypeSelectionPanel;
-	private SearchTypeSelectionPanel searchTypeSelectionPanel;
 	
 	protected boolean onFinish;
 	protected boolean onFinishOnly;
@@ -66,7 +64,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		setSpacing(true);
 		setMargin(true);
 		
-		cbComplexQuery = new CheckBox(Messages.getString("AbstractSearchPanel.ContinueToBuildAComplexQuery")); //$NON-NLS-1$
+		cbComplexQuery = new CheckBox("AbstractSearchPanel.ContinueToBuildAComplexQuery"); //$NON-NLS-1$
 		cbComplexQuery.setImmediate(true);
 		addComponent(cbComplexQuery);
 		
@@ -78,39 +76,39 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	}
 
 	private void initSearchPanelActions() {
-		cbComplexQuery.addValueChangeListener(new ValueChangeListener() {
-			
-			public void valueChange(ValueChangeEvent event) {
-				if (cbComplexQuery.getValue()) {
-					if (complexTypeSelectionPanel == null) {
-						complexTypeSelectionPanel = 
-								new ComplexTypeSelectionPanel(queryTree);
-						searchTypeSelectionPanel = new SearchTypeSelectionPanel(
-								toggleButtonStateListener, queryTree, queryOptions, 
-								corpus, true);
-					}
-					toggleButtonStateListener.getWizard().addStep(
-							complexTypeSelectionPanel);
-					toggleButtonStateListener.getWizard().addStep(
-							searchTypeSelectionPanel);
-				}
-				else {
-					if (complexTypeSelectionPanel != null) {
-						toggleButtonStateListener.getWizard().removeStep(
-								searchTypeSelectionPanel);
-						toggleButtonStateListener.getWizard().removeStep(
-								complexTypeSelectionPanel);
-					}
-				}
-				
-				onFinishOnly = !cbComplexQuery.getValue();
-				onFinish = (!cbComplexQuery.getValue() 
-							&& (curQuery != null) && !curQuery.isEmpty());
-				
-				toggleButtonStateListener.stepChanged(AbstractSearchPanel.this);
-			}
-			
-		});
+//		cbComplexQuery.addValueChangeListener(new ValueChangeListener() {
+//			
+//			public void valueChange(ValueChangeEvent event) {
+//				if (cbComplexQuery.getValue()) {
+//					if (complexTypeSelectionPanel == null) {
+//						complexTypeSelectionPanel = 
+//								new ComplexTypeSelectionPanel(queryTree);
+//						searchTypeSelectionPanel = new SearchTypeSelectionPanel(
+//								toggleButtonStateListener, queryTree, queryOptions, 
+//								corpus, true);
+//					}
+//					toggleButtonStateListener.getWizard().addStep(
+//							complexTypeSelectionPanel);
+//					toggleButtonStateListener.getWizard().addStep(
+//							searchTypeSelectionPanel);
+//				}
+//				else {
+//					if (complexTypeSelectionPanel != null) {
+//						toggleButtonStateListener.getWizard().removeStep(
+//								searchTypeSelectionPanel);
+//						toggleButtonStateListener.getWizard().removeStep(
+//								complexTypeSelectionPanel);
+//					}
+//				}
+//				
+//				onFinishOnly = !cbComplexQuery.getValue();
+//				onFinish = (!cbComplexQuery.getValue() 
+//							&& (curQuery != null) && !curQuery.isEmpty());
+//				
+//				toggleButtonStateListener.stepChanged(AbstractSearchPanel.this);
+//			}
+//			
+//		});
 	}
 
 	public void addCbComplexQueryListener(ValueChangeListener listener) {

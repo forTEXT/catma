@@ -5,6 +5,11 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.Project;
 import de.catma.tag.TagDefinition;
+import de.catma.ui.dialog.wizard.ProgressStep;
+import de.catma.ui.dialog.wizard.ProgressStepFactory;
+import de.catma.ui.dialog.wizard.StepChangeListener;
+import de.catma.ui.dialog.wizard.WizardContext;
+import de.catma.ui.dialog.wizard.WizardStep;
 import de.catma.ui.module.tags.TagSelectionPanel;
 import de.catma.ui.module.tags.TagSelectionPanel.TagSelectionChangedListener;
 

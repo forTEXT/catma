@@ -27,7 +27,7 @@ import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultRowItem;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
-import de.catma.ui.module.analyze.visualization.Visualisation;
+import de.catma.ui.module.analyze.visualization.Visualization;
 
 public class VizMaxPanel extends VerticalLayout  {
 	
@@ -62,7 +62,7 @@ public class VizMaxPanel extends VerticalLayout  {
 	private Button btMinViz;
 	private ComboBox<QuerySelection> queryResultBox;
 	
-	private Visualisation visualization;
+	private Visualization visualization;
 
 	private QueryResultPanel currentQueryResultPanel;
 
@@ -75,7 +75,7 @@ public class VizMaxPanel extends VerticalLayout  {
 	private HorizontalLayout buttonAndBoxPanel;
 
 	public VizMaxPanel( 
-			Visualisation visualization,
+			Visualization visualization,
 			List<QueryResultPanelSetting> queryResultPanelSettings, Project project,
 			LoadingCache<String, KwicProvider> kwicProviderCache, LeaveListener leaveListener) {
 		this.visualization = visualization;

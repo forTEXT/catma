@@ -39,8 +39,8 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.TechInfoSet;
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
-import de.catma.ui.dialog.wizard.WizardStepListener;
+import de.catma.ui.legacy.wizard.DynamicWizardStep;
+import de.catma.ui.legacy.wizard.WizardStepListener;
 
 class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	

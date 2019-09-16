@@ -16,18 +16,12 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.ui.dialog.wizard;
+package de.catma.ui.legacy.wizard;
 
 import org.vaadin.teemu.wizards.WizardStep;
 
-public interface DynamicWizardStep extends WizardStep {
-	public void stepActivated(boolean forward); 
-	
-	public boolean onFinish();
-	
-	public boolean onFinishOnly();
+public interface WizardStepListener {
 
-	public void stepDeactivated(boolean forward);
+	public void stepChanged(WizardStep source);
 	
-	public void stepAdded();
 }

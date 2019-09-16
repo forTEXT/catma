@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.dialog.wizard;
 
 import com.vaadin.ui.Component;
 
@@ -9,4 +9,12 @@ public interface WizardStep extends Component {
 	public void setStepChangeListener(StepChangeListener stepChangeListener);
 	public void setFinished();
 	public void setCurrent();
+	
+	public default String getProgressStepDescription() {
+		if (getProgressStep() != null) {
+			return getProgressStep().getStepDescription();
+		}
+		return null;
+	}
+
 }

@@ -36,7 +36,7 @@ import com.vaadin.ui.VerticalSplitPanel;
 import de.catma.document.corpus.Corpus;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
-import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
+import de.catma.ui.legacy.wizard.ToggleButtonStateListener;
 
 public class FreqPanel extends AbstractSearchPanel {
 	

@@ -360,7 +360,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		});
 		
-		linesPerPageSlider.addValueListener(new ValueChangeListener<Double>() {
+		linesPerPageSlider.addValueChangeListener(new ValueChangeListener<Double>() {
 			
 			public void valueChange(ValueChangeEvent<Double> event) {
 				Double perCentValue = (Double)linesPerPageSlider.getValue();

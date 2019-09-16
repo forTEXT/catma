@@ -42,12 +42,16 @@ import de.catma.queryengine.QueryId;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryJob.QueryException;
 import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.tabbedview.ClosableTab;
 import de.catma.ui.component.tabbedview.TabCaptionChangeListener;
+import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.wizard.WizardContext;
+import de.catma.ui.module.analyze.querybuilder.QueryBuilder;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.module.analyze.resourcepanel.AnalyzeResourcePanel;
@@ -311,6 +315,25 @@ public class AnalyzeView extends HorizontalLayout
 		kwicBt.addClickListener(event -> addKwicViz());
 
 		distBt.addClickListener(event -> addDistViz());
+		
+		btQueryBuilder.addClickListener(clickEvent -> showQueryBuilder());
+	}
+
+	private void showQueryBuilder() {
+		WizardContext wizardContext = new WizardContext();
+		wizardContext.put(QueryBuilder.ContextKey.QUERY_TREE, new QueryTree());
+		
+		QueryBuilder queryBuilder = new QueryBuilder(
+			project, 
+			wizardContext, 
+			new SaveCancelListener<WizardContext>() {
+				@Override
+				public void savePressed(WizardContext result) {
+					// TODO Auto-generated method stub
+					
+				}
+		});
+		queryBuilder.show();
 	}
 
 	private void addKwicViz() {

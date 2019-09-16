@@ -27,11 +27,12 @@ import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
+
+import de.catma.ui.legacy.wizard.DynamicWizardStep;
+import de.catma.ui.legacy.wizard.WizardStepListener;
+
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TextField;
-
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
-import de.catma.ui.dialog.wizard.WizardStepListener;
 
 class ContentInfoPanel extends HorizontalLayout implements
 		DynamicWizardStep {

@@ -31,8 +31,8 @@ import de.catma.document.corpus.Corpus;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.component.Slider;
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
-import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
+import de.catma.ui.legacy.wizard.DynamicWizardStep;
+import de.catma.ui.legacy.wizard.ToggleButtonStateListener;
 
 public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep {
 

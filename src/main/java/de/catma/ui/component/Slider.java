@@ -103,11 +103,11 @@ public class Slider extends VerticalLayout {
 		sliderComp.setResolution(resolution);
 	}
 
-	public Object getValue() {
+	public Double getValue() {
 		return sliderComp.getValue();
 	}
 
-	public void addValueListener(ValueChangeListener<Double> listener) {
+	public void addValueChangeListener(ValueChangeListener<Double> listener) {
 		sliderComp.addValueChangeListener(listener);
 	}
 

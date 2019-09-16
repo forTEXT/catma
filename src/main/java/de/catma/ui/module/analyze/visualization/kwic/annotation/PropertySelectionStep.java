@@ -14,6 +14,11 @@ import de.catma.project.Project;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.ui.dialog.wizard.ProgressStep;
+import de.catma.ui.dialog.wizard.ProgressStepFactory;
+import de.catma.ui.dialog.wizard.StepChangeListener;
+import de.catma.ui.dialog.wizard.WizardContext;
+import de.catma.ui.dialog.wizard.WizardStep;
 import de.catma.ui.module.annotate.annotationpanel.EditPropertyTab;
 
 public class PropertySelectionStep extends VerticalLayout implements WizardStep {
@@ -108,6 +113,9 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 			}
 		}
 		context.put(AnnotationWizardContextKey.PROPERTIES, result);
+		if (result.isEmpty()) {
+			progressStep.setCompleted("no values");
+		}
 		progressStep.setFinished();
 	}
 	

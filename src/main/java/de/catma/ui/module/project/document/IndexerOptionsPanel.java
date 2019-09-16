@@ -58,8 +58,8 @@ import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.LanguageDetector;
 import de.catma.document.source.LanguageItem;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
-import de.catma.ui.dialog.wizard.WizardStepListener;
+import de.catma.ui.legacy.wizard.DynamicWizardStep;
+import de.catma.ui.legacy.wizard.WizardStepListener;
 
 class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 	

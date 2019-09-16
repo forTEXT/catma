@@ -17359,22 +17359,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	user-select: text;
 }
 
-.catma .distributionchartviewpanel .v-slot {
-	height: 100%;
-}
-
-.catma .distributionchartviewpanel .v-expand {
-	height: auto;
-}
-
-.catma .distributionchartviewpanel .v-scrollable > .v-widget {
-	overflow: visible;
-}
-
-.catma .distributionchartviewpanelzoom {
-	-moz-transform: scale(0.5);
-}
-
 .catma .v-table-cell-content-rtl-field {
 	direction: rtl;
 }
@@ -17385,6 +17369,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .c-slider {
 	padding: unset;
+}
+
+.catma .slider-centered-text {
+	text-align: center;
 }
 
 .catma .help-padding-fix {
@@ -17432,10 +17420,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .help-windows .v-window-header {
 	color: #fff;
-}
-
-.catma .similarity-slider .v-expand .v-align-center {
-	text-align: inherit;
 }
 
 .catma table.taggerline-table {
@@ -17589,10 +17573,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .application-loginlink:focus::after {
 	border-color: none;
 	box-shadow: none;
-}
-
-.catma .tagsetselection-dialog-create-tag-libary {
-	margin-top: 25px;
 }
 
 .catma .catma-embedded-vega {

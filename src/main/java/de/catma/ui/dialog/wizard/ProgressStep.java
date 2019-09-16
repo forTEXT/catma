@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.dialog.wizard;
 
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.ContentMode;
@@ -47,5 +47,18 @@ public class ProgressStep extends HorizontalLayout {
 	public void setFinished() {
 		stepLabel.removeStyleName("progress-step-number-current");
 		stepLabel.addStyleName("progress-step-number-faded-out");
+	}
+
+	public void setStepDescription(String description) {
+		this.description = description;
+		stepDescription.setValue(description);
+	}
+	
+	public String getStepDescription() {
+		return description;
+	}
+	
+	public int getNumber() {
+		return number;
 	}
 }

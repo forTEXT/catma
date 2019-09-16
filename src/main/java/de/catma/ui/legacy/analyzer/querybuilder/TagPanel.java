@@ -41,7 +41,7 @@ import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
+import de.catma.ui.legacy.wizard.ToggleButtonStateListener;
 
 public class TagPanel extends AbstractSearchPanel {
 	

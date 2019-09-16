@@ -67,8 +67,8 @@ import de.catma.document.source.contenthandler.HttpProtocolHandler;
 import de.catma.document.source.contenthandler.ProtocolHandler;
 import de.catma.project.Project;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
-import de.catma.ui.dialog.wizard.WizardStepListener;
+import de.catma.ui.legacy.wizard.DynamicWizardStep;
+import de.catma.ui.legacy.wizard.WizardStepListener;
 import de.catma.util.IDGenerator;
 
 class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
