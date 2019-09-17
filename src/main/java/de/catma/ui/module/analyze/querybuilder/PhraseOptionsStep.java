@@ -3,7 +3,6 @@ package de.catma.ui.module.analyze.querybuilder;
 import java.util.Iterator;
 
 import com.github.appreciated.material.MaterialTheme;
-import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -31,11 +30,21 @@ public class PhraseOptionsStep extends VerticalLayout implements WizardStep {
 	private StepChangeListener stepChangeListener;
 	private HorizontalLayout wordSequencePanelContent;
 	private TextField curQueryField;
+	private Project project;
+	private WizardContext context;
+	private ProgressStepFactory progressStepFactory;
+	private int nextStepNo;
 	
 	public PhraseOptionsStep(
+			int stepNo,
 			Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		queryTree = (QueryTree) context.get(QueryBuilder.ContextKey.QUERY_TREE);
-		this.progressStep = progressStepFactory.create(2, getProgressStepDescription());
+		this.project = project;
+		this.context = context;
+		this.progressStepFactory = progressStepFactory;
+		
+		this.progressStep = progressStepFactory.create(stepNo, getStepDescription());
+		this.nextStepNo = stepNo+1;
 		initComponents();
 		initActions();
 		setCurQuery(queryTree.toString());
@@ -135,8 +144,7 @@ public class PhraseOptionsStep extends VerticalLayout implements WizardStep {
 
 	@Override
 	public WizardStep getNextStep() {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComplexTypeSelectionStep(nextStepNo, project, context, progressStepFactory);
 	}
 
 	@Override
@@ -150,22 +158,32 @@ public class PhraseOptionsStep extends VerticalLayout implements WizardStep {
 	}
 
 	@Override
-	public void setFinished() {
-		progressStep.setFinished();
-	}
-
-	@Override
-	public void setCurrent() {
-		progressStep.setCurrent();
-	}
-	
-	@Override
 	public String toString() {
 		return "by word or phrase pattern";
 	}
 
 	@Override
-	public String getProgressStepDescription() {
+	public String getStepDescription() {
 		return "How does your phrase look like?";
+	}
+	
+	@Override
+	public boolean canFinish() {
+		return true;
+	}
+	
+	@Override
+	public void enter(boolean back) {
+		if ((back) && (stepChangeListener != null)) {
+			stepChangeListener.stepChanged(this);
+		}
+	}
+	
+	
+	@Override
+	public void exit(boolean back) {
+		if (back) {
+			queryTree.removeLast();
+		}
 	}
 }

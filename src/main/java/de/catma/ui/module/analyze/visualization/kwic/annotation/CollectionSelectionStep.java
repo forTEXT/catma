@@ -1,5 +1,6 @@
 package de.catma.ui.module.analyze.visualization.kwic.annotation;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -55,7 +56,6 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
     
 	public CollectionSelectionStep(EventBus eventBus, Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		this.eventBus = eventBus;
-		eventBus.register(this);
 		this.project = project;
 		this.context = context;
 		this.progressStep = progressStepFactory.create(3, "Select Collections");
@@ -344,20 +344,35 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	public void setStepChangeListener(StepChangeListener stepChangeListener) {
 		this.stepChangeListener = stepChangeListener;
 	}
-
+	
 	@Override
-	public void setFinished() {
-        Map<String, AnnotationCollectionReference> collectionsByDocumentId = 
-        		getCollectionRefsByDocumentId();
-        
-        context.put(AnnotationWizardContextKey.COLLECTIONREFS_BY_DOCID, collectionsByDocumentId);
-        
+	public void enter(boolean back) {
+		eventBus.register(this);
+	}
+	
+	@Override
+	public void exit(boolean back) {
+		Map<String, AnnotationCollectionReference> collectionsByDocumentId = 
+				getCollectionRefsByDocumentId();
+		
+		if (back) {
+			context.put(AnnotationWizardContextKey.COLLECTIONREFS_BY_DOCID, Collections.emptyMap());
+		}
+		else {
+			context.put(AnnotationWizardContextKey.COLLECTIONREFS_BY_DOCID, collectionsByDocumentId);
+		}
+		
 		eventBus.unregister(this);
 	}
 	
 	@Override
-	public void setCurrent() {
-		progressStep.setCurrent();
+	public boolean canNext() {
+		return false;
+	}
+	
+	@Override
+	public boolean canFinish() {
+		return true;
 	}
 
 }

@@ -25,12 +25,11 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 	
 	private ProgressStep progressStep;
 	private TabSheet propertyTabSheet;
-	private Project project;
 	private CollectionSelectionStep nextStep;
 	private WizardContext context;
+	private boolean skipped;
 
 	public PropertySelectionStep(EventBus eventBus, Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
-		this.project = project;
 		this.context = context;
 		this.progressStep = progressStepFactory.create(2, "Set Property values");
 		this.nextStep = new CollectionSelectionStep(eventBus, project, context, progressStepFactory);
@@ -98,31 +97,39 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 				valueCount, valueCaption, propCount, propertyCaption));
 	}
 
+	
 	@Override
-	public void setFinished() {
-		List<Property> result = new ArrayList<>();
-		Iterator<Component> componentIterator = propertyTabSheet.iterator();
-		while (componentIterator.hasNext()) {
-			EditPropertyTab tab = (EditPropertyTab)componentIterator.next();
-			
-			if (tab.isChanged()) {
-				Property property = tab.getProperty();
+	public void exit(boolean back) {
+
+		if (back) {
+			context.put(AnnotationWizardContextKey.PROPERTIES, Collections.emptyList());
+		}
+		else {
+			List<Property> result = new ArrayList<>();
+			Iterator<Component> componentIterator = propertyTabSheet.iterator();
+			while (componentIterator.hasNext()) {
+				EditPropertyTab tab = (EditPropertyTab)componentIterator.next();
 				
-				property.setPropertyValueList(tab.getPropertyValues());
-				result.add(property);
+				if (tab.isChanged()) {
+					Property property = tab.getProperty();
+					
+					property.setPropertyValueList(tab.getPropertyValues());
+					result.add(property);
+				}
 			}
+			context.put(AnnotationWizardContextKey.PROPERTIES, result);
+			if (result.isEmpty()) {
+				progressStep.setCompleted("no values");
+			}			
 		}
-		context.put(AnnotationWizardContextKey.PROPERTIES, result);
-		if (result.isEmpty()) {
-			progressStep.setCompleted("no values");
-		}
-		progressStep.setFinished();
-	}
-	
-	
-	@Override
-	public void setCurrent() {
-		progressStep.setCurrent();
 	}
 
+	public void setSkipped(boolean skipped) {
+		this.skipped = skipped;
+	}
+	
+	@Override
+	public boolean isSkipped() {
+		return skipped;
+	}
 }

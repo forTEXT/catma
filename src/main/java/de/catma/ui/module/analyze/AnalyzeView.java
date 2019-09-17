@@ -329,8 +329,8 @@ public class AnalyzeView extends HorizontalLayout
 			new SaveCancelListener<WizardContext>() {
 				@Override
 				public void savePressed(WizardContext result) {
-					// TODO Auto-generated method stub
-					
+					QueryTree queryTree = (QueryTree) result.get(QueryBuilder.ContextKey.QUERY_TREE);
+					queryBox.setValue(queryTree.toString());
 				}
 		});
 		queryBuilder.show();

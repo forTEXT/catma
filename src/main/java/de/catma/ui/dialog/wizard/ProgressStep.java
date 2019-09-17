@@ -34,6 +34,12 @@ public class ProgressStep extends HorizontalLayout {
 		stepLabel.setContentMode(ContentMode.HTML);
 	}
 	
+	public void setUnfinished() {
+		resetCurrent();
+		stepLabel.removeStyleName("progress-step-number-current");
+		stepLabel.addStyleName("progress-step-number-faded-out");
+	}
+	
 	public void setCurrent() {
 		stepLabel.removeStyleName("progress-step-number-faded-out");
 		stepLabel.addStyleName("progress-step-number-current");

@@ -15,6 +15,7 @@ public class QueryBuilder extends Wizard {
 			WizardContext context, SaveCancelListener<WizardContext> saveCancelListener) {
 		super("Build your Query", 
 				progressPanel -> new SearchTypeSelectionStep(
+						1,
 						project, 
 						context,
 						(number, description) -> progressPanel.addStep(number, description)),

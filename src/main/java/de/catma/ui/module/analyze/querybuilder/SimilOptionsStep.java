@@ -1,6 +1,5 @@
 package de.catma.ui.module.analyze.querybuilder;
 
-import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
@@ -9,6 +8,7 @@ import de.catma.project.Project;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.component.Slider;
 import de.catma.ui.dialog.wizard.ProgressStep;
+import de.catma.ui.dialog.wizard.ProgressStepFactory;
 import de.catma.ui.dialog.wizard.StepChangeListener;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.dialog.wizard.WizardStep;
@@ -22,10 +22,24 @@ public class SimilOptionsStep extends VerticalLayout implements WizardStep {
 	private String curQuery = null;
 	private TextField curQueryField;
 	private StepChangeListener stepChangeListener;
+	private Project project;
+	private WizardContext context;
+	private ProgressStepFactory progressStepFactory;
+	private int nextStepNo;
 
-	public SimilOptionsStep(Project project, WizardContext context, ProgressStep progressStep) {
+	public SimilOptionsStep(
+			int stepNo,
+			Project project, WizardContext context, 
+			ProgressStep progressStep, 
+			ProgressStepFactory progressStepFactory) {
+		this.nextStepNo = stepNo+1;
+		this.project = project;
+		this.context = context;
+		this.progressStepFactory = progressStepFactory;
+
 		this.queryTree = (QueryTree) context.get(QueryBuilder.ContextKey.QUERY_TREE);
 		this.progressStep = progressStep;
+				
 		initComponents();
 		initActions();
 	}
@@ -109,8 +123,7 @@ public class SimilOptionsStep extends VerticalLayout implements WizardStep {
 
 	@Override
 	public WizardStep getNextStep() {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComplexTypeSelectionStep(nextStepNo, project, context, progressStepFactory);
 	}
 
 	@Override
@@ -124,22 +137,31 @@ public class SimilOptionsStep extends VerticalLayout implements WizardStep {
 	}
 
 	@Override
-	public void setFinished() {
-		progressStep.setFinished();
-	}
-
-	@Override
-	public void setCurrent() {
-		progressStep.setCurrent();
-	}
-	
-	@Override
-	public String getProgressStepDescription() {
+	public String getStepDescription() {
 		return "Give an example";
 	}
 
 	@Override
 	public String toString() {
 		return "by grade of similarity";
+	}
+	
+	@Override
+	public boolean canFinish() {
+		return true;
+	}
+	
+	@Override
+	public void enter(boolean back) {
+		if ((back) && (stepChangeListener != null)) {
+			stepChangeListener.stepChanged(this);
+		}
+	}
+	
+	@Override
+	public void exit(boolean back) {
+		if (back) {
+			queryTree.removeLast();
+		}
 	}
 }

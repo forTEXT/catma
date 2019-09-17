@@ -21,13 +21,15 @@ public class SearchTypeSelectionStep extends VerticalLayout implements WizardSte
 	private WizardStep nextStep;
 	private RadioButtonGroup<WizardStep> rgSteps;
 	private ProgressStep nextProgressStep;
+	private int nextStepNo;
 
 	public SearchTypeSelectionStep(
+			int stepNo,
 			Project project, 
 			WizardContext context, 
 			ProgressStepFactory progressStepFactory) {
-		
-		this.progressStep = progressStepFactory.create(1, "How do you want to search?");
+		this.progressStep = progressStepFactory.create(stepNo, "How do you want to search?");
+		this.nextStepNo = stepNo+1;
 		initComponents(project, context, progressStepFactory);
 		initActions();
 	}
@@ -38,7 +40,7 @@ public class SearchTypeSelectionStep extends VerticalLayout implements WizardSte
 
 	private void handleNextStepChange(ValueChangeEvent<WizardStep> event) {
 		nextStep = event.getValue();
-		nextProgressStep.setStepDescription(nextStep.getProgressStepDescription());
+		nextProgressStep.setStepDescription(nextStep.getStepDescription());
 	}
 
 	private void initComponents(
@@ -48,12 +50,13 @@ public class SearchTypeSelectionStep extends VerticalLayout implements WizardSte
 		
 		List<WizardStep> nextSteps = new ArrayList<WizardStep>();
 		
-		PhraseOptionsStep phraseOptionsStep = new PhraseOptionsStep(project, context, progressStepFactory);  
+		PhraseOptionsStep phraseOptionsStep = new PhraseOptionsStep(this.nextStepNo, project, context, progressStepFactory);  
 		nextProgressStep = phraseOptionsStep.getProgressStep();
 		
 		nextSteps.add(phraseOptionsStep);
 		
-		nextSteps.add(new SimilOptionsStep(project, context, nextProgressStep));
+		nextSteps.add(new SimilOptionsStep(this.nextStepNo, project, context, nextProgressStep, progressStepFactory));
+		nextSteps.add(new FreqOptionsStep(this.nextStepNo, project, context, nextProgressStep, progressStepFactory));
 		
 		rgSteps = new RadioButtonGroup<>("", nextSteps);
 		rgSteps.setValue(nextSteps.get(0));
@@ -78,22 +81,17 @@ public class SearchTypeSelectionStep extends VerticalLayout implements WizardSte
 	public boolean isValid() {
 		return true; //always valid
 	}
+	
+	@Override
+	public boolean canFinish() {
+		return false;
+	}
 
 	@Override
 	public void setStepChangeListener(StepChangeListener stepChangeListener) {
 		if (stepChangeListener != null) {
 			stepChangeListener.stepChanged(this); //always valid
 		}
-	}
-
-	@Override
-	public void setFinished() {
-		progressStep.setFinished();
-	}
-
-	@Override
-	public void setCurrent() {
-		progressStep.setCurrent();
 	}
 
 }

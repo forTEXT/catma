@@ -45,14 +45,17 @@ public class TagSelectionStep extends VerticalLayout implements WizardStep {
 			
 			if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
 				nextStep.getProgressStep().setCompleted("no Properties available");
+				nextStep.setSkipped(true);
 			}
 			else {
 				nextStep.getProgressStep().resetCurrent();
+				nextStep.setSkipped(false);
 			}
 		}
 		else {
 			progressStep.resetCurrent();
 			nextStep.getProgressStep().resetCurrent();
+			nextStep.setSkipped(false);
 		}
 		
 		if (stepChangeListener != null) {
@@ -83,7 +86,7 @@ public class TagSelectionStep extends VerticalLayout implements WizardStep {
 	@Override
 	public WizardStep getNextStep() {
 		if (selectedTag != null && selectedTag.getUserDefinedPropertyDefinitions().isEmpty()) {
-			nextStep.setFinished();
+			nextStep.getProgressStep().setFinished();
 			return nextStep.getNextStep();
 		}
 		else {
@@ -99,13 +102,12 @@ public class TagSelectionStep extends VerticalLayout implements WizardStep {
 	}
 	
 	@Override
-	public void setFinished() {
-		context.put(AnnotationWizardContextKey.TAG, selectedTag);
-		progressStep.setFinished();
-	}
-	
-	@Override
-	public void setCurrent() {
-		progressStep.setCurrent();
+	public void exit(boolean back) {
+		if (back) {
+			context.put(AnnotationWizardContextKey.TAG, null);
+		}
+		else {
+			context.put(AnnotationWizardContextKey.TAG, selectedTag);			
+		}
 	}
 }
