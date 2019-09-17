@@ -1,13 +1,8 @@
 package de.catma.ui.module.analyze.querybuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextField;
@@ -21,7 +16,7 @@ import de.catma.ui.dialog.wizard.StepChangeListener;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.dialog.wizard.WizardStep;
 
-public class FreqOptionsStep extends VerticalLayout implements WizardStep {
+public class CollocOptionsStep extends VerticalLayout implements WizardStep {
 	
 	private ProgressStep progressStep;
 	private QueryTree queryTree;
@@ -33,13 +28,12 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 	private ProgressStepFactory progressStepFactory;
 	private int nextStepNo;
 
-	private ComboBox<FreqComparator> freqComparatorCombo;
-	private TextField freq1Input;
-	private TextField freq2Input;
-	private Label andLabel;
-	private FreqComparator exactlyFreqComp;
+	private TextField wordInput;
+	private TextField collocInput;
+	private TextField spanSizeInput;
 	
-	public FreqOptionsStep(
+	
+	public CollocOptionsStep(
 			int stepNo,
 			Project project, WizardContext context, 
 			ProgressStep progressStep, 
@@ -53,36 +47,26 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 		this.progressStep = progressStep;
 				
 		initComponents();
-		freqComparatorCombo.setValue(exactlyFreqComp);
 		initActions();
 	}
 	
 	private void initActions() {
-		freq1Input.addValueChangeListener(event -> handleFreqChange());
-		freq2Input.addValueChangeListener(event -> handleFreqChange());
-		freqComparatorCombo.addValueChangeListener(event -> handleFreqChange());
-		freqComparatorCombo.addValueChangeListener(event -> {
-			freq2Input.setVisible(event.getValue().isRange());
-			andLabel.setVisible(event.getValue().isRange());
-		});
+		wordInput.addValueChangeListener(event -> handleCollocChange());
+		collocInput.addValueChangeListener(event -> handleCollocChange());
+		spanSizeInput.addValueChangeListener(event -> handleCollocChange());
 	}
 
-	private void handleFreqChange() {
+	private void handleCollocChange() {
 		if (curQuery != null) {
 			queryTree.removeLast();
 		}
 		
-		StringBuilder builder = new StringBuilder("freq "); //$NON-NLS-1$
-		FreqComparator curComparator = freqComparatorCombo.getValue(); 
-		
-		builder.append(curComparator.getComparator());
-		builder.append(" "); //$NON-NLS-1$
-		builder.append(freq1Input.getValue());
-		
-		if (curComparator.isRange()) {
-			builder.append("-"); //$NON-NLS-1$
-			builder.append(freq2Input.getValue());
-		}
+		StringBuilder builder = new StringBuilder("\""); //$NON-NLS-1$
+		builder.append(wordInput.getValue());
+		builder.append("\" & \""); //$NON-NLS-1$
+		builder.append(collocInput.getValue());
+		builder.append("\" "); //$NON-NLS-1$
+		builder.append(spanSizeInput.getValue());
 		
 		curQuery = builder.toString();
 		queryTree.add(curQuery);		
@@ -102,45 +86,17 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 		searchPanel.setMargin(new MarginInfo(true, false, false, false));
 		
 		searchPanel.setSpacing(true);
+		searchPanel.addStyleName("query-builder-colloc-options-step-search-panel");
 	
-		List<FreqComparator> freqComparators = new ArrayList<FreqComparator>();
-		exactlyFreqComp = 
-				new FreqComparator("exactly", "=");  //$NON-NLS-2$
-		freqComparators.add(exactlyFreqComp);
+		wordInput = new TextField("Search for all occurrences of");
+		searchPanel.addComponent(wordInput);
 		
-		freqComparators.add(
-                new FreqComparator("more than", ">")); //$NON-NLS-2$
-		freqComparators.add(
-                new FreqComparator("less than", "<"));  //$NON-NLS-2$
-		freqComparators.add(
-                new FreqComparator("more or equal than", ">=")); //$NON-NLS-2$
-		freqComparators.add(
-                new FreqComparator("less or equal than", "<="));  //$NON-NLS-2$
-		freqComparators.add(
-                new FreqComparator("between", "=", true)); //$NON-NLS-2$
+		collocInput = new TextField("that appear near"); 
+		searchPanel.addComponent(collocInput);
 		
-		searchPanel.addComponent(new Label("The word shall appear")); 
+		spanSizeInput = new TextField("within a token span of", "5");  //$NON-NLS-2$
+		searchPanel.addComponent(spanSizeInput);
 		
-		freqComparatorCombo = new ComboBox<FreqComparator>(null, freqComparators);
-		freqComparatorCombo.setEmptySelectionAllowed(false);
-		
-		searchPanel.addComponent(freqComparatorCombo);
-		
-		freq1Input = new TextField();
-		
-		searchPanel.addComponent(freq1Input);
-		searchPanel.setExpandRatio(freq1Input, 0.5f);
-		
-		andLabel = new Label("and"); 
-		searchPanel.addComponent(andLabel);
-		
-		freq2Input = new TextField();
-
-		searchPanel.addComponent(freq2Input);
-		searchPanel.setExpandRatio(freq2Input, 0.5f);
-		
-		searchPanel.addComponent(new Label("times.")); 
-
 		addComponent(searchPanel);
 		setExpandRatio(searchPanel, 1);
 		
@@ -177,35 +133,28 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 
 	@Override
 	public boolean isValid() {
-		if ((freq1Input.getValue() != null) && !freq1Input.getValue().isEmpty()) {
+		if ((wordInput.getValue() == null) || wordInput.getValue().isEmpty()) {
+			Notification.show("Info", "Please enter a word!", Type.HUMANIZED_MESSAGE);
+			return false;
+		}
+		if ((collocInput.getValue() == null) || collocInput.getValue().isEmpty()) {
+			Notification.show("Info", "Please enter a collocate!", Type.HUMANIZED_MESSAGE);
+			return false;
+		}
+		
+		if ((spanSizeInput.getValue() != null) && !spanSizeInput.getValue().isEmpty()) {
 			try {
-				Integer.valueOf(freq1Input.getValue());
+				Integer.valueOf(spanSizeInput.getValue());
 			}
 			catch (NumberFormatException nfe) {
-				Notification.show("Info", "Please enter a valid integer for the frequency!", Type.HUMANIZED_MESSAGE);
+				Notification.show("Info", "Please enter a valid integer for the token span!", Type.HUMANIZED_MESSAGE);
 				return false;
 			}
 		}
 		else {
-			Notification.show("Info", "Please enter a frequency!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please enter a token span!", Type.HUMANIZED_MESSAGE);
 			return false;
-		}
-		
-		if (freqComparatorCombo.getValue().isRange()) {
-			if ((freq2Input.getValue() != null) && !freq2Input.getValue().isEmpty()) {
-				try {
-					Integer.valueOf(freq2Input.getValue());
-				}
-				catch (NumberFormatException nfe) {
-					Notification.show("Info", "Please enter a valid integer for the frequency!", Type.HUMANIZED_MESSAGE);
-					return false;
-				}
-			}
-			else {
-				Notification.show("Info", "Please enter a frequency!", Type.HUMANIZED_MESSAGE);
-				return false;
-			}			
-		}
+		}			
 		
 		return curQuery != null;
 	}
@@ -217,12 +166,12 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 
 	@Override
 	public String getStepDescription() {
-		return "How often should the word appear?";
+		return "Give the word and its collocate";
 	}
 
 	@Override
 	public String toString() {
-		return "by frequency";
+		return "by collocation";
 	}
 	
 	@Override

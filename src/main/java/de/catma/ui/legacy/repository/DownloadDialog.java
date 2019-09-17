@@ -1,14 +1,14 @@
 package de.catma.ui.legacy.repository;
 
+import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.server.FileDownloader;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.v7.ui.themes.BaseTheme;
 
 public class DownloadDialog extends Window {
 	
@@ -27,7 +27,7 @@ public class DownloadDialog extends Window {
 		content.setSpacing(true);
 		
 		Button btDownload = new Button("Download " + filename);
-		btDownload.addStyleName(BaseTheme.BUTTON_LINK);
+		btDownload.addStyleName(MaterialTheme.BUTTON_LINK);
 		
 		FileDownloader fileDownloader = new FileDownloader(new StreamResource(source, filename));
 		fileDownloader.extend(btDownload);

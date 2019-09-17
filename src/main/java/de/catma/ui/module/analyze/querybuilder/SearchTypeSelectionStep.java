@@ -56,6 +56,8 @@ public class SearchTypeSelectionStep extends VerticalLayout implements WizardSte
 		nextSteps.add(phraseOptionsStep);
 		
 		nextSteps.add(new SimilOptionsStep(this.nextStepNo, project, context, nextProgressStep, progressStepFactory));
+		nextSteps.add(new TagOptionsStep(this.nextStepNo, project, context, nextProgressStep, progressStepFactory));
+		nextSteps.add(new CollocOptionsStep(this.nextStepNo, project, context, nextProgressStep, progressStepFactory));
 		nextSteps.add(new FreqOptionsStep(this.nextStepNo, project, context, nextProgressStep, progressStepFactory));
 		
 		rgSteps = new RadioButtonGroup<>("", nextSteps);

@@ -2,15 +2,15 @@ package de.catma.ui.visualizer.doubletree;
 
 import java.util.List;
 
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.ui.Alignment;
-import com.vaadin.v7.ui.CheckBox;
-import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.Panel;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.source.KeywordInContext;
 import de.catma.ui.component.tabbedview.ClosableTab;
@@ -31,9 +31,9 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 
 	
 	private void initActions() {
-		cbCaseSensitive.addValueChangeListener(new ValueChangeListener() {
+		cbCaseSensitive.addValueChangeListener(new ValueChangeListener<Boolean>() {
 			
-			public void valueChange(ValueChangeEvent event) {
+			public void valueChange(ValueChangeEvent<Boolean> event) {
 				doubleTree.setupFromArrays(kwics, cbCaseSensitive.getValue());
 			}
 		});
@@ -51,7 +51,6 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 		headerPanel.setWidth("500px"); //$NON-NLS-1$
 		
 		cbCaseSensitive = new CheckBox(Messages.getString("DoubleTreeView.caseSensitive"), true); //$NON-NLS-1$
-		cbCaseSensitive.setImmediate(true);
 		
 		headerPanel.addComponent(cbCaseSensitive);
 		headerPanel.setComponentAlignment(cbCaseSensitive, Alignment.TOP_LEFT);
