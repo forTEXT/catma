@@ -32,6 +32,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 
 import de.catma.backgroundservice.BackgroundService;
+import de.catma.backgroundservice.ExecutionListener;
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -179,19 +181,36 @@ public class GraphWorktreeProject implements IndexedProject {
 							gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
 			}
 			else {
-				printStatus();
 				gitProjectHandler.initAndUpdateSubmodules();
 				gitProjectHandler.removeStaleSubmoduleDirectories();
-				gitProjectHandler.ensureDevBranches();			
+				gitProjectHandler.ensureDevBranches();
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
+						new ExecutionListener<Void>() {
+							
+							@Override
+							public void error(Throwable t) {
+								openProjectListener.failure(t);
+							}
+							
+							@Override
+							public void done(Void result) {
+								initTagManagerListeners();
+								openProjectListener.ready(GraphWorktreeProject.this);
+							}
+						},
+						new ProgressListener() {
+							
+							@Override
+							public void setProgress(String value, Object... args) {
+								openProjectListener.progress(value, args);
+							}
+						},
 						rootRevisionHash,
 						tagManager,
 						() -> gitProjectHandler.getTagsets(),
 						() -> gitProjectHandler.getDocuments(),
-						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
-				
-				initTagManagerListeners();
-				openProjectListener.ready(this);
+						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary),
+						backgroundService);
 			}
 		}
 		catch(Exception e) {
@@ -1168,12 +1187,31 @@ public class GraphWorktreeProject implements IndexedProject {
 			gitProjectHandler.ensureDevBranches();		
 			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			graphProjectHandler.ensureProjectRevisionIsLoaded(
+					new ExecutionListener<Void>() {
+						
+						@Override
+						public void error(Throwable t) {
+							openProjectListener.failure(t);
+						}
+						
+						@Override
+						public void done(Void result) {
+							openProjectListener.ready(GraphWorktreeProject.this);
+						}
+					},
+					new ProgressListener() {
+						
+						@Override
+						public void setProgress(String value, Object... args) {
+							openProjectListener.progress(value, args);
+						}
+					},
 					rootRevisionHash,
 					tagManager,
 					() -> gitProjectHandler.getTagsets(),
 					() -> gitProjectHandler.getDocuments(),
-					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary));
-			openProjectListener.ready(this);
+					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary),
+					backgroundService);
 		}
 	}
 	

@@ -18,7 +18,6 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
@@ -27,7 +26,6 @@ import de.catma.rbac.IRBACManager;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.module.main.ErrorHandler;
 
 /**
  * Displays a list of all projects in a card style layout.
@@ -37,7 +35,6 @@ public class ProjectListView extends VerticalLayout implements
         HasDataProvider<ProjectReference> {
 
     private final ProjectManager projectManager;
-    private final ErrorHandler errorLogger;
 	private final EventBus eventBus;
 	private final Comparator<ProjectReference> sortByNameAsc = (ref1,ref2) -> ref1.getName().compareTo(ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = (ref1,ref2) -> ref2.getName().compareTo(ref1.getName());
@@ -50,7 +47,6 @@ public class ProjectListView extends VerticalLayout implements
     		EventBus eventBus, 
     		IRBACManager rbacManager, 
     		Provider<JoinProjectCard> joinProjectCardProvider){ 
-        this.errorLogger = (ErrorHandler)UI.getCurrent();
         this.projectManager = projectManager;
         this.eventBus = eventBus;
         this.rbacManager = rbacManager;
@@ -68,14 +64,7 @@ public class ProjectListView extends VerticalLayout implements
     @Override
     public void setDataProvider(final DataProvider<ProjectReference, ?> dataProvider) {
         this.dataProvider = Objects.requireNonNull(dataProvider);
-        this.dataProvider.addDataProviderListener(event -> {
-            if (event instanceof DataChangeEvent.DataRefreshEvent) {
-               // refresh(((DataChangeEvent.DataRefreshEvent<ProjectReference>) event).getItem());
-            	rebuild();
-            } else {
-            	rebuild();
-            }
-        });
+        this.dataProvider.addDataProviderListener(event -> rebuild());
         rebuild();
     }
 

@@ -18,7 +18,6 @@ import de.catma.project.Project;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
-import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;

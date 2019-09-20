@@ -134,9 +134,8 @@ public class CatmaNav extends VerticalLayout implements CatmaRouter {
 	@Override
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if(isNewTarget(routeToProjectEvent.getClass())) {
-			addButtons();
-	        setSelectedStyle(btProject);
 	        currentRoute = routeToProjectEvent.getClass();
+	        setSelectedStyle(btProject);
 		}
 	}
 	
@@ -154,6 +153,8 @@ public class CatmaNav extends VerticalLayout implements CatmaRouter {
 	@Subscribe
 	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
 		this.currentProject = projectReadyEvent.getProject();
+		addButtons();
+        setSelectedStyle(btProject);
 	}
 	
 	private void setSelectedStyle(LargeLinkButton selectedButton) {

@@ -72,8 +72,6 @@ public class ProjectCard extends VerticalFlexLayout  {
 		}
 	}
 
-
-
 	protected void initComponents() {
         addStyleName("projectlist__card");
 
@@ -83,7 +81,7 @@ public class ProjectCard extends VerticalFlexLayout  {
         descriptionLabel.setWidth("100%");
         preview.addComponents(descriptionLabel);
 
-        preview.addLayoutClickListener(evt -> eventBus.post(new RouteToProjectEvent(projectReference, false)));
+        preview.addLayoutClickListener(evt -> handleOpenProjectRequest());
         addComponent(preview);
 
         HorizontalFlexLayout descriptionBar = new HorizontalFlexLayout();
@@ -96,7 +94,6 @@ public class ProjectCard extends VerticalFlexLayout  {
         nameLabel.setWidth("100%");
         
         descriptionBar.addComponent(nameLabel);
-//        descriptionBar.setExpandRatio(name,1.0f);
 
         IconButton btnRemove = new IconButton(VaadinIcons.TRASH);
         descriptionBar.addComponents(btnRemove);
@@ -199,7 +196,13 @@ public class ProjectCard extends VerticalFlexLayout  {
         
     }
 
-    public String toString() {
+    private void handleOpenProjectRequest() {
+    	eventBus.post(new RouteToProjectEvent(projectReference, false));
+	}
+
+
+
+	public String toString() {
     	return projectReference.getProjectId() + " " + projectReference.getName() + " "+ projectReference.getDescription();
     }
 }

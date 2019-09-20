@@ -2,14 +2,12 @@ package de.catma.ui.di;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
 import com.google.inject.Scopes;
 import com.vaadin.ui.UI;
 
-import de.catma.ui.CatmaApplication;
 import de.catma.ui.KeyValueStorage;
 
 

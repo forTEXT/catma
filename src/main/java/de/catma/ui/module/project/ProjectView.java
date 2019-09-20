@@ -32,6 +32,7 @@ import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
@@ -41,6 +42,7 @@ import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
@@ -125,6 +127,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private PropertyChangeListener projectExceptionListener;
 	private Multimap<Resource, Resource> docResourceToReadableCollectionResourceMap = HashMultimap.create();
 	private MenuItem miInvite;
+	private ProgressBar progressBar;
 
 	@Inject
     public ProjectView(
@@ -747,6 +750,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	/* build the GUI */
 
 	private void initComponents() {
+		progressBar = new ProgressBar();
+		progressBar.setIndeterminate(false);
+		progressBar.setVisible(false);
+		addComponent(progressBar);
+		setComponentAlignment(progressBar, Alignment.TOP_CENTER);
 		HorizontalFlexLayout mainPanel = new HorizontalFlexLayout();
     	mainPanel.setFlexWrap(FlexWrap.WRAP);
     	mainPanel.addStyleName("project-view-main-panel"); //$NON-NLS-1$
@@ -926,14 +934,30 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @param projectReference
      */
     private void initProject(ProjectReference projectReference) {
+    	progressBar.setIndeterminate(true);
+    	progressBar.setVisible(true);
+    	final UI ui = UI.getCurrent();
         projectManager.openProject(projectReference, new OpenProjectListener() {
 
             @Override
             public void progress(String msg, Object... params) {
+            	ui.access(() -> {
+	            	if (params != null) {
+	            		progressBar.setCaption(String.format(msg, params));
+	            	}
+	            	else {
+	            		progressBar.setCaption(msg);
+	            	}
+	            	ui.push();
+            	});
             }
 
             @Override
             public void ready(Project project) {
+            	progressBar.setIndeterminate(false);
+            	progressBar.setVisible(false);
+            	progressBar.setCaption("");
+            	
                 ProjectView.this.project = project;
                 ProjectView.this.project.addPropertyChangeListener(
                 		RepositoryChangeEvent.exceptionOccurred, 
@@ -944,12 +968,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 		tagsetChangeListener);
 
                 boolean membersEditAllowed = 
-                		projectManager.isAuthorizedOnProject(RBACPermission.PROJECT_MEMBERS_EDIT, projectReference.getProjectId());
+                		projectManager.isAuthorizedOnProject(
+                				RBACPermission.PROJECT_MEMBERS_EDIT, projectReference.getProjectId());
 		        miInvite.setVisible(membersEditAllowed);
 		        teamPanel.setVisible(membersEditAllowed);
                 
 				initData();
 				eventBus.post(new ProjectReadyEvent(project));
+		    	try {
+					rbacEnforcer.enforceConstraints(project.getRoleOnProject());
+				} catch (IOException e) {
+					errorHandler.showAndLogError("Error trying to fetch role", e); //$NON-NLS-1$
+				}
             }
             
             @Override
@@ -1043,11 +1073,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     @Override
     public void reloadAll() {
         initProject(projectReference);
-    	try {
-			rbacEnforcer.enforceConstraints(project.getRoleOnProject());
-		} catch (IOException e) {
-			errorHandler.showAndLogError("Error trying to fetch role", e); //$NON-NLS-1$
-		}
     }
 
     /**

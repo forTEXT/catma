@@ -18098,6 +18098,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-left: 5px;
 	margin-right: 5px;
 	padding: 5px;
+	white-space: normal;
 }
 
 .catma .analyze-card-buttonbar {

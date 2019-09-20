@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -22,8 +21,6 @@ import de.catma.ui.module.main.ErrorHandler;
  */
 public class DashboardView extends VerticalLayout {
 
-    private final ProjectManager projectManager;
-
     private final ErrorHandler errorLogger;
 	
 	private final ProjectListView projects;
@@ -33,8 +30,10 @@ public class DashboardView extends VerticalLayout {
 	private final DataProvider<ProjectReference,Void> projectDataProvider;
 
 	@Inject
-    public DashboardView(@Assisted("projectManager")ProjectManager projectManager, ProjectListView projectList, EventBus eventBus){ 
-        this.projectManager = projectManager;
+    public DashboardView(
+    		@Assisted("projectManager")ProjectManager projectManager,
+    		ProjectListView projectList, 
+    		EventBus eventBus){ 
         this.errorLogger = (ErrorHandler)(UI.getCurrent());
         this.projects = projectList;
         this.eventBus = eventBus;

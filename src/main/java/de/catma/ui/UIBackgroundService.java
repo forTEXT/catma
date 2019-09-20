@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.hazelcast.spi.ExecutionService;
 import com.vaadin.ui.UI;
 
 import de.catma.backgroundservice.BackgroundService;
@@ -17,6 +16,25 @@ import de.catma.backgroundservice.ProgressCallable;
 import de.catma.backgroundservice.ProgressListener;
 
 public class UIBackgroundService implements BackgroundService {
+	
+	public static class UIProgressListener implements ProgressListener {
+		
+		private final ProgressListener delegate;
+		private final UI ui;
+		
+		public UIProgressListener(ProgressListener delegate) {
+			this.delegate = delegate;
+			this.ui = UI.getCurrent();
+		}
+
+		@Override
+		public void setProgress(String value, Object... args) {
+			ui.access(() -> { 
+				delegate.setProgress(value, args);
+				UI.getCurrent().push();
+			});
+		}
+	}
 
 	private ScheduledExecutorService backgroundThread;
 	private boolean background;

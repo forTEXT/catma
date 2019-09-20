@@ -1,0 +1,307 @@
+package de.catma.repository.git.graph.tp;
+
+import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
+import static de.catma.repository.git.graph.NodeType.MarkupCollection;
+import static de.catma.repository.git.graph.NodeType.Position;
+import static de.catma.repository.git.graph.NodeType.ProjectRevision;
+import static de.catma.repository.git.graph.NodeType.Property;
+import static de.catma.repository.git.graph.NodeType.SourceDocument;
+import static de.catma.repository.git.graph.NodeType.Tag;
+import static de.catma.repository.git.graph.NodeType.TagInstance;
+import static de.catma.repository.git.graph.NodeType.Tagset;
+import static de.catma.repository.git.graph.NodeType.Term;
+import static de.catma.repository.git.graph.NodeType.nt;
+import static de.catma.repository.git.graph.RelationType.hasCollection;
+import static de.catma.repository.git.graph.RelationType.hasDocument;
+import static de.catma.repository.git.graph.RelationType.hasInstance;
+import static de.catma.repository.git.graph.RelationType.hasParent;
+import static de.catma.repository.git.graph.RelationType.hasPosition;
+import static de.catma.repository.git.graph.RelationType.hasProperty;
+import static de.catma.repository.git.graph.RelationType.hasTag;
+import static de.catma.repository.git.graph.RelationType.hasTagset;
+import static de.catma.repository.git.graph.RelationType.isAdjacentTo;
+import static de.catma.repository.git.graph.RelationType.isPartOf;
+import static de.catma.repository.git.graph.RelationType.rt;
+
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.jsoniter.JsonIterator;
+import com.jsoniter.any.Any;
+
+import de.catma.document.Range;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.project.ProjectReference;
+import de.catma.repository.git.graph.FileInfoProvider;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagsetDefinition;
+import de.catma.user.User;
+
+class GraphWriter {
+	
+	private final Logger logger = Logger.getLogger(GraphWriter.class.getName());
+	private final Graph graph;
+	private final FileInfoProvider fileInfoProvider;
+	private final ProjectReference projectReference;
+	private final User user;
+	
+	
+	public GraphWriter(Graph graph, FileInfoProvider fileInfoProvider, ProjectReference projectReference, User user) {
+		super();
+		this.graph = graph;
+		this.fileInfoProvider = fileInfoProvider;
+		this.projectReference = projectReference;
+		this.user = user;
+	}
+
+	Vertex addTagset(Vertex projectRevV, TagsetDefinition tagset) {
+		Vertex tagsetV = graph.addVertex(nt(Tagset));
+		
+		tagsetV.property("tagsetId", tagset.getUuid());
+		tagsetV.property("name", tagset.getName());
+//		tagsetV.property("revisionHash", tagset.getRevisionHash());
+//		tagsetV.property("description", "");// TODO: 
+		tagsetV.property("tagset", tagset);
+		
+		projectRevV.addEdge(rt(hasTagset), tagsetV);
+		
+		for (TagDefinition tag : tagset) {			
+			addTag(tagsetV, null, tag);
+		}
+		
+		return tagsetV;
+	}
+
+
+	void addTag(Vertex tagsetV, Vertex parentTagV, TagDefinition tag) {
+		Vertex tagV = graph.addVertex(nt(Tag));
+		
+		tagV.property("tagId", tag.getUuid());
+//		tagV.property("author", tag.getAuthor());
+//		tagV.property("color", tag.getColor());
+		tagV.property("name", tag.getName());
+		tagV.property("tag", tag);
+		
+		tagsetV.addEdge(rt(hasTag), tagV);
+		
+		if (parentTagV != null) {
+			tagV.addEdge(rt(hasParent), parentTagV);
+		}
+		
+		for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
+			addPropertyDefinition(tagV, propertyDef);
+		}
+		
+	}
+	
+	void addPropertyDefinition(Vertex tagV, PropertyDefinition propertyDef) {
+		Vertex propertyDefV = graph.addVertex(nt(Property));
+		propertyDefV.property("uuid", propertyDef.getUuid());
+		propertyDefV.property("name", propertyDef.getName());
+		propertyDefV.property("values", propertyDef.getPossibleValueList());
+		
+		tagV.addEdge(rt(hasProperty), propertyDefV);
+	}
+	
+
+	void addHasParentRelations(Vertex tagsetV, TagsetDefinition tagset) {
+		if (!tagset.isEmpty()) {
+			GraphTraversalSource g = graph.traversal();
+			
+			for (TagDefinition tag : tagset) {
+				if (!tag.getParentUuid().isEmpty()) {
+					Vertex tagV = g.V(tagsetV).outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid()).next();
+				
+					Vertex parentTagV = g.V(tagsetV).outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getParentUuid()).next();
+					
+					tagV.addEdge(rt(hasParent), parentTagV);
+				}
+			}
+			
+		}
+	}
+	
+	void addDocument(Vertex projectRevV, SourceDocument document) throws Exception {
+		logger.info("Starting to add Document " + document + " to the graph");
+		Vertex documentV = graph.addVertex(nt(SourceDocument));
+		SourceDocumentInfo info = 
+			document.getSourceContentHandler().getSourceDocumentInfo();
+		info.getTechInfoSet().setURI(fileInfoProvider.getSourceDocumentFileURI(document.getUuid()));
+		documentV.property("documentId", document.getUuid());
+//		documentV.property("author", info.getContentInfoSet().getAuthor());
+//		documentV.property("description", info.getContentInfoSet().getDescription());
+//		documentV.property("publisher", info.getContentInfoSet().getPublisher());
+//		documentV.property("title", info.getContentInfoSet().getTitle());
+//		documentV.property("checsum", info.getTechInfoSet().getChecksum());
+//		documentV.property("charset", info.getTechInfoSet().getCharset());
+//		documentV.property("fileOSType", info.getTechInfoSet().getFileOSType());
+//		documentV.property("fileType", info.getTechInfoSet().getFileType());
+//		documentV.property("mimeType", info.getTechInfoSet().getMimeType());
+//		documentV.property("locale", info.getIndexInfoSet().getLocale());
+		documentV.property("document", document);
+		
+		//TODO: necessary?
+//		documentV.property("unseparableCharacterSequences", info.getIndexInfoSet().getUnseparableCharacterSequences());
+//		documentV.property("userDefinedSeparatingCharacters", info.getIndexInfoSet().getUserDefinedSeparatingCharacters());
+		
+		projectRevV.addEdge(rt(hasDocument), documentV);
+		
+		try {
+			Path tokensPath = fileInfoProvider.getTokenizedSourceDocumentPath(document.getUuid());
+			Any content = JsonIterator.deserialize(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"));
+			Map<Integer, Vertex> adjacencyMap = new HashMap<>();
+			for (Map.Entry<String, Any> entry : content.asMap().entrySet()) {
+				String term = entry.getKey();
+				Vertex termV = graph.addVertex(nt(Term));
+				termV.property("literal", term);
+				List<Any> positionList = entry.getValue().asList();
+				termV.property("freq", positionList.size());
+				
+				termV.addEdge(rt(isPartOf), documentV);
+				
+				for (Any posEntry : positionList) {
+					int startOffset = posEntry.get("startOffset").as(Integer.class);
+					int endOffset = posEntry.get("endOffset").as(Integer.class);
+					int tokenOffset = posEntry.get("tokenOffset").as(Integer.class);
+					
+					Vertex positionV = graph.addVertex(nt(Position));
+					positionV.property(
+						"startOffset", startOffset);
+					positionV.property( 
+						"endOffset", endOffset);
+					positionV.property(
+						"tokenOffset", tokenOffset);
+					
+					termV.addEdge(rt(hasPosition), positionV);
+					adjacencyMap.put(tokenOffset, positionV);
+					
+				}
+			}
+			for (int i=0; i<adjacencyMap.size()-1; i++) {
+				adjacencyMap.get(i).addEdge(rt(isAdjacentTo), adjacencyMap.get(i+1));
+			}
+			logger.info("Finished adding Document " + document + " to the graph");	
+		}
+		catch (Exception e) {
+			logger.log(
+				Level.SEVERE, 
+				String.format(
+					"error loading tokens for Document %1$s in project %2$s", 
+					document.getUuid(), 
+					projectReference.getProjectId()), 
+				e);
+		}
+			
+	}
+	
+	void addCollection(String oldRevisionHash, String revisionHash, AnnotationCollection collection) {
+		GraphTraversalSource g = graph.traversal();
+		
+		Vertex documentV = 
+			g.V().has(nt(ProjectRevision), "revisionHash", oldRevisionHash)
+			.property("revisionHash", revisionHash)
+			.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", collection.getSourceDocumentId()).next();
+		documentV
+		.property("document")
+		.ifPresent(
+			doc -> 
+				((SourceDocument)doc).addUserMarkupCollectionReference(
+					new AnnotationCollectionReference(
+							collection.getUuid(),  
+							collection.getRevisionHash(),  
+							collection.getContentInfoSet(),  
+							collection.getSourceDocumentId(), 
+							collection.getSourceDocumentRevisionHash())));
+		Vertex collectionV = graph.addVertex(nt(MarkupCollection));
+		
+		collectionV.property("collectionId", collection.getId());
+//		collectionV.property("name", collection.getName());
+//		collectionV.property("revisionHash", collection.getRevisionHash());
+		collectionV.property("collection", collection);
+		
+		documentV.addEdge(rt(hasCollection), collectionV);
+		
+		addTagReferences(revisionHash, collectionV, collection.getTagReferences());
+	}
+	
+
+
+	void addTagReferences(String revisionHash, Vertex collectionV, List<TagReference> tagReferences) {
+		final ArrayListMultimap<TagInstance, Range> tagInstancesAndRanges = ArrayListMultimap.create();
+		
+		tagReferences.forEach(tagReference -> {
+			tagInstancesAndRanges.put(tagReference.getTagInstance(), tagReference.getRange());
+		});
+		
+		for (TagInstance ti : tagInstancesAndRanges.keySet()) {
+			List<Range> ranges = tagInstancesAndRanges.get(ti);
+			List<Integer> flatRanges = 
+				ranges
+				.stream()
+				.sorted()
+				.flatMap(range -> Stream.of(range.getStartPoint(), range.getEndPoint()))
+				.collect(Collectors.toList());
+			
+			
+			if (ti.getAuthor() == null) {
+				ti.setAuthor(user.getIdentifier());
+			}
+			
+			String tagsetId = ti.getTagsetId();
+			String tagId = ti.getTagDefinitionId();
+			
+			Vertex tagInstanceV = graph.addVertex(nt(TagInstance));
+			
+			tagInstanceV.property("tagInstanceId", ti.getUuid());
+			tagInstanceV.property("author", ti.getAuthor());
+			tagInstanceV.property("timestamp", ti.getTimestamp());
+			tagInstanceV.property("ranges", flatRanges);
+			
+			collectionV.addEdge(rt(hasInstance), tagInstanceV);
+			
+			GraphTraversalSource g = graph.traversal();
+			GraphTraversal<Vertex, Vertex> traversal = 
+				g.V().has(nt(ProjectRevision), "revisionHash", revisionHash)
+				.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagsetId)
+				.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tagId);
+			if (traversal.hasNext()) {
+				Vertex tagV = traversal.next();
+	
+				tagV.addEdge(rt(hasInstance), tagInstanceV);
+				
+				for (Property property : ti.getUserDefinedProperties()) {
+					Vertex annoPropertyV = graph.addVertex(nt(AnnotationProperty));
+					annoPropertyV.property("uuid", property.getPropertyDefinitionId());
+					annoPropertyV.property("values", property.getPropertyValueList());
+					
+					tagInstanceV.addEdge(rt(hasProperty), annoPropertyV);
+				}
+			}
+			else {
+				//TODO: check if deleted -> delete annotation/offer alternative, else do nothing and wait for next sync
+			}
+		}		
+	}
+
+
+}

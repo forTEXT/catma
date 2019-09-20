@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import org.antlr.runtime.RecognitionException;
 import org.vaadin.sliderpanel.SliderPanel;
@@ -29,6 +28,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -44,7 +44,6 @@ import de.catma.queryengine.QueryJob.QueryException;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.tabbedview.ClosableTab;
@@ -58,12 +57,11 @@ import de.catma.ui.module.analyze.resourcepanel.AnalyzeResourcePanel;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.analyze.visualization.vega.DistributionDisplaySettingHandler;
 import de.catma.ui.module.analyze.visualization.vega.VegaPanel;
-import de.catma.util.StopWatch;
+import de.catma.ui.module.main.ErrorHandler;
 
 public class AnalyzeView extends HorizontalLayout
 		implements ClosableTab {
 
-	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private IndexedProject project;
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	
@@ -92,6 +90,7 @@ public class AnalyzeView extends HorizontalLayout
 	private AnalyzeCaption analyzeCaption;
 	
 	private EventBus eventBus;
+	private ProgressBar progressBar;
 
 	public AnalyzeView(
 			Corpus corpus, 
@@ -258,13 +257,17 @@ public class AnalyzeView extends HorizontalLayout
 		queryBox.setEmptySelectionCaption("Select or enter a free query");
 		queryBox.setWidth("100%");
 		
+		progressBar = new ProgressBar();
+		progressBar.setIndeterminate(false);
+		progressBar.setVisible(false);
+		
 		btExecuteSearch = new Button("Search", VaadinIcons.SEARCH);	
 		btExecuteSearch.addStyleName(MaterialTheme.BUTTON_PRIMARY);
 		btExecuteSearch.setWidth("100%");
 		
 		HorizontalLayout queryPanel = new HorizontalLayout();
 		queryPanel.setSizeFull();
-		queryPanel.addComponents(btQueryBuilder, queryBox);
+		queryPanel.addComponents(btQueryBuilder, queryBox, progressBar);
 		queryPanel.setExpandRatio(queryBox, 1.0f);
 		
 		searchPanel.addComponents(queryPanel, btExecuteSearch);
@@ -273,7 +276,7 @@ public class AnalyzeView extends HorizontalLayout
 	}
 
 	private HorizontalLayout createVizIconsPanel() {		
-		kwicBt = new Button("Kwic", VaadinIcons.SPLIT);
+		kwicBt = new Button("Kwic", VaadinIcons.TABLE);
 		kwicBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		kwicBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		kwicBt.addStyleName("analyze_viz_icon");
@@ -411,7 +414,14 @@ public class AnalyzeView extends HorizontalLayout
 		    
 		return settings;
 	}
-
+	
+	private void showProgress(boolean visible) {
+		progressBar.setVisible(visible);
+		progressBar.setIndeterminate(visible);
+		btExecuteSearch.setEnabled(!visible);
+		btQueryBuilder.setEnabled(!visible);
+	}
+	
 	private void executeSearch() {
 
 		String searchInput = queryBox.getValue();
@@ -428,12 +438,11 @@ public class AnalyzeView extends HorizontalLayout
 				indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), project);
 		QueryJob job = new QueryJob(searchInput, queryOptions);
 		
-		//TODO: show progress
+		showProgress(true);
+		
 		((BackgroundServiceProvider) UI.getCurrent()).submit("Searching...",
 				job, new ExecutionListener<QueryResult>() {
 					public void done(QueryResult result) {
-						StopWatch watch = new StopWatch();
-						System.out.println(watch);
 						try {
 							QueryResultPanel queryResultPanel = new QueryResultPanel(project, result,
 									new QueryId(searchInput.toString()),
@@ -442,15 +451,14 @@ public class AnalyzeView extends HorizontalLayout
 							
 							resultsPanel.addComponentAsFirst(queryResultPanel);
 							addQueryResultPanelSetting(queryResultPanel.getQueryResultPanelSetting());
-						} catch (Exception e) {
-							//TODO: error handling
-							e.printStackTrace();
 						}
-
-						System.out.println(watch);
+						finally {
+							showProgress(false);
+						}
 					};
 
 					public void error(Throwable t) {
+						showProgress(false);
 
 						if (t instanceof QueryException) {
 							QueryJob.QueryException qe = (QueryJob.QueryException) t;
@@ -471,7 +479,7 @@ public class AnalyzeView extends HorizontalLayout
 										Type.TRAY_NOTIFICATION);
 							}
 						} else {
-							((CatmaApplication) UI.getCurrent())
+							((ErrorHandler) UI.getCurrent())
 									.showAndLogError("Error during search!", t);
 						}
 					}

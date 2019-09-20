@@ -7,6 +7,9 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.Multimap;
 
+import de.catma.backgroundservice.BackgroundService;
+import de.catma.backgroundservice.ExecutionListener;
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -25,11 +28,15 @@ public interface GraphProjectHandler {
 		public List<AnnotationCollection> get(TagLibrary tagLibrary);
 	}
 
-	void ensureProjectRevisionIsLoaded(String revisionHash, 
+	void ensureProjectRevisionIsLoaded(
+			ExecutionListener<Void> openProjectListener,
+			ProgressListener progressListener,
+			String revisionHash, 
 			TagManager tagManager,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier,
 			Supplier<List<SourceDocument>> documentsSupplier,
-			CollectionsSupplier collectionsSupplier) throws Exception;
+			CollectionsSupplier collectionsSupplier, 
+			BackgroundService backgroundService) throws Exception;
 
 	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document,
 			Path tokenizedSourceDocumentPath) throws Exception;
