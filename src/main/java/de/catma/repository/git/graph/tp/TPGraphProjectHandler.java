@@ -295,7 +295,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		Set<String> tagInstanceIds = 
 			tagReferences
 				.stream()
-				.map(tr -> tr.getTagInstanceID())
+				.map(tr -> tr.getTagInstanceId())
 				.collect(Collectors.toSet());
 		
 		GraphTraversalSource g = graph.traversal();

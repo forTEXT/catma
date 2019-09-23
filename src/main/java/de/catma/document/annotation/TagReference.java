@@ -23,10 +23,7 @@ import java.net.URISyntaxException;
 import java.util.Comparator;
 
 import de.catma.document.Range;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
-import de.catma.tag.PropertyDefinition.SystemPropertyName;
 
 /**
  * A {@link Range} of text referenced by a {@link TagInstance}.
@@ -86,7 +83,7 @@ public class TagReference {
 	/**
 	 * @return uuid of the {@link TagInstance}.
 	 */
-	public String getTagInstanceID() {
+	public String getTagInstanceId() {
 		return tagInstance.getUuid();
 	}
 	

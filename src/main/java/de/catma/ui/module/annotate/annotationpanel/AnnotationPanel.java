@@ -1098,7 +1098,7 @@ public class AnnotationPanel extends VerticalLayout {
 		//TODO: hide annotations from selected tagsets and this collection
 		annotationDetailsPanel.removeAnnotations(
 			collection.getTagReferences().stream().map(
-					tr -> tr.getTagInstanceID()).collect(Collectors.toSet()));
+					tr -> tr.getTagInstanceId()).collect(Collectors.toSet()));
 	}
 
 	public void removeCollection(String collectionId) {

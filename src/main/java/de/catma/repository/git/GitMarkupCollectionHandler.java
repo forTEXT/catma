@@ -9,11 +9,11 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.MergeResult;
@@ -22,20 +22,25 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
-import de.catma.rbac.RBACPermission;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.tag.Property;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
-import de.catma.user.User;
+import de.catma.tag.TagsetDefinition;
 
 public class GitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -73,12 +78,12 @@ public class GitMarkupCollectionHandler {
 	 * @throws IOException if an error occurs while creating the markup collection
 	 */
 	public String create(
-			@Nonnull String projectId,
-			@Nullable String markupCollectionId,
-			@Nonnull String name,
-			@Nullable String description,
-			@Nonnull String sourceDocumentId,
-			@Nonnull String sourceDocumentVersion
+			String projectId,
+			String markupCollectionId,
+			String name,
+			String description,
+			String sourceDocumentId,
+			String sourceDocumentVersion
 	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -131,10 +136,10 @@ public class GitMarkupCollectionHandler {
 	 * @param tagsetVersion the version of the tagset to add
 	 * @throws IOException if an error occurs while adding the tagset
 	 */
-	public void addTagset(@Nonnull String projectId,
-						  @Nonnull String markupCollectionId,
-						  @Nonnull String tagsetId,
-						  @Nonnull String tagsetVersion,
+	public void addTagset(String projectId,
+						  String markupCollectionId,
+						  String tagsetId,
+						  String tagsetVersion,
 						  String commitMsg
 	) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -169,7 +174,7 @@ public class GitMarkupCollectionHandler {
 		}
 	}
 
-	public void removeTagset(@Nonnull String projectId, @Nonnull String markupCollectionId, @Nonnull String tagsetId)
+	public void removeTagset(String projectId, String markupCollectionId, String tagsetId)
 			throws IOException {
 		// it should only be possible to remove a tagset if there are no tag instances referring to any of its tag
 		// definitions
@@ -190,9 +195,9 @@ public class GitMarkupCollectionHandler {
 	 * @throws IOException if an error occurs while creating the tag instance
 	 */
 	public String createTagInstance(
-			@Nonnull String projectId,
-			@Nonnull String markupCollectionId,
-			@Nonnull JsonLdWebAnnotation annotation
+			String projectId,
+			String markupCollectionId,
+			JsonLdWebAnnotation annotation
 	) throws IOException {
 
 		// TODO: check that the markup collection references the tagset for the tag instance being added
@@ -314,7 +319,7 @@ public class GitMarkupCollectionHandler {
 	}
 
 	public AnnotationCollection getCollection(
-			@Nonnull String projectId, @Nonnull String markupCollectionId, TagLibrary tagLibrary)
+			String projectId, String collectionId, TagLibrary tagLibrary)
 			throws Exception {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -322,7 +327,7 @@ public class GitMarkupCollectionHandler {
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String markupCollectionSubmoduleRelDir = 
-					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + markupCollectionId;
+					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + collectionId;
 
 			File markupCollectionSubmoduleAbsPath = new File(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
@@ -336,9 +341,60 @@ public class GitMarkupCollectionHandler {
 			localGitRepoManager.detach();  // can't call open on an attached instance
 
 			ArrayList<TagReference> tagReferences = this.openTagReferences(
-					projectId, markupCollectionId, markupCollectionSubmoduleAbsPath
+					projectId, collectionId, markupCollectionSubmoduleAbsPath
 			);
-
+			
+			// handle orphan Annotations
+			ArrayListMultimap<TagInstance, TagReference> tagInstances = ArrayListMultimap.create();
+			
+			Set<String> orphanAnnotationIds = new HashSet<>();
+			Iterator<TagReference> tagReferenceIterator = tagReferences.iterator();
+			while (tagReferenceIterator.hasNext()) {
+				TagReference tagReference = tagReferenceIterator.next();
+				if (!orphanAnnotationIds.contains(tagReference.getTagInstanceId())) {
+					TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
+							tagReference.getTagInstance().getTagsetId());
+					
+					String tagId = tagReference.getTagDefinitionId();
+					
+					if (tagset.isDeleted(tagId)) {
+						// Tag has been deleted, we remove the stale Annotation as well
+						orphanAnnotationIds.add(tagReference.getTagInstanceId());
+						tagReferenceIterator.remove();
+					}
+					else {
+						// other orphan Annotations get ignored upon indexing
+						// until the corresponding Tag or its "deletion" info come along
+						
+						tagInstances.put(tagReference.getTagInstance(), tagReference);
+					}
+				}
+			}
+			removeTagInstances(projectId, collectionId, orphanAnnotationIds);
+			
+			//handle orphan Properties
+			for (TagInstance tagInstance : tagInstances.keySet()) {
+				TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
+						tagInstance.getTagsetId());
+				Collection<Property> properties = tagInstance.getUserDefinedProperties();
+				for (Property property : new HashSet<>(properties)) {
+					// deleted property?
+					if (tagset.isDeleted(property.getPropertyDefinitionId())) {
+						// yes, we remove the stale property
+						tagInstance.removeUserDefinedProperty(property.getPropertyDefinitionId());
+						// and save the change
+						JsonLdWebAnnotation annotation = 
+								new JsonLdWebAnnotation(
+									CATMAPropertyKey.GitLabServerUrl.getValue(), 
+									projectId, 
+									tagInstances.get(tagInstance),
+									tagLibrary);
+						createTagInstance(projectId, collectionId, annotation);
+					}
+				}
+			}
+			
+			
 			File markupCollectionHeaderFile = new File(
 					markupCollectionSubmoduleAbsPath,
 					"header.json"
@@ -359,12 +415,11 @@ public class GitMarkupCollectionHandler {
 			);
 
 			AnnotationCollection userMarkupCollection = new AnnotationCollection(
-					markupCollectionId, contentInfoSet, tagLibrary, tagReferences,
+					collectionId, contentInfoSet, tagLibrary, tagReferences,
 					markupCollectionHeader.getSourceDocumentId(), 
 					markupCollectionHeader.getSourceDocumentVersion()
 			);
 			userMarkupCollection.setRevisionHash(markupCollectionRevisionHash);
-			userMarkupCollection.addTagReferences(tagReferences);
 			return userMarkupCollection;
 		}
 	}

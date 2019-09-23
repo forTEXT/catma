@@ -172,9 +172,9 @@ public class TeiUserMarkupCollectionSerializer {
 		List<TagInstance> tagInstances = new ArrayList<TagInstance>();
 		
 		for (TagReference tr : tagReferences) {
-			if (!addedTagInstances.contains(tr.getTagInstanceID())) {
+			if (!addedTagInstances.contains(tr.getTagInstanceId())) {
 				writeTagInstance(tr.getTagInstance(), textElement);
-				addedTagInstances.add(tr.getTagInstanceID());
+				addedTagInstances.add(tr.getTagInstanceId());
 			}
 			tagInstances.add(tr.getTagInstance());
 		}

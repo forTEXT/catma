@@ -70,6 +70,7 @@ public class AnnotationCollection {
 		this.contentInfoSet = contentInfoSet;
 		this.tagLibrary = tagLibrary;
 		this.tagReferences = new ArrayList<TagReference>();
+		this.tagReferences.addAll(tagReferences);
 		this.sourceDocumentId = sourceDocumentId;
 		this.sourceDocumentRevisionHash = sourceDocumentRevisionHash;
 	}
@@ -239,7 +240,7 @@ public class AnnotationCollection {
 		List<TagReference> result = new ArrayList<TagReference>();
 		
 		for (TagReference tr : getTagReferences()) {
-			if (tr.getTagInstanceID().equals(tagInstanceID)) {
+			if (tr.getTagInstanceId().equals(tagInstanceID)) {
 				result.add(tr);
 			}
 		}
@@ -261,7 +262,7 @@ public class AnnotationCollection {
 	 */
 	public boolean hasTagInstance(String instanceID) {
 		for (TagReference tr : getTagReferences()) {
-			if (tr.getTagInstanceID().equals(instanceID)) {
+			if (tr.getTagInstanceId().equals(instanceID)) {
 				return true;
 			}
 		}

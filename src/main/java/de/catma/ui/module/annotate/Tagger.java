@@ -229,16 +229,16 @@ public class Tagger extends AbstractComponent {
 							tagReference.getRange().getStartPoint(), 
 							tagReference.getRange().getEndPoint()));
 			ClientTagInstance tagInstance = 
-					tagInstancesByInstanceID.get(tagReference.getTagInstanceID());
+					tagInstancesByInstanceID.get(tagReference.getTagInstanceId());
 			if (tagInstance == null) {
 				TagDefinition tagDefintion = 
 					project.getTagManager().getTagLibrary().getTagDefinition(tagReference.getTagDefinitionId());
 				
 				tagInstancesByInstanceID.put(
-						tagReference.getTagInstanceID(),
+						tagReference.getTagInstanceId(),
 						new ClientTagInstance(
 								tagReference.getTagDefinitionId(),
-								tagReference.getTagInstanceID(), 
+								tagReference.getTagInstanceId(), 
 								ColorConverter.toHex(tagDefintion.getColor()), 
 								textRanges));
 			}

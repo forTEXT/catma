@@ -311,7 +311,7 @@ public class TaggerView extends HorizontalLayout
 			List<AnnotationCollection> userMarkupCollections) {
 		
 		for (AnnotationCollection umc : userMarkupCollections) {
-			if (umc.hasTagInstance(tr.getTagInstanceID())) {
+			if (umc.hasTagInstance(tr.getTagInstanceId())) {
 				return true;
 			}
 		}

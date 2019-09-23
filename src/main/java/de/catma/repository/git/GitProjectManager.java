@@ -168,7 +168,7 @@ public class GitProjectManager implements ProjectManager {
 			
 			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
 
-			TagLibrary tagLibrary = new TagLibrary(projectReference.getName());
+			TagLibrary tagLibrary = new TagLibrary();
 
 			Project project =
 				new GraphWorktreeProject(

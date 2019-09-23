@@ -476,7 +476,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				gitProjectHandler.addOrUpdate(
 					collectionId, 
 					tagReferences.stream()
-						.filter(tagRef -> tagRef.getTagInstanceID().equals(tagInstance.getUuid()))
+						.filter(tagRef -> tagRef.getTagInstanceId().equals(tagInstance.getUuid()))
 						.collect(Collectors.toList()), 
 					tagManager.getTagLibrary());
 			}
@@ -962,7 +962,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 				Collection<String> tagInstanceIds = tagReferences
 						.stream()
-						.map(tr -> tr.getTagInstanceID())
+						.map(tr -> tr.getTagInstanceId())
 						.collect(Collectors.toSet());
 				
 				for (String tagInstanceId : tagInstanceIds) {
@@ -1054,7 +1054,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void importTagLibrary(InputStream inputStream) throws IOException {
 		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory();
-		factory.setTagManager(new TagManager(new TagLibrary("import")));
+		factory.setTagManager(new TagManager(new TagLibrary()));
 		TagLibrarySerializationHandler tagLibrarySerializationHandler = 
 				factory.getTagLibrarySerializationHandler();
 		TagLibrary importedLibrary =

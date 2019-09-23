@@ -86,7 +86,7 @@ public class ConflictedProjectView extends HugeCard {
 				&& ((tagsetConflictsIterator == null) || !this.tagsetConflictsIterator.hasNext())
 				&& ((tagConflictIterator == null) || !this.tagConflictIterator.hasNext())) {
 				conflictedProject.resolveTagsetConflicts(this.tagsetConflicts);
-				this.tagManager = new TagManager(new TagLibrary("conflicted-project"));
+				this.tagManager = new TagManager(new TagLibrary());
 
 				conflictedProject.getTagsets().stream().forEach(
 						tagset -> tagManager.addTagsetDefinition(tagset));

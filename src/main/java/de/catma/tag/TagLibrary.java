@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.catma.document.source.ContentInfoSet;
-
 /**
  * A library of {@link TagsetDefinition}s.
  * 
@@ -36,27 +34,10 @@ import de.catma.document.source.ContentInfoSet;
  */
 public class TagLibrary implements Iterable<TagsetDefinition> {
 
-	private ContentInfoSet contentInfoSet;
 	private Map<String,TagsetDefinition> tagsetDefinitionsByID;
 	
-	/**
-	 * @param id identifier, repository dependent
-	 * @param name name of the library
-	 */
-	public TagLibrary(String name) {
-		this(new ContentInfoSet(name));
-	}
-	
-	private TagLibrary(ContentInfoSet contentInfoSet) {
-		this.contentInfoSet = contentInfoSet; 
+	public TagLibrary() {
 		tagsetDefinitionsByID = new HashMap<String, TagsetDefinition>();
-	}
-
-	public TagLibrary(TagLibrary tagLibraryToCopy) {
-		this(new ContentInfoSet(tagLibraryToCopy.contentInfoSet));
-		for (TagsetDefinition tagsetDef : tagLibraryToCopy) {
-			add(new TagsetDefinition(tagsetDef));
-		}
 	}
 
 	void add(TagsetDefinition tagsetDefinition) {
@@ -97,14 +78,6 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 	 */
 	public TagsetDefinition getTagsetDefinition(String tagsetDefinitionID) {
 		return tagsetDefinitionsByID.get(tagsetDefinitionID);
-	}
-	
-	public String getName() {
-		return contentInfoSet.getTitle();
-	}
-
-	public void setName(String name) {
-		this.contentInfoSet.setTitle(name);
 	}
 
 	/**
@@ -168,20 +141,18 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 		TagsetDefinition tagsetDefinition = getTagsetDefinition(tagDefinition);
 		return tagsetDefinition.getTagPath(tagDefinition);
 	}
-	
-	/**
-	 * @return bibliographical meta data
-	 */
-	public ContentInfoSet getContentInfoSet() {
-		//TODO: unmodifiable copy
-		return contentInfoSet;
-	}
-	
-	void setContentInfoSet(ContentInfoSet contentInfoSet) {
-		this.contentInfoSet = contentInfoSet;
-	}
 
 	void clear() {
 		tagsetDefinitionsByID.clear();
+	}
+	
+	public boolean isDeleted(String definitionUuid) {
+		for (TagsetDefinition tagset : this) {
+			if (tagset.isDeleted(definitionUuid)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }

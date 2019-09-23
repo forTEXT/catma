@@ -284,21 +284,27 @@ class GraphWriter {
 				g.V().has(nt(ProjectRevision), "revisionHash", revisionHash)
 				.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagsetId)
 				.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tagId);
-			if (traversal.hasNext()) {
+			if (traversal.hasNext()) {	// usually the Tag should always be present, 
+										// because we delete stale Annotations when loading the Collection from git
+										// if we hit an orphan Annotation at this stage it gets ignored
+				                        // until the next sync might bring the corresponding Tag
 				Vertex tagV = traversal.next();
 	
 				tagV.addEdge(rt(hasInstance), tagInstanceV);
 				
 				for (Property property : ti.getUserDefinedProperties()) {
-					Vertex annoPropertyV = graph.addVertex(nt(AnnotationProperty));
-					annoPropertyV.property("uuid", property.getPropertyDefinitionId());
-					annoPropertyV.property("values", property.getPropertyValueList());
 					
-					tagInstanceV.addEdge(rt(hasProperty), annoPropertyV);
+					if (g.V(tagV)
+							.outE(rt(hasProperty))
+							.inV().has(nt(Property), "uuid", property.getPropertyDefinitionId())
+							.hasNext()) {
+						Vertex annoPropertyV = graph.addVertex(nt(AnnotationProperty));
+						annoPropertyV.property("uuid", property.getPropertyDefinitionId());
+						annoPropertyV.property("values", property.getPropertyValueList());
+						
+						tagInstanceV.addEdge(rt(hasProperty), annoPropertyV);
+					}
 				}
-			}
-			else {
-				//TODO: check if deleted -> delete annotation/offer alternative, else do nothing and wait for next sync
 			}
 		}		
 	}
