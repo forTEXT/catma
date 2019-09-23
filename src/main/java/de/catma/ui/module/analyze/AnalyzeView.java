@@ -254,7 +254,7 @@ public class AnalyzeView extends HorizontalLayout
 
 		queryBox = new ComboBox<>();
 		queryBox.setDataProvider(new ListDataProvider<>(queryProposals));
-		queryBox.setEmptySelectionCaption("Select or enter a free query");
+		queryBox.setPlaceholder("Select or enter a free query");
 		queryBox.setWidth("100%");
 		
 		progressBar = new ProgressBar();

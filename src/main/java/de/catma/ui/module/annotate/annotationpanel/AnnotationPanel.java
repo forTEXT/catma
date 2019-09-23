@@ -298,20 +298,20 @@ public class AnnotationPanel extends VerticalLayout {
             
     		if (!project.isAuthorizedOnProject(RBACPermission.COLLECTION_CREATE)) {
     			if (editableCollectionProvider.getItems().isEmpty()) {
-    				currentEditableCollectionBox.setEmptySelectionCaption(
+    				currentEditableCollectionBox.setPlaceholder(
     						"Please contact the Project maintainer to get an editable Collection!");
     			}
     			else {
-    				currentEditableCollectionBox.setEmptySelectionCaption(
+    				currentEditableCollectionBox.setPlaceholder(
     						"Please select a Collection...");
     			}
     		}
     		else if (editableCollectionProvider.getItems().isEmpty()) {
-				currentEditableCollectionBox.setEmptySelectionCaption(
+				currentEditableCollectionBox.setPlaceholder(
 						"Please create a Collection...");
     		}
     		else {
-				currentEditableCollectionBox.setEmptySelectionCaption(
+				currentEditableCollectionBox.setPlaceholder(
 						"Please select a Collection...");    			
     		}
     		
@@ -984,7 +984,7 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		currentEditableCollectionBox = new ComboBox<>("Collection currently being edited");
 		currentEditableCollectionBox.setWidth("100%");
-		currentEditableCollectionBox.setEmptySelectionCaption(
+		currentEditableCollectionBox.setPlaceholder(
 				"Please select a Document first!");
 
 		btAddCollection = new IconButton(VaadinIcons.PLUS);
