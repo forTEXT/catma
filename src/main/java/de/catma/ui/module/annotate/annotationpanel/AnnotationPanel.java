@@ -252,8 +252,7 @@ public class AnnotationPanel extends VerticalLayout {
 			try {
 				addCollection(project.getUserMarkupCollection(collectionReference));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				((ErrorHandler)UI.getCurrent()).showAndLogError("error add new Collection", e);
 			}
 		}
 		else if (collectionChangeEvent.getChangeType().equals(ChangeType.DELETED)) {

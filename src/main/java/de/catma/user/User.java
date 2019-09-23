@@ -47,26 +47,6 @@ public interface User extends RBACSubject {
 	 */
 	String getEmail();
 
-	/**
-	 * @return true if the user is locked
-	 */
-	boolean isLocked();
-
-	/**
-	 * @return true if the user is a guest
-	 */
-	boolean isGuest();
-
-	/**
-	 * @return true if the user is spawnable
-	 */
-	boolean isSpawnable();
-	
-	/**
-	 * @return true if the user has the given permission
-	 */
-	boolean hasPermission(Permission permission);
-	
 	default String preciseName() {
 		return getName() + " / " + getIdentifier();
 	}

@@ -27,6 +27,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -42,6 +43,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
+import de.catma.ui.module.main.ErrorHandler;
 
 public class QueryResultPanel extends VerticalLayout {
 	
@@ -781,8 +783,8 @@ public class QueryResultPanel extends VerticalLayout {
 			tokenCount = flatTagBasedTreeData.getRootItems().size();
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO:
-		}
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error adding query result", e);
+        }
 	}
 
 	void addPropertiesAsColumnsTagBasedRootItems(QueryResult result) {
@@ -843,7 +845,7 @@ public class QueryResultPanel extends VerticalLayout {
 			tokenCount = propertiesAsColumnsTagBasedTreeData.getRootItems().size();
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO:
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error adding query result", e);
 		}			
 	}
 

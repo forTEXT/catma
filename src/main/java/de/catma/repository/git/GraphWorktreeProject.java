@@ -674,12 +674,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void reload() throws IOException {
-		// TODO Auto-generated method stub 
-
-	}
-
-	@Override
 	public void close() {
 		try {
 			commitAllChanges(
@@ -854,8 +848,6 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) {
-		// TODO Auto-generated method stub
-
         eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.UPDATED));
 	}
 

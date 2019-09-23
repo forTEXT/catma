@@ -816,8 +816,7 @@ public class TaggerView extends HorizontalLayout
 					userMarkupCollectionManager.getAnnotations(
 							pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID)));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
 		}
 	}
 	
@@ -827,8 +826,7 @@ public class TaggerView extends HorizontalLayout
 			annotationPanel.showAnnotationDetails(
 				userMarkupCollectionManager.getAnnotations(tagInstanceIDs));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
 		}
 	}
 	

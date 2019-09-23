@@ -198,12 +198,6 @@ public interface Project {
 	 */
 	public void open(OpenProjectListener openProjectListener);
 	
-	/**
-	 * Reloads information about available {@link SourceDocument}s, {@link AnnotationCollection}s and
-	 * {@link TagLibary TagLibraries}.
-	 * @throws IOException any repository error
-	 */
-	public void reload() throws IOException;
 	public void close();
 	
 	/**

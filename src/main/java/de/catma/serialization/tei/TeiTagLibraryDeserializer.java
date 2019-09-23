@@ -20,19 +20,20 @@ package de.catma.serialization.tei;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import de.catma.ExceptionHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
-import de.catma.util.IDGenerator;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 
 public class TeiTagLibraryDeserializer {
+	
+	private Logger logger = Logger.getLogger(TeiTagLibraryDeserializer.class.getName());
 	
 	private TeiDocument teiDocument;
 	private TagManager tagManager;
@@ -118,7 +119,7 @@ public class TeiTagLibraryDeserializer {
 				tagDef.addSystemPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
-				ExceptionHandler.log(uee);
+				logger.log(Level.SEVERE, "error adding system property " + systemPropertyNodes.get(i), uee);
 			}
 				
 		}
@@ -130,7 +131,7 @@ public class TeiTagLibraryDeserializer {
 				tagDef.addUserDefinedPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
-				ExceptionHandler.log(uee);
+				logger.log(Level.SEVERE, "error adding user property " + userPropertyNodes.get(i), uee);
 			}
 				
 		}

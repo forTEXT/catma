@@ -419,7 +419,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	    				}
 	    				catch (Exception e) {
-	    					e.printStackTrace(); //TODO
+	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
 	    				}
 	    			});
 	    		dlg.show();
@@ -436,8 +436,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    				initData();
 	    				//TODO: post event to other views needed
 	    				Notification.show(
-		    					"Info",  //$NON-NLS-1$
-		    					"Your Project has been synchronized!",  //$NON-NLS-1$
+		    					"Info",  
+		    					"Your Project has been synchronized!",  
 		    					Type.HUMANIZED_MESSAGE);	    				
 	                }
 	                
@@ -448,17 +448,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	                @Override
 	                public void failure(Throwable t) {
-	                    errorHandler.showAndLogError("error opening project", t); //$NON-NLS-1$
+	                    errorHandler.showAndLogError("error opening project", t);
 	                }
 	            });
 				Notification.show(
-					"Info",  //$NON-NLS-1$
-					"Your Project has been synchronized!",  //$NON-NLS-1$
+					"Info",  
+					"Your Project has been synchronized!",  
 					Type.HUMANIZED_MESSAGE);	    		
 	    	}
     	}
     	catch (Exception e) {
-            errorHandler.showAndLogError("error accessing project", e); //$NON-NLS-1$
+            errorHandler.showAndLogError("error accessing project", e);
     	}	
     }
 
@@ -631,64 +631,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				
 				public void wizardCompleted(WizardCompletedEvent event) {
 					event.getWizard().removeListener(this);
-					//TODO:
-//					final boolean generateStarterKit = repository.getSourceDocuments().isEmpty();
+
 					try {
 						for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
 							final SourceDocument sourceDocument = sdr.getSourceDocument();
-							
-//							project.addPropertyChangeListener(
-//								RepositoryChangeEvent.sourceDocumentChanged,
-//								new PropertyChangeListener() {
-//
-//									@Override
-//									public void propertyChange(PropertyChangeEvent evt) {
-//										
-//										if ((evt.getNewValue() == null)	|| (evt.getOldValue() != null)) {
-//											return; // no insert
-//										}
-//										
-//										String newSdId = (String) evt.getNewValue();
-//										if (!sourceDocument.getID().equals(newSdId)) {
-//											return;
-//										}
-//										
-//											
-//										project.removePropertyChangeListener(
-//											RepositoryChangeEvent.sourceDocumentChanged, 
-//											this);
-										
-										//TODO:
-//										if (currentCorpus != null) {
-//											try {
-//												repository.update(currentCorpus, sourceDocument);
-//												setSourceDocumentsFilter(currentCorpus);
-//												
-//											} catch (IOException e) {
-//												((CatmaApplication)UI.getCurrent()).showAndLogError(
-//													Messages.getString("SourceDocumentPanel.errorAddingSourceDocToCorpus"), e); //$NON-NLS-1$
-//											}
-//											
-//										}
-										
-										//TODO:
-//										if (sourceDocument
-//												.getSourceContentHandler()
-//												.hasIntrinsicMarkupCollection()) {
-//											try {
-//												handleIntrinsicMarkupCollection(sourceDocument);
-//											} catch (IOException e) {
-//												((CatmaApplication)UI.getCurrent()).showAndLogError(
-//													Messages.getString("SourceDocumentPanel.errorExtratingIntrinsicAnnotations"), e); //$NON-NLS-1$
-//											}
-//										}
-										
-//										if (generateStarterKit) {
-//											generateStarterKit(sourceDocument);
-//										}
-//									}
-//								});
-
 							project.insert(sourceDocument);
 						}
 						

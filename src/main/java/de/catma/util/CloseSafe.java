@@ -19,8 +19,8 @@
 package de.catma.util;
 
 import java.io.Closeable;
-
-import de.catma.ExceptionHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Utility for safe closing of {@link Closeable}s.
@@ -42,7 +42,7 @@ public class CloseSafe {
 			}
 		}
 		catch (Exception exc) {
-			ExceptionHandler.log(exc);
+			Logger.getLogger(CloseSafe.class.getName()).log(Level.WARNING, "error closing closeable", exc);
 		}
 	}
 }

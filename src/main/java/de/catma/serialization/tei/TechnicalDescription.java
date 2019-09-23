@@ -25,15 +25,16 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.CRC32;
 
-import nu.xom.Elements;
-import de.catma.ExceptionHandler;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.TechInfoSet;
+import nu.xom.Elements;
 
 /**
  * Represents the technical description within a CATMA TEI document which holds
@@ -44,6 +45,8 @@ import de.catma.document.source.TechInfoSet;
  * @see SourceDocument
  */
 public class TechnicalDescription {
+	
+	private Logger logger = Logger.getLogger(TechnicalDescription.class.getName());
 
 	/**
 	 * The xml:id of the feature structure which holds the information
@@ -141,7 +144,7 @@ public class TechnicalDescription {
 			}
 		}
 		catch( IllegalArgumentException iae ) {
-			ExceptionHandler.log( iae );
+			logger.log(Level.SEVERE, "error retrieving file type", iae);
 		}
 		
 		return null;
@@ -166,11 +169,8 @@ public class TechnicalDescription {
 				return Charset.forName( value );
 			}
 		}
-		catch( IllegalCharsetNameException exc ) {
-			ExceptionHandler.log( exc );
-		}
-		catch( UnsupportedCharsetException exc2 ) {
-			ExceptionHandler.log( exc2 );
+		catch( IllegalCharsetNameException | UnsupportedCharsetException exc ) {
+			logger.log(Level.SEVERE, "error retrieving charset", exc);
 		}
 		
 		return Charset.defaultCharset();
@@ -187,7 +187,7 @@ public class TechnicalDescription {
 			}
 		}
 		catch( IllegalArgumentException iae ) {
-			ExceptionHandler.log( iae );
+			logger.log(Level.SEVERE, "error retrieving file OS type", iae);
 		}
 		
 		return null;
@@ -421,7 +421,7 @@ public class TechnicalDescription {
 				return Long.valueOf( value );
 			}
 			catch( Exception exc ) {
-				ExceptionHandler.log( exc );
+				logger.log(Level.SEVERE, "error retrieving checksum", exc);
 				return null;
 			}
 		}

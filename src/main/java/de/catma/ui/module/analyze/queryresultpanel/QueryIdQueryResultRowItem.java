@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
+import com.vaadin.ui.UI;
 
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.QueryId;
@@ -11,6 +12,7 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.module.main.ErrorHandler;
 
 public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 	
@@ -82,7 +84,7 @@ public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO:
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error displaying query results", e);
 		}
 	}
 	

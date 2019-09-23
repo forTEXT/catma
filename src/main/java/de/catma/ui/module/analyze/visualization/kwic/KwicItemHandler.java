@@ -2,6 +2,8 @@ package de.catma.ui.module.analyze.visualization.kwic;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -17,6 +19,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
 
 public class KwicItemHandler {
+	private Logger logger = Logger.getLogger(KwicItemHandler.class.getName());
 	
 	private int contextSize = 5; 
 
@@ -45,8 +48,7 @@ public class KwicItemHandler {
 				name = kwicProvider.getSourceDocumentName();
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "error retrieving Document name for " + row, e);
 		}
 		return name;
 	}
@@ -56,8 +58,7 @@ public class KwicItemHandler {
 		try {
 			backwardContext = spanContextCache.get(row).getBackwardContext();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "error retrieving backward context for " + row, e);
 		}
 		return backwardContext;		
 	}
@@ -67,8 +68,7 @@ public class KwicItemHandler {
 		try {
 			forwardContext = spanContextCache.get(row).getForwardContext();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "error retrieving forward context for " + row, e);
 		}
 		return forwardContext;		
 	}	
@@ -84,8 +84,7 @@ public class KwicItemHandler {
 						kwicProviderCache.get(tRow.getSourceDocumentId()), 
 						tagDefinition);
 			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "error retrieving keyword for " + row, e);
 			}
 		}
 		
@@ -106,8 +105,7 @@ public class KwicItemHandler {
 						tagDefinition, 
 						tRow.getTagDefinitionPath());
 			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "error retrieving keyword description for " + row, e);
 			}
 		}
 		return row.getPhrase();
@@ -133,8 +131,7 @@ public class KwicItemHandler {
 				return collectionName;
 			}
 			catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "error retrieving Collection name for " + row, e);
 				return "N/A";
 			}
 		}
@@ -213,8 +210,7 @@ public class KwicItemHandler {
 				return "kwic-panel-keyword-rtl";
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "error retrieving keyword style for " + row, e);
 		}
 		
 		return "kwic-panel-keyword";
@@ -226,8 +222,7 @@ public class KwicItemHandler {
 				return "kwic-panel-backwardctx-rtl";
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "error retrieving backward context style for " + row, e);
 		}
 		
 		return "kwic-panel-backwardctx";
@@ -239,8 +234,7 @@ public class KwicItemHandler {
 				return "kwic-panel-forwardctx-rtl";
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "error retrieving forward context style for " + row, e);
 		}
 		
 		return "kwic-panel-forwardctx";

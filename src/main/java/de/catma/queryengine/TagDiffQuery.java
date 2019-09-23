@@ -97,15 +97,10 @@ public class TagDiffQuery extends Query {
 						relevantUserMarkupCollIDs,
 						propertyName, tagPhrase);
 
-        Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-
         for (QueryResultRow row  : result) {
         	SourceDocument sd = 
         			repository.getSourceDocument(row.getSourceDocumentId());
-        	if (!sd.isLoaded()) {
-    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
-        		toBeUnloaded.add(sd);
-        	}
+
         	TagQueryResultRow tRow = (TagQueryResultRow)row;
         	
         	if (tRow.getRanges().size() > 1) {
@@ -122,11 +117,7 @@ public class TagDiffQuery extends Query {
         		row.setPhrase(sd.getContent(row.getRange()));
         	}
         }
-        
-        for (SourceDocument sd : toBeUnloaded) {
-        	sd.unload();
-        }
-        
+
         return result;
     }
 }

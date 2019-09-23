@@ -22,7 +22,6 @@ import static de.catma.repository.git.graph.RelationType.rt;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,12 +52,9 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.tag.TagDefinition;
-import de.catma.tag.TagDefinitionPathInfo;
-import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.util.IDGenerator;
 
@@ -510,25 +506,6 @@ public class TPGraphProjectIndexer implements Indexer {
 	public void close() {
 		// TODO Auto-generated method stub
 
-	}
-
-	@Override
-	public void updateIndex(TagInstance tagInstance, Collection<Property> properties) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void removeUserMarkupCollections(Collection<String> usermarkupCollectionIDs) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public List<TagDefinitionPathInfo> getTagDefinitionPathInfos(List<String> userMarkupCollectionIDs)
-			throws IOException {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

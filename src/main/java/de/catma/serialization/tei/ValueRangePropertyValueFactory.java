@@ -20,11 +20,13 @@ package de.catma.serialization.tei;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import nu.xom.Elements;
-import de.catma.ExceptionHandler;
 
 public class ValueRangePropertyValueFactory implements PropertyValueFactory {
+	private Logger logger = Logger.getLogger(ValueRangePropertyValueFactory.class.getName());
 	
 	private boolean singleSelectValue = true;
 	private TeiElement teiElement;
@@ -58,7 +60,7 @@ public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 					throw new UnknownElementException(curChild.getLocalName() + " is not supported!");
 				}
 			} catch (UnknownElementException e) {
-				ExceptionHandler.log(e);
+				logger.log(Level.SEVERE, "error extracting value", e);
 			}
 		}
 		

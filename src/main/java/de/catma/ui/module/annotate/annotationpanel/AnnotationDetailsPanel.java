@@ -51,6 +51,7 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.module.main.ErrorHandler;
 
 public class AnnotationDetailsPanel extends VerticalLayout {
 	private Project project;
@@ -126,8 +127,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 					try {
 						addAnnotation(annotation);
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						((ErrorHandler)UI.getCurrent()).showAndLogError("error adding Annotation", e);
 					}
 				});
 				
@@ -174,8 +174,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		try {
 			addAnnotations(annotations);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error refreshing Annotations", e);
 		}
 	}
 
@@ -361,9 +360,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 							
 							
 						} catch (IOException e) {
-							
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							((ErrorHandler)UI.getCurrent()).showAndLogError("error updating Annotation Properties", e);
 						}
 					}
 				});

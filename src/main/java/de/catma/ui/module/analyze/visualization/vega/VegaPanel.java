@@ -40,6 +40,7 @@ import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
+import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 
 public class VegaPanel extends HorizontalSplitPanel implements Visualization {
@@ -339,8 +340,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 		try {
 			displaySettingsHandler.handleDisplaySetting(displaySetting, this);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error changing display setting", e);
 		}
 	}
 

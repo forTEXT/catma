@@ -19,7 +19,6 @@
 package de.catma.indexer;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
 import de.catma.backgroundservice.BackgroundService;
@@ -29,9 +28,6 @@ import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.QueryId;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.tag.Property;
-import de.catma.tag.TagDefinitionPathInfo;
-import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 
 public interface Indexer {
@@ -96,13 +92,6 @@ public interface Indexer {
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException;
 	
 	public void close();
-
-	public void updateIndex(TagInstance tagInstance, Collection<Property> properties) throws IOException;
-
-	public void removeUserMarkupCollections(Collection<String> usermarkupCollectionIDs) throws IOException;
-
-	public List<TagDefinitionPathInfo> getTagDefinitionPathInfos(
-			List<String> userMarkupCollectionIDs) throws IOException;
 
 	public QueryResult searchTagDiff(QueryId queryId, List<String> relevantUserMarkupCollIDs,
 			String propertyName, String tagPhrase) throws IOException;

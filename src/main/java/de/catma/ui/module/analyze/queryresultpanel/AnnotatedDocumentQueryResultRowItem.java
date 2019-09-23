@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
+import com.vaadin.ui.UI;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
@@ -12,6 +13,7 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.module.main.ErrorHandler;
 
 public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowItem {
 
@@ -68,7 +70,7 @@ public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowI
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO:
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error displaying annotated query results", e);
 		}
 	}
 	

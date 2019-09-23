@@ -73,53 +73,6 @@ public class AnnotationCollection {
 		this.sourceDocumentId = sourceDocumentId;
 		this.sourceDocumentRevisionHash = sourceDocumentRevisionHash;
 	}
-	
-
-	//TODO: copy construction will be different in a git/graph based environment
-	@Deprecated
-	public AnnotationCollection(AnnotationCollection userMarkupCollection) throws URISyntaxException {
-		this(
-			userMarkupCollection.getId(),
-			new ContentInfoSet(userMarkupCollection.getContentInfoSet()), 
-			new TagLibrary(userMarkupCollection.getTagLibrary()),
-			"","");
-		
-		IDGenerator idGenerator = new IDGenerator();
-		Map<String,TagInstance> copiedTagInstances = new HashMap<String,TagInstance>();
-		
-		for (TagReference tr : userMarkupCollection.getTagReferences()) {
-			TagInstance tagInstance = tr.getTagInstance();
-			
-			TagInstance copiedInstance = copiedTagInstances.get(tagInstance.getUuid());
-			
-			if (copiedInstance == null) {
-//				TagDefinition tagDefinition = 
-//					getTagLibrary().getTagDefinition(tagInstance.getTagDefinition().getUuid());
-//				copiedInstance = new TagInstance(idGenerator.generate(), tagDefinition);
-//				for (Property property : tagInstance.getSystemProperties()) {
-//					copiedInstance.addSystemProperty(
-//						new Property(
-//							tagDefinition.getPropertyDefinition(
-//								property.getPropertyDefinition().getName()),
-//							Collections.<String>emptySet()));
-//				}
-				
-//				for (Property property : tagInstance.getUserDefinedProperties()) {
-//					copiedInstance.addSystemProperty(
-//						new Property(
-//							tagDefinition.getPropertyDefinition(
-//								property.getPropertyDefinition().getName()),
-//							Collections.<String>emptySet()));
-//				}
-				
-//				copiedTagInstances.put(tagInstance.getUuid(), copiedInstance);
-			}
-		
-			addTagReference( 
-				new TagReference(copiedInstance, tr.getTarget().toString(), tr.getRange(), userMarkupCollection.getUuid()));
-		}
-	
-	}
 
 	/**
 	 * @return the internal library with all relevant {@link TagsetDefinition}s.

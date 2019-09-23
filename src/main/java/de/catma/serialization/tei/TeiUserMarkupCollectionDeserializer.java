@@ -25,8 +25,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import de.catma.ExceptionHandler;
 import de.catma.document.annotation.TagReference;
 import de.catma.serialization.tei.PtrValueHandler.TargetValues;
 import de.catma.tag.Property;
@@ -40,6 +41,8 @@ import nu.xom.Elements;
 import nu.xom.Nodes;
 
 public class TeiUserMarkupCollectionDeserializer {
+	
+	private Logger logger = Logger.getLogger(TeiUserMarkupCollectionDeserializer.class.getName());
 
 	private TeiDocument teiDocument;
 	private List<TagReference> tagReferences;
@@ -84,7 +87,7 @@ public class TeiUserMarkupCollectionDeserializer {
 						tagReferences.add(tagReference);
 					}
 					catch(URISyntaxException ue) {
-						ExceptionHandler.log(ue);
+						logger.log(Level.SEVERE, "error during deserialization", ue);
 					}
 				}
 			}
@@ -202,7 +205,7 @@ public class TeiUserMarkupCollectionDeserializer {
 				}
 			}
 			catch(UnknownElementException ue) {
-				ExceptionHandler.log(ue);
+				logger.log(Level.SEVERE, "error adding properties", ue);
 			}
 		}
 		

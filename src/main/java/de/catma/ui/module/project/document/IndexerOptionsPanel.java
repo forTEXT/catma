@@ -249,7 +249,6 @@ class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 		
 		table = new Table("Documents", container); 
 		
-		//TODO: investigate whether using a FieldFactory would make things easier..
 		table.addGeneratedColumn("sourceDocumentInfo.indexInfoSet.language",  //$NON-NLS-1$
 				new ComboBoxColumnGenerator(languageItems, makeComboBoxListenerGenerator())
 		);

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
@@ -223,8 +224,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 						queryResultRowInAnnotateEvent.getSelection(), 
 						queryResultRowInAnnotateEvent.getRows());
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				((ErrorHandler)UI.getCurrent()).showAndLogError("error opening Document in Annotate module", e);
 			}
 			currentRoute = queryResultRowInAnnotateEvent.getClass();
 

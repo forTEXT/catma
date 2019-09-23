@@ -24,6 +24,7 @@ import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.components.grid.ItemClickListener;
@@ -52,6 +53,7 @@ import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.AnnotationWizard;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.AnnotationWizardContextKey;
+import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 
 
@@ -146,8 +148,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 						try {
 							annotateSelection(selectedRows, result);
 						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							((ErrorHandler)UI.getCurrent()).showAndLogError(
+									"error annotating selected rows", e);
 						}						
 					}
 					

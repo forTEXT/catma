@@ -4,12 +4,14 @@ import java.util.ArrayList;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
+import com.vaadin.ui.UI;
 
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
+import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.util.Cleaner;
 
 public class DocumentQueryResultRowItem implements QueryResultRowItem {
@@ -89,7 +91,8 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO:
+			((ErrorHandler)UI.getCurrent()).showAndLogError(
+				"error displaying annotated kwic query results", e);
 		}
 	}
 

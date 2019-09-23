@@ -21,6 +21,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
@@ -38,6 +39,7 @@ import de.catma.ui.dialog.wizard.ProgressStepFactory;
 import de.catma.ui.dialog.wizard.StepChangeListener;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.dialog.wizard.WizardStep;
+import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.CollectionResource;
 import de.catma.ui.module.project.DocumentResource;
 import de.catma.ui.module.project.Resource;
@@ -64,8 +66,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		try {
 			initData();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error loading available Collections", e);
 		}
 	}
 	
@@ -246,8 +247,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	    	}
 		}
 		catch (Exception e) {
-			//TODO:
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error adding a Collection", e);
 		}
 	}
 

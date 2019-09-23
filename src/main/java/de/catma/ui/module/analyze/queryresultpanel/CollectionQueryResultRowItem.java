@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
+import com.vaadin.ui.UI;
 
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
@@ -12,6 +13,7 @@ import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
+import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.util.Cleaner;
 
 public class CollectionQueryResultRowItem implements QueryResultRowItem {
@@ -103,7 +105,7 @@ public class CollectionQueryResultRowItem implements QueryResultRowItem {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO:
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error displaying annotated kwic query results", e);
 		}
 	}
 

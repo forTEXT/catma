@@ -65,7 +65,7 @@ public enum TeiDocumentVersion {
 			 	TeiDocumentConverter converter = nextVersion.converterClazz.newInstance();
 	            converter.convert(teiDocument);
 			} catch (Exception e) {
-				throw new RuntimeException(e); // TODO: better use non generic exception
+				throw new RuntimeException(e);
 			}
         }
     }

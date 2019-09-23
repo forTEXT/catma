@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import de.catma.ExceptionHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -44,6 +44,7 @@ import de.catma.ExceptionHandler;
  */
 public enum CharsetLanguageInfo {
 	SINGLETON;
+	private Logger logger = Logger.getLogger(CharsetLanguageInfo.class.getName());
 	
 	private static final String OTHERS = "OTHERS";
 	// resource which contains the mapping information
@@ -75,7 +76,7 @@ public enum CharsetLanguageInfo {
 			try {
 				charsetLanguageInfoProperties.load( is );
 			} catch( IOException e ) {
-				ExceptionHandler.log( e );
+				logger.log(Level.SEVERE, "error loading CharsetLanguageInfo.propertes", e);
 			}
 		}
 		finally {
