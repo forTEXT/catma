@@ -36,4 +36,9 @@ public class DocumentDataItem implements DocumentTreeItem {
 	public void addToCorpus(Corpus corpus) {
 		corpus.addSourceDocument(document);
 	}
+	
+	@Override
+	public String getUuid() {
+		return document.getUuid();
+	}
 }

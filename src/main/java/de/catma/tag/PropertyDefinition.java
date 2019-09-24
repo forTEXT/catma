@@ -136,7 +136,7 @@ public class PropertyDefinition {
 	}
 
 	/**
-	 * Replaces this definition with the given definition. (The {@link #getId() id}
+	 * Replaces this definition with the given definition. (The {@link #getUuid() id}
 	 * and the {@link #getUuid() uuid} will not be overridden.
 	 * 
 	 * @param pd 

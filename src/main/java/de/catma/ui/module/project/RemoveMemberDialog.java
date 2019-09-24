@@ -20,7 +20,7 @@ public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
 	
 	public RemoveMemberDialog(RBACUnAssignmentFunction unassignment,
 			Set<Member> members, SaveCancelListener<Void> saveCancelListener) {
-		super("Remove member","Removes the selected memeber from current project", saveCancelListener);
+		super("Remove Members","Remove the selected Members from the Project", saveCancelListener);
 		this.members = members;
 		this.unassignment = unassignment;
 	}

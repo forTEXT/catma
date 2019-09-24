@@ -91,7 +91,6 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
 		moreOptionsMenu.addItem("Annotate selected rows", clickEvent -> handleAnnotateSelectedRequest(eventBus));
-//		moreOptionsMenu.addItem("Export Visualisation", clickEvent -> handleExportVisualizationRequest());
 		
 		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
 			@Override
@@ -114,9 +113,21 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 					.parallelStream()
 					.filter(row -> row.getSourceDocumentId().equals(documentId))
 					.collect(Collectors.toList());
-			
-			eventBus.post(new QueryResultRowInAnnotateEvent(
-				documentId, selectedRow, documentRows, project));
+			try {
+				if (project.hasDocument(documentId)) {
+					eventBus.post(new QueryResultRowInAnnotateEvent(
+						documentId, selectedRow, documentRows, project));
+				}
+				else {
+					Notification.show(
+							"Info", 
+							"The corresponding Document is no longer part of the Project!", 
+							Type.WARNING_MESSAGE);
+				}
+			}
+			catch (Exception e) {
+				((ErrorHandler)UI.getCurrent()).showAndLogError("error accessing project data", e);
+			}
 		}
 	}
 

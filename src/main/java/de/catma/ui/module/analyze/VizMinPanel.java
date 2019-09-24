@@ -64,4 +64,8 @@ public class VizMinPanel extends VerticalLayout {
 	public void addQueryResultPanelSetting(QueryResultPanelSetting queryResultPanelSetting) {
 		vizMaxPanel.addQueryResultPanelSetting(queryResultPanelSetting);
 	}
+
+	public void removeQueryResultPanelSetting(QueryResultPanelSetting queryResultPanelSetting) {
+		vizMaxPanel.removeQueryResultPanelSetting(queryResultPanelSetting);
+	}
 }

@@ -34,6 +34,13 @@ public class AnnotationCollectionReference {
 	private String sourceDocumentId;
 	private String sourceDocumentRevisiohHash;
 	
+	public AnnotationCollectionReference(AnnotationCollection annotationCollection) {
+		this(annotationCollection.getId(),
+				annotationCollection.getRevisionHash(),
+				annotationCollection.getContentInfoSet(),
+				annotationCollection.getSourceDocumentId(),
+				annotationCollection.getRevisionHash());
+	}
 	
 	public AnnotationCollectionReference(
 		String id, String revisionHash, 

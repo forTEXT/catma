@@ -903,5 +903,22 @@ public class QueryResultPanel extends VerticalLayout {
 		return displaySetting;
 	}
 
+	public void clear() {
+		if (phraseBasedTreeData != null) {
+			phraseBasedTreeData.clear();
+		}
+		if (tagBasedTreeData != null) {
+			tagBasedTreeData.clear();
+		}
+		if (flatTagBasedTreeData != null) {
+			flatTagBasedTreeData.clear();
+		}
+		if (propertiesAsColumnsTagBasedTreeData != null) {
+			propertiesAsColumnsTagBasedTreeData.clear();
+		}
+		optionsBt.setEnabled(false);
+		queryResultGrid.getDataProvider().refreshAll();
+	}
+
 
 }

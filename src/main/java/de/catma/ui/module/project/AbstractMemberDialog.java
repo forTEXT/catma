@@ -15,23 +15,32 @@ import de.catma.user.User;
 
 public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> {
 
-	protected final ComboBox<User> cb_users = new ComboBox<>("member");
-	protected final ComboBox<RBACRole> cb_role = new ComboBox<RBACRole>("role", 
-			Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER)); 
-	protected final Label l_description;
+	protected ComboBox<User> cb_users;
+	protected ComboBox<RBACRole> cb_role; 
+	protected Label l_description;
 		
 	protected ErrorHandler errorLogger;
 	
 	public AbstractMemberDialog(String title, String description, 
 			SaveCancelListener<T> saveCancelListener) {
 		super(title, saveCancelListener);
+		this.errorLogger = (ErrorHandler) UI.getCurrent();
+		initComponents(description);
+	}
+
+
+	private void initComponents(String description) {
+		
 		this.l_description = new Label(description);
 		l_description.setHeight("50px");
-	    this.errorLogger = (ErrorHandler) UI.getCurrent();
 		
+	    cb_users = new ComboBox<>("Member");
 		cb_users.setWidth("100%");
 		cb_users.setPageLength(20);
 		cb_users.setItemCaptionGenerator(User::preciseName);
+		
+		cb_role = new ComboBox<RBACRole>("Role", 
+				Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 
 		cb_role.setWidth("100%");
 		cb_role.setItemCaptionGenerator(RBACRole::getRolename);
@@ -44,7 +53,6 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		content.addComponent(l_description);
 		content.addComponent(cb_users);
 		content.addComponent(cb_role);
-		content.setHeightUndefined();
 	}
 
 	@Override

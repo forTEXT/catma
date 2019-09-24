@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.antlr.runtime.RecognitionException;
 import org.vaadin.sliderpanel.SliderPanel;
@@ -53,6 +54,7 @@ import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.module.analyze.querybuilder.QueryBuilder;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanelSetting;
+import de.catma.ui.module.analyze.queryresultpanel.RefreshQueryResultPanel;
 import de.catma.ui.module.analyze.resourcepanel.AnalyzeResourcePanel;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.analyze.visualization.vega.DistributionDisplaySettingHandler;
@@ -223,15 +225,20 @@ public class AnalyzeView extends HorizontalLayout
 			indexInfoSet = corpus.getSourceDocuments().get(0).getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
 		}
 		
-		
-		//TODO: update queries and vizs
-		
 		currentCorpus = corpus;
 		
 		if (!analyzeCaption.isSetManually()) {
 			analyzeCaption.setCaption(currentCorpus);
 			if (tabCaptionChangeListener != null) {
 				tabCaptionChangeListener.tabCaptionChange(this);
+			}
+		}
+		
+		for (int i=0; i<resultsPanel.getComponentCount(); i++) {
+			Component component = resultsPanel.getComponent(i);
+			if (component instanceof QueryResultPanel) {
+			    QueryResultPanel queryResultPanel = (QueryResultPanel)component;
+			    handleMarkAsStale(queryResultPanel);
 			}
 		}
 	}
@@ -408,8 +415,11 @@ public class AnalyzeView extends HorizontalLayout
 	private List<QueryResultPanelSetting> getQueryResultPanelSettings() {
 		List<QueryResultPanelSetting> settings = new ArrayList<QueryResultPanelSetting>();
 		for (Iterator<Component> iter = resultsPanel.iterator(); iter.hasNext(); ) {
-		    QueryResultPanel queryResultPanel = (QueryResultPanel)iter.next();
-		    settings.add(queryResultPanel.getQueryResultPanelSetting());
+			Component component = iter.next();
+			if (component instanceof QueryResultPanel) {
+			    QueryResultPanel queryResultPanel = (QueryResultPanel)component;
+			    settings.add(queryResultPanel.getQueryResultPanelSetting());
+			}
 		}
 		    
 		return settings;
@@ -429,7 +439,10 @@ public class AnalyzeView extends HorizontalLayout
 			Notification.show("Info", "Please enter or select a query first!", Type.HUMANIZED_MESSAGE);
 			return;
 		}
-		
+		executeSearch(searchInput, queryResultPanel -> resultsPanel.addComponentAsFirst(queryResultPanel));
+	}
+
+	private void executeSearch(String searchInput, Consumer<QueryResultPanel> addToLayoutFunction) {
 		QueryOptions queryOptions = new QueryOptions(
 				new QueryId(searchInput),
 				currentCorpus.getDocumentIds(), 
@@ -447,9 +460,9 @@ public class AnalyzeView extends HorizontalLayout
 							QueryResultPanel queryResultPanel = new QueryResultPanel(project, result,
 									new QueryId(searchInput.toString()),
 									kwicProviderCache, 
-									closingPanel -> resultsPanel.removeComponent(closingPanel));
+									closingPanel -> handleRemoveQueryResultPanel(closingPanel));
 							
-							resultsPanel.addComponentAsFirst(queryResultPanel);
+							addToLayoutFunction.accept(queryResultPanel);
 							addQueryResultPanelSetting(queryResultPanel.getQueryResultPanelSetting());
 						}
 						finally {
@@ -487,6 +500,34 @@ public class AnalyzeView extends HorizontalLayout
 
 	}
 
+	private void handleRemoveQueryResultPanel(QueryResultPanel queryResultPanel) {
+		resultsPanel.removeComponent(queryResultPanel);
+		removeQueryResultPanelSetting(queryResultPanel.getQueryResultPanelSetting());
+	}
+	
+	private void handleMarkAsStale(QueryResultPanel queryResultPanel) {
+		RefreshQueryResultPanel refreshQueryResultPanel = new RefreshQueryResultPanel(queryResultPanel.getQueryId());
+		resultsPanel.replaceComponent(queryResultPanel, refreshQueryResultPanel);
+		refreshQueryResultPanel.addRemoveClickListener(clickEvent -> resultsPanel.removeComponent(refreshQueryResultPanel));
+		refreshQueryResultPanel.addRefreshClickListener(clickEvent -> handleRefreshQueryResultPanel(refreshQueryResultPanel));
+		removeQueryResultPanelSetting(queryResultPanel.getQueryResultPanelSetting());
+	}
+
+	private void handleRefreshQueryResultPanel(RefreshQueryResultPanel refreshQueryResultPanel) {
+		QueryId queryId = refreshQueryResultPanel.getQueryId();
+		
+		executeSearch(
+			queryId.getQuery(), 
+			queryResultPanel -> resultsPanel.replaceComponent(refreshQueryResultPanel, queryResultPanel));
+	}
+
+	private void removeQueryResultPanelSetting(QueryResultPanelSetting queryResultPanelSetting) {
+		for (Iterator<Component> compIter=vizCardsPanel.iterator(); compIter.hasNext();) {
+			VizMinPanel vizMinPanel = (VizMinPanel)compIter.next();
+			vizMinPanel.removeQueryResultPanelSetting(queryResultPanelSetting);
+		}
+	}
+
 	private void addQueryResultPanelSetting(QueryResultPanelSetting queryResultPanelSetting) {
 		for (Iterator<Component> compIter=vizCardsPanel.iterator(); compIter.hasNext();) {
 			VizMinPanel vizMinPanel = (VizMinPanel)compIter.next();
@@ -508,8 +549,6 @@ public class AnalyzeView extends HorizontalLayout
 	@Override
 	public void close() {
 		analyzeResourcePanel.close();
-		// TODO Auto-generated method stub
-
 	}
 	
 	@Override

@@ -4,7 +4,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.vaadin.data.provider.DataProvider;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -69,7 +68,7 @@ public class DashboardView extends VerticalLayout {
         addComponent(projects);
     }
 
-    public void handleResourceChangedEvent(ResourcesChangedEvent<Component> event){
+    public void handleResourceChangedEvent(ResourcesChangedEvent event){
     	projectDataProvider.refreshAll();
     }
 }

@@ -89,35 +89,36 @@ public class VizMaxPanel extends VerticalLayout  {
 	}
 	
 	private void setQueryResultPanel(QuerySelection querySelection) {
-		if (currentQueryResultPanel != null) {
-			((ComponentContainer)currentQueryResultPanel.getParent()).removeComponent(currentQueryResultPanel);
+		if (querySelection != null) {
+			if (currentQueryResultPanel != null) {
+				((ComponentContainer)currentQueryResultPanel.getParent()).removeComponent(currentQueryResultPanel);
+			}
+			if (querySelection.getPanel() == null) {
+				QueryResultPanel queryResultPanel = 
+					new QueryResultPanel(
+						project, 
+						querySelection.getSetting().getQueryResult(), 
+						querySelection.getSetting().getQueryId(), 
+						kwicProviderCache,
+						querySelection.getSetting().getDisplaySetting(),
+						item -> handleItemSelection(item));
+				queryResultPanel.setSizeFull();
+				querySelection.setPanel(queryResultPanel);
+			}
+			AbstractOrderedLayout buttonAndBoxPanelContainer = 
+					(AbstractOrderedLayout)buttonAndBoxPanel.getParent();
+			if (buttonAndBoxPanelContainer != null) {
+				buttonAndBoxPanelContainer.removeComponent(buttonAndBoxPanel);
+			}
+			querySelection.getPanel().addToButtonBarLeft(buttonAndBoxPanel);
+			buttonAndBoxPanelContainer = 
+					(AbstractOrderedLayout)buttonAndBoxPanel.getParent();
+			buttonAndBoxPanelContainer.setExpandRatio(buttonAndBoxPanel, 1f);
+			
+			topLeftPanel.addComponent(querySelection.getPanel());
+			topLeftPanel.setExpandRatio(querySelection.getPanel(), 1f);
+			currentQueryResultPanel = querySelection.getPanel();
 		}
-		
-		if (querySelection.getPanel() == null) {
-			QueryResultPanel queryResultPanel = 
-				new QueryResultPanel(
-					project, 
-					querySelection.getSetting().getQueryResult(), 
-					querySelection.getSetting().getQueryId(), 
-					kwicProviderCache,
-					querySelection.getSetting().getDisplaySetting(),
-					item -> handleItemSelection(item));
-			queryResultPanel.setSizeFull();
-			querySelection.setPanel(queryResultPanel);
-		}
-		AbstractOrderedLayout buttonAndBoxPanelContainer = 
-				(AbstractOrderedLayout)buttonAndBoxPanel.getParent();
-		if (buttonAndBoxPanelContainer != null) {
-			buttonAndBoxPanelContainer.removeComponent(buttonAndBoxPanel);
-		}
-		querySelection.getPanel().addToButtonBarLeft(buttonAndBoxPanel);
-		buttonAndBoxPanelContainer = 
-				(AbstractOrderedLayout)buttonAndBoxPanel.getParent();
-		buttonAndBoxPanelContainer.setExpandRatio(buttonAndBoxPanel, 1f);
-		
-		topLeftPanel.addComponent(querySelection.getPanel());
-		topLeftPanel.setExpandRatio(querySelection.getPanel(), 1f);
-		currentQueryResultPanel = querySelection.getPanel();
 	}
 
 	private void handleItemSelection(QueryResultRowItem item) {
@@ -225,7 +226,34 @@ public class VizMaxPanel extends VerticalLayout  {
 
 	@SuppressWarnings("unchecked")
 	public void addQueryResultPanelSetting(QueryResultPanelSetting setting) {
-		((ListDataProvider<QuerySelection>)queryResultBox.getDataProvider()).getItems().add(new QuerySelection(setting));
+		QuerySelection querySelection = new QuerySelection(setting);
+		
+		((ListDataProvider<QuerySelection>)queryResultBox.getDataProvider()).getItems().add(querySelection);
 		queryResultBox.getDataProvider().refreshAll();
+		queryResultBox.setValue(querySelection);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private QuerySelection getQuerySelection(QueryResultPanelSetting setting) {
+		for (QuerySelection querySelection : ((ListDataProvider<QuerySelection>)queryResultBox.getDataProvider()).getItems()) {
+			if (querySelection.getSetting().getQueryId().equals(setting.getQueryId())) {
+				return querySelection;
+			}
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void removeQueryResultPanelSetting(QueryResultPanelSetting setting) {
+		QuerySelection querySelection = getQuerySelection(setting);
+		
+		if (queryResultBox.getValue() != null && queryResultBox.getValue().getSetting().getQueryId().equals(setting.getQueryId())) {
+			querySelection.getPanel().clear();
+		}
+		
+		if (querySelection != null) {
+			((ListDataProvider<QuerySelection>)queryResultBox.getDataProvider()).getItems().remove(querySelection);
+			queryResultBox.getDataProvider().refreshAll();
+		}
 	}
 }

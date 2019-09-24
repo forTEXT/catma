@@ -11,4 +11,5 @@ public interface ResourceSelectionListener {
 	public void annotationCollectionSelected(
 			AnnotationCollectionReference collectionReference, boolean selected);
 	public void tagsetsSelected(Collection<TagsetDefinition> tagsets);
+	public void resourcesChanged();
 }

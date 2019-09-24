@@ -122,7 +122,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
         				project.hasPermission(project.getRoleForCollection(collectionRef.getId()), RBACPermission.COLLECTION_WRITE))
         		)
         		.filter(colRes -> project.hasPermission(
-        			project.getRoleForCollection(colRes.getResourceId()), RBACPermission.COLLECTION_READ))
+        			project.getRoleForCollection(colRes.getResourceId()), RBACPermission.COLLECTION_WRITE))
         		.collect(Collectors.toList());
         		
                 
@@ -132,6 +132,13 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
                     	docResource,
                     	readableCollectionResources
                     );
+                }
+                else {
+                	//TODO: improve message
+                	Notification.show(
+                		"Info", 
+                		String.format("You do not have a writable Collection available for Document %1$s", srcDoc.toString()), 
+                		Type.HUMANIZED_MESSAGE);
                 }
             }
         }

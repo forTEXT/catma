@@ -113,4 +113,6 @@ public interface GraphProjectHandler {
 	void removeDocument(String rootRevisionHash, SourceDocument document, String oldRootRevisionHash)
 			throws Exception;
 
+	boolean hasDocument(String rootRevisionHash, String documentId);
+
 }

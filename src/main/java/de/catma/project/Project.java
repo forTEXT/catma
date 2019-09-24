@@ -269,6 +269,7 @@ public interface Project {
 	 */
 	public SourceDocument getSourceDocument(AnnotationCollectionReference umcRef);
 
+	public boolean hasDocument(String documentId) throws Exception;
 
 	/**
 	 * Creates a User Markup Collection with that name for the given Source Document.

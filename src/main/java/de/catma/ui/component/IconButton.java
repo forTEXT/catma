@@ -13,12 +13,12 @@ public class IconButton extends Button {
 
 	public IconButton(Resource icon, ClickListener listener) {
 		super(icon, listener);
-		addStyleNames(ValoTheme.BUTTON_ICON_ONLY, MaterialTheme.BUTTON_FLAT, MaterialTheme.BUTTON_BORDERLESS);
+		addStyleNames(ValoTheme.BUTTON_ICON_ONLY, MaterialTheme.BUTTON_FLAT, MaterialTheme.BUTTON_BORDERLESS, "icon-button");
 	}
 
 	public IconButton(Resource icon) {
 		super(icon);
-		addStyleNames(ValoTheme.BUTTON_ICON_ONLY, MaterialTheme.BUTTON_FLAT, MaterialTheme.BUTTON_BORDERLESS);
+		addStyleNames(ValoTheme.BUTTON_ICON_ONLY, MaterialTheme.BUTTON_FLAT, MaterialTheme.BUTTON_BORDERLESS, "icon-button");
 	}
 
 }

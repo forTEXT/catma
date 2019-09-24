@@ -17290,6 +17290,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-family: "Open Sans", sans-serif;
 }
 
+.catma .icon-button.v-button.v-disabled {
+	background: white;
+}
+
 .catma .catma-menu .v-menubar-menuitem-highlight {
 	background: #E6E9EB;
 	color: #000;
@@ -18115,6 +18119,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .analyze-queryresult-panel {
 	border: solid 1px rgba(151, 151, 151, 0.12);
+}
+
+.catma .refresh-query-result-panel-refresh-button {
+	color: #B00020 !important;
+}
+
+.catma .refresh-query-result-panel-refresh-button:hover {
+	color: #464646 !important;
 }
 
 .catma .kwic-panel-keyword {

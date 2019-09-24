@@ -4,13 +4,11 @@ import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -19,7 +17,6 @@ import de.catma.project.Project;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
-import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.rbac.RBACAssignmentFunction;
@@ -162,14 +159,5 @@ public class ResourcePermissionDialog extends Window {
 			this.bringToFront();
 		}
 	}
-	
-	
-    /**
-     * called when {@link ResourcesChangedEvent} is fired e.g. when source documents have been removed or added
-     * @param resourcesChangedEvent
-     */
-    @Subscribe
-    public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
-    	initData();
-    }
+
 }

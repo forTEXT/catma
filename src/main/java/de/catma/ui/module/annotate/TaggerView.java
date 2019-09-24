@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -167,7 +168,7 @@ public class TaggerView extends HorizontalLayout
 				} catch (ValueOutOfBoundsException toBeIgnored) {}
 				
 				List<AnnotationCollectionReference> collectionReferences =
-					resourcePanel.getSelectedUserMarkupCollectionReferences();
+					resourcePanel.getSelectedAnnotationCollectionReferences();
 				
 				userMarkupCollectionManager.clear();
 				
@@ -400,6 +401,40 @@ public class TaggerView extends HorizontalLayout
 		});
 		
 		resourcePanel.setSelectionListener(new ResourceSelectionListener() {
+			
+			@Override
+			public void resourcesChanged() {
+				AnnotationCollection selectedEditableCollection = 
+						annotationPanel.getSelectedEditableCollection();
+				Set<String> selectedAnnotationCollectionIds = 
+						resourcePanel.getSelectedAnnotationCollectionReferences()
+						.stream().map(collRef -> collRef.getId())
+						.collect(Collectors.toSet());
+				
+				for (AnnotationCollection collection : 
+						userMarkupCollectionManager.getUserMarkupCollections()) {
+					if (selectedAnnotationCollectionIds.contains(collection.getId())) {
+						setAnnotationCollectionSelected(
+							new AnnotationCollectionReference(collection), 
+							true);
+					}
+					else {
+						userMarkupCollectionManager.remove(collection.getId());
+						annotationPanel.removeCollection(collection.getId());
+						tagger.setVisible(collection.getTagReferences(), false);						
+					}
+				}
+				
+				if ((selectedEditableCollection != null) 
+						&& (userMarkupCollectionManager.contains(selectedEditableCollection.getId()))) {
+					annotationPanel.setSelectedEditableCollection(
+						userMarkupCollectionManager.getUserMarkupCollection(
+								selectedEditableCollection.getId()));
+				}
+				
+				annotationPanel.clearTagsets();
+				tagsetsSelected(resourcePanel.getSelectedTagsets());
+			}
 
 			@Override
 			public void documentSelected(SourceDocument sourceDocument) {

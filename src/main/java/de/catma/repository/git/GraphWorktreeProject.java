@@ -13,6 +13,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -713,8 +714,10 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void removePropertyChangeListener(
 			RepositoryChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
-		this.propertyChangeSupport.removePropertyChangeListener(
-				propertyChangeEvent.name(), propertyChangeListener);
+		if (this.propertyChangeSupport != null) {
+			this.propertyChangeSupport.removePropertyChangeListener(
+					propertyChangeEvent.name(), propertyChangeListener);
+		}
 	}
 
 	@Override
@@ -858,7 +861,12 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public Collection<SourceDocument> getSourceDocuments() throws Exception {
-		return graphProjectHandler.getDocuments( this.rootRevisionHash);
+		return graphProjectHandler.getDocuments(this.rootRevisionHash);
+	}
+	
+	@Override
+	public boolean hasDocument(String documentId) throws Exception {
+		return graphProjectHandler.hasDocument(this.rootRevisionHash, documentId);
 	}
 
 	@Override
@@ -868,7 +876,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void delete(SourceDocument sourceDocument) throws Exception {
-		for (AnnotationCollectionReference collectionRef : sourceDocument.getUserMarkupCollectionRefs()) {
+		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocument.getUserMarkupCollectionRefs())) {
 			delete(collectionRef);
 		}
 		documentCache.invalidate(sourceDocument.getUuid());

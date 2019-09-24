@@ -8,13 +8,11 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
-import com.hazelcast.core.MessageListener;
 import com.jsoniter.JsonIterator;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -31,9 +29,9 @@ import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.module.project.ProjectInvitation;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.module.project.ProjectInvitation;
 import de.catma.user.User;
 import de.catma.util.DammAlgorithm;
 
@@ -79,7 +77,7 @@ public class JoinProjectDialog extends Window {
 		@Override
 		public void uiBlockingOnMessage(Message<JoinedProjectMessage> message) {
 			if(message.getMessageObject().getInvitation().getKey() == JoinProjectDialog.this.invitation.getKey()) {	
-				JoinProjectDialog.this.eventBus.post(new ResourcesChangedEvent<Component>(null));
+				JoinProjectDialog.this.eventBus.post(new ResourcesChangedEvent());
 				Notification.show("Joined successfully", "sucessfully join project " + 
 						JoinProjectDialog.this.invitation.getName() , Type.HUMANIZED_MESSAGE);
 				JoinProjectDialog.this.getUI().push();
