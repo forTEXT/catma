@@ -129,33 +129,6 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 		return Collections.unmodifiableList(new ArrayList<>(collectionById.values()));
 	}
 
-
-	/**
-	 * @param tagsetDefinition
-	 * TagsetDefinition
-	 * @return a list {@link TagsetDefinition#isSynchronized(TagsetDefinition) of out ot synch} UserMarkupCollections
-	 */
-	public List<AnnotationCollection> getOutOfSyncUserMarkupCollections(
-			TagsetDefinition tagsetDefinition) {
-		
-		List<AnnotationCollection> result = 
-				new ArrayList<AnnotationCollection>();
-		
-//		for (UserMarkupCollection userMarkupCollection : userMarkupCollections) {
-//			// FIXME: regardless of tagsetdef containment, check tagdef containment as well to support old standard tagsets and move operations
-//			
-//			// no need to check non writable collections, they won't be updated anyway
-//			if (userMarkupCollection.getAccessMode().equals(AccessMode.WRITE) 
-//					&& 
-//					userMarkupCollection.getTagLibrary().contains(tagsetDefinition)) {
-//				result.add(userMarkupCollection);
-//			}
-//			
-//		}
-		
-		return result;
-	}
-
 	/**
 	 * Removes the given {@link TagInstance}s from the {@link AnnotationCollection}s
 	 * that contains them. If there is no such collection in this manager, this is 

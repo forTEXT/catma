@@ -109,7 +109,7 @@ public class ProjectCard extends VerticalFlexLayout  {
                             	projectManager.delete(projectReference.getProjectId());
                             }
                         } catch (Exception e) {
-                            errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
+                            errorLogger.showAndLogError("can't delete Project " + projectReference.getName(), e);
                         }
                         eventBus.post(new ResourcesChangedEvent());
                     });

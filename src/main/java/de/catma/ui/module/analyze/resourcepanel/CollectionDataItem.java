@@ -56,4 +56,9 @@ public class CollectionDataItem implements DocumentTreeItem {
 	public String getUuid() {
 		return collectionRef.getId();
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

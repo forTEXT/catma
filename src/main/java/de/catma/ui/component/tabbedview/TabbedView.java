@@ -29,9 +29,7 @@ import org.vaadin.elements.Elements;
 import org.vaadin.elements.Root;
 
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;

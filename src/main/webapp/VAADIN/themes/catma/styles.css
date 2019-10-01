@@ -18103,6 +18103,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-right: 5px;
 	padding: 5px;
 	white-space: normal;
+	border-bottom: none !important;
+}
+
+.catma .viz-max-panel-name {
+	border-bottom: none !important;
 }
 
 .catma .analyze-card-buttonbar {
@@ -18157,6 +18162,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .kwic-panel-backwardctx-header {
 	text-align: right !important;
+}
+
+.catma .v-treegrid-footer, .catma .catma .v-treegrid-footer-deco {
+	bottom: 17px;
+}
+
+.catma .v-treegrid-scroller, .catma .catma .v-treegrid-horizontal-scrollbar-deco {
+	background: white !important;
 }
 
 .catma .progress-step-number-current {

@@ -18,7 +18,9 @@
  */
 package de.catma.ui;
 
+import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.ServletException;
 
@@ -29,6 +31,7 @@ import com.vaadin.server.BootstrapListener;
 import com.vaadin.server.BootstrapPageResponse;
 import com.vaadin.server.CustomizedSystemMessages;
 import com.vaadin.server.DeploymentConfiguration;
+import com.vaadin.server.RequestHandler;
 import com.vaadin.server.ServiceException;
 import com.vaadin.server.SessionInitEvent;
 import com.vaadin.server.SessionInitListener;
@@ -36,12 +39,48 @@ import com.vaadin.server.SystemMessages;
 import com.vaadin.server.SystemMessagesInfo;
 import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.UIProvider;
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.server.VaadinServletService;
+import com.vaadin.server.VaadinSession;
 
 import de.catma.properties.CATMAPropertyKey;
 
 @Singleton
 public class CatmaApplicationServlet extends VaadinServlet implements SessionInitListener {
+	
+	public static final class DelegateQueryResultRequestHandler implements RequestHandler {
+		private final CopyOnWriteArrayList<RequestHandler> delegates;
+		
+		public DelegateQueryResultRequestHandler() {
+			this.delegates = new CopyOnWriteArrayList<RequestHandler>();
+		}
+		
+		@Override
+		public boolean handleRequest(VaadinSession session, VaadinRequest request, VaadinResponse response)
+				throws IOException {
+			if (!delegates.isEmpty() 
+					&& request.getPathInfo().toLowerCase().endsWith("/queryresult/selection.json")) {
+				for (RequestHandler handler : delegates) {
+					if (handler.handleRequest(session, request, response)) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		
+		public void add(RequestHandler handler) {
+			if (!delegates.contains(handler)) {
+				delegates.add(handler);
+			}
+		}
+		
+		public void remove(RequestHandler handler) {
+			delegates.remove(handler);
+		}
+	}
 	
 	private final UIProvider uiProvider;
 	
@@ -170,6 +209,21 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
         return super.createDeploymentConfiguration(initParameters);
     }
 
+    @Override
+    protected VaadinServletService createServletService(DeploymentConfiguration deploymentConfiguration)
+    		throws ServiceException {
+        VaadinServletService service = new VaadinServletService(this,
+                deploymentConfiguration) {
+        	protected java.util.List<com.vaadin.server.RequestHandler> createRequestHandlers() throws ServiceException {
+        		java.util.List<com.vaadin.server.RequestHandler> handlers = super.createRequestHandlers();
+        		handlers.add(new DelegateQueryResultRequestHandler());
+        		return handlers;
+        	};
+        };
+        service.init();
+        return service;
+    }
+    
 	@Override
 	public void sessionInit(SessionInitEvent event) throws ServiceException {
 		event.getSession().getUIProviders().forEach(event.getSession()::removeUIProvider);

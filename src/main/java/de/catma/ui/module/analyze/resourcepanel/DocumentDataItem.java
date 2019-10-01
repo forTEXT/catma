@@ -41,4 +41,9 @@ public class DocumentDataItem implements DocumentTreeItem {
 	public String getUuid() {
 		return document.getUuid();
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

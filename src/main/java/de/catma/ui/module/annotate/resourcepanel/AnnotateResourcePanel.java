@@ -18,6 +18,7 @@ import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
@@ -411,6 +412,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 
 		documentActionGridComponent = 
 				new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
+		documentActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
 		
 		addComponent(documentActionGridComponent);
 		
@@ -421,7 +423,6 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				"resource-grid", 				
 				"flat-undecorated-icon-buttonrenderer",
 				"no-focused-before-border");
-		tagsetGrid.setSelectionMode(SelectionMode.MULTI);
 
 		tagsetGrid.setHeight("250px");
 		tagsetGrid
@@ -442,7 +443,10 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		
 		tagsetActionGridComponent = 
 				new ActionGridComponent<Grid<TagsetDefinition>>(tagsetLabel, tagsetGrid);
-
+		tagsetActionGridComponent.setSelectionModeFixed(SelectionMode.MULTI);
+		tagsetActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
+		tagsetActionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
+		
 		addComponent(tagsetActionGridComponent);
 	}
 

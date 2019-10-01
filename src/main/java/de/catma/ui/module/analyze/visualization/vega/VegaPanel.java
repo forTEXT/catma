@@ -12,12 +12,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
+import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.RequestHandler;
+import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Notification;
@@ -34,6 +38,7 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.CatmaApplicationServlet.DelegateQueryResultRequestHandler;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.module.analyze.QueryOptionsProvider;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
@@ -80,17 +85,20 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 
 	private VerticalSplitPanel leftSplitPanel;
 
+	private CheckBox cbPublicExposure;
+
 	public VegaPanel(EventBus eventBus, Project project, LoadingCache<String, KwicProvider> kwicProviderCache,
 			QueryOptionsProvider queryOptionsProvider, 
 			DisplaySettingHandler displaySettingsHandler) {
 		
 		this.vegaViewId = new IDGenerator().generate().toLowerCase();
-		String queryResultPath = vegaViewId+"/queryresult/default.json";
+		String queryResultPath = vegaViewId+"/queryresult/selection.json";
 		this.queryResultUrl = CATMAPropertyKey.BaseURL.getValue() + queryResultPath;
 
 		this.queryResultRequestHandler = 
 				new JSONQueryResultRequestHandler(
 						queryOptionsProvider, queryResultPath, vegaViewId);
+
 		VaadinSession.getCurrent().addRequestHandler(queryResultRequestHandler);
 		
 		this.project = project;
@@ -137,8 +145,43 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 				toggleKwicVisible(false);
 			}
 		});
+		
+		cbPublicExposure.addValueChangeListener(event -> handlePublicExposureValueChange(event));
 
 	}
+
+	private void handlePublicExposureValueChange(ValueChangeEvent<Boolean> event) {
+
+		if (event.getValue()) {
+			VaadinSession.getCurrent().removeRequestHandler(queryResultRequestHandler);
+			for (RequestHandler handler : VaadinService.getCurrent().getRequestHandlers()) {
+				if (handler instanceof DelegateQueryResultRequestHandler) {
+					((DelegateQueryResultRequestHandler) handler).add(queryResultRequestHandler);
+					break;
+				}
+			}
+			
+			Notification.show(
+				"Info", 
+				"Please keep in mind that your selection is now public accessible for everyone who knows the URL "
+				+ "until you uncheck this box or until you close this Analyze session!", 
+				Type.ERROR_MESSAGE);
+		}
+		else {
+			
+			if (!VaadinSession.getCurrent().getRequestHandlers().contains(queryResultRequestHandler)) {
+				VaadinSession.getCurrent().addRequestHandler(queryResultRequestHandler);
+			}
+
+			for (RequestHandler handler : VaadinService.getCurrent().getRequestHandlers()) {
+				if (handler instanceof DelegateQueryResultRequestHandler) {
+					((DelegateQueryResultRequestHandler) handler).remove(queryResultRequestHandler);
+					break;
+				}
+			}
+		}
+	}
+
 
 	private void toggleKwicVisible(boolean visible) {
 		if (visible) {
@@ -285,20 +328,22 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 		buttonPanel.addComponent(btExpandCompressRight);
 		buttonPanel.setComponentAlignment(btExpandCompressRight, Alignment.TOP_RIGHT);
 		
-		HorizontalLayout queryResultInfoPanel = new HorizontalLayout();
+		VerticalLayout queryResultInfoPanel = new VerticalLayout();
 		queryResultInfoPanel.setWidth("100%");
 		queryResultInfoPanel.setSpacing(true);
 		codePanel.addComponent(queryResultInfoPanel);
 		
 		TextField queryResultUrlField = new TextField(
 				MessageFormat.format(
-					"data URL of your selection or use {0} placeholder for custom queries", 
+					"Data URL of your selection or use {0} placeholder for custom queries", 
 					CATMA_QUERY_URL), queryResultUrl);
 		
 		queryResultUrlField.setReadOnly(true);
 		queryResultUrlField.setWidth("100%");
 		queryResultInfoPanel.addComponent(queryResultUrlField);
-		queryResultInfoPanel.setExpandRatio(queryResultUrlField, 1f);
+
+		cbPublicExposure = new CheckBox("Expose the selected data for access in the Vega Online Editor");
+		queryResultInfoPanel.addComponent(cbPublicExposure);
 
 		specEditor = new TextArea("Vega Specification");
 		specEditor.setSizeFull();
@@ -311,6 +356,12 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 	@Override
 	public void close() {
 		VaadinSession.getCurrent().removeRequestHandler(queryResultRequestHandler);
+		for (RequestHandler handler : VaadinService.getCurrent().getRequestHandlers()) {
+			if (handler instanceof DelegateQueryResultRequestHandler) {
+				((DelegateQueryResultRequestHandler) handler).remove(queryResultRequestHandler);
+				break;
+			}
+		}
 	}
 
 	@Override

@@ -881,7 +881,12 @@ $v-focus-color: #5A98A1;
 		margin-right: 5px;
         padding: 5px;
         white-space: normal;
+        border-bottom: none !important;
     }
+    
+    .viz-max-panel-name {
+	    border-bottom: none !important;
+	}
         
 	.analyze-card-buttonbar {   
     	background-color: #ffffff;
@@ -936,6 +941,14 @@ $v-focus-color: #5A98A1;
     .kwic-panel-backwardctx-header {
     	text-align: right !important;
     }
+    
+    .v-treegrid-footer, .catma .v-treegrid-footer-deco {
+		bottom: 17px;
+	}
+	
+	.v-treegrid-scroller, .catma .v-treegrid-horizontal-scrollbar-deco {
+		background: white !important;
+	}
     
 	.progress-step-number-current {
 	    background: #5A98A1;

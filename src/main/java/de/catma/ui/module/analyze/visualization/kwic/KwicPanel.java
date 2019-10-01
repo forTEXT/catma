@@ -23,9 +23,10 @@ import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.components.grid.ItemClickListener;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -34,6 +35,7 @@ import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResultRow;
@@ -76,6 +78,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	private VaadinIcons expandResource = VaadinIcons.EXPAND_SQUARE;
 	private VaadinIcons compressResource = VaadinIcons.COMPRESS_SQUARE;
 	private Registration defaultDoubleClickRegistration;
+	private MenuItem miRemoveAnnotations;
 
 	public KwicPanel(
 			EventBus eventBus,
@@ -92,6 +95,11 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 
 		moreOptionsMenu.addItem("Annotate selected rows", clickEvent -> handleAnnotateSelectedRequest(eventBus));
 		
+		miRemoveAnnotations = 
+			moreOptionsMenu.addItem(
+				"Remove selected Annotations", clickEvent -> handleRemoveAnnotationsRequest(eventBus));
+		miRemoveAnnotations.setEnabled(false);
+		
 		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
 			@Override
 			public SerializablePredicate<QueryResultRow> createSearchFilter(String searchInput) {
@@ -102,6 +110,96 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		btExpandCompress.addClickListener(clickEvent -> handleMaxMinRequest());
 		defaultDoubleClickRegistration = 
 		kwicGrid.addItemClickListener(clickEvent -> handleKwicItemClick(clickEvent, eventBus));
+	}
+
+	private void handleRemoveAnnotationsRequest(EventBus eventBus) {
+
+		final Set<QueryResultRow> selectedRows = kwicGrid.getSelectedItems();
+		
+		if (selectedRows.isEmpty()) {
+			Notification.show(
+				"Info", 
+				"Please select one or more Annotation rows!", 
+				Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
+		int annotationRows = 0;
+		List<AnnotationCollectionReference> annotationCollectionReferences = 
+				new ArrayList<>();
+		boolean resourcesMissing = false;
+		Set<String> tagInstanceIdsToBeRemoved = new HashSet<String>();
+		Set<QueryResultRow> rowsToBeRemoved = new HashSet<>();
+		
+		try {
+
+			for (QueryResultRow row : selectedRows) {
+				if (row instanceof TagQueryResultRow) {
+					annotationRows++;
+					if (project.hasDocument(row.getSourceDocumentId())) {
+						SourceDocument document = project.getSourceDocument(row.getSourceDocumentId());
+						AnnotationCollectionReference collRef = 
+							document.getUserMarkupCollectionReference(
+									((TagQueryResultRow) row).getMarkupCollectionId());
+						if (collRef != null) {
+							annotationCollectionReferences.add(collRef);
+							tagInstanceIdsToBeRemoved.add(((TagQueryResultRow) row).getTagInstanceId());
+							rowsToBeRemoved.add(row);
+						}
+						else {
+							resourcesMissing = true;
+						}
+					}
+					else {
+						resourcesMissing = true;
+					}
+				}
+			}
+			
+			if (annotationRows == 0) {
+				Notification.show(
+					"Info", 
+					"Your selection does not contain any Annotations! Please select Annotations only!", 
+					Type.HUMANIZED_MESSAGE);
+				return;
+			}
+			
+			if (annotationCollectionReferences.isEmpty()) {
+				Notification.show(
+					"Info", 
+					"The Documents and/or Collections referenced by your selection are no longer part of the Project!", 
+					Type.HUMANIZED_MESSAGE);
+					return;			
+			}
+			
+			if (resourcesMissing) {
+				Notification.show(
+					"Info", 
+					"Some of the Documents and/or Collections referenced by your selection "
+					+ "are no longer part of the Project and will be ignored, "
+					+ "see columns 'Document' and 'Collection' for details!", 
+					Type.HUMANIZED_MESSAGE);
+			}
+			
+			if (annotationRows != selectedRows.size()) {
+				Notification.show(
+					"Info", 
+					"Some rows of your selection do not represent Annotations and will be ignored, see column 'Tag' for details!", 
+					Type.HUMANIZED_MESSAGE);
+			}
+			
+			AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
+			for (AnnotationCollectionReference ref : annotationCollectionReferences) {
+				collectionManager.add(project.getUserMarkupCollection(ref));
+			}
+			
+			collectionManager.removeTagInstance(tagInstanceIdsToBeRemoved, true);
+			kwicDataProvider.getItems().removeAll(rowsToBeRemoved);
+			kwicDataProvider.refreshAll();
+		}
+		catch (Exception e) {
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error deleting Annotations!", e);
+		}
 	}
 
 	private void handleKwicItemClick(ItemClick<QueryResultRow> clickEvent, EventBus eventBus) {
@@ -341,6 +439,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 				kwicGrid.getColumn(ColumnId.PROPERTY_NAME.name()).setHidden(false);
 				kwicGrid.getColumn(ColumnId.PROPERTY_VALUE.name()).setHidden(false);
 			}
+			miRemoveAnnotations.setEnabled(true);
 		}
 		
 		kwicGrid.getDataProvider().refreshAll();

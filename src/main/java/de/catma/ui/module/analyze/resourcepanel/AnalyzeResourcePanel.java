@@ -14,6 +14,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -268,6 +269,8 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 				documentTree);
 
 		documentActionGridComponent.setSelectionModeFixed(Grid.SelectionMode.MULTI);
+		documentActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
+		documentActionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
 
 		addComponent(documentActionGridComponent);
 

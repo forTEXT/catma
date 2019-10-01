@@ -17,8 +17,8 @@ import de.catma.ui.module.main.ErrorHandler;
 public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 	
 	private final QueryId queryId;
-	private final String identity;
-	private GroupedQueryResult groupedQueryResult;
+	protected final String identity;
+	protected GroupedQueryResult groupedQueryResult;
 	private QueryResultRowArray rows;
 
 	public QueryIdQueryResultRowItem(String parentIdentity, GroupedQueryResult groupedQueryResult) {

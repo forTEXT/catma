@@ -275,6 +275,7 @@ public class TagsView extends HugeCard {
 
 
 	private void initComponents() {
+        getHugeCardBar().setMoreOptionsButtonVisible(false);
         
 		HorizontalLayout content = new HorizontalLayout();
 		content.setSizeFull();

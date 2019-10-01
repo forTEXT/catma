@@ -1,6 +1,8 @@
 package de.catma.ui.module.analyze;
 
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -63,12 +65,42 @@ import de.catma.ui.module.main.ErrorHandler;
 
 public class AnalyzeView extends HorizontalLayout
 		implements ClosableTab {
+	
+	private static final class NamedQuery {
+		private final String name;
+		private final String query;
+		private boolean hideName;
+		
+		public NamedQuery(String query) {
+			this(query, query, true);
+		}		
+		
+		public NamedQuery(String name, String query) {
+			this(name, query, false);
+		}
+		
+		public NamedQuery(String name, String query, boolean hideName) {
+			super();
+			this.hideName = hideName;
+			this.name = name;
+			this.query = query;
+		}
+
+		public String getQuery() {
+			return query;
+		}
+		
+		@Override
+		public String toString() {
+			return hideName?this.query:(this.name + " (" + this.query + ")");
+		}
+	}
 
 	private IndexedProject project;
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	
 	private Corpus currentCorpus;
-	private List<String> queryProposals;
+	private List<NamedQuery> queryProposals;
 	
 	private Button btExecuteSearch;
 	private Button btQueryBuilder;
@@ -79,7 +111,7 @@ public class AnalyzeView extends HorizontalLayout
 	private Button btQueryOptions;
 	private Button btVizOptions;
 	
-	private ComboBox<String> queryBox;
+	private ComboBox<NamedQuery> queryBox;
 	
 	private VerticalLayout resultsPanel;
 	private VerticalLayout vizCardsPanel;
@@ -128,7 +160,8 @@ public class AnalyzeView extends HorizontalLayout
 		Label searchPanelLabel = new Label("Queries");
 		
 		btQueryOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
-
+		btQueryOptions.setVisible(false); // TODO: no query options so far
+		
 	    HorizontalLayout queryHeaderPanel = new HorizontalLayout(searchPanelLabel, btQueryOptions);
 	    queryHeaderPanel.setWidth("100%");
 
@@ -163,6 +196,7 @@ public class AnalyzeView extends HorizontalLayout
 		Label vizPanelLabel = new Label("Visualisations");
 
 		btVizOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
+		btVizOptions.setVisible(false); // TODO: no viz options so far
 
 	    HorizontalLayout vizHeaderPanel = new HorizontalLayout(vizPanelLabel, btVizOptions);
 	    vizHeaderPanel.setWidth("100%");
@@ -223,6 +257,12 @@ public class AnalyzeView extends HorizontalLayout
 			
 			//TODO: provide a facility where the user can select between different IndexInfoSets -> AnalyzeResourcePanel
 			indexInfoSet = corpus.getSourceDocuments().get(0).getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
+			btQueryBuilder.setEnabled(true);
+			btExecuteSearch.setEnabled(true);
+		}
+		else {
+			btQueryBuilder.setEnabled(false);
+			btExecuteSearch.setEnabled(false);
 		}
 		
 		currentCorpus = corpus;
@@ -251,13 +291,11 @@ public class AnalyzeView extends HorizontalLayout
 
 		btQueryBuilder = new Button("Build Query");
 
-		//TODO: add Queries with descriptive names
 		queryProposals = new ArrayList<>();
-		queryProposals.add("property= \"%\"");
-		queryProposals.add("tag=\"%\"");
-		queryProposals.add("wild= \"Blumen%\",tag=\"%\"");
-		queryProposals.add("wild= \"%\"");
-		queryProposals.add("freq>0");
+		queryProposals.add(new NamedQuery("Wordlist", "freq>0"));
+		queryProposals.add(new NamedQuery("Wildcard 'a'", "wild = \"a%\""));
+		queryProposals.add(new NamedQuery("Taglist", "tag=\"%\""));
+		queryProposals.add(new NamedQuery("Taglist with Properties", "property=\"%\""));
 
 		queryBox = new ComboBox<>();
 		queryBox.setDataProvider(new ListDataProvider<>(queryProposals));
@@ -316,12 +354,13 @@ public class AnalyzeView extends HorizontalLayout
 	
 	private void initActions() {
 		queryBox.setNewItemProvider(inputString -> {
-		    return Optional.of(inputString);
+		    return Optional.of(new NamedQuery(inputString));
 		});
 		
 		btExecuteSearch.addClickListener(clickEvent -> executeSearch());	
 		queryBox.addValueChangeListener(valueChange -> btExecuteSearch.click());
-
+		queryBox.addFocusListener(event -> queryBox.setValue(null));
+		
 		kwicBt.addClickListener(event -> addKwicViz());
 
 		distBt.addClickListener(event -> addDistViz());
@@ -340,7 +379,8 @@ public class AnalyzeView extends HorizontalLayout
 				@Override
 				public void savePressed(WizardContext result) {
 					QueryTree queryTree = (QueryTree) result.get(QueryBuilder.ContextKey.QUERY_TREE);
-					queryBox.setValue(queryTree.toString());
+					String query = queryTree.toString();
+					queryBox.setValue(new NamedQuery(query));
 				}
 		});
 		queryBuilder.show();
@@ -351,8 +391,12 @@ public class AnalyzeView extends HorizontalLayout
 			Notification.show("Info", "Please query some data first!", Type.HUMANIZED_MESSAGE);
 			return;
 		}
+		String name = 
+				"KWIC - KeyWord In Context " 
+						+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME);
 		VizMaxPanel vizMaxPanel = 
 				new VizMaxPanel(
+						name,
 						new KwicPanel(
 								eventBus,
 								project, 
@@ -364,7 +408,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		VizMinPanel vizMinPanel = 
 				new VizMinPanel(
-					"KWIC - KeyWord In Context", 
+					name, 
 					vizMaxPanel,
 					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
 					() -> setContent(vizMaxPanel, contentPanel));
@@ -391,9 +435,12 @@ public class AnalyzeView extends HorizontalLayout
 					indexInfoSet.getUnseparableCharacterSequences(),
 					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), project),
 				new DistributionDisplaySettingHandler());
-		
+		String name = 
+				"Distribution Chart " 
+						+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME);
 		VizMaxPanel vizMaxPanel = 
 			new VizMaxPanel(
+					name,
 					vegaPanel,
 					getQueryResultPanelSettings(),
 					project, 
@@ -402,7 +449,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		VizMinPanel vizMinPanel = 
 				new VizMinPanel(
-					"Distribution", 
+					name, 
 					vizMaxPanel,
 					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
 					() -> setContent(vizMaxPanel, contentPanel));
@@ -433,13 +480,17 @@ public class AnalyzeView extends HorizontalLayout
 	}
 	
 	private void executeSearch() {
-
-		String searchInput = queryBox.getValue();
-		if (searchInput == null || searchInput.trim().isEmpty()) {
-			Notification.show("Info", "Please enter or select a query first!", Type.HUMANIZED_MESSAGE);
-			return;
+		NamedQuery namedQuery = queryBox.getValue();
+		if (namedQuery != null) {
+			kwicBt.focus();
+			String searchInput = namedQuery.getQuery();
+			
+			if (searchInput == null || searchInput.trim().isEmpty()) {
+				Notification.show("Info", "Please enter or select a query first!", Type.HUMANIZED_MESSAGE);
+				return;
+			}
+			executeSearch(searchInput, queryResultPanel -> resultsPanel.addComponentAsFirst(queryResultPanel));
 		}
-		executeSearch(searchInput, queryResultPanel -> resultsPanel.addComponentAsFirst(queryResultPanel));
 	}
 
 	private void executeSearch(String searchInput, Consumer<QueryResultPanel> addToLayoutFunction) {
@@ -549,6 +600,10 @@ public class AnalyzeView extends HorizontalLayout
 	@Override
 	public void close() {
 		analyzeResourcePanel.close();
+		for (Iterator<Component> compIter=vizCardsPanel.iterator(); compIter.hasNext();) {
+			VizMinPanel vizMinPanel = (VizMinPanel)compIter.next();
+			vizMinPanel.close();
+		}
 	}
 	
 	@Override

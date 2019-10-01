@@ -1,6 +1,7 @@
 package de.catma.ui.module.analyze.queryresultpanel;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
@@ -21,8 +22,10 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 	private GroupedQueryResult groupedQueryResult;
 	private QueryResultRowArray rows;
 	private Project project;
+	private boolean includeQueryId;
 
-	public TagQueryResultRowItem(GroupedQueryResult groupedQueryResult, Project project) {
+	public TagQueryResultRowItem(boolean includeQueryId, GroupedQueryResult groupedQueryResult, Project project) {
+		this.includeQueryId = includeQueryId;
 		this.groupedQueryResult = groupedQueryResult;
 		this.project = project;
 		this.identity = groupedQueryResult.getGroup().toString();
@@ -72,16 +75,33 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 	@Override
 	public void addChildRowItems(TreeData<QueryResultRowItem> treeData, LoadingCache<String, KwicProvider> kwicProviderCache) {
 		try {
-			for (String documentId : groupedQueryResult.getSourceDocumentIDs()) {
-				String documentName = kwicProviderCache.get(documentId).getSourceDocumentName();
-				AnnotatedDocumentQueryResultRowItem item = new AnnotatedDocumentQueryResultRowItem(
-						identity,
-						documentName, documentId, 
-						groupedQueryResult.getSubResult(documentId), 
-						project);
-				if (!treeData.contains(item)) {
-					treeData.addItem(this, item);
-					treeData.addItem(item, new DummyQueryResultRowItem());
+			if (includeQueryId) {
+				Set<GroupedQueryResult> groupedQueryResults = getRows().asGroupedSet(row -> {
+					return row.getQueryId();
+				});
+				
+				for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
+					AnnotatedQueryIdQueryResultRowItem queryIdQueryResultRowItem = 
+							new AnnotatedQueryIdQueryResultRowItem(identity, groupedQueryResult, project);
+					if (!treeData.contains(queryIdQueryResultRowItem)) {
+						treeData.addItem(this, queryIdQueryResultRowItem);
+						treeData.addItem(queryIdQueryResultRowItem, new DummyQueryResultRowItem());
+					}
+				}			
+			}
+			else {
+				for (String documentId : groupedQueryResult.getSourceDocumentIDs()) {
+				
+					String documentName = kwicProviderCache.get(documentId).getSourceDocumentName();
+					AnnotatedDocumentQueryResultRowItem item = new AnnotatedDocumentQueryResultRowItem(
+							identity,
+							documentName, documentId, 
+							groupedQueryResult.getSubResult(documentId), 
+							project);
+					if (!treeData.contains(item)) {
+						treeData.addItem(this, item);
+						treeData.addItem(item, new DummyQueryResultRowItem());
+					}
 				}
 			}
 		}

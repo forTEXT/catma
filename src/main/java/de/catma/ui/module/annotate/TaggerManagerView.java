@@ -28,7 +28,6 @@ import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.ui.component.tabbedview.TabbedView;
-import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
 
 public class TaggerManagerView extends TabbedView {
 	
@@ -41,14 +40,6 @@ public class TaggerManagerView extends TabbedView {
 				eventBus));
 		this.eventBus = eventBus;
 		this.eventBus.register(this);
-	}
-	
-	@Subscribe
-	public void taggerViewSourceDocumentChanged(
-			TaggerViewSourceDocumentChangedEvent taggerViewSourceDocumentChangedEvent) {
-		TaggerView taggerView = taggerViewSourceDocumentChangedEvent.getTaggerView();
-		String caption = taggerView.getSourceDocument()==null?"N/A":taggerView.getSourceDocument().toString();
-		setCaption(taggerView, caption);
 	}
 	
     @Subscribe

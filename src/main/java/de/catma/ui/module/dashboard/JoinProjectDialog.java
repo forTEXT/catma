@@ -45,8 +45,8 @@ public class JoinProjectDialog extends Window {
 
 	private final TextField tfCode = new TextField("Code");
 	private final TextField tfName = new TextField("Name");
-	private final TextArea taDescription = new TextArea("Decription");
-	private final ComboBox<RBACRole> cbRole = new ComboBox<RBACRole>("role", 
+	private final TextArea taDescription = new TextArea("Description");
+	private final ComboBox<RBACRole> cbRole = new ComboBox<RBACRole>("Role", 
 			Lists.newArrayList(RBACRole.values()));
     private final Cache<Integer, String> invitationCache = 
     		Caching.getCachingProvider().getCacheManager().getCache(HazelcastConfiguration.CACHE_KEY_INVITATIONS);
@@ -78,7 +78,7 @@ public class JoinProjectDialog extends Window {
 		public void uiBlockingOnMessage(Message<JoinedProjectMessage> message) {
 			if(message.getMessageObject().getInvitation().getKey() == JoinProjectDialog.this.invitation.getKey()) {	
 				JoinProjectDialog.this.eventBus.post(new ResourcesChangedEvent());
-				Notification.show("Joined successfully", "sucessfully join project " + 
+				Notification.show("Joined successfully", "Sucessfully joined Project " + 
 						JoinProjectDialog.this.invitation.getName() , Type.HUMANIZED_MESSAGE);
 				JoinProjectDialog.this.getUI().push();
 				JoinProjectDialog.this.close();
@@ -91,7 +91,7 @@ public class JoinProjectDialog extends Window {
 		content.addStyleName("spacing");
 		content.addStyleName("margin");
 
-		Label lDescription = new Label("Please enter your invitation code to find and join a project");
+		Label lDescription = new Label("Please enter your invitation code to find and join a Project");
 		content.addComponent(lDescription);
 		
 		tfCode.setWidth("100%");
