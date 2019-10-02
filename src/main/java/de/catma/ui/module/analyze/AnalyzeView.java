@@ -57,6 +57,7 @@ import de.catma.ui.module.analyze.resourcepanel.AnalyzeResourcePanel;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.analyze.visualization.vega.DistributionDisplaySettingHandler;
 import de.catma.ui.module.analyze.visualization.vega.VegaPanel;
+import de.catma.ui.module.analyze.visualization.vega.WordCloudDisplaySettingHandler;
 import de.catma.ui.module.main.ErrorHandler;
 
 public class AnalyzeView extends HorizontalLayout
@@ -106,6 +107,7 @@ public class AnalyzeView extends HorizontalLayout
 		initActions();
 		
 		corpusChanged();
+
 	}
 	
 	@Override
@@ -319,6 +321,8 @@ public class AnalyzeView extends HorizontalLayout
 
 		distBt.addClickListener(event -> addDistViz());
 		
+		wordCloudBt.addClickListener(event -> addWCViz());
+		
 		btQueryBuilder.addClickListener(clickEvent -> showQueryBuilder());
 	}
 
@@ -396,6 +400,44 @@ public class AnalyzeView extends HorizontalLayout
 		VizMinPanel vizMinPanel = 
 				new VizMinPanel(
 					"Distribution", 
+					vizMaxPanel,
+					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
+					() -> setContent(vizMaxPanel, contentPanel));
+		
+
+		vizCardsPanel.addComponent(vizMinPanel);
+		setContent(vizMaxPanel, contentPanel);
+	}
+	
+	private void addWCViz() {
+		if (getQueryResultPanelSettings().isEmpty()) {
+			Notification.show("Info", "Please query some data first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		VegaPanel vegaPanel = 
+			new VegaPanel(
+				eventBus,
+				project, 
+				kwicProviderCache, 
+				() -> new QueryOptions(
+					new QueryId(""), //TODO: ok?
+					currentCorpus.getDocumentIds(), 
+					currentCorpus.getCollectionIds(),
+					indexInfoSet.getUnseparableCharacterSequences(),
+					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), project),
+				new WordCloudDisplaySettingHandler());
+		
+		VizMaxPanel vizMaxPanel = 
+			new VizMaxPanel(
+					vegaPanel,
+					getQueryResultPanelSettings(),
+					project, 
+					kwicProviderCache,
+					closedVizMaxPanel -> setContent(contentPanel, closedVizMaxPanel));
+		
+		VizMinPanel vizMinPanel = 
+				new VizMinPanel(
+					"WordCloud", 
 					vizMaxPanel,
 					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
 					() -> setContent(vizMaxPanel, contentPanel));
