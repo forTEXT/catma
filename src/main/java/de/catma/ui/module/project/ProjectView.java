@@ -71,6 +71,7 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
@@ -79,6 +80,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
+import de.catma.ui.events.MembersChangedEvent;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
@@ -313,6 +315,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		() -> importTagSetBtn.setEnabled(true))
         		);
         
+        //TODO:
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
@@ -384,6 +387,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleSynchronizeRequest() {
     	try {
+    		setEnabled(false);
+    		
 	    	if (project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
 	    			"Commit all changes", 
@@ -399,7 +404,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		    		            @Override
 		    		            public void ready(Project project) {
-		    						initData();
+		    		            	reloadAll();
+		    		            	setEnabled(true);
 				    				Notification.show(
 					    					"Info", 
 					    					"Your Project has been synchronized!", 
@@ -408,17 +414,20 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    		            
 		    		            @Override
 		    		            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
+		    		            	setEnabled(true);
 		    						eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
 		    		            }
 
 		    		            @Override
 		    		            public void failure(Throwable t) {
+		    		            	setEnabled(true);
 		    		                errorHandler.showAndLogError("error opening project", t);
 		    		            }
 		    		        });
 
 	    				}
 	    				catch (Exception e) {
+	    					setEnabled(true);
 	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
 	    				}
 	    			});
@@ -433,8 +442,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	                @Override
 	                public void ready(Project project) {
-	    				initData();
-	    				//TODO: post event to other views needed
+	    				reloadAll();
+	    				setEnabled(true);
 	    				Notification.show(
 		    					"Info",  
 		    					"Your Project has been synchronized!",  
@@ -443,18 +452,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                
 	                @Override
 	                public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
+	                	setEnabled(true);
 	    				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
 	                }
 
 	                @Override
 	                public void failure(Throwable t) {
+	                	setEnabled(true);
 	                    errorHandler.showAndLogError("error opening project", t);
 	                }
 	            });
-				Notification.show(
-					"Info",  
-					"Your Project has been synchronized!",  
-					Type.HUMANIZED_MESSAGE);	    		
 	    	}
     	}
     	catch (Exception e) {
@@ -854,21 +861,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	new CreateMemberDialog(
         		project::assignOnProject,
         		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()), //$NON-NLS-1$
-        		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
+        		(evt) -> eventBus.post(new MembersChangedEvent())
         		).show());
         
         ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-        moreOptionsContextMenu.addItem("Edit Members", (click) -> new EditMemberDialog(
-        		project::assignOnProject,
-        		teamGrid.getSelectedItems(),
-        		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
-        		).show());
-        moreOptionsContextMenu.addItem("Remove Members", (click) -> new RemoveMemberDialog(
-        		project::unassignFromProject,
-        		teamGrid.getSelectedItems(),
-        		(evt) -> eventBus.post(new ResourcesChangedEvent<Component>(this))
-        		).show());
+        moreOptionsContextMenu.addItem("Edit Members", (click) -> handleEditMembers());
+        moreOptionsContextMenu.addItem("Remove Members", (click) -> handleRemoveMembers());
         teamContent.addComponent(membersGridComponent);
         return teamContent;
     }
@@ -876,7 +875,56 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 
 
-    /**
+    private void handleRemoveMembers() {
+    	if (teamGrid.getSelectedItems().isEmpty()) {
+    		
+    	}
+    	else {
+    		if (teamGrid.getSelectedItems()
+    				.stream()
+    				.map(User::getUserId)
+    				.filter(id -> id.equals(project.getUser().getUserId()))
+    				.findFirst()
+    				.isPresent()) {
+    			HTMLNotification.show(
+    				"Info", 
+    				"You cannot remove yourself from the Project. "
+    				+ "Please use the 'Leave Project' button on the Project card on the Dashboard instead!"
+					+ "<br><br> If your are the owner of the Project, "
+					+ "please contact the Administrator to request an transfer of ownership.",
+    				Type.ERROR_MESSAGE);
+    		}
+    		Set<Member> members = teamGrid.getSelectedItems()
+    				.stream()
+    				.filter(member -> !member.getUserId().equals(project.getUser().getUserId()))
+    				.collect(Collectors.toSet());
+    		
+    		members.remove(project.getUser());
+    		
+    		if (!members.isEmpty()) {
+	    		new RemoveMemberDialog(
+	            		project::unassignFromProject,
+	            		teamGrid.getSelectedItems(),
+	            		(evt) -> eventBus.post(new MembersChangedEvent())
+	            		).show();
+    		}
+    	}
+	}
+
+	private void handleEditMembers() {
+    	if (teamGrid.getSelectedItems().isEmpty()) {
+    		Notification.show("Info", "Select at least one Member first!", Type.HUMANIZED_MESSAGE);
+    	}
+    	else {
+    		new EditMemberDialog(
+            		project::assignOnProject,
+            		teamGrid.getSelectedItems(),
+            		(evt) -> eventBus.post(new MembersChangedEvent())
+            		).show();
+    	}
+    }
+
+	/**
      * @param projectReference
      */
     private void initProject(ProjectReference projectReference) {
@@ -1035,7 +1083,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @param resourcesChangedEvent
      */
     @Subscribe
-    public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
+    public void handleResourceChanged(ResourcesChangedEvent resourcesChangedEvent){
     	reloadAll();
     }
     
@@ -1044,6 +1092,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	initData();
     }
 
+    @Subscribe
+    public void handleMembersChanged(MembersChangedEvent membersChangedEvent) {
+    	try {
+	    	ListDataProvider<Member> memberData = new ListDataProvider<>(project.getProjectMembers());
+	    	teamGrid.setDataProvider(memberData);
+    	}
+    	catch (Exception e) {
+    		((ErrorHandler)UI.getCurrent()).showAndLogError("error loading Members", e);
+    	}
+    }
+    
     /**
      * deletes selected resources
      *

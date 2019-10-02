@@ -275,6 +275,7 @@ public class TagsView extends HugeCard {
 
 
 	private void initComponents() {
+        getHugeCardBar().setMoreOptionsButtonVisible(false);
         
 		HorizontalLayout content = new HorizontalLayout();
 		content.setSizeFull();
@@ -292,7 +293,7 @@ public class TagsView extends HugeCard {
                 tagsetGrid
         );
         
-		resourcePanel = new TagResourcePanel(project); 
+		resourcePanel = new TagResourcePanel(project, eventBus); 
 		drawer = new SliderPanelBuilder(resourcePanel)
 				.mode(SliderMode.LEFT).expanded(false).build();
 		
@@ -304,6 +305,7 @@ public class TagsView extends HugeCard {
 	}
 	
 	public void close() {
+		resourcePanel.close();
 		eventBus.unregister(this);
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged, 
@@ -392,56 +394,75 @@ public class TagsView extends HugeCard {
 	}
 
 	private void handleDeleteTagsetRequest() {
-		Collection<TagsetDefinition> selectedTagsets = 
-			tagsetGrid.getSelectedItems().stream()
-			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
-			.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
-			.collect(Collectors.toList());
-		if (selectedTagsets.isEmpty()) {
-			Notification.show("Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
-		}
-		else {
-			for (TagsetDefinition tagset : selectedTagsets) {
-				ConfirmDialog.show(
-					UI.getCurrent(), 
-					"Warning", 
-					String.format("Are you sure you want to delete Tagset %1$s and all related data?", tagset.getName()),
-					"Yes",
-					"Cancel",
-					dlg -> {
-						if (dlg.isConfirmed()) {
-							project.getTagManager().removeTagsetDefinition(tagset);
-						}
-					});
-			}
-		}
-	}
-
-	private void handleEditTagsetRequest() {
-		Collection<TagsetDefinition> selectedTagsets = 
+		if (project.isAuthorizedOnProject(RBACPermission.TAGSET_DELETE_OR_EDIT)) {
+			Collection<TagsetDefinition> selectedTagsets = 
 				tagsetGrid.getSelectedItems().stream()
 				.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
 				.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
 				.collect(Collectors.toList());
-		
-		if (!selectedTagsets.isEmpty()) {
-			final TagsetDefinition tagset = selectedTagsets.iterator().next();
-	    	SingleTextInputDialog tagsetNameDlg = 
-	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:", tagset.getName(),
-	        				new SaveCancelListener<String>() {
-	    						@Override
-	    						public void savePressed(String result) {
-	    							project.getTagManager().setTagsetDefinitionName(tagset, result);
-	    						}
-	    					});
-	            	
-	            tagsetNameDlg.show();			
+			if (selectedTagsets.isEmpty()) {
+				Notification.show("Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
+			}
+			else {
+	
+				for (TagsetDefinition tagset : selectedTagsets) {
+					ConfirmDialog.show(
+						UI.getCurrent(), 
+						"Warning", 
+						String.format("Are you sure you want to delete Tagset %1$s and all related data?", tagset.getName()),
+						"Yes",
+						"Cancel",
+						dlg -> {
+							if (dlg.isConfirmed()) {
+								project.getTagManager().removeTagsetDefinition(tagset);
+							}
+						});
+				}
+			}
 		}
 		else {
 			Notification.show(
-				"Info", "Please select a Tagset first!", 
-				Type.HUMANIZED_MESSAGE);
-		}	
+					"Info",
+					"You do not have the permission to delete Tagsets! "
+					+ "Please contact the Project maintainer for changes!",
+					Type.HUMANIZED_MESSAGE);			
+		}
+	}
+
+	private void handleEditTagsetRequest() {
+		if (project.isAuthorizedOnProject(RBACPermission.TAGSET_DELETE_OR_EDIT)) {
+			Collection<TagsetDefinition> selectedTagsets = 
+					tagsetGrid.getSelectedItems().stream()
+					.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
+					.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
+					.collect(Collectors.toList());
+			
+			if (!selectedTagsets.isEmpty()) {
+				final TagsetDefinition tagset = selectedTagsets.iterator().next();
+		    	SingleTextInputDialog tagsetNameDlg = 
+		        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:", tagset.getName(),
+		        				new SaveCancelListener<String>() {
+		    						@Override
+		    						public void savePressed(String result) {
+		    							project.getTagManager().setTagsetDefinitionName(tagset, result);
+		    						}
+		    					});
+		            	
+		            tagsetNameDlg.show();			
+			}
+			else {
+				Notification.show(
+					"Info", "Please select a Tagset first!", 
+					Type.HUMANIZED_MESSAGE);
+			}
+		}
+		else {
+			Notification.show(
+					"Info",
+					"You do not have the permission to edit Tagsets! "
+					+ "Please contact the Project maintainer for changes!",
+					Type.HUMANIZED_MESSAGE);			
+		}
 	}
 
 	private void handleEditPropertiesRequest() {
@@ -818,6 +839,7 @@ public class TagsView extends HugeCard {
 				"You do not have the permission to make changes to any of the available Tagsets! "
 				+ "Please contact the Project maintainer for changes!",
 				Type.HUMANIZED_MESSAGE);
+			return;
 		}
 		AddParenttagDialog addTagDialog = 
 			new AddParenttagDialog(
@@ -866,20 +888,29 @@ public class TagsView extends HugeCard {
 	}
     
 	private void handleAddTagsetRequest() {
-    	SingleTextInputDialog tagsetNameDlg = 
-        		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
-        				new SaveCancelListener<String>() {
-    						
-    						@Override
-    						public void savePressed(String result) {
-    							IDGenerator idGenerator = new IDGenerator();
-    							project.getTagManager().addTagsetDefinition(
-    								new TagsetDefinition(
-    									idGenerator.generate(), result, new Version()));
-    						}
-    					});
-            	
-    	tagsetNameDlg.show();
+		if (project.isAuthorizedOnProject(RBACPermission.TAGSET_CREATE_OR_UPLOAD)) {
+	    	SingleTextInputDialog tagsetNameDlg = 
+	        		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+	        				new SaveCancelListener<String>() {
+	    						
+	    						@Override
+	    						public void savePressed(String result) {
+	    							IDGenerator idGenerator = new IDGenerator();
+	    							project.getTagManager().addTagsetDefinition(
+	    								new TagsetDefinition(
+	    									idGenerator.generate(), result, new Version()));
+	    						}
+	    					});
+	            	
+	    	tagsetNameDlg.show();
+		}
+		else {
+			Notification.show(
+					"Info",
+					"You do not have the permission to create Tagsets! "
+					+ "Please contact the Project maintainer for changes!",
+					Type.HUMANIZED_MESSAGE);			
+		}
 	}
 
 	private void addTags(

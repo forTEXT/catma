@@ -78,6 +78,7 @@ public class JSONQueryResultRequestHandler implements RequestHandler {
 						queryResult, 
 						queryOptionsProvider.getQueryOptions().getRepository());
 		response.setCacheTime(-1);
+		response.setHeader("Access-Control-Allow-Origin", "https://vega.github.io");
 		outputStream.write(jsonValues.toString().getBytes("UTF-8"));
 	}
 

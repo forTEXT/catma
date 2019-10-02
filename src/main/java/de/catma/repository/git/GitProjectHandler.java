@@ -513,20 +513,27 @@ public class GitProjectHandler {
 				Path collectionDirPath = 
 					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 					 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
-				localRepoManager.detach();
 				 
 				if (!collectionDirPath.toFile().exists()) {
 					return collections;
 				}
+				
+				List<Path> paths = localRepoManager.getSubmodulePaths()
+						.stream()
+						.filter(path -> path.startsWith(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME))
+						.map(path -> 
+							Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+								 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME)
+								 .resolve(path))
+						.collect(Collectors.toList());
+				localRepoManager.detach();
+				
 				GitMarkupCollectionHandler gitMarkupCollectionHandler = 
 						new GitMarkupCollectionHandler(
 								localRepoManager, 
 								this.remoteGitServerManager,
 								this.credentialsProvider);
-				List<Path> paths = Files
-						.walk(collectionDirPath, 1)
-						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
-						.collect(Collectors.toList());
+				
 				for (Path collectionPath : paths) {
 					String collectionId = collectionPath.getFileName().toString();
 					try {

@@ -31,6 +31,7 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 
 	public PropertySelectionStep(EventBus eventBus, Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		this.context = context;
+		this.context.put(AnnotationWizardContextKey.PROPERTIES, Collections.emptyList());
 		this.progressStep = progressStepFactory.create(2, "Set Property values");
 		this.nextStep = new CollectionSelectionStep(eventBus, project, context, progressStepFactory);
 		initComponents();

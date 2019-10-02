@@ -26,5 +26,8 @@ public class HugeCard extends VerticalLayout {
     }
 
     public ContextMenu getMoreOptionsContextMenu() { return hugeCardBar.getMoreOptionsContextMenu(); }
+    protected HugeCardBar getHugeCardBar() {
+		return hugeCardBar;
+	}
 
 }

@@ -129,7 +129,7 @@ public class AnnotationCollection {
 	
 	/**
 	 * @param tagDefinition 
-	 * @return a set of {@link TagDefinition#getId() IDs} of tag definitions that
+	 * @return a set of {@link TagDefinition#getUuid() IDs} of tag definitions that
 	 * are children of the given definition (deep list)
 	 */
 	public Set<String> getChildIDs(TagDefinition tagDefinition) {

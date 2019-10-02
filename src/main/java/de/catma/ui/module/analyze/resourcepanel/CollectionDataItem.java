@@ -51,4 +51,14 @@ public class CollectionDataItem implements DocumentTreeItem {
 			documentTree.select(dataProvider.getTreeData().getParent(this));
 		}
 	}
+	
+	@Override
+	public String getUuid() {
+		return collectionRef.getId();
+	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

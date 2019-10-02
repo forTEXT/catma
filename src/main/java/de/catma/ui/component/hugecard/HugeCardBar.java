@@ -38,5 +38,8 @@ public class HugeCardBar extends HorizontalLayout {
     }
 
     public ContextMenu getMoreOptionsContextMenu() { return this.moreOptionsContextMenu; }
+    public void setMoreOptionsButtonVisible(boolean visible) {
+    	this.btMoreOptions.setVisible(visible);
+    }
 
 }

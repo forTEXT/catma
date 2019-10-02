@@ -17,6 +17,10 @@ $v-focus-color: #5A98A1;
   		font-family: "Open Sans", sans-serif;
   	}
   	
+  	.icon-button.v-button.v-disabled {
+  		background: white;
+  	}
+  	
   	.catma-menu .v-menubar-menuitem-highlight {
 	    background: #E6E9EB;
 	    color: #000;
@@ -877,7 +881,12 @@ $v-focus-color: #5A98A1;
 		margin-right: 5px;
         padding: 5px;
         white-space: normal;
+        border-bottom: none !important;
     }
+    
+    .viz-max-panel-name {
+	    border-bottom: none !important;
+	}
         
 	.analyze-card-buttonbar {   
     	background-color: #ffffff;
@@ -895,6 +904,14 @@ $v-focus-color: #5A98A1;
     	border: solid 1px rgba(151, 151, 151, 0.12);
     }
     
+    .refresh-query-result-panel-refresh-button {
+    	color: #B00020 !important;
+    }
+
+    .refresh-query-result-panel-refresh-button:hover {
+    	color: rgb(70, 70, 70) !important;
+    }
+        
     .kwic-panel-keyword {
     	text-align: center;
     }
@@ -924,6 +941,14 @@ $v-focus-color: #5A98A1;
     .kwic-panel-backwardctx-header {
     	text-align: right !important;
     }
+    
+    .v-treegrid-footer, .catma .v-treegrid-footer-deco {
+		bottom: 17px;
+	}
+	
+	.v-treegrid-scroller, .catma .v-treegrid-horizontal-scrollbar-deco {
+		background: white !important;
+	}
     
 	.progress-step-number-current {
 	    background: #5A98A1;

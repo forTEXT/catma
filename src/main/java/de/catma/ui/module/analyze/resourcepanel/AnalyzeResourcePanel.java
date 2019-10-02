@@ -14,11 +14,13 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
@@ -29,8 +31,10 @@ import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
+import de.catma.project.event.ProjectReadyEvent;
 import de.catma.rbac.RBACPermission;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.module.main.ErrorHandler;
 
 public class AnalyzeResourcePanel extends VerticalLayout {
 
@@ -101,9 +105,32 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 			documentTree.expand(documentData.getRootItems());
 		}
 		catch (Exception e) {
-			//TODO:
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("error loading Project data", e);
 		}
+	}
+	
+	@Subscribe
+	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
+		Corpus corpus = getCorpus();
+		List<String> documentIds = corpus.getDocumentIds();
+		List<String> collectionIds = corpus.getCollectionIds();
+		
+		initData();
+		
+		for (DocumentTreeItem documentDataItem : documentData.getRootItems()) {
+			List<DocumentTreeItem> collectionItems = documentData.getChildren(documentDataItem);
+			if (documentIds.contains(documentDataItem.getUuid())) {
+				documentTree.getSelectionModel().select(documentDataItem);
+				for (DocumentTreeItem oneCollection : collectionItems) {
+					if (collectionIds.contains(oneCollection.getUuid())) {
+						documentTree.getSelectionModel().select(oneCollection);
+					}
+				}
+			}
+		}
+		
+		corpusChangedListener.corpusChanged();
+		
 	}
 	
     @SuppressWarnings("unchecked")
@@ -242,6 +269,8 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 				documentTree);
 
 		documentActionGridComponent.setSelectionModeFixed(Grid.SelectionMode.MULTI);
+		documentActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
+		documentActionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
 
 		addComponent(documentActionGridComponent);
 
@@ -252,7 +281,16 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 			@Override
 			public void selectionChange(SelectionEvent<DocumentTreeItem> event) {
 				if (event.isUserOriginated()) {
-					event.getAllSelectedItems().forEach(item -> item.ensureSelectedParent(documentTree));
+					Set<DocumentTreeItem> selectedItems = new HashSet<>(event.getAllSelectedItems());
+					for (DocumentTreeItem item : documentData.getRootItems()) {
+						if (!event.getAllSelectedItems().contains(item)) {
+							documentData.getChildren(item).forEach(child -> {
+								documentTree.deselect(child);
+								selectedItems.remove(child);
+							});
+						}
+					}
+					selectedItems.forEach(item -> item.ensureSelectedParent(documentTree));
 					corpusChangedListener.corpusChanged();
 				}
 			}

@@ -33,7 +33,7 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 	public EditMemberDialog(
 			RBACAssignmentFunction assignment,
 			Set<Member> members, SaveCancelListener<Set<RBACSubject>> saveCancelListener) {
-		super("Updates a member","update the role", saveCancelListener);
+		super("Updates Members","Change the role of the selected Members", saveCancelListener);
 		this.members = members;
 		this.assignment = assignment;
 		this.accesslevel = members.isEmpty() ?  RBACRole.REPORTER : members.iterator().next().getRole();
@@ -53,7 +53,7 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 		
 		roleBinder
 			.forField(cb_role)
-			.withValidator((role,context) ->  role.equals(RBACRole.OWNER)?  ValidationResult.error("Setting to owner is not allowed") : ValidationResult.ok());
+			.withValidator((role,context) ->  role.equals(RBACRole.OWNER)?  ValidationResult.error("Changing the owner is not allowed") : ValidationResult.ok());
 		cb_role.setValue(accesslevel);
 	}
 	

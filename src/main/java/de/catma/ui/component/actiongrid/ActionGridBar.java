@@ -93,6 +93,10 @@ public class ActionGridBar extends HorizontalLayout {
 		btnAdd.setVisible(visible);
 	}
 	
+	public void setMoreOptionsBtnVisible(boolean visible) {
+		btnMoreOptions.setVisible(visible);
+	}
+	
 	public void addButtonRight(Button button) {
         addComponent(button);
         setComponentAlignment(button, Alignment.MIDDLE_RIGHT);		

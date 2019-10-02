@@ -10,10 +10,19 @@ class CollectionDataItem implements DocumentTreeItem {
 	private boolean selected = true;
 	private boolean hasWritePermission;
 
-	public CollectionDataItem(AnnotationCollectionReference collectionRef, boolean hasWritePermission) {
-		super();
+	public CollectionDataItem(
+			AnnotationCollectionReference collectionRef, 
+			boolean hasWritePermission) {
+		this(collectionRef, hasWritePermission, true);
+	}
+	
+	public CollectionDataItem(
+			AnnotationCollectionReference collectionRef, 
+			boolean hasWritePermission, 
+			boolean selected) {
 		this.collectionRef = collectionRef;
 		this.hasWritePermission = hasWritePermission;
+		this.selected = selected;
 	}
 	
 	@Override

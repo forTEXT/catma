@@ -46,11 +46,11 @@ import de.catma.rbac.RBACRole;
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
-import de.catma.ui.events.ResourcesChangedEvent;
+import de.catma.ui.events.MembersChangedEvent;
 import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.module.main.ErrorHandler;
 
 /**
  * Dialog to invite other member to a project
@@ -287,6 +287,6 @@ public class ProjectInvitationDialog extends Window {
 	public void close() {
 		super.close();
 	    eventBus.unregister(this);
-		eventBus.post(new ResourcesChangedEvent<>(this));
+		eventBus.post(new MembersChangedEvent());
 	}
 }

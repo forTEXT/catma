@@ -73,6 +73,7 @@
       "name": "zoom",
       "value": 5,
       "bind": {
+      	"name": "Zoom",
         "input": "range",
         "min": 1,
         "max": 10
@@ -345,10 +346,11 @@
     {
       "stroke": "color",
       "symbolType": "circle",
-      "title": "phrase"
+      "title": "Phrase"
     }
   ],
   "usermeta": {
-    "Author": "Marco Petris"
+    "Author": "Marco Petris, Institute for German Studies, University of Hamburg, 2019",
+    "Licence": "GPLv3"
   }
 }

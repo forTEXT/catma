@@ -120,6 +120,9 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 				}, 
 				progressListener);
 		}
+		else {
+			openProjectListener.done(null);
+		}
 	}
 
 
@@ -145,6 +148,15 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.properties("document")
 		.map(prop -> (SourceDocument)prop.get().orElse(null))
 		.toList();
+	}
+	
+	@Override
+	public boolean hasDocument(String rootRevisionHash, String documentId) {
+		GraphTraversalSource g = graph.traversal();
+		
+		return g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", documentId)
+		.hasNext();
 	}
 
 	@Override

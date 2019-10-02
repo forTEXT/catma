@@ -29,9 +29,7 @@ public  class CreateMemberDialog extends AbstractMemberDialog<RBACSubject> {
 
 					@Override
 					public List<User> load(Query<User,String> query) throws Exception {
-//						String username = query.getFilter().isPresent() ? query.getFilter().get() : "";
 						return getUserQuery.apply(query);
-//						return remoteGitManager.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit());	
 					}
 		           });
 	
@@ -61,7 +59,7 @@ public  class CreateMemberDialog extends AbstractMemberDialog<RBACSubject> {
 			RBACAssignmentFunction assignment, 
 			QueryFunction<User> getUserQuery, 
 			SaveCancelListener<RBACSubject> saveCancelListener) {
-		super("Adds a new member","Add a new team member and select his role", saveCancelListener);
+		super("Add a new Member","Select a new team Member and his/her role", saveCancelListener);
 		this.assignment = assignment;
 		this.getUserQuery = getUserQuery;
 		this.cb_users.setDataProvider(userDataProvider);

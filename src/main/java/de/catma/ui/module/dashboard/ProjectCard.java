@@ -8,7 +8,6 @@ import org.vaadin.dialogs.ConfirmDialog;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
@@ -110,9 +109,9 @@ public class ProjectCard extends VerticalFlexLayout  {
                             	projectManager.delete(projectReference.getProjectId());
                             }
                         } catch (Exception e) {
-                            errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
+                            errorLogger.showAndLogError("can't delete Project " + projectReference.getName(), e);
                         }
-                        eventBus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
+                        eventBus.post(new ResourcesChangedEvent());
                     });
                 })
         );
@@ -129,7 +128,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 							nameLabel.setValue(result.getName());
 						} catch (IOException e) {
 							errorLogger.showAndLogError("Failed to update Project", e);
-							eventBus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
+							eventBus.post(new ResourcesChangedEvent());
 						}
         			}).show();
         });
@@ -150,7 +149,7 @@ public class ProjectCard extends VerticalFlexLayout  {
                            } catch (Exception e) {
                                errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
                            }
-                           eventBus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
+                           eventBus.post(new ResourcesChangedEvent());
                        });
                    })
         		

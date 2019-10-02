@@ -4,6 +4,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
@@ -17,6 +19,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.event.ProjectReadyEvent;
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
@@ -38,8 +41,10 @@ public class TagResourcePanel extends VerticalLayout {
 	private PropertyChangeListener projectExceptionListener;
 	private ErrorHandler errorHandler;
 	private TagsetSelectionListener tagsetSelectionListener;
+	private EventBus eventBus;
 	
-	public TagResourcePanel(Project project) {
+	public TagResourcePanel(Project project, EventBus eventBus) {
+		this.eventBus = eventBus;
 		this.project = project;
         this.errorHandler = (ErrorHandler)UI.getCurrent();
 
@@ -47,6 +52,7 @@ public class TagResourcePanel extends VerticalLayout {
 		initActions();
 		initProjectListeners();
 		initData();
+		this.eventBus.register(this);
 	}
 	
     private void initData() {
@@ -217,7 +223,16 @@ public class TagResourcePanel extends VerticalLayout {
         		TagManagerEvent.tagsetDefinitionChanged,
         		tagsetChangeListener);
 		}
-		
+		eventBus.unregister(this);
+	}
+	
+	@Subscribe
+	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
+		TagsetSelectionListener tagsetSelectionListener = this.tagsetSelectionListener;
+		this.tagsetSelectionListener = null;
+		initData();
+		this.tagsetSelectionListener = tagsetSelectionListener;
+		this.tagsetSelectionListener.tagsetsSelected(getSelectedTagsets());
 	}
 	
 	public void setTagsetSelectionListener(TagsetSelectionListener tagsetSelectionListener) {

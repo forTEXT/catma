@@ -10,12 +10,10 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.assistedinject.Assisted;
 import com.vaadin.data.HasDataProvider;
-import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
@@ -127,7 +125,7 @@ public class ProjectListView extends VerticalLayout implements
 	}
 
 	@Subscribe
-	public void resourceChanged(ResourcesChangedEvent<Component> resourcesChangedEvent){
+	public void resourceChanged(ResourcesChangedEvent resourcesChangedEvent){
 		getDataProvider().refreshAll();
 	}
 }

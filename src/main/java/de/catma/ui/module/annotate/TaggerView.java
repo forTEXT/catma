@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -81,7 +82,6 @@ import de.catma.ui.component.Slider;
 import de.catma.ui.component.tabbedview.ClosableTab;
 import de.catma.ui.component.tabbedview.TabCaptionChangeListener;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
@@ -134,6 +134,7 @@ public class TaggerView extends HorizontalLayout
 	private SliderPanel drawer;
 	private KwicPanel kwicPanel;
 	private VerticalSplitPanel rightSplitPanel;
+	private TabCaptionChangeListener tabNameChangeListener;
 	
 	public TaggerView(
 			int taggerID, 
@@ -158,7 +159,8 @@ public class TaggerView extends HorizontalLayout
 		try {
 			if (sourceDocument != null) {
 				linesPerPageSlider.setEnabled(true);
-				btAnalyze.setEnabled(true);
+				btAnalyze.setEnabled(project instanceof IndexedProject);
+				pagerComponent.setEnabled(true);
 				
 				tagger.setText(sourceDocument.getContent());
 				totalLineCount = pager.getTotalLineCount();
@@ -167,7 +169,7 @@ public class TaggerView extends HorizontalLayout
 				} catch (ValueOutOfBoundsException toBeIgnored) {}
 				
 				List<AnnotationCollectionReference> collectionReferences =
-					resourcePanel.getSelectedUserMarkupCollectionReferences();
+					resourcePanel.getSelectedAnnotationCollectionReferences();
 				
 				userMarkupCollectionManager.clear();
 				
@@ -190,6 +192,7 @@ public class TaggerView extends HorizontalLayout
 			else {
 				linesPerPageSlider.setEnabled(false);
 				btAnalyze.setEnabled(false);
+				pagerComponent.setEnabled(false);
 			}
 		} catch (IOException e) {
 			errorHandler.showAndLogError("Error showing the Document!", e);
@@ -400,6 +403,40 @@ public class TaggerView extends HorizontalLayout
 		});
 		
 		resourcePanel.setSelectionListener(new ResourceSelectionListener() {
+			
+			@Override
+			public void resourcesChanged() {
+				AnnotationCollection selectedEditableCollection = 
+						annotationPanel.getSelectedEditableCollection();
+				Set<String> selectedAnnotationCollectionIds = 
+						resourcePanel.getSelectedAnnotationCollectionReferences()
+						.stream().map(collRef -> collRef.getId())
+						.collect(Collectors.toSet());
+				
+				for (AnnotationCollection collection : 
+						userMarkupCollectionManager.getUserMarkupCollections()) {
+					if (selectedAnnotationCollectionIds.contains(collection.getId())) {
+						setAnnotationCollectionSelected(
+							new AnnotationCollectionReference(collection), 
+							true);
+					}
+					else {
+						userMarkupCollectionManager.remove(collection.getId());
+						annotationPanel.removeCollection(collection.getId());
+						tagger.setVisible(collection.getTagReferences(), false);						
+					}
+				}
+				
+				if ((selectedEditableCollection != null) 
+						&& (userMarkupCollectionManager.contains(selectedEditableCollection.getId()))) {
+					annotationPanel.setSelectedEditableCollection(
+						userMarkupCollectionManager.getUserMarkupCollection(
+								selectedEditableCollection.getId()));
+				}
+				
+				annotationPanel.clearTagsets();
+				tagsetsSelected(resourcePanel.getSelectedTagsets());
+			}
 
 			@Override
 			public void documentSelected(SourceDocument sourceDocument) {
@@ -846,7 +883,9 @@ public class TaggerView extends HorizontalLayout
 			.isRightToLeftWriting());
 		
 		initData();
-		eventBus.post(new TaggerViewSourceDocumentChangedEvent(TaggerView.this));
+		if (tabNameChangeListener != null) {
+			tabNameChangeListener.tabCaptionChange(this);
+		}
 		this.drawer.collapse();
 	}
 
@@ -857,6 +896,11 @@ public class TaggerView extends HorizontalLayout
 	
 	@Override
 	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
-		//noop tabname is not changeable
+		this.tabNameChangeListener =  tabNameChangeListener;
+	}
+	
+	@Override
+	public String getCaption() {
+		return this.sourceDocument==null?"no selection yet":sourceDocument.toString();
 	}
 }

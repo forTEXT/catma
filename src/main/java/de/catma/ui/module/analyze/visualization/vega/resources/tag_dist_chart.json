@@ -1,16 +1,12 @@
 {
   "$schema": "https://vega.github.io/schema/vega/v5.json",
   "description": "A simple tag based distribution chart with tag start offsets binned to 10 percent chunks and facets for each Document",
-  "autosize": {
-    "type": "pad",
-    "resize": true
-  },
+  "autosize": {"type": "pad", "resize": true},
   "data": [
     {
       "name": "queryresult",
       "url": "CATMA_QUERY_URL",
-      "transform": 
-      [
+      "transform": [
         {
           "type": "formula",
           "expr": "datum.startOffset/datum.sourceDocumentSize*100",
@@ -18,15 +14,12 @@
         },
         {
           "type": "bin",
-          "field": "relStartOffset", 
-          "as": [
-            "binStart",
-            "binEnd"
-          ],
+          "field": "relStartOffset",
+          "as": ["binStart", "binEnd"],
           "extent": [0, 100],
           "maxbins": 10
         }
-      ]			
+      ]
     },
     {
       "name": "binnedQueryResult",
@@ -38,15 +31,12 @@
             "binStart",
             "binEnd",
             "tagPath",
+            "tagColor",
             "sourceDocumentTitle",
             "sourceDocumentId"
           ],
-          "ops": [
-            "count"
-          ],
-          "as": [
-            "countPerBin"
-          ]
+          "ops": ["count"],
+          "as": ["countPerBin"]
         },
         {
           "type": "collect",
@@ -54,7 +44,7 @@
             "field": ["sourceDocumentTitle", "tagPath", "binStart"],
             "order": ["ascending", "ascending", "ascending"]
           }
-        }          
+        }
       ]
     },
     {
@@ -72,40 +62,16 @@
     {
       "name": "zoom",
       "value": 5,
-      "bind": {
-        "input": "range",
-        "min": 1,
-        "max": 10
-      }
+      "bind": {"name": "Zoom", "input": "range", "min": 1, "max": 10}
     },
-    {
-      "name": "child_width",
-      "value": 200,
-      "update": "40*zoom"
-    },
-    {
-      "name": "child_height",
-      "value": 200,
-      "update": "40*zoom"
-    },
-    {
-      "name": "binStartClick"
-    },
-    {
-      "name": "tagPathClick"
-    },
-    {
-      "name": "documentClick"
-    },    {
-      "name": "userselection",
-      "update": "data(\"selectedBin\")" 
-    }
+    {"name": "child_width", "value": 200, "update": "40*zoom"},
+    {"name": "child_height", "value": 200, "update": "40*zoom"},
+    {"name": "binStartClick"},
+    {"name": "tagPathClick"},
+    {"name": "documentClick"},
+    {"name": "userselection", "update": "data(\"selectedBin\")"}
   ],
-  "layout": {
-    "padding": 20,
-    "columns": 2,
-    "bounds": "full"
-  },
+  "layout": {"padding": 20, "columns": 2, "bounds": "full"},
   "marks": [
     {
       "name": "cell",
@@ -115,28 +81,14 @@
         "facet": {
           "name": "binnedQueryResultPerDoc",
           "data": "binnedQueryResult",
-          "groupby": [
-            "sourceDocumentTitle",
-            "sourceDocumentId"
-          ]
+          "groupby": ["sourceDocumentTitle", "sourceDocumentId"]
         }
       },
-      "sort": {
-        "field": [
-          "datum.sourceDocumentTitle"
-        ],
-        "order": [
-          "ascending"
-        ]
-      },
+      "sort": {"field": ["datum.sourceDocumentTitle"], "order": ["ascending"]},
       "encode": {
         "update": {
-          "width": {
-            "signal": "child_width"
-          },
-          "height": {
-            "signal": "child_height"
-          }
+          "width": {"signal": "child_width"},
+          "height": {"signal": "child_height"}
         }
       },
       "marks": [
@@ -147,52 +99,29 @@
             "facet": {
               "name": "binnedQueryResultPerDocPerTagPath",
               "data": "binnedQueryResultPerDoc",
-              "groupby": [
-                "tagPath"
-              ]
+              "groupby": ["tagPath"]
             }
           },
           "encode": {
             "update": {
-              "width": {
-                "field": {
-                  "group": "width"
-                }
-              },
-              "height": {
-                "field": {
-                  "group": "height"
-                }
-              }
+              "width": {"field": {"group": "width"}},
+              "height": {"field": {"group": "height"}}
             }
           },
           "marks": [
             {
               "name": "linesPerTagPath",
               "type": "line",
-              "style": [
-                "line"
-              ],
-              "sort": {
-                "field": "datum.binStart",
-                "order": "descending"
-              },
-              "from": {
-                "data": "binnedQueryResultPerDocPerTagPath"
-              },
+              "style": ["line"],
+              "sort": {"field": "datum.binStart", "order": "descending"},
+              "from": {"data": "binnedQueryResultPerDocPerTagPath"},
               "encode": {
                 "update": {
-                  "stroke": {
-                    "scale": "color",
-                    "field": "tagPath"
-                  },
+                  "stroke": {"field": "tagColor"},
                   "x": {
                     "signal": "scale(\"x\", (datum.binStart + datum.binEnd) / 2)"
                   },
-                  "y": {
-                    "scale": "y",
-                    "field": "countPerBin"
-                  }
+                  "y": {"scale": "y", "field": "countPerBin"}
                 }
               }
             }
@@ -201,33 +130,19 @@
         {
           "name": "countPerBinDot",
           "type": "symbol",
-          "style": [
-            "point"
-          ],
-          "from": {
-            "data": "binnedQueryResultPerDoc"
-          },
+          "style": ["point"],
+          "from": {"data": "binnedQueryResultPerDoc"},
           "encode": {
             "update": {
-              "fill": {
-                "value": "transparent"
+              "fill": {"value": "transparent"},
+              "stroke": {"field": "tagColor"},
+              "x": {
+                "signal": "scale(\"x\", (datum.binStart + datum.binEnd) / 2)"
               },
-              "stroke": {
-                "scale": "color",
-                "field": "tagPath"
-              },
-              "x": 
-                {
-                  "signal": "scale(\"x\", (datum.binStart + datum.binEnd) / 2)"
-                }
-              ,
-              "y": {
-                "scale": "y",
-                "field": "countPerBin"
-              }
+              "y": {"scale": "y", "field": "countPerBin"}
             },
             "hover": {"cursor": {"value": "pointer"}}
-          }          
+          }
         }
       ],
       "axes": [
@@ -250,32 +165,20 @@
       ],
       "title": {
         "style": "guide-label",
-        "encode": {
-          "enter": {
-            "text": {
-              "signal": "parent.sourceDocumentTitle"
-            }
-          }
-        } 
+        "encode": {"enter": {"text": {"signal": "parent.sourceDocumentTitle"}}}
       },
       "signals": [
         {
           "name": "binStartClick",
           "on": [
-            {
-              "events": "@countPerBinDot:click",
-              "update": "datum.binStart"
-            }
+            {"events": "@countPerBinDot:click", "update": "datum.binStart"}
           ],
           "push": "outer"
         },
         {
           "name": "tagPathClick",
           "on": [
-            {
-              "events": "@countPerBinDot:click",
-              "update": "datum.tagPath"
-            }
+            {"events": "@countPerBinDot:click", "update": "datum.tagPath"}
           ],
           "push": "outer"
         },
@@ -288,7 +191,7 @@
             }
           ],
           "push": "outer"
-        }                   
+        }
       ]
     }
   ],
@@ -296,55 +199,31 @@
     {
       "name": "x",
       "type": "linear",
-      "domain": {
-        "signal": "[0, 100]"
-      },
-      "range": [
-        0,
-        {
-          "signal": "child_width"
-        }
-      ]
+      "domain": {"signal": "[0, 100]"},
+      "range": [0, {"signal": "child_width"}]
     },
     {
       "name": "y",
       "type": "linear",
       "domain": {
-        "fields": [
-          {
-            "data": "binnedQueryResult",
-            "field": "countPerBin"
-          }
-        ]
+        "fields": [{"data": "binnedQueryResult", "field": "countPerBin"}]
       },
-      "range": [
-        {
-          "signal": "child_height"
-        },
-        0
-      ],
+      "range": [{"signal": "child_height"}, 0],
       "nice": true
     },
     {
       "name": "color",
       "type": "ordinal",
       "domain": {
-        "fields": [
-          {
-            "data": "binnedQueryResult",
-            "field": "tagPath"
-          }
-        ],
+        "fields": [{"data": "binnedQueryResult", "field": "tagPath"}],
         "sort": true
       },
-      "range": "category"
+      "range": {"data": "binnedQueryResult", "field": "tagColor"}
     }
   ],
-  "legends": [
-    {
-      "stroke": "color",
-      "symbolType": "circle",
-      "title": "tagPath"
-    }
-  ]
+  "legends": [{"stroke": "color", "symbolType": "circle", "title": "Tag Path"}],
+  "usermeta": {
+    "Author": "Marco Petris, Institute for German Studies, University of Hamburg, 2019",
+    "Licence": "GPLv3"
+  }
 }

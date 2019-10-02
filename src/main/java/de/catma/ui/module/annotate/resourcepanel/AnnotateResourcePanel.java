@@ -18,6 +18,7 @@ import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
@@ -38,6 +39,7 @@ import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
+import de.catma.project.event.ProjectReadyEvent;
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
@@ -74,7 +76,36 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		
 		initComponents();
 		initActions();
-		initData(currentlySelectedSourceDocument);
+		initData(currentlySelectedSourceDocument, Collections.emptySet());
+	}
+	
+	@Subscribe
+	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
+		// switch off resourceSelectionListener
+		ResourceSelectionListener resourceSelectionListener = this.resourceSelectionListener;
+		this.resourceSelectionListener = null;
+		
+		Collection<TagsetDefinition> tagsets = getSelectedTagsets();
+
+		initData(
+			getSelectedDocument(), 
+			getSelectedAnnotationCollectionReferences()
+				.stream()
+				.map(AnnotationCollectionReference::getId)
+				.collect(Collectors.toSet()));
+		
+		tagsetData.getItems().forEach(tagset -> {
+			if (tagsets.contains(tagset)) {
+				tagsetGrid.select(tagset);
+			}
+			else {
+				tagsetGrid.deselect(tagset);
+			}
+		});
+		
+		// switch on resourceSelectionListener
+		this.resourceSelectionListener = resourceSelectionListener;
+		this.resourceSelectionListener.resourcesChanged();
 	}
 
     private void initProjectListeners() {
@@ -262,7 +293,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	collectionNameDlg.show();
     }
     
-	private void initData(SourceDocument currentlySelectedSourceDocument) {
+	private void initData(SourceDocument currentlySelectedSourceDocument, Set<String> currentlysSelectedColletionIds) {
 		try {
 			documentData = new TreeData<>();
 			
@@ -280,6 +311,9 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			DocumentTreeItem preselectedItem = null;
 			
 			for (DocumentTreeItem documentDataItem : documentData.getRootItems()) {
+				if (documentDataItem.isSelected()) {
+					preselectedItem = documentDataItem;
+				}
 				for (AnnotationCollectionReference umcRef : 
 					((DocumentDataItem)documentDataItem).getDocument().getUserMarkupCollectionRefs()) {
 					documentData.addItem(
@@ -288,10 +322,10 @@ public class AnnotateResourcePanel extends VerticalLayout {
 							umcRef,
 							project.hasPermission(
 									project.getRoleForCollection(umcRef.getId()),
-									RBACPermission.COLLECTION_WRITE)));
-					if (documentDataItem.isSelected()) {
-						preselectedItem = documentDataItem;
-					}
+									RBACPermission.COLLECTION_WRITE),
+							(currentlysSelectedColletionIds.isEmpty() || currentlysSelectedColletionIds.contains(umcRef.getId()))
+						)
+					);
 				}
 			}
 			
@@ -316,7 +350,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		}
 	}
 	
-	public List<AnnotationCollectionReference> getSelectedUserMarkupCollectionReferences() {
+	public List<AnnotationCollectionReference> getSelectedAnnotationCollectionReferences() {
 		
 		Optional<DocumentTreeItem> optionalDocumentTreeItem = 
 				documentData.getRootItems()
@@ -378,6 +412,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 
 		documentActionGridComponent = 
 				new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
+		documentActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
 		
 		addComponent(documentActionGridComponent);
 		
@@ -388,7 +423,6 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				"resource-grid", 				
 				"flat-undecorated-icon-buttonrenderer",
 				"no-focused-before-border");
-		tagsetGrid.setSelectionMode(SelectionMode.MULTI);
 
 		tagsetGrid.setHeight("250px");
 		tagsetGrid
@@ -409,7 +443,10 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		
 		tagsetActionGridComponent = 
 				new ActionGridComponent<Grid<TagsetDefinition>>(tagsetLabel, tagsetGrid);
-
+		tagsetActionGridComponent.setSelectionModeFixed(SelectionMode.MULTI);
+		tagsetActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
+		tagsetActionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
+		
 		addComponent(tagsetActionGridComponent);
 	}
 
@@ -472,7 +509,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     		nextSelectedDocument = currentlySelectedDocument;
     	}
     	
-    	initData(nextSelectedDocument);
+    	initData(nextSelectedDocument, Collections.emptySet());
     }
     
     public SourceDocument getSelectedDocument() {

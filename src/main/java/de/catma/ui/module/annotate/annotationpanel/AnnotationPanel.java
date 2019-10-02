@@ -866,6 +866,7 @@ public class AnnotationPanel extends VerticalLayout {
 				"You do not have the permission to make changes to any of the available Tagsets! "
 				+ "Please contact the Project maintainer for changes!",
 				Type.HUMANIZED_MESSAGE);
+			return;
 		}
 		AddParenttagDialog addTagDialog = 
 			new AddParenttagDialog(
@@ -1072,6 +1073,11 @@ public class AnnotationPanel extends VerticalLayout {
 
 	public void addCollection(AnnotationCollection collection) {
 		this.collections.add(collection);
+		setSelectedEditableCollection(collection);
+		//TODO: show Annotations from this collection and selected Tagsets
+	}
+
+	public void setSelectedEditableCollection(AnnotationCollection collection) {
 		if (project.hasPermission(
 			project.getRoleForCollection(collection.getId()), 
 			RBACPermission.COLLECTION_WRITE)) {
@@ -1080,10 +1086,13 @@ public class AnnotationPanel extends VerticalLayout {
 			if ((currentEditableCollectionBox.getValue() == null) 
 					&& !this.editableCollections.isEmpty()) {
 				currentEditableCollectionBox.setValue(collection);
-				
+				Notification.show("Info", 
+						String.format(
+							"The Collection currently being edited has been changed to '%1$s'!",  
+							collection.getName()),
+						Type.HUMANIZED_MESSAGE);				
 			}
-		}			
-		//TODO: show Annotations from this collection and selected Tagsets
+		}	
 	}
 	
 	private void removeCollection(AnnotationCollection collection) {
@@ -1217,4 +1226,11 @@ public class AnnotationPanel extends VerticalLayout {
 	public void removeAnnotations(Collection<String> annotationIds) {
 		annotationDetailsPanel.removeAnnotations(annotationIds);
 	}
+
+	public void clearTagsets() {
+		tagsets.clear();
+		tagsetData.clear();
+		tagsetDataProvider.refreshAll();
+	}
+
 }

@@ -10,9 +10,11 @@ import com.google.common.cache.LoadingCache;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.GridSortOrderBuilder;
+import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.SerializablePredicate;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -21,7 +23,7 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -29,6 +31,8 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.components.grid.FooterCell;
+import com.vaadin.ui.components.grid.FooterRow;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
@@ -61,7 +65,7 @@ public class QueryResultPanel extends VerticalLayout {
 	
 	private ContextMenu optionsMenu;
 
-	private Label queryInfo;
+	private TextField queryInfo;
 
 	private LoadingCache<String , KwicProvider> kwicProviderCache;
 
@@ -151,6 +155,9 @@ public class QueryResultPanel extends VerticalLayout {
 		initComponents();
 		initActions(resultPanelCloseListener);
 		displaySetting.init(this);
+		if (cardStyle) {
+			caretRightBt.click();
+		}
 	}
 
 	void initPhraseBasedData() {
@@ -170,16 +177,20 @@ public class QueryResultPanel extends VerticalLayout {
 			.setCaption("Phrase")
 			.setDescriptionGenerator(item -> item.getDetailedKeyInContext(), ContentMode.HTML)			
 			.setRenderer(new HtmlRenderer())
-			.setWidth(360);
+			.setId("phrase")
+			.setWidth(310);
 
+		
 		Column<QueryResultRowItem, Integer> freqColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getFrequency)
-			.setCaption("Frequency");
+			.setCaption("Frequency")
+			.setId("frequency");
+		
 		if ((itemSelectionListener == null) && (itemRemovedListener==null)) {
 			freqColumn.setExpandRatio(1);
 		}
 		else {
-			freqColumn.setWidth(100);
+			freqColumn.setWidth(120);
 		}
 		
 		if (itemSelectionListener != null) {
@@ -206,11 +217,27 @@ public class QueryResultPanel extends VerticalLayout {
 			.setExpandRatio(1);		
 		}		
 		
+		FooterRow footer = queryResultGrid.prependFooterRow();
+		queryResultGrid.setFooterVisible(true);
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getPhraseBasedTreeData());
 		
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 
+		queryResultDataProvider.addDataProviderListener(
+			event -> handleTotalTypesChange(
+					"Types", 
+					footer.getCell("phrase"), 
+					"Tokens",
+					footer.getCell("frequency"), 
+					queryResultDataProvider));
+		handleTotalTypesChange(
+				"Types", 
+				footer.getCell("phrase"), 
+				"Tokens",
+				footer.getCell("frequency"), 
+				queryResultDataProvider);
+		
 		treeGridPanel.addComponent(queryResultGrid);
 		
 		queryResultGrid.setSortOrder(new GridSortOrderBuilder<QueryResultRowItem>().thenDesc(freqColumn).build());
@@ -219,6 +246,18 @@ public class QueryResultPanel extends VerticalLayout {
 		fireDisplaySettingChanged();
 	}
 	
+	private void handleTotalTypesChange(
+		String types,
+		FooterCell typeFooterCell, 
+		String tokens,
+		FooterCell tokenFooterCell, 
+		TreeDataProvider<QueryResultRowItem> queryResultDataProvider) {
+		if (typeFooterCell != null) {
+			typeFooterCell.setText(types + ": " + queryResultDataProvider.getTreeData().getRootItems().size());
+		}
+		tokenFooterCell.setText(tokens + ": " + tokenCount);
+	}
+
 	private void initInfoLabel() {
 		if (cardStyle) {
 			this.queryInfo.setValue(queryId + " (" + tokenCount + ")");
@@ -264,6 +303,7 @@ public class QueryResultPanel extends VerticalLayout {
 			.setCaption("Annotation")
 			.setDescriptionGenerator(item -> item.getDetailedKeyInContext(), ContentMode.HTML)
 			.setRenderer(new HtmlRenderer())
+			.setId("annotation")
 			.setWidth(200);
 		
 		for (String propertyName : propertyNames) {
@@ -304,6 +344,22 @@ public class QueryResultPanel extends VerticalLayout {
 			.setRenderer(removeItemsRenderer)
 			.setExpandRatio(1);		
 		}		
+		
+		FooterRow footer = queryResultGrid.prependFooterRow();
+		queryResultGrid.setFooterVisible(true);
+		queryResultDataProvider.addDataProviderListener(
+				event -> handleTotalTypesChange(
+						null, 
+						null,
+						"Annotations",
+						footer.getCell("annotation"), 
+						queryResultDataProvider));
+		handleTotalTypesChange(
+				null, 
+				null, 
+				"Annotations",
+				footer.getCell("annotation"), 
+				queryResultDataProvider);
 
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 		
@@ -360,6 +416,7 @@ public class QueryResultPanel extends VerticalLayout {
 		queryResultGrid
 			.addColumn(QueryResultRowItem::getKey)
 			.setCaption("Annotation")
+			.setId("annotation")
 			.setRenderer(new HtmlRenderer())
 			.setWidth(200);
 		
@@ -368,6 +425,7 @@ public class QueryResultPanel extends VerticalLayout {
 			.setCaption("Property")
 			.setWidth(100);
 			queryResultGrid.addColumn(QueryResultRowItem::getPropertyValue)
+			.setId("propertyvalue")
 			.setCaption("Property Value")
 			.setWidth(300);
 		}
@@ -396,7 +454,39 @@ public class QueryResultPanel extends VerticalLayout {
 		}			
 
 		queryResultGrid.setDataProvider(queryResultDataProvider);
-		
+		FooterRow footer = queryResultGrid.prependFooterRow();
+		queryResultGrid.setFooterVisible(true);
+		if (resultContainsProperties) {
+			queryResultDataProvider.addDataProviderListener(
+					event -> handleTotalTypesChange(
+							null, 
+							null,
+							"Property Values",
+							footer.getCell("propertyvalue"), 
+							queryResultDataProvider));
+			handleTotalTypesChange(
+					null, 
+					null,
+					"Property Values",
+					footer.getCell("propertyvalue"), 
+					queryResultDataProvider);
+		}
+		else {
+			queryResultDataProvider.addDataProviderListener(
+					event -> handleTotalTypesChange(
+							null, 
+							null,
+							"Annotations",
+							footer.getCell("annotation"), 
+							queryResultDataProvider));
+			handleTotalTypesChange(
+					null, 
+					null, 
+					"Annotations",
+					footer.getCell("annotation"), 
+					queryResultDataProvider);
+			
+		}
 		treeGridPanel.addComponent(queryResultGrid);
 		
 		if (queryResultDataProvider.getTreeData().getRootItems().size() == 0) {
@@ -422,7 +512,7 @@ public class QueryResultPanel extends VerticalLayout {
 		treeGridPanel.removeAllComponents();
 		
 		initQueryResultGrid();
-		
+
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getTagBasedTreeData());
 		
@@ -431,7 +521,8 @@ public class QueryResultPanel extends VerticalLayout {
 			.setCaption("Tag Path")
 			.setRenderer(new HtmlRenderer())
 			.setDescriptionGenerator(item -> item.getDetailedKeyInContext(), ContentMode.HTML)
-			.setWidth(360);
+			.setId("tagPath")
+			.setWidth(300);
 		
 		if (resultContainsProperties) {
 			queryResultGrid.addColumn(QueryResultRowItem::getPropertyName)
@@ -441,17 +532,18 @@ public class QueryResultPanel extends VerticalLayout {
 			.setCaption("Property Value")
 			.setWidth(300);
 			
-			tagPathColumn.setWidth(200);
+			tagPathColumn.setWidth(130);
 		}
 
 		Column<QueryResultRowItem, ?> freqColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getFrequency)
+			.setId("frequency")
 			.setCaption("Frequency");
 		if ((itemSelectionListener == null) && (itemRemovedListener==null)) {
 			freqColumn.setExpandRatio(1);
 		}
 		else {
-			freqColumn.setWidth(100);
+			freqColumn.setWidth(130);
 		}
 		
 		if (itemSelectionListener != null) {
@@ -477,7 +569,25 @@ public class QueryResultPanel extends VerticalLayout {
 			.setExpandRatio(1);		
 		}	
 
+
+		
 		queryResultGrid.setDataProvider(queryResultDataProvider);
+		
+		FooterRow footer = queryResultGrid.prependFooterRow();
+		queryResultGrid.setFooterVisible(true);
+		queryResultDataProvider.addDataProviderListener(
+				event -> handleTotalTypesChange(
+						"Tags", 
+						footer.getCell("tagPath"),
+						"Annotations",
+						footer.getCell("frequency"), 
+						queryResultDataProvider));
+		handleTotalTypesChange(
+				"Tags", 
+				footer.getCell("tagPath"), 
+				"Annotations",
+				footer.getCell("frequency"), 
+				queryResultDataProvider);
 		
 		treeGridPanel.addComponent(queryResultGrid);
 		
@@ -508,6 +618,7 @@ public class QueryResultPanel extends VerticalLayout {
 	
 	private TreeData<QueryResultRowItem> getFlatTagBasedTreeData() {
 		if (flatTagBasedTreeData == null) {
+			resultContainsProperties = false;
 			flatTagBasedTreeData = new TreeData<QueryResultRowItem>();
 			addFlatTagBasedRootItems(queryResult);
 		}
@@ -563,8 +674,8 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	private void createResultInfoBar() {
-		queryInfo = new Label();
-		
+		queryInfo = new TextField();
+		queryInfo.setWidth("90%");
 		queryInfo.addStyleName("analyze-card-infobar");
 		
 		addComponent(queryInfo);
@@ -673,6 +784,18 @@ public class QueryResultPanel extends VerticalLayout {
 		return new QueryResultPanelSetting(queryId, queryResult, displaySetting);
 	}
 	
+	public QueryResultRowArray getFilteredQueryResult() {
+		QueryResultRowArray result = new QueryResultRowArray();
+		@SuppressWarnings("unchecked")
+		final TreeDataProvider<QueryResultRowItem> dataProvider = 
+				((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider());
+		dataProvider.fetch(
+				new HierarchicalQuery<QueryResultRowItem, SerializablePredicate<QueryResultRowItem>>(null , null))
+		.forEach(item -> result.addAll(item.getRows()));
+
+		return result;
+	}
+
 	public QueryId getQueryId() {
 		return queryId;
 	}
@@ -691,7 +814,6 @@ public class QueryResultPanel extends VerticalLayout {
 					item -> item.addQueryResultRow(row, dataProvider.getTreeData(), kwicProviderCache));
 			}
 		};
-		
 		if (rowsAdded) {
 			if (!dataProvider.getTreeData().equals(phraseBasedTreeData)) {
 				phraseBasedTreeData = null;
@@ -709,6 +831,7 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		// add new root items
 		displaySetting.addQueryResultRootItems(this, rows);
+		tokenCount = ((QueryResultRowArray)queryResult).size();
 		dataProvider.refreshAll();
 	}
 
@@ -716,10 +839,10 @@ public class QueryResultPanel extends VerticalLayout {
 		Set<GroupedQueryResult> groupedQueryResults = result.asGroupedSet();
 		tokenCount = 0;
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
-			tokenCount += groupedQueryResult.getTotalFrequency();
 			PhraseQueryResultRowItem phraseQueryResultRowItem = 
 					new PhraseQueryResultRowItem(includeQueryId, groupedQueryResult);
 			if (!phraseBasedTreeData.contains(phraseQueryResultRowItem)) {
+				tokenCount += groupedQueryResult.getTotalFrequency();
 				phraseBasedTreeData.addItem(null, phraseQueryResultRowItem);
 				phraseBasedTreeData.addItem(phraseQueryResultRowItem, new DummyQueryResultRowItem());
 			}
@@ -738,10 +861,10 @@ public class QueryResultPanel extends VerticalLayout {
 			return "no Tag available / not annotated";
 		});
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
-			tokenCount += groupedQueryResult.getTotalFrequency();
 			TagQueryResultRowItem tagQueryResultRowItem = 
-					new TagQueryResultRowItem(groupedQueryResult, project);
+					new TagQueryResultRowItem(includeQueryId, groupedQueryResult, project);
 			if (!tagBasedTreeData.contains(tagQueryResultRowItem)) {
+				tokenCount += groupedQueryResult.getTotalFrequency();
 				tagBasedTreeData.addItem(null, tagQueryResultRowItem);
 				tagBasedTreeData.addItem(tagQueryResultRowItem, new DummyQueryResultRowItem());
 			}
@@ -752,6 +875,10 @@ public class QueryResultPanel extends VerticalLayout {
 		try {
 			for (QueryResultRow row : result) {
 				if (row instanceof TagQueryResultRow) {
+					if (((TagQueryResultRow) row).getPropertyDefinitionId() != null) {
+						resultContainsProperties = true;
+					}
+
 					TagQueryResultRow tRow = (TagQueryResultRow)row;
 					
 					KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
@@ -856,6 +983,7 @@ public class QueryResultPanel extends VerticalLayout {
 				((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider());
 		
 		if (((QueryResultRowArray)queryResult).removeAll(rows)) {
+			tokenCount = ((QueryResultRowArray)queryResult).size();
 			if (!dataProvider.getTreeData().equals(phraseBasedTreeData)) {
 				phraseBasedTreeData = null;
 			}
@@ -903,5 +1031,26 @@ public class QueryResultPanel extends VerticalLayout {
 		return displaySetting;
 	}
 
+	public void clear() {
+		if (phraseBasedTreeData != null) {
+			phraseBasedTreeData.clear();
+		}
+		if (tagBasedTreeData != null) {
+			tagBasedTreeData.clear();
+		}
+		if (flatTagBasedTreeData != null) {
+			flatTagBasedTreeData.clear();
+		}
+		if (propertiesAsColumnsTagBasedTreeData != null) {
+			propertiesAsColumnsTagBasedTreeData.clear();
+		}
+		optionsBt.setEnabled(false);
+		queryResultGrid.getDataProvider().refreshAll();
+	}
 
+	public MenuItem addOptionsMenuItem(String caption, Command command) {
+		return optionsMenu.addItem(caption, command);
+	}
+
+	
 }

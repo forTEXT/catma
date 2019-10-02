@@ -4,17 +4,14 @@ import java.util.Objects;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.UI;
 
 import de.catma.project.ProjectManager;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
-import de.catma.ui.module.main.ErrorHandler;
 
 /**
  * Renders a new Project link styled as a card.
@@ -24,14 +21,12 @@ import de.catma.ui.module.main.ErrorHandler;
  */
 public class CreateProjectCard extends VerticalFlexLayout {
 
-	private final ErrorHandler errorLogger;
 	private final ProjectManager projectManager;
 	private final EventBus eventBus;
 	
 	@Inject
 	public CreateProjectCard(ProjectManager projectManager, EventBus eventBus){
 		this.projectManager = Objects.requireNonNull(projectManager);
-        this.errorLogger = (ErrorHandler) UI.getCurrent();
         this.eventBus = eventBus;
         initComponents();
 
@@ -47,7 +42,7 @@ public class CreateProjectCard extends VerticalFlexLayout {
         newproject.addComponents(labelDesc);
 
         newproject.addLayoutClickListener(evt -> {
-        	new CreateProjectDialog(projectManager, result -> eventBus.post(new ResourcesChangedEvent<Component>(this))).show();
+        	new CreateProjectDialog(projectManager, result -> eventBus.post(new ResourcesChangedEvent())).show();
 
 
         });

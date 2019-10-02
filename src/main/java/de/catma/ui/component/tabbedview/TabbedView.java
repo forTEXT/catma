@@ -29,9 +29,7 @@ import org.vaadin.elements.Elements;
 import org.vaadin.elements.Root;
 
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
@@ -53,47 +51,6 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 	private TabSheet tabSheet;
 	private TabComponent lastTab;
 	private ClosableTabFactory closeableTabFactory;
-
-	@Deprecated
-	private static class SimpleLabelTab extends VerticalLayout implements ClosableTab {
-		
-		public SimpleLabelTab(String noOpenTabsText) {
-			setSpacing(true);
-
-			Label noOpenTabsLabel = new Label(noOpenTabsText);
-
-			noOpenTabsLabel.setSizeFull();
-			addComponent(noOpenTabsLabel);
-			setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
-		}
-		
-		@Override
-		public void addClickshortCuts() {
-		}
-		@Override
-		public void removeClickshortCuts() {
-		}
-		@Override
-		public void close() {
-		}
-
-		@Override
-		public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
-		}
-		
-		
-	}
-	@Deprecated
-	public TabbedView(final String noOpenTabsText) {
-		this (new ClosableTabFactory() {
-			
-			@Override
-			public ClosableTab createClosableTab() {
-				return new SimpleLabelTab(noOpenTabsText);
-			}
-		});
-
-	}
 	
 	public TabbedView(ClosableTabFactory closeableTabFactory) {
 		this.closeableTabFactory = closeableTabFactory;
@@ -167,10 +124,13 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 	}
 
 	protected void onTabClose(Component tabContent) {
-		onTabClose(tabSheet, tabContent);
+		onTabClose(tabSheet, tabContent, true);
+	}
+	public void onTabClose(TabSheet tabsheet, Component tabContent) {
+		onTabClose(tabSheet, tabContent, true);
 	}
 
-	public void onTabClose(TabSheet tabsheet, Component tabContent) {
+	public void onTabClose(TabSheet tabsheet, Component tabContent, boolean ensureEmptyTab) {
 		tabsheet.removeComponent(tabContent);
 		((ClosableTab) tabContent).close();
 		
@@ -178,7 +138,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 			lastTab = null;
 		}
 
-		if (tabsheet.getComponentCount() == 0) {
+		if (ensureEmptyTab && tabsheet.getComponentCount() == 0) {
 			addClosableTab(closeableTabFactory.createClosableTab());
 		}
 
@@ -246,18 +206,14 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 
 	public void closeClosables() {
 		Set<Component> componentBuffer = new HashSet<Component>();
-		for (Component comp : this) {
+		for (Component comp : tabSheet) {
 			componentBuffer.add(comp);
 		}
 		for (Component comp : componentBuffer) {
 			if (comp instanceof ClosableTab) {
-				onTabClose(tabSheet, comp);
+				onTabClose(tabSheet, comp, false);
 			}
 		}
 	}
 
-	@Deprecated
-	protected VerticalLayout getIntroPanel() {
-		return null;
-	}
 }

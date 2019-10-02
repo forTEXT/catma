@@ -5,6 +5,7 @@ import com.vaadin.ui.TreeGrid;
 import de.catma.document.corpus.Corpus;
 
 public interface DocumentTreeItem {
+	public String getUuid();
 	public String getName();
 	public String getIcon();
 	public String getPermissionIcon();
