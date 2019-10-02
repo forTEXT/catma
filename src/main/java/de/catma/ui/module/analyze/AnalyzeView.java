@@ -481,8 +481,13 @@ public class AnalyzeView extends HorizontalLayout
 					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), project),
 				new WordCloudDisplaySettingHandler());
 		
+		String name = 
+				"Wordcloud " 
+						+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME);
+		
 		VizMaxPanel vizMaxPanel = 
 			new VizMaxPanel(
+					name,
 					vegaPanel,
 					getQueryResultPanelSettings(),
 					project, 
