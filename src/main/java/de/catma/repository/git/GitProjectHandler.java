@@ -99,7 +99,7 @@ public class GitProjectHandler {
 			// create the tagset
 			String tagsetRevisionHash = gitTagsetHandler.create(projectId, tagsetId, name, description);
 
-			localGitRepoManager.open(projectId, GitTagsetHandler.getTagsetRepositoryName(tagsetId));
+			localGitRepoManager.open(projectId, tagsetId);
 			localGitRepoManager.push(credentialsProvider);
 			String tagsetRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
@@ -132,7 +132,7 @@ public class GitProjectHandler {
 				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
 			rolesPerResource.put(
-				GitTagsetHandler.getTagsetRepositoryName(tagsetId), 
+				tagsetId, 
 				RBACRole.OWNER);
 			
 			return tagsetRevisionHash;
@@ -182,7 +182,7 @@ public class GitProjectHandler {
 	}
 
 	// markup collection operations
-	public String createMarkupCollection(String markupCollectionId,
+	public String createMarkupCollection(String collectionId,
 										 String name,
 										 String description,
 										 String sourceDocumentId,
@@ -201,7 +201,7 @@ public class GitProjectHandler {
 			// create the markup collection
 			String revisionHash = gitMarkupCollectionHandler.create(
 					projectId,
-					markupCollectionId,
+					collectionId,
 					name,
 					description,
 					sourceDocumentId,
@@ -213,7 +213,7 @@ public class GitProjectHandler {
 
 			localGitRepoManager.open(
 					projectId, 
-					GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
+					collectionId);
 			localGitRepoManager.push(credentialsProvider);
 			String markupCollectionRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
@@ -225,7 +225,7 @@ public class GitProjectHandler {
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
 					MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
-					markupCollectionId
+					collectionId
 			).toFile();
 
 			// submodule files and the changed .gitmodules file are automatically staged
@@ -236,17 +236,17 @@ public class GitProjectHandler {
 			);
 			
 			localGitRepoManager.commit(
-				String.format("Added Collection %1$s with ID %2$s", name, markupCollectionId),
+				String.format("Added Collection %1$s with ID %2$s", name, collectionId),
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail());
 			localGitRepoManager.detach(); 
 			
 			gitMarkupCollectionHandler.checkout(
-				projectId, markupCollectionId, 
+				projectId, collectionId, 
 				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);			
 
 			rolesPerResource.put(
-				GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId), 
+				collectionId, 
 				RBACRole.OWNER);
 			
 			return revisionHash;
@@ -297,7 +297,7 @@ public class GitProjectHandler {
 					sourceDocumentInfo
 			);
 			
-			localRepoManager.open(projectId, GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
+			localRepoManager.open(projectId, sourceDocumentId);
 			localRepoManager.push(credentialsProvider);
 
 			String remoteUri = localRepoManager.getRemoteUrl(null);
@@ -335,7 +335,7 @@ public class GitProjectHandler {
 				remoteGitServerManager.getEmail());
 			
 			rolesPerResource.put(
-				GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId), 
+				sourceDocumentId, 
 				RBACRole.OWNER);
 			
 			return revisionHash;
@@ -1350,15 +1350,15 @@ public class GitProjectHandler {
 	}
 
 	public RBACRole getRoleForDocument(String documentId) {
-		return rolesPerResource.get(GitSourceDocumentHandler.getSourceDocumentRepositoryName(documentId));
+		return rolesPerResource.get(documentId);
 	}
 
 	public RBACRole getRoleForCollection(String collectionId) {
-		return rolesPerResource.get(GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(collectionId));
+		return rolesPerResource.get(collectionId);
 	}
 	
 	public RBACRole getRoleForTagset(String tagsetId) {
-		return rolesPerResource.get(GitTagsetHandler.getTagsetRepositoryName(tagsetId));
+		return rolesPerResource.get(tagsetId);
 	}
 
 	public boolean hasPermission(RBACRole role, RBACPermission permission) {

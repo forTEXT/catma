@@ -578,7 +578,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							IDGenerator idGenerator = new IDGenerator();
 							project.getTagManager().addTagsetDefinition(
 								new TagsetDefinition(
-									idGenerator.generate(), result, new Version()));
+									idGenerator.generateTagsetId(), result, new Version()));
 						}
 					});
         	

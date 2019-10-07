@@ -189,7 +189,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 				if (fileName.startsWith(".")) {
 					continue; // we treat them as hidden files, that's probably what most users would expect
 				}
-				String fileId = idGenerator.generate();
+				String fileId = idGenerator.generateDocumentId();
 				
 				File entryDestination = new File(tempDir, fileId);
 				if (entryDestination.exists()) {

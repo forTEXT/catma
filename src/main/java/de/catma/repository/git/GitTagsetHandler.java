@@ -10,9 +10,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.MergeResult;
@@ -23,8 +20,6 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 
 import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.TagConflict;
-import de.catma.rbac.RBACPermission;
-import de.catma.rbac.RBACRole;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -33,18 +28,11 @@ import de.catma.repository.git.serialization.models.GitTagsetHeader;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.user.User;
 
 public class GitTagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 	private final CredentialsProvider credentialsProvider;
-
-	private static final String TAGSET_REPOSITORY_NAME_FORMAT = "%s_tagset";
-
-	public static String getTagsetRepositoryName(String tagsetId) {
-		return String.format(TAGSET_REPOSITORY_NAME_FORMAT, tagsetId);
-	}
 
 	public GitTagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider) {
@@ -66,18 +54,17 @@ public class GitTagsetHandler {
 	 * @return the new revisionhash
 	 * @throws IOException if an error occurs while creating the tagset
 	 */
-	public String create(@Nonnull String projectId,
-						 @Nullable String tagsetId,
-						 @Nonnull String name,
-						 @Nullable String description
+	public String create(String projectId,
+						 String tagsetId,
+						 String name,
+						 String description
 	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the remote tagset repository
-			String tagsetRepoName = GitTagsetHandler.getTagsetRepositoryName(tagsetId);
 
 			CreateRepositoryResponse createRepositoryResponse =
-					this.remoteGitServerManager.createRepository(tagsetRepoName, tagsetRepoName, projectId);
+					this.remoteGitServerManager.createRepository(tagsetId, tagsetId, projectId);
 
 			// clone the repository locally
 			localGitRepoManager.clone(
@@ -196,7 +183,7 @@ public class GitTagsetHandler {
 		}		
 	}
 	
-	public TagsetDefinition getTagset(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
+	public TagsetDefinition getTagset(String projectId, String tagsetId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);

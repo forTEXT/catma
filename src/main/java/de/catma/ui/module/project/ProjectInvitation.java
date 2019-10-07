@@ -23,21 +23,18 @@ public final class ProjectInvitation implements Serializable {
 	private final String name;
 	private final String description;
 	private final int defaultRole;
-	private final int key;
 	private final boolean createOwnCollection;
 	private final Set<String> documentIds;
+	private final int key;
 	
 	private static final int generateKey(){
 		return DammAlgorithm.padChecksum(new SecureRandom().nextInt(99999));
 	}
 	
 	public ProjectInvitation(
-			@JsonProperty("projectId") String projectId, 
-			@JsonProperty("defaultRole") int defaultRole,
-			@JsonProperty("name") String name,
-			@JsonProperty("description") String description,
-			@JsonProperty("createowncollection") boolean createOwnCollection,
-			@JsonProperty("documentIds") Set<String> documentIds) {
+			String projectId, int defaultRole, 
+			String name, String description, 
+			boolean createOwnCollection, Set<String> documentIds) {
 		
 		this(projectId, defaultRole, name, description, createOwnCollection,documentIds, generateKey());
 		
@@ -49,7 +46,7 @@ public final class ProjectInvitation implements Serializable {
 			@JsonProperty("defaultRole") int defaultRole,
 			@JsonProperty("name") String name,
 			@JsonProperty("description") String description,
-			@JsonProperty("createowncollection") boolean createOwnCollection,
+			@JsonProperty("createOwnCollection") boolean createOwnCollection,
 			@JsonProperty("documentIds") Set<String> documentIds,
 			@JsonProperty("key") int key) {
 		

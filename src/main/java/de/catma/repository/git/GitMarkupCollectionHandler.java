@@ -23,7 +23,6 @@ import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -47,12 +46,6 @@ public class GitMarkupCollectionHandler {
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 	private final CredentialsProvider credentialsProvider;
 
-	private static final String MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT = "%s_markupcollection";
-
-	public static String getMarkupCollectionRepositoryName(String markupCollectionId) {
-		return String.format(MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT, markupCollectionId);
-	}
-
 	public GitMarkupCollectionHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitManagerRestricted remoteGitServerManager,
 			CredentialsProvider credentialsProvider) {
@@ -68,8 +61,7 @@ public class GitMarkupCollectionHandler {
 	 * repo). Instead call the <code>createMarkupCollection</code> method of the {@link GitProjectManager} class.
 	 *
 	 * @param projectId the ID of the project within which the new markup collection must be created
-	 * @param markupCollectionId the ID of the new markup collection. If none is provided, a new ID will be
-	 *                           generated.
+	 * @param collectionId the ID of the new collection
 	 * @param name the name of the new markup collection
 	 * @param description the description of the new markup collection
 	 * @param sourceDocumentId the ID of the source document to which the new markup collection relates
@@ -79,7 +71,7 @@ public class GitMarkupCollectionHandler {
 	 */
 	public String create(
 			String projectId,
-			String markupCollectionId,
+			String collectionId,
 			String name,
 			String description,
 			String sourceDocumentId,
@@ -88,13 +80,10 @@ public class GitMarkupCollectionHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the remote markup collection repository
-			String markupCollectionRepoName = GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(
-					markupCollectionId
-			);
 
 			CreateRepositoryResponse createRepositoryResponse =
 					this.remoteGitServerManager.createRepository(
-							markupCollectionRepoName, markupCollectionRepoName, projectId
+							collectionId, collectionId, projectId
 					);
 
 			// clone the repository locally
@@ -116,7 +105,7 @@ public class GitMarkupCollectionHandler {
 			return localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
-					String.format("Added Collection %1$s with ID %2$s", name, markupCollectionId),
+					String.format("Added Collection %1$s with ID %2$s", name, collectionId),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);

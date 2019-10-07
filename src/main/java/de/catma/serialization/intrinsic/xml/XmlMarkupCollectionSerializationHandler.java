@@ -73,7 +73,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        StringBuilder contentBuilder = new StringBuilder();
 	        TagsetDefinition tagsetDefinition = 
 	        		new TagsetDefinition(
-	        			idGenerator.generate(), 
+	        			idGenerator.generateTagsetId(), 
 	        			"Intrinsic Markup", new Version());
 	        
 	        tagManager.addTagsetDefinition(tagsetDefinition);

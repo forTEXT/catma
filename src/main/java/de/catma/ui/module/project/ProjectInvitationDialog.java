@@ -22,6 +22,7 @@ import com.hazelcast.core.Message;
 import com.jsoniter.output.JsonStream;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -144,11 +145,12 @@ public class ProjectInvitationDialog extends Window {
 						}
 						
 						for (String documentId : projectInvitation.getDocumentIds()) {
-							// minimum role 
-							project.assignOnResource(
-									() -> message.getMessageObject().getUserId(), 
-									RBACRole.REPORTER, documentId);
-							
+							if (projectInvitation.getDefaultRole() < RBACRole.REPORTER.getAccessLevel()) {
+								// minimum role 
+								project.assignOnResource(
+										() -> message.getMessageObject().getUserId(), 
+										RBACRole.REPORTER, documentId);
+							}							
 							
 							DocumentResource docResource = 
 									(DocumentResource) documentResourceByUuid.get(documentId);
@@ -164,7 +166,8 @@ public class ProjectInvitationDialog extends Window {
 								project.createUserMarkupCollectionWithAssignment(
 									collectionName, 
 									docResource.getDocument(), 
-									message.getMessageObject().getUserId(),
+									projectInvitation.getDefaultRole() < RBACRole.ASSISTANT.getAccessLevel()?
+											message.getMessageObject().getUserId():null,
 									RBACRole.ASSISTANT);
 							}
 							
@@ -203,6 +206,8 @@ public class ProjectInvitationDialog extends Window {
 		content.addComponent(lInvitationCode);
 
 		cbOwnCollection = new CheckBox("Create one collection per Document and joined User", false);
+		cbOwnCollection.setValue(false);
+		
 		content.addComponent(cbOwnCollection);
 		cbOwnCollection.setEnabled(!documentsForCollectionCreation.isEmpty());
 		
@@ -262,6 +267,7 @@ public class ProjectInvitationDialog extends Window {
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setWidth("100%");
+		buttonPanel.setMargin(new MarginInfo(true, false));
 		
 		btnInvite = new Button("Invite");
 		btnStopInvite = new Button("Stop invitation");
@@ -304,7 +310,7 @@ public class ProjectInvitationDialog extends Window {
 		
 		progressIndicator.setIndeterminate(true);
 		progressIndicator.setVisible(true);
-		progressIndicator.setCaption("Invitation running, keep this Dialog open...");
+		progressIndicator.setCaption("Invitation running, keep this dialog window open...");
 		
 		projectInvitation = new ProjectInvitation(
 				project.getProjectId(), 

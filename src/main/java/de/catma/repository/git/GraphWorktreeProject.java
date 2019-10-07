@@ -897,7 +897,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void createUserMarkupCollectionWithAssignment(
 			String name, SourceDocument sourceDocument, Integer userId, RBACRole role) {
 		try {
-			String collectionId = idGenerator.generate();
+			String collectionId = idGenerator.generateCollectionId();
 			
 			String umcRevisionHash = gitProjectHandler.createMarkupCollection(
 						collectionId, 

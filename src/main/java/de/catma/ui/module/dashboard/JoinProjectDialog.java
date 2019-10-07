@@ -118,13 +118,12 @@ public class JoinProjectDialog extends Window {
 
 		tfCode = new TextField("Code");
 		tfCode.setWidth("100%");
-		tfCode.setCaption("Invitation code");
 		tfCode.setDescription("Enter your invitation code here");
 		content.addComponent(tfCode);
+		content.setExpandRatio(tfCode, 0.3f);
 		
 		tfName = new TextField("Name");
 		tfName.setWidth("100%");
-		tfName.setCaption("");
 		tfName.setReadOnly(true);
 		tfName.setVisible(false);
 		content.addComponent(tfName);

@@ -247,7 +247,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 							IDGenerator idGenerator = new IDGenerator();
 							project.getTagManager().addTagsetDefinition(
 								new TagsetDefinition(
-									idGenerator.generate(), result, new Version()));
+									idGenerator.generateTagsetId(), result, new Version()));
 						}
 					});
         	
