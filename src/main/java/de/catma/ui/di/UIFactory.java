@@ -1,6 +1,6 @@
 package de.catma.ui.di;
 
-import java.util.Set;
+import java.util.List;
 
 import com.google.inject.assistedinject.Assisted;
 
@@ -9,8 +9,8 @@ import de.catma.project.ProjectManager;
 import de.catma.ui.module.dashboard.DashboardView;
 import de.catma.ui.module.dashboard.ProjectListView;
 import de.catma.ui.module.main.MainView;
+import de.catma.ui.module.project.DocumentResource;
 import de.catma.ui.module.project.ProjectInvitationDialog;
-import de.catma.ui.module.project.Resource;
 
 public interface UIFactory {
 	
@@ -23,5 +23,5 @@ public interface UIFactory {
 	
 	ProjectInvitationDialog getProjectInvitationDialog(
 			@Assisted("project") Project project, 
-			@Assisted("resources")  Set<Resource> resources);
+			@Assisted("resources")  List<DocumentResource> documentsWithWriteAccess);
 }

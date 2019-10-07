@@ -84,7 +84,7 @@ public class ResourcePermissionDialog extends Window {
 			.setCaption("Username");
 		
 		permissionGrid
-			.addColumn(mem -> mem.getRole().getRolename(), new HtmlRenderer())
+			.addColumn(mem -> mem.getRole().getRoleName(), new HtmlRenderer())
 			.setWidth(200)
 			.setCaption("Role");
 		

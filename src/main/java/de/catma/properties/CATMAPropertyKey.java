@@ -20,109 +20,45 @@ package de.catma.properties;
 
 import java.util.Properties;
 
-import de.catma.project.Project;
-
 /**
- * All possible keys for a {@link Project}'s property. The keys are indexed so
- * more than one repository can be configured in the same properties file. 
- * The indices starting with 1. A key named 'Repositoy' in this enumeration would appear 
- * as 'Repository1' for the first configured repository in the properties file.
- * A RepositoryPropetyKey provides several convenience methods for value testing and value access.
+ * All possible keys for a CATMA property. 
  * 
  * @author marco.petris@web.de
  *
  */
 public enum CATMAPropertyKey {
-	/**
-	 * The name of the repository.
-	 */
-	Repository,
-	/**
-	 * The full class name of the implementation of the {@link de.catma.serialization.SerializationHandlerFactory}.
-	 */
-	SerializationHandlerFactory,
-	/**
-	 * The full path to the repository's folder.
-	 */
-	RepositoryFolderPath,
-	/**
-	 * The full class name of the implementation of the {@link de.catma.document.repository.RepositoryFactory}.
-	 */
-	RepositoryFactory, 
-	/**
-	 * boolean flag 'true'->repository access requires authentication
-	 */
-	RepositoryAuthenticationRequired,
-	/**
-	 * a URL that gives access to the repository data (e.g. a JDBC URL).
-	 */
-	RepositoryUrl,
-	/**
-	 * a repository system user 
-	 */
-	RepositoryUser,
-	/**
-	 * the password for the repository system user
-	 */
-	RepositoryPass,
-	/**
-	 * the class name of the implementation of the {@link de.catma.indexer.IndexerFactory} 
-	 * for {@link de.catma.indexer.IndexedRepository IndexedRepositories}.
-	 */
-	IndexerFactory, 
-	/**
-	 * a URL that gives access to the index data (e.g. a JDBC URL).
-	 */
-	IndexerUrl, 
-	/**
-	 * a temporal directory, that can be used e.g. for uploads
-	 */
+
 	TempDir,
 	LoginType,
 	InitType,
-	GraphDbPath, 
-	SourceDocumentIndexMaintainer, 
-	SourceDocumentIndexMaintainerMaxObjects,
-	HeurecleaFolder,
-	AnnotationGeneratorURL,
-	BaseURL("http://www.digitalhumanities.it/catma/"),
+	BaseURL("http://localhost:8080/catma/"),
 	otpSecret,
 	otpDuration,
 	signup_tokenKey,
 	version,
+	
 	Google_oauthAuthorizationCodeRequestURL,
 	Google_oauthAccessTokenRequestURL,
 	Google_oauthClientId,
 	Google_oauthClientSecret,
 	Google_recaptchaSiteKey,
 	Google_recaptchaSecretKey,
-	CATMA_oauthAuthorizationCodeRequestURL,
-	CATMA_oauthAccessTokenRequestURL,
-	CATMA_oauthClientId,
-	CATMA_oauthClientSecret, 
-	commitAfterNodeCount,
-	commitAfterRelationCount,
-	DBIndexMaintenanceJobIntervalInSeconds, 
-	DBIndexMaintainerMaxObjects, 
-	IndexMaintainerEnabled, 
-	GuestAccessCountExpirationInDays, 
-	GuestAccessCountConcurrencyLevel, 
-	GuestAccessCountMax, 
-	SpamProtectionAnswer, 
-	SpamProtectionQuestion,
+	
 	GitBasedRepositoryBasePath, 
 	GitLabAdminPersonalAccessToken, 
 	GitLabServerUrl, 
-	GraphDbUri, 
-	GraphDbUser, 
-	GraphDbPass, 
+	
 	GraphDbGitMountBasePath,
+	
 	MailHost,
 	MailPort,
 	MailAuthenticationNeeded,
 	MailUser,
 	MailPass,
-	MailFrom,
+	MailFrom, 
+	
+	SpamProtectionAnswer, 
+	SpamProtectionQuestion,
 	;
 
 	private final String defaultValue;

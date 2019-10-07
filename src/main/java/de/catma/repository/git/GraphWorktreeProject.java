@@ -893,9 +893,9 @@ public class GraphWorktreeProject implements IndexedProject {
 		return null;
 	}
 
-
 	@Override
-	public void createUserMarkupCollection(String name, SourceDocument sourceDocument) {
+	public void createUserMarkupCollectionWithAssignment(
+			String name, SourceDocument sourceDocument, Integer userId, RBACRole role) {
 		try {
 			String collectionId = idGenerator.generate();
 			
@@ -913,7 +913,12 @@ public class GraphWorktreeProject implements IndexedProject {
 				rootRevisionHash, 
 				collectionId, name, umcRevisionHash, 
 				sourceDocument, oldRootRevisionHash);
-
+			
+			if ((userId != null) && !role.equals(RBACRole.OWNER)) {
+				assignOnResource(() -> userId, 
+						role, collectionId);		
+			}
+			
 			eventBus.post(
 				new CollectionChangeEvent(
 					sourceDocument.getUserMarkupCollectionReference(collectionId), 
@@ -925,6 +930,17 @@ public class GraphWorktreeProject implements IndexedProject {
 					RepositoryChangeEvent.exceptionOccurred.name(),
 					null, e);
 		}
+		
+	}
+
+	@Override
+	public void createUserMarkupCollection(String name, SourceDocument sourceDocument) {
+		createUserMarkupCollectionWithAssignment(
+				name, 
+				sourceDocument, 
+				null, // no assignment
+				null // no assignment
+		);
 	}
 
 	@Override

@@ -43,7 +43,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 				Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 
 		cb_role.setWidth("100%");
-		cb_role.setItemCaptionGenerator(RBACRole::getRolename);
+		cb_role.setItemCaptionGenerator(RBACRole::getRoleName);
 		cb_role.setEmptySelectionAllowed(false);
 	}
 

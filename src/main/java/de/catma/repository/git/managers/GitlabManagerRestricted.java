@@ -12,8 +12,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -54,7 +52,7 @@ import elemental.json.Json;
 import elemental.json.JsonException;
 import elemental.json.JsonObject;
 
-public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGitUserInformation, GitlabManagerCommon {
+public class GitlabManagerRestricted extends GitlabManagerCommon implements IRemoteGitManagerRestricted, IGitUserInformation {
 
 	private final GitLabApi restrictedGitLabApi;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -105,7 +103,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	}
 	
 	@Override
-	public CreateRepositoryResponse createRepository(String name, @Nullable String path)
+	public CreateRepositoryResponse createRepository(String name, String path)
 			throws IOException {
 		ProjectApi projectApi = this.restrictedGitLabApi.getProjectApi();
 
@@ -130,7 +128,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	
 	@Override
 	public CreateRepositoryResponse createRepository(
-			String name, @Nullable String path, String groupPath)
+			String name, String path, String groupPath)
 			throws IOException {
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
@@ -181,7 +179,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	
 
 	@Override
-	public String createGroup(String name, String path, @Nullable String description)
+	public String createGroup(String name, String path, String description)
 			throws IOException {
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 
@@ -389,7 +387,8 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 				Map<Integer,de.catma.user.Member> mergedList = new HashMap<>();
 				
 				for(de.catma.user.Member m : allMembers){
-					if(! mergedList.containsKey(m.getUserId()) || mergedList.get(m.getUserId()).getRole().value < m.getRole().value){
+					if(! mergedList.containsKey(m.getUserId()) 
+							|| mergedList.get(m.getUserId()).getRole().getAccessLevel() < m.getRole().getAccessLevel()){
 						mergedList.put(m.getUserId(), m);
 					}
 				}

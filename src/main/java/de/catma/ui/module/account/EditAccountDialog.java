@@ -10,20 +10,20 @@ import com.google.inject.Inject;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.events.ChangeUserAttributeEvent;
-import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.signup.ChangePasswordValidator;
@@ -42,6 +42,14 @@ public class EditAccountDialog extends Window {
 	private final String username;
 	private final String name;
 	private final int userId;
+
+	private Button btnCancel;
+
+	private Button btnSave;
+
+	private PasswordField tfPassword;
+
+	private PasswordField tfVerifyPassword;
 	
 	@Inject
 	public EditAccountDialog(IRemoteGitManagerPrivileged gitManagerPrivileged, 
@@ -57,76 +65,19 @@ public class EditAccountDialog extends Window {
 	
 		this.setCaption("Account details");
 		initComponents();
+		initActions();
 	}
 
 
 
-	private void initComponents(){
-		setWidth("400px");
-		setModal(true);
-		
-		VerticalFlexLayout content = new VerticalFlexLayout();
-		content.addStyleName("spacing");
-		content.addStyleName("margin");
-		Label lDescription = new Label("description", ContentMode.HTML);
-		lDescription.setValue("Edit your account details");
-		
-		TextField tfName = new TextField("Full name");
-		tfName.setSizeFull();
-		if(name != null){
-			tfName.setValue(name);
-		}
-		TextField tfUsername = new TextField("Username");
-		tfUsername.setSizeFull();
-		if(username != null){
-			tfUsername.setValue(username);
-		}
-		tfUsername.setEnabled(false);
-		TextField tfEmail = new TextField("E-Mail");
-		tfEmail.setSizeFull();
-		tfEmail.setValue(email);
-		tfEmail.setEnabled(false);
-		tfEmail.setDescription("Email is already verified");
-		
-		PasswordField tfPassword = new PasswordField("Password");
-		tfPassword.setSizeFull();
-		
-		PasswordField tfVerifyPassword = new PasswordField("Verify Password");
-		tfVerifyPassword.setSizeFull();
-		
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
-		buttonPanel.setJustifyContent(JustifyContent.SPACE_BETWEEN);
-		Button btnSave = new Button("Save");
-		btnSave.setDescription("awaiting google verification");
-		Button btnCancel = new Button("Cancel");
-		
-		buttonPanel.addComponent(btnCancel);
-		buttonPanel.addComponent(btnSave);
-		
-		btnCancel.addClickListener(evt -> { 
-			Notification.show("User creation aborted", Type.TRAY_NOTIFICATION);
-			this.close();
-		});
-		
-		content.addComponent(lDescription);
-		content.addComponent(tfName);
-		content.addComponent(tfUsername);
-		content.addComponent(tfEmail);
-		content.addComponent(tfPassword);
-		content.addComponent(tfVerifyPassword);
-		content.addComponent(buttonPanel);
-		
-		userBinder.forField(tfName)
-		.bind(UserData::getName, UserData::setName);
-		userBinder.forField(tfPassword)
-	    .withValidator(new ChangePasswordValidator(8))
-	    .bind(UserData::getPassword, UserData::setPassword);
+	private void initActions() {
+		btnCancel.addClickListener(evt -> close());
 		
 		btnSave.addClickListener(click -> {
 
 			// sanity check the password
 			if(! tfPassword.getValue().equals(tfVerifyPassword.getValue())) {
-				Notification.show("Passwords doen't match",Type.ERROR_MESSAGE);
+				Notification.show("Passwords don't match",Type.ERROR_MESSAGE);
 				return;
 			}
 
@@ -155,6 +106,72 @@ public class EditAccountDialog extends Window {
 			}
 			this.close();
 		});
+	}
+
+
+
+	private void initComponents(){
+		setWidth("40%");
+		setHeight("80%");
+		setModal(true);
+		
+		VerticalLayout content = new VerticalLayout();
+		content.setSizeFull();
+		
+		Label lDescription = new Label("Edit your account details", ContentMode.HTML);
+		
+		TextField tfName = new TextField("Full name");
+		tfName.setWidth("100%");
+		if(name != null){
+			tfName.setValue(name);
+		}
+		TextField tfUsername = new TextField("Username");
+		tfUsername.setWidth("100%");
+		if(username != null){
+			tfUsername.setValue(username);
+		}
+		tfUsername.setEnabled(false);
+		TextField tfEmail = new TextField("E-Mail");
+		tfEmail.setWidth("100%");
+		tfEmail.setValue(email);
+		tfEmail.setEnabled(false);
+		tfEmail.setDescription("Email has already been verified");
+		
+		tfPassword = new PasswordField("Password");
+		tfPassword.setWidth("100%");
+		
+		tfVerifyPassword = new PasswordField("Verify password");
+		tfVerifyPassword.setWidth("100%");
+		
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setWidth("100%");
+		
+		btnSave = new Button("Save");
+		btnCancel = new Button("Cancel");
+		
+		buttonPanel.addComponent(btnSave);
+		buttonPanel.addComponent(btnCancel);
+
+		buttonPanel.setComponentAlignment(btnCancel, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setComponentAlignment(btnSave, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setExpandRatio(btnSave, 1f);
+		
+		content.addComponent(lDescription);
+		content.addComponent(tfName);
+		content.addComponent(tfUsername);
+		content.addComponent(tfEmail);
+		content.addComponent(tfPassword);
+		content.addComponent(tfVerifyPassword);
+		content.setExpandRatio(tfVerifyPassword, 1f);
+		
+		content.addComponent(buttonPanel);
+		
+		userBinder.forField(tfName)
+		.bind(UserData::getName, UserData::setName);
+		userBinder.forField(tfPassword)
+	    .withValidator(new ChangePasswordValidator(8))
+	    .bind(UserData::getPassword, UserData::setPassword);
+		
 		setContent(content);
 
 	}

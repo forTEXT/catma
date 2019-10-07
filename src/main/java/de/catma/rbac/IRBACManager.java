@@ -81,7 +81,7 @@ public interface IRBACManager {
 		if(role == null || permission == null) {
 			return false;
 		} else {
-			return role.value >= permission.getRoleRequired().value;
+			return role.getAccessLevel() >= permission.getRoleRequired().getAccessLevel();
 		}
 	};
 	

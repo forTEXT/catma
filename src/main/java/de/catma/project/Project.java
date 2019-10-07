@@ -399,4 +399,7 @@ public interface Project {
 
 	RBACRole getRoleOnProject() throws IOException;
 
+	void createUserMarkupCollectionWithAssignment(
+		String name, SourceDocument sourceDocument, Integer userId, RBACRole role);
+
 }

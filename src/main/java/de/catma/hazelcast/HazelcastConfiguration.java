@@ -17,22 +17,28 @@ import com.hazelcast.client.config.ClientConfig;
  * @author db
  *
  */
-public class HazelcastConfiguration {
-
-	public final static String CACHE_KEY_SIGNUPTOKEN = "signupToken";
-	public final static String CACHE_KEY_INVITATIONS = "projectInvitation";
-	public final static String TOPIC_PROJECT_INVITATIONS = "projectInvitations";
-	public final static String TOPIC_PROJECT_JOINED = "projectJoined";
-
+public final class HazelcastConfiguration {
 	
-    public final static Configuration<String, String> signupTokenConfiguration = 
+	public static enum CacheKeyName {
+		SIGNUP_TOKEN,
+		PROJECT_INVITATION,
+		;
+	}
+
+	public static enum TopicName {
+		PROJECT_INVITATION,
+		PROJECT_JOINED,
+		;
+	}
+
+	public final static Configuration<String, String> SIGNUP_TOKEN_CONFIG = 
     		new MutableConfiguration<String, String>()
     		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(HOURS, 4)));
 
-    public final static Configuration<Integer, String> invitationConfiguration = 
+    public final static Configuration<Integer, String> PROJECT_INVITATION_CONFIG = 
     		new MutableConfiguration<Integer, String>()
     		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(TimeUnit.MINUTES, 30)));
 
-    public final static ClientConfig clientConfig = new ClientConfig().setExecutorPoolSize(1);
+    public final static ClientConfig CLIENT_CONFIG = new ClientConfig().setExecutorPoolSize(1);
     
 }

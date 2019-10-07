@@ -98,22 +98,22 @@ public class ProjectCard extends VerticalFlexLayout  {
         descriptionBar.addComponents(btnRemove);
 
         btnRemove.addClickListener(
-                (event -> {
-                    ConfirmDialog.show(UI.getCurrent(),"Delete Project",
-                            "Do you want to delete Project: " + projectReference.getName() + "?",
-                            "OK",
-                            "Cancel"
-                    , (evt) -> {
-                        try {
-                            if(evt.isConfirmed()){
-                            	projectManager.delete(projectReference.getProjectId());
-                            }
-                        } catch (Exception e) {
-                            errorLogger.showAndLogError("can't delete Project " + projectReference.getName(), e);
+            (event -> {
+                ConfirmDialog.show(UI.getCurrent(),"Delete Project",
+                        "Do you want to delete the whole Project '" + projectReference.getName() + "'?",
+                        "OK",
+                        "Cancel"
+                , (evt) -> {
+                    try {
+                        if(evt.isConfirmed()){
+                        	projectManager.delete(projectReference.getProjectId());
                         }
-                        eventBus.post(new ResourcesChangedEvent());
-                    });
-                })
+                    } catch (Exception e) {
+                        errorLogger.showAndLogError("can't delete Project " + projectReference.getName(), e);
+                    }
+                    eventBus.post(new ResourcesChangedEvent());
+                });
+            })
         );
         
         IconButton btnEdit = new IconButton(VaadinIcons.PENCIL);
@@ -136,24 +136,24 @@ public class ProjectCard extends VerticalFlexLayout  {
         
         IconButton btnLeave = new IconButton(VaadinIcons.EXIT);
         btnLeave.addClickListener(
-        		   (event -> {
-                       ConfirmDialog.show(UI.getCurrent(),"Leave Project",
-                               "Do you want to leave Project: " + projectReference.getName() + "?",
-                               "OK",
-                               "Cancel"
-                       , (evt) -> {
-                           try {
-                               if(evt.isConfirmed()){
-                               	projectManager.leaveProject(projectReference.getProjectId());
-                               }
-                           } catch (Exception e) {
-                               errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
-                           }
-                           eventBus.post(new ResourcesChangedEvent());
-                       });
-                   })
-        		
-        		);
+		   (event -> {
+               ConfirmDialog.show(UI.getCurrent(),"Leave Project",
+                       "Do you want to leave '" + projectReference.getName() + "'?",
+                       "OK",
+                       "Cancel"
+               , (evt) -> {
+                   try {
+                       if(evt.isConfirmed()) {
+                    	   projectManager.leaveProject(projectReference.getProjectId());
+                       }
+                   } catch (Exception e) {
+                       errorLogger.showAndLogError("can't leave project " + projectReference.getName(), e);
+                   }
+                   eventBus.post(new ResourcesChangedEvent());
+               });
+           })
+		
+		);
         
         descriptionBar.addComponent(btnLeave);
         

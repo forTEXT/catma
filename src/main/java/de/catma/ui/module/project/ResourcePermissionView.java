@@ -136,7 +136,7 @@ public class ResourcePermissionView extends Window {
     			permissionGrid.addColumn(e -> {
     				Map<String, RBACRole> members = e.getValue();
     				if(members.containsKey(member)){
-    					return members.get(member).roleName;
+    					return members.get(member).getRoleName();
     				} else {
     					return "";
     				}

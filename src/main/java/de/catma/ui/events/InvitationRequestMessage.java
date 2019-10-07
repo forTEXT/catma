@@ -4,19 +4,16 @@ import java.io.Serializable;
 
 public class InvitationRequestMessage implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 6959708701334863307L;
 	
 	private final int code;
 	private final String name;
-	private final int userid;
+	private final int userId;
 
-	public InvitationRequestMessage(int userid, String name, int code){
+	public InvitationRequestMessage(int userId, String name, int code){
 		this.code = code;
 		this.name = name;
-		this.userid = userid;
+		this.userId = userId;
 	}
 
 	public int getCode() {
@@ -27,9 +24,7 @@ public class InvitationRequestMessage implements Serializable {
 		return name;
 	}
 
-	public int getUserid() {
-		return userid;
+	public int getUserId() {
+		return userId;
 	}
-
-	
 }

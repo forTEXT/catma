@@ -40,5 +40,7 @@ public interface Resource {
 	public default boolean isCollection() { return false; }
 
 	public String getPermissionIcon();
+	
+	public boolean hasWritePermission();
 
 }

@@ -30,7 +30,8 @@ public class SignupTokenManager {
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     private final Cache<String, String> tokenCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache(HazelcastConfiguration.CACHE_KEY_SIGNUPTOKEN);
+    		Caching.getCachingProvider().getCacheManager().getCache(
+    				HazelcastConfiguration.CacheKeyName.SIGNUP_TOKEN.name());
 
     /**
      * checks if a token exists
@@ -101,17 +102,17 @@ public class SignupTokenManager {
      */
     public void handleVerify(String token, EventBus eventBus) {
     	if(token == null || token.isEmpty() ){
-    		eventBus.post(new TokenInvalidEvent("token is empty"));
+    		eventBus.post(new TokenInvalidEvent("Token is empty. Please sign up again!"));
     		return;
 
     	}
     	if(!containsToken(token)){
-    		eventBus.post(new TokenInvalidEvent("token is unknown, it can only be used once."));
+    		eventBus.post(new TokenInvalidEvent("Token is unknown, it can only be used once. Please sign up again!"));
     		return;
     	}
     	Optional<SignupToken> signupToken = get(token);
     	if(!signupToken.isPresent()){
-    		eventBus.post(new TokenInvalidEvent("tokendata is empty, internal error"));
+    		eventBus.post(new TokenInvalidEvent("Token is corrupt. Please sign up again!"));
     		logger.log(Level.WARNING, "token was found but content was null");
     		return;
     	}

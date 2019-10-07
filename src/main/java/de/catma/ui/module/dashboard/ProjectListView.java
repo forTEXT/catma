@@ -54,7 +54,7 @@ public class ProjectListView extends VerticalLayout implements
     }
 
     //data elements
-    private DataProvider<ProjectReference, ?> dataProvider = DataProvider.ofItems();;
+    private DataProvider<ProjectReference, ?> dataProvider = DataProvider.ofItems();
 
     //ui elements
     private HorizontalFlexLayout projectsLayout = new HorizontalFlexLayout();

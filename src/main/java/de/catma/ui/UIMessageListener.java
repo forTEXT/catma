@@ -6,12 +6,18 @@ import com.vaadin.ui.UI;
 
 public abstract class UIMessageListener<T> implements MessageListener<T> {
 
-	public abstract void uiBlockingOnMessage(Message<T> message);
+	private final UI ui;
+
+	public abstract void uiOnMessage(Message<T> message);
+	
+	public UIMessageListener(UI ui) {
+		this.ui = ui;
+	}
 	
 	@Override
-	public void onMessage(Message<T> message) {
-		UI.getCurrent().access( () -> {
-			uiBlockingOnMessage(message);
+	public final void onMessage(Message<T> message) {
+		ui.access( () -> {
+			uiOnMessage(message);
 		});
 	}
 }

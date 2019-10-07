@@ -22,11 +22,11 @@ public class CoreModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		super.configure();
-		  install(new FactoryModuleBuilder()
-				.implement(IRemoteGitManagerRestricted.class, GitlabManagerRestricted.class)
-				.build(IRemoteGitManagerFactory.class));
-		  bind(LoginService.class).to(GitlabLoginService.class).in(VaadinUIScoped.class);
-		  bind(InitializationService.class).to(Vaadin8InitializationService.class).in(VaadinUIScoped.class);
+		install(new FactoryModuleBuilder()
+			.implement(IRemoteGitManagerRestricted.class, GitlabManagerRestricted.class)
+			.build(IRemoteGitManagerFactory.class));
+		bind(LoginService.class).to(GitlabLoginService.class).in(VaadinUIScoped.class);
+		bind(InitializationService.class).to(Vaadin8InitializationService.class).in(VaadinUIScoped.class);
 	}
 	
 	@Provides

@@ -70,5 +70,10 @@ public class CollectionResource implements Resource {
 	public String getPermissionIcon() {
 		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
 	}
+	
+	@Override
+	public boolean hasWritePermission() {
+		return hasWritePermission;
+	}
 
 }

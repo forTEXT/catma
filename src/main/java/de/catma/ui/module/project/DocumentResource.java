@@ -4,7 +4,6 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.project.Project;
-import de.catma.repository.git.GitSourceDocumentHandler;
 
 public class DocumentResource implements Resource {
 
@@ -82,7 +81,7 @@ public class DocumentResource implements Resource {
 
 	@Override
 	public String getResourceId() {
-		return GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocument.getUuid());
+		return sourceDocument.getUuid();
 	}
 
 	@Override
@@ -93,5 +92,10 @@ public class DocumentResource implements Resource {
 	@Override
 	public String getPermissionIcon() {
 		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
+	}
+	
+	@Override
+	public boolean hasWritePermission() {
+		return hasWritePermission;
 	}
 }

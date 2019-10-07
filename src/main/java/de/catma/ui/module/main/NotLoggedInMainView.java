@@ -36,7 +36,11 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 	
 	private IconButton btHelp;
 
-	public NotLoggedInMainView(InitializationService initService, LoginService loginService, HazelCastService hazelCastService, EventBus eventBus) {
+	public NotLoggedInMainView(
+			InitializationService initService, 
+			LoginService loginService, 
+			HazelCastService hazelCastService, 
+			EventBus eventBus) {
 		this.initService = initService;
 		this.loginService = loginService;
 		this.hazelCastService = hazelCastService;

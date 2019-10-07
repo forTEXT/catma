@@ -162,15 +162,15 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	private void handleRequestToken(VaadinRequest request){
 		if(signupTokenManager.parseUri(request.getPathInfo())) {
 			SignupTokenManager tokenManager = new SignupTokenManager();
-			tokenManager.handleVerify( request.getParameter("token"), eventBus);
+			tokenManager.handleVerify(request.getParameter("token"), eventBus);
 		}
 	}
 	private void handleRequestOauth(VaadinRequest request){
-		if(request.getParameter("code") != null && VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
+		if(request.getParameter("code") != null 
+				&& VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
 			handleOauth(request);
-			Component mainView;
 			try {
-				mainView = initService.newEntryPage(loginservice, hazelCastService);
+				Component mainView = initService.newEntryPage(loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				getCurrent().getPage().pushState("/catma/");

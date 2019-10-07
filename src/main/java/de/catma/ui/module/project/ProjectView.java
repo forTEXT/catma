@@ -733,13 +733,28 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamPanel.addComponent(initTeamContent());
  
         miInvite = getMoreOptionsContextMenu().addItem(
-        	"Invite someone to the Project", click -> 
-        		uiFactory.getProjectInvitationDialog(
-        			project, 
-        			docResourceToReadableCollectionResourceMap.keySet()).show());
+        	"Invite someone to the Project", click -> handleProjectInvitationRequest());
     }
 
-    private void handleCommitRequest() {
+    private void handleProjectInvitationRequest() {
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<Resource> resourceDataProvider = 
+				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
+		
+		List<DocumentResource> documentsWithWriteAccess = 
+			resourceDataProvider.getTreeData().getRootItems()
+			.stream()
+			.filter(resource -> resource instanceof DocumentResource)
+			.map(resource -> (DocumentResource)resource)
+			.filter(resource -> resource.hasWritePermission())
+			.collect(Collectors.toList());
+		
+		uiFactory.getProjectInvitationDialog(
+        			project, 
+        			documentsWithWriteAccess).show();
+	}
+
+	private void handleCommitRequest() {
     	try {
 	    	if (project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
