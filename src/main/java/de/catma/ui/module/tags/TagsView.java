@@ -761,13 +761,16 @@ public class TagsView extends HugeCard {
 						possiblyChangedPd.getUuid().equals(existingPropertyDef.getUuid()))
 					.findFirst()
 					.ifPresent(editedPropertyDef -> {
-						existingPropertyDef.setName(editedPropertyDef.getName());
-						existingPropertyDef.setPossibleValueList(
-							editedPropertyDef.getPossibleValueList());
+						if (!existingPropertyDef.getName().equals(editedPropertyDef.getName())
+								|| !existingPropertyDef.getPossibleValueList().equals(editedPropertyDef.getPossibleValueList())) {
+							existingPropertyDef.setName(editedPropertyDef.getName());
+							existingPropertyDef.setPossibleValueList(
+								editedPropertyDef.getPossibleValueList());
+							project.getTagManager().updateUserDefinedPropertyDefinition(
+									tag, existingPropertyDef);
+						}
 					});
 				
-				project.getTagManager().updateUserDefinedPropertyDefinition(
-					tag, existingPropertyDef);
 			}
 		}
 		

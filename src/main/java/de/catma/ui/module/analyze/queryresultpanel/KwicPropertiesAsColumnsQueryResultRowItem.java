@@ -1,9 +1,11 @@
 package de.catma.ui.module.analyze.queryresultpanel;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.google.common.base.Joiner;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.vaadin.data.TreeData;
 
 import de.catma.indexer.KwicProvider;
@@ -19,7 +21,7 @@ public class KwicPropertiesAsColumnsQueryResultRowItem implements QueryResultRow
 	private String documentName;
 	private String collectionName;
 	private QueryResultRowArray rows;
-	private Map<String,String> propertyValueByName;
+	private Multimap<String,String> propertyValueByName;
 
 	public KwicPropertiesAsColumnsQueryResultRowItem(
 			QueryResultRowArray rows, String kwic, String detailedKwic, 
@@ -34,7 +36,7 @@ public class KwicPropertiesAsColumnsQueryResultRowItem implements QueryResultRow
 	}
 
 	private void initPropertyValueByName() {
-		this.propertyValueByName = new HashMap<String, String>();
+		this.propertyValueByName = ArrayListMultimap.create();
 		for (QueryResultRow row : rows) {
 			if (row instanceof TagQueryResultRow) {
 				TagQueryResultRow tRow = (TagQueryResultRow) row;
@@ -107,7 +109,7 @@ public class KwicPropertiesAsColumnsQueryResultRowItem implements QueryResultRow
 	
 	@Override
 	public String getPropertyValue(String propertyName) {
-		return propertyValueByName.get(propertyName);
+		return propertyValueByName.get(propertyName).stream().collect(Collectors.joining(", "));
 	}
 
 	@Override

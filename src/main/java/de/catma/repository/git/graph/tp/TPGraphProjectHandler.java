@@ -275,7 +275,9 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	
 	private void logRootRevisionHash(String rootRevisionHash, String oldRootRevisionHash, String at) {
 		StringBuilder log = new StringBuilder();
-		
+		if (rootRevisionHash.equals(oldRootRevisionHash)) {
+			System.out.println("hier");
+		}
 		log.append("\nold rootRevisionHash " + oldRootRevisionHash);
 		log.append("\nnew rootRevisionHash " + rootRevisionHash );
 		log.append("\nProjectRevision at ");

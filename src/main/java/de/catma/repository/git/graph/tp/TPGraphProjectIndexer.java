@@ -23,6 +23,7 @@ import static de.catma.repository.git.graph.RelationType.rt;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -318,6 +319,7 @@ public class TPGraphProjectIndexer implements Indexer {
 		.toList();
 	
 		QueryResultRowArray result = new QueryResultRowArray();
+		HashSet<String> systemPropertiesAddedTagInstanceIds = new HashSet<>();
 		
 		for (Map<String,Object> entry : resultMap) {
 			String documentId = (String)entry.get("doc-uuid");
@@ -353,46 +355,50 @@ public class TPGraphProjectIndexer implements Indexer {
 			if (annoPropertyV.equals(annoV)) {
 				annoPropertyV = null; //no matching Annotation Property for this Annotation
 			}
-			// try to add rows for matching system properties
-			addTagQueryResultRowForSystemProperty(
-				queryId,
-				result, 
-				PropertyDefinition.SystemPropertyName.catma_markupauthor, 
-				annoAuthor,
-				propertyNameFilter,
-				propertyValueFilter,
-				documentId,
-				collectionId,
-				tagId,
-				tagPath,
-				tagInstanceId,
-				rangeList);
-			addTagQueryResultRowForSystemProperty(
-				queryId,
-				result, 
-				PropertyDefinition.SystemPropertyName.catma_markuptimestamp, 
-				annoTimestamp,
-				propertyNameFilter,
-				propertyValueFilter,
-				documentId,
-				collectionId,
-				tagId,
-				tagPath,
-				tagInstanceId,
-				rangeList);		
-			addTagQueryResultRowForSystemProperty(
-				queryId,
-				result, 
-				PropertyDefinition.SystemPropertyName.catma_displaycolor, 
-				color,
-				propertyNameFilter,
-				propertyValueFilter,
-				documentId,
-				collectionId,
-				tagId,
-				tagPath,
-				tagInstanceId,
-				rangeList);	
+			
+			if (!systemPropertiesAddedTagInstanceIds.contains(tagInstanceId)) {
+				// try to add rows for matching system properties
+				addTagQueryResultRowForSystemProperty(
+					queryId,
+					result, 
+					PropertyDefinition.SystemPropertyName.catma_markupauthor, 
+					annoAuthor,
+					propertyNameFilter,
+					propertyValueFilter,
+					documentId,
+					collectionId,
+					tagId,
+					tagPath,
+					tagInstanceId,
+					rangeList);
+				addTagQueryResultRowForSystemProperty(
+					queryId,
+					result, 
+					PropertyDefinition.SystemPropertyName.catma_markuptimestamp, 
+					annoTimestamp,
+					propertyNameFilter,
+					propertyValueFilter,
+					documentId,
+					collectionId,
+					tagId,
+					tagPath,
+					tagInstanceId,
+					rangeList);		
+				addTagQueryResultRowForSystemProperty(
+					queryId,
+					result, 
+					PropertyDefinition.SystemPropertyName.catma_displaycolor, 
+					color,
+					propertyNameFilter,
+					propertyValueFilter,
+					documentId,
+					collectionId,
+					tagId,
+					tagPath,
+					tagInstanceId,
+					rangeList);
+				systemPropertiesAddedTagInstanceIds.add(tagInstanceId);
+			}			
 			
 			// add rows for user defined properties for each matching value
 			if ((propertyV != null) && (annoPropertyV != null)) {
