@@ -155,6 +155,18 @@ public class TaggerView extends HorizontalLayout
 		initData();
 	}
 
+	@Override
+	public void contextMenuSelected(int x, int y) {
+		if (annotationPanel.getSelectedEditableCollection() == null) {
+			annotationPanel.highlightCurrentEditableCollectionBox();
+		}
+		else {
+			if (taggerContextMenu != null) {
+				taggerContextMenu.show(x, y);
+			}
+		}
+	}
+	
 	private void initData() {
 		try {
 			if (sourceDocument != null) {
@@ -610,6 +622,7 @@ public class TaggerView extends HorizontalLayout
 			userMarkupCollectionManager,
 			selectedAnnotationId -> tagger.setTagInstanceSelected(selectedAnnotationId),
 			collection -> handleCollectionValueChange(collection),
+			tag -> tagger.addTagInstanceWith(tag),
 			() -> sourceDocument,
 			eventBus);
 		rightSplitPanel.addComponent(annotationPanel);
@@ -739,7 +752,7 @@ public class TaggerView extends HorizontalLayout
 		AnnotationCollection collection = annotationPanel.getSelectedEditableCollection();
 		if (collection == null) { //shouldn't happen, but just in case
 			Notification.show("Info", 
-					"Please make sure you have a editable Collection available "
+					"Please make sure you have an editable Collection available "
 					+ "and select this Collection as 'currently being edited'! "
 					+ "Your Annotation hasn't been saved!",
 					Type.ERROR_MESSAGE);

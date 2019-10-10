@@ -57,6 +57,7 @@ public class Tagger extends AbstractComponent {
 		public void tagInstanceSelected(String instancePartID, String lineID);
 		public void tagInstanceSelected(Set<String> tagInstanceIDs);
 		public Annotation getTagInstanceInfo(String tagInstanceId);
+		public void contextMenuSelected(int x, int y);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -110,6 +111,11 @@ public class Tagger extends AbstractComponent {
 		public void log(String msg) {
 			System.out.println(
 					"Got log message from client: " +  msg); //$NON-NLS-1$
+		}
+		
+		@Override
+		public void contextMenuSelected(int x, int y) {
+			taggerListener.contextMenuSelected(x, y);
 		}
 	};
 

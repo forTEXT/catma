@@ -120,9 +120,20 @@ class GraphWriter {
 		propertyDefV.property("name", propertyDef.getName());
 		propertyDefV.property("values", propertyDef.getPossibleValueList());
 		
+		logVertex(propertyDefV);
+		
 		tagV.addEdge(rt(hasProperty), propertyDefV);
 	}
 	
+	
+	void logVertex(Vertex v) {
+		StringBuilder log = new StringBuilder(v.toString());
+		log.append("label[");
+		log.append(v.label());
+		log.append("]");
+		v.properties().forEachRemaining(prop -> log.append(" " + prop.key() + ":" + prop.value()));
+		logger.info(log.toString());
+	}
 
 	void addHasParentRelations(Vertex tagsetV, TagsetDefinition tagset) {
 		if (!tagset.isEmpty()) {

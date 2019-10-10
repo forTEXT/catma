@@ -7,9 +7,13 @@ interface TagsetTreeItem {
 	public String getName();
 	public String getTagsetName();
 	public String getPropertySummary();
+	public String getRemoveIcon();
+	
+	public void handleRemovalRequest(TagsView tagsView);
 	
 	public default void removePropertyDataItem(TreeDataProvider<TagsetTreeItem> dataProvider) {}
 	public default String generateStyle() { return null; }
 	public default String getPropertyValue() { return null; }
+	boolean isEditable();
 
 }

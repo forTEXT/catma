@@ -30,7 +30,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
-import de.catma.ui.events.ResourcesChangedEvent;
+import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.module.project.ProjectInvitation;
 import de.catma.user.User;
 import de.catma.util.DammAlgorithm;
@@ -95,7 +95,7 @@ public class JoinProjectDialog extends Window {
 		@Override
 		public void uiOnMessage(Message<JoinedProjectMessage> message) {
 			if(message.getMessageObject().getInvitation().getKey() == JoinProjectDialog.this.invitation.getKey()) {	
-				JoinProjectDialog.this.eventBus.post(new ResourcesChangedEvent());
+				JoinProjectDialog.this.eventBus.post(new ProjectChangedEvent());
 				Notification.show("Joined successfully", "Sucessfully joined Project " + 
 						JoinProjectDialog.this.invitation.getName() , Type.HUMANIZED_MESSAGE);
 				JoinProjectDialog.this.getUI().push();

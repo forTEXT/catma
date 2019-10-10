@@ -90,6 +90,11 @@ public class TaggerConnector extends AbstractComponentConnector {
 				//does not get reported back to the server since we do
 				// not use client side removal within CATMA
 			}
+			
+			@Override
+			public void contextMenuSelected(int x, int y) {
+				rpc.contextMenuSelected(x, y);
+			}
 		});
 
 		return tagger;

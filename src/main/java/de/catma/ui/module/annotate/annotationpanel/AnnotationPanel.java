@@ -8,11 +8,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import org.vaadin.dialogs.ConfirmDialog;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.collect.ArrayListMultimap;
@@ -28,6 +27,7 @@ import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -42,6 +42,7 @@ import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.annotation.Annotation;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionManager;
@@ -103,6 +104,7 @@ public class AnnotationPanel extends VerticalLayout {
 			AnnotationCollectionManager collectionManager, 
 			Consumer<String> annotationSelectionListener,
 			Consumer<AnnotationCollection> collectionSelectionListener,
+			Consumer<TagDefinition> tagSelectionListener,
 			Supplier<SourceDocument> currentDocumentProvider,
 			EventBus eventBus) {
 		this.project = project;
@@ -112,7 +114,7 @@ public class AnnotationPanel extends VerticalLayout {
 		this.eventBus.register(this);
 		this.tagsetData = new TreeData<TagsetTreeItem>();
 		initComponents(annotationSelectionListener);
-		initActions(collectionSelectionListener);
+		initActions(collectionSelectionListener, tagSelectionListener);
 		initListeners();
 		initData();
 	}
@@ -359,7 +361,9 @@ public class AnnotationPanel extends VerticalLayout {
         }
     }
 
-	private void initActions(Consumer<AnnotationCollection> collectionSelectionListener) {
+	private void initActions(
+			Consumer<AnnotationCollection> collectionSelectionListener, 
+			Consumer<TagDefinition> tagSelectionListener) {
 		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Tagsets")
 			.setSortable(false)
@@ -448,6 +452,8 @@ public class AnnotationPanel extends VerticalLayout {
 			}
 		});
 		
+		tagsetGrid.addItemClickListener(clickEvent -> handleTagSelection(clickEvent, tagSelectionListener));
+		
         ContextMenu addContextMenu = 
         		tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
         addContextMenu.addItem("Add Tag", clickEvent -> handleAddTagRequest());
@@ -457,7 +463,6 @@ public class AnnotationPanel extends VerticalLayout {
 		ContextMenu moreOptionsContextMenu = 
 				tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
-		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
 		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
 		
 		currentEditableCollectionBox.addValueChangeListener(
@@ -469,6 +474,37 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		btAddCollection.addClickListener(clickEvent -> handelAddCollectionRequest());
 		
+	}
+
+	private void handleTagSelection(
+			ItemClick<TagsetTreeItem> clickEvent, 
+			Consumer<TagDefinition> tagSelectionListener) {
+		
+		TagsetTreeItem selectedItem = clickEvent.getItem();
+		if (selectedItem instanceof TagDataItem) {
+			if (getSelectedEditableCollection() != null) {
+				TagDefinition tag = ((TagDataItem)selectedItem).getTag();
+				tagSelectionListener.accept(tag);
+			}
+			else {
+				highlightCurrentEditableCollectionBox();
+			}
+		}
+	}
+
+	public void highlightCurrentEditableCollectionBox() {
+		currentEditableCollectionBox.addStyleName("annotationpanel-current-editable-collection-box-highlight");
+		final UI currentUI = UI.getCurrent(); 
+		((BackgroundServiceProvider)currentUI).accuireBackgroundService().schedule(
+				() -> {
+					currentUI.access(() -> {
+						currentEditableCollectionBox.removeStyleName(
+								"annotationpanel-current-editable-collection-box-highlight");
+						currentUI.push();
+					});
+				},
+				1,
+				TimeUnit.SECONDS);
 	}
 
 	private void handelAddCollectionRequest() {
@@ -494,49 +530,6 @@ public class AnnotationPanel extends VerticalLayout {
 
 	private void handleEditPropertiesRequest() {
 		handleAddPropertyRequest();
-	}
-
-	private void handleDeleteTagRequest() {
-		final List<TagDefinition> targetTags = tagsetGrid.getSelectedItems()
-		.stream()
-		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
-		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
-		.collect(Collectors.toList());
-		if (!targetTags.isEmpty()) {
-			for (TagDefinition targetTag : targetTags) {
-				if (!project.hasPermission(
-						project.getRoleForTagset(targetTag.getTagsetDefinitionUuid()), 
-						RBACPermission.TAGSET_WRITE)) {
-					Notification.show(
-						"Info", 
-						String.format(
-							"You do not have the permission to make changes to the Tagset of Tag %1$s, "
-							+ "Please contact the Project maintainer!", 
-							targetTag.getName()), 
-						Type.HUMANIZED_MESSAGE);
-					return;
-				}			
-			}
-			String msg = String.format(
-				"Are you sure you want to delete the following Tags: %1$s?", 
-				targetTags
-				.stream()
-				.map(TagDefinition::getName)
-				.collect(Collectors.joining(",")));
-			
-			ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
-				if (dlg.isConfirmed()) {
-					for (TagDefinition tag : targetTags) {
-						TagsetDefinition tagset =
-								project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
-						project.getTagManager().removeTagDefinition(tagset, tag);
-					}
-				}
-			});
-		}
-		else {
-			Notification.show("Info", "Please select one or more Tags first!", Type.TRAY_NOTIFICATION);
-		}
 	}
 
 	private void handleEditTagRequest() {

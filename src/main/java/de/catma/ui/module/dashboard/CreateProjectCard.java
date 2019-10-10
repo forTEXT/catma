@@ -8,7 +8,7 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 
 import de.catma.project.ProjectManager;
-import de.catma.ui.events.ResourcesChangedEvent;
+import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
@@ -42,7 +42,7 @@ public class CreateProjectCard extends VerticalFlexLayout {
         newproject.addComponents(labelDesc);
 
         newproject.addLayoutClickListener(evt -> {
-        	new CreateProjectDialog(projectManager, result -> eventBus.post(new ResourcesChangedEvent())).show();
+        	new CreateProjectDialog(projectManager, result -> eventBus.post(new ProjectChangedEvent())).show();
 
 
         });

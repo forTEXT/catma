@@ -6,4 +6,5 @@ public interface TaggerListener {
 	public void tagInstanceSelected(String instanceIDJson);
 	public void tagInstanceRemoved(String tagInstanceID);
 	public void tagInstancesSelected(String tagInstanceIDsJson);
+	public void contextMenuSelected(int x, int y);
 }

@@ -66,7 +66,7 @@ public class TagSelectionPanel extends VerticalLayout {
             tagsetData = new TreeData<TagsetTreeItem>();
             Collection<TagsetDefinition> tagsets = project.getTagManager().getTagLibrary().getTagsetDefinitions();
             for (TagsetDefinition tagset : tagsets) {
-            	TagsetDataItem tagsetItem = new TagsetDataItem(tagset);
+            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
             	tagsetData.addItem(null, tagsetItem);
             	addTags(tagsetItem, tagset);
             }
@@ -91,7 +91,7 @@ public class TagSelectionPanel extends VerticalLayout {
     	}
 	}
 	private void addTags(
-			TagsetDataItem tagsetItem, 
+			TagsetTreeItem tagsetItem, 
 			TagsetDefinition tagset) {
 		
         for (TagDefinition tag : tagset) {

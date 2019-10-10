@@ -27,7 +27,6 @@ import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Upload.FailedEvent;
 import com.vaadin.ui.Upload.FailedListener;
@@ -48,7 +47,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	private UploadPanel uploadPanel;
 	private boolean onAdvance = false;
 	private AddSourceDocWizardResult wizardResult;
-	private Panel remoteURIInputPanel;
+	private VerticalLayout remoteLayout;
 
 	public LocationPanel(WizardStepListener listener, AddSourceDocWizardResult wizardResult) {
 		this.wizardResult = wizardResult;
@@ -60,14 +59,14 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		
 		uploadPanel.addListener(new StartedListener() {
 			public void uploadStarted(StartedEvent event) {
-				remoteURIInputPanel.setEnabled(false);
+				remoteLayout.setEnabled(false);
 			}
 		});
 		
 
 		uploadPanel.addListener(new FailedListener() {
 			public void uploadFailed(FailedEvent event) {
-				remoteURIInputPanel.setEnabled(true);
+				remoteLayout.setEnabled(true);
 			}
 		});
 		
@@ -127,22 +126,29 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		setMargin(true);
 		
 //		setSizeFull();
-		VerticalLayout remoteLayout = new VerticalLayout();
+		remoteLayout = new VerticalLayout();
 		remoteLayout.setMargin(true);
 		remoteLayout.setSpacing(true);
 		remoteLayout.setSizeFull();
 		
-		remoteURIInputPanel = new Panel(remoteLayout);
 		
 		remoteURIInput = new TextField();
-		remoteURIInput.setCaption("Enter an URL that is accessible over the internet:");
+		remoteURIInput.setCaption("Enter a URL that is accessible over the internet:");
 		remoteURIInput.setWidth("100%"); //$NON-NLS-1$
 		remoteURIInput.setValueChangeMode(ValueChangeMode.EAGER);
 		remoteLayout.addComponent(remoteURIInput);
 		remoteLayout.setExpandRatio(remoteURIInput, 2);
 		
-		addComponent(remoteURIInputPanel);
-		remoteLayout.addComponent(new Label("Please note that some content providers like gutenberg.org block access to their documents by third party tools like CATMA. If you encounter any errors loading a file via URL please consider using a mirror of that site."));
+		addComponent(remoteLayout);
+		Label urlInfoLabel = 
+			new Label(
+				"Please note that some document libraries block access to "
+				+ "their documents by third party tools like CATMA. "
+				+ "If you encounter any errors loading a file via URL please consider downloading the file to your local computer first.");
+		
+		urlInfoLabel.removeStyleName("v-label-undef-w");
+		
+		remoteLayout.addComponent(urlInfoLabel);
 		
 		Label localFileLabel = new Label("or upload a local file from your computer:"); //$NON-NLS-1$
 		addComponent(localFileLabel);

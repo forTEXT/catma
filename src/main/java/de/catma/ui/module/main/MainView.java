@@ -239,7 +239,9 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			}
 			
 			setContent(tagsView);
-			
+			if (routeToTagsEvent.getTagset() != null) {
+				this.tagsView.setSelectedTagset(routeToTagsEvent.getTagset());
+			}
 			currentRoute = routeToTagsEvent.getClass();
 		}
 		

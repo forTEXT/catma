@@ -186,7 +186,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 					Type.TRAY_NOTIFICATION);
 			}
 			
-			if (getSelectedDocument().equals(document)) {
+			if (getSelectedDocument() != null && getSelectedDocument().equals(document)) {
 				collectionDataItem.fireSelectedEvent(this.resourceSelectionListener);
 			}
     	}
@@ -512,7 +512,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	initData(nextSelectedDocument, Collections.emptySet());
     }
     
-    public SourceDocument getSelectedDocument() {
+    private SourceDocument getSelectedDocument() {
     	for (DocumentTreeItem documentTreeItem : documentData.getRootItems()) {
     		if ((documentTreeItem instanceof DocumentDataItem) && documentTreeItem.isSelected()) {
     			return ((DocumentDataItem)documentTreeItem).getDocument();

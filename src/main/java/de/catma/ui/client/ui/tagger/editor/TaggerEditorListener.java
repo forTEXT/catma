@@ -31,4 +31,5 @@ public interface TaggerEditorListener {
 	public void tagSelected(String tagInstancePartID, String lineID);
 	public void logEvent(String event);
 	public void tagsSelected(HashSet<String> tagInstanceIDs);
+	public void contextMenuSelected(int x, int y);
 }

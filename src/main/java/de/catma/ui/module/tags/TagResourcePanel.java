@@ -10,6 +10,7 @@ import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
@@ -69,6 +70,7 @@ public class TagResourcePanel extends VerticalLayout {
 	private void initActions() {
 		tagsetGrid.addSelectionListener(
 				selectionEvent -> handleTagsetSelectionEvent(selectionEvent));
+		tagsetActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false); // no options so far
         tagsetActionGridComponent.getActionGridBar().addBtnAddClickListener(
             	click -> handleAddTagsetRequest());		
         tagsetActionGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
@@ -179,8 +181,10 @@ public class TagResourcePanel extends VerticalLayout {
     }
 
 	private void initComponents() {
+		setWidth("400px");
+		setHeight("100%");
+
 		Label tagsetLabel = new Label("Tagsets");
-		setSizeFull();
 		
 		tagsetGrid = new Grid<>();
 		tagsetGrid.addStyleNames(
@@ -209,7 +213,8 @@ public class TagResourcePanel extends VerticalLayout {
 		
 		tagsetActionGridComponent = 
 				new ActionGridComponent<Grid<TagsetDefinition>>(tagsetLabel, tagsetGrid);
-		
+		tagsetActionGridComponent.setSelectionModeFixed(SelectionMode.MULTI);
+		tagsetActionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
 		addComponent(tagsetActionGridComponent);
 	}
 
@@ -237,5 +242,10 @@ public class TagResourcePanel extends VerticalLayout {
 	
 	public void setTagsetSelectionListener(TagsetSelectionListener tagsetSelectionListener) {
 		this.tagsetSelectionListener = tagsetSelectionListener;
+	}
+
+	public void setSelectedTagset(TagsetDefinition tagset) {
+		this.tagsetGrid.deselectAll();
+		this.tagsetGrid.select(tagset);
 	}
 }

@@ -81,10 +81,11 @@ import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.MembersChangedEvent;
-import de.catma.ui.events.ResourcesChangedEvent;
+import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
+import de.catma.ui.events.routing.RouteToTagsEvent;
 import de.catma.ui.layout.FlexLayout.FlexWrap;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
@@ -339,6 +340,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				};
         	}
 		});
+        
+        tagsetGrid.addItemClickListener(clickEvent -> handleTagsetClick(clickEvent));
+	}
+
+	private void handleTagsetClick(ItemClick<TagsetDefinition> itemClickEvent) {
+    	if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
+    		TagsetDefinition tagset = itemClickEvent.getItem();
+    		
+    		eventBus.post(new RouteToTagsEvent(project, tagset));
+    	}		
 	}
 
 	private void handleSelectFilteredDocuments() {
@@ -531,8 +542,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					"Delete",
 					"Cancel", 
 					dlg -> {
-						for (TagsetDefinition tagset : tagsets) {
-							project.getTagManager().removeTagsetDefinition(tagset);
+						if (dlg.isConfirmed()) {
+							for (TagsetDefinition tagset : tagsets) {
+								project.getTagManager().removeTagsetDefinition(tagset);
+							}
 						}
 					}
 			);
@@ -1094,11 +1107,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
     /**
-     * called when {@link ResourcesChangedEvent} is fired e.g. when source documents have been removed or added
+     * called when {@link ProjectChangedEvent} is fired e.g. when source documents have been removed or added
      * @param resourcesChangedEvent
      */
     @Subscribe
-    public void handleResourceChanged(ResourcesChangedEvent resourcesChangedEvent){
+    public void handleResourceChanged(ProjectChangedEvent resourcesChangedEvent){
     	reloadAll();
     }
     

@@ -4,7 +4,7 @@ import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.dialog.SaveCancelListener;
 
-public class CreateProjectDialog extends AbstractProjectDialog{
+public class CreateProjectDialog extends AbstractProjectDialog {
 
 	public CreateProjectDialog(ProjectManager projectManager, SaveCancelListener<ProjectReference> saveCancelListener) {
 		super("Create a new Project",projectManager, saveCancelListener);

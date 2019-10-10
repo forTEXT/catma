@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -62,7 +63,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 
 public class TPGraphProjectHandler implements GraphProjectHandler {
-
+	private Logger logger = Logger.getLogger(TPGraphProjectHandler.class.getName());
 	private Graph graph;
 	private ProjectReference projectReference;
 	private User user;
@@ -130,6 +131,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document,
 			Path tokenizedSourceDocumentPath) throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addSourceDocument enter");
+
 		GraphTraversalSource g = graph.traversal();
 
 		Vertex projectRevV = 
@@ -137,6 +140,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		projectRevV.property("revisionHash", rootRevisionHash);
 		
 		graphWriter.addDocument(projectRevV, document);
+		
+		logRootRevisionHash("addSourceDocument exit");
 	}
 
 	@Override
@@ -173,32 +178,36 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public void addCollection(String rootRevisionHash, String collectionId, String name, String umcRevisionHash,
 			SourceDocument document, String oldRootRevisionHash) throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addCollection enter");
 		graphWriter.addCollection(
 			oldRootRevisionHash,
 			rootRevisionHash,
 			new AnnotationCollection(collectionId, new ContentInfoSet(name), tagManager.getTagLibrary(), 
 					document.getUuid(), document.getRevisionHash()));
+		logRootRevisionHash("addCollection exit");
 	}
 
 	@Override
 	public void addTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addTagset enter");
+		
 		GraphTraversalSource g = graph.traversal();
-
-		Vertex v = g.V().hasLabel(nt(ProjectRevision)).next();
-		System.out.println(v);
-		System.out.println(v.property("revisionHash").value());
 		Vertex projectRevV = 
 			g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash).next();
 		projectRevV.property("revisionHash", rootRevisionHash);
 		
 		Vertex tagsetV = graphWriter.addTagset(projectRevV, tagset);
 		graphWriter.addHasParentRelations(tagsetV, tagset);
+
+		logRootRevisionHash("addTagset exit");
 	}
 
 	@Override
 	public void addTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
 			String oldRootRevisionHash) throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addTagDefinition enter");
+		
 		GraphTraversalSource g = graph.traversal();
 
 		Vertex tagsetV = 
@@ -212,19 +221,26 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		}
 		
 		graphWriter.addTag(tagsetV, parentTagV, tag);
+		
+		logRootRevisionHash("addTagDefinition exit");
 	}
 
 	@Override
 	public void updateTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
 			String oldRootRevisionHash) throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "updateTagDefinition enter");
 		
 		GraphTraversalSource g = graph.traversal();
-		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		Vertex tagV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
 		.property("revisionHash", rootRevisionHash)
 		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
 		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid())
-		.property("name", tag.getName());
-
+		.property("name", tag.getName())
+		.next();
+		
+		graphWriter.logVertex(tagV);
+		
+		logRootRevisionHash("updateTagDefinition exit");
 	}
 
 	@Override
@@ -241,6 +257,9 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public void addPropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
+		
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addPropertyDefinition enter");
+		
 		GraphTraversalSource g = graph.traversal();
 
 		Vertex tagV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -250,21 +269,54 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.next();
 		
 		graphWriter.addPropertyDefinition(tagV, propertyDefinition);
+		
+		logRootRevisionHash("addPropertyDefinition exit");
+	}
+	
+	private void logRootRevisionHash(String rootRevisionHash, String oldRootRevisionHash, String at) {
+		StringBuilder log = new StringBuilder();
+		
+		log.append("\nold rootRevisionHash " + oldRootRevisionHash);
+		log.append("\nnew rootRevisionHash " + rootRevisionHash );
+		log.append("\nProjectRevision at ");
+		log.append(at);
+		log.append(": ");
+		
+		graph.traversal().V().hasLabel(nt(ProjectRevision)).properties("revisionHash").value().forEachRemaining(value -> log.append(value));
+		logger.info(log.toString());
 	}
 
+	private void logRootRevisionHash(String at) {
+		StringBuilder log = new StringBuilder("ProjectRevision at ");
+		log.append(at);
+		log.append(": ");
+		
+		graph.traversal().V().hasLabel(nt(ProjectRevision)).properties("revisionHash").value().forEachRemaining(value -> log.append(value));
+		logger.info(log.toString());
+	}
+	
 	@Override
 	public void createOrUpdatePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
-
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "createOrUpdatePropertyDefinition enter");
+		
 		GraphTraversalSource g = graph.traversal();
 
-		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		Vertex propertyV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
 		.property("revisionHash", rootRevisionHash)
 		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
 		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid())
 		.outE(rt(hasProperty)).inV().has(nt(Property), "uuid", propertyDefinition.getUuid())
-		.property("name", propertyDefinition.getName())
-		.property("values", propertyDefinition.getPossibleValueList());
+		.next();
+		
+		graphWriter.logVertex(propertyV);
+		
+		propertyV.property("name", propertyDefinition.getName());
+		propertyV.property("values", propertyDefinition.getPossibleValueList());
+		
+		graphWriter.logVertex(propertyV);
+
+		logRootRevisionHash("createOrUpdatePropertyDefinition exit" );
 	}
 
 	@Override
@@ -285,7 +337,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public void addTagReferences(String rootRevisionHash, AnnotationCollection collection,
 			List<TagReference> tagReferences) throws Exception {
-		System.out.println(graph);
+		logger.info("Adding " + tagReferences.size() + " references, graph size: " + graph);
+		
 		GraphTraversalSource g = graph.traversal();
 		Vertex collectionV = 
 			g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
@@ -295,14 +348,15 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			.next();
 
 		graphWriter.addTagReferences(rootRevisionHash, collectionV, tagReferences);
-		System.out.println(graph);
+		
+		logger.info("Finished adding " + tagReferences.size() + " references, graph size: " + graph);
 	}
 
 	@Override
 	public void removeTagReferences(String rootRevisionHash, AnnotationCollection collection,
 			List<TagReference> tagReferences) throws Exception {
 		
-		System.out.println(graph);
+		logger.info("Removing " + tagReferences.size() + " references, graph size: " + graph);
 		
 		Set<String> tagInstanceIds = 
 			tagReferences
@@ -320,12 +374,17 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.outE(rt(hasProperty)).inV().drop()
 		.cap("instances").unfold().drop().iterate();
 		
-		System.out.println(graph);
+		logger.info("Finished removing " + tagReferences.size() + " references, graph size: " + graph);
 	}
 
 	@Override
 	public void removeProperties(String rootRevisionHash, String collectionId, String collectionRevisionHash,
 			String propertyDefId) throws Exception {
+		
+		logger.info(
+			"Removing Properties for PropertyDefinition with ID " 
+					+ propertyDefId + ", graph size: " + graph);
+		
 		GraphTraversalSource g = graph.traversal();
 		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
 		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
@@ -333,6 +392,12 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
 		.outE(rt(hasProperty)).inV().has(nt(AnnotationProperty), "uuid", propertyDefId)
 		.drop().iterate();
+		
+		logger.info(
+			"Finished removing Properties for PropertyDefinition ID " 
+				+ propertyDefId 
+				+ "in Collection ID " + collectionId 
+				+ " rev " + collectionRevisionHash + ", graph size: " + graph);
 	}
 
 	@Override
@@ -340,7 +405,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			String rootRevisionHash, 
 			AnnotationCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws Exception {
-	
+	//TODO: check
 		GraphTraversalSource g = graph.traversal();
 		
 		GraphTraversal<Vertex, Vertex> tagInstanceTraversal = g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
@@ -403,6 +468,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds,
 			String collectionRevisionHash) throws Exception {
+		logger.info("Removing " + tagInstanceIds.size() + " Annotations, graph size: " + graph);
+		
 		GraphTraversalSource g = graph.traversal();
 		
 		g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
@@ -413,11 +480,14 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.outE(rt(hasProperty)).inV().hasLabel(nt(AnnotationProperty)).drop() //AnnotationProperties
 		.cap("toBeDropped").unfold().drop().iterate(); //TagInstance
 		
+		logger.info("Fnished removing " + tagInstanceIds.size() + " Annotations, graph size: " + graph);
 	}
 
 	@Override
 	public void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "removeTagDefinition enter");
+		
 		GraphTraversalSource g = graph.traversal();
 		
 		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -427,11 +497,15 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.store("toBeDropped")
 		.outE(rt(hasProperty)).inV().hasLabel(nt(Property)).drop() // Properties
 		.cap("toBeDropped").unfold().drop().iterate(); // Tag
+		
+		logRootRevisionHash("removeTagDefinition exit");
 	}
 
 	@Override
 	public void removePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "removePropertyDefinition enter");
+		
 		GraphTraversalSource g = graph.traversal();
 		
 		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -440,11 +514,16 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid())
 		.outE(rt(hasProperty)).inV().has(nt(Property), "uuid", propertyDefinition.getUuid())
 		.drop().iterate();
+		
+		logRootRevisionHash("removePropertyDefinition exit");
 	}
 
 	@Override
 	public void removeTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
+		
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "removeTagset enter");
+		
 		GraphTraversalSource g = graph.traversal();
 
 		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -455,21 +534,33 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.store("toBeDropped")
 		.outE(rt(hasProperty)).inV().drop() // Properties
 		.cap("toBeDropped").unfold().drop().iterate(); // Tagset and Tags	
+		
+		logRootRevisionHash("removeTagset exit");
 	}
 
 	@Override
 	public void updateTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "updateTagset enter");
+		
 		GraphTraversalSource g = graph.traversal();
-		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		
+		Vertex tagsetV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
 		.property("revisionHash", rootRevisionHash)
 		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
-		.property("name", tagset.getName());
+		.property("name", tagset.getName())
+		.next();
+		
+		graphWriter.logVertex(tagsetV);
+		
+		logRootRevisionHash("updateTagset exit");
 	}
 
 	@Override
 	public void updateCollection(String rootRevisionHash, AnnotationCollectionReference collectionRef,
 			String oldRootRevisionHash) throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "updateCollection enter");
+		
 		GraphTraversalSource g = graph.traversal();
 
 		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -477,11 +568,15 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.property("revisionHash", rootRevisionHash);
 		
 		// the collection itself has currently no indexed fields so there is no updated to be done
+		
+		logRootRevisionHash("updateCollection exit");
 	}
 
 	@Override
 	public void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference,
 			String oldRootRevisionHash) throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "removeCollection enter");
+		
 		GraphTraversalSource g = graph.traversal();
 		
 		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -494,12 +589,14 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.outE(rt(hasProperty)).inV().hasLabel(nt(AnnotationProperty)).drop() //AnnotationProperties
 		.cap("toBeDropped").unfold().drop().iterate(); // Collection and TagInstances		
 
+		logRootRevisionHash("removeCollection exit");
 	}
 
 	@Override
 	public void removeDocument(String rootRevisionHash, SourceDocument document, String oldRootRevisionHash)
 			throws Exception {
-
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "removeDocument enter");
+		
 		GraphTraversalSource g = graph.traversal();
 		
 		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -510,6 +607,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.store("toBeDropped")
 		.outE(rt(hasPosition)).inV().hasLabel(nt(Position)).drop() // Positions
 		.cap("toBeDropped").unfold().drop().iterate();  // Document and Terms
+		
+		logRootRevisionHash("removeDocument exit");
 	}
 	
 	public Indexer createIndexer() {

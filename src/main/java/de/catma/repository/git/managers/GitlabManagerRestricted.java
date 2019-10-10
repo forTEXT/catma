@@ -237,28 +237,28 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			groupApi.deleteGroup(group);
 		}
 		catch (GitLabApiException e) {
-			//TODO: Nasty workaround, but it's not fixed in gitlab4j yet.
-			// A switch to a new gitlab4j requires jaxb 2.3.0 to work. This requires jetty 9.4 to work, which is 
-			// broken in the current elcipse jetty plugin
-			if(e.getHttpStatus() == 202){  // Async operation indicated by HTTP ACCEPT 202. wait till finished
-				for(int i = 0;i < 10; i++ ){
-					logger.info("gitlab: async delete operation detected, waiting 150msec per round. round: " + i );
-					try {
-						Thread.sleep(150);
-						List<Group> res = groupApi.getGroups(path);
-						if(res.isEmpty()){
-							return;
-						}
-					} catch (GitLabApiException e1) {
-						continue; //NOOP
-					} catch (InterruptedException e1) {
-						continue; //NOOP
-					}
-				}
+//			//TODO: Nasty workaround, but it's not fixed in gitlab4j yet.
+//			// A switch to a new gitlab4j requires jaxb 2.3.0 to work. This requires jetty 9.4 to work, which is 
+//			// broken in the current elcipse jetty plugin
+//			if(e.getHttpStatus() == 202){  // Async operation indicated by HTTP ACCEPT 202. wait till finished
+//				for(int i = 0;i < 10; i++ ){
+//					logger.info("gitlab: async delete operation detected, waiting 150msec per round. round: " + i );
+//					try {
+//						Thread.sleep(150);
+//						List<Group> res = groupApi.getGroups(path);
+//						if(res.isEmpty()){
+//							return;
+//						}
+//					} catch (GitLabApiException e1) {
+//						continue; //NOOP
+//					} catch (InterruptedException e1) {
+//						continue; //NOOP
+//					}
+//				}
+//				throw new IOException("Failed to delete remote group", e);
+//			}else {
 				throw new IOException("Failed to delete remote group", e);
-			}else {
-				throw new IOException("Failed to delete remote group", e);
-			}
+//			}
 		}
 	}
 	
