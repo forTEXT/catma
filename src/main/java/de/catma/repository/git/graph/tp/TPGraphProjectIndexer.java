@@ -24,12 +24,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -37,6 +39,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
@@ -356,6 +361,8 @@ public class TPGraphProjectIndexer implements Indexer {
 				annoPropertyV = null; //no matching Annotation Property for this Annotation
 			}
 			
+			// if we haven't added system properties for the current tagInstance yet
+			// we try to add them now with respect to user defined name and value filters
 			if (!systemPropertiesAddedTagInstanceIds.contains(tagInstanceId)) {
 				// try to add rows for matching system properties
 				addTagQueryResultRowForSystemProperty(
@@ -462,8 +469,11 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchFreqency(QueryId queryId, List<String> documentIdList, CompareOperator comp1, int freq1,
+	public QueryResult searchFrequency(
+			QueryId queryId, List<String> documentIdList, 
+			CompareOperator comp1, int freq1,
 			CompareOperator comp2, int freq2) throws IOException {
+		
 		GraphTraversalSource g = graph.traversal();
 
 		return new QueryResultRowArray(
@@ -491,16 +501,93 @@ public class TPGraphProjectIndexer implements Indexer {
 	@Override
 	public SpanContext getSpanContextFor(String sourceDocumentId, Range range, int spanContextSize,
 			SpanDirection direction) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+		
+		GraphTraversalSource g = graph.traversal();
+		
+		List<Vertex> positionVs = g.V().hasLabel(nt(ProjectRevision))
+		.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", sourceDocumentId)
+		.inE(rt(isPartOf))
+		.outV().hasLabel(nt(Term))
+		.outE(rt(hasPosition)).inV().hasLabel(nt(Position))
+		.filter(new InRangeFilter(range))
+		.order().by("tokenOffset", Order.asc)
+		.toList();
+		
+		SpanContext spanContext = new SpanContext(sourceDocumentId);
+		if (!positionVs.isEmpty()) {
+			Vertex firstPositionV = positionVs.get(0);
+			Vertex lastPositionV = positionVs.get(positionVs.size()-1);
+			
+			if (direction.equals(SpanDirection.BOTH) || direction.equals(SpanDirection.BACKWARD)) {
+				GraphTraversal<Vertex, Path> backwardAdjacencyTraversal = 
+					g.V(firstPositionV).repeat(__.in(rt(isAdjacentTo))).times(spanContextSize).path();
+				
+				if (backwardAdjacencyTraversal.hasNext()) {
+					Path backwardAdjacencyPath = backwardAdjacencyTraversal.next();
+					Iterator<Object> backwardAdjacencyPathIterator = backwardAdjacencyPath.iterator();
+					//skip first
+					backwardAdjacencyPathIterator.next();
+					while(backwardAdjacencyPathIterator.hasNext()) {
+						Vertex positionVertex = (Vertex)backwardAdjacencyPathIterator.next();
+						
+						Vertex termV = 
+							g.V(positionVertex).inE(rt(hasPosition)).outV().hasLabel(nt(Term)).next();
+						
+						String term = (String)termV.property("literal").value();
+						int tokenOffset = (int)positionVertex.property("tokenOffset").value();
+						int startOffset = (int)positionVertex.property("startOffset").value();
+						int endOffset = (int)positionVertex.property("endOffset").value();
+						
+						spanContext.addBackwardToken(new TermInfo(term, startOffset, endOffset, tokenOffset));
+					}
+				}
+			}
+			
+			if (direction.equals(SpanDirection.BOTH) || direction.equals(SpanDirection.FORWARD)) {
+				GraphTraversal<Vertex, Path> forwardAdjacencyTraversal = 
+					g.V(lastPositionV).repeat(__.out(rt(isAdjacentTo))).times(spanContextSize).path();
+				
+				if (forwardAdjacencyTraversal.hasNext()) {
+					Path forwardAdjacencyPath = forwardAdjacencyTraversal.next();
+					Iterator<Object> forwardAdjacencyPathIterator = forwardAdjacencyPath.iterator();
+					//skip first
+					forwardAdjacencyPathIterator.next();
+					while(forwardAdjacencyPathIterator.hasNext()) {
+						Vertex positionVertex = (Vertex)forwardAdjacencyPathIterator.next();
+						
+						Vertex termV = 
+							g.V(positionVertex).inE(rt(hasPosition)).outV().hasLabel(nt(Term)).next();
+						
+						String term = (String)termV.property("literal").value();
+						int tokenOffset = (int)positionVertex.property("tokenOffset").value();
+						int startOffset = (int)positionVertex.property("startOffset").value();
+						int endOffset = (int)positionVertex.property("endOffset").value();
+						
+						spanContext.addForwardToken(new TermInfo(term, startOffset, endOffset, tokenOffset));
+					}
+				}
+			}
 
-	@Override
-	public QueryResult searchCollocation(QueryId queryId, QueryResult baseResult, QueryResult collocationConditionResult,
-			int spanContextSize, SpanDirection direction) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+			
+		}
+		if (!spanContext.getBackwardTokens().isEmpty()) {
+			TermInfo firstToken = spanContext.getBackwardTokens().get(0);
+			TermInfo lastToken = spanContext.getBackwardTokens().get(spanContext.getBackwardTokens().size()-1);
+			spanContext.setBackwardRange(
+				new Range(firstToken.getRange().getStartPoint(), lastToken.getRange().getEndPoint()));
+		}
+		if (!spanContext.getForwardTokens().isEmpty()) {
+			TermInfo firstToken = spanContext.getForwardTokens().get(0);
+			TermInfo lastToken = spanContext.getForwardTokens().get(spanContext.getForwardTokens().size()-1);
+			spanContext.setForwardRange(
+				new Range(firstToken.getRange().getStartPoint(), lastToken.getRange().getEndPoint()));
+		}
+		
+		System.out.println(spanContext.getForwardRange());
+
+		return spanContext;
 	}
+	
 
 	@Override
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException {
@@ -509,13 +596,77 @@ public class TPGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public void close() {
-		// TODO Auto-generated method stub
+	public QueryResult searchCollocation(
+			QueryId queryId, QueryResult baseResult, QueryResult collocationConditionResult,
+			int spanContextSize, SpanDirection direction) throws IOException {
+	
+		int baseResultSize = baseResult.size();
+		int collocConditionResultSize = collocationConditionResult.size();
+		
+		boolean swapCollocationDirection = baseResultSize > collocConditionResultSize;
+		
+		//swap to reduce the amount of span context computation
+		if (swapCollocationDirection) {
+			QueryResult bufferResult = baseResult;
+			baseResult = collocationConditionResult;
+			collocationConditionResult = bufferResult;
+		}
+		
+		Multimap<String, QueryResultRow> collocConditionResultBySourceDocumentId = 
+				ArrayListMultimap.create();
+		collocationConditionResult.forEach(
+			row -> collocConditionResultBySourceDocumentId.put(row.getSourceDocumentId(), row));
+		
+		QueryResultRowArray matchingBaseRows = new QueryResultRowArray();
+		QueryResultRowArray matchingCollocConditionRows = new QueryResultRowArray();
 
+		for (QueryResultRow row : baseResult) {
+			
+			if (collocConditionResultBySourceDocumentId.containsKey(row.getSourceDocumentId())) {
+				SpanContext spanContext = 
+						getSpanContextFor(
+								row.getSourceDocumentId(), row.getRange(), spanContextSize, direction);
+
+				boolean baseMatch = matchingBaseRows.contains(row);
+		
+				for (QueryResultRow collocConditionRow : 
+					collocConditionResultBySourceDocumentId.get(row.getSourceDocumentId()) ) {
+					boolean collocMatch = matchingCollocConditionRows.contains(collocConditionRow);
+					if (!baseMatch || !collocMatch) {
+						if (spanContext.hasOverlappingRange(collocConditionRow.getRanges(), direction)) {
+							if (!baseMatch) {
+								matchingBaseRows.add(row);
+								baseMatch = true;
+							}
+							if (!collocMatch) {
+								matchingCollocConditionRows.add(collocConditionRow);
+								collocMatch = true;
+							}
+						}
+
+					}					 
+				}
+			}			
+		}
+		
+		// swap back
+		if (swapCollocationDirection) {
+			QueryResultRowArray bufferResult = matchingBaseRows;
+			matchingBaseRows = matchingCollocConditionRows;
+			matchingCollocConditionRows = bufferResult;
+		}
+		
+		return matchingBaseRows;
 	}
 
 	@Override
-	public QueryResult searchTagDiff(QueryId queryId, List<String> relevantUserMarkupCollIDs, String propertyName, String tagPhrase)
+	public void close() {
+		// noop
+	}
+
+	@Override
+	public QueryResult searchTagDiff(
+			QueryId queryId, List<String> relevantUserMarkupCollIDs, String propertyName, String tagPhrase)
 			throws IOException {
 		// TODO Auto-generated method stub
 		return null;

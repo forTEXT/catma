@@ -359,7 +359,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		btExecuteSearch.addClickListener(clickEvent -> executeSearch());	
 		queryBox.addValueChangeListener(valueChange -> btExecuteSearch.click());
-		queryBox.addFocusListener(event -> queryBox.setValue(null));
+//		queryBox.addFocusListener(event -> queryBox.setValue(null));
 		
 		kwicBt.addClickListener(event -> addKwicViz());
 

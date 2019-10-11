@@ -166,6 +166,44 @@ public class SpanContext {
 		return (forwardTokens.containsAll(termInfos) 
 				|| backwardTokens.containsAll(termInfos));
 	}
+	
+	public boolean hasOverlappingForwardRange(Collection<Range> ranges) {
+		if (getForwardRange() != null) {
+			for (Range range : ranges) {
+				if (this.getForwardRange().hasOverlappingRange(range)) {
+					return true;
+				}
+			}
+		}		
+		return false;
+	}
+	
+	public boolean hasOverlappingBackwardRange(Collection<Range> ranges) {
+		if (this.getBackwardRange() != null) {
+			for (Range range : ranges) {
+				if (this.getBackwardRange().hasOverlappingRange(range)) {
+					return true;
+				}
+			}
+		}		
+		return false;
+	}
+	
+	public boolean hasOverlappingRange(Collection<Range> ranges, SpanDirection spanDirection) {
+		if (spanDirection.equals(SpanDirection.BOTH) || spanDirection.equals(SpanDirection.FORWARD)) {
+			if (hasOverlappingForwardRange(ranges)) {
+				return true;
+			}
+		}
+		
+		if (spanDirection.equals(SpanDirection.BOTH) || spanDirection.equals(SpanDirection.BACKWARD)) {
+			if (hasOverlappingBackwardRange(ranges)) {
+				return true;
+			}
+		}		
+		
+		return false;
+	}
 
 	public void addForwardTokens(Collection<TermInfo> termInfos) {
 		for (TermInfo ti : termInfos) {
