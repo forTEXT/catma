@@ -163,15 +163,17 @@ public class AnnotatedTextProvider {
 		StringBuilder builder = new StringBuilder();
 		builder.append("<div");
 		builder.append(" class=\"annotation-details-tag-color\"");
-		builder.append(" style=\"");
-		builder.append(" background-color:");
-		builder.append("#"+ColorConverter.toHex(
-				tagDefinition.getColor()));
-		builder.append(";");
-		builder.append(" color:");
-		builder.append(ColorConverter.isLightColor(
-			tagDefinition.getColor())?"black":"white");
-		builder.append(";");
+		if (tagDefinition != null) {
+			builder.append(" style=\"");
+			builder.append(" background-color:");
+			builder.append("#"+ColorConverter.toHex(
+					tagDefinition.getColor()));
+			builder.append(";");
+			builder.append(" color:");
+			builder.append(ColorConverter.isLightColor(
+				tagDefinition.getColor())?"black":"white");
+			builder.append(";");
+		}
 		builder.append("\">");
 		
 		try {

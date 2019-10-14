@@ -21,7 +21,9 @@ public class UIHelpWindow extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		
-		Label helpText = new Label("<p>Watch out for these little question mark icons while navigating through CATMA. They provide useful hints for managing the firststeps within a CATMA component.</p><h4>Login</h4>Once you're logged in, you will see the Repository Manager, which will explain the first steps to you. If you ever get stuck, you can just click on the question mark icons!", ContentMode.HTML); 
+		Label helpText = 
+			new Label("<p>Watch out for these little question mark icons while navigating through CATMA. They provide useful hints for managing the firststeps within a CATMA system.</p><h4>Sign up and login</h4><p>You can either login directly with a gmail address or you can sign up and create a CATMA account.</p><p>Once you're logged in, you will see the Project Manager, which will explain the first steps to you. If you ever get stuck, you can just click on the question mark icons!", ContentMode.HTML);
+		helpText.addStyleName("help-text");
 		content.addComponent( helpText);
 		setContent(content);
 		

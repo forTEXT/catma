@@ -153,6 +153,11 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
+				
+				if ((evt.getOldValue() != null) && (evt.getNewValue() == null)) {
+					
+				}
+				
 				refreshAnnotations();
 			}
 		};

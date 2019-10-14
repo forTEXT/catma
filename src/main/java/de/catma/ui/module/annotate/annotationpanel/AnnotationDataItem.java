@@ -44,7 +44,13 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 
 	@Override
 	public String getTag() {
-		return tagset.getTagDefinition(annotation.getTagInstance().getTagDefinitionId()).getName();
+		TagDefinition tag = tagset.getTagDefinition(annotation.getTagInstance().getTagDefinitionId());
+		if (tag != null) {
+			return tag.getName();
+		}
+		else {
+			return "N/A";
+		}
 	}
 
 	@Override

@@ -8,12 +8,23 @@ package de.catma.ui.events;
 public class HeaderContextChangeEvent  {
 
     private final String value;
+    private final boolean dashboard;
 
     public HeaderContextChangeEvent(String value){
         this.value = value;
+        this.dashboard = false;
     }
+    
+    public HeaderContextChangeEvent() {
+		this.value = "";
+		this.dashboard = true;
+	}
 
-    public String getValue() {
+	public String getValue() {
         return value;
     }
+	
+	public boolean isDashboard() {
+		return dashboard;
+	}
 }

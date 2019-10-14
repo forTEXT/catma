@@ -31,7 +31,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.assistedinject.Assisted;
-import com.google.inject.assistedinject.AssistedInject;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.project.ProjectReference;
@@ -63,12 +62,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		       .expireAfterWrite(5, TimeUnit.SECONDS)
 		       .build();
 	
-	@AssistedInject
 	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("token") String userImpersonationToken) throws IOException {
 		this(eventBus, backgroundService, new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
 	}
 	
-	@AssistedInject
 	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("username") String username, @Assisted("password") String password) throws IOException {
 		this(eventBus, backgroundService, oauth2Login(CATMAPropertyKey.GitLabServerUrl.getValue(), username, password));
 	}

@@ -237,7 +237,7 @@ public class Tagger extends AbstractComponent {
 			ClientTagInstance tagInstance = 
 					tagInstancesByInstanceID.get(tagReference.getTagInstanceId());
 			if (tagInstance == null) {
-				TagDefinition tagDefintion = 
+				TagDefinition tagDefinition = 
 					project.getTagManager().getTagLibrary().getTagDefinition(tagReference.getTagDefinitionId());
 				
 				tagInstancesByInstanceID.put(
@@ -245,7 +245,7 @@ public class Tagger extends AbstractComponent {
 						new ClientTagInstance(
 								tagReference.getTagDefinitionId(),
 								tagReference.getTagInstanceId(), 
-								ColorConverter.toHex(tagDefintion.getColor()), 
+								tagDefinition==null?"FFFFFF":ColorConverter.toHex(tagDefinition.getColor()), 
 								textRanges));
 			}
 			else {

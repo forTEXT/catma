@@ -140,6 +140,7 @@ public class AnnotationPanel extends VerticalLayout {
 		            	tagsetData.addItem(
 		            		tagsetItem, new TagDataItem(tag));
 		            	
+		            	tagsetDataProvider.refreshAll();
 		            	tagsetGrid.expand(tagsetItem);
 		            }
 		            else {
@@ -148,10 +149,10 @@ public class AnnotationPanel extends VerticalLayout {
 		            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag);
 		            	tagsetData.addItem(parentTagItem, new TagDataItem(tag));
 		            	
+		            	tagsetDataProvider.refreshAll();
 		            	tagsetGrid.expand(parentTagItem);
 		            }
 		            
-					tagsetDataProvider.refreshAll();
 		            
 				}
 				else if (newValue == null) { //removed
@@ -174,9 +175,8 @@ public class AnnotationPanel extends VerticalLayout {
 					tagsetData.addItem(tagsetItem, tagDataItem);
 					//TODO: sort
 					
-					showExpandedProperties(tagDataItem);
-					
 					tagsetDataProvider.refreshAll();
+					showExpandedProperties(tagDataItem);
 				}
 				
 			}
@@ -230,6 +230,7 @@ public class AnnotationPanel extends VerticalLayout {
 				.filter(tagDataItem -> tagDataItem.getTag().getUuid().equals(tagId))
 				.findFirst()
 				.ifPresent(tagDataItem -> {
+					tagsetDataProvider.refreshItem(tagDataItem);
 					tagDataItem.setPropertiesExpanded(false);
 					hideExpandedProperties(tagDataItem);
 					tagDataItem.setPropertiesExpanded(true);

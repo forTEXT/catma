@@ -35,31 +35,55 @@ public class ProjectListView extends VerticalLayout {
 	private final Comparator<ProjectReference> sortByNameAsc = (ref1,ref2) -> ref1.getName().compareTo(ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = (ref1,ref2) -> ref2.getName().compareTo(ref1.getName());
 	private final IRBACManager rbacManager;
-	private final Provider<JoinProjectCard> joinProjectCardProvider;
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 	private final Set<String> deletedProjectIds;
+	private HorizontalFlexLayout projectsLayout = new HorizontalFlexLayout();
+	private IconButton sortButton;
+	private IconButton helpButton;
+	private ProjectManagerHelpWindow helpWindow;
 
-	@Inject
-    ProjectListView(@Assisted("projectManager")ProjectManager projectManager, 
+    public ProjectListView(ProjectManager projectManager, 
     		EventBus eventBus, 
-    		IRBACManager rbacManager, 
-    		Provider<JoinProjectCard> joinProjectCardProvider){ 
+    		IRBACManager rbacManager){ 
         this.projectManager = projectManager;
         this.eventBus = eventBus;
         this.rbacManager = rbacManager;
-        this.joinProjectCardProvider = joinProjectCardProvider;
         this.deletedProjectIds = new HashSet<String>();
         initComponents();
+        initActions();
         eventBus.register(this);
         initData();
     }
 
-    private HorizontalFlexLayout projectsLayout = new HorizontalFlexLayout();
+    private void initActions() {
+        
+        sortButton.addClickListener(evt -> {
+        	if(sortButton.getIcon().equals(VaadinIcons.ARROW_DOWN)){
+        		selectedSortOrder=sortByNameDesc;
+        		sortButton.setIcon(VaadinIcons.ARROW_UP);
+        	}else {
+        		selectedSortOrder=sortByNameAsc;
+        		sortButton.setIcon(VaadinIcons.ARROW_DOWN);
+        	}
+        	initData();
+        });		
+        
+        helpButton.addClickListener(evt -> {
+        	if (helpWindow.getParent() == null) {
+        		UI.getCurrent().addWindow(helpWindow);
+        	}
+        	else {
+        		UI.getCurrent().removeWindow(helpWindow);
+        	}
+        });
+	}
+
 
     private void initData() {
         projectsLayout.removeAllComponents();
         projectsLayout.addComponent(new CreateProjectCard(projectManager, eventBus));
-        projectsLayout.addComponent(joinProjectCardProvider.get());
+        projectsLayout.addComponent(new JoinProjectCard(eventBus));
+        
         try {
 	        projectManager.getProjectReferences()
 	        .stream()
@@ -74,6 +98,8 @@ public class ProjectListView extends VerticalLayout {
     }
 
     protected void initComponents() {
+    	helpWindow = new ProjectManagerHelpWindow();
+    	
     	addStyleName("projectlist");
     	projectsLayout.addStyleNames("projectlist__list");
     	
@@ -84,24 +110,16 @@ public class ProjectListView extends VerticalLayout {
 
         Label title = new Label("Title");
 
-        IconButton sortButton = new IconButton(VaadinIcons.ARROW_DOWN);
-        
-        sortButton.addClickListener((evt) -> {
-        	if(sortButton.getIcon().equals(VaadinIcons.ARROW_DOWN)){
-        		selectedSortOrder=sortByNameDesc;
-        		sortButton.setIcon(VaadinIcons.ARROW_UP);
-        	}else {
-        		selectedSortOrder=sortByNameAsc;
-        		sortButton.setIcon(VaadinIcons.ARROW_DOWN);
-        	}
-        	initData();
-        });
-
+        sortButton = new IconButton(VaadinIcons.ARROW_DOWN);
         descriptionBar.addComponent(description);
         descriptionBar.setExpandRatio(description, 1f);
         descriptionBar.addComponent(title);
         descriptionBar.addComponent(sortButton);
         descriptionBar.setComponentAlignment(sortButton, Alignment.MIDDLE_RIGHT);
+        
+        helpButton = new IconButton(VaadinIcons.QUESTION_CIRCLE);
+        descriptionBar.addComponent(helpButton);
+        descriptionBar.setComponentAlignment(helpButton, Alignment.MIDDLE_RIGHT);
 
         descriptionBar.setWidth("100%");
 

@@ -23,9 +23,10 @@ import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.server.BootstrapFragmentResponse;
 import com.vaadin.server.BootstrapListener;
 import com.vaadin.server.BootstrapPageResponse;
@@ -47,7 +48,8 @@ import com.vaadin.server.VaadinSession;
 
 import de.catma.properties.CATMAPropertyKey;
 
-@Singleton
+@WebServlet(urlPatterns = "/*", name = "CatmaApplicationServlet", asyncSupported = true, loadOnStartup = 0)
+@VaadinServletConfiguration(ui = CatmaApplication.class, productionMode = false)
 public class CatmaApplicationServlet extends VaadinServlet implements SessionInitListener {
 	
 	public static final class DelegateQueryResultRequestHandler implements RequestHandler {

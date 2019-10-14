@@ -17379,8 +17379,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-align: center;
 }
 
-.catma .help-padding-fix {
-	padding-right: 10px;
+.catma .help-text {
+	white-space: normal;
+}
+
+.catma .label-with-word-wrap {
+	white-space: normal;
 }
 
 .catma span.v-button-wrap div.gwt-HTML span {
@@ -17547,8 +17551,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	outline: none;
 }
 
-.catma .tagger-trace-checkbox {
-	margin-top: 8px;
+.catma .tagger-trace-checkbox-selected {
+	background: #5a98a1;
+	color: white;
 }
 
 .catma .taginstanceinfo {
@@ -17621,6 +17626,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: white;
 	padding: 0.5em;
 	height: 56px;
+}
+
+.catma .header-home-button .v-icon {
+	font-size: medium;
 }
 
 .catma .header .v-button, .catma .header .button__icon {
@@ -18112,6 +18121,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .viz-max-panel-name {
 	border-bottom: none !important;
+}
+
+.catma input.viz-max-panel-name.v-textfield-viz-max-panel-name {
+	width: 100%;
+	text-align: center;
 }
 
 .catma .analyze-card-buttonbar {

@@ -1,13 +1,13 @@
 package de.catma.ui.module.dashboard;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.user.User;
 
 /**
  * Renders a new Project link styled as a card.
@@ -17,11 +17,13 @@ import de.catma.ui.layout.VerticalFlexLayout;
  */
 public class JoinProjectCard extends VerticalFlexLayout {
 
-	private final Provider<JoinProjectDialog> joinProjectProvider;
 	
-	@Inject
-	public JoinProjectCard(Provider<JoinProjectDialog> joinProjectProvider){
-        this.joinProjectProvider = joinProjectProvider;
+	private EventBus eventBus;
+	private User currentUser;
+
+	public JoinProjectCard(User currentUser, EventBus eventBus) {
+		this.currentUser = currentUser;
+		this.eventBus = eventBus;
         initComponents();
 	}
 
@@ -35,7 +37,7 @@ public class JoinProjectCard extends VerticalFlexLayout {
         newproject.addComponents(labelDesc);
 
         newproject.addLayoutClickListener(evt -> {
-        	joinProjectProvider.get().show();
+        	new JoinProjectDialog(currentUser, eventBus).show();
         });
         addComponent(newproject);
 

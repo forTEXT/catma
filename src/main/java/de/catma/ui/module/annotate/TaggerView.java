@@ -45,10 +45,10 @@ import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Slider;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -78,7 +78,6 @@ import de.catma.tag.Version;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
-import de.catma.ui.component.Slider;
 import de.catma.ui.component.tabbedview.ClosableTab;
 import de.catma.ui.component.tabbedview.TabCaptionChangeListener;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -110,7 +109,6 @@ public class TaggerView extends HorizontalLayout
 	private TagManager tagManager;
 	private int taggerID;
 	private Button btAnalyze;
-	private Button btHelp;
 	private Project project;
 	private PagerComponent pagerComponent;
 	private Slider linesPerPageSlider;
@@ -119,9 +117,8 @@ public class TaggerView extends HorizontalLayout
 	private int approxMaxLineLength;
 	private int maxPageLengthInLines = 30;
 	private int initialSplitterPositionInPixels = 785;
-	
-	private TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
-	private CheckBox cbTraceSelection;
+
+	private IconButton cbTraceSelection;
 	private Button btClearSearchHighlights;
 	private AnnotateResourcePanel resourcePanel;
 	private AnnotationPanel annotationPanel;
@@ -359,13 +356,17 @@ public class TaggerView extends HorizontalLayout
 				tagger.removeHighlights();
 			}
 		});
-		cbTraceSelection.addValueChangeListener(new ValueChangeListener<Boolean>() {
-			
-			@Override
-			public void valueChange(ValueChangeEvent<Boolean> event) {
-				Boolean traceSelection = event.getValue();
+		cbTraceSelection.addClickListener(clickEvent -> {
+				boolean traceSelection = (boolean) cbTraceSelection.getData();
+				traceSelection = !traceSelection;
+				cbTraceSelection.setData(traceSelection);
 				tagger.setTraceSelection(traceSelection);
-			}
+				if (traceSelection) {
+					cbTraceSelection.addStyleName("tagger-trace-checkbox-selected");
+				}
+				else {
+					cbTraceSelection.removeStyleName("tagger-trace-checkbox-selected");
+				}
 		});
 
 		btAnalyze.addClickListener(new ClickListener() {	
@@ -398,19 +399,6 @@ public class TaggerView extends HorizontalLayout
 					errorHandler.showAndLogError("Error showing the Document!", e);
 				}
 
-			}
-		});
-		
-		btHelp.addClickListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				
-				if(taggerHelpWindow.getParent() == null){
-					UI.getCurrent().addWindow(taggerHelpWindow);
-				} else {
-					UI.getCurrent().removeWindow(taggerHelpWindow);
-				}
-				
 			}
 		});
 		
@@ -555,9 +543,6 @@ public class TaggerView extends HorizontalLayout
 		taggerPanel.setSpacing(true);
 		taggerPanel.setMargin(new MarginInfo(true, true, true, false));
 
-		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE);
-		btHelp.addStyleName("help-button"); //$NON-NLS-1$
-		
 		boolean isRtl = sourceDocument == null?false: 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet().isRightToLeftWriting(); 
 
@@ -572,7 +557,7 @@ public class TaggerView extends HorizontalLayout
 		taggerPanel.setExpandRatio(tagger, 1.0f);
 		
 		HorizontalLayout actionPanel = new HorizontalLayout();
-		actionPanel.setSpacing(true);
+		actionPanel.setSpacing(false);
 		
 		taggerPanel.addComponent(actionPanel);
 		
@@ -584,29 +569,29 @@ public class TaggerView extends HorizontalLayout
 			}
 		});
 		
-		actionPanel.addComponent(btHelp);
 		
 		actionPanel.addComponent(pagerComponent);
-
-		btAnalyze = new Button("Analyze");
-		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
-		btAnalyze.setEnabled(project instanceof IndexedProject);
-		actionPanel.addComponent(btAnalyze);
 		
-		linesPerPageSlider =  new Slider(null, 1, 100, "% page size");
-		linesPerPageSlider.setWidth("150px"); //$NON-NLS-1$
+		linesPerPageSlider =  new Slider(1, 100, 0);
+		linesPerPageSlider.setWidth("100px"); //$NON-NLS-1$
 		actionPanel.addComponent(linesPerPageSlider);
 		
-		cbTraceSelection = new CheckBox();
+		cbTraceSelection = new IconButton(VaadinIcons.AREA_SELECT);
+		cbTraceSelection.setData(false); //state
+		
 		cbTraceSelection.setIcon(VaadinIcons.AREA_SELECT);
 		cbTraceSelection.setDescription("Allow multiple discontinous selections");
 		actionPanel.addComponent(cbTraceSelection);
-		cbTraceSelection.addStyleName("tagger-trace-checkbox"); //$NON-NLS-1$
 
 		btClearSearchHighlights = new IconButton(VaadinIcons.ERASER);
 		btClearSearchHighlights.setDescription("Clear all search highlights");
 		actionPanel.addComponent(btClearSearchHighlights);
 		
+		btAnalyze = new Button("Analyze");
+		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
+		btAnalyze.setEnabled(project instanceof IndexedProject);
+		actionPanel.addComponent(btAnalyze);
+
 		rightSplitPanel = new VerticalSplitPanel();
 		rightSplitPanel.setSizeFull();
 		

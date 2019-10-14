@@ -1,11 +1,10 @@
 package de.catma.ui.module.dashboard;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
+import de.catma.rbac.IRBACManager;
 
 /**
  *
@@ -15,26 +14,20 @@ import de.catma.project.ProjectManager;
  */
 public class DashboardView extends VerticalLayout {
 
-	private final ProjectListView projects;
-
-	private final EventBus eventBus;
-
-	@Inject
     public DashboardView(
-    		@Assisted("projectManager")ProjectManager projectManager,
-    		ProjectListView projectList, 
-    		EventBus eventBus){ 
-        this.projects = projectList;
-        this.eventBus = eventBus;
-        this.eventBus.register(this);
-        initComponents();
+    		ProjectManager projectManager,
+    		IRBACManager rbacManager,
+    		EventBus eventBus) { 
+    	
+        initComponents(projectManager, eventBus, rbacManager);
     }
 
-    private void initComponents() {
+    private void initComponents(ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager) {
     	setSizeFull();
     	setMargin(false);
     	addStyleName("dashboard-view");
-        addComponent(projects);
+    	ProjectListView projectListView = new ProjectListView(projectManager, eventBus, rbacManager);
+        addComponent(projectListView);
     }
 
 }

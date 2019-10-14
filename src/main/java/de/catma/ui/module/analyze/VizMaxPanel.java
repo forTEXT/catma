@@ -76,8 +76,6 @@ public class VizMaxPanel extends VerticalLayout  {
 
 	private QueryResultPanel selectedResultsPanel;
 
-//	private HorizontalLayout buttonAndBoxPanel;
-
 	private TextField nameLabel;
 
 	public VizMaxPanel( 
@@ -161,14 +159,14 @@ public class VizMaxPanel extends VerticalLayout  {
 		
 		nameLabel = new TextField(null, name);
 		nameLabel.addStyleName("viz-max-panel-name");
-		nameLabel.setWidth("90%");
 		
 		titlePanel.addComponent(nameLabel);
-		titlePanel.setComponentAlignment(nameLabel, Alignment.TOP_LEFT);
+		titlePanel.setComponentAlignment(nameLabel, Alignment.TOP_CENTER);
+		titlePanel.setExpandRatio(nameLabel, 1.f);
 		
 		btMinViz = new IconButton(VaadinIcons.COMPRESS_SQUARE);
 		titlePanel.addComponent(btMinViz);
-		titlePanel.setComponentAlignment(btMinViz, Alignment.TOP_RIGHT);
+		titlePanel.setComponentAlignment(btMinViz, Alignment.TOP_CENTER);
 		addComponent(titlePanel);
 		
 		mainContentSplitPanel = new HorizontalSplitPanel();
@@ -189,13 +187,6 @@ public class VizMaxPanel extends VerticalLayout  {
 		topLeftPanel.setMargin(new MarginInfo(false, false, false, false));
 		resultSelectionSplitPanel.addComponent(topLeftPanel);
 		
-//		buttonAndBoxPanel = new HorizontalLayout();
-//		buttonAndBoxPanel.setWidth("100%");
-//		buttonAndBoxPanel.setMargin(false);
-//		
-//		
-//		buttonAndBoxPanel.addComponent(btMinViz);
-		
 		queryResultBox = new ComboBox<QuerySelection>();
 		queryResultBox.setWidth("100%");
 		queryResultBox.setEmptySelectionCaption("Select a resultset");
@@ -204,11 +195,9 @@ public class VizMaxPanel extends VerticalLayout  {
 		queryResultBox.setItemCaptionGenerator(
 			querySelection -> querySelection.getSetting().getQueryId().toString());
 		
-//		buttonAndBoxPanel.addComponent(queryResultBox);
-//		buttonAndBoxPanel.setExpandRatio(queryResultBox, 1f);
+
 		// bottom left
 
-		
 		selectedResultsPanel = new QueryResultPanel(
 			project, kwicProviderCache, DisplaySetting.GROUPED_BY_PHRASE,
 			item -> handleItemRemoval(item));

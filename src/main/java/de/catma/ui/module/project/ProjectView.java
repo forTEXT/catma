@@ -24,7 +24,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.HierarchicalQuery;
@@ -75,7 +74,6 @@ import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
-import de.catma.ui.di.UIFactory;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.UploadDialog;
@@ -114,7 +112,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private final ErrorHandler errorHandler;
 	private final EventBus eventBus;
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
-	private final UIFactory uiFactory;
 	
     private TreeGrid<Resource> documentGrid;
     private ActionGridComponent<TreeGrid<Resource>> documentGridComponent;
@@ -132,15 +129,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private MenuItem miInvite;
 	private ProgressBar progressBar;
 
-	@Inject
     public ProjectView(
-    		UIFactory uiFactory, ProjectManager projectManager, 
+    		ProjectManager projectManager, 
     		EventBus eventBus) {
     	super("Project");
     	this.projectManager = projectManager;
         this.eventBus = eventBus;
     	this.errorHandler = (ErrorHandler)UI.getCurrent();
-    	this.uiFactory = uiFactory;
         initProjectListeners();
 
         initComponents();
@@ -762,9 +757,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			.filter(resource -> resource.hasWritePermission())
 			.collect(Collectors.toList());
 		
-		uiFactory.getProjectInvitationDialog(
+		new ProjectInvitationDialog(
         			project, 
-        			documentsWithWriteAccess).show();
+        			documentsWithWriteAccess,
+        			eventBus, 
+        			((CatmaApplication)UI.getCurrent()).getHazelCastService()).show();
 	}
 
 	private void handleCommitRequest() {

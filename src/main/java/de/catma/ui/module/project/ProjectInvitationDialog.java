@@ -14,8 +14,6 @@ import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
@@ -86,10 +84,9 @@ public class ProjectInvitationDialog extends Window {
     
 	private ProjectInvitation projectInvitation;
 
-	@Inject
 	public ProjectInvitationDialog(
-			@Assisted("project") Project project,
-			@Assisted("resources") List<DocumentResource> documentsForCollectionCreation,
+			Project project,
+			List<DocumentResource> documentsForCollectionCreation,
 			EventBus eventBus,
 			HazelCastService hazelcastService) {
 		
@@ -190,6 +187,15 @@ public class ProjectInvitationDialog extends Window {
 				}
 			}
 		}
+	}
+	
+	private void setInvitationSettingsEnabled(boolean enabled) {
+		cbOwnCollection.setEnabled(enabled);
+		if (cbOwnCollection.getValue()) {
+			documentGrid.setEnabled(enabled);
+		}
+		
+		roleBox.setEnabled(enabled);
 	}
 	
 	private void initComponents() {
@@ -308,6 +314,7 @@ public class ProjectInvitationDialog extends Window {
 			return;
 		}
 		
+		setInvitationSettingsEnabled(false);
 		progressIndicator.setIndeterminate(true);
 		progressIndicator.setVisible(true);
 		progressIndicator.setCaption("Invitation running, keep this dialog window open...");

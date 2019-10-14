@@ -109,7 +109,7 @@ public class AuthenticationDialog extends Window {
 			try {
 				
 				loginservice.login(tfUsername.getValue(), pfPassword.getValue());
-				Component mainView = initService.newEntryPage(loginservice, hazelCastService);
+				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				close();
@@ -175,8 +175,8 @@ public class AuthenticationDialog extends Window {
 
 	private void initComponents() {
 		setModal(true);
-		setWidth("25%");
-		setHeight("50%");
+		setWidth("50%");
+		setHeight("60%");
 		
 		VerticalLayout content = new VerticalLayout();
 		content.setSizeFull();

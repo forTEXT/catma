@@ -2,6 +2,7 @@ package de.catma.queryengine;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.regex.Pattern;
 
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
@@ -14,13 +15,13 @@ public class QueryId {
 	private QueryId(String query, String timestamp) {
 		this.query = query;
 		this.timestamp = LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_DATE_TIME);
-		this.name = query + " " + this.timestamp.format(DateTimeFormatter.ISO_LOCAL_TIME); 
+		this.name = query + " " + this.timestamp.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)); 
 	}
 	
 	public QueryId(String query) {
 		this.query = query;
 		this.timestamp = LocalDateTime.now();
-		this.name = query + " " + this.timestamp.format(DateTimeFormatter.ISO_LOCAL_TIME);
+		this.name = query + " " + this.timestamp.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM));
 	}
 	
 	public void setName(String name) {

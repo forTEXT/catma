@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
@@ -16,26 +14,23 @@ import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.ui.di.UIFactory;
+import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.ui.UIBackgroundService;
+import de.catma.ui.module.main.CatmaHeader;
+import de.catma.ui.module.main.MainView;
 import de.catma.ui.module.main.NotLoggedInMainView;
 
 public class Vaadin8InitializationService implements InitializationService {
 
-	private final Injector injector;
 	
 	private BackgroundService backgroundService;
 
-	@Inject
-	public Vaadin8InitializationService(Injector injector) {
-		this.injector = injector;
-	}
-	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@Override
 	public BackgroundService accuireBackgroundService() {
 		if(backgroundService == null) {
-			backgroundService = injector.getInstance(BackgroundService.class);
+			backgroundService = new UIBackgroundService(true);
 		}
 		return backgroundService;
 	}
@@ -77,8 +72,10 @@ public class Vaadin8InitializationService implements InitializationService {
 	}
 
 	@Override
-	@Inject
-	public Component newEntryPage(LoginService loginService, HazelCastService hazelcastService) throws IOException {
+	public Component newEntryPage(
+		EventBus eventBus,
+		LoginService loginService, HazelCastService hazelcastService) throws IOException {
+		
 		IRemoteGitManagerRestricted api = loginService.getAPI();
 
 		if(api != null ){
@@ -87,12 +84,16 @@ public class Vaadin8InitializationService implements InitializationService {
 					api,
 					(projectId) -> {}, //noop deletion handler
 					accuireBackgroundService(),
-					injector.getInstance(EventBus.class));
-
+					eventBus);
+			
 			hazelcastService.start();
-			return injector.getInstance(UIFactory.class).getMainview(projectManager);
+			return new MainView(
+					projectManager, 
+					new CatmaHeader(eventBus, loginService, new GitlabManagerPrivileged()), 
+					eventBus,
+					api);
 		} else {
-			return new NotLoggedInMainView(this, loginService, hazelcastService, injector.getInstance(EventBus.class));
+			return new NotLoggedInMainView(this, loginService, hazelcastService, eventBus);
 
 		}
 	}

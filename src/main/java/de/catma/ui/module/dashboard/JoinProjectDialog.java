@@ -5,7 +5,6 @@ import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.jsoniter.JsonIterator;
@@ -27,6 +26,7 @@ import com.vaadin.ui.Window;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.rbac.RBACRole;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
@@ -65,11 +65,11 @@ public class JoinProjectDialog extends Window {
 
 	private ProjectInvitation invitation;
 	
-	@Inject
-	public JoinProjectDialog(User currentUser, EventBus eventBus, HazelCastService hazelcastService) {
+	public JoinProjectDialog(User currentUser, EventBus eventBus) {
 		super("Join project");
 		this.currentUser = currentUser;
 		this.eventBus = eventBus;
+		HazelCastService hazelcastService = ((CatmaApplication)UI.getCurrent()).getHazelCastService();
 	    this.invitationTopic = 
 	    		hazelcastService.getHazelcastClient().getTopic(
 	    				HazelcastConfiguration.TopicName.PROJECT_INVITATION.name());
@@ -114,6 +114,8 @@ public class JoinProjectDialog extends Window {
 		content.setSizeFull();
 		
 		Label lDescription = new Label("Please enter your invitation code to find and join a Project");
+		lDescription.addStyleName("label-with-word-wrap");
+		
 		content.addComponent(lDescription);
 
 		tfCode = new TextField("Code");
@@ -187,8 +189,10 @@ public class JoinProjectDialog extends Window {
 					tfCode.setReadOnly(true);
 					tfName.setValue(invitation.getName());
 					tfName.setVisible(true);
+					taDescription.setReadOnly(false);
 					taDescription.setValue(invitation.getDescription() == null? "": invitation.getDescription());
 					taDescription.setVisible(true);
+					taDescription.setReadOnly(true);
 					cbRole.setValue(RBACRole.forValue(invitation.getDefaultRole()));
 					cbRole.setVisible(true);
 					btnJoin.setEnabled(true);
