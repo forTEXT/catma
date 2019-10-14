@@ -93,7 +93,7 @@ public class CreateUserDialog extends Window {
 
 		buttonPanel.setComponentAlignment(btnCancel, Alignment.BOTTOM_RIGHT);
 		buttonPanel.setComponentAlignment(btnCreate, Alignment.BOTTOM_RIGHT);
-		buttonPanel.setExpandRatio(btnCancel, 1f);
+		buttonPanel.setExpandRatio(btnCreate, 1f);
 		
 		btnCancel.addClickListener(evt -> { 
 			Notification.show("User creation aborted", Type.TRAY_NOTIFICATION);

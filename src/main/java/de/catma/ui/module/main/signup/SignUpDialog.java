@@ -170,7 +170,7 @@ public class SignUpDialog extends Window {
 		        email.setSubject("CATMA Activation");
 		        email.setMsg("In order to verify your account please visit the following link.\n"+qs.toString());
 		        email.addTo(user.getEmail(),user.getName());
-//		        email.send();
+		        email.send();
 
 		        logger.info("token URL is: "  + qs.toString());
 		        Notification.show("To complete your account please click the link that has been sent to your email",

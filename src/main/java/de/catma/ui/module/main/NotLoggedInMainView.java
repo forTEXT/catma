@@ -109,9 +109,11 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 				initService,
 				hazelCastService,
 				eventBus).show());
-		LabelButton btn_newsletter = new LabelButton("Newsletter");
+		Link newsLetterLink = new Link("Newsletter", new ExternalResource("https://catma.de/newsletter/"));
+		newsLetterLink.setTargetName("_blank");
+		newsLetterLink.addStyleName("button__label");
 
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout(btn_signup,btn_login,btn_newsletter);
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout(btn_signup,btn_login,newsLetterLink);
 		buttonPanel.addStyleName("home__content__btns");
 		buttonPanel.setJustifyContent(JustifyContent.CENTER);
 		contentPanel.addComponent(buttonPanel);

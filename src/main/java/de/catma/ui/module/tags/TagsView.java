@@ -146,17 +146,28 @@ public class TagsView extends HugeCard {
             		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
             		.findFirst()
             		.ifPresent(tagsetDataItem -> {
+            			TagDataItem oldItem = new TagDataItem(tag, tagsetDataItem.isEditable());
+            			String parentTagId = tag.getParentUuid();
+            			TagsetTreeItem parent = tagsetDataItem;
             			
-            			tagsetData.removeItem(new TagDataItem(tag, tagsetDataItem.isEditable()));
+            			if (!parentTagId.isEmpty()) {
+            				parent = new TagDataItem(
+            					tagset.getTagDefinition(parentTagId), tagsetDataItem.isEditable());
+            			}
+
+            			tagsetData.removeItem(oldItem);
+
             			TagDataItem tagDataItem = new TagDataItem(tag, tagsetDataItem.isEditable());
             			tagDataItem.setPropertiesExpanded(true);
-            			tagsetData.addItem(tagsetDataItem, tagDataItem);
+            			tagsetData.addItem(parent, tagDataItem);
+            			
+            			addTagSubTree(tagset, tag, tagDataItem);
+            			
             			//TODO: sort
-            			
-            			showExpandedProperties(tagDataItem);
-            			
+
             			tagsetDataProvider.refreshAll();
             			
+            			showExpandedProperties(tagDataItem);
             		});
 				}
 				
@@ -1032,7 +1043,7 @@ public class TagsView extends HugeCard {
 
 	private void addTagSubTree(
     		TagsetDefinition tagset, 
-    		TagDefinition tag, TagDataItem parentItem) {
+    		TagDefinition tag, TagsetTreeItem parentItem) {
         for (TagDefinition childDefinition : tagset.getDirectChildren(tag)) {
         	TagDataItem childItem = new TagDataItem(childDefinition, parentItem.isEditable());
             tagsetData.addItem(parentItem, childItem);
