@@ -2,7 +2,6 @@ package de.catma.ui.login;
 
 import java.io.IOException;
 
-import com.google.inject.Inject;
 import com.vaadin.server.VaadinSession;
 
 import de.catma.repository.git.GitUser;
@@ -24,7 +23,6 @@ public class GitlabLoginService implements LoginService {
 	
 	private final IRemoteGitManagerFactory iRemoteGitManagerFactory;
 		
-	@Inject
 	public GitlabLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory) {
 		this.iRemoteGitManagerFactory=iRemoteGitManagerFactory;
 	}

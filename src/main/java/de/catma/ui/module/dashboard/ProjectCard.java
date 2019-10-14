@@ -6,7 +6,6 @@ import java.util.Objects;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
@@ -48,7 +47,6 @@ public class ProjectCard extends VerticalFlexLayout  {
 	private Label descriptionLabel;
 	private Label nameLabel;
 
-	@Inject
     ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;

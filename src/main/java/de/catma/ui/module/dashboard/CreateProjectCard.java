@@ -3,7 +3,6 @@ package de.catma.ui.module.dashboard;
 import java.util.Objects;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 
@@ -24,7 +23,6 @@ public class CreateProjectCard extends VerticalFlexLayout {
 	private final ProjectManager projectManager;
 	private final EventBus eventBus;
 	
-	@Inject
 	public CreateProjectCard(ProjectManager projectManager, EventBus eventBus){
 		this.projectManager = Objects.requireNonNull(projectManager);
         this.eventBus = eventBus;

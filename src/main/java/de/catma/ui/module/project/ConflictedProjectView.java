@@ -6,11 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
-import de.catma.project.ProjectReference;
 import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
@@ -38,7 +36,6 @@ public class ConflictedProjectView extends HugeCard {
 	private TagsetConflict currentTagsetConflict;
 	private Iterator<TagConflict> tagConflictIterator;
 
-	@Inject
     public ConflictedProjectView(ConflictedProject conflictedProject, EventBus eventBus){
     	super("Resolve Project Conflicts");
     	this.conflictedProject = conflictedProject;

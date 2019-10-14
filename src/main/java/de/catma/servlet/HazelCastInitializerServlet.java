@@ -17,7 +17,7 @@ import de.catma.hazelcast.HazelcastConfiguration;
  * @author db
  *
  */
-@WebServlet(name = "HazelCast", urlPatterns = "/hazelcast", loadOnStartup = 3)
+@WebServlet(name = "HazelCast", urlPatterns = "/hazelcast", loadOnStartup = 2)
 public class HazelCastInitializerServlet extends HttpServlet{
 
 	private volatile HazelcastInstance hazalcastNode;

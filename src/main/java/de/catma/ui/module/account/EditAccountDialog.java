@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.shared.ui.ContentMode;
@@ -51,7 +50,6 @@ public class EditAccountDialog extends Window {
 
 	private PasswordField tfVerifyPassword;
 	
-	@Inject
 	public EditAccountDialog(IRemoteGitManagerPrivileged gitManagerPrivileged, 
 			LoginService loginService, EventBus eventBus) {
 		this.gitManagerPrivileged = gitManagerPrivileged;

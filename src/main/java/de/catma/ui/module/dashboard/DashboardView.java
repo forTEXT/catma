@@ -5,6 +5,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.rbac.IRBACManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 
 /**
  *
@@ -16,17 +17,18 @@ public class DashboardView extends VerticalLayout {
 
     public DashboardView(
     		ProjectManager projectManager,
-    		IRBACManager rbacManager,
+    		IRemoteGitManagerRestricted remoteGitManagerRestricted,
     		EventBus eventBus) { 
     	
-        initComponents(projectManager, eventBus, rbacManager);
+        initComponents(projectManager, eventBus, remoteGitManagerRestricted);
     }
 
-    private void initComponents(ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager) {
+    private void initComponents(ProjectManager projectManager, EventBus eventBus, IRemoteGitManagerRestricted remoteGitManagerRestricted) {
     	setSizeFull();
     	setMargin(false);
     	addStyleName("dashboard-view");
-    	ProjectListView projectListView = new ProjectListView(projectManager, eventBus, rbacManager);
+    	ProjectListView projectListView = 
+    			new ProjectListView(projectManager, eventBus, remoteGitManagerRestricted);
         addComponent(projectListView);
     }
 

@@ -11,6 +11,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.rbac.IRBACManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
@@ -74,7 +75,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	private TaggerManagerView taggerManagerView;
 	private AnalyzeManagerView analyzeManagerView;
 
-	private IRBACManager rbacManager;
+	private IRemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	
 	/**
@@ -85,11 +86,11 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	 */
     public MainView(ProjectManager projectManager, 
     		CatmaHeader catmaHeader, 
-    		EventBus eventBus, IRBACManager rbacManager){
+    		EventBus eventBus, IRemoteGitManagerRestricted remoteGitManagerRestricted){
         this.projectManager = projectManager;
         this.header = catmaHeader;
         this.eventBus = eventBus;
-        this.rbacManager = rbacManager;
+        this.remoteGitManagerRestricted = remoteGitManagerRestricted;
         this.navigation = new CatmaNav(eventBus);
         initComponents();
         eventBus.register(this);
@@ -147,7 +148,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
 		closeViews();
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
-			setContent(new DashboardView(projectManager, rbacManager, eventBus));
+			setContent(new DashboardView(projectManager, remoteGitManagerRestricted, eventBus));
 			viewSection.addStyleName("no-margin-view-section");
 			eventBus.post(new HeaderContextChangeEvent());
 			currentRoute = routeToDashboardEvent.getClass();

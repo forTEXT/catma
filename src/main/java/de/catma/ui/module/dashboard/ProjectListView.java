@@ -6,9 +6,6 @@ import java.util.Set;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.assistedinject.Assisted;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
@@ -18,7 +15,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.rbac.IRBACManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.layout.HorizontalFlexLayout;
@@ -34,7 +31,7 @@ public class ProjectListView extends VerticalLayout {
 	private final EventBus eventBus;
 	private final Comparator<ProjectReference> sortByNameAsc = (ref1,ref2) -> ref1.getName().compareTo(ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = (ref1,ref2) -> ref2.getName().compareTo(ref1.getName());
-	private final IRBACManager rbacManager;
+	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 	private final Set<String> deletedProjectIds;
 	private HorizontalFlexLayout projectsLayout = new HorizontalFlexLayout();
@@ -44,10 +41,10 @@ public class ProjectListView extends VerticalLayout {
 
     public ProjectListView(ProjectManager projectManager, 
     		EventBus eventBus, 
-    		IRBACManager rbacManager){ 
+    		IRemoteGitManagerRestricted remoteGitManagerRestricted){ 
         this.projectManager = projectManager;
         this.eventBus = eventBus;
-        this.rbacManager = rbacManager;
+        this.remoteGitManagerRestricted = remoteGitManagerRestricted;
         this.deletedProjectIds = new HashSet<String>();
         initComponents();
         initActions();
@@ -82,14 +79,14 @@ public class ProjectListView extends VerticalLayout {
     private void initData() {
         projectsLayout.removeAllComponents();
         projectsLayout.addComponent(new CreateProjectCard(projectManager, eventBus));
-        projectsLayout.addComponent(new JoinProjectCard(eventBus));
+        projectsLayout.addComponent(new JoinProjectCard(remoteGitManagerRestricted.getUser(), eventBus));
         
         try {
 	        projectManager.getProjectReferences()
 	        .stream()
 	        .filter(projectRef -> !deletedProjectIds.contains(projectRef.getProjectId())) // gitlab group removal is a background operation, we usually still get the removed Project immediately after removal
 	        .sorted(selectedSortOrder)
-	        .map(prj -> new ProjectCard(prj, projectManager, eventBus, rbacManager))
+	        .map(prj -> new ProjectCard(prj, projectManager, eventBus, remoteGitManagerRestricted))
 	        .forEach(projectsLayout::addComponent);
         }
         catch (Exception e) {
