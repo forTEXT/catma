@@ -83,6 +83,11 @@ public final class ProjectInvitation implements Serializable {
 		return createOwnCollection;
 	}
 
+	// needs to start with get... for json serialization 
+	public boolean getCreateOwnCollection() {
+		return createOwnCollection;
+	}
+	
 	public Set<String> getDocumentIds() {
 		return documentIds;
 	}

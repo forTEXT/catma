@@ -33,7 +33,7 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 	public EditMemberDialog(
 			RBACAssignmentFunction assignment,
 			Set<Member> members, SaveCancelListener<Set<RBACSubject>> saveCancelListener) {
-		super("Updates Members","Change the role of the selected Members", saveCancelListener);
+		super("Update Members","Change the role of the selected Members", saveCancelListener);
 		this.members = members;
 		this.assignment = assignment;
 		this.accesslevel = members.isEmpty() ?  RBACRole.REPORTER : members.iterator().next().getRole();

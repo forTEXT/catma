@@ -63,7 +63,6 @@ public class ResourcePermissionDialog extends Window {
 				+ " Permissions at project level are not listed below."
 				+ " If a member has a role with higher access level already assigned then it's not necessary to assign extra permissions.", ContentMode.HTML);
 		lDescription.setWidth("100%");
-		lDescription.addStyleNames("flexlayout");
 		
 		content.addComponent(lDescription);
 		

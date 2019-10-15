@@ -266,10 +266,26 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
 
 
-        MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem("Edit resource permissions", (click) -> {
-		        new ResourcePermissionView(
-		        		docResourceToReadableCollectionResourceMap,
-		        		this.project).show();
+        MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem(
+        		"View resource permissions", 
+        		click -> {
+        			@SuppressWarnings("unchecked")
+					TreeDataProvider<Resource> resourceDataProvider = 
+        					(TreeDataProvider<Resource>) documentGrid.getDataProvider();
+        			TreeData<Resource> resourceData = resourceDataProvider.getTreeData();
+        			if (!resourceData.getRootItems().isEmpty()) {
+	        			new ResourcePermissionView(
+	        				resourceData.getRootItems(),
+			        		docResourceToReadableCollectionResourceMap,
+			        		this.project)
+	        			.show();
+        			}
+        			else {
+        				Notification.show(
+        					"Info", 
+        					"You do not have any Documents yet, please add a Document first!", 
+        					Type.HUMANIZED_MESSAGE);
+        			}
 		        }
         );
         editResBtn.setEnabled(false);
@@ -311,11 +327,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		() -> importTagSetBtn.setEnabled(true))
         		);
         
-        //TODO:
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
-        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
+        //TODO:
+//        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
         
         tagsetGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
         	@Override
@@ -337,6 +353,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		});
         
         tagsetGrid.addItemClickListener(clickEvent -> handleTagsetClick(clickEvent));
+        
+        
 	}
 
 	private void handleTagsetClick(ItemClick<TagsetDefinition> itemClickEvent) {
@@ -739,9 +757,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
- 
-        miInvite = getMoreOptionsContextMenu().addItem(
-        	"Invite someone to the Project", click -> handleProjectInvitationRequest());
     }
 
     private void handleProjectInvitationRequest() {
@@ -893,6 +908,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         moreOptionsContextMenu.addItem("Edit Members", (click) -> handleEditMembers());
         moreOptionsContextMenu.addItem("Remove Members", (click) -> handleRemoveMembers());
+        
+        miInvite = moreOptionsContextMenu.addItem(
+        	"Invite someone to the Project", click -> handleProjectInvitationRequest());
         teamContent.addComponent(membersGridComponent);
         return teamContent;
     }
@@ -1044,24 +1062,32 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 		new DocumentResource(
                 			srcDoc, 
                 			project.getProjectId(), 
-                			project.hasPermission(project.getRoleForDocument(srcDoc.getUuid()), RBACPermission.DOCUMENT_WRITE));
+                			project.hasPermission(
+                					project.getRoleForDocument(srcDoc.getUuid()), 
+                					RBACPermission.DOCUMENT_WRITE));
                 
-                if(project.hasPermission(project.getRoleForDocument(srcDoc.getUuid()), RBACPermission.DOCUMENT_READ)) {
-	                treeData.addItem(null,docResource);
+                if(project.hasPermission(
+                		project.getRoleForDocument(srcDoc.getUuid()), 
+                		RBACPermission.DOCUMENT_READ)) {
+                	
+	                treeData.addItem(null, docResource);
 	                
 	                List<AnnotationCollectionReference> collections = 
 	                		srcDoc.getUserMarkupCollectionRefs();
 	                
 	            	List<Resource> readableCollectionResources = collections
             		.stream()
+            		.filter(collectionRef -> project.hasPermission(
+            				project.getRoleForCollection(
+            						collectionRef.getId()), RBACPermission.COLLECTION_READ))
             		.map(collectionRef -> 
-            			(Resource)new CollectionResource(
+            			new CollectionResource(
             				collectionRef, 
             				project.getProjectId(),
-            				project.hasPermission(project.getRoleForCollection(collectionRef.getId()), RBACPermission.COLLECTION_WRITE))
+            				project.hasPermission(
+            						project.getRoleForCollection(collectionRef.getId()), 
+            						RBACPermission.COLLECTION_WRITE))
             		)
-            		.filter(colRes -> project.hasPermission(
-            			project.getRoleForCollection(colRes.getResourceId()), RBACPermission.COLLECTION_READ))
             		.collect(Collectors.toList());
             		
                     
