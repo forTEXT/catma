@@ -513,7 +513,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						tagDefinition.getName(),
 						tagDefinition.getUuid(),
 						tagsetDefinition.getName(),
-						tagsetDefinition.getUuid()), true);
+						tagsetDefinition.getUuid()));
 		
 		graphProjectHandler.removePropertyDefinition(
 			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
@@ -1161,7 +1161,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					collectionCcommitMsgProvider.apply(collectionRef));
 			}
 			
-			gitProjectHandler.commitProject(projectCommitMsg, true);
+			gitProjectHandler.commitProject(projectCommitMsg);
 			
 			printStatus();
 			

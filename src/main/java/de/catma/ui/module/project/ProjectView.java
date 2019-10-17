@@ -104,6 +104,11 @@ import de.catma.util.IDGenerator;
  * @author db
  */
 public class ProjectView extends HugeCard implements CanReloadAll {
+	
+	private enum DocumentGridColumn {
+		NAME,
+		;
+	}
 
 	private ProjectManager projectManager;
     private ProjectReference projectReference;
@@ -343,7 +348,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         				if (t != null) {
 	        				String name = t.getName();
 	        				if (name != null) {
-	        					return name.startsWith(searchInput);
+	        					return name.toLowerCase().startsWith(searchInput.toLowerCase());
 	        				}
         				}
         				return false;
@@ -366,7 +371,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleSelectFilteredDocuments() {
-		documentGridComponent.setSelectionModeFixed(SelectionMode.MULTI);
+		documentGridComponent.setSelectionMode(SelectionMode.MULTI);
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<Resource> dataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
 		dataProvider.fetch(
@@ -495,13 +500,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleEditResources() {
 		final Set<Resource> selectedResources = documentGrid.getSelectedItems();
-		if ((selectedResources.size() != 1) 
-				&& !selectedResources.iterator().next().isCollection()) {
-			Notification.show("Info", "Please select a single entry first!", Type.HUMANIZED_MESSAGE); 
+		if (selectedResources.isEmpty()) {
+			Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE); 
 		}	
 		else {
 			final Resource resource = selectedResources.iterator().next();
-			
+			if (selectedResources.size() > 1) {
+				documentGridComponent.setSelectionMode(SelectionMode.SINGLE);
+			}
 			// TODO: add proper edit metadata dialog including document level annotations!
 			
 			if (resource.isCollection()) {
@@ -550,7 +556,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		if (!tagsets.isEmpty()) {
 			ConfirmDialog.show(
 					UI.getCurrent(), 
-					"Warnung", 
+					"Warning", 
 					"Are you sure you want to delete the selected Tagsets with all their contents?", 
 					"Delete",
 					"Cancel", 
@@ -840,6 +846,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
+        	.setId(DocumentGridColumn.NAME.name())
         	.setWidth(300);
         
         documentGrid
@@ -1036,7 +1043,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	
         	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
         	documentGrid.setDataProvider(resourceDataProvider);
-        	
+        	documentGrid.sort(DocumentGridColumn.NAME.name());
         	documentGrid.expand(resourceDataProvider.getTreeData().getRootItems());
         	
         	tagsetData = new ListDataProvider<>(project.getTagsets());
@@ -1161,27 +1168,32 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @param resourceGrid
      */
     private void handleDeleteResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-    	
-    	ConfirmDialog.show( 
-    		UI.getCurrent(), 
-    		"Info", 
-    		"Are you sure you want to delete the selected resources: "
-    		+ resourceGrid.getSelectedItems()
-    			.stream()
-    			.map(resource -> resource.getName())
-    			.collect(Collectors.joining(",")) //$NON-NLS-1$
-    		+ "?", 
-    		"Yes", 
-    		"Cancel", dlg -> {
-	            for (Resource resource: resourceGrid.getSelectedItems()) {
-	            	try {
-	            		resource.deleteFrom(project);
-	                } catch (Exception e) {
-	                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
-	                }
-	            }
-    		});
-
+    	if (!resourceGrid.getSelectedItems().isEmpty()) {
+	    	ConfirmDialog.show( 
+	    		UI.getCurrent(), 
+	    		"Info", 
+	    		"Are you sure you want to delete the selected resources: "
+	    		+ resourceGrid.getSelectedItems()
+	    			.stream()
+	    			.map(resource -> resource.getName())
+	    			.collect(Collectors.joining(",")) //$NON-NLS-1$
+	    		+ "?", 
+	    		"Yes", 
+	    		"Cancel", dlg -> {
+	    			if (dlg.isConfirmed()) {
+			            for (Resource resource: resourceGrid.getSelectedItems()) {
+			            	try {
+			            		resource.deleteFrom(project);
+			                } catch (Exception e) {
+			                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
+			                }
+			            }
+	    			}
+	    		});
+    	}
+    	else {
+    		Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE);
+    	}
     }
     
     private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
@@ -1243,23 +1255,25 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 	private SerializablePredicate<Object> createSearchFilter(String searchInput) {
 		@SuppressWarnings("unchecked")
-		TreeDataProvider<Resource> documentDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+		TreeDataProvider<Resource> documentDataProvider = 
+			(TreeDataProvider<Resource>) documentGrid.getDataProvider();
 		TreeData<Resource> documentData = documentDataProvider.getTreeData();
 		
 		return new SerializablePredicate<Object>() {
 			@Override
 			public boolean test(Object r) {
 				if (r instanceof CollectionResource) {
-					return r.toString().startsWith(searchInput);
+					return r.toString().toLowerCase().startsWith(searchInput.toLowerCase());
 				}
 				else {
-					if (r.toString().startsWith(searchInput)) {
+					if (r.toString().toLowerCase().startsWith(searchInput.toLowerCase())) {
 						return true;
 					}
 					else {
 						return documentData.getChildren((Resource)r)
 								.stream()
-								.filter(child -> child.toString().startsWith(searchInput))
+								.filter(child -> 
+									child.toString().toLowerCase().startsWith(searchInput.toLowerCase()))
 								.findAny()
 								.isPresent();
 					}

@@ -238,7 +238,6 @@ public class GitProjectManager implements ProjectManager {
 					null,
 					credentialsProvider,
 					true // init and update submodules
-					
 				);
 				
 			}

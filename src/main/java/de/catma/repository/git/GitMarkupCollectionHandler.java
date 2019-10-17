@@ -137,7 +137,7 @@ public class GitMarkupCollectionHandler {
 
 			File targetMarkupCollectionHeaderFilePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME,
 					markupCollectionId,
 					"header.json"
 			).toFile();
@@ -196,7 +196,7 @@ public class GitMarkupCollectionHandler {
 
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + markupCollectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -265,7 +265,7 @@ public class GitMarkupCollectionHandler {
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String markupCollectionSubmoduleRelDir = String.format(
-					"%s/%s", GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
+					"%s/%s", GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
 			);
 
 			File markupCollectionSubmoduleAbsPath = new File(
@@ -316,7 +316,7 @@ public class GitMarkupCollectionHandler {
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String markupCollectionSubmoduleRelDir = 
-					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + collectionId;
+					GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + collectionId;
 
 			File markupCollectionSubmoduleAbsPath = new File(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
@@ -419,7 +419,7 @@ public class GitMarkupCollectionHandler {
 
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -439,7 +439,7 @@ public class GitMarkupCollectionHandler {
 
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -489,7 +489,7 @@ public class GitMarkupCollectionHandler {
 
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -507,7 +507,7 @@ public class GitMarkupCollectionHandler {
 
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -525,7 +525,7 @@ public class GitMarkupCollectionHandler {
 
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -540,7 +540,7 @@ public class GitMarkupCollectionHandler {
 
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionRef.getId();
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -580,7 +580,7 @@ public class GitMarkupCollectionHandler {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -626,7 +626,7 @@ public class GitMarkupCollectionHandler {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -640,7 +640,7 @@ public class GitMarkupCollectionHandler {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			String collectionGitRepositoryName =
 					projectRootRepositoryName
-							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
@@ -656,7 +656,7 @@ public class GitMarkupCollectionHandler {
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String collectionSubmoduleRelDir = 
-					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + collectionId;
+					GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + collectionId;
 			
 			File collectionSubmoduleAbsPath = new File(
 					localGitRepoManager.getRepositoryWorkTree().toString(),

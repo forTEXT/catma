@@ -19,13 +19,8 @@ public interface Resource {
 	 */
 	String getResourceId();
 
-	
-	/**
-	 * 
-	 * @return the project identifier
-	 */
+
 	String getProjectId();
-	
 	
     String getName();
 

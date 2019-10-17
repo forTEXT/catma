@@ -215,6 +215,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		user.setUsername(identifier);
 		user.setName(name);
 		user.setIsAdmin(isAdmin);
+		user.setSkipConfirmation(true);
 		
 		if (provider != null) {
 			Identity identity = new Identity();

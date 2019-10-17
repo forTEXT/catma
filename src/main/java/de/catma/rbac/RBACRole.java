@@ -10,9 +10,9 @@ public enum RBACRole {
 
     NONE(0,"None"), 
     GUEST(10,"Student"), 
-    REPORTER(20,"Reporter"), 
+    REPORTER(20,"Observer"), 
     ASSISTANT(30,"Assistant"), 
-    MAINTAINER(40,"Maintainer"), 
+    MAINTAINER(40,"Partner"), 
     OWNER(50,"Owner");
 
     private final int accessLevel;

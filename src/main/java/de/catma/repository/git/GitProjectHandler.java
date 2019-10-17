@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -56,7 +57,7 @@ public class GitProjectHandler {
 	private Logger logger = Logger.getLogger(GitProjectHandler.class.getName());
 	
 	public static final String TAGSET_SUBMODULES_DIRECTORY_NAME = "tagsets";
-	public static final String MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
+	public static final String ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
 
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -224,7 +225,7 @@ public class GitProjectHandler {
 			// add the submodule
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME,
 					collectionId
 			).toFile();
 
@@ -408,11 +409,10 @@ public class GitProjectHandler {
 				.filter(path -> path.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME))
 				.map(path -> 
 					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-						 .resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)
 						 .resolve(path))
 				.collect(Collectors.toList());
 
-			localRepoManager.detach();	
+			localRepoManager.detach();
 			
 			GitSourceDocumentHandler gitSourceDocumentHandler = 
 				new GitSourceDocumentHandler(
@@ -422,16 +422,18 @@ public class GitProjectHandler {
 
 			for (Path sourceDocPath : paths) {
 				String sourceDocumentId = sourceDocPath.getFileName().toString();
-				try {
-					documents.add(gitSourceDocumentHandler.open(projectId, sourceDocumentId));
-				} catch (Exception e) {
-					logger.log(
-						Level.SEVERE,
-						String.format(
-							"error loading Document %1$s for project %2$s",
-							sourceDocPath,
-							projectId), 
-						e);					
+				if (hasPermission(getRoleForDocument(sourceDocumentId), RBACPermission.DOCUMENT_READ)) {
+					try {
+						documents.add(gitSourceDocumentHandler.open(projectId, sourceDocumentId));
+					} catch (Exception e) {
+						logger.log(
+							Level.SEVERE,
+							String.format(
+								"error loading Document %1$s for project %2$s",
+								sourceDocPath,
+								projectId), 
+							e);					
+					}
 				}
 			}
 		}
@@ -446,11 +448,8 @@ public class GitProjectHandler {
 		
 		return documents;
 	}
-	
-	//NEXT: - 
-	//      - deletion handler
-	//		- configurable smptp
 
+	
 	public List<AnnotationCollectionReference> getCollectionReferences() {
 		ArrayList<AnnotationCollectionReference> collectionReferences = new ArrayList<>();
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
@@ -462,10 +461,9 @@ public class GitProjectHandler {
 			
 				List<Path> paths = localRepoManager.getSubmodulePaths()
 					.stream()
-					.filter(path -> path.startsWith(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME))
+					.filter(path -> path.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME))
 					.map(path -> 
 						Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-							 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME)
 							 .resolve(path))
 					.collect(Collectors.toList());
 
@@ -512,7 +510,7 @@ public class GitProjectHandler {
 				 
 				Path collectionDirPath = 
 					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+					 .resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
 				 
 				if (!collectionDirPath.toFile().exists()) {
 					return collections;
@@ -520,10 +518,10 @@ public class GitProjectHandler {
 				
 				List<Path> paths = localRepoManager.getSubmodulePaths()
 						.stream()
-						.filter(path -> path.startsWith(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME))
+						.filter(path -> path.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME))
 						.map(path -> 
 							Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-								 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME)
+								 .resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)
 								 .resolve(path))
 						.collect(Collectors.toList());
 				localRepoManager.detach();
@@ -603,14 +601,14 @@ public class GitProjectHandler {
 		}	
 	}
 	
-	public String commitProject(String msg, boolean all) throws IOException{
+	public String commitProject(String msg) throws IOException{
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 			
-			return localGitRepoManager.commit(msg, remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(), all);
+			return localGitRepoManager.commitWithSubmodules(msg, remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail(), getReadableSubmodules(localGitRepoManager));
 		}
 	}
 
@@ -730,7 +728,7 @@ public class GitProjectHandler {
 			// remove the submodule only!!!
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME,
 					collectionId
 			).toFile();
 	
@@ -772,7 +770,7 @@ public class GitProjectHandler {
 
 	public void addCollectionToStaged(String collectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			Path relativePath = Paths.get(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionId);
+			Path relativePath = Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionId);
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
@@ -782,7 +780,7 @@ public class GitProjectHandler {
 	
 	public String addToStagedAndCommit(AnnotationCollectionReference collectionRef, String commitMsg) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			Path relativePath = Paths.get(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionRef.getId());
+			Path relativePath = Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionRef.getId());
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
@@ -848,7 +846,6 @@ public class GitProjectHandler {
 				.filter(path -> path.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME))
 				.map(path -> 
 					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-						 .resolve(TAGSET_SUBMODULES_DIRECTORY_NAME)
 						 .resolve(path))
 				.collect(Collectors.toList());			
 			 localRepoManager.detach();
@@ -923,10 +920,8 @@ public class GitProjectHandler {
 							localGitRepoManager, 
 							this.remoteGitServerManager,
 							this.credentialsProvider);
-
-			for (AnnotationCollectionReference collectionRef : getDocuments().stream()
-					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
-					.collect(Collectors.toList())) {
+			//TODO: better get collectionRefs from graph
+			for (AnnotationCollectionReference collectionRef : getCollectionReferences()) {
 				
 				if (collectionHandler.hasUncommittedChanges(projectId, collectionRef.getId())) {
 					return true;
@@ -936,7 +931,8 @@ public class GitProjectHandler {
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 			
-			return localGitRepoManager.hasUncommitedChanges();
+			return localGitRepoManager.hasUncommitedChangesWithSubmodules(
+					getReadableSubmodules(localGitRepoManager));
 		}
 	}
 
@@ -998,7 +994,7 @@ public class GitProjectHandler {
 					.resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
 			Path collectionDirPath = 
 					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
-					.resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+					.resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
 
 			Status projectStatus = localGitRepoManager.getStatus();
 			localGitRepoManager.detach();
@@ -1070,7 +1066,7 @@ public class GitProjectHandler {
 			 
 			Path collectionDirPath = 
 					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
-					.resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+					.resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
 
 			localGitRepoManager.detach();
 
@@ -1274,9 +1270,52 @@ public class GitProjectHandler {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-			localGitRepoManager.initAndUpdateSubmodules(credentialsProvider);
+			
+			localGitRepoManager.initAndUpdateSubmodules(credentialsProvider, getReadableSubmodules(localGitRepoManager));
 		}		
 		
+	}
+	
+	private Set<String> getReadableSubmodules(ILocalGitRepositoryManager localRepoManager) throws IOException {
+		Set<String> readableSubmodules = new HashSet<>();
+		
+			
+		List<String> relativeSubmodulePaths = localRepoManager.getSubmodulePaths();
+		
+		for (String relativeSubmodulePath : relativeSubmodulePaths) {
+			if (relativeSubmodulePath.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)) {
+				String documentId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					 .resolve(relativeSubmodulePath)
+					 .getFileName()
+					 .toString();
+				RBACRole resourceRole = rolesPerResource.get(documentId);
+				if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.DOCUMENT_READ)) {
+					readableSubmodules.add(relativeSubmodulePath);
+				}
+			}
+			else if (relativeSubmodulePath.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)) {
+				String collectionId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					 .resolve(relativeSubmodulePath)
+					 .getFileName()
+					 .toString();
+				RBACRole resourceRole = rolesPerResource.get(collectionId);
+				if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.COLLECTION_READ)) {
+					readableSubmodules.add(relativeSubmodulePath);
+				}
+			}
+			else if (relativeSubmodulePath.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
+				String collectionId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					 .resolve(relativeSubmodulePath)
+					 .getFileName()
+					 .toString();
+				RBACRole resourceRole = rolesPerResource.get(collectionId);
+				if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.TAGSET_READ)) {
+					readableSubmodules.add(relativeSubmodulePath);
+				}
+			}
+		}
+
+		return readableSubmodules;
 	}
 
 	public void removeStaleSubmoduleDirectories() throws Exception {
@@ -1287,7 +1326,7 @@ public class GitProjectHandler {
 
 			Path collectionDirPath = 
 				 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-				 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+				 .resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
 			 
 			if (collectionDirPath.toFile().exists()) {
 				List<Path> paths = Files
@@ -1297,7 +1336,7 @@ public class GitProjectHandler {
 				
 				for (Path collectionPath : paths) {
 					Path relCollectionPath = 
-						Paths.get(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionPath.getFileName().toString());
+						Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionPath.getFileName().toString());
 					String relCollectionPathUnix = FilenameUtils.separatorsToUnix(relCollectionPath.toString());
 					if (!validSubmodulePaths.contains(relCollectionPathUnix)) {
 						FileUtils.deleteDirectory(

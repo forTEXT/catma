@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
@@ -24,7 +26,9 @@ import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
+import org.eclipse.jgit.api.SubmoduleInitCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -235,11 +239,12 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			
 			if (initAndUpdateSubmodules) {
 				this.gitApi.submoduleInit().call();
-				SubmoduleUpdateCommand submoduleUpdateCommand = 
-					jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
 				
-				submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
-				submoduleUpdateCommand.call();
+//				SubmoduleUpdateCommand submoduleUpdateCommand = 
+//					jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+//				
+//				submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
+//				submoduleUpdateCommand.call();
 				
 			}
 		}
@@ -310,13 +315,13 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 		try {
 			List<String> paths = new ArrayList<>();
-			SubmoduleWalk submoduleWalk = SubmoduleWalk.forIndex(this.gitApi.getRepository());
-			
-			while (submoduleWalk.next()) {
-				paths.add(submoduleWalk.getModulesPath());
+			try (SubmoduleWalk submoduleWalk = SubmoduleWalk.forIndex(this.gitApi.getRepository())) {
+				while (submoduleWalk.next()) {
+					paths.add(submoduleWalk.getModulesPath());
+				}
+				
+				return paths;
 			}
-			
-			return paths;
 		}
 		catch (Exception e) {
 			throw new IOException(e);
@@ -518,6 +523,46 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		return this.commit(message, committerName, committerEmail, false);
 	}
 
+	@Override
+	public String commitWithSubmodules(
+			String message, String committerName, String committerEmail, Set<String> submodules) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `commit` on a detached instance");
+		}
+
+		try {
+			
+			StatusCommand statusCommand = gitApi.status();
+			for (String submodule : submodules) {
+				statusCommand.addPath(submodule);
+			}
+			
+			statusCommand.addPath(".");
+			
+			if (statusCommand.call().hasUncommittedChanges()) {
+				AddCommand addCommand = this.gitApi.add();
+				for (String submodule : submodules) {
+					addCommand
+					.addFilepattern(submodule);
+				}
+				addCommand.call();
+//				addCommand.addFilepattern(".").call();
+				
+				return this.gitApi
+					.commit()
+					.setMessage(message)
+					.setCommitter(committerName, committerEmail)
+					.call()
+					.getName();
+			}
+			else {
+				return getRevisionHash();
+			}
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to commit", e);
+		}
+	}
 	@Override
 	public String commit(String message, String committerName, String committerEmail, boolean all) throws IOException {
 		if (!isAttached()) {
@@ -774,6 +819,26 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IOException("Failed to check for uncommited changes", e);
 		}
 	}
+
+	@Override
+	public boolean hasUncommitedChangesWithSubmodules(Set<String> submodules) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `status` on a detached instance");
+		}
+		
+		try {
+			StatusCommand statusCommand = gitApi.status();
+			for (String submodule : submodules) {
+				statusCommand.addPath(submodule);
+			}
+			
+			statusCommand.addPath(".");
+			
+			return statusCommand.call().hasUncommittedChanges();
+		} catch (GitAPIException e) {
+			throw new IOException("Failed to check for uncommited changes", e);
+		}
+	}
 	
 	@Override
 	public boolean hasUntrackedChanges() throws IOException {
@@ -938,16 +1003,18 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public void initAndUpdateSubmodules(CredentialsProvider credentialsProvider) throws Exception {
+	public void initAndUpdateSubmodules(CredentialsProvider credentialsProvider, Set<String> submodules) throws Exception {
 		
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `initAndUpdateSubmodules` on a detached instance");
 		}
 
-		this.gitApi.submoduleInit().call();
+		SubmoduleInitCommand submoduleInitCommand = this.gitApi.submoduleInit();
+		submoduleInitCommand.call();
+		
 		SubmoduleUpdateCommand submoduleUpdateCommand = 
 			jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
-		
+		submodules.forEach(submodule -> submoduleUpdateCommand.addPath(submodule));
 		submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
 		submoduleUpdateCommand.call();
 		

@@ -101,8 +101,8 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		contentPanel.addComponent(new Image(null,logoResource));		
 		
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
-		LabelButton btn_login = new LabelButton("Login", event -> new AuthenticationDialog(
-				"Authentication",
+		LabelButton btn_login = new LabelButton("Sign in", event -> new AuthenticationDialog(
+				"Sign in",
 				CATMAPropertyKey.BaseURL.getValue(
 						CATMAPropertyKey.BaseURL.getDefaultValue()),
 				loginService,

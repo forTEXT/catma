@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
@@ -65,8 +66,11 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	String getRevisionHash(String submodule) throws IOException;
 
 	String commit(String message, String committerName, String committerEmail, boolean all) throws IOException;
+	String commitWithSubmodules(String message, String committerName, String committerEmail, Set<String> submodules)
+			throws IOException;
 
 	boolean hasUncommitedChanges() throws IOException;
+	boolean hasUncommitedChangesWithSubmodules(Set<String> submodules) throws IOException;
 
 	String addAllAndCommit(String commitMsg, String committerName, String committerEmail) throws IOException;
 
@@ -82,10 +86,11 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void resolveRootConflicts(CredentialsProvider credentialsProvider) throws IOException;
 
-	void initAndUpdateSubmodules(CredentialsProvider credentialsProvider) throws Exception;
+	void initAndUpdateSubmodules(CredentialsProvider credentialsProvider, Set<String> submodules) throws Exception;
 
 	List<String> getSubmodulePaths() throws IOException;
 
 	boolean hasRef(String branch) throws IOException;
+
 
 }

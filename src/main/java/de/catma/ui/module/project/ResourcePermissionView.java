@@ -2,6 +2,7 @@ package de.catma.ui.module.project;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -10,10 +11,15 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.vaadin.contextmenu.ContextMenu;
+import com.vaadin.data.Binder;
+import com.vaadin.data.Binder.Binding;
+import com.vaadin.data.StatusChangeEvent;
+import com.vaadin.data.StatusChangeListener;
 import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -30,7 +36,7 @@ import de.catma.user.Member;
 
 public class ResourcePermissionView extends Window {
 
-    private final ErrorHandler errorHandler;
+	private final ErrorHandler errorHandler;
 	private Grid<Resource> permissionGrid;
 	private ActionGridComponent<Grid<Resource>> permissionGridComponent;
 
@@ -75,6 +81,9 @@ public class ResourcePermissionView extends Window {
         permissionGrid.setRowHeight(45);
         permissionGrid.setHeaderVisible(true);
         
+        permissionGrid.getEditor().setEnabled(true);
+        permissionGrid.getEditor().setBuffered(false);
+        
         permissionGridComponent = 
     		new ActionGridComponent<Grid<Resource>> (
     			new Label("Resource specific permissions"),
@@ -92,11 +101,17 @@ public class ResourcePermissionView extends Window {
 	private void initActions(){
 		ContextMenu moreOptionsContextMenu = permissionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
+		permissionGrid.addItemClickListener(event -> {
+			if (!event.getMouseEventDetails().isDoubleClick()) {
+				
+			}
+		});
+		
 		moreOptionsContextMenu.addItem(
 				"Edit permission", 
-				(click) -> {
+				menuItem -> {
 					getSelectedResource().ifPresent(resource -> {
-//						permissionGrid.getEditor().editRow(permiss);
+//						permissionGrid.getEditor().editRow(click.get);
 						Notification.show("Info", "not yet implemented", Type.HUMANIZED_MESSAGE);
 						
 //						ResourcePermissionDialog rpd = new ResourcePermissionDialog(
@@ -110,7 +125,7 @@ public class ResourcePermissionView extends Window {
 					});
 				}	
 		);
-
+		
 	}
 
 	private void initData(
@@ -143,13 +158,18 @@ public class ResourcePermissionView extends Window {
     		}
     		
     		for (Member member : permissionMatrix.columnKeySet() ){
-    			permissionGrid.addColumn(resource -> {
+    			Column<Resource, String> memberColumn = permissionGrid.addColumn(resource -> {
     				RBACRole role = permissionMatrix.get(resource, member);
     				return role==null?"":role.getRoleName();
     			})
     			.setExpandRatio(1)
     			.setCaption(member.getName())
     			.setDescriptionGenerator(resource -> member.preciseName());
+    			
+    			// only reporter and lower can be upgraded for specific resources
+    			if (member.getRole().getAccessLevel() <= RBACRole.REPORTER.getAccessLevel()) {
+    				memberColumn.setEditorBinding(createRoleEditor(member));
+    			}
     		}
     		
 			permissionData = new ListDataProvider<>(permissionMatrix.rowKeySet());
@@ -161,7 +181,56 @@ public class ResourcePermissionView extends Window {
 		}
 	}
 	
-	public void show(){
+	private Binding<Resource, RBACRole> createRoleEditor(Member member) {
+		
+		final ComboBox<RBACRole> roleBox = new ComboBox<>();
+		Binder<Resource> binder = permissionGrid.getEditor().getBinder();
+		binder.addStatusChangeListener(new StatusChangeListener() {
+			
+			@Override
+			public void statusChange(StatusChangeEvent event) {
+				Resource resource = (Resource) event.getBinder().getBean();
+				Collection<RBACRole> availableRoles = new HashSet<RBACRole>();
+				if (resource != null) {
+					
+					RBACRole role = permissionMatrix.get(resource, member);
+					availableRoles.add(role);
+					RBACRole projectRole = member.getRole();
+					availableRoles.add(projectRole);
+					
+					if (projectRole.getAccessLevel() == RBACRole.REPORTER.getAccessLevel()) {
+						if (resource.isCollection()) { 
+							availableRoles.add(RBACRole.ASSISTANT);
+						}
+					}
+					else if (projectRole.getAccessLevel() == RBACRole.GUEST.getAccessLevel()) {
+						availableRoles.add(RBACRole.REPORTER);
+						if (resource.isCollection()) {
+							availableRoles.add(RBACRole.ASSISTANT);
+						}
+					}
+				}
+				roleBox.setItems(availableRoles);
+			}
+		});
+		return binder.bind(
+				roleBox, 
+				resource -> permissionMatrix.get(resource, member),
+				(resource, role) -> handleRoleChange(resource, member, role));
+	}
+
+
+	private void handleRoleChange(Resource resource, Member member, RBACRole role) {
+		try {
+			project.assignOnResource(member, role, resource.getResourceId());
+			permissionMatrix.put(resource, member, role);
+		} catch (IOException e) {
+			errorHandler.showAndLogError("Error changing permissions!", e);
+		}
+	}
+
+
+	public void show() {
 		UI.getCurrent().addWindow(this);
 	}
 	

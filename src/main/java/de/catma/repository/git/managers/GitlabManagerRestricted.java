@@ -303,14 +303,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	public String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project rootProject =projectApi.getProject(
+			Project rootProject = projectApi.getProject(
 				projectReference.getProjectId(), 
 				GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
 			
 			return GitlabUtils.rewriteGitLabServerUrl(rootProject.getHttpUrlToRepo());
 		}
 		catch (GitLabApiException e) {
-			throw new IOException("Failed to load Project's Root Repository Url", e);
+			throw new IOException(
+				"Failed to load Project's Root Repository URL: " 
+					+ GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()), e);
 		}
 	}
 	

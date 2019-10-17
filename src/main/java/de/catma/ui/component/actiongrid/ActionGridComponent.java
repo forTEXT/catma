@@ -26,13 +26,13 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
 		
 		public DefaultSearchFilter(String filterValue) {
 			super();
-			this.filterValue = filterValue;
+			this.filterValue = filterValue.toLowerCase();
 		}
 
 		@Override
 		public boolean test(Object arg) {
 			if (arg != null) {
-				return arg.toString().startsWith(filterValue);
+				return arg.toString().toLowerCase().startsWith(filterValue);
 			}
 			return false;
 		}
@@ -47,14 +47,14 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
 
 		public HierarchicalSearchFilter(String filterValue, HierarchicalDataProvider<Object, Object> dataProvider) {
 			super();
-			this.filterValue = filterValue;
+			this.filterValue = filterValue.toLowerCase();
 			this.dataProvider = dataProvider;
 		}
 
 		@Override
 		public boolean test(Object arg) {
 			if (arg != null) {
-				if (arg.toString().startsWith(filterValue)) {
+				if (arg.toString().toLowerCase().startsWith(filterValue)) {
 					return true;
 				}
 				Set<Object> children = 

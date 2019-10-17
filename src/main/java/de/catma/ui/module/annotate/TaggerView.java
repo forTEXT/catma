@@ -576,10 +576,9 @@ public class TaggerView extends HorizontalLayout
 		linesPerPageSlider.setWidth("100px"); //$NON-NLS-1$
 		actionPanel.addComponent(linesPerPageSlider);
 		
-		cbTraceSelection = new IconButton(VaadinIcons.AREA_SELECT);
+		cbTraceSelection = new IconButton(VaadinIcons.TWIN_COL_SELECT);
 		cbTraceSelection.setData(false); //state
 		
-		cbTraceSelection.setIcon(VaadinIcons.AREA_SELECT);
 		cbTraceSelection.setDescription("Allow multiple discontinous selections");
 		actionPanel.addComponent(cbTraceSelection);
 

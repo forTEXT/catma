@@ -10,7 +10,7 @@ final class TagsetSearchFilterProvider implements SerializablePredicate<TagsetTr
 
 	public TagsetSearchFilterProvider(String searchInput, TreeData<TagsetTreeItem> tagsetData) {
 		super();
-		this.searchInput = searchInput;
+		this.searchInput = searchInput.toLowerCase();
 		this.tagsetData = tagsetData;
 	}
 
@@ -22,7 +22,7 @@ final class TagsetSearchFilterProvider implements SerializablePredicate<TagsetTr
 	private boolean testTagsetTreeItem(TagsetTreeItem t) {
 		String strValue = t.toString();
 		
-		if (strValue != null && strValue.startsWith(searchInput)) {
+		if (strValue != null && strValue.toLowerCase().startsWith(searchInput)) {
 			return true;
 		}
 
