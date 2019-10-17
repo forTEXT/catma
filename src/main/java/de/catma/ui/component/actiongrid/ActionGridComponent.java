@@ -45,7 +45,9 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
 		private HierarchicalDataProvider<Object, Object> dataProvider;
 		
 
-		public HierarchicalSearchFilter(String filterValue, HierarchicalDataProvider<Object, Object> dataProvider) {
+		public HierarchicalSearchFilter(
+				String filterValue, 
+				HierarchicalDataProvider<Object, Object> dataProvider) {
 			super();
 			this.filterValue = filterValue.toLowerCase();
 			this.dataProvider = dataProvider;

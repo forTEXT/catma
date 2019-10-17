@@ -91,7 +91,8 @@ public class DocumentResource implements Resource {
 
 	@Override
 	public String getPermissionIcon() {
-		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
+		return null; // documents aren't editable yet
+		//return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
 	}
 	
 	@Override

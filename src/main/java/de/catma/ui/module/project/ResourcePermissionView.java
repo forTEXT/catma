@@ -4,50 +4,50 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
-import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.Binder;
 import com.vaadin.data.Binder.Binding;
 import com.vaadin.data.StatusChangeEvent;
 import com.vaadin.data.StatusChangeListener;
-import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.server.SerializablePredicate;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.Project;
 import de.catma.rbac.RBACRole;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.Member;
 
 public class ResourcePermissionView extends Window {
 
 	private final ErrorHandler errorHandler;
-	private Grid<Resource> permissionGrid;
-	private ActionGridComponent<Grid<Resource>> permissionGridComponent;
+	private TreeGrid<Resource> permissionGrid;
+	private ActionGridComponent<TreeGrid<Resource>> permissionGridComponent;
 
 	private final Table<Resource,Member,RBACRole> permissionMatrix = HashBasedTable.create();
 	
-	private ListDataProvider<Resource> permissionData;
+	private TreeDataProvider<Resource> permissionDataProvider;
 	private Project project;
 
 	public ResourcePermissionView(
-			List<Resource> documentResources, 
-			Multimap<Resource,Resource> documentResourceToCollectionResources, 
+			TreeData<Resource> resourceData, 
+			Collection<TagsetDefinition> tagsets, 
 			Project project) {
 		
 		this.project = project;
@@ -55,7 +55,7 @@ public class ResourcePermissionView extends Window {
         
 		initComponents();
 		initActions();
-		initData(documentResources, documentResourceToCollectionResources);
+		initData(resourceData, tagsets);
 	}
 
 	
@@ -76,7 +76,7 @@ public class ResourcePermissionView extends Window {
 		
 		content.addComponent(lDescription);
 		
-		permissionGrid = new Grid<>();
+		permissionGrid = new TreeGrid<>();
         permissionGrid.setSizeFull();
         permissionGrid.setRowHeight(45);
         permissionGrid.setHeaderVisible(true);
@@ -85,12 +85,13 @@ public class ResourcePermissionView extends Window {
         permissionGrid.getEditor().setBuffered(false);
         
         permissionGridComponent = 
-    		new ActionGridComponent<Grid<Resource>> (
+    		new ActionGridComponent<TreeGrid<Resource>> (
     			new Label("Resource specific permissions"),
     			permissionGrid);
         permissionGridComponent.setSizeFull();
         permissionGridComponent.setSelectionModeFixed(SelectionMode.SINGLE);
         permissionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
+        permissionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
         
 		content.addComponent(permissionGridComponent);
 		content.setExpandRatio(permissionGridComponent, 1f);
@@ -98,63 +99,74 @@ public class ResourcePermissionView extends Window {
 		setContent(content);
 	}
 	
-	private void initActions(){
-		ContextMenu moreOptionsContextMenu = permissionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-
-		permissionGrid.addItemClickListener(event -> {
-			if (!event.getMouseEventDetails().isDoubleClick()) {
-				
-			}
-		});
-		
-		moreOptionsContextMenu.addItem(
-				"Edit permission", 
-				menuItem -> {
-					getSelectedResource().ifPresent(resource -> {
-//						permissionGrid.getEditor().editRow(click.get);
-						Notification.show("Info", "not yet implemented", Type.HUMANIZED_MESSAGE);
-						
-//						ResourcePermissionDialog rpd = new ResourcePermissionDialog(
-//								resource,
-//								project, 
-//								(evt) -> initData());
-//						rpd.addCloseListener(event -> initData());
-//						rpd.show();
-						
-						
-					});
-				}	
-		);
-		
+	private void initActions() {
+		permissionGridComponent.setSearchFilterProvider(
+			new SearchFilterProvider<Resource>() {
+				@Override
+				public SerializablePredicate<Resource> createSearchFilter(String searchInput) {
+					return new SerializablePredicate<Resource>() {
+						@Override
+						public boolean test(Resource t) {
+							if (t != null) {
+								if (t.getName().toLowerCase().startsWith(searchInput)) {
+									return true;
+								}
+								List<Resource> children = 
+									permissionDataProvider.getTreeData().getChildren(t);
+								
+								for (Resource child : children) {
+									if (test(child)) {
+										return true;
+									}
+								}
+							}
+							return false;						}
+					};
+				}
+			});
 	}
 
 	private void initData(
-			List<Resource> documentResources, 
-			Multimap<Resource, Resource> documentResourceToCollectionResources) {
+			TreeData<Resource> resourceData, 
+			Collection<TagsetDefinition> tagsets) {
     	try {
     		
     		permissionGrid.removeAllColumns();
 
     		permissionGrid
-			.addColumn(entry -> entry.getName() + " / " + entry.getClass().getSimpleName().substring(0, 1))
-			.setWidth(150)
-			.setCaption("Resource");
+			.addColumn(resource -> resource.getIcon(), new HtmlRenderer())
+			.setWidth(70);
     		
-    		for (Resource documentResource : documentResources) {
+    		permissionGrid
+			.addColumn(resource -> resource.getName())
+			.setWidth(250)
+			.setCaption("Resource");
+    		TreeData<Resource> items = new TreeData<Resource>();
+    		for (Resource documentResource : resourceData.getRootItems()) {
     			Set<Member> documentMembers = 
     					project.getResourceMembers(documentResource.getResourceId());
     			documentMembers.forEach(
     				member -> permissionMatrix.put(documentResource, member, member.getRole()));
+    			items.addItem(null, documentResource);
     			
     			Collection<Resource> collectionResources = 
-    				documentResourceToCollectionResources.get(documentResource);
+    				resourceData.getChildren(documentResource);
     			for (Resource collectionResource : collectionResources) {
     				Set<Member> collectionMembers = 
     						project.getResourceMembers(collectionResource.getResourceId());
     				collectionMembers.forEach(
     					member -> permissionMatrix.put(collectionResource, member, member.getRole()));
+    				items.addItem(documentResource, collectionResource);
     			}
     			
+    		}
+
+    		for (TagsetDefinition tagset : tagsets) {
+    			Set<Member> tagsetMembers = project.getResourceMembers(tagset.getUuid());
+    			TagsetResource tagsetResource = 
+    					new TagsetResource(tagset, project.getProjectId());
+    			tagsetMembers.forEach(member -> permissionMatrix.put(tagsetResource, member, member.getRole()));
+    			items.addItem(null, tagsetResource);
     		}
     		
     		for (Member member : permissionMatrix.columnKeySet() ){
@@ -162,7 +174,7 @@ public class ResourcePermissionView extends Window {
     				RBACRole role = permissionMatrix.get(resource, member);
     				return role==null?"":role.getRoleName();
     			})
-    			.setExpandRatio(1)
+    			.setWidth(120)
     			.setCaption(member.getName())
     			.setDescriptionGenerator(resource -> member.preciseName());
     			
@@ -170,11 +182,16 @@ public class ResourcePermissionView extends Window {
     			if (member.getRole().getAccessLevel() <= RBACRole.REPORTER.getAccessLevel()) {
     				memberColumn.setEditorBinding(createRoleEditor(member));
     			}
+    			else {
+    				memberColumn.setHidable(true);
+    				memberColumn.setHidden(true);
+    			}
     		}
     		
-			permissionData = new ListDataProvider<>(permissionMatrix.rowKeySet());
+			permissionDataProvider = new TreeDataProvider<>(items);
 			
-			permissionGrid.setDataProvider(permissionData);
+			permissionGrid.setDataProvider(permissionDataProvider);
+			permissionGrid.expand(resourceData.getRootItems());
 			
 		} catch (IOException e) {
 			errorHandler.showAndLogError("Failed to fetch permissions", e);
@@ -224,6 +241,7 @@ public class ResourcePermissionView extends Window {
 		try {
 			project.assignOnResource(member, role, resource.getResourceId());
 			permissionMatrix.put(resource, member, role);
+			permissionGrid.getEditor().cancel();
 		} catch (IOException e) {
 			errorHandler.showAndLogError("Error changing permissions!", e);
 		}
@@ -233,17 +251,4 @@ public class ResourcePermissionView extends Window {
 	public void show() {
 		UI.getCurrent().addWindow(this);
 	}
-	
-	
-	private Optional<Resource> getSelectedResource() {
-		Set<Resource> resources = permissionGrid.getSelectedItems();
-		if (!resources.isEmpty()) {
-			return Optional.of(resources.iterator().next());
-		}
-		else  {
-			Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE);
-			return Optional.empty();
-		}
-	}
-
 }

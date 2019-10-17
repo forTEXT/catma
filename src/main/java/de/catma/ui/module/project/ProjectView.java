@@ -6,9 +6,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.text.Collator;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -20,8 +22,6 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
@@ -109,6 +109,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		NAME,
 		;
 	}
+	
+	private enum TagsetGridColumn {
+		NAME,
+		;
+	}
 
 	private ProjectManager projectManager;
     private ProjectReference projectReference;
@@ -130,7 +135,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private PropertyChangeListener tagsetChangeListener;
 
     private PropertyChangeListener projectExceptionListener;
-	private Multimap<Resource, Resource> docResourceToReadableCollectionResourceMap = HashMultimap.create();
 	private MenuItem miInvite;
 	private ProgressBar progressBar;
 
@@ -210,7 +214,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
 			resourceDataProvider.refreshAll();
-			
+
 			if (isAttached()) {
 				documentGrid.expand(documentResource);
 				
@@ -271,36 +275,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
 
 
-        MenuItem editResBtn = documentsGridMoreOptionsContextMenu.addItem(
-        		"View resource permissions", 
-        		click -> {
-        			@SuppressWarnings("unchecked")
-					TreeDataProvider<Resource> resourceDataProvider = 
-        					(TreeDataProvider<Resource>) documentGrid.getDataProvider();
-        			TreeData<Resource> resourceData = resourceDataProvider.getTreeData();
-        			if (!resourceData.getRootItems().isEmpty()) {
-	        			new ResourcePermissionView(
-	        				resourceData.getRootItems(),
-			        		docResourceToReadableCollectionResourceMap,
-			        		this.project)
-	        			.show();
-        			}
-        			else {
-        				Notification.show(
-        					"Info", 
-        					"You do not have any Documents yet, please add a Document first!", 
-        					Type.HUMANIZED_MESSAGE);
-        			}
-		        }
-        );
-        editResBtn.setEnabled(false);
-        
         documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
         
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
-        		() -> editResBtn.setEnabled(true))
-        		);
         
         
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
@@ -842,7 +818,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				        
 		    return sb.toString();
 		};
-      
+		
         documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
@@ -871,6 +847,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         tagsetGrid.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer()).setWidth(100);
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
+			.setId(TagsetGridColumn.NAME.name())
 			.setCaption("Name")
 			.setWidth(300);
 	
@@ -893,7 +870,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px"); //$NON-NLS-1$
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-        teamGrid.addColumn(User::getName).setWidth(200).setDescriptionGenerator(User::preciseName);
+        teamGrid.addColumn(User::getName)
+        	.setWidth(200)
+        	.setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
+        	.setDescriptionGenerator(User::preciseName);
         teamGrid.addColumn(Member::getRole).setExpandRatio(1);
         
         Label membersAnnotations = new Label("Members");
@@ -918,6 +898,35 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         miInvite = moreOptionsContextMenu.addItem(
         	"Invite someone to the Project", click -> handleProjectInvitationRequest());
+        
+        MenuItem editResBtn = moreOptionsContextMenu.addItem(
+        		"View resource permissions", 
+        		click -> {
+        			@SuppressWarnings("unchecked")
+					TreeDataProvider<Resource> resourceDataProvider = 
+        					(TreeDataProvider<Resource>) documentGrid.getDataProvider();
+        			TreeData<Resource> resourceData = resourceDataProvider.getTreeData();
+        			if (!resourceData.getRootItems().isEmpty()) {
+	        			new ResourcePermissionView(
+	        				resourceData,
+			        		tagsetData.getItems(),
+			        		this.project)
+	        			.show();
+        			}
+        			else {
+        				Notification.show(
+        					"Info", 
+        					"You do not have any Documents yet, please add a Document first!", 
+        					Type.HUMANIZED_MESSAGE);
+        			}
+		        }
+        );
+        editResBtn.setEnabled(false);
+        rbacEnforcer.register(RBACConstraint.ifAuthorized(
+        		role -> (project.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
+        		() -> editResBtn.setEnabled(true))
+        		);
+        
         teamContent.addComponent(membersGridComponent);
         return teamContent;
     }
@@ -927,7 +936,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private void handleRemoveMembers() {
     	if (teamGrid.getSelectedItems().isEmpty()) {
-    		
+    		Notification.show("Info", "Please select one or more members first!", Type.HUMANIZED_MESSAGE);
     	}
     	else {
     		if (teamGrid.getSelectedItems()
@@ -955,8 +964,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    		new RemoveMemberDialog(
 	            		project::unassignFromProject,
 	            		teamGrid.getSelectedItems(),
-	            		(evt) -> eventBus.post(new MembersChangedEvent())
-	            		).show();
+	            		evt -> eventBus.post(new MembersChangedEvent())
+	            ).show();
     		}
     	}
 	}
@@ -1040,7 +1049,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private void initData() {
         try {
-        	
         	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
         	documentGrid.setDataProvider(resourceDataProvider);
         	documentGrid.sort(DocumentGridColumn.NAME.name());
@@ -1048,9 +1056,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	
         	tagsetData = new ListDataProvider<>(project.getTagsets());
         	tagsetGrid.setDataProvider(tagsetData);
-        	
         	ListDataProvider<Member> memberData = new ListDataProvider<>(project.getProjectMembers());
         	teamGrid.setDataProvider(memberData);
+        	tagsetGrid.sort(TagsetGridColumn.NAME.name());
 		} catch (Exception e) {
 			errorHandler.showAndLogError("error initializing data", e);
 		}
@@ -1058,12 +1066,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
         if(project != null){
-            docResourceToReadableCollectionResourceMap.clear();
 
             TreeData<Resource> treeData = new TreeData<>();
             Collection<SourceDocument> srcDocs = project.getSourceDocuments();
-            
+            Locale locale = Locale.getDefault();
             for(SourceDocument srcDoc : srcDocs) {
+            	locale = 
+            		srcDoc.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet().getLocale();
             	
                 DocumentResource docResource = 
                 		new DocumentResource(
@@ -1106,12 +1115,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                    );
 	                }
 	                
-	                docResourceToReadableCollectionResourceMap.putAll(
-	                		docResource, readableCollectionResources);
-
                 }
             }
-
+            Collator collator = Collator.getInstance(locale);
+            collator.setStrength(Collator.PRIMARY);
+            documentGrid
+            	.getColumn(DocumentGridColumn.NAME.name())
+            	.setComparator((r1, r2) -> collator.compare(r1.getName(), r2.getName()));
+            tagsetGrid.getColumn(TagsetGridColumn.NAME.name())
+            .setComparator((t1, t2) -> collator.compare(t1.getName(), t2.getName()));
+            
             return new TreeDataProvider<>(treeData);
         }
         return new TreeDataProvider<>(new TreeData<>());

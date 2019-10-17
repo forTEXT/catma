@@ -546,7 +546,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					.addFilepattern(submodule);
 				}
 				addCommand.call();
-//				addCommand.addFilepattern(".").call();
 				
 				return this.gitApi
 					.commit()
