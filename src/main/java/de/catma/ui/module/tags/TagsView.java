@@ -294,6 +294,9 @@ public class TagsView extends HugeCard {
 			}
 		});
 		
+		tagsetGrid.addExpandListener(expandEvent -> handleExpandCollapseTagset(expandEvent.getExpandedItem(), true));
+		tagsetGrid.addCollapseListener(collapseEvent -> handleExpandCollapseTagset(collapseEvent.getCollapsedItem(), false));
+
 	    ContextMenu addContextMenu = 
 	    		tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
 	    addContextMenu.addItem("Add Tagset", clickEvent -> handleAddTagsetRequest());
@@ -317,6 +320,10 @@ public class TagsView extends HugeCard {
 	}
 
 
+
+	private void handleExpandCollapseTagset(TagsetTreeItem tagsetTreeItem, boolean expanded) {
+		tagsetTreeItem.setTagsetExpanded(expanded);
+	}
 
 	private void handleTagsetTreeItemRemovalRequest(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
 		TagsetTreeItem item = rendererClickEvent.getItem();

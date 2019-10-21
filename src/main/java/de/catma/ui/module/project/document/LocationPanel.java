@@ -146,7 +146,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 				+ "their documents by third party tools like CATMA. "
 				+ "If you encounter any errors loading a file via URL please consider downloading the file to your local computer first.");
 		
-		urlInfoLabel.removeStyleName("v-label-undef-w");
+		urlInfoLabel.addStyleName("label-with-word-wrap");
 		
 		remoteLayout.addComponent(urlInfoLabel);
 		

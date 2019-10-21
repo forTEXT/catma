@@ -42,15 +42,16 @@ import org.apache.commons.io.FilenameUtils;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
-import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
+import com.vaadin.ui.TextArea;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -67,6 +68,7 @@ import de.catma.document.source.contenthandler.HttpProtocolHandler;
 import de.catma.document.source.contenthandler.ProtocolHandler;
 import de.catma.project.Project;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.dialog.HelpWindow;
 import de.catma.ui.legacy.wizard.DynamicWizardStep;
 import de.catma.ui.legacy.wizard.WizardStepListener;
 import de.catma.util.IDGenerator;
@@ -75,8 +77,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 	
 	private Grid<SourceDocumentResult> table;
 	private boolean onAdvance = false;
-	private Label taPreview;
-	private Panel previewPanel;
+	private TextArea taPreview;
 	private WizardStepListener wizardStepListener;
 	private AddSourceDocWizardResult wizardResult;
 	private Project repository;
@@ -175,7 +176,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 			
 			output.add(outputSourceDocumentResult);
 		}
-		else { //TODO: put this somewhere sensible
+		else { 
 			URI uri = inputTechInfoSet.getURI();
 			ZipFile zipFile = new ZipFile(uri.getPath());
 			Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
@@ -262,12 +263,15 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 
 		currentPreviewDocument = sdr.getSourceDocument();
 		try{
+			this.taPreview.setReadOnly(false);
+			
 			taPreview.setValue(
-					"<pre>" + currentPreviewDocument.getContent(new Range(0, 2000)) + "</pre>");			 //$NON-NLS-1$ //$NON-NLS-2$
+					currentPreviewDocument.getContent(new Range(0, 2000)));		
 		} catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error loading preview", e);
 		}		
+		this.taPreview.setReadOnly(true);
 	}
 	
 	private boolean loadSourceDocumentAndContent(SourceDocumentResult sdr) {
@@ -329,7 +333,7 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 	private void initComponents() {
 		setSpacing(true);
 		setSizeFull();
-		setMargin(true);
+		setMargin(new MarginInfo(true, false, false, true));
 
 		ComboBox<FileType> fileTypeEditor = new ComboBox<FileType>(null, FileType.getActiveFileTypes());
 		ComboBox<Charset> charsetEditor = new ComboBox<Charset>(null, Charset.availableCharsets().values());
@@ -383,19 +387,26 @@ class FileTypePanel extends HorizontalLayout implements DynamicWizardStep {
 		table.setSelectionMode(SelectionMode.SINGLE);
 		
 		addComponent(table);
+		setExpandRatio(table, 0.5f);
 		
 		VerticalLayout previewContent = new VerticalLayout();
 		previewContent.setMargin(true);
-		previewPanel = new Panel("Preview", previewContent);
-		previewPanel.getContent().setSizeUndefined();
-		previewPanel.setHeight("100%"); //$NON-NLS-1$
-		previewPanel.setStyleName("preview-panel"); //$NON-NLS-1$
+
+		this.taPreview = new TextArea("Preview");
+		this.taPreview.setReadOnly(true);
+		this.taPreview.setSizeFull();
 		
-		this.taPreview = new Label();
-		this.taPreview.setContentMode(ContentMode.HTML);
-		previewContent.addComponent(taPreview);
+		addComponent(this.taPreview);
+		setExpandRatio(this.taPreview, 0.5f);
 		
-		addComponent(previewPanel);
+		HelpWindow helpWindow = new HelpWindow(
+			"File Type", 
+			"<p>This step allows you to adjust the file type and the encoding which have been detected automatically by CATMA.</p><p>If the characters in the preview don't look right to you, double click on the Document row and try to find the correct type and encoding.");
+		
+		Button btHelp = helpWindow.createHelpWindowButton();
+		
+		addComponent(btHelp);
+		setComponentAlignment(btHelp, Alignment.TOP_RIGHT);
 	}
 	
 	private void initActions() {

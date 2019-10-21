@@ -1,15 +1,20 @@
 package de.catma.ui.module.tags;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.vaadin.icons.VaadinIcons;
 
+import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.util.Cleaner;
 
 class TagsetDataItem implements TagsetTreeItem {
 	
 	private TagsetDefinition tagset;
 	private boolean editable;
+	private boolean expanded = false;
 
 	public TagsetDataItem(TagsetDefinition tagset) {
 		this(tagset, false);
@@ -28,7 +33,20 @@ class TagsetDataItem implements TagsetTreeItem {
 
 	@Override
 	public String getName() {
-		return "";
+		if (expanded) {
+			return "";
+		}
+		StringBuilder tagSummeryBuilder = new StringBuilder();
+		if (!tagset.isEmpty()) {
+			List<TagDefinition> rootTags = tagset.getRootTagDefinitions();
+			tagSummeryBuilder.append(
+				rootTags.stream()
+				.map(tag -> Cleaner.clean(tag.getName()))
+				.collect(Collectors.joining(",")));
+			tagSummeryBuilder.append(
+				((rootTags.size() > 3)?"...":""));
+		}
+		return tagSummeryBuilder.toString();
 	}
 	
 	@Override
@@ -94,5 +112,10 @@ class TagsetDataItem implements TagsetTreeItem {
 		if (editable) {
 			tagsView.deleteTagsets(Collections.singleton(tagset));
 		}
+	}
+	
+	@Override
+	public void setTagsetExpanded(boolean expanded) {
+		this.expanded = expanded;
 	}
 }

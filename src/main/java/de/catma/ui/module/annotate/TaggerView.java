@@ -579,7 +579,7 @@ public class TaggerView extends HorizontalLayout
 		cbTraceSelection = new IconButton(VaadinIcons.TWIN_COL_SELECT);
 		cbTraceSelection.setData(false); //state
 		
-		cbTraceSelection.setDescription("Allow multiple discontinous selections");
+		cbTraceSelection.setDescription("Allow multiple discontinuous selections");
 		actionPanel.addComponent(cbTraceSelection);
 
 		btClearSearchHighlights = new IconButton(VaadinIcons.ERASER);

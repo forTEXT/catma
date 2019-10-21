@@ -454,6 +454,8 @@ public class AnnotationPanel extends VerticalLayout {
 		});
 		
 		tagsetGrid.addItemClickListener(clickEvent -> handleTagSelection(clickEvent, tagSelectionListener));
+		tagsetGrid.addCollapseListener(event -> event.getCollapsedItem().setTagsetExpanded(false));
+		tagsetGrid.addExpandListener(event -> event.getExpandedItem().setTagsetExpanded(true));
 		
         ContextMenu addContextMenu = 
         		tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();

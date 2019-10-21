@@ -1081,7 +1081,7 @@
  */
 
 .v-vaadin-version:after {
-	content: "8.8.1";
+	content: "8.9.1";
 }
 
 .v-widget {
@@ -6026,7 +6026,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-popup td.v-datefield-calendarpanel-month {
 	width: 116px;
+	cursor: default;
 	color: #5A98A1;
+}
+
+.catma .v-datefield-popup td.v-datefield-calendarpanel-month.header-month-year {
+	cursor: pointer;
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-year td.v-datefield-calendarpanel-month {
@@ -6207,7 +6212,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td.v-datefield-calendarpanel-month {
 	width: 116px;
+	cursor: default;
 	color: #5A98A1;
+}
+
+.catma td.v-datefield-calendarpanel-month.header-month-year {
+	cursor: pointer;
 }
 
 .catma .v-datefield-calendarpanel-year td.v-datefield-calendarpanel-month {
@@ -6858,7 +6868,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td.v-inline-datefield-calendarpanel-month {
 	width: 116px;
+	cursor: default;
 	color: #5A98A1;
+}
+
+.catma td.v-inline-datefield-calendarpanel-month.header-month-year {
+	cursor: pointer;
 }
 
 .catma .v-inline-datefield-calendarpanel-year td.v-inline-datefield-calendarpanel-month {
@@ -17323,8 +17338,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 10px;
 }
 
-.catma .v-panel-preview-panel {
-	margin-top: 24px;
+.catma .v-slot-sourcedoc-wizard-content-info-documents-margins {
+	margin: 10px;
 }
 
 .catma .analyzer-panel-padding {

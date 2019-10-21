@@ -22,4 +22,6 @@ interface TagsetTreeItem {
 	public default String generateStyle() { return null; }
 	public default String getPropertyValue() { return null; }
 
+	public default void setTagsetExpanded(boolean expanded) {};
+
 }

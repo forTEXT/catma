@@ -225,6 +225,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		propertyDefPanel.addComponent(propertyDefinitionGrid);
 		
 		possibleValuesArea = new TextArea("Proposed Values");
+		possibleValuesArea.setPlaceholder("You can add multiple comma separated values: value1, value2, ...");
 		possibleValuesArea.setSizeFull();
 		
 		propertyDefPanel.addComponent(possibleValuesArea);

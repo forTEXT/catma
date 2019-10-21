@@ -15,5 +15,7 @@ interface TagsetTreeItem {
 	public default String generateStyle() { return null; }
 	public default String getPropertyValue() { return null; }
 	boolean isEditable();
+	
+	public default void setTagsetExpanded(boolean expanded) {};
 
 }
