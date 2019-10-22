@@ -1,0 +1,151 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.8.json",
+  "name": "wordcloud for tag queries",
+  "autosize": {"type": "pad", "resize": true},
+  "data": [
+    {
+      "name": "queryresult",
+      "url": "CATMA_QUERY_URL"
+    },
+    {
+      "name": "tagCountPerDocument",
+      "source": "queryresult",
+      "transform": [
+        {
+          "type": "formula",
+          "as": "tagPathNice",
+          "expr": "substring(datum.tagPath,1,25)"
+        },
+        {
+          "type": "aggregate",
+          "groupby": [
+            "tagPath",
+            "sourceDocumentId",
+            "sourceDocumentTitle",
+            "tagColor",
+            "tagPathNice"
+          ],
+          "ops": ["count"],
+          "as": ["count"]
+        }
+      ]
+    },
+    {
+      "name": "selectedTag",
+      "source": "queryresult",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.tagPath===tagClick&& datum.sourceDocumentId===documentClick"
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "cellSize",
+      "value":8,
+      "bind": {"input": "range", "min": 5, "max": 20}
+    },
+    {
+      "name": "fontSizeMin",
+      "value": 12,
+      "bind": {"input": "range", "min": 1, "max": 15}
+    },
+    {
+      "name": "fontSizeMax",
+      "value": 28,
+      "bind": {"input": "range", "min": 16, "max": 45}
+    },
+    {
+      "name": "wordPadding",
+      "value": 3,
+      "bind": {"input": "range", "min": 1, "max": 10}
+    },
+    {"name": "child_width", "value": 100, "update": "40*cellSize"},
+    {"name": "child_height", "value": 100, "update": "40*cellSize"},
+    {"name": "tagClick"},
+    {"name": "documentClick"},
+    {"name": "userselection", "update": "data(\"selectedTag\")"}
+  ],
+  "layout": {"padding": 20, "columns": 2, "bounds": "flush"},
+  "marks": [
+    {
+      "name": "cell",
+      "type": "group",
+      "style": "cell",
+      "from": {
+        "facet": {
+          "name": "tagCloudPerDoc",
+          "data": "tagCountPerDocument",
+          "groupby": ["sourceDocumentTitle", "sourceDocumentId"]
+        }
+      },
+      "sort": {
+        "field": ["datum.sourceDocumentTitle"],
+        "as": "docTitle",
+        "order": ["ascending"]
+      },
+      "encode": {
+        "update": {
+          "width": {"signal": "child_width"},
+          "height": {"signal": "child_height"}
+        }
+      },
+      "title": {
+        "style": "guide-label",
+        "text": {"signal": "parent.sourceDocumentTitle"},
+         "fontSize" : 15
+      },
+      "marks": [
+        {
+          "type": "text",
+          "from": {"data": "tagCloudPerDoc"},
+          "encode": {
+            "enter": {
+              "text": {"field": "tagPathNice"},
+              "align": {"value": "center"},
+              "baseline": {"value": "alphabetic"}
+            },
+            "update": {
+              "fillOpacity": {"value": 1},
+              "stroke": {"field": "tagColor"}
+            },
+            "hover": {
+              "fillOpacity": {"value": 0.5},
+              "cursor": {"value": "pointer"}
+            }
+          },
+          "transform": [
+            {
+              "type": "wordcloud",
+              "size": [{"signal": "child_width"}, {"signal": "child_height"}],
+              "font": "Arial",
+              "fontWeight": "bold",
+              "fontSize": {"field": "datum.count"},
+              "fontSizeRange": [
+                {"signal": "fontSizeMin"},
+                {"signal": "fontSizeMax"}
+              ],
+              "padding": {"signal": "wordPadding"},
+              "spiral": "archimedean"
+            }
+          ]
+        }
+      ],
+      "signals": [
+        {
+          "name": "documentClick",
+          "on": [{"events": "click", "update": "datum.sourceDocumentId"}],
+          "push": "outer"
+        },
+        {
+          "name": "tagClick",
+          "on": [{"events": "click", "update": "datum.tagPath"}],
+          "push": "outer"
+        }
+      ]
+    }
+  ],
+  "config": {}
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.0.json",
+  "name": "wordcloud for phrase queries",
+  "autosize": {"type": "pad", "resize": true},
+  "data": [
+    {
+      "name": "queryresult",
+      "url": "CATMA_QUERY_URL"
+    },
+    {
+      "name": "phraseCountPerDocument",
+      "source": "queryresult",
+      "transform": [
+        {
+          "type": "formula",
+          "as": "shortenPhrase",
+          "expr": "substring(datum.phrase,0,25)"
+        },
+        {
+          "type": "aggregate",
+          "groupby": [
+            "phrase",
+            "sourceDocumentId",
+            "sourceDocumentTitle",
+            "shortenPhrase"
+          ],
+          "ops": ["count"],
+          "as": ["count"]
+        }
+      ]
+    },
+    {
+      "name": "selectedWord",
+      "source": "queryresult",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.phrase===wordClick&& datum.sourceDocumentId===documentClick"
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "cellSize",
+      "value": 8,
+      "bind": {"input": "range", "min": 5, "max": 20}
+    },
+    {
+      "name": "fontSizeMin",
+      "value": 8,
+      "bind": {"input": "range", "min": 1, "max": 10}
+    },
+    {
+      "name": "fontSizeMax",
+      "value": 20,
+      "bind": {"input": "range", "min": 11, "max": 45}
+    },
+    {
+      "name": "wordPadding",
+      "value": 1,
+      "bind": {"input": "range", "min": 1, "max": 10}
+    },
+    {"name": "child_width", "value": 100, "update": "40*cellSize"},
+    {"name": "child_height", "value": 100, "update": "40*cellSize"},
+    {"name": "wordClick"},
+    {"name": "documentClick"},
+    {"name": "userselection", "update": "data(\"selectedWord\")"}
+  ],
+  "layout": {"padding": 20, "columns": 2, "bounds": "flush"},
+  "marks": [
+    {
+      "name": "cell",
+      "type": "group",
+      "style": "cell",
+      "from": {
+        "facet": {
+          "name": "wordCloudPerDoc",
+          "data": "phraseCountPerDocument",
+          "groupby": ["sourceDocumentTitle", "sourceDocumentId"]
+        }
+      },
+      "sort": {
+        "field": ["datum.sourceDocumentTitle"],
+        "as": "docTitle",
+        "order": ["ascending"]
+      },
+      "encode": {
+        "update": {
+          "width": {"signal": "child_width"},
+          "height": {"signal": "child_height"}
+        }
+      },
+      "title": {
+        "style": "guide-label",
+        "text": {"signal": "parent.sourceDocumentTitle"},
+        "fontSize": 15
+      },
+      "marks": [
+        {
+          "type": "text",
+          "from": {"data": "wordCloudPerDoc"},
+          "encode": {
+            "enter": {
+              "text": {"field": "shortenPhrase"},
+              "align": {"value": "center"},
+              "baseline": {"value": "alphabetic"}
+            },
+            "update": {"fillOpacity": {"value": 1}},
+            "hover": {
+              "fillOpacity": {"value": 0.5},
+              "cursor": {"value": "pointer"}
+            }
+          },
+          "transform": [
+            {
+              "type": "wordcloud",
+              "size": [{"signal": "child_width"}, {"signal": "child_height"}],
+              "font": "Arial",
+              "fontSize": {"field": "datum.count"},
+              "fontWeight": "20",
+              "fontSizeRange": [
+                {"signal": "fontSizeMin"},
+                {"signal": "fontSizeMax"}
+              ],
+              "padding": {"signal": "wordPadding"},
+              "spiral": "archimedean"
+            }
+          ]
+        }
+      ],
+      "signals": [
+        {
+          "name": "documentClick",
+          "on": [{"events": "click", "update": "datum.sourceDocumentId"}],
+          "push": "outer"
+        },
+        {
+          "name": "wordClick",
+          "on": [{"events": "click", "update": "datum.phrase"}],
+          "push": "outer"
+        }
+      ]
+    }
+  ],
+  "config": {}
+}
