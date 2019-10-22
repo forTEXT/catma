@@ -31,6 +31,23 @@ import java.util.UUID;
 public class IDGenerator {
 	public final static String ID_PREFIX = "CATMA_";
 	
+	public final static String DOCUMENT_ID_PREFIX = "D_";
+	public final static String COLLECTION_ID_PREFIX = "C_";
+	public final static String TAGSET_ID_PREFIX = "T_";
+	
+	
+	public String generateDocumentId() {
+		return DOCUMENT_ID_PREFIX + UUID.randomUUID().toString().toUpperCase();
+	}
+
+	public String generateCollectionId() {
+		return COLLECTION_ID_PREFIX + UUID.randomUUID().toString().toUpperCase();
+	}
+	
+	public String generateTagsetId() {
+		return TAGSET_ID_PREFIX + UUID.randomUUID().toString().toUpperCase();
+	}
+
 	/**
 	 * @return a new CATMA UUID.
 	 */

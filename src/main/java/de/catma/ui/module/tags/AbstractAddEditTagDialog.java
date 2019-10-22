@@ -186,7 +186,8 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		propertyDefNamePanel.setMargin(new MarginInfo(true, true, false, true));
 		
 		tfPropertyDefName = new TextField("Add Properties");
-		tfPropertyDefName.setPlaceholder("Property Name");
+		tfPropertyDefName.setPlaceholder("Enter a Property name");
+		tfPropertyDefName.setWidth("250px");
 		propertyDefNamePanel.addComponent(tfPropertyDefName);
 		
 		btAddProperty = new Button("Add Property");
@@ -224,6 +225,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		propertyDefPanel.addComponent(propertyDefinitionGrid);
 		
 		possibleValuesArea = new TextArea("Proposed Values");
+		possibleValuesArea.setPlaceholder("You can add multiple comma separated values: value1, value2, ...");
 		possibleValuesArea.setSizeFull();
 		
 		propertyDefPanel.addComponent(possibleValuesArea);
@@ -247,7 +249,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 	
 	@Override
 	protected void layoutWindow() {
-		setHeight("60%");
+		setHeight("80%");
 		setWidth("60%");
 	}
 	

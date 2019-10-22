@@ -12,8 +12,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -32,8 +30,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.assistedinject.Assisted;
-import com.google.inject.assistedinject.AssistedInject;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.project.ProjectReference;
@@ -54,7 +50,7 @@ import elemental.json.Json;
 import elemental.json.JsonException;
 import elemental.json.JsonObject;
 
-public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGitUserInformation, GitlabManagerCommon {
+public class GitlabManagerRestricted extends GitlabManagerCommon implements IRemoteGitManagerRestricted, IGitUserInformation {
 
 	private final GitLabApi restrictedGitLabApi;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -65,13 +61,11 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 		       .expireAfterWrite(5, TimeUnit.SECONDS)
 		       .build();
 	
-	@AssistedInject
-	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("token") String userImpersonationToken) throws IOException {
+	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, String userImpersonationToken) throws IOException {
 		this(eventBus, backgroundService, new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
 	}
 	
-	@AssistedInject
-	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, @Assisted("username") String username, @Assisted("password") String password) throws IOException {
+	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, String username, String password) throws IOException {
 		this(eventBus, backgroundService, oauth2Login(CATMAPropertyKey.GitLabServerUrl.getValue(), username, password));
 	}
 
@@ -105,7 +99,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	}
 	
 	@Override
-	public CreateRepositoryResponse createRepository(String name, @Nullable String path)
+	public CreateRepositoryResponse createRepository(String name, String path)
 			throws IOException {
 		ProjectApi projectApi = this.restrictedGitLabApi.getProjectApi();
 
@@ -130,7 +124,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	
 	@Override
 	public CreateRepositoryResponse createRepository(
-			String name, @Nullable String path, String groupPath)
+			String name, String path, String groupPath)
 			throws IOException {
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
@@ -181,7 +175,7 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	
 
 	@Override
-	public String createGroup(String name, String path, @Nullable String description)
+	public String createGroup(String name, String path, String description)
 			throws IOException {
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 
@@ -239,28 +233,28 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 			groupApi.deleteGroup(group);
 		}
 		catch (GitLabApiException e) {
-			//TODO: Nasty workaround, but it's not fixed in gitlab4j yet.
-			// A switch to a new gitlab4j requires jaxb 2.3.0 to work. This requires jetty 9.4 to work, which is 
-			// broken in the current elcipse jetty plugin
-			if(e.getHttpStatus() == 202){  // Async operation indicated by HTTP ACCEPT 202. wait till finished
-				for(int i = 0;i < 10; i++ ){
-					logger.info("gitlab: async delete operation detected, waiting 150msec per round. round: " + i );
-					try {
-						Thread.sleep(150);
-						List<Group> res = groupApi.getGroups(path);
-						if(res.isEmpty()){
-							return;
-						}
-					} catch (GitLabApiException e1) {
-						continue; //NOOP
-					} catch (InterruptedException e1) {
-						continue; //NOOP
-					}
-				}
+//			//TODO: Nasty workaround, but it's not fixed in gitlab4j yet.
+//			// A switch to a new gitlab4j requires jaxb 2.3.0 to work. This requires jetty 9.4 to work, which is 
+//			// broken in the current elcipse jetty plugin
+//			if(e.getHttpStatus() == 202){  // Async operation indicated by HTTP ACCEPT 202. wait till finished
+//				for(int i = 0;i < 10; i++ ){
+//					logger.info("gitlab: async delete operation detected, waiting 150msec per round. round: " + i );
+//					try {
+//						Thread.sleep(150);
+//						List<Group> res = groupApi.getGroups(path);
+//						if(res.isEmpty()){
+//							return;
+//						}
+//					} catch (GitLabApiException e1) {
+//						continue; //NOOP
+//					} catch (InterruptedException e1) {
+//						continue; //NOOP
+//					}
+//				}
+//				throw new IOException("Failed to delete remote group", e);
+//			}else {
 				throw new IOException("Failed to delete remote group", e);
-			}else {
-				throw new IOException("Failed to delete remote group", e);
-			}
+//			}
 		}
 	}
 	
@@ -309,14 +303,16 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 	public String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project rootProject =projectApi.getProject(
+			Project rootProject = projectApi.getProject(
 				projectReference.getProjectId(), 
 				GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
 			
 			return GitlabUtils.rewriteGitLabServerUrl(rootProject.getHttpUrlToRepo());
 		}
 		catch (GitLabApiException e) {
-			throw new IOException("Failed to load Project's Root Repository Url", e);
+			throw new IOException(
+				"Failed to load Project's Root Repository URL: " 
+					+ GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()), e);
 		}
 	}
 	
@@ -389,7 +385,8 @@ public class GitlabManagerRestricted implements IRemoteGitManagerRestricted, IGi
 				Map<Integer,de.catma.user.Member> mergedList = new HashMap<>();
 				
 				for(de.catma.user.Member m : allMembers){
-					if(! mergedList.containsKey(m.getUserId()) || mergedList.get(m.getUserId()).getRole().value < m.getRole().value){
+					if(! mergedList.containsKey(m.getUserId()) 
+							|| mergedList.get(m.getUserId()).getRole().getAccessLevel() < m.getRole().getAccessLevel()){
 						mergedList.put(m.getUserId(), m);
 					}
 				}

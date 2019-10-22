@@ -54,8 +54,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
@@ -77,13 +75,17 @@ import de.catma.backgroundservice.ProgressCallable;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.ui.component.HTMLNotification;
+import de.catma.ui.di.IRemoteGitManagerFactory;
 import de.catma.ui.events.RegisterCloseableEvent;
 import de.catma.ui.events.TokenInvalidEvent;
 import de.catma.ui.events.TokenValidEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.login.GitlabLoginService;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
+import de.catma.ui.login.Vaadin8InitializationService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.signup.CreateUserDialog;
 import de.catma.ui.module.main.signup.SignupTokenManager;
@@ -103,7 +105,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
     private final ConcurrentHashMap<String,Object> _attributes = new ConcurrentHashMap<String, Object>();
 	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
 	 
-	private final Injector injector;
 	
 	// Bind later when UI is ready.
 	private LoginService loginservice;
@@ -111,18 +112,27 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	private EventBus eventBus;
 	private HazelCastService hazelCastService;
 	
-	@Inject
-	public CatmaApplication(Injector injector) throws IOException {
-		this.injector = injector;
-	}
-
-
 	@Override
 	protected void init(VaadinRequest request) {
-		eventBus = injector.getInstance(EventBus.class);
-		loginservice = injector.getInstance(LoginService.class);
-		initService = injector.getInstance(InitializationService.class);
-		hazelCastService = injector.getInstance(HazelCastService.class);
+		eventBus = new EventBus();
+		initService = new Vaadin8InitializationService();
+		
+		loginservice = new GitlabLoginService(new IRemoteGitManagerFactory() {
+			
+			@Override
+			public IRemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password)
+					throws IOException {
+				
+				return new GitlabManagerRestricted(eventBus, initService.accuireBackgroundService(), username, password);
+			}
+			
+			@Override
+			public IRemoteGitManagerRestricted createFromToken(String userImpersonationToken) throws IOException {
+				return new GitlabManagerRestricted(eventBus, initService.accuireBackgroundService(), userImpersonationToken);
+			}
+		});
+		
+		hazelCastService = new HazelCastService();
 		this.eventBus.register(this);
 
 		logger.info("Session: " + request.getWrappedSession().getId());
@@ -132,7 +142,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		Page.getCurrent().setTitle(Version.LATEST.toString());
 		
 		try {
-			Component component = initService.newEntryPage(loginservice, hazelCastService);
+			Component component = initService.newEntryPage(eventBus, loginservice, hazelCastService);
 			setContent(component);
 		} catch (IOException e) {
 			showAndLogError("error creating landing page",e);			
@@ -162,15 +172,15 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	private void handleRequestToken(VaadinRequest request){
 		if(signupTokenManager.parseUri(request.getPathInfo())) {
 			SignupTokenManager tokenManager = new SignupTokenManager();
-			tokenManager.handleVerify( request.getParameter("token"), eventBus);
+			tokenManager.handleVerify(request.getParameter("token"), eventBus);
 		}
 	}
 	private void handleRequestOauth(VaadinRequest request){
-		if(request.getParameter("code") != null && VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
+		if(request.getParameter("code") != null 
+				&& VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
 			handleOauth(request);
-			Component mainView;
 			try {
-				mainView = initService.newEntryPage(loginservice, hazelCastService);
+				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				getCurrent().getPage().pushState("/catma/");
@@ -413,4 +423,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		closeListener.add(new WeakReference<Closeable>(registerCloseableEvent.getCloseable()));
 	}
 	
+	public HazelCastService getHazelCastService() {
+		return hazelCastService;
+	}
 }

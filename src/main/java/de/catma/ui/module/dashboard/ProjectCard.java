@@ -6,7 +6,6 @@ import java.util.Objects;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
@@ -20,7 +19,7 @@ import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.ui.component.IconButton;
-import de.catma.ui.events.ResourcesChangedEvent;
+import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
@@ -48,7 +47,6 @@ public class ProjectCard extends VerticalFlexLayout  {
 	private Label descriptionLabel;
 	private Label nameLabel;
 
-	@Inject
     ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
@@ -98,22 +96,22 @@ public class ProjectCard extends VerticalFlexLayout  {
         descriptionBar.addComponents(btnRemove);
 
         btnRemove.addClickListener(
-                (event -> {
-                    ConfirmDialog.show(UI.getCurrent(),"Delete Project",
-                            "Do you want to delete Project: " + projectReference.getName() + "?",
-                            "OK",
-                            "Cancel"
-                    , (evt) -> {
-                        try {
-                            if(evt.isConfirmed()){
-                            	projectManager.delete(projectReference.getProjectId());
-                            }
-                        } catch (Exception e) {
-                            errorLogger.showAndLogError("can't delete Project " + projectReference.getName(), e);
+            (event -> {
+                ConfirmDialog.show(UI.getCurrent(),"Delete Project",
+                        "Do you want to delete the whole Project '" + projectReference.getName() + "'?",
+                        "OK",
+                        "Cancel"
+                , (evt) -> {
+                    try {
+                        if(evt.isConfirmed()){
+                        	projectManager.delete(projectReference.getProjectId());
+                        	eventBus.post(new ProjectChangedEvent(projectReference.getProjectId()));
                         }
-                        eventBus.post(new ResourcesChangedEvent());
-                    });
-                })
+                    } catch (Exception e) {
+                        errorLogger.showAndLogError("can't delete Project " + projectReference.getName(), e);
+                    }
+                });
+            })
         );
         
         IconButton btnEdit = new IconButton(VaadinIcons.PENCIL);
@@ -128,7 +126,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 							nameLabel.setValue(result.getName());
 						} catch (IOException e) {
 							errorLogger.showAndLogError("Failed to update Project", e);
-							eventBus.post(new ResourcesChangedEvent());
+							eventBus.post(new ProjectChangedEvent());
 						}
         			}).show();
         });
@@ -136,24 +134,24 @@ public class ProjectCard extends VerticalFlexLayout  {
         
         IconButton btnLeave = new IconButton(VaadinIcons.EXIT);
         btnLeave.addClickListener(
-        		   (event -> {
-                       ConfirmDialog.show(UI.getCurrent(),"Leave Project",
-                               "Do you want to leave Project: " + projectReference.getName() + "?",
-                               "OK",
-                               "Cancel"
-                       , (evt) -> {
-                           try {
-                               if(evt.isConfirmed()){
-                               	projectManager.leaveProject(projectReference.getProjectId());
-                               }
-                           } catch (Exception e) {
-                               errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
-                           }
-                           eventBus.post(new ResourcesChangedEvent());
-                       });
-                   })
-        		
-        		);
+		   (event -> {
+               ConfirmDialog.show(UI.getCurrent(),"Leave Project",
+                       "Do you want to leave '" + projectReference.getName() + "'?",
+                       "OK",
+                       "Cancel"
+               , (evt) -> {
+                   try {
+                       if(evt.isConfirmed()) {
+                    	   projectManager.leaveProject(projectReference.getProjectId());
+                       }
+                   } catch (Exception e) {
+                       errorLogger.showAndLogError("can't leave project " + projectReference.getName(), e);
+                   }
+                   eventBus.post(new ProjectChangedEvent());
+               });
+           })
+		
+		);
         
         descriptionBar.addComponent(btnLeave);
         

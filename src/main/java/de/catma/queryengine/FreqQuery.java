@@ -73,7 +73,7 @@ public class FreqQuery extends Query {
     @Override
     protected QueryResult execute() throws Exception {
     	QueryOptions options = getQueryOptions();
-    	return options.getIndexer().searchFreqency(
+    	return options.getIndexer().searchFrequency(
     			options.getQueryId(),
     			options.getRelevantSourceDocumentIDs(), operator1, freq1, operator2, freq2);
     }

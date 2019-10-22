@@ -95,22 +95,37 @@ public class TagsView extends HugeCard {
 					TagsetDefinition tagset = value.getFirst();
 					TagDefinition tag = value.getSecond();
 		            if (tag.getParentUuid().isEmpty()) {
-		            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
-		            	tagsetData.addItem(
-		            		tagsetItem, new TagDataItem(tag));
-		            	
-		            	tagsetGrid.expand(tagsetItem);
+		            	tagsetData.getRootItems()
+		            		.stream()
+		            		.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
+		            		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
+		            		.findFirst()
+		            		.ifPresent(tagsetDataItem -> {
+		            			tagsetData.addItem(
+		            					tagsetDataItem, new TagDataItem(tag, tagsetDataItem.isEditable()));
+		            			tagsetDataProvider.refreshAll();
+		            			
+		            			tagsetGrid.expand(tagsetDataItem);
+		            		});
 		            }
 		            else {
-		            	TagDefinition parentTag = 
+		            	tagsetData.getRootItems()
+	            		.stream()
+	            		.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
+	            		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
+	            		.findFirst()
+	            		.ifPresent(tagsetDataItem -> {		            	
+	            			TagDefinition parentTag = 
 		            		project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid());
-		            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag);
-		            	tagsetData.addItem(parentTagItem, new TagDataItem(tag));
 		            	
-		            	tagsetGrid.expand(parentTagItem);
+			            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag, tagsetDataItem.isEditable());
+			            	tagsetData.addItem(parentTagItem, new TagDataItem(tag, tagsetDataItem.isEditable()));
+	
+			            	tagsetDataProvider.refreshAll();
+	
+			            	tagsetGrid.expand(parentTagItem);
+	            		});
 		            }
-		            
-					tagsetDataProvider.refreshAll();
 		            
 				}
 				else if (newValue == null) { //removed
@@ -118,24 +133,42 @@ public class TagsView extends HugeCard {
 					
 					TagDefinition deletedTag = deleted.getSecond();
 					
-					tagsetData.removeItem(new TagDataItem(deletedTag));
+					tagsetData.removeItem(new TagDataItem(deletedTag, true));
 					tagsetDataProvider.refreshAll();
 					
 				}
 				else { //update
 					TagDefinition tag = (TagDefinition) newValue;
 					TagsetDefinition tagset = (TagsetDefinition)oldValue;
-	            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+	            	tagsetData.getRootItems()
+            		.stream()
+            		.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
+            		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
+            		.findFirst()
+            		.ifPresent(tagsetDataItem -> {
+            			TagDataItem oldItem = new TagDataItem(tag, tagsetDataItem.isEditable());
+            			String parentTagId = tag.getParentUuid();
+            			TagsetTreeItem parent = tagsetDataItem;
+            			
+            			if (!parentTagId.isEmpty()) {
+            				parent = new TagDataItem(
+            					tagset.getTagDefinition(parentTagId), tagsetDataItem.isEditable());
+            			}
 
-					tagsetData.removeItem(new TagDataItem(tag));
-					TagDataItem tagDataItem = new TagDataItem(tag);
-					tagDataItem.setPropertiesExpanded(true);
-					tagsetData.addItem(tagsetItem, tagDataItem);
-					//TODO: sort
-					
-					showExpandedProperties(tagDataItem);
-					
-					tagsetDataProvider.refreshAll();
+            			tagsetData.removeItem(oldItem);
+
+            			TagDataItem tagDataItem = new TagDataItem(tag, tagsetDataItem.isEditable());
+            			tagDataItem.setPropertiesExpanded(true);
+            			tagsetData.addItem(parent, tagDataItem);
+            			
+            			addTagSubTree(tagset, tag, tagDataItem);
+            			
+            			//TODO: sort
+
+            			tagsetDataProvider.refreshAll();
+            			
+            			showExpandedProperties(tagDataItem);
+            		});
 				}
 				
 			}
@@ -233,6 +266,17 @@ public class TagsView extends HugeCard {
 		.setCaption("Values")
 		.setSortable(false)
 		.setHidable(true)
+		.setWidth(300);
+		
+		ButtonRenderer<TagsetTreeItem> btRemovalRenderer = 
+			new ButtonRenderer<>(rendererClickEvent -> handleTagsetTreeItemRemovalRequest(rendererClickEvent));
+		btRemovalRenderer.setHtmlContentAllowed(true);
+		
+		tagsetGrid.addColumn(
+			tagsetTreeItem -> tagsetTreeItem.getRemoveIcon())
+		.setRenderer(btRemovalRenderer)
+		.setSortable(false)
+		.setHidable(false)
 		.setExpandRatio(1);
 		
 		tagsetGrid.setStyleGenerator(new StyleGenerator<TagsetTreeItem>() {
@@ -250,6 +294,9 @@ public class TagsView extends HugeCard {
 			}
 		});
 		
+		tagsetGrid.addExpandListener(expandEvent -> handleExpandCollapseTagset(expandEvent.getExpandedItem(), true));
+		tagsetGrid.addCollapseListener(collapseEvent -> handleExpandCollapseTagset(collapseEvent.getCollapsedItem(), false));
+
 	    ContextMenu addContextMenu = 
 	    		tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
 	    addContextMenu.addItem("Add Tagset", clickEvent -> handleAddTagsetRequest());
@@ -273,6 +320,17 @@ public class TagsView extends HugeCard {
 	}
 
 
+
+	private void handleExpandCollapseTagset(TagsetTreeItem tagsetTreeItem, boolean expanded) {
+		tagsetTreeItem.setTagsetExpanded(expanded);
+	}
+
+	private void handleTagsetTreeItemRemovalRequest(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
+		TagsetTreeItem item = rendererClickEvent.getItem();
+		if (item.isEditable()) {
+			item.handleRemovalRequest(this);
+		}
+	}
 
 	private void initComponents() {
         getHugeCardBar().setMoreOptionsButtonVisible(false);
@@ -357,8 +415,8 @@ public class TagsView extends HugeCard {
 		
 		for (String possibleValue : propertyDefinition.getPossibleValueList()) {
 			tagsetGrid.getTreeData().addItem(
-				new PropertyDataItem(propertyDefinition), 
-				new PossibleValueDataItem(possibleValue));
+				propertyDataItem, 
+				new PossibleValueDataItem(possibleValue, propertyDataItem.isEditable()));
 		}
 		
 		tagsetGrid.expand(propertyDataItem);
@@ -369,7 +427,7 @@ public class TagsView extends HugeCard {
 		
 		PropertyDataItem lastPropertyDataItem = null; 
 		for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
-			lastPropertyDataItem = new PropertyDataItem(propertyDefinition);
+			lastPropertyDataItem = new PropertyDataItem(propertyDefinition, tagDataItem.isEditable());
 			tagsetGrid.getTreeData().addItem(tagDataItem, lastPropertyDataItem);
 		}
 		
@@ -401,23 +459,13 @@ public class TagsView extends HugeCard {
 				.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
 				.collect(Collectors.toList());
 			if (selectedTagsets.isEmpty()) {
-				Notification.show("Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
+				Notification.show(
+					"Info", 
+					"Please select one or more Tagsets first!",
+					Type.HUMANIZED_MESSAGE);
 			}
 			else {
-	
-				for (TagsetDefinition tagset : selectedTagsets) {
-					ConfirmDialog.show(
-						UI.getCurrent(), 
-						"Warning", 
-						String.format("Are you sure you want to delete Tagset %1$s and all related data?", tagset.getName()),
-						"Yes",
-						"Cancel",
-						dlg -> {
-							if (dlg.isConfirmed()) {
-								project.getTagManager().removeTagsetDefinition(tagset);
-							}
-						});
-				}
+				deleteTagsets(selectedTagsets);
 			}
 		}
 		else {
@@ -426,6 +474,24 @@ public class TagsView extends HugeCard {
 					"You do not have the permission to delete Tagsets! "
 					+ "Please contact the Project maintainer for changes!",
 					Type.HUMANIZED_MESSAGE);			
+		}
+	}
+
+	void deleteTagsets(Collection<TagsetDefinition> selectedTagsets) {
+		for (TagsetDefinition tagset : selectedTagsets) {
+			ConfirmDialog.show(
+				UI.getCurrent(), 
+				"Warning", 
+				String.format(
+						"Are you sure you want to delete Tagset %1$s and all related data?", 
+						tagset.getName()),
+				"Yes",
+				"Cancel",
+				dlg -> {
+					if (dlg.isConfirmed()) {
+						project.getTagManager().removeTagsetDefinition(tagset);
+					}
+				});
 		}
 	}
 
@@ -440,7 +506,9 @@ public class TagsView extends HugeCard {
 			if (!selectedTagsets.isEmpty()) {
 				final TagsetDefinition tagset = selectedTagsets.iterator().next();
 		    	SingleTextInputDialog tagsetNameDlg = 
-		        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:", tagset.getName(),
+		        		new SingleTextInputDialog(
+		        				"Edit Tagset", 
+		        				"Please enter the new Tagset name:", tagset.getName(),
 		        				new SaveCancelListener<String>() {
 		    						@Override
 		    						public void savePressed(String result) {
@@ -490,26 +558,30 @@ public class TagsView extends HugeCard {
 					return;
 				}			
 			}
-			String msg = String.format(
+			deleteTags(targetTags);
+		}
+		else {
+			Notification.show("Info", "Please select one or more Tags first!", Type.TRAY_NOTIFICATION);
+		}
+	}
+
+	void deleteTags(List<TagDefinition> targetTags) {
+		String msg = String.format(
 				"Are you sure you want to delete the following Tags: %1$s?", 
 				targetTags
 				.stream()
 				.map(TagDefinition::getName)
 				.collect(Collectors.joining(",")));
 			
-			ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
-				if (dlg.isConfirmed()) {
-					for (TagDefinition tag : targetTags) {
-						TagsetDefinition tagset =
-								project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
-						project.getTagManager().removeTagDefinition(tagset, tag);
-					}
+		ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
+			if (dlg.isConfirmed()) {
+				for (TagDefinition tag : targetTags) {
+					TagsetDefinition tagset =
+							project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
+					project.getTagManager().removeTagDefinition(tagset, tag);
 				}
-			});
-		}
-		else {
-			Notification.show("Info", "Please select one or more Tags first!", Type.TRAY_NOTIFICATION);
-		}
+			}
+		});
 	}
 
 	private void handleEditTagRequest() {
@@ -641,7 +713,52 @@ public class TagsView extends HugeCard {
 			addPropertyDialog.show();
 		}
 	}
+	
+	void deletePropertyDataItem(PropertyDataItem propertyDataItem) {
+		TagDataItem tagDataItem = (TagDataItem) tagsetData.getParent(propertyDataItem);
+		TagsetTreeItem tagsetDataItemCandidate = tagsetData.getParent(tagDataItem);
+		while (!(tagsetDataItemCandidate instanceof TagsetDataItem)) {
+			tagsetDataItemCandidate = tagsetData.getParent(tagsetDataItemCandidate);
+			if (tagsetDataItemCandidate == null) {
+				break;
+			}
+		}
+		
+		TagsetDataItem tagsetDataItem = (TagsetDataItem) tagsetDataItemCandidate;
+		if (tagsetDataItem != null) {
+			String msg = String.format(
+					"Are you sure you want to delete the following Property: %1$s?", 
+					propertyDataItem.getPropertyDefinition().getName());
+				
+			ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
+				if (dlg.isConfirmed()) {
+					project.getTagManager().removeUserDefinedPropertyDefinition(
+							propertyDataItem.getPropertyDefinition(), tagDataItem.getTag(), tagsetDataItem.getTagset());
+				}
+			});
+		}
+	}
 
+	void deletePossibleValueDataItem(PossibleValueDataItem possibleValueDataItem) {
+		PropertyDataItem propertyDataItem = (PropertyDataItem) tagsetData.getParent(possibleValueDataItem);
+		TagDataItem tagDataItem = (TagDataItem) tagsetData.getParent(propertyDataItem);
+		String msg = String.format(
+				"Are you sure you want to delete the following Value: %1$s?", 
+				possibleValueDataItem.getPropertyValue());
+			
+		ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
+			if (dlg.isConfirmed()) {
+				ArrayList<String> values = 
+					new ArrayList<>(propertyDataItem.getPropertyDefinition().getPossibleValueList());
+				values.remove(possibleValueDataItem.getPropertyValue());
+				propertyDataItem.getPropertyDefinition().setPossibleValueList(values);
+				project.getTagManager().updateUserDefinedPropertyDefinition(
+						tagDataItem.getTag(), propertyDataItem.getPropertyDefinition());
+			}
+		});
+		
+	}
+	
 	private void handleSingleEditProperties(List<PropertyDefinition> editedPropertyDefs, TagDefinition tag) {
 		TagsetDefinition tagset = 
 				project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
@@ -662,13 +779,16 @@ public class TagsView extends HugeCard {
 						possiblyChangedPd.getUuid().equals(existingPropertyDef.getUuid()))
 					.findFirst()
 					.ifPresent(editedPropertyDef -> {
-						existingPropertyDef.setName(editedPropertyDef.getName());
-						existingPropertyDef.setPossibleValueList(
-							editedPropertyDef.getPossibleValueList());
+						if (!existingPropertyDef.getName().equals(editedPropertyDef.getName())
+								|| !existingPropertyDef.getPossibleValueList().equals(editedPropertyDef.getPossibleValueList())) {
+							existingPropertyDef.setName(editedPropertyDef.getName());
+							existingPropertyDef.setPossibleValueList(
+								editedPropertyDef.getPossibleValueList());
+							project.getTagManager().updateUserDefinedPropertyDefinition(
+									tag, existingPropertyDef);
+						}
 					});
 				
-				project.getTagManager().updateUserDefinedPropertyDefinition(
-					tag, existingPropertyDef);
 			}
 		}
 		
@@ -862,7 +982,9 @@ public class TagsView extends HugeCard {
             tagsetData = new TreeData<TagsetTreeItem>();
             
             for (TagsetDefinition tagset : tagsets) {
-            	TagsetDataItem tagsetItem = new TagsetDataItem(tagset);
+            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset, project.hasPermission(
+						project.getRoleForTagset(tagset.getUuid()), 
+						RBACPermission.TAGSET_WRITE));
             	tagsetData.addItem(null, tagsetItem);
             	addTags(tagsetItem, tagset);
             }
@@ -898,7 +1020,7 @@ public class TagsView extends HugeCard {
 	    							IDGenerator idGenerator = new IDGenerator();
 	    							project.getTagManager().addTagsetDefinition(
 	    								new TagsetDefinition(
-	    									idGenerator.generate(), result, new Version()));
+	    									idGenerator.generateTagsetId(), result, new Version()));
 	    						}
 	    					});
 	            	
@@ -914,12 +1036,12 @@ public class TagsView extends HugeCard {
 	}
 
 	private void addTags(
-			TagsetDataItem tagsetItem, 
+			TagsetTreeItem tagsetItem, 
 			TagsetDefinition tagset) {
 		
         for (TagDefinition tag : tagset) {
             if (tag.getParentUuid().isEmpty()) {
-            	TagDataItem tagItem =  new TagDataItem(tag);
+            	TagDataItem tagItem =  new TagDataItem(tag, tagsetItem.isEditable());
                 tagsetData.addItem(tagsetItem, tagItem);
                 addTagSubTree(tagset, tag, tagItem);
             }
@@ -928,9 +1050,9 @@ public class TagsView extends HugeCard {
 
 	private void addTagSubTree(
     		TagsetDefinition tagset, 
-    		TagDefinition tag, TagDataItem parentItem) {
+    		TagDefinition tag, TagsetTreeItem parentItem) {
         for (TagDefinition childDefinition : tagset.getDirectChildren(tag)) {
-        	TagDataItem childItem = new TagDataItem(childDefinition);
+        	TagDataItem childItem = new TagDataItem(childDefinition, parentItem.isEditable());
             tagsetData.addItem(parentItem, childItem);
             addTagSubTree(tagset, childDefinition, childItem);
         }
@@ -943,7 +1065,7 @@ public class TagsView extends HugeCard {
         
 		tagsetData.clear();
         for (TagsetDefinition tagset : tagsets) {
-        	TagsetDataItem tagsetItem = new TagsetDataItem(tagset);
+        	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
         	tagsetData.addItem(null, tagsetItem);
         	addTags(tagsetItem, tagset);
         }
@@ -951,5 +1073,9 @@ public class TagsView extends HugeCard {
         for (TagsetDefinition tagset : this.tagsets) {
         	expandTagsetDefinition(tagset);
         }
+	}
+
+	public void setSelectedTagset(TagsetDefinition tagset) {
+		this.resourcePanel.setSelectedTagset(tagset);
 	}	
 }

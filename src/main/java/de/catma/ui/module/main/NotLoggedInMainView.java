@@ -36,7 +36,11 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 	
 	private IconButton btHelp;
 
-	public NotLoggedInMainView(InitializationService initService, LoginService loginService, HazelCastService hazelCastService, EventBus eventBus) {
+	public NotLoggedInMainView(
+			InitializationService initService, 
+			LoginService loginService, 
+			HazelCastService hazelCastService, 
+			EventBus eventBus) {
 		this.initService = initService;
 		this.loginService = loginService;
 		this.hazelCastService = hazelCastService;
@@ -97,17 +101,19 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		contentPanel.addComponent(new Image(null,logoResource));		
 		
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
-		LabelButton btn_login = new LabelButton("Login", event -> new AuthenticationDialog(
-				"Authentication",
+		LabelButton btn_login = new LabelButton("Sign in", event -> new AuthenticationDialog(
+				"Sign in",
 				CATMAPropertyKey.BaseURL.getValue(
 						CATMAPropertyKey.BaseURL.getDefaultValue()),
 				loginService,
 				initService,
 				hazelCastService,
 				eventBus).show());
-		LabelButton btn_newsletter = new LabelButton("Newsletter");
+		Link newsLetterLink = new Link("Newsletter", new ExternalResource("https://catma.de/newsletter/"));
+		newsLetterLink.setTargetName("_blank");
+		newsLetterLink.addStyleName("button__label");
 
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout(btn_signup,btn_login,btn_newsletter);
+		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout(btn_signup,btn_login,newsLetterLink);
 		buttonPanel.addStyleName("home__content__btns");
 		buttonPanel.setJustifyContent(JustifyContent.CENTER);
 		contentPanel.addComponent(buttonPanel);

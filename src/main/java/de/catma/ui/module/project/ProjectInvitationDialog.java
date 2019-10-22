@@ -2,6 +2,7 @@ package de.catma.ui.module.project;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,45 +13,42 @@ import javax.cache.Cache;
 import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.jsoniter.output.JsonStream;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
-import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.project.Project;
-import de.catma.project.event.ChangeType;
-import de.catma.project.event.CollectionChangeEvent;
 import de.catma.rbac.RBACRole;
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.events.MembersChangedEvent;
-import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.util.ColorConverter;
 
 /**
  * Dialog to invite other member to a project
@@ -58,124 +56,175 @@ import de.catma.ui.module.main.ErrorHandler;
  *
  */
 public class ProjectInvitationDialog extends Window {
-
+	
+	private Label lInvitationCode; 
+	private ComboBox<RBACRole> roleBox;
+	private CheckBox cbOwnCollection;
+	private Grid<DocumentResource> documentGrid;
+	private ListSelect<String> joinedUsersConsole;
+	private Button btnInvite;
+	private Button btnStopInvite;
+	private ProgressBar progressIndicator;
+	
     private final Cache<Integer, String> invitationCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache(HazelcastConfiguration.CACHE_KEY_INVITATIONS);
+    		Caching.getCachingProvider().getCacheManager().getCache(
+    				HazelcastConfiguration.CacheKeyName.PROJECT_INVITATION.name());
     
-
-	private final ComboBox<RBACRole> cb_role = new ComboBox<RBACRole>("role", 
-			Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
-	private final CheckBox chbOwnCollection = new CheckBox("create own collection", false);
-	private final Button btnInvite = new Button("Invite");
-	private final Button btnStopInvite = new Button("Stop invitation");
-	private final VerticalFlexLayout content = new VerticalFlexLayout();
-	private final Label lInvitationCode = new Label("",ContentMode.HTML); 
-	private final Grid<Resource> resourceGrid = new Grid<>();
 	private final List<String> joinedUsers = new ArrayList<>();
-	private final ListSelect<String> cbConsole = new ListSelect<>("joined users", joinedUsers);
+	
     private final ErrorHandler errorLogger;
     private final HazelcastInstance hazelcast;
     private final ITopic<InvitationRequestMessage> invitationTopic;
     private final ITopic<JoinedProjectMessage> joinedTopic;
     private final EventBus eventBus;
-    private final Set<Resource> resources;
-    private final Map<String,Integer> customCollectionToUserMap = Maps.newHashMap();
+    
+    private final Project project;
+
+    private final List<DocumentResource> documentsForCollectionCreation;
     
 	private ProjectInvitation projectInvitation;
 
-
-	private final Project project;
-
-
-
-	@Inject
 	public ProjectInvitationDialog(
-			@Assisted("project") Project project,
-			@Assisted("resources") Set<Resource> resources,
+			Project project,
+			List<DocumentResource> documentsForCollectionCreation,
 			EventBus eventBus,
-			HazelCastService hazelcastService){
-		super("Invite to project");
-		setDescription("Invite user to project");
-		setModal(true);
+			HazelCastService hazelcastService) {
+		
+		super("Invite others to the Project");
+		
 		this.project = project;
-		this.resources = resources;
+		this.documentsForCollectionCreation = documentsForCollectionCreation;
 	    this.errorLogger = (ErrorHandler) UI.getCurrent();
 	    this.eventBus = eventBus;
 	    this.hazelcast = hazelcastService.getHazelcastClient();
-	    this.resourceGrid.setDataProvider(new ListDataProvider<>(resources));
-	    invitationTopic = hazelcast.getTopic(HazelcastConfiguration.TOPIC_PROJECT_INVITATIONS);
-	    joinedTopic = hazelcast.getTopic(HazelcastConfiguration.TOPIC_PROJECT_JOINED);
-	    eventBus.register(this);
+	    
+	    this.invitationTopic = hazelcast.getTopic(HazelcastConfiguration.TopicName.PROJECT_INVITATION.name());
+	    this.joinedTopic = hazelcast.getTopic(HazelcastConfiguration.TopicName.PROJECT_JOINED.name());
+	    
 		initComponents();
+		initActions();
+	}
+
+	private void initActions() {
+		cbOwnCollection.addValueChangeListener(event -> documentGrid.setEnabled(event.getValue()));
+		btnInvite.addClickListener(this::handleInvitePressed);
+		btnStopInvite.addClickListener(evt -> close());
 	}
 
 	private class ProjectInvitationHandler extends UIMessageListener<InvitationRequestMessage> {
 		
-		private Map<String, Resource> docLookup =  resources.stream().collect(Collectors.toMap(Resource::getResourceId, res -> res));
+		private final Map<String, DocumentResource> documentResourceByUuid =  
+			documentsForCollectionCreation.stream().collect(
+					Collectors.toMap(Resource::getResourceId, res -> res));
 		
+		private final Map<Integer, String> userId2Color = new HashMap<Integer, String>();
+		private final Set<String> colors = ColorConverter.getColorNames();
+		
+		public ProjectInvitationHandler(UI ui) {
+			super(ui);
+		}
+
 		@Override
-		public void uiBlockingOnMessage(Message<InvitationRequestMessage> message) {
-			UI.getCurrent().access( () -> {
-				if(message.getMessageObject().getCode() == projectInvitation.getKey()){
-					try {
-						if(projectInvitation.isCreateOwnCollection()) {
-							
-							for(String resId : projectInvitation.getResources() ) {
-								project.assignOnResource(() -> message.getMessageObject().getUserid(), RBACRole.REPORTER, resId);
-								DocumentResource docResource = (DocumentResource) docLookup.get(resId);
-								if(docResource != null){
-									String collectionName = message.getMessageObject().getName() + "s collection";
-									customCollectionToUserMap.put(collectionName, message.getMessageObject().getUserid());
-									project.createUserMarkupCollection(collectionName, docResource.getDocument());
-								}
-							}	
+		public void uiOnMessage(Message<InvitationRequestMessage> message) {
+			if (message.getMessageObject().getCode() == projectInvitation.getKey()) {
+				try {
+					project.assignOnProject(
+							() -> message.getMessageObject().getUserId(), 
+							RBACRole.forValue(projectInvitation.getDefaultRole()));
+
+					if (projectInvitation.isCreateOwnCollection()) {
+						String color = userId2Color.get(message.getMessageObject().getUserId());
+						
+						if (color == null && !colors.isEmpty()) {
+							color = colors.iterator().next();
+							colors.remove(color);
+							userId2Color.put(message.getMessageObject().getUserId(), color);
 						}
 						
-						project.assignOnProject(() -> message.getMessageObject().getUserid(), 
-								RBACRole.forValue(projectInvitation.getDefaultRole()));
-						joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
-						joinedUsers.add(message.getMessageObject().getName());
-						cbConsole.setItems(joinedUsers);
-						cbConsole.markAsDirty();
-						cbConsole.setVisible(true);
-						ProjectInvitationDialog.this.getUI().push();
-					} catch (IOException e) {
-						errorLogger.showAndLogError("Can't assign UserId " + message.getMessageObject().getName() + "to this project", e);
+						for (String documentId : projectInvitation.getDocumentIds()) {
+							if (projectInvitation.getDefaultRole() < RBACRole.REPORTER.getAccessLevel()) {
+								// minimum role 
+								project.assignOnResource(
+										() -> message.getMessageObject().getUserId(), 
+										RBACRole.REPORTER, documentId);
+							}							
+							
+							DocumentResource docResource = 
+									(DocumentResource) documentResourceByUuid.get(documentId);
+							if (docResource != null) {
+								String collectionName = 
+									color 
+									+ " " 
+									+ message.getMessageObject().getName() 
+									+ " "
+									+ docResource.getName();
+								
+								// collection creation with minimum role assignment
+								project.createUserMarkupCollectionWithAssignment(
+									collectionName, 
+									docResource.getDocument(), 
+									projectInvitation.getDefaultRole() < RBACRole.ASSISTANT.getAccessLevel()?
+											message.getMessageObject().getUserId():null,
+									RBACRole.ASSISTANT);
+							}
+							
+						}	
 					}
+					
+					joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
+					
+					joinedUsers.add(message.getMessageObject().getName());
+					joinedUsersConsole.getDataProvider().refreshAll();
+					joinedUsersConsole.setVisible(true);
+					
+					ProjectInvitationDialog.this.getUI().push();
+					
+				} catch (IOException e) {
+					errorLogger.showAndLogError(
+							"Can't assign User " 
+									+ message.getMessageObject().getName() 
+									+ " to this Project", e);
 				}
 			}
-			);
 		}
 	}
 	
+	private void setInvitationSettingsEnabled(boolean enabled) {
+		cbOwnCollection.setEnabled(enabled);
+		if (cbOwnCollection.getValue()) {
+			documentGrid.setEnabled(enabled);
+		}
+		
+		roleBox.setEnabled(enabled);
+	}
+	
 	private void initComponents() {
-		content.addStyleName("spacing");
-		content.addStyleName("margin");
-
-		lInvitationCode.setCaption("Your Invitation code");
+		setModal(true);
+		setWidth("60%");
+		setHeight("90%");
+		
+		VerticalLayout content = new VerticalLayout();
+		content.setSizeFull();
+		
+		lInvitationCode = new Label("",ContentMode.HTML); 
 		lInvitationCode.setVisible(false);
+		
 		content.addComponent(lInvitationCode);
 
-		cb_role.setWidth("100%");
-		cb_role.setItemCaptionGenerator(RBACRole::getRolename);
-		cb_role.setEmptySelectionAllowed(false);
+		cbOwnCollection = new CheckBox("Create one collection per Document and joined User", false);
+		cbOwnCollection.setValue(false);
 		
-		chbOwnCollection.addValueChangeListener(event -> {
-			if(event.getValue()){
-				resourceGrid.setEnabled(true);
-			}
-			else {	
-				resourceGrid.setEnabled(false);
-			}
-		});
-		content.addComponent(chbOwnCollection);
+		content.addComponent(cbOwnCollection);
+		cbOwnCollection.setEnabled(!documentsForCollectionCreation.isEmpty());
 		
-        resourceGrid.addStyleName("project-view-document-grid");
-        resourceGrid.setHeaderVisible(false);
-        resourceGrid.setRowHeight(45);
-        resourceGrid.setDescription("Document for default collection");
-        
-		resourceGrid
+		documentGrid = new Grid<>();
+		documentGrid.setSizeFull();
+		documentGrid.setRowHeight(45);
+        documentGrid.setCaption("Documents");
+	    documentGrid.setDataProvider(new ListDataProvider<>(documentsForCollectionCreation));
+	    documentGrid.setSelectionMode(SelectionMode.MULTI);
+	    
+		documentGrid
 			.addColumn(resource -> resource.getIcon(), new HtmlRenderer())
 			.setWidth(100);
         
@@ -196,97 +245,109 @@ public class ProjectInvitationDialog extends Window {
 		    return sb.toString();
 		};
       
-        resourceGrid
+        documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
-        	.setCaption("Name")
-        	.setWidthUndefined();
-        resourceGrid.setEnabled(false);
+        	.setCaption("Name");
+//        	.setExpandRatio(1);
         
-        content.addComponent(resourceGrid);
+        documentGrid.setEnabled(false);
+        
+        content.addComponent(documentGrid);
+        content.setExpandRatio(documentGrid, 1f);
+        
 
-		content.addComponent(cb_role);
+		roleBox = new ComboBox<RBACRole>("Role", 
+				Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
+		roleBox.setWidth("100%");
+		roleBox.setItemCaptionGenerator(RBACRole::getRoleName);
+		roleBox.setEmptySelectionAllowed(false);
+		content.addComponent(roleBox);
 		
-		cbConsole.setWidth("100%");
-		cbConsole.setCaption("Users");
-		cbConsole.setReadOnly(true);
-		cbConsole.setVisible(false);
+		joinedUsersConsole = new ListSelect<>("Joined Users", joinedUsers);
+		joinedUsersConsole.setWidth("100%");
+		joinedUsersConsole.setCaption("Users");
+		joinedUsersConsole.setReadOnly(true);
+		joinedUsersConsole.setVisible(false);
 
-		content.addComponent(cbConsole);
+		content.addComponent(joinedUsersConsole);
 		
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
-		buttonPanel.addStyleName("spacing-left-right");
-		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setWidth("100%");
+		buttonPanel.setMargin(new MarginInfo(true, false));
+		
+		btnInvite = new Button("Invite");
+		btnStopInvite = new Button("Stop invitation");
+		
+		progressIndicator = new ProgressBar();
+		progressIndicator.setIndeterminate(false);
+		progressIndicator.setVisible(false);
+		
+		buttonPanel.addComponent(progressIndicator);
+		buttonPanel.setExpandRatio(progressIndicator, 0.5f);
 		
 		buttonPanel.addComponent(btnInvite);
 		buttonPanel.addComponent(btnStopInvite);
-		
-		btnInvite.addClickListener(this::handleInvitePressed);
-		
-		btnStopInvite.addClickListener(evt -> close());
+		buttonPanel.setComponentAlignment(btnInvite, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setComponentAlignment(btnStopInvite, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setExpandRatio(btnInvite, 0.5f);
 		
 		content.addComponent(buttonPanel);
+		content.setComponentAlignment(buttonPanel, Alignment.BOTTOM_RIGHT);
+		
 		setContent(content);
 	}
 	
-	private void handleInvitePressed(ClickEvent clickEvent){
-		if(chbOwnCollection.getValue() && resourceGrid.getSelectedItems().isEmpty() ){
-			Notification.show("No document selected", "Please select documents where own collections should be created", Notification.Type.WARNING_MESSAGE);
+	private void handleInvitePressed(ClickEvent clickEvent) {
+		if (roleBox.getValue() == null) {
+			Notification.show(
+				"Info", 
+				"Please select a Project role for the joining users!", 
+				Type.HUMANIZED_MESSAGE);
 			return;
 		}
-		setDescription("Invitation running... keep this Dialog open");
+		
+		if(cbOwnCollection.getValue() && documentGrid.getSelectedItems().isEmpty() ){
+			Notification.show(
+					"Info", 
+					"Please select at least one Document to create a Collection for each joining user!", 
+					Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
+		setInvitationSettingsEnabled(false);
+		progressIndicator.setIndeterminate(true);
+		progressIndicator.setVisible(true);
+		progressIndicator.setCaption("Invitation running, keep this dialog window open...");
+		
 		projectInvitation = new ProjectInvitation(
 				project.getProjectId(), 
-				cb_role.getValue(). 
-				value, 
+				roleBox.getValue().getAccessLevel(), 
 				project.getName(), 
 				project.getDescription(),
-				chbOwnCollection.getValue(),
-				resourceGrid.getSelectedItems().stream().map(Resource::getResourceId).collect(Collectors.toSet()));
+				cbOwnCollection.getValue(),
+				documentGrid.getSelectedItems().stream().map(Resource::getResourceId).collect(Collectors.toSet()));
+		
 		invitationCache.put(projectInvitation.getKey(), JsonStream.serialize(projectInvitation));
-		lInvitationCode.setValue("<h1>" + projectInvitation.getKey() + "</h2>");
+		
+		lInvitationCode.setValue(
+			"Your invitation code: <b style=\"font-size: xx-large;\">" + projectInvitation.getKey() + "</b>");
+
 		lInvitationCode.setVisible(true);
 		btnInvite.setEnabled(false);
-	    String regid = invitationTopic.addMessageListener(new ProjectInvitationHandler());      
+		
+	    String regid = invitationTopic.addMessageListener(new ProjectInvitationHandler(UI.getCurrent()));      
+	    
 		addCloseListener((evt) -> invitationTopic.removeMessageListener(regid));
 	}
 	
 	public void show(){
 		UI.getCurrent().addWindow(this);
 	}
-	
-	@Subscribe
-	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
-		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
-    		AnnotationCollectionReference collectionReference = 
-    				collectionChangeEvent.getCollectionReference();
-    		
-    		Integer userId = customCollectionToUserMap.get(collectionReference.getName());
-    		
-    		if(userId == null) {
-    			errorLogger.showAndLogError("UserId empty for own collection",
-    					new NullPointerException("UserId null for collection " + collectionReference.getName() ));
-    			return;
-    		}
 
-    		try {
-				project.assignOnResource(() -> userId, 
-						RBACRole.ASSISTANT, collectionReference.getId());
-			} catch (IOException e) {
-    			errorLogger.showAndLogError("failed to assign permission on collection", e);
-			}
-    		
-			Notification.show(
-				"Info", 
-				String.format("permission on own collection %1$s has been set", collectionReference.toString()),  
-				Type.TRAY_NOTIFICATION);			
-		}
-
-	}
 
 	@Override
 	public void close() {
 		super.close();
-	    eventBus.unregister(this);
 		eventBus.post(new MembersChangedEvent());
 	}
 }

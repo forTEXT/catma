@@ -93,7 +93,10 @@ public class TaggerEditor extends FocusWidget
 		this.taggerEditorListener = taggerEditorListener;
 		
 		// Tell GWT the events we are interested in consuming
-		sinkEvents(Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP | Event.ONCLICK | Event.ONBLUR | Event.ONFOCUS);
+		sinkEvents(
+				Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP 
+				| Event.ONCLICK | Event.ONBLUR | Event.ONFOCUS
+				| Event.ONCONTEXTMENU);
 
 		addMouseUpHandler(this);
 		addMouseDownHandler(this);
@@ -557,6 +560,10 @@ public class TaggerEditor extends FocusWidget
 				Element targetElement = Element.as(eventTarget);
 				fireTagsSelected(targetElement);
 			}
+		}
+		else if(event.getNativeButton() == NativeEvent.BUTTON_RIGHT) {
+			taggerEditorListener.contextMenuSelected(event.getClientX(), event.getClientY());
+			event.preventDefault();
 		}
 	}
 

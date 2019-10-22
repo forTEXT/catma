@@ -6,11 +6,8 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.HazelcastClientFactory;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.topic.impl.TopicService;
 
 import de.catma.hazelcast.HazelcastConfiguration;
 /**
@@ -20,10 +17,10 @@ import de.catma.hazelcast.HazelcastConfiguration;
  * @author db
  *
  */
-@WebServlet(name = "HazelCast", urlPatterns = "/hazelcast", loadOnStartup = 3)
+@WebServlet(name = "HazelCast", urlPatterns = "/hazelcast", loadOnStartup = 2)
 public class HazelCastInitializerServlet extends HttpServlet{
 
-	HazelcastInstance hazalcastNode;
+	private volatile HazelcastInstance hazalcastNode;
 	
 	@Override
     public void init() throws ServletException {
@@ -34,8 +31,12 @@ public class HazelCastInitializerServlet extends HttpServlet{
 		hazalcastNode = Hazelcast.newHazelcastInstance();
 	    CacheManager manager = Caching.getCachingProvider().getCacheManager();
 		
-	    manager.createCache(HazelcastConfiguration.CACHE_KEY_SIGNUPTOKEN, HazelcastConfiguration.signupTokenConfiguration);
-	    manager.createCache(HazelcastConfiguration.CACHE_KEY_INVITATIONS, HazelcastConfiguration.invitationConfiguration);
+	    manager.createCache(
+	    		HazelcastConfiguration.CacheKeyName.SIGNUP_TOKEN.name(), 
+	    		HazelcastConfiguration.SIGNUP_TOKEN_CONFIG);
+	    manager.createCache(
+	    		HazelcastConfiguration.CacheKeyName.PROJECT_INVITATION.name(),
+	    		HazelcastConfiguration.PROJECT_INVITATION_CONFIG);
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override

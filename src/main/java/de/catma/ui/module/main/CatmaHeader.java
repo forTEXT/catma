@@ -2,8 +2,6 @@ package de.catma.ui.module.main;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Page;
@@ -14,6 +12,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
 
 import de.catma.properties.CATMAPropertyKey;
+import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -30,31 +29,30 @@ import de.catma.ui.util.Version;
 public class CatmaHeader extends HorizontalLayout {
 
 	private final EventBus eventBus;
-	private final Provider<EditAccountDialog> accountDialogProvider;
 	private final LoginService loginService;
 	private final Label contextInformation = new Label();
+	private Button btHome;
 
-	@Inject
-	public CatmaHeader(Provider<EditAccountDialog> accountDialogProvider, EventBus eventBus, LoginService loginService){
+	public CatmaHeader(EventBus eventBus, LoginService loginService, IRemoteGitManagerPrivileged gitManagerPrivileged){
         super();
-        this.accountDialogProvider = accountDialogProvider;
         this.eventBus = eventBus;
         this.loginService = loginService;
         eventBus.register(this);
-        initComponents();
+        initComponents(gitManagerPrivileged);
     }
 
 
-    private void initComponents() {
+    private void initComponents(IRemoteGitManagerPrivileged gitManagerPrivileged) {
     	addStyleName("header");
     	setWidth("100%");
     	
-		Button home = new Button("Catma " + Version.LATEST);
-		home.addClickListener((evt) -> eventBus.post(new RouteToDashboardEvent()));
-		home.addStyleNames(ValoTheme.BUTTON_LINK, ValoTheme.LABEL_H3);
+		btHome = new Button("Catma " + Version.LATEST);
+		btHome.addClickListener((evt) -> eventBus.post(new RouteToDashboardEvent()));
+		btHome.addStyleNames(ValoTheme.BUTTON_LINK, ValoTheme.LABEL_H3);
+		btHome.addStyleName("header-home-button");
 		
-        addComponent(home);
-        setComponentAlignment(home, Alignment.MIDDLE_LEFT);
+        addComponent(btHome);
+        setComponentAlignment(btHome, Alignment.MIDDLE_LEFT);
         
         contextInformation.addStyleName("header__context");
         addComponent(contextInformation);
@@ -65,7 +63,7 @@ public class CatmaHeader extends HorizontalLayout {
         btnAccount.setDescription(loginService.getAPI().getUser().getName());
         ContextMenu ctxAccount = new ContextMenu(btnAccount, true);
         ctxAccount.addItem("Edit Account", (item) -> {
-        	EditAccountDialog editAccount = accountDialogProvider.get();
+        	EditAccountDialog editAccount = new EditAccountDialog(gitManagerPrivileged, loginService, eventBus);
         	editAccount.show();
         });
         ctxAccount.addItem("Logout", (item) -> {
@@ -77,12 +75,18 @@ public class CatmaHeader extends HorizontalLayout {
         btnAccount.addClickListener((evt) ->  ctxAccount.open(evt.getClientX(), evt.getClientY()));
         
         addComponent(btnAccount);
-        setComponentAlignment(home, Alignment.MIDDLE_RIGHT);
+        setComponentAlignment(btHome, Alignment.MIDDLE_RIGHT);
     }
 
     @Subscribe
     public void headerChangeEvent(HeaderContextChangeEvent headerContextChangeEvent){
         contextInformation.setValue(headerContextChangeEvent.getValue());
+        if (headerContextChangeEvent.isDashboard()) {
+        	btHome.setIcon(null);
+        }
+        else {
+        	btHome.setIcon(VaadinIcons.HOME);
+        }
     }
 
 }

@@ -57,6 +57,7 @@ public class Tagger extends AbstractComponent {
 		public void tagInstanceSelected(String instancePartID, String lineID);
 		public void tagInstanceSelected(Set<String> tagInstanceIDs);
 		public Annotation getTagInstanceInfo(String tagInstanceId);
+		public void contextMenuSelected(int x, int y);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -110,6 +111,11 @@ public class Tagger extends AbstractComponent {
 		public void log(String msg) {
 			System.out.println(
 					"Got log message from client: " +  msg); //$NON-NLS-1$
+		}
+		
+		@Override
+		public void contextMenuSelected(int x, int y) {
+			taggerListener.contextMenuSelected(x, y);
 		}
 	};
 
@@ -231,7 +237,7 @@ public class Tagger extends AbstractComponent {
 			ClientTagInstance tagInstance = 
 					tagInstancesByInstanceID.get(tagReference.getTagInstanceId());
 			if (tagInstance == null) {
-				TagDefinition tagDefintion = 
+				TagDefinition tagDefinition = 
 					project.getTagManager().getTagLibrary().getTagDefinition(tagReference.getTagDefinitionId());
 				
 				tagInstancesByInstanceID.put(
@@ -239,7 +245,7 @@ public class Tagger extends AbstractComponent {
 						new ClientTagInstance(
 								tagReference.getTagDefinitionId(),
 								tagReference.getTagInstanceId(), 
-								ColorConverter.toHex(tagDefintion.getColor()), 
+								tagDefinition==null?"FFFFFF":ColorConverter.toHex(tagDefinition.getColor()), 
 								textRanges));
 			}
 			else {

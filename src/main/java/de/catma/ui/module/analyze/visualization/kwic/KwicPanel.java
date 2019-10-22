@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
@@ -40,6 +42,7 @@ import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.rbac.RBACPermission;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -93,12 +96,14 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	private void initActions(EventBus eventBus) {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
-		moreOptionsMenu.addItem("Annotate selected rows", clickEvent -> handleAnnotateSelectedRequest(eventBus));
+		moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
 		
 		miRemoveAnnotations = 
 			moreOptionsMenu.addItem(
-				"Remove selected Annotations", clickEvent -> handleRemoveAnnotationsRequest(eventBus));
+				"Remove selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
 		miRemoveAnnotations.setEnabled(false);
+		
+		moreOptionsMenu.addItem("Export", mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
 		
 		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
 			@Override
@@ -128,11 +133,22 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		List<AnnotationCollectionReference> annotationCollectionReferences = 
 				new ArrayList<>();
 		boolean resourcesMissing = false;
+		boolean permissionsMissing = false;
+		
 		Set<String> tagInstanceIdsToBeRemoved = new HashSet<String>();
 		Set<QueryResultRow> rowsToBeRemoved = new HashSet<>();
 		
 		try {
+			LoadingCache<String, Boolean> collectionIdToHasWritePermission = 
+					CacheBuilder.newBuilder().build(new CacheLoader<String, Boolean>() {
 
+						@Override
+						public Boolean load(String collectionId) throws Exception {
+							return project.hasPermission(project.getRoleForCollection(
+									collectionId), RBACPermission.COLLECTION_WRITE);
+						}
+						
+					});
 			for (QueryResultRow row : selectedRows) {
 				if (row instanceof TagQueryResultRow) {
 					annotationRows++;
@@ -141,10 +157,16 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 						AnnotationCollectionReference collRef = 
 							document.getUserMarkupCollectionReference(
 									((TagQueryResultRow) row).getMarkupCollectionId());
+						
 						if (collRef != null) {
-							annotationCollectionReferences.add(collRef);
-							tagInstanceIdsToBeRemoved.add(((TagQueryResultRow) row).getTagInstanceId());
-							rowsToBeRemoved.add(row);
+							if (collectionIdToHasWritePermission.get(collRef.getId())) {
+								annotationCollectionReferences.add(collRef);
+								tagInstanceIdsToBeRemoved.add(((TagQueryResultRow) row).getTagInstanceId());
+								rowsToBeRemoved.add(row);
+							}
+							else {
+								permissionsMissing = true;
+							}
 						}
 						else {
 							resourcesMissing = true;
@@ -154,6 +176,13 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 						resourcesMissing = true;
 					}
 				}
+			}
+			
+			if (permissionsMissing) {
+				Notification.show(
+					"Info", 
+					"You do not have the write permission for one or more Collections referenced by your selection. Those Collections will be ignored!", 
+					Type.HUMANIZED_MESSAGE);
 			}
 			
 			if (annotationRows == 0) {

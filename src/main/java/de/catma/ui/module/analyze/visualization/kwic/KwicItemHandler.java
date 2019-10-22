@@ -165,39 +165,41 @@ public class KwicItemHandler {
 	}
 
 	public boolean containsSearchInput(QueryResultRow row, String searchInput) {
-		if (getDocumentName(row).contains(searchInput)) {
+		searchInput = searchInput.toLowerCase();
+		
+		if (getDocumentName(row).toLowerCase().contains(searchInput)) {
 			return true;
 		}
 		
-		if (getBackwardContext(row).contains(searchInput)) {
+		if (getBackwardContext(row).toLowerCase().contains(searchInput)) {
 			return true;
 		}
 		
-		if (getForwardContext(row).contains(searchInput)) {
+		if (getForwardContext(row).toLowerCase().contains(searchInput)) {
 			return true;
 		}		
 		
-		if (getKeywordDescription(row).contains(searchInput)) {
+		if (getKeywordDescription(row).toLowerCase().contains(searchInput)) {
 			return true;
 		}
 		
 		String tagPath = getTagPath(row);
-		if (tagPath != null && tagPath.contains(searchInput)) {
+		if (tagPath != null && tagPath.toLowerCase().contains(searchInput)) {
 			return true;
 		}
 		
 		String collection = getCollectionName(row);
-		if (collection != null && collection.contains(searchInput)) {
+		if (collection != null && collection.toLowerCase().contains(searchInput)) {
 			return true;
 		}
 
 		String propertyname = getPropertyName(row);
-		if (propertyname != null && propertyname.contains(searchInput)) {
+		if (propertyname != null && propertyname.toLowerCase().contains(searchInput)) {
 			return true;
 		}
 
 		String propertvalue = getPropertyValueDescription(row);
-		if (propertvalue != null && propertvalue.contains(searchInput)) {
+		if (propertvalue != null && propertvalue.toLowerCase().contains(searchInput)) {
 			return true;
 		}
 		

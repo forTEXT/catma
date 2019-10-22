@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A set of {@link TagDefinition}s.
@@ -144,7 +145,7 @@ public class TagsetDefinition implements Versionable, Iterable<TagDefinition> {
 		.filter(tagDef -> tagDef.getParentUuid().isEmpty())
 		.sorted(new Comparator<TagDefinition>() {
 			@Override
-			public int compare(TagDefinition o1, TagDefinition o2) {
+			public int compare(TagDefinition o1, TagDefinition o2) { //TODO: sort by predefined sort order
 				if (o1.getName().equals(o2.getName())) {
 					return o1.getUuid().compareTo(o2.getUuid());
 				}
@@ -315,6 +316,12 @@ public class TagsetDefinition implements Versionable, Iterable<TagDefinition> {
 		return true;
 	}
 
+	public int size() {
+		return tagDefinitions.size();
+	}
 
+	public Stream<TagDefinition> stream() {
+		return tagDefinitions.values().stream();
+	}
 	
 }

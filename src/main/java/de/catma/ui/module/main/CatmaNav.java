@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
@@ -42,7 +41,6 @@ public class CatmaNav extends VerticalLayout implements CatmaRouter {
 	private LargeLinkButton btAnalyze;
 	private Project currentProject;
 	
-	@Inject
     public CatmaNav(EventBus eventBus){ 
         eventBus.register(this);
         initComponents();

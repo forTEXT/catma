@@ -24,8 +24,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.ServletException;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.vaadin.server.BootstrapFragmentResponse;
 import com.vaadin.server.BootstrapListener;
 import com.vaadin.server.BootstrapPageResponse;
@@ -38,7 +36,6 @@ import com.vaadin.server.SessionInitListener;
 import com.vaadin.server.SystemMessages;
 import com.vaadin.server.SystemMessagesInfo;
 import com.vaadin.server.SystemMessagesProvider;
-import com.vaadin.server.UIProvider;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinServlet;
@@ -47,8 +44,7 @@ import com.vaadin.server.VaadinSession;
 
 import de.catma.properties.CATMAPropertyKey;
 
-@Singleton
-public class CatmaApplicationServlet extends VaadinServlet implements SessionInitListener {
+public class CatmaApplicationServlet extends VaadinServlet {
 	
 	public static final class DelegateQueryResultRequestHandler implements RequestHandler {
 		private final CopyOnWriteArrayList<RequestHandler> delegates;
@@ -82,14 +78,6 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
 		}
 	}
 	
-	private final UIProvider uiProvider;
-	
-	@Inject
-	public CatmaApplicationServlet(UIProvider uiProvider){
-		super();
-		this.uiProvider = uiProvider;
-	}
-
 	private enum JsLib {
 		D3("doubletreejs/d3.min.js"),
 		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.min.js"),
@@ -166,8 +154,6 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
 	
 	@Override
 	protected void servletInitialized() throws ServletException {
-        getService().addSessionInitListener(this);
-
 		getService().addSessionInitListener(new SessionInitListener() {
 			
 			@Override
@@ -223,14 +209,5 @@ public class CatmaApplicationServlet extends VaadinServlet implements SessionIni
         service.init();
         return service;
     }
-    
-	@Override
-	public void sessionInit(SessionInitEvent event) throws ServiceException {
-		event.getSession().getUIProviders().forEach(event.getSession()::removeUIProvider);
-
-		event.getSession()
-        .addUIProvider(uiProvider);		
-	}
-	
 
 }

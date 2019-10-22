@@ -75,7 +75,7 @@ public interface Indexer {
 			List<String> userMarkupCollectionIdList,
 			String propertyName, String propertyValue, String tagValue) throws Exception;
 	
-	public QueryResult searchFreqency(
+	public QueryResult searchFrequency(
 			QueryId queryId, 
 			List<String> documentIdList, 
 			CompareOperator comp1, int freq1, 

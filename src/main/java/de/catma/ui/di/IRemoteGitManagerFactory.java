@@ -1,6 +1,6 @@
 package de.catma.ui.di;
 
-import com.google.inject.assistedinject.Assisted;
+import java.io.IOException;
 
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 
@@ -13,10 +13,10 @@ import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 public interface IRemoteGitManagerFactory {
 
 	IRemoteGitManagerRestricted createFromToken(
-			@Assisted("token") String userImpersonationToken);
+			String userImpersonationToken) throws IOException;
 
 	IRemoteGitManagerRestricted createFromUsernameAndPassword(
-			@Assisted("username")String username, 
-			@Assisted("password") String password);
+			String username, 
+			String password) throws IOException;
 
 }

@@ -12,10 +12,12 @@ class PropertyDataItem implements TagsetTreeItem {
 	
 	private PropertyDefinition propertyDefinition;
 	private boolean valuesExpanded;
+	private boolean editable;
 	
-	public PropertyDataItem(PropertyDefinition propertyDefinition) {
+	public PropertyDataItem(PropertyDefinition propertyDefinition, boolean editable) {
 		super();
 		this.propertyDefinition = propertyDefinition;
+		this.editable = editable;
 	}
 
 	@Override
@@ -111,4 +113,24 @@ class PropertyDataItem implements TagsetTreeItem {
 		return propertyDefinition.getName();
 	}
 	
+	@Override
+	public String getRemoveIcon() {
+		if (editable) {
+			return VaadinIcons.TRASH.getHtml();
+		}
+		return VaadinIcons.LOCK.getHtml();
+	}
+
+	@Override
+	public boolean isEditable() {
+		return editable;
+	}
+	
+	@Override
+	public void handleRemovalRequest(TagsView tagsView) {
+		if (editable) {
+			tagsView.deletePropertyDataItem(this);
+		}
+	}
+
 }

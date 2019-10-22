@@ -15,34 +15,29 @@ import de.catma.util.DammAlgorithm;
  * @author db
  *
  */
-public class ProjectInvitation implements Serializable {
+public final class ProjectInvitation implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 6455694878222463900L;
 	
 	private final String projectId;
 	private final String name;
 	private final String description;
 	private final int defaultRole;
-	private final int key;
 	private final boolean createOwnCollection;
-	private final Set<String> resources;
+	private final Set<String> documentIds;
+	private final int key;
 	
-	public static int generate(){
+	private static final int generateKey(){
 		return DammAlgorithm.padChecksum(new SecureRandom().nextInt(99999));
 	}
 	
 	public ProjectInvitation(
-			@JsonProperty("projectId") String projectId, 
-			@JsonProperty("defaultRole") int defaultRole,
-			@JsonProperty("name") String name,
-			@JsonProperty("desfription") String description,
-			@JsonProperty("createowncollection") boolean createOwnCollection,
-			@JsonProperty("resources") Set<String> resources
-			){
-		this(projectId, defaultRole, name, description, createOwnCollection,resources, generate());
+			String projectId, int defaultRole, 
+			String name, String description, 
+			boolean createOwnCollection, Set<String> documentIds) {
+		
+		this(projectId, defaultRole, name, description, createOwnCollection,documentIds, generateKey());
+		
 	}
 	
 	@JsonCreator
@@ -50,17 +45,18 @@ public class ProjectInvitation implements Serializable {
 			@JsonProperty("projectId") String projectId, 
 			@JsonProperty("defaultRole") int defaultRole,
 			@JsonProperty("name") String name,
-			@JsonProperty("desfription") String description,
-			@JsonProperty("createowncollection") boolean createOwnCollection,
-			@JsonProperty("resources") Set<String> resources,
+			@JsonProperty("description") String description,
+			@JsonProperty("createOwnCollection") boolean createOwnCollection,
+			@JsonProperty("documentIds") Set<String> documentIds,
 			@JsonProperty("key") int key) {
+		
 		this.projectId = projectId;
 		this.defaultRole = defaultRole;
 		this.name = name;
 		this.description = description;
 		this.key = key;
 		this.createOwnCollection = createOwnCollection;
-		this.resources = resources;
+		this.documentIds = documentIds;
 	}
 
 	public String getProjectId() {
@@ -87,8 +83,13 @@ public class ProjectInvitation implements Serializable {
 		return createOwnCollection;
 	}
 
-	public Set<String> getResources() {
-		return resources;
+	// needs to start with get... for json serialization 
+	public boolean getCreateOwnCollection() {
+		return createOwnCollection;
+	}
+	
+	public Set<String> getDocumentIds() {
+		return documentIds;
 	}
 
 	@Override

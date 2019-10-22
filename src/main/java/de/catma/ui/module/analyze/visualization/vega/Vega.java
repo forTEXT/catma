@@ -15,7 +15,6 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.visualization.vega.VegaClientRpc;
 import de.catma.ui.client.ui.visualization.vega.VegaServerRpc;
 import de.catma.ui.client.ui.visualization.vega.VegaState;

@@ -1,7 +1,6 @@
 package de.catma.ui.module.project;
 
 import com.google.common.collect.Lists;
-import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Label;
@@ -43,7 +42,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 				Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 
 		cb_role.setWidth("100%");
-		cb_role.setItemCaptionGenerator(RBACRole::getRolename);
+		cb_role.setItemCaptionGenerator(RBACRole::getRoleName);
 		cb_role.setEmptySelectionAllowed(false);
 	}
 
@@ -55,9 +54,4 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		content.addComponent(cb_role);
 	}
 
-	@Override
-	protected void layoutButtonPanel(ComponentContainer content) {
-		super.layoutButtonPanel(content);
-		((AbstractOrderedLayout)content).setExpandRatio(getButtonPanel(), 1f);
-	}
 }

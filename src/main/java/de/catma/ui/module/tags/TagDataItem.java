@@ -1,5 +1,6 @@
 package de.catma.ui.module.tags;
 
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 import com.vaadin.icons.VaadinIcons;
@@ -12,10 +13,16 @@ class TagDataItem implements TagsetTreeItem {
 	
 	private TagDefinition tag;
 	private boolean propertiesExpanded;
+	private boolean editable;
 	
 	public TagDataItem(TagDefinition tag) {
+		this(tag, false);
+	}
+
+	public TagDataItem(TagDefinition tag, boolean editable) {
 		super();
 		this.tag = tag;
+		this.editable = editable;
 	}
 
 	@Override
@@ -99,5 +106,25 @@ class TagDataItem implements TagsetTreeItem {
 		this.propertiesExpanded = propertiesExpanded;
 	}
 	
+	@Override
+	public String getRemoveIcon() {
+		if (editable) {
+			return VaadinIcons.TRASH.getHtml();
+		}
+		return VaadinIcons.LOCK.getHtml();
+	}
+
+	@Override
+	public boolean isEditable() {
+		return editable;
+	}
+	
+	@Override
+	public void handleRemovalRequest(TagsView tagsView) {
+		if (editable) {
+			tagsView.deleteTags(Collections.singletonList(tag));
+		}
+		
+	} 
 	
 }

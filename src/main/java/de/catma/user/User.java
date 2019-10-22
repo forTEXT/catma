@@ -48,7 +48,7 @@ public interface User extends RBACSubject {
 	String getEmail();
 
 	default String preciseName() {
-		return getName() + " / " + getIdentifier();
+		return getName() + " (" + getIdentifier() + ")";
 	}
 	
 }

@@ -16,20 +16,20 @@ import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
 import io.netty.handler.codec.http.QueryStringEncoder;
 
@@ -47,31 +47,35 @@ public class SignUpDialog extends Window {
 
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final Binder<UserData> userBinder = new Binder<>();
-	private final IRemoteGitManagerPrivileged gitlabManagerPrivileged= new GitlabManagerPrivileged();
+	private final IRemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
 	
 	public SignUpDialog(String caption) {
 		super(caption);
-		setWidth("400px");
+		setWidth("50%");
+		setHeight("50%");
 		initComponents();
 	}
 
 	private void initComponents() {
 		setModal(true);
 		
-		VerticalFlexLayout content = new VerticalFlexLayout();
-		content.addStyleName("spacing");
-		content.addStyleName("margin");
+		VerticalLayout content = new VerticalLayout();
+		content.setSizeFull();
+		
 		Label description = new Label("Description", ContentMode.HTML);
-		description.setValue("Please signup using only your valid email address. <br /> "
-				+ "We'll send you an activation link back to your address.<br />"
-				+ "After successful activation you'll need to complete your profile with username and password.");
+		description.setValue("Please sign up using your valid email address. <br /> <br />"
+			+ "We'll send you an activation link back to that address. "
+			+ "After successful activation you'll be able to complete your profile with username and password.<br />");
 		description.setWidth("100%");
 		content.addComponent(description);
+		
 		TextField tfEmail = new TextField("Email address");
-		tfEmail.setSizeFull();
+		tfEmail.setWidth("100%");
+		
 		tfEmail.setEnabled(false);
 		tfEmail.setDescription("Awaiting Google recaptcha verification...");
 		content.addComponent(tfEmail);
+		content.setExpandRatio(tfEmail, 1f);
 		
 		TextField hiddenVerification = new TextField();
 		hiddenVerification.addStyleName("g-recaptcha-response");
@@ -93,15 +97,18 @@ public class SignUpDialog extends Window {
 			
 		});
 		
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
-		buttonPanel.addStyleName("spacing-left-right");
-		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setWidth("100%");
+		
 		Button btnSignup = new Button("Sign Up");
 		
 		Button btnCancel = new Button("Cancel");
 		
-		buttonPanel.addComponent(btnCancel);
 		buttonPanel.addComponent(btnSignup);
+		buttonPanel.addComponent(btnCancel);
+		buttonPanel.setComponentAlignment(btnCancel, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setComponentAlignment(btnSignup, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setExpandRatio(btnSignup, 1f);
 		
 		btnCancel.addClickListener(evt -> this.close());
 		

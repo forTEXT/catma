@@ -8,26 +8,28 @@ import java.util.stream.Collectors;
 
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
-import com.vaadin.shared.data.sort.SortDirection;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.Resolution;
 import de.catma.project.conflict.TagConflict;
 import de.catma.tag.PropertyDefinition;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.util.Cleaner;
 import de.catma.util.ColorConverter;
 
-public class TagConflictView extends VerticalFlexLayout {
+public class TagConflictView extends VerticalLayout {
 
 	private TagConflict tagConflict;
 	private TagsetConflict tagsetConflict;
 	private ResolutionListener resolutionListener;
-	private Label tagsetLabel;
+	private TextField tagsetNameField;
 	private Label leftTagLabel;
 	private Label rightTagLabel;
 	private TreeGrid<PropertyDefTreeItem> propertyGrid;
@@ -48,6 +50,10 @@ public class TagConflictView extends VerticalFlexLayout {
 	}
 
 	private void initData() {
+		this.tagsetNameField.setReadOnly(false);
+		this.tagsetNameField.setValue(tagsetConflict.getName());
+		this.tagsetNameField.setReadOnly(true);
+		
 		String devBackgroundColor = "#"+ColorConverter.toHex(tagConflict.getDevTagDefinition().getColor());
 		String devColor = "#464646";
 		if (!ColorConverter.isLightColor(tagConflict.getDevTagDefinition().getColor())) {
@@ -55,7 +61,7 @@ public class TagConflictView extends VerticalFlexLayout {
 		}
 		this.leftTagLabel.setValue(
 			"My Tag: <span style=\"background: "+devBackgroundColor+";color: "+devColor+";\">"
-			+tagConflict.getDevTagDefinition().getName()+"</span>");
+			+Cleaner.clean(tagConflict.getDevTagDefinition().getName())+"</span>");
 
 		String masterBackgroundColor = "#"+ColorConverter.toHex(tagConflict.getMasterTagDefinition().getColor());
 		String masterColor = "#464646";
@@ -64,7 +70,7 @@ public class TagConflictView extends VerticalFlexLayout {
 		}
 		this.rightTagLabel.setValue(
 			"Their Tag: <span style=\"background: "+masterBackgroundColor+";color: "+masterColor+";\">"
-			+tagConflict.getMasterTagDefinition().getName()+"</span>");
+			+ Cleaner.clean(tagConflict.getMasterTagDefinition().getName())+"</span>");
 		
 		Set<String> allPropertyDefIds = new HashSet<>();
 		allPropertyDefIds.addAll(
@@ -124,30 +130,34 @@ public class TagConflictView extends VerticalFlexLayout {
 	}
 
 	private void initComponents() {
-		addStyleName("tag-conflict-view");
+		setMargin(true);
+		setSpacing(true);
+		setSizeFull();
 		
-		this.tagsetLabel = new Label();
-		addComponent(this.tagsetLabel);
+		this.tagsetNameField = new TextField("Tagset");
+		this.tagsetNameField.setReadOnly(true);
+		this.tagsetNameField.setWidth("100%");
+		this.tagsetNameField.addStyleName("tag-conflict-view-tagset-field");
+		
+		addComponent(this.tagsetNameField);
 
-		HorizontalFlexLayout comparisonPanel = new HorizontalFlexLayout();
+		HorizontalLayout comparisonPanel = new HorizontalLayout();
+		comparisonPanel.setWidth("100%");
 		addComponent(comparisonPanel);
-		comparisonPanel.setJustifyContent(JustifyContent.SPACE_AROUND);
-		comparisonPanel.addStyleName("tag-conflict-view-comparison-panel");
 		
 		this.leftTagLabel = new Label();
-		this.leftTagLabel.setContentMode(ContentMode.HTML); //TODO: escape input
+		this.leftTagLabel.setContentMode(ContentMode.HTML); 
 		comparisonPanel.addComponent(this.leftTagLabel);
 		
 		
 		this.rightTagLabel = new Label();
-		this.rightTagLabel.setContentMode(ContentMode.HTML); //TODO: escape input
+		this.rightTagLabel.setContentMode(ContentMode.HTML);
 		comparisonPanel.addComponent(this.rightTagLabel);
 		
 		propertyGrid = new TreeGrid<>();
-		propertyGrid.setWidth("100%");
+		propertyGrid.setSizeFull();
 		
 		propertyGrid.addStyleNames(
-				"tag-conflict-view-property-grid-margin",
 				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
 		propertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getMinePropertyName())
 			.setCaption("My Properties")
@@ -163,16 +173,20 @@ public class TagConflictView extends VerticalFlexLayout {
 			.setSortable(true);
 		
 		addComponent(propertyGrid);
-
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
-		buttonPanel.addStyleName("tag-conflict-view-button-panel");
-		buttonPanel.setJustifyContent(JustifyContent.SPACE_AROUND);
+		setExpandRatio(propertyGrid, 1f);
+		
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setWidth("100%");
+		
 		btMine = new Button("Take mine");
 		buttonPanel.addComponent(btMine);
+		buttonPanel.setComponentAlignment(btMine, Alignment.BOTTOM_CENTER);
 		btBoth = new Button("Take both");
 		buttonPanel.addComponent(btBoth);
+		buttonPanel.setComponentAlignment(btBoth, Alignment.BOTTOM_CENTER);
 		btTheirs = new Button("Take theirs");
 		buttonPanel.addComponent(btTheirs);
+		buttonPanel.setComponentAlignment(btTheirs, Alignment.BOTTOM_CENTER);
 		addComponent(buttonPanel);
 	}
 

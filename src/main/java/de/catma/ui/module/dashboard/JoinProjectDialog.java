@@ -5,32 +5,32 @@ import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.jsoniter.JsonIterator;
 import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.rbac.RBACRole;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
-import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.module.project.ProjectInvitation;
 import de.catma.user.User;
 import de.catma.util.DammAlgorithm;
@@ -43,18 +43,21 @@ import de.catma.util.DammAlgorithm;
  */
 public class JoinProjectDialog extends Window {
 
-	private final TextField tfCode = new TextField("Code");
-	private final TextField tfName = new TextField("Name");
-	private final TextArea taDescription = new TextArea("Description");
-	private final ComboBox<RBACRole> cbRole = new ComboBox<RBACRole>("Role", 
-			Lists.newArrayList(RBACRole.values()));
-    private final Cache<Integer, String> invitationCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache(HazelcastConfiguration.CACHE_KEY_INVITATIONS);
-    private final VerticalFlexLayout content = new VerticalFlexLayout();
+	private TextField tfCode;
+	private TextField tfName;
+	private ComboBox<RBACRole> cbRole;
+	private TextArea taDescription;
+	
+	
+	private Button btnJoin;
+	private Button btnCancel;
+    
+	private final Cache<Integer, String> invitationCache = 
+    		Caching.getCachingProvider().getCacheManager().getCache(
+    				HazelcastConfiguration.CacheKeyName.PROJECT_INVITATION.name());
+    
     private final User currentUser;
     
-    private final Button btnJoin = new Button("Join");
-    private final Button btnCancel = new Button("Cancel");
     private final EventBus eventBus;
 
     private final ITopic<InvitationRequestMessage> invitationTopic;
@@ -62,22 +65,37 @@ public class JoinProjectDialog extends Window {
 
 	private ProjectInvitation invitation;
 	
-	@Inject
-	public JoinProjectDialog(User currentUser, EventBus eventBus, HazelCastService hazelcastService) {
+	public JoinProjectDialog(User currentUser, EventBus eventBus) {
 		super("Join project");
 		this.currentUser = currentUser;
 		this.eventBus = eventBus;
-	    invitationTopic = hazelcastService.getHazelcastClient().getTopic(HazelcastConfiguration.TOPIC_PROJECT_INVITATIONS);
-	    joinedTopic = hazelcastService.getHazelcastClient().getTopic(HazelcastConfiguration.TOPIC_PROJECT_JOINED);
+		HazelCastService hazelcastService = ((CatmaApplication)UI.getCurrent()).getHazelCastService();
+	    this.invitationTopic = 
+	    		hazelcastService.getHazelcastClient().getTopic(
+	    				HazelcastConfiguration.TopicName.PROJECT_INVITATION.name());
+	    this.joinedTopic = 
+	    		hazelcastService.getHazelcastClient().getTopic(
+	    				HazelcastConfiguration.TopicName.PROJECT_JOINED.name());
 		initComponents();
+		initActions();
 	}
 	
+	private void initActions() {
+		tfCode.addValueChangeListener(this::onCodeEntered);
+		btnJoin.addClickListener(this::handleJoinPressed);
+		btnCancel.addClickListener(evt -> close());
+	}
+
 	private class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage>{
 		
+		public ProjectJoinHandler(UI ui) {
+			super(ui);
+		}
+
 		@Override
-		public void uiBlockingOnMessage(Message<JoinedProjectMessage> message) {
+		public void uiOnMessage(Message<JoinedProjectMessage> message) {
 			if(message.getMessageObject().getInvitation().getKey() == JoinProjectDialog.this.invitation.getKey()) {	
-				JoinProjectDialog.this.eventBus.post(new ResourcesChangedEvent());
+				JoinProjectDialog.this.eventBus.post(new ProjectChangedEvent());
 				Notification.show("Joined successfully", "Sucessfully joined Project " + 
 						JoinProjectDialog.this.invitation.getName() , Type.HUMANIZED_MESSAGE);
 				JoinProjectDialog.this.getUI().push();
@@ -87,50 +105,62 @@ public class JoinProjectDialog extends Window {
 		
 	}
 	
-	private void initComponents() {		
-		content.addStyleName("spacing");
-		content.addStyleName("margin");
-
+	private void initComponents() {	
+		setWidth("30%");
+		setHeight("90%");
+		center();
+		
+		VerticalLayout content = new VerticalLayout();
+		content.setSizeFull();
+		
 		Label lDescription = new Label("Please enter your invitation code to find and join a Project");
+		lDescription.addStyleName("label-with-word-wrap");
+		
 		content.addComponent(lDescription);
-		
+
+		tfCode = new TextField("Code");
 		tfCode.setWidth("100%");
-		tfCode.setCaption("Invitation code");
 		tfCode.setDescription("Enter your invitation code here");
-		tfCode.addValueChangeListener(this::onCodeEntered);
 		content.addComponent(tfCode);
+		content.setExpandRatio(tfCode, 0.3f);
 		
+		tfName = new TextField("Name");
 		tfName.setWidth("100%");
-		tfName.setCaption("");
 		tfName.setReadOnly(true);
 		tfName.setVisible(false);
 		content.addComponent(tfName);
 		
+		cbRole = new ComboBox<RBACRole>("Role", 
+				Lists.newArrayList(RBACRole.values()));
 		cbRole.setWidth("100%");
-		cbRole.setItemCaptionGenerator(RBACRole::getRolename);
+		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);
 		cbRole.setEmptySelectionAllowed(false);
 		cbRole.setReadOnly(true);
 		cbRole.setVisible(false);
 		content.addComponent(cbRole);
 		
+		taDescription = new TextArea("Description");
 		taDescription.setWidth("100%");
 		taDescription.setHeight("100%");
 		taDescription.setVisible(false);
 		
 		content.addComponent(taDescription);
+		content.setExpandRatio(taDescription, 1f);
 		
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
-		buttonPanel.addStyleName("spacing-left-right");
-		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setWidth("100%");
 		
-		btnJoin.addClickListener(this::handleJoinPressed);
+		btnJoin = new Button("Join");
+	    btnCancel = new Button("Cancel");
+	    
 		btnJoin.setEnabled(false);
-		
-		btnCancel.addClickListener(evt -> close());
 
 		buttonPanel.addComponent(btnJoin);
 		buttonPanel.addComponent(btnCancel);
-		
+		buttonPanel.setExpandRatio(btnJoin, 1f);
+		buttonPanel.setComponentAlignment(btnJoin, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setComponentAlignment(btnCancel, Alignment.BOTTOM_RIGHT);
+
 		content.addComponent(buttonPanel);
 		setContent(content);
 
@@ -138,9 +168,13 @@ public class JoinProjectDialog extends Window {
 
 	private void handleJoinPressed(ClickEvent event) {
 		if(invitation != null) {
-		    String regid = joinedTopic.addMessageListener(new ProjectJoinHandler());      
+		    String regid = joinedTopic.addMessageListener(new ProjectJoinHandler(UI.getCurrent()));      
 			addCloseListener((evt) -> joinedTopic.removeMessageListener(regid));
-			invitationTopic.publish(new InvitationRequestMessage(currentUser.getUserId(), currentUser.getName(), invitation.getKey()));
+			invitationTopic.publish(
+				new InvitationRequestMessage(
+						currentUser.getUserId(), 
+						currentUser.getName(), 
+						invitation.getKey()));
 		}
 	}
 	
@@ -149,18 +183,19 @@ public class JoinProjectDialog extends Window {
 			Integer code = Integer.parseInt(changeEvent.getValue());
 			if(DammAlgorithm.validate(code)){
 				String marshalledInvitation = invitationCache.get(code);
-				if(marshalledInvitation != null){
+				if(marshalledInvitation != null) {
 					invitation = JsonIterator.deserialize(marshalledInvitation, ProjectInvitation.class);
 					
 					tfCode.setReadOnly(true);
 					tfName.setValue(invitation.getName());
 					tfName.setVisible(true);
-					taDescription.setValue(invitation.getDescription() == null ? "nonexistent description": invitation.getDescription() );
+					taDescription.setReadOnly(false);
+					taDescription.setValue(invitation.getDescription() == null? "": invitation.getDescription());
 					taDescription.setVisible(true);
+					taDescription.setReadOnly(true);
 					cbRole.setValue(RBACRole.forValue(invitation.getDefaultRole()));
 					cbRole.setVisible(true);
 					btnJoin.setEnabled(true);
-					
 				}
 			}
 		} catch (NumberFormatException ne){
@@ -171,10 +206,4 @@ public class JoinProjectDialog extends Window {
 	public void show(){
 		UI.getCurrent().addWindow(this);
 	}
-	
-	@Override
-	public void close() {
-		super.close();
-	}
-
 }

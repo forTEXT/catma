@@ -29,7 +29,7 @@ import de.catma.ui.module.main.ErrorHandler;
 public abstract class AbstractProjectDialog extends AbstractOkCancelDialog<ProjectReference>{
 
 	protected final TextField name = new TextField("Name");
-	protected final TextArea description = new TextArea("Decription");
+	protected final TextArea description = new TextArea("Description");
 	protected final ProjectManager projectManager;
 	protected Binder<ProjectData> projectBinder = new Binder<>();
 	protected ErrorHandler errorLogger;
@@ -62,12 +62,12 @@ public abstract class AbstractProjectDialog extends AbstractOkCancelDialog<Proje
 		projectBinder.forField(name)
 	    .withValidator(new StringLengthValidator(
 	        "Name must be between 2 and 50 characters long",
-	        2, 20))
+	        2, 50))
 	    .bind(ProjectData::getName, ProjectData::setName);
 		projectBinder.forField(description)
 	    .withValidator(new StringLengthValidator(
-	        "Description must not be empty",
-	        1, 1000))
+	        "Description must not be longer than 2000 characters",
+	        0, 2000))
 	    .bind(ProjectData::getDescription, ProjectData::setDescription);
 		name.setWidth("100%");
 		description.setWidth("100%");

@@ -4,16 +4,15 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
+import de.catma.rbac.IRBACManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
-import de.catma.ui.di.UIFactory;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.events.RegisterCloseableEvent;
@@ -26,6 +25,7 @@ import de.catma.ui.events.routing.RouteToTagsEvent;
 import de.catma.ui.module.analyze.AnalyzeManagerView;
 import de.catma.ui.module.annotate.TaggerManagerView;
 import de.catma.ui.module.annotate.TaggerView;
+import de.catma.ui.module.dashboard.DashboardView;
 import de.catma.ui.module.project.ConflictedProjectView;
 import de.catma.ui.module.project.ProjectView;
 import de.catma.ui.module.tags.TagsView;
@@ -69,34 +69,29 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
      */
 	private final ProjectManager projectManager;
 
-	/*
-	 * Factory to generate Views
-	 */
-	private final UIFactory uiFactory;
-
-
 	private Class<?> currentRoute;
 	private ProjectView projectView;
 	private TagsView tagsView;
 	private TaggerManagerView taggerManagerView;
 	private AnalyzeManagerView analyzeManagerView;
 
+	private IRemoteGitManagerRestricted remoteGitManagerRestricted;
+
 	
 	/**
 	 * 
 	 * @param projectManager
 	 * @param eventBus
+	 * @param api 
 	 */
-	@Inject
-    public MainView(@Assisted("projectManager")ProjectManager projectManager, 
+    public MainView(ProjectManager projectManager, 
     		CatmaHeader catmaHeader, 
-    		EventBus eventBus,
-    		UIFactory uiFactory){
+    		EventBus eventBus, IRemoteGitManagerRestricted remoteGitManagerRestricted){
         this.projectManager = projectManager;
         this.header = catmaHeader;
         this.eventBus = eventBus;
+        this.remoteGitManagerRestricted = remoteGitManagerRestricted;
         this.navigation = new CatmaNav(eventBus);
-        this.uiFactory = uiFactory;
         initComponents();
         eventBus.register(this);
         eventBus.post(new RegisterCloseableEvent(this));
@@ -153,9 +148,9 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
 		closeViews();
 		if(isNewTarget(routeToDashboardEvent.getClass())) {
-			setContent(uiFactory.getDashboardView(projectManager));
+			setContent(new DashboardView(projectManager, remoteGitManagerRestricted, eventBus));
 			viewSection.addStyleName("no-margin-view-section");
-			eventBus.post(new HeaderContextChangeEvent(""));
+			eventBus.post(new HeaderContextChangeEvent());
 			currentRoute = routeToDashboardEvent.getClass();
 		}
 	}
@@ -164,7 +159,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if(isNewTarget(routeToProjectEvent.getClass())) {
 			if (this.projectView == null) {
-				this.projectView = new ProjectView(uiFactory, projectManager, eventBus);
+				this.projectView = new ProjectView(projectManager, eventBus);
 				setContent(projectView);
 				this.projectView.setProjectReference(routeToProjectEvent.getProjectReference());
 			}
@@ -239,7 +234,9 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			}
 			
 			setContent(tagsView);
-			
+			if (routeToTagsEvent.getTagset() != null) {
+				this.tagsView.setSelectedTagset(routeToTagsEvent.getTagset());
+			}
 			currentRoute = routeToTagsEvent.getClass();
 		}
 		

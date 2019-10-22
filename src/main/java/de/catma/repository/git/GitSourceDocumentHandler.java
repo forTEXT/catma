@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -35,12 +34,6 @@ import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
 public class GitSourceDocumentHandler {
 	private Logger logger = Logger.getLogger(GitSourceDocumentHandler.class.getName());
 	
-	private static final String SOURCEDOCUMENT_REPOSITORY_NAME_FORMAT = "%s_sourcedocument";
-	
-	public static String getSourceDocumentRepositoryName(String sourceDocumentId) {
-		return String.format(SOURCEDOCUMENT_REPOSITORY_NAME_FORMAT, sourceDocumentId);
-	}
-	
     private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 
@@ -62,8 +55,7 @@ public class GitSourceDocumentHandler {
 	 * repo). Instead call the <code>createSourceDocument</code> method of the {@link GitProjectManager} class.
 	 *
 	 * @param projectId the ID of the project within which the source document must be created
-	 * @param sourceDocumentId the ID of the source document to create. If none is provided, a new
-	 *                         ID will be generated.
+	 * @param sourceDocumentId the ID of the source document to create.
 	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original,
 	 *                                     unmodified source document
 	 * @param originalSourceDocumentFileName the file name of the original, unmodified source
@@ -77,7 +69,7 @@ public class GitSourceDocumentHandler {
 	 * @return the revision hash
 	 * @throws IOException if an error occurs while creating the source document
 	 */
-	public String create(String projectId, @Nullable String sourceDocumentId,
+	public String create(String projectId, String sourceDocumentId,
 						 InputStream originalSourceDocumentStream,
 						 String originalSourceDocumentFileName,
 						 InputStream convertedSourceDocumentStream,
@@ -92,11 +84,10 @@ public class GitSourceDocumentHandler {
 			logger.info("Adding SourceDocument to the local project " + projectId);
 			
 			// create the source document repository
-			String sourceDocumentRepoName = GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId);
 
 			CreateRepositoryResponse response = 
 				this.remoteGitServerManager.createRepository(
-					sourceDocumentRepoName, sourceDocumentRepoName, projectId
+					sourceDocumentId, sourceDocumentId, projectId
 				);
 
 			// clone the repository locally
@@ -165,7 +156,8 @@ public class GitSourceDocumentHandler {
 			String revisionHash = localGitRepoManager.commit(
 				commitMessage,
 				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getEmail()
+				remoteGitServerManager.getEmail(),
+				false
 			);
 			
 			logger.info("Finished adding SourceDocument to the local project " + projectId);

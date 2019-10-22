@@ -12,7 +12,6 @@ import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.project.conflict.TagConflict;
-import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
@@ -69,11 +68,16 @@ public class GitConflictedProject implements ConflictedProject {
 					gitProjectHandler.resolveAnnotationConflict(
 						collectionConflict.getCollectionId(), annotationConflict, tagLibrary);
 				}
-				gitProjectHandler.addAndCommitCollection(
-					collectionConflict.getCollectionId(), "Auto-committing merged changes");
+				gitProjectHandler.addCollectionToStagedAndCommit(
+					collectionConflict.getCollectionId(), "Auto-committing merged changes", true);
 				
-				gitProjectHandler.checkoutCollectionDevBranchAndRebase(collectionConflict.getCollectionId());
 			}
+			gitProjectHandler.addCollectionSubmoduleToStagedAndCommit(
+				collectionConflict.getCollectionId(), "Auto-committing merged changes", false);
+
+			gitProjectHandler.checkoutCollectionDevBranchAndRebase(collectionConflict.getCollectionId());
+			
+			gitProjectHandler.synchronizeCollectionWithRemote(collectionConflict.getCollectionId());
 		}
 		
 	}
@@ -93,6 +97,8 @@ public class GitConflictedProject implements ConflictedProject {
 					tagsetConflict.getUuid(), "Auto-committing merged changes");
 			
 			gitProjectHandler.checkoutTagsetDevBranchAndRebase(tagsetConflict.getUuid());
+			
+			gitProjectHandler.synchronizeTagsetWithRemote(tagsetConflict.getUuid());
 
 		}
 		

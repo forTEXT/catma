@@ -19,13 +19,8 @@ public interface Resource {
 	 */
 	String getResourceId();
 
-	
-	/**
-	 * 
-	 * @return the project identifier
-	 */
+
 	String getProjectId();
-	
 	
     String getName();
 
@@ -38,7 +33,10 @@ public interface Resource {
 	public void deleteFrom(Project project) throws Exception;
 	
 	public default boolean isCollection() { return false; }
+	public default boolean isTagset() { return false; }
 
 	public String getPermissionIcon();
+	
+	public boolean hasWritePermission();
 
 }

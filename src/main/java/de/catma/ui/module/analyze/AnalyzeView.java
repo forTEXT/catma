@@ -3,6 +3,7 @@ package de.catma.ui.module.analyze;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -361,7 +362,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		btExecuteSearch.addClickListener(clickEvent -> executeSearch());	
 		queryBox.addValueChangeListener(valueChange -> btExecuteSearch.click());
-		queryBox.addFocusListener(event -> queryBox.setValue(null));
+//		queryBox.addFocusListener(event -> queryBox.setValue(null));
 		
 		kwicBt.addClickListener(event -> addKwicViz());
 
@@ -397,7 +398,7 @@ public class AnalyzeView extends HorizontalLayout
 		}
 		String name = 
 				"KWIC - KeyWord In Context " 
-						+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME);
+						+ LocalDateTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM));
 		VizMaxPanel vizMaxPanel = 
 				new VizMaxPanel(
 						name,
@@ -441,7 +442,7 @@ public class AnalyzeView extends HorizontalLayout
 				new DistributionDisplaySettingHandler());
 		String name = 
 				"Distribution Chart " 
-						+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME);
+						+ LocalDateTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM));
 		VizMaxPanel vizMaxPanel = 
 			new VizMaxPanel(
 					name,

@@ -2,13 +2,13 @@ package de.catma.ui.module.project;
 
 import java.util.Set;
 
+import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComponentContainer;
-import com.vaadin.ui.ListSelect;
+import com.vaadin.ui.Grid;
 
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.rbac.RBACUnAssignmentFunction;
 import de.catma.user.Member;
-import de.catma.user.User;
 
 public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
 
@@ -16,7 +16,7 @@ public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
 	
 	private final RBACUnAssignmentFunction unassignment;	
 	
-	private ListSelect<Member> ls_members;
+	private Grid<Member> ls_members;
 	
 	public RemoveMemberDialog(RBACUnAssignmentFunction unassignment,
 			Set<Member> members, SaveCancelListener<Void> saveCancelListener) {
@@ -27,11 +27,14 @@ public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
 	
 	@Override
 	protected void addContent(ComponentContainer content) {
-		ls_members = new ListSelect<>("Members", members);
-		ls_members.setReadOnly(true);
+		ls_members = new Grid<>("Members", members);
 		ls_members.setWidth("100%");
-		ls_members.setItemCaptionGenerator(User::preciseName);
-		content.addComponent(ls_members);		
+		ls_members.addColumn(user -> user.preciseName()).setCaption("Name");
+		ls_members.setHeight("100%");
+		content.addComponent(ls_members);
+		if (content instanceof AbstractOrderedLayout) {
+			((AbstractOrderedLayout)content).setExpandRatio(ls_members, 1f);
+		}
 	}
 	
 	@Override
@@ -50,8 +53,8 @@ public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
 	@Override
 	protected void layoutWindow() {
 		super.layoutWindow();
-		setWidth("320px");
-		setHeight("550px");
+		setWidth("70%");
+		setHeight("80%");
 
 	}
 }

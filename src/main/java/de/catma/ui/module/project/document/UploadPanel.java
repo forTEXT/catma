@@ -105,7 +105,7 @@ class UploadPanel extends HorizontalLayout {
 							((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
 					IDGenerator idGenerator = new IDGenerator();
 					
-					File uploadFile = new File(new File(tempDir), idGenerator.generate());
+					File uploadFile = new File(new File(tempDir), idGenerator.generateDocumentId());
 					uploadedFileUri = uploadFile.toURI();
 					
 					if (uploadFile.exists()) {

@@ -12,7 +12,7 @@ public class HazelCastService {
 	}
 
 	public void start() {
-		hazelcastClient = HazelcastClient.newHazelcastClient(HazelcastConfiguration.clientConfig);
+		hazelcastClient = HazelcastClient.newHazelcastClient(HazelcastConfiguration.CLIENT_CONFIG);
 	}
 	
 	public void stop() {

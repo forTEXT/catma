@@ -32,25 +32,27 @@ import org.jboss.aerogear.security.otp.api.Clock;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.eventbus.EventBus;
+import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
-import de.catma.ui.layout.FlexLayout.JustifyContent;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
@@ -67,7 +69,6 @@ public class AuthenticationDialog extends Window {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
-	
 	private Button btCancel;
 	private Button googleLogInLink;
 	private String baseUrl;
@@ -78,8 +79,6 @@ public class AuthenticationDialog extends Window {
 	private final InitializationService initService;
 	private final EventBus eventBus;
 	private final HazelCastService hazelCastService;
-
-
 	
 	public AuthenticationDialog(
 			String caption, 
@@ -87,10 +86,10 @@ public class AuthenticationDialog extends Window {
 			LoginService loginService,
 			InitializationService initService,
 			HazelCastService hazelCastService,
-			EventBus eventBus
-			) { 
+			EventBus eventBus) { 
+		
 		super(caption);
-		setModal(true);
+
 		this.baseUrl = baseUrl;
 		this.loginservice = loginService;
 		this.initService = initService;
@@ -110,7 +109,7 @@ public class AuthenticationDialog extends Window {
 			try {
 				
 				loginservice.login(tfUsername.getValue(), pfPassword.getValue());
-				Component mainView = initService.newEntryPage(loginservice, hazelCastService);
+				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				close();
@@ -166,58 +165,73 @@ public class AuthenticationDialog extends Window {
 	
 		return authenticationUrlBuilder.toString();
 	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+		tfUsername.focus();
+	}
 
 
 	private void initComponents() {
-		VerticalFlexLayout content = new VerticalFlexLayout();
-		content.addStyleName("spacing");
-		content.addStyleName("margin");
+		setModal(true);
+		setWidth("50%");
+		setHeight("60%");
+		
+		VerticalLayout content = new VerticalLayout();
+		content.setSizeFull();
 		
 		tfUsername = new TextField("Username");
-		tfUsername.setSizeFull();
-		pfPassword = new PasswordField("Password");
-		pfPassword.setSizeFull();
+		tfUsername.setWidth("100%");
 		
+		pfPassword = new PasswordField("Password");
+		pfPassword.setWidth("100%");
 		
 		content.addComponent(tfUsername);
 		content.addComponent(pfPassword);
-		
+		HorizontalLayout gOauthPanel = new HorizontalLayout();
+		gOauthPanel.setMargin(new MarginInfo(true, false, true, true));
+		content.addComponent(gOauthPanel);
+		gOauthPanel.addComponent(new Label("or"));
 		googleLogInLink = new Button("Log in with your Google account");
 		googleLogInLink.setIcon(new ClassResource("module/main/login/resources/google.png")); //$NON-NLS-1$
 		googleLogInLink.setStyleName(MaterialTheme.BUTTON_LINK);
 		googleLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
 		
-		content.addComponent(googleLogInLink);
+		gOauthPanel.addComponent(googleLogInLink);
 		
 		Label termsOfUse = new Label(
 				MessageFormat.format(
 					"By logging in you accept the <a target=\"blank\" href=\"{0}\">terms of use</a>!", 
 					"http://catma.de/documentation/terms-of-use-privacy-policy/")); //$NON-NLS-1$
 		termsOfUse.setContentMode(ContentMode.HTML);
-		termsOfUse.setSizeFull();
+		termsOfUse.setWidth("100%");
 		
 		content.addComponent(termsOfUse);
+		content.setExpandRatio(termsOfUse, 1f);
 		
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
-		buttonPanel.addStyleName("spacing-left-right");
-		buttonPanel.setJustifyContent(JustifyContent.FLEX_END);
-
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setWidth("100%");
+		
 		btLogin = new Button("Login"); 
+		btLogin.setClickShortcut(KeyCode.ENTER);
+		
 		btCancel = new Button("Cancel");
 
-		buttonPanel.addComponent(btCancel);
 		buttonPanel.addComponent(btLogin);
+		buttonPanel.addComponent(btCancel);
+
+		buttonPanel.setComponentAlignment(btCancel, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setComponentAlignment(btLogin, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setExpandRatio(btLogin, 1f);
 		
 		content.addComponent(buttonPanel);
 		
 		setContent(content);
-	}
-	
-	public void show(String dialogWidth) {
-		UI.getCurrent().addWindow(this);
+
 	}
 	
 	public void show() {
-		show("400px"); //$NON-NLS-1$
+		UI.getCurrent().addWindow(this);
 	}
 }

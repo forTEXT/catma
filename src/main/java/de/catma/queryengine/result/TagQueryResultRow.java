@@ -112,6 +112,7 @@ public class TagQueryResultRow extends QueryResultRow {
 		final int prime = 31;
 		int result = super.hashCode();
 		result = prime * result + ((propertyDefinitionId == null) ? 0 : propertyDefinitionId.hashCode());
+		result = prime * result + ((propertyValue == null) ? 0 : propertyValue.hashCode());
 		result = prime * result + ((tagInstanceId == null) ? 0 : tagInstanceId.hashCode());
 		return result;
 	}
@@ -122,13 +123,18 @@ public class TagQueryResultRow extends QueryResultRow {
 			return true;
 		if (!super.equals(obj))
 			return false;
-		if (getClass() != obj.getClass())
+		if (!(obj instanceof TagQueryResultRow))
 			return false;
 		TagQueryResultRow other = (TagQueryResultRow) obj;
 		if (propertyDefinitionId == null) {
 			if (other.propertyDefinitionId != null)
 				return false;
 		} else if (!propertyDefinitionId.equals(other.propertyDefinitionId))
+			return false;
+		if (propertyValue == null) {
+			if (other.propertyValue != null)
+				return false;
+		} else if (!propertyValue.equals(other.propertyValue))
 			return false;
 		if (tagInstanceId == null) {
 			if (other.tagInstanceId != null)
@@ -137,6 +143,9 @@ public class TagQueryResultRow extends QueryResultRow {
 			return false;
 		return true;
 	}
+
+
+	
 	
 	
 }

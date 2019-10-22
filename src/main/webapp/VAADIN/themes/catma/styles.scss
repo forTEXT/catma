@@ -50,11 +50,10 @@ $v-focus-color: #5A98A1;
 		padding: 10px;	
 	}
 	
-	.v-panel-preview-panel {
-		margin-top: 24px;	
+	.v-slot-sourcedoc-wizard-content-info-documents-margins {
+		margin: 10px;	
 	}
-
-
+	
 	.analyzer-panel-padding {
 		padding: 10px;
 	}
@@ -109,8 +108,12 @@ $v-focus-color: #5A98A1;
 		text-align: center;
 	}
 
-	.help-padding-fix {
-		padding-right: 10px;
+	.help-text {
+		white-space: normal;
+	}
+	
+	.label-with-word-wrap {
+		white-space: normal;
 	}
 	
 	span.v-button-wrap div.gwt-HTML span {
@@ -292,11 +295,11 @@ $v-focus-color: #5A98A1;
 		border-top: 1px solid white;
 		outline:none;
     }
-    
-    
-    .tagger-trace-checkbox {
-    	margin-top: 8px;
-    }
+
+    .tagger-trace-checkbox-selected {
+		background: rgb(90, 152, 161);
+    	color: white;
+	}
 
     .taginstanceinfo {
     	margin: 5px;
@@ -380,6 +383,10 @@ $v-focus-color: #5A98A1;
             height: 56px;
         }
 
+		.header-home-button .v-icon {
+			font-size: medium;
+		}
+        
         .header .v-button, .header .button__icon {
             color: white;
             cursor: pointer;
@@ -792,6 +799,10 @@ $v-focus-color: #5A98A1;
 		margin-right: 5px;
 	}
 	
+	.annotationpanel-current-editable-collection-box-highlight {
+	    background: lightgoldenrodyellow;
+	}
+	
 	.v-treegrid.v-widget.annotation-details-card-property-tree.v-treegrid-annotation-details-card-property-tree.v-has-height {
 	    box-shadow: none;
 	}
@@ -823,44 +834,16 @@ $v-focus-color: #5A98A1;
 	
 	}	
 	
-	.annotation-conflict-view-property-grid-left-margin {
-		margin-left:2px;
-		margin-right:5px;
-		margin-bottom:5px;
-	}
-	.annotation-conflict-view-property-grid-right-margin {
-		margin-right:2px;
-		margin-left:5px;
-		margin-bottom:5px;
+	input.annotation-conflict-view-resource-field {
+		border-bottom: none !important;
+    	font-weight: bold;
+    	margin-bottom: 20px;
 	}
 	
-	.annotation-conflict-view {
-		flex-grow: 1;
-	}
-	
-	.annotation-conflict-view-comparison-panel {
-		flex-grow: 1;
-	}
-	
-	.annotation-conflict-view-button-panel {
-		flex-grow: 1;
-	}
-	
-	.tag-conflict-view {
-		flex-grow: 1;
-	}
-	
-	.tag-conflict-view-property-grid-margin {
-		margin-bottom:5px;
-	}
-	
-	.tag-conflict-view-comparison-panel {
-		flex-grow: 1;
-		align-items: center;
-	}
-	
-	.tag-conflict-view-button-panel {
-		flex-grow: 1;
+	input.tag-conflict-view-tagset-field {
+		border-bottom: none !important;
+    	font-weight: bold;
+    	margin-bottom: 20px;
 	}
 
 	.analyze-search-panel {
@@ -886,6 +869,11 @@ $v-focus-color: #5A98A1;
     
     .viz-max-panel-name {
 	    border-bottom: none !important;
+	}
+	
+	input.viz-max-panel-name.v-textfield-viz-max-panel-name {
+	    width: 100%;
+	    text-align: center;
 	}
         
 	.analyze-card-buttonbar {   

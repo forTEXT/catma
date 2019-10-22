@@ -6,9 +6,6 @@ import de.catma.ui.module.project.ProjectInvitation;
 
 public class JoinedProjectMessage implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 4432309957370280636L;
 	private final ProjectInvitation invitation;
 
@@ -19,5 +16,4 @@ public class JoinedProjectMessage implements Serializable {
 	public ProjectInvitation getInvitation() {
 		return invitation;
 	}
-
 }

@@ -24,17 +24,19 @@ import java.util.Collection;
 import java.util.Collections;
 
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.VerticalLayout;
 
+import de.catma.ui.dialog.HelpWindow;
 import de.catma.ui.legacy.wizard.DynamicWizardStep;
 import de.catma.ui.legacy.wizard.WizardStepListener;
 
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.TextField;
-
-class ContentInfoPanel extends HorizontalLayout implements
+class ContentInfoPanel extends VerticalLayout implements
 		DynamicWizardStep {
 	
 	private Grid<SourceDocumentResult> table;
@@ -52,12 +54,19 @@ class ContentInfoPanel extends HorizontalLayout implements
 	}
 
 	private void initComponents() {
-		setSpacing(true);
-		setMargin(true);
+		setSpacing(false);
+		setMargin(false);
 		setSizeFull();
+		
+		
+		HelpWindow helpWindow = new HelpWindow("Content details", "<p>This step allows you to set the Document's meta data.</p><p>Double click on a row to change title, author, publisher and description.</p>");
+		Button btHelp = helpWindow.createHelpWindowButton();
+		addComponent(btHelp);
+		setComponentAlignment(btHelp, Alignment.TOP_RIGHT);
 		
 		table = new Grid<>("Documents", new ListDataProvider<>(Collections.emptyList()));
 		table.setSizeFull();
+		table.addStyleName("sourcedoc-wizard-content-info-documents-margins");
 		
 		TextField titleEditor = new TextField();
 		TextField authorEditor = new TextField();
@@ -65,39 +74,35 @@ class ContentInfoPanel extends HorizontalLayout implements
 		TextField publisherEditor = new TextField();
 		
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getTechInfoSet().getFileName())
-			.setCaption("File Name")
-			.setWidth(200);
+			.setCaption("File Name");
 		
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getTitle())
 			.setCaption("Title")
 			.setEditorComponent(
 				titleEditor, 
-				(docResult,title) -> docResult.getSourceDocumentInfo().getContentInfoSet().setTitle(title))
-			.setWidth(200);		
+				(docResult,title) -> docResult.getSourceDocumentInfo().getContentInfoSet().setTitle(title));
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getAuthor())
 			.setCaption("Author")
 			.setEditorComponent(
 				authorEditor, 
-				(docResult,author) -> docResult.getSourceDocumentInfo().getContentInfoSet().setAuthor(author))
-			.setWidth(200);		
+				(docResult,author) -> docResult.getSourceDocumentInfo().getContentInfoSet().setAuthor(author));
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getDescription())
 			.setCaption("Description")
 			.setEditorComponent(
 				descEditor, 
-				(docResult,desc) -> docResult.getSourceDocumentInfo().getContentInfoSet().setDescription(desc))
-			.setWidth(200);		
+				(docResult,desc) -> docResult.getSourceDocumentInfo().getContentInfoSet().setDescription(desc));
 		table.addColumn(docResult -> docResult.getSourceDocumentInfo().getContentInfoSet().getPublisher())
 			.setCaption("Publisher")
 			.setEditorComponent(
 				publisherEditor, 
-				(docResult,publisher) -> docResult.getSourceDocumentInfo().getContentInfoSet().setPublisher(publisher))
-			.setExpandRatio(1);
+				(docResult,publisher) -> docResult.getSourceDocumentInfo().getContentInfoSet().setPublisher(publisher));
 		
 		table.setSelectionMode(SelectionMode.SINGLE);
 		table.getEditor().setEnabled(true);
 		
 		addComponent(table);
-		
+		setExpandRatio(table, 1f);
+
 	}
 
 	public Component getContent() {

@@ -97,6 +97,11 @@ public class VTagger extends Composite {
 			public void logEvent(String event) {
 				logToServer(event);
 			}
+			
+			@Override
+			public void contextMenuSelected(int x, int y) {
+				taggerListener.contextMenuSelected(x, y);
+			}
 		});
 		
 		initWidget(taggerEditor);

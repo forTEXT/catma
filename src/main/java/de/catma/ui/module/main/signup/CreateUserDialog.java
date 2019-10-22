@@ -11,22 +11,22 @@ import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.server.Page;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.ui.layout.FlexLayout.JustifyContent;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
 
 /**
  * Dialog for User creation. Email has already been verified and must not be changed.
@@ -42,48 +42,58 @@ public class CreateUserDialog extends Window {
 
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final Binder<UserData> userBinder = new Binder<>();
-	private final IRemoteGitManagerPrivileged gitlabManagerPrivileged= new GitlabManagerPrivileged();
+	private final IRemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
 	private final SignupToken signupToken;
 	
 	public CreateUserDialog(String caption, SignupToken signupToken) {
 		super(caption);
 		this.signupToken = signupToken;
-		setWidth("400px");
+		setWidth("50%");
+		setHeight("80%");
+		
 		initComponents();
 	}
 
 	private void initComponents() {
 		setModal(true);
-		VerticalFlexLayout content = new VerticalFlexLayout();
-		content.addStyleName("spacing");
-		content.addStyleName("margin");
+		VerticalLayout content = new VerticalLayout();
+		content.setSizeFull();
+		
 		Label lDescription = new Label("description", ContentMode.HTML);
-		lDescription.setValue("Please complete your sign by filling out this form and create your user account");
+		lDescription.setValue("Please complete your sign-up by filling out this form:");
 		
 		TextField tfUsername = new TextField("Username");
-		tfUsername.setSizeFull();
+		tfUsername.setWidth("100%");
+		
 		TextField tfEmail = new TextField("E-Mail");
-		tfEmail.setSizeFull();
+		tfEmail.setWidth("100%");
 		tfEmail.setValue(signupToken.getEmail());
 		tfEmail.setEnabled(false);
-		tfEmail.setDescription("Email is already verified");
+		tfEmail.setDescription("Email is already been verified");
+		
 		PasswordField tfPassword = new PasswordField("Password");
-		tfPassword.setSizeFull();
-		PasswordField tfVerifyPassword = new PasswordField("Verify Password");
-		tfVerifyPassword.setSizeFull();
+		tfPassword.setWidth("100%");
+		
+		PasswordField tfVerifyPassword = new PasswordField("Verify password");
+		tfVerifyPassword.setWidth("100%");
+		
 		TextField hiddenVerification = new TextField();
 		hiddenVerification.addStyleName("g-recaptcha-response");
 		
 
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout();
-		buttonPanel.setJustifyContent(JustifyContent.SPACE_BETWEEN);
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setWidth("100%");
 		Button btnCreate = new Button("Create");
 		btnCreate.setEnabled(false);
 		btnCreate.setDescription("Awaiting Google recaptcha verification...");
 		Button btnCancel = new Button("Cancel");
 		
-		buttonPanel.addComponent(btnCancel);
 		buttonPanel.addComponent(btnCreate);
+		buttonPanel.addComponent(btnCancel);
+
+		buttonPanel.setComponentAlignment(btnCancel, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setComponentAlignment(btnCreate, Alignment.BOTTOM_RIGHT);
+		buttonPanel.setExpandRatio(btnCreate, 1f);
 		
 		btnCancel.addClickListener(evt -> { 
 			Notification.show("User creation aborted", Type.TRAY_NOTIFICATION);
@@ -94,7 +104,7 @@ public class CreateUserDialog extends Window {
 			recaptchaResult = new GoogleRecaptchaVerifier().verify(hiddenVerification.getValue());
 			if (recaptchaResult.isSuccess()) {
 				btnCreate.setEnabled(true);
-				btnCreate.setDescription("Create User profile");
+				btnCreate.setDescription("Create user account");
 			}
 			else {
 				Notification.show(
@@ -111,6 +121,8 @@ public class CreateUserDialog extends Window {
 		content.addComponent(tfEmail);
 		content.addComponent(tfPassword);
 		content.addComponent(tfVerifyPassword);
+		content.setExpandRatio(tfVerifyPassword, 1f);
+		
 		content.addComponent(hiddenVerification);
 		content.addComponent(buttonPanel);
 		
@@ -119,7 +131,6 @@ public class CreateUserDialog extends Window {
 	    .bind(UserData::getUsername, UserData::setUsername);
 		
 		userBinder.forField(tfEmail)
-//	    .withValidator(new UsernameValidator(gitlabManagerPrivileged))
 	    .bind(UserData::getEmail, UserData::setEmail);
 		
 		userBinder.forField(tfPassword)
@@ -143,7 +154,7 @@ public class CreateUserDialog extends Window {
 			// sanity check the password
 			if(tfPassword.getValue() == null || tfVerifyPassword.getValue() == null || 
 					(! tfPassword.getValue().equals(tfVerifyPassword.getValue()))) {
-				Notification.show("Passwords doen't match",Type.ERROR_MESSAGE);
+				Notification.show("Passwords don't match",Type.ERROR_MESSAGE);
 				return;
 			}
 
@@ -161,9 +172,15 @@ public class CreateUserDialog extends Window {
 				return;
 			}
 			try {
-				gitlabManagerPrivileged.createUser(user.getEmail(), user.getUsername(), user.getPassword(), user.getUsername(), false);
+				gitlabManagerPrivileged.createUser(
+						user.getEmail(), 
+						user.getUsername(), user.getPassword(), 
+						user.getUsername(), 
+						false);
 				
-				Notification.show("User creation completed. Please sign in!", Type.TRAY_NOTIFICATION);
+				Notification.show(
+						"Your user account has been created. Please sign in!", 
+						Type.HUMANIZED_MESSAGE);
 				
 			} catch (IOException e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't create token in backend", e);

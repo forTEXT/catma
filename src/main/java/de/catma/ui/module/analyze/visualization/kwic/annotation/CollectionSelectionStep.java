@@ -170,16 +170,16 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 			@Override
 			public boolean test(Object r) {
 				if (r instanceof CollectionResource) {
-					return r.toString().startsWith(searchInput);
+					return r.toString().toLowerCase().startsWith(searchInput.toLowerCase());
 				}
 				else {
-					if (r.toString().startsWith(searchInput)) {
+					if (r.toString().toLowerCase().startsWith(searchInput.toLowerCase())) {
 						return true;
 					}
 					else {
 						return documentData.getChildren((Resource)r)
 								.stream()
-								.filter(child -> child.toString().startsWith(searchInput))
+								.filter(child -> child.toString().toLowerCase().startsWith(searchInput.toLowerCase()))
 								.findAny()
 								.isPresent();
 					}

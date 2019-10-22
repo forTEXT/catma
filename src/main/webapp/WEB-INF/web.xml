@@ -12,15 +12,6 @@
 	<session-config>
     	<session-timeout>120</session-timeout>
 	</session-config>
-	   <filter>
-        <filter-name>guiceFilter</filter-name>
-        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
-        <async-supported>true</async-supported>
-    </filter>
-    <filter-mapping>
-        <filter-name>guiceFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
 	<servlet> 
 		<servlet-name>CATMAProperties</servlet-name> 
 		<servlet-class>de.catma.servlet.PropertiesInitializerServlet</servlet-class> 
@@ -41,13 +32,41 @@
              <param-name>start-scheduler-on-load</param-name>
              <param-value>true</param-value>
          </init-param>
-   		<load-on-startup>3</load-on-startup>
+   		<load-on-startup>2</load-on-startup>
 	</servlet>
+	
+	<servlet>
+		<servlet-name>CATMAApp</servlet-name>
+		<servlet-class>de.catma.ui.CatmaApplicationServlet</servlet-class>
+		<init-param>
+			<param-name>UI</param-name>
+			<param-value>de.catma.ui.CatmaApplication</param-value>
+		</init-param>
+		<init-param>
+			<param-name>widgetset</param-name>
+			<param-value>de.catma.ui.CleaWidgetset</param-value>
+		</init-param>
+		<init-param>
+			<param-name>closeIdleSessions</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>org.atmosphere.container.JSR356AsyncSupport.mappingPath</param-name>
+			<param-value>/PUSH</param-value>
+		</init-param>
+		<load-on-startup>3</load-on-startup>
+
+		<async-supported>true</async-supported>
+	</servlet>	
 	<servlet-mapping>
     	<servlet-name>default</servlet-name>
     	<url-pattern>/manual/*</url-pattern>
 	</servlet-mapping>
-    
+    	<servlet-mapping>
+		<servlet-name>CATMAApp</servlet-name>
+		<url-pattern>/*</url-pattern>
+	</servlet-mapping>
+	
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 		<welcome-file>index.htm</welcome-file>

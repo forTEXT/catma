@@ -102,4 +102,9 @@ public class TagQueryResult implements GroupedQueryResult, QueryResult {
 	public boolean remove(QueryResultRow row) {
 		return rows.remove(row);
 	}
+	
+	@Override
+	public int size() {
+		return rows.size();
+	}
 }

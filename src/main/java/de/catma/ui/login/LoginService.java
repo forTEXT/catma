@@ -26,7 +26,8 @@ public interface LoginService {
 	 * @return API
 	 * @throws IOException
 	 */
-	IRemoteGitManagerRestricted loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException;
+	IRemoteGitManagerRestricted loggedInFromThirdParty(
+			String identifier, String provider, String email, String name) throws IOException;
 	
 	/**
 	 * It's implementation specific how to store the current API

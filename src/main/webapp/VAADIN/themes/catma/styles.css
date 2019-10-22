@@ -1081,7 +1081,7 @@
  */
 
 .v-vaadin-version:after {
-	content: "8.8.1";
+	content: "8.9.1";
 }
 
 .v-widget {
@@ -6026,7 +6026,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-popup td.v-datefield-calendarpanel-month {
 	width: 116px;
+	cursor: default;
 	color: #5A98A1;
+}
+
+.catma .v-datefield-popup td.v-datefield-calendarpanel-month.header-month-year {
+	cursor: pointer;
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-year td.v-datefield-calendarpanel-month {
@@ -6207,7 +6212,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td.v-datefield-calendarpanel-month {
 	width: 116px;
+	cursor: default;
 	color: #5A98A1;
+}
+
+.catma td.v-datefield-calendarpanel-month.header-month-year {
+	cursor: pointer;
 }
 
 .catma .v-datefield-calendarpanel-year td.v-datefield-calendarpanel-month {
@@ -6858,7 +6868,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td.v-inline-datefield-calendarpanel-month {
 	width: 116px;
+	cursor: default;
 	color: #5A98A1;
+}
+
+.catma td.v-inline-datefield-calendarpanel-month.header-month-year {
+	cursor: pointer;
 }
 
 .catma .v-inline-datefield-calendarpanel-year td.v-inline-datefield-calendarpanel-month {
@@ -17323,8 +17338,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 10px;
 }
 
-.catma .v-panel-preview-panel {
-	margin-top: 24px;
+.catma .v-slot-sourcedoc-wizard-content-info-documents-margins {
+	margin: 10px;
 }
 
 .catma .analyzer-panel-padding {
@@ -17379,8 +17394,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-align: center;
 }
 
-.catma .help-padding-fix {
-	padding-right: 10px;
+.catma .help-text {
+	white-space: normal;
+}
+
+.catma .label-with-word-wrap {
+	white-space: normal;
 }
 
 .catma span.v-button-wrap div.gwt-HTML span {
@@ -17547,8 +17566,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	outline: none;
 }
 
-.catma .tagger-trace-checkbox {
-	margin-top: 8px;
+.catma .tagger-trace-checkbox-selected {
+	background: #5a98a1;
+	color: white;
 }
 
 .catma .taginstanceinfo {
@@ -17621,6 +17641,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: white;
 	padding: 0.5em;
 	height: 56px;
+}
+
+.catma .header-home-button .v-icon {
+	font-size: medium;
 }
 
 .catma .header .v-button, .catma .header .button__icon {
@@ -18014,6 +18038,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-right: 5px;
 }
 
+.catma .annotationpanel-current-editable-collection-box-highlight {
+	background: lightgoldenrodyellow;
+}
+
 .catma .v-treegrid.v-widget.annotation-details-card-property-tree.v-treegrid-annotation-details-card-property-tree.v-has-height {
 	box-shadow: none;
 }
@@ -18044,45 +18072,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0px;
 }
 
-.catma .annotation-conflict-view-property-grid-left-margin {
-	margin-left: 2px;
-	margin-right: 5px;
-	margin-bottom: 5px;
+.catma input.annotation-conflict-view-resource-field {
+	border-bottom: none !important;
+	font-weight: bold;
+	margin-bottom: 20px;
 }
 
-.catma .annotation-conflict-view-property-grid-right-margin {
-	margin-right: 2px;
-	margin-left: 5px;
-	margin-bottom: 5px;
-}
-
-.catma .annotation-conflict-view {
-	flex-grow: 1;
-}
-
-.catma .annotation-conflict-view-comparison-panel {
-	flex-grow: 1;
-}
-
-.catma .annotation-conflict-view-button-panel {
-	flex-grow: 1;
-}
-
-.catma .tag-conflict-view {
-	flex-grow: 1;
-}
-
-.catma .tag-conflict-view-property-grid-margin {
-	margin-bottom: 5px;
-}
-
-.catma .tag-conflict-view-comparison-panel {
-	flex-grow: 1;
-	align-items: center;
-}
-
-.catma .tag-conflict-view-button-panel {
-	flex-grow: 1;
+.catma input.tag-conflict-view-tagset-field {
+	border-bottom: none !important;
+	font-weight: bold;
+	margin-bottom: 20px;
 }
 
 .catma .analyze-search-panel {
@@ -18108,6 +18107,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .viz-max-panel-name {
 	border-bottom: none !important;
+}
+
+.catma input.viz-max-panel-name.v-textfield-viz-max-panel-name {
+	width: 100%;
+	text-align: center;
 }
 
 .catma .analyze-card-buttonbar {

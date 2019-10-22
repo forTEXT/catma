@@ -8,16 +8,16 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.Constants.ImpersonationState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.NotificationSettingsApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Identity;
 import org.gitlab4j.api.models.ImpersonationToken;
 import org.gitlab4j.api.models.ImpersonationToken.Scope;
+import org.gitlab4j.api.models.NotificationSettings;
 import org.gitlab4j.api.models.User;
 
 import de.catma.properties.CATMAPropertyKey;
@@ -26,7 +26,7 @@ import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.util.Pair;
 
-public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, GitlabManagerCommon {
+public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRemoteGitManagerPrivileged {
 	
 	public static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
@@ -87,11 +87,21 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 	}
 	
 	@Override
-	public int createUser(String email, String identifier, @Nullable String password,
-			   String name, @Nullable Boolean isAdmin)
+	public int createUser(String email, String identifier, String password,
+			   String name, Boolean isAdmin)
 					   throws IOException {
 		User user = this.createUser(email, identifier, password, name, null, isAdmin);
-		this.createImpersonationToken(user.getId(),GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
+		String token = this.createImpersonationToken(user.getId(),GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
+		NotificationSettingsApi userNotificationSettingsApi = 
+			new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), token).getNotificationSettingsApi();
+		try {
+			NotificationSettings settings = userNotificationSettingsApi.getGlobalNotificationSettings();
+			settings.setLevel(NotificationSettings.Level.DISABLED);
+			userNotificationSettingsApi.updateGlobalNotificationSettings(settings);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to update notification settings for " + user, e);
+		}
 		return user.getId();
 	}
 	
@@ -186,8 +196,8 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 	}
 	
 	// it's more convenient to work with the User class internally, which is why this method exists
-	private User createUser(String email, String identifier, @Nullable String password, String name, String provider,
-							@Nullable Boolean isAdmin) throws IOException {
+	private User createUser(String email, String identifier, String password, String name, String provider,
+							Boolean isAdmin) throws IOException {
 		UserApi userApi = privilegedGitLabApi.getUserApi();
 		if (password == null) {
 			// generate a random password
@@ -205,6 +215,7 @@ public class GitlabManagerPrivileged implements IRemoteGitManagerPrivileged, Git
 		user.setUsername(identifier);
 		user.setName(name);
 		user.setIsAdmin(isAdmin);
+		user.setSkipConfirmation(true);
 		
 		if (provider != null) {
 			Identity identity = new Identity();

@@ -142,6 +142,12 @@ public class PagerComponent extends HorizontalLayout {
 			
 			public void valueChange(ValueChangeEvent<String> event) {
 				currentPageNumber = pageInput.getNumber();
+				if (currentPageNumber > lastPageNumber) {
+					currentPageNumber = lastPageNumber;
+				}
+				else if (currentPageNumber < 1) {
+					currentPageNumber = 1;
+				}
 				pageChangeListener.pageChanged(currentPageNumber);
 				if (currentPageNumber == 1) {
 					previousPageButton.setEnabled(false);
@@ -158,36 +164,11 @@ public class PagerComponent extends HorizontalLayout {
 				pageInput.setComponentError(null);
 			}
 		});
-
-		//TODO:
-//		pageInput.addValidator(new Validator() {
-//			public boolean isValid(Object value) {
-//				if (value != null) {
-//					try {
-//						int i = Integer.valueOf(value.toString());
-//						if (i>=1 && i<=lastPageNumber) {
-//							return true;
-//						}
-//					}
-//					catch (NumberFormatException nfe) {
-//						return false;
-//					}
-//				}
-//				return false;
-//			}
-//			
-//			public void validate(Object value) throws InvalidValueException {
-//				if (!isValid(value)) {
-//					throw new InvalidValueException(MessageFormat.format(Messages.getString("PagerComponent.numberRequirements"), lastPageNumber));  //$NON-NLS-1$
-//				}
-//			}
-//		});
-//		pageInput.setInvalidAllowed(false);
-//		pageInput.setInvalidCommitted(false);
+		
 	}
 
 	private void initComponents() {
-		setSpacing(true);
+		setSpacing(false);
 		firstPageButton = new IconButton(VaadinIcons.FAST_BACKWARD);
 		addComponent(firstPageButton);
 		previousPageButton = new IconButton(VaadinIcons.BACKWARDS);

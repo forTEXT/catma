@@ -14,8 +14,8 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
-import de.catma.ui.module.annotate.Tagger;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.module.annotate.Tagger;
 import de.catma.util.ColorConverter;
 import de.catma.util.Pair;
 
@@ -173,6 +173,10 @@ public class TaggerContextMenu {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);
+	}
+
+	public void show(int x, int y) {
+		contextMenu.open(x, y);
 	}
 
 }
