@@ -156,7 +156,8 @@ public class GitSourceDocumentHandler {
 			String revisionHash = localGitRepoManager.commit(
 				commitMessage,
 				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getEmail()
+				remoteGitServerManager.getEmail(),
+				false
 			);
 			
 			logger.info("Finished adding SourceDocument to the local project " + projectId);

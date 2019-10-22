@@ -18072,45 +18072,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0px;
 }
 
-.catma .annotation-conflict-view-property-grid-left-margin {
-	margin-left: 2px;
-	margin-right: 5px;
-	margin-bottom: 5px;
+.catma input.annotation-conflict-view-resource-field {
+	border-bottom: none !important;
+	font-weight: bold;
+	margin-bottom: 20px;
 }
 
-.catma .annotation-conflict-view-property-grid-right-margin {
-	margin-right: 2px;
-	margin-left: 5px;
-	margin-bottom: 5px;
-}
-
-.catma .annotation-conflict-view {
-	flex-grow: 1;
-}
-
-.catma .annotation-conflict-view-comparison-panel {
-	flex-grow: 1;
-}
-
-.catma .annotation-conflict-view-button-panel {
-	flex-grow: 1;
-}
-
-.catma .tag-conflict-view {
-	flex-grow: 1;
-}
-
-.catma .tag-conflict-view-property-grid-margin {
-	margin-bottom: 5px;
-}
-
-.catma .tag-conflict-view-comparison-panel {
-	flex-grow: 1;
-	align-items: center;
-}
-
-.catma .tag-conflict-view-button-panel {
-	flex-grow: 1;
+.catma input.tag-conflict-view-tagset-field {
+	border-bottom: none !important;
+	font-weight: bold;
+	margin-bottom: 20px;
 }
 
 .catma .analyze-search-panel {

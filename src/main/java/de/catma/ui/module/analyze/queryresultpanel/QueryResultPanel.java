@@ -741,7 +741,8 @@ public class QueryResultPanel extends VerticalLayout {
 		miGroupByTagPath = optionsMenu.addItem("Group by Tag Path", mi -> initTagBasedData());
 		miFlatTable = optionsMenu.addItem("Display Annotations as flat table", mi -> initFlatTagBasedData());
 		miPropertiesAsColumns = optionsMenu.addItem("Display Properties as columns", mi -> initPropertiesAsColumnsTagBasedData());
-		
+		optionsMenu.addItem("Export", mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
+
 		if (resultPanelCloseListener != null) {
 			removeBt.addClickListener(clickEvent -> resultPanelCloseListener.closeRequest(QueryResultPanel.this));
 		}

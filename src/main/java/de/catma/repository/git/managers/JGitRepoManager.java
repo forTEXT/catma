@@ -456,7 +456,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		    gitApi.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
 		    gitApi.rm().setCached(true).addFilepattern(relativeUnixStyleFilePath).call();
 
-		    String projectRevisionHash = commit(commitMsg, committerName, committerEmail);
+		    String projectRevisionHash = commit(commitMsg, committerName, committerEmail, false);
 			
 			File submoduleGitDir = 
 				basePath
@@ -483,7 +483,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		this.remove(targetFile);
-		return this.commit(commitMsg, committerName, committerEmail);
+		return this.commit(commitMsg, committerName, committerEmail, false);
 	}
 
 	/**
@@ -507,7 +507,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		this.add(targetFile, bytes);
-		return this.commit(commitMsg, committerName, committerEmail);
+		return this.commit(commitMsg, committerName, committerEmail, false);
 	}
 
 	/**
@@ -518,9 +518,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws IOException if the commit operation failed
 	 */
 	@Override
-	public String commit(String message, String committerName, String committerEmail)
+	public String commit(String message, String committerName, String committerEmail, boolean force)
 			throws IOException {
-		return this.commit(message, committerName, committerEmail, false);
+		return this.commit(message, committerName, committerEmail, false, force);
 	}
 
 	@Override
@@ -563,13 +563,13 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 	@Override
-	public String commit(String message, String committerName, String committerEmail, boolean all) throws IOException {
+	public String commit(String message, String committerName, String committerEmail, boolean all, boolean force) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `commit` on a detached instance");
 		}
 
 		try {
-			if (gitApi.status().call().hasUncommittedChanges()) {
+			if (force || gitApi.status().call().hasUncommittedChanges()) {
 				return this.gitApi
 					.commit()
 					.setMessage(message)
@@ -855,7 +855,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public String addAllAndCommit(String message, String committerName, String committerEmail) throws IOException {
+	public String addAllAndCommit(
+			String message, String committerName, String committerEmail, boolean force) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addAllAndCommit` on a detached instance");
 		}
@@ -875,8 +876,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				rmCmd.call();
 			}
 			
-			if (gitApi.status().call().hasUncommittedChanges()) {
-				return commit(message, committerName, committerEmail);
+			if (force || gitApi.status().call().hasUncommittedChanges()) {
+				return commit(message, committerName, committerEmail, force);
 			}
 			else {
 				return getRevisionHash();

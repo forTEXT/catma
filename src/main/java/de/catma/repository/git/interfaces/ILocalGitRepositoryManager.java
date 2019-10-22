@@ -35,7 +35,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	String addAndCommit(File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail)
 			throws IOException;
 
-	String commit(String message, String committerName, String committerEmail) throws IOException;
+	String commit(String message, String committerName, String committerEmail, boolean force) throws IOException;
 
 	void addSubmodule(File path, String uri, CredentialsProvider credentialsProvider)
 			throws IOException;
@@ -65,14 +65,14 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	String getRevisionHash(String submodule) throws IOException;
 
-	String commit(String message, String committerName, String committerEmail, boolean all) throws IOException;
+	String commit(String message, String committerName, String committerEmail, boolean all, boolean force) throws IOException;
 	String commitWithSubmodules(String message, String committerName, String committerEmail, Set<String> submodules)
 			throws IOException;
 
 	boolean hasUncommitedChanges() throws IOException;
 	boolean hasUncommitedChangesWithSubmodules(Set<String> submodules) throws IOException;
 
-	String addAllAndCommit(String commitMsg, String committerName, String committerEmail) throws IOException;
+	String addAllAndCommit(String commitMsg, String committerName, String committerEmail, boolean force) throws IOException;
 
 	String removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException;
 

@@ -584,7 +584,7 @@ public class GitTagsetHandler {
 		}
 	}
 
-	public String addAllAndCommit(String projectId, String tagsetId, String commitMsg) throws Exception {
+	public String addAllAndCommit(String projectId, String tagsetId, String commitMsg, boolean force) throws Exception {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -599,7 +599,8 @@ public class GitTagsetHandler {
 			String tagsetRevision = localGitRepoManager.addAllAndCommit(
 					commitMsg,
 					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());
+					remoteGitServerManager.getEmail(),
+					force);
 				
 			return tagsetRevision;
 		}

@@ -29,7 +29,7 @@ public interface GraphProjectHandler {
 	}
 
 	void ensureProjectRevisionIsLoaded(
-			ExecutionListener<Void> openProjectListener,
+			ExecutionListener<TagManager> openProjectListener,
 			ProgressListener progressListener,
 			String revisionHash, 
 			TagManager tagManager,

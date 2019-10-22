@@ -83,10 +83,10 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	
 	@Override
 	public void ensureProjectRevisionIsLoaded(
-			ExecutionListener<Void> openProjectListener, 
+			ExecutionListener<TagManager> openProjectListener, 
 			ProgressListener progressListener,
 			String revisionHash, 
-			TagManager tagManager,
+			final TagManager tagManager,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, 
 			Supplier<List<SourceDocument>> documentsSupplier,
 			CollectionsSupplier collectionsSupplier,
@@ -112,7 +112,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 					@Override
 					public void done(TagManager result) {
 						TPGraphProjectHandler.this.tagManager = result;
-						openProjectListener.done(null);
+						openProjectListener.done(result);
 					}
 					@Override
 					public void error(Throwable t) {
@@ -122,7 +122,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 				progressListener);
 		}
 		else {
-			openProjectListener.done(null);
+			openProjectListener.done(tagManager);
 		}
 	}
 

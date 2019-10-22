@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,7 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
+import com.vaadin.ui.UI;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.ExecutionListener;
@@ -69,6 +71,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
@@ -186,7 +189,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				gitProjectHandler.removeStaleSubmoduleDirectories();
 				gitProjectHandler.ensureDevBranches();
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
-						new ExecutionListener<Void>() {
+						new ExecutionListener<TagManager>() {
 							
 							@Override
 							public void error(Throwable t) {
@@ -194,7 +197,8 @@ public class GraphWorktreeProject implements IndexedProject {
 							}
 							
 							@Override
-							public void done(Void result) {
+							public void done(TagManager result) {
+								tagManager = result;
 								initTagManagerListeners();
 								openProjectListener.ready(GraphWorktreeProject.this);
 							}
@@ -455,12 +459,13 @@ public class GraphWorktreeProject implements IndexedProject {
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			// TODO: check permissions if commit is allowed, if that is not the case skip git update
 			
-			gitProjectHandler.addAndCommitCollection(
+			gitProjectHandler.addCollectionToStagedAndCommit(
 					collectionId,
 					String.format(
 						"Autocommitting changes before performing an update of Annotations "
 						+ "as part of a Property Definition deletion operation",
-						propertyDefinition.getName()));
+						propertyDefinition.getName()),
+					false);
 			
 			Collection<TagReference> tagReferences = 
 					annotationIdsByCollectionId.get(collectionId);
@@ -483,11 +488,12 @@ public class GraphWorktreeProject implements IndexedProject {
 			}
 			
 			String collectionRevisionHash = 
-				gitProjectHandler.addAndCommitCollection(
+				gitProjectHandler.addCollectionToStagedAndCommit(
 					collectionId,
 					String.format(
 						"Annotation Properties removed, caused by the removal of Tag Property %1$s ", 
-						propertyDefinition.getName()));
+						propertyDefinition.getName()),
+					false);
 			
 			graphProjectHandler.removeProperties(
 				this.rootRevisionHash, 
@@ -677,18 +683,19 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void close() {
 		try {
-			commitAllChanges(
-				collectionRef -> String.format(
-						"Auto-committing Collection %1$s with ID %2$s on Project close",
-						collectionRef.getName(),
-						collectionRef.getId()),
-				String.format(
-						"Auto-committing Project %1$s with ID %2$s on close", 
-						projectReference.getName(),
-						projectReference.getProjectId()));
+			if (!gitProjectHandler.hasConflicts()) {
+				commitAllChanges(
+					collectionRef -> String.format(
+							"Auto-committing Collection %1$s with ID %2$s on Project close",
+							collectionRef.getName(),
+							collectionRef.getId()),
+					String.format(
+							"Auto-committing Project %1$s with ID %2$s on close", 
+							projectReference.getName(),
+							projectReference.getProjectId()));
+			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Error closing Project", e);
 		}
 		try {
 			for (PropertyChangeListener listener : this.propertyChangeSupport.getPropertyChangeListeners()) {
@@ -698,7 +705,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			this.eventBus = null;
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO:
+			logger.log(Level.SEVERE, "Error closing Project", e);
 		}
 	}
 
@@ -1046,10 +1053,11 @@ public class GraphWorktreeProject implements IndexedProject {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		// project commit
-		this.rootRevisionHash = gitProjectHandler.addToStagedAndCommit(
-			collectionReference, 
+		this.rootRevisionHash = gitProjectHandler.addCollectionSubmoduleToStagedAndCommit(
+			collectionReference.getId(), 
 			String.format("Updated metadata of Collection %1$s with ID %2$s", 
-					collectionReference.getName(), collectionReference.getId()));
+					collectionReference.getName(), collectionReference.getId()),
+			false);
 		
 		graphProjectHandler.updateCollection(
 			this.rootRevisionHash, collectionReference, oldRootRevisionHash);		
@@ -1156,9 +1164,10 @@ public class GraphWorktreeProject implements IndexedProject {
 			
 			for (AnnotationCollectionReference collectionRef : collectionRefs) {
 				
-				gitProjectHandler.addAndCommitCollection(
+				gitProjectHandler.addCollectionToStagedAndCommit(
 					collectionRef.getId(), 
-					collectionCcommitMsgProvider.apply(collectionRef));
+					collectionCcommitMsgProvider.apply(collectionRef),
+					false);
 			}
 			
 			gitProjectHandler.commitProject(projectCommitMsg);
@@ -1178,12 +1187,12 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 		
 		for (TagsetDefinition tagset : getTagsets()) {
-			gitProjectHandler.synchronizeWithRemote(tagset);
+			gitProjectHandler.synchronizeTagsetWithRemote(tagset.getUuid());
 		}
 		
 		for (SourceDocument document : getSourceDocuments()) {
 			for (AnnotationCollectionReference collectionReference : document.getUserMarkupCollectionRefs()) {
-				gitProjectHandler.synchronizeWithRemote(collectionReference);
+				gitProjectHandler.synchronizeCollectionWithRemote(collectionReference.getId());
 			}
 		}
 		
@@ -1203,7 +1212,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			gitProjectHandler.ensureDevBranches();		
 			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			graphProjectHandler.ensureProjectRevisionIsLoaded(
-					new ExecutionListener<Void>() {
+					new ExecutionListener<TagManager>() {
 						
 						@Override
 						public void error(Throwable t) {
@@ -1211,7 +1220,8 @@ public class GraphWorktreeProject implements IndexedProject {
 						}
 						
 						@Override
-						public void done(Void result) {
+						public void done(TagManager result) {
+							tagManager = result;
 							openProjectListener.ready(GraphWorktreeProject.this);
 						}
 					},

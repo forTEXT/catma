@@ -2,6 +2,7 @@ package de.catma.ui.module.analyze;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 
 import de.catma.document.corpus.Corpus;
 
@@ -20,7 +21,7 @@ public class AnalyzeCaption {
 		return String.format("%1$d Document(s), %2$d Collection(s) %3$s", 
 				corpus.getSourceDocuments().size(), 
 				corpus.getUserMarkupCollectionRefs().size(),
-				timestamp.format(DateTimeFormatter.ISO_LOCAL_TIME));
+				timestamp.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)));
 	}
 
 	public void setCaption(String caption) {

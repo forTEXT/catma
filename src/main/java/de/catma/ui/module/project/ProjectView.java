@@ -255,7 +255,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         
         MenuItem editDocBtn = documentsGridMoreOptionsContextMenu.addItem(
-            	"Edit documents / collections",(menuItem) -> handleEditResources());
+            	"Edit Documents / Collections",(menuItem) -> handleEditResources());
         editDocBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
@@ -263,7 +263,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		() -> editDocBtn.setEnabled(true))
         		);
         MenuItem deleteDocsBtn = documentsGridMoreOptionsContextMenu.addItem(
-        	"Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, documentGrid));
+        	"Delete Documents / Collections",(menuItem) -> handleDeleteResources(menuItem, documentGrid));
         deleteDocsBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
@@ -272,11 +272,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		);
         
         documentsGridMoreOptionsContextMenu.addItem(
-            	"Analyze documents / collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
+            	"Analyze Documents / Collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
 
+        documentsGridMoreOptionsContextMenu.addItem(
+        		"Import Collections", 
+        		mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
+        documentsGridMoreOptionsContextMenu.addItem(
+        		"Export Collections", 
+        		mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
 
         documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
-        
         
         
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
@@ -287,30 +292,32 @@ public class ProjectView extends HugeCard implements CanReloadAll {
    
         ContextMenu moreOptionsMenu = 
         	tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        MenuItem editTagset = moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
+        MenuItem editTagset = moreOptionsMenu.addItem("Edit Tagset", mi -> handleEditTagsetRequest());
         editTagset.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
         		() -> editTagset.setEnabled(true))
         		);
 
-        MenuItem deleteTagSetBtn = moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
+        MenuItem deleteTagSetBtn = moreOptionsMenu.addItem("Delete Tagset", mi -> handleDeleteTagsetRequest());
         deleteTagSetBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
         		() -> deleteTagSetBtn.setEnabled(true))
         		);
         
-        MenuItem importTagSetBtn = moreOptionsMenu.addItem("Import Tagsets", clickEvent -> handleImportTagsetsRequest());
+        MenuItem importTagSetBtn = moreOptionsMenu.addItem("Import Tagsets", mi -> handleImportTagsetsRequest());
         importTagSetBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
         		() -> importTagSetBtn.setEnabled(true))
         		);
         
+        moreOptionsMenu.addItem("Export Tagsets", mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
+        
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
-        hugeCardMoreOptions.addItem("Commit all changes", e -> handleCommitRequest());
-        hugeCardMoreOptions.addItem("Synchronize with the team", e -> handleSynchronizeRequest());
+        hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
+        hugeCardMoreOptions.addItem("Synchronize with the team", mi -> handleSynchronizeRequest());
         //TODO:
 //        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
         
@@ -360,34 +367,35 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleImportTagsetsRequest() {
-		UploadDialog uploadDialog =
-				new UploadDialog("Upload Tagsets",
-						new SaveCancelListener<byte[]>() {
-			
-			public void cancelPressed() {}
-			
-			public void savePressed(byte[] result) {
-				InputStream is = new ByteArrayInputStream(result);
-				try {
-					if (BOMFilterInputStream.hasBOM(result)) {
-						is = new BOMFilterInputStream(
-								is, Charset.forName("UTF-8")); //$NON-NLS-1$
-					}
-					
-					project.importTagLibrary(is);
-					
-					
-				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error importing Tagsets", e);
-				}
-				finally {
-					CloseSafe.close(is);
-				}
-			}
-			
-		});
-		uploadDialog.show();	
+		Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE);
+//		UploadDialog uploadDialog =
+//				new UploadDialog("Upload Tagsets",
+//						new SaveCancelListener<byte[]>() {
+//			
+//			public void cancelPressed() {}
+//			
+//			public void savePressed(byte[] result) {
+//				InputStream is = new ByteArrayInputStream(result);
+//				try {
+//					if (BOMFilterInputStream.hasBOM(result)) {
+//						is = new BOMFilterInputStream(
+//								is, Charset.forName("UTF-8")); //$NON-NLS-1$
+//					}
+//					
+//					project.importTagLibrary(is);
+//					
+//					
+//				} catch (IOException e) {
+//					((CatmaApplication)UI.getCurrent()).showAndLogError(
+//						"Error importing Tagsets", e);
+//				}
+//				finally {
+//					CloseSafe.close(is);
+//				}
+//			}
+//			
+//		});
+//		uploadDialog.show();	
 	}
 
 	private void handleSynchronizeRequest() {
@@ -900,7 +908,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	"Invite someone to the Project", click -> handleProjectInvitationRequest());
         
         MenuItem editResBtn = moreOptionsContextMenu.addItem(
-        		"View resource permissions", 
+        		"Resource permissions", 
         		click -> {
         			@SuppressWarnings("unchecked")
 					TreeDataProvider<Resource> resourceDataProvider = 

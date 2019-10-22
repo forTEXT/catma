@@ -427,7 +427,8 @@ public class GitMarkupCollectionHandler {
 			return localGitRepoManager.commit(
 					message,
 					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());
+					remoteGitServerManager.getEmail(),
+					false);
 		}
 	}
 
@@ -449,7 +450,8 @@ public class GitMarkupCollectionHandler {
 					"Auto-committing changes before performing a deletion of "
 					+ "Annotations as part of a Tag deletion operation",
 					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());				
+					remoteGitServerManager.getEmail(),
+					false);				
 			}
 			
 			removeTagInstances(localGitRepoManager, deletedTagInstanceIds);
@@ -458,7 +460,8 @@ public class GitMarkupCollectionHandler {
 				return localGitRepoManager.commit(
 						commitMsg,
 						remoteGitServerManager.getUsername(),
-						remoteGitServerManager.getEmail());
+						remoteGitServerManager.getEmail(),
+						false);
 
 			}
 			else {
@@ -500,7 +503,7 @@ public class GitMarkupCollectionHandler {
 		}
 	}
 
-	public String addAndCommitChanges(String projectId, String collectionId, String commitMsg) throws IOException {
+	public String addAndCommitChanges(String projectId, String collectionId, String commitMsg, boolean force) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -515,7 +518,8 @@ public class GitMarkupCollectionHandler {
 			return localGitRepoManager.addAllAndCommit(
 					commitMsg,
 					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());
+					remoteGitServerManager.getEmail(),
+					force);
 		}
 	}
 	
@@ -726,11 +730,11 @@ public class GitMarkupCollectionHandler {
 
 		String masterVersion = serializedConflictingAnnotation
 			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
-			.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> dev\\E(\\r\\n|\\r|\\n)", "");
+			.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
 		
 		String devVersion = serializedConflictingAnnotation
 			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
-			.replaceAll("\\Q>>>>>>> dev\\E(\\r\\n|\\r|\\n)", "");
+			.replaceAll("\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
 				
 		
 		JsonLdWebAnnotation masterVersionJsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
@@ -746,14 +750,23 @@ public class GitMarkupCollectionHandler {
 
 		AnnotationConflict annotationConflict = 
 				new AnnotationConflict(
-					masterTagReferences.get(0).getTagInstance(), masterTagReferences, 
-					devTagReferences.get(0).getTagInstance(), devTagReferences);
+					devTagReferences.get(0).getTagInstance(), devTagReferences,
+					masterTagReferences.get(0).getTagInstance(), masterTagReferences);
 		
 		return annotationConflict;
 	}
 
-	public void rebaseToMaster() throws Exception {
+	public void rebaseToMaster(String projectId, String collectionId, String branch) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);		
+			localGitRepoManager.checkout(branch, false);
 			localGitRepoManager.rebase(Constants.MASTER);
 		}
 	}

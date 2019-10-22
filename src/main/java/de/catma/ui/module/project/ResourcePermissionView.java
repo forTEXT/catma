@@ -16,13 +16,15 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
@@ -31,6 +33,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
+import de.catma.ui.dialog.HelpWindow;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.Member;
 
@@ -60,21 +63,15 @@ public class ResourcePermissionView extends Window {
 
 	
 	private void initComponents() {
-		VerticalLayout content = new VerticalLayout();
+		HorizontalLayout content = new HorizontalLayout();
 		content.setSizeFull();
+		content.setMargin(new MarginInfo(true, false, true, true));
+		content.setSpacing(false);
 		
-		setCaption("Resource permission viewer");
+		setCaption("Resource permissions");
 		setWidth("85%");
 		setHeight("90%");
 		setModal(true);
-
-		Label lDescription = new Label(
-			"All resource specific permissions are listed below. "
-			+ "You can only change resource specific roles not Project roles. "
-			+ "Higher roles cannot be overwritten by lower roles.");
-		lDescription.setWidth("100%");
-		
-		content.addComponent(lDescription);
 		
 		permissionGrid = new TreeGrid<>();
         permissionGrid.setSizeFull();
@@ -96,6 +93,18 @@ public class ResourcePermissionView extends Window {
 		content.addComponent(permissionGridComponent);
 		content.setExpandRatio(permissionGridComponent, 1f);
 		
+		
+		HelpWindow helpWindow = new HelpWindow("Resource permissions", 
+				"<p>The resource permission matrix gives you an overview of the resource specific permissions for each team member.</p>"
+				+ "<p>By default it shows team members with changeable resource roles only. But you can add columns for all team members by using the show/hide columns menu in the upper right corner of the table</p>"
+				+ "<p>You can change resource specific roles only. Double click on a resource row to set a new resource specific role for a team member. To change Project roles go to the team section of the Project view.</p>"
+				+ "<p>Note that higher roles on the Project level cannot be overwritten by lower roles on the resource level. In fact it is not even possible to set lower roles in such cases.</p>");
+
+		Button btHelp = helpWindow.createHelpWindowButton();
+		content.addComponent(btHelp);
+		content.setComponentAlignment(btHelp, Alignment.TOP_RIGHT);
+		
+
 		setContent(content);
 	}
 	

@@ -125,7 +125,8 @@ public class GitProjectHandler {
 			localGitRepoManager.commit(
 					String.format("Added Tagset %1$s with ID %2$s", name, tagsetId),
 					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());
+					remoteGitServerManager.getEmail(),
+					false);
 
 			localGitRepoManager.detach(); 
 			
@@ -239,7 +240,8 @@ public class GitProjectHandler {
 			localGitRepoManager.commit(
 				String.format("Added Collection %1$s with ID %2$s", name, collectionId),
 				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getEmail());
+				remoteGitServerManager.getEmail(),
+				false);
 			localGitRepoManager.detach(); 
 			
 			gitMarkupCollectionHandler.checkout(
@@ -333,7 +335,8 @@ public class GitProjectHandler {
 			localRepoManager.commit(
 				String.format("Added Document %1$s with ID %2$s", name, sourceDocumentId),
 				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getEmail());
+				remoteGitServerManager.getEmail(),
+				false);
 			
 			rolesPerResource.put(
 				sourceDocumentId, 
@@ -612,7 +615,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public String addAndCommitCollection(String collectionId, String commitMsg) throws IOException {
+	public String addCollectionToStagedAndCommit(String collectionId, String commitMsg, boolean force) throws IOException {
 		
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = 
@@ -622,7 +625,7 @@ public class GitProjectHandler {
 					this.credentialsProvider);
 			
 			String revisionHash = gitMarkupCollectionHandler.addAndCommitChanges(
-				projectId, collectionId, commitMsg);
+				projectId, collectionId, commitMsg, force);
 			
 			return revisionHash;
 		}	
@@ -778,9 +781,10 @@ public class GitProjectHandler {
 		}	
 	}
 	
-	public String addToStagedAndCommit(AnnotationCollectionReference collectionRef, String commitMsg) throws Exception {
+	public String addCollectionSubmoduleToStagedAndCommit(
+			String collectionId, String commitMsg, boolean force) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			Path relativePath = Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionRef.getId());
+			Path relativePath = Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionId);
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
@@ -789,7 +793,8 @@ public class GitProjectHandler {
 			return localGitRepoManager.commit(
 					commitMsg, 
 					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());			
+					remoteGitServerManager.getEmail(),
+					force);			
 		}	
 	}
 	
@@ -802,7 +807,7 @@ public class GitProjectHandler {
 						this.remoteGitServerManager,
 						this.credentialsProvider);
 			
-			return gitTagsetHandler.addAllAndCommit(projectId, tagsetId, commitMsg);
+			return gitTagsetHandler.addAllAndCommit(projectId, tagsetId, commitMsg, true);
 		}		
 	}
 	
@@ -817,7 +822,8 @@ public class GitProjectHandler {
 			return localGitRepoManager.commit(
 					commitMsg, 
 					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());
+					remoteGitServerManager.getEmail(),
+					false);
 		}		
 	}
 
@@ -936,7 +942,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public void synchronizeWithRemote(TagsetDefinition tagset) throws Exception {
+	public void synchronizeTagsetWithRemote(String tagsetId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(
@@ -946,8 +952,8 @@ public class GitProjectHandler {
 			
 			MergeResult mergeResult = gitTagsetHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
-					projectId, tagset.getUuid(), hasPermission(
-								getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE));
+					projectId, tagsetId, hasPermission(
+								getRoleForTagset(tagsetId), RBACPermission.TAGSET_WRITE));
 			//TODO: handle mergeResult
 		}
 	}
@@ -1118,7 +1124,7 @@ public class GitProjectHandler {
 		}		
 	}
 
-	public void synchronizeWithRemote(AnnotationCollectionReference collectionReference) throws Exception {
+	public void synchronizeCollectionWithRemote(String collectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler collectionHandler = 
 					new GitMarkupCollectionHandler(
@@ -1128,8 +1134,8 @@ public class GitProjectHandler {
 			
 			MergeResult mergeResult = collectionHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
-					projectId, collectionReference.getId(),
-					hasPermission(getRoleForCollection(collectionReference.getId()), RBACPermission.COLLECTION_WRITE));
+					projectId, collectionId,
+					hasPermission(getRoleForCollection(collectionId), RBACPermission.COLLECTION_WRITE));
 			//TODO: handle mergeResult			
 		}
 	}
@@ -1152,7 +1158,8 @@ public class GitProjectHandler {
 			localGitRepoManager.addAllAndCommit(
 					"Auto-committing merged changes",
 					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());
+					remoteGitServerManager.getEmail(),
+					true);
 			
 			localGitRepoManager.push(credentialsProvider);
 			
@@ -1248,8 +1255,8 @@ public class GitProjectHandler {
 						localGitRepoManager, 
 						this.remoteGitServerManager,
 						this.credentialsProvider);
-			collectionHandler.checkout(collectionId, collectionId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, false);
-			collectionHandler.rebaseToMaster();
+			collectionHandler.checkout(projectId, collectionId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, false);
+			collectionHandler.rebaseToMaster(projectId, collectionId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH);
 		}
 	}
 

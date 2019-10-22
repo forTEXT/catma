@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.eventbus.EventBus;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
@@ -18,11 +20,11 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.module.main.ErrorHandler;
 
 public class ConflictedProjectView extends HugeCard {
 	
-	private VerticalFlexLayout mainPanel;
+	private VerticalLayout mainPanel;
 	private ConflictedProject conflictedProject;
 	private Iterator<CollectionConflict> collectionConflictIterator;
 	private Iterator<AnnotationConflict> annotationConflictIterator;
@@ -112,7 +114,7 @@ public class ConflictedProjectView extends HugeCard {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO:
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Error showing next conflict!", e);
 		}
 	}
 
@@ -142,17 +144,16 @@ public class ConflictedProjectView extends HugeCard {
 			this.collectionConflictIterator = collectionConflicts.iterator();
 			showNextConflict();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loadin conflicted Project!", e);
 		}
 	}
 	
 	
 
 	private void initComponents() {
-		mainPanel = new VerticalFlexLayout();
+		mainPanel = new VerticalLayout();
+		mainPanel.setSizeFull();
 		addComponent(mainPanel);
-		
-		
+		setExpandRatio(mainPanel, 1f);
 	}
 }
