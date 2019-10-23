@@ -94,11 +94,12 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				if(groupMember.getAccessLevel() != AccessLevel.OWNER && 
 						groupMember.getAccessLevel().value.intValue() != role.getAccessLevel()) {
 					
+					RBACSubject updatedSubject = updateGroupMember(subject, role, group.getId());
 					if(role.getAccessLevel() < RBACRole.ASSISTANT.getAccessLevel()){
-						assignDefaultAccessToRootProject(subject, group.getId());
+						assignDefaultAccessToRootProject(updatedSubject, group.getId());
 					}
 					
-					return updateGroupMember(subject, role, group.getId());
+					return updatedSubject;
 					
 				} else {
 					// AccessLevel is either OWNER which means we would change/loose the owner, 
@@ -110,11 +111,13 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				
 				// member does not exist yet, so we create a new group member
 
+				RBACSubject newSubject = createGroupMember(subject, role, group.getId());
+
 				if(role.getAccessLevel() < RBACRole.ASSISTANT.getAccessLevel()){
 					assignDefaultAccessToRootProject(subject, group.getId());
 				}
 				
-				return createGroupMember(subject, role, group.getId());
+				return newSubject;
 			}
 		} catch (GitLabApiException e) {
 			throw new IOException(
@@ -149,7 +152,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			}
 			getGitLabApi().getProjectApi().removeMember(project.getId(), subject.getUserId());
 		} catch (GitLabApiException e) {
-			throw new IOException("Project or user unkown: "+ resourceId + "subject:" + subject, e);
+			throw new IOException("error unassigning from resource #"+ resourceId + ", subject " + subject, e);
 		}	
 	}
 	
@@ -190,6 +193,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				}
 				
 			} catch (GitLabApiException e) {
+				Logger.getLogger(GitlabManagerCommon.class.getName()).log(Level.WARNING, "could not update project member", e);
 				return createProjectMember(subject, role, gitResourceProject.getId());
 			}
 		} catch (GitLabApiException e) {
@@ -206,7 +210,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		try {
 			return new GitMember(getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
-			throw new IOException("Project unkown "+ groupId,e);
+			throw new IOException("error creating group member in group #"+ groupId,e);
 		}		
 	}
 	
@@ -228,7 +232,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				return new GitMember(getGitLabApi().getProjectApi().addMember(rootProject.getId(), subject.getUserId(), AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel())));
 			}
 		} catch (GitLabApiException e) {
-			throw new IOException("Project unkown "+ groupId,e);
+			throw new IOException("error assigning default access to root project in group #"+ groupId,e);
 		}	
 	}
 	
@@ -236,7 +240,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		try {
 			return new GitMember(getGitLabApi().getGroupApi().updateMember(groupId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
-			throw new IOException("Project unkown "+ groupId, e);
+			throw new IOException("error updating group member in group  #"+ groupId, e);
 		}		
 	}
 	
@@ -244,7 +248,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		try {
 			return new GitMember(getGitLabApi().getProjectApi().addMember(projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
-			throw new IOException("Project unkown "+ projectId,e);
+			throw new IOException("error creating project member in project #"+ projectId,e);
 		}		
 	}
 	
@@ -253,7 +257,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		try {
 			return new GitMember(getGitLabApi().getProjectApi().updateMember(projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
-			throw new IOException("Project unkown "+ projectId, e);
+			throw new IOException("error updating project member in project #"+ projectId, e);
 		}		
 	}
 	
@@ -262,7 +266,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		try {
 			Project project = getGitLabApi().getProjectApi().getProject(projectId, resourceId);
 			if(project == null) {
-				throw new IOException("resource or rootproject unkown "+ resourceId);
+				throw new IOException("resource or root-project unkown "+ resourceId);
 			}
 				Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
 			
@@ -291,7 +295,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			return RBACRole.forValue(member.getAccessLevel().value);
 			
 		} catch (GitLabApiException e) {
-			throw new IOException("Project unkown "+ projectId, e);
+			throw new IOException("error getting role on project #"+ projectId, e);
 		}	
 	}
 	

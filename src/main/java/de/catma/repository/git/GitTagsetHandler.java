@@ -521,7 +521,7 @@ public class GitTagsetHandler {
 						new File(absTagPathname), StandardCharsets.UTF_8);
 					
 					TagConflict tagConflict = 
-							getBothModifiedAnnotationConflict(
+							getBothModifiedTagConflict(
 								projectId, tagsetId, serializedConflictingTag);
 					tagsetConflict.addTagConflict(tagConflict);
 					break;
@@ -535,7 +535,7 @@ public class GitTagsetHandler {
 		}
 	}
 
-	private TagConflict getBothModifiedAnnotationConflict(
+	private TagConflict getBothModifiedTagConflict(
 			String projectId, String tagsetId, String serializedConflictingTag) throws Exception {
 
 		String masterVersion = serializedConflictingTag
