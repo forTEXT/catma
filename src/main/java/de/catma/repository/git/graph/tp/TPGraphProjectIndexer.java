@@ -250,6 +250,8 @@ public class TPGraphProjectIndexer implements Indexer {
 	public QueryResult searchProperty(QueryId queryId, List<String> collectionIdList, String propertyNamePattern,
 			String propertyValuePattern, String tagPathPattern) throws Exception {
 		
+		QueryResultRowArray result = new QueryResultRowArray();
+
 		PropertyNameFilter propertyNameFilter = new PropertyNameFilter(propertyNamePattern);
 		PropertyValueFilter propertyValueFilter = new PropertyValueFilter(propertyValuePattern);
 		
@@ -273,170 +275,170 @@ public class TPGraphProjectIndexer implements Indexer {
 		.outV().hasLabel(nt(Tag));
 		
 		Set<Vertex> tagVs = traversal.toSet();
-		
-		// get all paths for the Tags
-		List<Path> tagPaths  = g.V(tagVs)
-		.optional(__.repeat(__.out(rt(hasParent))).until(__.outE(rt(hasParent)).count().is(0)))
-		.path()
-		.toList();
-		
-		// collect all Tags matching the given pattern and map them by their tagId
-		Map<String, String> validTagIdToTagPathMapping = new HashMap<>();
-
-		for (Path path : tagPaths) {
-			Vertex tag = path.get(0);
-			String tagId = (String) tag.properties("tagId").next().orElse(null);
+		if (!tagVs.isEmpty()) {
+			// get all paths for the Tags
+			List<Path> tagPaths  = g.V(tagVs)
+			.optional(__.repeat(__.out(rt(hasParent))).until(__.outE(rt(hasParent)).count().is(0)))
+			.path()
+			.toList();
+			
+			// collect all Tags matching the given pattern and map them by their tagId
+			Map<String, String> validTagIdToTagPathMapping = new HashMap<>();
 	
-			StringBuilder builder = new StringBuilder();
-			String conc = "/";
-			
-			path.forEach(
-				tagVertex -> {
-					builder.append(conc);
-					builder.append(
-						((Vertex)tagVertex).properties("name").next().orElse(null));
-				});
-			
-			String tagPathStr = builder.toString();
-			
-			if ((tagPathRegex==null) || Pattern.matches(tagPathRegex, tagPathStr)) {
-				validTagIdToTagPathMapping.put(tagId, tagPathStr);
-			}
-		}
+			for (Path path : tagPaths) {
+				Vertex tag = path.get(0);
+				String tagId = (String) tag.properties("tagId").next().orElse(null);
 		
-		// get all Annotations for the participating Collections and Tags with their matching Annotaiton Properties 
-		List<Map<String,Object>> resultMap = g.V().hasLabel(nt(ProjectRevision))
-		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
-		.as("doc-uuid")
-		.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", P.within(collectionIdList))
-		.as("collection-uuid")
-		.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
-		.as("anno")
-		.optional(__.outE(rt(hasProperty)).inV().hasLabel(nt(AnnotationProperty)).filter(propertyValueFilter))
-		.as("anno-property")
-		.select("anno")
-		.inE(rt(hasInstance)).outV().has(nt(Tag), "tagId", P.within(validTagIdToTagPathMapping.keySet()))
-		.as("tag")
-		.optional(__.outE(rt(hasProperty)).inV().hasLabel(nt(Property)).filter(propertyNameFilter))
-		.as("property")
-		.select("doc-uuid", "collection-uuid", "anno", "tag", "anno-property", "property")
-		.by("documentId").by("collectionId").by().by().by().by()
-		.toList();
-	
-		QueryResultRowArray result = new QueryResultRowArray();
-		HashSet<String> systemPropertiesAddedTagInstanceIds = new HashSet<>();
-		
-		for (Map<String,Object> entry : resultMap) {
-			String documentId = (String)entry.get("doc-uuid");
-			String collectionId = (String)entry.get("collection-uuid");
-			
-			Vertex annoV = (Vertex) entry.get("anno");
-			String tagInstanceId = (String)annoV.property("tagInstanceId").value();
-			
-			@SuppressWarnings("unchecked")
-			List<Integer> ranges = (List<Integer>)annoV.property("ranges").value();
-			
-			List<Range> rangeList = new ArrayList<>();
-			for (int i=0; i<ranges.size()-1; i+=2) {
-				rangeList.add(new Range(ranges.get(i), ranges.get(i+1)));
-			}
-			
-			String annoAuthor = (String)annoV.property("author").value();
-			String annoTimestamp = (String)annoV.property("timestamp").value();
-			
-			Vertex tagV = (Vertex)entry.get("tag");
-			
-			String tagId = (String) tagV.property("tagId").value();
-			String tagPath = validTagIdToTagPathMapping.get(tagId);
-			TagDefinition tag = (TagDefinition) tagV.property("tag").value();
-			String color = tag.getColor();
-			
-			Vertex propertyV = (Vertex)entry.get("property");
-			if (propertyV.equals(tagV)) {
-				propertyV = null; // no matching Properties for this Tag
-			}
-			
-			Vertex annoPropertyV = (Vertex)entry.get("anno-property");
-			if (annoPropertyV.equals(annoV)) {
-				annoPropertyV = null; //no matching Annotation Property for this Annotation
-			}
-			
-			// if we haven't added system properties for the current tagInstance yet
-			// we try to add them now with respect to user defined name and value filters
-			if (!systemPropertiesAddedTagInstanceIds.contains(tagInstanceId)) {
-				// try to add rows for matching system properties
-				addTagQueryResultRowForSystemProperty(
-					queryId,
-					result, 
-					PropertyDefinition.SystemPropertyName.catma_markupauthor, 
-					annoAuthor,
-					propertyNameFilter,
-					propertyValueFilter,
-					documentId,
-					collectionId,
-					tagId,
-					tagPath,
-					tagInstanceId,
-					rangeList);
-				addTagQueryResultRowForSystemProperty(
-					queryId,
-					result, 
-					PropertyDefinition.SystemPropertyName.catma_markuptimestamp, 
-					annoTimestamp,
-					propertyNameFilter,
-					propertyValueFilter,
-					documentId,
-					collectionId,
-					tagId,
-					tagPath,
-					tagInstanceId,
-					rangeList);		
-				addTagQueryResultRowForSystemProperty(
-					queryId,
-					result, 
-					PropertyDefinition.SystemPropertyName.catma_displaycolor, 
-					color,
-					propertyNameFilter,
-					propertyValueFilter,
-					documentId,
-					collectionId,
-					tagId,
-					tagPath,
-					tagInstanceId,
-					rangeList);
-				systemPropertiesAddedTagInstanceIds.add(tagInstanceId);
-			}			
-			
-			// add rows for user defined properties for each matching value
-			if ((propertyV != null) && (annoPropertyV != null)) {
-				@SuppressWarnings("unchecked")
-				List<String> propertyValues = (List<String>) annoPropertyV.property("values").value();
-				String annoPropertyDefinitionId = (String)annoPropertyV.property("uuid").value();
-				String propertyName = (String)propertyV.property("name").value();
-				String propertyDefinitionId = (String)propertyV.property("uuid").value();
+				StringBuilder builder = new StringBuilder();
+				String conc = "/";
 				
-				if (annoPropertyDefinitionId.equals(propertyDefinitionId)) {
-					for (String propValue : propertyValues) {
-						if (propertyValueFilter.testValue(propValue)) {
-							result.add(
-								new TagQueryResultRow(
-									queryId,
-									documentId, 
-									rangeList, 
-									collectionId, 
-									tagId,
-									tagPath,
-									"", //TODO: Version
-									tagInstanceId,
-									annoPropertyDefinitionId,
-									propertyName,
-									propValue));
+				path.forEach(
+					tagVertex -> {
+						builder.append(conc);
+						builder.append(
+							((Vertex)tagVertex).properties("name").next().orElse(null));
+					});
+				
+				String tagPathStr = builder.toString();
+				
+				if ((tagPathRegex==null) || Pattern.matches(tagPathRegex, tagPathStr)) {
+					validTagIdToTagPathMapping.put(tagId, tagPathStr);
+				}
+			}
+			
+			// get all Annotations for the participating Collections and Tags with their matching Annotaiton Properties 
+			List<Map<String,Object>> resultMap = g.V().hasLabel(nt(ProjectRevision))
+			.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
+			.as("doc-uuid")
+			.outE(rt(hasCollection)).inV().has(nt(MarkupCollection), "collectionId", P.within(collectionIdList))
+			.as("collection-uuid")
+			.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
+			.as("anno")
+			.optional(__.outE(rt(hasProperty)).inV().hasLabel(nt(AnnotationProperty)).filter(propertyValueFilter))
+			.as("anno-property")
+			.select("anno")
+			.inE(rt(hasInstance)).outV().has(nt(Tag), "tagId", P.within(validTagIdToTagPathMapping.keySet()))
+			.as("tag")
+			.optional(__.outE(rt(hasProperty)).inV().hasLabel(nt(Property)).filter(propertyNameFilter))
+			.as("property")
+			.select("doc-uuid", "collection-uuid", "anno", "tag", "anno-property", "property")
+			.by("documentId").by("collectionId").by().by().by().by()
+			.toList();
+		
+
+			HashSet<String> systemPropertiesAddedTagInstanceIds = new HashSet<>();
+			
+			for (Map<String,Object> entry : resultMap) {
+				String documentId = (String)entry.get("doc-uuid");
+				String collectionId = (String)entry.get("collection-uuid");
+				
+				Vertex annoV = (Vertex) entry.get("anno");
+				String tagInstanceId = (String)annoV.property("tagInstanceId").value();
+				
+				@SuppressWarnings("unchecked")
+				List<Integer> ranges = (List<Integer>)annoV.property("ranges").value();
+				
+				List<Range> rangeList = new ArrayList<>();
+				for (int i=0; i<ranges.size()-1; i+=2) {
+					rangeList.add(new Range(ranges.get(i), ranges.get(i+1)));
+				}
+				
+				String annoAuthor = (String)annoV.property("author").value();
+				String annoTimestamp = (String)annoV.property("timestamp").value();
+				
+				Vertex tagV = (Vertex)entry.get("tag");
+				
+				String tagId = (String) tagV.property("tagId").value();
+				String tagPath = validTagIdToTagPathMapping.get(tagId);
+				TagDefinition tag = (TagDefinition) tagV.property("tag").value();
+				String color = tag.getColor();
+				
+				Vertex propertyV = (Vertex)entry.get("property");
+				if (propertyV.equals(tagV)) {
+					propertyV = null; // no matching Properties for this Tag
+				}
+				
+				Vertex annoPropertyV = (Vertex)entry.get("anno-property");
+				if (annoPropertyV.equals(annoV)) {
+					annoPropertyV = null; //no matching Annotation Property for this Annotation
+				}
+				
+				// if we haven't added system properties for the current tagInstance yet
+				// we try to add them now with respect to user defined name and value filters
+				if (!systemPropertiesAddedTagInstanceIds.contains(tagInstanceId)) {
+					// try to add rows for matching system properties
+					addTagQueryResultRowForSystemProperty(
+						queryId,
+						result, 
+						PropertyDefinition.SystemPropertyName.catma_markupauthor, 
+						annoAuthor,
+						propertyNameFilter,
+						propertyValueFilter,
+						documentId,
+						collectionId,
+						tagId,
+						tagPath,
+						tagInstanceId,
+						rangeList);
+					addTagQueryResultRowForSystemProperty(
+						queryId,
+						result, 
+						PropertyDefinition.SystemPropertyName.catma_markuptimestamp, 
+						annoTimestamp,
+						propertyNameFilter,
+						propertyValueFilter,
+						documentId,
+						collectionId,
+						tagId,
+						tagPath,
+						tagInstanceId,
+						rangeList);		
+					addTagQueryResultRowForSystemProperty(
+						queryId,
+						result, 
+						PropertyDefinition.SystemPropertyName.catma_displaycolor, 
+						color,
+						propertyNameFilter,
+						propertyValueFilter,
+						documentId,
+						collectionId,
+						tagId,
+						tagPath,
+						tagInstanceId,
+						rangeList);
+					systemPropertiesAddedTagInstanceIds.add(tagInstanceId);
+				}			
+				
+				// add rows for user defined properties for each matching value
+				if ((propertyV != null) && (annoPropertyV != null)) {
+					@SuppressWarnings("unchecked")
+					List<String> propertyValues = (List<String>) annoPropertyV.property("values").value();
+					String annoPropertyDefinitionId = (String)annoPropertyV.property("uuid").value();
+					String propertyName = (String)propertyV.property("name").value();
+					String propertyDefinitionId = (String)propertyV.property("uuid").value();
+					
+					if (annoPropertyDefinitionId.equals(propertyDefinitionId)) {
+						for (String propValue : propertyValues) {
+							if (propertyValueFilter.testValue(propValue)) {
+								result.add(
+									new TagQueryResultRow(
+										queryId,
+										documentId, 
+										rangeList, 
+										collectionId, 
+										tagId,
+										tagPath,
+										"", //TODO: Version
+										tagInstanceId,
+										annoPropertyDefinitionId,
+										propertyName,
+										propValue));
+							}
 						}
 					}
 				}
 			}
-		}
-		
+		}		
 		
 		return result;
 	}
@@ -591,8 +593,7 @@ public class TPGraphProjectIndexer implements Indexer {
 
 	@Override
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException("there hasn't been a use case for this so far");
 	}
 
 	@Override
@@ -669,7 +670,7 @@ public class TPGraphProjectIndexer implements Indexer {
 			QueryId queryId, List<String> relevantUserMarkupCollIDs, String propertyName, String tagPhrase)
 			throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		return new QueryResultRowArray();
 	}
 
 }
