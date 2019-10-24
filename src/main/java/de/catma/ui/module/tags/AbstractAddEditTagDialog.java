@@ -192,6 +192,8 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		
 		btAddProperty = new Button("Add Property");
 		btAddProperty.addStyleName(MaterialTheme.BUTTON_FLAT);
+		btAddProperty.addStyleName(MaterialTheme.BUTTON_PRIMARY);
+		
 		propertyDefNamePanel.addComponent(btAddProperty);
 		propertyDefNamePanel.setComponentAlignment(btAddProperty, Alignment.BOTTOM_LEFT);	
 		

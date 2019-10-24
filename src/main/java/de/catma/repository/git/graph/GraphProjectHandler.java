@@ -46,7 +46,7 @@ public interface GraphProjectHandler {
 	SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception;
 
 	void addCollection(String rootRevisionHash, String collectionId, String name, String umcRevisionHash,
-			SourceDocument document, String oldRootRevisionHash) throws Exception;
+			SourceDocument document, TagLibrary tagLibrary, String oldRootRevisionHash) throws Exception;
 
 	void addTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
@@ -67,7 +67,7 @@ public interface GraphProjectHandler {
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception;
 
-	AnnotationCollection getCollection(String rootRevisionHash, TagLibrary tagLibrary,
+	AnnotationCollection getCollection(String rootRevisionHash,
 			AnnotationCollectionReference collectionReference) throws Exception;
 
 	void addTagReferences(String rootRevisionHash, AnnotationCollection collection, List<TagReference> tagReferences)
@@ -86,7 +86,7 @@ public interface GraphProjectHandler {
 			throws Exception;
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(String rootRevisionHash,
-			PropertyDefinition propertyDefinition, TagDefinition tag, TagLibrary tagLibrary) throws Exception;
+			PropertyDefinition propertyDefinition, TagDefinition tag) throws Exception;
 
 	void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds,
 			String collectionRevisionHash) throws Exception;

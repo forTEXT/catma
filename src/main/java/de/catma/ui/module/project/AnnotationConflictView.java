@@ -20,6 +20,7 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
 
 public class AnnotationConflictView extends VerticalLayout {
@@ -145,20 +146,20 @@ public class AnnotationConflictView extends VerticalLayout {
 		HorizontalLayout comparisonPanel = new HorizontalLayout();
 		comparisonPanel.setSizeFull();
 		
-		leftPropertyGrid = new TreeGrid<>();
+		leftPropertyGrid = TreeGridFactory.createDefaultTreeGrid();
 		leftPropertyGrid.setSizeFull();
 		
 		leftPropertyGrid.addStyleNames(
-				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
+				"flat-undecorated-icon-buttonrenderer");
 		leftPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getName()).setCaption("Property");
 		leftPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getValue()).setCaption("Value");
 		
 		comparisonPanel.addComponent(leftPropertyGrid);
 		
-		rightPropertyGrid = new TreeGrid<>();
+		rightPropertyGrid = TreeGridFactory.createDefaultTreeGrid();
 		rightPropertyGrid.setSizeFull();
 		rightPropertyGrid.addStyleNames(
-				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
+				"flat-undecorated-icon-buttonrenderer");
 
 		rightPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getName()).setCaption("Property");
 		rightPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getValue()).setCaption("Value");

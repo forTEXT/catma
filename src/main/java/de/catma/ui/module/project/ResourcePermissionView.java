@@ -31,6 +31,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.project.Project;
 import de.catma.rbac.RBACRole;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.HelpWindow;
@@ -73,7 +74,7 @@ public class ResourcePermissionView extends Window {
 		setHeight("90%");
 		setModal(true);
 		
-		permissionGrid = new TreeGrid<>();
+		permissionGrid = TreeGridFactory.createDefaultTreeGrid();
         permissionGrid.setSizeFull();
         permissionGrid.setRowHeight(45);
         permissionGrid.setHeaderVisible(true);

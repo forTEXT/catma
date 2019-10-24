@@ -98,7 +98,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	private boolean tagManagerListenersEnabled = true;
 
 	private IDGenerator idGenerator = new IDGenerator();
-	private TagManager tagManager;
+	private final TagManager tagManager;
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userDefinedPropertyChangedListener;
@@ -198,7 +198,7 @@ public class GraphWorktreeProject implements IndexedProject {
 							
 							@Override
 							public void done(TagManager result) {
-								tagManager = result;
+								tagManager.load(result.getTagLibrary());
 								initTagManagerListeners();
 								openProjectListener.ready(GraphWorktreeProject.this);
 							}
@@ -454,7 +454,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		// remove AnnotationProperties
 		Multimap<String, TagReference> annotationIdsByCollectionId =
 			graphProjectHandler.getTagReferencesByCollectionId(
-					this.rootRevisionHash, propertyDefinition, tagDefinition, tagManager.getTagLibrary());
+					this.rootRevisionHash, propertyDefinition, tagDefinition);
 		
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			// TODO: check permissions if commit is allowed, if that is not the case skip git update
@@ -919,7 +919,9 @@ public class GraphWorktreeProject implements IndexedProject {
 			graphProjectHandler.addCollection(
 				rootRevisionHash, 
 				collectionId, name, umcRevisionHash, 
-				sourceDocument, oldRootRevisionHash);
+				sourceDocument,
+				tagManager.getTagLibrary(),
+				oldRootRevisionHash);
 			
 			if ((userId != null) && !role.equals(RBACRole.OWNER)) {
 				assignOnResource(() -> userId, 
@@ -967,7 +969,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	public AnnotationCollection getUserMarkupCollection(AnnotationCollectionReference userMarkupCollectionReference)
 			throws IOException {
 		try {
-			return graphProjectHandler.getCollection(rootRevisionHash, getTagLibrary(), userMarkupCollectionReference);
+			return graphProjectHandler.getCollection(rootRevisionHash, userMarkupCollectionReference);
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
@@ -1221,7 +1223,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						
 						@Override
 						public void done(TagManager result) {
-							tagManager = result;
+							tagManager.load(result.getTagLibrary());
 							openProjectListener.ready(GraphWorktreeProject.this);
 						}
 					},

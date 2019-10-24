@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import de.catma.rbac.RBACPermission;
+import de.catma.tag.TagManager;
 import de.catma.user.User;
 
 public interface ProjectManager {
@@ -20,6 +21,7 @@ public interface ProjectManager {
 	public ProjectReference createProject(String name, String description) throws Exception;
 
 	public void openProject(
+			TagManager tagManager,
 			ProjectReference projectReference,
 			OpenProjectListener openProjectListener);
 

@@ -46,6 +46,7 @@ import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
 import de.catma.ui.module.main.ErrorHandler;
 
@@ -639,11 +640,11 @@ public class QueryResultPanel extends VerticalLayout {
 	private void initQueryResultGrid() {
 		// grid needs to be reinitialized when a new set of root nodes is set
 		// otherwise the children triangle is not shown even if children are present
-		queryResultGrid = new TreeGrid<QueryResultRowItem>();
+		queryResultGrid = TreeGridFactory.createDefaultTreeGrid();
 		queryResultGrid.setSizeFull();
 		
 		queryResultGrid.addStyleNames("annotation-details-panel-annotation-details-grid",
-				"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
+				"flat-undecorated-icon-buttonrenderer");
 		
 		
 		queryResultGrid.addExpandListener(event -> handleExpandRequest(event));

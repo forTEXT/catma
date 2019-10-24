@@ -31,6 +31,7 @@ import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.rbac.RBACPermission;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
@@ -260,11 +261,11 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 
 	private void initComponents() {
 		setSizeFull();
-    	documentGrid = new TreeGrid<>();
+    	documentGrid = TreeGridFactory.createDefaultTreeGrid();
     	documentGrid.setSizeFull();
     	
         documentGrid.addStyleNames(
-				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
+				"flat-undecorated-icon-buttonrenderer");
 
         documentGrid.setRowHeight(45);
         documentGrid.setSelectionMode(SelectionMode.MULTI);
