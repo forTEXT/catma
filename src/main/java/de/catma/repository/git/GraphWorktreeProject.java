@@ -637,7 +637,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 		
 		// remove Tag
-		String tagsetRevision = gitProjectHandler.removeTag(tagsetDefinition, tagDefinition);
+		String tagsetRevision = gitProjectHandler.removeTag(tagDefinition);
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 
 		// commit Project
@@ -1113,17 +1113,6 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 	}
 
-	@Deprecated
-	private TagLibrary getTagLibrary() {
-		return tagManager.getTagLibrary();
-	}
-
-	@Override
-	@Deprecated
-	public boolean isAuthenticationRequired() {
-		return false;
-	}
-
 	@Override
 	public User getUser() {
 		return user;
@@ -1151,35 +1140,29 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void commitChanges(String commitMsg) {
+	public void commitChanges(String commitMsg) throws Exception {
 		commitAllChanges(collectionRef -> commitMsg, commitMsg);
 	}
 
 	private void commitAllChanges(
 		Function<AnnotationCollectionReference, String> collectionCcommitMsgProvider, 
-		String projectCommitMsg) {
-		try {
-			List<AnnotationCollectionReference> collectionRefs = 
-					getSourceDocuments().stream()
-					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
-					.collect(Collectors.toList());
+		String projectCommitMsg) throws Exception {
+		List<AnnotationCollectionReference> collectionRefs = 
+				getSourceDocuments().stream()
+				.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
+				.collect(Collectors.toList());
+		
+		for (AnnotationCollectionReference collectionRef : collectionRefs) {
 			
-			for (AnnotationCollectionReference collectionRef : collectionRefs) {
-				
-				gitProjectHandler.addCollectionToStagedAndCommit(
-					collectionRef.getId(), 
-					collectionCcommitMsgProvider.apply(collectionRef),
-					false);
-			}
-			
-			gitProjectHandler.commitProject(projectCommitMsg);
-			
-			printStatus();
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			gitProjectHandler.addCollectionToStagedAndCommit(
+				collectionRef.getId(), 
+				collectionCcommitMsgProvider.apply(collectionRef),
+				false);
 		}
+		
+		gitProjectHandler.commitProject(projectCommitMsg);
+		
+		printStatus();
 	}
 	
 	@Override

@@ -9,12 +9,17 @@ public class TagConflict {
 
 	private TagDefinition masterTagDefinition;
 	private TagDefinition devTagDefinition;
+	private boolean bothPossible = false;
 	
 	public TagConflict(
 			TagDefinition masterTagDefinition, TagDefinition devTagDefinition) {
 		super();
 		this.masterTagDefinition = masterTagDefinition;
 		this.devTagDefinition = devTagDefinition;
+		this.
+		
+		bothPossible = 
+			((this.masterTagDefinition != null) && (this.devTagDefinition != null));
 	}
 
 	public boolean isResolved() {
@@ -35,7 +40,7 @@ public class TagConflict {
 
 	public TagDefinition getResolvedTagDefinition() {
 		if (!isResolved()) {
-			throw new IllegalStateException("this Tag Conflict is not resolved yet!");
+			throw new IllegalStateException("This Tag conflict is not resolved yet!");
 		}
 		
 		switch (this.resolution) {
@@ -46,12 +51,39 @@ public class TagConflict {
 			return getMasterTagDefinition();
 		}
 		default: {
+			if (!isBothPossible()) {
+				throw new IllegalStateException(
+						"Cannot resolve Tag conflict with both versions!");
+			}
 			return createCombinedTagDefinition();
 		}
 		
 		}
 	}
 
+	public TagDefinition getDismissedTagDefinition() {
+		if (!isResolved()) {
+			throw new IllegalStateException("This Tag conflict is not resolved yet!");
+		}
+		
+		switch (this.resolution) {
+		case MINE: {
+			return getMasterTagDefinition();
+		}
+		case THEIRS: {
+			return getDevTagDefinition();
+		}
+		default: {
+			if (!isBothPossible()) {
+				throw new IllegalStateException(
+						"Cannot resolve Tag conflict with both versions!");
+			}
+			return createCombinedTagDefinition();
+		}
+		
+		}
+	}
+	
 	private TagDefinition createCombinedTagDefinition() {
 		
 		TagDefinition tagDefinition = new TagDefinition(masterTagDefinition);
@@ -76,8 +108,15 @@ public class TagConflict {
 	}
 
 	public void setResolution(Resolution resolution) {
+		if (resolution.equals(Resolution.BOTH) && !isBothPossible()) {
+			throw new IllegalStateException(
+				"Cannot resolve Tag conflict with both versions!");
+		}
 		this.resolution = resolution;
 	}
 	
+	public boolean isBothPossible() {
+		return bothPossible;
+	}
 	
 }
