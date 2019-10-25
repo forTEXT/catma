@@ -332,6 +332,9 @@ public class GitTagsetHandler {
 			serializedTagsetHeader = new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
 			gitTagsetHeader.getDeletedDefinitions().add(tagDefinition.getUuid());
 			
+			serializedTagsetHeader = 
+					new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
+			
 			localGitRepoManager.add(
 					tagsetHeaderFile,
 					serializedTagsetHeader.getBytes(StandardCharsets.UTF_8));
