@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
@@ -249,6 +250,13 @@ public class VizMaxPanel extends VerticalLayout  {
 				displaySettings -> visualization.setDisplaySetting(displaySettings));
 		selectedResultsPanel.addOptionsMenuItem(
 			"Remove all", mi -> handleItemRemoval(selectedResultsPanel.getFilteredQueryResult()));
+		
+		selectedResultsPanel.addItemSelectionListener(selectionEvent -> handleSelectedResultItemClick(selectionEvent));
+	}
+
+	private void handleSelectedResultItemClick(SelectionEvent<QueryResultRowItem> selectionEvent) {
+		selectionEvent.getFirstSelectedItem().ifPresent(
+				item ->visualization.setSelectedQueryResultRows(item.getRows()));
 	}
 
 	@SuppressWarnings("unchecked")

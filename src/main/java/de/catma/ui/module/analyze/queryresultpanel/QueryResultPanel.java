@@ -1,7 +1,9 @@
 package de.catma.ui.module.analyze.queryresultpanel;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -13,8 +15,11 @@ import com.vaadin.data.provider.GridSortOrderBuilder;
 import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
+import com.vaadin.event.selection.SelectionEvent;
+import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -115,7 +120,9 @@ public class QueryResultPanel extends VerticalLayout {
 	private HorizontalLayout buttonPanel;
 	
 	private DisplaySettingChangeListener displaySettingChangeListener;
-
+	
+	private ArrayList<Registration> itemSelectionListenerRegistrations;
+	
 	public QueryResultPanel(Project project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
 			ItemSelectionListener itemSelectionListener) {
@@ -152,7 +159,7 @@ public class QueryResultPanel extends VerticalLayout {
 		this.cardStyle = cardStyle;
 		this.includeQueryId = includeQueryId;
 		this.queryId = queryId; 
-
+		this.itemSelectionListenerRegistrations = new ArrayList<Registration>();
 		initComponents();
 		initActions(resultPanelCloseListener);
 		displaySetting.init(this);
@@ -637,17 +644,47 @@ public class QueryResultPanel extends VerticalLayout {
 		return tagBasedTreeData;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void initQueryResultGrid() {
 		// grid needs to be reinitialized when a new set of root nodes is set
 		// otherwise the children triangle is not shown even if children are present
+		
+		ArrayList<SelectionListener<QueryResultRowItem>> existingListeners = new ArrayList<>();
+		
+		if (queryResultGrid != null) {
+			Collection<?> selectionListeners = 
+					queryResultGrid.getListeners(SelectionEvent.class);
+			for (Object selectionListener : selectionListeners) {
+				if (selectionListener instanceof SelectionListener) {
+					existingListeners.add(
+						(SelectionListener<QueryResultRowItem>)selectionListener);
+				}
+			}
+			
+			Iterator<Registration> registrationIterator = 
+					itemSelectionListenerRegistrations.iterator();
+			while (registrationIterator.hasNext()) {
+				registrationIterator.next().remove();
+				registrationIterator.remove();
+			}
+		}
+		
 		queryResultGrid = TreeGridFactory.createDefaultTreeGrid();
 		queryResultGrid.setSizeFull();
+		existingListeners.forEach(
+			listener -> addItemSelectionListener(listener));
 		
 		queryResultGrid.addStyleNames("annotation-details-panel-annotation-details-grid",
 				"flat-undecorated-icon-buttonrenderer");
 		
 		
 		queryResultGrid.addExpandListener(event -> handleExpandRequest(event));
+	}
+
+	public void addItemSelectionListener(
+			SelectionListener<QueryResultRowItem> listener) {
+		itemSelectionListenerRegistrations.add(
+				queryResultGrid.addSelectionListener(listener));
 	}
 
 	private void initComponents() {
@@ -835,6 +872,15 @@ public class QueryResultPanel extends VerticalLayout {
 		displaySetting.addQueryResultRootItems(this, rows);
 		tokenCount = ((QueryResultRowArray)queryResult).size();
 		dataProvider.refreshAll();
+		
+		if (!dataProvider.getTreeData().getRootItems().isEmpty() 
+				&& queryResultGrid.getSelectedItems().isEmpty()) {
+			queryResultGrid.getDataCommunicator().fetchItemsWithRange(0,1)
+				.stream()
+				.findFirst()
+				.ifPresent(item -> 
+					queryResultGrid.select(item));
+		}
 	}
 
 	void addPhraseBasedRootItems(QueryResult result) {
