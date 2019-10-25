@@ -21,6 +21,7 @@ import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.Resolution;
 import de.catma.project.conflict.TagConflict;
 import de.catma.tag.PropertyDefinition;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.util.Cleaner;
 import de.catma.util.ColorConverter;
 
@@ -154,7 +155,7 @@ public class TagConflictView extends VerticalLayout {
 		this.rightTagLabel.setContentMode(ContentMode.HTML);
 		comparisonPanel.addComponent(this.rightTagLabel);
 		
-		propertyGrid = new TreeGrid<>();
+		propertyGrid = TreeGridFactory.createDefaultTreeGrid();
 		propertyGrid.setSizeFull();
 		
 		propertyGrid.addStyleNames(

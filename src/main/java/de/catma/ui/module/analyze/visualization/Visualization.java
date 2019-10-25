@@ -10,6 +10,6 @@ public interface Visualization extends Component {
 	void removeQueryResultRows(Iterable<QueryResultRow> queryResult);
 	void setExpansionListener(ExpansionListener expansionListener);
 	void close();
-	void setSelectedQueryResultRow(QueryResultRow row);
+	void setSelectedQueryResultRows(Iterable<QueryResultRow> selectedRows);
 	void setDisplaySetting(DisplaySetting displaySettings);
 }

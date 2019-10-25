@@ -49,6 +49,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.module.main.ErrorHandler;
@@ -221,11 +222,11 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		annotationDetailData = new TreeData<>();
 		annotationDetailsProvider = new TreeDataProvider<>(annotationDetailData);
-		annotationDetailsTree = new TreeGrid<>(annotationDetailsProvider);
+		annotationDetailsTree = TreeGridFactory.createDefaultGrid(annotationDetailsProvider);
 		annotationDetailsTree.setSizeFull();
 		annotationDetailsTree.addStyleNames(
 			"annotation-details-panel-annotation-details-grid", 
-			"flat-undecorated-icon-buttonrenderer", "no-focused-before-border");
+			"flat-undecorated-icon-buttonrenderer");
 
 		annotationDetailsTree.addColumn(annotationTreeItem -> 
 			annotationTreeItem.getDetail(),

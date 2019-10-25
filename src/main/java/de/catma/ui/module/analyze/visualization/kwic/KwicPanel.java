@@ -517,7 +517,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	}
 	
 	@Override
-	public void setSelectedQueryResultRow(QueryResultRow row) {
+	public void setSelectedQueryResultRows(Iterable<QueryResultRow> selectedRows) {
 		// noop
 	}
 	

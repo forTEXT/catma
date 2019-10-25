@@ -2,10 +2,7 @@ package de.catma.ui.module.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.text.Collator;
 import java.util.Collection;
 import java.util.HashSet;
@@ -50,7 +47,6 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.indexer.IndexedProject;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
@@ -66,17 +62,19 @@ import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.HTMLNotification;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
-import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.MembersChangedEvent;
 import de.catma.ui.events.ProjectChangedEvent;
@@ -94,7 +92,6 @@ import de.catma.ui.module.project.document.AddSourceDocWizardResult;
 import de.catma.ui.module.project.document.SourceDocumentResult;
 import de.catma.user.Member;
 import de.catma.user.User;
-import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 
 /**
@@ -114,6 +111,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		NAME,
 		;
 	}
+
+	private final TagManager tagManager;
 
 	private ProjectManager projectManager;
     private ProjectReference projectReference;
@@ -145,6 +144,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	this.projectManager = projectManager;
         this.eventBus = eventBus;
     	this.errorHandler = (ErrorHandler)UI.getCurrent();
+		TagLibrary tagLibrary = new TagLibrary();
+		this.tagManager = new TagManager(tagLibrary);
+
+
         initProjectListeners();
 
         initComponents();
@@ -409,35 +412,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    			commitMsg -> {
 	    				try {
 		    				project.commitChanges(commitMsg);
-		    				project.synchronizeWithRemote(new OpenProjectListener() {
-
-		    		            @Override
-		    		            public void progress(String msg, Object... params) {
-		    		            }
-
-		    		            @Override
-		    		            public void ready(Project project) {
-		    		            	reloadAll();
-		    		            	setEnabled(true);
-				    				Notification.show(
-					    					"Info", 
-					    					"Your Project has been synchronized!", 
-					    					Type.HUMANIZED_MESSAGE);		    						
-		    		            }
-		    		            
-		    		            @Override
-		    		            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
-		    		            	setEnabled(true);
-		    						eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
-		    		            }
-
-		    		            @Override
-		    		            public void failure(Throwable t) {
-		    		            	setEnabled(true);
-		    		                errorHandler.showAndLogError("error opening project", t);
-		    		            }
-		    		        });
-
+		    				synchronizeProject();
 	    				}
 	    				catch (Exception e) {
 	    					setEnabled(true);
@@ -447,40 +422,69 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    		dlg.show();
 	    	}
 	    	else {
-	    		project.synchronizeWithRemote(new OpenProjectListener() {
-
-	                @Override
-	                public void progress(String msg, Object... params) {
-	                }
-
-	                @Override
-	                public void ready(Project project) {
-	    				reloadAll();
-	    				setEnabled(true);
-	    				Notification.show(
-		    					"Info",  
-		    					"Your Project has been synchronized!",  
-		    					Type.HUMANIZED_MESSAGE);	    				
-	                }
-	                
-	                @Override
-	                public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
-	                	setEnabled(true);
-	    				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
-	                }
-
-	                @Override
-	                public void failure(Throwable t) {
-	                	setEnabled(true);
-	                    errorHandler.showAndLogError("error opening project", t);
-	                }
-	            });
+	    		synchronizeProject();
 	    	}
     	}
     	catch (Exception e) {
             errorHandler.showAndLogError("error accessing project", e);
     	}	
     }
+
+	private void synchronizeProject() throws Exception {
+    	setProgressBarVisible(true);
+    	
+    	final UI ui = UI.getCurrent();
+    	
+		project.synchronizeWithRemote(new OpenProjectListener() {
+
+            @Override
+            public void progress(String msg, Object... params) {
+            	ui.access(() -> {
+	            	if (params != null) {
+	            		progressBar.setCaption(String.format(msg, params));
+	            	}
+	            	else {
+	            		progressBar.setCaption(msg);
+	            	}
+	            	ui.push();
+            	});
+            }
+
+            @Override
+            public void ready(Project project) {
+            	setProgressBarVisible(false);
+            	reloadAll();
+            	setEnabled(true);
+				Notification.show(
+    					"Info", 
+    					"Your Project has been synchronized!", 
+    					Type.HUMANIZED_MESSAGE);		    						
+            }
+            
+            @Override
+            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
+            	setProgressBarVisible(false);
+            	setEnabled(true);
+				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
+            }
+
+            @Override
+            public void failure(Throwable t) {
+            	setProgressBarVisible(false);
+            	setEnabled(true);
+                errorHandler.showAndLogError("error opening project", t);
+            }
+        });
+
+	}
+	
+	private void setProgressBarVisible(boolean visible) {
+    	progressBar.setIndeterminate(visible);
+    	progressBar.setVisible(visible);
+		if (!visible) {
+			progressBar.setCaption("");
+		}
+	}
 
 	private void handleEditResources() {
 		final Set<Resource> selectedResources = documentGrid.getSelectedItems();
@@ -799,9 +803,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     private Component initResourceContent() {
     	HorizontalFlexLayout resourceContent = new HorizontalFlexLayout();
-    	documentGrid = new TreeGrid<>();
+    	documentGrid = TreeGridFactory.createDefaultTreeGrid();
         documentGrid.addStyleNames(
-				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer"); //$NON-NLS-1$ //$NON-NLS-2$
+				"flat-undecorated-icon-buttonrenderer"); //$NON-NLS-1$ 
 
         documentGrid.setHeaderVisible(false);
         documentGrid.setRowHeight(45);
@@ -995,10 +999,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @param projectReference
      */
     private void initProject(ProjectReference projectReference) {
-    	progressBar.setIndeterminate(true);
-    	progressBar.setVisible(true);
+    	setEnabled(false);
+    	setProgressBarVisible(true);
+    	
     	final UI ui = UI.getCurrent();
-        projectManager.openProject(projectReference, new OpenProjectListener() {
+        projectManager.openProject(tagManager, projectReference, new OpenProjectListener() {
 
             @Override
             public void progress(String msg, Object... params) {
@@ -1015,10 +1020,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
             @Override
             public void ready(Project project) {
-            	progressBar.setIndeterminate(false);
-            	progressBar.setVisible(false);
-            	progressBar.setCaption("");
-            	
+            	setProgressBarVisible(false);
                 ProjectView.this.project = project;
                 ProjectView.this.project.addPropertyChangeListener(
                 		RepositoryChangeEvent.exceptionOccurred, 
@@ -1027,29 +1029,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 ProjectView.this.project.getTagManager().addPropertyChangeListener(
                 		TagManagerEvent.tagsetDefinitionChanged,
                 		tagsetChangeListener);
-
-                boolean membersEditAllowed = 
-                		projectManager.isAuthorizedOnProject(
-                				RBACPermission.PROJECT_MEMBERS_EDIT, projectReference.getProjectId());
-		        miInvite.setVisible(membersEditAllowed);
-		        teamPanel.setVisible(membersEditAllowed);
-                
-				initData();
-				eventBus.post(new ProjectReadyEvent(project));
-		    	try {
-					rbacEnforcer.enforceConstraints(project.getRoleOnProject());
-				} catch (IOException e) {
-					errorHandler.showAndLogError("Error trying to fetch role", e);
-				}
+                setEnabled(true);
+                reloadAll();
             }
             
             @Override
             public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
+            	setProgressBarVisible(false);
+            	setEnabled(true);
 				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
             }
 
             @Override
             public void failure(Throwable t) {
+            	setProgressBarVisible(false);
+            	setEnabled(true);
                 errorHandler.showAndLogError("error opening project", t);
             }
         });
@@ -1145,7 +1139,20 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     @Override
     public void reloadAll() {
-        initProject(projectReference);
+
+        boolean membersEditAllowed = 
+        		projectManager.isAuthorizedOnProject(
+        				RBACPermission.PROJECT_MEMBERS_EDIT, projectReference.getProjectId());
+        miInvite.setVisible(membersEditAllowed);
+        teamPanel.setVisible(membersEditAllowed);
+        
+		initData();
+		eventBus.post(new ProjectReadyEvent(project));
+    	try {
+			rbacEnforcer.enforceConstraints(project.getRoleOnProject());
+		} catch (IOException e) {
+			errorHandler.showAndLogError("Error trying to fetch role", e);
+		}        
     }
 
     /**
@@ -1154,7 +1161,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     public void setProjectReference(ProjectReference projectReference) {
         this.projectReference = projectReference;
         eventBus.post(new HeaderContextChangeEvent(projectReference.getName()));
-        reloadAll();
+        initProject(projectReference);
     }
 
     /**

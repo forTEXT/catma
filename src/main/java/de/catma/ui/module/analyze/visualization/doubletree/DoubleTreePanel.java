@@ -204,7 +204,7 @@ public class DoubleTreePanel extends VerticalLayout implements Visualization {
 	}
 	
 	@Override
-	public void setSelectedQueryResultRow(QueryResultRow row) {
+	public void setSelectedQueryResultRows(Iterable<QueryResultRow> selectedRows) {
 		// TODO Auto-generated method stub
 
 	}

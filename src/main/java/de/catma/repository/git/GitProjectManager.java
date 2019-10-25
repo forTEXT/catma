@@ -22,7 +22,6 @@ import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
@@ -162,13 +161,13 @@ public class GitProjectManager implements ProjectManager {
 
 	@Override
 	public void openProject(
+			TagManager tagManager,
 			ProjectReference projectReference,
 			OpenProjectListener openProjectListener) {
 		try {
 			
 			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
 
-			TagLibrary tagLibrary = new TagLibrary();
 
 			Project project =
 				new GraphWorktreeProject(
@@ -179,7 +178,7 @@ public class GitProjectManager implements ProjectManager {
 							this.localGitRepositoryManager, 
 							this.remoteGitServerManager),
 						projectReference,
-						new TagManager(tagLibrary),
+						tagManager,
                         backgroundService,
                         eventBus);
 			

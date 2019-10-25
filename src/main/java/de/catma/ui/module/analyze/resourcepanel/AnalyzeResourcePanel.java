@@ -33,6 +33,7 @@ import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
 import de.catma.rbac.RBACPermission;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.module.main.ErrorHandler;
 
@@ -244,7 +245,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	private void initComponents() {
 		Label documentTreeLabel = new Label("Documents & Annotations");
 
-		documentTree = new TreeGrid<>();
+		documentTree = TreeGridFactory.createDefaultTreeGrid();
 		documentTree.addStyleNames("resource-grid", "flat-undecorated-icon-buttonrenderer");
 
 		documentTree

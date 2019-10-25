@@ -107,7 +107,7 @@ public class TagManager {
 	}
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private TagLibrary tagLibrary;
+	private final TagLibrary tagLibrary;
 	
 	private PropertyChangeSupport propertyChangeSupport;
 	
@@ -116,9 +116,11 @@ public class TagManager {
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 	}
 	
-	public void load(Collection<TagsetDefinition> tagsets) {
-		this.tagLibrary.clear();
-		tagsets.forEach(tagset ->this.tagLibrary.add(tagset));
+	public void load(Iterable<TagsetDefinition> tagsets) {
+		if (!this.tagLibrary.equals(tagsets)) {
+			this.tagLibrary.clear();
+			tagsets.forEach(tagset ->this.tagLibrary.add(tagset));
+		}
 	}
 	
 	public void addTagsetDefinition(

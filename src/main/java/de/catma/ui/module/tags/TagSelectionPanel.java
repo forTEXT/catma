@@ -29,6 +29,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -85,9 +86,6 @@ public class TagSelectionPanel extends VerticalLayout {
     	for (TagDefinition tag : tagset) {
     		TagDataItem item = new TagDataItem(tag);
     		tagsetGrid.expand(item);
-    		if (!tag.getUserDefinedPropertyDefinitions().isEmpty()) {
-    			tagsetGrid.setDetailsVisible(item, true);
-    		}
     	}
 	}
 	private void addTags(
@@ -136,14 +134,18 @@ public class TagSelectionPanel extends VerticalLayout {
 	    addContextMenu.addItem("Add Tagset", clickEvent -> handleAddTagsetRequest());
 	    addContextMenu.addItem("Add Tag", clickEvent -> handleAddTagRequest());
 	    addContextMenu.addItem("Add Subtag", clickEvent -> handleAddSubtagRequest());
+	    
+		tagsetGrid.addExpandListener(expandEvent -> expandEvent.getExpandedItem().setTagsetExpanded(true));
+		tagsetGrid.addCollapseListener(collapseEvent -> collapseEvent.getCollapsedItem().setTagsetExpanded(false));
+
 	}
 
 	private void initComponents() {
 		setSizeFull();
-		tagsetGrid = new TreeGrid<>();
+		tagsetGrid = TreeGridFactory.createDefaultTreeGrid();
 		tagsetGrid.setSizeFull();
 		tagsetGrid.addStyleNames(
-				"no-focused-before-border", "flat-undecorated-icon-buttonrenderer");
+				"flat-undecorated-icon-buttonrenderer");
 		tagsetGrid.setSizeFull();
 		tagsetGrid.setSelectionMode(SelectionMode.SINGLE);
 		tagsetGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);

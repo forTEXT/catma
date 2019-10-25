@@ -44,6 +44,7 @@ import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -377,11 +378,10 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private void initComponents() {
 		addStyleName("annotate-resource-panel");
 		Label documentTreeLabel = new Label("Documents & Annotations");
-		documentTree = new TreeGrid<>();
+		documentTree = TreeGridFactory.createDefaultTreeGrid();
 		documentTree.addStyleNames(
 				"resource-grid", 
-				"flat-undecorated-icon-buttonrenderer", 
-				"no-focused-before-border");
+				"flat-undecorated-icon-buttonrenderer");
 		
 		ButtonRenderer<DocumentTreeItem> documentSelectionRenderer = 
 				new ButtonRenderer<DocumentTreeItem>(

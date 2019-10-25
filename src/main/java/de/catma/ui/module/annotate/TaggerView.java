@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -408,22 +407,27 @@ public class TaggerView extends HorizontalLayout
 			public void resourcesChanged() {
 				AnnotationCollection selectedEditableCollection = 
 						annotationPanel.getSelectedEditableCollection();
-				Set<String> selectedAnnotationCollectionIds = 
-						resourcePanel.getSelectedAnnotationCollectionReferences()
-						.stream().map(collRef -> collRef.getId())
-						.collect(Collectors.toSet());
 				
-				for (AnnotationCollection collection : 
-						userMarkupCollectionManager.getUserMarkupCollections()) {
-					if (selectedAnnotationCollectionIds.contains(collection.getId())) {
+				List<AnnotationCollectionReference> selectedAnnotationCollectionRefs = 
+						resourcePanel.getSelectedAnnotationCollectionReferences();
+				
+				for (AnnotationCollection collection : userMarkupCollectionManager) {
+					userMarkupCollectionManager.remove(collection.getId());
+					annotationPanel.removeCollection(collection.getId());
+					tagger.setVisible(collection.getTagReferences(), false);						
+				}
+				
+				userMarkupCollectionManager.clear();
+				
+				for (AnnotationCollectionReference collectionReference : selectedAnnotationCollectionRefs) {
+					try {
+						AnnotationCollection collection = project.getUserMarkupCollection(collectionReference);
 						setAnnotationCollectionSelected(
 							new AnnotationCollectionReference(collection), 
 							true);
 					}
-					else {
-						userMarkupCollectionManager.remove(collection.getId());
-						annotationPanel.removeCollection(collection.getId());
-						tagger.setVisible(collection.getTagReferences(), false);						
+					catch (IOException e) {
+						((ErrorHandler)UI.getCurrent()).showAndLogError("error refreshing Annotation Collection!", e);
 					}
 				}
 				

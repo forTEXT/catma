@@ -7,6 +7,7 @@ import com.google.common.base.Joiner;
 import com.vaadin.data.Binder;
 import com.vaadin.data.BinderValidationStatus;
 import com.vaadin.data.ValidationResult;
+import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
@@ -43,12 +44,14 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 	protected void addContent(ComponentContainer content) {
 		ls_members = new ListSelect<>("Members", members);
 		ls_members.setReadOnly(true);
-		ls_members.setWidth("100%");
+		ls_members.setSizeFull();
 		ls_members.setItemCaptionGenerator(User::preciseName);
-		
 		
 		content.addComponent(l_description);
 		content.addComponent(ls_members);
+		if (content instanceof AbstractOrderedLayout) {
+			((AbstractOrderedLayout) content).setExpandRatio(ls_members, 1f);
+		}
 		content.addComponent(cb_role);
 		
 		roleBinder
@@ -85,8 +88,8 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 	@Override
 	protected void layoutWindow() {
 		super.layoutWindow();
-		setWidth("320px");
-		setHeight("550px");
+		setWidth("70%");
+		setHeight("80%");
 
 	}
 }

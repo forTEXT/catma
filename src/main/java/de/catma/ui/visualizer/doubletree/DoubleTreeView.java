@@ -13,10 +13,8 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.source.KeywordInContext;
-import de.catma.ui.component.tabbedview.ClosableTab;
-import de.catma.ui.component.tabbedview.TabCaptionChangeListener;
 
-public class DoubleTreeView  extends Panel implements ClosableTab {
+public class DoubleTreeView  extends Panel {
 	
 	private DoubleTree doubleTree;
 	private List<KeywordInContext> kwics;
@@ -86,10 +84,5 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 	public String toString() {
 		return Messages.getString("DoubleTreeView.kwicAsDoubleTree"); //$NON-NLS-1$
 	}
-	
-	@Override
-	public void setTabNameChangeListener(TabCaptionChangeListener tabNameChangeListener) {
-		// TODO Auto-generated method stub
-		
-	}
+
 }

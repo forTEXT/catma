@@ -68,7 +68,6 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	private ProjectReference projectReference;
 	private User user;
 	private FileInfoProvider fileInfoProvider;
-	private TagManager tagManager;
 	private GraphWriter graphWriter;
 	
 	public TPGraphProjectHandler(ProjectReference projectReference, 
@@ -111,7 +110,6 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 				new ExecutionListener<TagManager>() {
 					@Override
 					public void done(TagManager result) {
-						TPGraphProjectHandler.this.tagManager = result;
 						openProjectListener.done(result);
 					}
 					@Override
@@ -177,12 +175,12 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void addCollection(String rootRevisionHash, String collectionId, String name, String umcRevisionHash,
-			SourceDocument document, String oldRootRevisionHash) throws Exception {
+			SourceDocument document, TagLibrary tagLibrary, String oldRootRevisionHash) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addCollection enter");
 		graphWriter.addCollection(
 			oldRootRevisionHash,
 			rootRevisionHash,
-			new AnnotationCollection(collectionId, new ContentInfoSet(name), tagManager.getTagLibrary(), 
+			new AnnotationCollection(collectionId, new ContentInfoSet(name), tagLibrary, 
 					document.getUuid(), document.getRevisionHash()));
 		logRootRevisionHash("addCollection exit");
 	}
@@ -322,7 +320,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public AnnotationCollection getCollection(String rootRevisionHash, TagLibrary tagLibrary,
+	public AnnotationCollection getCollection(String rootRevisionHash,
 			AnnotationCollectionReference collectionReference) throws Exception {
 		GraphTraversalSource g = graph.traversal();
 		
@@ -451,7 +449,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(String rootRevisionHash,
-			PropertyDefinition propertyDefinition, TagDefinition tag, TagLibrary tagLibrary) throws Exception {
+			PropertyDefinition propertyDefinition, TagDefinition tag) throws Exception {
 		Multimap<String, TagReference> result = ArrayListMultimap.create();
 		
 		GraphTraversalSource g = graph.traversal();

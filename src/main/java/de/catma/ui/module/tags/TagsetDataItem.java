@@ -41,6 +41,7 @@ class TagsetDataItem implements TagsetTreeItem {
 			List<TagDefinition> rootTags = tagset.getRootTagDefinitions();
 			tagSummeryBuilder.append(
 				rootTags.stream()
+				.limit(3)
 				.map(tag -> Cleaner.clean(tag.getName()))
 				.collect(Collectors.joining(",")));
 			tagSummeryBuilder.append(
