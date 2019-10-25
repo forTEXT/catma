@@ -210,6 +210,7 @@ public class ResourcePermissionView extends Window {
 	private Binding<Resource, RBACRole> createRoleEditor(Member member) {
 		
 		final ComboBox<RBACRole> roleBox = new ComboBox<>();
+		roleBox.setEmptySelectionAllowed(false);
 		Binder<Resource> binder = permissionGrid.getEditor().getBinder();
 		binder.addStatusChangeListener(new StatusChangeListener() {
 			
@@ -237,6 +238,7 @@ public class ResourcePermissionView extends Window {
 					}
 				}
 				roleBox.setItems(availableRoles);
+				roleBox.setEnabled(availableRoles.size() > 1);
 			}
 		});
 		return binder.bind(
@@ -247,12 +249,14 @@ public class ResourcePermissionView extends Window {
 
 
 	private void handleRoleChange(Resource resource, Member member, RBACRole role) {
-		try {
-			project.assignOnResource(member, role, resource.getResourceId());
-			permissionMatrix.put(resource, member, role);
-			permissionGrid.getEditor().cancel();
-		} catch (IOException e) {
-			errorHandler.showAndLogError("Error changing permissions!", e);
+		if (role != null) {
+			try {
+				project.assignOnResource(member, role, resource.getResourceId());
+				permissionMatrix.put(resource, member, role);
+				permissionGrid.getEditor().cancel();
+			} catch (IOException e) {
+				errorHandler.showAndLogError("Error changing permissions!", e);
+			}
 		}
 	}
 

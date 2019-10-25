@@ -186,8 +186,8 @@ public class ProjectCard extends VerticalFlexLayout  {
         			})
         		);
         
-        IconButton buttonAction = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
-        descriptionBar.addComponents(buttonAction);
+//        IconButton buttonAction = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
+//        descriptionBar.addComponents(buttonAction);
 
         addComponents(descriptionBar);
         
