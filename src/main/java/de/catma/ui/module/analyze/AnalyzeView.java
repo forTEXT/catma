@@ -59,6 +59,7 @@ import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.module.analyze.queryresultpanel.RefreshQueryResultPanel;
 import de.catma.ui.module.analyze.resourcepanel.AnalyzeResourcePanel;
+import de.catma.ui.module.analyze.visualization.doubletree.DoubleTreePanel;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.analyze.visualization.vega.DistributionDisplaySettingHandler;
 import de.catma.ui.module.analyze.visualization.vega.VegaPanel;
@@ -109,7 +110,7 @@ public class AnalyzeView extends HorizontalLayout
 	private Button kwicBt;
 	private Button distBt;
 	private Button wordCloudBt;
-	private Button networkBt;
+	private Button doubleTreeBt;
 	private Button btQueryOptions;
 	private Button btVizOptions;
 	
@@ -342,13 +343,13 @@ public class AnalyzeView extends HorizontalLayout
 		wordCloudBt.addStyleName("analyze_viz_icon");
 		wordCloudBt.setSizeFull();
 
-		networkBt = new Button("NETWORK", VaadinIcons.CLUSTER);
-		networkBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
-		networkBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
-		networkBt.addStyleName("analyze_viz_icon");
-		networkBt.setSizeFull();
+		doubleTreeBt = new Button("Doubletree", VaadinIcons.ROAD_BRANCHES);
+		doubleTreeBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
+		doubleTreeBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
+		doubleTreeBt.addStyleName("analyze_viz_icon");
+		doubleTreeBt.setSizeFull();
 
-		return new HorizontalLayout(kwicBt, distBt, wordCloudBt, networkBt);
+		return new HorizontalLayout(kwicBt, distBt, wordCloudBt, doubleTreeBt);
 	}
 	
 	private void setContent(Component newContent, Component oldContent) {	
@@ -369,6 +370,8 @@ public class AnalyzeView extends HorizontalLayout
 		distBt.addClickListener(event -> addDistViz());
 		
 		wordCloudBt.addClickListener(event -> addWCViz());
+		
+		doubleTreeBt.addClickListener(event -> addDoubleTreeViz());
 		
 		btQueryBuilder.addClickListener(clickEvent -> showQueryBuilder());
 	}
@@ -498,6 +501,49 @@ public class AnalyzeView extends HorizontalLayout
 		VizMinPanel vizMinPanel = 
 				new VizMinPanel(
 					"WordCloud", 
+					vizMaxPanel,
+					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
+					() -> setContent(vizMaxPanel, contentPanel));
+		
+
+		vizCardsPanel.addComponent(vizMinPanel);
+		setContent(vizMaxPanel, contentPanel);
+	}
+	
+	private void addDoubleTreeViz() {
+		if (getQueryResultPanelSettings().isEmpty()) {
+			Notification.show("Info", "Please query some data first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		DoubleTreePanel doubleTreePanel = 
+			new DoubleTreePanel(
+				eventBus,
+				project, 
+				kwicProviderCache, 
+				() -> new QueryOptions(
+					new QueryId(""), //TODO: ok?
+					currentCorpus.getDocumentIds(), 
+					currentCorpus.getCollectionIds(),
+					indexInfoSet.getUnseparableCharacterSequences(),
+					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), project));
+		
+		
+		String name = 
+				"Doubletree " 
+						+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME);
+		
+		VizMaxPanel vizMaxPanel = 
+			new VizMaxPanel(
+					name,
+					doubleTreePanel,
+					getQueryResultPanelSettings(),
+					project, 
+					kwicProviderCache,
+					closedVizMaxPanel -> setContent(contentPanel, closedVizMaxPanel));
+		
+		VizMinPanel vizMinPanel = 
+				new VizMinPanel(
+					"Doubletree", 
 					vizMaxPanel,
 					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
 					() -> setContent(vizMaxPanel, contentPanel));
