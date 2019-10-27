@@ -60,6 +60,7 @@ import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.module.analyze.queryresultpanel.RefreshQueryResultPanel;
 import de.catma.ui.module.analyze.resourcepanel.AnalyzeResourcePanel;
 import de.catma.ui.module.analyze.visualization.doubletree.DoubleTreePanel;
+import de.catma.ui.module.analyze.visualization.doubletree.DoubleTreePanel;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.analyze.visualization.vega.DistributionDisplaySettingHandler;
 import de.catma.ui.module.analyze.visualization.vega.VegaPanel;
@@ -516,16 +517,7 @@ public class AnalyzeView extends HorizontalLayout
 			return;
 		}
 		DoubleTreePanel doubleTreePanel = 
-			new DoubleTreePanel(
-				eventBus,
-				project, 
-				kwicProviderCache, 
-				() -> new QueryOptions(
-					new QueryId(""), //TODO: ok?
-					currentCorpus.getDocumentIds(), 
-					currentCorpus.getCollectionIds(),
-					indexInfoSet.getUnseparableCharacterSequences(),
-					indexInfoSet.getUserDefinedSeparatingCharacters(), indexInfoSet.getLocale(), project));
+			new DoubleTreePanel(	kwicProviderCache);
 		
 		
 		String name = 

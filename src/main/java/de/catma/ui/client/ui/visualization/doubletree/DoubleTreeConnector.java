@@ -5,7 +5,7 @@ import com.vaadin.client.annotations.OnStateChange;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.shared.ui.Connect;
 
-import de.catma.ui.visualizer.doubletree.DoubleTree;
+import de.catma.ui.module.analyze.visualization.doubletree.DoubleTree;
 
 @Connect(DoubleTree.class)
 public class DoubleTreeConnector extends AbstractComponentConnector {

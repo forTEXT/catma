@@ -116,7 +116,7 @@
             {
               "type": "wordcloud",
               "size": [{"signal": "child_width"}, {"signal": "child_height"}],
-              "font": "Arial",
+              "font": "Open Sans",
               "fontSize": {"field": "datum.count"},
               "fontWeight": "20",
               "fontSizeRange": [

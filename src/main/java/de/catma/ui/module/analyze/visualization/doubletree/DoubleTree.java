@@ -4,11 +4,10 @@ import java.util.List;
 
 import com.vaadin.ui.AbstractComponent;
 
-import de.catma.ui.client.ui.visualization.doubletree.DoubleTreeState;
-import de.catma.ui.visualizer.doubletree.KwicListJSONSerializer;
 import de.catma.document.source.KeywordInContext;
+import de.catma.ui.client.ui.visualization.doubletree.DoubleTreeState;
 
-public class DoubleTree  extends AbstractComponent {
+public class DoubleTree extends AbstractComponent {
 
 	private String kwicsJson;
 	
@@ -27,5 +26,4 @@ public class DoubleTree  extends AbstractComponent {
 	protected DoubleTreeState getState() {
 		return (DoubleTreeState) super.getState();
 	}
-
 }

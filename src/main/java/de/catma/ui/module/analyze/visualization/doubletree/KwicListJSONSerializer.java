@@ -1,4 +1,4 @@
-package de.catma.ui.visualizer.doubletree;
+package de.catma.ui.module.analyze.visualization.doubletree;
 
 import java.math.BigDecimal;
 import java.util.List;
