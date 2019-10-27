@@ -1,7 +1,7 @@
 package de.catma.ui.module.analyze.queryresultpanel;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -15,7 +15,6 @@ import com.vaadin.data.provider.GridSortOrderBuilder;
 import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
-import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
@@ -122,6 +121,7 @@ public class QueryResultPanel extends VerticalLayout {
 	private DisplaySettingChangeListener displaySettingChangeListener;
 	
 	private ArrayList<Registration> itemSelectionListenerRegistrations;
+	private ArrayList<WeakReference<SelectionListener<QueryResultRowItem>>> itemSelectionListeners;
 	
 	public QueryResultPanel(Project project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
@@ -159,7 +159,9 @@ public class QueryResultPanel extends VerticalLayout {
 		this.cardStyle = cardStyle;
 		this.includeQueryId = includeQueryId;
 		this.queryId = queryId; 
-		this.itemSelectionListenerRegistrations = new ArrayList<Registration>();
+		this.itemSelectionListenerRegistrations = new ArrayList<>();
+		this.itemSelectionListeners = new ArrayList<>();
+		
 		initComponents();
 		initActions(resultPanelCloseListener);
 		displaySetting.init(this);
@@ -644,7 +646,6 @@ public class QueryResultPanel extends VerticalLayout {
 		return tagBasedTreeData;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void initQueryResultGrid() {
 		// grid needs to be reinitialized when a new set of root nodes is set
 		// otherwise the children triangle is not shown even if children are present
@@ -652,13 +653,18 @@ public class QueryResultPanel extends VerticalLayout {
 		ArrayList<SelectionListener<QueryResultRowItem>> existingListeners = new ArrayList<>();
 		
 		if (queryResultGrid != null) {
-			Collection<?> selectionListeners = 
-					queryResultGrid.getListeners(SelectionEvent.class);
-			for (Object selectionListener : selectionListeners) {
-				if (selectionListener instanceof SelectionListener) {
-					existingListeners.add(
-						(SelectionListener<QueryResultRowItem>)selectionListener);
+
+			Iterator<WeakReference<SelectionListener<QueryResultRowItem>>> itemSelectionListenerIterator =
+					itemSelectionListeners.iterator();
+			while (itemSelectionListenerIterator.hasNext()) {
+				SelectionListener<QueryResultRowItem> selectionListener =
+						itemSelectionListenerIterator.next().get();
+				
+				if (selectionListener != null) {
+					existingListeners.add(selectionListener);
 				}
+				
+				itemSelectionListenerIterator.remove();
 			}
 			
 			Iterator<Registration> registrationIterator = 
@@ -683,6 +689,7 @@ public class QueryResultPanel extends VerticalLayout {
 
 	public void addItemSelectionListener(
 			SelectionListener<QueryResultRowItem> listener) {
+		itemSelectionListeners.add(new WeakReference<>(listener));
 		itemSelectionListenerRegistrations.add(
 				queryResultGrid.addSelectionListener(listener));
 	}

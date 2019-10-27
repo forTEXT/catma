@@ -15,7 +15,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Link;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -30,7 +29,7 @@ import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
 
-public class DoubleTreePanel  extends Panel implements  Visualization{
+public class DoubleTreePanel  extends VerticalLayout implements Visualization {
 	
 	private DoubleTree doubleTree;
 	private List<KeywordInContext> kwics;
@@ -60,10 +59,10 @@ public class DoubleTreePanel  extends Panel implements  Visualization{
 	}
 
 	private void initComponents() {
-		VerticalLayout content = new VerticalLayout();
-		content.setMargin(true);
-		content.setSpacing(true);
-		setHeight("100%"); 
+		setSizeFull();
+		setMargin(true);
+		setSpacing(true);
+		
 		HorizontalLayout headerPanel = new HorizontalLayout();
 		headerPanel.setSpacing(true);
 		headerPanel.setWidth("100%"); 
@@ -87,15 +86,15 @@ public class DoubleTreePanel  extends Panel implements  Visualization{
 		headerPanel.setComponentAlignment(btExpandCompressRight, Alignment.TOP_RIGHT);
 		
 
-		content.addComponent(headerPanel);
-		content.setComponentAlignment(headerPanel, Alignment.TOP_CENTER);
+		addComponent(headerPanel);
+		setComponentAlignment(headerPanel, Alignment.TOP_CENTER);
+
 		
 		doubleTree = new DoubleTree();
-		doubleTree.setHeight("100%"); //$NON-NLS-1$
+		doubleTree.setSizeFull();
+		addComponent(doubleTree);
+		setExpandRatio(doubleTree, 1f);
 		
-		content.addComponent(doubleTree);
-		setContent(content);
-		setScrollLeft(400);
 	}
 	
 
