@@ -168,7 +168,7 @@ public class GitProjectHandler {
 		}
 	}
 	
-	public String removeTag(TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) throws IOException {
+	public String removeTag(TagDefinition tagDefinition) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(
@@ -177,7 +177,7 @@ public class GitProjectHandler {
 					this.credentialsProvider);
 
 			String tagsetRevision = 
-				gitTagsetHandler.removeTagDefinition(projectId, tagsetDefinition, tagDefinition);
+				gitTagsetHandler.removeTagDefinition(projectId, tagDefinition);
 			
 			return tagsetRevision;
 		}
@@ -353,39 +353,6 @@ public class GitProjectHandler {
 				projectId,
 				GitProjectManager.getProjectRootRepositoryName(projectId));
 			return localRepoManager.getRevisionHash();
-		}
-	}
-	
-	public String publishChanges() throws Exception {
-		
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			localRepoManager.open(
-				projectId,
-				GitProjectManager.getProjectRootRepositoryName(projectId));
-				//TODO
-			// get involved tagsets
-			// check for modifications
-			// fetch/merge master / merge dev into master
-			// push master
-			// rebase dev to master
-			
-			// get involved collections
-			// check for modifications
-			// fetch/merge master / merge dev into master
-			// push master
-			// rebase dev to master
-
-			
-			// how to set root project submodule checksums correctly ?
-			// checkout submodules on commit hashes of master HEAD 
-			// add and commit changes
-			
-			//System.out.println(localRepoManager.getRevisionHash("tagsets/CATMA_6CF585DD-6D52-4571-B245-F94F2BC6789A"));
-
-			
-		
-		
-			return null;
 		}
 	}
 
@@ -666,7 +633,7 @@ public class GitProjectHandler {
 				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
 				projectId, tagsetId, hasPermission(
 						getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE));
-			//TODO: handle mergeresult
+			//TODO: handle mergeresult -> take theirs
 			
 			
 			localGitRepoManager.detach();
@@ -722,7 +689,7 @@ public class GitProjectHandler {
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
 					projectId, collectionId, 
 					hasPermission(getRoleForCollection(collectionId), RBACPermission.COLLECTION_WRITE));
-			//TODO: handle merge result
+			//TODO: handle merge result -> take theirs
 			
 			localGitRepoManager.detach();			
 			// open the project root repo
@@ -950,11 +917,12 @@ public class GitProjectHandler {
 					this.remoteGitServerManager,
 					this.credentialsProvider);
 			
+			@SuppressWarnings("unused")
 			MergeResult mergeResult = gitTagsetHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
 					projectId, tagsetId, hasPermission(
 								getRoleForTagset(tagsetId), RBACPermission.TAGSET_WRITE));
-			//TODO: handle mergeResult
+			// mergeResult is handled after all resources have been synchronized
 		}
 	}
 
@@ -1132,11 +1100,12 @@ public class GitProjectHandler {
 						this.remoteGitServerManager,
 						this.credentialsProvider);
 			
+			@SuppressWarnings("unused")
 			MergeResult mergeResult = collectionHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
 					projectId, collectionId,
 					hasPermission(getRoleForCollection(collectionId), RBACPermission.COLLECTION_WRITE));
-			//TODO: handle mergeResult			
+			// mergeResult is handled after all resources have been synchronized
 		}
 	}
 
@@ -1210,7 +1179,7 @@ public class GitProjectHandler {
 		
 	}
 
-	public void resolveTagConflict(String tagsetId, TagConflict tagConflict) throws IOException {
+	public void resolveTagConflict(String tagsetId, TagConflict tagConflict) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(
@@ -1219,8 +1188,16 @@ public class GitProjectHandler {
 					this.credentialsProvider);
 
 			TagDefinition tagDefinition = tagConflict.getResolvedTagDefinition();
-			gitTagsetHandler.createOrUpdateTagDefinition(
-					projectId, tagsetId, tagDefinition);
+			if (tagDefinition == null) {
+				gitTagsetHandler.removeTagDefinition(
+					projectId,
+					tagConflict.getDismissedTagDefinition());
+			}
+			else {
+				gitTagsetHandler.removeFromDeletedJournal(projectId, tagsetId, tagDefinition.getUuid());
+				gitTagsetHandler.createOrUpdateTagDefinition(
+						projectId, tagsetId, tagDefinition);
+			}
 
 		}		
 	}

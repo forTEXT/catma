@@ -85,7 +85,7 @@ public class GitConflictedProject implements ConflictedProject {
 	@Override
 	public void resolveTagsetConflicts(List<TagsetConflict> tagsetConflicts) throws Exception {
 		for (TagsetConflict tagsetConflict : tagsetConflicts) {
-			if (!tagsetConflict.getTagConflicts().isEmpty()) {
+			if (!tagsetConflict.getTagConflicts().isEmpty() || tagsetConflict.isHeaderConflict()) {
 				for (TagConflict tagConflict : tagsetConflict.getTagConflicts()) {
 					gitProjectHandler.resolveTagConflict(tagsetConflict.getUuid(), tagConflict);
 				}

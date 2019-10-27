@@ -341,11 +341,7 @@ public interface Project {
 	 * @throws IOException
 	 */
 	public void importTagLibrary(InputStream inputStream) throws IOException;
-	
-	/**
-	 * @return if true then users have to authenticate for access to the repository
-	 */
-	public boolean isAuthenticationRequired();
+
 	/**
 	 * @return current user of this repository instance
 	 */
@@ -367,7 +363,7 @@ public interface Project {
 
 	public boolean hasUncommittedChanges() throws Exception;
 
-	public void commitChanges(String commitMsg);
+	public void commitChanges(String commitMsg) throws Exception;
 
 	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;
 

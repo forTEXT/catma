@@ -364,6 +364,28 @@ $v-focus-color: #5A98A1;
     	   padding-right: 80px;
         }
         
+        .not-logged-in-main-view-fortext-bottom-panel {
+        	margin-bottom: 10px;
+        }
+        
+        .not-logged-in-main-view-fortext-button {
+        	background: #a80000;
+			padding: 20px;
+			width: 20%;
+		}
+		
+		.not-logged-in-main-view-fortext-button img {
+			width: 100%;
+		}
+		
+		.not-logged-in-main-view-fortext-label {
+			color: #a80000;
+			width: 50%;
+			align-self: flex-end;
+			text-align: end;
+			padding-right: 10px;
+		}
+        
       /* signup */
         .g-recaptcha-response {
     		display: none !important;

@@ -4,7 +4,9 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.ThemeResource;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Image;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.UI;
 
@@ -119,6 +121,23 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		contentPanel.addComponent(buttonPanel);
 		
 		addComponent(contentPanel);		
+
+		HorizontalFlexLayout bottomPanel = new HorizontalFlexLayout();
+		bottomPanel.addStyleName("not-logged-in-main-view-fortext-bottom-panel");
+		addComponent(bottomPanel);
+		
+		Link fortextButton = new Link("", new ExternalResource("https://fortext.net"));
+		fortextButton.setIcon(new ThemeResource("fortext_logo.png"));
+		fortextButton.setTargetName("_blank");
+		fortextButton.addStyleName("not-logged-in-main-view-fortext-button");
+
+		Label fortextLabel = new Label("developed and maintained</br>in cooperation with");
+		fortextLabel.setContentMode(ContentMode.HTML);
+		fortextLabel.addStyleName("not-logged-in-main-view-fortext-label");
+		
+		bottomPanel.addComponent(fortextLabel);
+		bottomPanel.addComponent(fortextButton);
+		
 	}
 	
 }
