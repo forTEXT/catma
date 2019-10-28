@@ -40,26 +40,26 @@
       ]
     }
   ],
-  "signals": [
+   "signals": [
     {
       "name": "cellSize",
       "value": 8,
-      "bind": {"input": "range", "min": 5, "max": 20}
+      "bind": {"name": "wordcloud size","input": "range", "min": 5, "max": 20}
     },
     {
       "name": "fontSizeMin",
       "value": 8,
-      "bind": {"input": "range", "min": 1, "max": 10}
+      "bind": {"name": "fontsize min","input": "range", "min": 1, "max": 10}
     },
     {
       "name": "fontSizeMax",
       "value": 20,
-      "bind": {"input": "range", "min": 11, "max": 45}
+      "bind": {"name":"fontsize max","input": "range", "min": 11, "max": 45}
     },
     {
       "name": "wordPadding",
       "value": 1,
-      "bind": {"input": "range", "min": 1, "max": 10}
+      "bind": {"name":"word padding","input": "range", "min": 1, "max": 10}
     },
     {"name": "child_width", "value": 100, "update": "40*cellSize"},
     {"name": "child_height", "value": 100, "update": "40*cellSize"},
