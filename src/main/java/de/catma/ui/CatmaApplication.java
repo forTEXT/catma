@@ -57,20 +57,15 @@ import com.google.common.eventbus.Subscribe;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
-import com.vaadin.data.TreeData;
-import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -132,9 +127,10 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			}
 			
 			@Override
-			public IRemoteGitManagerRestricted createFromToken(String userImpersonationToken) throws IOException {
+			public IRemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
 				return new GitlabManagerRestricted(eventBus, initService.accuireBackgroundService(), userImpersonationToken);
 			}
+
 		});
 		
 		hazelCastService = new HazelCastService();

@@ -12,7 +12,7 @@ import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
  */
 public interface IRemoteGitManagerFactory {
 
-	IRemoteGitManagerRestricted createFromToken(
+	IRemoteGitManagerRestricted createFromImpersonationToken(
 			String userImpersonationToken) throws IOException;
 
 	IRemoteGitManagerRestricted createFromUsernameAndPassword(
