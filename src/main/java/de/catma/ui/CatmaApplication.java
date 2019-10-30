@@ -281,10 +281,14 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		}
 		if (Page.getCurrent() != null) {
 			HTMLNotification.show("Error", 
-					MessageFormat.format(
-							"An error has occurred!<br />We''ve been notified about this error and it will be fixed soon.<br />The underlying error message is:<br /> {0} <br /> {1}", 
-							message, e.getMessage()),
-					Type.ERROR_MESSAGE);
+				MessageFormat.format(
+					"An error has occurred!<br />"
+					+ "The error has been logged "
+					+ "but you can help us by sending an email with a more detailed description.<br />"
+					+ "Or you open an issue at <a href=\"https://github.com/mpetris/catma\">GitHub</a>.<br />"
+					+ "<br />The underlying error message is:<br /> {0} <br /> {1}", 
+					message, e.getMessage()==null?"":e.getMessage()),
+				Type.ERROR_MESSAGE);
 		}
 	}
 
