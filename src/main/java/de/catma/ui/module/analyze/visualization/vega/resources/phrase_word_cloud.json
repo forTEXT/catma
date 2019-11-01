@@ -26,7 +26,15 @@
           ],
           "ops": ["count"],
           "as": ["count"]
-        }
+        },
+        {
+          "type": "window",
+          "sort": {"field": "count", "order": "descending"},
+          "ops": ["row_number"],
+          "fields": ["count"],
+          "as": ["id"]
+        },
+        {"type": "filter", "expr": "datum.id <= numberOfTypesLimit "}
       ]
     },
     {
@@ -40,26 +48,37 @@
       ]
     }
   ],
-   "signals": [
+  "signals": [
+    {
+      "name": "numberOfTypesLimit",
+      "value": 20,
+      "bind": {
+        "name": "No. of Types",
+        "step": 1,
+        "input": "range",
+        "min": 1,
+        "max": 500
+      }
+    },
     {
       "name": "cellSize",
       "value": 8,
-      "bind": {"name": "wordcloud size","input": "range", "min": 5, "max": 20}
+      "bind": {"name": "Tile size", "input": "range", "min": 5, "max": 20}
     },
     {
       "name": "fontSizeMin",
       "value": 8,
-      "bind": {"name": "fontsize min","input": "range", "min": 1, "max": 10}
+      "bind": {"name": "Fontsize min", "input": "range", "min": 1, "max": 10}
     },
     {
       "name": "fontSizeMax",
       "value": 20,
-      "bind": {"name":"fontsize max","input": "range", "min": 11, "max": 45}
+      "bind": {"name": "Fontsize max", "input": "range", "min": 11, "max": 45}
     },
     {
       "name": "wordPadding",
       "value": 1,
-      "bind": {"name":"word padding","input": "range", "min": 1, "max": 10}
+      "bind": {"name": "Word padding", "input": "range", "min": 1, "max": 10}
     },
     {"name": "child_width", "value": 100, "update": "40*cellSize"},
     {"name": "child_height", "value": 100, "update": "40*cellSize"},
