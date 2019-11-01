@@ -13,6 +13,7 @@ import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.GridSortOrderBuilder;
 import com.vaadin.data.provider.HierarchicalQuery;
+import com.vaadin.data.provider.InMemoryDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.event.selection.SelectionListener;
@@ -123,6 +124,8 @@ public class QueryResultPanel extends VerticalLayout {
 	private ArrayList<Registration> itemSelectionListenerRegistrations;
 	private ArrayList<WeakReference<SelectionListener<QueryResultRowItem>>> itemSelectionListeners;
 	
+	private PunctuationFilter punctuationFilter;
+
 	public QueryResultPanel(Project project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
 			ItemSelectionListener itemSelectionListener) {
@@ -232,6 +235,8 @@ public class QueryResultPanel extends VerticalLayout {
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getPhraseBasedTreeData());
 		
+		queryResultDataProvider.addFilter(punctuationFilter);
+		
 		queryResultGrid.setDataProvider(queryResultDataProvider);
 
 		queryResultDataProvider.addDataProviderListener(
@@ -298,6 +303,7 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getPropertiesAsColumnsTagBasedTreeData());
+		queryResultDataProvider.addFilter(punctuationFilter);
 		
 		Column<QueryResultRowItem, ?> tagPathColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getTagPath)
@@ -402,6 +408,7 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getFlatTagBasedTreeData());
+		queryResultDataProvider.addFilter(punctuationFilter);
 		
 		Column<QueryResultRowItem, ?> tagPathColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getTagPath)
@@ -525,6 +532,7 @@ public class QueryResultPanel extends VerticalLayout {
 
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider = 
 				new TreeDataProvider<QueryResultRowItem>(getTagBasedTreeData());
+		queryResultDataProvider.addFilter(punctuationFilter);
 		
 		Column<QueryResultRowItem, ?> tagPathColumn = queryResultGrid
 			.addColumn(QueryResultRowItem::getKey)
@@ -673,10 +681,15 @@ public class QueryResultPanel extends VerticalLayout {
 				registrationIterator.next().remove();
 				registrationIterator.remove();
 			}
+			
+			if (queryResultGrid.getDataProvider() instanceof InMemoryDataProvider) {
+				((InMemoryDataProvider<?>)queryResultGrid.getDataProvider()).clearFilters();
+			}
 		}
 		
 		queryResultGrid = TreeGridFactory.createDefaultTreeGrid();
 		queryResultGrid.setSizeFull();
+		
 		existingListeners.forEach(
 			listener -> addItemSelectionListener(listener));
 		
@@ -787,7 +800,13 @@ public class QueryResultPanel extends VerticalLayout {
 		miFlatTable = optionsMenu.addItem("Display Annotations as flat table", mi -> initFlatTagBasedData());
 		miPropertiesAsColumns = optionsMenu.addItem("Display Properties as columns", mi -> initPropertiesAsColumnsTagBasedData());
 		optionsMenu.addItem("Export", mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
-
+		MenuItem miFilterPunctuation = optionsMenu.addItem(
+				"Filter punctuation", 
+				mi -> queryResultGrid.getDataProvider().refreshAll());
+		miFilterPunctuation.setCheckable(true);
+		miFilterPunctuation.setChecked(true);
+		punctuationFilter = new PunctuationFilter(() -> miFilterPunctuation.isChecked());
+		
 		if (resultPanelCloseListener != null) {
 			removeBt.addClickListener(clickEvent -> resultPanelCloseListener.closeRequest(QueryResultPanel.this));
 		}
@@ -797,7 +816,6 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		searchField.addValueChangeListener(event -> handleSearchValueInput(event.getValue()));
 	}
-
 
 	private void handleSearchValueInput(String searchValue) {
 		@SuppressWarnings("unchecked")
