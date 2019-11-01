@@ -55,42 +55,59 @@ public class TagConflictView extends VerticalLayout {
 		this.tagsetNameField.setValue(tagsetConflict.getName());
 		this.tagsetNameField.setReadOnly(true);
 		
-		String devBackgroundColor = "#"+ColorConverter.toHex(tagConflict.getDevTagDefinition().getColor());
-		String devColor = "#464646";
-		if (!ColorConverter.isLightColor(tagConflict.getDevTagDefinition().getColor())) {
-			devColor = "#FFFFFF";
-		}
-		this.leftTagLabel.setValue(
-			"My Tag: <span style=\"background: "+devBackgroundColor+";color: "+devColor+";\">"
-			+Cleaner.clean(tagConflict.getDevTagDefinition().getName())+"</span>");
-
-		String masterBackgroundColor = "#"+ColorConverter.toHex(tagConflict.getMasterTagDefinition().getColor());
-		String masterColor = "#464646";
-		if (!ColorConverter.isLightColor(tagConflict.getMasterTagDefinition().getColor())) {
-			masterColor = "#FFFFFF";
-		}
-		this.rightTagLabel.setValue(
-			"Their Tag: <span style=\"background: "+masterBackgroundColor+";color: "+masterColor+";\">"
-			+ Cleaner.clean(tagConflict.getMasterTagDefinition().getName())+"</span>");
-		
 		Set<String> allPropertyDefIds = new HashSet<>();
-		allPropertyDefIds.addAll(
-			tagConflict.getDevTagDefinition().getUserDefinedPropertyDefinitions()
-			.stream()
-			.map(PropertyDefinition::getUuid)
-			.collect(Collectors.toSet()));
-		allPropertyDefIds.addAll(
-				tagConflict.getMasterTagDefinition().getUserDefinedPropertyDefinitions()
-				.stream()
-				.map(PropertyDefinition::getUuid)
-				.collect(Collectors.toSet()));
+		if (tagConflict.getDevTagDefinition() != null) {
+			String devBackgroundColor = "#"+ColorConverter.toHex(tagConflict.getDevTagDefinition().getColor());
+			String devColor = "#464646";
+			if (!ColorConverter.isLightColor(tagConflict.getDevTagDefinition().getColor())) {
+				devColor = "#FFFFFF";
+			}
+			this.leftTagLabel.setValue(
+				"My Tag: <span style=\"background: "+devBackgroundColor+";color: "+devColor+";\">"
+				+Cleaner.clean(tagConflict.getDevTagDefinition().getName())+"</span>");
+
+			allPropertyDefIds.addAll(
+					tagConflict.getDevTagDefinition().getUserDefinedPropertyDefinitions()
+					.stream()
+					.map(PropertyDefinition::getUuid)
+					.collect(Collectors.toSet()));
+		}
+		else {
+			this.leftTagLabel.setValue("My Tag is DELETED");
+		}
+		
+		if (tagConflict.getMasterTagDefinition() != null) {
+			String masterBackgroundColor = "#"+ColorConverter.toHex(tagConflict.getMasterTagDefinition().getColor());
+			String masterColor = "#464646";
+			if (!ColorConverter.isLightColor(tagConflict.getMasterTagDefinition().getColor())) {
+				masterColor = "#FFFFFF";
+			}
+			this.rightTagLabel.setValue(
+				"Their Tag: <span style=\"background: "+masterBackgroundColor+";color: "+masterColor+";\">"
+				+ Cleaner.clean(tagConflict.getMasterTagDefinition().getName())+"</span>");
+			
+			allPropertyDefIds.addAll(
+					tagConflict.getMasterTagDefinition().getUserDefinedPropertyDefinitions()
+					.stream()
+					.map(PropertyDefinition::getUuid)
+					.collect(Collectors.toSet()));
+		}
+		else {
+			this.rightTagLabel.setValue("Their Tag is DELETED");
+		}
+		
 		TreeData<PropertyDefTreeItem> treeData = new TreeData<>();
 		
 		for (String propertyDefId : allPropertyDefIds) {
-			PropertyDefinition mine = 
-				tagConflict.getDevTagDefinition().getPropertyDefinitionByUuid(propertyDefId);
-			PropertyDefinition theirs = 
-				tagConflict.getMasterTagDefinition().getPropertyDefinitionByUuid(propertyDefId);
+			PropertyDefinition mine = null;
+			if (tagConflict.getDevTagDefinition() != null) {
+				mine = tagConflict.getDevTagDefinition().getPropertyDefinitionByUuid(propertyDefId);
+			}
+			
+			PropertyDefinition theirs = null;
+			if (tagConflict.getMasterTagDefinition() != null) {
+				theirs = tagConflict.getMasterTagDefinition().getPropertyDefinitionByUuid(propertyDefId);
+			}
 			
 			PropertyDefDataItem propertyDefDataItem = new PropertyDefDataItem(mine, theirs);
 			
@@ -116,6 +133,8 @@ public class TagConflictView extends VerticalLayout {
 				new TreeDataProvider<>(treeData);
 		propertyGrid.setDataProvider(propertyDefTreeDataProvider);
 		propertyGrid.expand(treeData.getRootItems());
+		
+		btBoth.setEnabled(tagConflict.isBothPossible());
 	}
 
 

@@ -247,12 +247,7 @@ public class VizMaxPanel extends VerticalLayout  {
 		});
 		
 		selectedResultsPanel.setDisplaySettingChangeListener(
-				displaySettings -> 
-				{
-					visualization.setDisplaySetting(displaySettings);
-					selectedResultsPanel.addItemSelectionListener(selectionEvent -> handleSelectedResultItemClick(selectionEvent));
-					
-				});
+				displaySettings -> visualization.setDisplaySetting(displaySettings));
 		selectedResultsPanel.addOptionsMenuItem(
 			"Remove all", mi -> handleItemRemoval(selectedResultsPanel.getFilteredQueryResult()));
 		

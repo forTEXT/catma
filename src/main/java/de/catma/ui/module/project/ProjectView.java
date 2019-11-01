@@ -780,11 +780,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    			"Commit all changes", 
 	    			"Please enter a short description for this commit:", 
 	    			commitMsg -> {
-	    				project.commitChanges(commitMsg);
-	    				Notification.show(
-	    					"Info", 
-	    					"Your changes have been committed!", 
-	    					Type.HUMANIZED_MESSAGE);
+	    				try {
+		    				project.commitChanges(commitMsg);
+		    				Notification.show(
+		    					"Info", 
+		    					"Your changes have been committed!", 
+		    					Type.HUMANIZED_MESSAGE);
+	    				}
+	    				catch (Exception e) {
+	    					errorHandler.showAndLogError("Error committing all changes!", e);
+	    				}
 	    			});
 	    		dlg.show();
 	    	}
@@ -793,7 +798,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	}
     	}
     	catch (Exception e) {
-            errorHandler.showAndLogError("error accessing project", e);
+            errorHandler.showAndLogError("Error accessing Project!", e);
     	}
 	}
 

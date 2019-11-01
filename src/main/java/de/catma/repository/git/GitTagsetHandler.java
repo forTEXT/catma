@@ -30,6 +30,8 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 
 public class GitTagsetHandler {
+	private static final String HEADER_FILE_NAME = "header.json";
+	
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 	private final CredentialsProvider credentialsProvider;
@@ -75,7 +77,7 @@ public class GitTagsetHandler {
 			);
 
 			// write header.json into the local repo
-			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), HEADER_FILE_NAME);
 
 			GitTagsetHeader header = new GitTagsetHeader(name, description, new TreeSet<>());
 			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
@@ -304,7 +306,7 @@ public class GitTagsetHandler {
 		}
 	}	
 
-	public String removeTagDefinition(String projectId, TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) 
+	public String removeTagDefinition(String projectId, TagDefinition tagDefinition) 
 			throws IOException {
 		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -313,23 +315,29 @@ public class GitTagsetHandler {
 			String tagsetGitRepositoryName = 
 					projectRootRepositoryName 
 					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
-					+ "/" + tagsetDefinition.getUuid();
+					+ "/" + tagDefinition.getTagsetDefinitionUuid();
 
 			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
 
 			// write header.json with deletion journal
-			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			File tagsetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), HEADER_FILE_NAME);
 			
-			GitTagsetHeader header = 
-					new GitTagsetHeader(
-							tagsetDefinition.getName(), 
-							"", //TODO: description
-							new TreeSet<>(tagsetDefinition.getDeletedDefinitions()));
-			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
+			String serializedTagsetHeader = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);
+			GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
+					.deserialize(
+							serializedTagsetHeader,
+							GitTagsetHeader.class
+					);
+
+			serializedTagsetHeader = new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
+			gitTagsetHeader.getDeletedDefinitions().add(tagDefinition.getUuid());
+			
+			serializedTagsetHeader = 
+					new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
 			
 			localGitRepoManager.add(
-					targetHeaderFile,
-					serializedHeader.getBytes(StandardCharsets.UTF_8));
+					tagsetHeaderFile,
+					serializedTagsetHeader.getBytes(StandardCharsets.UTF_8));
 			
 			String targetTagDefinitionsFolderRelativePath = 
 				(StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : (tagDefinition.getParentUuid()+"/"))
@@ -369,7 +377,7 @@ public class GitTagsetHandler {
 			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
 
 			// write header.json with deletion journal
-			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), HEADER_FILE_NAME);
 			
 			GitTagsetHeader header = 
 					new GitTagsetHeader(
@@ -422,7 +430,7 @@ public class GitTagsetHandler {
 			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
 
 			
-			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), HEADER_FILE_NAME);
 			GitTagsetHeader header = 
 					new GitTagsetHeader(
 							tagsetDefinition.getName(), 
@@ -477,37 +485,58 @@ public class GitTagsetHandler {
 			);
 
 			localGitRepoManager.detach(); 
-			//TODO: handle header conflict
-			File tagsetHeaderFile = new File(
-					tagsetSubmoduleAbsPath,
-					"header.json"
-			);
-			
-			String serializedTagsetHeaderFile = FileUtils.readFileToString(
-					tagsetHeaderFile, StandardCharsets.UTF_8
-			);
-			
-			GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
-					.deserialize(
-							serializedTagsetHeaderFile,
-							GitTagsetHeader.class
-					);
-			
-			TagsetConflict tagsetConflict = 
-				new TagsetConflict(
-					projectId, 
-					tagsetId, 
-					gitTagsetHeader.getName(), 
-					gitTagsetHeader.getDeletedDefinitions());
-			
 			
 			String tagsetGitRepositoryName =
 					projectRootRepositoryName + "/" + tagsetSubmoduleRelDir;
 
 			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
 
-			Status status = localGitRepositoryManager.getStatus();
-
+			Status status = localGitRepoManager.getStatus();
+			
+			File tagsetHeaderFile = new File(
+					tagsetSubmoduleAbsPath,
+					HEADER_FILE_NAME
+			);
+			
+			String serializedTagsetHeaderFile = FileUtils.readFileToString(
+					tagsetHeaderFile, StandardCharsets.UTF_8
+			);
+			
+			TagsetConflict tagsetConflict = null;
+			if (status.getConflictingStageState().containsKey(HEADER_FILE_NAME)) {
+				GitTagsetHeader gitTagsetHeader = resolveTagsetHeaderConflict(
+					serializedTagsetHeaderFile, 
+					status.getConflictingStageState().get(HEADER_FILE_NAME));
+				
+				serializedTagsetHeaderFile = 
+						new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
+				
+				localGitRepoManager.add(
+						tagsetHeaderFile.getAbsoluteFile(), 
+						serializedTagsetHeaderFile.getBytes(StandardCharsets.UTF_8));
+				tagsetConflict = 
+						new TagsetConflict(
+							projectId, 
+							tagsetId, 
+							gitTagsetHeader.getName(), 
+							gitTagsetHeader.getDeletedDefinitions());
+				tagsetConflict.setHeaderConflict(true);
+				status = localGitRepoManager.getStatus();
+			}
+			else {
+				GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
+						.deserialize(
+								serializedTagsetHeaderFile,
+								GitTagsetHeader.class
+						);
+				tagsetConflict = 
+						new TagsetConflict(
+							projectId, 
+							tagsetId, 
+							gitTagsetHeader.getName(), 
+							gitTagsetHeader.getDeletedDefinitions());
+			}			
+			
 			for (Entry<String, StageState> entry : status.getConflictingStageState().entrySet()) {
 				String relativeTagPathname = entry.getKey();
 				String absTagPathname = tagsetSubmoduleAbsPath + "/" + relativeTagPathname;
@@ -526,6 +555,30 @@ public class GitTagsetHandler {
 					tagsetConflict.addTagConflict(tagConflict);
 					break;
 				}
+				case DELETED_BY_THEM: { // them is the user on the dev branch here
+
+					// in this case the file comes from us (the team on the master branch)
+					String serializedConflictingTag = FileUtils.readFileToString(
+							new File(absTagPathname), StandardCharsets.UTF_8);
+					
+					TagConflict tagConflict = 
+							getDeleteByThemTagConflict(
+								projectId, tagsetId, serializedConflictingTag);
+					tagsetConflict.addTagConflict(tagConflict);
+					break;					
+				}
+				case DELETED_BY_US: { // us is the team on the master branch here
+					
+					// in this case the file comes from them (the user on the dev branch)
+					String serializedConflictingTag = FileUtils.readFileToString(
+							new File(absTagPathname), StandardCharsets.UTF_8);
+					
+					TagConflict tagConflict = 
+							getDeleteByUsTagConflict(
+								projectId, tagsetId, serializedConflictingTag);
+					tagsetConflict.addTagConflict(tagConflict);
+					break;						
+				}
 				default: System.out.println("not handled"); //TODO:
 				}
 				
@@ -535,8 +588,75 @@ public class GitTagsetHandler {
 		}
 	}
 
+	private GitTagsetHeader resolveTagsetHeaderConflict(String serializedTagsetHeaderFile, StageState stageState) {
+		if (stageState.equals(StageState.BOTH_MODIFIED)) {
+			String masterVersion = serializedTagsetHeaderFile
+					.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
+					.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
+				
+			String devVersion = serializedTagsetHeaderFile
+				.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
+				.replaceAll("\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
+			
+			GitTagsetHeader masterTagsetHeader = 
+					new SerializationHelper<GitTagsetHeader>().deserialize(
+							masterVersion, GitTagsetHeader.class);
+			
+			GitTagsetHeader devTagsetHeader = 
+					new SerializationHelper<GitTagsetHeader>().deserialize(
+							devVersion, GitTagsetHeader.class);
+			
+			String name = masterTagsetHeader.getName();
+			if (!name.trim().toLowerCase().equals(devTagsetHeader.getName().trim().toLowerCase())) {
+				name += " " + devTagsetHeader.getName();
+			}
+			
+			String description = masterTagsetHeader.getDescription();
+			if (!description.trim().toLowerCase().equals(devTagsetHeader.getDescription().trim().toLowerCase())) {
+				description += " " + devTagsetHeader.getDescription();
+			}
+			
+			TreeSet<String> deletedDefinitions = new TreeSet<>();
+			deletedDefinitions.addAll(masterTagsetHeader.getDeletedDefinitions());
+			deletedDefinitions.addAll(devTagsetHeader.getDeletedDefinitions());
+			
+			return new GitTagsetHeader(name, description, deletedDefinitions);
+		}
+		else {
+			 return new SerializationHelper<GitTagsetHeader>().deserialize(
+					 serializedTagsetHeaderFile, GitTagsetHeader.class);
+		}
+	}
+
+	private TagConflict getDeleteByThemTagConflict(
+			String projectId, String tagsetId, 
+			String serializedConflictingTag) {
+		GitTagDefinition gitMasterTagDefinition = new SerializationHelper<GitTagDefinition>()
+				.deserialize(
+						serializedConflictingTag,
+						GitTagDefinition.class
+				);
+		TagDefinition masterTagDefinition = gitMasterTagDefinition.getTagDefinition();
+		
+		return new TagConflict(masterTagDefinition, null);
+	}
+
+	private TagConflict getDeleteByUsTagConflict(
+			String projectId, String tagsetId, 
+			String serializedConflictingTag) {
+		GitTagDefinition gitDevTagDefinition = new SerializationHelper<GitTagDefinition>()
+				.deserialize(
+						serializedConflictingTag,
+						GitTagDefinition.class
+				);
+		TagDefinition devTagDefinition = gitDevTagDefinition.getTagDefinition();
+		
+		return new TagConflict(null, devTagDefinition);
+	}
+	
 	private TagConflict getBothModifiedTagConflict(
-			String projectId, String tagsetId, String serializedConflictingTag) throws Exception {
+			String projectId, String tagsetId,
+			String serializedConflictingTag) throws Exception {
 
 		String masterVersion = serializedConflictingTag
 			.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
@@ -603,6 +723,36 @@ public class GitTagsetHandler {
 					force);
 				
 			return tagsetRevision;
+		}
+	}
+
+	public void removeFromDeletedJournal(String projectId, String tagsetId, String tagOrPropertyId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
+
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			// write header.json with deletion journal
+			File tagsetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), HEADER_FILE_NAME);
+			
+			String serializedTagsetHeader = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);
+			GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
+					.deserialize(
+							serializedTagsetHeader,
+							GitTagsetHeader.class
+					);
+
+			gitTagsetHeader.getDeletedDefinitions().remove(tagOrPropertyId);
+			serializedTagsetHeader = new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
+			
+			localGitRepoManager.add(
+					tagsetHeaderFile,
+					serializedTagsetHeader.getBytes(StandardCharsets.UTF_8));
 		}
 	}
 }

@@ -20,6 +20,8 @@ public class TagsetConflict {
 	private Set<String> devDeletedDefinitions;
 	private Set<String> masterDeletedDefinitions;
 	
+	private boolean headerConflict;
+	
 	public TagsetConflict(String projectId, String uuid, String name,
 			Set<String> devDeletedDefinitions) {
 		super();
@@ -76,5 +78,13 @@ public class TagsetConflict {
 
 	public void addTagConflict(TagConflict tagConflict) {
 		this.tagConflicts.add(tagConflict);
+	}
+	
+	public void setHeaderConflict(boolean headerConflict) {
+		this.headerConflict = headerConflict;
+	}
+	
+	public boolean isHeaderConflict() {
+		return headerConflict;
 	}
 }
