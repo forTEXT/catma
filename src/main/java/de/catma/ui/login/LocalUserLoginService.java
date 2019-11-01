@@ -27,7 +27,7 @@ public class LocalUserLoginService implements LoginService {
 		String user = System.getProperty("user.name");
 		Pair<GitUser, String> userTokenPair = new GitlabManagerPrivileged().acquireImpersonationToken(
 				user, "catma", user+"@catma.de",user);
-		api = iRemoteGitManagerFactory.createFromToken(userTokenPair.getSecond());
+		api = iRemoteGitManagerFactory.createFromImpersonationToken(userTokenPair.getSecond());
 		return api;
 	}
 
@@ -37,10 +37,17 @@ public class LocalUserLoginService implements LoginService {
         Pair<GitUser, String> userAndToken = 
         		gitlabManagerPrivileged.acquireImpersonationToken(identifier, provider, email, name);
 
-		api = iRemoteGitManagerFactory.createFromToken(userAndToken.getSecond());
+		api = iRemoteGitManagerFactory.createFromImpersonationToken(userAndToken.getSecond());
 		return api;
 	}
 
+	@Override
+	public IRemoteGitManagerRestricted login(String personalAccessToken) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
 	@Override
 	public IRemoteGitManagerRestricted getAPI() {
 		if(this.api == null){

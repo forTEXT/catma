@@ -40,6 +40,8 @@ public interface LoginService {
 	 * logout the current user
 	 */
 	void logout();
+
+	IRemoteGitManagerRestricted login(String personalAccessToken) throws IOException;
 	
 	
 }

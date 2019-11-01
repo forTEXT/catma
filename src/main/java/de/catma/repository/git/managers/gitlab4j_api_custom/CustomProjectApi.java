@@ -59,7 +59,11 @@ public class CustomProjectApi extends AbstractApi {
 					        Response response = get(Response.Status.OK, params, "projects");
 					        List<Project> projects = response.readEntity(new GenericType<List<Project>>() {});
 					        ;
-							return new Pair<>(level, projects.stream().filter(p -> p.getNamespace().getId() == projectId).collect(Collectors.toSet()));		
+							return new Pair<>(level, projects
+									.stream()
+									.filter(p -> 
+										p.getNamespace().getId().intValue() == projectId)
+									.collect(Collectors.toSet()));		
 					}
 			});
         }

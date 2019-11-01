@@ -33,6 +33,11 @@ public class GitlabLoginService implements LoginService {
 		return api;
 	}
 
+	@Override
+	public IRemoteGitManagerRestricted login(String personalAccessToken) throws IOException {
+		api = iRemoteGitManagerFactory.createFromImpersonationToken(personalAccessToken);
+		return api;
+	}
 
 	@Override
 	public IRemoteGitManagerRestricted loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException {
@@ -40,7 +45,7 @@ public class GitlabLoginService implements LoginService {
         Pair<GitUser, String> userAndToken = 
         		gitlabManagerPrivileged.acquireImpersonationToken(identifier, provider, email, name);
 
-		api = iRemoteGitManagerFactory.createFromToken(userAndToken.getSecond());
+		api = iRemoteGitManagerFactory.createFromImpersonationToken(userAndToken.getSecond());
 		return api;
 	}
 

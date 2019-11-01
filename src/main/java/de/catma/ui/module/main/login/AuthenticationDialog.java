@@ -32,6 +32,9 @@ import org.jboss.aerogear.security.otp.api.Clock;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.eventbus.EventBus;
+import com.vaadin.event.Action;
+import com.vaadin.event.Action.Handler;
+import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.VaadinSession;
@@ -65,7 +68,7 @@ import de.catma.ui.module.main.ErrorHandler;
  * @author marco.petris@web.de
  *
  */
-public class AuthenticationDialog extends Window {
+public class AuthenticationDialog extends Window implements Handler {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
@@ -79,6 +82,10 @@ public class AuthenticationDialog extends Window {
 	private final InitializationService initService;
 	private final EventBus eventBus;
 	private final HazelCastService hazelCastService;
+	private final Action personalAccessTokenAction = 
+			new ShortcutAction("Alt+P", ShortcutAction.KeyCode.P, new int[] { ShortcutAction.ModifierKey.ALT });
+
+	private PasswordField pfPersonalAccessToken;
 	
 	public AuthenticationDialog(
 			String caption, 
@@ -100,15 +107,38 @@ public class AuthenticationDialog extends Window {
 		initComponents();
 		initActions();
 	}
+	
 
+	@Override
+	public Action[] getActions(Object target, Object sender) {
+	    if (sender == AuthenticationDialog.this) {
+	        return new Action[] {personalAccessTokenAction};
+	    }
+	    return null;
+	}
+
+	@Override
+	public void handleAction(Action action, Object sender, Object target) {
+		if (action.equals(personalAccessTokenAction) && sender.equals(AuthenticationDialog.this)) {
+			pfPersonalAccessToken.setVisible(!pfPersonalAccessToken.isVisible());
+			tfUsername.setVisible(!pfPersonalAccessToken.isVisible());
+			pfPassword.setVisible(!pfPersonalAccessToken.isVisible());
+		}
+	}
 
 	private void initActions() {
+		addActionHandler(this);
+		
 		btCancel.addClickListener(click -> close());			
 
 		btLogin.addClickListener(click -> {
 			try {
-				
-				loginservice.login(tfUsername.getValue(), pfPassword.getValue());
+				if (pfPersonalAccessToken.isVisible()) {
+					loginservice.login(pfPersonalAccessToken.getValue());
+				}
+				else {
+					loginservice.login(tfUsername.getValue(), pfPassword.getValue());
+				}
 				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
@@ -187,8 +217,14 @@ public class AuthenticationDialog extends Window {
 		pfPassword = new PasswordField("Password");
 		pfPassword.setWidth("100%");
 		
+		pfPersonalAccessToken = new PasswordField("Personal Access Token");
+		pfPersonalAccessToken.setWidth("100%");
+		pfPersonalAccessToken.setVisible(false);
+		
 		content.addComponent(tfUsername);
 		content.addComponent(pfPassword);
+		content.addComponent(pfPersonalAccessToken);
+		
 		HorizontalLayout gOauthPanel = new HorizontalLayout();
 		gOauthPanel.setMargin(new MarginInfo(true, false, true, true));
 		content.addComponent(gOauthPanel);

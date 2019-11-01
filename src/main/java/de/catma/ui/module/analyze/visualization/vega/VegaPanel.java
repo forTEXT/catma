@@ -384,8 +384,6 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 	@Override
 	public void setSelectedQueryResultRows(Iterable<QueryResultRow> selectedRows) {
 		// noop
-		
-		selectedRows.forEach(row -> System.out.println(row));
 	}
 
 	@Override
