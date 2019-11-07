@@ -85,8 +85,9 @@ public class TaggerContextMenu {
 					}
 					
 					MenuItem parentItem = entryToMenuItemMap.get(parent);
-					
-					addToMenuItem(parentItem, tagset, tag);
+					if (parentItem != null) {
+						addToMenuItem(parentItem, tagset, tag);
+					}
 				}
 				else if (newValue == null) { //removed
 					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
@@ -102,8 +103,9 @@ public class TaggerContextMenu {
 					TagsetDefinition tagset = (TagsetDefinition)oldValue;
 
 	            	MenuItem menuItem = entryToMenuItemMap.get(tag);
-	            	
-	            	menuItem.setText(createTagMenuItemCaption(tag));
+	            	if (menuItem != null) {
+	            		menuItem.setText(createTagMenuItemCaption(tag));
+	            	}
 	            	
 				}
 				

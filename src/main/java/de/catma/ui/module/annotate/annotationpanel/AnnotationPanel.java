@@ -138,20 +138,24 @@ public class AnnotationPanel extends VerticalLayout {
 					TagDefinition tag = value.getSecond();
 		            if (tag.getParentUuid().isEmpty()) {
 		            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
-		            	tagsetData.addItem(
-		            		tagsetItem, new TagDataItem(tag));
-		            	
-		            	tagsetDataProvider.refreshAll();
-		            	tagsetGrid.expand(tagsetItem);
+		            	if (tagsetData.contains(tagsetItem)) {
+			            	tagsetData.addItem(
+			            		tagsetItem, new TagDataItem(tag));
+			            	
+			            	tagsetDataProvider.refreshAll();
+			            	tagsetGrid.expand(tagsetItem);
+		            	}
 		            }
 		            else {
 		            	TagDefinition parentTag = 
 		            		project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid());
 		            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag);
-		            	tagsetData.addItem(parentTagItem, new TagDataItem(tag));
-		            	
-		            	tagsetDataProvider.refreshAll();
-		            	tagsetGrid.expand(parentTagItem);
+		            	if (tagsetData.contains(parentTagItem)) {
+			            	tagsetData.addItem(parentTagItem, new TagDataItem(tag));
+			            	
+			            	tagsetDataProvider.refreshAll();
+			            	tagsetGrid.expand(parentTagItem);
+		            	}
 		            }
 		            
 		            
@@ -160,24 +164,28 @@ public class AnnotationPanel extends VerticalLayout {
 					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
 					
 					TagDefinition deletedTag = deleted.getSecond();
-					
-					tagsetData.removeItem(new TagDataItem(deletedTag));
-					tagsetDataProvider.refreshAll();
+					TagDataItem deletedItem = new TagDataItem(deletedTag);
+					if (tagsetData.contains(deletedItem)) {
+						tagsetData.removeItem(deletedItem);
+						tagsetDataProvider.refreshAll();
+					}
 					
 				}
 				else { //update
 					TagDefinition tag = (TagDefinition) newValue;
 					TagsetDefinition tagset = (TagsetDefinition)oldValue;
 	            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
-
-					tagsetData.removeItem(new TagDataItem(tag));
-					TagDataItem tagDataItem = new TagDataItem(tag);
-					tagDataItem.setPropertiesExpanded(true);
-					tagsetData.addItem(tagsetItem, tagDataItem);
-					//TODO: sort
-					
-					tagsetDataProvider.refreshAll();
-					showExpandedProperties(tagDataItem);
+	            	if (tagsetData.contains(tagsetItem)) {
+						tagsetData.removeItem(new TagDataItem(tag));
+						TagDataItem tagDataItem = new TagDataItem(tag);
+						tagDataItem.setPropertiesExpanded(true);
+						
+						tagsetData.addItem(tagsetItem, tagDataItem);
+						//TODO: sort
+						
+						tagsetDataProvider.refreshAll();
+						showExpandedProperties(tagDataItem);
+	            	}
 				}
 				
 			}
