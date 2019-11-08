@@ -59,7 +59,6 @@ import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
 
 public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
-	
 	private final String repositoryBasePath;
 	private String username;
 
@@ -303,7 +302,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 		ObjectId headRevision = this.gitApi.getRepository().resolve(Constants.HEAD);
 		if (headRevision == null) {
-			return "no_commits_yet";
+			return NO_COMMITS_YET;
 		}
 		else {
 			return headRevision.getName();

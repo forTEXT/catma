@@ -12,6 +12,7 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 
 public interface ILocalGitRepositoryManager extends AutoCloseable {
 	static String DEFAULT_LOCAL_DEV_BRANCH = "dev";
+	static String NO_COMMITS_YET = "no_commits_yet";
 	
 	boolean isAttached();
 

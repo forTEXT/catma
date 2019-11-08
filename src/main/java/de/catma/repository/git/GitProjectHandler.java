@@ -1219,7 +1219,7 @@ public class GitProjectHandler {
 					localGitRepoManager.push(credentialsProvider);
 				}
 			}
-			else {
+			else if (!localGitRepoManager.getRevisionHash().equals(ILocalGitRepositoryManager.NO_COMMITS_YET)) {
 				localGitRepoManager.push(credentialsProvider);
 			}
 		}	
