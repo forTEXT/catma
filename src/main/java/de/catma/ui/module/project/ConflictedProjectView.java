@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.eventbus.EventBus;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -16,11 +18,14 @@ import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.project.conflict.TagConflict;
+import de.catma.repository.git.CommitMissingException;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.util.ExceptionUtil;
 
 public class ConflictedProjectView extends HugeCard {
 	
@@ -107,8 +112,23 @@ public class ConflictedProjectView extends HugeCard {
 			else {
 				conflictedProject.resolveCollectionConflict(
 					this.collectionConflicts, this.tagManager.getTagLibrary());
-				
-				conflictedProject.resolveRootConflicts();
+				try {
+					conflictedProject.resolveRootConflicts();
+				}
+				catch (Exception e) {
+					if (ExceptionUtil.stackTraceContains(CommitMissingException.class.getName(), e)) {
+						Notification.show(
+							"Error", 
+							ExceptionUtil.getMessageFor(CommitMissingException.class.getName(), e), 
+							Type.ERROR_MESSAGE);
+						eventBus.post(new RouteToDashboardEvent());
+						return;
+					}
+					else {
+						// rethrow unexpected error
+						throw new Exception(e);
+					}
+				}
 				
 				eventBus.post(new RouteToProjectEvent(conflictedProject.getProjectReference(), true));
 			}
@@ -149,7 +169,7 @@ public class ConflictedProjectView extends HugeCard {
 			this.collectionConflictIterator = collectionConflicts.iterator();
 			showNextConflict();
 		} catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loadin conflicted Project!", e);
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading conflicted Project!", e);
 		}
 	}
 	

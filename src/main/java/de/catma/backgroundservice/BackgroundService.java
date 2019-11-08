@@ -20,7 +20,6 @@
 
 package de.catma.backgroundservice;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -57,10 +56,4 @@ public interface BackgroundService {
 			long delay, TimeUnit unit);
 	public void shutdown();
 
-	/**
-	 * Gets the underlying ExecutorService. It's necessary for the use of CompletionService
-	 * 
-	 * @return
-	 */
-	public ExecutorService getExecutorService();
 }

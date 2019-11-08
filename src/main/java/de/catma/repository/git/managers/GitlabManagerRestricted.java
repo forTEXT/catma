@@ -376,7 +376,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		try {
 			Project project = restrictedGitLabApi.getProjectApi().getProject(projectId, resourceId);
 			if(project != null ){
-				List<GitMember> allMembers = new CustomProjectApi(restrictedGitLabApi, backgroundService.getExecutorService())
+				List<GitMember> allMembers = new CustomProjectApi(restrictedGitLabApi)
 						.getAllMembers(project.getId())
 						.stream()
 						.map(member -> new GitMember(member))
@@ -407,7 +407,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	public Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException {
 		try {
 			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
-			CustomProjectApi customProjectApi = new CustomProjectApi(restrictedGitLabApi,  backgroundService.getExecutorService());			
+			CustomProjectApi customProjectApi = new CustomProjectApi(restrictedGitLabApi);			
 			Map<String, AccessLevel> permMap = customProjectApi.getResourcePermissions(group.getId());
 			
 			return permMap.entrySet()

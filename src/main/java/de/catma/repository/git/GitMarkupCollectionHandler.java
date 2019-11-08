@@ -648,7 +648,7 @@ public class GitMarkupCollectionHandler {
 							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
-			return localGitRepositoryManager.getStatus();
+			return localGitRepoManager.getStatus();
 		}
 	}
 

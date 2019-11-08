@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -52,6 +53,7 @@ import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.util.FS;
 
+import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
@@ -922,10 +924,15 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				
 				for (String conflictingSubmodule : gitApi.status().call().getConflicting()) {
 					
+					// get the base entry from where the branches diverge, the common ancestor version
 					int baseIdx = dirCache.findEntry(conflictingSubmodule);
 					DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
 
+					// get their version, the being-merged in version
 					DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2); // TODO: check stage
+					
+					// we try to make sure that their version is included (merged) in the latest version
+					// of this submodule
 					ensureLatestSubmoduleRevision(
 						baseEntry, theirEntry, conflictingSubmodule, credentialsProvider);
 					
@@ -962,7 +969,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		try (Git submoduleGitApi = Git.wrap(
 			SubmoduleWalk.getSubmoduleRepository(this.gitApi.getRepository(), conflictingSubmodule))) {
 			boolean foundTheirs = false;
-			while (!foundTheirs) {
+			int tries = 10;
+			while (!foundTheirs && tries > 0) {
+				// iterate over the revisions until we find their commit or until we reach
+				// the the common ancestor version (base)
 				Iterator<RevCommit> revIterator = submoduleGitApi
 				.log()
 				.call()
@@ -970,15 +980,21 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				while (revIterator.hasNext()) {
 					RevCommit revCommit = revIterator.next();
 					if (revCommit.getId().equals(theirEntry.getObjectId())) {
+						// we found their version
 						foundTheirs = true;
 						break;
 					}
 					else if (revCommit.getId().equals(baseEntry.getObjectId())) {
+						// we reached the common ancestor
 						break;
 					}
 				}
 				
 				if (!foundTheirs) {
+					// we reached the common ancestor without finding
+					// their commit, so we pull again to see if it comes in now
+					// and then we start over
+					
 					submoduleGitApi.checkout()
 					.setName(Constants.MASTER)
 					.setCreateBranch(false)
@@ -987,17 +1003,29 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					PullResult pullResult = 
 						submoduleGitApi.pull().setCredentialsProvider(credentialsProvider).call();
 					if (!pullResult.isSuccessful()) {
-						throw new IllegalStateException(""); //TODO:
+						throw new IllegalStateException(
+							String.format(
+							"Trying to get the latest commits for %1$s failed!", conflictingSubmodule));
 					}
 					
-					submoduleGitApi.checkout()
-					.setName(ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH)
-					.setCreateBranch(false)
-					.call();
+					submoduleGitApi
+						.checkout()
+						.setName(ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH)
+						.setCreateBranch(false)
+						.call();
 					
 					submoduleGitApi.rebase().setUpstream(Constants.MASTER).call();
 				}
-				
+				tries --;
+			}
+			
+			if (!foundTheirs) {
+				Logger.getLogger(this.getClass().getName()).severe(
+						String.format("Cannot resolve root conflict for submodule %1$s commit %2$s is missing!",
+						conflictingSubmodule, theirEntry.getObjectId().toString()));
+				throw new CommitMissingException(
+					"Failed to synchronize the Project because of a missing commit, "
+					+ "try again later or contact the system administrator!");
 			}
 		}
 	}

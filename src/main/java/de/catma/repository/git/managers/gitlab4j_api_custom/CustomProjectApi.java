@@ -3,11 +3,6 @@ package de.catma.repository.git.managers.gitlab4j_api_custom;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.GenericType;
@@ -24,15 +19,10 @@ import org.gitlab4j.api.models.Project;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import de.catma.util.Pair;
-
 public class CustomProjectApi extends AbstractApi {
 
-	private ExecutorService parallelExecutor;
-	
-	public CustomProjectApi(GitLabApi gitLabApi, ExecutorService parallelExecutor) {
+	public CustomProjectApi(GitLabApi gitLabApi) {
 		super(gitLabApi);
-		this.parallelExecutor = parallelExecutor;
 	}
 
     public List<Member> getAllMembers(Integer projectId) throws GitLabApiException {
@@ -41,54 +31,35 @@ public class CustomProjectApi extends AbstractApi {
     }
     
     public Map<String, AccessLevel> getResourcePermissions(Integer projectId) throws GitLabApiException {
-    	CompletionService<Pair<Integer,Set<Project>>> cs = new ExecutorCompletionService<>(parallelExecutor);
     	List<Integer> accessLevels = Lists.newArrayList(
     			AccessLevel.GUEST.value,
     			AccessLevel.REPORTER.value,
     			AccessLevel.DEVELOPER.value,
     			AccessLevel.MAINTAINER.value,
-    			AccessLevel.OWNER.value
-    			);
-        for (Integer level: accessLevels){
-        	cs.submit(new Callable<Pair<Integer, Set<Project>>>(
-        			) {
-						@Override
-						public Pair<Integer,Set<Project>> call() throws Exception {
-					    	MultivaluedMap<String, String> params = CustomProjectApi.this.getDefaultPerPageParam();
-					    	params.add("min_access_level", level.toString());
-					        Response response = get(Response.Status.OK, params, "projects");
-					        List<Project> projects = response.readEntity(new GenericType<List<Project>>() {});
-					        ;
-							return new Pair<>(level, projects
-									.stream()
-									.filter(p -> 
-										p.getNamespace().getId().intValue() == projectId)
-									.collect(Collectors.toSet()));		
-					}
-			});
+    			AccessLevel.OWNER.value);
+        Map<String, AccessLevel> resultMap = Maps.newHashMap();
+
+        for (final Integer level: accessLevels) {
+	    	MultivaluedMap<String, String> params = CustomProjectApi.this.getDefaultPerPageParam();
+	    	params.add("min_access_level", level.toString());
+	        Response response = get(Response.Status.OK, params, "projects");
+	        List<Project> resourceAndContainerProjects = response.readEntity(new GenericType<List<Project>>() {});
+	        Set<Project> filteredOnGroupProjects = 
+	        	resourceAndContainerProjects
+					.stream()
+					.filter(p -> 
+						p.getNamespace().getId().equals(projectId)) // projectId is the GitLab namespace/groupId
+					.collect(Collectors.toSet());
+					
+			for (Project p : filteredOnGroupProjects) {
+        		if(! resultMap.containsKey(p.getName()) 
+            			|| resultMap.get(p.getName()).value.intValue() < level.intValue()) {
+            			
+        			resultMap.put(p.getName(), AccessLevel.forValue(level));
+        		}
+			}
         }
         
-        Map<String, AccessLevel> resultMap = Maps.newConcurrentMap();
-        try {
-	        int n = accessLevels.size();
-	        for (int i = 0; i < n; ++i) {
-	        	Pair<Integer, Set<Project>> response;
-					response = cs.take().get();
-				
-	            if (response != null){
-	            	for(Project p : response.getSecond()){
-	            		if(! resultMap.containsKey(p.getName()) || resultMap.get(p.getName()).value < response.getFirst()){
-	            			resultMap.put(p.getName(), AccessLevel.forValue(response.getFirst()));
-	            		}
-	            	}
-	            	response.getFirst();
-	            }
-	        }
-        } catch (InterruptedException e) {
-        	throw new GitLabApiException(e);
-        } catch (ExecutionException e) {
-        	throw new GitLabApiException(e);
-        }
         return resultMap;
     }
 }

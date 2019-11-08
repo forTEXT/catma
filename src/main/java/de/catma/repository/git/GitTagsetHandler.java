@@ -465,7 +465,7 @@ public class GitTagsetHandler {
 			
 			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
 			
-			return localGitRepositoryManager.getStatus();
+			return localGitRepoManager.getStatus();
 		}
 	}
 
