@@ -488,7 +488,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		String name = 
 				"Wordcloud " 
-						+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME);
+						+ LocalDateTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM));
 		
 		VizMaxPanel vizMaxPanel = 
 			new VizMaxPanel(
@@ -522,7 +522,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		String name = 
 				"Doubletree " 
-						+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME);
+						+ LocalDateTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM));
 		
 		VizMaxPanel vizMaxPanel = 
 			new VizMaxPanel(
