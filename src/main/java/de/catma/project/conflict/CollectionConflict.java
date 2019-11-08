@@ -12,6 +12,7 @@ public class CollectionConflict {
 	private String collectionId;
 	private ContentInfoSet contentInfoSet;
 	private String sourceDocumentId;
+	private boolean headerConflict;
 	
 	public CollectionConflict(String projectId, String collectionId, 
 			ContentInfoSet contentInfoSet, String sourceDocumentId) {
@@ -44,5 +45,13 @@ public class CollectionConflict {
 	
 	public String getDocumentId() {
 		return sourceDocumentId;
+	}
+
+	public void setHeaderConflict(boolean headerConflict) {
+		this.headerConflict = headerConflict;
+	}
+	
+	public boolean isHeaderConflict() {
+		return headerConflict;
 	}
 }

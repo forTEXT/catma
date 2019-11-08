@@ -9,6 +9,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -42,6 +43,8 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
 public class GitMarkupCollectionHandler {
+	private static final String HEADER_FILE_NAME = "header.json";
+
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 	private final CredentialsProvider credentialsProvider;
@@ -95,7 +98,7 @@ public class GitMarkupCollectionHandler {
 			);
 
 			// write header.json into the local repo
-			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), HEADER_FILE_NAME);
 
 			GitMarkupCollectionHeader header = new GitMarkupCollectionHeader(
 					name, description, sourceDocumentId, sourceDocumentVersion
@@ -139,7 +142,7 @@ public class GitMarkupCollectionHandler {
 					localGitRepoManager.getRepositoryWorkTree().toString(),
 					GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME,
 					markupCollectionId,
-					"header.json"
+					HEADER_FILE_NAME
 			).toFile();
 
 			// update header.json
@@ -221,7 +224,7 @@ public class GitMarkupCollectionHandler {
 	private boolean isTagInstanceFilename(String fileName){
 		// TODO: split filename parts and check if it is a CATMA uuid
 		return !(
-				fileName.equalsIgnoreCase("header.json") || fileName.equalsIgnoreCase(".git")
+				fileName.equalsIgnoreCase(HEADER_FILE_NAME) || fileName.equalsIgnoreCase(".git")
 		);
 	}
 
@@ -281,7 +284,7 @@ public class GitMarkupCollectionHandler {
 
 			File markupCollectionHeaderFile = new File(
 					markupCollectionSubmoduleAbsPath,
-					"header.json"
+					HEADER_FILE_NAME
 			);
 
 			String serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
@@ -386,7 +389,7 @@ public class GitMarkupCollectionHandler {
 			
 			File markupCollectionHeaderFile = new File(
 					markupCollectionSubmoduleAbsPath,
-					"header.json"
+					HEADER_FILE_NAME
 			);
 
 			String serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
@@ -552,7 +555,7 @@ public class GitMarkupCollectionHandler {
 			
 			ContentInfoSet contentInfoSet = collectionRef.getContentInfoSet();
 			
-			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), HEADER_FILE_NAME);
 			GitMarkupCollectionHeader header = new GitMarkupCollectionHeader(
 					contentInfoSet.getTitle(), 
 					contentInfoSet.getDescription(), 
@@ -668,29 +671,6 @@ public class GitMarkupCollectionHandler {
 			);
 
 			localGitRepoManager.detach(); 
-			//TODO: handle header conflict
-			File collectionHeaderFile = new File(
-					collectionSubmoduleAbsPath,
-					"header.json"
-			);
-
-			String serializedCollectionHeaderFile = FileUtils.readFileToString(
-					collectionHeaderFile, StandardCharsets.UTF_8
-			);
-
-			GitMarkupCollectionHeader collectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
-					.deserialize(serializedCollectionHeaderFile, GitMarkupCollectionHeader.class);
-
-			ContentInfoSet contentInfoSet = new ContentInfoSet(
-					collectionHeader.getAuthor(),
-					collectionHeader.getDescription(),
-					collectionHeader.getPublisher(),
-					collectionHeader.getName()
-			);
-			CollectionConflict collectionConflict = 
-					new CollectionConflict(
-						projectId, collectionId, contentInfoSet, 
-						collectionHeader.getSourceDocumentId());
 			
 			String collectionGitRepositoryName =
 					projectRootRepositoryName + "/" + collectionSubmoduleRelDir;
@@ -698,7 +678,61 @@ public class GitMarkupCollectionHandler {
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 
 			Status status = localGitRepositoryManager.getStatus();
+			
+			File collectionHeaderFile = new File(
+					collectionSubmoduleAbsPath,
+					HEADER_FILE_NAME
+			);
 
+			String serializedCollectionHeaderFile = FileUtils.readFileToString(
+					collectionHeaderFile, StandardCharsets.UTF_8
+			);
+
+			CollectionConflict collectionConflict = null; 
+			if (status.getConflictingStageState().containsKey(HEADER_FILE_NAME)) {
+				GitMarkupCollectionHeader gitCollectionHeader = resolveCollectionHeaderConflict(
+					serializedCollectionHeaderFile, 
+					status.getConflictingStageState().get(HEADER_FILE_NAME));
+				
+				serializedCollectionHeaderFile = 
+					new SerializationHelper<GitMarkupCollectionHeader>().serialize(gitCollectionHeader);
+				
+				localGitRepoManager.add(
+						collectionHeaderFile.getAbsoluteFile(), 
+						serializedCollectionHeaderFile.getBytes(StandardCharsets.UTF_8));
+				
+				ContentInfoSet contentInfoSet = new ContentInfoSet(
+						gitCollectionHeader.getAuthor(),
+						gitCollectionHeader.getDescription(),
+						gitCollectionHeader.getPublisher(),
+						gitCollectionHeader.getName()
+				);
+				collectionConflict = 
+						new CollectionConflict(
+							projectId, collectionId, contentInfoSet, 
+							gitCollectionHeader.getSourceDocumentId());
+
+				collectionConflict.setHeaderConflict(true);
+				status = localGitRepoManager.getStatus();
+			}
+			else {
+				GitMarkupCollectionHeader gitCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
+						.deserialize(
+								serializedCollectionHeaderFile,
+								GitMarkupCollectionHeader.class
+						);
+				ContentInfoSet contentInfoSet = new ContentInfoSet(
+						gitCollectionHeader.getAuthor(),
+						gitCollectionHeader.getDescription(),
+						gitCollectionHeader.getPublisher(),
+						gitCollectionHeader.getName()
+				);
+				collectionConflict = 
+						new CollectionConflict(
+							projectId, collectionId, contentInfoSet, 
+							gitCollectionHeader.getSourceDocumentId());
+			}			
+			
 			for (Entry<String, StageState> entry : status.getConflictingStageState().entrySet()) {
 				String relativeAnnotationPathname = entry.getKey();
 				String absAnnotationPathname = collectionSubmoduleAbsPath + "/" + relativeAnnotationPathname;
@@ -717,6 +751,30 @@ public class GitMarkupCollectionHandler {
 					collectionConflict.addAnnotationConflict(annotationConflict);
 					break;
 				}
+				case DELETED_BY_THEM: { // them is the user on the dev branch here
+
+					// in this case the file comes from us (the team on the master branch)
+					String serializedConflictingAnnotation = FileUtils.readFileToString(
+							new File(absAnnotationPathname), StandardCharsets.UTF_8);
+					
+					AnnotationConflict annotationConflict = 
+							getDeleteByThemAnnotationConflict(
+								projectId, collectionId, serializedConflictingAnnotation);
+					collectionConflict.addAnnotationConflict(annotationConflict);
+					break;					
+				}
+				case DELETED_BY_US: { // us is the team on the master branch here
+					
+					// in this case the file comes from them (the user on the dev branch)
+					String serializedConflictingAnnotation = FileUtils.readFileToString(
+							new File(absAnnotationPathname), StandardCharsets.UTF_8);
+					
+					AnnotationConflict annotationConflict = 
+							getDeleteByUsAnnotationConflict(
+								projectId, collectionId, serializedConflictingAnnotation);
+					collectionConflict.addAnnotationConflict(annotationConflict);
+					break;						
+				}				
 				default: System.out.println("not handled"); //TODO:
 				}
 				
@@ -724,7 +782,90 @@ public class GitMarkupCollectionHandler {
 			return collectionConflict;
 		}		
 	}
+	
+	private AnnotationConflict getDeleteByThemAnnotationConflict(
+			String projectId, String collectionId, 
+			String serializedConflictingAnnotation) throws Exception {
+		
+		JsonLdWebAnnotation masterVersionJsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
+				.deserialize(
+						serializedConflictingAnnotation,
+						JsonLdWebAnnotation.class
+				);
+		
+		List<TagReference> masterTagReferences = 
+				masterVersionJsonLdWebAnnotation.toTagReferenceList(projectId, collectionId);
 
+		AnnotationConflict annotationConflict = 
+				new AnnotationConflict(
+					null, Collections.emptyList(),
+					masterTagReferences.get(0).getTagInstance(), masterTagReferences);
+		
+		return annotationConflict;		
+	}
+
+	private AnnotationConflict getDeleteByUsAnnotationConflict(
+			String projectId, String collectionId, 
+			String serializedConflictingAnnotation) throws Exception {
+		
+		JsonLdWebAnnotation devVersionJsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
+				.deserialize(
+						serializedConflictingAnnotation,
+						JsonLdWebAnnotation.class
+				);
+		List<TagReference> devTagReferences = 
+				devVersionJsonLdWebAnnotation.toTagReferenceList(projectId, collectionId);
+
+		AnnotationConflict annotationConflict = 
+				new AnnotationConflict(
+					devTagReferences.get(0).getTagInstance(), devTagReferences,
+					null, Collections.emptyList());
+		
+		return annotationConflict;		
+	}
+
+	private GitMarkupCollectionHeader resolveCollectionHeaderConflict(
+			String serializedCollectionHeaderFile, StageState stageState) {
+		
+		if (stageState.equals(StageState.BOTH_MODIFIED)) {
+			String masterVersion = serializedCollectionHeaderFile
+					.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
+					.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
+				
+			String devVersion = serializedCollectionHeaderFile
+				.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
+				.replaceAll("\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
+			
+			GitMarkupCollectionHeader masterCollectionHeader = 
+					new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
+							masterVersion, GitMarkupCollectionHeader.class);
+			
+			GitMarkupCollectionHeader devCollectionHeader = 
+					new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
+							devVersion, GitMarkupCollectionHeader.class);
+			
+			String name = masterCollectionHeader.getName();
+			if (!name.trim().toLowerCase().equals(devCollectionHeader.getName().trim().toLowerCase())) {
+				name += " " + devCollectionHeader.getName();
+			}
+			
+			String description = masterCollectionHeader.getDescription();
+			if (!description.trim().toLowerCase().equals(devCollectionHeader.getDescription().trim().toLowerCase())) {
+				description += " " + devCollectionHeader.getDescription();
+			}
+			
+			return new GitMarkupCollectionHeader(
+				name, description, 
+				masterCollectionHeader.getSourceDocumentId(), // cannot change
+				masterCollectionHeader.getSourceDocumentVersion() // cannot change yet
+			);
+		}
+		else {
+			 return new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
+					 serializedCollectionHeaderFile, GitMarkupCollectionHeader.class);
+		}
+	}
+	
 	private AnnotationConflict getBothModifiedAnnotationConflict(
 			String projectId, String collectionId, String serializedConflictingAnnotation) throws Exception {
 

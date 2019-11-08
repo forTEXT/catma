@@ -7,11 +7,11 @@ import java.util.function.Function;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
-import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.project.conflict.TagConflict;
+import de.catma.project.conflict.TagsetConflict;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 

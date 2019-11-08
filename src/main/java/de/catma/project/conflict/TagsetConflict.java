@@ -1,12 +1,9 @@
-package de.catma.project;
+package de.catma.project.conflict;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import de.catma.project.conflict.Resolution;
-import de.catma.project.conflict.TagConflict;
 
 public class TagsetConflict {
 	

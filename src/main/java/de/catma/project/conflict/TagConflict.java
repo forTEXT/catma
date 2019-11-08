@@ -16,9 +16,7 @@ public class TagConflict {
 		super();
 		this.masterTagDefinition = masterTagDefinition;
 		this.devTagDefinition = devTagDefinition;
-		this.
-		
-		bothPossible = 
+		this.bothPossible = 
 			((this.masterTagDefinition != null) && (this.devTagDefinition != null));
 	}
 

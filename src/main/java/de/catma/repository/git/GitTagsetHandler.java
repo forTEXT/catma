@@ -18,8 +18,8 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
-import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.TagConflict;
+import de.catma.project.conflict.TagsetConflict;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -196,7 +196,7 @@ public class GitTagsetHandler {
 
 			File tagsetHeaderFile = new File(
 				localGitRepoManager.getRepositoryWorkTree(),
-				String.format("%s/header.json", tagsetSubmoduleName, tagsetId)
+				tagsetSubmoduleName + "/" + HEADER_FILE_NAME
 			);
 
 			String serialized = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);

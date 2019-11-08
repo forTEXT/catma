@@ -17,9 +17,9 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.project.TagsetConflict;
 import de.catma.project.conflict.Resolution;
 import de.catma.project.conflict.TagConflict;
+import de.catma.project.conflict.TagsetConflict;
 import de.catma.tag.PropertyDefinition;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.util.Cleaner;

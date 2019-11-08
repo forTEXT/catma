@@ -18,6 +18,8 @@ public class AnnotationConflict {
 
 	private TagInstance masterTagInstance;
 	private List<TagReference> masterTagReferences;
+
+	private boolean bothPossible = false;
 	
 	
 	public AnnotationConflict(TagInstance devTagInstance, List<TagReference> devTagReferences,
@@ -27,6 +29,9 @@ public class AnnotationConflict {
 		this.devTagReferences = devTagReferences;
 		this.masterTagInstance = masterTagInstance;
 		this.masterTagReferences = masterTagReferences;
+		this.bothPossible = 
+				((this.masterTagInstance != null) && (this.devTagInstance != null));
+
 	}
 	
 	
@@ -107,5 +112,9 @@ public class AnnotationConflict {
 		}
 		
 		return references;
+	}
+	
+	public boolean isBothPossible() {
+		return bothPossible;
 	}
 }

@@ -75,27 +75,42 @@ public class AnnotationConflictView extends VerticalLayout {
 		collectionNameField.setReadOnly(true);
 		
 		TagInstance devTagInstance = this.annotationConflict.getDevTagInstance();
-		TagDefinition tag = 
-				tagManager.getTagLibrary().getTagDefinition(devTagInstance.getTagDefinitionId());
-		String tagPath = tagManager.getTagLibrary().getTagPath(tag);
-		
-		String annotatedKwicText = AnnotatedTextProvider.buildAnnotatedKeywordInContext(
-				this.annotationConflict.getDevTagReferences(), kwicProvider, tag, tagPath);
-		annotatedKwic.setValue(annotatedKwicText);
-		
-		TreeDataProvider<PropertyTreeItem> leftPropertyTreeDataProvider = 
-				createPropertyTreeDataProvider(devTagInstance, tag);
-		
-		leftPropertyGrid.setDataProvider(leftPropertyTreeDataProvider);
-		leftPropertyGrid.expandRecursively(
-				leftPropertyTreeDataProvider.getTreeData().getRootItems(), 1);
 		TagInstance masterTagInstance = this.annotationConflict.getMasterTagInstance();
+		TagDefinition tag = null;
 		
-		TreeDataProvider<PropertyTreeItem> rightPropertyTreeDataProvider = 
-				createPropertyTreeDataProvider(masterTagInstance, tag);
-		rightPropertyGrid.setDataProvider(rightPropertyTreeDataProvider);		
-		rightPropertyGrid.expandRecursively(
-				rightPropertyTreeDataProvider.getTreeData().getRootItems(), 1);
+		if (devTagInstance != null) {
+			tag = 
+					tagManager.getTagLibrary().getTagDefinition(devTagInstance.getTagDefinitionId());
+			String tagPath = tagManager.getTagLibrary().getTagPath(tag);
+			
+			String annotatedKwicText = AnnotatedTextProvider.buildAnnotatedKeywordInContext(
+					this.annotationConflict.getDevTagReferences(), kwicProvider, tag, tagPath);
+			annotatedKwic.setValue(annotatedKwicText);
+			
+			TreeDataProvider<PropertyTreeItem> leftPropertyTreeDataProvider = 
+					createPropertyTreeDataProvider(devTagInstance, tag);
+			
+			leftPropertyGrid.setDataProvider(leftPropertyTreeDataProvider);
+			leftPropertyGrid.expandRecursively(
+					leftPropertyTreeDataProvider.getTreeData().getRootItems(), 1);
+		}
+		else if (masterTagInstance != null) {
+			tag = 
+					tagManager.getTagLibrary().getTagDefinition(masterTagInstance.getTagDefinitionId());
+			String tagPath = tagManager.getTagLibrary().getTagPath(tag);
+			
+			String annotatedKwicText = AnnotatedTextProvider.buildAnnotatedKeywordInContext(
+					this.annotationConflict.getDevTagReferences(), kwicProvider, tag, tagPath);
+			annotatedKwic.setValue(annotatedKwicText);
+		}
+		//TODO: show if dev or master is deleted
+		if (masterTagInstance != null) {
+			TreeDataProvider<PropertyTreeItem> rightPropertyTreeDataProvider = 
+					createPropertyTreeDataProvider(masterTagInstance, tag);
+			rightPropertyGrid.setDataProvider(rightPropertyTreeDataProvider);		
+			rightPropertyGrid.expandRecursively(
+					rightPropertyTreeDataProvider.getTreeData().getRootItems(), 1);
+		}
  	}
 
 	private TreeDataProvider<PropertyTreeItem> createPropertyTreeDataProvider(
