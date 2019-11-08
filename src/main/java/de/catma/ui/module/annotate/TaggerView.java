@@ -411,7 +411,8 @@ public class TaggerView extends HorizontalLayout
 				List<AnnotationCollectionReference> selectedAnnotationCollectionRefs = 
 						resourcePanel.getSelectedAnnotationCollectionReferences();
 				
-				for (AnnotationCollection collection : userMarkupCollectionManager) {
+				for (AnnotationCollection collection : 
+						userMarkupCollectionManager.getUserMarkupCollections()) {
 					userMarkupCollectionManager.remove(collection.getId());
 					annotationPanel.removeCollection(collection.getId());
 					tagger.setVisible(collection.getTagReferences(), false);						
