@@ -66,7 +66,7 @@ import de.catma.util.IDGenerator;
 
 public class TPGraphProjectIndexer implements Indexer {
 	
-	private Graph graph;
+	private final Graph graph;
 	private IDGenerator idGenerator;
 
 	public TPGraphProjectIndexer(Graph graph) {

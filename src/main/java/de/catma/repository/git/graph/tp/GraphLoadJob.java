@@ -41,11 +41,11 @@ public class GraphLoadJob extends DefaultProgressCallable<Pair<TagManager, Graph
 	private final GraphWriter graphWriter;
 	private final TagManager tagManager;
 
-	public GraphLoadJob(ProjectReference projectReference, TagManager tagManager, User user, String revisionHash,
+	public GraphLoadJob(Graph graph, ProjectReference projectReference, TagManager tagManager, User user, String revisionHash,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
 			CollectionsSupplier collectionsSupplier, FileInfoProvider fileInfoProvider) {
 		super();
-		this.graph = TinkerGraph.open();
+		this.graph = graph;
 		this.projectReference = projectReference;
 		this.tagManager = tagManager;
 		this.user = user;

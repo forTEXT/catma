@@ -99,6 +99,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			
 			backgroundService.submit(
 				new GraphLoadJob(
+						graph,
 						projectReference, 
 						tagManager,
 						user, 
