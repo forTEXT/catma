@@ -544,6 +544,7 @@ public class TagsView extends HugeCard {
 		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
+		
 		if (!targetTags.isEmpty()) {
 			for (TagDefinition targetTag : targetTags) {
 				if (!project.hasPermission(

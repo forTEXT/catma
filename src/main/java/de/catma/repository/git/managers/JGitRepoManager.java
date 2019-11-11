@@ -477,13 +477,25 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public String removeAndCommit(File targetFile, String commitMsg, String committerName, String committerEmail)
+	public String removeAndCommit(
+			File targetFile, boolean removeEmptyParent, 
+			String commitMsg, String committerName, String committerEmail)
 			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `removeAndCommit` on a detached instance");
 		}
-
+		
+		File parentDir = targetFile.getParentFile();
+		
 		this.remove(targetFile);
+		
+		if ((parentDir != null) && parentDir.isDirectory() && removeEmptyParent) {
+			String[] content = parentDir.list();
+			if ((content != null) && content.length == 0) {
+				parentDir.delete();
+			}
+		}
+		
 		return this.commit(commitMsg, committerName, committerEmail, false);
 	}
 

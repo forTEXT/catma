@@ -22,7 +22,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.logging.Logger;
 
 import de.catma.document.source.ContentInfoSet;
@@ -177,6 +176,9 @@ public class TagManager {
 
 	public void removeTagDefinition(TagsetDefinition tagsetDefinition,
 			TagDefinition tagDefinition) {
+		for (TagDefinition child : tagsetDefinition.getDirectChildren(tagDefinition)) {
+			removeTagDefinition(tagsetDefinition, child);
+		}
 		tagsetDefinition.remove(tagDefinition);
 		tagsetDefinition.setVersion();
 		this.propertyChangeSupport.firePropertyChange(

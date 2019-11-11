@@ -350,6 +350,7 @@ public class GitTagsetHandler {
 
 			String tagsetRevision = localGitRepoManager.removeAndCommit(
 					targetTagDefinitionsFolderAbsolutePath, 
+					!StringUtils.isEmpty(tagDefinition.getParentUuid()), // delete empty parent tag directory
 					String.format(
 						"Removing Tag %1$s with ID %2$s", 
 						tagDefinition.getName(), 
