@@ -46,6 +46,7 @@ import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.Member;
@@ -1082,13 +1083,21 @@ public class GitProjectHandler {
 					this.remoteGitServerManager,
 					this.credentialsProvider);
 			
-			JsonLdWebAnnotation annotation = 
-					new JsonLdWebAnnotation(
-						CATMAPropertyKey.GitLabServerUrl.getValue(), 
-						projectId, 
-						annotationConflict.getResolvedTagReferences(),
-						tagLibrary);
-			gitMarkupCollectionHandler.createTagInstance(projectId, collectionId, annotation);
+			if (annotationConflict.getResolvedTagReferences().isEmpty()) {
+				TagInstance tagInstance = 
+					annotationConflict.getDismissedTagInstance();
+				gitMarkupCollectionHandler.removeTagInstances(
+					projectId, collectionId, Collections.singleton(tagInstance.getUuid()));
+			}
+			else {
+				JsonLdWebAnnotation annotation = 
+						new JsonLdWebAnnotation(
+							CATMAPropertyKey.GitLabServerUrl.getValue(), 
+							projectId, 
+							annotationConflict.getResolvedTagReferences(),
+							tagLibrary);
+				gitMarkupCollectionHandler.createTagInstance(projectId, collectionId, annotation);
+			}
 		}		
 	}
 

@@ -48,15 +48,9 @@ public class ConflictedProjectView extends HugeCard {
     	this.conflictedProject = conflictedProject;
     	this.eventBus = eventBus;
     	initComponents();
-    	initActions();
     	initData();
 	}
 
-	private void initActions() {
-		// TODO Auto-generated method stub
-		
-	}
-	
 	private void showNextCollectionConflict() throws IOException {
 		currentCollectionConflict = collectionConflictIterator.next();
 		annotationConflictIterator = currentCollectionConflict.getAnnotationConflicts().iterator();

@@ -37,6 +37,8 @@ public class AnnotationConflictView extends VerticalLayout {
 	private ResolutionListener resolutionListener;
 	private TextField documentNameField;
 	private TextField collectionNameField;
+	private Label leftIsDeletedLabel;
+	private Label rightIsDeletedLabel;
 
 	public AnnotationConflictView(
 			AnnotationConflict annotationConflict, 
@@ -86,13 +88,7 @@ public class AnnotationConflictView extends VerticalLayout {
 			String annotatedKwicText = AnnotatedTextProvider.buildAnnotatedKeywordInContext(
 					this.annotationConflict.getDevTagReferences(), kwicProvider, tag, tagPath);
 			annotatedKwic.setValue(annotatedKwicText);
-			
-			TreeDataProvider<PropertyTreeItem> leftPropertyTreeDataProvider = 
-					createPropertyTreeDataProvider(devTagInstance, tag);
-			
-			leftPropertyGrid.setDataProvider(leftPropertyTreeDataProvider);
-			leftPropertyGrid.expandRecursively(
-					leftPropertyTreeDataProvider.getTreeData().getRootItems(), 1);
+
 		}
 		else if (masterTagInstance != null) {
 			tag = 
@@ -100,10 +96,23 @@ public class AnnotationConflictView extends VerticalLayout {
 			String tagPath = tagManager.getTagLibrary().getTagPath(tag);
 			
 			String annotatedKwicText = AnnotatedTextProvider.buildAnnotatedKeywordInContext(
-					this.annotationConflict.getDevTagReferences(), kwicProvider, tag, tagPath);
+					this.annotationConflict.getMasterTagReferences(), kwicProvider, tag, tagPath);
 			annotatedKwic.setValue(annotatedKwicText);
 		}
-		//TODO: show if dev or master is deleted
+
+		if (devTagInstance != null) {
+			TreeDataProvider<PropertyTreeItem> leftPropertyTreeDataProvider = 
+					createPropertyTreeDataProvider(devTagInstance, tag);
+			
+			leftPropertyGrid.setDataProvider(leftPropertyTreeDataProvider);
+			leftPropertyGrid.expandRecursively(
+					leftPropertyTreeDataProvider.getTreeData().getRootItems(), 1);			
+		}
+		else {
+			leftPropertyGrid.setVisible(false);
+			leftIsDeletedLabel.setVisible(true);
+		}
+		
 		if (masterTagInstance != null) {
 			TreeDataProvider<PropertyTreeItem> rightPropertyTreeDataProvider = 
 					createPropertyTreeDataProvider(masterTagInstance, tag);
@@ -111,6 +120,12 @@ public class AnnotationConflictView extends VerticalLayout {
 			rightPropertyGrid.expandRecursively(
 					rightPropertyTreeDataProvider.getTreeData().getRootItems(), 1);
 		}
+		else {
+			rightPropertyGrid.setVisible(false);
+			rightIsDeletedLabel.setVisible(true);
+		}
+		
+		btBoth.setEnabled(annotationConflict.isBothPossible());
  	}
 
 	private TreeDataProvider<PropertyTreeItem> createPropertyTreeDataProvider(
@@ -171,6 +186,10 @@ public class AnnotationConflictView extends VerticalLayout {
 		
 		comparisonPanel.addComponent(leftPropertyGrid);
 		
+		leftIsDeletedLabel = new Label("My Annotation is DELETED.");
+		leftIsDeletedLabel.setVisible(false);
+		comparisonPanel.addComponent(leftIsDeletedLabel);
+		
 		rightPropertyGrid = TreeGridFactory.createDefaultTreeGrid();
 		rightPropertyGrid.setSizeFull();
 		rightPropertyGrid.addStyleNames(
@@ -179,6 +198,11 @@ public class AnnotationConflictView extends VerticalLayout {
 		rightPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getName()).setCaption("Property");
 		rightPropertyGrid.addColumn(propertyTreeItem -> propertyTreeItem.getValue()).setCaption("Value");
 		comparisonPanel.addComponent(rightPropertyGrid);
+
+		rightIsDeletedLabel = new Label("Their Annotation is DELETED.");
+		rightIsDeletedLabel.setVisible(false);
+		comparisonPanel.addComponent(rightIsDeletedLabel);
+		
 		addComponent(comparisonPanel);
 		setExpandRatio(comparisonPanel, 1f);
 		

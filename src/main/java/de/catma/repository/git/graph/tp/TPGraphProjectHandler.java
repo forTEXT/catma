@@ -61,6 +61,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
+import de.catma.util.Pair;
 
 public class TPGraphProjectHandler implements GraphProjectHandler {
 	private Logger logger = Logger.getLogger(TPGraphProjectHandler.class.getName());
@@ -98,7 +99,6 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			
 			backgroundService.submit(
 				new GraphLoadJob(
-						graph, 
 						projectReference, 
 						tagManager,
 						user, 
@@ -107,10 +107,11 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 						documentsSupplier, 
 						collectionsSupplier, 
 						fileInfoProvider), 
-				new ExecutionListener<TagManager>() {
+				new ExecutionListener<Pair<TagManager, Graph>>() {
 					@Override
-					public void done(TagManager result) {
-						openProjectListener.done(result);
+					public void done(Pair<TagManager, Graph> result) {
+						graph = result.getSecond();
+						openProjectListener.done(result.getFirst());
 					}
 					@Override
 					public void error(Throwable t) {

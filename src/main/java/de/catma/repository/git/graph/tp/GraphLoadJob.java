@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.document.annotation.AnnotationCollection;
@@ -24,8 +25,9 @@ import de.catma.repository.git.graph.GraphProjectHandler.CollectionsSupplier;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
+import de.catma.util.Pair;
 
-public class GraphLoadJob extends DefaultProgressCallable<TagManager> {
+public class GraphLoadJob extends DefaultProgressCallable<Pair<TagManager, Graph>> {
 
 	private Logger logger = Logger.getLogger(TPGraphProjectHandler.class.getName());
 	
@@ -39,11 +41,11 @@ public class GraphLoadJob extends DefaultProgressCallable<TagManager> {
 	private final GraphWriter graphWriter;
 	private final TagManager tagManager;
 
-	public GraphLoadJob(Graph graph, ProjectReference projectReference, TagManager tagManager, User user, String revisionHash,
+	public GraphLoadJob(ProjectReference projectReference, TagManager tagManager, User user, String revisionHash,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
 			CollectionsSupplier collectionsSupplier, FileInfoProvider fileInfoProvider) {
 		super();
-		this.graph = graph;
+		this.graph = TinkerGraph.open();
 		this.projectReference = projectReference;
 		this.tagManager = tagManager;
 		this.user = user;
@@ -55,7 +57,7 @@ public class GraphLoadJob extends DefaultProgressCallable<TagManager> {
 	}
 
 	@Override
-	public TagManager call() throws Exception {
+	public Pair<TagManager, Graph> call() throws Exception {
 
 		getProgressListener().setProgress("Start loading project %1$s...", projectReference.getName());
 
@@ -96,7 +98,7 @@ public class GraphLoadJob extends DefaultProgressCallable<TagManager> {
 
 		logger.info("Finished loading " + projectReference.getName() + " " + projectReference.getProjectId());
 		
-		return tagManager;
+		return new Pair<>(tagManager, graph);
 	}
 
 }

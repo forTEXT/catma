@@ -117,4 +117,28 @@ public class AnnotationConflict {
 	public boolean isBothPossible() {
 		return bothPossible;
 	}
+
+
+	public TagInstance getDismissedTagInstance() throws Exception {
+		if (!isResolved()) {
+			throw new IllegalStateException("this Annotation Conflict is not resolved yet!");
+		}
+		
+		switch (this.resolution) {
+		case MINE: {
+			return getMasterTagInstance();
+		}
+		case THEIRS: {
+			return getDevTagInstance();
+		}
+		default: {
+			if (!isBothPossible()) {
+				throw new IllegalStateException(
+						"Cannot resolve Annotation conflict with both versions!");
+			}
+			return createCombinedTagInstance().get(0).getTagInstance();
+		}
+		
+		}
+	}
 }

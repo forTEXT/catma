@@ -73,7 +73,7 @@ public class TagConflictView extends VerticalLayout {
 					.collect(Collectors.toSet()));
 		}
 		else {
-			this.leftTagLabel.setValue("My Tag is DELETED");
+			this.leftTagLabel.setValue("My Tag is DELETED.");
 		}
 		
 		if (tagConflict.getMasterTagDefinition() != null) {
@@ -93,7 +93,7 @@ public class TagConflictView extends VerticalLayout {
 					.collect(Collectors.toSet()));
 		}
 		else {
-			this.rightTagLabel.setValue("Their Tag is DELETED");
+			this.rightTagLabel.setValue("Their Tag is DELETED.");
 		}
 		
 		TreeData<PropertyDefTreeItem> treeData = new TreeData<>();

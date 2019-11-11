@@ -3,6 +3,7 @@ package de.catma.ui.module.annotate.annotationpanel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -345,7 +346,9 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 				annotation.getUserMarkupCollection().getUuid()), 
 				RBACPermission.COLLECTION_WRITE)) {
 
-			if (annotation.getTagInstance().getUserDefinedProperties().isEmpty()) {
+			String tagId = annotation.getTagInstance().getTagDefinitionId();
+			TagDefinition tag = project.getTagManager().getTagLibrary().getTagDefinition(tagId);
+			if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
 				Notification.show(
 						"Info", 
 						"There are no Properties defined for the Tag of this Annotation!", 
@@ -390,7 +393,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	public void addAnnotation(Annotation annotation) throws IOException {
 		Optional<AnnotationDataItem> optionalItem = 
 				findAnnotationDataItem(annotation.getTagInstance().getUuid());
-		if (optionalItem.isPresent()) {
+		if (optionalItem.isPresent() && isAttached()) {
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());
 			annotationDetailsTree.select(optionalItem.get());
 			annotationDetailsTree.expand(optionalItem.get());
@@ -435,16 +438,20 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 									new AnnotationPropertyValueDataItem(value);
 							annotationDetailData.addItem(propertyDataItem, valueDataItem);
 						}
-						annotationDetailsTree.expand(propertyDataItem);
 					}
 				}
 			}
 			
-			annotationDetailsTree.expand(annotationDataItem);
 			annotationDetailsProvider.refreshAll();
-			annotationDetailsTree.select(annotationDataItem);
-			annotationDetailsTree.scrollTo(
-				annotationDetailData.getRootItems().size()-1, ScrollDestination.START);
+			if (isAttached()) {
+				List<AnnotationTreeItem> items = new ArrayList<>();
+				items.add(annotationDataItem);
+				items.addAll(annotationDetailData.getChildren(annotationDataItem));
+				annotationDetailsTree.expand(items);
+				annotationDetailsTree.select(annotationDataItem);
+				annotationDetailsTree.scrollTo(
+					annotationDetailData.getRootItems().size()-1, ScrollDestination.START);
+			}
 		}
 	}
 	

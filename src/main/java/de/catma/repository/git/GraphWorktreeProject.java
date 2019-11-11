@@ -1020,6 +1020,9 @@ public class GraphWorktreeProject implements IndexedProject {
 			AnnotationCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
 		try {
+			for (Property property : properties) {
+				tagInstance.addUserDefinedProperty(property);
+			}
 			gitProjectHandler.addOrUpdate(
 					collection.getUuid(), 
 					collection.getTagReferences(tagInstance), 

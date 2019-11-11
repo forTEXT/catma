@@ -10,7 +10,6 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
-import de.catma.rbac.IRBACManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.events.HeaderContextChangeEvent;
@@ -166,7 +165,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			else {
 				setContent(projectView);
 				if (routeToProjectEvent.isReloadProject()) {
-					this.projectView.setProjectReference(routeToProjectEvent.getProjectReference());
+					this.projectView.reloadProject();
 				}
 			}
 	    	currentRoute = routeToProjectEvent.getClass();
