@@ -377,7 +377,7 @@ public class GitProjectHandler {
 		
 			List<Path> paths = localRepoManager.getSubmodulePaths()
 				.stream()
-				.filter(path -> path.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME))
+				.filter(path -> path != null && path.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME))
 				.map(path -> 
 					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 						 .resolve(path))
@@ -432,7 +432,7 @@ public class GitProjectHandler {
 			
 				List<Path> paths = localRepoManager.getSubmodulePaths()
 					.stream()
-					.filter(path -> path.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME))
+					.filter(path -> path != null && path.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME))
 					.map(path -> 
 						Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 							 .resolve(path))
@@ -489,7 +489,7 @@ public class GitProjectHandler {
 				
 				List<Path> paths = localRepoManager.getSubmodulePaths()
 						.stream()
-						.filter(path -> path.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME))
+						.filter(path -> path != null && path.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME))
 						.map(path -> 
 							Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 								 .resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)
@@ -817,7 +817,7 @@ public class GitProjectHandler {
 					 GitProjectManager.getProjectRootRepositoryName(projectId));
 			List<Path> paths = localRepoManager.getSubmodulePaths()
 				.stream()
-				.filter(path -> path.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME))
+				.filter(path -> path != null && path.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME))
 				.map(path -> 
 					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 						 .resolve(path))
@@ -1276,34 +1276,36 @@ public class GitProjectHandler {
 		List<String> relativeSubmodulePaths = localRepoManager.getSubmodulePaths();
 		
 		for (String relativeSubmodulePath : relativeSubmodulePaths) {
-			if (relativeSubmodulePath.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)) {
-				String documentId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(relativeSubmodulePath)
-					 .getFileName()
-					 .toString();
-				RBACRole resourceRole = rolesPerResource.get(documentId);
-				if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.DOCUMENT_READ)) {
-					readableSubmodules.add(relativeSubmodulePath);
+			if (relativeSubmodulePath != null) {
+				if (relativeSubmodulePath.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)) {
+					String documentId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+						 .resolve(relativeSubmodulePath)
+						 .getFileName()
+						 .toString();
+					RBACRole resourceRole = rolesPerResource.get(documentId);
+					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.DOCUMENT_READ)) {
+						readableSubmodules.add(relativeSubmodulePath);
+					}
 				}
-			}
-			else if (relativeSubmodulePath.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)) {
-				String collectionId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(relativeSubmodulePath)
-					 .getFileName()
-					 .toString();
-				RBACRole resourceRole = rolesPerResource.get(collectionId);
-				if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.COLLECTION_READ)) {
-					readableSubmodules.add(relativeSubmodulePath);
+				else if (relativeSubmodulePath.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)) {
+					String collectionId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+						 .resolve(relativeSubmodulePath)
+						 .getFileName()
+						 .toString();
+					RBACRole resourceRole = rolesPerResource.get(collectionId);
+					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.COLLECTION_READ)) {
+						readableSubmodules.add(relativeSubmodulePath);
+					}
 				}
-			}
-			else if (relativeSubmodulePath.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
-				String collectionId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(relativeSubmodulePath)
-					 .getFileName()
-					 .toString();
-				RBACRole resourceRole = rolesPerResource.get(collectionId);
-				if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.TAGSET_READ)) {
-					readableSubmodules.add(relativeSubmodulePath);
+				else if (relativeSubmodulePath.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
+					String collectionId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+						 .resolve(relativeSubmodulePath)
+						 .getFileName()
+						 .toString();
+					RBACRole resourceRole = rolesPerResource.get(collectionId);
+					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.TAGSET_READ)) {
+						readableSubmodules.add(relativeSubmodulePath);
+					}
 				}
 			}
 		}

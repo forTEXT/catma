@@ -40,6 +40,7 @@ import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -335,16 +336,19 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IllegalStateException("Can't determine root revision hash on a detached instance");
 		}
 		
-		ObjectId headRevision = 
-			SubmoduleWalk
-			.getSubmoduleRepository(this.gitApi.getRepository(), submodule)
-			.resolve(Constants.HEAD);
-		if (headRevision == null) {
-			return "no_commits_yet";
+		try (Repository subModuleRepo = SubmoduleWalk
+				.getSubmoduleRepository(this.gitApi.getRepository(), submodule)) {
+			
+			ObjectId headRevision = subModuleRepo.resolve(Constants.HEAD);
+			
+			if (headRevision == null) {
+				return "no_commits_yet";
+			}
+			else {
+				return headRevision.getName();
+			}
 		}
-		else {
-			return headRevision.getName();
-		}
+		
 	}
 
 	/**
@@ -933,26 +937,79 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		try {
 			if (dirCache.hasUnmergedPaths()) {
 				
-				for (String conflictingSubmodule : gitApi.status().call().getConflicting()) {
+				Status status = gitApi.status().call();
+				
+				for (String conflictingSubmodule : status.getConflicting()) {
 					
-					// get the base entry from where the branches diverge, the common ancestor version
-					int baseIdx = dirCache.findEntry(conflictingSubmodule);
-					DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
-
-					// get their version, the being-merged in version
-					DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2); // TODO: check stage
+					StageState conflictState = 
+							status.getConflictingStageState().get(conflictingSubmodule);
 					
-					// we try to make sure that their version is included (merged) in the latest version
-					// of this submodule
-					ensureLatestSubmoduleRevision(
-						baseEntry, theirEntry, conflictingSubmodule, credentialsProvider);
+					switch (conflictState) {
 					
-					ObjectId subModuleHeadRevision = 
-							SubmoduleWalk
-							.getSubmoduleRepository(this.gitApi.getRepository(), conflictingSubmodule)
-							.resolve(Constants.HEAD);
+					case BOTH_MODIFIED: {
+						// get the base entry from where the branches diverge, the common ancestor version
+						int baseIdx = dirCache.findEntry(conflictingSubmodule);
+						DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
+						
+						// get their version, the being-merged in version
+						DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2);
+						
+					    //Stage 0: 'normal', un-conflicted, all-is-well entry.
+					    //Stage 1: 'base', the common ancestor version.
+					    //Stage 2: 'ours', the target (HEAD) version.
+					    //Stage 3: 'theirs', the being-merged-in version.
+						
+						if (theirEntry.getPathString().equals(conflictingSubmodule)
+								&& theirEntry.getStage() == 3) {
+							// we try to make sure that their version is included (merged) in the latest version
+							// of this submodule
+							ensureLatestSubmoduleRevision(
+									baseEntry, theirEntry, conflictingSubmodule, credentialsProvider);
+							try (Repository subModuleRepo = 
+									SubmoduleWalk.getSubmoduleRepository(
+											this.gitApi.getRepository(), conflictingSubmodule)) {
+								// now get the current submodule revision (which includes the merge)
+								ObjectId subModuleHeadRevision = 
+										subModuleRepo.resolve(Constants.HEAD);
+								
+								baseEntry.setObjectId(subModuleHeadRevision);
+							}
+							break;
+						}
+						else {
+							Logger.getLogger(this.getClass().getName()).severe(
+									String.format(
+										"Cannot resolve root conflict for submodule %1$s expected a 'theirs'-stage-3 commit entry but found none!",
+									conflictingSubmodule));
+							throw new CommitMissingException(
+								"Failed to synchronize the Project because of an unexpected merge conflict, "
+								+ "please contact the system administrator!");
+						}
+					}
+					case DELETED_BY_THEM: {
+						//TODO:
+						Logger.getLogger(this.getClass().getName()).severe(
+								String.format(
+									"Cannot resolve root conflict for submodule %1$s DELETED_BY_THEM not supported yet!",
+								conflictingSubmodule));
+						throw new CommitMissingException(
+								"Failed to synchronize the Project because of an unexpected merge conflict, "
+								+ "please contact the system administrator!");						
+					}
+					case DELETED_BY_US: {
+						//TODO:
+						Logger.getLogger(this.getClass().getName()).severe(
+								String.format(
+									"Cannot resolve root conflict for submodule %1$s DELETED_BY_US not supported yet!",
+								conflictingSubmodule));
+						throw new CommitMissingException(
+								"Failed to synchronize the Project because of an unexpected merge conflict, "
+								+ "please contact the system administrator!");
+					}
 					
-					baseEntry.setObjectId(subModuleHeadRevision);
+					}
+					
+					
 				}
 				dirCache.write();
 				dirCache.commit();
@@ -977,8 +1034,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			DirCacheEntry theirEntry, String conflictingSubmodule,
 			CredentialsProvider credentialsProvider) throws Exception {
 		
-		try (Git submoduleGitApi = Git.wrap(
-			SubmoduleWalk.getSubmoduleRepository(this.gitApi.getRepository(), conflictingSubmodule))) {
+		try (Repository submoduleRepo = 
+			SubmoduleWalk.getSubmoduleRepository(this.gitApi.getRepository(), conflictingSubmodule)) {
+			Git submoduleGitApi = Git.wrap(submoduleRepo);
+			
 			boolean foundTheirs = false;
 			int tries = 10;
 			while (!foundTheirs && tries > 0) {

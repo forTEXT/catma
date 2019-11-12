@@ -179,6 +179,8 @@ public class GraphWorktreeProject implements IndexedProject {
 			this.gitProjectHandler.loadRolesPerResource();
 			
 			if (gitProjectHandler.hasConflicts()) {
+				gitProjectHandler.initAndUpdateSubmodules();
+
 				openProjectListener.conflictResolutionNeeded(
 						new GitConflictedProject(
 							projectReference,
@@ -1209,6 +1211,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		gitProjectHandler.synchronizeWithRemote();
 		
 		if (gitProjectHandler.hasConflicts()) {
+			gitProjectHandler.initAndUpdateSubmodules();
 			openProjectListener.conflictResolutionNeeded(
 					new GitConflictedProject(
 						projectReference,

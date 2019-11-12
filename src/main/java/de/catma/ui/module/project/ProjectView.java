@@ -1001,57 +1001,62 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
 	/**
-     * @param projectReference
+     * @param projectReference 
      */
-    public void reloadProject() {
-    	setEnabled(false);
-    	setProgressBarVisible(true);
-    	
-    	final UI ui = UI.getCurrent();
-        this.project.open(new OpenProjectListener() {
-
-            @Override
-            public void progress(String msg, Object... params) {
-            	ui.access(() -> {
-	            	if (params != null) {
-	            		progressBar.setCaption(String.format(msg, params));
-	            	}
-	            	else {
-	            		progressBar.setCaption(msg);
-	            	}
-	            	ui.push();
-            	});
-            }
-
-            @Override
-            public void ready(Project project) {
-            	setProgressBarVisible(false);
-                ProjectView.this.project = project;
-                ProjectView.this.project.addPropertyChangeListener(
-                		RepositoryChangeEvent.exceptionOccurred, 
-                		projectExceptionListener);
-                
-                ProjectView.this.project.getTagManager().addPropertyChangeListener(
-                		TagManagerEvent.tagsetDefinitionChanged,
-                		tagsetChangeListener);
-                setEnabled(true);
-                reloadAll();
-            }
-            
-            @Override
-            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
-            	setProgressBarVisible(false);
-            	setEnabled(true);
-				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
-            }
-
-            @Override
-            public void failure(Throwable t) {
-            	setProgressBarVisible(false);
-            	setEnabled(true);
-                errorHandler.showAndLogError("error opening project", t);
-            }
-        });
+    public void reloadProject(ProjectReference projectReference) {
+    	if (this.project == null) {
+    		setProjectReference(projectReference);
+    	}
+    	else {
+	    	setEnabled(false);
+	    	setProgressBarVisible(true);
+	    	
+	    	final UI ui = UI.getCurrent();
+	        this.project.open(new OpenProjectListener() {
+	
+	            @Override
+	            public void progress(String msg, Object... params) {
+	            	ui.access(() -> {
+		            	if (params != null) {
+		            		progressBar.setCaption(String.format(msg, params));
+		            	}
+		            	else {
+		            		progressBar.setCaption(msg);
+		            	}
+		            	ui.push();
+	            	});
+	            }
+	
+	            @Override
+	            public void ready(Project project) {
+	            	setProgressBarVisible(false);
+	                ProjectView.this.project = project;
+	                ProjectView.this.project.addPropertyChangeListener(
+	                		RepositoryChangeEvent.exceptionOccurred, 
+	                		projectExceptionListener);
+	                
+	                ProjectView.this.project.getTagManager().addPropertyChangeListener(
+	                		TagManagerEvent.tagsetDefinitionChanged,
+	                		tagsetChangeListener);
+	                setEnabled(true);
+	                reloadAll();
+	            }
+	            
+	            @Override
+	            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
+	            	setProgressBarVisible(false);
+	            	setEnabled(true);
+					eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
+	            }
+	
+	            @Override
+	            public void failure(Throwable t) {
+	            	setProgressBarVisible(false);
+	            	setEnabled(true);
+	                errorHandler.showAndLogError("error opening project", t);
+	            }
+	        });
+    	}
     }
     
 	/**
