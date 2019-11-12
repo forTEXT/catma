@@ -408,6 +408,28 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+		// remove Annotations
+		Multimap<String, String> annotationIdsByCollectionId =
+			graphProjectHandler.getAnnotationIdsByCollectionId(this.rootRevisionHash, tagsetDefinition);
+		
+		for (String collectionId : annotationIdsByCollectionId.keySet()) {
+			// TODO: check permissions if commit is allowed, if that is not the case skip git removal
+			String collectionRevisionHash = gitProjectHandler.removeTagInstancesAndCommit(
+				collectionId, annotationIdsByCollectionId.get(collectionId), 
+				String.format(
+						"Annotations removed, "
+						+ "caused by the removal of Tagset %1$s with ID %2$s", 
+						tagsetDefinition.getName(),
+						tagsetDefinition.getUuid()));
+			
+			gitProjectHandler.addCollectionToStaged(collectionId);
+			
+			graphProjectHandler.removeTagInstances(
+				this.rootRevisionHash, collectionId,
+				annotationIdsByCollectionId.get(collectionId), 
+				collectionRevisionHash);
+		}
+		
 		String oldRootRevisionHash = this.rootRevisionHash;
 		gitProjectHandler.removeTagset(tagsetDefinition);
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 

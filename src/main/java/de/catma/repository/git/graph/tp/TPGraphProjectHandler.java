@@ -448,6 +448,32 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		
 		return result;
 	}
+	
+	@Override
+	public Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagsetDefinition tagset)
+			throws Exception {
+		GraphTraversalSource g = graph.traversal();
+		
+		List<Map<String,Object>> resultMap = g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
+		.outE(rt(hasTag)).inV().hasLabel(nt(Tag))
+		.outE(rt(hasInstance)).inV().hasLabel(nt(TagInstance))
+		.as("annotationId")
+		.inE(rt(hasInstance)).outV().hasLabel(nt(MarkupCollection))
+		.as("collectionId")
+		.select("annotationId", "collectionId")
+		.by("tagInstanceId").by("collectionId")
+		.toList();
+		
+		
+		Multimap<String, String> result = HashMultimap.create();
+		
+		for (Map<String,Object> entry : resultMap) {
+			result.put((String)entry.get("collectionId"), (String)entry.get("annotationId"));
+		}
+		
+		return result;
+	}
 
 	@Override
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(String rootRevisionHash,

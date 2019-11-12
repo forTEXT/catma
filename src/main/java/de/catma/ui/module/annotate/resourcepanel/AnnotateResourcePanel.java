@@ -143,6 +143,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			tagsetData.refreshAll();
 		}
 		else if (newValue == null) { // removal
+			tagsetGrid.deselect((TagsetDefinition) oldValue);
 			tagsetData.refreshAll();
 		}
 		else { // metadata update

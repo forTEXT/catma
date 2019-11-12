@@ -349,8 +349,8 @@ public class GitMarkupCollectionHandler {
 					
 					String tagId = tagReference.getTagDefinitionId();
 					
-					if (tagset.isDeleted(tagId)) {
-						// Tag has been deleted, we remove the stale Annotation as well
+					if (tagset == null || tagset.isDeleted(tagId)) {
+						// Tag/Tagset has been deleted, we remove the stale Annotation as well
 						orphanAnnotationIds.add(tagReference.getTagInstanceId());
 						tagReferenceIterator.remove();
 					}
