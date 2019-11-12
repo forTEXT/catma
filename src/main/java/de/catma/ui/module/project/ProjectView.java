@@ -286,12 +286,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
         
-        
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
-        		() ->  tagsetGridComponent.getActionGridBar().addBtnAddClickListener(
-        	        	click -> handleAddTagsetRequest()))
-        		);
+        tagsetGridComponent.getActionGridBar().addBtnAddClickListener(click -> handleAddTagsetRequest());
+        tagsetGridComponent.getActionGridBar().setAddBtnEnabled(false);
+        rbacEnforcer.register(
+        	RBACConstraint.ifAuthorized(
+        		role -> project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD),
+        		() -> tagsetGridComponent.getActionGridBar().setAddBtnEnabled(true)));
    
         ContextMenu moreOptionsMenu = 
         	tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();

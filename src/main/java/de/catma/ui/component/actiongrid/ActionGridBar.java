@@ -92,6 +92,10 @@ public class ActionGridBar extends HorizontalLayout {
 	public void setAddBtnVisible(boolean visible) {
 		btnAdd.setVisible(visible);
 	}
+
+	public void setAddBtnEnabled(boolean enabled) {
+		btnAdd.setEnabled(enabled);
+	}
 	
 	public void setMoreOptionsBtnVisible(boolean visible) {
 		btnMoreOptions.setVisible(visible);
