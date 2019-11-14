@@ -1,6 +1,7 @@
 package de.catma.repository.git.managers;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,6 @@ import org.gitlab4j.api.models.Visibility;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -46,7 +46,6 @@ import de.catma.repository.git.interfaces.IGitUserInformation;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
-import de.catma.util.StopWatch;
 import elemental.json.Json;
 import elemental.json.JsonException;
 import elemental.json.JsonObject;
@@ -313,9 +312,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		try {
 			List<org.gitlab4j.api.models.User> userPager;
 			
-			if(usernameOrEmail.isEmpty()) {
-				userPager = this.restrictedGitLabApi.getUserApi()
-					.getUsers(offset, limit);
+			if(usernameOrEmail.isEmpty() || usernameOrEmail.length() < 3) {
+				return Collections.emptyList();
 			} else {
 				userPager = this.restrictedGitLabApi.getUserApi()
 						.findUsers(usernameOrEmail,offset, limit);

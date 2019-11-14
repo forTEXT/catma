@@ -63,10 +63,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 			);
 		}
 
-		String impersonationToken = null;
-
-		// if the user was newly created, we need to create an impersonation token
-		impersonationToken = this.createImpersonationToken(
+		String impersonationToken = this.createImpersonationToken(
 			user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
 		);
 
@@ -87,10 +84,10 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
-	public int createUser(String email, String identifier, String password,
-			   String name, Boolean isAdmin)
+	public int createUser(String email, String username, String password,
+			   String publicname)
 					   throws IOException {
-		User user = this.createUser(email, identifier, password, name, null, isAdmin);
+		User user = this.createUser(email, username, password, publicname, null);
 		String token = this.createImpersonationToken(user.getId(),GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
 		NotificationSettingsApi userNotificationSettingsApi = 
 			new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), token).getNotificationSettingsApi();
@@ -124,12 +121,12 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 
 			if (user == null) {
 
-				user = this.createUser(email,
-						identifier + provider,
-						null,
-						name,
-						provider,
-						null
+				user = this.createUser(
+						email,
+						identifier + provider, // username
+						null, //password will be generated
+						name, //public name
+						provider
 				);
 			}
 
@@ -191,13 +188,13 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 			.filter(u -> usernameOrEmail.equals(u.getUsername()) || usernameOrEmail.equals(u.getEmail()))
 			.count() > 0;
 		} catch(GitLabApiException e){
-			throw new IOException("failed to check for username",e);
+			throw new IOException("Failed to validate username and email!",e);
 		}
 	}
 	
 	// it's more convenient to work with the User class internally, which is why this method exists
-	private User createUser(String email, String identifier, String password, String name, String provider,
-							Boolean isAdmin) throws IOException {
+	private User createUser(String email, String username, String password, String publicname, String provider
+			) throws IOException {
 		UserApi userApi = privilegedGitLabApi.getUserApi();
 		if (password == null) {
 			// generate a random password
@@ -207,19 +204,16 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 			);
 		}
 
-		if (isAdmin == null) {
-			isAdmin = false;
-		}
 		User user = new User();
 		user.setEmail(email);
-		user.setUsername(identifier);
-		user.setName(name);
-		user.setIsAdmin(isAdmin);
+		user.setUsername(username);
+		user.setName(publicname);
+		user.setIsAdmin(false);
 		user.setSkipConfirmation(true);
 		
 		if (provider != null) {
 			Identity identity = new Identity();
-			identity.setExternUid(identifier);
+			identity.setExternUid(username);
 			identity.setProvider(provider);
 			
 			user.setIdentities(Collections.singletonList(identity));

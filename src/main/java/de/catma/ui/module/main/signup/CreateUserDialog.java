@@ -59,13 +59,12 @@ public class CreateUserDialog extends Window {
 		VerticalLayout content = new VerticalLayout();
 		content.setSizeFull();
 		
-		Label lDescription = new Label("description", ContentMode.HTML);
-		lDescription.setValue("Please complete your sign-up by filling out this form:");
+		Label lDescription = new Label("Please complete your sign-up by filling out this form:", ContentMode.HTML);
 		
 		TextField tfUsername = new TextField("Username");
 		tfUsername.setWidth("100%");
 		
-		TextField tfEmail = new TextField("E-Mail");
+		TextField tfEmail = new TextField("Email");
 		tfEmail.setWidth("100%");
 		tfEmail.setValue(signupToken.getEmail());
 		tfEmail.setEnabled(false);
@@ -175,8 +174,7 @@ public class CreateUserDialog extends Window {
 				gitlabManagerPrivileged.createUser(
 						user.getEmail(), 
 						user.getUsername(), user.getPassword(), 
-						user.getUsername(), 
-						false);
+						user.getUsername());
 				
 				Notification.show(
 						"Your user account has been created. Please sign in!", 

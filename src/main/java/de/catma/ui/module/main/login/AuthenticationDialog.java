@@ -59,12 +59,9 @@ import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.util.ExceptionUtil;
 
 /**
- * Authentication dialog for OpenID Connect authentication with Google.
- * Based on: 
- * https://developers.google.com/accounts/docs/OpenIDConnect
- * 
  * @author marco.petris@web.de
  *
  */
@@ -145,8 +142,11 @@ public class AuthenticationDialog extends Window implements Handler {
 				close();
 				
 			} catch (IOException e) {
-				Notification.show("Login error", "username or password wrong", Type.ERROR_MESSAGE);
-				logger.log(Level.SEVERE,"login services" , e);
+				Notification.show("Login error", "Username or password wrong!", Type.ERROR_MESSAGE);
+				String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
+				if (message != null && !message.equals("invalid_grant")) {
+					logger.log(Level.SEVERE,"login services" , e);
+				}
 			}
 		});
 		
@@ -211,7 +211,7 @@ public class AuthenticationDialog extends Window implements Handler {
 		VerticalLayout content = new VerticalLayout();
 		content.setSizeFull();
 		
-		tfUsername = new TextField("Username");
+		tfUsername = new TextField("Username or email");
 		tfUsername.setWidth("100%");
 		
 		pfPassword = new PasswordField("Password");

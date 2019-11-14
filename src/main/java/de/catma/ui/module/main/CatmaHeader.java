@@ -68,7 +68,6 @@ public class CatmaHeader extends HorizontalLayout {
         });
         ctxAccount.addItem("Logout", (item) -> {
         	loginService.logout();
-        	Page.getCurrent().setLocation(CATMAPropertyKey.BaseURL.getValue());
     	});
         
         

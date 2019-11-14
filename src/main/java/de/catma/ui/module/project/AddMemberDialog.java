@@ -15,7 +15,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.rbac.RBACAssignmentFunction;
 import de.catma.user.User;
 
-public  class CreateMemberDialog extends AbstractMemberDialog<RBACSubject> {
+public  class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
 
 	private final RBACAssignmentFunction assignment;
 	
@@ -55,7 +55,7 @@ public  class CreateMemberDialog extends AbstractMemberDialog<RBACSubject> {
 
 
 	
-	public CreateMemberDialog(
+	public AddMemberDialog(
 			RBACAssignmentFunction assignment, 
 			QueryFunction<User> getUserQuery, 
 			SaveCancelListener<RBACSubject> saveCancelListener) {

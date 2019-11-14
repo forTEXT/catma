@@ -43,8 +43,8 @@ public class LocalUserLoginService implements LoginService {
 
 	@Override
 	public IRemoteGitManagerRestricted login(String personalAccessToken) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		api = iRemoteGitManagerFactory.createFromImpersonationToken(personalAccessToken);
+		return api;
 	}
 	
 	
@@ -63,7 +63,11 @@ public class LocalUserLoginService implements LoginService {
 	@Override
 	public void logout() {
 		VaadinSession.getCurrent().close();
-		api = null;
     	VaadinSession.getCurrent().getSession().invalidate();
+	}
+
+	@Override
+	public void close() {
+		api = null;
 	}
 }

@@ -255,14 +255,11 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			}
 		}
 		
-		IRemoteGitManagerRestricted api = loginservice.getAPI();
-		
-		if(api != null){
-			logger.info("application for user " + api.getUsername() + " has been closed");
-		}
+		loginservice.close();
 		
 		initService.shutdown();
 		hazelCastService.stop();
+		getPage().setLocation(CATMAPropertyKey.LogoutURL.getValue(CATMAPropertyKey.LogoutURL.getDefaultValue()));
 		super.close();
 	}
 
@@ -318,6 +315,10 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		return this._attributes.get(key);
 	}
 	
+	/**
+	 * Based on: https://developers.google.com/accounts/docs/OpenIDConnect
+	 * @param request
+	 */
 	public void handleOauth(VaadinRequest request){
 		try {
 			// extract answer
@@ -369,8 +370,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 				ObjectNode accessTokenResponseJSon = 
 						mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
 		
-				// we're actually not interested in the access token 
-				// but we want the email information from the id token
 				String idToken = accessTokenResponseJSon.get("id_token").asText(); //$NON-NLS-1$
 				
 				String[] pieces = idToken.split("\\."); //$NON-NLS-1$
@@ -383,11 +382,8 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 				
 				logger.info("decodedPayload: " + decodedPayload); //$NON-NLS-1$
 				
-				// finally the email address
-				// String email = payloadJson.get("email").asText(); //$NON-NLS-1$
-		
-				String identifier = payloadJson.get("sub").asText();
-				String email = payloadJson.get("email").asText();
+				String identifier = payloadJson.get("sub").asText(); //$NON-NLS-1$
+				String email = payloadJson.get("email").asText(); //$NON-NLS-1$
 				String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
 				String provider = "google_com";
 				loginservice.loggedInFromThirdParty(identifier, provider, email, name);
@@ -397,13 +393,13 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		        logger.info("authentication failure: " + error); //$NON-NLS-1$
 				new Notification(
 		            "Authentication failure",
-		            "The authentication failed, you are not allowed to access this repository!",
+		            "The authentication failed!",
 		            Type.ERROR_MESSAGE).show(getPage());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			((ErrorHandler)this).showAndLogError(
-					"Error during login", e);
+					"Error during login!", e);
 		}
 	}
 	

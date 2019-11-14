@@ -40,13 +40,11 @@ public interface IRemoteGitManagerPrivileged extends ICommonRemoteGitManager {
 	 * @param password the password of the user to create. A random, 12 character password will be
 	 *                 generated if none is supplied.
 	 * @param name the name of the user to create
-	 * @param isAdmin whether the user to create should be an admin or not. Defaults to false if not
-	 *                supplied.
 	 * @return the new user ID
 	 * @throws IOException if something went wrong while creating the remote
 	 *         user
 	 */
-	int createUser(String email, String username, String password, String name, Boolean isAdmin) throws IOException;
+	int createUser(String email, String username, String password, String name) throws IOException;
 
 	/**
 	 * Changes a user 

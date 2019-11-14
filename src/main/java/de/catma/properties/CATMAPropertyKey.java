@@ -36,6 +36,7 @@ public enum CATMAPropertyKey {
 	otpDuration,
 	signup_tokenKey,
 	version,
+	LogoutURL("https://www.catma.de"),
 	
 	Google_oauthAuthorizationCodeRequestURL,
 	Google_oauthAccessTokenRequestURL,

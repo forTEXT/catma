@@ -118,7 +118,7 @@ public class EditAccountDialog extends Window {
 		
 		Label lDescription = new Label("Edit your account details", ContentMode.HTML);
 		
-		TextField tfName = new TextField("Full name");
+		TextField tfName = new TextField("Public name");
 		tfName.setWidth("100%");
 		if(name != null){
 			tfName.setValue(name);
@@ -129,7 +129,7 @@ public class EditAccountDialog extends Window {
 			tfUsername.setValue(username);
 		}
 		tfUsername.setEnabled(false);
-		TextField tfEmail = new TextField("E-Mail");
+		TextField tfEmail = new TextField("Email");
 		tfEmail.setWidth("100%");
 		tfEmail.setValue(email);
 		tfEmail.setEnabled(false);

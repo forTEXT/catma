@@ -902,7 +902,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
 
         addContextMenu.addItem("Add Member", (click) -> 
-        	new CreateMemberDialog(
+        	new AddMemberDialog(
         		project::assignOnProject,
         		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()), //$NON-NLS-1$
         		(evt) -> eventBus.post(new MembersChangedEvent())
