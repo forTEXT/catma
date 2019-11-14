@@ -931,7 +931,7 @@ public class QueryResultPanel extends VerticalLayout {
 				}
 				return ((TagQueryResultRow) row).getTagDefinitionPath();
 			}
-			return "no Tag available / not annotated";
+			return TagQueryResultRowItem.getNoTagAvailableKey();
 		});
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
 			TagQueryResultRowItem tagQueryResultRowItem = 

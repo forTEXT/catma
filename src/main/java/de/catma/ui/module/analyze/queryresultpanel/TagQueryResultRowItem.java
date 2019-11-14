@@ -139,9 +139,27 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 	public void addQueryResultRow(QueryResultRow row, TreeData<QueryResultRowItem> treeData,
 			LoadingCache<String, KwicProvider> kwicProviderCache) {
 		
-		if (row instanceof TagQueryResultRow 
-				&& groupedQueryResult.getGroup().toString().equals(
+		if (row instanceof TagQueryResultRow) {
+			if (groupedQueryResult.getGroup().toString().equals(
 						((TagQueryResultRow)row).getTagDefinitionPath())) {
+				groupedQueryResult.add(row);
+				
+				//update existing rows
+				treeData.getChildren(this).forEach(child -> {
+					if (!child.isExpansionDummy()) {
+						child.addQueryResultRow(row, treeData, kwicProviderCache);
+					}
+				});
+				
+				if (rows != null) {
+					rows.add(row);
+					
+					// check for missing child row
+					addChildRowItems(treeData, kwicProviderCache);
+				}
+			}
+		}
+		else if (groupedQueryResult.getGroup().toString().equals(getNoTagAvailableKey())) {
 			groupedQueryResult.add(row);
 			
 			//update existing rows
@@ -156,8 +174,9 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 				
 				// check for missing child row
 				addChildRowItems(treeData, kwicProviderCache);
-			}
+			}			
 		}
+		
 	}
 	
 	@Override
@@ -182,5 +201,9 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 	@Override
 	public boolean startsWith(String searchValue) {
 		return groupedQueryResult.getGroup().toString().startsWith(searchValue);
+	}
+
+	public static String getNoTagAvailableKey() {
+		return "no Tag available / not annotated";
 	}
 }
