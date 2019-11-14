@@ -807,6 +807,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		try {
 			SubmoduleStatusCommand submoduleStatusCommand = this.gitApi.submoduleStatus();
+			submoduleStatusCommand.addPath(submoduleName);
+			
 			Map<String, SubmoduleStatus> results = submoduleStatusCommand.call();
 
 			if (!results.containsKey(submoduleName)) {
