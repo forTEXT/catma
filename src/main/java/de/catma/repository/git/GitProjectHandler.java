@@ -859,6 +859,8 @@ public class GitProjectHandler {
 	}
 
 	public void ensureDevBranches() throws Exception {
+		logger.info(String.format("Ensuring dev branches for Project %1$s", projectId));
+		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(
@@ -867,6 +869,11 @@ public class GitProjectHandler {
 					this.credentialsProvider);
 
 			for (TagsetDefinition tagset : getTagsets()) {
+				logger.info(
+						String.format(
+							"Checking out dev branch for Tagset %1$s with ID %2$s", 
+							tagset.getName(),
+							tagset.getUuid()));
 				gitTagsetHandler.checkout(
 					projectId, tagset.getUuid(), 
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
@@ -879,6 +886,11 @@ public class GitProjectHandler {
 						this.credentialsProvider);
 			
 			for (AnnotationCollectionReference collectionReference : getCollectionReferences()) {
+				logger.info(
+						String.format(
+							"Checking out dev branch for Collection %1$s with ID %2$s", 
+							collectionReference.getName(),
+							collectionReference.getId()));
 				collectionHandler.checkout(
 					projectId, 
 					collectionReference.getId(), 
@@ -1260,6 +1272,7 @@ public class GitProjectHandler {
 	}
 
 	public void initAndUpdateSubmodules() throws Exception {
+		logger.info(String.format("Init and update submodules for Project %1$s", projectId));
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
@@ -1314,6 +1327,7 @@ public class GitProjectHandler {
 	}
 
 	public void removeStaleSubmoduleDirectories() throws Exception {
+		logger.info(String.format("Removing stale submodule directories for Project %1$s", projectId));
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			localRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 			

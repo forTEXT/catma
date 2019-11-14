@@ -228,31 +228,43 @@ class GraphWriter {
 	void addCollection(String oldRevisionHash, String revisionHash, AnnotationCollection collection) {
 		GraphTraversalSource g = graph.traversal();
 		
-		Vertex documentV = 
+		GraphTraversal<Vertex, Vertex> graphTraversal = 
 			g.V().has(nt(ProjectRevision), "revisionHash", oldRevisionHash)
 			.property("revisionHash", revisionHash)
-			.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", collection.getSourceDocumentId()).next();
-		documentV
-		.property("document")
-		.ifPresent(
-			doc -> 
-				((SourceDocument)doc).addUserMarkupCollectionReference(
-					new AnnotationCollectionReference(
-							collection.getUuid(),  
-							collection.getRevisionHash(),  
-							collection.getContentInfoSet(),  
-							collection.getSourceDocumentId(), 
-							collection.getSourceDocumentRevisionHash())));
-		Vertex collectionV = graph.addVertex(nt(MarkupCollection));
+			.outE(rt(hasDocument)).inV().has(nt(SourceDocument), "documentId", collection.getSourceDocumentId());
 		
-		collectionV.property("collectionId", collection.getId());
-//		collectionV.property("name", collection.getName());
-//		collectionV.property("revisionHash", collection.getRevisionHash());
-		collectionV.property("collection", collection);
+		if (graphTraversal.hasNext()) {
+			Vertex documentV = 
+				graphTraversal.next();
 		
-		documentV.addEdge(rt(hasCollection), collectionV);
-		
-		addTagReferences(revisionHash, collectionV, collection.getTagReferences());
+			documentV
+			.property("document")
+			.ifPresent(
+				doc -> 
+					((SourceDocument)doc).addUserMarkupCollectionReference(
+						new AnnotationCollectionReference(
+								collection.getUuid(),  
+								collection.getRevisionHash(),  
+								collection.getContentInfoSet(),  
+								collection.getSourceDocumentId(), 
+								collection.getSourceDocumentRevisionHash())));
+			Vertex collectionV = graph.addVertex(nt(MarkupCollection));
+			
+			collectionV.property("collectionId", collection.getId());
+	//		collectionV.property("name", collection.getName());
+	//		collectionV.property("revisionHash", collection.getRevisionHash());
+			collectionV.property("collection", collection);
+			
+			documentV.addEdge(rt(hasCollection), collectionV);
+			
+			addTagReferences(revisionHash, collectionV, collection.getTagReferences());
+		}
+		else {
+			logger.info(
+				String.format(
+					"Skipping loading Collection %1$s with ID %2$s, couldn't find Document with ID %3$s", 
+					collection.getName(), collection.getId(), collection.getSourceDocumentId()));
+		}
 	}
 	
 

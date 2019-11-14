@@ -1,7 +1,6 @@
 package de.catma.repository.git.managers;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,15 +18,18 @@ import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.GroupFilter;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectAccess;
+import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.Visibility;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
@@ -42,10 +44,9 @@ import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IGitUserInformation;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.repository.git.managers.gitlab4j_api_custom.CustomGroupApi;
-import de.catma.repository.git.managers.gitlab4j_api_custom.CustomProjectApi;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
+import de.catma.util.StopWatch;
 import elemental.json.Json;
 import elemental.json.JsonException;
 import elemental.json.JsonObject;
@@ -54,7 +55,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 
 	private final GitLabApi restrictedGitLabApi;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
-	private final BackgroundService backgroundService;
 	private GitUser user;
 	// Cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
 	private final Cache<String, List<ProjectReference>> projectsCache = CacheBuilder.newBuilder()
@@ -75,7 +75,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			currentUser = api.getUserApi().getCurrentUser();
 			this.user = new GitUser(currentUser);
 			this.restrictedGitLabApi = api;
-			this.backgroundService = backgroundService;
 			eventBus.register(this);
 		} catch (GitLabApiException e) {
 			throw new IOException(e);
@@ -233,28 +232,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			groupApi.deleteGroup(group);
 		}
 		catch (GitLabApiException e) {
-//			//TODO: Nasty workaround, but it's not fixed in gitlab4j yet.
-//			// A switch to a new gitlab4j requires jaxb 2.3.0 to work. This requires jetty 9.4 to work, which is 
-//			// broken in the current elcipse jetty plugin
-//			if(e.getHttpStatus() == 202){  // Async operation indicated by HTTP ACCEPT 202. wait till finished
-//				for(int i = 0;i < 10; i++ ){
-//					logger.info("gitlab: async delete operation detected, waiting 150msec per round. round: " + i );
-//					try {
-//						Thread.sleep(150);
-//						List<Group> res = groupApi.getGroups(path);
-//						if(res.isEmpty()){
-//							return;
-//						}
-//					} catch (GitLabApiException e1) {
-//						continue; //NOOP
-//					} catch (InterruptedException e1) {
-//						continue; //NOOP
-//					}
-//				}
-//				throw new IOException("Failed to delete remote group", e);
-//			}else {
-				throw new IOException("Failed to delete remote group", e);
-//			}
+			throw new IOException("Failed to delete remote group", e);
 		}
 	}
 	
@@ -284,15 +262,14 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 
 	@Override
 	public List<ProjectReference> getProjectReferences() throws IOException {
-		CustomGroupApi groupApi = new CustomGroupApi(restrictedGitLabApi);
-		
+		GroupApi groupApi = new GroupApi(restrictedGitLabApi);
 		try {
 			return projectsCache.get("projects", () -> 
-			 groupApi.getGroups().stream().map(
-					group -> unmarshallProjectReference(
-							group.getPath(),  group.getDescription()))
-					.collect(Collectors.toList())
-					);
+			 groupApi.getGroups(new GroupFilter().withMinAccessLevel(AccessLevel.GUEST))
+			 	.stream()
+			 	.map(group -> 
+			 		unmarshallProjectReference(group.getPath(),  group.getDescription()))
+				.collect(Collectors.toList()));
 		}
 		catch (Exception e) {
 			throw new IOException("Failed to load groups", e);
@@ -376,7 +353,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		try {
 			Project project = restrictedGitLabApi.getProjectApi().getProject(projectId, resourceId);
 			if(project != null ){
-				List<GitMember> allMembers = new CustomProjectApi(restrictedGitLabApi)
+				List<GitMember> allMembers = new ProjectApi(restrictedGitLabApi)
 						.getAllMembers(project.getId())
 						.stream()
 						.map(member -> new GitMember(member))
@@ -399,16 +376,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			throw new IOException("resource unknown");
 		}
 	}
-	
-	public Map<String, RBACRole> getRolesPerResource(ProjectReference projectReference) throws IOException {
-		return getRolesPerResource(projectReference.getProjectId());
-	}	
-	
+
 	public Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException {
 		try {
 			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
-			CustomProjectApi customProjectApi = new CustomProjectApi(restrictedGitLabApi);			
-			Map<String, AccessLevel> permMap = customProjectApi.getResourcePermissions(group.getId());
+			Map<String, AccessLevel> permMap = getResourcePermissions(group.getId());
 			
 			return permMap.entrySet()
 					.stream()
@@ -417,57 +389,45 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 							e -> RBACRole.forValue(e.getValue().value)));
 
 		} catch (GitLabApiException e){
-			throw new IOException("retrieving permissions failed",e);
+			throw new IOException("Permission retrieval failed!",e);
 		}
 	}
-	
-//	public Map<String, RBACRole> getRolesPerProject(ProjectReference projectReference) throws IOException {
-//		try {
-//			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectReference.getProjectId());
-//			CustomProjectApi customProjectApi = new CustomProjectApi(restrictedGitLabApi,  backgroundService.getExecutorService());			
-//			Map<String, AccessLevel> permMap = customProjectApi.getResourcePermissions(group.getId());
-//			
-//			return permMap.entrySet()
-//					.stream()
-//					.collect(Collectors.toMap(
-//							Map.Entry::getKey,
-//							e -> RBACRole.forValue(e.getValue().value)));
-//
-//		} catch (GitLabApiException e){
-//			throw new IOException("retrieving permissions failed",e);
-//		}
-//	}
-	
-	private RBACRole getEffectiveRole(Permissions permissions) {
-		ProjectAccess groupRole = permissions.getGroupAccess();
-		ProjectAccess projectRole = permissions.getProjectAccess();
-		
-		return RBACRole.forValue(
-				Math.max(groupRole.getAccessLevel().value, 
-						projectRole.getAccessLevel().value));
-	}
-	/**
-	 * @deprecated is this old?
-	 * @param projectReference
-	 * @return
-	 * @throws IOException
-	 */
-	@Deprecated
-	public Set<String> getProjectRepositoryUrls(ProjectReference projectReference) throws IOException {
-		try {
-			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-			
-			Group group = groupApi.getGroup(projectReference.getProjectId());
-			return Collections.unmodifiableSet(groupApi
-				.getProjects(group.getId())
+
+	private Map<String, AccessLevel> getResourcePermissions(Integer groupId) throws GitLabApiException {
+
+        Map<String, AccessLevel> resultMap = Maps.newHashMap();
+        ProjectApi projectApi = new ProjectApi(restrictedGitLabApi);
+
+        logger.info("Loading project permissions");
+
+    	List<Project> resourceAndContainerProjects = 
+    			projectApi.getProjects(new ProjectFilter().withMembership(true));
+
+    	logger.info(String.format("Filtering %1$d resources on group #%2$d", resourceAndContainerProjects.size(), groupId));
+        Set<Project> filteredOnGroupProjects = 
+        	resourceAndContainerProjects
 				.stream()
-				.map(project -> GitlabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo()))
-				.collect(Collectors.toSet()));
+				.filter(p -> 
+					p.getNamespace().getId().equals(groupId)) // the GitLab namespace/groupId
+				.collect(Collectors.toSet());
+
+        logger.info(String.format("Updating accesslevel registry for %1$d resources", filteredOnGroupProjects.size()));
+		for (Project p : filteredOnGroupProjects) {
+			Permissions permission = p.getPermissions();
+			if (permission.getGroupAccess() != null) {
+				resultMap.put(p.getName(), permission.getGroupAccess().getAccessLevel());
+			}
+			
+    		if(permission.getProjectAccess() != null && 
+    			(!resultMap.containsKey(p.getName()) 
+        			|| resultMap.get(p.getName()).value.intValue() < permission.getProjectAccess().getAccessLevel().value.intValue())) {
+        			
+    			resultMap.put(p.getName(), permission.getProjectAccess().getAccessLevel());
+    		}
 		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to load Group Repositories", e);
-		}
-	}
+
+        return resultMap;
+    }
 
 	private ProjectReference unmarshallProjectReference(String path, String eventuallyMarshalledMetadata){
 		try {

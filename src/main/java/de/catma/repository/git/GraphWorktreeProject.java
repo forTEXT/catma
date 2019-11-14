@@ -174,10 +174,16 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void open(OpenProjectListener openProjectListener) {
 		try {
-			
+			logger.info(String.format(
+				"Opening Project %1$s with ID %2$s", projectReference.getName(), projectReference.getProjectId()));
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+			logger.info(
+				String.format("Revision Hash for Project %1$s is %2$s", projectReference.getProjectId(), this.rootRevisionHash));
+			
 			this.gitProjectHandler.loadRolesPerResource();
 			
+			logger.info(
+				String.format("Checking for conflicts in Project %1$s", projectReference.getProjectId()));
 			if (gitProjectHandler.hasConflicts()) {
 				gitProjectHandler.initAndUpdateSubmodules();
 
@@ -187,9 +193,13 @@ public class GraphWorktreeProject implements IndexedProject {
 							gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
 			}
 			else {
+				
 				gitProjectHandler.initAndUpdateSubmodules();
+
 				gitProjectHandler.removeStaleSubmoduleDirectories();
+				
 				gitProjectHandler.ensureDevBranches();
+				
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
 						new ExecutionListener<TagManager>() {
 							
@@ -200,8 +210,16 @@ public class GraphWorktreeProject implements IndexedProject {
 							
 							@Override
 							public void done(TagManager result) {
+								logger.info(
+									String.format("Loading Tag library for Project %1$s", 
+											projectReference.getProjectId()));								
 								tagManager.load(result.getTagLibrary());
+								
 								initTagManagerListeners();
+								
+								logger.info(
+										String.format("Project %1$s is loaded.", 
+												projectReference.getProjectId()));
 								openProjectListener.ready(GraphWorktreeProject.this);
 							}
 						},
@@ -209,6 +227,7 @@ public class GraphWorktreeProject implements IndexedProject {
 							
 							@Override
 							public void setProgress(String value, Object... args) {
+								logger.info(String.format(value, args));
 								openProjectListener.progress(value, args);
 							}
 						},

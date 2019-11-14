@@ -92,9 +92,18 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			CollectionsSupplier collectionsSupplier,
 			BackgroundService backgroundService) throws Exception {
 		
+		logger.info(
+			String.format(
+					"Checking if Project %1$s with revision %2$s is present in the graph", 
+					projectReference.getProjectId(), revisionHash));
+		
 		GraphTraversalSource g = graph.traversal();
 
 		if (!g.V().has(nt(ProjectRevision), "revisionHash", revisionHash).hasNext()) {
+			logger.info(
+					String.format(
+							"Loading Project %1$s with revision %2$s into the graph", 
+							projectReference.getProjectId(), revisionHash));
 			((TinkerGraph)graph).clear();
 			
 			backgroundService.submit(
@@ -122,6 +131,11 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 				progressListener);
 		}
 		else {
+			logger.info(
+				String.format(
+						"Project %1$s with revision %2$s already present in the graph", 
+						projectReference.getProjectId(), revisionHash));
+
 			openProjectListener.done(tagManager);
 		}
 	}
