@@ -3,6 +3,7 @@ package de.catma.ui.module.project;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -117,8 +118,9 @@ public class ProjectInvitationDialog extends Window {
 			documentsForCollectionCreation.stream().collect(
 					Collectors.toMap(Resource::getResourceId, res -> res));
 		
-		private final Map<Integer, String> userId2Color = new HashMap<Integer, String>();
+		private final Map<Integer, String> userId2Color = new HashMap<>();
 		private final Set<String> colors = ColorConverter.getColorNames();
+		private final Set<Integer> assignedUsers = new HashSet<>();
 		
 		public ProjectInvitationHandler(UI ui) {
 			super(ui);
@@ -128,57 +130,63 @@ public class ProjectInvitationDialog extends Window {
 		public void uiOnMessage(Message<InvitationRequestMessage> message) {
 			if (message.getMessageObject().getCode() == projectInvitation.getKey()) {
 				try {
-					project.assignOnProject(
-							() -> message.getMessageObject().getUserId(), 
-							RBACRole.forValue(projectInvitation.getDefaultRole()));
-
-					if (projectInvitation.isCreateOwnCollection()) {
-						String color = userId2Color.get(message.getMessageObject().getUserId());
+					Integer userId = Integer.valueOf(message.getMessageObject().getUserId());
+					
+					if (!assignedUsers.contains(userId)) {
 						
-						if (color == null && !colors.isEmpty()) {
-							color = colors.iterator().next();
-							colors.remove(color);
-							userId2Color.put(message.getMessageObject().getUserId(), color);
-						}
+						assignedUsers.add(userId);
 						
-						for (String documentId : projectInvitation.getDocumentIds()) {
-							if (projectInvitation.getDefaultRole() < RBACRole.REPORTER.getAccessLevel()) {
-								// minimum role 
-								project.assignOnResource(
-										() -> message.getMessageObject().getUserId(), 
-										RBACRole.REPORTER, documentId);
-							}							
+						project.assignOnProject(
+								() -> userId, 
+								RBACRole.forValue(projectInvitation.getDefaultRole()));
+						
+						if (projectInvitation.isCreateOwnCollection()) {
+							String color = userId2Color.get(userId);
 							
-							DocumentResource docResource = 
-									(DocumentResource) documentResourceByUuid.get(documentId);
-							if (docResource != null) {
-								String collectionName = 
-									color 
-									+ " " 
-									+ message.getMessageObject().getName() 
-									+ " "
-									+ docResource.getName();
-								
-								// collection creation with minimum role assignment
-								project.createUserMarkupCollectionWithAssignment(
-									collectionName, 
-									docResource.getDocument(), 
-									projectInvitation.getDefaultRole() < RBACRole.ASSISTANT.getAccessLevel()?
-											message.getMessageObject().getUserId():null,
-									RBACRole.ASSISTANT);
+							if (color == null && !colors.isEmpty()) {
+								color = colors.iterator().next();
+								colors.remove(color);
+								userId2Color.put(userId, color);
 							}
 							
-						}	
-					}
-					
-					joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
-					
-					joinedUsers.add(message.getMessageObject().getName());
-					joinedUsersConsole.getDataProvider().refreshAll();
-					joinedUsersConsole.setVisible(true);
-					
-					ProjectInvitationDialog.this.getUI().push();
-					
+							for (String documentId : projectInvitation.getDocumentIds()) {
+								if (projectInvitation.getDefaultRole() < RBACRole.REPORTER.getAccessLevel()) {
+									// minimum role 
+									project.assignOnResource(
+											() -> userId, 
+											RBACRole.REPORTER, documentId);
+								}							
+								
+								DocumentResource docResource = 
+										(DocumentResource) documentResourceByUuid.get(documentId);
+								if (docResource != null) {
+									String collectionName = 
+										color 
+										+ " " 
+										+ message.getMessageObject().getName() 
+										+ " "
+										+ docResource.getName();
+									
+									// collection creation with minimum role assignment
+									project.createUserMarkupCollectionWithAssignment(
+										collectionName, 
+										docResource.getDocument(), 
+										projectInvitation.getDefaultRole() < RBACRole.ASSISTANT.getAccessLevel()?
+												userId:null,
+										RBACRole.ASSISTANT);
+								}
+								
+							}	
+						}
+						
+						joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
+						
+						joinedUsers.add(message.getMessageObject().getName());
+						joinedUsersConsole.getDataProvider().refreshAll();
+						joinedUsersConsole.setVisible(true);
+						
+						ProjectInvitationDialog.this.getUI().push();
+					}					
 				} catch (IOException e) {
 					errorLogger.showAndLogError(
 							"Can't assign User " 
