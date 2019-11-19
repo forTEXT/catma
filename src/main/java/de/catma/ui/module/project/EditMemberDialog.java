@@ -47,17 +47,17 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 		ls_members.setSizeFull();
 		ls_members.setItemCaptionGenerator(User::preciseName);
 		
-		content.addComponent(l_description);
+		content.addComponent(descriptionLabel);
 		content.addComponent(ls_members);
 		if (content instanceof AbstractOrderedLayout) {
 			((AbstractOrderedLayout) content).setExpandRatio(ls_members, 1f);
 		}
-		content.addComponent(cb_role);
+		content.addComponent(cbRole);
 		
 		roleBinder
-			.forField(cb_role)
+			.forField(cbRole)
 			.withValidator((role,context) ->  role.equals(RBACRole.OWNER)?  ValidationResult.error("Changing the owner is not allowed") : ValidationResult.ok());
-		cb_role.setValue(accesslevel);
+		cbRole.setValue(accesslevel);
 	}
 	
 	@Override
@@ -76,7 +76,7 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 		try {
 			Set<RBACSubject> result = new HashSet<>();
 			for(Member member : members){
-				result.add( assignment.assign(member, cb_role.getValue()));
+				result.add( assignment.assign(member, cbRole.getValue()));
 			}
 			return result;
 		} catch (Exception e) {

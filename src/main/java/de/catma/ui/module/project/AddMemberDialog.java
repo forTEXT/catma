@@ -9,7 +9,10 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.Query;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 
+import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.rbac.RBACAssignmentFunction;
@@ -62,13 +65,30 @@ public  class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
 		super("Add a new Member","Select a new team Member and his/her role", saveCancelListener);
 		this.assignment = assignment;
 		this.getUserQuery = getUserQuery;
-		this.cb_users.setDataProvider(userDataProvider);
+		this.cbUsers.setDataProvider(userDataProvider);
+		this.cbRole.setValue(RBACRole.MAINTAINER);
+	}
+	
+	@Override
+	protected void handleOkPressed() {
+		
+		if (cbUsers.getValue() == null) {
+			Notification.show("Info", "Please select a valid member first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
+		if (cbRole.getValue() == null) {
+			Notification.show("Info", "Please select a role first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
+		super.handleOkPressed();
 	}
 	
 	@Override
 	protected RBACSubject getResult() {
 		try {
-			return assignment.assign(cb_users.getValue(), cb_role.getValue());
+			return assignment.assign(cbUsers.getValue(), cbRole.getValue());
 		} catch (Exception e) {
 			errorLogger.showAndLogError(e.getMessage(),e);
 			return null;
