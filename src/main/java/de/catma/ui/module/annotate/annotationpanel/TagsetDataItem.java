@@ -139,4 +139,9 @@ class TagsetDataItem implements TagsetTreeItem {
 	public void setTagsetExpanded(boolean expanded) {
 		this.expanded = expanded;
 	}
+	
+	@Override
+	public String getId() {
+		return tagset.getUuid();
+	}
 }

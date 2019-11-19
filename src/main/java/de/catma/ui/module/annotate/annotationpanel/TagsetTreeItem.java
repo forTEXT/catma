@@ -8,6 +8,7 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.TagReference;
 
 interface TagsetTreeItem {
+	public String getId();
 	public String getColor();
 	public String getName();
 	public String getTagsetName();
