@@ -514,7 +514,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		VizMinPanel vizMinPanel = 
 				new VizMinPanel(
-					"WordCloud", 
+					name, 
 					vizMaxPanel,
 					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
 					() -> setContent(vizMaxPanel, contentPanel));
@@ -548,7 +548,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		VizMinPanel vizMinPanel = 
 				new VizMinPanel(
-					"Doubletree", 
+					name, 
 					vizMaxPanel,
 					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
 					() -> setContent(vizMaxPanel, contentPanel));
