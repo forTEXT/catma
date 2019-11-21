@@ -243,7 +243,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 
 
 	private void handleVegaValueChange(QueryResult rows) {
-		kwicPanel.clear();
+		//kwicPanel.clear();
 		kwicPanel.addQueryResultRows(rows);
 		kwicPanel.expand();
 	}
@@ -374,6 +374,8 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {
 		queryResultRequestHandler.removeQuerResultRows(queryResult);
 		vega.reloadData();
+		kwicPanel.removeQueryResultRows(queryResult);
+		
 	}
 
 	@Override

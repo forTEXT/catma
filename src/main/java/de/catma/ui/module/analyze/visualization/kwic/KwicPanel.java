@@ -98,6 +98,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 
 		moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
 		
+		moreOptionsMenu.addItem("Remove selected rows", mi -> handleRemoveRowRequest());
+		
 		miRemoveAnnotations = 
 			moreOptionsMenu.addItem(
 				"Remove selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
@@ -229,6 +231,12 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("error deleting Annotations!", e);
 		}
+	}
+	
+	private void handleRemoveRowRequest() {
+		final Set<QueryResultRow> selectedRows = kwicGrid.getSelectedItems();
+		removeQueryResultRows(selectedRows);
+		
 	}
 
 	private void handleKwicItemClick(ItemClick<QueryResultRow> clickEvent, EventBus eventBus) {

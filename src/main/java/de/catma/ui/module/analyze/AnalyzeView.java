@@ -200,7 +200,7 @@ public class AnalyzeView extends HorizontalLayout
 		VerticalLayout vizPanel = new VerticalLayout();
 		vizPanel.setSizeFull();
 		
-		Label vizPanelLabel = new Label("Visualisations");
+		Label vizPanelLabel = new Label("Visualizations");
 
 		btVizOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
 		btVizOptions.setVisible(false); // TODO: no viz options so far
