@@ -329,11 +329,6 @@ public class AnalyzeView extends HorizontalLayout
 
 	private HorizontalLayout createVizIconsPanel() {	
 		
-	/*	kwicBt = new Button("Kwic", VaadinIcons.TABLE);
-		kwicBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
-		kwicBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
-		kwicBt.addStyleName("analyze_viz_icon");
-		kwicBt.setSizeFull();*/
 		
 		kwicBt = new Button("");
 		kwicBt.setIcon(new ThemeResource("kwic_xs.png"));
@@ -354,7 +349,7 @@ public class AnalyzeView extends HorizontalLayout
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		wordCloudBt.addStyleName("analyze_viz_icon");
-		//wordCloudBt.setSizeFull();
+		wordCloudBt.setSizeFull();
 
 		doubleTreeBt = new Button("");
 		doubleTreeBt.setIcon(new ThemeResource("doubletree_xs.png"));
