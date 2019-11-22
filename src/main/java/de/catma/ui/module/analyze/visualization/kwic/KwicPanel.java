@@ -20,6 +20,7 @@ import com.vaadin.server.SerializablePredicate;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.ItemClick;
@@ -30,6 +31,8 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.components.grid.ItemClickListener;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
@@ -48,6 +51,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.Version;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.component.actiongrid.ActionGridBar;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -95,11 +99,20 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 
 	private void initActions(EventBus eventBus) {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-
-		moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
+		ActionGridBar actionBar = kwicGridComponent.getActionGridBar();
 		
-		moreOptionsMenu.addItem("Remove selected rows", mi -> handleRemoveRowRequest());
-		
+	    Button  btnEraser = new IconButton(VaadinIcons.ERASER);
+	    
+		 actionBar.setBtn(btnEraser);
+		 btnEraser.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				handleRemoveRowRequest();
+				
+			}
+		});
+			
 		miRemoveAnnotations = 
 			moreOptionsMenu.addItem(
 				"Remove selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
