@@ -35,6 +35,7 @@ public class ActionGridBar extends HorizontalLayout {
         btnToggleMultiselect = new IconButton(VaadinIcons.TASKS);
         searchField = new TextField();
         searchField.setPlaceholder("\u2315");
+  
         ctmAdd = new ContextMenu(btnAdd,true);
         ctmMoreOptions = new ContextMenu(btnMoreOptions,true);
 
@@ -53,6 +54,7 @@ public class ActionGridBar extends HorizontalLayout {
         addComponent(titleComponent);
         setExpandRatio(titleComponent, 1f);
         addComponent(searchField);
+        
         addComponent(btnAdd);
         setComponentAlignment(btnAdd, Alignment.MIDDLE_RIGHT);
         addComponent(btnMoreOptions);
@@ -95,6 +97,10 @@ public class ActionGridBar extends HorizontalLayout {
 
 	public void setAddBtnEnabled(boolean enabled) {
 		btnAdd.setEnabled(enabled);
+	}
+	
+	public void setBtn(Component component) {
+		addComponent(component,getComponentIndex(searchField)+1);
 	}
 	
 	public void setMoreOptionsBtnVisible(boolean visible) {

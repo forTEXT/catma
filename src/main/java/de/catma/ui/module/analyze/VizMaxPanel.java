@@ -33,6 +33,7 @@ import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultRowItem;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
+import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 
 public class VizMaxPanel extends VerticalLayout  {
 	
@@ -218,6 +219,7 @@ public class VizMaxPanel extends VerticalLayout  {
 	private void handleItemRemoval(QueryResultRowArray rows) {
 		visualization.removeQueryResultRows(rows);
 		selectedResultsPanel.removeQueryResultRows(rows);
+	
 	}
 	
 	private void handleItemRemoval(QueryResultRowItem item) {

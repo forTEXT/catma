@@ -22,6 +22,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -198,7 +200,7 @@ public class AnalyzeView extends HorizontalLayout
 		VerticalLayout vizPanel = new VerticalLayout();
 		vizPanel.setSizeFull();
 		
-		Label vizPanelLabel = new Label("Visualisations");
+		Label vizPanelLabel = new Label("Visualizations");
 
 		btVizOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
 		btVizOptions.setVisible(false); // TODO: no viz options so far
@@ -325,26 +327,32 @@ public class AnalyzeView extends HorizontalLayout
 		return searchPanel;
 	}
 
-	private HorizontalLayout createVizIconsPanel() {		
-		kwicBt = new Button("Kwic", VaadinIcons.TABLE);
+	private HorizontalLayout createVizIconsPanel() {	
+		
+		
+		kwicBt = new Button("");
+		kwicBt.setIcon(new ThemeResource("kwic_xs.png"));
 		kwicBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		kwicBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		kwicBt.addStyleName("analyze_viz_icon");
 		kwicBt.setSizeFull();
 
-		distBt = new Button("Distribution", VaadinIcons.CHART_LINE);
+		distBt = new Button("");
+		distBt.setIcon(new ThemeResource("distribution_xs.png"));
 		distBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		distBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		distBt.addStyleName("analyze_viz_icon");
 		distBt.setSizeFull();
 
-		wordCloudBt = new Button("Wordcloud", VaadinIcons.CLOUD);
+		wordCloudBt = new Button("");
+		wordCloudBt.setIcon(new ThemeResource("wordcloud_xs.png"));
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		wordCloudBt.addStyleName("analyze_viz_icon");
 		wordCloudBt.setSizeFull();
 
-		doubleTreeBt = new Button("Doubletree", VaadinIcons.ROAD_BRANCHES);
+		doubleTreeBt = new Button("");
+		doubleTreeBt.setIcon(new ThemeResource("doubletree_xs.png"));
 		doubleTreeBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		doubleTreeBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		doubleTreeBt.addStyleName("analyze_viz_icon");
@@ -501,7 +509,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		VizMinPanel vizMinPanel = 
 				new VizMinPanel(
-					"WordCloud", 
+					name, 
 					vizMaxPanel,
 					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
 					() -> setContent(vizMaxPanel, contentPanel));
@@ -535,7 +543,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		VizMinPanel vizMinPanel = 
 				new VizMinPanel(
-					"Doubletree", 
+					name, 
 					vizMaxPanel,
 					toBeRemovedVizMinPanel -> vizCardsPanel.removeComponent(toBeRemovedVizMinPanel),
 					() -> setContent(vizMaxPanel, contentPanel));
