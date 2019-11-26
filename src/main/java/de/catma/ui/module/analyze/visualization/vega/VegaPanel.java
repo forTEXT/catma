@@ -243,7 +243,6 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 
 
 	private void handleVegaValueChange(QueryResult rows) {
-		//kwicPanel.clear();
 		kwicPanel.addQueryResultRows(rows);
 		kwicPanel.expand();
 	}
@@ -299,6 +298,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 		leftBottomPanel.addComponent(kwicPanel);
 		kwicPanel.setExpandResource(VaadinIcons.ANGLE_DOUBLE_UP);
 		kwicPanel.setCompressResource(VaadinIcons.ANGLE_DOUBLE_DOWN);
+		kwicPanel.setBtnClearSelectedRowsVisible(true);
 		
 		VerticalLayout codePanel = new VerticalLayout();
 		codePanel.setSizeFull();

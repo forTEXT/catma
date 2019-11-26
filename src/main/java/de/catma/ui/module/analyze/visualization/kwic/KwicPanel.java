@@ -20,7 +20,8 @@ import com.vaadin.server.SerializablePredicate;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.ItemClick;
@@ -31,8 +32,6 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.components.grid.ItemClickListener;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
@@ -86,6 +85,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	private VaadinIcons compressResource = VaadinIcons.COMPRESS_SQUARE;
 	private Registration defaultDoubleClickRegistration;
 	private MenuItem miRemoveAnnotations;
+	private IconButton btnClearSelectedRows;
 
 	public KwicPanel(
 			EventBus eventBus,
@@ -101,11 +101,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		ActionGridBar actionBar = kwicGridComponent.getActionGridBar();
 		
-	    Button  btnEraser = new IconButton(VaadinIcons.ERASER);
-	    
-		 actionBar.setBtn(btnEraser);
-		 btnEraser.addClickListener(new ClickListener() {
-			
+		actionBar.addButtonAfterSearchField(btnClearSelectedRows);
+		btnClearSelectedRows.addClickListener(new ClickListener() {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				handleRemoveRowRequest();
@@ -463,6 +460,14 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		kwicGridComponent.setMargin(new MarginInfo(false, false, false, true));
 		addComponent(kwicGridComponent);
 		setExpandRatio(kwicGridComponent, 1f);
+		
+		btnClearSelectedRows = new IconButton(VaadinIcons.ERASER);
+		btnClearSelectedRows.setVisible(false);
+		btnClearSelectedRows.setDescription("Remove the selected rows from this list");
+	}
+	
+	public void setBtnClearSelectedRowsVisible(boolean visible) {
+		btnClearSelectedRows.setVisible(visible);
 	}
 
 	public void addQueryResultRows(Iterable<QueryResultRow> queryResult)  {	
