@@ -983,6 +983,20 @@ public class GitProjectHandler {
 					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
 					.resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
 
+			Status topLevelStatus = localGitRepoManager.getStatus(true);
+			boolean pushTopLevelConflictResolution = false;
+			if (!topLevelStatus.getConflicting().isEmpty()) {
+				if (topLevelStatus.getConflicting().contains(Constants.DOT_GIT_MODULES)) {
+					logger.info(String.format(
+						"Found conflicts in %1$s of Project %2$s, trying auto resolution", 
+						Constants.DOT_GIT_MODULES, 
+						projectId));
+
+					localGitRepoManager.resolveGitSubmoduleFileConflicts();
+					pushTopLevelConflictResolution = true;
+				}
+			}
+			
 			Status projectStatus = localGitRepoManager.getStatus();
 			localGitRepoManager.detach();
 			 
@@ -997,7 +1011,7 @@ public class GitProjectHandler {
 						.filter(tagsetPath -> !tagsetsDirPath.equals(tagsetPath))
 						.collect(Collectors.toList());
 				for (Path tagsetPath : paths) {
-					if (tagsetPath.toFile().list().length > 0) { // empty directories are submodules not yet initialized 
+					if (tagsetPath.toFile().list() != null && tagsetPath.toFile().list().length > 0) { // empty directories are submodules not yet initialized or deleted 
 						String tagsetId = tagsetPath.getFileName().toString();						 
 						Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
 						if (!status.getConflicting().isEmpty()) {
@@ -1021,7 +1035,7 @@ public class GitProjectHandler {
 								this.credentialsProvider);
 
 				for (Path collectionPath : paths) {
-					if (collectionPath.toFile().list().length > 0) { // empty directories are submodules not yet initialized 
+					if (collectionPath.toFile().list() != null && collectionPath.toFile().list().length > 0) { // empty directories are submodules not yet initialized or deleted 
 						String collectionId = collectionPath.getFileName().toString();
 						Status status = gitCollectionHandler.getStatus(projectId, collectionId);
 						if (!status.getConflicting().isEmpty()) {
@@ -1036,6 +1050,17 @@ public class GitProjectHandler {
 			if (!projectStatus.getConflicting().isEmpty()) {
 				StatusPrinter.print("Project #" +projectId , projectStatus, System.out); 
 				return true;				
+			}
+			
+			
+			if (pushTopLevelConflictResolution) {
+				if (projectStatus.hasUncommittedChanges()) {
+					localGitRepoManager.open(
+							 projectId,
+							 GitProjectManager.getProjectRootRepositoryName(projectId));
+						 
+					localGitRepoManager.push(credentialsProvider);
+				}
 			}
 		} 
 		
@@ -1142,8 +1167,6 @@ public class GitProjectHandler {
 			StatusPrinter.print("Project status", status, System.out);
 
 			localGitRepoManager.resolveRootConflicts(this.credentialsProvider);
-				
-			status = localGitRepoManager.getStatus();
 
 			localGitRepoManager.addAllAndCommit(
 					"Auto-committing merged changes",

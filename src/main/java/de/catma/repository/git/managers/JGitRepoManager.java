@@ -38,10 +38,12 @@ import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
@@ -49,6 +51,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
+import org.eclipse.jgit.submodule.SubmoduleWalk.IgnoreSubmoduleMode;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
@@ -916,17 +919,21 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public Status getStatus() throws IOException {
+	public Status getStatus(boolean ignoreSubmodules) throws IOException {
 		try {
 			if (!isAttached()) {
 				throw new IllegalStateException("Can't call `getStatus` on a detached instance");
 			}
 			
-			return gitApi.status().call();
+			return gitApi.status().setIgnoreSubmodules(ignoreSubmodules?IgnoreSubmoduleMode.ALL:IgnoreSubmoduleMode.NONE).call();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to retrieve the status", e);
 		}
+	}
+	@Override
+	public Status getStatus() throws IOException {
+		return getStatus(false);
 	}
 
 	@Override
@@ -1119,4 +1126,94 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		submoduleUpdateCommand.call();
 		
 	}
+	
+	@Override
+	public void resolveGitSubmoduleFileConflicts() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `resolveGitSubmoduleFileConflicts` on a detached instance");
+		}		
+		
+		DirCache dirCache = gitApi.getRepository().lockDirCache();
+		try {
+			int baseIdx = dirCache.findEntry(Constants.DOT_GIT_MODULES);
+
+			// get base version
+			DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
+
+			// get our version
+			DirCacheEntry ourEntry = dirCache.getEntry(baseIdx+1);
+			
+			// get their version, the being-merged in version
+			DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2);
+			
+			Config baseConfig = getDotGitModulesConfig(baseEntry.getObjectId());
+			Config ourConfig = getDotGitModulesConfig(ourEntry.getObjectId());
+			Config theirConfig = getDotGitModulesConfig(theirEntry.getObjectId());
+			
+			
+			Set<String> baseModules = baseConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+			Set<String> ourModules = ourConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+			Set<String> theirModules = theirConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+			
+			for (String name : theirModules) {
+				if (!ourModules.contains(name)) {
+					if (baseModules.contains(name)) {
+						//deleted by us
+					}
+					else {
+						//added by them
+						
+						ourConfig.setString(
+							ConfigConstants.CONFIG_SUBMODULE_SECTION, name,
+							"path", 
+							theirConfig.getString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name, "path"));
+						ourConfig.setString(
+							ConfigConstants.CONFIG_SUBMODULE_SECTION, name,
+							"url", 
+							theirConfig.getString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name, "url"));
+					}
+				}
+			}
+			
+			for (String name : ourModules) {
+				if (!theirModules.contains(name)) {
+					if (baseModules.contains(name)) {
+						//deleted by them
+						ourConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, name);
+					}
+					else {
+						//added by us
+					}
+				}
+			}
+
+			dirCache.unlock();
+
+			add(
+				new File(this.gitApi.getRepository().getWorkTree(), Constants.DOT_GIT_MODULES), 
+				ourConfig.toText().getBytes("UTF-8"));
+			
+		}
+		catch (Exception e) {
+			try  {
+				dirCache.unlock();
+			}
+			catch (Exception e2) {
+				e2.printStackTrace();
+			}
+			throw new IOException("Failed to resolve root conflicts", e);
+		}		
+		
+	}
+	
+	private Config getDotGitModulesConfig(ObjectId objectId) throws Exception {
+        ObjectLoader loader = gitApi.getRepository().open(objectId);
+        String content = new String(loader.getBytes(), "UTF-8");	
+        
+        Config config = new Config();
+        config.fromText(content);
+        return config;
+	}
+	
+	
 }
