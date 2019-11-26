@@ -198,9 +198,9 @@ public class TPGraphProjectIndexer implements Indexer {
 				
 				path.forEach(
 					tagVertex -> {
-						builder.append(conc);
-						builder.append(
+						builder.insert(0,
 							((Vertex)tagVertex).properties("name").next().orElse(null));
+						builder.insert(0, conc);
 					});
 				
 				String tagPathStr = builder.toString();
@@ -294,9 +294,9 @@ public class TPGraphProjectIndexer implements Indexer {
 				
 				path.forEach(
 					tagVertex -> {
-						builder.append(conc);
-						builder.append(
+						builder.insert(0,
 							((Vertex)tagVertex).properties("name").next().orElse(null));
+						builder.insert(0, conc);
 					});
 				
 				String tagPathStr = builder.toString();
