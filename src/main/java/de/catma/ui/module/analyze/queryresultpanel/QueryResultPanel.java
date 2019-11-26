@@ -125,6 +125,7 @@ public class QueryResultPanel extends VerticalLayout {
 	private ArrayList<WeakReference<SelectionListener<QueryResultRowItem>>> itemSelectionListeners;
 	
 	private PunctuationFilter punctuationFilter;
+	
 
 	public QueryResultPanel(Project project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
@@ -1103,7 +1104,7 @@ public class QueryResultPanel extends VerticalLayout {
 	public DisplaySetting getDisplaySetting() {
 		return displaySetting;
 	}
-
+	
 	public void clear() {
 		if (phraseBasedTreeData != null) {
 			phraseBasedTreeData.clear();
@@ -1123,6 +1124,11 @@ public class QueryResultPanel extends VerticalLayout {
 
 	public MenuItem addOptionsMenuItem(String caption, Command command) {
 		return optionsMenu.addItem(caption, command);
+	}
+	
+	public boolean isEmpty() {
+		return ((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider()).getTreeData().getRootItems()
+				.isEmpty();
 	}
 
 	
