@@ -1,5 +1,7 @@
 package de.catma.ui.component;
 
+import java.util.Collection;
+
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.HierarchicalDataProvider;
 import com.vaadin.event.ExpandEvent;
@@ -22,8 +24,25 @@ public class TreeGridFactory {
 		}
 	}
 	
+	public static class EnhancedTreeGrid<T> extends TreeGrid<T> {
+		
+		@Override
+		public void expand(Collection<T> items) {
+			if (isAttached()) {
+				super.expand(items);
+			}
+		}
+		
+		@Override
+		public void collapse(Collection<T> items) {
+			if (isAttached()) {
+				super.collapse(items);
+			}
+		}
+	}
+	
 	public static <T> TreeGrid<T> createDefaultTreeGrid() {
-		TreeGrid<T> treeGrid = new TreeGrid<>();
+		TreeGrid<T> treeGrid = new EnhancedTreeGrid<>();
 //		treeGrid.addStyleName("no-focused-before-border");
 		treeGrid.addExpandListener(new TreeGridChildRowClientCacheBugfix<T>());
 		return treeGrid;

@@ -14,9 +14,9 @@ import de.catma.user.User;
 
 public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> {
 
-	protected ComboBox<User> cb_users;
-	protected ComboBox<RBACRole> cb_role; 
-	protected Label l_description;
+	protected ComboBox<User> cbUsers;
+	protected ComboBox<RBACRole> cbRole; 
+	protected Label descriptionLabel;
 		
 	protected ErrorHandler errorLogger;
 	
@@ -30,28 +30,28 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 
 	private void initComponents(String description) {
 		
-		this.l_description = new Label(description);
-		l_description.setHeight("50px");
+		this.descriptionLabel = new Label(description);
+		descriptionLabel.setHeight("50px");
 		
-	    cb_users = new ComboBox<>("Member");
-		cb_users.setWidth("100%");
-		cb_users.setPageLength(20);
-		cb_users.setItemCaptionGenerator(User::preciseName);
+	    cbUsers = new ComboBox<>("Member");
+		cbUsers.setWidth("100%");
+		cbUsers.setPageLength(20);
+		cbUsers.setItemCaptionGenerator(User::preciseName);
 		
-		cb_role = new ComboBox<RBACRole>("Role", 
+		cbRole = new ComboBox<RBACRole>("Role", 
 				Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 
-		cb_role.setWidth("100%");
-		cb_role.setItemCaptionGenerator(RBACRole::getRoleName);
-		cb_role.setEmptySelectionAllowed(false);
+		cbRole.setWidth("100%");
+		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);
+		cbRole.setEmptySelectionAllowed(false);
 	}
 
 
 	@Override
 	protected void addContent(ComponentContainer content) {
-		content.addComponent(l_description);
-		content.addComponent(cb_users);
-		content.addComponent(cb_role);
+		content.addComponent(descriptionLabel);
+		content.addComponent(cbUsers);
+		content.addComponent(cbRole);
 	}
 
 }

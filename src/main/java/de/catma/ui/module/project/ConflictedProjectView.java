@@ -80,10 +80,13 @@ public class ConflictedProjectView extends HugeCard {
 
 	private void showNextConflict() {
 		try {
-			if ((this.tagManager == null)
-				&& ((tagsetConflictsIterator == null) || !this.tagsetConflictsIterator.hasNext())
-				&& ((tagConflictIterator == null) || !this.tagConflictIterator.hasNext())) {
+			if ((this.tagManager == null) // Tag/Tagset conflict resolution not applied yet
+				&& ((tagsetConflictsIterator == null) || !this.tagsetConflictsIterator.hasNext()) // all Tagset conflicts resolved by the use
+				&& ((tagConflictIterator == null) || !this.tagConflictIterator.hasNext())) { // all Tag conflicts resolved by the user
+				// apply Tag/Tagset conflict resolutions
 				conflictedProject.resolveTagsetConflicts(this.tagsetConflicts);
+				
+				// load Tagsets
 				this.tagManager = new TagManager(new TagLibrary());
 
 				conflictedProject.getTagsets().stream().forEach(

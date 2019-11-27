@@ -148,5 +148,8 @@ class TagDataItem implements TagsetTreeItem {
 		this.propertiesExpanded = propertiesExpanded;
 	}
 	
-	
+	@Override
+	public String getId() {
+		return tag.getUuid();
+	}
 }

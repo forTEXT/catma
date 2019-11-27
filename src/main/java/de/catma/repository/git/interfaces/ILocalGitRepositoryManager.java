@@ -93,5 +93,9 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	boolean hasRef(String branch) throws IOException;
 
+	Status getStatus(boolean ignoreSubmodules) throws IOException;
+
+	void resolveGitSubmoduleFileConflicts() throws IOException;
+
 
 }

@@ -5,12 +5,14 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.text.Collator;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -1273,7 +1275,30 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    		"Yes", 
 	    		"Cancel", dlg -> {
 	    			if (dlg.isConfirmed()) {
-			            for (Resource resource: resourceGrid.getSelectedItems()) {
+			           Stream<Resource> sortedResources =  resourceGrid.getSelectedItems()
+			            .stream()
+			            .sorted(new Comparator<Resource>() {
+
+							@Override
+							public int compare(Resource o1, Resource o2) {
+								if (o1.isCollection() && o2.isCollection()) {
+									return o1.getResourceId().compareTo(o2.getResourceId());
+								}
+								else if (o1.isCollection()) {
+									return -1;
+								}
+								else if (o2.isCollection()){
+									return 1;
+								}
+								else {
+									return o1.getResourceId().compareTo(o2.getResourceId());
+								}
+							}
+			            	
+						});
+			            
+			            	
+			            for (Resource resource: sortedResources.collect(Collectors.toList())) {
 			            	try {
 			            		resource.deleteFrom(project);
 			                } catch (Exception e) {

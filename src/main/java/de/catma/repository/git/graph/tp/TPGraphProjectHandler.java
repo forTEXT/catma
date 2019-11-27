@@ -289,9 +289,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	
 	private void logRootRevisionHash(String rootRevisionHash, String oldRootRevisionHash, String at) {
 		StringBuilder log = new StringBuilder();
-		if (rootRevisionHash.equals(oldRootRevisionHash)) {
-			System.out.println("hier");
-		}
+
 		log.append("\nold rootRevisionHash " + oldRootRevisionHash);
 		log.append("\nnew rootRevisionHash " + rootRevisionHash );
 		log.append("\nProjectRevision at ");
@@ -318,10 +316,14 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		
 		GraphTraversalSource g = graph.traversal();
 
-		Vertex propertyV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		Vertex tagsetV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
 		.property("revisionHash", rootRevisionHash)
-		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid())
-		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid())
+		.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagset.getUuid()).next();
+		
+		Vertex tagV = g.V(tagsetV)
+		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid()).next();
+		
+		Vertex propertyV = g.V(tagV)
 		.outE(rt(hasProperty)).inV().has(nt(Property), "uuid", propertyDefinition.getUuid())
 		.next();
 		

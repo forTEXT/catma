@@ -141,4 +141,8 @@ class PropertyDataItem implements TagsetTreeItem {
 		return propertyDefinition.getName();
 	}
 	
+	@Override
+	public String getId() {
+		return propertyDefinition.getUuid();
+	}
 }

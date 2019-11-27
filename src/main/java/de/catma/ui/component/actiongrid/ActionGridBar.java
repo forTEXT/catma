@@ -99,8 +99,8 @@ public class ActionGridBar extends HorizontalLayout {
 		btnAdd.setEnabled(enabled);
 	}
 	
-	public void setBtn(Component component) {
-		addComponent(component,getComponentIndex(searchField)+1);
+	public void addButtonAfterSearchField(Button button) {
+		addComponent(button, getComponentIndex(searchField)+1);
 	}
 	
 	public void setMoreOptionsBtnVisible(boolean visible) {
