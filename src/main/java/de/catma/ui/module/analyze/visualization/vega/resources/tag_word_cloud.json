@@ -64,7 +64,7 @@
     },
     {"name": "child_width", "value": 100, "update": "40*cellSize"},
     {"name": "child_height", "value": 100, "update": "40*cellSize"},
-    {"name": "wordClick"},
+    {"name": "tagClick"},
     {"name": "documentClick"},
     {"name": "userselection", "update": "data(\"selectedWord\")"}
   ],
