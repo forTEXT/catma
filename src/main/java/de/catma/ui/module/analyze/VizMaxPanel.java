@@ -130,15 +130,24 @@ public class VizMaxPanel extends VerticalLayout  {
 			topLeftPanel.addComponent(querySelection.getPanel());
 			topLeftPanel.setExpandRatio(querySelection.getPanel(), 1f);
 			currentQueryResultPanel = querySelection.getPanel();
+
 		}
 	}
 
-	private void handleItemSelection(QueryResultRowItem item) {
+	private void handleItemSelection(QueryResultRowItem item) {		 
 		handleRowsSelection(item.getRows());
 	}
 
 	private void handleRowsSelection(QueryResultRowArray rows) {
-		selectedResultsPanel.addQueryResultRows(rows);
+
+		if (!currentQueryResultPanel.getDisplaySetting().equals(selectedResultsPanel.getDisplaySetting())
+				&& selectedResultsPanel.isEmpty()) {
+			selectedResultsPanel.addQueryResultRows(rows);
+			DisplaySetting currentQueryDisplaySetting = currentQueryResultPanel.getDisplaySetting();
+			currentQueryDisplaySetting.init(selectedResultsPanel);
+		} else {
+			selectedResultsPanel.addQueryResultRows(rows);
+		}
 		visualization.addQueryResultRows(rows);
 	}
 	
