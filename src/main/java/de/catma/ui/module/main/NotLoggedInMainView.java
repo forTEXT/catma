@@ -66,22 +66,22 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		addComponent(menuLayout);
 		
 		Link aboutLink = new Link("About",
-				new ExternalResource("http://www.catma.de")); //$NON-NLS-1$
+				new ExternalResource(CATMAPropertyKey.AboutURL.getValue(CATMAPropertyKey.AboutURL.getDefaultValue())));
 		aboutLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(aboutLink);
 
 		Link termsOfUseLink = new Link("Terms of use",
-				new ExternalResource("http://catma.de/documentation/terms-of-use-privacy-policy/")); //$NON-NLS-1$
+				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue())));
 		termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(termsOfUseLink);
 
 		Link imprintLink = new Link("Imprint",
-				new ExternalResource("http://www.catma.de/documentation/imprint"));
+				new ExternalResource(CATMAPropertyKey.ImprintURL.getValue(CATMAPropertyKey.ImprintURL.getDefaultValue())));
 		imprintLink.setTargetName("_blank"); 
 		menuLayout.addComponent(imprintLink);
 
 		Link privacyLink = new Link("Privacy Statement",
-				new ExternalResource("http://catma.de/documentation/privacy/")); 
+				new ExternalResource(CATMAPropertyKey.PrivacyStatementURL.getValue(CATMAPropertyKey.PrivacyStatementURL.getDefaultValue()))); 
 		privacyLink.setTargetName("_blank");
 		menuLayout.addComponent(privacyLink);
 
