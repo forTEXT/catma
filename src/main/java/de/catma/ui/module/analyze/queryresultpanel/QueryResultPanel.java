@@ -976,7 +976,9 @@ public class QueryResultPanel extends VerticalLayout {
 								.getName(),
 							true
 						);
-					flatTagBasedTreeData.addItem(null, item);
+					if (!flatTagBasedTreeData.contains(item)) {
+						flatTagBasedTreeData.addItem(null, item);
+					}
 				}
 			}
 			
@@ -1039,7 +1041,9 @@ public class QueryResultPanel extends VerticalLayout {
 							.getUserMarkupCollectionReference(masterRow.getMarkupCollectionId())
 							.getName()
 					);
-				propertiesAsColumnsTagBasedTreeData.addItem(null, item);
+				if (!propertiesAsColumnsTagBasedTreeData.contains(item)) {
+					propertiesAsColumnsTagBasedTreeData.addItem(null, item);
+				}
 			}				
 			
 			tokenCount = propertiesAsColumnsTagBasedTreeData.getRootItems().size();
