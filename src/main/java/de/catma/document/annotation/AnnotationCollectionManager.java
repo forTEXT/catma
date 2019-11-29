@@ -263,6 +263,7 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 		return tagInstanceIds
 		.stream()
 		.map(tagInstanceId -> getAnnotation(tagInstanceId))
+		.filter(anno -> anno != null)
 		.collect(Collectors.toList());
 	}
 
