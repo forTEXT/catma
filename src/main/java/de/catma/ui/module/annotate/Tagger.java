@@ -141,9 +141,14 @@ public class Tagger extends AbstractComponent {
 	public void updateAnnotation(String annotationId) {
 		Annotation annotation = 
 				taggerListener.getTagInstanceInfo(annotationId);
-		getState().tagInstanceIdToTooltipInfo.put(
-			annotationId, 
-			tagInstanceInfoHTMLSerializer.toHTML(annotation));
+		if (annotation != null) {
+			getState().tagInstanceIdToTooltipInfo.put(
+				annotationId, 
+				tagInstanceInfoHTMLSerializer.toHTML(annotation));
+		}
+		else {
+			getState().tagInstanceIdToTooltipInfo.remove(annotationId);
+		}
 	}
 	
 	@Override
@@ -195,9 +200,14 @@ public class Tagger extends AbstractComponent {
 					}
 					Annotation tagInstanceInfo = 
 							taggerListener.getTagInstanceInfo(ti.getInstanceID());
-					getState().tagInstanceIdToTooltipInfo.put(
-						ti.getInstanceID(), 
-						tagInstanceInfoHTMLSerializer.toHTML(tagInstanceInfo));
+					if (tagInstanceInfo != null) {
+						getState().tagInstanceIdToTooltipInfo.put(
+							ti.getInstanceID(), 
+							tagInstanceInfoHTMLSerializer.toHTML(tagInstanceInfo));
+					}
+					else {
+						getState().tagInstanceIdToTooltipInfo.remove(ti.getInstanceID());
+					}
 				}
 				else {
 					for (Page page : pages) {
