@@ -465,7 +465,7 @@ public class GitProjectHandler {
 			catch (Exception e) {
 				logger.log(
 					Level.SEVERE, 
-					"error loading Collection references for project %1$s" + projectId, e);
+					String.format("error loading Collection references for project %1$s", projectId), e);
 			}
 		}
 		return collectionReferences;
@@ -523,7 +523,7 @@ public class GitProjectHandler {
 			catch (Exception e) {
 				logger.log(
 					Level.SEVERE, 
-					"error loading Collection references for project %1$s" + projectId, e);
+					String.format("error loading Collection references for project %1$s", projectId), e);
 			}
 		}
 		return collections;
