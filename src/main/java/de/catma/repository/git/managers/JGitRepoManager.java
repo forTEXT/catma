@@ -424,7 +424,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			if (targetFile.isDirectory()) {
 				FileUtils.deleteDirectory(targetFile);
 			}
-			else if (!targetFile.delete()) {
+			else if (targetFile.exists() && !targetFile.delete()) {
 				throw new IOException(String.format(
 						"could not remove %s", 
 						targetFile.toString()));
