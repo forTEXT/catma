@@ -384,20 +384,26 @@ public class TaggerView extends HorizontalLayout
 				List<ClientTagInstance> absoluteTagInstances = 
 						pager.getAbsoluteTagInstances();
 				
-				Page currentPage = pager.getCurrentPage();
-				pager.setMaxPageLengthInLines(lines);
-				//recalculate pages
-				try {
-					pager.setText(sourceDocument.getContent());
-					int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
-					tagger.setPage(previousPageNumber);					
-					tagger.setTagInstancesVisible(absoluteTagInstances, true);
-
-					pagerComponent.setPage(previousPageNumber);
-				} catch (IOException e) {
-					errorHandler.showAndLogError("Error showing the Document!", e);
+				Page currentPage = null;
+				if (pager.hasPages()) {
+					currentPage = pager.getCurrentPage();
 				}
-
+				
+				pager.setMaxPageLengthInLines(lines);
+				
+				if (pager.hasPages()) {
+					//recalculate pages
+					try {
+						pager.setText(sourceDocument.getContent());
+						int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
+						tagger.setPage(previousPageNumber);					
+						tagger.setTagInstancesVisible(absoluteTagInstances, true);
+	
+						pagerComponent.setPage(previousPageNumber);
+					} catch (IOException e) {
+						errorHandler.showAndLogError("Error showing the Document!", e);
+					}
+				}
 			}
 		});
 		
@@ -627,6 +633,8 @@ public class TaggerView extends HorizontalLayout
 
 			@Override
 			public void positionChanged(SplitterPositionChangedEvent event) {
+				
+				
 				float width = event.getPosition();
 				
 				// unit != Unit.PERCENTAGE && unit != Unit.PIXELS
@@ -641,19 +649,27 @@ public class TaggerView extends HorizontalLayout
 				
 				List<ClientTagInstance> absoluteTagInstances = pager.getAbsoluteTagInstances();
 				
-				Page currentPage = pager.getCurrentPage();
+				Page currentPage = null;
+				
+				if (pager.hasPages()) {
+					currentPage = pager.getCurrentPage();
+				}
+				
 				pager.setApproxMaxLineLength(approxMaxLineLength);
-				//recalculate pages
-				try {
-					pager.setText(sourceDocument.getContent());
-					int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
-					tagger.setPage(previousPageNumber);					
-					tagger.setTagInstancesVisible(absoluteTagInstances, true);
-
-					pagerComponent.setPage(previousPageNumber);
-				} catch (IOException e) {
-					errorHandler.showAndLogError("Error showing the Document!", e); //$NON-NLS-1$
-				}							
+				
+				if (pager.hasPages()) {
+					//recalculate pages
+					try {
+						pager.setText(sourceDocument.getContent());
+						int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
+						tagger.setPage(previousPageNumber);					
+						tagger.setTagInstancesVisible(absoluteTagInstances, true);
+	
+						pagerComponent.setPage(previousPageNumber);
+					} catch (IOException e) {
+						errorHandler.showAndLogError("Error showing the Document!", e); //$NON-NLS-1$
+					}
+				}
 			}
 			
 		};
