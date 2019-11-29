@@ -71,6 +71,7 @@ public class Pager implements Iterable<Page> {
 	
 	public void setText(String text) {
 		if (!matchChecksum(text)) {
+			currentPageIndex = 0;
 			pages.clear();
 			buildPages(text);
 			if (pagerListener != null) {
