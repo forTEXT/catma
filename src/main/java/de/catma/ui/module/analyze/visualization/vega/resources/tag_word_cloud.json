@@ -66,7 +66,7 @@
     {"name": "child_height", "value": 100, "update": "40*cellSize"},
     {"name": "tagClick"},
     {"name": "documentClick"},
-    {"name": "userselection", "update": "data(\"selectedWord\")"}
+    {"name": "userselection", "update": "data(\"selectedTag\")"}
   ],
   "layout": {"padding": 20, "columns": 2, "bounds": "flush"},
   "marks": [
@@ -147,5 +147,9 @@
       ]
     }
   ],
-  "config": {}
+  "config": {},
+    "usermeta": {
+    "Author": "Christian Bruck, Institute for German Studies, University of Hamburg, 2019",
+    "Licence": "GPLv3"
+  }
 }
