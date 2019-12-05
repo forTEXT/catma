@@ -1299,8 +1299,12 @@ public class GitProjectHandler {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-			
-			localGitRepoManager.initAndUpdateSubmodules(credentialsProvider, getReadableSubmodules(localGitRepoManager));
+			Status projectStatus = localGitRepoManager.getStatus(true);
+			Set<String> conflicting = projectStatus.getConflicting();
+			Set<String> readableSubmodules = getReadableSubmodules(localGitRepoManager);
+			Set<String> validSubmodules = new HashSet<>(readableSubmodules);
+			validSubmodules.removeAll(conflicting);
+			localGitRepoManager.initAndUpdateSubmodules(credentialsProvider, validSubmodules);
 		}		
 		
 	}
