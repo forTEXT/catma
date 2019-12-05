@@ -431,7 +431,7 @@ public class AnalyzeView extends HorizontalLayout
 					() -> setContent(vizMaxPanel, contentPanel));
 		
 
-		vizCardsPanel.addComponent(vizMinPanel);
+		vizCardsPanel.addComponentAsFirst(vizMinPanel);
 		setContent(vizMaxPanel, contentPanel);
 	}
 
@@ -472,7 +472,7 @@ public class AnalyzeView extends HorizontalLayout
 					() -> setContent(vizMaxPanel, contentPanel));
 		
 
-		vizCardsPanel.addComponent(vizMinPanel);
+		vizCardsPanel.addComponentAsFirst(vizMinPanel);
 		setContent(vizMaxPanel, contentPanel);
 	}
 	
@@ -515,7 +515,7 @@ public class AnalyzeView extends HorizontalLayout
 					() -> setContent(vizMaxPanel, contentPanel));
 		
 
-		vizCardsPanel.addComponent(vizMinPanel);
+		vizCardsPanel.addComponentAsFirst(vizMinPanel);
 		setContent(vizMaxPanel, contentPanel);
 	}
 	
@@ -549,7 +549,7 @@ public class AnalyzeView extends HorizontalLayout
 					() -> setContent(vizMaxPanel, contentPanel));
 		
 
-		vizCardsPanel.addComponent(vizMinPanel);
+		vizCardsPanel.addComponentAsFirst(vizMinPanel);
 		setContent(vizMaxPanel, contentPanel);
 	}
 
