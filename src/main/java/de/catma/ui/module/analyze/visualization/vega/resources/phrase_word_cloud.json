@@ -162,5 +162,9 @@
       ]
     }
   ],
-  "config": {}
+  "config": {},
+  "usermeta": {
+    "Author": "Christian Bruck, Institute for German Studies, University of Hamburg, 2019",
+    "Licence": "GPLv3"
+  }
 }
