@@ -47,6 +47,7 @@ import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
@@ -59,6 +60,7 @@ import org.eclipse.jgit.util.FS;
 
 import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.jgitcommand.DeletedByThemWorkaroundStrategyRecursive;
 import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
 
@@ -718,9 +720,30 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			if (ref != null) {
 				mergeCommand.include(ref);
 			} 
-//			else {
-//				mergeCommand.include(ObjectId.fromString(branch));
-//			}
+
+			return mergeCommand.call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to merge", e);
+		}		
+	}
+	
+	@Override
+	public MergeResult mergeWithDeletedByThemWorkaroundStrategyRecursive(String branch) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `merge` on a detached instance");
+		}
+
+		try {
+			MergeCommand mergeCommand = this.gitApi.merge();
+			
+			
+			Ref ref = this.gitApi.getRepository().findRef(branch);
+			if (ref != null) {
+				mergeCommand.include(ref);
+			} 
+
+			mergeCommand.setStrategy(new DeletedByThemWorkaroundStrategyRecursive());
 			
 			return mergeCommand.call();
 		}

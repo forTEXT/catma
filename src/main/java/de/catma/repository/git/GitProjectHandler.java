@@ -1257,7 +1257,8 @@ public class GitProjectHandler {
 			
 			if (localGitRepoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {
 				MergeResult mergeWithOriginMasterResult = 
-					localGitRepoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+					localGitRepoManager.mergeWithDeletedByThemWorkaroundStrategyRecursive(
+							Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
 				
 				if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
 					localGitRepoManager.push(credentialsProvider);
