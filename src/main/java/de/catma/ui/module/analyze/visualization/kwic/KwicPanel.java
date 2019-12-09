@@ -99,6 +99,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 
 	private void initActions(EventBus eventBus) {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+		moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
+		
 		ActionGridBar actionBar = kwicGridComponent.getActionGridBar();
 		
 		actionBar.addButtonAfterSearchField(btnClearSelectedRows);

@@ -125,6 +125,7 @@ public class QueryResultPanel extends VerticalLayout {
 	private ArrayList<WeakReference<SelectionListener<QueryResultRowItem>>> itemSelectionListeners;
 	
 	private PunctuationFilter punctuationFilter;
+	
 
 	public QueryResultPanel(Project project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
@@ -978,7 +979,9 @@ public class QueryResultPanel extends VerticalLayout {
 								.getName(),
 							true
 						);
-					flatTagBasedTreeData.addItem(null, item);
+					if (!flatTagBasedTreeData.contains(item)) {
+						flatTagBasedTreeData.addItem(null, item);
+					}
 				}
 			}
 			
@@ -1041,7 +1044,9 @@ public class QueryResultPanel extends VerticalLayout {
 							.getUserMarkupCollectionReference(masterRow.getMarkupCollectionId())
 							.getName()
 					);
-				propertiesAsColumnsTagBasedTreeData.addItem(null, item);
+				if (!propertiesAsColumnsTagBasedTreeData.contains(item)) {
+					propertiesAsColumnsTagBasedTreeData.addItem(null, item);
+				}
 			}				
 			
 			tokenCount = propertiesAsColumnsTagBasedTreeData.getRootItems().size();
@@ -1105,7 +1110,7 @@ public class QueryResultPanel extends VerticalLayout {
 	public DisplaySetting getDisplaySetting() {
 		return displaySetting;
 	}
-
+	
 	public void clear() {
 		if (phraseBasedTreeData != null) {
 			phraseBasedTreeData.clear();
@@ -1125,6 +1130,11 @@ public class QueryResultPanel extends VerticalLayout {
 
 	public MenuItem addOptionsMenuItem(String caption, Command command) {
 		return optionsMenu.addItem(caption, command);
+	}
+	
+	public boolean isEmpty() {
+		return ((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider()).getTreeData().getRootItems()
+				.isEmpty();
 	}
 
 	
