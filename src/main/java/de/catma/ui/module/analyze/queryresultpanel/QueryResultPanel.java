@@ -828,6 +828,8 @@ public class QueryResultPanel extends VerticalLayout {
 		else {
 			dataProvider.setFilter(row -> row.startsWith(searchValue));
 		}
+		
+		dataProvider.addFilter(punctuationFilter);
 	}
 
 	private void handleExpandRequest(ExpandEvent<QueryResultRowItem> event) {

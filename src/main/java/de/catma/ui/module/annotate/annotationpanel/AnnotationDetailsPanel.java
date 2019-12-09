@@ -449,8 +449,11 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 				items.addAll(annotationDetailData.getChildren(annotationDataItem));
 				annotationDetailsTree.expand(items);
 				annotationDetailsTree.select(annotationDataItem);
-				annotationDetailsTree.scrollTo(
-					annotationDetailData.getRootItems().size()-1, ScrollDestination.START);
+				int itemIdx = annotationDetailData.getRootItems().size()-1;
+				if (itemIdx >= 0) {
+					annotationDetailsTree.scrollTo(
+						itemIdx, ScrollDestination.START);
+				}
 			}
 		}
 	}

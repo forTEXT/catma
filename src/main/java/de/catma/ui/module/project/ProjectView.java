@@ -713,11 +713,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     			child = resource;
     		}
     		
-    		SourceDocument document = ((DocumentResource)root).getDocument();
-    		AnnotationCollectionReference collectionReference = 
-    			(child==null?null:((CollectionResource)child).getCollectionReference());
-    		
-    		eventBus.post(new RouteToAnnotateEvent(project, document, collectionReference));
+    		if (root != null) {
+	    		SourceDocument document = ((DocumentResource)root).getDocument();
+	    		AnnotationCollectionReference collectionReference = 
+	    			(child==null?null:((CollectionResource)child).getCollectionReference());
+	    		
+	    		eventBus.post(new RouteToAnnotateEvent(project, document, collectionReference));
+    		}
     	}
     }
     
