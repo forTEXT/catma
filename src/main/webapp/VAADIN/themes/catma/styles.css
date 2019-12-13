@@ -18094,6 +18094,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0px;
 }
 
+.catma input.deleted-resource-conflict-view-resource-field {
+	border-bottom: none !important;
+	font-weight: bold;
+	margin-bottom: 20px;
+}
+
 .catma input.annotation-conflict-view-resource-field {
 	border-bottom: none !important;
 	font-weight: bold;

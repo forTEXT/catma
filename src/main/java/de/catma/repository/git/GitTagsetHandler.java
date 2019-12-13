@@ -18,6 +18,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
+import de.catma.document.source.ContentInfoSet;
 import de.catma.project.conflict.TagConflict;
 import de.catma.project.conflict.TagsetConflict;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -222,6 +223,34 @@ public class GitTagsetHandler {
 		}
 	}
 
+	public ContentInfoSet getContentInfoSet(String projectId, String tagsetId) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
+
+			String tagsetSubmoduleName = String.format(
+					"%s/%s", GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
+			);
+
+			File tagsetHeaderFile = new File(
+				localGitRepoManager.getRepositoryWorkTree(),
+				tagsetSubmoduleName + "/" + HEADER_FILE_NAME
+			);
+
+			String serialized = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);
+			GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
+					.deserialize(
+							serialized,
+							GitTagsetHeader.class
+					);
+
+			ContentInfoSet contentInfoSet = new ContentInfoSet();
+			contentInfoSet.setTitle(gitTagsetHeader.getName());
+
+			return contentInfoSet;
+		}
+	}
+	
 	/**
 	 * Creates a tag definition within the tagset identified by <code>tagsetId</code>.
 	 *

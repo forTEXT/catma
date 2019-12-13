@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +49,6 @@ import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
-import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
@@ -58,6 +59,7 @@ import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.util.FS;
 
+import de.catma.project.conflict.DeletedResourceConflict;
 import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.jgitcommand.DeletedByThemWorkaroundStrategyRecursive;
@@ -217,11 +219,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @param path the destination path of the clone operation
 	 * @param username the username to authenticate with
 	 * @param password the password to authenticate with
-	 * @param initAndUpdateSubmodules init and update submodules
+	 * @param initSubmodules init submodules
 	 * @return the name of the cloned repository
 	 */
 	@Override
-	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider, boolean initAndUpdateSubmodules)
+	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider, boolean initSubmodules)
 			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
@@ -244,7 +246,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			
 			this.gitApi = cloneCommand.call();
 			
-			if (initAndUpdateSubmodules) {
+			if (initSubmodules) {
 				this.gitApi.submoduleInit().call();
 				
 //				SubmoduleUpdateCommand submoduleUpdateCommand = 
@@ -960,12 +962,14 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 
 	@Override
-	public void resolveRootConflicts(CredentialsProvider credentialsProvider) throws IOException {
-		
+	public Collection<DeletedResourceConflict> resolveRootConflicts(String projectId, CredentialsProvider credentialsProvider) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `resolveRootConflicts` on a detached instance");
 		}
+
+		List<DeletedResourceConflict> deletedResourceConflicts = new ArrayList<>();
 		DirCache dirCache = gitApi.getRepository().lockDirCache();
+		
 		try {
 			if (dirCache.hasUnmergedPaths()) {
 				
@@ -1020,13 +1024,38 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					}
 					case DELETED_BY_THEM: {
 						//TODO:
-						Logger.getLogger(this.getClass().getName()).severe(
-								String.format(
-									"Cannot resolve root conflict for submodule %1$s DELETED_BY_THEM not supported yet!",
-								conflictingSubmodule));
-						throw new CommitMissingException(
-								"Failed to synchronize the Project because of an unexpected merge conflict, "
-								+ "please contact the system administrator!");						
+
+						String ourTreeName = "refs/heads/master"; 
+						RevCommit ourCommit = 
+							gitApi.log().add(gitApi.getRepository().resolve(ourTreeName)).addPath(conflictingSubmodule).call().iterator().next();
+						String ourLastCommitMsg = ourCommit.getFullMessage();
+						System.out.println(ourLastCommitMsg);
+						
+						String theirTreeName = "refs/remotes/origin/master"; 
+						RevCommit theirCommit = 
+							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(conflictingSubmodule).call().iterator().next();
+						String theirLastCommitMsg = theirCommit.getFullMessage();
+						System.out.println(theirLastCommitMsg);						
+						
+						
+						deletedResourceConflicts.add(
+							new DeletedResourceConflict(
+								projectId,
+								conflictingSubmodule,
+								ourCommit.getName(), 
+								ourLastCommitMsg, 
+								theirCommit.getName(), 
+								theirLastCommitMsg, 
+								theirCommit.getCommitterIdent().getName(),
+								true));
+						break;
+//						Logger.getLogger(this.getClass().getName()).severe(
+//								String.format(
+//									"Cannot resolve root conflict for submodule %1$s DELETED_BY_THEM not supported yet!",
+//								conflictingSubmodule));
+//						throw new CommitMissingException(
+//								"Failed to synchronize the Project because of an unexpected merge conflict, "
+//								+ "please contact the system administrator!");						
 					}
 					case DELETED_BY_US: {
 						//TODO:
@@ -1040,9 +1069,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					}
 					
 					}
-					
-					
+
 				}
+
 				dirCache.write();
 				dirCache.commit();
 			}
@@ -1060,6 +1089,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IOException("Failed to resolve root conflicts", e);
 		}
 		
+		return deletedResourceConflicts;
 	}
 
 	private void ensureLatestSubmoduleRevision(DirCacheEntry baseEntry, 

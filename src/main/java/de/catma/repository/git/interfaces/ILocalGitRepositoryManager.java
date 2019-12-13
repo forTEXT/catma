@@ -3,12 +3,15 @@ package de.catma.repository.git.interfaces;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.transport.CredentialsProvider;
+
+import de.catma.project.conflict.DeletedResourceConflict;
 
 public interface ILocalGitRepositoryManager extends AutoCloseable {
 	static String DEFAULT_LOCAL_DEV_BRANCH = "dev";
@@ -85,7 +88,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	Status getStatus() throws IOException;
 
-	void resolveRootConflicts(CredentialsProvider credentialsProvider) throws IOException;
+	Collection<DeletedResourceConflict> resolveRootConflicts(String projectId, CredentialsProvider credentialsProvider) throws IOException;
 
 	void initAndUpdateSubmodules(CredentialsProvider credentialsProvider, Set<String> submodules) throws Exception;
 

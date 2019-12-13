@@ -310,6 +310,45 @@ public class GitMarkupCollectionHandler {
 
 	}
 
+	public ContentInfoSet getContentInfoSet(String projectId, String markupCollectionId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
+
+			String markupCollectionSubmoduleRelDir = String.format(
+					"%s/%s", GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
+			);
+
+			File markupCollectionSubmoduleAbsPath = new File(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					markupCollectionSubmoduleRelDir
+			);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			File markupCollectionHeaderFile = new File(
+					markupCollectionSubmoduleAbsPath,
+					HEADER_FILE_NAME
+			);
+
+			String serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
+					markupCollectionHeaderFile, StandardCharsets.UTF_8
+			);
+
+			GitMarkupCollectionHeader markupCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
+					.deserialize(serializedMarkupCollectionHeaderFile, GitMarkupCollectionHeader.class);
+
+			return new ContentInfoSet(
+					markupCollectionHeader.getAuthor(),
+					markupCollectionHeader.getDescription(),
+					markupCollectionHeader.getPublisher(),
+					markupCollectionHeader.getName()
+			);
+
+		}
+
+	}
+	
 	public AnnotationCollection getCollection(
 			String projectId, String collectionId, TagLibrary tagLibrary)
 			throws Exception {

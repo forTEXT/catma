@@ -10,6 +10,7 @@ import de.catma.project.ProjectReference;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
+import de.catma.project.conflict.DeletedResourceConflict;
 import de.catma.project.conflict.TagConflict;
 import de.catma.project.conflict.TagsetConflict;
 import de.catma.tag.TagLibrary;
@@ -105,13 +106,17 @@ public class GitConflictedProject implements ConflictedProject {
 	}
 	
 	@Override
+	public void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedReourceConflicts) {
+		//TODO: 
+	}
+	
+	@Override
 	public ProjectReference getProjectReference() {
 		return projectReference;
 	}
 	
 	@Override
-	public void resolveRootConflicts() throws Exception {
-		gitProjectHandler.resolveRootConflicts();
-		
+	public Collection<DeletedResourceConflict> resolveRootConflicts() throws Exception {
+		return gitProjectHandler.resolveRootConflicts();
 	}
 }

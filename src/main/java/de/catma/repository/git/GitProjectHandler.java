@@ -29,13 +29,16 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.indexer.TermInfo;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
+import de.catma.project.conflict.DeletedResourceConflict;
 import de.catma.project.conflict.TagConflict;
 import de.catma.project.conflict.TagsetConflict;
+import de.catma.project.conflict.DeletedResourceConflict.ResourceType;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -1155,7 +1158,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public void resolveRootConflicts() throws Exception {
+	public Collection<DeletedResourceConflict> resolveRootConflicts() throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			
 			localGitRepoManager.open(
@@ -1166,16 +1169,74 @@ public class GitProjectHandler {
 			
 			StatusPrinter.print("Project status", status, System.out);
 
-			localGitRepoManager.resolveRootConflicts(this.credentialsProvider);
+			Collection<DeletedResourceConflict> deletedResourceConflicts = 
+					localGitRepoManager.resolveRootConflicts(projectId, this.credentialsProvider);
 
-			localGitRepoManager.addAllAndCommit(
-					"Auto-committing merged changes",
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(),
-					true);
+			if (deletedResourceConflicts.isEmpty()) {
+				localGitRepoManager.addAllAndCommit(
+						"Auto-committing merged changes",
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail(),
+						true);
+				
+				localGitRepoManager.push(credentialsProvider);
+			}
+			else {
+				localGitRepoManager.detach();
+				
+				for (DeletedResourceConflict deletedResourceConflict : deletedResourceConflicts) {
+					if (deletedResourceConflict.getRelativeModulePath().startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)) {
+						try {
+							GitMarkupCollectionHandler collectionHandler = 
+									new GitMarkupCollectionHandler(
+										localGitRepoManager, 
+										this.remoteGitServerManager,
+										this.credentialsProvider);
+							String collectionId =
+								deletedResourceConflict.getRelativeModulePath().substring(
+										ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME.length()+1);
+							
+							ContentInfoSet contentInfoSet = 
+								collectionHandler.getContentInfoSet(
+								projectId, 
+								collectionId);
+							deletedResourceConflict.setResourceId(collectionId);
+							deletedResourceConflict.setContentInfoSet(
+									contentInfoSet);
+							deletedResourceConflict.setResourceType(ResourceType.ANNOTATION_COLLECTION);
+						}
+						finally {
+							localGitRepoManager.detach();
+						}
+					}
+					else if (deletedResourceConflict.getRelativeModulePath().startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
+						try {
+							GitTagsetHandler tagsetHandler = 
+									new GitTagsetHandler(
+											localGitRepoManager, 
+											this.remoteGitServerManager,
+											this.credentialsProvider);
+							String tagsetId = 
+								deletedResourceConflict.getRelativeModulePath().substring(
+										TAGSET_SUBMODULES_DIRECTORY_NAME.length()+1);
+										
+							ContentInfoSet contentInfoSet = tagsetHandler.getContentInfoSet(
+									projectId, 
+									tagsetId);
+							deletedResourceConflict.setResourceId(tagsetId);
+							deletedResourceConflict.setContentInfoSet(
+									contentInfoSet);
+							deletedResourceConflict.setResourceType(ResourceType.TAGSET);
+						}
+						finally {
+							localGitRepoManager.detach();
+						}
+					}
+				}
+			}
 			
-			localGitRepoManager.push(credentialsProvider);
 			
+			return deletedResourceConflicts;
 		}
 	}
 

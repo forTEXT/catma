@@ -16,6 +16,7 @@ import de.catma.indexer.KwicProvider;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.ConflictedProject;
+import de.catma.project.conflict.DeletedResourceConflict;
 import de.catma.project.conflict.TagConflict;
 import de.catma.project.conflict.TagsetConflict;
 import de.catma.repository.git.CommitMissingException;
@@ -110,7 +111,13 @@ public class ConflictedProjectView extends HugeCard {
 				conflictedProject.resolveCollectionConflict(
 					this.collectionConflicts, this.tagManager.getTagLibrary());
 				try {
-					conflictedProject.resolveRootConflicts();
+					Collection<DeletedResourceConflict> deletedReourceConflicts = 
+							conflictedProject.resolveRootConflicts();
+					
+					if (!deletedReourceConflicts.isEmpty()) {
+						showDeletedResourceConflicts(deletedReourceConflicts);
+						return;
+					}
 				}
 				catch (Exception e) {
 					if (ExceptionUtil.stackTraceContains(CommitMissingException.class.getName(), e)) {
@@ -132,6 +139,31 @@ public class ConflictedProjectView extends HugeCard {
 		}
 		catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("Error showing next conflict!", e);
+		}
+	}
+
+	private void showDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedReourceConflicts) {
+		final Iterator<DeletedResourceConflict> deletedResourceConflictsIterator = deletedReourceConflicts.iterator();
+		showNextDeletedResourceConflict(deletedReourceConflicts, deletedResourceConflictsIterator);
+	}
+
+	private void showNextDeletedResourceConflict(Collection<DeletedResourceConflict> deletedReourceConflicts,
+			Iterator<DeletedResourceConflict> deletedResourceConflictsIterator) {
+		if (deletedResourceConflictsIterator.hasNext()) {
+			DeletedResourceConflict deletedResourceConflict = deletedResourceConflictsIterator.next();
+			
+			DeletedResourceConflictView deletedResourceConflictView = new DeletedResourceConflictView(deletedResourceConflict, new ResolutionListener() {
+				
+				@Override
+				public void resolved() {
+					showNextDeletedResourceConflict(deletedReourceConflicts, deletedResourceConflictsIterator);
+				}
+			});
+			mainPanel.removeAllComponents();
+			mainPanel.addComponent(deletedResourceConflictView);
+		}
+		else {
+			conflictedProject.resolveDeletedResourceConflicts(deletedReourceConflicts);
 		}
 	}
 
