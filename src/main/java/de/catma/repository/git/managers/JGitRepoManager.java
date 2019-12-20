@@ -35,6 +35,8 @@ import org.eclipse.jgit.api.SubmoduleInitCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.NoFilepatternException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.dircache.DirCache;
@@ -1266,6 +1268,51 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
         Config config = new Config();
         config.fromText(content);
         return config;
+	}
+	
+	@Override
+	public void keepSubmodule(String relativeModulePath, String submoduleUri) throws Exception {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `keepSubmodule` on a detached instance");
+		}		
+		
+		// Save submodule URL to parent repository's config
+		StoredConfig config = gitApi.getRepository().getConfig();
+		config.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeModulePath,
+				ConfigConstants.CONFIG_KEY_URL, submoduleUri);
+		try {
+			config.save();
+		} catch (IOException e) {
+			throw new JGitInternalException(e.getMessage(), e);
+		}
+
+		// Save path and URL to parent repository's .gitmodules file
+		FileBasedConfig modulesConfig = new FileBasedConfig(new File(
+				gitApi.getRepository().getWorkTree(), Constants.DOT_GIT_MODULES), gitApi.getRepository().getFS());
+		try {
+			modulesConfig.load();
+			modulesConfig.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION,
+					relativeModulePath, ConfigConstants.CONFIG_KEY_PATH, relativeModulePath);
+			modulesConfig.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION,
+					relativeModulePath, ConfigConstants.CONFIG_KEY_URL, submoduleUri);
+			modulesConfig.save();
+		} catch (IOException e) {
+			throw new JGitInternalException(e.getMessage(), e);
+		} catch (ConfigInvalidException e) {
+			throw new JGitInternalException(e.getMessage(), e);
+		}
+
+		AddCommand add = new AddCommand(gitApi.getRepository());
+		// Add .gitmodules file to parent repository's index
+		add.addFilepattern(Constants.DOT_GIT_MODULES);
+		// Add submodule directory to parent repository's index
+		add.addFilepattern(relativeModulePath);
+		try {
+			add.call();
+		} catch (NoFilepatternException e) {
+			throw new JGitInternalException(e.getMessage(), e);
+		}
+		
 	}
 	
 	

@@ -163,7 +163,12 @@ public class ConflictedProjectView extends HugeCard {
 			mainPanel.addComponent(deletedResourceConflictView);
 		}
 		else {
-			conflictedProject.resolveDeletedResourceConflicts(deletedReourceConflicts);
+			try {
+				conflictedProject.resolveDeletedResourceConflicts(deletedReourceConflicts);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 

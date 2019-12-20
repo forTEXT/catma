@@ -19,7 +19,7 @@ public interface ConflictedProject {
 	ProjectReference getProjectReference();
 	public Collection<DeletedResourceConflict> resolveRootConflicts() throws Exception;
 	public void resolveTagsetConflicts(List<TagsetConflict> tagsetConflicts) throws Exception;
-	public void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedReourceConflicts);
+	public void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedReourceConflicts) throws Exception;
 	
 	
 }

@@ -36,9 +36,10 @@ import de.catma.indexer.TermInfo;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.DeletedResourceConflict;
+import de.catma.project.conflict.DeletedResourceConflict.ResourceType;
+import de.catma.project.conflict.Resolution;
 import de.catma.project.conflict.TagConflict;
 import de.catma.project.conflict.TagsetConflict;
-import de.catma.project.conflict.DeletedResourceConflict.ResourceType;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -1532,5 +1533,47 @@ public class GitProjectHandler {
 	
 	public RBACRole getRoleOnProject(RBACSubject subject) throws IOException {
 		return remoteGitServerManager.getRoleOnProject(subject, projectId);
+	}
+
+	public void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedResourceConflicts) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(
+					 projectId,
+					 GitProjectManager.getProjectRootRepositoryName(projectId));
+	
+			 for (DeletedResourceConflict deletedResourceConflict : deletedResourceConflicts) {
+				 if (deletedResourceConflict.isDeletedByThem()) {
+					 if (deletedResourceConflict.getResolution().equals(Resolution.MINE)) {
+						 // keep mine
+						String relativeModulePath = deletedResourceConflict.getRelativeModulePath();
+						String submoduleId = relativeModulePath.substring(relativeModulePath.lastIndexOf('/')+1);
+						String submoduleUri = 
+							CATMAPropertyKey.GitLabServerUrl.getValue() + "/" + projectId + "/" + submoduleId + ".git";
+						
+						localGitRepoManager.keepSubmodule(relativeModulePath, submoduleUri);
+					 }
+					 else {
+						 // delete mine
+					 }
+					 
+				 }
+				 else {
+					 if (deletedResourceConflict.getResolution().equals(Resolution.MINE)) {
+						 
+						 // delete theirs
+					 }
+					 else {
+						 // keep theirs, clone
+					 }				
+				 }
+			 }
+			 
+			 localGitRepoManager.commit(
+					 "Auto-committing merged changes", 
+					 remoteGitServerManager.getUsername(),
+					 remoteGitServerManager.getEmail(), true);
+
+			 localGitRepoManager.push(credentialsProvider); //TODO: maybe better do a full synchronize?
+		}
 	}
 }

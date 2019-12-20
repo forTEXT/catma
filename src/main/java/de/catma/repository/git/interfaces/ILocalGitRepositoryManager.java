@@ -102,5 +102,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	MergeResult mergeWithDeletedByThemWorkaroundStrategyRecursive(String branch) throws IOException;
 
+	void keepSubmodule(String relativeModulePath, String submoduleUri) throws Exception;
+
 
 }
