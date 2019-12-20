@@ -94,16 +94,18 @@ public class Tagger extends AbstractComponent {
 		
 		@Override
 		public void tagInstanceAdded(String tagInstanceJson) {
-			try {
-				ClientTagInstance tagInstance = 
-						tagInstanceJSONSerializer.fromJSON(tagInstanceJson);
-				
-				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
-				taggerListener.tagInstanceAdded(
-						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
-			} catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error adding Annotation!", e); 
+			if (pager.hasPages()) {
+				try {
+					ClientTagInstance tagInstance = 
+							tagInstanceJSONSerializer.fromJSON(tagInstanceJson);
+					
+					pager.getCurrentPage().addRelativeTagInstance(tagInstance);
+					taggerListener.tagInstanceAdded(
+							pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
+				} catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error adding Annotation!", e); 
+				}
 			}
 		}
 		
@@ -176,49 +178,52 @@ public class Tagger extends AbstractComponent {
 	}
 	
 	void removeTagInstances(Collection<String> annotationIds) {
-		for (String annotationId : annotationIds) {
-			for (Page page : pager.getPagesForAnnotationId(annotationId)) {
-				page.removeRelativeTagInstance(annotationId);
+		if (pager.hasPages()) {
+			for (String annotationId : annotationIds) {
+				for (Page page : pager.getPagesForAnnotationId(annotationId)) {
+					page.removeRelativeTagInstance(annotationId);
+				}
+				getState().tagInstanceIdToTooltipInfo.remove(annotationId);
 			}
-			getState().tagInstanceIdToTooltipInfo.remove(annotationId);
-		}
-		if (pager.getCurrentPage().isDirty()) {
-			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+			if (pager.getCurrentPage().isDirty()) {
+				setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+			}
 		}
 	}
 	
 	
 	void setTagInstancesVisible(
 			Collection<ClientTagInstance> tagInstances, boolean visible) {
-				
-		for (ClientTagInstance ti : tagInstances) {
-			List<Page> pages = pager.getPagesForAbsoluteTagInstance(ti);
-			if (!pages.isEmpty()) {
-				if (visible) {
-					for (Page page : pages) {
-						page.addAbsoluteTagInstance(ti);
-					}
-					Annotation tagInstanceInfo = 
-							taggerListener.getTagInstanceInfo(ti.getInstanceID());
-					if (tagInstanceInfo != null) {
-						getState().tagInstanceIdToTooltipInfo.put(
-							ti.getInstanceID(), 
-							tagInstanceInfoHTMLSerializer.toHTML(tagInstanceInfo));
+		if (pager.hasPages()) {
+			for (ClientTagInstance ti : tagInstances) {
+				List<Page> pages = pager.getPagesForAbsoluteTagInstance(ti);
+				if (!pages.isEmpty()) {
+					if (visible) {
+						for (Page page : pages) {
+							page.addAbsoluteTagInstance(ti);
+						}
+						Annotation tagInstanceInfo = 
+								taggerListener.getTagInstanceInfo(ti.getInstanceID());
+						if (tagInstanceInfo != null) {
+							getState().tagInstanceIdToTooltipInfo.put(
+								ti.getInstanceID(), 
+								tagInstanceInfoHTMLSerializer.toHTML(tagInstanceInfo));
+						}
+						else {
+							getState().tagInstanceIdToTooltipInfo.remove(ti.getInstanceID());
+						}
 					}
 					else {
+						for (Page page : pages) {
+							page.removeRelativeTagInstance(ti.getInstanceID());
+						}
 						getState().tagInstanceIdToTooltipInfo.remove(ti.getInstanceID());
 					}
-				}
-				else {
-					for (Page page : pages) {
-						page.removeRelativeTagInstance(ti.getInstanceID());
-					}
-					getState().tagInstanceIdToTooltipInfo.remove(ti.getInstanceID());
-				}
-			}	
-		}
-		if (pager.getCurrentPage().isDirty()) {
-			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+				}	
+			}
+			if (pager.getCurrentPage().isDirty()) {
+				setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+			}
 		}
 	}
 
@@ -266,8 +271,10 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void highlight(Range absoluteRange) {
-		pager.highlight(absoluteRange);
-		setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+		if (pager.hasPages()) {
+			pager.highlight(absoluteRange);
+			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+		}
 	}
 
 	public void setTagInstanceSelected(String annotationId) {

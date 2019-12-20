@@ -866,12 +866,14 @@ public class TaggerView extends HorizontalLayout
 	}
 	
 	public void tagInstanceSelected(String instancePartID, String lineID) {
-		try {
-			annotationPanel.showAnnotationDetails(
-					userMarkupCollectionManager.getAnnotations(
-							pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID)));
-		} catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
+		if (pager.hasPages()) {
+			try {
+				annotationPanel.showAnnotationDetails(
+						userMarkupCollectionManager.getAnnotations(
+								pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID)));
+			} catch (IOException e) {
+				((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
+			}
 		}
 	}
 	
