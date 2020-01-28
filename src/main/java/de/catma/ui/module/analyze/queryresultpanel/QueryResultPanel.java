@@ -1,12 +1,17 @@
 package de.catma.ui.module.analyze.queryresultpanel;
 
 import java.lang.ref.WeakReference;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
 import com.vaadin.contextmenu.ContextMenu;
@@ -18,7 +23,9 @@ import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.FileDownloader;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.server.StreamResource;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
@@ -41,6 +48,7 @@ import com.vaadin.ui.components.grid.FooterRow;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.queryengine.QueryId;
@@ -52,6 +60,8 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
+import de.catma.ui.module.analyze.CSVExportFlatStreamSource;
+import de.catma.ui.module.analyze.CSVExportGroupedStreamSource;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
 import de.catma.ui.module.main.ErrorHandler;
 
@@ -125,7 +135,6 @@ public class QueryResultPanel extends VerticalLayout {
 	private ArrayList<WeakReference<SelectionListener<QueryResultRowItem>>> itemSelectionListeners;
 	
 	private PunctuationFilter punctuationFilter;
-	
 
 	public QueryResultPanel(Project project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
@@ -242,11 +251,12 @@ public class QueryResultPanel extends VerticalLayout {
 
 		queryResultDataProvider.addDataProviderListener(
 			event -> handleTotalTypesChange(
-					"Types", 
-					footer.getCell("phrase"), 
-					"Tokens",
-					footer.getCell("frequency"), 
-					queryResultDataProvider));
+				"Types", 
+				footer.getCell("phrase"), 
+				"Tokens",
+				footer.getCell("frequency"), 
+				queryResultDataProvider));
+		
 		handleTotalTypesChange(
 				"Types", 
 				footer.getCell("phrase"), 
@@ -268,9 +278,11 @@ public class QueryResultPanel extends VerticalLayout {
 		String tokens,
 		FooterCell tokenFooterCell, 
 		TreeDataProvider<QueryResultRowItem> queryResultDataProvider) {
+		List<QueryResultRowItem> filteredItems = getFilteredQueryResultRowItems();
 		if (typeFooterCell != null) {
-			typeFooterCell.setText(types + ": " + queryResultDataProvider.getTreeData().getRootItems().size());
+			typeFooterCell.setText(types + ": " + filteredItems.size());
 		}
+		tokenCount = filteredItems.stream().map(item -> item.getFrequency()).reduce(0, Integer::sum).intValue();
 		tokenFooterCell.setText(tokens + ": " + tokenCount);
 	}
 
@@ -364,13 +376,15 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		FooterRow footer = queryResultGrid.prependFooterRow();
 		queryResultGrid.setFooterVisible(true);
+		
 		queryResultDataProvider.addDataProviderListener(
-				event -> handleTotalTypesChange(
+			event -> handleTotalTypesChange(
 						null, 
 						null,
 						"Annotations",
 						footer.getCell("annotation"), 
 						queryResultDataProvider));
+		
 		handleTotalTypesChange(
 				null, 
 				null, 
@@ -800,7 +814,42 @@ public class QueryResultPanel extends VerticalLayout {
 		miGroupByTagPath = optionsMenu.addItem("Group by Tag Path", mi -> initTagBasedData());
 		miFlatTable = optionsMenu.addItem("Display Annotations as flat table", mi -> initFlatTagBasedData());
 		miPropertiesAsColumns = optionsMenu.addItem("Display Properties as columns", mi -> initPropertiesAsColumnsTagBasedData());
-		optionsMenu.addItem("Export", mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
+		MenuItem miExport = optionsMenu.addItem("Export");
+		MenuItem miCSVFlatExport = miExport.addItem("Export flat as CSV");
+		
+		StreamResource csvFlatExportResource = new StreamResource(
+					new CSVExportFlatStreamSource(
+						() -> getFilteredQueryResult(), 
+						project, 
+						kwicProviderCache, 
+						((BackgroundServiceProvider)UI.getCurrent())),
+					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+		csvFlatExportResource.setCacheTime(0);
+		csvFlatExportResource.setMIMEType("text/comma-separated-values");
+		
+		FileDownloader csvFlatExportFileDownloader = 
+			new FileDownloader(csvFlatExportResource);
+		
+		csvFlatExportFileDownloader.extend(miCSVFlatExport);
+		
+		MenuItem miCSVGroupedByPhraseExport = miExport.addItem("Export grouped as CSV");
+		
+		StreamResource csvGroupedByPhraseExportResource = new StreamResource(
+					new CSVExportGroupedStreamSource(
+						() -> getFilteredQueryResult(), 
+						project, 
+						kwicProviderCache, 
+						((BackgroundServiceProvider)UI.getCurrent())),
+					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+		csvGroupedByPhraseExportResource.setCacheTime(0);
+		csvGroupedByPhraseExportResource.setMIMEType("text/comma-separated-values");
+		
+		FileDownloader csvGroupedByPhraseExportFileDownloader = 
+			new FileDownloader(csvGroupedByPhraseExportResource);
+		
+		csvGroupedByPhraseExportFileDownloader.extend(miCSVGroupedByPhraseExport);
+		
+		
 		MenuItem miFilterPunctuation = optionsMenu.addItem(
 				"Filter punctuation", 
 				mi -> queryResultGrid.getDataProvider().refreshAll());
@@ -861,6 +910,15 @@ public class QueryResultPanel extends VerticalLayout {
 		.forEach(item -> result.addAll(item.getRows()));
 
 		return result;
+	}
+	
+	private List<QueryResultRowItem> getFilteredQueryResultRowItems() {
+		@SuppressWarnings("unchecked")
+		final TreeDataProvider<QueryResultRowItem> dataProvider = 
+				((TreeDataProvider<QueryResultRowItem>) queryResultGrid.getDataProvider());
+		return dataProvider.fetch(
+				new HierarchicalQuery<QueryResultRowItem, SerializablePredicate<QueryResultRowItem>>(null , null))
+		.collect(Collectors.toList());
 	}
 
 	public QueryId getQueryId() {

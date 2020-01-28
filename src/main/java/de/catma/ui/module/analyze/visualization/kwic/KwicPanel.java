@@ -1,5 +1,6 @@
 package de.catma.ui.module.analyze.visualization.kwic;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -15,8 +16,11 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.FileDownloader;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.server.StreamResource;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
@@ -35,6 +39,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.components.grid.ItemClickListener;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -43,6 +48,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.Property;
@@ -56,6 +62,8 @@ import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
+import de.catma.ui.module.analyze.CSVExportFlatStreamSource;
+import de.catma.ui.module.analyze.CSVExportGroupedStreamSource;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
@@ -117,7 +125,23 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 				"Remove selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
 		miRemoveAnnotations.setEnabled(false);
 		
-		moreOptionsMenu.addItem("Export", mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
+		MenuItem miExport = moreOptionsMenu.addItem("Export");
+		MenuItem miCSVFlatExport = miExport.addItem("Export as CSV");
+		
+		StreamResource csvFlatExportResource = new StreamResource(
+					new CSVExportFlatStreamSource(
+						() -> getFilteredQueryResult(), 
+						project, 
+						kwicItemHandler.getKwicProviderCache(), 
+						((BackgroundServiceProvider)UI.getCurrent())),
+					"CATMA-KWIC_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+		csvFlatExportResource.setCacheTime(0);
+		csvFlatExportResource.setMIMEType("text/comma-separated-values");
+		
+		FileDownloader csvFlatExportFileDownloader = 
+			new FileDownloader(csvFlatExportResource);
+		
+		csvFlatExportFileDownloader.extend(miCSVFlatExport);
 		
 		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
 			@Override
@@ -129,6 +153,15 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		btExpandCompress.addClickListener(clickEvent -> handleMaxMinRequest());
 		defaultDoubleClickRegistration = 
 		kwicGrid.addItemClickListener(clickEvent -> handleKwicItemClick(clickEvent, eventBus));
+	}
+	
+	public QueryResultRowArray getFilteredQueryResult() {
+		QueryResultRowArray result = new QueryResultRowArray();
+		kwicDataProvider.fetch(
+				new Query<QueryResultRow, SerializablePredicate<QueryResultRow>>())
+		.forEach(row -> result.add(row));
+
+		return result;
 	}
 
 	private void handleRemoveAnnotationsRequest(EventBus eventBus) {
