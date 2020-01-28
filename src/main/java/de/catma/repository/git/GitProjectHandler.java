@@ -1099,13 +1099,15 @@ public class GitProjectHandler {
 								this.credentialsProvider);
 
 				for (Path collectionPath : paths) {
-					String collectionId = collectionPath.getFileName().toString();
-					Status status = gitCollectionHandler.getStatus(projectId, collectionId);
-					if (!status.getConflicting().isEmpty()) {
-						collectionConflicts.add(
-								gitCollectionHandler.getCollectionConflict(
-										projectId, collectionId));
-					}					
+					if (collectionDirPath.resolve(collectionPath).resolve(Constants.DOT_GIT).toFile().exists()) {
+						String collectionId = collectionPath.getFileName().toString();
+						Status status = gitCollectionHandler.getStatus(projectId, collectionId);
+						if (!status.getConflicting().isEmpty()) {
+							collectionConflicts.add(
+									gitCollectionHandler.getCollectionConflict(
+											projectId, collectionId));
+						}
+					}
 				}
 				
 			}
@@ -1197,13 +1199,20 @@ public class GitProjectHandler {
 								deletedResourceConflict.getRelativeModulePath().substring(
 										ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME.length()+1);
 							
-							ContentInfoSet contentInfoSet = 
-								collectionHandler.getContentInfoSet(
-								projectId, 
-								collectionId);
 							deletedResourceConflict.setResourceId(collectionId);
-							deletedResourceConflict.setContentInfoSet(
-									contentInfoSet);
+
+							if (deletedResourceConflict.isDeletedByThem()) {
+								ContentInfoSet contentInfoSet = 
+									collectionHandler.getContentInfoSet(
+									projectId, 
+									collectionId);
+								deletedResourceConflict.setContentInfoSet(
+										contentInfoSet);
+							}
+							else {
+								deletedResourceConflict.setContentInfoSet(new ContentInfoSet("N/A"));
+							}
+							
 							deletedResourceConflict.setResourceType(ResourceType.ANNOTATION_COLLECTION);
 						}
 						finally {
@@ -1554,17 +1563,41 @@ public class GitProjectHandler {
 					 }
 					 else {
 						 // delete mine
+						String relativeModulePath = deletedResourceConflict.getRelativeModulePath();
+						Path collectionDirPath = 
+								 Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+								 .resolve(relativeModulePath);
+						localGitRepoManager.remove(collectionDirPath.toFile());
 					 }
 					 
 				 }
 				 else {
-					 if (deletedResourceConflict.getResolution().equals(Resolution.MINE)) {
-						 
+					if (deletedResourceConflict.getResolution().equals(Resolution.MINE)) {
 						 // delete theirs
-					 }
-					 else {
-						 // keep theirs, clone
-					 }				
+						String relativeModulePath = deletedResourceConflict.getRelativeModulePath();
+						Path collectionDirPath = 
+								 Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+								 .resolve(relativeModulePath);
+						localGitRepoManager.remove(collectionDirPath.toFile());						 
+					}
+					else {
+						String relativeModulePath = deletedResourceConflict.getRelativeModulePath();
+						String submoduleId = relativeModulePath.substring(relativeModulePath.lastIndexOf('/')+1);
+						String submoduleUri = 
+							CATMAPropertyKey.GitLabServerUrl.getValue() + "/" + projectId + "/" + submoduleId + ".git";
+						
+						Path collectionDirPath = 
+								 Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+								 .resolve(relativeModulePath);
+						localGitRepoManager.remove(collectionDirPath.toFile());
+						
+						File targetSubmodulePath = Paths.get(
+								localGitRepoManager.getRepositoryWorkTree().getAbsolutePath(),
+								relativeModulePath
+						).toFile();
+						
+						localGitRepoManager.addSubmodule(targetSubmodulePath, submoduleUri, credentialsProvider);
+					}				
 				 }
 			 }
 			 

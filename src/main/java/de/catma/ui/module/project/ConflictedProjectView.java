@@ -165,9 +165,9 @@ public class ConflictedProjectView extends HugeCard {
 		else {
 			try {
 				conflictedProject.resolveDeletedResourceConflicts(deletedReourceConflicts);
+				showNextConflict();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				((ErrorHandler)UI.getCurrent()).showAndLogError("Error resolving deleted resource conflicts!", e);
 			}
 		}
 	}

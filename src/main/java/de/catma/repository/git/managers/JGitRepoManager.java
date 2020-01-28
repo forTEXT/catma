@@ -478,6 +478,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				.resolve(Constants.MODULES)
 				.resolve(relativeFilePath).toFile();
 			
+			detach();
+			
 			FileUtils.deleteDirectory(submoduleGitDir);
 			
 			FileUtils.deleteDirectory(absoluteFilePath.toFile());
@@ -1025,8 +1027,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 						}
 					}
 					case DELETED_BY_THEM: {
-						//TODO:
-
 						String ourTreeName = "refs/heads/master"; 
 						RevCommit ourCommit = 
 							gitApi.log().add(gitApi.getRepository().resolve(ourTreeName)).addPath(conflictingSubmodule).call().iterator().next();
@@ -1050,26 +1050,44 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 								theirLastCommitMsg, 
 								theirCommit.getCommitterIdent().getName(),
 								true));
-						break;
-//						Logger.getLogger(this.getClass().getName()).severe(
-//								String.format(
-//									"Cannot resolve root conflict for submodule %1$s DELETED_BY_THEM not supported yet!",
-//								conflictingSubmodule));
-//						throw new CommitMissingException(
-//								"Failed to synchronize the Project because of an unexpected merge conflict, "
-//								+ "please contact the system administrator!");						
+						break;		
 					}
 					case DELETED_BY_US: {
-						//TODO:
+						
+						String ourTreeName = "refs/heads/master"; 
+						RevCommit ourCommit = 
+							gitApi.log().add(gitApi.getRepository().resolve(ourTreeName)).addPath(conflictingSubmodule).call().iterator().next();
+						String ourLastCommitMsg = ourCommit.getFullMessage();
+						System.out.println(ourLastCommitMsg);
+						
+						String theirTreeName = "refs/remotes/origin/master"; 
+						RevCommit theirCommit = 
+							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(conflictingSubmodule).call().iterator().next();
+						String theirLastCommitMsg = theirCommit.getFullMessage();
+						System.out.println(theirLastCommitMsg);						
+						
+						deletedResourceConflicts.add(
+								new DeletedResourceConflict(
+									projectId,
+									conflictingSubmodule,
+									ourCommit.getName(), 
+									ourLastCommitMsg, 
+									theirCommit.getName(), 
+									theirLastCommitMsg, 
+									theirCommit.getCommitterIdent().getName(),
+									false));
+						break;		
+					}
+					default: {
+						
 						Logger.getLogger(this.getClass().getName()).severe(
 								String.format(
-									"Cannot resolve root conflict for submodule %1$s DELETED_BY_US not supported yet!",
-								conflictingSubmodule));
+									"Cannot resolve root conflict for submodule %1$s %2$s not supported yet!",
+								conflictingSubmodule, conflictState.name()));
 						throw new CommitMissingException(
 								"Failed to synchronize the Project because of an unexpected merge conflict, "
 								+ "please contact the system administrator!");
 					}
-					
 					}
 
 				}
