@@ -92,7 +92,8 @@ public class DeletedByThemWorkaroundStrategyRecursive extends StrategyRecursive 
 				if (((modeO != 0 && !tw.idEqual(T_BASE, T_OURS)) || (modeT != 0 && !tw
 						.idEqual(T_BASE, T_THEIRS)))) {
 					
-					// mpetris: when merging .gitsubmodules and descending into the submodules
+
+					// mpetris: when merging .gitmodules and descending into the submodules
 					// this contentMerge fails because it tries to get the base of the submodule repo
 					// from the container repo
 					// since we're not interested in a content merge as either OURS or THEIRS
@@ -133,14 +134,14 @@ public class DeletedByThemWorkaroundStrategyRecursive extends StrategyRecursive 
 		}
 		
 		/*
-		 * copied from super class
+		 * mpetris: copied from super class
 		 */
 		private boolean nonTree(final int mode) {
 			return mode != 0 && !FileMode.TREE.equals(mode);
 		}
 		
 		/*
-		 * copied from super class
+		 * mpetris: copied from super class
 		 */
 		private DirCacheEntry add(byte[] path, CanonicalTreeParser p, int stage,
 				long lastMod, long len) {
@@ -157,7 +158,7 @@ public class DeletedByThemWorkaroundStrategyRecursive extends StrategyRecursive 
 		}
 		
 		/*
-		 * copied from super class
+		 * mpetris: copied from super class
 		 */
 		private boolean isWorktreeDirty(WorkingTreeIterator work,
 				DirCacheEntry ourDce) throws IOException {
