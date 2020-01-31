@@ -2,7 +2,10 @@ package de.catma.ui.module.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.text.Collator;
 import java.util.Collection;
 import java.util.Comparator;
@@ -49,6 +52,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.indexer.IndexedProject;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
@@ -64,6 +68,7 @@ import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
+import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -77,6 +82,7 @@ import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.MembersChangedEvent;
 import de.catma.ui.events.ProjectChangedEvent;
@@ -94,6 +100,7 @@ import de.catma.ui.module.project.document.AddSourceDocWizardResult;
 import de.catma.ui.module.project.document.SourceDocumentResult;
 import de.catma.user.Member;
 import de.catma.user.User;
+import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 
 /**
@@ -372,35 +379,47 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleImportTagsetsRequest() {
-		Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE);
-//		UploadDialog uploadDialog =
-//				new UploadDialog("Upload Tagsets",
-//						new SaveCancelListener<byte[]>() {
-//			
-//			public void cancelPressed() {}
-//			
-//			public void savePressed(byte[] result) {
-//				InputStream is = new ByteArrayInputStream(result);
-//				try {
-//					if (BOMFilterInputStream.hasBOM(result)) {
-//						is = new BOMFilterInputStream(
-//								is, Charset.forName("UTF-8")); //$NON-NLS-1$
-//					}
-//					
-//					project.importTagLibrary(is);
-//					
-//					
-//				} catch (IOException e) {
-//					((CatmaApplication)UI.getCurrent()).showAndLogError(
-//						"Error importing Tagsets", e);
-//				}
-//				finally {
-//					CloseSafe.close(is);
-//				}
-//			}
-//			
-//		});
-//		uploadDialog.show();	
+		UploadDialog uploadDialog =
+				new UploadDialog("Upload Tagsets",
+						new SaveCancelListener<byte[]>() {
+			
+			public void savePressed(byte[] result) {
+				InputStream is = new ByteArrayInputStream(result);
+				try {
+					if (BOMFilterInputStream.hasBOM(result)) {
+						is = new BOMFilterInputStream(
+								is, Charset.forName("UTF-8")); //$NON-NLS-1$
+					}
+					
+					List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = 
+							project.loadTagLibrary(is);
+					
+					TagsetImportDialog tagsetImportDialog = 
+						new TagsetImportDialog(tagsetDefinitionImportStatusList, new SaveCancelListener<List<TagsetDefinitionImportStatus>>() {
+							@Override
+							public void savePressed(List<TagsetDefinitionImportStatus> result) {
+								try {
+									project.importTagsets(result);
+								} catch (IOException e) {
+									((CatmaApplication)UI.getCurrent()).showAndLogError(
+										"Error importing Tagsets", e);
+								}
+							}
+					});
+					
+					tagsetImportDialog.show();
+					
+				} catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error loading external Tagsets", e);
+				}
+				finally {
+					CloseSafe.close(is);
+				}
+			}
+			
+		});
+		uploadDialog.show();	
 	}
 
 	private void handleSynchronizeRequest() {

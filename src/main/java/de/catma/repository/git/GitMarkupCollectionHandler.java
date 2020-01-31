@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -116,61 +115,6 @@ public class GitMarkupCollectionHandler {
 
 		}
 
-	}
-
-	/**
-	 * Adds an existing tagset, identified by <code>tagsetId</code> and <code>tagsetVersion</code>, to the markup
-	 * collection identified by <code>markupCollectionId</code>.
-	 *
-	 * @param projectId the ID of the project that contains the markup collection to which the tagset should be added
-	 * @param markupCollectionId the ID of the markup collection to add the tagset to
-	 * @param tagsetId the ID of the tagset to add
-	 * @param tagsetVersion the version of the tagset to add
-	 * @throws IOException if an error occurs while adding the tagset
-	 */
-	public void addTagset(String projectId,
-						  String markupCollectionId,
-						  String tagsetId,
-						  String tagsetVersion,
-						  String commitMsg
-	) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectId, projectRootRepositoryName);
-
-			File targetMarkupCollectionHeaderFilePath = Paths.get(
-					localGitRepoManager.getRepositoryWorkTree().toString(),
-					GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME,
-					markupCollectionId,
-					HEADER_FILE_NAME
-			).toFile();
-
-			// update header.json
-			SerializationHelper<GitMarkupCollectionHeader> serializationHelper = new SerializationHelper<>();
-			GitMarkupCollectionHeader markupCollectionHeader = serializationHelper.deserialize(
-					FileUtils.readFileToString(targetMarkupCollectionHeaderFilePath, StandardCharsets.UTF_8),
-					GitMarkupCollectionHeader.class
-			);
-
-			markupCollectionHeader.addTagset(new AbstractMap.SimpleEntry<>(tagsetId, tagsetVersion));
-
-			String serializedHeader = serializationHelper.serialize(markupCollectionHeader);
-
-
-			localGitRepoManager.addAndCommit(
-					targetMarkupCollectionHeaderFilePath, serializedHeader.getBytes(StandardCharsets.UTF_8),
-					commitMsg,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail()
-			);
-		}
-	}
-
-	public void removeTagset(String projectId, String markupCollectionId, String tagsetId)
-			throws IOException {
-		// it should only be possible to remove a tagset if there are no tag instances referring to any of its tag
-		// definitions
-		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	/**

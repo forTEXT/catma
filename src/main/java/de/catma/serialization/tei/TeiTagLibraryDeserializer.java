@@ -62,7 +62,8 @@ public class TeiTagLibraryDeserializer {
 
 			TagsetDefinition tagsetDefinition = 
 					new TagsetDefinition(
-							tagsetDefinitionElement.getID(),tagsetName, 
+							tagsetDefinitionElement.getID(),
+							tagsetName, 
 							new Version(versionString));
 			
 			tagManager.addTagsetDefinition(tagsetDefinition);
@@ -87,11 +88,9 @@ public class TeiTagLibraryDeserializer {
 			
 			TagDefinition tagDef = 
 					new TagDefinition(
-							null,
 							tagDefinitionElement.getID(), 
 							description,
 							new Version(tagDefinitionElement.getAttributeValue(Attribute.n)), 
-							null,
 							tagDefinitionElement.getAttributeValue(Attribute.fsDecl_baseTypes),
 							tagsetDefinition.getUuid());
 			

@@ -128,8 +128,9 @@ public class XmlMarkupCollectionSerializationHandler implements
         	String parentUuid = (parentTag==null)?null:parentTag.getUuid();
         	tagDefinition = 
         		new TagDefinition(
-        			null, idGenerator.generate(), 
-        			elementStack.peek(), new Version(), null, parentUuid,
+        			idGenerator.generate(), 
+        			elementStack.peek(), new Version(), 
+        			parentUuid,
         			tagsetDefinition.getUuid());
         	PropertyDefinition colorDef = 
         		new PropertyDefinition(

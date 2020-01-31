@@ -12,6 +12,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -61,6 +62,7 @@ import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.serialization.TagLibrarySerializationHandler;
+import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.serialization.tei.TeiSerializationHandlerFactory;
 import de.catma.tag.Property;
@@ -1132,7 +1134,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void importTagLibrary(InputStream inputStream) throws IOException {
+	public List<TagsetDefinitionImportStatus> loadTagLibrary(InputStream inputStream) throws IOException {
 		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory();
 		factory.setTagManager(new TagManager(new TagLibrary()));
 		TagLibrarySerializationHandler tagLibrarySerializationHandler = 
@@ -1140,14 +1142,110 @@ public class GraphWorktreeProject implements IndexedProject {
 		TagLibrary importedLibrary =
 			tagLibrarySerializationHandler.deserialize(null, inputStream);
 		
+		List<String> resourceIds = gitProjectHandler.getResourceIds();
+		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = new ArrayList<>();
 		for (TagsetDefinition tagset : importedLibrary) {
-			tagManager.addTagsetDefinition(tagset);
-			
-			
-			for (TagDefinition tag : tagset.getRootTagDefinitions()) {
-				tagManager.addTagDefinition(tagset, tag);
+			boolean inProjectHistory = resourceIds.contains(tagset.getUuid());
+			boolean current = 
+				inProjectHistory && (getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid()) != null);
+			tagsetDefinitionImportStatusList.add(
+				new TagsetDefinitionImportStatus(tagset, inProjectHistory, current));
+		}
+		return tagsetDefinitionImportStatusList;
+//		for (TagsetDefinition tagset : importedLibrary) {
+//			//TODO: check if there had been a Tagset with this ID in the Project namespace
+//			try {
+//				tagManagerListenersEnabled = false;
+//				try {
+//					addTagsetDefinition(tagset);
+//					tagManager.addTagsetDefinition(tagset);
+//				} catch (Exception e) {
+//					throw new IOException(
+//						String.format(
+//							"Import of Tagset %1$s failed! The import has been aborted.",
+//							tagset.getName()), 
+//						e);
+//				}
+//			}
+//			finally {
+//				tagManagerListenersEnabled = true;
+//			}
+//			for (TagDefinition tag : tagset.getRootTagDefinitions()) {
+//				tagManager.addTagDefinition(tagset, tag);
+//				
+//				importTagHierarchy(tag, tagset);
+//			}
+//		}
+	}
+	
+	@Override
+	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException {
+		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatusList) {
+			if (tagsetDefinitionImportStatus.isDoImport()) {
+				TagsetDefinition tagset = tagsetDefinitionImportStatus.getTagset();
 				
-				importTagHierarchy(tag, tagset);
+				if (!tagsetDefinitionImportStatus.isInProjectHistory()) {
+					try {
+						tagManagerListenersEnabled = false;
+						try {
+							addTagsetDefinition(tagset);
+							tagManager.addTagsetDefinition(tagset);
+						} catch (Exception e) {
+							throw new IOException(
+								String.format(
+									"Import of Tagset %1$s failed! The import has been aborted.",
+									tagset.getName()), 
+								e);
+						}
+					}
+					finally {
+						tagManagerListenersEnabled = true;
+					}
+					for (TagDefinition tag : tagset.getRootTagDefinitions()) {
+						tagManager.addTagDefinition(tagset, tag);
+						
+						importTagHierarchy(tag, tagset);
+					}					
+				}
+				else if (!tagsetDefinitionImportStatus.isCurrent()) {
+					TagsetDefinition oldTagset = 
+							gitProjectHandler.cloneAndAddTagset(tagset.getUuid(), tagset.getName());
+					
+					String oldRootRevisionHash = this.rootRevisionHash;
+					
+					
+					//TODO commit re-add
+					
+					
+					for (TagDefinition tagDefinition : oldTagset.getRootTagDefinitions()) {
+						gitProjectHandler.removeTag(tagDefinition);
+						oldTagset.remove(tagDefinition);
+					}
+					try {
+						graphProjectHandler.addTagset(rootRevisionHash, oldTagset, oldRootRevisionHash);
+					
+						oldTagset.setName(tagset.getName());
+					
+						updateTagsetDefinition(oldTagset);
+						
+						for (TagDefinition tag : tagset.getRootTagDefinitions()) {
+							tagManager.addTagDefinition(oldTagset, tag);
+							
+							importTagHierarchy(tag, oldTagset);
+						}						
+						
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					
+				}
+				else {
+					// TODO update existing Tagset
+				}
+				
+				
 			}
 		}
 	}

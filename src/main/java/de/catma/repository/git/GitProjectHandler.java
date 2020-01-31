@@ -146,6 +146,57 @@ public class GitProjectHandler {
 		}
 	}
 	
+	public TagsetDefinition cloneAndAddTagset(String tagsetId, String name) throws IOException {
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = 
+					new GitTagsetHandler(
+							localGitRepoManager, 
+							this.remoteGitServerManager,
+							this.credentialsProvider);
+
+
+			String tagsetRepoRemoteUrl = 
+					CATMAPropertyKey.GitLabServerUrl.getValue() + "/" + projectId + "/" + tagsetId + ".git";
+
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+
+			// add the submodule
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					TAGSET_SUBMODULES_DIRECTORY_NAME,
+					tagsetId
+			).toFile();
+
+			// submodule files and the changed .gitmodules file are automatically staged
+			localGitRepoManager.addSubmodule(
+					targetSubmodulePath,
+					tagsetRepoRemoteUrl,
+					credentialsProvider
+			);
+			
+			localGitRepoManager.commit(
+					String.format("Added Tagset %1$s with ID %2$s", name, tagsetId),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail(),
+					false);
+
+			localGitRepoManager.detach(); 
+			
+			gitTagsetHandler.checkout(
+				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+
+			
+			//TODO:
+			rolesPerResource.put(
+				tagsetId, 
+				RBACRole.OWNER);
+			
+			return gitTagsetHandler.getTagset(projectId, tagsetId);
+		}
+	}
+	
 	public String createOrUpdateTag(String tagsetId, TagDefinition tagDefinition, String commitMsg) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			
@@ -1609,4 +1660,10 @@ public class GitProjectHandler {
 			 localGitRepoManager.push(credentialsProvider); //TODO: maybe better do a full synchronize?
 		}
 	}
+
+	List<String> getResourceIds() throws IOException {
+		return remoteGitServerManager.getGroupRepositoryNames(projectId);
+	}
+	
+	
 }

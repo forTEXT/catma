@@ -9,7 +9,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 
 public class AddSubtagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	
-	public AddSubtagDialog(	SaveCancelListener<TagDefinition> saveCancelListener) {
+	public AddSubtagDialog(SaveCancelListener<TagDefinition> saveCancelListener) {
 		super("Add Subtag", saveCancelListener);
 		initComponents(false);
 		initActions();
@@ -25,10 +25,8 @@ public class AddSubtagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 		
 		TagDefinition tag = 
 			new TagDefinition(
-				null, 
 				idGenerator.generate(), 
 				tfName.getValue(), new Version(),
-				null, 
 				null, 
 				isWithTagsetSelection()?cbTagsets.getValue().getUuid():null);
 		

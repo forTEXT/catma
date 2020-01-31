@@ -39,6 +39,7 @@ import de.catma.project.event.DocumentChangeEvent;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
+import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
@@ -338,9 +339,10 @@ public interface Project {
 
 	/**
 	 * @param inputStream the tag library
+	 * @return 
 	 * @throws IOException
 	 */
-	public void importTagLibrary(InputStream inputStream) throws IOException;
+	public List<TagsetDefinitionImportStatus> loadTagLibrary(InputStream inputStream) throws IOException;
 
 	/**
 	 * @return current user of this repository instance
@@ -397,5 +399,7 @@ public interface Project {
 
 	void createUserMarkupCollectionWithAssignment(
 		String name, SourceDocument sourceDocument, Integer userId, RBACRole role);
+
+	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException;
 
 }

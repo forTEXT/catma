@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
 
 /**
  * A definition of a tag. That is a type of a {@link TagInstance}.
@@ -32,32 +30,25 @@ import java.util.logging.Logger;
  */
 public class TagDefinition implements Versionable {
 
-	private Logger logger = Logger.getLogger(this.getClass().getName());
-
-	
 	private String uuid;
 	private String name;
 	private Version version = new Version(); //TODO: replace version with createdDate
 	private Map<String,PropertyDefinition> systemPropertyDefinitions;
 	private Map<String,PropertyDefinition> userDefinedPropertyDefinitions;
-	private Set<String> deletedPropertyDefinitions;
 	private String parentUuid;
 	private String tagsetDefinitionUuid;
 
 	/**
-	 * @param id the identifier of the definition (repository dependent)
 	 * @param uuid a CATMA uuid see {@link de.catma.util.IDGenerator}
 	 * @param name the name of the definition
 	 * @param version the version of the definition
-	 * @param parentId the identifier of the parent or <code>null</code> if this
-	 * is already a top level definition
 	 * @param parentUuid the CATMA uuid of the parent or <code>null</code> if this
 	 * is already a top level definition
 	 */
 	public TagDefinition(
-			Integer id, String uuid, 
+			String uuid, 
 			String name, Version version,  
-			Integer parentId, String parentUuid, String tagsetDefinitionUuid) {
+			String parentUuid, String tagsetDefinitionUuid) {
 		this();
 		this.uuid = uuid;
 		this.name = name;
@@ -74,9 +65,9 @@ public class TagDefinition implements Versionable {
 	 * @param toCopy
 	 */
 	public TagDefinition(TagDefinition toCopy) {
-		this(null, toCopy.uuid, 
+		this(toCopy.uuid, 
 				toCopy.name, new Version(toCopy.version), 
-				null, toCopy.parentUuid, toCopy.tagsetDefinitionUuid);
+				toCopy.parentUuid, toCopy.tagsetDefinitionUuid);
 		
 		for (PropertyDefinition pd : toCopy.getSystemPropertyDefinitions()) {
 			addSystemPropertyDefinition(new PropertyDefinition(pd));
