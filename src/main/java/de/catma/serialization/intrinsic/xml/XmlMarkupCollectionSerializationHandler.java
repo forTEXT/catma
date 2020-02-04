@@ -129,7 +129,7 @@ public class XmlMarkupCollectionSerializationHandler implements
         	tagDefinition = 
         		new TagDefinition(
         			idGenerator.generate(), 
-        			elementStack.peek(), new Version(), 
+        			elementStack.peek(),
         			parentUuid,
         			tagsetDefinition.getUuid());
         	PropertyDefinition colorDef = 

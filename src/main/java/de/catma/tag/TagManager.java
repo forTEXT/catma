@@ -218,7 +218,6 @@ public class TagManager {
 	public void removeUserDefinedPropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) {
 		tagsetDefinition.remove(propertyDefinition, tagDefinition);
-		tagDefinition.setVersion();
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.userPropertyDefinitionChanged.name(),
 				new Pair<>(
@@ -240,7 +239,6 @@ public class TagManager {
 	public void addUserDefinedPropertyDefinition(TagDefinition td,
 			PropertyDefinition propertyDefinition) {
 		td.addUserDefinedPropertyDefinition(propertyDefinition);
-		td.setVersion();
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.userPropertyDefinitionChanged.name(),
 				null,
@@ -250,7 +248,6 @@ public class TagManager {
 	public void updateUserDefinedPropertyDefinition(
 			TagDefinition td,
 			PropertyDefinition propertyDefinition) {
-		td.setVersion();
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.userPropertyDefinitionChanged.name(),
 				td,

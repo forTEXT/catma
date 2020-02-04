@@ -90,7 +90,6 @@ public class TeiTagLibraryDeserializer {
 					new TagDefinition(
 							tagDefinitionElement.getID(), 
 							description,
-							new Version(tagDefinitionElement.getAttributeValue(Attribute.n)), 
 							tagDefinitionElement.getAttributeValue(Attribute.fsDecl_baseTypes),
 							tagsetDefinition.getUuid());
 			

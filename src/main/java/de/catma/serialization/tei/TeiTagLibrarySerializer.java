@@ -22,6 +22,7 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 
 public class TeiTagLibrarySerializer {
 
@@ -44,7 +45,7 @@ public class TeiTagLibrarySerializer {
 		TeiElement fsdDecl = new TeiElement(TeiElementName.fsdDecl);
 		fsdDecl.setID(tagset.getUuid());
 		fsdDecl.setAttributeValue(
-			Attribute.n, tagset.getName() + " " + tagset.getVersion());
+			Attribute.n, tagset.getName() + " " + tagset.getRevisionHash());
 		encodingDesc.appendChild(fsdDecl);
 		
 		for (TagDefinition td : tagset) {
@@ -56,7 +57,7 @@ public class TeiTagLibrarySerializer {
 		
 		TeiElement fsDecl = new TeiElement(TeiElementName.fsDecl);
 		fsDecl.setID(td.getUuid());
-		fsDecl.setAttributeValue(Attribute.n, td.getVersion().toString());
+		fsDecl.setAttributeValue(Attribute.n, new Version().toString());
 		fsDecl.setAttributeValue(Attribute.type, td.getUuid());
 		if (!td.getParentUuid().isEmpty()) {
 			fsDecl.setAttributeValue(Attribute.fsDecl_baseTypes, td.getParentUuid());

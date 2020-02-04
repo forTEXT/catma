@@ -26,7 +26,7 @@ public class AddSubtagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 		TagDefinition tag = 
 			new TagDefinition(
 				idGenerator.generate(), 
-				tfName.getValue(), new Version(),
+				tfName.getValue(),
 				null, 
 				isWithTagsetSelection()?cbTagsets.getValue().getUuid():null);
 		

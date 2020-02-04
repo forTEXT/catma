@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  * @author marco.petris@web.de
  *
  */
-public class TagsetDefinition implements Versionable, Iterable<TagDefinition> {
+public class TagsetDefinition implements Iterable<TagDefinition> {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private String uuid;
@@ -79,10 +79,6 @@ public class TagsetDefinition implements Versionable, Iterable<TagDefinition> {
 		for (TagDefinition tagDefinition : toCopy) {
 			addTagDefinition(new TagDefinition(tagDefinition));
 		}
-	}
-
-	public Version getVersion() {
-		return version;
 	}
 	
 	@Override

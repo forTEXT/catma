@@ -1,10 +1,13 @@
 package de.catma.ui.module.analyze;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,7 +40,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
 	private final Project project;
 	private final LoadingCache<String, KwicProvider> kwicProviderCache;
 	private final BackgroundServiceProvider backgroundServiceProvider;
-	
+	   
 	public CSVExportFlatStreamSource(
 			Supplier<QueryResult> queryResultSupplier, Project project,
 			LoadingCache<String, KwicProvider> kwicProviderCache, BackgroundServiceProvider backgroundServiceProvider) {
@@ -53,6 +56,10 @@ public class CSVExportFlatStreamSource implements StreamSource {
 		final QueryResult queryResult = queryResultSupplier.get();
         final PipedInputStream in = new PipedInputStream();
         final UI ui = UI.getCurrent();
+        final Lock lock = new ReentrantLock();
+        final Condition sending  = lock.newCondition();
+        lock.lock();
+
         backgroundServiceProvider.submit("csv-export", new DefaultProgressCallable<Void>() {
         	@Override
         	public Void call() throws Exception {
@@ -65,6 +72,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
         						return "#"+ColorConverter.toHex(project.getTagManager().getTagLibrary().getTagDefinition(tagDefinitionId).getColor());
         					}
         				});
+        		
                 try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.withDelimiter(';'))) {
     	            for (QueryResultRow row : queryResult) {
     	            	KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
@@ -105,13 +113,21 @@ public class CSVExportFlatStreamSource implements StreamSource {
     	            				row.getRange().getEndPoint());
     	            	}
     	
-    	                csvPrinter.flush();  
+    	                csvPrinter.flush();
+    	                lock.lock();
+    	                try {
+    	                	sending.signal();
+    	                }
+    	                finally {
+    	                	lock.unlock();
+    	                }
     	            }
                 }
 
         		return null; //intended
         	}
-		}, new ExecutionListener<Void>() {
+		}, 
+        new ExecutionListener<Void>() {
 			@Override
 			public void done(Void result) {
 				// noop
@@ -121,18 +137,19 @@ public class CSVExportFlatStreamSource implements StreamSource {
 				((ErrorHandler)ui).showAndLogError("Error export data to CSV!", t);
 			}
 		});
-
         
         // waiting on the background thread to send data to the pipe
-        int tries = 100;
         try {
-			while (!(in.available() > 0) && tries > 0) {
-				Thread.sleep(10);
-				tries--;
+	        try {
+				sending.await(10, TimeUnit.SECONDS);
+			} catch (InterruptedException e1) {
+				Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export!", e1);
 			}
-		} catch (IOException | InterruptedException e) {
-			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export!", e);
-		}
+        }
+        finally {
+       		lock.unlock();
+        }
+
         
         return in;
 	}

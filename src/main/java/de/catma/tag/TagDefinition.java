@@ -28,11 +28,10 @@ import java.util.Map;
  * 
  * @author marco.petris@web.de
  */
-public class TagDefinition implements Versionable {
+public class TagDefinition {
 
 	private String uuid;
 	private String name;
-	private Version version = new Version(); //TODO: replace version with createdDate
 	private Map<String,PropertyDefinition> systemPropertyDefinitions;
 	private Map<String,PropertyDefinition> userDefinedPropertyDefinitions;
 	private String parentUuid;
@@ -47,12 +46,11 @@ public class TagDefinition implements Versionable {
 	 */
 	public TagDefinition(
 			String uuid, 
-			String name, Version version,  
+			String name,  
 			String parentUuid, String tagsetDefinitionUuid) {
 		this();
 		this.uuid = uuid;
 		this.name = name;
-		this.version = version;
 		this.parentUuid = parentUuid;
 		if (this.parentUuid == null) {
 			this.parentUuid = "";
@@ -66,7 +64,7 @@ public class TagDefinition implements Versionable {
 	 */
 	public TagDefinition(TagDefinition toCopy) {
 		this(toCopy.uuid, 
-				toCopy.name, new Version(toCopy.version), 
+				toCopy.name, 
 				toCopy.parentUuid, toCopy.tagsetDefinitionUuid);
 		
 		for (PropertyDefinition pd : toCopy.getSystemPropertyDefinitions()) {
@@ -81,24 +79,12 @@ public class TagDefinition implements Versionable {
 		systemPropertyDefinitions = new HashMap<String, PropertyDefinition>();
 		userDefinedPropertyDefinitions = new HashMap<String, PropertyDefinition>();
 	}
-
-	public Version getVersion() {
-		return version;
-	}
-
-	/**
-	 * Sets a new {@link Version}.
-	 */
-	void setVersion() {
-		this.version = new Version();
-	}
 	
 	
 	@Override
 	public String toString() {
 		return "TAG_DEF[" + name 
 				+ ",u#" + uuid +","
-				+version
 				+((parentUuid.isEmpty()) ? "]" : (",#"+parentUuid+"]"));
 	}
 

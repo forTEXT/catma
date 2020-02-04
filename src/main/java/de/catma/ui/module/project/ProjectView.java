@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.Collator;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -32,7 +34,9 @@ import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.FileDownloader;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.server.StreamResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
@@ -325,7 +329,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		() -> importTagSetBtn.setEnabled(true))
         		);
         
-        moreOptionsMenu.addItem("Export Tagsets", mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
+        MenuItem miExportTagsets = moreOptionsMenu.addItem("Export Tagsets");
+		StreamResource tagsetXmlExportResource = new StreamResource(
+			new TagsetXMLExportStreamSource(
+				() -> tagsetGrid.getSelectedItems(), 
+				() -> project),
+			"CATMA-Tag-Library_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".xml");
+		tagsetXmlExportResource	.setCacheTime(0);
+		tagsetXmlExportResource.setMIMEType("text/xml");
+	
+		FileDownloader tagsetXmlExportFileDownloader = 
+				new FileDownloader(tagsetXmlExportResource);
+	
+		tagsetXmlExportFileDownloader.extend(miExportTagsets);
         
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
@@ -355,6 +371,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         tagsetGrid.addItemClickListener(clickEvent -> handleTagsetClick(clickEvent));
         
         
+	}
+
+	private void handleExportTagsetsRequest() {
+
+		Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
+		
+		if (tagsets.isEmpty()) {
+			Notification.show("Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
+		}
+		else {
+			
+		}
 	}
 
 	private void handleTagsetClick(ItemClick<TagsetDefinition> itemClickEvent) {

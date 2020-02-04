@@ -37,7 +37,7 @@ public class AddParenttagDialog extends AbstractAddEditTagDialog<Pair<TagsetDefi
 		TagDefinition tag = 
 			new TagDefinition(
 				idGenerator.generate(), 
-				tfName.getValue(), new Version(),
+				tfName.getValue(),
 				null, 
 				cbTagsets.getValue().getUuid());
 		

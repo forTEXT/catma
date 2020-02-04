@@ -27,6 +27,7 @@ package de.catma.tag;
  * @author Marco Petris
  * 
  */
+@Deprecated
 public interface Versionable {
 	/**
 	 * @return the version of the implementer
