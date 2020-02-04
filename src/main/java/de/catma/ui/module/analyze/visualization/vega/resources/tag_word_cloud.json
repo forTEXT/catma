@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega/v5.8.json",
   "name": "wordcloud for tag queries",
   "autosize": {"type": "pad", "resize": true},
+  "background": "white",
   "data": [
     {
       "name": "queryresult",
@@ -13,8 +14,8 @@
       "transform": [
         {
           "type": "formula",
-          "as": "tagPathNice",
-          "expr": "substring(datum.tagPath,1,25)"
+          "as": "tagName",
+          "expr": "substring(datum.tagPath,lastindexof(datum.tagPath, '/')+1)"
         },
         {
           "type": "aggregate",
@@ -23,7 +24,7 @@
             "sourceDocumentId",
             "sourceDocumentTitle",
             "tagColor",
-            "tagPathNice"
+            "tagName"
           ],
           "ops": ["count"],
           "as": ["count"]
@@ -45,22 +46,22 @@
     {
       "name": "cellSize",
       "value": 8,
-      "bind": {"name": "wordcloud size","input": "range", "min": 5, "max": 20}
+      "bind": {"name": "wordcloud size", "input": "range", "min": 5, "max": 20}
     },
     {
       "name": "fontSizeMin",
       "value": 8,
-      "bind": {"name": "fontsize min","input": "range", "min": 1, "max": 10}
+      "bind": {"name": "fontsize min", "input": "range", "min": 1, "max": 10}
     },
     {
       "name": "fontSizeMax",
       "value": 20,
-      "bind": {"name":"fontsize max","input": "range", "min": 11, "max": 45}
+      "bind": {"name": "fontsize max", "input": "range", "min": 11, "max": 45}
     },
     {
       "name": "wordPadding",
       "value": 1,
-      "bind": {"name":"word padding","input": "range", "min": 1, "max": 10}
+      "bind": {"name": "word padding", "input": "range", "min": 1, "max": 10}
     },
     {"name": "child_width", "value": 100, "update": "40*cellSize"},
     {"name": "child_height", "value": 100, "update": "40*cellSize"},
@@ -83,7 +84,6 @@
       },
       "sort": {
         "field": ["datum.sourceDocumentTitle"],
-        "as": "docTitle",
         "order": ["ascending"]
       },
       "encode": {
@@ -95,7 +95,7 @@
       "title": {
         "style": "guide-label",
         "text": {"signal": "parent.sourceDocumentTitle"},
-         "fontSize" : 15
+        "fontSize": 15
       },
       "marks": [
         {
@@ -103,7 +103,8 @@
           "from": {"data": "tagCloudPerDoc"},
           "encode": {
             "enter": {
-              "text": {"field": "tagPathNice"},
+              "tooltip": {"field": "tagPath"},
+              "text": {"field": "tagName"},
               "align": {"value": "center"},
               "baseline": {"value": "alphabetic"}
             },
@@ -148,7 +149,7 @@
     }
   ],
   "config": {},
-    "usermeta": {
+  "usermeta": {
     "Author": "Christian Bruck, Institute for German Studies, University of Hamburg, 2019",
     "Licence": "GPLv3"
   }
