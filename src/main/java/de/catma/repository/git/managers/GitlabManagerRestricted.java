@@ -386,7 +386,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 							Map.Entry::getKey,
 							e -> RBACRole.forValue(e.getValue().value)));
 
-		} catch (GitLabApiException e){
+		} catch (GitLabApiException e) {
 			throw new IOException("Permission retrieval failed!",e);
 		}
 	}

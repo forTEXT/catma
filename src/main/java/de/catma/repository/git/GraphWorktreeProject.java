@@ -1152,30 +1152,6 @@ public class GraphWorktreeProject implements IndexedProject {
 				new TagsetDefinitionImportStatus(tagset, inProjectHistory, current));
 		}
 		return tagsetDefinitionImportStatusList;
-//		for (TagsetDefinition tagset : importedLibrary) {
-//			//TODO: check if there had been a Tagset with this ID in the Project namespace
-//			try {
-//				tagManagerListenersEnabled = false;
-//				try {
-//					addTagsetDefinition(tagset);
-//					tagManager.addTagsetDefinition(tagset);
-//				} catch (Exception e) {
-//					throw new IOException(
-//						String.format(
-//							"Import of Tagset %1$s failed! The import has been aborted.",
-//							tagset.getName()), 
-//						e);
-//				}
-//			}
-//			finally {
-//				tagManagerListenersEnabled = true;
-//			}
-//			for (TagDefinition tag : tagset.getRootTagDefinitions()) {
-//				tagManager.addTagDefinition(tagset, tag);
-//				
-//				importTagHierarchy(tag, tagset);
-//			}
-//		}
 	}
 	
 	@Override
@@ -1208,26 +1184,45 @@ public class GraphWorktreeProject implements IndexedProject {
 					}					
 				}
 				else if (!tagsetDefinitionImportStatus.isCurrent()) {
-					TagsetDefinition oldTagset = 
-							gitProjectHandler.cloneAndAddTagset(tagset.getUuid(), tagset.getName());
 					
 					String oldRootRevisionHash = this.rootRevisionHash;
 					
+					Pair<TagsetDefinition, String> result = 
+							gitProjectHandler.cloneAndAddTagset(
+								tagset.getUuid(), 
+								tagset.getName(),
+								String.format(
+										"Re-Added Tagset %1$s with ID %2$s", 
+										tagset.getName(), tagset.getUuid()));
 					
-					//TODO commit re-add
+					TagsetDefinition oldTagset = result.getFirst();
+					this.rootRevisionHash = result.getSecond();
 					
-					
+					// remove old Tags
 					for (TagDefinition tagDefinition : oldTagset.getRootTagDefinitions()) {
 						gitProjectHandler.removeTag(tagDefinition);
 						oldTagset.remove(tagDefinition);
 					}
-					try {
-						graphProjectHandler.addTagset(rootRevisionHash, oldTagset, oldRootRevisionHash);
 					
+					try {
+						// add empty Tagset
+						graphProjectHandler.addTagset(
+								this.rootRevisionHash, oldTagset, oldRootRevisionHash);
+					
+						// update meta data
 						oldTagset.setName(tagset.getName());
 					
 						updateTagsetDefinition(oldTagset);
 						
+						try {
+							tagManagerListenersEnabled = false;
+							tagManager.addTagsetDefinition(tagset);
+						}
+						finally {
+							tagManagerListenersEnabled = true;
+						}						
+						
+						// add imported Tags
 						for (TagDefinition tag : tagset.getRootTagDefinitions()) {
 							tagManager.addTagDefinition(oldTagset, tag);
 							
@@ -1235,17 +1230,60 @@ public class GraphWorktreeProject implements IndexedProject {
 						}						
 						
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						throw new IOException(
+								String.format(
+									"Import of Tagset %1$s failed! The import has been aborted.",
+									tagset.getName()), 
+								e);
 					}
-					
-					
 				}
 				else {
-					// TODO update existing Tagset
+					try {
+						TagsetDefinition existingTagset = 
+							getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid());
+						
+						for (TagDefinition incomingTag : tagset) {
+							if (existingTagset.hasTagDefinition(incomingTag.getUuid())) {
+								TagDefinition existingTag = existingTagset.getTagDefinition(incomingTag.getUuid());
+								for (PropertyDefinition incomingPropertyDef : incomingTag.getUserDefinedPropertyDefinitions()) {
+									PropertyDefinition existingPropertyDef = 
+											existingTag.getPropertyDefinitionByUuid(incomingPropertyDef.getUuid());
+									if (existingPropertyDef != null) {
+										for (String value : incomingPropertyDef.getPossibleValueList()) {
+											if (!existingPropertyDef.getPossibleValueList().contains(value)) {
+												existingPropertyDef.addValue(value);
+											}
+										}
+										existingPropertyDef.setName(incomingPropertyDef.getName());
+										
+										updatePropertyDefinition(existingPropertyDef, existingTag);
+									}
+									else {
+										existingTag.addUserDefinedPropertyDefinition(incomingPropertyDef);
+									}
+									
+									existingTag.setName(incomingTag.getName());
+									existingTag.setColor(incomingTag.getColor());
+									updateTagDefinition(existingTag, existingTagset);
+								}
+	
+							}
+							else {
+								getTagManager().addTagDefinition(existingTagset, incomingTag);
+							}
+						}
+						
+						existingTagset.setName(tagset.getName());
+						updateTagsetDefinition(existingTagset);
+					}
+					catch (Exception e) {
+						throw new IOException(
+								String.format(
+									"Import of Tagset %1$s failed! The import has been aborted.",
+									tagset.getName()), 
+								e);
+					}
 				}
-				
-				
 			}
 		}
 	}

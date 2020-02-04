@@ -56,6 +56,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 public class GitProjectHandler {
 
@@ -146,7 +147,7 @@ public class GitProjectHandler {
 		}
 	}
 	
-	public TagsetDefinition cloneAndAddTagset(String tagsetId, String name) throws IOException {
+	public Pair<TagsetDefinition, String> cloneAndAddTagset(String tagsetId, String name, String commitMsg) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
@@ -176,8 +177,8 @@ public class GitProjectHandler {
 					credentialsProvider
 			);
 			
-			localGitRepoManager.commit(
-					String.format("Added Tagset %1$s with ID %2$s", name, tagsetId),
+			String rootRevisionHash = localGitRepoManager.commit(
+					commitMsg,
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail(),
 					false);
@@ -187,13 +188,12 @@ public class GitProjectHandler {
 			gitTagsetHandler.checkout(
 				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
-			
-			//TODO:
-			rolesPerResource.put(
-				tagsetId, 
-				RBACRole.OWNER);
-			
-			return gitTagsetHandler.getTagset(projectId, tagsetId);
+			if (!rolesPerResource.containsKey(tagsetId)) {
+				RBACRole role = remoteGitServerManager.getRoleOnResource(user, projectId, tagsetId);
+				rolesPerResource.put(tagsetId, role);
+			}
+
+			return new Pair<>(gitTagsetHandler.getTagset(projectId, tagsetId), rootRevisionHash);
 		}
 	}
 	
@@ -1657,7 +1657,7 @@ public class GitProjectHandler {
 					 remoteGitServerManager.getUsername(),
 					 remoteGitServerManager.getEmail(), true);
 
-			 localGitRepoManager.push(credentialsProvider); //TODO: maybe better do a full synchronize?
+			 localGitRepoManager.push(credentialsProvider); //push may fail, we'll check that later up the chain
 		}
 	}
 

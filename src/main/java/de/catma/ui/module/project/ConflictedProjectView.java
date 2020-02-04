@@ -133,7 +133,7 @@ public class ConflictedProjectView extends HugeCard {
 						throw new Exception(e);
 					}
 				}
-				
+				// TODO: check if there everything is pushed, remote state might have prevented a push
 				eventBus.post(new RouteToProjectEvent(conflictedProject.getProjectReference(), true));
 			}
 		}
