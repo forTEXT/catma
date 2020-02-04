@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega/v5.json",
   "description": "A simple tag based distribution chart with tag start offsets binned to 10 percent chunks and facets for each Document",
   "autosize": {"type": "pad", "resize": true},
+  "background": "white",
   "data": [
     {
       "name": "queryresult",

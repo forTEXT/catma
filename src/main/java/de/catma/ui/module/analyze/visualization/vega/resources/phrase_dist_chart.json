@@ -5,6 +5,7 @@
     "type": "pad",
     "resize": true
   },
+  "background": "white",
   "data": [
     {
       "name": "queryresult",
