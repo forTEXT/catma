@@ -1157,9 +1157,11 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException {
 		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatusList) {
+			
 			if (tagsetDefinitionImportStatus.isDoImport()) {
 				TagsetDefinition tagset = tagsetDefinitionImportStatus.getTagset();
 				
+				// new Tagset
 				if (!tagsetDefinitionImportStatus.isInProjectHistory()) {
 					try {
 						tagManagerListenersEnabled = false;
@@ -1180,9 +1182,10 @@ public class GraphWorktreeProject implements IndexedProject {
 					for (TagDefinition tag : tagset.getRootTagDefinitions()) {
 						tagManager.addTagDefinition(tagset, tag);
 						
-						importTagHierarchy(tag, tagset);
+						importTagHierarchy(tag, tagset, tagset);
 					}					
 				}
+				// removed, but exists in version history
 				else if (!tagsetDefinitionImportStatus.isCurrent()) {
 					
 					String oldRootRevisionHash = this.rootRevisionHash;
@@ -1209,10 +1212,6 @@ public class GraphWorktreeProject implements IndexedProject {
 						graphProjectHandler.addTagset(
 								this.rootRevisionHash, oldTagset, oldRootRevisionHash);
 					
-						// update meta data
-						oldTagset.setName(tagset.getName());
-					
-						updateTagsetDefinition(oldTagset);
 						
 						try {
 							tagManagerListenersEnabled = false;
@@ -1226,9 +1225,13 @@ public class GraphWorktreeProject implements IndexedProject {
 						for (TagDefinition tag : tagset.getRootTagDefinitions()) {
 							tagManager.addTagDefinition(oldTagset, tag);
 							
-							importTagHierarchy(tag, oldTagset);
+							importTagHierarchy(tag, tagset, oldTagset);
 						}						
 						
+						// update meta data
+						oldTagset.setName(tagset.getName());
+						
+						updateTagsetDefinition(oldTagset);
 					} catch (Exception e) {
 						throw new IOException(
 								String.format(
@@ -1237,6 +1240,7 @@ public class GraphWorktreeProject implements IndexedProject {
 								e);
 					}
 				}
+				// exists already in project
 				else {
 					try {
 						TagsetDefinition existingTagset = 
@@ -1288,10 +1292,10 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 	}
 
-	private void importTagHierarchy(TagDefinition tag, TagsetDefinition tagset) {
+	private void importTagHierarchy(TagDefinition tag, TagsetDefinition tagset, TagsetDefinition targetTagset) {
 		for (TagDefinition childTag : tagset.getDirectChildren(tag)) {
-			tagManager.addTagDefinition(tagset, childTag);
-			importTagHierarchy(childTag, tagset);
+			tagManager.addTagDefinition(targetTagset, childTag);
+			importTagHierarchy(childTag, tagset, targetTagset);
 		}
 	}
 

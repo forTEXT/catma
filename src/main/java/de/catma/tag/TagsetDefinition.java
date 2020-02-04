@@ -98,6 +98,8 @@ public class TagsetDefinition implements Versionable, Iterable<TagDefinition> {
 		}
 		tagDefinitionChildren.get(
 				tagDef.getParentUuid()).add(tagDef.getUuid());
+		
+		deletedDefinitions.remove(tagDef.getUuid());
 	}
 	
 	public String getUuid() {
