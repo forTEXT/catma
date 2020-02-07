@@ -25,12 +25,12 @@ import java.io.OutputStream;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.SourceDocument;
 import de.catma.serialization.DocumentSerializer;
-import de.catma.serialization.UserMarkupCollectionSerializationHandler;
+import de.catma.serialization.AnnotationCollectionSerializationHandler;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 
 public class TeiUserMarkupCollectionSerializationHandler implements
-		UserMarkupCollectionSerializationHandler {
+		AnnotationCollectionSerializationHandler {
 
 	private TagManager tagManager;
 	private boolean withText;

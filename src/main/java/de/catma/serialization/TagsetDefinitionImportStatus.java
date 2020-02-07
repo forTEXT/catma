@@ -1,5 +1,7 @@
 package de.catma.serialization;
 
+import java.util.Set;
+
 import de.catma.tag.TagsetDefinition;
 
 public class TagsetDefinitionImportStatus {
@@ -8,6 +10,7 @@ public class TagsetDefinitionImportStatus {
 	private boolean inProjectHistory;
 	private boolean current;
 	private boolean doImport = true;
+	private Set<String> tagDefinitionIds;
 	
 	public TagsetDefinitionImportStatus(TagsetDefinition tagset, boolean inProjectHistory, boolean current) {
 		super();
@@ -35,4 +38,19 @@ public class TagsetDefinitionImportStatus {
 	public void setDoImport(boolean doImport) {
 		this.doImport = doImport;
 	}
+
+	public void setUpdateFilter(Set<String> tagDefinitionIds) {
+		this.tagDefinitionIds = tagDefinitionIds;
+	}
+
+	public boolean passesUpdateFilter(String tagDefinitionId) {
+		
+		if (this.tagDefinitionIds != null) {
+			return this.tagDefinitionIds.contains(tagDefinitionId);
+		}
+		
+		return true;
+	}
+	
+	
 }

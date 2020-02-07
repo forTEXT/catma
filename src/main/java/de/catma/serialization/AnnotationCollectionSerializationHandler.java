@@ -25,9 +25,9 @@ import java.io.OutputStream;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.SourceDocument;
 
-public interface UserMarkupCollectionSerializationHandler {
+public interface AnnotationCollectionSerializationHandler {
 
-	public void serialize(AnnotationCollection userMarkupCollection, 
+	public void serialize(AnnotationCollection annotationCollection, 
 		SourceDocument sourceDocument, OutputStream outputStream) throws IOException;
 	
 	public AnnotationCollection deserialize(

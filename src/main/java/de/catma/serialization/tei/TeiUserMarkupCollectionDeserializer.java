@@ -149,7 +149,7 @@ public class TeiUserMarkupCollectionDeserializer {
 		for (int i=0; i<propertyElements.size(); i++) {
 			try {
 				TeiElement curPropertyElement = (TeiElement)propertyElements.get(i);
-				//TODO: check if we need to make a new TeiDoc Version to support this, f_name no longer contains the name but the uuid!
+
 				PropertyDefinition propertyDefinition =
 						tagDefinition.getPropertyDefinition(
 								curPropertyElement.getAttributeValue(Attribute.f_name));

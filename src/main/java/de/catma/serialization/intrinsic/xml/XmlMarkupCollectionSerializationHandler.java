@@ -17,7 +17,7 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
-import de.catma.serialization.UserMarkupCollectionSerializationHandler;
+import de.catma.serialization.AnnotationCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -35,7 +35,7 @@ import nu.xom.Node;
 import nu.xom.Text;
 
 public class XmlMarkupCollectionSerializationHandler implements
-		UserMarkupCollectionSerializationHandler {
+		AnnotationCollectionSerializationHandler {
 	
 	private SourceDocument sourceDocument;
 	private TagManager tagManager;

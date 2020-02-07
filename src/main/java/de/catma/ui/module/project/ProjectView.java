@@ -53,6 +53,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
@@ -106,6 +107,7 @@ import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 /**
  *
@@ -292,7 +294,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         documentsGridMoreOptionsContextMenu.addItem(
         		"Import Collections", 
-        		mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
+        		mi -> handleImportCollectionRequest());
         documentsGridMoreOptionsContextMenu.addItem(
         		"Export Collections", 
         		mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
@@ -372,18 +374,90 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         
 	}
-
-	private void handleExportTagsetsRequest() {
-
-		Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
+	private void handleImportCollectionRequest() {
+		try {
+	    	if (project.hasUncommittedChanges()) {
+	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
+	    			"Commit all changes", 
+	    			"You have changes, that need to be committed first, please enter a short description for this commit:", 
+	    			commitMsg -> {
+	    				try {
+		    				project.commitChanges(commitMsg);
+		    				importCollection();
+	    				}
+	    				catch (Exception e) {
+	    					setEnabled(true);
+	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
+	    				}
+	    			});
+	    		dlg.show();
+	    	}
+	    	else {
+	    		importCollection();
+	    	}
+    	}
+    	catch (Exception e) {
+            errorHandler.showAndLogError("Error accessing Project!", e);
+    	}		
+	}
+	private void importCollection() {
+		Set<SourceDocument> selectedDocuments = getSelectedDocuments();
 		
-		if (tagsets.isEmpty()) {
-			Notification.show("Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
+		if (selectedDocuments.size() != 1) {
+			Notification.show("Info", "Please select the corresponding Document first!", Type.HUMANIZED_MESSAGE);
 		}
 		else {
+			final SourceDocument document = selectedDocuments.iterator().next();
 			
+			UploadDialog uploadDialog =
+					new UploadDialog(String.format("Upload a Collection for %1$s:", document.toString()),
+							new SaveCancelListener<byte[]>() {
+				
+				public void savePressed(byte[] result) {
+					InputStream is = new ByteArrayInputStream(result);
+					try {
+						if (BOMFilterInputStream.hasBOM(result)) {
+							is = new BOMFilterInputStream(
+									is, Charset.forName("UTF-8")); //$NON-NLS-1$
+						}
+						
+						Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
+								project.loadAnnotationCollection(is, document);
+						
+						List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
+						final AnnotationCollection annotationCollection = loadResult.getFirst();
+						
+						CollectionImportDialog tagsetImportDialog = 
+							new CollectionImportDialog(
+									tagsetDefinitionImportStatusList, 
+									new SaveCancelListener<List<TagsetDefinitionImportStatus>>() {
+								@Override
+								public void savePressed(List<TagsetDefinitionImportStatus> result) {
+									try {
+										project.importCollection(result, annotationCollection);
+									} catch (IOException e) {
+										((CatmaApplication)UI.getCurrent()).showAndLogError(
+											"Error importing Tagsets", e);
+									}
+								}
+						});
+						
+						tagsetImportDialog.show();
+						
+					} catch (IOException e) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
+							"Error loading external Tagsets", e);
+					}
+					finally {
+						CloseSafe.close(is);
+					}
+				}
+				
+			});
+			uploadDialog.show();
 		}
 	}
+
 
 	private void handleTagsetClick(ItemClick<TagsetDefinition> itemClickEvent) {
     	if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
@@ -408,7 +482,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleImportTagsetsRequest() {
 		UploadDialog uploadDialog =
-				new UploadDialog("Upload Tagsets",
+				new UploadDialog("Upload a Tag Library with one or more Tagsets:",
 						new SaveCancelListener<byte[]>() {
 			
 			public void savePressed(byte[] result) {
@@ -423,7 +497,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							project.loadTagLibrary(is);
 					
 					TagsetImportDialog tagsetImportDialog = 
-						new TagsetImportDialog(tagsetDefinitionImportStatusList, new SaveCancelListener<List<TagsetDefinitionImportStatus>>() {
+						new TagsetImportDialog(
+								tagsetDefinitionImportStatusList, 
+								new SaveCancelListener<List<TagsetDefinitionImportStatus>>() {
 							@Override
 							public void savePressed(List<TagsetDefinitionImportStatus> result) {
 								try {
@@ -433,7 +509,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 										"Error importing Tagsets", e);
 								}
 							}
-					});
+						});
 					
 					tagsetImportDialog.show();
 					
@@ -457,7 +533,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	if (project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
 	    			"Commit all changes", 
-	    			"You have uncommited changes, please enter a short description for this commit:", 
+	    			"You have uncommitted changes, please enter a short description for this commit:", 
 	    			commitMsg -> {
 	    				try {
 		    				project.commitChanges(commitMsg);
@@ -654,8 +730,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         collectionNameDlg.show();
     	
 	}
-
-	private void handleAddCollectionRequest() {
+	
+	private Set<SourceDocument> getSelectedDocuments() {
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<Resource> resourceDataProvider = 
 				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
@@ -675,6 +751,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		DocumentResource documentResource = (DocumentResource)root;
     		selectedDocuments.add(documentResource.getDocument());
     	}
+    	
+    	return selectedDocuments;
+	}
+
+	private void handleAddCollectionRequest() {
+
+    	Set<SourceDocument> selectedDocuments = getSelectedDocuments();
     	
     	if (!selectedDocuments.isEmpty()) {
 	    	SingleTextInputDialog collectionNameDlg = 

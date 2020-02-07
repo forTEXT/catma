@@ -31,6 +31,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.UI;
@@ -63,8 +64,9 @@ import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.TagsetDefinitionImportStatus;
-import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.serialization.tei.TeiSerializationHandlerFactory;
+import de.catma.serialization.tei.TeiTagLibrarySerializationHandler;
+import de.catma.serialization.tei.TeiUserMarkupCollectionDeserializer;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -998,19 +1000,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void importUserMarkupCollection(InputStream inputStream, SourceDocument sourceDocument) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void importUserMarkupCollection(InputStream inputStream, SourceDocument sourceDocument,
-			UserMarkupCollectionSerializationHandler userMarkupCollectionSerializationHandler) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public AnnotationCollection getUserMarkupCollection(AnnotationCollectionReference userMarkupCollectionReference)
 			throws IOException {
 		try {
@@ -1088,11 +1077,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	@Deprecated
-	public void update(List<AnnotationCollection> userMarkupCollections, TagsetDefinition tagsetDefinition) {
-	}
-
-	@Override
 	public void update(
 			AnnotationCollectionReference collectionReference, 
 			ContentInfoSet contentInfoSet) throws Exception {
@@ -1131,6 +1115,117 @@ public class GraphWorktreeProject implements IndexedProject {
 		eventBus.post(
 			new CollectionChangeEvent(
 				collectionReference, document, ChangeType.DELETED));
+	}
+	
+	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadAnnotationCollection(
+			InputStream inputStream, SourceDocument document) throws IOException {
+		TagManager tagManager = new TagManager(new TagLibrary());
+		
+		TeiTagLibrarySerializationHandler  tagLibrarySerializationHandler = new TeiTagLibrarySerializationHandler(tagManager);
+
+		TagLibrary importedLibrary =
+			tagLibrarySerializationHandler.deserialize(null, inputStream);
+		
+		List<String> resourceIds = gitProjectHandler.getResourceIds();
+		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = new ArrayList<>();
+		for (TagsetDefinition tagset : importedLibrary) {
+			boolean inProjectHistory = resourceIds.contains(tagset.getUuid());
+			boolean current = 
+				inProjectHistory && (getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid()) != null);
+			tagsetDefinitionImportStatusList.add(
+				new TagsetDefinitionImportStatus(tagset, inProjectHistory, current));
+		}
+		
+		String collectionId = idGenerator.generate();
+		
+		TeiUserMarkupCollectionDeserializer deserializer = 
+				new TeiUserMarkupCollectionDeserializer(
+						tagLibrarySerializationHandler.getTeiDocument(), tagManager.getTagLibrary(),
+						collectionId);
+		
+		AnnotationCollection annotationCollection = new AnnotationCollection(
+				collectionId, tagLibrarySerializationHandler.getTeiDocument().getContentInfoSet(),
+				tagManager.getTagLibrary(), deserializer.getTagReferences(),
+				document.getUuid(),
+				document.getRevisionHash());
+		
+		return new Pair<>(annotationCollection, tagsetDefinitionImportStatusList);
+	}
+	
+	public void importCollection(
+		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList, 
+		AnnotationCollection importAnnotationCollection) throws IOException {
+	
+		// if updates to existing Tagsets are needed, update only the Tags
+		// that are actually referenced in the Collection
+		Set<String> tagDefinitionIds = 
+			importAnnotationCollection.getTagReferences().stream().map(
+					tagRef -> tagRef.getTagDefinitionId()).collect(Collectors.toSet());
+		
+	
+		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatusList) {
+			tagsetDefinitionImportStatus.setUpdateFilter(tagDefinitionIds);
+		}
+		
+		importTagsets(tagsetDefinitionImportStatusList);
+		
+		importAnnotationCollection.setTagLibrary(tagManager.getTagLibrary());
+		
+		try {
+			SourceDocument sourceDocument = 
+					getSourceDocument(importAnnotationCollection.getSourceDocumentId());
+			String umcRevisionHash = gitProjectHandler.createMarkupCollection(
+					importAnnotationCollection.getId(), 
+					importAnnotationCollection.getName(), 
+					importAnnotationCollection.getContentInfoSet().getDescription(), //description
+					importAnnotationCollection.getSourceDocumentId(), 
+					importAnnotationCollection.getSourceDocumentRevisionHash());
+		
+			String oldRootRevisionHash = this.rootRevisionHash;
+			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+	
+			
+			graphProjectHandler.addCollection(
+				rootRevisionHash, 
+				importAnnotationCollection.getId(), 
+				importAnnotationCollection.getName(), umcRevisionHash, 
+				sourceDocument,
+				tagManager.getTagLibrary(),
+				oldRootRevisionHash);
+		
+			AnnotationCollectionReference annotationCollectionReference =
+					sourceDocument.getUserMarkupCollectionReference(importAnnotationCollection.getId());
+			eventBus.post(
+				new CollectionChangeEvent(
+					annotationCollectionReference, 
+					sourceDocument, 
+					ChangeType.CREATED));		
+			
+			AnnotationCollection createdAnnotationCollection = getUserMarkupCollection(annotationCollectionReference);
+			createdAnnotationCollection.addTagReferences(importAnnotationCollection.getTagReferences());
+			ArrayListMultimap<String, TagReference> tagReferencesByTagInstanceId = ArrayListMultimap.create();
+			
+			importAnnotationCollection.getTagReferences().stream().forEach(
+				tagReference -> tagReferencesByTagInstanceId.put(tagReference.getTagInstanceId(), tagReference));
+			for (String tagInstanceId : tagReferencesByTagInstanceId.keySet()) {
+				update(
+						createdAnnotationCollection, 
+						tagReferencesByTagInstanceId.get(tagInstanceId));
+			}
+			
+			commitChanges(
+				String.format(
+					"Imported Annotations from Collection %1$s with ID %2$s", 
+					createdAnnotationCollection.getName(), 
+					createdAnnotationCollection.getId()));
+		}
+		catch (Exception e) {
+			throw new IOException(
+				String.format(
+					"Import of Collection %1$s failed! The import has been aborted.",
+					importAnnotationCollection.getName()), 
+				e);		
+		}
 	}
 
 	@Override
@@ -1247,33 +1342,35 @@ public class GraphWorktreeProject implements IndexedProject {
 							getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid());
 						
 						for (TagDefinition incomingTag : tagset) {
-							if (existingTagset.hasTagDefinition(incomingTag.getUuid())) {
-								TagDefinition existingTag = existingTagset.getTagDefinition(incomingTag.getUuid());
-								for (PropertyDefinition incomingPropertyDef : incomingTag.getUserDefinedPropertyDefinitions()) {
-									PropertyDefinition existingPropertyDef = 
-											existingTag.getPropertyDefinitionByUuid(incomingPropertyDef.getUuid());
-									if (existingPropertyDef != null) {
-										for (String value : incomingPropertyDef.getPossibleValueList()) {
-											if (!existingPropertyDef.getPossibleValueList().contains(value)) {
-												existingPropertyDef.addValue(value);
+							if (tagsetDefinitionImportStatus.passesUpdateFilter(incomingTag.getUuid())) {
+								if (existingTagset.hasTagDefinition(incomingTag.getUuid())) {
+									TagDefinition existingTag = existingTagset.getTagDefinition(incomingTag.getUuid());
+									for (PropertyDefinition incomingPropertyDef : incomingTag.getUserDefinedPropertyDefinitions()) {
+										PropertyDefinition existingPropertyDef = 
+												existingTag.getPropertyDefinitionByUuid(incomingPropertyDef.getUuid());
+										if (existingPropertyDef != null) {
+											for (String value : incomingPropertyDef.getPossibleValueList()) {
+												if (!existingPropertyDef.getPossibleValueList().contains(value)) {
+													existingPropertyDef.addValue(value);
+												}
 											}
+											existingPropertyDef.setName(incomingPropertyDef.getName());
+											
+											updatePropertyDefinition(existingPropertyDef, existingTag);
 										}
-										existingPropertyDef.setName(incomingPropertyDef.getName());
+										else {
+											existingTag.addUserDefinedPropertyDefinition(incomingPropertyDef);
+										}
 										
-										updatePropertyDefinition(existingPropertyDef, existingTag);
+										existingTag.setName(incomingTag.getName());
+										existingTag.setColor(incomingTag.getColor());
+										updateTagDefinition(existingTag, existingTagset);
 									}
-									else {
-										existingTag.addUserDefinedPropertyDefinition(incomingPropertyDef);
-									}
-									
-									existingTag.setName(incomingTag.getName());
-									existingTag.setColor(incomingTag.getColor());
-									updateTagDefinition(existingTag, existingTagset);
+		
 								}
-	
-							}
-							else {
-								getTagManager().addTagDefinition(existingTagset, incomingTag);
+								else {
+									getTagManager().addTagDefinition(existingTagset, incomingTag);
+								}
 							}
 						}
 						

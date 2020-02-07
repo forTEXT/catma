@@ -36,7 +36,6 @@ import de.catma.project.Project;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
-import de.catma.tag.TagsetDefinition;
 import de.catma.util.Pair;
 
 /**
@@ -61,28 +60,6 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 		this.repository = repository;
 		collectionById = new HashMap<String, AnnotationCollection>();
 	}
-	
-	/**
-	 * Updates given UserMarkupCollections
-	 * with the TagsetDefinition. That is all the {@link de.catma.tag.TagLibrary TagLibraries}
-	 * and all the {@link TagInstance}s are updated with the new TagsetDefinition.
-	 * The actual persistent modifications are made through {@link Project#update(List, TagsetDefinition)}.
-	 * @param outOfSynchCollections
-	 * @param tagsetDefinition
-	 */
-	@Deprecated
-	public void updateUserMarkupCollections(
-			List<AnnotationCollection> outOfSynchCollections, 
-			TagsetDefinition tagsetDefinition) {
-		
-		for (AnnotationCollection userMarkupCollection : outOfSynchCollections) {
-			logger.info("synching " + userMarkupCollection);
-			userMarkupCollection.synchronizeTagInstances();
-		}
-
-		repository.update(outOfSynchCollections, tagsetDefinition);
-	}
-	
 
 	public void add(AnnotationCollection userMarkupCollection) {
 		if (!this.collectionById.containsValue(userMarkupCollection)) {

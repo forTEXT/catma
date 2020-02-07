@@ -24,7 +24,7 @@ public interface SerializationHandlerFactory {
 
 	public SourceDocumentInfoSerializationHandler getSourceDocumentInfoSerializationHandler();
 	public TagLibrarySerializationHandler getTagLibrarySerializationHandler();
-	public UserMarkupCollectionSerializationHandler getUserMarkupCollectionSerializationHandler();
+	public AnnotationCollectionSerializationHandler getAnnotationCollectionSerializationHandler();
 	public void setTagManager(TagManager tagManager);
 	
 }

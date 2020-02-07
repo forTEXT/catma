@@ -33,6 +33,7 @@ import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
 
 public class TeiUserMarkupCollectionSerializer {
 	
@@ -81,7 +82,8 @@ public class TeiUserMarkupCollectionSerializer {
 			if (!currentReferences.isEmpty()) {
 				parent = writeSegment(
 						currentReferences, ptrParentElement, 
-						textElement, addedTagInstances);
+						textElement, addedTagInstances, 
+						userMarkupCollection.getTagLibrary());
 			}
 			writeText(
 				targetURI, range, parent, sourceDocument);
@@ -167,13 +169,13 @@ public class TeiUserMarkupCollectionSerializer {
 
 	private TeiElement writeSegment(
 		List<TagReference> tagReferences, TeiElement abElement, 
-		TeiElement textElement, Set<String> addedTagInstances) {
+		TeiElement textElement, Set<String> addedTagInstances, TagLibrary tagLibrary) {
 		
 		List<TagInstance> tagInstances = new ArrayList<TagInstance>();
 		
 		for (TagReference tr : tagReferences) {
 			if (!addedTagInstances.contains(tr.getTagInstanceId())) {
-				writeTagInstance(tr.getTagInstance(), textElement);
+				writeTagInstance(tr.getTagInstance(), textElement, tagLibrary);
 				addedTagInstances.add(tr.getTagInstanceId());
 			}
 			tagInstances.add(tr.getTagInstance());
@@ -190,7 +192,7 @@ public class TeiUserMarkupCollectionSerializer {
 
 
 	private void writeTagInstance(TagInstance tagInstance,
-			TeiElement textElement) {
+			TeiElement textElement, TagLibrary tagLibrary) {
 		
 		TeiElement fs = new TeiElement(TeiElementName.fs);
 		textElement.appendChild(fs);
@@ -199,11 +201,11 @@ public class TeiUserMarkupCollectionSerializer {
 		fs.setAttributeValue(
 			Attribute.type, tagInstance.getTagDefinitionId());
 		for (Property p : tagInstance.getSystemProperties()) {
-			writeProperty(p, fs);
+			writeProperty(p, fs, tagInstance.getTagDefinitionId(), tagLibrary);
 		}
 		
 		for (Property p : tagInstance.getUserDefinedProperties()) {
-			writeProperty(p,fs);
+			writeProperty(p, fs, tagInstance.getTagDefinitionId(), tagLibrary);
 		}
 		
 	}
@@ -218,13 +220,13 @@ public class TeiUserMarkupCollectionSerializer {
 		}
 	}
 
-	private void writeProperty(Property property, TeiElement fs) {
+	private void writeProperty(Property property, TeiElement fs, String tagDefinitionId, TagLibrary tagLibrary) {
 		TeiElement f = new TeiElement(TeiElementName.f);
 		fs.appendChild(f);
 		
-		//TODO: check if we need to make a new TeiDoc Version to support this, f_name no longer contains the name but the uuid!
-
-		f.setAttributeValue(Attribute.f_name, Validator.SINGLETON.convertToXMLName(property.getPropertyDefinitionId()));
+		String propertyName = 
+			tagLibrary.getTagDefinition(tagDefinitionId).getPropertyDefinitionByUuid(property.getPropertyDefinitionId()).getName();
+		f.setAttributeValue(Attribute.f_name, Validator.SINGLETON.convertToXMLName(propertyName));
 
 		if (property.getPropertyValueList().size() > 1) {
 			TeiElement vRange = new TeiElement(TeiElementName.vRange);

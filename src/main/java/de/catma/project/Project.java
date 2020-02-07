@@ -40,7 +40,7 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.serialization.TagsetDefinitionImportStatus;
-import de.catma.serialization.UserMarkupCollectionSerializationHandler;
+import de.catma.serialization.AnnotationCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -279,20 +279,7 @@ public interface Project {
 	 * @throws IOException
 	 */
 	public void createUserMarkupCollection(String name, SourceDocument sourceDocument);
-	/**
-	 * Imports a User Markup Collection.
-	 * @param inputStream the User Markup Collection
-	 * @param sourceDocument the corresponding Source Document
-	 * @throws IOException
-	 */
-	public void importUserMarkupCollection(
-			InputStream inputStream, SourceDocument sourceDocument) throws IOException;
-	
-	public void importUserMarkupCollection(
-			InputStream inputStream,
-			final SourceDocument sourceDocument, 
-			UserMarkupCollectionSerializationHandler userMarkupCollectionSerializationHandler) 
-					throws IOException;
+
 	/**
 	 * @param userMarkupCollectionReference
 	 * @return the User Markup Collection for the given reference.
@@ -319,13 +306,7 @@ public interface Project {
 	 */
 	public void update(
 			AnnotationCollection userMarkupCollection, TagInstance tagInstance, Collection<Property> properties) throws IOException;
-	/**
-	 * Updates the give TagsetDefinition within the list of User Markup Collections.
-	 * @param userMarkupCollections
-	 * @param tagsetDefinition
-	 */
-	public void update(List<AnnotationCollection> userMarkupCollections,
-			TagsetDefinition tagsetDefinition);
+
 	/**
 	 * Updates the User Markup Collection's metadata.
 	 * @param userMarkupCollectionReference
@@ -401,5 +382,11 @@ public interface Project {
 		String name, SourceDocument sourceDocument, Integer userId, RBACRole role);
 
 	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException;
+
+	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadAnnotationCollection(
+			InputStream inputStream, SourceDocument document) throws IOException;
+
+	public void importCollection(
+		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList, AnnotationCollection annotationCollection) throws IOException;
 
 }

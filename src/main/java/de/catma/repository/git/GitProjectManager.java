@@ -119,15 +119,9 @@ public class GitProjectManager implements ProjectManager {
 	 */
 	@Override
 	public void delete(String projectId) throws IOException {
-		List<String> repositoryNames = this.remoteGitServerManager.getGroupRepositoryNames(
-			projectId
+		FileUtils.deleteDirectory(
+			Paths.get(this.localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(), projectId).toFile()
 		);
-
-		for (String name : repositoryNames) {
-			FileUtils.deleteDirectory(
-				new File(this.localGitRepositoryManager.getRepositoryBasePath(), name)
-			);
-		}
 
 		this.remoteGitServerManager.deleteGroup(projectId);
 		try {

@@ -21,7 +21,7 @@ package de.catma.serialization.tei;
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.serialization.SourceDocumentInfoSerializationHandler;
 import de.catma.serialization.TagLibrarySerializationHandler;
-import de.catma.serialization.UserMarkupCollectionSerializationHandler;
+import de.catma.serialization.AnnotationCollectionSerializationHandler;
 import de.catma.tag.TagManager;
 
 public class TeiSerializationHandlerFactory implements
@@ -41,7 +41,7 @@ public class TeiSerializationHandlerFactory implements
 		return new TeiTagLibrarySerializationHandler(tagManager);
 	}
 
-	public UserMarkupCollectionSerializationHandler getUserMarkupCollectionSerializationHandler() {
+	public AnnotationCollectionSerializationHandler getAnnotationCollectionSerializationHandler() {
 		return new TeiUserMarkupCollectionSerializationHandler(tagManager, false);
 	}
 

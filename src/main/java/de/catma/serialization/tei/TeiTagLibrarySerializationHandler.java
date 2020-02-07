@@ -55,6 +55,10 @@ public class TeiTagLibrarySerializationHandler implements TagLibrarySerializatio
 		return tagManager.getTagLibrary();
 	}
 	
+	public TeiDocument getTeiDocument() {
+		return teiDocument;
+	}
+	
 	public TagLibrary deserialize(
 			String id, InputStream inputStream) throws IOException {
 		try {
