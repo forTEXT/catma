@@ -293,11 +293,27 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             	"Analyze Documents / Collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
 
         documentsGridMoreOptionsContextMenu.addItem(
-        		"Import Collections", 
+        		"Import a Collection", 
         		mi -> handleImportCollectionRequest());
-        documentsGridMoreOptionsContextMenu.addItem(
-        		"Export Collections", 
-        		mi -> Notification.show("Info", "Will be implemented soon!", Type.HUMANIZED_MESSAGE));
+        MenuItem miExportCollections = documentsGridMoreOptionsContextMenu.addItem(
+        		"Export Collections");
+        
+		StreamResource collectionXmlExportResource = new StreamResource(
+				new CollectionXMLExportStreamSource(
+					()-> getSelectedDocuments(),
+					() -> documentGrid.getSelectedItems().stream()
+						.filter(resource -> resource.isCollection())
+						.map(resource -> ((CollectionResource)resource).getCollectionReference())
+						.collect(Collectors.toList()),
+					() -> project),
+				"CATMA-Corpus_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".tar.gz");
+		collectionXmlExportResource	.setCacheTime(0);
+		collectionXmlExportResource.setMIMEType("application/gzip");
+	
+		FileDownloader collectionXmlExportFileDownloader = 
+					new FileDownloader(collectionXmlExportResource);
+		
+		collectionXmlExportFileDownloader.extend(miExportCollections);
 
         documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
         

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
 import java.util.zip.GZIPOutputStream;
 
@@ -35,7 +34,7 @@ public class CorpusExporter {
 	}
 
 	public void export(
-		String exportName, Collection<Corpus> corpora,  OutputStream os) throws IOException {
+		String exportName, Corpus corpus,  OutputStream os) throws IOException {
 		
 		OutputStream tarFileOs = new GZIPOutputStream(os);
 		
@@ -45,55 +44,48 @@ public class CorpusExporter {
 			taOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
 			taOut.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
 			
-			for (Corpus corpus : corpora) {
-				String corpusName = cleanupName(corpus.toString());
+			for (SourceDocument sd : corpus.getSourceDocuments()) {
 				
-				for (SourceDocument sd : corpus.getSourceDocuments()) {
-					
-					TarArchiveEntry sdEntry = 
-						new TarArchiveEntry(getSourceDocEntryName(exportName, corpusName, sd));
+				TarArchiveEntry sdEntry = 
+					new TarArchiveEntry(getSourceDocEntryName(exportName, sd));
+			
+				byte[] sdContent = 
+					sd.getContent().getBytes(Charset.forName("UTF8"));
 				
-					byte[] sdContent = 
-						sd.getContent().getBytes(Charset.forName("UTF8"));
+				sdEntry.setSize(sdContent.length);
+				
+				taOut.putArchiveEntry(sdEntry);
+				
+				taOut.write(sdContent);
+				
+				taOut.closeArchiveEntry();
+				
+				for (AnnotationCollectionReference umcRef 
+						: corpus.getUserMarkupCollectionRefs(sd)) {
 					
-					sdEntry.setSize(sdContent.length);
+					AnnotationCollection umc = 
+							repo.getUserMarkupCollection(umcRef);
+
+					TeiUserMarkupCollectionSerializationHandler handler =
+							new TeiUserMarkupCollectionSerializationHandler(
+									repo.getTagManager(), false);
+					ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
+					handler.serialize(
+						repo.getUserMarkupCollection(umcRef), sd, teiDocOut);
+
+					byte[] umcContent = teiDocOut.toByteArray();
 					
-					taOut.putArchiveEntry(sdEntry);
+					String umcEntryName = getUmcEntryName(exportName, umc, sd);
 					
-					taOut.write(sdContent);
+					TarArchiveEntry umcEntry = 
+						new TarArchiveEntry(umcEntryName);
+					
+					umcEntry.setSize(umcContent.length);
+					
+					taOut.putArchiveEntry(umcEntry);
+					taOut.write(umcContent);
 					
 					taOut.closeArchiveEntry();
-					
-					for (AnnotationCollectionReference umcRef 
-							: corpus.getUserMarkupCollectionRefs(sd)) {
-						
-						AnnotationCollection umc = 
-								repo.getUserMarkupCollection(umcRef);
-
-						TeiUserMarkupCollectionSerializationHandler handler =
-								new TeiUserMarkupCollectionSerializationHandler(
-										repo.getTagManager(), false);
-						ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
-						handler.serialize(
-							repo.getUserMarkupCollection(umcRef), sd, teiDocOut);
-
-						byte[] umcContent = teiDocOut.toByteArray();
-						
-						String umcEntryName = getUmcEntryName(exportName, corpusName, umc, sd);
-						
-						TarArchiveEntry umcEntry = 
-							new TarArchiveEntry(umcEntryName);
-						
-						umcEntry.setSize(umcContent.length);
-						
-						taOut.putArchiveEntry(umcEntry);
-						taOut.write(umcContent);
-						
-						taOut.closeArchiveEntry();
-					}
-					
-					sd.unload();
-					
 				}
 			}
 		}
@@ -104,11 +96,9 @@ public class CorpusExporter {
 		
 	}
 	
-	private String getUmcEntryName(String exportName, String corpusName, AnnotationCollection umc, SourceDocument sd) {
+	private String getUmcEntryName(String exportName, AnnotationCollection umc, SourceDocument sd) {
 		if (simpleEntryStyle) {
-			return corpusName 
-					+ "/" 
-					+ cleanupName(getFilename(sd, false))
+			return cleanupName(getFilename(sd, false))
 					+ "/annotationcollections/" 
 					+ cleanupName(umc.getName())
 					+ ".xml";
@@ -117,8 +107,6 @@ public class CorpusExporter {
 		return exportName 
 				+ "_" 
 				+ date 
-				+ "/"
-				+ corpusName 										 
 				+ "/" + cleanupName(sd.getUuid()) 
 				+ "/annotationcollections/" 
 				+ cleanupName(umc.getName())
@@ -126,19 +114,15 @@ public class CorpusExporter {
 
 	}
 
-	private String getSourceDocEntryName(String exportName, String corpusName, SourceDocument sd) {
+	private String getSourceDocEntryName(String exportName, SourceDocument sd) {
 		if (simpleEntryStyle) {
-			return corpusName 
-					+ "/" 
-					+ cleanupName(getFilename(sd, false)) 
+			return cleanupName(getFilename(sd, false)) 
 					+ "/" 
 					+ cleanupName(getFilename(sd, true)); 
 		}
 		return exportName 
 				+ "_" 
 				+ date 
-				+ "/" 
-				+ corpusName 
 				+ "/" 
 				+ cleanupName(sd.getUuid()) 
 				+ "/" 

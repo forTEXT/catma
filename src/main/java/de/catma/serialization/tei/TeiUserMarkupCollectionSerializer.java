@@ -32,6 +32,7 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 
@@ -200,9 +201,16 @@ public class TeiUserMarkupCollectionSerializer {
 		fs.setID(tagInstance.getUuid());
 		fs.setAttributeValue(
 			Attribute.type, tagInstance.getTagDefinitionId());
-		for (Property p : tagInstance.getSystemProperties()) {
-			writeProperty(p, fs, tagInstance.getTagDefinitionId(), tagLibrary);
-		}
+		
+		writeProperty(
+			PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
+			tagInstance.getAuthor(), fs);
+		writeProperty(
+			PropertyDefinition.SystemPropertyName.catma_markuptimestamp.name(),
+			tagInstance.getTimestamp(), fs);
+		writeProperty(
+			PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
+			tagLibrary.getTagDefinition(tagInstance.getTagDefinitionId()).getColor(), fs);
 		
 		for (Property p : tagInstance.getUserDefinedProperties()) {
 			writeProperty(p, fs, tagInstance.getTagDefinitionId(), tagLibrary);
@@ -220,6 +228,17 @@ public class TeiUserMarkupCollectionSerializer {
 		}
 	}
 
+	private void writeProperty(String propertyName, String value, TeiElement fs) {
+		TeiElement f = new TeiElement(TeiElementName.f);
+		fs.appendChild(f);
+		
+		f.setAttributeValue(Attribute.f_name, Validator.SINGLETON.convertToXMLName(propertyName));
+
+		TeiElement string = new TeiElement(TeiElementName.string);
+		string.appendChild(value);
+		f.appendChild(string);
+	}
+	
 	private void writeProperty(Property property, TeiElement fs, String tagDefinitionId, TagLibrary tagLibrary) {
 		TeiElement f = new TeiElement(TeiElementName.f);
 		fs.appendChild(f);
