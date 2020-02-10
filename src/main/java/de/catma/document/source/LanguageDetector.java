@@ -49,7 +49,7 @@ public class LanguageDetector {
             classifier
                 = (BaseClassifier<CharSequence>)AbstractExternalizable.readResourceObject(
                     this.getClass(),
-                    "/de/catma/document/source/resources/langid-leipzig.classifier");
+                    "/de/catma/document/source/langid-leipzig.classifier");
         }
         catch (ClassNotFoundException e) {
             throw new IOException(e);

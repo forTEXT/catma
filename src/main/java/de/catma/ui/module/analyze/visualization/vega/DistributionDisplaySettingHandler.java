@@ -28,7 +28,7 @@ public final class DistributionDisplaySettingHandler implements DisplaySettingHa
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 			
 			IOUtils.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream(
-					"/de/catma/ui/module/analyze/visualization/vega/resources/phrase_dist_chart.json"), buffer);
+					"/de/catma/ui/module/analyze/visualization/vega/phrase_dist_chart.json"), buffer);
 			groupByPhraseScript = buffer.toString("UTF-8");
 		}
 		return groupByPhraseScript;
@@ -39,7 +39,7 @@ public final class DistributionDisplaySettingHandler implements DisplaySettingHa
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 			
 			IOUtils.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream(
-					"/de/catma/ui/module/analyze/visualization/vega/resources/tag_dist_chart.json"), buffer);
+					"/de/catma/ui/module/analyze/visualization/vega/tag_dist_chart.json"), buffer);
 			groupByTagScript = buffer.toString("UTF-8");
 		}
 		return groupByTagScript;

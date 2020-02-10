@@ -39,7 +39,7 @@ import java.util.logging.Logger;
  * <br>
  * This class is a singleton.
  * 
- * @author marco.petris@web.d
+ * @author marco.petris@web.de
  *
  */
 public enum CharsetLanguageInfo {
@@ -71,7 +71,7 @@ public enum CharsetLanguageInfo {
 		try {
 			is = 
 				Thread.currentThread().getContextClassLoader().getResourceAsStream(
-					"de/catma/document/source/resources/" +
+					"de/catma/document/source/" +
 					"CharsetLanguageInfo.properties" );
 			try {
 				charsetLanguageInfoProperties.load( is );
