@@ -26,15 +26,7 @@ import java.util.Map;
 
 import org.mozilla.universalchardet.UniversalDetector;
 
-import de.catma.document.source.contenthandler.DOCContentHandler;
-import de.catma.document.source.contenthandler.DOCXContentHandler;
-import de.catma.document.source.contenthandler.HTMLContentHandler;
-import de.catma.document.source.contenthandler.PDFContentHandler;
-import de.catma.document.source.contenthandler.RTFContentHandler;
 import de.catma.document.source.contenthandler.SourceContentHandler;
-import de.catma.document.source.contenthandler.TEIContentHandler;
-import de.catma.document.source.contenthandler.XML2ContentHandler;
-import de.catma.document.source.contenthandler.XMLContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 
 /**
@@ -56,26 +48,6 @@ public class SourceDocumentHandler {
 		typeHandlerMap = new HashMap<FileType, Class<? extends SourceContentHandler>>();
 		registerSourceContentHandler(
 				FileType.TEXT, StandardContentHandler.class );
-        registerSourceContentHandler(
-                FileType.RTF, RTFContentHandler.class );
-        registerSourceContentHandler(
-                FileType.PDF, PDFContentHandler.class );
-        registerSourceContentHandler(
-                FileType.XPDF, PDFContentHandler.class );
-        registerSourceContentHandler(
-                FileType.HTML, HTMLContentHandler.class );
-        registerSourceContentHandler(
-                FileType.HTM, HTMLContentHandler.class );
-        registerSourceContentHandler(
-                FileType.DOC, DOCContentHandler.class );
-        registerSourceContentHandler(
-        		FileType.DOCX, DOCXContentHandler.class);
-        registerSourceContentHandler(
-        		FileType.XML2, XML2ContentHandler.class);
-        registerSourceContentHandler(
-        		FileType.XML, XMLContentHandler.class);
-        registerSourceContentHandler(
-        		FileType.TEI, TEIContentHandler.class);
 	}
 	
 	/**
