@@ -25,9 +25,10 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
-import org.apache.pdfbox.util.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 /**
  * A content handler for PDF based {@link de.catma.document.source.SourceDocument}s.
@@ -43,7 +44,7 @@ public class PDFContentHandler extends AbstractSourceContentHandler {
 	public void load(InputStream is) throws IOException {
         PDDocument document = null;
         try {
-            document = PDDocument.load(is, false);
+            document = PDDocument.load(is, MemoryUsageSetting.setupTempFileOnly());
 
             if (document.isEncrypted()) {
                 throw new IOException("can not open pdf document because it is encrypted");
@@ -55,9 +56,8 @@ public class PDFContentHandler extends AbstractSourceContentHandler {
                 throw new IOException( "You do not have permission to extract text" );
             }
 
-            PDFTextStripper stripper = new PDFTextStripper("UTF-8");
+            PDFTextStripper stripper = new PDFTextStripper();
             
-            stripper.setForceParsing( false );
             stripper.setSortByPosition( false );
             stripper.setShouldSeparateByBeads( true );
             stripper.setStartPage( 1 );
