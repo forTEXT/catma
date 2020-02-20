@@ -86,8 +86,15 @@ public class GitProjectHandler {
 		this.credentialsProvider = new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
 	}
 	
-	public void loadRolesPerResource() throws Exception {
+	/**
+	 * Loads the roles per resources
+	 * @return true if we encountered changes and a graph reload is appropriate
+	 * @throws Exception
+	 */
+	public boolean loadRolesPerResource() throws Exception {
+		Map<String, RBACRole> oldRolesPerResource = this.rolesPerResource;
 		this.rolesPerResource = remoteGitServerManager.getRolesPerResource(projectId);
+		return oldRolesPerResource == null || !oldRolesPerResource.equals(this.rolesPerResource);
 	}
 
 	// tagset operations
@@ -501,19 +508,23 @@ public class GitProjectHandler {
 						this.credentialsProvider);
 				
 				for (Path collectionPath : paths) {
+					
 					String collectionId = collectionPath.getFileName().toString();
-					try {
-						collectionReferences.add(
-							gitMarkupCollectionHandler.getCollectionReference(projectId, collectionId));
-					} catch (Exception e) {
-						logger.log(
-						Level.SEVERE, 
-							String.format(
-								"error loading Collection reference %1$s for project %2$s",
-								collectionPath,
-								projectId), 
-							e);
-						 
+					RBACRole resourceRole = rolesPerResource.get(collectionId);
+					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.COLLECTION_READ)) {
+						try {
+							collectionReferences.add(
+									gitMarkupCollectionHandler.getCollectionReference(projectId, collectionId));
+						} catch (Exception e) {
+							logger.log(
+									Level.SEVERE, 
+									String.format(
+											"error loading Collection reference %1$s for project %2$s",
+											collectionPath,
+											projectId), 
+									e);
+							
+						}
 					}
 				}
 			}
@@ -560,18 +571,21 @@ public class GitProjectHandler {
 				
 				for (Path collectionPath : paths) {
 					String collectionId = collectionPath.getFileName().toString();
-					try {
-						collections.add(
-							gitMarkupCollectionHandler.getCollection(projectId, collectionId, tagLibrary));
-					} catch (Exception e) {
-						logger.log(
-						Level.SEVERE, 
-							String.format(
-								"error loading Collection reference %1$s for project %2$s",
-								collectionPath,
-								projectId), 
-							e);
-						 
+					RBACRole resourceRole = rolesPerResource.get(collectionId);
+					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.COLLECTION_READ)) {
+						try {
+							collections.add(
+								gitMarkupCollectionHandler.getCollection(projectId, collectionId, tagLibrary));
+						} catch (Exception e) {
+							logger.log(
+							Level.SEVERE, 
+								String.format(
+									"error loading Collection reference %1$s for project %2$s",
+									collectionPath,
+									projectId), 
+								e);
+							 
+						}
 					}
 				}
 			}
@@ -885,11 +899,18 @@ public class GitProjectHandler {
 						 this.remoteGitServerManager,
 						 this.credentialsProvider);
 			 for (Path tagsetPath : paths) {
+				 
 				 try {
-					 TagsetDefinition tagset = gitTagsetHandler.getTagset(
-							 projectId, 
-							 tagsetPath.getFileName().toString());						 
-					 result.add(tagset);
+					String tagsetId = tagsetPath
+							 .getFileName()
+							 .toString();
+					RBACRole resourceRole = rolesPerResource.get(tagsetId);
+					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.TAGSET_READ)) {
+						 TagsetDefinition tagset = gitTagsetHandler.getTagset(
+								 projectId, 
+								 tagsetPath.getFileName().toString());						 
+						 result.add(tagset);
+					}
 				 }
 				 catch (Exception e) {
 					logger.log(
@@ -1461,11 +1482,11 @@ public class GitProjectHandler {
 					}
 				}
 				else if (relativeSubmodulePath.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
-					String collectionId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+					String tagsetId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 						 .resolve(relativeSubmodulePath)
 						 .getFileName()
 						 .toString();
-					RBACRole resourceRole = rolesPerResource.get(collectionId);
+					RBACRole resourceRole = rolesPerResource.get(tagsetId);
 					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.TAGSET_READ)) {
 						readableSubmodules.add(relativeSubmodulePath);
 					}

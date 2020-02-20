@@ -240,6 +240,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						() -> gitProjectHandler.getTagsets(),
 						() -> gitProjectHandler.getDocuments(),
 						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary),
+						false, //forceGraphReload
 						backgroundService);
 			}
 		}
@@ -1475,7 +1476,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						documentId -> getSourceDocumentURI(documentId)));
 		}
 		else {
-			gitProjectHandler.loadRolesPerResource();
+			boolean forceGraphReload = gitProjectHandler.loadRolesPerResource();
 			gitProjectHandler.initAndUpdateSubmodules();
 			gitProjectHandler.removeStaleSubmoduleDirectories();
 			gitProjectHandler.ensureDevBranches();		
@@ -1506,6 +1507,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					() -> gitProjectHandler.getTagsets(),
 					() -> gitProjectHandler.getDocuments(),
 					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary),
+					forceGraphReload,
 					backgroundService);
 		}
 	}

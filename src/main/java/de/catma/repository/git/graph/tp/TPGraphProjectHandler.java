@@ -90,6 +90,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, 
 			Supplier<List<SourceDocument>> documentsSupplier,
 			CollectionsSupplier collectionsSupplier,
+			boolean forceGraphReload,
 			BackgroundService backgroundService) throws Exception {
 		
 		logger.info(
@@ -99,7 +100,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		
 		GraphTraversalSource g = graph.traversal();
 
-		if (!g.V().has(nt(ProjectRevision), "revisionHash", revisionHash).hasNext()) {
+		if (forceGraphReload || !g.V().has(nt(ProjectRevision), "revisionHash", revisionHash).hasNext()) {
 			logger.info(
 					String.format(
 							"Loading Project %1$s with revision %2$s into the graph", 
