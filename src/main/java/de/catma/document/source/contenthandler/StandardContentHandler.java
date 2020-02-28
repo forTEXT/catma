@@ -28,7 +28,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.Charset;
+
+import org.apache.tika.Tika;
+import org.apache.tika.metadata.Metadata;
 
 /**
  * The standard content handler which handles plain text files.
@@ -123,5 +127,25 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 				} catch( IOException ignored) {}
 			}
 		}
+	}
+	
+	public static void main(String[] args) throws Exception {
+		Tika tika = new Tika();
+		Metadata metadata = new Metadata();
+		Reader reader = tika.parse(new File(args[0]), metadata);
+		StringBuilder contentBuffer = new StringBuilder();
+		
+		char[] charBuf = new char[65536];
+		int cCount = -1;
+        while((cCount=reader.read(charBuf)) != -1) {
+        	contentBuffer.append( charBuf, 0, cCount);
+        }
+        
+        
+		System.out.println(metadata);
+		
+		System.out.println("***"+contentBuffer.toString());
+		System.out.println("finished----");
+
 	}
 }

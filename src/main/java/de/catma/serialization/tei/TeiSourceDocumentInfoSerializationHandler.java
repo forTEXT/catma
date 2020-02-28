@@ -74,7 +74,6 @@ public class TeiSourceDocumentInfoSerializationHandler implements
 			
 			DocumentSerializer serializer = new DocumentSerializer();
 			serializer.serialize(teiDocument.getDocument(), outputStream);
-			
 		} catch (Exception exc) {
 			throw new IOException(exc);
 		}	
