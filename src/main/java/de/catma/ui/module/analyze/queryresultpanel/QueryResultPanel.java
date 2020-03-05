@@ -385,6 +385,7 @@ public class QueryResultPanel extends VerticalLayout {
 						footer.getCell("annotation"), 
 						queryResultDataProvider));
 		
+		queryResultGrid.setDataProvider(queryResultDataProvider);
 		handleTotalTypesChange(
 				null, 
 				null, 
@@ -392,7 +393,6 @@ public class QueryResultPanel extends VerticalLayout {
 				footer.getCell("annotation"), 
 				queryResultDataProvider);
 
-		queryResultGrid.setDataProvider(queryResultDataProvider);
 		
 		treeGridPanel.addComponent(queryResultGrid);
 		
@@ -612,13 +612,13 @@ public class QueryResultPanel extends VerticalLayout {
 				event -> handleTotalTypesChange(
 						"Tags", 
 						footer.getCell("tagPath"),
-						"Annotations",
+						resultContainsProperties?"Property Values":"Annotations",
 						footer.getCell("frequency"), 
 						queryResultDataProvider));
 		handleTotalTypesChange(
 				"Tags", 
 				footer.getCell("tagPath"), 
-				"Annotations",
+				resultContainsProperties?"Property Values":"Annotations",
 				footer.getCell("frequency"), 
 				queryResultDataProvider);
 		
