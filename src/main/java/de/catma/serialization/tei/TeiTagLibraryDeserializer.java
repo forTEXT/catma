@@ -58,13 +58,15 @@ public class TeiTagLibraryDeserializer {
 			String nValue = tagsetDefinitionElement.getAttributeValue(Attribute.n);
 			int dividerPos = nValue.lastIndexOf(' ');
 			String tagsetName = nValue.substring(0, dividerPos);
-			String versionString = nValue.substring(dividerPos+1);
+			
+			// version gets ignored, versioning is done via git or not at all! 
+//			String versionString = nValue.substring(dividerPos+1);
 
 			TagsetDefinition tagsetDefinition = 
 					new TagsetDefinition(
 							tagsetDefinitionElement.getID(),
 							tagsetName, 
-							new Version(versionString));
+							new Version());
 			
 			tagManager.addTagsetDefinition(tagsetDefinition);
 			

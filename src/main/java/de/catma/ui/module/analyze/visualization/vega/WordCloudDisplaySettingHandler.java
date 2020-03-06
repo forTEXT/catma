@@ -30,7 +30,7 @@ public class WordCloudDisplaySettingHandler implements DisplaySettingHandler {
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 			
 			IOUtils.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream(
-					"/de/catma/ui/module/analyze/visualization/vega/resources/phrase_word_cloud.json"), buffer);
+					"/de/catma/ui/module/analyze/visualization/vega/phrase_word_cloud.json"), buffer);
 			groupByPhraseScript = buffer.toString("UTF-8");
 		}
 		return groupByPhraseScript;
@@ -41,7 +41,7 @@ public class WordCloudDisplaySettingHandler implements DisplaySettingHandler {
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 			
 			IOUtils.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream(
-					"/de/catma/ui/module/analyze/visualization/vega/resources/tag_word_cloud.json"), buffer);
+					"/de/catma/ui/module/analyze/visualization/vega/tag_word_cloud.json"), buffer);
 			groupByTagScript = buffer.toString("UTF-8");
 		}
 		return groupByTagScript;

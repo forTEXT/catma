@@ -230,7 +230,7 @@ public class AuthenticationDialog extends Window implements Handler {
 		content.addComponent(gOauthPanel);
 		gOauthPanel.addComponent(new Label("or"));
 		googleLogInLink = new Button("Log in with your Google account");
-		googleLogInLink.setIcon(new ClassResource("module/main/login/resources/google.png")); //$NON-NLS-1$
+		googleLogInLink.setIcon(new ClassResource("module/main/login/google.png")); //$NON-NLS-1$
 		googleLogInLink.setStyleName(MaterialTheme.BUTTON_LINK);
 		googleLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
 		

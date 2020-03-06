@@ -87,7 +87,7 @@ public class CSVExportGroupedStreamSource implements StreamSource {
         	@Override
         	public Void call() throws Exception {
             	PipedOutputStream out = new PipedOutputStream(in);
-            	OutputStreamWriter writer = new OutputStreamWriter(out);
+            	OutputStreamWriter writer = new OutputStreamWriter(out, "UTF-8");
             	
             	ArrayList<String> header = new ArrayList<>();
             	header.add("Group");

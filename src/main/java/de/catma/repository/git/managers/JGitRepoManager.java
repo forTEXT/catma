@@ -1192,12 +1192,13 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		SubmoduleInitCommand submoduleInitCommand = this.gitApi.submoduleInit();
 		submoduleInitCommand.call();
 		
-		SubmoduleUpdateCommand submoduleUpdateCommand = 
-			jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
-		submodules.forEach(submodule -> submoduleUpdateCommand.addPath(submodule));
-		submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
-		submoduleUpdateCommand.call();
-		
+		if (!submodules.isEmpty()) {
+			SubmoduleUpdateCommand submoduleUpdateCommand = 
+				jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+			submodules.forEach(submodule -> submoduleUpdateCommand.addPath(submodule));
+			submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
+			submoduleUpdateCommand.call();
+		}		
 	}
 	
 	@Override

@@ -88,12 +88,11 @@ public class AnnotatedTextProvider {
 	public static String buildAnnotatedKeywordInContext(
 			Collection<TagReference> tagReferences, KwicProvider kwicProvider, 
 			TagDefinition tagDefinition, String tagPath) {
-		return buildAnnotatedKeywordInContext(Range.mergeRanges(
-				new TreeSet<>(
+		return buildAnnotatedKeywordInContext(
 					tagReferences
 					.stream()
 					.map(tagRef -> tagRef.getRange())
-					.collect(Collectors.toList()))), 
+					.collect(Collectors.toList()), 
 				kwicProvider, 
 				tagDefinition, 
 				tagPath);
@@ -106,7 +105,7 @@ public class AnnotatedTextProvider {
 		StringBuilder builder = new StringBuilder();
 		
 		try {
-			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(ranges, 5);
+			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(Range.mergeRanges(new TreeSet<>(ranges)), 5);
 			String conc = "";
 			for (KeywordInSpanContext kwic : kwics) {
 				builder.append(Cleaner.clean(kwic.getBackwardContext()));
@@ -177,7 +176,7 @@ public class AnnotatedTextProvider {
 		builder.append("\">");
 		
 		try {
-			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(ranges, 5);
+			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(Range.mergeRanges(new TreeSet<>(ranges)), 5);
 
 			String joinedAnnotatedText = kwics.stream()
 			.map(kwic -> kwic.getKeyword())
