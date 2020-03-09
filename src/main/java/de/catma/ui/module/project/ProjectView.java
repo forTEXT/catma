@@ -88,6 +88,7 @@ import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.UploadDialog;
+import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.MembersChangedEvent;
 import de.catma.ui.events.ProjectChangedEvent;
@@ -103,6 +104,7 @@ import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.document.AddSourceDocWizardFactory;
 import de.catma.ui.module.project.document.AddSourceDocWizardResult;
 import de.catma.ui.module.project.document.SourceDocumentResult;
+import de.catma.ui.module.project.documentwizard.DocumentWizard;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.CloseSafe;
@@ -254,7 +256,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
         ContextMenu addContextMenu = 
         	documentGridComponent.getActionGridBar().getBtnAddContextMenu();
-        MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
+        MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest2());
         addDocumentBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.DOCUMENT_CREATE_OR_UPLOAD)),
@@ -794,6 +796,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		Notification.show("Info", "Please select one or more Documents first!", Type.HUMANIZED_MESSAGE); 
     	}
     }
+	
+	private void handleAddDocumentRequest2() {
+		WizardContext wizardContext = new WizardContext();
+		DocumentWizard documentWizard = new DocumentWizard(wizardContext, new SaveCancelListener<WizardContext>() {
+			@Override
+			public void savePressed(WizardContext result) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		documentWizard.show();
+	}
 
 	private void handleAddDocumentRequest() {
 		

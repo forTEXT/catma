@@ -133,18 +133,18 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 		Tika tika = new Tika();
 		Metadata metadata = new Metadata();
 		Reader reader = tika.parse(new File(args[0]), metadata);
-		StringBuilder contentBuffer = new StringBuilder();
-		
-		char[] charBuf = new char[65536];
-		int cCount = -1;
-        while((cCount=reader.read(charBuf)) != -1) {
-        	contentBuffer.append( charBuf, 0, cCount);
-        }
-        
+//		StringBuilder contentBuffer = new StringBuilder();
+//		
+//		char[] charBuf = new char[65536];
+//		int cCount = -1;
+//        while((cCount=reader.read(charBuf)) != -1) {
+//        	contentBuffer.append( charBuf, 0, cCount);
+//        }
+//        
         
 		System.out.println(metadata);
 		
-		System.out.println("***"+contentBuffer.toString());
+//		System.out.println("***"+contentBuffer.toString());
 		System.out.println("finished----");
 
 	}

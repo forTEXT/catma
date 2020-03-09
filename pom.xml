@@ -15,8 +15,8 @@
 	</prerequisites>
 	
     <properties>
-		<vaadin.version>8.9.2</vaadin.version>
-		<vaadin.plugin.version>8.9.2</vaadin.plugin.version>
+		<vaadin.version>8.10.2</vaadin.version>
+		<vaadin.plugin.version>8.10.2</vaadin.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -251,6 +251,12 @@
 	    	<artifactId>tika-parsers</artifactId>
 	    	<version>1.23</version>
 	  	</dependency>
+
+		<dependency>
+		    <groupId>org.apache.tika</groupId>
+		    <artifactId>tika-langdetect</artifactId>
+		    <version>1.23</version>
+		</dependency>
 
         <dependency>
             <groupId>com.googlecode.juniversalchardet</groupId>

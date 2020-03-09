@@ -28,7 +28,7 @@
 	<inherits name="com.google.gwt.json.JSON" />
     
     
-	<set-property name="user.agent" value="gecko1_8, safari, ie9"/>  
+	<!-- <set-property name="user.agent" value="gecko1_8, safari, ie9"/>  -->  
 
     <inherits name="com.google.common.collect.Collect"/>
 
@@ -44,4 +44,5 @@
     
 
     <inherits name="com.wcs.wcslib.vaadin.widget.multifileupload.WidgetSet" />
+    
 </module>

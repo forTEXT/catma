@@ -1081,7 +1081,7 @@
  */
 
 .v-vaadin-version:after {
-	content: "8.9.2";
+	content: "8.10.2";
 }
 
 .v-widget {
@@ -2922,6 +2922,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: none;
 }
 
+.catma .v-filterselect.v-readonly.borderless [class*="input"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-filterselect.v-readonly.borderless [class*="input"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-filterselect.v-readonly.borderless [class*="input"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
+}
+
 .catma .v-filterselect .v-icon {
 	position: absolute;
 	pointer-events: none;
@@ -3382,6 +3402,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: none;
 }
 
+.catma .v-filterselect-tiny.v-readonly.borderless [class*="input"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-filterselect-tiny.v-readonly.borderless [class*="input"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-filterselect-tiny.v-readonly.borderless [class*="input"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
+}
+
 .catma .v-filterselect-compact, .catma .v-filterselect-small {
 	height: 25px;
 	
@@ -3500,6 +3540,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-filterselect-compact.v-readonly [class$="button"]:active:after, .catma .v-filterselect-small.v-readonly [class$="button"]:active:after {
 	display: none;
+}
+
+.catma .v-filterselect-compact.v-readonly.borderless [class*="input"], .catma .v-filterselect-small.v-readonly.borderless [class*="input"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-filterselect-compact.v-readonly.borderless [class*="input"]:focus, .catma .v-filterselect-small.v-readonly.borderless [class*="input"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-filterselect-compact.v-readonly.borderless [class*="input"][class*="prompt"], .catma .v-filterselect-small.v-readonly.borderless [class*="input"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
 }
 
 .catma .v-filterselect-small {
@@ -3627,6 +3687,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: none;
 }
 
+.catma .v-filterselect-large.v-readonly.borderless [class*="input"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-filterselect-large.v-readonly.borderless [class*="input"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-filterselect-large.v-readonly.borderless [class*="input"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
+}
+
 .catma .v-filterselect-huge {
 	height: 46px;
 	
@@ -3746,6 +3826,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-filterselect-huge.v-readonly [class$="button"]:active:after {
 	display: none;
+}
+
+.catma .v-filterselect-huge.v-readonly.borderless [class*="input"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-filterselect-huge.v-readonly.borderless [class*="input"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-filterselect-huge.v-readonly.borderless [class*="input"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
 }
 
 .catma .v-csslayout-well {
@@ -5767,6 +5867,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: none;
 }
 
+.catma .v-datefield.v-readonly.borderless [class*="textfield"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-datefield.v-readonly.borderless [class*="textfield"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-datefield.v-readonly.borderless [class*="textfield"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
+}
+
 .catma .v-datefield-error .v-datefield-textfield {
 	border-color: #d32f2f !important;
 	background: #fefbfb;
@@ -6404,6 +6524,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: none;
 }
 
+.catma .v-datefield-tiny.v-readonly.borderless [class*="textfield"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-datefield-tiny.v-readonly.borderless [class*="textfield"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-datefield-tiny.v-readonly.borderless [class*="textfield"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
+}
+
 .catma .v-datefield-compact, .catma .v-datefield-small {
 	height: 25px;
 	border-radius: 2px;
@@ -6509,6 +6649,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-compact.v-readonly [class*="button"]:active:after, .catma .v-datefield-small.v-readonly [class*="button"]:active:after {
 	display: none;
+}
+
+.catma .v-datefield-compact.v-readonly.borderless [class*="textfield"], .catma .v-datefield-small.v-readonly.borderless [class*="textfield"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-datefield-compact.v-readonly.borderless [class*="textfield"]:focus, .catma .v-datefield-small.v-readonly.borderless [class*="textfield"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-datefield-compact.v-readonly.borderless [class*="textfield"][class*="prompt"], .catma .v-datefield-small.v-readonly.borderless [class*="textfield"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
 }
 
 .catma .v-datefield-small {
@@ -6623,6 +6783,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: none;
 }
 
+.catma .v-datefield-large.v-readonly.borderless [class*="textfield"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-datefield-large.v-readonly.borderless [class*="textfield"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-datefield-large.v-readonly.borderless [class*="textfield"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
+}
+
 .catma .v-datefield-huge {
 	height: 46px;
 	border-radius: 2px;
@@ -6729,6 +6909,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-huge.v-readonly [class*="button"]:active:after {
 	display: none;
+}
+
+.catma .v-datefield-huge.v-readonly.borderless [class*="textfield"] {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.catma .v-datefield-huge.v-readonly.borderless [class*="textfield"]:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.catma .v-datefield-huge.v-readonly.borderless [class*="textfield"][class*="prompt"] {
+	color: inherit;
+	opacity: 0.5;
+	filter: alpha(opacity=50) ;
 }
 
 .catma .v-inline-datefield-calendarpanel {
