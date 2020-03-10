@@ -7,6 +7,7 @@ import de.catma.ui.dialog.wizard.WizardContext;
 public class DocumentWizard extends Wizard {
 	public enum WizardContextKey {
 		UPLOAD_FILE_LIST,
+		PROJECT,
 		;
 	}
 	

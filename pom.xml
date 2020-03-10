@@ -179,13 +179,6 @@
         </dependency>
 		<!-- external OAUTH login and document loading over HTTP end -->
 		
-		<!-- resultset export  -->
-        <dependency>
-            <groupId>net.sourceforge.javacsv</groupId>
-            <artifactId>javacsv</artifactId>
-            <version>2.0</version>
-        </dependency>
-		
         <dependency>
             <groupId>com.io7m.xom</groupId>
             <artifactId>xom</artifactId>
@@ -250,6 +243,12 @@
 	    	<groupId>org.apache.tika</groupId>
 	    	<artifactId>tika-parsers</artifactId>
 	    	<version>1.23</version>
+	    	<exclusions>
+                <exclusion>
+                    <groupId>c3p0</groupId>
+                    <artifactId>c3p0</artifactId>
+                </exclusion>
+            </exclusions>
 	  	</dependency>
 
 		<dependency>

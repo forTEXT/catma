@@ -18439,3 +18439,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .query-builder-colloc-options-step-search-panel .v-spacing {
 	width: 40px;
 }
+
+.catma .document-wizard-rtl-preview {
+	direction: rtl;
+	text-align: right;
+}

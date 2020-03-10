@@ -799,6 +799,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 	private void handleAddDocumentRequest2() {
 		WizardContext wizardContext = new WizardContext();
+		wizardContext.put(DocumentWizard.WizardContextKey.PROJECT, project);
 		DocumentWizard documentWizard = new DocumentWizard(wizardContext, new SaveCancelListener<WizardContext>() {
 			@Override
 			public void savePressed(WizardContext result) {

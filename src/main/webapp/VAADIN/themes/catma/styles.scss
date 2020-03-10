@@ -1001,4 +1001,9 @@ $v-focus-color: #5A98A1;
 	.query-builder-colloc-options-step-search-panel .v-spacing {
 		width: 40px;
 	}
+	
+	.document-wizard-rtl-preview {
+		direction: rtl;
+    	text-align: right;
+	}
 }

@@ -8,6 +8,7 @@ import de.catma.document.source.LanguageItem;
 
 public class UploadFile {
 	
+	private final String uuid;
 	private final URI tempFilename;
 	private final String originalFilename;
 	private String mimetype;
@@ -20,8 +21,9 @@ public class UploadFile {
 	private String publisher;
 	private String description;
 	
-	public UploadFile(URI tempFilename, String originalFilename, String mimetype, long fileLength) {
+	public UploadFile(String uuid, URI tempFilename, String originalFilename, String mimetype, long fileLength) {
 		super();
+		this.uuid = uuid;
 		this.tempFilename = tempFilename;
 		this.originalFilename = originalFilename;
 		if (mimetype != null) {

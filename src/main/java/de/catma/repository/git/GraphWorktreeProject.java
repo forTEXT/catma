@@ -1122,7 +1122,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			InputStream inputStream, SourceDocument document) throws IOException {
 		TagManager tagManager = new TagManager(new TagLibrary());
 		
-		TeiTagLibrarySerializationHandler  tagLibrarySerializationHandler = new TeiTagLibrarySerializationHandler(tagManager);
+		TeiTagLibrarySerializationHandler tagLibrarySerializationHandler = new TeiTagLibrarySerializationHandler(tagManager);
 
 		TagLibrary importedLibrary =
 			tagLibrarySerializationHandler.deserialize(null, inputStream);

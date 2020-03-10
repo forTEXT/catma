@@ -106,7 +106,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 	private Tika tika;
 	private Grid<UploadFile> fileGrid;
 	private MultiFileUpload upload;
-	private MetadataStep nextStep;
+	private CheckContentStep nextStep;
 	private StepChangeListener stepChangeListener;
 	private PushMode originalPushMode;
 	private TextField urlInputField;
@@ -124,7 +124,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 		this.fileDataProvider = new ListDataProvider<UploadFile>(this.fileList);
 		
 		this.tika = new Tika();
-		this.nextStep = new MetadataStep(wizardContext, progressStepFactory);
+		this.nextStep = new CheckContentStep(wizardContext, progressStepFactory);
 		this.idGenerator = new IDGenerator();
 
 		initComponents();
@@ -150,10 +150,10 @@ class UploadStep extends VerticalLayout implements WizardStep {
 				
 				URLConnection conn = url.openConnection();
 				String urlConnContentEncoding = conn.getContentEncoding();
-				
+				final String fileId = idGenerator.generateDocumentId();
 				String tempDir = 
 						((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
-				final File tempFile = new File(new File(tempDir), idGenerator.generateDocumentId());
+				final File tempFile = new File(new File(tempDir), fileId);
 				if (tempFile.exists()) {
 					tempFile.delete();
 				}
@@ -184,7 +184,11 @@ class UploadStep extends VerticalLayout implements WizardStep {
 							progressBar.setVisible(false);
 							progressBar.setIndeterminate(false);
 							UploadFile uploadFile = 
-									new UploadFile(tempFile.toURI(), originalFilename, urlConnContentEncoding, result);
+									new UploadFile(
+										fileId, 
+										tempFile.toURI(), 
+										originalFilename, 
+										urlConnContentEncoding, result);
 							String type = urlConnContentEncoding;
 							
 							Metadata metadata = new Metadata();
@@ -318,7 +322,8 @@ class UploadStep extends VerticalLayout implements WizardStep {
 					String tempDir = 
 							((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
 					
-					File tempFile = new File(new File(tempDir), idGenerator.generateDocumentId());
+					final String fileId = idGenerator.generateDocumentId();
+					File tempFile = new File(new File(tempDir), fileId);
 					
 					if (tempFile.exists()) {
 						tempFile.delete();
@@ -331,7 +336,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 						String type = tika.detect(fis, fileName);
 						
 						UploadFile uploadFile = 
-							new UploadFile(tempFile.toURI(), fileName, type, length);
+							new UploadFile(fileId, tempFile.toURI(), fileName, type, length);
 						
 						if (type.toLowerCase().trim().equals(FileType.ZIP.getMimeType())) {
 							handleZipFile(uploadFile);
@@ -413,7 +418,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 			if (fileName.startsWith(".")) {
 				continue; // we treat them as hidden files, that's probably what most users would expect
 			}
-			String fileId = idGenerator.generateDocumentId();
+			final String fileId = idGenerator.generateDocumentId();
 			
 			File entryDestination = new File(tempDir, fileId);
 			if (entryDestination.exists()) {
@@ -434,6 +439,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 					String type = tika.detect(fis, fileName);
 					UploadFile extractedUploadFile = 
 							new UploadFile(
+									fileId,
 									entryDestination.toURI(), 
 									fileName, type, entry.getSize());
 					
