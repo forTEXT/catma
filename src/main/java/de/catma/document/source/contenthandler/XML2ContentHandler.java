@@ -82,19 +82,10 @@ public class XML2ContentHandler extends AbstractSourceContentHandler {
             }
         }
 		
-		if (element.getChildCount() == 0) { //empty elements
-			addEmptyElement(contentBuilder, element);
-		}
-		else {
+		if (element.getChildCount() != 0) {
 			addBreak(contentBuilder, element);
 		}
     }
-    
-    @Deprecated
-    public void addEmptyElement(StringBuilder contentBuilder, Element element) {
-		//contentBuilder.append(" ");
-	}
-
 
 	public void addTextContent(StringBuilder contentBuilder, Element element,
 			String content) {

@@ -55,7 +55,6 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 
 	private WizardContext wizardContext;
 	private ProgressStep progressStep;
-	private ArrayList<UploadFile> fileList;
 	private ListDataProvider<UploadFile> fileDataProvider;
 	private Grid<UploadFile> fileGrid;
 	private ArrayList<LanguageItem> languageItems;
@@ -64,6 +63,7 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 	private ActionGridComponent<Grid<UploadFile>> fileActionGridComponent;
 	private HorizontalLayout contentPanel;
 	private AddMetadataStep nextStep;
+	private StepChangeListener stepChangeListener;
 
 	@SuppressWarnings("unchecked")
 	public CheckContentStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
@@ -71,9 +71,9 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 		this.wizardContext = wizardContext; 
 		this.progressStep = progressStepFactory.create(2, "Check the content");
 		
-		this.fileList = (ArrayList<UploadFile>) wizardContext.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
+		ArrayList<UploadFile> fileList = (ArrayList<UploadFile>) wizardContext.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
 		
-		this.fileDataProvider = new ListDataProvider<UploadFile>(this.fileList);
+		this.fileDataProvider = new ListDataProvider<UploadFile>(fileList);
 		this.nextStep = new AddMetadataStep(wizardContext, progressStepFactory);
 
 		initComponents();
@@ -310,8 +310,6 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 						}
 						else {
 							Metadata metadata = new Metadata();
-							MediaType type = MediaType.parse(uploadFile.getMimetype());
-							
 							try {
 								
 								try (FileInputStream fis = new FileInputStream(new File(uploadFile.getTempFilename()))) {
@@ -368,6 +366,10 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 							updatePreview(uploadFile);
 						});
 					}
+					if (stepChangeListener != null) {
+						stepChangeListener.stepChanged(CheckContentStep.this);
+					}
+
 				}
 				@Override
 				public void error(Throwable t) {
@@ -398,8 +400,6 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 
 	@Override
 	public void setStepChangeListener(StepChangeListener stepChangeListener) {
-		if (stepChangeListener != null) {
-			stepChangeListener.stepChanged(this); // always valid and can next
-		}
+		this.stepChangeListener = stepChangeListener;
 	}
 }

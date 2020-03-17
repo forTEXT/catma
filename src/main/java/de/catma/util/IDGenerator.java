@@ -47,6 +47,10 @@ public class IDGenerator {
 	public String generateTagsetId() {
 		return TAGSET_ID_PREFIX + UUID.randomUUID().toString().toUpperCase();
 	}
+	
+	public String generateTagsetId(String base) {
+		return TAGSET_ID_PREFIX + UUID.nameUUIDFromBytes(base.getBytes()).toString().toUpperCase();
+	}
 
 	/**
 	 * @return a new CATMA UUID.

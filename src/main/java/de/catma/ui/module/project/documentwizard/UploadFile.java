@@ -4,6 +4,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
+import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.LanguageItem;
 
 public class UploadFile {
@@ -20,6 +21,7 @@ public class UploadFile {
 	private String author;
 	private String publisher;
 	private String description;
+	private AnnotationCollection intrinsicMarkupCollection;
 	
 	public UploadFile(String uuid, URI tempFilename, String originalFilename, String mimetype, long fileLength) {
 		super();
@@ -124,7 +126,15 @@ public class UploadFile {
 		this.charset = charset;
 	}
 	
+	public String getUuid() {
+		return uuid;
+	}
 	
+	public void setIntrinsicMarkupCollection(AnnotationCollection intrinsicMarkupCollection) {
+		this.intrinsicMarkupCollection = intrinsicMarkupCollection;
+	}
 	
-	
+	public AnnotationCollection getIntrinsicMarkupCollection() {
+		return intrinsicMarkupCollection;
+	}
 }

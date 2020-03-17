@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import de.catma.document.Range;
@@ -18,6 +19,7 @@ import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.serialization.AnnotationCollectionSerializationHandler;
+import de.catma.tag.KnownTagsetDefinitionName;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -37,10 +39,8 @@ import nu.xom.Text;
 public class XmlMarkupCollectionSerializationHandler implements
 		AnnotationCollectionSerializationHandler {
 	
-	private SourceDocument sourceDocument;
 	private TagManager tagManager;
 	private IDGenerator idGenerator;
-	private HashMap<String, TagDefinition> pathToTagDefMap;
 	private XML2ContentHandler xmlContentHandler;
 	
 
@@ -50,7 +50,6 @@ public class XmlMarkupCollectionSerializationHandler implements
 		super();
 		this.tagManager = tagManager;
 		this.idGenerator = new IDGenerator();
-		this.pathToTagDefMap = new HashMap<>();
 		this.xmlContentHandler = xmlContentHandler;
 	}
 
@@ -70,17 +69,43 @@ public class XmlMarkupCollectionSerializationHandler implements
 		try {
 	        Builder builder = new Builder();
 	        Document document = builder.build(inputStream);
-	        StringBuilder contentBuilder = new StringBuilder();
-	        TagsetDefinition tagsetDefinition = 
-	        		new TagsetDefinition(
-	        			idGenerator.generateTagsetId(), 
-	        			"Intrinsic Markup", new Version());
+	        Map<String, String> namespacePrefixToTagsetIdMap = new HashMap<>();
+	        for (int idx=0; idx<document.getRootElement().getNamespaceDeclarationCount(); idx++) {
+	        	String prefix = document.getRootElement().getNamespacePrefix(idx);
+	        	String namespaceURI = document.getRootElement().getNamespaceURI(prefix);
+	        	if (namespaceURI != null && !namespaceURI.isEmpty()) {
+		        	String tagsetId = idGenerator.generateTagsetId(namespaceURI);
+	
+		        	if (tagManager.getTagLibrary().getTagsetDefinition(tagsetId) == null) {
+		        		TagsetDefinition tagsetDefinition = 
+		        				new TagsetDefinition(
+		        						tagsetId, 
+		        						namespaceURI, new Version());
+		        		tagManager.addTagsetDefinition(tagsetDefinition);
+		        	}
+		        	namespacePrefixToTagsetIdMap.put(prefix, tagsetId);
+	        	}
+	        }
 	        
-	        tagManager.addTagsetDefinition(tagsetDefinition);
+	        String defaultIntrinsicXmlTagsetId = 
+	        		KnownTagsetDefinitionName.DEFAULT_INTRINSIC_XML.asTagsetId();
+	        
+	        StringBuilder contentBuilder = new StringBuilder();
+	        
+	        if (tagManager.getTagLibrary().getTagsetDefinition(defaultIntrinsicXmlTagsetId) == null) {
+	        	TagsetDefinition tagsetDefinition = 
+	        			new TagsetDefinition(
+	        					defaultIntrinsicXmlTagsetId, 
+	        					null, new Version());
+	        	
+	        	tagManager.addTagsetDefinition(tagsetDefinition);
+	        }
+	        
+	        
 	        Stack<String> elementStack = new Stack<String>();
 	        AnnotationCollection userMarkupCollection = 
 	        	new AnnotationCollection(
-	        		new IDGenerator().generate(),
+	        		id,
 	        		new ContentInfoSet(
 	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
 	        		tagManager.getTagLibrary(),
@@ -91,8 +116,11 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        		contentBuilder, 
 	        		document.getRootElement(), 
 	        		elementStack, tagManager,
-	        		tagManager.getTagLibrary(), tagsetDefinition,
-	        		userMarkupCollection);
+	        		tagManager.getTagLibrary(),
+	        		namespacePrefixToTagsetIdMap,
+	        		userMarkupCollection,
+	        		sourceDocument.getUuid(),
+	        		sourceDocument.getLength());
 	        
 	        return userMarkupCollection;
 		}
@@ -102,12 +130,13 @@ public class XmlMarkupCollectionSerializationHandler implements
 	}
 
     private void scanElements(
-    	
     		StringBuilder contentBuilder, Element element,
     		Stack<String> elementStack, TagManager tagManager, 
     		TagLibrary tagLibrary, 
-    		TagsetDefinition tagsetDefinition,
-    		AnnotationCollection userMarkupCollection) throws Exception {
+    		Map<String, String> namespacePrefixToTagsetIdMap,
+    		AnnotationCollection userMarkupCollection,
+    		String docId,
+    		int docLength) throws Exception {
     	
 		int start = contentBuilder.length();
 
@@ -118,20 +147,32 @@ public class XmlMarkupCollectionSerializationHandler implements
         
         String parentPath = pathBuilder.toString();
         
-        elementStack.push(element.getQualifiedName()); 
+        elementStack.push(element.getLocalName()); 
         String path = parentPath + "/" + elementStack.peek();
 
-        TagDefinition tagDefinition = pathToTagDefMap.get(path);
+        String tagName = element.getLocalName();
+
+        String prefix = element.getNamespacePrefix();
+        String tagsetId = namespacePrefixToTagsetIdMap.get(prefix);
+        if (tagsetId == null) {
+	        tagsetId = KnownTagsetDefinitionName.DEFAULT_INTRINSIC_XML.asTagsetId();
+        }
+
+        TagsetDefinition tagset = tagLibrary.getTagsetDefinition(tagsetId);
+        String tagId = idGenerator.generate(tagName);
+        
+        
+        TagDefinition tagDefinition = tagset.getTagDefinition(tagId);
+
+        String pathPropertyDefId = idGenerator.generate("path");
         
         if (tagDefinition == null) {
-        	TagDefinition parentTag = pathToTagDefMap.get(parentPath);
-        	String parentUuid = (parentTag==null)?null:parentTag.getUuid();
         	tagDefinition = 
         		new TagDefinition(
-        			idGenerator.generate(), 
+        			tagId, 
         			elementStack.peek(),
-        			parentUuid,
-        			tagsetDefinition.getUuid());
+        			null, //no parent, hierarchy is collected in annotation property
+        			tagsetId);
         	PropertyDefinition colorDef = 
         		new PropertyDefinition(
     				idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
@@ -139,9 +180,15 @@ public class XmlMarkupCollectionSerializationHandler implements
         			Collections.singleton(
         				ColorConverter.toRGBIntAsString(ColorConverter.randomHex())));
         	tagDefinition.addSystemPropertyDefinition(colorDef);
-        			
-        	pathToTagDefMap.put(path, tagDefinition);
-        	tagManager.addTagDefinition(tagsetDefinition, tagDefinition);
+        	
+        	PropertyDefinition pathDef = 
+        		new PropertyDefinition(
+        				pathPropertyDefId,
+            			"path", 
+            			Collections.emptyList());
+        	tagDefinition.addUserDefinedPropertyDefinition(pathDef);
+        	
+        	tagManager.addTagDefinition(tagset, tagDefinition);
         }
 
 		for( int idx=0; idx<element.getChildCount(); idx++) {
@@ -151,22 +198,20 @@ public class XmlMarkupCollectionSerializationHandler implements
             }
             else if (curChild instanceof Element) { //descent
                 scanElements(
-                	
                 	contentBuilder, 
                 	(Element)curChild, 
                 	elementStack,
                 	tagManager,
                 	tagLibrary,
-                	tagsetDefinition,
-                	userMarkupCollection);
+                	namespacePrefixToTagsetIdMap,
+                	userMarkupCollection,
+                	docId,
+                	docLength);
             
             }
         }
 		
-		if (element.getChildCount() == 0) {
-			xmlContentHandler.addEmptyElement(contentBuilder, element);
-		}
-		else {
+		if (element.getChildCount() != 0) {
 			xmlContentHandler.addBreak(contentBuilder, element);
 		}
 		
@@ -176,17 +221,14 @@ public class XmlMarkupCollectionSerializationHandler implements
 		  
         
         if (range.isSinglePoint()) {
-        	int sourceDocumentLength = 0;
-    		
-			sourceDocumentLength = sourceDocument.getLength();
-			
-			int newStart = range.getStartPoint();
+
+        	int newStart = range.getStartPoint();
 			if (newStart > 0) {
 				newStart = newStart-1;
 			}
 			
 			int newEnd = range.getEndPoint();
-			if (newEnd < sourceDocumentLength-1) {
+			if (newEnd < docLength-1) {
 				newEnd = newEnd+1;
 			}
 			
@@ -230,9 +272,14 @@ public class XmlMarkupCollectionSerializationHandler implements
         			Collections.singleton(element.getAttribute(i).getValue()));
         	tagInstance.addUserDefinedProperty(property);
         }
+        
+        Property pathProperty = 
+        	new Property(pathPropertyDefId, Collections.singletonList(path));
+        tagInstance.addUserDefinedProperty(pathProperty);
+        	
         														
         TagReference tagReference = new TagReference(
-        	tagInstance, sourceDocument.getUuid(), range, userMarkupCollection.getId());
+        	tagInstance, docId, range, userMarkupCollection.getId());
         userMarkupCollection.addTagReference(tagReference);
      
         elementStack.pop();	
