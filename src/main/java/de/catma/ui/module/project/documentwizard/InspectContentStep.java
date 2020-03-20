@@ -21,6 +21,7 @@ import org.apache.tika.mime.MediaType;
 import com.vaadin.data.Binder.Binding;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
@@ -50,7 +51,7 @@ import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.dialog.wizard.WizardStep;
 import de.catma.ui.module.main.ErrorHandler;
 
-public class CheckContentStep extends VerticalLayout implements WizardStep {
+public class InspectContentStep extends VerticalLayout implements WizardStep {
 	
 
 	private WizardContext wizardContext;
@@ -64,12 +65,15 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 	private HorizontalLayout contentPanel;
 	private AddMetadataStep nextStep;
 	private StepChangeListener stepChangeListener;
+	private CheckBox cbUseApostrophe;
 
 	@SuppressWarnings("unchecked")
-	public CheckContentStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
+	public InspectContentStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
 		
 		this.wizardContext = wizardContext; 
-		this.progressStep = progressStepFactory.create(2, "Check the content");
+		this.wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, false);
+		
+		this.progressStep = progressStepFactory.create(2, "Inspect the content");
 		
 		ArrayList<UploadFile> fileList = (ArrayList<UploadFile>) wizardContext.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
 		
@@ -99,6 +103,9 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 				languageSelectionDialog.show();
 			}
 		});
+		
+		cbUseApostrophe.addValueChangeListener(
+			event -> this.wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, event.getValue()));
 	}
 
 	private void updatePreview(UploadFile uploadFile) {
@@ -147,7 +154,7 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 			}
 		}
 		catch (Exception e) {
-			Logger.getLogger(CheckContentStep.class.getName()).log(
+			Logger.getLogger(InspectContentStep.class.getName()).log(
 					Level.SEVERE, 
 					String.format("Error loading preview of %1$s", uploadFile.getOriginalFilename()), 
 					e);
@@ -240,9 +247,21 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
         fileActionGridComponent.setMargin(false);
         fileActionGridComponent.getActionGridBar().setAddBtnVisible(false);
         
-        contentPanel.addComponent(fileActionGridComponent);
-     
-        contentPanel.setExpandRatio(fileActionGridComponent, 0.6f);
+        VerticalLayout leftColumn = new VerticalLayout();
+        leftColumn.setMargin(false);
+        leftColumn.setSizeFull();
+        
+        
+        leftColumn.addComponent(fileActionGridComponent);
+        leftColumn.setExpandRatio(fileActionGridComponent, 1.0f);
+        
+        cbUseApostrophe = new CheckBox("always use the apostrophe as a word separator");
+        cbUseApostrophe.setDescription(
+        	"This has influence on the segmentation of the text, i. e. on how the wordlist is created.");
+        leftColumn.addComponent(cbUseApostrophe);
+        
+        contentPanel.addComponent(leftColumn);
+        contentPanel.setExpandRatio(leftColumn, 0.6f);
         
 		this.taPreview = new TextArea("Preview");
 		this.taPreview.setReadOnly(true);
@@ -250,7 +269,7 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 		
 		contentPanel.addComponent(this.taPreview);
 		contentPanel.setExpandRatio(this.taPreview, 0.4f);
-
+		
 	}
 
 	@Override
@@ -328,7 +347,7 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 								
 								
 							} catch (Exception e) {
-								Logger.getLogger(CheckContentStep.class.getName()).log(
+								Logger.getLogger(InspectContentStep.class.getName()).log(
 										Level.SEVERE, 
 										String.format("Error inspecting %1$s", uploadFile.getOriginalFilename()), 
 										e);
@@ -367,13 +386,13 @@ public class CheckContentStep extends VerticalLayout implements WizardStep {
 						});
 					}
 					if (stepChangeListener != null) {
-						stepChangeListener.stepChanged(CheckContentStep.this);
+						stepChangeListener.stepChanged(InspectContentStep.this);
 					}
 
 				}
 				@Override
 				public void error(Throwable t) {
-					Logger.getLogger(CheckContentStep.class.getName()).log(
+					Logger.getLogger(InspectContentStep.class.getName()).log(
 							Level.SEVERE, 
 							"Error inspecting files", 
 							t);

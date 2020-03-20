@@ -389,4 +389,6 @@ public interface Project {
 	public void importCollection(
 		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList, AnnotationCollection annotationCollection) throws IOException;
 
+	boolean inProjectHistory(String resourceId) throws IOException;
+
 }

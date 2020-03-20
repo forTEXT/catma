@@ -9,6 +9,8 @@ public class DocumentWizard extends Wizard {
 		COLLECTION_NAME_PATTERN,
 		UPLOAD_FILE_LIST,
 		PROJECT,
+		APOSTROPHE_AS_SEPARATOR,
+		TAGSET_IMPORT_LIST,
 		;
 	}
 	

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +54,7 @@ import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.rbac.RBACPermission;
+import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -311,12 +313,17 @@ public class AnnotationPanel extends VerticalLayout {
 	@Subscribe
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
-    		AnnotationCollectionReference collectionReference = 
-    				collectionChangeEvent.getCollectionReference();
-			try {
-				addCollection(project.getUserMarkupCollection(collectionReference));
-			} catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("error add new Collection", e);
+			SourceDocument document = currentDocumentProvider.get();
+			if (document != null) {
+	    		AnnotationCollectionReference collectionReference = 
+	    				collectionChangeEvent.getCollectionReference();
+	    		if (document.getUuid().equals(collectionReference.getSourceDocumentId())) {
+					try {
+						addCollection(project.getUserMarkupCollection(collectionReference));
+					} catch (IOException e) {
+						((ErrorHandler)UI.getCurrent()).showAndLogError("error add new Collection", e);
+					}
+	    		}
 			}
 		}
 		else if (collectionChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
@@ -1128,7 +1135,12 @@ public class AnnotationPanel extends VerticalLayout {
 
 	public void addCollection(AnnotationCollection collection) {
 		this.collections.add(collection);
-		setSelectedEditableCollection(collection);
+		
+		// if it is an imported XML Collection it is not likely that the collection is going to be edited
+		// and we do not automatically select it for editing
+		if (!Objects.equals(collection.getName(), XmlMarkupCollectionSerializationHandler.DEFAULT_COLLECTION_TITLE)) {
+			setSelectedEditableCollection(collection);
+		}
 		//TODO: show Annotations from this collection and selected Tagsets
 	}
 

@@ -194,7 +194,7 @@ public class TagDefinition {
 				setValue(colorAsRgbInt);
 	}
 	
-	void setAuthor(String author) {
+	public void setAuthor(String author) {
 		getPropertyDefinition(
 			PropertyDefinition.SystemPropertyName.catma_markupauthor.name()).
 				setValue(author);

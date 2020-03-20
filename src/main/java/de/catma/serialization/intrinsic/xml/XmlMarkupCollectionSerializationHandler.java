@@ -39,18 +39,22 @@ import nu.xom.Text;
 public class XmlMarkupCollectionSerializationHandler implements
 		AnnotationCollectionSerializationHandler {
 	
+	public final static String DEFAULT_COLLECTION_TITLE = "Intrinsic Markup";
+	
 	private TagManager tagManager;
 	private IDGenerator idGenerator;
 	private XML2ContentHandler xmlContentHandler;
+	private String author;
 	
 
 	
 	public XmlMarkupCollectionSerializationHandler(
-			TagManager tagManager, XML2ContentHandler xmlContentHandler) {
+			TagManager tagManager, XML2ContentHandler xmlContentHandler, String author) {
 		super();
 		this.tagManager = tagManager;
 		this.idGenerator = new IDGenerator();
 		this.xmlContentHandler = xmlContentHandler;
+		this.author = author;
 	}
 
 	@Override
@@ -107,7 +111,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        	new AnnotationCollection(
 	        		id,
 	        		new ContentInfoSet(
-	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
+	        			"", "Intrinsic Markup", "", DEFAULT_COLLECTION_TITLE), 
 	        		tagManager.getTagLibrary(),
 	        		sourceDocument.getUuid(),
 	        		sourceDocument.getRevisionHash());
@@ -159,28 +163,34 @@ public class XmlMarkupCollectionSerializationHandler implements
         }
 
         TagsetDefinition tagset = tagLibrary.getTagsetDefinition(tagsetId);
-        String tagId = idGenerator.generate(tagName);
+        String tagId = idGenerator.generate();
         
         
-        TagDefinition tagDefinition = tagset.getTagDefinition(tagId);
+        TagDefinition tagDefinition = tagset.getTagDefinitionsByName(tagName).findFirst().orElse(null);
 
-        String pathPropertyDefId = idGenerator.generate("path");
+        String pathPropertyDefId = null;
         
         if (tagDefinition == null) {
+        	
         	tagDefinition = 
         		new TagDefinition(
         			tagId, 
         			elementStack.peek(),
         			null, //no parent, hierarchy is collected in annotation property
         			tagsetId);
-        	PropertyDefinition colorDef = 
-        		new PropertyDefinition(
-    				idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
-        			PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
-        			Collections.singleton(
-        				ColorConverter.toRGBIntAsString(ColorConverter.randomHex())));
-        	tagDefinition.addSystemPropertyDefinition(colorDef);
-        	
+    		tagDefinition.addSystemPropertyDefinition(
+    				new PropertyDefinition(
+    					idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()), 
+    					PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
+    					Collections.singletonList(ColorConverter.toRGBIntAsString(ColorConverter.randomHex()))));
+    		tagDefinition.addSystemPropertyDefinition(
+    				new PropertyDefinition(
+    					idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()), 
+    					PropertyDefinition.SystemPropertyName.catma_markupauthor.name(), 
+    					Collections.singletonList(author)));
+    		
+    		pathPropertyDefId = idGenerator.generate();
+    		
         	PropertyDefinition pathDef = 
         		new PropertyDefinition(
         				pathPropertyDefId,
@@ -190,7 +200,10 @@ public class XmlMarkupCollectionSerializationHandler implements
         	
         	tagManager.addTagDefinition(tagset, tagDefinition);
         }
-
+        else {
+        	pathPropertyDefId = tagDefinition.getPropertyDefinition("path").getUuid();
+        }
+        
 		for( int idx=0; idx<element.getChildCount(); idx++) {
             Node curChild = element.getChild(idx);
             if (curChild instanceof Text) {
@@ -239,10 +252,11 @@ public class XmlMarkupCollectionSerializationHandler implements
         TagInstance tagInstance = new TagInstance(
         	idGenerator.generate(), 
         	tagDefinition.getUuid(),
-        	tagDefinition.getAuthor(),
+        	author,
         	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
         	tagDefinition.getUserDefinedPropertyDefinitions(),
         	tagDefinition.getTagsetDefinitionUuid());
+
 
         for (int i=0; i<element.getAttributeCount(); i++) {
         	PropertyDefinition propertyDefinition = 

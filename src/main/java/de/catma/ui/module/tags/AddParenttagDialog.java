@@ -7,7 +7,6 @@ import java.util.Optional;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.Pair;
 
@@ -43,7 +42,7 @@ public class AddParenttagDialog extends AbstractAddEditTagDialog<Pair<TagsetDefi
 		
 		tag.addSystemPropertyDefinition(
 			new PropertyDefinition(
-				idGenerator.generate(), 
+				idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()), 
 				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
 				Collections.singletonList(String.valueOf(colorPicker.getValue().getRGB()))));
 

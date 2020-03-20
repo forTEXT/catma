@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.apache.tika.mime.MediaType;
 import org.eclipse.jgit.api.Status;
 
 import com.google.common.cache.CacheBuilder;
@@ -96,7 +97,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	private ProjectReference projectReference;
 	private String rootRevisionHash;
 	private GraphProjectHandler graphProjectHandler;
-	private String tempDir;
+	private final String tempDir;
 	private BackgroundService backgroundService;
 
 	private boolean tagManagerListenersEnabled = true;
@@ -856,19 +857,19 @@ public class GraphWorktreeProject implements IndexedProject {
 			logger.info("tokenization finished");
 			
 			try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
-				
+				MediaType mediaType = 
+					MediaType.parse(sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getMimeType());
+				String extension = mediaType.getBaseType().getType();
+				if (extension == null || extension.isEmpty()) {
+					extension = "unknown";
+				}
 				String sourceDocRevisionHash = gitProjectHandler.createSourceDocument(
 					sourceDocument.getUuid(), 
 					originalFileInputStream,
 					sourceDocument.getUuid() 
 						+ ORIG_INFIX 
 						+ "." 
-						+ sourceDocument
-							.getSourceContentHandler()
-							.getSourceDocumentInfo()
-							.getTechInfoSet()
-							.getFileType()
-							.getDefaultExtension(),
+						+ extension,
 					new ByteArrayInputStream(
 						sourceDocument.getContent().getBytes(Charset.forName("UTF-8"))), 
 					convertedFilename, 
@@ -1227,6 +1228,11 @@ public class GraphWorktreeProject implements IndexedProject {
 					importAnnotationCollection.getName()), 
 				e);		
 		}
+	}
+	
+	@Override
+	public boolean inProjectHistory(String resourceId) throws IOException {
+		return gitProjectHandler.getResourceIds().contains(resourceId);
 	}
 
 	@Override

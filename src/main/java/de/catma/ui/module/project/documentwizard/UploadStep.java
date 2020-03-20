@@ -106,7 +106,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 	private Tika tika;
 	private Grid<UploadFile> fileGrid;
 	private MultiFileUpload upload;
-	private CheckContentStep nextStep;
+	private InspectContentStep nextStep;
 	private StepChangeListener stepChangeListener;
 	private PushMode originalPushMode;
 	private TextField urlInputField;
@@ -124,7 +124,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 		this.fileDataProvider = new ListDataProvider<UploadFile>(this.fileList);
 		
 		this.tika = new Tika();
-		this.nextStep = new CheckContentStep(wizardContext, progressStepFactory);
+		this.nextStep = new InspectContentStep(wizardContext, progressStepFactory);
 		this.idGenerator = new IDGenerator();
 
 		initComponents();

@@ -121,6 +121,10 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 		return tagDefinitions.get(tagDefinitionID);
 	}
 	
+	public Stream<TagDefinition> getTagDefinitionsByName(String name) {
+		return tagDefinitions.values().stream().filter(tag -> tag.getName().equals(name));
+	}
+	
 	public Iterator<TagDefinition> iterator() {
 		return Collections.unmodifiableCollection(tagDefinitions.values()).iterator();
 	}

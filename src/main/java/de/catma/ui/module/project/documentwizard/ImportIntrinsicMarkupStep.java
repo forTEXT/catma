@@ -52,67 +52,6 @@ import de.catma.util.IDGenerator;
 
 public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardStep {
 	
-	enum TagsetImportState {
-		WILL_BE_CREATED("will be created"),
-		WILL_BE_MERGED("will be merged"),
-		WILL_BE_IGNORED("will be ignored"),
-		;
-		
-		private String label;
-
-		private TagsetImportState(String label) {
-			this.label = label;
-		}
-		
-		@Override
-		public String toString() {
-			return label;
-		}
-		
-	}
-	
-	static class TagsetImport {
-		
-		private String namespace;
-		private TagsetDefinition extractedTagset;
-		private TagsetDefinition targetTagset;
-		private TagsetImportState importState;
-
-		public TagsetImport(
-				String namespace, 
-				TagsetDefinition extractedTagset, 
-				TagsetDefinition targetTagset, TagsetImportState importState) {
-			super();
-			this.namespace = namespace;
-			this.extractedTagset = extractedTagset;
-			this.targetTagset = targetTagset;
-			this.importState = importState;
-		}
-		
-		public String getNamespace() {
-			return namespace;
-		}
-		public TagsetDefinition getExtractedTagset() {
-			return extractedTagset;
-		}
-		
-		public String getTargetName() {
-			return targetTagset==null?"":targetTagset.getName();
-		}
-		
-		public TagsetImportState getImportState() {
-			return importState;
-		}
-		
-		public void setImportState(TagsetImportState importState) {
-			this.importState = importState;
-		}
-		
-		public void setTargetTagset(TagsetDefinition targetTagset) {
-			this.targetTagset = targetTagset;
-		}
-	}
-
 	private ProgressStep progressStep;
 	private ListDataProvider<UploadFile> fileDataProvider;
 	private ListDataProvider<TagsetImport> tagsetDataProvider;
@@ -326,7 +265,8 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 					contentHandler.setSourceDocumentInfo(documentInfo);
 					
 					XmlMarkupCollectionSerializationHandler handler =
-							new XmlMarkupCollectionSerializationHandler(tagmanager, contentHandler);
+							new XmlMarkupCollectionSerializationHandler(
+									tagmanager, contentHandler, project.getUser().getIdentifier());
 					try (FileInputStream fis = new FileInputStream(new File(uploadFile.getTempFilename()))) {
 						AnnotationCollection collection = 
 							handler.deserialize(doc, idGenerator.generateCollectionId(), fis);
@@ -379,6 +319,8 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 				}
 				
 				tagsetDataProvider.refreshAll();
+				wizardContext.put(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST, tagsetImportList);
+				
 				if (stepChangeListener != null) {
 					stepChangeListener.stepChanged(ImportIntrinsicMarkupStep.this);
 				}

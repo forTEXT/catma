@@ -32,7 +32,7 @@ public class AddSubtagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 		
 		tag.addSystemPropertyDefinition(
 			new PropertyDefinition(
-				idGenerator.generate(), 
+				idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()), 
 				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
 				Collections.singletonList(String.valueOf(colorPicker.getValue().getRGB()))));
 

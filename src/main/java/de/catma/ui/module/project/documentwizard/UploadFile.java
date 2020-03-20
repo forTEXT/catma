@@ -2,12 +2,19 @@ package de.catma.ui.module.project.documentwizard;
 
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.Locale;
 
+import com.google.common.collect.Lists;
+
 import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.source.ContentInfoSet;
+import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.LanguageItem;
+import de.catma.document.source.TechInfoSet;
 
 public class UploadFile {
+	private static final char APOSTROPHE = '\'';
 	
 	private final String uuid;
 	private final URI tempFilename;
@@ -136,5 +143,22 @@ public class UploadFile {
 	
 	public AnnotationCollection getIntrinsicMarkupCollection() {
 		return intrinsicMarkupCollection;
+	}
+	
+	public ContentInfoSet getContentInfoSet() {
+		return new ContentInfoSet(author, description, publisher, title);
+	}
+	
+	public TechInfoSet getTechInfoSet() {
+		TechInfoSet techInfoSet = new TechInfoSet(originalFilename, mimetype, tempFilename);
+		techInfoSet.setCharset(charset);
+		return techInfoSet;
+	}
+	
+	public IndexInfoSet getIndexInfoSet(boolean useApostropheAsSeparator) {
+		return new IndexInfoSet(
+				Collections.emptyList(), 
+				useApostropheAsSeparator?Lists.newArrayList(APOSTROPHE):Collections.emptyList(), 
+				locale);
 	}
 }

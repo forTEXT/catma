@@ -5,27 +5,31 @@ import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.text.Collator;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.CRC32;
 
 import org.vaadin.dialogs.ConfirmDialog;
-import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
-import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
-import org.vaadin.teemu.wizards.event.WizardProgressListener;
-import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
-import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
@@ -50,14 +54,20 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.document.corpus.Corpus;
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
+import de.catma.document.source.contenthandler.SourceContentHandler;
+import de.catma.document.source.contenthandler.TikaContentHandler;
+import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.indexer.IndexedProject;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
@@ -74,6 +84,10 @@ import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.serialization.TagsetDefinitionImportStatus;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -101,10 +115,10 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.CanReloadAll;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.module.project.document.AddSourceDocWizardFactory;
-import de.catma.ui.module.project.document.AddSourceDocWizardResult;
-import de.catma.ui.module.project.document.SourceDocumentResult;
 import de.catma.ui.module.project.documentwizard.DocumentWizard;
+import de.catma.ui.module.project.documentwizard.TagsetImport;
+import de.catma.ui.module.project.documentwizard.TagsetImportState;
+import de.catma.ui.module.project.documentwizard.UploadFile;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.CloseSafe;
@@ -802,58 +816,229 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		wizardContext.put(DocumentWizard.WizardContextKey.PROJECT, project);
 		DocumentWizard documentWizard = new DocumentWizard(wizardContext, new SaveCancelListener<WizardContext>() {
 			@Override
+			@SuppressWarnings("unchecked")
 			public void savePressed(WizardContext result) {
-				// TODO Auto-generated method stub
+				IDGenerator idGenerator = new IDGenerator();
+				boolean useApostropheAsSeparator = 
+						(Boolean)result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
+				String collectionNamePattern = (String)result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
+						
+				Collection<TagsetImport> tagsetImports = 
+						(Collection<TagsetImport>)result.get(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST);
+				Collection<UploadFile> uploadFiles = 
+						(Collection<UploadFile>)result.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
 				
+				// Ignoring Tagsets
+				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED)).forEach(tagsetImport -> {
+					for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
+						for (UploadFile uploadFile : uploadFiles) {
+							if (uploadFile.getIntrinsicMarkupCollection() != null) {
+								AnnotationCollection intrinsicMarkupCollection =
+										uploadFile.getIntrinsicMarkupCollection();
+								intrinsicMarkupCollection.removeTagReferences(intrinsicMarkupCollection.getTagReferences(tag));
+							}
+						}
+					}
+				});
+				
+				// Creating Tagsets
+				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED)).forEach(tagsetImport -> {
+					
+					if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
+						// already imported, so it will be a merge
+						tagsetImport.setImportState(TagsetImportState.WILL_BE_MERGED);
+					}
+					else {
+						TagsetDefinition extractedTagset = 
+								tagsetImport.getExtractedTagset();
+						try {
+							project.importTagsets(
+								Collections.singletonList(
+									new TagsetDefinitionImportStatus(
+											extractedTagset, 
+											project.inProjectHistory(extractedTagset.getUuid()), 
+											project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
+						}
+						catch (Exception e) {
+							Logger.getLogger(ProjectView.class.getName()).log(
+									Level.SEVERE, 
+									String.format("Error importing tagset %1$s with ID %2$s", 
+											extractedTagset.getName(), 
+											extractedTagset.getUuid()), 
+									e);
+							String errorMsg = e.getMessage();
+							if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+								errorMsg = "";
+							}
+	
+							Notification.show(
+								"Error", 
+								String.format(
+										"Error importing tagset %1$s! "
+										+ "This tagset will be skipped!\n The underlying error message was:\n%2$s", 
+										extractedTagset.getName(), errorMsg), 
+								Type.ERROR_MESSAGE);					
+						}
+					}
+				});
+				
+				// Merging Tagsets
+				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED)).forEach(tagsetImport -> {
+					TagsetDefinition targetTagset = 
+						project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid());
+					
+					for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
+						
+						Optional<TagDefinition> optionalTag =
+							targetTagset.getTagDefinitionsByName(tag.getName()).findFirst();
+						
+						if (optionalTag.isPresent()) {
+							TagDefinition existingTag = optionalTag.get();
+							
+							tag.getUserDefinedPropertyDefinitions().forEach(pd -> {
+								if (existingTag.getPropertyDefinition(pd.getName()) == null) {
+									project.getTagManager().addUserDefinedPropertyDefinition(
+											existingTag, new PropertyDefinition(pd));
+								}
+							});
+							
+							for (UploadFile uploadFile : uploadFiles) {
+								if (uploadFile.getIntrinsicMarkupCollection() != null) {
+									AnnotationCollection intrinsicMarkupCollection =
+											uploadFile.getIntrinsicMarkupCollection();
+									
+									List<TagReference> tagReferences = 
+										intrinsicMarkupCollection.getTagReferences(tag);
+
+									intrinsicMarkupCollection.removeTagReferences(tagReferences);
+									
+									Multimap<TagInstance, TagReference> referencesByInstance = 
+											ArrayListMultimap.create();
+									tagReferences.forEach(tr -> referencesByInstance.put(tr.getTagInstance(), tr));
+									
+									for (TagInstance incomingTagInstance : referencesByInstance.keySet()) {
+										TagInstance newTagInstance = 
+												new TagInstance(
+														idGenerator.generate(),
+														existingTag.getUuid(),
+														incomingTagInstance.getAuthor(),
+														incomingTagInstance.getTimestamp(),
+														existingTag.getUserDefinedPropertyDefinitions(),
+														targetTagset.getUuid());
+										
+										for (Property oldProp : incomingTagInstance.getUserDefinedProperties()) {
+											String oldPropDefId = oldProp.getPropertyDefinitionId();
+											PropertyDefinition oldPropDef = 
+													tag.getPropertyDefinitionByUuid(oldPropDefId);
+
+											PropertyDefinition existingPropDef = 
+												existingTag.getPropertyDefinition(oldPropDef.getName());
+											
+											
+											newTagInstance.addUserDefinedProperty(
+												new Property(
+													existingPropDef.getUuid(), 
+													oldProp.getPropertyValueList()));
+										}
+										
+										ArrayList<TagReference> newReferences = new ArrayList<>();
+										referencesByInstance.get(incomingTagInstance).forEach(tr -> {
+											try {
+												newReferences.add(
+													new TagReference(
+														newTagInstance, 
+														tr.getTarget().toString(), 
+														tr.getRange(), 
+														tr.getUserMarkupCollectionUuid()));
+											} catch (URISyntaxException e) {
+												e.printStackTrace();
+											}
+										});
+										
+										intrinsicMarkupCollection.addTagReferences(newReferences);
+									}
+									
+								}
+							}								
+						}
+						else {
+							tag.setTagsetDefinitionUuid(targetTagset.getUuid());
+							
+							project.getTagManager().addTagDefinition(targetTagset, tag);
+						}
+					}
+				});
+				
+				// Importing docs and collections
+				for (UploadFile uploadFile : uploadFiles) {
+					addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern);
+				}
+
 			}
 		});
 		
 		documentWizard.show();
 	}
 
-	private void handleAddDocumentRequest() {
+	private void addUploadFile(UploadFile uploadFile, boolean useApostropheAsSeparator, String collectionNamePattern) {
 		
-		final AddSourceDocWizardResult wizardResult = 
-				new AddSourceDocWizardResult();
+		SourceDocumentInfo sourceDocumentInfo = 
+				new SourceDocumentInfo(
+						uploadFile.getIndexInfoSet(useApostropheAsSeparator), 
+						uploadFile.getContentInfoSet(), 
+						uploadFile.getTechInfoSet());
 		
-		AddSourceDocWizardFactory factory = 
-			new AddSourceDocWizardFactory(
-					new WizardProgressListener() {
-				
-				public void wizardCompleted(WizardCompletedEvent event) {
-					event.getWizard().removeListener(this);
-
-					try {
-						for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
-							final SourceDocument sourceDocument = sdr.getSourceDocument();
-							project.insert(sourceDocument);
-						}
+		SourceContentHandler contentHandler =
+				sourceDocumentInfo.getTechInfoSet().getMimeType().equals(FileType.XML2.getMimeType())?
+						new XML2ContentHandler()
+						:new TikaContentHandler();
 						
-					} catch (Exception e) {
-						((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error adding the Source Document!", e);
-					}
-				}
 
-				public void wizardCancelled(WizardCancelledEvent event) {
-					event.getWizard().removeListener(this);
-				}
-				
-				public void stepSetChanged(WizardStepSetChangedEvent event) {/*not needed*/}
-				
-				public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
-			}, 
-			wizardResult,
-			project);
+		contentHandler.setSourceDocumentInfo(sourceDocumentInfo);		
 		
-		Window sourceDocCreationWizardWindow = 
-				factory.createWizardWindow(
-						"Add new Source Document", "85%",  "98%");  //$NON-NLS-2$ //$NON-NLS-3$
+		SourceDocument document = new SourceDocument(uploadFile.getUuid(), contentHandler);
 		
-		UI.getCurrent().addWindow(
-				sourceDocCreationWizardWindow);
-		
-		sourceDocCreationWizardWindow.center();
+		try {
+			String content = document.getContent();
+			
+			FileOSType fileOSType = FileOSType.getFileOSType(content);
+			
+			sourceDocumentInfo.getTechInfoSet().setFileOSType(fileOSType);
+			CRC32 checksum = new CRC32();
+			checksum.update(content.getBytes());
+			
+			sourceDocumentInfo.getTechInfoSet().setChecksum(checksum.getValue());
+
+			project.insert(document);
+			
+			AnnotationCollection intrinsicMarkupCollection = 
+					uploadFile.getIntrinsicMarkupCollection();
+			
+			project.importCollection(Collections.emptyList(), intrinsicMarkupCollection);
+			
+			if (collectionNamePattern != null && !collectionNamePattern.isEmpty()) {
+				String collectionName = collectionNamePattern.replace("{{Title}}", uploadFile.getTitle());
+				project.createUserMarkupCollection(collectionName, document);
+			}
+			
+		} catch (IOException e) {
+			Logger.getLogger(ProjectView.class.getName()).log(
+					Level.SEVERE, 
+					String.format("Error loading content of %1$s", uploadFile.getTempFilename().toString()), 
+					e);
+			String errorMsg = e.getMessage();
+			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+				errorMsg = "";
+			}
+
+			Notification.show(
+				"Error", 
+				String.format(
+						"Error loading content of %1$s! "
+						+ "This document will be skipped!\n The underlying error message was:\n%2$s", 
+						uploadFile.getTitle(), errorMsg), 
+				Type.ERROR_MESSAGE);
+		}
 	}
 	
 	private void handleResourceItemClick(ItemClick<Resource> itemClickEvent) {
