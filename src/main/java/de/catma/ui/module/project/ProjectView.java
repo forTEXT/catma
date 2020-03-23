@@ -56,6 +56,11 @@ import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.backgroundservice.BackgroundService;
+import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.backgroundservice.DefaultProgressCallable;
+import de.catma.backgroundservice.ExecutionListener;
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -94,6 +99,7 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.UIBackgroundService;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
@@ -270,7 +276,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
         ContextMenu addContextMenu = 
         	documentGridComponent.getActionGridBar().getBtnAddContextMenu();
-        MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest2());
+        MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
         addDocumentBtn.setEnabled(false);
         rbacEnforcer.register(RBACConstraint.ifAuthorized(
         		role -> (project.hasPermission(role, RBACPermission.DOCUMENT_CREATE_OR_UPLOAD)),
@@ -811,175 +817,405 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	}
     }
 	
-	private void handleAddDocumentRequest2() {
+	private void handleAddDocumentRequest() {
 		WizardContext wizardContext = new WizardContext();
 		wizardContext.put(DocumentWizard.WizardContextKey.PROJECT, project);
 		DocumentWizard documentWizard = new DocumentWizard(wizardContext, new SaveCancelListener<WizardContext>() {
 			@Override
 			@SuppressWarnings("unchecked")
 			public void savePressed(WizardContext result) {
-				IDGenerator idGenerator = new IDGenerator();
-				boolean useApostropheAsSeparator = 
-						(Boolean)result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
-				String collectionNamePattern = (String)result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
-						
-				Collection<TagsetImport> tagsetImports = 
-						(Collection<TagsetImport>)result.get(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST);
-				Collection<UploadFile> uploadFiles = 
-						(Collection<UploadFile>)result.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
 				
-				// Ignoring Tagsets
-				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED)).forEach(tagsetImport -> {
-					for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
-						for (UploadFile uploadFile : uploadFiles) {
-							if (uploadFile.getIntrinsicMarkupCollection() != null) {
-								AnnotationCollection intrinsicMarkupCollection =
-										uploadFile.getIntrinsicMarkupCollection();
-								intrinsicMarkupCollection.removeTagReferences(intrinsicMarkupCollection.getTagReferences(tag));
-							}
-						}
-					}
-				});
-				
-				// Creating Tagsets
-				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED)).forEach(tagsetImport -> {
-					
-					if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
-						// already imported, so it will be a merge
-						tagsetImport.setImportState(TagsetImportState.WILL_BE_MERGED);
-					}
-					else {
-						TagsetDefinition extractedTagset = 
-								tagsetImport.getExtractedTagset();
-						try {
-							project.importTagsets(
-								Collections.singletonList(
-									new TagsetDefinitionImportStatus(
-											extractedTagset, 
-											project.inProjectHistory(extractedTagset.getUuid()), 
-											project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
-						}
-						catch (Exception e) {
-							Logger.getLogger(ProjectView.class.getName()).log(
-									Level.SEVERE, 
-									String.format("Error importing tagset %1$s with ID %2$s", 
-											extractedTagset.getName(), 
-											extractedTagset.getUuid()), 
-									e);
-							String errorMsg = e.getMessage();
-							if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-								errorMsg = "";
-							}
-	
-							Notification.show(
-								"Error", 
-								String.format(
-										"Error importing tagset %1$s! "
-										+ "This tagset will be skipped!\n The underlying error message was:\n%2$s", 
-										extractedTagset.getName(), errorMsg), 
-								Type.ERROR_MESSAGE);					
-						}
-					}
-				});
-				
-				// Merging Tagsets
-				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED)).forEach(tagsetImport -> {
-					TagsetDefinition targetTagset = 
-						project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid());
-					
-					for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
-						
-						Optional<TagDefinition> optionalTag =
-							targetTagset.getTagDefinitionsByName(tag.getName()).findFirst();
-						
-						if (optionalTag.isPresent()) {
-							TagDefinition existingTag = optionalTag.get();
-							
-							tag.getUserDefinedPropertyDefinitions().forEach(pd -> {
-								if (existingTag.getPropertyDefinition(pd.getName()) == null) {
-									project.getTagManager().addUserDefinedPropertyDefinition(
-											existingTag, new PropertyDefinition(pd));
-								}
-							});
-							
-							for (UploadFile uploadFile : uploadFiles) {
-								if (uploadFile.getIntrinsicMarkupCollection() != null) {
-									AnnotationCollection intrinsicMarkupCollection =
-											uploadFile.getIntrinsicMarkupCollection();
-									
-									List<TagReference> tagReferences = 
-										intrinsicMarkupCollection.getTagReferences(tag);
-
-									intrinsicMarkupCollection.removeTagReferences(tagReferences);
-									
-									Multimap<TagInstance, TagReference> referencesByInstance = 
-											ArrayListMultimap.create();
-									tagReferences.forEach(tr -> referencesByInstance.put(tr.getTagInstance(), tr));
-									
-									for (TagInstance incomingTagInstance : referencesByInstance.keySet()) {
-										TagInstance newTagInstance = 
-												new TagInstance(
-														idGenerator.generate(),
-														existingTag.getUuid(),
-														incomingTagInstance.getAuthor(),
-														incomingTagInstance.getTimestamp(),
-														existingTag.getUserDefinedPropertyDefinitions(),
-														targetTagset.getUuid());
-										
-										for (Property oldProp : incomingTagInstance.getUserDefinedProperties()) {
-											String oldPropDefId = oldProp.getPropertyDefinitionId();
-											PropertyDefinition oldPropDef = 
-													tag.getPropertyDefinitionByUuid(oldPropDefId);
-
-											PropertyDefinition existingPropDef = 
-												existingTag.getPropertyDefinition(oldPropDef.getName());
-											
-											
-											newTagInstance.addUserDefinedProperty(
-												new Property(
-													existingPropDef.getUuid(), 
-													oldProp.getPropertyValueList()));
-										}
-										
-										ArrayList<TagReference> newReferences = new ArrayList<>();
-										referencesByInstance.get(incomingTagInstance).forEach(tr -> {
-											try {
-												newReferences.add(
-													new TagReference(
-														newTagInstance, 
-														tr.getTarget().toString(), 
-														tr.getRange(), 
-														tr.getUserMarkupCollectionUuid()));
-											} catch (URISyntaxException e) {
-												e.printStackTrace();
-											}
-										});
-										
-										intrinsicMarkupCollection.addTagReferences(newReferences);
-									}
-									
-								}
-							}								
-						}
-						else {
-							tag.setTagsetDefinitionUuid(targetTagset.getUuid());
-							
-							project.getTagManager().addTagDefinition(targetTagset, tag);
-						}
-					}
-				});
-				
-				// Importing docs and collections
-				for (UploadFile uploadFile : uploadFiles) {
-					addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern);
-				}
-
+				handleSaveDocumentWizardContext(result);
+//				
+//				
+//				
+//				
+//				IDGenerator idGenerator = new IDGenerator();
+//				boolean useApostropheAsSeparator = 
+//						(Boolean)result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
+//				String collectionNamePattern = (String)result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
+//						
+//				Collection<TagsetImport> tagsetImports = 
+//						(Collection<TagsetImport>)result.get(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST);
+//				Collection<UploadFile> uploadFiles = 
+//						(Collection<UploadFile>)result.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
+//				
+//				// Ignoring Tagsets
+//				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED)).forEach(tagsetImport -> {
+//					for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
+//						for (UploadFile uploadFile : uploadFiles) {
+//							if (uploadFile.getIntrinsicMarkupCollection() != null) {
+//								AnnotationCollection intrinsicMarkupCollection =
+//										uploadFile.getIntrinsicMarkupCollection();
+//								intrinsicMarkupCollection.removeTagReferences(intrinsicMarkupCollection.getTagReferences(tag));
+//							}
+//						}
+//					}
+//				});
+//				
+//				// Creating Tagsets
+//				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED)).forEach(tagsetImport -> {
+//					
+//					if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
+//						// already imported, so it will be a merge
+//						tagsetImport.setImportState(TagsetImportState.WILL_BE_MERGED);
+//					}
+//					else {
+//						TagsetDefinition extractedTagset = 
+//								tagsetImport.getExtractedTagset();
+//						try {
+//							project.importTagsets(
+//								Collections.singletonList(
+//									new TagsetDefinitionImportStatus(
+//											extractedTagset, 
+//											project.inProjectHistory(extractedTagset.getUuid()), 
+//											project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
+//						}
+//						catch (Exception e) {
+//							Logger.getLogger(ProjectView.class.getName()).log(
+//									Level.SEVERE, 
+//									String.format("Error importing tagset %1$s with ID %2$s", 
+//											extractedTagset.getName(), 
+//											extractedTagset.getUuid()), 
+//									e);
+//							String errorMsg = e.getMessage();
+//							if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+//								errorMsg = "";
+//							}
+//	
+//							Notification.show(
+//								"Error", 
+//								String.format(
+//										"Error importing tagset %1$s! "
+//										+ "This tagset will be skipped!\n The underlying error message was:\n%2$s", 
+//										extractedTagset.getName(), errorMsg), 
+//								Type.ERROR_MESSAGE);					
+//						}
+//					}
+//				});
+//				
+//				// Merging Tagsets
+//				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED)).forEach(tagsetImport -> {
+//					TagsetDefinition targetTagset = 
+//						project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid());
+//					
+//					for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
+//						
+//						Optional<TagDefinition> optionalTag =
+//							targetTagset.getTagDefinitionsByName(tag.getName()).findFirst();
+//						
+//						if (optionalTag.isPresent()) {
+//							TagDefinition existingTag = optionalTag.get();
+//							
+//							tag.getUserDefinedPropertyDefinitions().forEach(pd -> {
+//								if (existingTag.getPropertyDefinition(pd.getName()) == null) {
+//									project.getTagManager().addUserDefinedPropertyDefinition(
+//											existingTag, new PropertyDefinition(pd));
+//								}
+//							});
+//							
+//							for (UploadFile uploadFile : uploadFiles) {
+//								if (uploadFile.getIntrinsicMarkupCollection() != null) {
+//									AnnotationCollection intrinsicMarkupCollection =
+//											uploadFile.getIntrinsicMarkupCollection();
+//									
+//									List<TagReference> tagReferences = 
+//										intrinsicMarkupCollection.getTagReferences(tag);
+//
+//									intrinsicMarkupCollection.removeTagReferences(tagReferences);
+//									
+//									Multimap<TagInstance, TagReference> referencesByInstance = 
+//											ArrayListMultimap.create();
+//									tagReferences.forEach(tr -> referencesByInstance.put(tr.getTagInstance(), tr));
+//									
+//									for (TagInstance incomingTagInstance : referencesByInstance.keySet()) {
+//										TagInstance newTagInstance = 
+//												new TagInstance(
+//														idGenerator.generate(),
+//														existingTag.getUuid(),
+//														incomingTagInstance.getAuthor(),
+//														incomingTagInstance.getTimestamp(),
+//														existingTag.getUserDefinedPropertyDefinitions(),
+//														targetTagset.getUuid());
+//										
+//										for (Property oldProp : incomingTagInstance.getUserDefinedProperties()) {
+//											String oldPropDefId = oldProp.getPropertyDefinitionId();
+//											PropertyDefinition oldPropDef = 
+//													tag.getPropertyDefinitionByUuid(oldPropDefId);
+//
+//											PropertyDefinition existingPropDef = 
+//												existingTag.getPropertyDefinition(oldPropDef.getName());
+//											
+//											
+//											newTagInstance.addUserDefinedProperty(
+//												new Property(
+//													existingPropDef.getUuid(), 
+//													oldProp.getPropertyValueList()));
+//										}
+//										
+//										ArrayList<TagReference> newReferences = new ArrayList<>();
+//										referencesByInstance.get(incomingTagInstance).forEach(tr -> {
+//											try {
+//												newReferences.add(
+//													new TagReference(
+//														newTagInstance, 
+//														tr.getTarget().toString(), 
+//														tr.getRange(), 
+//														tr.getUserMarkupCollectionUuid()));
+//											} catch (URISyntaxException e) {
+//												e.printStackTrace();
+//											}
+//										});
+//										
+//										intrinsicMarkupCollection.addTagReferences(newReferences);
+//									}
+//									
+//								}
+//							}								
+//						}
+//						else {
+//							tag.setTagsetDefinitionUuid(targetTagset.getUuid());
+//							
+//							project.getTagManager().addTagDefinition(targetTagset, tag);
+//						}
+//					}
+//				});
+//				
+//				// Importing docs and collections
+//				for (UploadFile uploadFile : uploadFiles) {
+//					addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern);
+//				}
+//
 			}
+
 		});
 		
 		documentWizard.show();
 	}
 
+	private void handleSaveDocumentWizardContext(final WizardContext result) {
+    	setEnabled(false);
+    	setProgressBarVisible(true);
+    	
+    	final UI ui = UI.getCurrent();
+    	
+		BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
+		BackgroundService backgroundService = backgroundServiceProvider.accuireBackgroundService();
+		backgroundService.submit(
+			new DefaultProgressCallable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					
+					
+					
+					
+					IDGenerator idGenerator = new IDGenerator();
+					boolean useApostropheAsSeparator = 
+							(Boolean)result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
+					String collectionNamePattern = (String)result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
+							
+					Collection<TagsetImport> tagsetImports = 
+							(Collection<TagsetImport>)result.get(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST);
+					Collection<UploadFile> uploadFiles = 
+							(Collection<UploadFile>)result.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
+					
+					// Ignoring Tagsets
+					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED)).forEach(tagsetImport -> {
+						for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
+							for (UploadFile uploadFile : uploadFiles) {
+								if (uploadFile.getIntrinsicMarkupCollection() != null) {
+									AnnotationCollection intrinsicMarkupCollection =
+											uploadFile.getIntrinsicMarkupCollection();
+									intrinsicMarkupCollection.removeTagReferences(intrinsicMarkupCollection.getTagReferences(tag));
+								}
+							}
+						}
+					});
+					
+					getProgressListener().setProgress("Creating imported Tagsets");
+					// Creating Tagsets
+					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED)).forEach(tagsetImport -> {
+						getProgressListener().setProgress(
+								"Creating Tagset %1$s", tagsetImport.getTargetTagset().getName());
+						ui.accessSynchronously(() -> {
+							if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
+								// already imported, so it will be a merge
+								tagsetImport.setImportState(TagsetImportState.WILL_BE_MERGED);
+							}
+							else {
+								TagsetDefinition extractedTagset = 
+										tagsetImport.getExtractedTagset();
+								try {
+									project.importTagsets(
+										Collections.singletonList(
+											new TagsetDefinitionImportStatus(
+													extractedTagset, 
+													project.inProjectHistory(extractedTagset.getUuid()), 
+													project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
+								}
+								catch (Exception e) {
+									Logger.getLogger(ProjectView.class.getName()).log(
+											Level.SEVERE, 
+											String.format("Error importing tagset %1$s with ID %2$s", 
+													extractedTagset.getName(), 
+													extractedTagset.getUuid()), 
+											e);
+									String errorMsg = e.getMessage();
+									if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+										errorMsg = "";
+									}
+			
+									Notification.show(
+										"Error", 
+										String.format(
+												"Error importing tagset %1$s! "
+												+ "This tagset will be skipped!\n The underlying error message was:\n%2$s", 
+												extractedTagset.getName(), errorMsg), 
+										Type.ERROR_MESSAGE);					
+								}
+							}
+							ui.push();
+						});
+					});
+					
+					// Merging Tagsets
+					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED)).forEach(tagsetImport -> {
+						getProgressListener().setProgress(
+								"Merging Tagset %1$s", tagsetImport.getTargetTagset().getName());
+						ui.accessSynchronously(() -> {
+							TagsetDefinition targetTagset = 
+								project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid());
+							
+							for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
+								
+								Optional<TagDefinition> optionalTag =
+									targetTagset.getTagDefinitionsByName(tag.getName()).findFirst();
+								
+								if (optionalTag.isPresent()) {
+									TagDefinition existingTag = optionalTag.get();
+									
+									tag.getUserDefinedPropertyDefinitions().forEach(pd -> {
+										if (existingTag.getPropertyDefinition(pd.getName()) == null) {
+											project.getTagManager().addUserDefinedPropertyDefinition(
+													existingTag, new PropertyDefinition(pd));
+										}
+									});
+									
+									for (UploadFile uploadFile : uploadFiles) {
+										if (uploadFile.getIntrinsicMarkupCollection() != null) {
+											AnnotationCollection intrinsicMarkupCollection =
+													uploadFile.getIntrinsicMarkupCollection();
+											
+											List<TagReference> tagReferences = 
+												intrinsicMarkupCollection.getTagReferences(tag);
+	
+											intrinsicMarkupCollection.removeTagReferences(tagReferences);
+											
+											Multimap<TagInstance, TagReference> referencesByInstance = 
+													ArrayListMultimap.create();
+											tagReferences.forEach(tr -> referencesByInstance.put(tr.getTagInstance(), tr));
+											
+											for (TagInstance incomingTagInstance : referencesByInstance.keySet()) {
+												TagInstance newTagInstance = 
+														new TagInstance(
+																idGenerator.generate(),
+																existingTag.getUuid(),
+																incomingTagInstance.getAuthor(),
+																incomingTagInstance.getTimestamp(),
+																existingTag.getUserDefinedPropertyDefinitions(),
+																targetTagset.getUuid());
+												
+												for (Property oldProp : incomingTagInstance.getUserDefinedProperties()) {
+													String oldPropDefId = oldProp.getPropertyDefinitionId();
+													PropertyDefinition oldPropDef = 
+															tag.getPropertyDefinitionByUuid(oldPropDefId);
+	
+													PropertyDefinition existingPropDef = 
+														existingTag.getPropertyDefinition(oldPropDef.getName());
+													
+													
+													newTagInstance.addUserDefinedProperty(
+														new Property(
+															existingPropDef.getUuid(), 
+															oldProp.getPropertyValueList()));
+												}
+												
+												ArrayList<TagReference> newReferences = new ArrayList<>();
+												referencesByInstance.get(incomingTagInstance).forEach(tr -> {
+													try {
+														newReferences.add(
+															new TagReference(
+																newTagInstance, 
+																tr.getTarget().toString(), 
+																tr.getRange(), 
+																tr.getUserMarkupCollectionUuid()));
+													} catch (URISyntaxException e) {
+														e.printStackTrace();
+													}
+												});
+												
+												intrinsicMarkupCollection.addTagReferences(newReferences);
+											}
+											
+										}
+									}								
+								}
+								else {
+									tag.setTagsetDefinitionUuid(targetTagset.getUuid());
+									
+									project.getTagManager().addTagDefinition(targetTagset, tag);
+								}
+							}
+							ui.push();
+						});
+					});
+					
+					
+					// Importing docs and collections
+					for (UploadFile uploadFile : uploadFiles) {
+						getProgressListener().setProgress(
+								"Importing Document %1$s", uploadFile.getTitle());
+						ui.accessSynchronously(() -> {
+							addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern);
+							ui.push();
+						});
+					}
+
+					return null;
+				}
+			},
+			new ExecutionListener<Void>() {
+				@Override
+				public void done(Void result) {
+	            	setProgressBarVisible(false);
+	            	setEnabled(true);
+				}
+				@Override
+				public void error(Throwable t) {
+	            	setProgressBarVisible(false);
+	            	setEnabled(true);
+	                errorHandler.showAndLogError("error opening project", t);
+				}
+			},
+			new ProgressListener() {
+				
+				@Override
+				public void setProgress(String value, Object... args) {
+					ui.accessSynchronously(() -> {
+		            	if (args != null) {
+		            		progressBar.setCaption(String.format(value, args));
+		            	}
+		            	else {
+		            		progressBar.setCaption(value);
+		            	}
+		            	ui.push();
+					});
+				}
+			});
+
+	}
+	
+	
 	private void addUploadFile(UploadFile uploadFile, boolean useApostropheAsSeparator, String collectionNamePattern) {
 		
 		SourceDocumentInfo sourceDocumentInfo = 

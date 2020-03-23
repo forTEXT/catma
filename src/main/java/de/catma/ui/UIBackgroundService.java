@@ -30,7 +30,7 @@ public class UIBackgroundService implements BackgroundService {
 		public void setProgress(String value, Object... args) {
 			ui.access(() -> { 
 				delegate.setProgress(value, args);
-				UI.getCurrent().push();
+				ui.push();
 			});
 		}
 	}
