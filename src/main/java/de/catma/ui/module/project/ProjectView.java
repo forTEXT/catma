@@ -3,6 +3,10 @@ package de.catma.ui.module.project;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -11,6 +15,7 @@ import java.text.Collator;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,13 +27,19 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
+import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.utils.IOUtils;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -65,12 +76,16 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.corpus.Corpus;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
+import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.source.contenthandler.SourceContentHandler;
+import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.document.source.contenthandler.TikaContentHandler;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.indexer.IndexedProject;
@@ -99,7 +114,7 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.UIBackgroundService;
+import de.catma.ui.Parameter;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
@@ -121,6 +136,8 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.CanReloadAll;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.project.corpusimport.CorpusImportDialog;
+import de.catma.ui.module.project.corpusimport.CorpusImportDocumentMetadata;
 import de.catma.ui.module.project.documentwizard.DocumentWizard;
 import de.catma.ui.module.project.documentwizard.TagsetImport;
 import de.catma.ui.module.project.documentwizard.TagsetImportState;
@@ -337,6 +354,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		
 		collectionXmlExportFileDownloader.extend(miExportCollections);
 
+		
         documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
         
         tagsetGridComponent.getActionGridBar().addBtnAddClickListener(click -> handleAddTagsetRequest());
@@ -386,6 +404,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", mi -> handleSynchronizeRequest());
+        MenuItem miImportCorpus = hugeCardMoreOptions.addItem("Import CATMA 5 Corpus", mi -> handleCorpusImport());
+        miImportCorpus.setVisible(Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
+        
+
         //TODO:
 //        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
         
@@ -412,6 +434,149 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         
 	}
+	private void handleCorpusImport() {
+		try {
+	    	if (project.hasUncommittedChanges()) {
+	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
+	    			"Commit all changes", 
+	    			"You have changes, that need to be committed first, please enter a short description for this commit:", 
+	    			commitMsg -> {
+	    				try {
+		    				project.commitChanges(commitMsg);
+		    				importCollection();
+	    				}
+	    				catch (Exception e) {
+	    					setEnabled(true);
+	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
+	    				}
+	    			});
+	    		dlg.show();
+	    	}
+	    	else {
+	    		CorpusImportDialog corpusImportDialog = new CorpusImportDialog(
+	    			new SaveCancelListener<Pair<File,List<CorpusImportDocumentMetadata>>>() {
+	    				@Override
+	    				public void savePressed(Pair<File, List<CorpusImportDocumentMetadata>> result) {
+	    					importCorpus(result.getFirst(), result.getSecond());
+	    				}
+				});
+	    		
+	    		corpusImportDialog.show();
+	    	}
+    	}
+    	catch (Exception e) {
+            errorHandler.showAndLogError("Error accessing Project!", e);
+    	}		
+	}
+	
+	private void importCorpus(File corpusFile, List<CorpusImportDocumentMetadata> documentMetadataList) {
+		try {
+			
+			GZIPInputStream gzipIs = new GZIPInputStream(new FileInputStream(corpusFile));
+			
+			try (TarArchiveInputStream taIs = new TarArchiveInputStream(gzipIs)) {
+				TarArchiveEntry entry = taIs.getNextTarEntry();
+				while (entry != null) {
+					String[] pathParts = entry.getName().split(Pattern.quote("/"));
+					
+					String documentIdPart = pathParts[2];
+					String documentId = documentIdPart.substring(documentIdPart.indexOf("__")+3);
+					String idUri = "catma://"+documentId;
+					
+					CorpusImportDocumentMetadata documentMetadata = 
+						documentMetadataList.stream().filter(metadata -> metadata.sourceDocID.equals(idUri)).findFirst().orElse(null);
+					
+					Locale locale = Locale.forLanguageTag(documentMetadata.sourceDocLocale);
+					
+					boolean useApostrophe = 
+						Arrays.asList(documentMetadata.sourceDocSepChars).contains(String.valueOf(UploadFile.APOSTROPHE));
+					
+					if (pathParts[3].equals("annotationcollections")) {
+						ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+						IOUtils.copy(taIs, buffer);
+						
+						SourceDocument document = project.getSourceDocument(documentId);
+						Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
+								project.loadAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), document);
+						
+						List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
+						final AnnotationCollection annotationCollection = loadResult.getFirst();
+						
+						project.importCollection(
+								tagsetDefinitionImportStatusList, annotationCollection);
+						
+					}
+					else {
+						String title = documentMetadata.sourceDocName;
+						if (title == null || title.isEmpty()) {
+							title = documentId;
+						}
+						
+						String tempDir = 
+								((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+						
+						File tempFile = new File(new File(tempDir), documentId);
+						
+						if (tempFile.exists()) {
+							tempFile.delete();
+						}
+						try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+							IOUtils.copy(taIs, fos);
+						}
+
+						IndexInfoSet indexInfoSet =  new IndexInfoSet(
+								Collections.emptyList(), 
+								useApostrophe?Lists.newArrayList(UploadFile.APOSTROPHE):Collections.emptyList(), 
+								locale);
+						TechInfoSet techInfoSet = 
+							new TechInfoSet(documentId, FileType.TEXT.getMimeType(), tempFile.toURI());
+						
+						ContentInfoSet contentInfoSet =
+								new ContentInfoSet(
+									documentMetadata.sourceDocAuthor, 
+									documentMetadata.sourceDocDescription, 
+									documentMetadata.sourceDocPublisher,
+									title);
+						
+						techInfoSet.setCharset(Charset.forName("UTF-8"));
+						SourceDocumentInfo documentInfo = 
+								new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
+
+						StandardContentHandler handler = new StandardContentHandler();
+						handler.setSourceDocumentInfo(documentInfo);
+						
+						SourceDocument document = new SourceDocument(documentId, handler);
+						
+						project.insert(document);
+					}
+				
+					entry = taIs.getNextTarEntry();
+				}
+			
+			}					
+			
+		}
+		catch (Exception e) {
+			Logger.getLogger(ProjectView.class.getName()).log(
+					Level.SEVERE, 
+					"Error importing the CATMA 5 Corpus!", 
+					e);
+			String errorMsg = e.getMessage();
+			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+				errorMsg = "";
+			}
+
+			Notification.show(
+				"Error", 
+				String.format(
+						"Error importing the CATMA 5 Corpus! "
+						+ "This import will be aborted!\n The underlying error message was:\n%1$s", 
+						errorMsg), 
+				Type.ERROR_MESSAGE);					
+			
+		}
+	}
+
 	private void handleImportCollectionRequest() {
 		try {
 	    	if (project.hasUncommittedChanges()) {
@@ -822,170 +987,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		wizardContext.put(DocumentWizard.WizardContextKey.PROJECT, project);
 		DocumentWizard documentWizard = new DocumentWizard(wizardContext, new SaveCancelListener<WizardContext>() {
 			@Override
-			@SuppressWarnings("unchecked")
 			public void savePressed(WizardContext result) {
 				
 				handleSaveDocumentWizardContext(result);
-//				
-//				
-//				
-//				
-//				IDGenerator idGenerator = new IDGenerator();
-//				boolean useApostropheAsSeparator = 
-//						(Boolean)result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
-//				String collectionNamePattern = (String)result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
-//						
-//				Collection<TagsetImport> tagsetImports = 
-//						(Collection<TagsetImport>)result.get(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST);
-//				Collection<UploadFile> uploadFiles = 
-//						(Collection<UploadFile>)result.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
-//				
-//				// Ignoring Tagsets
-//				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED)).forEach(tagsetImport -> {
-//					for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
-//						for (UploadFile uploadFile : uploadFiles) {
-//							if (uploadFile.getIntrinsicMarkupCollection() != null) {
-//								AnnotationCollection intrinsicMarkupCollection =
-//										uploadFile.getIntrinsicMarkupCollection();
-//								intrinsicMarkupCollection.removeTagReferences(intrinsicMarkupCollection.getTagReferences(tag));
-//							}
-//						}
-//					}
-//				});
-//				
-//				// Creating Tagsets
-//				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED)).forEach(tagsetImport -> {
-//					
-//					if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
-//						// already imported, so it will be a merge
-//						tagsetImport.setImportState(TagsetImportState.WILL_BE_MERGED);
-//					}
-//					else {
-//						TagsetDefinition extractedTagset = 
-//								tagsetImport.getExtractedTagset();
-//						try {
-//							project.importTagsets(
-//								Collections.singletonList(
-//									new TagsetDefinitionImportStatus(
-//											extractedTagset, 
-//											project.inProjectHistory(extractedTagset.getUuid()), 
-//											project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
-//						}
-//						catch (Exception e) {
-//							Logger.getLogger(ProjectView.class.getName()).log(
-//									Level.SEVERE, 
-//									String.format("Error importing tagset %1$s with ID %2$s", 
-//											extractedTagset.getName(), 
-//											extractedTagset.getUuid()), 
-//									e);
-//							String errorMsg = e.getMessage();
-//							if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-//								errorMsg = "";
-//							}
-//	
-//							Notification.show(
-//								"Error", 
-//								String.format(
-//										"Error importing tagset %1$s! "
-//										+ "This tagset will be skipped!\n The underlying error message was:\n%2$s", 
-//										extractedTagset.getName(), errorMsg), 
-//								Type.ERROR_MESSAGE);					
-//						}
-//					}
-//				});
-//				
-//				// Merging Tagsets
-//				tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED)).forEach(tagsetImport -> {
-//					TagsetDefinition targetTagset = 
-//						project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid());
-//					
-//					for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
-//						
-//						Optional<TagDefinition> optionalTag =
-//							targetTagset.getTagDefinitionsByName(tag.getName()).findFirst();
-//						
-//						if (optionalTag.isPresent()) {
-//							TagDefinition existingTag = optionalTag.get();
-//							
-//							tag.getUserDefinedPropertyDefinitions().forEach(pd -> {
-//								if (existingTag.getPropertyDefinition(pd.getName()) == null) {
-//									project.getTagManager().addUserDefinedPropertyDefinition(
-//											existingTag, new PropertyDefinition(pd));
-//								}
-//							});
-//							
-//							for (UploadFile uploadFile : uploadFiles) {
-//								if (uploadFile.getIntrinsicMarkupCollection() != null) {
-//									AnnotationCollection intrinsicMarkupCollection =
-//											uploadFile.getIntrinsicMarkupCollection();
-//									
-//									List<TagReference> tagReferences = 
-//										intrinsicMarkupCollection.getTagReferences(tag);
-//
-//									intrinsicMarkupCollection.removeTagReferences(tagReferences);
-//									
-//									Multimap<TagInstance, TagReference> referencesByInstance = 
-//											ArrayListMultimap.create();
-//									tagReferences.forEach(tr -> referencesByInstance.put(tr.getTagInstance(), tr));
-//									
-//									for (TagInstance incomingTagInstance : referencesByInstance.keySet()) {
-//										TagInstance newTagInstance = 
-//												new TagInstance(
-//														idGenerator.generate(),
-//														existingTag.getUuid(),
-//														incomingTagInstance.getAuthor(),
-//														incomingTagInstance.getTimestamp(),
-//														existingTag.getUserDefinedPropertyDefinitions(),
-//														targetTagset.getUuid());
-//										
-//										for (Property oldProp : incomingTagInstance.getUserDefinedProperties()) {
-//											String oldPropDefId = oldProp.getPropertyDefinitionId();
-//											PropertyDefinition oldPropDef = 
-//													tag.getPropertyDefinitionByUuid(oldPropDefId);
-//
-//											PropertyDefinition existingPropDef = 
-//												existingTag.getPropertyDefinition(oldPropDef.getName());
-//											
-//											
-//											newTagInstance.addUserDefinedProperty(
-//												new Property(
-//													existingPropDef.getUuid(), 
-//													oldProp.getPropertyValueList()));
-//										}
-//										
-//										ArrayList<TagReference> newReferences = new ArrayList<>();
-//										referencesByInstance.get(incomingTagInstance).forEach(tr -> {
-//											try {
-//												newReferences.add(
-//													new TagReference(
-//														newTagInstance, 
-//														tr.getTarget().toString(), 
-//														tr.getRange(), 
-//														tr.getUserMarkupCollectionUuid()));
-//											} catch (URISyntaxException e) {
-//												e.printStackTrace();
-//											}
-//										});
-//										
-//										intrinsicMarkupCollection.addTagReferences(newReferences);
-//									}
-//									
-//								}
-//							}								
-//						}
-//						else {
-//							tag.setTagsetDefinitionUuid(targetTagset.getUuid());
-//							
-//							project.getTagManager().addTagDefinition(targetTagset, tag);
-//						}
-//					}
-//				});
-//				
-//				// Importing docs and collections
-//				for (UploadFile uploadFile : uploadFiles) {
-//					addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern);
-//				}
-//
 			}
 
 		});
@@ -1003,11 +1007,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		BackgroundService backgroundService = backgroundServiceProvider.accuireBackgroundService();
 		backgroundService.submit(
 			new DefaultProgressCallable<Void>() {
+				@SuppressWarnings("unchecked")
 				@Override
 				public Void call() throws Exception {
-					
-					
-					
 					
 					IDGenerator idGenerator = new IDGenerator();
 					boolean useApostropheAsSeparator = 
@@ -1018,6 +1020,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							(Collection<TagsetImport>)result.get(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST);
 					Collection<UploadFile> uploadFiles = 
 							(Collection<UploadFile>)result.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
+					
+					if (tagsetImports == null) {
+						tagsetImports = Collections.emptyList();
+					}
 					
 					// Ignoring Tagsets
 					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED)).forEach(tagsetImport -> {
@@ -1249,8 +1255,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			
 			AnnotationCollection intrinsicMarkupCollection = 
 					uploadFile.getIntrinsicMarkupCollection();
-			
-			project.importCollection(Collections.emptyList(), intrinsicMarkupCollection);
+			if (intrinsicMarkupCollection != null) {
+				project.importCollection(Collections.emptyList(), intrinsicMarkupCollection);
+			}
 			
 			if (collectionNamePattern != null && !collectionNamePattern.isEmpty()) {
 				String collectionName = collectionNamePattern.replace("{{Title}}", uploadFile.getTitle());

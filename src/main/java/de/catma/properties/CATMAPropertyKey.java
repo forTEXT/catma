@@ -63,7 +63,8 @@ public enum CATMAPropertyKey {
 	MailFrom, 
 	
 	SpamProtectionAnswer, 
-	SpamProtectionQuestion,
+	SpamProtectionQuestion, 
+	CATMA5API("https://portal.catma.de/catma/api/"),
 	;
 
 	private final String defaultValue;

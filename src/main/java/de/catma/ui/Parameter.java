@@ -10,6 +10,7 @@ public enum Parameter {
 	TAGGER_DOCUMENT("catma.tagger.document"), //$NON-NLS-1$
 	TAGGER_TAGSETDEF("catma.tagger.tsduuid"), //$NON-NLS-1$
 	AUTOLOGIN("catma.autologin"),  //$NON-NLS-1$
+	EXPERT("catma.expert"),
 	;
 	
 	private String key;

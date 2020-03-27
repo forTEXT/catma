@@ -14,7 +14,7 @@ import de.catma.document.source.LanguageItem;
 import de.catma.document.source.TechInfoSet;
 
 public class UploadFile {
-	private static final char APOSTROPHE = '\'';
+	public static final char APOSTROPHE = '\'';
 	
 	private final String uuid;
 	private final URI tempFilename;
