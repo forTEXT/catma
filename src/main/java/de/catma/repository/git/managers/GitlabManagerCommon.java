@@ -19,7 +19,7 @@ import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitProjectManager;
 
 public abstract class GitlabManagerCommon implements IRBACManager {
-
+	
 	/**
 	 * Gets a logger 
 	 * @return
@@ -298,5 +298,4 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			throw new IOException("error getting role on project #"+ projectId, e);
 		}	
 	}
-	
 }

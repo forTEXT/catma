@@ -2,10 +2,14 @@ package de.catma.repository.git.managers;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -14,6 +18,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.NotificationSettingsApi;
 import org.gitlab4j.api.UserApi;
+import org.gitlab4j.api.models.CustomAttribute;
 import org.gitlab4j.api.models.Identity;
 import org.gitlab4j.api.models.ImpersonationToken;
 import org.gitlab4j.api.models.ImpersonationToken.Scope;
@@ -28,6 +33,12 @@ import de.catma.util.Pair;
 
 public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRemoteGitManagerPrivileged {
 	
+
+	private enum CustomAttributeName {
+		last_login,
+		terms_of_use_consent_given,
+	}
+	
 	public static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
 	private final GitLabApi privilegedGitLabApi = new GitLabApi(
@@ -36,6 +47,9 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	
+	public GitlabManagerPrivileged() {
+		this.privilegedGitLabApi.getUserApi().enableCustomAttributes();
+	}
 	
 	@Override
 	public Pair<GitUser, String> acquireImpersonationToken(String identifier, String provider, String email, String name)
@@ -115,10 +129,10 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	private User acquireUser(String identifier, String provider, String email, String name)
 			throws IOException {
 		UserApi customUserApi = this.privilegedGitLabApi.getUserApi();
-
+		
 		try {
 			User user = customUserApi.getUser(identifier + provider);
-
+			
 			if (user == null) {
 
 				user = this.createUser(
@@ -129,7 +143,6 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 						provider
 				);
 			}
-
 			return user;
 		}
 		catch (GitLabApiException e) {
@@ -237,5 +250,76 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	public Logger getLogger() {
 		return logger;
 	}
+	
+	public boolean updateLastLoginAndGetTermsOfUseConsent(de.catma.user.User catmaUser) {
+		try {
+			UserApi userApi = privilegedGitLabApi.getUserApi();
+			
+			User user = userApi.getUser(catmaUser.getUserId());
+			
+			Optional<CustomAttribute> optionalLastLoginAtt = Optional.empty();
+			if (user.getCustomAttributes() != null) {
+				optionalLastLoginAtt = 
+					user.getCustomAttributes().stream()
+					.filter(attr -> attr.getKey().equals(CustomAttributeName.last_login.name()))
+					.findFirst();
+			}
 		
+			if (!optionalLastLoginAtt.isPresent()) {
+				logger.info(String.format("First Login of %1$s", user.getUsername()));
+				
+					userApi.createCustomAttribute(
+						user.getId(), 
+						CustomAttributeName.last_login.name(), 
+						LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+			}
+			else {
+				CustomAttribute lastLogin = optionalLastLoginAtt.get();
+				logger.info(String.format("Last Login of %1$s was %2$s.", user.getUsername(), lastLogin.getValue()));
+				lastLogin.setValue(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+				userApi.changeCustomAttribute(user.getId(), optionalLastLoginAtt.get());
+			}
+			
+			if (user.getCustomAttributes() != null) {
+				return Boolean.valueOf(user.getCustomAttributes().stream()
+					.filter(attr -> attr.getKey().equals(CustomAttributeName.terms_of_use_consent_given.name()))
+					.findFirst().orElse(new CustomAttribute().withValue(Boolean.FALSE.toString()))
+					.getValue());
+			}
+			else {
+				return false;
+			}
+			
+		} catch (GitLabApiException e) {
+			logger.log(Level.SEVERE, "Could access custom attributes", e);
+			return false;
+		}
+	}
+	
+	public void setTermsOfUseConsentGiven(de.catma.user.User catmaUser, boolean value) {
+		try {
+			UserApi userApi = privilegedGitLabApi.getUserApi();
+			
+			User user = userApi.getUser(catmaUser.getUserId());
+			
+			Optional<CustomAttribute> optionalAttribute = Optional.empty();
+			if (user.getCustomAttributes() != null) {
+				
+				optionalAttribute = 
+					user.getCustomAttributes().stream()
+						.filter(attr -> attr.getKey().equals(CustomAttributeName.terms_of_use_consent_given.name()))
+						.findFirst();
+			}
+			
+			CustomAttribute attr = optionalAttribute
+					.orElse(new CustomAttribute()
+							.withKey(CustomAttributeName.terms_of_use_consent_given.name())
+							.withValue(Boolean.FALSE.toString()));
+			attr.setValue(Boolean.valueOf(value).toString());
+			userApi.changeCustomAttribute(user.getId(), attr);
+		} catch (GitLabApiException e) {
+			logger.log(Level.SEVERE, "Could access custom attributes", e);
+		}
+	}
+	
 }

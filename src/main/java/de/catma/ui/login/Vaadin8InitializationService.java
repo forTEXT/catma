@@ -87,11 +87,17 @@ public class Vaadin8InitializationService implements InitializationService {
 					eventBus);
 			
 			hazelcastService.start();
+			GitlabManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
+			boolean termsOfUseConsentGiven = 
+				gitlabManagerPrivileged.updateLastLoginAndGetTermsOfUseConsent(api.getUser());
 			return new MainView(
 					projectManager, 
-					new CatmaHeader(eventBus, loginService, new GitlabManagerPrivileged()), 
+					new CatmaHeader(eventBus, loginService, gitlabManagerPrivileged), 
 					eventBus,
-					api);
+					api,
+					loginService,
+					termsOfUseConsentGiven,
+					consent -> gitlabManagerPrivileged.setTermsOfUseConsentGiven(api.getUser(), consent));
 		} else {
 			return new NotLoggedInMainView(this, loginService, hazelcastService, eventBus);
 

@@ -237,9 +237,13 @@ public class AuthenticationDialog extends Window implements Handler {
 		gOauthPanel.addComponent(googleLogInLink);
 		
 		Label termsOfUse = new Label(
-				MessageFormat.format(
-					"By logging in you accept the <a target=\"blank\" href=\"{0}\">terms of use</a>!", 
-					"http://catma.de/documentation/terms-of-use-privacy-policy/")); //$NON-NLS-1$
+				String.format(
+					"After the authentication you will be required to actively "
+					+ "consent once to our <a href=\"%1$s\" target=\"_blank\">terms of use</a> "
+					+ "and to our "
+    				+ "<a href=\"%2$s\" target=\"_blank\">privacy policy</a>.",
+    				CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue()),
+    				CATMAPropertyKey.PrivacyStatementURL.getValue(CATMAPropertyKey.PrivacyStatementURL.getDefaultValue())));
 		termsOfUse.setContentMode(ContentMode.HTML);
 		termsOfUse.setWidth("100%");
 		
