@@ -12,6 +12,7 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
@@ -36,7 +37,7 @@ public class CorpusExporter {
 	}
 
 	public void export(
-		String exportName, Collection<Corpus> corpora,  OutputStream os) throws IOException {
+		String exportName, Collection<Corpus> corpora,  OutputStream os, ProgressListener progressListener) throws IOException {
 		
 		OutputStream tarFileOs = new GZIPOutputStream(os);
 		
@@ -51,6 +52,7 @@ public class CorpusExporter {
 				
 				for (SourceDocument sd : corpus.getSourceDocuments()) {
 					
+					progressListener.setProgress("Adding Document " + sd.toString());
 					TarArchiveEntry sdEntry = 
 						new TarArchiveEntry(getSourceDocEntryName(exportName, corpusName, sd));
 				
@@ -70,7 +72,8 @@ public class CorpusExporter {
 						
 						UserMarkupCollection umc = 
 								repo.getUserMarkupCollection(umcRef);
-
+						progressListener.setProgress("Adding Collection " + umc.toString());
+						
 						TeiUserMarkupCollectionSerializationHandler handler =
 								new TeiUserMarkupCollectionSerializationHandler(
 										repo.getTagManager(), false);
@@ -109,7 +112,7 @@ public class CorpusExporter {
 		if (simpleEntryStyle) {
 			return corpusName 
 					+ "/" 
-					+ cleanupName(getFilename(sd))
+					+ cleanupName(getFilename(sd, false))
 					+ "/annotationcollections/" 
 					+ cleanupName(umc.getName())
 					+ ".xml";
@@ -129,12 +132,11 @@ public class CorpusExporter {
 
 	private String getSourceDocEntryName(String exportName, String corpusName, SourceDocument sd) {
 		if (simpleEntryStyle) {
-			String cleanFilename = cleanupName(getFilename(sd));
 			return corpusName 
 					+ "/" 
-					+ cleanFilename 
+					+ cleanupName(getFilename(sd, false)) 
 					+ "/" 
-					+ cleanFilename; 
+					+ cleanupName(getFilename(sd, true)); 
 		}
 		return exportName 
 				+ "_" 
@@ -144,7 +146,7 @@ public class CorpusExporter {
 				+ "/" 
 				+ cleanupName(sd.getID()) 
 				+ "/" 
-				+ cleanupName(getFilename(sd));
+				+ cleanupName(getFilename(sd, true));
 	}
 
 	public String getDate() {
@@ -155,18 +157,18 @@ public class CorpusExporter {
 		return name.replaceAll("[/:]|\\s", "_");
 	}
 	
-	private String getFilename(SourceDocument sourceDocument) {
+	private String getFilename(SourceDocument sourceDocument, boolean withFileExtension) {
 		SourceContentHandler sourceContentHandler = 
 				sourceDocument.getSourceContentHandler();
 		String title = 
 				sourceContentHandler.getSourceDocumentInfo()
 					.getContentInfoSet().getTitle();
 		if (simpleEntryStyle) {
-			return sourceDocument.toString() + ".txt";
+			return sourceDocument.toString() + (withFileExtension?".txt":"");
 		}
 		return sourceDocument.getID() 
-			+ (((title==null)||title.isEmpty())?"":("_"+title)) +
-			".txt";
+			+ (((title==null)||title.isEmpty())?"":("_"+title)) 
+			+ (withFileExtension?".txt":"");
 	};
 
 }

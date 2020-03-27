@@ -17,6 +17,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import de.catma.api.Parameter;
+import de.catma.backgroundservice.LogProgressListener;
 import de.catma.document.Corpus;
 import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
@@ -57,7 +58,8 @@ public class CorpusExport extends ServerResource {
 						
 					corpusExporter.export(
 							name,
-							Collections.singletonList(c), corpusOut);
+							Collections.singletonList(c), corpusOut,
+							new LogProgressListener());
 					
 					FileRepresentation rep = 
 							new FileRepresentation(out, MediaType.APPLICATION_GNU_ZIP);

@@ -22,6 +22,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,7 +71,9 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.Corpus;
 import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
@@ -456,34 +459,69 @@ public class CorpusPanel extends VerticalLayout {
 		final CorpusExporter corpusExporter = new CorpusExporter(repository, true);
 		final String name = corpusExporter.cleanupName(selectedValue.toString());
 		final String filename = name + corpusExporter.getDate() + ".tar.gz"; //$NON-NLS-1$
+		generateCorpusAnnotationsProgressBar.setIndeterminate(true);
+		generateCorpusAnnotationsProgressBar.setVisible(true);
 		
-		
-		DownloadDialog dlg = new DownloadDialog(new StreamSource() {
-			
-			@Override
-			public InputStream getStream() {
-				try {
-					File file = new File(((CatmaApplication)UI.getCurrent()).getTempDirectory() 
-							+ "/" +filename); //$NON-NLS-1$
-					try (FileOutputStream corpusOut = new FileOutputStream(file)) {
+		((BackgroundServiceProvider)UI.getCurrent()).getBackgroundService().submit(
+				new DefaultProgressCallable<File>() {
+					@Override
+					public File call() throws Exception {
+						try {
+							File file = new File(((CatmaApplication)UI.getCurrent()).getTempDirectory() 
+									+ "/" +filename); //$NON-NLS-1$
+							try (FileOutputStream corpusOut = new FileOutputStream(file)) {
+								
+								corpusExporter.export(
+										name,
+										Collections.singletonList(selectedValue), corpusOut,
+										getProgressListener());
+							}
+							return file;
+						}
+						catch (IOException e) {
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
+									Messages.getString("CorpusPanel.errorExportingCorpus"), e); //$NON-NLS-1$
+							return null;
+						}		
+					}
+				},
+				new ExecutionListener<File>() {
+					@Override
+					public void done(File file) {
+						generateCorpusAnnotationsProgressBar.setVisible(false);
+						DownloadDialog dlg = new DownloadDialog(new StreamSource() {
+							
+							@Override
+							public InputStream getStream() {
+								try {
+									return new FileInputStream(file);
+								} catch (FileNotFoundException e) {
+									((CatmaApplication)UI.getCurrent()).showAndLogError(
+											Messages.getString("CorpusPanel.errorExportingCorpus"), e); //$NON-NLS-1$
+									return null;
+								}
+							}
+						}, filename);
 						
-						corpusExporter.export(
-								name,
-								Collections.singletonList(selectedValue), corpusOut);
+						dlg.show();
+						
 					}
 					
-					return new FileInputStream(file);
-				}
-				catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							Messages.getString("CorpusPanel.errorExportingCorpus"), e); //$NON-NLS-1$
-					return null;
-				}
-			}
-		}, filename);
-		
-		dlg.show();
-		
+					@Override
+					public void error(Throwable t) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
+								Messages.getString("CorpusPanel.errorExportingCorpus"), t); //$NON-NLS-1$
+					}
+				},
+				new ProgressListener() {
+					
+					@Override
+					public void setProgress(String value, Object... args) {
+						UI.getCurrent().access(() -> {
+							generateCorpusAnnotationsProgressBar.setCaption(value);
+						});
+					}
+				});
 	}
 
 	protected void handleShareCorpusRequest(final Corpus corpus) {

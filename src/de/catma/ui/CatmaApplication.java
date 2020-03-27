@@ -296,7 +296,7 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 				btloginLogout.click();
 			}
 
-			setPollInterval(10000);
+			setPollInterval(1000);
 
 			if ((getParameter(Parameter.AUTOLOGIN) != null) && (getUser() == null)) {
 				getPage().setLocation(repositoryManagerView.createAuthenticationDialog().createLogInClick(this,

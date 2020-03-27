@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import de.catma.document.Corpus;
 import de.catma.document.source.ContentInfoSet;
+import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
@@ -35,6 +36,14 @@ public class CorpusEncoder {
 			sourceDocJson.put("sourceDocAuthor", cis.getAuthor());
 			sourceDocJson.put("sourceDocDescription", cis.getDescription());
 			sourceDocJson.put("sourceDocPublisher", cis.getPublisher());
+			IndexInfoSet indexInfoSet = sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
+			sourceDocJson.put("sourceDocLocale", indexInfoSet.getLocale().toString());
+			ArrayNode sepChars = factory.arrayNode();
+			indexInfoSet.getUserDefinedSeparatingCharacters().forEach(c -> sepChars.add(c.toString()));
+			sourceDocJson.set("sourceDocSepChars", sepChars);
+			ArrayNode unsepSeqs = factory.arrayNode();
+			indexInfoSet.getUnseparableCharacterSequences().forEach(seq -> unsepSeqs.add(seq));
+			sourceDocJson.set("sourceDocUnsepSeqs", unsepSeqs);
 			
 			ArrayNode umcRefListJson = factory.arrayNode();
 			sourceDocJson.set("umcList", umcRefListJson);
