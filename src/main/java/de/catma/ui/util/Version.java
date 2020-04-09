@@ -13,10 +13,10 @@ public final class Version {
     private int patch;
 
 
-    public final static Version CATMA_6_0_14 = new Version(6, 0, 14);
+    public final static Version CATMA_6_0_15 = new Version(6, 0, 15);
 
 
-    public final static Version LATEST = CATMA_6_0_14;
+    public final static Version LATEST = CATMA_6_0_15;
 
 
     /**
