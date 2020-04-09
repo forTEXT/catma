@@ -201,11 +201,6 @@
 			<artifactId>jersey-media-json-jackson</artifactId>
 			<version>2.28</version>
 		</dependency>
-		<!-- <dependency>
-			<groupId>com.fasterxml.jackson.module</groupId>
-			<artifactId>jackson-module-jaxb-annotations</artifactId>
-			<version>2.9.8</version>
-  		</dependency> -->
   		
 		<dependency>
 			<groupId>com.hazelcast</groupId>

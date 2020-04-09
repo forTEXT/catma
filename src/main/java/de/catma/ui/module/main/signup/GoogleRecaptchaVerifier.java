@@ -12,6 +12,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.client.ClientConfig;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+
 import de.catma.properties.CATMAPropertyKey;
 
 /**
@@ -22,15 +24,13 @@ import de.catma.properties.CATMAPropertyKey;
  */
 public class GoogleRecaptchaVerifier {
 
-	private final ClientConfig config;	
 	private final Client client;
 	private final WebTarget webtarget;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
 	
 	public GoogleRecaptchaVerifier(){
-	    config = new ClientConfig();
-	    client = ClientBuilder.newClient(config);
+	    client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
 	    webtarget = client.target("https://www.google.com/recaptcha/api/siteverify");
 	}
 	
