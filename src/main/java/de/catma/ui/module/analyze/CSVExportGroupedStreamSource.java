@@ -31,6 +31,7 @@ import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.module.analyze.queryresultpanel.TagQueryResultRowItem;
 import de.catma.ui.module.main.ErrorHandler;
 
 public class CSVExportGroupedStreamSource implements StreamSource {
@@ -39,13 +40,15 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 	private final Project project;
 	private final LoadingCache<String, KwicProvider> kwicProviderCache;
 	private final BackgroundServiceProvider backgroundServiceProvider;
+	private Supplier<Boolean> groupByTagSupplier;
 	
 	public CSVExportGroupedStreamSource(
-			Supplier<QueryResult> queryResultSupplier, Project project,
+			Supplier<QueryResult> queryResultSupplier, Project project, Supplier<Boolean> groupByTagSupplier,
 			LoadingCache<String, KwicProvider> kwicProviderCache, BackgroundServiceProvider backgroundServiceProvider) {
 		super();
 		this.queryResultSupplier = queryResultSupplier;
 		this.project = project;
+		this.groupByTagSupplier = groupByTagSupplier;
 		this.kwicProviderCache = kwicProviderCache;
 		this.backgroundServiceProvider = backgroundServiceProvider;
 	}
@@ -67,16 +70,27 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 		final Table<String, String, Integer> groupings = HashBasedTable.create();
 		
 		for (QueryResultRow row : queryResult) {
-			groupings.put(row.getPhrase(), "Total", getValue(groupings, row.getPhrase(), "Total")+1);
-			groupings.put(row.getPhrase(), row.getSourceDocumentId(), getValue(groupings, row.getPhrase(), row.getSourceDocumentId())+1);
+			
+			String group = row.getPhrase();
+			if (groupByTagSupplier.get()) {
+				if (row instanceof TagQueryResultRow) {
+					group = ((TagQueryResultRow) row).getTagDefinitionPath();
+				}
+				else {
+					group = TagQueryResultRowItem.getNoTagAvailableKey();
+				}
+			}
+			
+			groupings.put(group, "Total", getValue(groupings, group, "Total")+1);
+			groupings.put(group, row.getSourceDocumentId(), getValue(groupings, group, row.getSourceDocumentId())+1);
 			documentIds.add(row.getSourceDocumentId());
 			
 			if (row instanceof TagQueryResultRow) {
 				collectionIdByDocumentId.put(row.getSourceDocumentId(), ((TagQueryResultRow)row).getMarkupCollectionId());
 				groupings.put(
-						row.getPhrase(), 
+						group, 
 						((TagQueryResultRow)row).getMarkupCollectionId(), 
-						getValue(groupings, row.getPhrase(), 
+						getValue(groupings, group, 
 								((TagQueryResultRow)row).getMarkupCollectionId())+1);
 			}
 		}

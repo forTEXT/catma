@@ -388,6 +388,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		);
         
         MenuItem miExportTagsets = moreOptionsMenu.addItem("Export Tagsets");
+        MenuItem miExportTagsetsAsXML = miExportTagsets.addItem("as XML");
+        
 		StreamResource tagsetXmlExportResource = new StreamResource(
 			new TagsetXMLExportStreamSource(
 				() -> tagsetGrid.getSelectedItems(), 
@@ -399,7 +401,22 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		FileDownloader tagsetXmlExportFileDownloader = 
 				new FileDownloader(tagsetXmlExportResource);
 	
-		tagsetXmlExportFileDownloader.extend(miExportTagsets);
+		tagsetXmlExportFileDownloader.extend(miExportTagsetsAsXML);
+		
+        MenuItem miExportTagsetsAsCSV = miExportTagsets.addItem("as CSV");
+        
+		StreamResource tagsetCsvExportResource = new StreamResource(
+			new TagsetCSVExportStreamSource(
+				() -> tagsetGrid.getSelectedItems(), 
+				() -> project),
+			"CATMA-Tag-Library_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+		tagsetCsvExportResource	.setCacheTime(0);
+		tagsetCsvExportResource.setMIMEType("text/comma-separated-values");
+	
+		FileDownloader tagsetCsvExportFileDownloader = 
+				new FileDownloader(tagsetCsvExportResource);
+	
+		tagsetCsvExportFileDownloader.extend(miExportTagsetsAsCSV);
         
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());

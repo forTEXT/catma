@@ -838,6 +838,7 @@ public class QueryResultPanel extends VerticalLayout {
 					new CSVExportGroupedStreamSource(
 						() -> getFilteredQueryResult(), 
 						project, 
+						() -> getDisplaySetting().equals(DisplaySetting.GROUPED_BY_TAG),
 						kwicProviderCache, 
 						((BackgroundServiceProvider)UI.getCurrent())),
 					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
