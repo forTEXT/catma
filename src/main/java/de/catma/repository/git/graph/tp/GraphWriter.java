@@ -25,8 +25,10 @@ import static de.catma.repository.git.graph.RelationType.rt;
 
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -275,6 +277,9 @@ class GraphWriter {
 		tagReferences.forEach(tagReference -> {
 			tagInstancesAndRanges.put(tagReference.getTagInstance(), tagReference.getRange());
 		});
+
+		Map<String, Vertex> tagNodesById = new HashMap<>();
+		Set<String> availablePropertyDefIds = new HashSet<>();
 		
 		for (TagInstance ti : tagInstancesAndRanges.keySet()) {
 			List<Range> ranges = tagInstancesAndRanges.get(ti);
@@ -302,22 +307,30 @@ class GraphWriter {
 			
 			collectionV.addEdge(rt(hasInstance), tagInstanceV);
 			
+			Vertex tagV = tagNodesById.get(tagId);
 			GraphTraversalSource g = graph.traversal();
-			GraphTraversal<Vertex, Vertex> traversal = 
-				g.V().has(nt(ProjectRevision), "revisionHash", revisionHash)
-				.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagsetId)
-				.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tagId);
-			if (traversal.hasNext()) {	// usually the Tag should always be present, 
+			if (tagV == null) {
+				GraphTraversal<Vertex, Vertex> traversal = 
+						g.V().has(nt(ProjectRevision), "revisionHash", revisionHash)
+						.outE(rt(hasTagset)).inV().has(nt(Tagset), "tagsetId", tagsetId)
+						.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tagId);
+				if (traversal.hasNext()) {
+					tagV = traversal.next();
+					tagNodesById.put(tagId, tagV);
+				}
+			}
+			
+
+			if (tagV != null) {	// usually the Tag should always be present, 
 										// because we delete stale Annotations when loading the Collection from git
 										// if we hit an orphan Annotation at this stage it gets ignored
-				                        // until the next sync might bring the corresponding Tag
-				Vertex tagV = traversal.next();
-	
+				                        // until the next sync might bring the corresponding Tag	
 				tagV.addEdge(rt(hasInstance), tagInstanceV);
 				
 				for (Property property : ti.getUserDefinedProperties()) {
 					
-					if (g.V(tagV)
+					if (availablePropertyDefIds.contains(property.getPropertyDefinitionId()) 
+						|| g.V(tagV)
 							.outE(rt(hasProperty))
 							.inV().has(nt(Property), "uuid", property.getPropertyDefinitionId())
 							.hasNext()) {
@@ -326,6 +339,8 @@ class GraphWriter {
 						annoPropertyV.property("values", property.getPropertyValueList());
 						
 						tagInstanceV.addEdge(rt(hasProperty), annoPropertyV);
+						
+						availablePropertyDefIds.add(property.getPropertyDefinitionId());
 					}
 				}
 			}

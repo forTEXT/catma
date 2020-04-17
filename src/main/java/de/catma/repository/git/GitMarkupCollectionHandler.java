@@ -1,8 +1,13 @@
 package de.catma.repository.git;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -14,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.MergeResult;
@@ -24,6 +30,7 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 
 import com.google.common.collect.ArrayListMultimap;
 
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -173,24 +180,29 @@ public class GitMarkupCollectionHandler {
 	}
 
 	private ArrayList<TagReference> openTagReferences(
-		String projectId, String markupCollectionId, File parentDirectory)
+		String projectId, String markupCollectionId, File parentDirectory, 
+		ProgressListener progressListener, AtomicInteger counter)
 			throws Exception {
 
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
 		List<String> contents = Arrays.asList(parentDirectory.list());
-
+		
 		for (String item : contents) {
 			File target = new File(parentDirectory, item);
 
 			// if it is a directory, recurse into it adding results to the current tagReferences list
 			if (target.isDirectory() && !target.getName().equalsIgnoreCase(".git")) {
 				tagReferences.addAll(
-					this.openTagReferences(projectId, markupCollectionId, target));
+					this.openTagReferences(projectId, markupCollectionId, target, progressListener, counter));
 			}
 			// if item is <CATMA_UUID>.json, read it into a list of TagReference objects
 			else if (target.isFile() && isTagInstanceFilename(target.getName())) {
-				String serialized = FileUtils.readFileToString(target, StandardCharsets.UTF_8);
+				counter.incrementAndGet();
+				if (counter.intValue() % 1000 == 0) {
+					progressListener.setProgress("Loading Annotations %1$d", counter.intValue());
+				}
+				String serialized = readFileToString(target, StandardCharsets.UTF_8);
 				JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
 						.deserialize(serialized, JsonLdWebAnnotation.class);
 
@@ -204,6 +216,20 @@ public class GitMarkupCollectionHandler {
 		}
 
 		return tagReferences;
+	}
+	
+	private String readFileToString(File file, Charset encoding) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		try (FileInputStream fis = new FileInputStream(file)) {
+			FileChannel channel = fis.getChannel();
+			final int fileSize = (int)file.length();
+			MappedByteBuffer buffer = channel.map(MapMode.READ_ONLY, 0, fileSize);
+            for(int i = 0; i < fileSize; i++) {
+                builder.append(encoding.decode(buffer));
+            }
+		}
+		
+		return builder.toString();
 	}
 
 	public AnnotationCollectionReference getCollectionReference(String projectId, String markupCollectionId) throws Exception {
@@ -294,9 +320,9 @@ public class GitMarkupCollectionHandler {
 	}
 	
 	public AnnotationCollection getCollection(
-			String projectId, String collectionId, TagLibrary tagLibrary)
+			String projectId, String collectionId, TagLibrary tagLibrary, ProgressListener progressListener)
 			throws Exception {
-
+		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
@@ -314,9 +340,9 @@ public class GitMarkupCollectionHandler {
 			);
 
 			localGitRepoManager.detach();  // can't call open on an attached instance
-
+			AtomicInteger counter = new AtomicInteger();
 			ArrayList<TagReference> tagReferences = this.openTagReferences(
-					projectId, collectionId, markupCollectionSubmoduleAbsPath
+					projectId, collectionId, markupCollectionSubmoduleAbsPath, progressListener, counter
 			);
 			
 			// handle orphan Annotations

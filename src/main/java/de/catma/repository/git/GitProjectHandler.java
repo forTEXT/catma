@@ -26,6 +26,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -537,7 +538,7 @@ public class GitProjectHandler {
 		return collectionReferences;
 	}
 
-	public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) {
+	public List<AnnotationCollection> getCollections(TagLibrary tagLibrary, ProgressListener progressListener) {
 		ArrayList<AnnotationCollection> collections = new ArrayList<>();
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			try {
@@ -575,7 +576,7 @@ public class GitProjectHandler {
 					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.COLLECTION_READ)) {
 						try {
 							collections.add(
-								gitMarkupCollectionHandler.getCollection(projectId, collectionId, tagLibrary));
+								gitMarkupCollectionHandler.getCollection(projectId, collectionId, tagLibrary, progressListener));
 						} catch (Exception e) {
 							logger.log(
 							Level.SEVERE, 

@@ -84,12 +84,14 @@ public class GraphLoadJob extends DefaultProgressCallable<Pair<TagManager, Graph
 			graphWriter.addHasParentRelations(tagsetV, tagset);
 		}
 		
-		for (SourceDocument document : documentsSupplier.get()) {
+		final List<SourceDocument> documents = documentsSupplier.get();
+		for (SourceDocument document : documents) {
 			getProgressListener().setProgress("Indexing Document %1$s...", document.toString());
 			graphWriter.addDocument(projectRevV, document);
 		}
 
-		for (AnnotationCollection collection : collectionsSupplier.get(tagManager.getTagLibrary())) {
+		final List<AnnotationCollection> collections = collectionsSupplier.get(tagManager.getTagLibrary());
+		for (AnnotationCollection collection : collections) {
 			getProgressListener().setProgress("Indexing Collection %1$s...", collection.toString());
 
 			graphWriter.addCollection(revisionHash, revisionHash, collection);

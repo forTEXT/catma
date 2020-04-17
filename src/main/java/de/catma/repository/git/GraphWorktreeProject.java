@@ -204,7 +204,15 @@ public class GraphWorktreeProject implements IndexedProject {
 				gitProjectHandler.removeStaleSubmoduleDirectories();
 				
 				gitProjectHandler.ensureDevBranches();
-				
+				ProgressListener progressListener = 
+					new ProgressListener() {
+						
+						@Override
+						public void setProgress(String value, Object... args) {
+							logger.info(String.format(value, args));
+							openProjectListener.progress(value, args);
+						}
+					};
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
 						new ExecutionListener<TagManager>() {
 							
@@ -228,19 +236,12 @@ public class GraphWorktreeProject implements IndexedProject {
 								openProjectListener.ready(GraphWorktreeProject.this);
 							}
 						},
-						new ProgressListener() {
-							
-							@Override
-							public void setProgress(String value, Object... args) {
-								logger.info(String.format(value, args));
-								openProjectListener.progress(value, args);
-							}
-						},
+						progressListener,
 						rootRevisionHash,
 						tagManager,
 						() -> gitProjectHandler.getTagsets(),
 						() -> gitProjectHandler.getDocuments(),
-						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary),
+						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener),
 						false, //forceGraphReload
 						backgroundService);
 			}
@@ -1487,6 +1488,14 @@ public class GraphWorktreeProject implements IndexedProject {
 			gitProjectHandler.removeStaleSubmoduleDirectories();
 			gitProjectHandler.ensureDevBranches();		
 			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+			ProgressListener progressListener = new ProgressListener() {
+				
+				@Override
+				public void setProgress(String value, Object... args) {
+					openProjectListener.progress(value, args);
+				}
+			}
+			;
 			graphProjectHandler.ensureProjectRevisionIsLoaded(
 					new ExecutionListener<TagManager>() {
 						
@@ -1501,18 +1510,12 @@ public class GraphWorktreeProject implements IndexedProject {
 							openProjectListener.ready(GraphWorktreeProject.this);
 						}
 					},
-					new ProgressListener() {
-						
-						@Override
-						public void setProgress(String value, Object... args) {
-							openProjectListener.progress(value, args);
-						}
-					},
+					progressListener,
 					rootRevisionHash,
 					tagManager,
 					() -> gitProjectHandler.getTagsets(),
 					() -> gitProjectHandler.getDocuments(),
-					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary),
+					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener),
 					forceGraphReload,
 					backgroundService);
 		}
