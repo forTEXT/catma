@@ -3,6 +3,8 @@ package de.catma.ui.module.analyze.visualization.vega;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLDecoder;
+import java.util.Collection;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.vaadin.server.RequestHandler;
@@ -20,16 +22,16 @@ import de.catma.ui.module.analyze.QueryOptionsProvider;
 
 public class JSONQueryResultRequestHandler implements RequestHandler {
 	
-	private QueryResultRowArray queryResult;
-	private String queryResultUrlPath;
-	private QueryOptionsProvider queryOptionsProvider;
-	private String vegaViewIdPath;
-	private String queryUrlPath;
+	private CopyOnWriteArrayList<QueryResultRow> queryResult; // concurrent access!
+	private final String queryResultUrlPath;
+	private final QueryOptionsProvider queryOptionsProvider;
+	private final String vegaViewIdPath;
+	private final String queryUrlPath;
 	
 	public JSONQueryResultRequestHandler(
 			QueryOptionsProvider queryOptionsProvider, 
 			String queryResultUrlPath, String vegaViewId) {
-		this.queryResult = new QueryResultRowArray();
+		this.queryResult = new CopyOnWriteArrayList<QueryResultRow>();
 		this.queryOptionsProvider = queryOptionsProvider;
 		this.queryResultUrlPath = "/"+queryResultUrlPath.toLowerCase();
 		this.vegaViewIdPath = "/"+vegaViewId.toLowerCase();
@@ -69,7 +71,7 @@ public class JSONQueryResultRequestHandler implements RequestHandler {
 		return false;
 	}
 
-	private void writeResponse(QueryResult queryResult, VaadinResponse response) throws IOException {
+	private void writeResponse(Iterable<QueryResultRow> queryResult, VaadinResponse response) throws IOException {
 		//TODO:
 //		response.setContentType("json");
 		OutputStream outputStream = response.getOutputStream();

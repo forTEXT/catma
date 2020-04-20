@@ -53,7 +53,7 @@ public class JSONQueryResultBuilder {
 		tagColor, 
 	}
 	
-	public ArrayNode createJSONQueryResult(final QueryResult queryResult, final Project project) throws IOException {
+	public ArrayNode createJSONQueryResult(final Iterable<QueryResultRow> queryResult, final Project project) throws IOException {
 
 		LoadingCache<String, SourceDocInfo> sourceDocInfoCache = 
 				CacheBuilder.newBuilder().maximumSize(10).build(new CacheLoader<String, SourceDocInfo>() {
