@@ -876,7 +876,9 @@ public class QueryResultPanel extends VerticalLayout {
 			dataProvider.setFilter(null);
 		}
 		else {
-			dataProvider.setFilter(row -> row.startsWith(searchValue));
+			dataProvider.setFilter(
+				row -> 
+				row.startsWith(searchValue));
 		}
 		
 		dataProvider.addFilter(punctuationFilter);

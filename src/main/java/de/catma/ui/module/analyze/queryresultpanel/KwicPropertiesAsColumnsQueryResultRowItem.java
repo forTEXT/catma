@@ -51,6 +51,11 @@ public class KwicPropertiesAsColumnsQueryResultRowItem implements QueryResultRow
 	public String getKey() {
 		return this.kwic;
 	}
+	
+	@Override
+	public String getFilterKey() {
+		return this.kwic;
+	}
 
 	@Override
 	public int getFrequency() {

@@ -33,6 +33,11 @@ public class PhraseQueryResultRowItem implements QueryResultRowItem {
 	}
 
 	@Override
+	public String getFilterKey() {
+		return groupedQueryResult.getGroup().toString();
+	}
+	
+	@Override
 	public int getFrequency() {
 		return groupedQueryResult.getTotalFrequency();
 	}

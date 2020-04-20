@@ -41,6 +41,11 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 	}
 
 	@Override
+	public String getFilterKey() {
+		return documentName;
+	}
+	
+	@Override
 	public int getFrequency() {
 		return groupedQueryResult.getTotalFrequency();
 	}

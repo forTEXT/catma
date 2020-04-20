@@ -13,6 +13,11 @@ public class DummyQueryResultRowItem implements QueryResultRowItem {
 	public String getKey() {
 		return null; //no key
 	}
+	
+	@Override
+	public String getFilterKey() {
+		return getKey();
+	}
 
 	@Override
 	public int getFrequency() {
@@ -62,6 +67,6 @@ public class DummyQueryResultRowItem implements QueryResultRowItem {
 	
 	@Override
 	public boolean startsWith(String searchValue) {
-		return true;
+		return false;
 	}
 }

@@ -15,9 +15,11 @@ public class PunctuationFilter implements SerializablePredicate<QueryResultRowIt
 	@Override
 	public boolean test(QueryResultRowItem item) {
 		if (isEnabled.get()) {
-			String key = item.getKey();
-			
-			if ((key != null) && key.length() == 1) {
+			String key = item.getFilterKey();
+			if (key == null) {
+				return false;
+			}
+			else if (key.length() == 1) {
 				return Character.isLetter(Character.codePointAt(key, 0));
 			}
 		}

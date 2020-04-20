@@ -31,6 +31,11 @@ public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 	public String getKey() {
 		return queryId.getName();
 	}
+	
+	@Override
+	public String getFilterKey() {
+		return getKey();
+	}
 
 	@Override
 	public int getFrequency() {

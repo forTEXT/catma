@@ -42,6 +42,11 @@ public class CollectionQueryResultRowItem implements QueryResultRowItem {
 	public String getKey() {
 		return Cleaner.clean(collectionName);
 	}
+	
+	@Override
+	public String getFilterKey() {
+		return collectionName;
+	}
 
 	@Override
 	public int getFrequency() {

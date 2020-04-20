@@ -35,6 +35,11 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 	public String getKey() {
 		return Cleaner.clean(groupedQueryResult.getGroup().toString());
 	}
+	
+	@Override
+	public String getFilterKey() {
+		return groupedQueryResult.getGroup().toString();
+	}
 
 	@Override
 	public int getFrequency() {

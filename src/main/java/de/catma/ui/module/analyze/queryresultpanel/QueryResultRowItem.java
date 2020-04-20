@@ -9,6 +9,7 @@ import de.catma.queryengine.result.QueryResultRowArray;
 
 public interface QueryResultRowItem {
 	public String getKey();
+	public String getFilterKey();
 	public int getFrequency();
 	public QueryResultRowArray getRows();
 	public Integer getStartOffset();
