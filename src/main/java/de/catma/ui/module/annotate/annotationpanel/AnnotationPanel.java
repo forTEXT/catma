@@ -175,6 +175,7 @@ public class AnnotationPanel extends VerticalLayout {
 						if (tagsetData.contains(deletedItem)) {
 							tagsetData.removeItem(deletedItem);
 							tagsetDataProvider.refreshAll();
+							tagsetGrid.deselect(deletedItem);
 						}						
 					});
 					
@@ -269,6 +270,7 @@ public class AnnotationPanel extends VerticalLayout {
 				}
 				
 				tagsetDataProvider.refreshAll();
+				tagsetGrid.deselectAll();
 			}
 		};
 		
@@ -1215,6 +1217,7 @@ public class AnnotationPanel extends VerticalLayout {
 			tagsetData.removeItem(tagsetDataItem);
 		}
 		tagsetDataProvider.refreshAll();
+		tagsetGrid.deselectAll();
 	}
 	
 	public void close() {
@@ -1302,6 +1305,7 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsets.clear();
 		tagsetData.clear();
 		tagsetDataProvider.refreshAll();
+		tagsetGrid.deselectAll();
 	}
 
 }

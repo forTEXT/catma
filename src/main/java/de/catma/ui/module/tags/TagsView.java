@@ -136,6 +136,7 @@ public class TagsView extends HugeCard {
 					
 					tagsetData.removeItem(new TagDataItem(deletedTag, true));
 					tagsetDataProvider.refreshAll();
+					tagsetGrid.deselectAll();
 					
 				}
 				else { //update
@@ -230,6 +231,7 @@ public class TagsView extends HugeCard {
 				});
 				
 				tagsetDataProvider.refreshAll();
+				tagsetGrid.deselectAll();
 			}
 		};
 		
