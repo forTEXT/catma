@@ -1,6 +1,8 @@
 package de.catma.queryengine.result.json;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,7 +18,6 @@ import de.catma.document.Range;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.project.Project;
-import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.util.ColorConverter;
@@ -91,7 +92,9 @@ public class JSONQueryResultBuilder {
 			ObjectNode rowNode = factory.objectNode();
 			addQueryResultRowFields(rowNode, row);
 			if (row instanceof TagQueryResultRow) {
-				for (Range range : ((TagQueryResultRow) row).getRanges()) {
+				List<Range> mergedRanges = 
+					Range.mergeRanges(new TreeSet<>(((TagQueryResultRow) row).getRanges()));
+				for (Range range : mergedRanges) {
 					addTagQueryResultRowFields(rowNode, (TagQueryResultRow)row, range, colorCache);
 				}
 			}

@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.List;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -78,7 +80,9 @@ public class CSVExportFlatStreamSource implements StreamSource {
     	            	KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
     	            	if (row instanceof TagQueryResultRow) {
     	            		TagQueryResultRow tRow = (TagQueryResultRow) row;
-    	            		for (Range range : ((TagQueryResultRow) row).getRanges()) {
+    	    				List<Range> mergedRanges = 
+    	    						Range.mergeRanges(new TreeSet<>((tRow).getRanges()));
+    	            		for (Range range : mergedRanges) {
     	            			KeywordInSpanContext kwic = kwicProvider.getKwic(range, 5);
         	            		csvPrinter.printRecord(
         	            				row.getQueryId().toSerializedString(),
