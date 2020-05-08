@@ -102,11 +102,15 @@ public class TagsView extends HugeCard {
 		            		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
 		            		.findFirst()
 		            		.ifPresent(tagsetDataItem -> {
-		            			tagsetData.addItem(
-		            					tagsetDataItem, new TagDataItem(tag, tagsetDataItem.isEditable()));
-		            			tagsetDataProvider.refreshAll();
-		            			
-		            			tagsetGrid.expand(tagsetDataItem);
+		            			TagDataItem tagDataItem = 
+		            					new TagDataItem(tag, tagsetDataItem.isEditable());
+		            			if (!tagsetData.contains(tagsetDataItem)) {
+			            			tagsetData.addItem(
+			            					tagsetDataItem, tagDataItem);
+			            			tagsetDataProvider.refreshAll();
+			            			
+			            			tagsetGrid.expand(tagsetDataItem);
+		            			}
 		            		});
 		            }
 		            else {
@@ -115,16 +119,19 @@ public class TagsView extends HugeCard {
 	            		.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
 	            		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
 	            		.findFirst()
-	            		.ifPresent(tagsetDataItem -> {		            	
-	            			TagDefinition parentTag = 
-		            		project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid());
-		            	
-			            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag, tagsetDataItem.isEditable());
-			            	tagsetData.addItem(parentTagItem, new TagDataItem(tag, tagsetDataItem.isEditable()));
-	
-			            	tagsetDataProvider.refreshAll();
-	
-			            	tagsetGrid.expand(parentTagItem);
+	            		.ifPresent(tagsetDataItem -> {		            
+	            			TagDataItem tagDataItem = new TagDataItem(tag, tagsetDataItem.isEditable());
+	            			if (!tagsetData.contains(tagDataItem)) {
+		            			TagDefinition parentTag = 
+			            		project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid());
+			            	
+				            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag, tagsetDataItem.isEditable());
+				            	tagsetData.addItem(parentTagItem, tagDataItem);
+		
+				            	tagsetDataProvider.refreshAll();
+		
+				            	tagsetGrid.expand(parentTagItem);
+	            			}
 	            		});
 		            }
 		            
