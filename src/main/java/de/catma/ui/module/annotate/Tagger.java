@@ -272,9 +272,18 @@ public class Tagger extends AbstractComponent {
 
 	public void highlight(Range absoluteRange) {
 		if (pager.hasPages()) {
-			pager.highlight(absoluteRange);
+			int firstLineId = pager.highlight(absoluteRange);
 			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+			if (firstLineId != -1) {
+								
+				if (pager.getCurrentPage().hasLine(pager.getCurrentPage().getLineCount()-1)) {
+					getRpcProxy(TaggerClientRpc.class).scrollLineToVisible("LINE." + (pager.getCurrentPage().getLineCount()-1));
+				}
+				
+				getRpcProxy(TaggerClientRpc.class).scrollLineToVisible("LINE." + firstLineId);
+			}
 		}
+		
 	}
 
 	public void setTagInstanceSelected(String annotationId) {

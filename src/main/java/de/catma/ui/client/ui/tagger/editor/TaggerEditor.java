@@ -616,5 +616,13 @@ public class TaggerEditor extends FocusWidget
 		
 	}
 
+	public void scrollLineToVisible(String lineId) {
+		Line line = lineIdToLineMap.get(lineId);
+		if (line != null) {
+			line.getLineElement().scrollIntoView();
+		}
+		
+	}
+
 }
 

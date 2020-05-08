@@ -268,14 +268,22 @@ public class Pager implements Iterable<Page> {
 		return maxPageLengthInLines;
 	}
 	
-	public void highlight(Range absoluteHighlightRange) {
+	public int highlight(Range absoluteHighlightRange) {
+		int firstLineId = -1;
+		
 		for (Page page : pages) {
 
 			Range overlappingAbsoluteRange = page.getOverlappingRange(absoluteHighlightRange);
 			if (overlappingAbsoluteRange != null) {
-				page.addHighlight(overlappingAbsoluteRange);
+				int lineId = page.addHighlight(overlappingAbsoluteRange);
+				
+				if (lineId != -1 && firstLineId == -1) {
+					firstLineId = lineId;
+				}
 			}
 		}
+		
+		return firstLineId;
 	}
 
 	public void removeHighlights() {

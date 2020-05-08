@@ -59,6 +59,11 @@ public class TaggerConnector extends AbstractComponentConnector {
 				getWidget().removeHighlights();
 			}
 			
+			@Override
+			public void scrollLineToVisible(String lineId) {
+				getWidget().scrollLineToVisible(lineId);
+			}
+			
 		});
 	}
 	

@@ -330,17 +330,29 @@ public class Page {
 				this.pageStart, this.pageEnd).getOverlappingRange(absoluteTextRange);
 	}
 
-	public void addHighlight(Range highlightedAbsoluteRange) {
+	/**
+	 * @param highlightedAbsoluteRange
+	 * @return the ID of the first affected {@link Line}
+	 */
+	public int addHighlight(Range highlightedAbsoluteRange) {
 		pageDiv = null;
-
+		Line firstLine = null;
+		
 		TextRange highlightedRelativeRange = getRelativeRangeFor(highlightedAbsoluteRange);
 		
 		for (Line line : lines) {
 			TextRange overlappingRange = line.getOverlappingRange(highlightedRelativeRange);
 			if (overlappingRange != null) {
 				line.addHighlight(overlappingRange);
+				firstLine = (firstLine==null)?line:firstLine;
 			}
 		}
+		
+		if (firstLine != null) {
+			return firstLine.getLineId();
+		}
+		return -1;
+		
 	}
 
 	public boolean isDirty() {
@@ -358,5 +370,9 @@ public class Page {
 
 	public boolean contains(String annotationId) {
 		return this.relativeTagInstances.containsKey(annotationId);
+	}
+
+	public boolean hasLine(int lineId) {
+		return lines.stream().filter(line -> line.getLineId() == lineId).findAny().isPresent();
 	}
 }

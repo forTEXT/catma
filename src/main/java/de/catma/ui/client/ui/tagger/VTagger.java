@@ -167,4 +167,8 @@ public class VTagger extends Composite {
 		taggerEditor.removeHighlights();
 		
 	}
+
+	public void scrollLineToVisible(String lineId) {
+		taggerEditor.scrollLineToVisible(lineId);
+	}
 }

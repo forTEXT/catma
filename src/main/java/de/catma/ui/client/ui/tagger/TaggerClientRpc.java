@@ -11,4 +11,5 @@ public interface TaggerClientRpc extends ClientRpc {
 	public void setTagInstanceSelected(String tagInstanceId);
 	public void setTraceSelection(boolean traceSelection);
 	public void removeHighlights();
+	public void scrollLineToVisible(String lineId);
 }

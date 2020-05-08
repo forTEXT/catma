@@ -77,6 +77,10 @@ public class Line {
 		this.lineId = lineId;
 	}
 	
+	public int getLineId() {
+		return lineId;
+	}
+	
 	public void setTextRange(TextRange relativeTextRange) {
 		this.textRange = relativeTextRange;
 		for (LineContent lineContent : lineContents) {
