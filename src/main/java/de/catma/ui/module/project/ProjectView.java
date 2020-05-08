@@ -1841,7 +1841,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
     /**
-     * called when {@link ProjectChangedEvent} is fired e.g. when source documents have been removed or added
+     * called when {@link ProjectChangedEvent} is fired when the Project's name changes and if members join
      * @param resourcesChangedEvent
      */
     @Subscribe
