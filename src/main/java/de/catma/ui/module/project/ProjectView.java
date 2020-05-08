@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -487,94 +488,202 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	}		
 	}
 	
-	private void importCorpus(File corpusFile, List<CorpusImportDocumentMetadata> documentMetadataList) {
+	private void importCorpus(final File corpusFile, final List<CorpusImportDocumentMetadata> documentMetadataList) {
+    	setEnabled(false);
+    	setProgressBarVisible(true);
 		try {
-			
-			GZIPInputStream gzipIs = new GZIPInputStream(new FileInputStream(corpusFile));
-			
-			try (TarArchiveInputStream taIs = new TarArchiveInputStream(gzipIs)) {
-				TarArchiveEntry entry = taIs.getNextTarEntry();
-				while (entry != null) {
-					String[] pathParts = entry.getName().split(Pattern.quote("/"));
-					
-					String documentIdPart = pathParts[2];
-					String documentId = documentIdPart.substring(documentIdPart.indexOf("__")+3);
-					String idUri = "catma://"+documentId;
-					
-					CorpusImportDocumentMetadata documentMetadata = 
-						documentMetadataList.stream().filter(metadata -> metadata.sourceDocID.equals(idUri)).findFirst().orElse(null);
-					
-					Locale locale = Locale.forLanguageTag(documentMetadata.sourceDocLocale);
-					
-					boolean useApostrophe = 
-						Arrays.asList(documentMetadata.sourceDocSepChars).contains(String.valueOf(UploadFile.APOSTROPHE));
-					
-					if (pathParts[3].equals("annotationcollections")) {
-						ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-						IOUtils.copy(taIs, buffer);
+			final String tempDir = 
+					((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+	    	final UI ui = UI.getCurrent();
+	    	
+			BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
+			BackgroundService backgroundService = backgroundServiceProvider.accuireBackgroundService();
+			backgroundService.submit(
+				new DefaultProgressCallable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						getProgressListener().setProgress("Importing Corpus");
+	
+						GZIPInputStream gzipIs = new GZIPInputStream(new FileInputStream(corpusFile));
 						
-						SourceDocument document = project.getSourceDocument(documentId);
-						Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
-								project.loadAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), document);
+						try (TarArchiveInputStream taIs = new TarArchiveInputStream(gzipIs)) {
+							TarArchiveEntry entry = taIs.getNextTarEntry();
+							while (entry != null) {
+								final String entryName = entry.getName();
+								final String[] pathParts = entry.getName().split(Pattern.quote("/"));
+								
+								final String documentIdPart = pathParts[2];
+								final String documentId = documentIdPart.substring(documentIdPart.indexOf("__")+3);
+								final String idUri = "catma://"+documentId;
+								
+								final CorpusImportDocumentMetadata documentMetadata = 
+									documentMetadataList.stream().filter(metadata -> metadata.sourceDocID.equals(idUri)).findFirst().orElse(null);
+								
+								final Locale locale = Locale.forLanguageTag(documentMetadata.sourceDocLocale);
+								
+								final boolean useApostrophe = 
+									Arrays.asList(documentMetadata.sourceDocSepChars).contains(String.valueOf(UploadFile.APOSTROPHE));
+								
+								if (pathParts[3].equals("annotationcollections")) {
+									
+									getProgressListener().setProgress("Importing Collection %1$s", pathParts[4]);
+									
+									ui.accessSynchronously(() -> {
+										try {
+											final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+											IOUtils.copy(taIs, buffer);
+											
+											SourceDocument document = project.getSourceDocument(documentId);
+											Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
+													project.loadAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), document);
+											
+											List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
+											final AnnotationCollection annotationCollection = loadResult.getFirst();
+											
+//											annotationCollection.getTagLibrary().getTagsetDefinitions() // hier gehts weiter
+											
+											if (!annotationCollection.getName().equals("Intrinsic Markup")) { //FIXME: better exclude internal Tagset Intrinsic Markup!
+												project.importCollection(
+														tagsetDefinitionImportStatusList, annotationCollection);
+											}
+										}
+										catch (Exception e) {
+							    			Logger.getLogger(ProjectView.class.getName()).log(
+							    					Level.SEVERE, 
+							    					"Error importing the CATMA 5 Corpus: " + entryName, 
+							    					e);
+							    			String errorMsg = e.getMessage();
+							    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+							    				errorMsg = "";
+							    			}
+	
+							    			Notification.show(
+							    				"Error", 
+							    				String.format(
+							    						"Error importing the CATMA 5 Corpus! "
+							    						+ "This Collection will be skipped!\n The underlying error message was:\n%1$s", 
+							    						errorMsg), 
+							    				Type.ERROR_MESSAGE);										}
+									});
+								}
+								else {
+									final String title = 
+										(documentMetadata.sourceDocName==null|| documentMetadata.sourceDocName.isEmpty())?
+												documentId
+												:documentMetadata.sourceDocName;
+									
+									getProgressListener().setProgress("Importing Document %1$s", title);
+									
+									final File tempFile = new File(new File(tempDir), documentId);
+									
+									if (tempFile.exists()) {
+										tempFile.delete();
+									}
+									try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+										IOUtils.copy(taIs, fos);
+									}
+	
+									ui.accessSynchronously(() -> {
+										IndexInfoSet indexInfoSet =  new IndexInfoSet(
+												Collections.emptyList(), 
+												useApostrophe?Lists.newArrayList(UploadFile.APOSTROPHE):Collections.emptyList(), 
+												locale);
+										TechInfoSet techInfoSet = 
+											new TechInfoSet(documentId, FileType.TEXT.getMimeType(), tempFile.toURI());
+										
+										ContentInfoSet contentInfoSet =
+												new ContentInfoSet(
+													documentMetadata.sourceDocAuthor, 
+													documentMetadata.sourceDocDescription, 
+													documentMetadata.sourceDocPublisher,
+													title);
+										
+										techInfoSet.setCharset(Charset.forName("UTF-8"));
+										SourceDocumentInfo documentInfo = 
+												new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
+	
+										StandardContentHandler handler = new StandardContentHandler();
+										handler.setSourceDocumentInfo(documentInfo);
+										
+										SourceDocument document = new SourceDocument(documentId, handler);
+										try {
+											project.insert(document);
+										}
+										catch (Exception e) {
+							    			Logger.getLogger(ProjectView.class.getName()).log(
+							    					Level.SEVERE, 
+							    					"Error importing the CATMA 5 Corpus: " + entryName, 
+							    					e);
+							    			String errorMsg = e.getMessage();
+							    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+							    				errorMsg = "";
+							    			}
+	
+							    			Notification.show(
+							    				"Error", 
+							    				String.format(
+							    						"Error importing the CATMA 5 Corpus! "
+							    						+ "This Document will be skipped!\n The underlying error message was:\n%1$s", 
+							    						errorMsg), 
+							    				Type.ERROR_MESSAGE);		
+							    		}
+									});
+								}
+							
+								entry = taIs.getNextTarEntry();
+							}
 						
-						List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
-						final AnnotationCollection annotationCollection = loadResult.getFirst();
-						
-						project.importCollection(
-								tagsetDefinitionImportStatusList, annotationCollection);
-						
+						}					
+						return null;
 					}
-					else {
-						String title = documentMetadata.sourceDocName;
-						if (title == null || title.isEmpty()) {
-							title = documentId;
-						}
-						
-						String tempDir = 
-								((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
-						
-						File tempFile = new File(new File(tempDir), documentId);
-						
-						if (tempFile.exists()) {
-							tempFile.delete();
-						}
-						try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-							IOUtils.copy(taIs, fos);
-						}
-
-						IndexInfoSet indexInfoSet =  new IndexInfoSet(
-								Collections.emptyList(), 
-								useApostrophe?Lists.newArrayList(UploadFile.APOSTROPHE):Collections.emptyList(), 
-								locale);
-						TechInfoSet techInfoSet = 
-							new TechInfoSet(documentId, FileType.TEXT.getMimeType(), tempFile.toURI());
-						
-						ContentInfoSet contentInfoSet =
-								new ContentInfoSet(
-									documentMetadata.sourceDocAuthor, 
-									documentMetadata.sourceDocDescription, 
-									documentMetadata.sourceDocPublisher,
-									title);
-						
-						techInfoSet.setCharset(Charset.forName("UTF-8"));
-						SourceDocumentInfo documentInfo = 
-								new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
-
-						StandardContentHandler handler = new StandardContentHandler();
-						handler.setSourceDocumentInfo(documentInfo);
-						
-						SourceDocument document = new SourceDocument(documentId, handler);
-						
-						project.insert(document);
+				},
+				new ExecutionListener<Void>() {
+					@Override
+					public void done(Void result) {
+		            	setProgressBarVisible(false);
+		            	setEnabled(true);
 					}
-				
-					entry = taIs.getNextTarEntry();
-				}
-			
-			}					
-			
+					@Override
+					public void error(Throwable t) {
+		            	setProgressBarVisible(false);
+		            	setEnabled(true);
+		    			Logger.getLogger(ProjectView.class.getName()).log(
+		    					Level.SEVERE, 
+		    					"Error importing the CATMA 5 Corpus!", 
+		    					t);
+		    			String errorMsg = t.getMessage();
+		    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+		    				errorMsg = "";
+		    			}
+	
+		    			Notification.show(
+		    				"Error", 
+		    				String.format(
+		    						"Error importing the CATMA 5 Corpus! "
+		    						+ "This import will be aborted!\n The underlying error message was:\n%1$s", 
+		    						errorMsg), 
+		    				Type.ERROR_MESSAGE);					
+					}
+				},
+				new ProgressListener() {
+					
+					@Override
+					public void setProgress(String value, Object... args) {
+						ui.accessSynchronously(() -> {
+			            	if (args != null) {
+			            		progressBar.setCaption(String.format(value, args));
+			            	}
+			            	else {
+			            		progressBar.setCaption(value);
+			            	}
+			            	ui.push();
+						});
+					}
+				});
 		}
 		catch (Exception e) {
+        	setProgressBarVisible(false);
+        	setEnabled(true);
 			Logger.getLogger(ProjectView.class.getName()).log(
 					Level.SEVERE, 
 					"Error importing the CATMA 5 Corpus!", 
@@ -590,8 +699,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						"Error importing the CATMA 5 Corpus! "
 						+ "This import will be aborted!\n The underlying error message was:\n%1$s", 
 						errorMsg), 
-				Type.ERROR_MESSAGE);					
-			
+				Type.ERROR_MESSAGE);	
 		}
 	}
 
@@ -1218,7 +1326,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				public void error(Throwable t) {
 	            	setProgressBarVisible(false);
 	            	setEnabled(true);
-	                errorHandler.showAndLogError("error opening project", t);
+	                errorHandler.showAndLogError("Error adding Documents", t);
 				}
 			},
 			new ProgressListener() {

@@ -148,6 +148,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			Path tokenizedSourceDocumentPath) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addSourceDocument enter");
 
+		logger.info("Adding Document " + document);
+		
 		GraphTraversalSource g = graph.traversal();
 
 		Vertex projectRevV = 
@@ -194,6 +196,9 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	public void addCollection(String rootRevisionHash, String collectionId, String name, String umcRevisionHash,
 			SourceDocument document, TagLibrary tagLibrary, String oldRootRevisionHash) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addCollection enter");
+		
+		logger.info("Adding Collection " + name);
+		
 		graphWriter.addCollection(
 			oldRootRevisionHash,
 			rootRevisionHash,
@@ -206,6 +211,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	public void addTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addTagset enter");
+		logger.info("Adding " + tagset);
 		
 		GraphTraversalSource g = graph.traversal();
 		Vertex projectRevV = 
@@ -222,6 +228,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	public void addTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
 			String oldRootRevisionHash) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addTagDefinition enter");
+		logger.info("Adding " + tag + " in " + tagset);
 		
 		GraphTraversalSource g = graph.traversal();
 
@@ -244,6 +251,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	public void updateTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
 			String oldRootRevisionHash) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "updateTagDefinition enter");
+		logger.info("Updating " + tag + " in " + tagset);
 		
 		GraphTraversalSource g = graph.traversal();
 		Vertex tagV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -274,6 +282,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
 		
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addPropertyDefinition enter");
+		
+		logger.info("Adding " + propertyDefinition + " in " + tag + " in " + tagset);
 		
 		GraphTraversalSource g = graph.traversal();
 
@@ -315,6 +325,8 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "createOrUpdatePropertyDefinition enter");
 		
+		logger.info("Creating or updating " + propertyDefinition + " in " + tag + " in " + tagset);
+		
 		GraphTraversalSource g = graph.traversal();
 
 		Vertex tagsetV = g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
@@ -324,16 +336,23 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		Vertex tagV = g.V(tagsetV)
 		.outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid()).next();
 		
-		Vertex propertyV = g.V(tagV)
-		.outE(rt(hasProperty)).inV().has(nt(Property), "uuid", propertyDefinition.getUuid())
-		.next();
+		GraphTraversal<Vertex, Vertex> searchPropertyDefTraversal = 
+			g.V(tagV)
+			.outE(rt(hasProperty)).inV().has(nt(Property), "uuid", propertyDefinition.getUuid());
 		
-		graphWriter.logVertex(propertyV);
-		
-		propertyV.property("name", propertyDefinition.getName());
-		propertyV.property("values", propertyDefinition.getPossibleValueList());
-		
-		graphWriter.logVertex(propertyV);
+		if (searchPropertyDefTraversal.hasNext()) {
+			Vertex propertyV = searchPropertyDefTraversal.next();
+			
+			graphWriter.logVertex(propertyV);
+			
+			propertyV.property("name", propertyDefinition.getName());
+			propertyV.property("values", propertyDefinition.getPossibleValueList());
+			
+			graphWriter.logVertex(propertyV);
+		}
+		else {
+			graphWriter.addPropertyDefinition(tagV, propertyDefinition);
+		}
 
 		logRootRevisionHash("createOrUpdatePropertyDefinition exit" );
 	}
@@ -587,6 +606,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	public void updateTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
 			throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "updateTagset enter");
+		logger.info("Updating " + tagset);
 		
 		GraphTraversalSource g = graph.traversal();
 		

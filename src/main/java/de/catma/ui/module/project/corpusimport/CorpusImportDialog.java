@@ -100,14 +100,22 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 					try {
 						List<CorpusImportDocumentMetadata> documentMetadataList = getDocumentMetadata(corpusMetadata);
 						result.setSecond(documentMetadataList);
+						progressBar.setVisible(false);
+						
+						CorpusImportDialog.this.result = result;
+						
+						CorpusImportDialog.super.handleOkPressed();
 					} catch (Exception e) {
-						e.printStackTrace(); //TODO:
+						progressBar.setVisible(false);
+						Notification.show(
+							"Error", 
+							String.format(
+									"Error retrieving Document metadata! "
+									+ "\n The underlying error message was:\n%2$s", 
+									e.getMessage()), 
+							Type.ERROR_MESSAGE);	
+						handleCancelPressed();
 					}
-					progressBar.setVisible(false);
-					
-					CorpusImportDialog.this.result = result;
-					
-					CorpusImportDialog.super.handleOkPressed();
 				}
 
 				@Override

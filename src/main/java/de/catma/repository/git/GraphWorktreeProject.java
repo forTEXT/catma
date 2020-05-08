@@ -1349,7 +1349,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						TagsetDefinition existingTagset = 
 							getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid());
 						
-						for (TagDefinition incomingTag : tagset) {
+						for (TagDefinition incomingTag : tagset) {// FIXME: roots first depth first
 							if (tagsetDefinitionImportStatus.passesUpdateFilter(incomingTag.getUuid())) {
 								if (existingTagset.hasTagDefinition(incomingTag.getUuid())) {
 									TagDefinition existingTag = existingTagset.getTagDefinition(incomingTag.getUuid());
