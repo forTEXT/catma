@@ -502,12 +502,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					String idUri = "catma://"+documentId;
 					
 					CorpusImportDocumentMetadata documentMetadata = 
-						documentMetadataList.stream().filter(metadata -> metadata.sourceDocID.equals(idUri)).findFirst().orElse(null);
+						documentMetadataList.stream().filter(metadata -> metadata.getSourceDocID().equals(idUri)).findFirst().orElse(null);
 					
-					Locale locale = Locale.forLanguageTag(documentMetadata.sourceDocLocale);
+					Locale locale = Locale.forLanguageTag(documentMetadata.getSourceDocLocale());
 					
 					boolean useApostrophe = 
-						Arrays.asList(documentMetadata.sourceDocSepChars).contains(String.valueOf(UploadFile.APOSTROPHE));
+						Arrays.asList(documentMetadata.getSourceDocSepChars()).contains(String.valueOf(UploadFile.APOSTROPHE));
 					
 					if (pathParts[3].equals("annotationcollections")) {
 						ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -525,7 +525,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						
 					}
 					else {
-						String title = documentMetadata.sourceDocName;
+						String title = documentMetadata.getSourceDocName();
 						if (title == null || title.isEmpty()) {
 							title = documentId;
 						}
@@ -551,9 +551,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						
 						ContentInfoSet contentInfoSet =
 								new ContentInfoSet(
-									documentMetadata.sourceDocAuthor, 
-									documentMetadata.sourceDocDescription, 
-									documentMetadata.sourceDocPublisher,
+									documentMetadata.getSourceDocAuthor(), 
+									documentMetadata.getSourceDocDescription(), 
+									documentMetadata.getSourceDocPublisher(),
 									title);
 						
 						techInfoSet.setCharset(Charset.forName("UTF-8"));

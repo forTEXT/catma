@@ -17,18 +17,15 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.jsoniter.annotation.JsonIgnore;
-import com.jsoniter.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 
 import de.catma.document.Range;
 import de.catma.document.annotation.TagReference;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.tag.Property;
-import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 
 /**
@@ -39,6 +36,9 @@ import de.catma.tag.Version;
  * @see <a href="https://json-ld.org/spec/latest/json-ld/">JSON-LD</a>
  */
 public class JsonLdWebAnnotation {
+	
+	private @SerializedName("@context") String context = "http://www.w3.org/ns/anno.jsonld";
+	private String type = "Annotation";
 	private String id;
 	private JsonLdWebAnnotationBody_Dataset body;
 	private JsonLdWebAnnotationTarget_List target;
@@ -109,13 +109,12 @@ public class JsonLdWebAnnotation {
 		);
 	}
 
-	@JsonProperty(to="@context")
 	public String getContext() {
-		return "http://www.w3.org/ns/anno.jsonld";
+		return this.context;
 	}
 
 	public String getType() {
-		return "Annotation";
+		return this.type;
 	}
 
 	public String getId() {
@@ -176,12 +175,10 @@ public class JsonLdWebAnnotation {
 		}).collect(Collectors.toList());
 	}
 
-	@JsonIgnore
 	public String getTagInstanceUuid() {
 		return this.getLastPathSegmentFromUrl(this.id).replace(".json", "");
 	}
 
-	@JsonIgnore
 	public TagInstance getTagInstance()
 			throws Exception {
 
@@ -214,15 +211,6 @@ public class JsonLdWebAnnotation {
 		return tagInstance;
 	}
 
-	private TagDefinition getTagDefinition(TagLibrary tagLibrary)
-			throws IOException {
-		String tagsetId = this.getLastPathSegmentFromUrl(this.body.getTagset());
-		String tagId = this.getLastPathSegmentFromUrl(this.body.getTag());
-		
-		TagsetDefinition tagsetDefinition = tagLibrary.getTagsetDefinition(tagsetId);
-		return tagsetDefinition.getTagDefinition(tagId);
-
-	}
 
 	private String getLastPathSegmentFromUrl(String url) {
 		return url.substring(url.lastIndexOf("/") + 1);

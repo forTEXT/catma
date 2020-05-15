@@ -1,84 +1,43 @@
 package de.catma.repository.git.serialization.model_wrappers;
 
-import com.jsoniter.annotation.JsonIgnore;
+import java.util.TreeMap;
+
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 
-import java.util.HashMap;
-import java.util.TreeMap;
-
 public class GitTagDefinition {
-	private TagDefinition tagDefinition;
+	private String name;
+	private String parentUuid;
+	private TreeMap<String,PropertyDefinition> systemPropertyDefinitions;
+	private String tagsetDefinitionUuid;
+	private TreeMap<String,PropertyDefinition> userDefinedPropertyDefinitions;
+	private String uuid;
 	
 	public GitTagDefinition() {
-		this.tagDefinition = new TagDefinition();
+		this.systemPropertyDefinitions = new TreeMap<String, PropertyDefinition>();
+		this.userDefinedPropertyDefinitions = new TreeMap<String, PropertyDefinition>();
 	}
 
-	public GitTagDefinition(TagDefinition tagDefinition){
-		this.tagDefinition = tagDefinition;
+	public GitTagDefinition(TagDefinition tagDefinition) {
+		this();
+		
+		this.name = tagDefinition.getName();
+		this.parentUuid = tagDefinition.getParentUuid();
+		for(PropertyDefinition propertyDefinition : tagDefinition.getSystemPropertyDefinitions()){
+			systemPropertyDefinitions.put(propertyDefinition.getUuid(), propertyDefinition);
+		}
+		this.tagsetDefinitionUuid = tagDefinition.getTagsetDefinitionUuid();
+		for(PropertyDefinition propertyDefinition : tagDefinition.getUserDefinedPropertyDefinitions()){
+			userDefinedPropertyDefinitions.put(propertyDefinition.getUuid(), propertyDefinition);
+		}
+		this.uuid = tagDefinition.getUuid();
+		
 	}
 
-	@JsonIgnore
 	public TagDefinition getTagDefinition() {
-		return this.tagDefinition;
-	}
-
-//	private String uuid;
-//	private String name;
-//	private Version version;
-//	private Map<String,PropertyDefinition> systemPropertyDefinitions;
-//	private Map<String,PropertyDefinition> userDefinedPropertyDefinitions;
-//	private String parentUuid;
-
-	public String getUuid(){return this.tagDefinition.getUuid();}
-
-	public void setUuid(String uuid){this.tagDefinition.setUuid(uuid);}
-
-	public String getName(){return this.tagDefinition.getName();}
-
-	public void setName(String name){this.tagDefinition.setName(name);}
-
-	public TreeMap<String, GitPropertyDefinition> getSystemPropertyDefinitions(){
-		TreeMap<String, GitPropertyDefinition> newMap = new TreeMap<>();
-
-		for(PropertyDefinition propertyDefinition : this.tagDefinition.getSystemPropertyDefinitions()){
-			newMap.put(propertyDefinition.getUuid(), new GitPropertyDefinition(propertyDefinition));
-		}
-
-		return newMap;
-	}
-
-	public void setSystemPropertyDefinitions(HashMap<String, GitPropertyDefinition> systemPropertyDefinitions){
-		for (GitPropertyDefinition value: systemPropertyDefinitions.values()) {
-			this.tagDefinition.addSystemPropertyDefinition(value.getPropertyDefinition());
-		}
-	}
-
-	public TreeMap<String, GitPropertyDefinition> getUserDefinedPropertyDefinitions(){
-		TreeMap<String, GitPropertyDefinition> newMap = new TreeMap<>();
-
-		for(PropertyDefinition propertyDefinition : this.tagDefinition.getUserDefinedPropertyDefinitions()){
-			newMap.put(propertyDefinition.getUuid(), new GitPropertyDefinition(propertyDefinition));
-		}
-
-		return newMap;
-	}
-
-	public void setUserDefinedPropertyDefinitions(HashMap<String, GitPropertyDefinition> userPropertyDefinitions){
-		for (GitPropertyDefinition value: userPropertyDefinitions.values()) {
-			this.tagDefinition.addUserDefinedPropertyDefinition(value.getPropertyDefinition());
-		}
-	}
-
-	public String getParentUuid(){return this.tagDefinition.getParentUuid();}
-
-	public void setParentUuid(String uuid){this.tagDefinition.setParentUuid(uuid);}
-
-	public String getTagsetDefinitionUuid() {
-		return this.tagDefinition.getTagsetDefinitionUuid();
-	}
-
-	public void setTagsetDefinitionUuid(String tagsetDefinitionUuid) {
-		this.tagDefinition.setTagsetDefinitionUuid(tagsetDefinitionUuid);
+		TagDefinition tag = new TagDefinition(uuid, name, parentUuid, tagsetDefinitionUuid);
+		this.systemPropertyDefinitions.values().forEach(prop -> tag.addSystemPropertyDefinition(prop));
+		this.userDefinedPropertyDefinitions.values().forEach(prop -> tag.addUserDefinedPropertyDefinition(prop));
+		return tag;
 	}
 }

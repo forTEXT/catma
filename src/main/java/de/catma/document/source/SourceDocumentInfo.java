@@ -18,7 +18,7 @@
  */
 package de.catma.document.source;
 
-
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Metadata for a {@link SourceDocument}.
@@ -28,9 +28,9 @@ package de.catma.document.source;
  */
 public class SourceDocumentInfo {
 
-	private IndexInfoSet indexInfoSet;
-	private ContentInfoSet contentInfoSet;
-	private TechInfoSet techInfoSet;
+	private @SerializedName("gitIndexInfoSet") IndexInfoSet indexInfoSet;
+	private @SerializedName("gitContentInfoSet") ContentInfoSet contentInfoSet;
+	private @SerializedName("gitTechInfoSet") TechInfoSet techInfoSet;
 	
 	public SourceDocumentInfo() {
 	}

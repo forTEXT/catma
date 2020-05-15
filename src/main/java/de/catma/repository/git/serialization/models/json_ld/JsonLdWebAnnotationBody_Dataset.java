@@ -5,7 +5,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -13,9 +12,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.jsoniter.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 
 import de.catma.document.annotation.TagReference;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.tag.Property;
@@ -30,10 +30,12 @@ import de.catma.tag.TagLibrary;
  */
 public class JsonLdWebAnnotationBody_Dataset {
 	// we use the TreeMap and TreeSet types so that we get automatic sorting
-	private TreeMap<String, String> context;
+	private @SerializedName("@context") TreeMap<String, String> context;
 	private String tagset;
 	private String tag;
 	private TreeMap<String, TreeMap<String, TreeSet<String>>> properties;
+	@SuppressWarnings("unused") // used by reflection
+	private String type = "Dataset";
 
 	public final static String SYSTEM_PROPERTIES_KEY = "system";
 	public final static String USER_PROPERTIES_KEY = "user";
@@ -49,8 +51,8 @@ public class JsonLdWebAnnotationBody_Dataset {
 		String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		this();
-		this.context.put("tagset", "http://catma.de/portal/tagset");  // TODO: what should this URL be?
-		this.context.put("tag", "http://catma.de/portal/tag");  // TODO: what should this URL be?
+		this.context.put("tagset", CATMAPropertyKey.BaseURL.getValue() + "/tagset");
+		this.context.put("tag", CATMAPropertyKey.BaseURL.getValue() + "/tag");
 
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -144,41 +146,16 @@ public class JsonLdWebAnnotationBody_Dataset {
 		}
 	}
 
-	@JsonProperty(to="@context")
-	public TreeMap<String, String> getContext() {
-		return this.context;
-	}
-
-	@JsonProperty(from="@context")
-	public void setContext(TreeMap<String, String> context) {
-		this.context = context;
-	}
-
-	public String getType() {
-		return "Dataset";
-	}
-
 	public String getTagset() {
 		return this.tagset;
-	}
-
-	public void setTagset(String tagset) {
-		this.tagset = tagset;
 	}
 
 	public String getTag() {
 		return this.tag;
 	}
 
-	public void setTag(String tag) {
-		this.tag = tag;
-	}
-
 	public TreeMap<String, TreeMap<String, TreeSet<String>>> getProperties() {
 		return this.properties;
 	}
 
-	public void setProperties(TreeMap<String, TreeMap<String, TreeSet<String>>> properties) {
-		this.properties = properties;
-	}
 }

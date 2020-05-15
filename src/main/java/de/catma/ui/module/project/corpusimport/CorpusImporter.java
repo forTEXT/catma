@@ -74,12 +74,12 @@ public class CorpusImporter {
 				final String idUri = "catma://"+documentId;
 				
 				final CorpusImportDocumentMetadata documentMetadata = 
-					documentMetadataList.stream().filter(metadata -> metadata.sourceDocID.equals(idUri)).findFirst().orElse(null);
+					documentMetadataList.stream().filter(metadata -> metadata.getSourceDocID().equals(idUri)).findFirst().orElse(null);
 				
-				final Locale locale = Locale.forLanguageTag(documentMetadata.sourceDocLocale);
+				final Locale locale = Locale.forLanguageTag(documentMetadata.getSourceDocLocale());
 				
 				final boolean useApostrophe = 
-					Arrays.asList(documentMetadata.sourceDocSepChars).contains(String.valueOf(UploadFile.APOSTROPHE));
+					Arrays.asList(documentMetadata.getSourceDocSepChars()).contains(String.valueOf(UploadFile.APOSTROPHE));
 				
 				if (pathParts[3].equals("annotationcollections")) {
 					
@@ -138,9 +138,9 @@ public class CorpusImporter {
 				}
 				else {
 					final String title = 
-						(documentMetadata.sourceDocName==null|| documentMetadata.sourceDocName.isEmpty())?
+						(documentMetadata.getSourceDocName()==null|| documentMetadata.getSourceDocName().isEmpty())?
 								documentId
-								:documentMetadata.sourceDocName;
+								:documentMetadata.getSourceDocName();
 					
 					progressListener.setProgress("Importing Document %1$s", title);
 					
@@ -164,9 +164,9 @@ public class CorpusImporter {
 						
 						ContentInfoSet contentInfoSet =
 								new ContentInfoSet(
-									documentMetadata.sourceDocAuthor, 
-									documentMetadata.sourceDocDescription, 
-									documentMetadata.sourceDocPublisher,
+									documentMetadata.getSourceDocAuthor(), 
+									documentMetadata.getSourceDocDescription(), 
+									documentMetadata.getSourceDocPublisher(),
 									title);
 						
 						techInfoSet.setCharset(Charset.forName("UTF-8"));

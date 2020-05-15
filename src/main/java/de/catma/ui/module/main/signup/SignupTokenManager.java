@@ -11,9 +11,8 @@ import javax.cache.Caching;
 
 import com.google.common.base.Splitter;
 import com.google.common.eventbus.EventBus;
-import com.jsoniter.JsonIterator;
-import com.jsoniter.output.JsonStream;
-import com.jsoniter.spi.JsonException;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.ui.events.TokenInvalidEvent;
@@ -49,7 +48,7 @@ public class SignupTokenManager {
      */
     public void put(SignupToken token){
     	Objects.requireNonNull(token);
-    	tokenCache.put(token.getToken(), JsonStream.serialize(token));
+    	tokenCache.put(token.getToken(), new Gson().toJson(token));
     }
     
     /**
@@ -66,8 +65,8 @@ public class SignupTokenManager {
     	}
     	String encodedToken = tokenCache.getAndRemove(token);
     	try {
-    		return Optional.of(JsonIterator.deserialize(encodedToken, SignupToken.class));
-	    } catch (JsonException e){
+    		return Optional.of(new Gson().fromJson(encodedToken, SignupToken.class));
+	    } catch (JsonSyntaxException e){
 	    	logger.log(Level.INFO,"Signuptoken corrupt", e);
 			return Optional.empty();
 		}

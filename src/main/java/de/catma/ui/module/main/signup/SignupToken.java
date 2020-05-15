@@ -1,8 +1,5 @@
 package de.catma.ui.module.main.signup;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
-
 /**
  * Signup token bean class. It can be marshalled to json and back. This is useful for verification purpose.
  * @author db
@@ -10,15 +7,17 @@ import com.jsoniter.annotation.JsonProperty;
  */
 public class SignupToken {
 
-	private final String requestDate;
-	private final String email;
-	private final String token;
+	private String requestDate;
+	private String email;
+	private String token;
 	
-	@JsonCreator
+	public SignupToken() {
+	}
+	
 	public SignupToken(
-			@JsonProperty("requestDate") String requestDate, 
-			@JsonProperty("email")String email, 
-			@JsonProperty("token")String token) {
+			String requestDate, 
+			String email, 
+			String token) {
 		this.requestDate = requestDate;
 		this.email = email;
 		this.token = token;

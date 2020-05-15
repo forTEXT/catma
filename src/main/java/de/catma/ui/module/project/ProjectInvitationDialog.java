@@ -15,10 +15,10 @@ import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
+import com.google.gson.Gson;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
-import com.jsoniter.output.JsonStream;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
@@ -335,7 +335,7 @@ public class ProjectInvitationDialog extends Window {
 				cbOwnCollection.getValue(),
 				documentGrid.getSelectedItems().stream().map(Resource::getResourceId).collect(Collectors.toSet()));
 		
-		invitationCache.put(projectInvitation.getKey(), JsonStream.serialize(projectInvitation));
+		invitationCache.put(projectInvitation.getKey(), new Gson().toJson(projectInvitation));
 		
 		lInvitationCode.setValue(
 			"Your invitation code: <b style=\"font-size: xx-large;\">" + projectInvitation.getKey() + "</b>");
