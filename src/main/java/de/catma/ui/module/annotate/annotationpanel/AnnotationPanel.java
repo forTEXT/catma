@@ -1136,7 +1136,9 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	public void addCollection(AnnotationCollection collection) {
-		this.collections.add(collection);
+		if (!this.collections.contains(collection)) {
+			this.collections.add(collection);
+		}
 		
 		// if it is an imported XML Collection it is not likely that the collection is going to be edited
 		// and we do not automatically select it for editing
@@ -1150,8 +1152,10 @@ public class AnnotationPanel extends VerticalLayout {
 		if (project.hasPermission(
 			project.getRoleForCollection(collection.getId()), 
 			RBACPermission.COLLECTION_WRITE)) {
-			this.editableCollections.add(collection);
-			currentEditableCollectionBox.getDataProvider().refreshAll();	
+			if (!this.editableCollections.contains(collection)) {
+				this.editableCollections.add(collection);
+				currentEditableCollectionBox.getDataProvider().refreshAll();
+			}
 			if ((currentEditableCollectionBox.getValue() == null) 
 					&& !this.editableCollections.isEmpty()) {
 				currentEditableCollectionBox.setValue(collection);
