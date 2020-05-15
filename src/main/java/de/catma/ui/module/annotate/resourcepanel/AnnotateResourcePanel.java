@@ -279,20 +279,30 @@ public class AnnotateResourcePanel extends VerticalLayout {
     		selectedDocuments.add(documentDataItem.getDocument());
     	}
     	
-    	
-    	SingleTextInputDialog collectionNameDlg = 
-    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
-    				new SaveCancelListener<String>() {
-						
-						@Override
-						public void savePressed(String result) {
-							for (SourceDocument document : selectedDocuments) {
-								project.createUserMarkupCollection(result, document);
+    	if (selectedDocuments.isEmpty()) {
+    		SourceDocument document = getSelectedDocument();
+    		if (document != null) {
+    			selectedDocuments.add(document);
+    		}
+    	}
+    	if (selectedDocuments.isEmpty()) {
+    		Notification.show("Info", "Please select at least one Document first!", Type.HUMANIZED_MESSAGE);
+    	}
+    	else {
+	    	SingleTextInputDialog collectionNameDlg = 
+	    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+	    				new SaveCancelListener<String>() {
+							
+							@Override
+							public void savePressed(String result) {
+								for (SourceDocument document : selectedDocuments) {
+									project.createUserMarkupCollection(result, document);
+								}
 							}
-						}
-					});
-    	
-    	collectionNameDlg.show();
+						});
+	    	
+	    	collectionNameDlg.show();
+    	}
     }
     
 	private void initData(SourceDocument currentlySelectedSourceDocument, Set<String> currentlysSelectedColletionIds) {
