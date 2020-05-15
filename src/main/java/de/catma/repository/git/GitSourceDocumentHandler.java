@@ -28,7 +28,6 @@ import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
 
 public class GitSourceDocumentHandler {
@@ -143,9 +142,9 @@ public class GitSourceDocumentHandler {
 			sourceDocumentInfo.getTechInfoSet().setFileType(FileType.TEXT);
 			sourceDocumentInfo.getTechInfoSet().setFileOSType(FileOSType.getFileOSType(new String(bytes, "UTF-8")));
 			sourceDocumentInfo.getTechInfoSet().setMimeType("text/plain");
-			GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
-			String serializedGitSourceDocumentInfo = new SerializationHelper<GitSourceDocumentInfo>()
-					.serialize(gitSourceDocumentInfo);
+//			GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
+			String serializedGitSourceDocumentInfo = new SerializationHelper<SourceDocumentInfo>()
+					.serialize(sourceDocumentInfo);
 			localGitRepoManager.add(
 				targetHeaderFile, serializedGitSourceDocumentInfo.getBytes(StandardCharsets.UTF_8)
 			);
@@ -192,10 +191,10 @@ public class GitSourceDocumentHandler {
 			);
 
 			String serializedHeaderFile = FileUtils.readFileToString(headerFile, StandardCharsets.UTF_8);
-			GitSourceDocumentInfo gitSourceDocumentInfo = new SerializationHelper<GitSourceDocumentInfo>()
+			SourceDocumentInfo sourceDocumentInfo = new SerializationHelper<SourceDocumentInfo>()
 					.deserialize(
 							serializedHeaderFile,
-							GitSourceDocumentInfo.class
+							SourceDocumentInfo.class
 					);
 
 
@@ -204,7 +203,7 @@ public class GitSourceDocumentHandler {
 			
 			SourceContentHandler contentHandler = new StandardContentHandler();
 			
-			SourceDocumentInfo sourceDocumentInfo = gitSourceDocumentInfo.getSourceDocumentInfo();
+//			SourceDocumentInfo sourceDocumentInfo = gitSourceDocumentInfo.getSourceDocumentInfo();
 			contentHandler.setSourceDocumentInfo(sourceDocumentInfo);
 			
 			SourceDocument sourceDocument = docHandler.loadSourceDocument(sourceDocumentId, contentHandler);

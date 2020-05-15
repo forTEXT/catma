@@ -5,6 +5,7 @@ import java.util.Objects;
 public class JsonLdWebAnnotationTextPositionSelector implements Comparable<JsonLdWebAnnotationTextPositionSelector> {
 	private Integer start;
 	private Integer end;
+	private String type = "TextPositionSelector";
 
 	public JsonLdWebAnnotationTextPositionSelector() {
 
@@ -16,7 +17,7 @@ public class JsonLdWebAnnotationTextPositionSelector implements Comparable<JsonL
 	}
 
 	public String getType() {
-		return "TextPositionSelector";
+		return this.type;
 	}
 
 	public Integer getStart() {

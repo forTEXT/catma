@@ -41,8 +41,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.jsoniter.JsonIterator;
-import com.jsoniter.any.Any;
+import com.google.gson.Gson;
 
 import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollection;
@@ -181,21 +180,24 @@ class GraphWriter {
 		
 		try {
 			Path tokensPath = fileInfoProvider.getTokenizedSourceDocumentPath(document.getUuid());
-			Any content = JsonIterator.deserialize(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"));
+			@SuppressWarnings("rawtypes")
+			Map content = new Gson().fromJson(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"), Map.class);
+			
 			Map<Integer, Vertex> adjacencyMap = new HashMap<>();
-			for (Map.Entry<String, Any> entry : content.asMap().entrySet()) {
-				String term = entry.getKey();
+			for (Object entry : content.entrySet()) {
+				
+				String term = (String)((Map.Entry)entry).getKey();
 				Vertex termV = graph.addVertex(nt(Term));
 				termV.property("literal", term);
-				List<Any> positionList = entry.getValue().asList();
+				List positionList = (List)((Map.Entry)entry).getValue();
 				termV.property("freq", positionList.size());
 				
 				termV.addEdge(rt(isPartOf), documentV);
 				
-				for (Any posEntry : positionList) {
-					int startOffset = posEntry.get("startOffset").as(Integer.class);
-					int endOffset = posEntry.get("endOffset").as(Integer.class);
-					int tokenOffset = posEntry.get("tokenOffset").as(Integer.class);
+				for (Object posEntry : positionList) {
+					int startOffset = ((Double)((Map)posEntry).get("startOffset")).intValue();
+					int endOffset = ((Double)((Map)posEntry).get("endOffset")).intValue();
+					int tokenOffset = ((Double)((Map)posEntry).get("tokenOffset")).intValue();
 					
 					Vertex positionV = graph.addVertex(nt(Position));
 					positionV.property(

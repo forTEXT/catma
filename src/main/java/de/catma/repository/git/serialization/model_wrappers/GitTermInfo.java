@@ -2,26 +2,16 @@ package de.catma.repository.git.serialization.model_wrappers;
 
 import de.catma.indexer.TermInfo;
 
+@SuppressWarnings("unused") // fields are accessed by reflection
 public class GitTermInfo {
 	
-	private TermInfo termInfo;
+	private int endOffset;
+	private int startOffset;
+	private int tokenOffset;
 
 	public GitTermInfo(TermInfo termInfo) {
-		super();
-		this.termInfo = termInfo;
+		this.endOffset = termInfo.getRange().getEndPoint();
+		this.startOffset = termInfo.getRange().getStartPoint();
+		this.tokenOffset = termInfo.getTokenOffset();
 	}
-
-	public int getTokenOffset() {
-		return termInfo.getTokenOffset();
-	}
-	
-	
-	public int getStartOffset() {
-		return termInfo.getRange().getStartPoint();
-	}
-
-	public int getEndOffset() {
-		return termInfo.getRange().getEndPoint();
-	}
-
 }

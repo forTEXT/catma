@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +15,8 @@ import java.util.logging.Logger;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 
-import com.jsoniter.JsonIterator;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractOrderedLayout;
@@ -44,30 +46,20 @@ import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<CorpusImportDocumentMetadata>>> {
-	public static class CorpusMetadata {
-		public String ID;
-		public String name;
-
-		@Override
-		public String toString() {
-			return name;
-		}
-	}
-	
 	private ProgressBar progressBar;
 	private TextField nameField;
 	private PasswordField passField;
 	private Button btListCorpora;
-	private Grid<CorpusMetadata> corporaGrid;
-	private ArrayList<CorpusMetadata> corpusMetadataList;
-	private ListDataProvider<CorpusMetadata> corpusMetadataProvider;
+	private Grid<CorpusImportMetadata> corporaGrid;
+	private ArrayList<CorpusImportMetadata> corpusMetadataList;
+	private ListDataProvider<CorpusImportMetadata> corpusMetadataProvider;
 	private Pair<File, List<CorpusImportDocumentMetadata>> result;
 	private final String tempDir;
 
 	public CorpusImportDialog(SaveCancelListener<Pair<File, List<CorpusImportDocumentMetadata>>> listener) throws IOException {
 		super("CATMA 5 Corpus Import", listener);
-		this.corpusMetadataList = new ArrayList<CorpusMetadata>();
-		this.corpusMetadataProvider = new ListDataProvider<CorpusMetadata>(this.corpusMetadataList);
+		this.corpusMetadataList = new ArrayList<CorpusImportMetadata>();
+		this.corpusMetadataProvider = new ListDataProvider<CorpusImportMetadata>(this.corpusMetadataList);
 		tempDir = ((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
 
 	}
@@ -79,7 +71,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 			Notification.show("Info", "Please select a Corpus from the list first!", Type.HUMANIZED_MESSAGE);
 		}
 		else {
-			final CorpusMetadata corpusMetadata = corporaGrid.getSelectedItems().iterator().next();
+			final CorpusImportMetadata corpusMetadata = corporaGrid.getSelectedItems().iterator().next();
 			BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
 			progressBar.setVisible(true);
 			progressBar.setIndeterminate(true);
@@ -144,7 +136,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		}
 	}
 
-	protected File getCorpusFile(CorpusMetadata corpusMetadata) throws Exception {
+	protected File getCorpusFile(CorpusImportMetadata corpusMetadata) throws Exception {
 		IDGenerator idGenerator = new IDGenerator();
 		
 		File tempFile = new File(new File(tempDir), idGenerator.generate());
@@ -153,7 +145,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 			tempFile.delete();
 		}
 		
-		try (InputStream is = getAPIInputStream("corpus/get?cid="+corpusMetadata.ID)) {
+		try (InputStream is = getAPIInputStream("corpus/get?cid="+corpusMetadata.getID())) {
 			try (FileOutputStream fos = new FileOutputStream(tempFile)) {
 				IOUtils.copy(is, fos);
 			}
@@ -162,25 +154,18 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		return tempFile;
 	}
 
-	private List<CorpusImportDocumentMetadata> getDocumentMetadata(CorpusMetadata corpusMetadata) throws Exception {
+	private List<CorpusImportDocumentMetadata> getDocumentMetadata(CorpusImportMetadata corpusMetadata) throws Exception {
 		List<CorpusImportDocumentMetadata> documentMetadataList = new ArrayList<>();
 		
-		try (InputStream is = getAPIInputStream("corpus/list?cid="+corpusMetadata.ID)) {
-			String corpusList = IOUtils.toString(is, "UTF-8");
-			// Streaming API is not threadsafe!
-			JsonIterator iter = JsonIterator.parse(corpusList);
-			iter.readObject(); //ID field
-			iter.readString(); //ID
-			iter.readObject(); //name field
-			iter.readString(); //name
-			iter.readObject(); //contents field
+		try (InputStream is = getAPIInputStream("corpus/list?cid="+corpusMetadata.getID())) {
 			
-			// content
-			while (iter.readArray()) {				
-				CorpusImportDocumentMetadata docMetadata = 
-					iter.read(CorpusImportDocumentMetadata.class);
-				
-				documentMetadataList.add(docMetadata);
+			Gson gson = new Gson();
+			
+			
+			String corpusContent = IOUtils.toString(is, "UTF-8");
+			CorpusImportMetadata corpusImportMetadata = gson.fromJson(corpusContent, CorpusImportMetadata.class);
+			for (CorpusImportDocumentMetadata corpusImportDocumentMetadata : corpusImportMetadata.getContents()) {
+				documentMetadataList.add(corpusImportDocumentMetadata);
 			}
 		}
 		
@@ -201,13 +186,13 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		btListCorpora.addClickListener(event -> handleListCorpora());
 		credentialPanel.addComponent(btListCorpora);
 		
-		corporaGrid = new Grid<CorpusMetadata>(corpusMetadataProvider);
+		corporaGrid = new Grid<CorpusImportMetadata>(corpusMetadataProvider);
 		corporaGrid.setSizeFull();
-		corporaGrid.addColumn(cm -> cm.ID).setCaption("ID").setExpandRatio(1);
-		corporaGrid.addColumn(cm -> cm.name).setCaption("Name").setExpandRatio(2);
+		corporaGrid.addColumn(cm -> cm.getID()).setCaption("ID").setExpandRatio(1);
+		corporaGrid.addColumn(cm -> cm.getName()).setCaption("Name").setExpandRatio(2);
 		
-		ActionGridComponent<Grid<CorpusMetadata>> corporaActionGridComponent = 
-				new ActionGridComponent<Grid<CorpusMetadata>>(new Label("Available Corpora"), corporaGrid);		
+		ActionGridComponent<Grid<CorpusImportMetadata>> corporaActionGridComponent = 
+				new ActionGridComponent<Grid<CorpusImportMetadata>>(new Label("Available Corpora"), corporaGrid);		
 		corporaActionGridComponent.setMargin(false);
 		corporaActionGridComponent.getActionGridBar().setAddBtnVisible(false);
 		corporaActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
@@ -229,13 +214,12 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 			corpusMetadataList.clear();
 			try (InputStream is = getAPIInputStream("corpus/list")) {
 				String corpusList = IOUtils.toString(is, "UTF-8");
-				// Streaming API is not threadsafe!
-				JsonIterator iter = JsonIterator.parse(corpusList);
-				while (iter.readArray()) {				
-					CorpusMetadata corpusMetadata = 
-						iter.read(CorpusMetadata.class);
-					this.corpusMetadataList.add(corpusMetadata);
-				}
+				
+				Gson gson = new Gson();
+				java.lang.reflect.Type collectionType = new TypeToken<Collection<CorpusImportMetadata>>(){}.getType();
+				Collection<CorpusImportMetadata> buffer = gson.fromJson(corpusList, collectionType);
+				
+				this.corpusMetadataList.addAll(buffer);
 			}
 		}
 		catch (Exception e) {

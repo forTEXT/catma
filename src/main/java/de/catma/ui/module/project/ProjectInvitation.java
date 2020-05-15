@@ -4,9 +4,6 @@ import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.Set;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
-
 import de.catma.rbac.RBACRole;
 import de.catma.util.DammAlgorithm;
 
@@ -19,16 +16,19 @@ public final class ProjectInvitation implements Serializable {
 
 	private static final long serialVersionUID = 6455694878222463900L;
 	
-	private final String projectId;
-	private final String name;
-	private final String description;
-	private final int defaultRole;
-	private final boolean createOwnCollection;
-	private final Set<String> documentIds;
-	private final int key;
+	private String projectId;
+	private String name;
+	private String description;
+	private int defaultRole;
+	private boolean createOwnCollection;
+	private Set<String> documentIds;
+	private int key;
 	
 	private static final int generateKey(){
 		return DammAlgorithm.padChecksum(new SecureRandom().nextInt(99999));
+	}
+	
+	public ProjectInvitation() {
 	}
 	
 	public ProjectInvitation(
@@ -40,15 +40,14 @@ public final class ProjectInvitation implements Serializable {
 		
 	}
 	
-	@JsonCreator
 	public ProjectInvitation(
-			@JsonProperty("projectId") String projectId, 
-			@JsonProperty("defaultRole") int defaultRole,
-			@JsonProperty("name") String name,
-			@JsonProperty("description") String description,
-			@JsonProperty("createOwnCollection") boolean createOwnCollection,
-			@JsonProperty("documentIds") Set<String> documentIds,
-			@JsonProperty("key") int key) {
+			String projectId, 
+			int defaultRole,
+			String name,
+			String description,
+			boolean createOwnCollection,
+			Set<String> documentIds,
+			int key) {
 		
 		this.projectId = projectId;
 		this.defaultRole = defaultRole;

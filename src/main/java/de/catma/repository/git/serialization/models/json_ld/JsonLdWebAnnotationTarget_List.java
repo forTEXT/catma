@@ -15,6 +15,7 @@ public class JsonLdWebAnnotationTarget_List {
 	// we use the TreeSet type so that we get automatic sorting (JsonLdWebAnnotationTarget implements the Comparable
 	// interface)
 	private TreeSet<JsonLdWebAnnotationTarget> items;
+	private String type = "List";
 
 	public JsonLdWebAnnotationTarget_List() {
 		this.items = new TreeSet<>();
@@ -27,7 +28,7 @@ public class JsonLdWebAnnotationTarget_List {
 	}
 
 	public String getType() {
-		return "List";
+		return this.type;
 	}
 
 	public TreeSet<JsonLdWebAnnotationTarget> getItems() {

@@ -104,7 +104,7 @@ public class TagsView extends HugeCard {
 		            		.ifPresent(tagsetDataItem -> {
 		            			TagDataItem tagDataItem = 
 		            					new TagDataItem(tag, tagsetDataItem.isEditable());
-		            			if (!tagsetData.contains(tagsetDataItem)) {
+		            			if (!tagsetData.contains(tagDataItem)) {
 			            			tagsetData.addItem(
 			            					tagsetDataItem, tagDataItem);
 			            			tagsetDataProvider.refreshAll();

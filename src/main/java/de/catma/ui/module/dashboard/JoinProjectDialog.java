@@ -5,9 +5,9 @@ import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
+import com.google.gson.Gson;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
-import com.jsoniter.JsonIterator;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -184,7 +184,7 @@ public class JoinProjectDialog extends Window {
 			if(DammAlgorithm.validate(code)){
 				String marshalledInvitation = invitationCache.get(code);
 				if(marshalledInvitation != null) {
-					invitation = JsonIterator.deserialize(marshalledInvitation, ProjectInvitation.class);
+					invitation = new Gson().fromJson(marshalledInvitation, ProjectInvitation.class);
 					
 					tfCode.setReadOnly(true);
 					tfName.setValue(invitation.getName());
