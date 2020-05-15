@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -145,7 +146,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 			tempFile.delete();
 		}
 		
-		try (InputStream is = getAPIInputStream("corpus/get?cid="+corpusMetadata.getID())) {
+		try (InputStream is = getAPIInputStream("corpus/get?cid="+corpusMetadata.getID()+"&format=xml,tei")) {
 			try (FileOutputStream fos = new FileOutputStream(tempFile)) {
 				IOUtils.copy(is, fos);
 			}
@@ -250,7 +251,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
 
-		URL url = new URL(CATMAPropertyKey.CATMA5API.getValue(CATMAPropertyKey.CATMA5API.getDefaultValue())+apiPath);
+		URL url = new URL(CATMAPropertyKey.CATMA5API.getValue(CATMAPropertyKey.CATMA5API.getDefaultValue())+URLEncoder.encode(apiPath, "UTF-8"));
 		URLConnection urlConnection = url.openConnection();
 		
 		urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);	
