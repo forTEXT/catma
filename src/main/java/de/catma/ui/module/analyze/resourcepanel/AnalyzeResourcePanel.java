@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -16,6 +17,7 @@ import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -48,7 +50,8 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
 	private EventBus eventBus;
 	private CorpusChangedListener corpusChangedListener;
-
+	private Set<DocumentTreeItem> lastSelection = new HashSet<DocumentTreeItem>();
+	
 	public AnalyzeResourcePanel(EventBus eventBus, Project project, Corpus corpus, CorpusChangedListener corpusChangedListener) {
 		this.eventBus = eventBus;
 		eventBus.register(this);
@@ -278,12 +281,20 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	}
 
 	private void initActions() {
+		
 		documentTree.addSelectionListener(new SelectionListener<DocumentTreeItem>() {
 			@Override
 			public void selectionChange(SelectionEvent<DocumentTreeItem> event) {
 				if (event.isUserOriginated()) {
 					Set<DocumentTreeItem> selectedItems = new HashSet<>(event.getAllSelectedItems());
-					for (DocumentTreeItem item : documentData.getRootItems()) {
+					
+					Set<DocumentTreeItem> deselectedRootItems = 
+						lastSelection
+						.stream()
+						.filter(item -> !event.getAllSelectedItems().contains(item) && item instanceof DocumentDataItem)
+						.collect(Collectors.toSet());
+					
+					for (DocumentTreeItem item : deselectedRootItems) {
 						if (!event.getAllSelectedItems().contains(item)) {
 							documentData.getChildren(item).forEach(child -> {
 								documentTree.deselect(child);
@@ -291,7 +302,11 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 							});
 						}
 					}
+					
 					selectedItems.forEach(item -> item.ensureSelectedParent(documentTree));
+					lastSelection.clear();
+					lastSelection.addAll(documentTree.getSelectedItems());
+					
 					corpusChangedListener.corpusChanged();
 				}
 			}
