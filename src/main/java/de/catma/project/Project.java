@@ -391,4 +391,6 @@ public interface Project {
 
 	boolean inProjectHistory(String resourceId) throws IOException;
 
+	void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
+
 }

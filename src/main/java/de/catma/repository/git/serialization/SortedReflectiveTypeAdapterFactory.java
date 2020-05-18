@@ -29,6 +29,9 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
+
 public final class SortedReflectiveTypeAdapterFactory implements TypeAdapterFactory {
 	
 	final static class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
@@ -138,8 +141,15 @@ public final class SortedReflectiveTypeAdapterFactory implements TypeAdapterFact
 	    }
 	    
 	    //mpetris: we handle only our own types
-	    if (!type.getRawType().getPackage().getName().startsWith("de.catma")) {
+	    if (raw.getPackage() == null || !raw.getPackage().getName().startsWith("de.catma")) {
 	    	return null;
+	    }
+	    
+	    if (FileOSType.class.isAssignableFrom(raw)) {
+	    	return (TypeAdapter<T>) new FileOSTypeAdapter();
+	    }
+	    if (FileType.class.isAssignableFrom(raw)) {
+	    	return (TypeAdapter<T>) new FileTypeAdapter();
 	    }
 
 	    ObjectConstructor<T> constructor = constructorConstructor.get(type);

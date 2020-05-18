@@ -126,7 +126,9 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	}
 	
 	public Iterator<TagDefinition> iterator() {
-		return Collections.unmodifiableCollection(tagDefinitions.values()).iterator();
+		return new RootsFirstDepthFirstIterator(this);
+		
+//		return Collections.unmodifiableCollection(tagDefinitions.values()).iterator();
 	}
 	
 	public String getName() {

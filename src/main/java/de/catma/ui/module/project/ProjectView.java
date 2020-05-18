@@ -85,6 +85,7 @@ import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
@@ -410,7 +411,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", mi -> handleSynchronizeRequest());
         MenuItem miImportCorpus = hugeCardMoreOptions.addItem("Import CATMA 5 Corpus", mi -> handleCorpusImport());
-        miImportCorpus.setVisible(Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
+        miImportCorpus.setVisible(CATMAPropertyKey.EXPERT.getValue(false) 
+        		|| Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
         
 
         //TODO:

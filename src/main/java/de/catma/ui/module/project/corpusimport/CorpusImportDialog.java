@@ -82,7 +82,8 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 				@Override
 				public Pair<File, List<CorpusImportDocumentMetadata>> call() throws Exception {
 					
-					File corpusFile = getCorpusFile(corpusMetadata);
+//					File corpusFile = getCorpusFile(corpusMetadata);
+					File corpusFile = new File("c:/test/Kleist_Dramen_Dracor2005161017.tar.gz");
 					
 					return new Pair<>(corpusFile, null);
 				}
@@ -251,7 +252,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
 
-		URL url = new URL(CATMAPropertyKey.CATMA5API.getValue(CATMAPropertyKey.CATMA5API.getDefaultValue())+URLEncoder.encode(apiPath, "UTF-8"));
+		URL url = new URL(CATMAPropertyKey.CATMA5API.getValue(CATMAPropertyKey.CATMA5API.getDefaultValue())+apiPath);
 		URLConnection urlConnection = url.openConnection();
 		
 		urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);	

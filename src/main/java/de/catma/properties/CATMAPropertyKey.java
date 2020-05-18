@@ -64,7 +64,8 @@ public enum CATMAPropertyKey {
 	
 	SpamProtectionAnswer, 
 	SpamProtectionQuestion, 
-	CATMA5API("https://portal.catma.de/catma/api/"),
+	CATMA5API("https://portal.catma.de/catma/api/"), 
+	EXPERT("false"),
 	;
 
 	private final String defaultValue;

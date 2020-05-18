@@ -103,6 +103,8 @@ class GraphWriter {
 		tagV.property("name", tag.getName());
 		tagV.property("tag", tag);
 		
+		logVertex(tagV);
+		
 		tagsetV.addEdge(rt(hasTag), tagV);
 		
 		if (parentTagV != null) {
@@ -121,7 +123,7 @@ class GraphWriter {
 		propertyDefV.property("name", propertyDef.getName());
 		propertyDefV.property("values", propertyDef.getPossibleValueList());
 		
-		logVertex(propertyDefV);
+//		logVertex(propertyDefV);
 		
 		tagV.addEdge(rt(hasProperty), propertyDefV);
 	}
@@ -143,10 +145,20 @@ class GraphWriter {
 			for (TagDefinition tag : tagset) {
 				if (!tag.getParentUuid().isEmpty()) {
 					Vertex tagV = g.V(tagsetV).outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getUuid()).next();
-				
-					Vertex parentTagV = g.V(tagsetV).outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getParentUuid()).next();
-					
-					tagV.addEdge(rt(hasParent), parentTagV);
+					GraphTraversal<Vertex, Vertex> traversal = g.V(tagsetV).outE(rt(hasTag)).inV().has(nt(Tag), "tagId", tag.getParentUuid());
+					if (traversal.hasNext()) {
+						Vertex parentTagV = traversal.next();
+						
+						tagV.addEdge(rt(hasParent), parentTagV);
+					}
+					else {
+						throw new IllegalStateException(
+							String.format(
+								"Couldn't find parent for Tag %1$s with parent ID %2$s in Tagset %3$s", 
+								tag.toString(), 
+								tag.getParentUuid(),
+								tagset.toString()));
+					}
 				}
 			}
 			

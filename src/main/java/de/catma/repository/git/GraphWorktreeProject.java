@@ -828,6 +828,11 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void insert(SourceDocument sourceDocument) throws IOException {
+		insert(sourceDocument, true);
+	}
+	
+	@Override
+	public void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException {
 		try {
 			File sourceTempFile = Paths.get(new File(this.tempDir).toURI()).resolve(sourceDocument.getUuid()).toFile();
 	
@@ -886,7 +891,9 @@ public class GraphWorktreeProject implements IndexedProject {
 				sourceDocument.setRevisionHash(sourceDocRevisionHash);
 			}
 			
-			sourceTempFile.delete();
+			if (deleteTempFile) {
+				sourceTempFile.delete();
+			}
 
 			String oldRootRevisionHash = this.rootRevisionHash;
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
@@ -1349,9 +1356,9 @@ public class GraphWorktreeProject implements IndexedProject {
 						TagsetDefinition existingTagset = 
 							getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid());
 						
-						for (TagDefinition incomingTag : tagset) {// FIXME: roots first depth first
-							if (tagsetDefinitionImportStatus.passesUpdateFilter(incomingTag.getUuid())) {
-								if (existingTagset.hasTagDefinition(incomingTag.getUuid())) {
+						for (TagDefinition incomingTag : tagset) {
+							if (existingTagset.hasTagDefinition(incomingTag.getUuid())) {
+								if (tagsetDefinitionImportStatus.passesUpdateFilter(incomingTag.getUuid())) {
 									TagDefinition existingTag = existingTagset.getTagDefinition(incomingTag.getUuid());
 									for (PropertyDefinition incomingPropertyDef : incomingTag.getUserDefinedPropertyDefinitions()) {
 										PropertyDefinition existingPropertyDef = 
@@ -1376,9 +1383,9 @@ public class GraphWorktreeProject implements IndexedProject {
 									}
 		
 								}
-								else {
-									getTagManager().addTagDefinition(existingTagset, incomingTag);
-								}
+							}
+							else {
+								getTagManager().addTagDefinition(existingTagset, incomingTag);
 							}
 						}
 						
