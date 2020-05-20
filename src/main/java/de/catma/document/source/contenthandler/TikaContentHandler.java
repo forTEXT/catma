@@ -16,6 +16,8 @@ public class TikaContentHandler extends AbstractSourceContentHandler {
 	@Override
 	public void load(InputStream is) throws IOException {
 		Tika tika = new Tika();
+		tika.setMaxStringLength(-1);
+		
 		Metadata metadata = new Metadata();
 		MediaType type = MediaType.parse(getSourceDocumentInfo().getTechInfoSet().getMimeType());
 		
@@ -29,6 +31,8 @@ public class TikaContentHandler extends AbstractSourceContentHandler {
 	        // some texts seem to include non valid unicode characters
 	        // and this causes problems when converting text to HTML
 	        // for GUI delivery and during indexing 
+//			setContent(
+//					tika.parseToString(is, metadata));
 			setContent(
 				tika.parseToString(is, metadata).replaceAll(
 					"[^\\x09\\x0A\\x0D\\x20-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]", "?"));
