@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * A definition of a tag. That is a type of a {@link TagInstance}.
@@ -233,5 +234,7 @@ public class TagDefinition {
 		return true;
 	}
 	
-	
+	Stream<TagDefinition> directChildrenStream(TagsetDefinition tagset) {
+		return Stream.concat(Stream.of(this), tagset.getDirectChildren(this).stream().flatMap(child -> child.directChildrenStream(tagset)));
+	}
 }

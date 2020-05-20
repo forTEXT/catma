@@ -57,7 +57,7 @@ public class TeiTagLibrarySerializer {
 		
 		TeiElement fsDecl = new TeiElement(TeiElementName.fsDecl);
 		fsDecl.setID(td.getUuid());
-		fsDecl.setAttributeValue(Attribute.n, new Version().toString());
+		fsDecl.setAttributeValue(Attribute.n, new Version().toString()); // TODO: to be backward compatible will be replaced by the revision hash
 		fsDecl.setAttributeValue(Attribute.type, td.getUuid());
 		if (!td.getParentUuid().isEmpty()) {
 			fsDecl.setAttributeValue(Attribute.fsDecl_baseTypes, td.getParentUuid());

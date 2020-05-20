@@ -42,7 +42,8 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private String uuid;
 	private String name;
-	private Version version;
+	@Deprecated
+	private Version version; // TODO: obsolete
 	private String revisionHash;
 	private Map<String,TagDefinition> tagDefinitions;
 	private Map<String,Set<String>> tagDefinitionChildren;
@@ -126,9 +127,7 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	}
 	
 	public Iterator<TagDefinition> iterator() {
-		return new RootsFirstDepthFirstIterator(this);
-		
-//		return Collections.unmodifiableCollection(tagDefinitions.values()).iterator();
+		return this.stream().iterator();
 	}
 	
 	public String getName() {
@@ -325,7 +324,6 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	}
 
 	public Stream<TagDefinition> stream() {
-		return tagDefinitions.values().stream();
+		return getRootTagDefinitions().stream().flatMap(root -> root.directChildrenStream(this));
 	}
-	
 }
