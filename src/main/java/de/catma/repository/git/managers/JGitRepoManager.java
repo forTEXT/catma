@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,8 +57,6 @@ import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.submodule.SubmoduleWalk.IgnoreSubmoduleMode;
 import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.PushResult;
-import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.util.FS;
 
 import de.catma.project.conflict.DeletedResourceConflict;
@@ -664,20 +662,20 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
 
-		try {
+//		try {
 			PushCommand pushCommand = this.gitApi.push();
 			pushCommand.setCredentialsProvider(credentialsProvider);
 			pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
-			Iterable<PushResult> pushResults = pushCommand.call();
-			for (PushResult pushResult : pushResults) {
-				for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
-					System.out.println(remoteRefUpdate);
-				}
-			}
-		}
-		catch (GitAPIException e) {
-			throw new IOException("Failed to push", e);
-		}
+//			Iterable<PushResult> pushResults = pushCommand.call();
+//			for (PushResult pushResult : pushResults) {
+//				for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
+//					System.out.println(remoteRefUpdate);
+//				}
+//			}
+//		}
+//		catch (GitAPIException e) {
+//			throw new IOException("Failed to push", e);
+//		}
 	}
 
 	/**
@@ -1214,20 +1212,42 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			// get base version
 			DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
 
-			// get our version
-			DirCacheEntry ourEntry = dirCache.getEntry(baseIdx+1);
+			Set<String> baseModules = null;
+			Set<String> ourModules = null;
+			Set<String> theirModules = null;
+
+			Config ourConfig = null;
+			Config theirConfig = null;
 			
-			// get their version, the being-merged in version
-			DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2);
-			
-			Config baseConfig = getDotGitModulesConfig(baseEntry.getObjectId());
-			Config ourConfig = getDotGitModulesConfig(ourEntry.getObjectId());
-			Config theirConfig = getDotGitModulesConfig(theirEntry.getObjectId());
-			
-			
-			Set<String> baseModules = baseConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
-			Set<String> ourModules = ourConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
-			Set<String> theirModules = theirConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+			if (baseEntry.getStage() == DirCacheEntry.STAGE_1) {
+				// get our version
+				DirCacheEntry ourEntry = dirCache.getEntry(baseIdx+1);
+				// get their version, the being-merged in version
+				DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2);
+
+				
+				Config baseConfig = getDotGitModulesConfig(baseEntry.getObjectId());
+
+				ourConfig = getDotGitModulesConfig(ourEntry.getObjectId());
+
+				theirConfig = getDotGitModulesConfig(theirEntry.getObjectId());
+				
+				baseModules = baseConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+				ourModules = ourConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+				theirModules = theirConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+				
+			}
+			else if (baseEntry.getStage() == DirCacheEntry.STAGE_2) { // no common ancestor
+				DirCacheEntry ourEntry = baseEntry;
+				DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+1);
+				
+				ourConfig = getDotGitModulesConfig(ourEntry.getObjectId());
+				theirConfig = getDotGitModulesConfig(theirEntry.getObjectId());
+				
+				baseModules = new HashSet<String>();
+				ourModules = ourConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+				theirModules = theirConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+			}
 			
 			for (String name : theirModules) {
 				if (!ourModules.contains(name)) {
