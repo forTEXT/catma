@@ -40,7 +40,6 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.serialization.TagsetDefinitionImportStatus;
-import de.catma.serialization.AnnotationCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -392,5 +391,7 @@ public interface Project {
 	boolean inProjectHistory(String resourceId) throws IOException;
 
 	void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
+
+	List<CommitInfo> getUnsynchronizedChanges() throws Exception;
 
 }

@@ -11,6 +11,7 @@ import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
+import de.catma.project.CommitInfo;
 import de.catma.project.conflict.DeletedResourceConflict;
 
 public interface ILocalGitRepositoryManager extends AutoCloseable {
@@ -103,6 +104,8 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	MergeResult mergeWithDeletedByThemWorkaroundStrategyRecursive(String branch) throws IOException;
 
 	void keepSubmodule(String relativeModulePath, String submoduleUri) throws Exception;
+
+	List<CommitInfo> getUnsynchronizedChanges() throws Exception;
 
 
 }

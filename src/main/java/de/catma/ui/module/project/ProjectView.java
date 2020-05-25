@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
@@ -43,6 +44,8 @@ import com.vaadin.server.FileDownloader;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.server.StreamResource;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
@@ -75,6 +78,7 @@ import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.TikaContentHandler;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.indexer.IndexedProject;
+import de.catma.project.CommitInfo;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
@@ -103,6 +107,7 @@ import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
 import de.catma.ui.component.HTMLNotification;
+import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
@@ -178,6 +183,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private PropertyChangeListener projectExceptionListener;
 	private MenuItem miInvite;
 	private ProgressBar progressBar;
+
+	private Button synchBell;
 
     public ProjectView(
     		ProjectManager projectManager, 
@@ -406,6 +413,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				new FileDownloader(tagsetCsvExportResource);
 	
 		tagsetCsvExportFileDownloader.extend(miExportTagsetsAsCSV);
+		
+		
+		moreOptionsMenu.addItem("Fork Tagsets into another Project", miForkTagset -> handleForkTagsetRequest());
         
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
@@ -415,6 +425,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		|| Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
         
 
+        synchBell.addClickListener(event -> handleSynchBellClick(event));
+        
         //TODO:
 //        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
         
@@ -441,6 +453,48 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         
 	}
+	
+	private void handleSynchBellClick(ClickEvent event) {
+//		event.getComponent().
+		
+		try {
+			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedChanges();
+			UnsychronizedChangesDialog dlg = new UnsychronizedChangesDialog(unsynchronizedChanges);
+			dlg.show(event.getClientX(), event.getClientY());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+
+	
+	}
+
+	
+	private void handleForkTagsetRequest() {
+		Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
+		
+		if (tagsets.isEmpty()) {
+			Notification.show("Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
+		try {
+			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedChanges();
+			
+			
+			for (CommitInfo ci : unsynchronizedChanges) {
+				System.out.println(ci.getCommitMsg().replaceAll(Pattern.quote("with")+"\\s+" + Pattern.quote("ID") + "\\s+\\S+\\s?", ""));
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
 	private void handleCorpusImport() {
 		try {
 	    	if (project.hasUncommittedChanges()) {
@@ -1327,6 +1381,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
+        
+        synchBell = new IconButton(VaadinIcons.BELL);
+        synchBell.addStyleName("project-view-synch-bell");
+        getHugeCardBar().addComponentBeforeMoreOptions(synchBell);
+        
+        try {
+			synchBell.setVisible(!project.getUnsynchronizedChanges().isEmpty());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     private void handleProjectInvitationRequest() {

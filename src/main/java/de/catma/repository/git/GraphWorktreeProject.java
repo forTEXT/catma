@@ -50,6 +50,7 @@ import de.catma.indexer.IndexedProject;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
+import de.catma.project.CommitInfo;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
 import de.catma.project.event.ChangeType;
@@ -1435,6 +1436,11 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public boolean hasUncommittedChanges() throws Exception {
 		return gitProjectHandler.hasUncommittedChanges();
+	}
+	
+	@Override
+	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
+		return gitProjectHandler.getUnsynchronizedChanges();
 	}
 
 	@Override

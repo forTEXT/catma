@@ -3,6 +3,7 @@ package de.catma.ui.component.hugecard;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 
@@ -33,6 +34,7 @@ public class HugeCardBar extends HorizontalLayout {
     	
         Label headerText = new Label(title);
         addComponent(headerText);
+        setExpandRatio(headerText, 1.0f);
         addComponent(btMoreOptions);
         setComponentAlignment(btMoreOptions, Alignment.MIDDLE_RIGHT);
     }
@@ -42,4 +44,8 @@ public class HugeCardBar extends HorizontalLayout {
     	this.btMoreOptions.setVisible(visible);
     }
 
+    public void addComponentBeforeMoreOptions(Component comp) {
+    	addComponent(comp, getComponentIndex(btMoreOptions));
+    	setComponentAlignment(comp, Alignment.MIDDLE_RIGHT);
+    }
 }

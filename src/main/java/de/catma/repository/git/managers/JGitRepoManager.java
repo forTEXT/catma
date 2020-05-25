@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +21,7 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.PullResult;
@@ -61,6 +61,7 @@ import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.util.FS;
 
+import de.catma.project.CommitInfo;
 import de.catma.project.conflict.DeletedResourceConflict;
 import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -1332,6 +1333,41 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new JGitInternalException(e.getMessage(), e);
 		}
 		
+	}
+	
+	@Override
+	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
+		List<CommitInfo> result = new ArrayList<>();
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `hasUnsynchronizedChanges` on a detached instance");
+		}		
+	
+		try {
+			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
+			Iterable<RevCommit> commits = null;
+			
+			if (refs.isEmpty()) {
+				// project never synchronized
+				
+				commits = this.gitApi.log().call();
+			}
+			else {
+				commits = this.gitApi.log().addRange(
+						this.gitApi.getRepository().resolve("refs/remotes/origin/master"), 
+						this.gitApi.getRepository().resolve("refs/heads/master")).call();
+			}
+			
+			
+			for (RevCommit c : commits) {
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+			}
+			
+		} catch (GitAPIException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return result;
 	}
 	
 	

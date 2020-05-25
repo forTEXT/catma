@@ -34,6 +34,7 @@ import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.indexer.TermInfo;
+import de.catma.project.CommitInfo;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.project.conflict.DeletedResourceConflict;
@@ -999,6 +1000,14 @@ public class GitProjectHandler {
 		}
 	}
 
+	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			return localGitRepoManager.getUnsynchronizedChanges();
+		}		
+	}
+	
 	public void synchronizeTagsetWithRemote(String tagsetId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
