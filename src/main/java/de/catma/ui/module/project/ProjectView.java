@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
@@ -159,6 +158,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		;
 	}
 
+	private Logger logger = Logger.getLogger(ProjectView.class.getName());
 	private final TagManager tagManager;
 
 	private ProjectManager projectManager;
@@ -184,7 +184,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private MenuItem miInvite;
 	private ProgressBar progressBar;
 
-	private Button synchBell;
+	private Button btSynchBell;
+	private final ProgressListener progressListener;
 
     public ProjectView(
     		ProjectManager projectManager, 
@@ -196,6 +197,24 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		TagLibrary tagLibrary = new TagLibrary();
 		this.tagManager = new TagManager(tagLibrary);
 
+		
+		final UI ui = UI.getCurrent();
+		this.progressListener = new ProgressListener() {
+			
+			@Override
+			public void setProgress(String value, Object... args) {
+				ui.accessSynchronously(() -> {
+	            	if (args != null) {
+	            		progressBar.setCaption(String.format(value, args));
+	            	}
+	            	else {
+	            		progressBar.setCaption(value);
+	            	}
+	            	ui.push();
+				});
+			}
+		};
+		
 
         initProjectListeners();
 
@@ -239,6 +258,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			TagsetDefinition tagset = (TagsetDefinition)newValue;
 			tagsetData.refreshItem(tagset);
 		}
+		
+		btSynchBell.setVisible(true);
 	}
 	
 	@Subscribe
@@ -280,6 +301,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		else {
 			initData();
 		}
+		
+		btSynchBell.setVisible(true);
 	}
 
 	private void initActions() {
@@ -425,7 +448,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		|| Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
         
 
-        synchBell.addClickListener(event -> handleSynchBellClick(event));
+        btSynchBell.addClickListener(event -> handleBtSynchBellClick(event));
         
         //TODO:
 //        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
@@ -454,22 +477,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
 	}
 	
-	private void handleSynchBellClick(ClickEvent event) {
-//		event.getComponent().
-		
+	private void handleBtSynchBellClick(ClickEvent event) {
 		try {
-			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedChanges();
-			UnsychronizedChangesDialog dlg = new UnsychronizedChangesDialog(unsynchronizedChanges);
-			dlg.show(event.getClientX(), event.getClientY());
+			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedCommits();
+			UnsychronizedCommitsDialog dlg = 
+				new UnsychronizedCommitsDialog(
+						unsynchronizedChanges, ()->handleSynchronizeRequest());
+			dlg.show();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Checking for unsynchronized changes failed!", e);
 		}
-		
-		
-		
-
-	
 	}
 
 	
@@ -482,17 +499,90 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 		
 		try {
-			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedChanges();
-			
-			
-			for (CommitInfo ci : unsynchronizedChanges) {
-				System.out.println(ci.getCommitMsg().replaceAll(Pattern.quote("with")+"\\s+" + Pattern.quote("ID") + "\\s+\\S+\\s?", ""));
+			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedCommits();
+			if (!unsynchronizedChanges.isEmpty()) {
+				ConfirmDialog.show(
+					UI.getCurrent(), 
+					"Unsynchronized commits", 
+					String.format(
+						"You have %1$d unsynchronized commit%2$s! "
+						+ "Forked Tagsets will only contain synchronized changes, "
+						+ "so you might want to synchronize first!", unsynchronizedChanges.size(), unsynchronizedChanges.size()==1?"":"s"), 
+					"Synch the Project now", 
+					"Continue without", dlg -> {
+						if (dlg.isConfirmed()) {
+							handleSynchronizeRequest();
+						}
+						else {
+							forkTagsets(tagsets);
+						}
+					});
+			}
+			else {
+				forkTagsets(tagsets);
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Checking for unsynchronized changes failed!", e);
 		}
+	}
 
+	private void forkTagsets(Set<TagsetDefinition> tagsets) {
+		try {
+			SelectProjectDialog selectProjectDialog = new SelectProjectDialog(
+				projectManager, eventBus,
+				projectManager.getProjectReferences(RBACPermission.TAGSET_CREATE_OR_UPLOAD)
+					.stream()
+					.filter(ref -> !ref.getProjectId().equals(this.project.getProjectId()))
+					.collect(Collectors.toList()), 
+				new SaveCancelListener<ProjectReference>() {
+	
+				@Override
+				public void savePressed(ProjectReference targetProject) {
+					new ForkHandler(
+						UI.getCurrent(),
+						project.getProjectId(),
+						projectManager,
+						tagsets,
+						targetProject,
+						new ExecutionListener<Void>() {
+	
+							@Override
+							public void done(Void result) {
+				            	setProgressBarVisible(false);
+				            	setEnabled(true);
+							}
+							@Override
+							public void error(Throwable t) {
+				            	setProgressBarVisible(false);
+				            	setEnabled(true);
+				    			Logger.getLogger(ProjectView.class.getName()).log(
+				    					Level.SEVERE, 
+				    					"Error forking Tagsets!", 
+				    					t);
+				    			String errorMsg = t.getMessage();
+				    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
+				    				errorMsg = "";
+				    			}
+			
+				    			Notification.show(
+				    				"Error", 
+				    				String.format(
+				    						"Error forking Tagsets! "
+				    						+ "This import will be aborted!\n The underlying error message was:\n%1$s", 
+				    						errorMsg), 
+				    				Type.ERROR_MESSAGE);					
+							}
+						},
+						progressListener).fork();
+				} 
+				
+			});
+			
+			selectProjectDialog.show();
+		}
+		catch (Exception e) {
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading Project references!", e);
+		}
 	}
 
 	private void handleCorpusImport() {
@@ -575,21 +665,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    				Type.ERROR_MESSAGE);					
 					}
 				},
-				new ProgressListener() {
-					
-					@Override
-					public void setProgress(String value, Object... args) {
-						ui.accessSynchronously(() -> {
-			            	if (args != null) {
-			            		progressBar.setCaption(String.format(value, args));
-			            	}
-			            	else {
-			            		progressBar.setCaption(value);
-			            	}
-			            	ui.push();
-						});
-					}
-				});
+				progressListener);
 		}
 		catch (Exception e) {
         	setProgressBarVisible(false);
@@ -823,6 +899,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     					"Info", 
     					"Your Project has been synchronized!", 
     					Type.HUMANIZED_MESSAGE);		    						
+				checkForUnsynchronizedCommits();
             }
             
             @Override
@@ -1239,21 +1316,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                errorHandler.showAndLogError("Error adding Documents", t);
 				}
 			},
-			new ProgressListener() {
-				
-				@Override
-				public void setProgress(String value, Object... args) {
-					ui.accessSynchronously(() -> {
-		            	if (args != null) {
-		            		progressBar.setCaption(String.format(value, args));
-		            	}
-		            	else {
-		            		progressBar.setCaption(value);
-		            	}
-		            	ui.push();
-					});
-				}
-			});
+			progressListener);
 
 	}
 	
@@ -1348,6 +1411,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		}
     	}
     }
+	
+	private void checkForUnsynchronizedCommits() {
+        
+        try {
+			btSynchBell.setVisible(!project.getUnsynchronizedCommits().isEmpty());
+		} catch (Exception e) {
+			String msg = "Checking for unsynchronized changes failed!";
+			logger.log(Level.SEVERE, msg, e);
+
+			Notification.show("Info", msg, Type.WARNING_MESSAGE);
+		}		
+	}
     
 
 	/* build the GUI */
@@ -1382,16 +1457,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
         
-        synchBell = new IconButton(VaadinIcons.BELL);
-        synchBell.addStyleName("project-view-synch-bell");
-        getHugeCardBar().addComponentBeforeMoreOptions(synchBell);
+        btSynchBell = new IconButton(VaadinIcons.BELL);
+        btSynchBell.addStyleName("project-view-synch-bell");
+        getHugeCardBar().addComponentBeforeMoreOptions(btSynchBell);
+        btSynchBell.setVisible(false);
         
-        try {
-			synchBell.setVisible(!project.getUnsynchronizedChanges().isEmpty());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
     }
 
     private void handleProjectInvitationRequest() {
@@ -1736,6 +1806,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 		tagsetChangeListener);
                 setEnabled(true);
                 reloadAll();
+                
+                checkForUnsynchronizedCommits();
             }
             
             @Override
@@ -1859,7 +1931,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			errorHandler.showAndLogError("Error trying to fetch role", e);
 		}        
     }
-
+    @Override
+    public void attach() {
+    	super.attach();
+    	if (project != null && !btSynchBell.isVisible()) {
+    		checkForUnsynchronizedCommits();
+    	}
+    }
     /**
      * handler for project selection
      */
@@ -1881,6 +1959,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     @Subscribe
     public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
     	initData();
+    	btSynchBell.setVisible(true);
     }
 
     @Subscribe

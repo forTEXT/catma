@@ -32,6 +32,10 @@ import de.catma.ui.module.main.ErrorHandler;
  * @author db
  */
 public class ProjectCard extends VerticalFlexLayout  {
+	
+	public interface ClickAction {
+		public void projectCardClicked(ProjectReference projectReference);
+	}
 
     private ProjectReference projectReference;
 
@@ -47,12 +51,30 @@ public class ProjectCard extends VerticalFlexLayout  {
 	private Label descriptionLabel;
 	private Label nameLabel;
 
-    ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventBus, IRBACManager rbacManager){
+	private final ClickAction clickAction;
+	
+	ProjectCard(ProjectReference projectReference, ProjectManager projectManager, 
+    		EventBus eventBus, IRBACManager rbacManager) {
+		this(projectReference, projectManager, eventBus, rbacManager, 
+				ref -> eventBus.post(new RouteToProjectEvent(ref, false)));
+	}
+	
+	public ProjectCard(ProjectReference projectReference, ProjectManager projectManager, 
+    		EventBus eventBus, ClickAction clickAction) {
+		this(projectReference, projectManager, eventBus, new NoopRBACManager(), 
+				ref -> clickAction.projectCardClicked(ref));
+	}
+
+    private ProjectCard(
+    		ProjectReference projectReference, ProjectManager projectManager, 
+    		EventBus eventBus, IRBACManager rbacManager, 
+    		ClickAction clickAction){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
         this.eventBus = eventBus;
         this.rbacManager = rbacManager;
         this.errorLogger = (ErrorHandler) UI.getCurrent();
+        this.clickAction = clickAction;
         initComponents();
         initData();
     }
@@ -60,9 +82,8 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 
     private void initData() {
-    	RBACRole projectRole;
 		try {
-			projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference.getProjectId());
+			RBACRole projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference.getProjectId());
 			rbacEnforcer.enforceConstraints(projectRole); // normally done in reload();
 		} catch (IOException e) {
             errorLogger.showAndLogError("can't fetch permissions" + projectReference.getName(), e);
@@ -194,8 +215,8 @@ public class ProjectCard extends VerticalFlexLayout  {
     }
 
     private void handleOpenProjectRequest() {
-    	eventBus.post(new RouteToProjectEvent(projectReference, false));
-	}
+    	clickAction.projectCardClicked(this.projectReference);
+    }
 
 
 

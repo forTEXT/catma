@@ -618,6 +618,7 @@ $v-focus-color: #5A98A1;
 		
 		.project-view-synch-bell {
 			color: yellow !important;
+			font-weight: bold;
 		}
 
         /* dashboard */
@@ -626,6 +627,12 @@ $v-focus-color: #5A98A1;
             background-color: white;
             overflow: auto;
         }
+
+		.select-project-dialog-list {
+			overflow: auto;
+			padding: 10px;
+			flex-wrap: wrap;
+		}
 
         /*
         * Projectlist in dashboard

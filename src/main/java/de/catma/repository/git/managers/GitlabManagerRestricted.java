@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -34,14 +35,17 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import de.catma.backgroundservice.BackgroundService;
+import de.catma.project.ForkStatus;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
+import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
+import de.catma.repository.git.ResourceAlreadyExistsException;
 import de.catma.repository.git.interfaces.IGitUserInformation;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.events.ChangeUserAttributeEvent;
@@ -261,10 +265,19 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 
 	@Override
 	public List<ProjectReference> getProjectReferences() throws IOException {
+		return getProjectReferences(AccessLevel.forValue(RBACRole.GUEST.getAccessLevel()));
+	}
+	
+	@Override
+	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException {
+		return getProjectReferences(AccessLevel.forValue(withPermission.getRoleRequired().getAccessLevel()));
+	}
+	
+	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
 		GroupApi groupApi = new GroupApi(restrictedGitLabApi);
 		try {
 			return projectsCache.get("projects", () -> 
-			 groupApi.getGroups(new GroupFilter().withMinAccessLevel(AccessLevel.GUEST))
+			 groupApi.getGroups(new GroupFilter().withMinAccessLevel(minAccessLevel))
 			 	.stream()
 			 	.map(group -> 
 			 		unmarshallProjectReference(group.getPath(),  group.getDescription()))
@@ -475,6 +488,46 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	@Override
 	public GitLabApi getGitLabApi() {
 		return restrictedGitLabApi;
+	}
+	
+	@Override
+	public ForkStatus forkResource(String resourceId, String sourceProjectId, String targetProjectId) throws IOException {
+		try {
+			Project sourceResourceProject = restrictedGitLabApi.getProjectApi().getProject(sourceProjectId, resourceId);
+			Optional<Project> optionalTargetResource = restrictedGitLabApi.getProjectApi().getOptionalProject(targetProjectId, resourceId);
+			if (optionalTargetResource.isPresent()) {
+				return ForkStatus.resourceAlreadyExists();
+			}
+			restrictedGitLabApi.getProjectApi().forkProject(sourceResourceProject, targetProjectId);
+			optionalTargetResource = restrictedGitLabApi.getProjectApi().getOptionalProject(targetProjectId, resourceId);
+			int tries = 10;
+			while (!optionalTargetResource.isPresent() && tries > 0) {
+				tries--;
+				
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					break;
+				}
+				logger.info(
+					String.format(
+						"Trying to retrieve forked resource %1$s from group %2$s (try %3$d)",
+						resourceId,
+						targetProjectId,
+						10-tries));
+				optionalTargetResource = restrictedGitLabApi.getProjectApi().getOptionalProject(targetProjectId, resourceId);
+			}
+			
+			if (!optionalTargetResource.isPresent()) {
+				logger.warning("Retrieval of forked resource failed! Trying to continue anyway!");
+			}
+			
+			return ForkStatus.success();
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+				String.format("Failed to fork resource %1$s from group %2$s into group %3$s", resourceId, sourceProjectId, targetProjectId), e);
+		}
 	}
 
 }

@@ -18073,11 +18073,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .project-view-synch-bell {
 	color: yellow !important;
+	font-weight: bold;
 }
 
 .catma .dashboard-view {
 	background-color: white;
 	overflow: auto;
+}
+
+.catma .select-project-dialog-list {
+	overflow: auto;
+	padding: 10px;
+	flex-wrap: wrap;
 }
 
 .catma .projectlist {

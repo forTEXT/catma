@@ -58,6 +58,8 @@ import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.submodule.SubmoduleWalk.IgnoreSubmoduleMode;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.util.FS;
 
 import de.catma.project.CommitInfo;
@@ -664,20 +666,20 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
 
-//		try {
+		try {
 			PushCommand pushCommand = this.gitApi.push();
 			pushCommand.setCredentialsProvider(credentialsProvider);
 			pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
-//			Iterable<PushResult> pushResults = pushCommand.call();
-//			for (PushResult pushResult : pushResults) {
-//				for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
-//					System.out.println(remoteRefUpdate);
-//				}
-//			}
-//		}
-//		catch (GitAPIException e) {
-//			throw new IOException("Failed to push", e);
-//		}
+			Iterable<PushResult> pushResults = pushCommand.call();
+			for (PushResult pushResult : pushResults) {
+				for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
+					System.out.println(remoteRefUpdate);
+				}
+			}
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to push", e);
+		}
 	}
 
 	/**

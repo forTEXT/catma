@@ -32,7 +32,7 @@ public class ProjectListView extends VerticalLayout {
 	private final Comparator<ProjectReference> sortByNameAsc = 
 			(ref1,ref2) -> String.CASE_INSENSITIVE_ORDER.compare(ref1.getName(), ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = 
-			(ref1,ref2) -> String.CASE_INSENSITIVE_ORDER.compare(ref1.getName(), ref2.getName());
+			(ref1,ref2) -> String.CASE_INSENSITIVE_ORDER.compare(ref1.getName(), ref2.getName())*-1;
 	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 	private final Set<String> deletedProjectIds;

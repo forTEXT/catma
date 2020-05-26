@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.catma.project.ForkStatus;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.user.Member;
@@ -108,6 +110,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @throws IOException
 	 */
 	List<ProjectReference> getProjectReferences() throws IOException;
+	List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException;
 
 	/**
 	 * finds the root project and constructs the URL
@@ -139,6 +142,9 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException ;
 
 	void updateGroup(String name, String path, String description) throws IOException;
+
+	ForkStatus forkResource(String resourceId, String sourceProjectId, String targetProjectId) throws IOException;
+
 
 
 }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -13,22 +14,27 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import com.google.common.eventbus.EventBus;
 
 import de.catma.backgroundservice.BackgroundService;
+import de.catma.project.ForkStatus;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.project.conflict.ConflictedProject;
 import de.catma.rbac.RBACPermission;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import elemental.json.Json;
 import elemental.json.JsonObject;
 
 public class GitProjectManager implements ProjectManager {
+	private final Logger logger = Logger.getLogger(getClass().getName());
+	
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 
@@ -139,6 +145,11 @@ public class GitProjectManager implements ProjectManager {
 	@Override
 	public List<ProjectReference> getProjectReferences() throws Exception {
 		return remoteGitServerManager.getProjectReferences();
+	}
+	
+	@Override
+	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws Exception {
+		return remoteGitServerManager.getProjectReferences(withPermission);
 	}
 
 	@Override
@@ -256,5 +267,55 @@ public class GitProjectManager implements ProjectManager {
 		
 		remoteGitServerManager.updateGroup(projectId, projectId, marshalledDescription);
 		
+	}
+	
+	@Override
+	public ForkStatus forkTagset(TagsetDefinition tagset, String sourceProjectId, ProjectReference targetProject) throws Exception {
+	
+		String targetProjectId = targetProject.getProjectId();
+		String tagsetId = tagset.getUuid();
+
+		cloneRootLocallyIfNotExists(targetProject, new OpenProjectListener() {
+			@Override
+			public void ready(Project project) {/** not used **/}
+			@Override
+			public void conflictResolutionNeeded(ConflictedProject project) {/** not used **/}
+			@Override
+			public void failure(Throwable t) {/** not used **/}
+			@Override
+			public void progress(String msg, Object... params) {logger.info(String.format(msg, params));}
+		});
+		
+		GitProjectHandler targetProjectHandler = new GitProjectHandler(
+				this.user, 
+				targetProjectId, 
+				this.localGitRepositoryManager, 
+				this.remoteGitServerManager);
+		
+		if (targetProjectHandler.hasConflicts()) {
+			return ForkStatus.targetHasConflicts();
+		}
+		else if (targetProjectHandler.hasUncommittedChanges()) {
+			return ForkStatus.targetNotClean();
+		}
+		ForkStatus forkStatus = remoteGitServerManager.forkResource(tagsetId, sourceProjectId, targetProjectId);
+		targetProjectHandler.loadRolesPerResource();
+		
+		if (forkStatus.isSuccess()) {
+			targetProjectHandler.cloneAndAddTagset(
+					tagset.getUuid(), 
+					tagset.getName(),
+					String.format(
+							"Forked Tagset %1$s with ID %2$s from %3$s with ID %4$s", 
+							tagset.getName(), tagset.getUuid(),
+							targetProject.getName(),
+							targetProjectId));
+		}
+		else {
+			return forkStatus;
+		}
+		
+		
+		return ForkStatus.success();
 	}
 }

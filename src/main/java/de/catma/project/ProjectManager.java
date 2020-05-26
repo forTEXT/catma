@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.List;
 
 import de.catma.rbac.RBACPermission;
+import de.catma.repository.git.ResourceAlreadyExistsException;
 import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 
 public interface ProjectManager {
@@ -15,6 +17,7 @@ public interface ProjectManager {
 	public User getUser();
 
 	public List<ProjectReference> getProjectReferences() throws Exception;
+	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws Exception;
 
 	ProjectReference findProjectReferenceById(String projectId) throws IOException;
 
@@ -30,4 +33,6 @@ public interface ProjectManager {
 	boolean isAuthorizedOnProject(RBACPermission permission, String projectId);
 
 	void updateProject(ProjectReference projectReference) throws IOException;
+
+	ForkStatus forkTagset(TagsetDefinition tagset, String sourceProjectId, ProjectReference targetProject) throws Exception;
 }

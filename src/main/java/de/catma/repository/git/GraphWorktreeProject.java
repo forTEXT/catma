@@ -1439,7 +1439,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 	
 	@Override
-	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
+	public List<CommitInfo> getUnsynchronizedCommits() throws Exception {
 		return gitProjectHandler.getUnsynchronizedChanges();
 	}
 
@@ -1593,5 +1593,4 @@ public class GraphWorktreeProject implements IndexedProject {
 	public RBACRole getRoleOnProject() throws IOException {
 		return gitProjectHandler.getRoleOnProject(user);
 	}
-	
 }

@@ -392,6 +392,5 @@ public interface Project {
 
 	void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
 
-	List<CommitInfo> getUnsynchronizedChanges() throws Exception;
-
+	List<CommitInfo> getUnsynchronizedCommits() throws Exception;
 }

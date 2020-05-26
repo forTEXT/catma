@@ -64,6 +64,19 @@ import de.catma.util.Pair;
 @SuppressWarnings("deprecation")
 public class CorpusImporter {
 
+	/**
+	 * !BACKGROUND THREAD! No direct UI code here!
+	 * 
+	 * 
+	 * @param progressListener
+	 * @param corpusFile
+	 * @param documentMetadataList
+	 * @param tempDir
+	 * @param ui
+	 * @param project
+	 * @return
+	 * @throws Exception
+	 */
 	public Void importCorpus(
 		final ProgressListener progressListener, 
 		final File corpusFile, 
