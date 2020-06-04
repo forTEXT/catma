@@ -38,6 +38,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.event.HasUserOriginated;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.FileDownloader;
 import com.vaadin.server.SerializablePredicate;
@@ -178,10 +179,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private Grid<Member> teamGrid;
     private VerticalFlexLayout teamPanel;
     private ListDataProvider<TagsetDefinition> tagsetData;
+    
     private PropertyChangeListener tagsetChangeListener;
-
     private PropertyChangeListener projectExceptionListener;
-	private MenuItem miInvite;
+    private PropertyChangeListener tagReferencesChangedListener;
+
+    private MenuItem miInvite;
 	private ProgressBar progressBar;
 
 	private Button btSynchBell;
@@ -240,6 +243,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			public void propertyChange(PropertyChangeEvent evt) {
 				handleTagsetChange(evt);
 			}
+		};
+		
+		this.tagReferencesChangedListener = new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				checkForUnsynchronizedCommits();
+			};
 		};
 	}
 
@@ -480,10 +489,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void handleBtSynchBellClick(ClickEvent event) {
 		try {
 			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedCommits();
-			UnsychronizedCommitsDialog dlg = 
-				new UnsychronizedCommitsDialog(
-						unsynchronizedChanges, ()->handleSynchronizeRequest());
-			dlg.show();
+			if (unsynchronizedChanges.isEmpty() && project.hasUncommittedChanges()) {
+				ConfirmDialog.show(UI.getCurrent(), "You have uncommited changes, do you want to commit now?", dlg -> {
+					if (dlg.isConfirmed()) {
+						handleCommitRequest();
+					}
+				});
+			}
+			else {
+				UnsychronizedCommitsDialog dlg = 
+					new UnsychronizedCommitsDialog(
+							unsynchronizedChanges, ()->handleSynchronizeRequest());
+				dlg.show();
+			}
 		} catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("Checking for unsynchronized changes failed!", e);
 		}
@@ -1415,7 +1433,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void checkForUnsynchronizedCommits() {
         
         try {
-			btSynchBell.setVisible(!project.getUnsynchronizedCommits().isEmpty());
+			btSynchBell.setVisible(
+				!project.getUnsynchronizedCommits().isEmpty() || project.hasUncommittedChanges());
 		} catch (Exception e) {
 			String msg = "Checking for unsynchronized changes failed!";
 			logger.log(Level.SEVERE, msg, e);
@@ -1749,6 +1768,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                ProjectView.this.project.getTagManager().addPropertyChangeListener(
 	                		TagManagerEvent.tagsetDefinitionChanged,
 	                		tagsetChangeListener);
+	                
+	                ProjectView.this.project.addPropertyChangeListener(
+	                		RepositoryChangeEvent.tagReferencesChanged, 
+	                		tagReferencesChangedListener);
+	                
 	                setEnabled(true);
 	                reloadAll();
 	                checkForUnsynchronizedCommits();
@@ -1805,6 +1829,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 ProjectView.this.project.getTagManager().addPropertyChangeListener(
                 		TagManagerEvent.tagsetDefinitionChanged,
                 		tagsetChangeListener);
+                
+                ProjectView.this.project.addPropertyChangeListener(
+                		RepositoryChangeEvent.tagReferencesChanged,
+                		tagReferencesChangedListener);
                 setEnabled(true);
                 reloadAll();
                 
@@ -2078,6 +2106,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                		TagManagerEvent.tagsetDefinitionChanged,
 	                		tagsetChangeListener);
 				}				
+				
+				if (tagReferencesChangedListener != null) {
+					project.removePropertyChangeListener(
+							RepositoryChangeEvent.tagReferencesChanged,
+							tagReferencesChangedListener);
+				}
 			}		
 			if (project != null) {
 				project.close();
