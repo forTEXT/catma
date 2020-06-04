@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileChannel.MapMode;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -180,7 +178,7 @@ public class GitMarkupCollectionHandler {
 	}
 
 	private ArrayList<TagReference> openTagReferences(
-		String projectId, String markupCollectionId, File parentDirectory, 
+		String projectId, String markupCollectionId, String collectionName, File parentDirectory, 
 		ProgressListener progressListener, AtomicInteger counter)
 			throws Exception {
 
@@ -194,13 +192,13 @@ public class GitMarkupCollectionHandler {
 			// if it is a directory, recurse into it adding results to the current tagReferences list
 			if (target.isDirectory() && !target.getName().equalsIgnoreCase(".git")) {
 				tagReferences.addAll(
-					this.openTagReferences(projectId, markupCollectionId, target, progressListener, counter));
+					this.openTagReferences(projectId, markupCollectionId, collectionName, target, progressListener, counter));
 			}
 			// if item is <CATMA_UUID>.json, read it into a list of TagReference objects
 			else if (target.isFile() && isTagInstanceFilename(target.getName())) {
 				counter.incrementAndGet();
 				if (counter.intValue() % 1000 == 0) {
-					progressListener.setProgress("Loading Annotations %1$d", counter.intValue());
+					progressListener.setProgress("Loading Annotations %1$s %2$d", collectionName, counter.intValue());
 				}
 				String serialized = readFileToString(target, StandardCharsets.UTF_8);
 				JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
@@ -221,12 +219,14 @@ public class GitMarkupCollectionHandler {
 	private String readFileToString(File file, Charset encoding) throws IOException {
 		StringBuilder builder = new StringBuilder();
 		try (FileInputStream fis = new FileInputStream(file)) {
-			FileChannel channel = fis.getChannel();
-			final int fileSize = (int)file.length();
-			MappedByteBuffer buffer = channel.map(MapMode.READ_ONLY, 0, fileSize);
-            for(int i = 0; i < fileSize; i++) {
-                builder.append(encoding.decode(buffer));
-            }
+			byte[] buffer = new byte[(int)file.length()];
+			int read = 0;
+			while((read=fis.read(buffer)) != -1) {
+				builder.append(new String(buffer, 0, read, encoding));
+				if (read == file.length()) {
+					break;
+				}
+			}
 		}
 		
 		return builder.toString();
@@ -340,9 +340,32 @@ public class GitMarkupCollectionHandler {
 			);
 
 			localGitRepoManager.detach();  // can't call open on an attached instance
+			
+			
+			
+			File markupCollectionHeaderFile = new File(
+					markupCollectionSubmoduleAbsPath,
+					HEADER_FILE_NAME
+			);
+
+			String serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
+					markupCollectionHeaderFile, StandardCharsets.UTF_8
+			);
+
+			GitMarkupCollectionHeader markupCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
+					.deserialize(serializedMarkupCollectionHeaderFile, GitMarkupCollectionHeader.class);
+
+			ContentInfoSet contentInfoSet = new ContentInfoSet(
+					markupCollectionHeader.getAuthor(),
+					markupCollectionHeader.getDescription(),
+					markupCollectionHeader.getPublisher(),
+					markupCollectionHeader.getName()
+			);
+			
 			AtomicInteger counter = new AtomicInteger();
 			ArrayList<TagReference> tagReferences = this.openTagReferences(
-					projectId, collectionId, markupCollectionSubmoduleAbsPath, progressListener, counter
+					projectId, collectionId, contentInfoSet.getTitle(), markupCollectionSubmoduleAbsPath, 
+					progressListener, counter
 			);
 			
 			// handle orphan Annotations
@@ -395,25 +418,7 @@ public class GitMarkupCollectionHandler {
 				}
 			}
 			
-			
-			File markupCollectionHeaderFile = new File(
-					markupCollectionSubmoduleAbsPath,
-					HEADER_FILE_NAME
-			);
 
-			String serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
-					markupCollectionHeaderFile, StandardCharsets.UTF_8
-			);
-
-			GitMarkupCollectionHeader markupCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
-					.deserialize(serializedMarkupCollectionHeaderFile, GitMarkupCollectionHeader.class);
-
-			ContentInfoSet contentInfoSet = new ContentInfoSet(
-					markupCollectionHeader.getAuthor(),
-					markupCollectionHeader.getDescription(),
-					markupCollectionHeader.getPublisher(),
-					markupCollectionHeader.getName()
-			);
 
 			AnnotationCollection userMarkupCollection = new AnnotationCollection(
 					collectionId, contentInfoSet, tagLibrary, tagReferences,

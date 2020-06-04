@@ -1751,6 +1751,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	                		tagsetChangeListener);
 	                setEnabled(true);
 	                reloadAll();
+	                checkForUnsynchronizedCommits();
 	            }
 	            
 	            @Override

@@ -98,14 +98,6 @@ public class CorpusImporter {
 				final String documentId = documentIdPart.substring(documentIdPart.indexOf("__")+3);
 				final String idUri = "catma://"+documentId;
 				
-				final CorpusImportDocumentMetadata documentMetadata = 
-					documentMetadataList.stream().filter(metadata -> metadata.getSourceDocID().equals(idUri)).findFirst().orElse(null);
-				
-				final Locale locale = LocaleUtils.toLocale(documentMetadata.getSourceDocLocale());
-				
-				final boolean useApostrophe = 
-					Arrays.asList(documentMetadata.getSourceDocSepChars()).contains(String.valueOf(UploadFile.APOSTROPHE));
-				
 				if (pathParts[3].equals("annotationcollections")) {
 					
 					progressListener.setProgress("Importing Collection %1$s", pathParts[4]);
@@ -167,6 +159,14 @@ public class CorpusImporter {
 					});
 				}
 				else {
+					final CorpusImportDocumentMetadata documentMetadata = 
+							documentMetadataList.stream().filter(metadata -> metadata.getSourceDocID().equals(idUri)).findFirst().orElse(null);
+						
+					final Locale locale = LocaleUtils.toLocale(documentMetadata.getSourceDocLocale());
+					
+					final boolean useApostrophe = 
+						Arrays.asList(documentMetadata.getSourceDocSepChars()).contains(String.valueOf(UploadFile.APOSTROPHE));
+						
 					final String title = 
 						(documentMetadata.getSourceDocName()==null|| documentMetadata.getSourceDocName().isEmpty())?
 								documentId

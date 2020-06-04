@@ -1366,6 +1366,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}		
 	
 		try {
+			if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
+				return result; // no HEAD -> new empty Project, no commits yet
+			}
+			
+			
 			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
 			Iterable<RevCommit> commits = null;
 			

@@ -82,8 +82,8 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 				@Override
 				public Pair<File, List<CorpusImportDocumentMetadata>> call() throws Exception {
 					
-//					File corpusFile = getCorpusFile(corpusMetadata);
-					File corpusFile = new File("c:/test/Kleist_Dramen_Dracor2005161017.tar.gz");
+					File corpusFile = getCorpusFile(corpusMetadata);
+//					File corpusFile = new File("c:/test/Kleist_Dramen_Dracor2005161017.tar.gz");
 					
 					return new Pair<>(corpusFile, null);
 				}

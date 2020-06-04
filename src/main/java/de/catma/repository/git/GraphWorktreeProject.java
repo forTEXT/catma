@@ -473,7 +473,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		String tagsetRevision = gitProjectHandler.createOrUpdateTag(
 			tagsetDefinition.getUuid(), 
 			tagDefinition,
-			String.format("Added Property Definition %1$s with %2$s to Tag %3$s with ID %4$s",
+			String.format("Added Property Definition %1$s with ID %2$s to Tag %3$s with ID %4$s",
 				propertyDefinition.getName(),
 				propertyDefinition.getUuid(),
 				tagDefinition.getName(),
@@ -486,7 +486,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 			tagsetDefinition.getUuid(), 
 			String.format(
-				"Added Property Definition %1$s with %2$s to Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
+				"Added Property Definition %1$s with ID %2$s to Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
 				propertyDefinition.getName(),
 				propertyDefinition.getUuid(),
 				tagDefinition.getName(),
@@ -584,7 +584,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		String tagsetRevision = gitProjectHandler.createOrUpdateTag(
 				tagsetDefinition.getUuid(), tagDefinition,
 				String.format(
-					"Updated Property Definition %1$s with %2$s in Tag %3$s with ID %4$s",
+					"Updated Property Definition %1$s with ID %2$s in Tag %3$s with ID %4$s",
 					propertyDefinition.getName(),
 					propertyDefinition.getUuid(),
 					tagDefinition.getName(),
@@ -597,7 +597,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 			tagsetDefinition.getUuid(), 
 			String.format(
-				"Updated Property Definition %1$s with %2$s in Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
+				"Updated Property Definition %1$s with ID %2$s in Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
 				propertyDefinition.getName(),
 				propertyDefinition.getUuid(),
 				tagDefinition.getName(),
