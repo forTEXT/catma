@@ -276,7 +276,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			return RBACRole.forValue(member.getAccessLevel().value);
 			
 		} catch (GitLabApiException e) {
-			throw new IOException("resource or rootproject unkown "+ resourceId, e);
+			throw new IOException("resource or root-project unkown "+ resourceId, e);
 		}		
 	}
 	

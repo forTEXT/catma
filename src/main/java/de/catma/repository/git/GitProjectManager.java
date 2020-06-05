@@ -292,6 +292,7 @@ public class GitProjectManager implements ProjectManager {
 				this.localGitRepositoryManager, 
 				this.remoteGitServerManager);
 		
+		targetProjectHandler.loadRolesPerResource();
 		if (targetProjectHandler.hasConflicts()) {
 			return ForkStatus.targetHasConflicts();
 		}
@@ -299,7 +300,6 @@ public class GitProjectManager implements ProjectManager {
 			return ForkStatus.targetNotClean();
 		}
 		ForkStatus forkStatus = remoteGitServerManager.forkResource(tagsetId, sourceProjectId, targetProjectId);
-		targetProjectHandler.loadRolesPerResource();
 		
 		if (forkStatus.isSuccess()) {
 			targetProjectHandler.cloneAndAddTagset(

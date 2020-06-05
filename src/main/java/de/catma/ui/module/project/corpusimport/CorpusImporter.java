@@ -132,11 +132,18 @@ public class CorpusImporter {
 									.filter(status -> status.getTagset().equals(intrinsicTagset))
 									.findFirst()
 									.ifPresent(status -> status.setDoImport(false));
+								
 							}
+							
+							tagsetDefinitionImportStatusList.stream()
+							.filter(status -> status.getTagset().isEmpty())
+							.forEach(status -> status.setDoImport(false));
+							
 							if (!annotationCollection.isEmpty()) {
 								project.importCollection(
 										tagsetDefinitionImportStatusList, annotationCollection);
 							}
+							
 						}
 						catch (Exception e) {
 			    			Logger.getLogger(ProjectView.class.getName()).log(

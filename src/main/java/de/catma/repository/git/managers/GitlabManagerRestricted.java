@@ -498,10 +498,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			if (optionalTargetResource.isPresent()) {
 				return ForkStatus.resourceAlreadyExists();
 			}
+			
 			restrictedGitLabApi.getProjectApi().forkProject(sourceResourceProject, targetProjectId);
-			optionalTargetResource = restrictedGitLabApi.getProjectApi().getOptionalProject(targetProjectId, resourceId);
+			
+			ProjectExtApi projectExtApi = new ProjectExtApi(restrictedGitLabApi);
+			ProjectExt projectExt = projectExtApi.getProjectExt(targetProjectId, resourceId);
+
+			String importStatus = projectExt.getImportStatus();
+			
 			int tries = 10;
-			while (!optionalTargetResource.isPresent() && tries > 0) {
+			while (!importStatus.equals("finished") && tries > 0) {
 				tries--;
 				
 				try {
@@ -511,16 +517,17 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 				}
 				logger.info(
 					String.format(
-						"Trying to retrieve forked resource %1$s from group %2$s (try %3$d)",
+						"Trying to retrieve forked resource status for %1$s from group %2$s (try %3$d)",
 						resourceId,
 						targetProjectId,
 						10-tries));
-				optionalTargetResource = restrictedGitLabApi.getProjectApi().getOptionalProject(targetProjectId, resourceId);
+				importStatus = projectExt.getImportStatus();
 			}
 			
-			if (!optionalTargetResource.isPresent()) {
-				logger.warning("Retrieval of forked resource failed! Trying to continue anyway!");
+			if (!importStatus.equals("finished")) {
+				logger.warning(String.format("Status is still '%1$s' and not 'finished'! Trying to continue anyway!", importStatus));
 			}
+			
 			
 			return ForkStatus.success();
 		}

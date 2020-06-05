@@ -198,8 +198,7 @@ public class GitProjectHandler {
 				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
 			if (!rolesPerResource.containsKey(tagsetId)) {
-				RBACRole role = remoteGitServerManager.getRoleOnResource(user, projectId, tagsetId);
-				rolesPerResource.put(tagsetId, role);
+				rolesPerResource.put(tagsetId, RBACRole.OWNER);
 			}
 
 			return new Pair<>(gitTagsetHandler.getTagset(projectId, tagsetId), rootRevisionHash);
