@@ -387,6 +387,9 @@ public class AuthenticationDialog extends VerticalLayout {
 //				new ClassResource("repository/resources/catma.png")); //$NON-NLS-1$
 		
 		Button catmaCreateAccountLink = new Button(Messages.getString("AuthenticationDialog.createCATMAaccount"));  //$NON-NLS-1$
+		catmaCreateAccountLink.setStyleName(BaseTheme.BUTTON_LINK);
+		catmaCreateAccountLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
+
 		catmaCreateAccountLink.addClickListener(
 			clickEvent -> Notification.show(
 				"Info", 
