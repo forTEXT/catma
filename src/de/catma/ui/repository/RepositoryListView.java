@@ -205,7 +205,15 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 			ParameterComponentValue.show(
 					catmaApplication, catmaApplication.getParameter(Parameter.COMPONENT));
 		}
-
+		
+		if (repository.getUser().isLocked()) {
+			Notification.show(
+				"Info", 
+				"Account creation for CATMA 5 has been deactivated. For new projects please use CATMA 6! "
+				+ "If for whatever reason you still need access to CATMA 5 please get in contact with us directly via catma-support@catma.de",
+				Type.HUMANIZED_MESSAGE);
+			repositoryManager.close();
+		}
 
 		if (!repository.getUser().isGuest() && !repository.getUser().isTermsOfUseConsentPresent()) {
 			new TermsOfUseConsentDialog(catmaApplication, new SaveCancelListener<Boolean>() {

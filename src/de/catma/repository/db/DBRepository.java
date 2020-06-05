@@ -383,7 +383,7 @@ public class DBRepository implements IndexedRepository {
 						USER.GUEST)
 				.values(
 					userIdentification.get(UserProperty.identifier.name()),
-					(byte)0,
+					(byte)1, // locked by default for CATMA 5
 					new java.sql.Timestamp(new Date().getTime()),
 					(byte)(isGuest?1:0))
 				.returning(USER.USERID)
@@ -402,7 +402,7 @@ public class DBRepository implements IndexedRepository {
 				user = new DBUser(
 					idRecord.getValue(USER.USERID), 
 					userIdentification.get(UserProperty.identifier.name()),
-					false,
+					true, //locked by default for CATMA 5
 					isGuest,
 					false, 
 					false);

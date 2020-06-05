@@ -379,13 +379,20 @@ public class AuthenticationDialog extends VerticalLayout {
 		catmaLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
 		addComponent(catmaLogInLink);
 		
-		Link catmaCreateAccountLink = 
-			new Link(
-				Messages.getString("AuthenticationDialog.createCATMAaccount"),  //$NON-NLS-1$
-				new ExternalResource("https://auth.catma.de/openam/XUI/#register/")); //$NON-NLS-1$
-		catmaCreateAccountLink.setIcon(
-				new ClassResource("repository/resources/catma.png")); //$NON-NLS-1$
+//		Link catmaCreateAccountLink = 
+//			new Link(
+//				Messages.getString("AuthenticationDialog.createCATMAaccount"),  //$NON-NLS-1$
+//				new ExternalResource("https://auth.catma.de/openam/XUI/#register/")); //$NON-NLS-1$
+//		catmaCreateAccountLink.setIcon(
+//				new ClassResource("repository/resources/catma.png")); //$NON-NLS-1$
 		
+		Button catmaCreateAccountLink = new Button(Messages.getString("AuthenticationDialog.createCATMAaccount"));  //$NON-NLS-1$
+		catmaCreateAccountLink.addClickListener(
+			clickEvent -> Notification.show(
+				"Info", 
+				"Account creation for CATMA 5 has been deactivated. For new projects please use CATMA 6! "
+				+ "If for whatever reason you still need access to CATMA 5 please get in contact with us directly via catma-support@catma.de",
+				Type.HUMANIZED_MESSAGE));
 		addComponent(catmaCreateAccountLink);
 
 		

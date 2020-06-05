@@ -53,9 +53,9 @@ public class CorpusEncoder {
 				umcRefJson.put("umcID", umcRef.getId());
 				umcRefJson.put("umcName", umcRef.getName());
 				ContentInfoSet umcCis = umcRef.getContentInfoSet();
-				sourceDocJson.put("umcAuthor", umcCis.getAuthor());
-				sourceDocJson.put("umcDescription", umcCis.getDescription());
-				sourceDocJson.put("umcPublisher", umcCis.getPublisher());	
+				umcRefJson.put("umcAuthor", umcCis.getAuthor());
+				umcRefJson.put("umcDescription", umcCis.getDescription());
+				umcRefJson.put("umcPublisher", umcCis.getPublisher());	
 				umcRefListJson.add(umcRefJson);
 			}
 			contentJson.add(sourceDocJson);

@@ -456,7 +456,7 @@ public class CorpusPanel extends VerticalLayout {
 	}
 
 	private void handleExportCorpusRequest(Corpus selectedValue) {
-		final CorpusExporter corpusExporter = new CorpusExporter(repository, true);
+		final CorpusExporter corpusExporter = new CorpusExporter(repository, true, false);
 		final String name = corpusExporter.cleanupName(selectedValue.toString());
 		final String filename = name + corpusExporter.getDate() + ".tar.gz"; //$NON-NLS-1$
 		generateCorpusAnnotationsProgressBar.setIndeterminate(true);

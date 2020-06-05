@@ -39,7 +39,9 @@ public class CorpusExport extends ServerResource {
 			String corpusId = form.getFirstValue(Parameter.cid.name());
 			String format = form.getFirstValue(Parameter.format.name());
 			
-			if ((format != null) && !format.trim().toLowerCase().equals("plain,tei")) {
+			if ((format == null) 
+					|| (!format.trim().toLowerCase().equals("plain,tei") 
+					&& !format.trim().toLowerCase().equals("xml,tei"))) {
 				throw new ResourceException
 				(Status.SERVER_ERROR_NOT_IMPLEMENTED, "requested format not supported yet");
 			}
@@ -47,7 +49,10 @@ public class CorpusExport extends ServerResource {
 			for (Corpus c : corpora) {
 				if (c.getId().equals(corpusId)) {
 
-					CorpusExporter corpusExporter = new CorpusExporter(repo, false);
+					CorpusExporter corpusExporter = new CorpusExporter(
+						repo, 
+						false, 
+						format != null && format.trim().toLowerCase().startsWith("xml")); // use xml source where possible
 					final String name = corpusExporter.cleanupName(c.toString());
 					final String fileName = name + corpusExporter.getDate() + ".tar.gz";
 					String tempDir =

@@ -1,6 +1,8 @@
 package de.catma.document.corpus;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
@@ -11,10 +13,12 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.io.IOUtils;
 
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
+import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -29,11 +33,14 @@ public class CorpusExporter {
 	private String date;
 
 	private boolean simpleEntryStyle;
+
+	private boolean useXmlSourceIfPossible;
 	
-	public CorpusExporter(Repository repo, boolean simpleEntryStyle) {
+	public CorpusExporter(Repository repo, boolean simpleEntryStyle, boolean useXmlSourceIfPossible) {
 		this.repo = repo;
 		this.simpleEntryStyle = simpleEntryStyle;
 		this.date = FORMATTER.format(new Date());
+		this.useXmlSourceIfPossible = useXmlSourceIfPossible;
 	}
 
 	public void export(
@@ -55,9 +62,22 @@ public class CorpusExporter {
 					progressListener.setProgress("Adding Document " + sd.toString());
 					TarArchiveEntry sdEntry = 
 						new TarArchiveEntry(getSourceDocEntryName(exportName, corpusName, sd));
-				
-					byte[] sdContent = 
-						sd.getContent().getBytes(Charset.forName("UTF8"));
+					FileType fileType = 
+							sd.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getFileType();
+
+					byte[] sdContent = null;
+					
+					if ((fileType.equals(FileType.XML) || fileType.equals(FileType.XML2)) 
+							&& useXmlSourceIfPossible) {
+						File origFile = repo.getFile(sd);
+						try (FileInputStream fis = new FileInputStream(origFile)) {
+							sdContent = IOUtils.toByteArray(fis);
+						}
+					}
+					else {
+						sdContent = 
+								sd.getContent().getBytes(Charset.forName("UTF8"));
+					}
 					
 					sdEntry.setSize(sdContent.length);
 					
@@ -163,12 +183,19 @@ public class CorpusExporter {
 		String title = 
 				sourceContentHandler.getSourceDocumentInfo()
 					.getContentInfoSet().getTitle();
+		FileType fileType = sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getFileType();
+		
+		String fileExtension = "." + 
+			((useXmlSourceIfPossible 
+					&& (fileType.equals(FileType.XML) || fileType.equals(FileType.XML2)))?
+							fileType.name().toLowerCase():"txt");
+		
 		if (simpleEntryStyle) {
-			return sourceDocument.toString() + (withFileExtension?".txt":"");
+			return sourceDocument.toString() + (withFileExtension?fileExtension:"");
 		}
 		return sourceDocument.getID() 
 			+ (((title==null)||title.isEmpty())?"":("_"+title)) 
-			+ (withFileExtension?".txt":"");
+			+ (withFileExtension?fileExtension:"");
 	};
 
 }
