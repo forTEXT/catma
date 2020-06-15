@@ -53,6 +53,10 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
+import de.catma.backgroundservice.BackgroundService;
+import de.catma.backgroundservice.DefaultProgressCallable;
+import de.catma.backgroundservice.ExecutionListener;
+import de.catma.backgroundservice.LogProgressListener;
 import de.catma.document.Range;
 import de.catma.document.annotation.Annotation;
 import de.catma.document.annotation.AnnotationCollection;
@@ -74,6 +78,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
@@ -164,46 +169,65 @@ public class TaggerView extends HorizontalLayout
 	}
 	
 	private void initData() {
-		try {
-			if (sourceDocument != null) {
-				linesPerPageSlider.setEnabled(true);
-				btAnalyze.setEnabled(project instanceof IndexedProject);
-				pagerComponent.setEnabled(true);
-				
-				tagger.setText(sourceDocument.getContent());
-				totalLineCount = pager.getTotalLineCount();
-				try {
-					linesPerPageSlider.setValue((100.0/totalLineCount)*maxPageLengthInLines);
-				} catch (ValueOutOfBoundsException toBeIgnored) {}
-				
-				List<AnnotationCollectionReference> collectionReferences =
-					resourcePanel.getSelectedAnnotationCollectionReferences();
-				
-				userMarkupCollectionManager.clear();
-				
-				for (AnnotationCollectionReference collectionRef : collectionReferences) {
-					AnnotationCollection collection = project.getUserMarkupCollection(collectionRef);
-					userMarkupCollectionManager.add(collection);
+		if (sourceDocument != null) {
+			final UI ui = UI.getCurrent();
+			((CatmaApplication)ui).submit("Load Document",
+			new DefaultProgressCallable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					ui.accessSynchronously(() -> {
+						try {
+							linesPerPageSlider.setEnabled(true);
+							btAnalyze.setEnabled(project instanceof IndexedProject);
+							pagerComponent.setEnabled(true);
+							
+							tagger.setText(sourceDocument.getContent());
+							totalLineCount = pager.getTotalLineCount();
+							try {
+								linesPerPageSlider.setValue((100.0/totalLineCount)*maxPageLengthInLines);
+							} catch (ValueOutOfBoundsException toBeIgnored) {}
+							
+							List<AnnotationCollectionReference> collectionReferences =
+									resourcePanel.getSelectedAnnotationCollectionReferences();
+							
+							userMarkupCollectionManager.clear();
+							
+							for (AnnotationCollectionReference collectionRef : collectionReferences) {
+								AnnotationCollection collection = project.getUserMarkupCollection(collectionRef);
+								userMarkupCollectionManager.add(collection);
+							}
+							
+							Collection<TagsetDefinition> tagsets = 
+									new HashSet<>(resourcePanel.getSelectedTagsets());
+							
+							annotationPanel.setData(
+									sourceDocument, 
+									tagsets, 
+									new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
+							if (taggerContextMenu != null) {
+								taggerContextMenu.setTagsets(tagsets);
+							}
+							ui.push();
+						} catch (IOException e) {
+							errorHandler.showAndLogError("Error showing the Document!", e);
+						}
+					});
+					return null;
 				}
+			}, new ExecutionListener<Void>() {
+				@Override
+				public void done(Void result) {/*noop*/}
 				
-				Collection<TagsetDefinition> tagsets = 
-						new HashSet<>(resourcePanel.getSelectedTagsets());
-				
-				annotationPanel.setData(
-						sourceDocument, 
-						tagsets, 
-						new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
-				if (taggerContextMenu != null) {
-					taggerContextMenu.setTagsets(tagsets);
+				@Override
+				public void error(Throwable t) {
+					errorHandler.showAndLogError("Error showing the Document!", t);
 				}
-			}			
-			else {
-				linesPerPageSlider.setEnabled(false);
-				btAnalyze.setEnabled(false);
-				pagerComponent.setEnabled(false);
-			}
-		} catch (IOException e) {
-			errorHandler.showAndLogError("Error showing the Document!", e);
+			});
+		}			
+		else {
+			linesPerPageSlider.setEnabled(false);
+			btAnalyze.setEnabled(false);
+			pagerComponent.setEnabled(false);
 		}
 	}
 
@@ -710,7 +734,7 @@ public class TaggerView extends HorizontalLayout
 
 	public int getApproximateMaxLineLengthForSplitterPanel(float width){
 		// based on ratio of 80:550
-		int approxMaxLineLength = (int) (width * 0.135);
+		int approxMaxLineLength = (int) (width * 0.125);
 		
 		return approxMaxLineLength;
 	}
@@ -799,7 +823,7 @@ public class TaggerView extends HorizontalLayout
 							new SaveCancelListener<List<Property>>() {
 								
 								@Override
-								public void savePressed(List<Property> result) {
+								public void savePressed(List<Property> notOfInterest) {
 									userMarkupCollectionManager.addTagReferences(
 											tagReferences, collection);
 								}

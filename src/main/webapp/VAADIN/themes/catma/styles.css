@@ -17698,6 +17698,23 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background-image: linear-gradient(to top, red, yellow 50%, red);
 }
 
+.catma .comment-container {
+	position: absolute;
+	left: 400px;
+	top: -5px;
+}
+
+.catma .comment-anchor {
+	position: relative;
+}
+
+.catma .comment {
+	border: 1px solid;
+	border-radius: 10px;
+	padding: 2px;
+	height: 20px;
+}
+
 .catma .selection-layer {
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;

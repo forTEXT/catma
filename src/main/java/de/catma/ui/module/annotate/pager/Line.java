@@ -14,6 +14,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 
+import de.catma.document.comment.Comment;
 import de.catma.ui.client.ui.tagger.shared.AnnotationLayerBuilder;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -31,6 +32,7 @@ public class Line {
 	private Map<String,ClientTagInstance> relativeTagInstanceByID;
 	private Set<TextRange> highlightedTextRanges;
 	private boolean rightToLeftWriting;
+	private Set<Comment> comments;
 
 	public Line(boolean rightToLeftWriting) {
 		this.rightToLeftWriting = rightToLeftWriting;
@@ -38,6 +40,7 @@ public class Line {
 		textRangesByRelativeTagInstanceID = ArrayListMultimap.create();
 		relativeTagInstanceByID = new HashMap<>();
 		highlightedTextRanges = new HashSet<>();
+		comments = new HashSet<>();
 	}
 	
 	public String getPresentationContent() {
@@ -75,6 +78,9 @@ public class Line {
 
 	public void setLineId(int lineId) {
 		this.lineId = lineId;
+		if (lineId == 3) {
+			comments.add(new Comment("mp", 1, "Dies ist der 1. Kommentar"));
+		}
 	}
 	
 	public int getLineId() {
@@ -183,6 +189,38 @@ public class Line {
 				}
 			}
 		}
+		
+		// comment layer
+		Element commentLayer = new Element("tr"); //$NON-NLS-1$
+		commentLayer.addAttribute(new Attribute("class", "comment-layer")); //$NON-NLS-1$ //$NON-NLS-2$
+		commentLayer.addAttribute(new Attribute("unselectable", "on")); //$NON-NLS-1$ //$NON-NLS-2$
+		tbody.appendChild(commentLayer);
+		
+		Element commentContent = new Element("td"); //$NON-NLS-1$
+		commentLayer.appendChild(commentContent);
+		commentContent.addAttribute(
+				new Attribute("class", "empty-comment-layer")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		
+//		Element commentAnchor = new Element("td"); //$NON-NLS-1$
+//		commentLayer.appendChild(commentAnchor);
+		commentContent.addAttribute(
+				new Attribute("class", "comment-anchor")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		Element commentContainer = new Element("div");
+		commentContent.appendChild(commentContainer);
+		commentContainer.addAttribute(
+				new Attribute("class", "comment-container")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		
+		for (Comment comment : comments) {
+			Element commentDiv = new Element("div"); //$NON-NLS-1$
+			commentDiv.addAttribute(
+					new Attribute("class", "comment")); //$NON-NLS-1$ //$NON-NLS-2$
+			commentContainer.appendChild(commentDiv);
+			commentDiv.appendChild(comment.getBody());
+		}
+		
 		
 		// annotation layers
 		AnnotationLayerBuilder annotationLayerBuilder = new AnnotationLayerBuilder(relativeTagInstanceByID.values(), rangeParts);

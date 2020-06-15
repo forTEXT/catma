@@ -220,6 +220,27 @@ $v-focus-color: #5A98A1;
 	    
 	}
 	
+	.comment-layer {
+	}
+	
+	.comment-container {
+		position: absolute;
+	    left: 400px;
+	    top: -5px;
+	}
+	
+	.comment-anchor {
+		position: relative;
+	}
+	
+	.comment {
+	    border: 1px solid;
+	    border-radius: 10px;
+	    padding: 2px;
+	    height: 20px;
+	}
+	
+	
 	.selection-layer {
 		-webkit-touch-callout: none;
   		-webkit-user-select: none;

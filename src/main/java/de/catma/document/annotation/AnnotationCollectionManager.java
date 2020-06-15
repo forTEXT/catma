@@ -48,7 +48,7 @@ import de.catma.util.Pair;
 public class AnnotationCollectionManager implements Iterable<AnnotationCollection>{
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private Project repository;
+	private Project project;
 			
 	private Map<String, AnnotationCollection> collectionById;
 
@@ -57,7 +57,7 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 	 * of a UserMarkupCollection is passed through up to the repository 
 	 */
 	public AnnotationCollectionManager(Project repository) {
-		this.repository = repository;
+		this.project = repository;
 		collectionById = new HashMap<String, AnnotationCollection>();
 	}
 
@@ -94,7 +94,7 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 	
 		userMarkupCollection.addTagReferences(tagReferences);
 		
-		repository.update(userMarkupCollection, tagReferences);
+		project.update(userMarkupCollection, tagReferences);
 
 	}
 
@@ -137,7 +137,7 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 		if (removeFromRepo) {
 			for (Map.Entry<AnnotationCollection, List<TagReference>> entry : toBeDeletedByUmc.entrySet()) {
 				if (!entry.getValue().isEmpty()) {
-					repository.update(entry.getKey(), entry.getValue());
+					project.update(entry.getKey(), entry.getValue());
 				}
 			}
 		}
@@ -294,7 +294,7 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 	 * @throws IOException
 	 */
 	public void updateProperty(AnnotationCollection userMarkupCollection, TagInstance tagInstance, Collection<Property> properties) throws IOException {
-		repository.update(userMarkupCollection, tagInstance, properties);
+		project.update(userMarkupCollection, tagInstance, properties);
 	}
 
 	public void remove(String collectionId) {

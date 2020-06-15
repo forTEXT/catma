@@ -149,6 +149,7 @@ public class TaggerEditor extends FocusWidget
 				getElement().removeChild(children.getItem(i));
 			}
 		}
+
 		getElement().appendChild(pageHtmlContent.getElement());
 		this.lineCount = lineCount;
 		createLineModels();
@@ -156,9 +157,12 @@ public class TaggerEditor extends FocusWidget
 	 
 	private void createLineModels() {
 		lineIdToLineMap = new HashMap<>();
+		int offsetWidth = getElement().getOffsetWidth(); 
+		
 		for (int lineId=0; lineId<this.lineCount; lineId++) {
 			Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
-			LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
+			LineNodeToLineConverter lineNodeToLineConverter = 
+					new LineNodeToLineConverter(lineElement, offsetWidth);
 			Line line = lineNodeToLineConverter.getLine();
 			lineIdToLineMap.put(LINEID_PREFIX+lineId, line);
 		}

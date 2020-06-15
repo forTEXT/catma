@@ -10,13 +10,16 @@ import java.util.TreeSet;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Style.Unit;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class LineNodeToLineConverter {
 
+	private static final int COMMENT_OFFSET_IN_PIXEL = 200;
 	private String lineId;
 	private TextRange textRange;
 	private Set<TextRange> tagInstanceTextRanges;
@@ -25,14 +28,14 @@ public class LineNodeToLineConverter {
 	private String presentationContent;
 	private Line line;
 	
-	public LineNodeToLineConverter(Element lineElement) {
+	public LineNodeToLineConverter(Element lineElement, int taggerEditorWidth) {
 		tagInstanceTextRanges = new HashSet<>();
 		highlightedTextRanges = new HashSet<>();
 		absoluteTagIntancesByID = new HashMap<>();
-		makeLineFromLineNode(lineElement);
+		makeLineFromLineNode(lineElement, taggerEditorWidth);
 	}
 	
-	private void makeLineFromLineNode(Element lineElement) {
+	private void makeLineFromLineNode(Element lineElement, int taggerEditorWidth) {
 		lineId = lineElement.getId();
 		Element lineBodyElement = lineElement.getFirstChildElement();
 		
@@ -50,6 +53,9 @@ public class LineNodeToLineConverter {
 				else if (layerElement.hasClassName("highlight-layer")) {
 					handleHighlightLayer(layerElement);
 				}
+				else if (layerElement.hasClassName("comment-layer")) {
+					handleCommentLayer(layerElement, taggerEditorWidth);
+				}
 			}
 		}
 		
@@ -62,6 +68,21 @@ public class LineNodeToLineConverter {
 			lineId, textRange, tagInstanceTextRanges, highlightedTextRanges,
 			new ArrayList<ClientTagInstance>(absoluteTagIntancesByID.values()), 
 			presentationContent);
+	}
+
+	private void handleCommentLayer(Element layerElement, int taggerEditorWidth) {
+		// TODO extract comments
+		
+		NodeList<Element> nodes = layerElement.getElementsByTagName("div");
+		for (int i=0; i<nodes.getLength(); i++) {
+			Element element = nodes.getItem(i);
+			if (element.hasClassName("comment-container")) {
+				Style style = element.getStyle();
+				style.setLeft(taggerEditorWidth-COMMENT_OFFSET_IN_PIXEL, Unit.PX);
+			}
+		}
+
+		
 	}
 
 	private void handleHighlightLayer(Element layerElement) {
