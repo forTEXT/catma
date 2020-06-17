@@ -119,6 +119,18 @@ public class Tagger extends AbstractComponent {
 		public void contextMenuSelected(int x, int y) {
 			taggerListener.contextMenuSelected(x, y);
 		}
+		
+		@Override
+		public void addComment(String textRanges, int x, int y) {
+			String[] textRangeSegments = textRanges.split(",");
+			List<TextRange> ranges = new ArrayList<>();
+			for (String textRangeSegment : textRangeSegments) {
+				String[] positions = textRangeSegment.split(":");
+				
+				ranges.add(new TextRange(Integer.valueOf(positions[0]), Integer.valueOf(positions[1])));
+			}
+			System.out.println(ranges + " x:" + x + " y:" + y);
+		}
 	};
 
 	private Pager pager;
@@ -127,6 +139,8 @@ public class Tagger extends AbstractComponent {
 	private TagInstanceInfoHTMLSerializer tagInstanceInfoHTMLSerializer;
 	private String taggerID;
 	private Project project;
+
+	private boolean forceClientRefresh = false;
 
 	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener, Project project) {
 		registerRpc(rpc);
@@ -156,7 +170,8 @@ public class Tagger extends AbstractComponent {
 	@Override
 	public void beforeClientResponse(boolean initial) {
 		super.beforeClientResponse(initial);
-		if (pager.hasPages()) {
+		if ((initial || forceClientRefresh) && pager.hasPages()) {
+			forceClientRefresh = false;
 			setPage(pager.getCurrentPageNumber());
 		}
 	}
@@ -169,6 +184,7 @@ public class Tagger extends AbstractComponent {
 	}
 	
 	public void setText(String text) {
+		this.forceClientRefresh  = true;
 		pager.setText(text);
 	}
 	

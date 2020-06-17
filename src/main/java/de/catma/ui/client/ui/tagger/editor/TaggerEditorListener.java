@@ -19,6 +19,9 @@
 package de.catma.ui.client.ui.tagger.editor;
 
 import java.util.HashSet;
+import java.util.List;
+
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public interface TaggerEditorListener {
 	public static enum TaggerEditorEventType {
@@ -27,9 +30,10 @@ public interface TaggerEditorListener {
 		;
 	}
 	
-	public void tagChanged(TaggerEditorEventType type, Object... args);
-	public void tagSelected(String tagInstancePartID, String lineID);
+	public void annotationChanged(TaggerEditorEventType type, Object... args);
+	public void annotationSelected(String tagInstancePartID, String lineID);
 	public void logEvent(String event);
-	public void tagsSelected(HashSet<String> tagInstanceIDs);
+	public void annotationsSelected(HashSet<String> tagInstanceIDs);
 	public void contextMenuSelected(int x, int y);
+	public void addComment(List<TextRange> ranges, int x, int y);
 }

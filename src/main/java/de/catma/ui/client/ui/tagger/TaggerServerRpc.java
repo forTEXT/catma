@@ -8,4 +8,5 @@ public interface TaggerServerRpc extends ServerRpc {
 	public void tagInstanceSelected(String instanceIDLineIDJson);
 	public void tagInstancesSelected(String tagInstanceIDsJson);
 	public void contextMenuSelected(int x, int y);
+	public void addComment(String textRanges, int x, int y);
 }

@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
 
@@ -56,13 +57,12 @@ public class VTagger extends Composite {
 		this.tagDefinitionJSONSerializer = new ClientTagDefinitionJSONSerializer();
 		this.textRangeJSONSerializer = new TextRangeJSONSerializer();
 		initComponents();
-		
 	}
 	
 	private void initComponents() {
 
 		taggerEditor = new TaggerEditor(new TaggerEditorListener() {
-			public void tagChanged(TaggerEditorEventType type, Object... args) {
+			public void annotationChanged(TaggerEditorEventType type, Object... args) {
 				switch(type) {
 				
 					case ADD : {
@@ -84,13 +84,13 @@ public class VTagger extends Composite {
 				}
 			}
 			
-			public void tagSelected(String tagInstancePartID, String lineID) {
+			public void annotationSelected(String tagInstancePartID, String lineID) {
 				taggerListener.tagInstanceSelected(
 						tagInstanceJSONSerializer.toJSONArrayString(tagInstancePartID, lineID));
 			}
 			
 			@Override
-			public void tagsSelected(HashSet<String> tagInstanceIDs) {
+			public void annotationsSelected(HashSet<String> tagInstanceIDs) {
 				taggerListener.tagInstancesSelected(tagInstanceJSONSerializer.toJSONArrayString(tagInstanceIDs));
 			}
 			
@@ -102,8 +102,13 @@ public class VTagger extends Composite {
 			public void contextMenuSelected(int x, int y) {
 				taggerListener.contextMenuSelected(x, y);
 			}
+			
+			@Override
+			public void addComment(List<TextRange> ranges, int x, int y) {
+				taggerListener.addComment(ranges, x, y);
+			}
 		});
-		
+
 		initWidget(taggerEditor);
 	}
 	
@@ -122,7 +127,14 @@ public class VTagger extends Composite {
 	public void setPage(String page, int lineCount) {
 
 		logger.info("setting page content");
-		taggerEditor.setHTML(new HTML(page), lineCount);
+		Timer timer = new Timer() {
+			@Override
+			public void run() {
+				taggerEditor.setHTML(new HTML(page), lineCount);
+			}
+		};
+		
+		timer.schedule(100);
 	}
 
 	public void removeTagInstances(String tagInstancesJson) {

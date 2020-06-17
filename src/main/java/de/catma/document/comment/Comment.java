@@ -1,22 +1,42 @@
 package de.catma.document.comment;
 
+import de.catma.document.Range;
+
 public class Comment {
-	private String userName;
-	private Integer userId;
+	
+	private final String username;
+	private final Integer userId;
+	
 	private String body;
-	public Comment(String userName, Integer userId, String body) {
+	private final Range range;
+	private final String documentId;
+	
+	public Comment(String username, Integer userId, String body, Range range, String documentId) {
 		super();
-		this.userName = userName;
+		this.username = username;
 		this.userId = userId;
 		this.body = body;
+		this.range = range;
+		this.documentId = documentId;
 	}
-	public String getUserName() {
-		return userName;
+	
+	public String getUsername() {
+		return username;
 	}
+	
 	public Integer getUserId() {
 		return userId;
 	}
+	
 	public String getBody() {
 		return body;
+	}
+	
+	public String getDocumentId() {
+		return documentId;
+	}
+	
+	public Range getRange() {
+		return range;
 	}
 }

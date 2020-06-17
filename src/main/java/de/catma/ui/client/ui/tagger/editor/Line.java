@@ -3,14 +3,23 @@ package de.catma.ui.client.ui.tagger.editor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.collect.Table;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.EventListener;
 
 import de.catma.ui.client.ui.tagger.shared.AnnotationLayerBuilder;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
@@ -18,6 +27,14 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class Line {
 	
+	public static interface LineListener {
+		public void addCommentClicked(String lineId, int x, int y);
+		public void addAnnotationClicked(String lineId);
+		public void commentClicked(String commentId);
+	}
+	
+	private static final int COMMENT_OFFSET_IN_PIXEL = 70;
+
 	private Element lineElement;
 	private String lineId;
 	private TextRange textRange;
@@ -26,18 +43,192 @@ public class Line {
 	private Set<TextRange> selectedTextRanges;
 	private Collection<ClientTagInstance> absoluteTagIntances;
 	private String presentationContent;
+	private Element addButtonElement;
+	private int taggerEditorWidth;
+	private LineListener lineListener;
 	
-	public Line(Element lineElement, String lineId, TextRange textRange, Set<TextRange> tagInstanceTextRanges,
-			Set<TextRange> highlightedTextRanges, Collection<ClientTagInstance> absoluteTagIntances, String presentationContent) {
+	Line(Element lineElement, int taggerEditorWidth, LineListener lineListener) {
 		super();
 		this.lineElement = lineElement;
-		this.lineId = lineId;
-		this.textRange = textRange;
-		this.tagInstanceTextRanges = tagInstanceTextRanges;
-		this.absoluteTagIntances = absoluteTagIntances;
-		this.presentationContent = presentationContent;
-		this.highlightedTextRanges = highlightedTextRanges;
+		
+		this.tagInstanceTextRanges = new HashSet<TextRange>();
+		this.highlightedTextRanges = new HashSet<TextRange>();
 		this.selectedTextRanges = new HashSet<>();
+		this.taggerEditorWidth = taggerEditorWidth;
+		this.lineListener = lineListener;
+		
+		makeLineFromLineNode();
+	}
+	
+	private void makeLineFromLineNode() {
+		lineId = lineElement.getId();
+		
+		Map<String,ClientTagInstance> absoluteTagIntancesByID = new HashMap<String, ClientTagInstance>();
+		
+		Element lineBodyElement = lineElement.getFirstChildElement();
+		
+		for (int layerIdx = 0; layerIdx < lineBodyElement.getChildCount(); layerIdx++) {
+			Node layerNode = lineBodyElement.getChild(layerIdx);
+			if (Element.is(layerNode)) {
+				Element layerElement = Element.as(layerNode);
+				
+				if (layerElement.hasClassName("tagger-display-layer")) {
+					handleDisplayLayer(layerElement);
+				}
+				else if (layerElement.hasClassName("annotation-layer")) {
+					handleAnnotationLayer(layerElement, absoluteTagIntancesByID);
+				}
+				else if (layerElement.hasClassName("highlight-layer")) {
+					handleHighlightLayer(layerElement);
+				}
+				else if (layerElement.hasClassName("comment-layer")) {
+					handleCommentLayer(layerElement);
+				}
+			}
+		}
+		
+		for (ClientTagInstance tagInstance : absoluteTagIntancesByID.values()) {
+			tagInstanceTextRanges.addAll(tagInstance.getRanges());
+		}
+		
+		this.absoluteTagIntances = absoluteTagIntancesByID.values();
+	}
+
+	private void handleCommentLayer(Element layerElement) {
+		// TODO extract comments
+		
+		NodeList<Element> nodes = layerElement.getElementsByTagName("div");
+		for (int i=0; i<nodes.getLength(); i++) {
+			Element element = nodes.getItem(i);
+			if (element.hasClassName("comment-container")) {
+				Style style = element.getStyle();
+				style.setLeft(taggerEditorWidth-COMMENT_OFFSET_IN_PIXEL, Unit.PX);
+				addCommentAddButton(element);
+			}
+		}
+
+		
+	}
+
+	private void addCommentAddButton(Element commentContainerElement) {
+		addButtonElement = DOM.createDiv();
+		addButtonElement.setAttribute(
+			"class", 
+			"add-comment-button v-button v-widget icon-only "
+			+ "v-button-icon-only button__icon v-button-button__icon "
+			+ "flat v-button-flat borderless v-button-borderless");
+		
+		commentContainerElement.appendChild(addButtonElement);
+		
+		addButtonElement.setInnerHTML("<span class=\"v-icon v-icon-plus"
+                + "\" style=\"font-family: Vaadin-Icons;\">&#x"
+                + Integer.toHexString(0xE801) + ";</span>");
+		
+	    Event.sinkEvents(addButtonElement, Event.ONCLICK);
+	    Event.setEventListener(addButtonElement, new EventListener() {
+
+	        @Override
+	        public void onBrowserEvent(Event event) {
+	             if(Event.ONCLICK == event.getTypeInt()) {
+	            	 lineListener.addCommentClicked(lineId, event.getClientX(), event.getClientY());
+	             }
+	        }
+	    });
+
+		addButtonElement.getStyle().setVisibility(Visibility.HIDDEN);
+		
+	}
+
+	private void handleHighlightLayer(Element layerElement) {
+		for (int highlightedSegmentIdx = 0; 
+				highlightedSegmentIdx<layerElement.getChildCount(); highlightedSegmentIdx++) {
+			Node hightlightedSegmentNode = layerElement.getChild(highlightedSegmentIdx);
+			if (Element.is(hightlightedSegmentNode)) {
+				Element highlightedSegmentElement = Element.as(hightlightedSegmentNode);
+				
+				if (highlightedSegmentElement.hasClassName("highlighted-content")) {
+					// id is expected to have the form h.startoffset.endoffset
+					String[] rangePositions = highlightedSegmentElement.getId().split("\\.");
+					TextRange highlightedTextRange = 
+						new TextRange(
+							Integer.valueOf(rangePositions[1]),
+							Integer.valueOf(rangePositions[2]));
+					highlightedTextRanges.add(highlightedTextRange);
+				}
+			}
+		}
+	}
+
+	private void handleAnnotationLayer(Element layerElement, Map<String, ClientTagInstance> absoluteTagIntancesByID) {
+		for (int annotationSegmentIdx = 0; 
+				annotationSegmentIdx<layerElement.getChildCount(); annotationSegmentIdx++) {
+			Node annotationSegmentNode = layerElement.getChild(annotationSegmentIdx);
+			if (Element.is(annotationSegmentNode)) {
+				Element annotationSegmentElement = Element.as(annotationSegmentNode);
+				
+				if (annotationSegmentElement.getId() != null &&
+						annotationSegmentElement.getId().startsWith("CATMA_")) {
+					
+					String annotationSegmentId = annotationSegmentElement.getId();
+					Style annotationSegmentStyle = annotationSegmentElement.getStyle();
+					String annotationColor = annotationSegmentStyle.getBackgroundColor();
+					handleAnnotationSegmment(annotationSegmentId, annotationColor, absoluteTagIntancesByID);
+				}
+			}
+		}
+	}
+
+	private void handleAnnotationSegmment(
+			String annotationSegmentId, String annotationColor, Map<String, ClientTagInstance> absoluteTagIntancesByID) {
+		annotationColor = getConvertedColor(annotationColor);
+		
+		String annotationId = ClientTagInstance.getTagInstanceIDFromPartId(annotationSegmentId);
+		TextRange textRange = ClientTagInstance.getTextRangeFromPartId(annotationSegmentId);
+		ClientTagInstance tagInstance = absoluteTagIntancesByID.get(annotationId);
+		if (tagInstance != null) {
+			TreeSet<TextRange> sortedRanges = new TreeSet<>(tagInstance.getRanges());
+			sortedRanges.add(textRange);
+			tagInstance = new ClientTagInstance(null, annotationId, annotationColor, ClientTagInstance.mergeRanges(sortedRanges));
+		}
+		else {
+			List<TextRange> textRanges = new ArrayList<>();
+			textRanges.add(textRange);
+			tagInstance = new ClientTagInstance(null, annotationId, annotationColor, textRanges);
+		}
+		
+		absoluteTagIntancesByID.put(annotationId, tagInstance);
+	}
+
+	private String getConvertedColor(String annotationColor) {
+		if (annotationColor.startsWith("rgb")) {
+			String[] colorStrings = annotationColor.substring(4, annotationColor.length()-1).split(",");
+			
+			int red = Integer.valueOf(colorStrings[0].trim());
+			int green = Integer.valueOf(colorStrings[1].trim());
+			int blue = Integer.valueOf(colorStrings[2].trim());
+			return fillUp(Integer.toHexString(red).toUpperCase()) 
+					+ fillUp(Integer.toHexString(green).toUpperCase()) 
+					+ fillUp(Integer.toHexString(blue).toUpperCase());
+		}
+		return annotationColor;
+	}
+	
+	private String fillUp(String hexString) {
+		if (hexString.length() < 2) {
+			return "0"+hexString;
+		}
+		
+		return hexString;
+	}
+
+	private void handleDisplayLayer(Element layerElement) {
+		textRange = getTextRangeFromDisplayLayer(layerElement);
+		presentationContent = layerElement.getFirstChildElement().getInnerText();
+	}
+	
+	private TextRange getTextRangeFromDisplayLayer(Element layerElement) {
+		String[] rangePositions = layerElement.getId().split("\\.");
+		return new TextRange(Integer.valueOf(rangePositions[0]),Integer.valueOf(rangePositions[1]));
 	}
 
 	private String getPresentationContent() {
@@ -148,6 +339,41 @@ public class Line {
 				}
 			}
 		}
+		
+		// comment layer
+		Element commentLayer = DOM.createTR();
+		commentLayer.setAttribute("class", "comment-layer"); 
+		commentLayer.setAttribute("unselectable", "on"); //$NON-NLS-1$ //$NON-NLS-2$
+		tbody.appendChild(commentLayer);
+		
+		Element commentContent = DOM.createTD();
+		commentLayer.appendChild(commentContent);
+		commentContent.setAttribute(
+				"class", "empty-comment-layer");
+		
+		commentContent.setAttribute(
+				"class", "comment-anchor");
+
+		Element commentContainer = DOM.createDiv();
+		commentContent.appendChild(commentContainer);
+		commentContainer.setAttribute(
+				"class", "comment-container"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		Style style = commentContainer.getStyle();
+		style.setLeft(taggerEditorWidth-Line.COMMENT_OFFSET_IN_PIXEL, Unit.PX);
+
+		
+		addCommentAddButton(commentContainer);
+
+		
+//		for (Comment comment : comments) {
+//			Element commentDiv = new Element("div"); //$NON-NLS-1$
+//			commentDiv.addAttribute(
+//					new Attribute("class", "comment")); //$NON-NLS-1$ //$NON-NLS-2$
+//			commentContainer.appendChild(commentDiv);
+//			commentDiv.appendChild(comment.getBody());
+//		}
+		
 		
 		// annotation layers
 		
@@ -324,5 +550,11 @@ public class Line {
 		}
 		
 		return tagInstanceIDs;
+	}
+
+	public void setAddCommentButtonVisible(boolean visible) {
+		if (addButtonElement != null) {
+			addButtonElement.getStyle().setVisibility(visible?Visibility.VISIBLE:Visibility.HIDDEN);
+		}
 	}
 }

@@ -53,6 +53,7 @@ import com.google.gwt.user.client.ui.FocusWidget;
 import com.google.gwt.user.client.ui.HTML;
 
 import de.catma.ui.client.ui.tagger.DebugUtil;
+import de.catma.ui.client.ui.tagger.editor.Line.LineListener;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener.TaggerEditorEventType;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
@@ -85,6 +86,7 @@ public class TaggerEditor extends FocusWidget
 	private String lastTagInstancePartID = null;
 	private int lineCount;
 	private HashMap<String,Line> lineIdToLineMap;
+	private LineListener lineListener;
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
@@ -104,6 +106,22 @@ public class TaggerEditor extends FocusWidget
 		addClickHandler(this);
 		addBlurHandler(this);
 		addFocusHandler(this);
+		this.lineListener = new LineListener() {
+			@Override
+			public void addAnnotationClicked(String lineId) {
+				// TODO Auto-generated method stub
+				
+			}
+			@Override
+			public void addCommentClicked(String lineId, int x, int y) {
+				fireAddComment(x, y);
+			}
+			@Override
+			public void commentClicked(String commentId) {
+				// TODO Auto-generated method stub
+				
+			}
+		};
 	}
 	
 	/**
@@ -130,7 +148,7 @@ public class TaggerEditor extends FocusWidget
 		}
 		lastTagInstancePartID = null;
 		
-		taggerEditorListener.tagChanged(
+		taggerEditorListener.annotationChanged(
 				TaggerEditorEventType.REMOVE, tagInstanceID, reportToServer);
 	}
 
@@ -138,7 +156,7 @@ public class TaggerEditor extends FocusWidget
 		if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			lastRangeList = impl.getRangeList();
 			logger.info("Ranges: " + lastRangeList.size());
-			showTagInstancesFromSelection();
+			handleMouseSelection();
 		}
 	}
 
@@ -161,11 +179,23 @@ public class TaggerEditor extends FocusWidget
 		
 		for (int lineId=0; lineId<this.lineCount; lineId++) {
 			Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
-			LineNodeToLineConverter lineNodeToLineConverter = 
-					new LineNodeToLineConverter(lineElement, offsetWidth);
-			Line line = lineNodeToLineConverter.getLine();
+					
+			Line line = new Line(lineElement, offsetWidth, this.lineListener);
 			lineIdToLineMap.put(LINEID_PREFIX+lineId, line);
 		}
+	}
+	
+	private void fireAddComment(int x, int y) {
+		highlightSelection();
+		List<TextRange> ranges = new ArrayList<>();
+		
+		for (Line line : lineIdToLineMap.values())  {
+			if (line.hasSelectedTextRanges()) {
+				ranges.addAll(line.getSelectedTextRanges());
+			}
+		}
+
+		taggerEditorListener.addComment(ranges, x, y);
 	}
 
 	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {
@@ -190,7 +220,7 @@ public class TaggerEditor extends FocusWidget
 							tagInstanceId, 
 							tagDefinition.getColor(), 
 							ranges);
-			taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, ti);
+			taggerEditorListener.annotationChanged(TaggerEditorEventType.ADD, ti);
 		}
 	}
 	
@@ -338,11 +368,13 @@ public class TaggerEditor extends FocusWidget
 				ContentElementID.CONTENT.name() + taggerID);
 	}
 
-	private void showTagInstancesFromSelection() {
+	private void handleMouseSelection() {
 		if (hasSelection()) {
 			List<NodeRange> lastNodeRanges = getLastNodeRanges();
 			HashSet<String> tagInstanceIDs = new HashSet<>();
+			Line firstSelectedLine = null;
 			
+			// find selected tagInstanceIDs and first selected line to show add-comment-button
 			for (NodeRange nodeRange : lastNodeRanges) {
 				Node startNode = nodeRange.getStartNode();
 				int startOffset = nodeRange.getStartOffset();
@@ -353,8 +385,10 @@ public class TaggerEditor extends FocusWidget
 				if (startNode.equals(endNode)) {
 					Element lineElement = getLineElementFromDisplayLayerContentNode(startNode);
 					Line line = getLine(lineElement);
-					
 					TextRange textRange = new TextRange(line.getLineOffset()+startOffset, line.getLineOffset()+endOffset);
+					if (firstSelectedLine == null && !textRange.isPoint()) {
+						firstSelectedLine = line;
+					}
 					tagInstanceIDs.addAll(line.getTagInstanceIDs(textRange));
 				}
 				else {
@@ -363,9 +397,14 @@ public class TaggerEditor extends FocusWidget
 					Line startLine = getLine(startLineElement);
 					Line endLine = getLine(endLineElement);
 
+
 					TextRange startRange = 
 						new TextRange(startLine.getLineOffset()+startOffset, startLine.getTextRange().getEndPos());
 					tagInstanceIDs.addAll(startLine.getTagInstanceIDs(startRange));
+					
+					if (firstSelectedLine == null && !startRange.isPoint()) {
+						firstSelectedLine = startLine;
+					}
 					
 					TextRange endRange = 
 						new TextRange(endLine.getTextRange().getStartPos(), endLine.getLineOffset()+endOffset);
@@ -380,7 +419,11 @@ public class TaggerEditor extends FocusWidget
 			}
 			
 			if (!tagInstanceIDs.isEmpty()) {
-				taggerEditorListener.tagsSelected(tagInstanceIDs);
+				taggerEditorListener.annotationsSelected(tagInstanceIDs);
+			}
+			
+			if (firstSelectedLine != null) {
+				firstSelectedLine.setAddCommentButtonVisible(true);
 			}
 		}
 	}
@@ -413,6 +456,7 @@ public class TaggerEditor extends FocusWidget
 					}
 					line.addSelectedTextRange(textRange);
 					line.updateLineElement();
+					line.setAddCommentButtonVisible(true);
 				}
 				else {
 					Element startLineElement = getLineElementFromDisplayLayerContentNode(startNode);
@@ -429,6 +473,7 @@ public class TaggerEditor extends FocusWidget
 					}
 					startLine.addSelectedTextRange(startRange);
 					startLine.updateLineElement();
+					startLine.setAddCommentButtonVisible(true);
 					
 					TextRange endRange = 
 						new TextRange(endLine.getLineOffset(), endLine.getLineOffset() + endOffset);
@@ -491,12 +536,31 @@ public class TaggerEditor extends FocusWidget
 	public void onMouseDown(MouseDownEvent event) {
 		if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			if (!traceSelection) {
-				for (Line line : lineIdToLineMap.values()) {
-					if (line.hasSelectedTextRanges()) {
-						line.removeSelectedTextRanges();
-						line.updateLineElement();
+				EventTarget eventTarget = event.getNativeEvent().getEventTarget();
+				if (Element.is(eventTarget)) {
+					Element targetElement = Element.as(eventTarget);
+					
+					if (!targetElement.hasClassName("comment-container") 
+							&& !targetElement.getParentElement().hasClassName("comment-container")
+							&& !targetElement.getParentElement().getParentElement().hasClassName("comment-container")) {
+						for (Line line : lineIdToLineMap.values()) {
+							if (line.hasSelectedTextRanges()) {
+								line.removeSelectedTextRanges();
+								line.updateLineElement();
+							}
+							line.setAddCommentButtonVisible(false);
+						}						
 					}
 				}
+				else {
+					for (Line line : lineIdToLineMap.values()) {
+						if (line.hasSelectedTextRanges()) {
+							line.removeSelectedTextRanges();
+							line.updateLineElement();
+						}
+						line.setAddCommentButtonVisible(false);
+					}
+				}				
 				lastTextRanges = null;
 			}
 			lastClientX = event.getClientX();
@@ -506,8 +570,9 @@ public class TaggerEditor extends FocusWidget
 	}
 	
 
-	private void fireTagsSelected(Element targetElement) {
+	private void handleElementLeftClick(Element targetElement) {
 
+		// annotation selection
 		if (targetElement.getParentElement().hasClassName("annotation-layer")) {
 			String tagInstancePartId = targetElement.getAttribute("id");
 			if (tagInstancePartId.isEmpty() && (lastTagInstancePartID == null)) {
@@ -523,8 +588,8 @@ public class TaggerEditor extends FocusWidget
 				if ((lastTagInstancePartID == null) 
 						|| ( ! lastTagInstancePartID.equals(tagInstancePartId))) {
 					this.lastTagInstancePartID = tagInstancePartId;
-					logger.info("fireTagsSelected: notifying listeners");
-					taggerEditorListener.tagSelected(tagInstancePartId, lineID);
+					logger.info("fireAnnpotationSelected: notifying listeners");
+					taggerEditorListener.annotationSelected(tagInstancePartId, lineID);
 				}
 			}
 			else {
@@ -558,11 +623,10 @@ public class TaggerEditor extends FocusWidget
 			if (traceSelection) {
 				highlightSelection();
 			}
-			
 			EventTarget eventTarget = event.getNativeEvent().getEventTarget();
 			if (Element.is(eventTarget)) {
 				Element targetElement = Element.as(eventTarget);
-				fireTagsSelected(targetElement);
+				handleElementLeftClick(targetElement);
 			}
 		}
 		else if(event.getNativeButton() == NativeEvent.BUTTON_RIGHT) {

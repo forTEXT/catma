@@ -1,5 +1,7 @@
 package de.catma.ui.client.ui.tagger;
 
+import java.util.List;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.vaadin.client.TooltipInfo;
@@ -9,6 +11,7 @@ import com.vaadin.shared.ui.Connect;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerState;
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.module.annotate.Tagger;
 
 @Connect(Tagger.class)
@@ -99,6 +102,23 @@ public class TaggerConnector extends AbstractComponentConnector {
 			@Override
 			public void contextMenuSelected(int x, int y) {
 				rpc.contextMenuSelected(x, y);
+			}
+			
+			@Override
+			public void addComment(List<TextRange> ranges, int x, int y) {
+				
+				StringBuilder builder = new StringBuilder();
+				String conc = "";
+				for (TextRange range : ranges) {
+					builder.append(conc);
+					builder.append(range.getStartPos());
+					builder.append(":");
+					builder.append(range.getEndPos());
+					conc = ",";
+				}
+				
+				rpc.addComment(builder.toString(), x, y);
+				
 			}
 		});
 

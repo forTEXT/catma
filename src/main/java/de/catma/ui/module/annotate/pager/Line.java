@@ -13,6 +13,7 @@ import java.util.TreeSet;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
+import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.comment.Comment;
 import de.catma.ui.client.ui.tagger.shared.AnnotationLayerBuilder;
@@ -23,6 +24,8 @@ import nu.xom.Element;
 
 public class Line {
 
+	private static final String PLUS_CODE = "\uE801";
+	
 	private int lineId;
 	private List<LineContent> lineContents;
 	private TextRange textRange;
@@ -78,9 +81,6 @@ public class Line {
 
 	public void setLineId(int lineId) {
 		this.lineId = lineId;
-		if (lineId == 3) {
-			comments.add(new Comment("mp", 1, "Dies ist der 1. Kommentar"));
-		}
 	}
 	
 	public int getLineId() {
@@ -212,14 +212,14 @@ public class Line {
 		commentContainer.addAttribute(
 				new Attribute("class", "comment-container")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		
-		for (Comment comment : comments) {
-			Element commentDiv = new Element("div"); //$NON-NLS-1$
-			commentDiv.addAttribute(
-					new Attribute("class", "comment")); //$NON-NLS-1$ //$NON-NLS-2$
-			commentContainer.appendChild(commentDiv);
-			commentDiv.appendChild(comment.getBody());
-		}
+		// TODO: client side:
+//		for (Comment comment : comments) {
+//			Element commentDiv = new Element("div"); //$NON-NLS-1$
+//			commentDiv.addAttribute(
+//					new Attribute("class", "comment")); //$NON-NLS-1$ //$NON-NLS-2$
+//			commentContainer.appendChild(commentDiv);
+//			commentDiv.appendChild(comment.getBody());
+//		}
 		
 		
 		// annotation layers
