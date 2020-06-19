@@ -103,6 +103,10 @@ public class SelectionHandlerImplStandard {
 		return result;
 	}
 	
+	public final void clear() {
+		removeAllRanges();
+	}
+	
 	protected native JavaScriptObject getRangeAt(int idx) /*-{
 		if ($wnd.getSelection().rangeCount > idx) {
 			return $wnd.getSelection().getRangeAt(idx);
@@ -112,6 +116,10 @@ public class SelectionHandlerImplStandard {
 		}
 	}-*/;
 
+	protected native void removeAllRanges() /*-{
+		$wnd.getSelection().removeAllRanges();
+	}-*/;
+	
 	protected native int getRangeCount() /*-{
 		return $wnd.getSelection().rangeCount;
 	}-*/;

@@ -198,6 +198,10 @@ public abstract class AbstractOkCancelDialog<T> extends Window {
 	protected Button getBtOk() {
 		return btOk;
 	}
+	
+	protected Button getBtCancel() {
+		return btCancel;
+	}
 
 	protected HorizontalLayout getButtonPanel() {
 		return buttonPanel;

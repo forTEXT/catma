@@ -13,28 +13,16 @@ import java.util.TreeSet;
 import com.google.common.collect.Table;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.EventListener;
 
 import de.catma.ui.client.ui.tagger.shared.AnnotationLayerBuilder;
+import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class Line {
 	
-	public static interface LineListener {
-		public void addCommentClicked(String lineId, int x, int y);
-		public void addAnnotationClicked(String lineId);
-		public void commentClicked(String commentId);
-	}
-	
-	private static final int COMMENT_OFFSET_IN_PIXEL = 70;
-
 	private Element lineElement;
 	private String lineId;
 	private TextRange textRange;
@@ -43,19 +31,16 @@ public class Line {
 	private Set<TextRange> selectedTextRanges;
 	private Collection<ClientTagInstance> absoluteTagIntances;
 	private String presentationContent;
-	private Element addButtonElement;
-	private int taggerEditorWidth;
-	private LineListener lineListener;
-	
-	Line(Element lineElement, int taggerEditorWidth, LineListener lineListener) {
+	private List<ClientComment> comments;
+
+	Line(Element lineElement) {
 		super();
 		this.lineElement = lineElement;
 		
 		this.tagInstanceTextRanges = new HashSet<TextRange>();
 		this.highlightedTextRanges = new HashSet<TextRange>();
 		this.selectedTextRanges = new HashSet<>();
-		this.taggerEditorWidth = taggerEditorWidth;
-		this.lineListener = lineListener;
+		this.comments = new ArrayList<ClientComment>();
 		
 		makeLineFromLineNode();
 	}
@@ -82,7 +67,7 @@ public class Line {
 					handleHighlightLayer(layerElement);
 				}
 				else if (layerElement.hasClassName("comment-layer")) {
-					handleCommentLayer(layerElement);
+//					handleCommentLayer(layerElement);
 				}
 			}
 		}
@@ -91,53 +76,52 @@ public class Line {
 			tagInstanceTextRanges.addAll(tagInstance.getRanges());
 		}
 		
-		this.absoluteTagIntances = absoluteTagIntancesByID.values();
+		this.absoluteTagIntances = new HashSet<>(absoluteTagIntancesByID.values());
 	}
-
+//TODO:
 	private void handleCommentLayer(Element layerElement) {
-		// TODO extract comments
 		
-		NodeList<Element> nodes = layerElement.getElementsByTagName("div");
-		for (int i=0; i<nodes.getLength(); i++) {
-			Element element = nodes.getItem(i);
-			if (element.hasClassName("comment-container")) {
-				Style style = element.getStyle();
-				style.setLeft(taggerEditorWidth-COMMENT_OFFSET_IN_PIXEL, Unit.PX);
-				addCommentAddButton(element);
-			}
-		}
-
-		
+//		NodeList<Element> nodes = layerElement.getElementsByTagName("div");
+//		for (int i=0; i<nodes.getLength(); i++) {
+//			Element element = nodes.getItem(i);
+//			if (element.hasClassName("comment-container")) {
+//				this.commentContainer = element;
+//				Style style = element.getStyle();
+//				style.setLeft(taggerEditorWidth-COMMENT_OFFSET_IN_PIXEL, Unit.PX);
+//				addCommentAddButton(element);
+//				break;
+//			}
+//		}
 	}
 
-	private void addCommentAddButton(Element commentContainerElement) {
-		addButtonElement = DOM.createDiv();
-		addButtonElement.setAttribute(
-			"class", 
-			"add-comment-button v-button v-widget icon-only "
-			+ "v-button-icon-only button__icon v-button-button__icon "
-			+ "flat v-button-flat borderless v-button-borderless");
-		
-		commentContainerElement.appendChild(addButtonElement);
-		
-		addButtonElement.setInnerHTML("<span class=\"v-icon v-icon-plus"
-                + "\" style=\"font-family: Vaadin-Icons;\">&#x"
-                + Integer.toHexString(0xE801) + ";</span>");
-		
-	    Event.sinkEvents(addButtonElement, Event.ONCLICK);
-	    Event.setEventListener(addButtonElement, new EventListener() {
-
-	        @Override
-	        public void onBrowserEvent(Event event) {
-	             if(Event.ONCLICK == event.getTypeInt()) {
-	            	 lineListener.addCommentClicked(lineId, event.getClientX(), event.getClientY());
-	             }
-	        }
-	    });
-
-		addButtonElement.getStyle().setVisibility(Visibility.HIDDEN);
-		
-	}
+//	private void addCommentAddButton(Element commentContainerElement) {
+//		addButtonElement = DOM.createDiv();
+//		addButtonElement.setAttribute(
+//			"class", 
+//			"add-comment-button v-button v-widget icon-only "
+//			+ "v-button-icon-only button__icon v-button-button__icon "
+//			+ "flat v-button-flat borderless v-button-borderless");
+//		
+//		commentContainerElement.appendChild(addButtonElement);
+//		
+//		addButtonElement.setInnerHTML("<span class=\"v-icon v-icon-plus"
+//                + "\" style=\"font-family: Vaadin-Icons;\">&#x"
+//                + Integer.toHexString(0xE801) + ";</span>");
+//		
+//	    Event.sinkEvents(addButtonElement, Event.ONCLICK);
+//	    Event.setEventListener(addButtonElement, new EventListener() {
+//
+//	        @Override
+//	        public void onBrowserEvent(Event event) {
+//	             if(Event.ONCLICK == event.getTypeInt()) {
+//	            	 lineListener.addCommentClicked(lineId, event.getClientX(), event.getClientY());
+//	             }
+//	        }
+//	    });
+//
+//		addButtonElement.getStyle().setVisibility(Visibility.HIDDEN);
+//		
+//	}
 
 	private void handleHighlightLayer(Element layerElement) {
 		for (int highlightedSegmentIdx = 0; 
@@ -341,39 +325,33 @@ public class Line {
 		}
 		
 		// comment layer
-		Element commentLayer = DOM.createTR();
-		commentLayer.setAttribute("class", "comment-layer"); 
-		commentLayer.setAttribute("unselectable", "on"); //$NON-NLS-1$ //$NON-NLS-2$
-		tbody.appendChild(commentLayer);
-		
-		Element commentContent = DOM.createTD();
-		commentLayer.appendChild(commentContent);
-		commentContent.setAttribute(
-				"class", "empty-comment-layer");
-		
-		commentContent.setAttribute(
-				"class", "comment-anchor");
-
-		Element commentContainer = DOM.createDiv();
-		commentContent.appendChild(commentContainer);
-		commentContainer.setAttribute(
-				"class", "comment-container"); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		Style style = commentContainer.getStyle();
-		style.setLeft(taggerEditorWidth-Line.COMMENT_OFFSET_IN_PIXEL, Unit.PX);
-
-		
-		addCommentAddButton(commentContainer);
-
-		
-//		for (Comment comment : comments) {
-//			Element commentDiv = new Element("div"); //$NON-NLS-1$
-//			commentDiv.addAttribute(
-//					new Attribute("class", "comment")); //$NON-NLS-1$ //$NON-NLS-2$
-//			commentContainer.appendChild(commentDiv);
-//			commentDiv.appendChild(comment.getBody());
+//		Element commentLayer = DOM.createTR();
+//		commentLayer.setAttribute("class", "comment-layer"); 
+//		commentLayer.setAttribute("unselectable", "on"); //$NON-NLS-1$ //$NON-NLS-2$
+//		tbody.appendChild(commentLayer);
+//		
+//		Element commentContent = DOM.createTD();
+//		commentLayer.appendChild(commentContent);
+//		commentContent.setAttribute(
+//				"class", "empty-comment-layer");
+//		
+//		commentContent.setAttribute(
+//				"class", "comment-anchor");
+//
+//		this.commentContainer = DOM.createDiv();
+//		commentContent.appendChild(commentContainer);
+//		commentContainer.setAttribute(
+//				"class", "comment-container"); //$NON-NLS-1$ //$NON-NLS-2$
+//		
+//		Style style = commentContainer.getStyle();
+//		style.setLeft(taggerEditorWidth-Line.COMMENT_OFFSET_IN_PIXEL, Unit.PX);
+//
+//		
+//		addCommentAddButton(commentContainer);
+//
+//		for (ClientComment comment : comments) {
+//			addCommentToLine(comment);
 //		}
-		
 		
 		// annotation layers
 		
@@ -552,9 +530,7 @@ public class Line {
 		return tagInstanceIDs;
 	}
 
-	public void setAddCommentButtonVisible(boolean visible) {
-		if (addButtonElement != null) {
-			addButtonElement.getStyle().setVisibility(visible?Visibility.VISIBLE:Visibility.HIDDEN);
-		}
+	public void addComment(ClientComment comment) {
+		this.comments.add(comment);
 	}
 }

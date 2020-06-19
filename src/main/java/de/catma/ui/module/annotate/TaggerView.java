@@ -37,6 +37,7 @@ import org.vaadin.sliderpanel.SliderPanelBuilder;
 import org.vaadin.sliderpanel.client.SliderMode;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
@@ -53,22 +54,23 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
-import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
-import de.catma.backgroundservice.LogProgressListener;
 import de.catma.document.Range;
 import de.catma.document.annotation.Annotation;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.comment.Comment;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.IndexedProject;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.event.ChangeType;
+import de.catma.project.event.CommentChangeEvent;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
@@ -101,6 +103,7 @@ import de.catma.ui.module.annotate.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.module.annotate.resourcepanel.AnnotateResourcePanel;
 import de.catma.ui.module.annotate.resourcepanel.ResourceSelectionListener;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.user.User;
 import de.catma.util.Pair;
 
 public class TaggerView extends HorizontalLayout 
@@ -145,7 +148,6 @@ public class TaggerView extends HorizontalLayout
 		this.project = project;
 		this.sourceDocument = sourceDocument;
 		this.eventBus = eventBus;
-		
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 		this.userMarkupCollectionManager = new AnnotationCollectionManager(project);
 		this.errorHandler = (ErrorHandler)UI.getCurrent();
@@ -154,6 +156,7 @@ public class TaggerView extends HorizontalLayout
 		initListeners();
 		pager.setMaxPageLengthInLines(maxPageLengthInLines);
 		initData();
+		this.eventBus.register(this);
 	}
 
 	@Override
@@ -946,5 +949,42 @@ public class TaggerView extends HorizontalLayout
 	@Override
 	public String getCaption() {
 		return this.sourceDocument==null?"no selection yet":sourceDocument.toString();
+	}
+	
+	@Override
+	public void addComment(List<Range> ranges, int x, int y) {
+		User user = project.getUser();
+		
+		CommentDialog commentDialog = new CommentDialog(
+				commentBody -> saveCommentChange(
+						new Comment(user.getName(), user.getUserId(), commentBody, ranges, this.sourceDocument.getUuid())));
+		commentDialog.show(x, y);
+	}
+
+	private void saveCommentChange(Comment comment) {
+		//TODO: 
+		// project.saveComment(comment);
+		handleCommentChange(new CommentChangeEvent(ChangeType.CREATED, comment));
+	}
+
+	@Subscribe
+	public void handleCommentChange(CommentChangeEvent commentChangeEvent) {
+		switch(commentChangeEvent.getChangeType()) {
+		case CREATED: {
+			try {
+				tagger.addComment(commentChangeEvent.getComment());
+			} catch (IOException e) {
+				errorHandler.showAndLogError("Error adding Comment!", e);
+			}
+		}
+		case UPDATED: {
+			
+		}
+		case DELETED: {
+			
+		}
+		}
+		
+		
 	}
 }

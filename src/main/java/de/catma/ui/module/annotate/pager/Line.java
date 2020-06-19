@@ -191,37 +191,24 @@ public class Line {
 		}
 		
 		// comment layer
-		Element commentLayer = new Element("tr"); //$NON-NLS-1$
-		commentLayer.addAttribute(new Attribute("class", "comment-layer")); //$NON-NLS-1$ //$NON-NLS-2$
-		commentLayer.addAttribute(new Attribute("unselectable", "on")); //$NON-NLS-1$ //$NON-NLS-2$
-		tbody.appendChild(commentLayer);
-		
-		Element commentContent = new Element("td"); //$NON-NLS-1$
-		commentLayer.appendChild(commentContent);
-		commentContent.addAttribute(
-				new Attribute("class", "empty-comment-layer")); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		
-//		Element commentAnchor = new Element("td"); //$NON-NLS-1$
-//		commentLayer.appendChild(commentAnchor);
-		commentContent.addAttribute(
-				new Attribute("class", "comment-anchor")); //$NON-NLS-1$ //$NON-NLS-2$
+//		Element commentLayer = new Element("tr"); //$NON-NLS-1$
+//		commentLayer.addAttribute(new Attribute("class", "comment-layer")); //$NON-NLS-1$ //$NON-NLS-2$
+//		commentLayer.addAttribute(new Attribute("unselectable", "on")); //$NON-NLS-1$ //$NON-NLS-2$
+//		tbody.appendChild(commentLayer);
+//		
+//		Element commentContent = new Element("td"); //$NON-NLS-1$
+//		commentLayer.appendChild(commentContent);
+//		commentContent.addAttribute(
+//				new Attribute("class", "empty-comment-layer")); //$NON-NLS-1$ //$NON-NLS-2$
+//			
+//		commentContent.addAttribute(
+//				new Attribute("class", "comment-anchor")); //$NON-NLS-1$ //$NON-NLS-2$
+//
+//		Element commentContainer = new Element("div");
+//		commentContent.appendChild(commentContainer);
+//		commentContainer.addAttribute(
+//				new Attribute("class", "comment-container")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Element commentContainer = new Element("div");
-		commentContent.appendChild(commentContainer);
-		commentContainer.addAttribute(
-				new Attribute("class", "comment-container")); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		// TODO: client side:
-//		for (Comment comment : comments) {
-//			Element commentDiv = new Element("div"); //$NON-NLS-1$
-//			commentDiv.addAttribute(
-//					new Attribute("class", "comment")); //$NON-NLS-1$ //$NON-NLS-2$
-//			commentContainer.appendChild(commentDiv);
-//			commentDiv.appendChild(comment.getBody());
-//		}
-		
-		
 		// annotation layers
 		AnnotationLayerBuilder annotationLayerBuilder = new AnnotationLayerBuilder(relativeTagInstanceByID.values(), rangeParts);
 		Table<Integer, TextRange, ClientTagInstance> layerTable = annotationLayerBuilder.getLayerTable();

@@ -36,4 +36,5 @@ public interface TaggerEditorListener {
 	public void annotationsSelected(HashSet<String> tagInstanceIDs);
 	public void contextMenuSelected(int x, int y);
 	public void addComment(List<TextRange> ranges, int x, int y);
+	public void setAddCommentButtonVisible(boolean visible, Line line);
 }

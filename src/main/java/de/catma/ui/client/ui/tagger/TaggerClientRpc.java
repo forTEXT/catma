@@ -12,4 +12,5 @@ public interface TaggerClientRpc extends ClientRpc {
 	public void setTraceSelection(boolean traceSelection);
 	public void removeHighlights();
 	public void scrollLineToVisible(String lineId);
+	public void addComment(String clientCommentJson);
 }

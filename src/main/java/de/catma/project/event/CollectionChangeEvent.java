@@ -5,9 +5,9 @@ import de.catma.document.source.SourceDocument;
 
 public class CollectionChangeEvent {
 	
-	private AnnotationCollectionReference collectionReference;
-	private SourceDocument document;
-	private ChangeType changeType;
+	private final AnnotationCollectionReference collectionReference;
+	private final SourceDocument document;
+	private final ChangeType changeType;
 	
 	public CollectionChangeEvent(AnnotationCollectionReference collectionReference, SourceDocument document,
 			ChangeType changeType) {

@@ -22,12 +22,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 
+import de.catma.ui.client.ui.tagger.comment.CommentPanel;
+import de.catma.ui.client.ui.tagger.editor.Line;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
+import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -47,6 +53,8 @@ public class VTagger extends Composite {
 	private TextRangeJSONSerializer textRangeJSONSerializer;
 
 	private TaggerListener taggerListener;
+
+	private CommentPanel commentPanel;
 	
 	/**
 	 * The constructor should first call super() to initialize the component and
@@ -57,8 +65,20 @@ public class VTagger extends Composite {
 		this.tagDefinitionJSONSerializer = new ClientTagDefinitionJSONSerializer();
 		this.textRangeJSONSerializer = new TextRangeJSONSerializer();
 		initComponents();
+		initActions();
 	}
 	
+	private void initActions() {
+		this.commentPanel.addAddCommentClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				List<TextRange> ranges = taggerEditor.getSelectedTextRanges();
+				
+				taggerListener.addComment(ranges, event.getClientX(), event.getClientY());
+			}
+		});
+	}
+
 	private void initComponents() {
 
 		taggerEditor = new TaggerEditor(new TaggerEditorListener() {
@@ -107,9 +127,22 @@ public class VTagger extends Composite {
 			public void addComment(List<TextRange> ranges, int x, int y) {
 				taggerListener.addComment(ranges, x, y);
 			}
+			
+			@Override
+			public void setAddCommentButtonVisible(boolean visible, Line line) {
+				commentPanel.setAddCommentButtonVisible(visible, line);
+			}
 		});
 
-		initWidget(taggerEditor);
+		FlowPanel panel = new FlowPanel();
+		panel.addStyleName("v-tagger-panel");
+		panel.add(taggerEditor);
+		
+		this.commentPanel = new CommentPanel();
+		
+		panel.add(commentPanel);
+		
+		initWidget(panel);
 	}
 	
 	public void logToServer(String logMsg) {
@@ -131,6 +164,18 @@ public class VTagger extends Composite {
 			@Override
 			public void run() {
 				taggerEditor.setHTML(new HTML(page), lineCount);
+//				
+//				Line line = taggerEditor.getLineForPos(1942);
+//
+//				commentPanel.getElement().removeAllChildren();
+//				Element element = line.getLineElement();
+//				int lineTop = element.getOffsetTop()-38;
+//				GWT.log("lineTop " + lineTop);
+//				Element commentDiv = DOM.createDiv();
+//				commentDiv.setAttribute("class", "comment");
+//				commentPanel.getElement().appendChild(commentDiv);
+//				commentDiv.setInnerText("nase hase \n rüben");
+//				commentDiv.getStyle().setTop(lineTop, Unit.PX);
 			}
 		};
 		
@@ -182,5 +227,12 @@ public class VTagger extends Composite {
 
 	public void scrollLineToVisible(String lineId) {
 		taggerEditor.scrollLineToVisible(lineId);
+	}
+
+	public void addComment(ClientComment comment) {
+		Line line = taggerEditor.addComment(comment);
+		if (line != null) {
+			commentPanel.addComment(comment, line);
+		}
 	}
 }

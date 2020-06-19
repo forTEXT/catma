@@ -32,11 +32,13 @@ import com.vaadin.ui.UI;
 import de.catma.document.Range;
 import de.catma.document.annotation.Annotation;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.comment.Comment;
 import de.catma.project.Project;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.tagger.TaggerServerRpc;
+import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerState;
@@ -58,6 +60,7 @@ public class Tagger extends AbstractComponent {
 		public void tagInstanceSelected(Set<String> tagInstanceIDs);
 		public Annotation getTagInstanceInfo(String tagInstanceId);
 		public void contextMenuSelected(int x, int y);
+		public void addComment(List<Range> ranges, int x, int y);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -123,13 +126,13 @@ public class Tagger extends AbstractComponent {
 		@Override
 		public void addComment(String textRanges, int x, int y) {
 			String[] textRangeSegments = textRanges.split(",");
-			List<TextRange> ranges = new ArrayList<>();
+			List<Range> ranges = new ArrayList<>();
 			for (String textRangeSegment : textRangeSegments) {
 				String[] positions = textRangeSegment.split(":");
 				
-				ranges.add(new TextRange(Integer.valueOf(positions[0]), Integer.valueOf(positions[1])));
+				ranges.add(new Range(Integer.valueOf(positions[0]), Integer.valueOf(positions[1])));
 			}
-			System.out.println(ranges + " x:" + x + " y:" + y);
+			taggerListener.addComment(ranges, x, y);
 		}
 	};
 
@@ -319,5 +322,14 @@ public class Tagger extends AbstractComponent {
 	@Override
 	protected TaggerState getState() {
 		return (TaggerState)super.getState();
+	}
+
+	public void addComment(Comment comment) throws IOException {
+		ClientComment clientComment = pager.addComment(comment);
+		
+		if (clientComment != null) {
+			getRpcProxy(TaggerClientRpc.class).addComment(
+				new ClientCommentJSONSerializer().toJSON(clientComment));
+		}
 	}	
 }

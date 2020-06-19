@@ -25,11 +25,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 import de.catma.document.Range;
+import de.catma.document.comment.Comment;
 import de.catma.tag.TagDefinition;
+import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 /**
  * @author marco.petris@web.de
@@ -208,6 +212,18 @@ public class Pager implements Iterable<Page> {
 		return result;
 	}
 	
+	public List<Page> getPagesForAbsoluteTextRanges(List<TextRange> textRanges) {
+		List<Page> result = new ArrayList<Page>();
+		
+		for (Page p : pages) {
+			if (p.hasOverlappingRange(textRanges)) {
+				result.add(p);
+			}
+		}
+		
+		return result;
+	}
+	
 	public List<ClientTagInstance> getAbsoluteTagInstances() {
 		List<ClientTagInstance> absoluteTagInstances = 
 				new ArrayList<ClientTagInstance>();
@@ -307,5 +323,24 @@ public class Pager implements Iterable<Page> {
 
 	public void setRightToLeftWriting(boolean rightToLeftWriting) {
 		this.rightToLeftWriting = rightToLeftWriting;
+	}
+
+	public ClientComment addComment(Comment comment) {
+		List<TextRange> ranges = comment.getRanges()
+				.stream()
+				.map(range -> new TextRange(range.getStartPoint(), range.getEndPoint()))
+				.collect(Collectors.toList()); 
+		List<Page> pages = getPagesForAbsoluteTextRanges(ranges);
+		
+		for (Page page : pages) {
+			page.addComment(comment);
+		}
+	
+		if (pages.contains(getCurrentPage())) {
+			return new ClientComment(comment.getUsername(), comment.getUserId(), comment.getBody(), ranges);
+		}
+		else {
+			return null;
+		}
 	}
 }

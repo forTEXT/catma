@@ -90,7 +90,23 @@ $v-focus-color: #5A98A1;
 		-o-user-select: text;
 		user-select: text; 
 	}
+	
+	.tagger-editor {
+		display: inline-block;
+	}
+	
+	.tagger-editor:focus {
+		outline: none;
+	}
+	
+	.tagger-editor-content-wrapper:focus {
+		outline: none;
+	}
 
+	.tagger-editor-content:focus {
+		outline: none;
+	}
+	
 	.v-table-cell-content-rtl-field {
 		direction: rtl;
 	}
@@ -220,7 +236,20 @@ $v-focus-color: #5A98A1;
 	    
 	}
 	
+	
+	.comment-panel {
+		display: inline-block;
+    	vertical-align: top;
+    	position: relative;	
+	}
+	
 	.comment-layer {
+	}
+	
+	.add-comment-button {
+		white-space: nowrap;
+		vertical-align: middle;
+		display: inline !important;
 	}
 	
 	.comment-container {
@@ -236,8 +265,12 @@ $v-focus-color: #5A98A1;
 	.comment {
 	    border: 1px solid;
 	    border-radius: 10px;
-	    padding: 2px;
-	    height: 20px;
+	    padding: 5px;
+	    margin: 5px;
+	    max-height: 75px;
+	    display: inline-block;
+	    position: absolute;
+	    top: 10px;
 	}
 	
 	

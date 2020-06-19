@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import com.google.gwt.core.client.GWT;
@@ -49,14 +50,15 @@ import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FocusWidget;
 import com.google.gwt.user.client.ui.HTML;
 
 import de.catma.ui.client.ui.tagger.DebugUtil;
-import de.catma.ui.client.ui.tagger.editor.Line.LineListener;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener.TaggerEditorEventType;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
+import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
@@ -86,11 +88,11 @@ public class TaggerEditor extends FocusWidget
 	private String lastTagInstancePartID = null;
 	private int lineCount;
 	private HashMap<String,Line> lineIdToLineMap;
-	private LineListener lineListener;
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
 		getElement().setTabIndex(0); // some browsers need the tabindex to fire blur/focus events
+		addStyleName("tagger-editor");
 		
 		this.taggerEditorListener = taggerEditorListener;
 		
@@ -106,22 +108,6 @@ public class TaggerEditor extends FocusWidget
 		addClickHandler(this);
 		addBlurHandler(this);
 		addFocusHandler(this);
-		this.lineListener = new LineListener() {
-			@Override
-			public void addAnnotationClicked(String lineId) {
-				// TODO Auto-generated method stub
-				
-			}
-			@Override
-			public void addCommentClicked(String lineId, int x, int y) {
-				fireAddComment(x, y);
-			}
-			@Override
-			public void commentClicked(String commentId) {
-				// TODO Auto-generated method stub
-				
-			}
-		};
 	}
 	
 	/**
@@ -167,7 +153,7 @@ public class TaggerEditor extends FocusWidget
 				getElement().removeChild(children.getItem(i));
 			}
 		}
-
+		pageHtmlContent.addStyleName("tagger-editor-content-wrapper");
 		getElement().appendChild(pageHtmlContent.getElement());
 		this.lineCount = lineCount;
 		createLineModels();
@@ -175,18 +161,16 @@ public class TaggerEditor extends FocusWidget
 	 
 	private void createLineModels() {
 		lineIdToLineMap = new HashMap<>();
-		int offsetWidth = getElement().getOffsetWidth(); 
 		
 		for (int lineId=0; lineId<this.lineCount; lineId++) {
 			Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
 					
-			Line line = new Line(lineElement, offsetWidth, this.lineListener);
+			Line line = new Line(lineElement);
 			lineIdToLineMap.put(LINEID_PREFIX+lineId, line);
 		}
 	}
-	
-	private void fireAddComment(int x, int y) {
-		highlightSelection();
+
+	public List<TextRange> getSelectedTextRanges() {
 		List<TextRange> ranges = new ArrayList<>();
 		
 		for (Line line : lineIdToLineMap.values())  {
@@ -194,8 +178,7 @@ public class TaggerEditor extends FocusWidget
 				ranges.addAll(line.getSelectedTextRanges());
 			}
 		}
-
-		taggerEditorListener.addComment(ranges, x, y);
+		return ranges;
 	}
 
 	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {
@@ -423,7 +406,15 @@ public class TaggerEditor extends FocusWidget
 			}
 			
 			if (firstSelectedLine != null) {
-				firstSelectedLine.setAddCommentButtonVisible(true);
+				final Line selectedLine = firstSelectedLine;
+				new Timer() {
+					
+					@Override
+					public void run() {
+						taggerEditorListener.setAddCommentButtonVisible(
+								true, selectedLine);
+					}
+				}.schedule(100);
 			}
 		}
 	}
@@ -456,7 +447,7 @@ public class TaggerEditor extends FocusWidget
 					}
 					line.addSelectedTextRange(textRange);
 					line.updateLineElement();
-					line.setAddCommentButtonVisible(true);
+					taggerEditorListener.setAddCommentButtonVisible(true, line);
 				}
 				else {
 					Element startLineElement = getLineElementFromDisplayLayerContentNode(startNode);
@@ -473,7 +464,7 @@ public class TaggerEditor extends FocusWidget
 					}
 					startLine.addSelectedTextRange(startRange);
 					startLine.updateLineElement();
-					startLine.setAddCommentButtonVisible(true);
+					taggerEditorListener.setAddCommentButtonVisible(true, startLine);
 					
 					TextRange endRange = 
 						new TextRange(endLine.getLineOffset(), endLine.getLineOffset() + endOffset);
@@ -532,7 +523,17 @@ public class TaggerEditor extends FocusWidget
 			highlightSelection();
 		}
 	}
-
+	
+	private void resetLines() {
+		for (Line line : lineIdToLineMap.values()) {
+			if (line.hasSelectedTextRanges()) {
+				line.removeSelectedTextRanges();
+				line.updateLineElement();
+			}
+		}
+		taggerEditorListener.setAddCommentButtonVisible(false, null);
+	}
+	
 	public void onMouseDown(MouseDownEvent event) {
 		if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			if (!traceSelection) {
@@ -543,25 +544,17 @@ public class TaggerEditor extends FocusWidget
 					if (!targetElement.hasClassName("comment-container") 
 							&& !targetElement.getParentElement().hasClassName("comment-container")
 							&& !targetElement.getParentElement().getParentElement().hasClassName("comment-container")) {
-						for (Line line : lineIdToLineMap.values()) {
-							if (line.hasSelectedTextRanges()) {
-								line.removeSelectedTextRanges();
-								line.updateLineElement();
-							}
-							line.setAddCommentButtonVisible(false);
-						}						
+						resetLines();
+					}
+					else {
+						return;
 					}
 				}
 				else {
-					for (Line line : lineIdToLineMap.values()) {
-						if (line.hasSelectedTextRanges()) {
-							line.removeSelectedTextRanges();
-							line.updateLineElement();
-						}
-						line.setAddCommentButtonVisible(false);
-					}
+					resetLines();
 				}				
 				lastTextRanges = null;
+				impl.clear();
 			}
 			lastClientX = event.getClientX();
 			lastClientY = event.getClientY();
@@ -690,6 +683,28 @@ public class TaggerEditor extends FocusWidget
 			line.getLineElement().scrollIntoView();
 		}
 		
+	}
+	
+	public Line getLineForPos(int pos) {
+		for (Line line : lineIdToLineMap.values()) {
+			if (line.getTextRange().isInBetweenInclusiveEdge(pos)) {
+				return line;
+			}
+		}
+		return null;
+	}
+
+	public Line addComment(ClientComment comment) {
+		
+		int startPos = comment.getRanges().get(0).getStartPos();
+		
+		Line line = getLineForPos(startPos);
+		
+		if (line != null) {
+			line.addComment(comment);
+		}
+		
+		return line;
 	}
 
 }

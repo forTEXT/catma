@@ -33,6 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.catma.document.Range;
+import de.catma.document.comment.Comment;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
@@ -57,7 +58,22 @@ public class Page {
 		id,
 		dir,
 		align,
+		clazz("class")
 		;
+	
+		private String attributeName;
+		
+		
+		private HTMLAttribute(String attributeName) {
+			this.attributeName = attributeName;
+		}
+
+		private HTMLAttribute() {
+		}
+		
+		public String getAttributeName() {
+			return attributeName == null?name():attributeName;
+		}
 	}
 	
 	private static enum HTMLAttributeValue {
@@ -78,6 +94,7 @@ public class Page {
 	private boolean rightToLeftWriting;
 	private ArrayList<Line> lines;
 	private Element pageDiv;
+	private Set<Comment> comments;
 	
 	public Page(int taggerID, String text, int pageStart, int pageEnd, int approxMaxLineLength, boolean rightToLeftWriting) {
 		this.taggerID = taggerID;
@@ -86,6 +103,7 @@ public class Page {
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
 		this.rightToLeftWriting = rightToLeftWriting;
+		this.comments = new HashSet<Comment>();
 		buildLines();
 	}
 	
@@ -172,7 +190,9 @@ public class Page {
 					new Attribute(
 						HTMLAttribute.id.name(), 
 						ContentElementID.CONTENT.name()+String.valueOf(taggerID)));
-			
+			pageDiv.addAttribute(new Attribute(
+					HTMLAttribute.clazz.getAttributeName(),
+					"tagger-editor-content"));
 			for (Line line : lines) {
 				pageDiv.appendChild(line.toHTML());
 			}
@@ -248,10 +268,14 @@ public class Page {
 	}
 
 	public boolean hasOverlappingRange(ClientTagInstance absoluteTagInstance) {
+		return hasOverlappingRange(absoluteTagInstance.getRanges());
+	}
+	
+	public boolean hasOverlappingRange(List<TextRange> absoluteTextRanges) {
 		TextRange pageRange = new TextRange(this.pageStart, this.pageEnd);
 		
-		if (!absoluteTagInstance.getRanges().isEmpty()) {
-			for (TextRange tr : absoluteTagInstance.getRanges()) {
+		if (!absoluteTextRanges.isEmpty()) {
+			for (TextRange tr : absoluteTextRanges) {
 				if (pageRange.hasOverlappingRange(tr)) {
 					return true;
 				}
@@ -374,5 +398,9 @@ public class Page {
 
 	public boolean hasLine(int lineId) {
 		return lines.stream().filter(line -> line.getLineId() == lineId).findAny().isPresent();
+	}
+
+	public void addComment(Comment comment) {
+		comments.add(comment);
 	}
 }

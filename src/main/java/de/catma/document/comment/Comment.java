@@ -1,5 +1,7 @@
 package de.catma.document.comment;
 
+import java.util.List;
+
 import de.catma.document.Range;
 
 public class Comment {
@@ -8,15 +10,15 @@ public class Comment {
 	private final Integer userId;
 	
 	private String body;
-	private final Range range;
+	private final List<Range> ranges;
 	private final String documentId;
 	
-	public Comment(String username, Integer userId, String body, Range range, String documentId) {
+	public Comment(String username, Integer userId, String body, List<Range> ranges, String documentId) {
 		super();
 		this.username = username;
 		this.userId = userId;
 		this.body = body;
-		this.range = range;
+		this.ranges = ranges;
 		this.documentId = documentId;
 	}
 	
@@ -36,7 +38,7 @@ public class Comment {
 		return documentId;
 	}
 	
-	public Range getRange() {
-		return range;
+	public List<Range> getRanges() {
+		return ranges;
 	}
 }

@@ -3,8 +3,8 @@ package de.catma.project.event;
 import de.catma.document.source.SourceDocument;
 
 public class DocumentChangeEvent {
-	private SourceDocument document;
-	private ChangeType changeType;
+	private final SourceDocument document;
+	private final ChangeType changeType;
 
 	public DocumentChangeEvent(SourceDocument document, ChangeType changeType) {
 		super();

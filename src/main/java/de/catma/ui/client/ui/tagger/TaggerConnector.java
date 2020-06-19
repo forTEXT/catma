@@ -67,6 +67,12 @@ public class TaggerConnector extends AbstractComponentConnector {
 				getWidget().scrollLineToVisible(lineId);
 			}
 			
+			@Override
+			public void addComment(String clientCommentJson) {
+				getWidget().addComment(
+					new ClientCommentJSONSerializer().fromJSONString(clientCommentJson));
+			}
+			
 		});
 	}
 	
