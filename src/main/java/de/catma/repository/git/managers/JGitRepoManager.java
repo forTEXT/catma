@@ -64,6 +64,8 @@ import org.eclipse.jgit.util.FS;
 
 import de.catma.project.CommitInfo;
 import de.catma.project.conflict.DeletedResourceConflict;
+import de.catma.properties.CATMAProperties;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.jgitcommand.DeletedByThemWorkaroundStrategyRecursive;
@@ -667,14 +669,19 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
-			PushCommand pushCommand = this.gitApi.push();
-			pushCommand.setCredentialsProvider(credentialsProvider);
-			pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
-			Iterable<PushResult> pushResults = pushCommand.call();
-			for (PushResult pushResult : pushResults) {
-				for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
-					System.out.println(remoteRefUpdate);
+			if (!CATMAPropertyKey.devPreventPush.getValue(false)) {
+				PushCommand pushCommand = this.gitApi.push();
+				pushCommand.setCredentialsProvider(credentialsProvider);
+				pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
+				Iterable<PushResult> pushResults = pushCommand.call();
+				for (PushResult pushResult : pushResults) {
+					for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
+						System.out.println(remoteRefUpdate);
+					}
 				}
+			}
+			else {
+				System.out.println("FAKE PUSH");
 			}
 		}
 		catch (GitAPIException e) {
@@ -1035,15 +1042,23 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 						String ourLastCommitMsg = ourCommit.getFullMessage();
 						
 						String theirTreeName = "refs/remotes/origin/master"; 
-						Iterator<RevCommit> remoteCommitIterator =
-							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(Constants.DOT_GIT_MODULES).call().iterator();
-						String resourceId = conflictingSubmodule.substring(conflictingSubmodule.indexOf('/')+1);
-						RevCommit theirCommit = null;
-						while(remoteCommitIterator.hasNext()) {
-							RevCommit revCommit = remoteCommitIterator.next();
-							if (revCommit.getFullMessage().contains(resourceId)) {
-								theirCommit = revCommit;
-								break;
+						
+						RevCommit theirCommit = 
+							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(conflictingSubmodule).call().iterator().next();
+						
+						if (theirCommit == null) {
+							
+							// couldn't find their commit based on the conflicting submodule path
+							// we try to find it based on the DOT_GIT_MODULES file and the resourceId in the commit message
+							Iterator<RevCommit> remoteCommitIterator =
+								gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(Constants.DOT_GIT_MODULES).call().iterator();
+							String resourceId = conflictingSubmodule.substring(conflictingSubmodule.indexOf('/')+1);
+							while(remoteCommitIterator.hasNext()) {
+								RevCommit revCommit = remoteCommitIterator.next();
+								if (revCommit.getFullMessage().contains(resourceId)) {
+									theirCommit = revCommit;
+									break;
+								}
 							}
 						}
 						
