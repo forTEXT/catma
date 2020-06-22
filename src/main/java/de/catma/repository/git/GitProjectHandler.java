@@ -1694,6 +1694,43 @@ public class GitProjectHandler {
 	List<String> getResourceIds() throws IOException {
 		return remoteGitServerManager.getGroupRepositoryNames(projectId);
 	}
+
+	public void verifyCollections() throws Exception {
+		List<AnnotationCollectionReference> collectionRefs = getCollectionReferences();
+		Set<String> documentIds = getDocuments().stream().map(SourceDocument::getUuid).collect(Collectors.toSet());
+		Set<AnnotationCollectionReference> staleCollectionCandidates = new HashSet<>();
+		for (AnnotationCollectionReference collectionRef : collectionRefs) {
+			String documentId = collectionRef.getSourceDocumentId();
+			
+			if (!documentIds.contains(documentId)) {
+				staleCollectionCandidates.add(collectionRef);
+			}
+		}
+		
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(
+					 projectId,
+					 GitProjectManager.getProjectRootRepositoryName(projectId));
+			
+			Set<String> verifiedDeleted = 
+				localGitRepoManager.verifyDeletedResources(
+					staleCollectionCandidates.stream().map(AnnotationCollectionReference::getSourceDocumentId).collect(Collectors.toSet()));
+			
+			localGitRepoManager.detach();
+			
+			for (AnnotationCollectionReference collectionRef : collectionRefs) {
+				if (verifiedDeleted.contains(collectionRef.getSourceDocumentId())) {
+					logger.info(String.format(
+						"Removing stale Collection %1$s with ID %2$s due to removal of corresp. Document with ID %3$s",
+						collectionRef.getName(), 
+						collectionRef.getId(),
+						collectionRef.getSourceDocumentId()));
+					removeCollection(collectionRef);
+				}
+			}
+			
+		}
+	}
 	
 	
 }

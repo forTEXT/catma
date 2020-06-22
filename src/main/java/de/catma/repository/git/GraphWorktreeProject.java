@@ -205,6 +205,9 @@ public class GraphWorktreeProject implements IndexedProject {
 				gitProjectHandler.removeStaleSubmoduleDirectories();
 				
 				gitProjectHandler.ensureDevBranches();
+				
+				gitProjectHandler.verifyCollections();
+				
 				ProgressListener progressListener = 
 					new ProgressListener() {
 						

@@ -1033,14 +1033,24 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 						RevCommit ourCommit = 
 							gitApi.log().add(gitApi.getRepository().resolve(ourTreeName)).addPath(conflictingSubmodule).call().iterator().next();
 						String ourLastCommitMsg = ourCommit.getFullMessage();
-						System.out.println(ourLastCommitMsg);
 						
 						String theirTreeName = "refs/remotes/origin/master"; 
-						RevCommit theirCommit = 
-							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(conflictingSubmodule).call().iterator().next();
-						String theirLastCommitMsg = theirCommit.getFullMessage();
-						System.out.println(theirLastCommitMsg);						
+						Iterator<RevCommit> remoteCommitIterator =
+							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(Constants.DOT_GIT_MODULES).call().iterator();
+						String resourceId = conflictingSubmodule.substring(conflictingSubmodule.indexOf('/')+1);
+						RevCommit theirCommit = null;
+						while(remoteCommitIterator.hasNext()) {
+							RevCommit revCommit = remoteCommitIterator.next();
+							if (revCommit.getFullMessage().contains(resourceId)) {
+								theirCommit = revCommit;
+								break;
+							}
+						}
 						
+						String theirLastCommitMsg = "no commit found";
+						if (theirCommit != null) {
+							theirLastCommitMsg = theirCommit.getFullMessage();
+						}
 						
 						deletedResourceConflicts.add(
 							new DeletedResourceConflict(
@@ -1048,9 +1058,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 								conflictingSubmodule,
 								ourCommit.getName(), 
 								ourLastCommitMsg, 
-								theirCommit.getName(), 
+								theirCommit != null?theirCommit.getName():"", 
 								theirLastCommitMsg, 
-								theirCommit.getCommitterIdent().getName(),
+								theirCommit != null?theirCommit.getCommitterIdent().getName():"",
 								true));
 						break;		
 					}
@@ -1060,13 +1070,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 						RevCommit ourCommit = 
 							gitApi.log().add(gitApi.getRepository().resolve(ourTreeName)).addPath(conflictingSubmodule).call().iterator().next();
 						String ourLastCommitMsg = ourCommit.getFullMessage();
-						System.out.println(ourLastCommitMsg);
 						
 						String theirTreeName = "refs/remotes/origin/master"; 
 						RevCommit theirCommit = 
 							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(conflictingSubmodule).call().iterator().next();
 						String theirLastCommitMsg = theirCommit.getFullMessage();
-						System.out.println(theirLastCommitMsg);						
 						
 						deletedResourceConflicts.add(
 								new DeletedResourceConflict(
@@ -1391,12 +1399,37 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			}
 			
 		} catch (GitAPIException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new IOException("Cannot check for unsynchronized changes!", e);
 		}
 		
 		return result;
 	}
 	
+
+	@Override
+	public Set<String> verifyDeletedResources(Set<String> resourceIds) throws IOException {
+		try {
+			Set<String> result = new HashSet<String>();
+			
+			Iterator<RevCommit> remoteCommitIterator =
+					gitApi.log().add(gitApi.getRepository().resolve("refs/heads/master")).addPath(Constants.DOT_GIT_MODULES).call().iterator();
+			
+			while(remoteCommitIterator.hasNext()) {
+				RevCommit revCommit = remoteCommitIterator.next();
+				String fullMsg = revCommit.getFullMessage();
+				if (fullMsg.startsWith("Removed Document")) {
+					for (String resourceId : resourceIds) {
+						if (!result.contains(resourceId) && fullMsg.endsWith(resourceId)) {
+							result.add(resourceId);
+						}
+					}
+				}
+			}
 	
+			return result;
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Cannot verify deleted resources!", e);
+		}
+	}
 }
