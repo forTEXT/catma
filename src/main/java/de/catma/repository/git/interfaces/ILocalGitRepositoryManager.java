@@ -107,5 +107,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	List<CommitInfo> getUnsynchronizedChanges() throws Exception;
 
+	Set<String> verifyDeletedResources(Set<String> collect) throws IOException;
+
 
 }
