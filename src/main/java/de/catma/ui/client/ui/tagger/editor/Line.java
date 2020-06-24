@@ -21,7 +21,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
-public class Line {
+public class Line implements Comparable<Line> {
 	
 	private Element lineElement;
 	private String lineId;
@@ -532,5 +532,10 @@ public class Line {
 
 	public void addComment(ClientComment comment) {
 		this.comments.add(comment);
+	}
+	
+	@Override
+	public int compareTo(Line o) {
+		return Integer.compare(this.getLineId(), o.getLineId());
 	}
 }

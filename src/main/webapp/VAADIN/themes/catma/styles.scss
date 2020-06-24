@@ -267,10 +267,26 @@ $v-focus-color: #5A98A1;
 	    border-radius: 10px;
 	    padding: 5px;
 	    margin: 5px;
-	    max-height: 75px;
-	    display: inline-block;
+	    white-space: normal;
+	    width: 100px;
+	    overflow: auto;
+	    cursor: pointer;
+	}
+	
+	.comment-content {
+		display: inline-block;		
+		vertical-align: top;
+	}
+	
+	.comment-button-panel {
+		display: inline-block;
+		float: right;
+	}
+	
+	.comment-line-panel {
 	    position: absolute;
 	    top: 10px;
+	    left: 60px;
 	}
 	
 	

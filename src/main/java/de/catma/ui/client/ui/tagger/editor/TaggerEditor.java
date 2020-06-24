@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -623,6 +624,15 @@ public class TaggerEditor extends FocusWidget
 			}
 		}
 		else if(event.getNativeButton() == NativeEvent.BUTTON_RIGHT) {
+			
+			EventTarget eventTarget = event.getNativeEvent().getEventTarget();
+			if (Element.is(eventTarget)) {
+				Element targetElement = Element.as(eventTarget);
+				if (!getElement().isOrHasChild(targetElement)) {
+					return;
+				}
+			}
+			
 			taggerEditorListener.contextMenuSelected(event.getClientX(), event.getClientY());
 			event.preventDefault();
 		}
@@ -694,6 +704,10 @@ public class TaggerEditor extends FocusWidget
 		return null;
 	}
 
+	public List<Line> getLines() {
+		return lineIdToLineMap.values().stream().sorted().collect(Collectors.toList());
+	}
+	
 	public Line addComment(ClientComment comment) {
 		
 		int startPos = comment.getRanges().get(0).getStartPos();

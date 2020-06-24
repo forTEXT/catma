@@ -1,12 +1,14 @@
 package de.catma.ui.client.ui.tagger.comment;
 
-import com.google.gwt.dom.client.Element;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.FlowPanel;
 
+import de.catma.ui.client.ui.tagger.comment.CommentLinePanel.CommentLinePanelListener;
 import de.catma.ui.client.ui.tagger.editor.Line;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
 
@@ -15,7 +17,8 @@ public class CommentPanel extends FlowPanel {
 	private static final int PANEL_OFFSET = 33; 
 	
 	private AddCommentButton btAddComment;
-
+	private ArrayList<CommentLinePanel> panels = new ArrayList<CommentLinePanel>();
+	
 	public CommentPanel() {
 		initComponents();
 		initActions();
@@ -47,12 +50,77 @@ public class CommentPanel extends FlowPanel {
 	}
 
 	public void addComment(ClientComment comment, Line line) {
-		Element commentDiv = DOM.createDiv();
-		commentDiv.setAttribute("class", "comment");
-		this.getElement().appendChild(commentDiv);
-		commentDiv.setInnerText(comment.getBody());
+		CommentLinePanel panel = panels.get(line.getLineId());
+		panel.addComment(comment);
+		alignCommentLinePanels(panel);
+	}
+
+	private void alignCommentLinePanels(CommentLinePanel panel) {
+		panel.getElement().getStyle().setTop(panel.getLine().getLineElement().getOffsetTop()-PANEL_OFFSET, Unit.PX);
+		int focusIdx = panels.indexOf(panel);
+		int currentMaxTop = panel.getLine().getLineElement().getOffsetTop()-PANEL_OFFSET;
+		int currentHeightDown = panel.getElement().getOffsetHeight();
 		
-		commentDiv.getStyle().setTop(line.getLineElement().getOffsetTop()-PANEL_OFFSET, Unit.PX);
+		if (focusIdx != 0) {
+			for (int idx=focusIdx-1; idx>=0; idx--) {
+				CommentLinePanel curPanel = panels.get(idx);
+				if (curPanel.getWidgetCount() > 0) {
+					int currentTop = curPanel.getLine().getLineElement().getOffsetTop()-PANEL_OFFSET;
+					if (currentTop > (currentMaxTop-curPanel.getElement().getOffsetHeight())) {
+						currentTop = currentMaxTop-curPanel.getElement().getOffsetHeight();
+					}
+	
+					curPanel.getElement().getStyle().setTop(currentTop, Unit.PX);
+					
+					currentMaxTop = currentTop;
+				}
+			}
+		}
+		
+		if (focusIdx != panels.size()-1) {
+			for (int idx=focusIdx+1; idx<panels.size(); idx++) {
+				CommentLinePanel curPanel = panels.get(idx);
+				if (curPanel.getWidgetCount() > 0) {
+					int currentTop = curPanel.getLine().getLineElement().getOffsetTop()-PANEL_OFFSET;
+					if (currentTop < (currentMaxTop+currentHeightDown)) {
+						currentTop = currentMaxTop+currentHeightDown;
+					}
+	
+					curPanel.getElement().getStyle().setTop(currentTop, Unit.PX);
+					
+					currentMaxTop = currentTop;
+					currentHeightDown = curPanel.getElement().getOffsetHeight(); 
+				}
+				
+				currentHeightDown = 0;
+				
+			}
+		}
+	}
+
+	public void setLines(List<Line> lines) {
+		panels = new ArrayList<CommentLinePanel>(lines.size());
+		for (Line line : lines) {
+			CommentLinePanel panel = new CommentLinePanel(line, new CommentLinePanelListener() {
+				@Override
+				public void commentBubbleSelected(Line line) {
+					CommentLinePanel selectedPanel = panels.get(line.getLineId());
+					for (CommentLinePanel panel : panels) {
+						if (!panel.equals(selectedPanel)) {
+							panel.deselect();
+						}
+					}
+					
+					alignCommentLinePanels(selectedPanel);
+				}
+			}); 
+			panels.add(panel);
+			add(panel);
+			
+			panel.getElement().getStyle().setTop(line.getLineElement().getOffsetTop()-PANEL_OFFSET, Unit.PX);
+
+		}
+		
 	}
 
 }

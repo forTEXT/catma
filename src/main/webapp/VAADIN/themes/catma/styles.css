@@ -17741,10 +17741,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 10px;
 	padding: 5px;
 	margin: 5px;
-	max-height: 75px;
+	white-space: normal;
+	width: 100px;
+	overflow: auto;
+	cursor: pointer;
+}
+
+.catma .comment-content {
 	display: inline-block;
+	vertical-align: top;
+}
+
+.catma .comment-button-panel {
+	display: inline-block;
+	float: right;
+}
+
+.catma .comment-line-panel {
 	position: absolute;
 	top: 10px;
+	left: 60px;
 }
 
 .catma .selection-layer {

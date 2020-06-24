@@ -164,18 +164,7 @@ public class VTagger extends Composite {
 			@Override
 			public void run() {
 				taggerEditor.setHTML(new HTML(page), lineCount);
-//				
-//				Line line = taggerEditor.getLineForPos(1942);
-//
-//				commentPanel.getElement().removeAllChildren();
-//				Element element = line.getLineElement();
-//				int lineTop = element.getOffsetTop()-38;
-//				GWT.log("lineTop " + lineTop);
-//				Element commentDiv = DOM.createDiv();
-//				commentDiv.setAttribute("class", "comment");
-//				commentPanel.getElement().appendChild(commentDiv);
-//				commentDiv.setInnerText("nase hase \n rüben");
-//				commentDiv.getStyle().setTop(lineTop, Unit.PX);
+				commentPanel.setLines(taggerEditor.getLines());
 			}
 		};
 		
