@@ -1425,22 +1425,23 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	public Set<String> verifyDeletedResources(Set<String> resourceIds) throws IOException {
 		try {
 			Set<String> result = new HashSet<String>();
-			
-			Iterator<RevCommit> remoteCommitIterator =
-					gitApi.log().add(gitApi.getRepository().resolve("refs/heads/master")).addPath(Constants.DOT_GIT_MODULES).call().iterator();
-			
-			while(remoteCommitIterator.hasNext()) {
-				RevCommit revCommit = remoteCommitIterator.next();
-				String fullMsg = revCommit.getFullMessage();
-				if (fullMsg.startsWith("Removed Document")) {
-					for (String resourceId : resourceIds) {
-						if (!result.contains(resourceId) && fullMsg.endsWith(resourceId)) {
-							result.add(resourceId);
+			ObjectId objectId = gitApi.getRepository().resolve("refs/heads/master");
+			if (objectId != null) {
+				Iterator<RevCommit> remoteCommitIterator =
+						gitApi.log().add(objectId).addPath(Constants.DOT_GIT_MODULES).call().iterator();
+				
+				while(remoteCommitIterator.hasNext()) {
+					RevCommit revCommit = remoteCommitIterator.next();
+					String fullMsg = revCommit.getFullMessage();
+					if (fullMsg.startsWith("Removed Document")) {
+						for (String resourceId : resourceIds) {
+							if (!result.contains(resourceId) && fullMsg.endsWith(resourceId)) {
+								result.add(resourceId);
+							}
 						}
 					}
 				}
-			}
-	
+			}	
 			return result;
 		}
 		catch (GitAPIException e) {
