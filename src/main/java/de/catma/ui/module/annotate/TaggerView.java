@@ -28,10 +28,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
 import org.vaadin.sliderpanel.client.SliderMode;
@@ -104,6 +106,7 @@ import de.catma.ui.module.annotate.resourcepanel.AnnotateResourcePanel;
 import de.catma.ui.module.annotate.resourcepanel.ResourceSelectionListener;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.User;
+import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class TaggerView extends HorizontalLayout 
@@ -210,6 +213,12 @@ public class TaggerView extends HorizontalLayout
 							if (taggerContextMenu != null) {
 								taggerContextMenu.setTagsets(tagsets);
 							}
+							
+							List<Comment> comments = project.getComments(sourceDocument.getUuid());
+							for (Comment comment : comments) {
+								System.out.println(comment);
+							}
+							
 							ui.push();
 						} catch (IOException e) {
 							errorHandler.showAndLogError("Error showing the Document!", e);
@@ -954,18 +963,60 @@ public class TaggerView extends HorizontalLayout
 	@Override
 	public void addComment(List<Range> ranges, int x, int y) {
 		User user = project.getUser();
-		
+		IDGenerator idGenerator = new IDGenerator();
 		CommentDialog commentDialog = new CommentDialog(
-				commentBody -> saveCommentChange(
-						new Comment(user.getName(), user.getUserId(), commentBody, ranges, this.sourceDocument.getUuid())));
+				commentBody -> {
+					try {
+						project.addComment(
+							new Comment(
+								idGenerator.generate(), 
+								user.getName(), user.getUserId(), 
+								commentBody, ranges, this.sourceDocument.getUuid()));
+					} catch (IOException e) {
+						errorHandler.showAndLogError("Error add Comment!", e);
+					}
+				});
 		commentDialog.show(x, y);
 	}
-
-	private void saveCommentChange(Comment comment) {
-		//TODO: 
-		// project.saveComment(comment);
-		handleCommentChange(new CommentChangeEvent(ChangeType.CREATED, comment));
+	
+	@Override
+	public void editComment(Optional<Comment> optionalComment, int x, int y) {
+		if (optionalComment.isPresent()) {
+			CommentDialog commentDialog = new CommentDialog(optionalComment.get().getBody(), commentBody -> {
+				final String oldBody = optionalComment.get().getBody();
+				optionalComment.get().setBody(commentBody);
+				try {
+					project.updateComment(optionalComment.get());
+				} catch (IOException e) {
+					errorHandler.showAndLogError("Error updating Comment!", e);
+					optionalComment.get().setBody(oldBody);
+				}
+			});
+			commentDialog.show(x, y);
+		}
+		else {
+			Notification.show("Info", "Couldn't find a Comment to edit!", Type.HUMANIZED_MESSAGE);
+		}
 	}
+	
+	@Override
+	public void removeComment(Optional<Comment> optionalComment) {
+		if (optionalComment.isPresent()) {
+			ConfirmDialog.show(UI.getCurrent(),"Remove Comment", "Are you sure you want to remove the Comment?", "Yes", "Cancel", dlg -> {
+				if (dlg.isConfirmed()) {
+					try {
+						project.removeComment(optionalComment.get());
+					} catch (IOException e) {
+						errorHandler.showAndLogError("Error removing Comment!", e);
+					}
+				}
+			});
+		}
+		else {
+			Notification.show("Info", "Couldn't find a Comment to edit!", Type.HUMANIZED_MESSAGE);
+		}	
+	}
+
 
 	@Subscribe
 	public void handleCommentChange(CommentChangeEvent commentChangeEvent) {
@@ -978,10 +1029,10 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		case UPDATED: {
-			
+			//TOOD: 
 		}
 		case DELETED: {
-			
+			//TODO:
 		}
 		}
 		

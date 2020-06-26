@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.vaadin.ui.AbstractComponent;
@@ -61,6 +62,8 @@ public class Tagger extends AbstractComponent {
 		public Annotation getTagInstanceInfo(String tagInstanceId);
 		public void contextMenuSelected(int x, int y);
 		public void addComment(List<Range> ranges, int x, int y);
+		public void editComment(Optional<Comment> optionalComment, int x, int y);
+		public void removeComment(Optional<Comment> optionalComment);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -133,6 +136,20 @@ public class Tagger extends AbstractComponent {
 				ranges.add(new Range(Integer.valueOf(positions[0]), Integer.valueOf(positions[1])));
 			}
 			taggerListener.addComment(ranges, x, y);
+		}
+		
+		@Override
+		public void editComment(String uuid, int x, int y) {
+			Optional<Comment> optionalComment = pager.getComment(uuid);
+			
+			taggerListener.editComment(optionalComment, x, y);
+		}
+		
+		@Override
+		public void removeComment(String uuid) {
+			Optional<Comment> optionalComment = pager.getComment(uuid);
+			
+			taggerListener.removeComment(optionalComment);
 		}
 	};
 

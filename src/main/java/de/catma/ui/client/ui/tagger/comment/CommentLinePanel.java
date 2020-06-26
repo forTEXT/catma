@@ -10,6 +10,8 @@ import de.catma.ui.client.ui.tagger.shared.ClientComment;
 public class CommentLinePanel extends FlowPanel {
 	public static interface CommentLinePanelListener {
 		public void commentBubbleSelected(Line line);
+		public void edit(ClientComment comment, int x, int y);
+		public void remove(ClientComment comment);
 	}
 	
 	private Line line;
@@ -45,6 +47,17 @@ public class CommentLinePanel extends FlowPanel {
 				
 				listener.commentBubbleSelected(line);
 			}
+			
+			@Override
+			public void edit(ClientComment comment, int x, int y) {
+				listener.edit(comment, x, y);
+			}
+			
+			@Override
+			public void remove(ClientComment comment) {
+				listener.remove(comment);
+			}
+			
 		}), 0);
 	}
 	

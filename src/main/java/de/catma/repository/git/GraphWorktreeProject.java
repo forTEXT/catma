@@ -43,6 +43,7 @@ import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.comment.Comment;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.StandardContentHandler;
@@ -55,6 +56,7 @@ import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
+import de.catma.project.event.CommentChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
@@ -1595,5 +1597,28 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public RBACRole getRoleOnProject() throws IOException {
 		return gitProjectHandler.getRoleOnProject(user);
+	}
+	
+	@Override
+	public void addComment(Comment comment) throws IOException {
+		gitProjectHandler.addComment(comment);
+		eventBus.post(new CommentChangeEvent(ChangeType.CREATED, comment));
+	}
+	
+	@Override
+	public void removeComment(Comment comment) throws IOException {
+		gitProjectHandler.removeComment(comment);
+		eventBus.post(new CommentChangeEvent(ChangeType.DELETED, comment));
+	}
+	
+	@Override
+	public void updateComment(Comment comment) throws IOException {
+		gitProjectHandler.updateComment(comment);
+		eventBus.post(new CommentChangeEvent(ChangeType.UPDATED, comment));
+	}
+	
+	@Override
+	public List<Comment> getComments(String documentId) throws IOException {
+		return gitProjectHandler.getComments(documentId);
 	}
 }

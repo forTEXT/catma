@@ -31,6 +31,7 @@ import java.util.Set;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.comment.Comment;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -392,5 +393,13 @@ public interface Project {
 
 	void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
 
-	List<CommitInfo> getUnsynchronizedCommits() throws Exception;
+	public List<CommitInfo> getUnsynchronizedCommits() throws Exception;
+
+	public void addComment(Comment comment) throws IOException;
+
+	public void updateComment(Comment comment) throws IOException;
+
+	public void removeComment(Comment comment) throws IOException;
+
+	List<Comment> getComments(String documentId) throws IOException;
 }

@@ -12,6 +12,8 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.google.common.eventbus.EventBus;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.project.ForkStatus;
@@ -24,13 +26,12 @@ import de.catma.rbac.RBACPermission;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted.GroupSerializationField;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
-import elemental.json.Json;
-import elemental.json.JsonObject;
 
 public class GitProjectManager implements ProjectManager {
 	private final Logger logger = Logger.getLogger(getClass().getName());
@@ -249,9 +250,9 @@ public class GitProjectManager implements ProjectManager {
 	}
 	
 	private String marshallProjectMetadata(String name, String description) {
-		JsonObject obj = Json.createObject();
-		obj.put("name", name);
-		obj.put("description", description);
+		JsonObject obj = new JsonObject();
+		obj.addProperty(GroupSerializationField.name.name(), name);
+		obj.addProperty(GroupSerializationField.description.name(), description);
 		return obj.toString();
 	}
 

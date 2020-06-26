@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -337,10 +338,39 @@ public class Pager implements Iterable<Page> {
 		}
 	
 		if (pages.contains(getCurrentPage())) {
-			return new ClientComment(comment.getUsername(), comment.getUserId(), comment.getBody(), ranges);
+			return new ClientComment(
+				comment.getUuid(), 
+				comment.getUsername(), comment.getUserId(), 
+				comment.getBody(), ranges);
 		}
 		else {
 			return null;
 		}
+	}
+
+	public Optional<Comment> getComment(String uuid) {
+		if (hasPages()) {
+			Page currentPage = getCurrentPage();
+			
+			Optional<Comment> optionalComment = currentPage.getComment(uuid);
+			if (optionalComment.isPresent()) {
+				return optionalComment;
+			}
+			
+		}
+		
+		return findComment(uuid);
+	}
+
+	private Optional<Comment> findComment(String uuid) {
+		if (hasPages()) {
+			for (Page page : pages) {
+				Optional<Comment> optinalComment = page.getComment(uuid);
+				if (optinalComment.isPresent()) {
+					return optinalComment;
+				}
+			}
+		}
+		return Optional.empty();
 	}
 }

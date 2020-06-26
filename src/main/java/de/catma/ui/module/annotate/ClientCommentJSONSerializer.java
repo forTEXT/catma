@@ -39,6 +39,8 @@ public class ClientCommentJSONSerializer {
 			throws IOException {
 		JsonNodeFactory factory = JsonNodeFactory.instance;
 		ObjectNode result = factory.objectNode();
+		result.put(SerializationField.uuid.name(), comment.getUuid());
+		
 		result.put(
 			SerializationField.username.name(), 
 			comment.getUsername());

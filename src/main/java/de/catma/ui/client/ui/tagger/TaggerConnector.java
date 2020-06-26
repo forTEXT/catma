@@ -8,7 +8,9 @@ import com.vaadin.client.TooltipInfo;
 import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.shared.ui.Connect;
+import com.vaadin.shared.ui.ContentMode;
 
+import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerState;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -126,6 +128,16 @@ public class TaggerConnector extends AbstractComponentConnector {
 				rpc.addComment(builder.toString(), x, y);
 				
 			}
+			
+			@Override
+			public void editComment(ClientComment comment, int x, int y) {
+				rpc.editComment(comment.getUuid(), x, y);
+			}
+			
+			@Override
+			public void removeComment(ClientComment comment) {
+				rpc.removeComment(comment.getUuid());
+			}
 		});
 
 		return tagger;
@@ -143,7 +155,7 @@ public class TaggerConnector extends AbstractComponentConnector {
     		if (tooltipInfo == null) {
     			tooltipInfo = "N/A";
     		}
-    		return new TooltipInfo(tooltipInfo, getState().errorMessage);
+    		return new TooltipInfo(tooltipInfo, ContentMode.HTML, getState().errorMessage);
     	}
     	else {
     		return null;

@@ -165,11 +165,6 @@ public class GitSourceDocumentHandler {
 		}
 	}
 
-	public void delete(@Nonnull String projectId, @Nonnull String sourceDocumentId)
-			throws IOException {
-    	throw new UnsupportedOperationException("Not implemented");
-	}
-
 	public SourceDocument open(@Nonnull String projectId, @Nonnull String sourceDocumentId)
 			throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {

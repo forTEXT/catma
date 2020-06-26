@@ -51,12 +51,16 @@ public class ClientCommentJSONSerializer extends JSONSerializer {
 	}
 	
 	public ClientComment fromJSON(JSONObject jsonObject) {
+		String uuid = 
+			getStringValueFromStringObject(
+				jsonObject.get(SerializationField.uuid.name()));
+				
 		String username = 
 			getStringValueFromStringObject(
 				jsonObject.get(SerializationField.username.name()));
 				
 		Integer userId = 
-			getIntValueFromStringObject(
+			getIntValueFromNumberObject(
 				jsonObject.get(SerializationField.userId.name()));
 		String body = 
 			getStringValueFromStringObject(
@@ -71,14 +75,14 @@ public class ClientCommentJSONSerializer extends JSONSerializer {
 			JSONObject trJSON = (JSONObject)rangesJSON.get(i);
 			TextRange tr = 
 					new TextRange(
-						getIntValueFromStringObject(
+						getIntValueFromNumberObject(
 							trJSON.get(SerializationField.startPos.name())),
-						getIntValueFromStringObject(
+						getIntValueFromNumberObject(
 							trJSON.get(SerializationField.endPos.name())));
 			ranges.add(tr);
 		}
 		
-		return new ClientComment(username, userId, body, ranges);
+		return new ClientComment(uuid, username, userId, body, ranges);
 	}
 
 	public String toJSONObjectString(ClientComment comment) {
@@ -88,7 +92,9 @@ public class ClientCommentJSONSerializer extends JSONSerializer {
 	public JSONObject toJSONObject(ClientComment comment) {
 		
 		JSONObject commentJSON = new JSONObject();
-		
+		commentJSON.put(
+				SerializationField.uuid.name(), 
+				new JSONString(comment.getUuid()));
 		commentJSON.put(
 				SerializationField.username.name(),
 				new JSONString(comment.getUsername()));

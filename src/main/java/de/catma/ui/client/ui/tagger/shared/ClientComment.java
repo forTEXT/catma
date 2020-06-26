@@ -10,23 +10,30 @@ public class ClientComment {
 		ranges,
 		startPos,
 		endPos,
-		body,
+		body, 
+		uuid,
 		;
 	}
 	
+	private final String uuid;
 	private final String username;
 	private final Integer userId;
 	private final List<TextRange> ranges;
 	
 	private String body;
 	
-	public ClientComment(String username, Integer userId, String body, List<TextRange> ranges) {
+	public ClientComment(String uuid, String username, Integer userId, String body, List<TextRange> ranges) {
 		super();
+		this.uuid = uuid;
 		this.username = username;
 		this.userId = userId;
 		this.body = body;
 		this.ranges = ranges;
 		ranges.sort(new TextRangeComparator());
+	}
+	
+	public String getUuid() {
+		return uuid;
 	}
 
 	public String getUsername() {

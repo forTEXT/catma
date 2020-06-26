@@ -33,9 +33,8 @@ import java.util.SortedSet;
  */
 public class Range implements Comparable<Range> {
 
-	private int startPoint;
-	private int endPoint;
-	private int hashCode;
+	private final int startPoint;
+	private final int endPoint;
 	
 	/**
 	 * @param startPoint the point before the first character.
@@ -44,10 +43,6 @@ public class Range implements Comparable<Range> {
 	public Range( int startPoint, int endPoint ) {
 		this.startPoint = Math.min(startPoint, endPoint);
 		this.endPoint = Math.max(startPoint, endPoint);
-		this.hashCode = 
-			(String.valueOf(this.startPoint ) 
-			+ "-" 
-			+ String.valueOf(this.endPoint)).hashCode();
 	}
 
 	/**
@@ -64,31 +59,31 @@ public class Range implements Comparable<Range> {
 		return endPoint;
 	}
 	
-	/**
-     * Equality is tested with start- and endpoint.
-     * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals( Object obj ) {
-		if( ( obj == null ) || !( obj instanceof Range ) ) {
-			return false;
-		}
-		else {
-			return (( this.startPoint == ((Range)obj).startPoint) 
-					&& ( this.endPoint == ((Range)obj).endPoint) );
-		}
-	}
-	
-	/**
-	 * @return hashcode computed with start- and endpoint
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
-		return this.hashCode;
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + endPoint;
+		result = prime * result + startPoint;
+		return result;
 	}
-	
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof Range))
+			return false;
+		Range other = (Range) obj;
+		if (endPoint != other.endPoint)
+			return false;
+		if (startPoint != other.startPoint)
+			return false;
+		return true;
+	}
+
 	/**
 	 * Tests whether the given point comes after (>) this start point.
 	 * @param point the point to test

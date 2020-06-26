@@ -6,20 +6,28 @@ import de.catma.document.Range;
 
 public class Comment {
 	
-	private final String username;
-	private final Integer userId;
-	
+	private final String uuid;
 	private String body;
 	private final List<Range> ranges;
 	private final String documentId;
 	
-	public Comment(String username, Integer userId, String body, List<Range> ranges, String documentId) {
+	private transient String username;
+	private transient Integer userId;
+	private transient Integer id;
+
+	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId) {
+		this(uuid, username, userId, body, ranges, documentId, null);
+	}
+
+	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId, Integer id) {
 		super();
+		this.uuid = uuid;
 		this.username = username;
 		this.userId = userId;
 		this.body = body;
 		this.ranges = ranges;
 		this.documentId = documentId;
+		this.id = id;
 	}
 	
 	public String getUsername() {
@@ -40,5 +48,34 @@ public class Comment {
 	
 	public List<Range> getRanges() {
 		return ranges;
+	}
+	
+	public Integer getId() {
+		return id;
+	}
+	
+	public String getUuid() {
+		return uuid;
+	}
+	
+	public void setBody(String body) {
+		this.body = body;
+	}
+	
+	public void setUserId(Integer userId) {
+		this.userId = userId;
+	}
+	
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	
+	@Override
+	public String toString() {
+		return uuid + " #" + id + " by " + username + " for " + documentId + " " + body;
 	}
 }

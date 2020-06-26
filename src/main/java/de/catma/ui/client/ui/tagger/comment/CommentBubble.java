@@ -16,6 +16,8 @@ public class CommentBubble extends FlowPanel {
 	
 	public static interface CommentBubbleListener {
 		public void selected(ClientComment comment);
+		public void edit(ClientComment comment, int x, int y);
+		public void remove(ClientComment comment);
 	}
 	
 	private ClientComment comment;
@@ -67,7 +69,7 @@ public class CommentBubble extends FlowPanel {
 			
 			@Override
 			public void onClick(ClickEvent event) {
-				GWT.log("edit");
+				listener.edit(comment, event.getClientX(), event.getClientY());
 			}
 		});
 		
@@ -75,7 +77,7 @@ public class CommentBubble extends FlowPanel {
 			
 			@Override
 			public void onClick(ClickEvent event) {
-				GWT.log("remove");
+				listener.remove(comment);
 			}
 		});
 	}

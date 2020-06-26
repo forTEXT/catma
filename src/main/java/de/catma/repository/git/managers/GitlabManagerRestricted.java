@@ -1,6 +1,7 @@
 package de.catma.repository.git.managers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -17,10 +18,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GroupApi;
+import org.gitlab4j.api.IssuesApi;
+import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AccessLevel;
+import org.gitlab4j.api.models.Author;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.GroupFilter;
+import org.gitlab4j.api.models.Issue;
+import org.gitlab4j.api.models.IssueFilter;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Permissions;
@@ -33,8 +39,11 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import de.catma.backgroundservice.BackgroundService;
+import de.catma.document.comment.Comment;
 import de.catma.project.ForkStatus;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
@@ -45,16 +54,15 @@ import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
-import de.catma.repository.git.ResourceAlreadyExistsException;
 import de.catma.repository.git.interfaces.IGitUserInformation;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
-import elemental.json.Json;
-import elemental.json.JsonException;
-import elemental.json.JsonObject;
 
 public class GitlabManagerRestricted extends GitlabManagerCommon implements IRemoteGitManagerRestricted, IGitUserInformation {
+	
+	private static final String CATMA_COMMENT_LABEL = "CATMA Comment";
 
 	private final GitLabApi restrictedGitLabApi;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -99,31 +107,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			throw new IOException(e);
 		}
 	}
-	
-	@Override
-	public CreateRepositoryResponse createRepository(String name, String path)
-			throws IOException {
-		ProjectApi projectApi = this.restrictedGitLabApi.getProjectApi();
 
-		Project project = new Project();
-		project.setName(name);
-
-		if (StringUtils.isNotEmpty(path)) {
-			project.setPath(path);
-		}
-
-		try {
-			project = projectApi.createProject(project);
-			return new CreateRepositoryResponse(
-				null, project.getId(),
-				GitlabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
-			);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to create remote Git repository", e);
-		}
-	}
-	
 	@Override
 	public CreateRepositoryResponse createRepository(
 			String name, String path, String groupPath)
@@ -440,15 +424,25 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
         return resultMap;
     }
 
-	private ProjectReference unmarshallProjectReference(String path, String eventuallyMarshalledMetadata){
+	private ProjectReference unmarshallProjectReference(String path, String eventuallyMarshalledMetadata) {
+		String name = "unknown";
+		String description = "unknown";
 		try {
-			JsonObject obj = Json.parse(eventuallyMarshalledMetadata);
-			String name = obj.get("name").asString();
-			String desc = obj.get("description").asString();
-			return new ProjectReference(path, name, desc);
-		} catch (JsonException e) {
-			return new ProjectReference(path, eventuallyMarshalledMetadata, "nonexistent description");
+			JsonObject metaDataJson = JsonParser.parseString(eventuallyMarshalledMetadata).getAsJsonObject();
+			
+			name = metaDataJson.get(GroupSerializationField.name.name()).getAsString();
+			description = metaDataJson.get(GroupSerializationField.description.name()).getAsString();
 		}
+		catch (Exception e) {
+			logger.log(
+				Level.WARNING, 
+				String.format(
+					"Error retrieving Project name or description for %1$s from %2$s", 
+					path, 
+					eventuallyMarshalledMetadata), 
+				e);
+		}
+		return new ProjectReference(path, name, description);
 	}
 
 	@Override
@@ -537,4 +531,73 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 	}
 
+	
+	@Override
+	public void addComment(String projectId, Comment comment) throws IOException {
+		
+		String resourceId = comment.getDocumentId();
+
+		try {
+			
+			String projectPath = projectId + "/" + resourceId;
+			
+			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
+			
+			
+			String title = comment.getBody().substring(0, Math.min(100, comment.getBody().length()));
+			if (title.length() < comment.getBody().length()) {
+				title += "...";
+			}
+			String description = new SerializationHelper<Comment>().serialize(comment);
+			
+			Issue issue = issuesApi.createIssue(
+					projectPath, title, description, 
+					null, null, null, 
+					CATMA_COMMENT_LABEL, 
+					null, null, null, null);
+			
+			comment.setId(issue.getId());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format(
+				"Failed to add a new Comment for resource %1$s in group %2$s!", resourceId, projectId), e);
+		}
+	}
+
+	@Override
+	public List<Comment> getComments(String projectId, String resourceId) throws IOException {
+		try {
+			List<Comment> result = new ArrayList<Comment>();
+			
+			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
+			String projectPath = projectId + "/" + resourceId;
+			Pager<Issue> issuePager = 
+				issuesApi.getIssues(projectPath, new IssueFilter().withLabels(Collections.singletonList(CATMA_COMMENT_LABEL)), 100);
+			
+			
+			for (Issue issue : issuePager.all()) {
+				String description = issue.getDescription();
+				try {
+					Author author = issue.getAuthor();
+					
+					Comment comment = new SerializationHelper<Comment>().deserialize(description, Comment.class);
+					comment.setId(issue.getId());
+					comment.setUserId(author.getId());
+					comment.setUsername(author.getName());
+					
+					result.add(comment);
+				}
+				catch (Exception e) {
+					logger.log(Level.SEVERE, String.format("Error deserializing Comment #%1$d %2$s", issue.getId(), description), e);
+				}
+			}
+			
+			return result;
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format(
+				"Failed to add a new Comment for resource %1$s in group %2$s!", resourceId, projectId), e);
+		}
+
+	}
 }

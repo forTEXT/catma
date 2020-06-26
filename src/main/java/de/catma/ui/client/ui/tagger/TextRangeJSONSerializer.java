@@ -35,9 +35,9 @@ public class TextRangeJSONSerializer extends JSONSerializer {
 		JSONObject trJSON = (JSONObject)JSONParser.parseStrict(jsonString);
 		TextRange tr = 
 				new TextRange(
-					getIntValueFromStringObject(
+					getIntValueFromNumberObject(
 						trJSON.get(SerializationField.startPos.name())),
-					getIntValueFromStringObject(
+					getIntValueFromNumberObject(
 						trJSON.get(SerializationField.endPos.name())));
 		return tr;
 	}

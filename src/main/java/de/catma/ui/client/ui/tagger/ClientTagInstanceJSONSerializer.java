@@ -65,9 +65,9 @@ public class ClientTagInstanceJSONSerializer extends JSONSerializer {
 			JSONObject trJSON = (JSONObject)rangesJSON.get(i);
 			TextRange tr = 
 					new TextRange(
-						getIntValueFromStringObject(
+						getIntValueFromNumberObject(
 							trJSON.get(SerializationField.startPos.name())),
-						getIntValueFromStringObject(
+						getIntValueFromNumberObject(
 							trJSON.get(SerializationField.endPos.name())));
 			ranges.add(tr);
 		}

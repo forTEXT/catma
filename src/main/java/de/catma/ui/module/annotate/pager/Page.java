@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -403,4 +404,9 @@ public class Page {
 	public void addComment(Comment comment) {
 		comments.add(comment);
 	}
+
+	public Optional<Comment> getComment(String uuid) {
+		return comments.stream().filter(comment -> comment.getUuid().equals(uuid)).findFirst();
+	}
 }
+

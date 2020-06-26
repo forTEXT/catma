@@ -30,6 +30,7 @@ import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.comment.Comment;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
@@ -1731,6 +1732,24 @@ public class GitProjectHandler {
 				
 			}
 		}
+	}
+	
+	public List<Comment> getComments(String documentId) throws IOException {
+		return remoteGitServerManager.getComments(projectId, documentId);
+	}
+
+	public void addComment(Comment comment) throws IOException {
+		remoteGitServerManager.addComment(projectId, comment);
+	}
+
+	public void removeComment(Comment comment) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void updateComment(Comment comment) throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	

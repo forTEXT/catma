@@ -30,6 +30,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 
 import de.catma.ui.client.ui.tagger.comment.CommentPanel;
+import de.catma.ui.client.ui.tagger.comment.CommentPanel.CommentPanelListener;
 import de.catma.ui.client.ui.tagger.editor.Line;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
@@ -69,14 +70,6 @@ public class VTagger extends Composite {
 	}
 	
 	private void initActions() {
-		this.commentPanel.addAddCommentClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				List<TextRange> ranges = taggerEditor.getSelectedTextRanges();
-				
-				taggerListener.addComment(ranges, event.getClientX(), event.getClientY());
-			}
-		});
 	}
 
 	private void initComponents() {
@@ -138,7 +131,25 @@ public class VTagger extends Composite {
 		panel.addStyleName("v-tagger-panel");
 		panel.add(taggerEditor);
 		
-		this.commentPanel = new CommentPanel();
+		this.commentPanel = new CommentPanel(new CommentPanelListener() {
+			
+			@Override
+			public void remove(ClientComment comment) {
+				taggerListener.removeComment(comment);
+			}
+			
+			@Override
+			public void edit(ClientComment comment, int x, int y) {
+				taggerListener.editComment(comment, x, y);
+			}
+			
+			@Override
+			public void addComment(int x, int y) {
+				List<TextRange> ranges = taggerEditor.getSelectedTextRanges();
+				
+				taggerListener.addComment(ranges, x, y);
+			}
+		});
 		
 		panel.add(commentPanel);
 		

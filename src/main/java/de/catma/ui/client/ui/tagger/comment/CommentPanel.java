@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -14,17 +15,33 @@ import de.catma.ui.client.ui.tagger.shared.ClientComment;
 
 public class CommentPanel extends FlowPanel {
 	
+	public static interface CommentPanelListener {
+		public void addComment(int x, int y);
+		public void edit(ClientComment comment, int x, int y);
+		public void remove(ClientComment comment);
+	}
+	
 	private static final int PANEL_OFFSET = 33; 
 	
 	private AddCommentButton btAddComment;
 	private ArrayList<CommentLinePanel> panels = new ArrayList<CommentLinePanel>();
+
+	private CommentPanelListener commentPanelListener;
 	
-	public CommentPanel() {
+	public CommentPanel(CommentPanelListener commentPanelListener) {
+		this.commentPanelListener = commentPanelListener;
 		initComponents();
 		initActions();
 	}
 
 	private void initActions() {
+		this.btAddComment.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				commentPanelListener.addComment(event.getClientX(), event.getClientY());
+			}
+		});
 	}
 
 	private void initComponents() {
@@ -43,10 +60,6 @@ public class CommentPanel extends FlowPanel {
 		
 		this.btAddComment.setVisible(visible);
 		this.btAddComment.getElement().getStyle().setTop(topOffset-PANEL_OFFSET, Unit.PX);
-	}
-	
-	public HandlerRegistration addAddCommentClickHandler(ClickHandler clickHandler) {
-		return this.btAddComment.addClickHandler(clickHandler);
 	}
 
 	public void addComment(ClientComment comment, Line line) {
@@ -112,6 +125,16 @@ public class CommentPanel extends FlowPanel {
 					}
 					
 					alignCommentLinePanels(selectedPanel);
+				}
+				
+				@Override
+				public void edit(ClientComment comment, int x, int y) {
+					commentPanelListener.edit(comment, x, y);
+				}
+				
+				@Override
+				public void remove(ClientComment comment) {
+					commentPanelListener.remove(comment);
 				}
 			}); 
 			panels.add(panel);

@@ -24,7 +24,7 @@ import com.google.gwt.json.client.JSONValue;
 
 public class JSONSerializer {
 
-	public int getIntValueFromStringObject(JSONValue jsonValue) {
+	public int getIntValueFromNumberObject(JSONValue jsonValue) {
 		if (jsonValue != null) {
 			double result = ((JSONNumber)jsonValue).doubleValue();
 			return Double.valueOf(result).intValue();

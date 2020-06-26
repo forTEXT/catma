@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.catma.document.comment.Comment;
 import de.catma.project.ForkStatus;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
@@ -20,17 +21,12 @@ import de.catma.user.User;
  *
  */
 public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommonRemoteGitManager {
-
-	/**
-	 * Creates a new remote repository with the <code>name</code> and <code>path</code> supplied.
-	 *
-	 * @param name the name of the repository to create
-	 * @param path the path of the repository to create
-	 * @return a {@link CreateRepositoryResponse} object containing the repository ID and HTTP URL
-	 * @throws IOException if something went wrong while creating the remote
-	 *         repository
-	 */
-	CreateRepositoryResponse createRepository(String name, String path) throws IOException;
+	
+	public static enum GroupSerializationField {
+		name,
+		description,
+		;
+	}
 
 	/**
 	 * Creates a new remote repository with the <code>name</code> and <code>path</code> supplied
@@ -144,6 +140,10 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	void updateGroup(String name, String path, String description) throws IOException;
 
 	ForkStatus forkResource(String resourceId, String sourceProjectId, String targetProjectId) throws IOException;
+
+	void addComment(String projectId, Comment comment) throws IOException;
+
+	List<Comment> getComments(String projectId, String resourceId) throws IOException;
 
 
 
