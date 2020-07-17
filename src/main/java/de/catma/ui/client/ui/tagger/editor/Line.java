@@ -18,6 +18,7 @@ import com.google.gwt.user.client.DOM;
 
 import de.catma.ui.client.ui.tagger.shared.AnnotationLayerBuilder;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
@@ -537,5 +538,38 @@ public class Line implements Comparable<Line> {
 	@Override
 	public int compareTo(Line o) {
 		return Integer.compare(this.getLineId(), o.getLineId());
+	}
+
+	public void updateComment(String uuid, String body) {
+		for (ClientComment comment : comments) {
+			if (comment.getUuid().equals(uuid)) {
+				comment.setBody(body);
+			}
+		}
+	}
+
+	public void removeComment(String uuid) {
+		ClientComment comment = findComment(uuid);
+		if (comment != null) {
+			this.comments.remove(comment);
+		}
+	}
+
+	private ClientComment findComment(String uuid) {
+		for (ClientComment comment : comments) {
+			if (comment.getUuid().equals(uuid)) {
+				return comment;
+			}
+		}
+
+		return null;
+	}
+
+	public void updateComment(String uuid, List<ClientCommentReply> replies) {
+		for (ClientComment comment : comments) {
+			if (comment.getUuid().equals(uuid)) {
+				comment.setReplies(replies);
+			}
+		}
 	}
 }

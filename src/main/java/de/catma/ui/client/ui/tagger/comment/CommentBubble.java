@@ -18,11 +18,13 @@ public class CommentBubble extends FlowPanel {
 		public void selected(ClientComment comment);
 		public void edit(ClientComment comment, int x, int y);
 		public void remove(ClientComment comment);
+		public void replyTo(ClientComment comment, int x, int y);
 	}
 	
 	private ClientComment comment;
 	private EditCommentButton btEdit;
 	private RemoveCommentButton btRemove;
+	private ReplyCommentButton btReply;
 	private FlowPanel buttonPanel;
 	private HTML content;
 	private CommentBubbleListener listener;
@@ -61,6 +63,8 @@ public class CommentBubble extends FlowPanel {
 			@Override
 			public void onMouseUp(MouseUpEvent event) {
 				buttonPanel.setVisible(true);
+				content.setHTML(comment.getBody());
+
 				listener.selected(comment);
 			}
 		}, MouseUpEvent.getType());
@@ -80,11 +84,19 @@ public class CommentBubble extends FlowPanel {
 				listener.remove(comment);
 			}
 		});
+		
+		btReply.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				listener.replyTo(comment, event.getClientX(), event.getClientY());
+			}
+		});
 	}
 
 	private void initComponents() {
 		addStyleName("comment");
-		this.content = new HTML(comment.getBody());
+		this.content = new HTML(getShortBody());
 		this.content.addStyleName("comment-content");
 		add(content);
 		
@@ -98,16 +110,41 @@ public class CommentBubble extends FlowPanel {
 		btRemove = new RemoveCommentButton();
 		buttonPanel.add(btRemove);
 
+		btReply = new ReplyCommentButton();
+		buttonPanel.add(btReply);
+		
 		add(buttonPanel);
 		
+	}
+	
+	private String getShortBody() {
+		boolean exceededLength = comment.getBody().length() > 80;
+		if (exceededLength) {
+			return comment.getBody().substring(0, 80) + "...";
+		}
+		else {
+			return comment.getBody();
+		}
 	}
 
 	public void deselect() {
 		buttonPanel.setVisible(false);
+		this.content.setHTML(getShortBody());
 	}
 
 	public ClientComment getComment() {
 		return comment;
+	}
+
+	public void refresh() {
+		if (buttonPanel.isVisible()) {
+			this.content.setHTML(comment.getBody());
+		}
+		else {
+			this.content.setHTML(getShortBody());
+		}
+		
+		//TODO: update comments
 	}
 
 }

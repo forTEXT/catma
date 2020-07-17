@@ -44,6 +44,7 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.StandardContentHandler;
@@ -58,6 +59,7 @@ import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.CommentChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
+import de.catma.project.event.ReplyChangeEvent;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -1620,5 +1622,19 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public List<Comment> getComments(String documentId) throws IOException {
 		return gitProjectHandler.getComments(documentId);
+	}
+	
+	@Override
+	public void addReply(Comment comment, Reply reply) throws IOException {
+		gitProjectHandler.addReply(comment, reply);
+		
+		
+		
+		eventBus.post(new ReplyChangeEvent(ChangeType.CREATED, reply));
+	}
+	
+	@Override
+	public List<Reply> getCommentReplies(Comment comment) throws IOException {
+		return gitProjectHandler.getCommentReplies(comment);
 	}
 }

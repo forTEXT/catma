@@ -30,8 +30,8 @@ public class TaggerConnector extends AbstractComponentConnector {
 			}
 			
 			@Override
-			public void setPage(String page, int lineCount) {
-				getWidget().setPage(page, lineCount);
+			public void setPage(String page, int lineCount, String comments) {
+				getWidget().setPage(page, lineCount, new ClientCommentJSONSerializer().fromJSONArray(comments));
 			}
 			
 			@Override
@@ -75,6 +75,20 @@ public class TaggerConnector extends AbstractComponentConnector {
 					new ClientCommentJSONSerializer().fromJSONString(clientCommentJson));
 			}
 			
+			@Override
+			public void updateComment(String uuid, String body, int startPos) {
+				getWidget().updateComment(uuid, body, startPos);	
+			}
+			
+			@Override
+			public void removeComment(String uuid, int startPos) {
+				getWidget().removeComment(uuid, startPos);
+			}
+			
+			@Override
+			public void setReplies(String uuid, int startPos, String replies) {
+				getWidget().setReplies(uuid, startPos, new ClientCommentReplyJSONSerializer().fromJSONArray(replies));
+			}
 		});
 	}
 	
@@ -137,6 +151,16 @@ public class TaggerConnector extends AbstractComponentConnector {
 			@Override
 			public void removeComment(ClientComment comment) {
 				rpc.removeComment(comment.getUuid());
+			}
+			
+			@Override
+			public void replyToComment(ClientComment comment, int x, int y) {
+				rpc.replyToComment(comment.getUuid(), x, y);
+			}
+			
+			@Override
+			public void loadReplies(String uuid) {
+				rpc.loadReplies(uuid);	
 			}
 		});
 

@@ -31,6 +31,7 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
@@ -1743,13 +1744,19 @@ public class GitProjectHandler {
 	}
 
 	public void removeComment(Comment comment) throws IOException {
-		// TODO Auto-generated method stub
-		
+		remoteGitServerManager.removeComment(projectId, comment);
 	}
 
 	public void updateComment(Comment comment) throws IOException {
-		// TODO Auto-generated method stub
-		
+		remoteGitServerManager.updateComment(projectId, comment);
+	}
+
+	public void addReply(Comment comment, Reply reply) throws IOException {
+		remoteGitServerManager.addReply(projectId, comment, reply);
+	}
+
+	public List<Reply> getCommentReplies(Comment comment) throws IOException {
+		return remoteGitServerManager.getCommentReplies(projectId, comment);
 	}
 	
 	

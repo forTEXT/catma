@@ -34,9 +34,11 @@ import de.catma.document.Range;
 import de.catma.document.annotation.Annotation;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
 import de.catma.project.Project;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.client.ui.tagger.CommentReplyJSONSerializer;
 import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.tagger.TaggerServerRpc;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
@@ -64,6 +66,8 @@ public class Tagger extends AbstractComponent {
 		public void addComment(List<Range> ranges, int x, int y);
 		public void editComment(Optional<Comment> optionalComment, int x, int y);
 		public void removeComment(Optional<Comment> optionalComment);
+		public void replyToComment(Optional<Comment> optionalComment, int x, int y);
+		public void loadReplies(Optional<Comment> optionalComment);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -151,6 +155,19 @@ public class Tagger extends AbstractComponent {
 			
 			taggerListener.removeComment(optionalComment);
 		}
+		
+		@Override
+		public void replyToComment(String uuid, int x, int y) {
+			Optional<Comment> optionalComment = pager.getComment(uuid);
+
+			taggerListener.replyToComment(optionalComment, x, y);
+		}
+		
+		@Override
+		public void loadReplies(String uuid) {
+			Optional<Comment> optionalComment = pager.getComment(uuid);
+			taggerListener.loadReplies(optionalComment);
+		}
 	};
 
 	private Pager pager;
@@ -196,21 +213,31 @@ public class Tagger extends AbstractComponent {
 		}
 	}
 
-	private void setPage(String pageContent, int lineCount) {
+	private void setPage(String pageContent, int lineCount, Collection<Comment> comments) {
+		String serializedComments = "";
+		try {
+			serializedComments = new ClientCommentJSONSerializer().toJSON(comments);
+		}
+		catch (IOException e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+					"Error serializing Comments!", e); 
+		}
+		
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
 		getRpcProxy(TaggerClientRpc.class).setPage(
 				pageContent, 
-				lineCount);
+				lineCount,
+				serializedComments);
 	}
 	
-	public void setText(String text) {
+	public void setText(String text, Collection<Comment> comments) {
 		this.forceClientRefresh  = true;
-		pager.setText(text);
+		pager.setText(text, comments);
 	}
 	
 	public void setPage(int pageNumber) {
 		Page page = pager.getPage(pageNumber);
-		setPage(page.toHTML(), page.getLineCount());
+		setPage(page.toHTML(), page.getLineCount(), page.getComments());
 	}
 	
 	void removeTagInstances(Collection<String> annotationIds) {
@@ -222,7 +249,10 @@ public class Tagger extends AbstractComponent {
 				getState().tagInstanceIdToTooltipInfo.remove(annotationId);
 			}
 			if (pager.getCurrentPage().isDirty()) {
-				setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+				setPage(
+					pager.getCurrentPage().toHTML(), 
+					pager.getCurrentPage().getLineCount(), 
+					pager.getCurrentPage().getComments());
 			}
 		}
 	}
@@ -258,7 +288,10 @@ public class Tagger extends AbstractComponent {
 				}	
 			}
 			if (pager.getCurrentPage().isDirty()) {
-				setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+				setPage(
+					pager.getCurrentPage().toHTML(), 
+					pager.getCurrentPage().getLineCount(), 
+					pager.getCurrentPage().getComments());
 			}
 		}
 	}
@@ -309,7 +342,10 @@ public class Tagger extends AbstractComponent {
 	public void highlight(Range absoluteRange) {
 		if (pager.hasPages()) {
 			int firstLineId = pager.highlight(absoluteRange);
-			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
+			setPage(
+				pager.getCurrentPage().toHTML(), 
+				pager.getCurrentPage().getLineCount(), 
+				pager.getCurrentPage().getComments());
 			if (firstLineId != -1) {
 								
 				if (pager.getCurrentPage().hasLine(pager.getCurrentPage().getLineCount()-1)) {
@@ -348,5 +384,22 @@ public class Tagger extends AbstractComponent {
 			getRpcProxy(TaggerClientRpc.class).addComment(
 				new ClientCommentJSONSerializer().toJSON(clientComment));
 		}
-	}	
+	}
+
+	public void setComments(List<Comment> comments) {
+		pager.setComments(comments);
+	}
+
+	public void updateComment(Comment comment) {
+		getRpcProxy(TaggerClientRpc.class).updateComment(comment.getUuid(), comment.getBody(), comment.getStartPos());
+	}
+
+	public void removeComment(Comment comment) {
+		getRpcProxy(TaggerClientRpc.class).removeComment(comment.getUuid(), comment.getStartPos());
+	}
+
+	public void setReplies(List<Reply> replies, Comment comment) {
+		getRpcProxy(TaggerClientRpc.class).setReplies(comment.getUuid(), comment.getStartPos(), 
+				new CommentReplyJSONSerializer().toJSONArrayString(replies));
+	}
 }

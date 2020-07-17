@@ -11,4 +11,6 @@ public interface TaggerServerRpc extends ServerRpc {
 	public void addComment(String textRanges, int x, int y);
 	public void editComment(String uuid, int x, int y);
 	public void removeComment(String uuid);
+	public void replyToComment(String uuid, int x, int y);
+	public void loadReplies(String uuid);
 }

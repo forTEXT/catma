@@ -36,11 +36,13 @@ import de.catma.ui.client.ui.util.JSONSerializer;
 public class ClientCommentJSONSerializer extends JSONSerializer {
 
 	public List<ClientComment> fromJSONArray(String jsonArrayString) {
-		JSONArray commentsJSON = 
-				(JSONArray)JSONParser.parseStrict(jsonArrayString);
 		List<ClientComment> comments = new ArrayList<ClientComment>();
-		for (int i=0; i<commentsJSON.size(); i++) {
-			comments.add(fromJSON((JSONObject)commentsJSON.get(i)));
+		if (jsonArrayString != null && !jsonArrayString.isEmpty()) {
+			JSONArray commentsJSON = 
+					(JSONArray)JSONParser.parseStrict(jsonArrayString);
+			for (int i=0; i<commentsJSON.size(); i++) {
+				comments.add(fromJSON((JSONObject)commentsJSON.get(i)));
+			}
 		}
 		return comments;
 		
@@ -69,6 +71,8 @@ public class ClientCommentJSONSerializer extends JSONSerializer {
 		JSONArray rangesJSON = 
 			(JSONArray)jsonObject.get(SerializationField.ranges.name());
 		
+		int replyCount = getIntValueFromNumberObject(jsonObject.get(SerializationField.replyCount.name()));
+		
 		List<TextRange> ranges = new ArrayList<TextRange>();
 		
 		for (int i=0; i<rangesJSON.size(); i++) {
@@ -82,7 +86,7 @@ public class ClientCommentJSONSerializer extends JSONSerializer {
 			ranges.add(tr);
 		}
 		
-		return new ClientComment(uuid, username, userId, body, ranges);
+		return new ClientComment(uuid, username, userId, body, replyCount, ranges);
 	}
 
 	public String toJSONObjectString(ClientComment comment) {
@@ -104,7 +108,11 @@ public class ClientCommentJSONSerializer extends JSONSerializer {
 				new JSONNumber(comment.getUserId().doubleValue()));
 		commentJSON.put(
 				SerializationField.body.name(), 
-				new JSONString(comment.getBody()));		
+				new JSONString(comment.getBody()));
+		
+		commentJSON.put(
+			SerializationField.replyCount.name(),
+			new JSONNumber(comment.getReplyCount()));
 		
 		TextRangeJSONSerializer textRangeJSONSerializer = new TextRangeJSONSerializer();
 		JSONArray rangesJSON = textRangeJSONSerializer.toJSONArray(comment.getRanges());

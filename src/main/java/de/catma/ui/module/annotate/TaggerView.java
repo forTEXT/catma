@@ -26,6 +26,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +57,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Range;
@@ -65,13 +67,13 @@ import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.IndexedProject;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
-import de.catma.project.event.ChangeType;
 import de.catma.project.event.CommentChangeEvent;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.tag.Property;
@@ -142,6 +144,7 @@ public class TaggerView extends HorizontalLayout
 	private KwicPanel kwicPanel;
 	private VerticalSplitPanel rightSplitPanel;
 	private TabCaptionChangeListener tabNameChangeListener;
+	private Collection<Comment> comments = Collections.emptyList();
 	
 	public TaggerView(
 			int taggerID, 
@@ -187,7 +190,10 @@ public class TaggerView extends HorizontalLayout
 							btAnalyze.setEnabled(project instanceof IndexedProject);
 							pagerComponent.setEnabled(true);
 							
-							tagger.setText(sourceDocument.getContent());
+							TaggerView.this.comments = TaggerView.this.project.getComments(sourceDocument.getUuid());
+
+							tagger.setText(sourceDocument.getContent(), TaggerView.this.comments);
+							
 							totalLineCount = pager.getTotalLineCount();
 							try {
 								linesPerPageSlider.setValue((100.0/totalLineCount)*maxPageLengthInLines);
@@ -214,10 +220,6 @@ public class TaggerView extends HorizontalLayout
 								taggerContextMenu.setTagsets(tagsets);
 							}
 							
-							List<Comment> comments = project.getComments(sourceDocument.getUuid());
-							for (Comment comment : comments) {
-								System.out.println(comment);
-							}
 							
 							ui.push();
 						} catch (IOException e) {
@@ -430,7 +432,7 @@ public class TaggerView extends HorizontalLayout
 				if (pager.hasPages()) {
 					//recalculate pages
 					try {
-						pager.setText(sourceDocument.getContent());
+						pager.setText(sourceDocument.getContent(), comments);
 						int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
 						tagger.setPage(previousPageNumber);					
 						tagger.setTagInstancesVisible(absoluteTagInstances, true);
@@ -696,7 +698,7 @@ public class TaggerView extends HorizontalLayout
 				if (pager.hasPages()) {
 					//recalculate pages
 					try {
-						pager.setText(sourceDocument.getContent());
+						pager.setText(sourceDocument.getContent(), comments);
 						int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
 						tagger.setPage(previousPageNumber);					
 						tagger.setTagInstancesVisible(absoluteTagInstances, true);
@@ -877,7 +879,7 @@ public class TaggerView extends HorizontalLayout
 				while(startPage != endPage) {
 					pager.setMaxPageLengthInLines(pager.getMaxPageLengthInLines()+5);
 					try {
-						pager.setText(sourceDocument.getContent());
+						pager.setText(sourceDocument.getContent(), comments);
 					} catch (IOException e) {
 						logger.log(Level.SEVERE, "error adjusting  page zoom", e); //$NON-NLS-1$
 					}
@@ -973,7 +975,7 @@ public class TaggerView extends HorizontalLayout
 								user.getName(), user.getUserId(), 
 								commentBody, ranges, this.sourceDocument.getUuid()));
 					} catch (IOException e) {
-						errorHandler.showAndLogError("Error add Comment!", e);
+						errorHandler.showAndLogError("Error adding Comment!", e);
 					}
 				});
 		commentDialog.show(x, y);
@@ -982,7 +984,7 @@ public class TaggerView extends HorizontalLayout
 	@Override
 	public void editComment(Optional<Comment> optionalComment, int x, int y) {
 		if (optionalComment.isPresent()) {
-			CommentDialog commentDialog = new CommentDialog(optionalComment.get().getBody(), commentBody -> {
+			CommentDialog commentDialog = new CommentDialog(optionalComment.get().getBody(), false, commentBody -> {
 				final String oldBody = optionalComment.get().getBody();
 				optionalComment.get().setBody(commentBody);
 				try {
@@ -1016,6 +1018,32 @@ public class TaggerView extends HorizontalLayout
 			Notification.show("Info", "Couldn't find a Comment to edit!", Type.HUMANIZED_MESSAGE);
 		}	
 	}
+	
+	@Override
+	public void replyToComment(Optional<Comment> optionalComment, int x, int y) {
+		if (optionalComment.isPresent()) {
+			User user = project.getUser();
+			IDGenerator idGenerator = new IDGenerator();
+			CommentDialog commentDialog = new CommentDialog(
+					true,
+					replyBody -> {
+						try {
+							project.addReply(optionalComment.get(), 
+								new Reply(
+									idGenerator.generate(),
+									replyBody, 
+									user.getName(), user.getUserId(), 
+									optionalComment.get().getUuid()));
+						} catch (IOException e) {
+							errorHandler.showAndLogError("Error adding Reply!", e);
+						}
+					});
+			commentDialog.show(x, y);
+		}
+		else {
+			Notification.show("Info", "Couldn't find a Comment to reply to!", Type.HUMANIZED_MESSAGE);
+		}
+	}
 
 
 	@Subscribe
@@ -1029,11 +1057,48 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		case UPDATED: {
-			//TOOD: 
+			tagger.updateComment(commentChangeEvent.getComment());
 		}
 		case DELETED: {
-			//TODO:
+			tagger.removeComment(commentChangeEvent.getComment());
 		}
+		}
+		
+		
+	}
+	
+	@Override
+	public void loadReplies(Optional<Comment> optionalComment) {
+		if(optionalComment.isPresent()) {
+			final Comment comment = optionalComment.get();
+			final UI ui = UI.getCurrent();
+			((BackgroundServiceProvider)ui).submit(
+				"load-comment-replies", new DefaultProgressCallable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						ui.accessSynchronously(() -> {
+							try {
+								List<Reply> replies = project.getCommentReplies(comment);
+								tagger.setReplies(replies, comment);
+							}
+							catch(IOException e) {
+								errorHandler.showAndLogError("Error loading Replies!", e);
+							}
+						});
+						
+						
+						return null;
+					}
+				}, new ExecutionListener<Void>() {
+					@Override
+					public void done(Void result) {
+						ui.push();
+					}
+					@Override
+					public void error(Throwable t) {
+						errorHandler.showAndLogError("Error loading Replies!", t);
+					}
+				});
 		}
 		
 		

@@ -14,6 +14,8 @@ public class Comment {
 	private transient String username;
 	private transient Integer userId;
 	private transient Integer id;
+	private transient int replyCount;
+	private transient List<Reply> replies;
 
 	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId) {
 		this(uuid, username, userId, body, ranges, documentId, null);
@@ -76,6 +78,26 @@ public class Comment {
 	
 	@Override
 	public String toString() {
-		return uuid + " #" + id + " by " + username + " for " + documentId + " " + body;
+		return "Comment " + uuid + " #" + id + " by " + username + " for " + documentId + " " + body;
+	}
+
+	public void setReplyCount(int replyCount) {
+		this.replyCount = replyCount;
+	}
+	
+	public int getReplyCount() {
+		return replyCount;
+	}
+
+	public int getStartPos() {
+		return ranges.stream().map(Range::getStartPoint).sorted().findFirst().orElse(-1);
+	}
+	
+	public List<Reply> getReplies() {
+		return replies;
+	}
+	
+	public void setReplies(List<Reply> replies) {
+		this.replies = replies;
 	}
 }

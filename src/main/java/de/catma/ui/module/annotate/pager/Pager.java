@@ -19,6 +19,7 @@
 package de.catma.ui.module.annotate.pager;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -74,15 +75,17 @@ public class Pager implements Iterable<Page> {
 		this.rightToLeftWriting = rightToLeftWriting;
 	}
 	
-	public void setText(String text) {
+	public void setText(String text, Collection<Comment> comments) {
 		if (!matchChecksum(text)) {
 			currentPageIndex = 0;
 			pages.clear();
 			buildPages(text);
+			this.setComments(comments);
 			if (pagerListener != null) {
 				pagerListener.textChanged();
 			}
 		}
+		
 	}
 	
 	public boolean hasPages() {
@@ -341,7 +344,9 @@ public class Pager implements Iterable<Page> {
 			return new ClientComment(
 				comment.getUuid(), 
 				comment.getUsername(), comment.getUserId(), 
-				comment.getBody(), ranges);
+				comment.getBody(), 
+				comment.getReplyCount(),
+				ranges);
 		}
 		else {
 			return null;
@@ -365,12 +370,16 @@ public class Pager implements Iterable<Page> {
 	private Optional<Comment> findComment(String uuid) {
 		if (hasPages()) {
 			for (Page page : pages) {
-				Optional<Comment> optinalComment = page.getComment(uuid);
-				if (optinalComment.isPresent()) {
-					return optinalComment;
+				Optional<Comment> optionalComment = page.getComment(uuid);
+				if (optionalComment.isPresent()) {
+					return optionalComment;
 				}
 			}
 		}
 		return Optional.empty();
+	}
+
+	public void setComments(Collection<Comment> comments) {
+		comments.forEach(comment -> addComment(comment));
 	}
 }

@@ -32,6 +32,7 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -402,4 +403,8 @@ public interface Project {
 	public void removeComment(Comment comment) throws IOException;
 
 	List<Comment> getComments(String documentId) throws IOException;
+
+	public void addReply(Comment comment, Reply reply) throws IOException;
+
+	public List<Reply> getCommentReplies(Comment comment) throws IOException;
 }

@@ -19,11 +19,15 @@
 package de.catma.ui.module.annotate;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import de.catma.document.comment.Comment;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientComment.SerializationField;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -32,7 +36,7 @@ public class ClientCommentJSONSerializer {
 	
 	public String toJSON(ClientComment comment) 
 			throws IOException {
-		return toJSONObject(comment).toString();
+		return new ObjectMapper().writeValueAsString(comment);
 	}
 
 	private ObjectNode toJSONObject(ClientComment comment) 
@@ -50,6 +54,9 @@ public class ClientCommentJSONSerializer {
 		result.put(
 				SerializationField.body.name(), 
 				comment.getBody());
+		result.put(
+				SerializationField.replyCount.name(), 
+				comment.getReplyCount());
 
 		ArrayNode ranges = factory.arrayNode();
 		
@@ -63,6 +70,30 @@ public class ClientCommentJSONSerializer {
 		result.set(SerializationField.ranges.name(), ranges);
 		
 		return result;
+	}
+	
+	
+	public String toJSON(Collection<Comment> comments) throws IOException {
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+		ArrayNode collection = factory.arrayNode(comments.size());
+		
+		for (Comment comment : comments) {
+			collection.add(
+				toJSONObject(
+					new ClientComment(
+						comment.getUuid(), 
+						comment.getUsername(), 
+						comment.getUserId(), 
+						comment.getBody(), 
+						comment.getReplyCount(),
+						comment.getRanges()
+							.stream()
+							.map(range -> new TextRange(range.getStartPoint(), range.getEndPoint()))
+							.collect(Collectors.toList()))));
+		}
+		
+		return new ObjectMapper().writeValueAsString(collection);
+		
 	}
 
 }

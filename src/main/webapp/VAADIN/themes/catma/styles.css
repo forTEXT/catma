@@ -17739,28 +17739,31 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .comment {
 	border: 1px solid;
 	border-radius: 10px;
+	border-color: #D4D4D4;
 	padding: 5px;
 	margin: 5px;
 	white-space: normal;
-	width: 100px;
+	width: 140px;
 	overflow: auto;
 	cursor: pointer;
+	display: flex;
+	flex-direction: row;
 }
 
 .catma .comment-content {
 	display: inline-block;
 	vertical-align: top;
+	flex-grow: 2;
 }
 
 .catma .comment-button-panel {
 	display: inline-block;
-	float: right;
 }
 
 .catma .comment-line-panel {
 	position: absolute;
 	top: 10px;
-	left: 60px;
+	left: 5px;
 }
 
 .catma .selection-layer {

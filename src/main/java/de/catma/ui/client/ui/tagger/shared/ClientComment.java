@@ -11,6 +11,7 @@ public class ClientComment {
 		startPos,
 		endPos,
 		body, 
+		replyCount,
 		uuid,
 		;
 	}
@@ -19,15 +20,18 @@ public class ClientComment {
 	private final String username;
 	private final Integer userId;
 	private final List<TextRange> ranges;
+	private int replyCount;
 	
 	private String body;
+	private List<ClientCommentReply> replies;
 	
-	public ClientComment(String uuid, String username, Integer userId, String body, List<TextRange> ranges) {
+	public ClientComment(String uuid, String username, Integer userId, String body, int replyCount, List<TextRange> ranges) {
 		super();
 		this.uuid = uuid;
 		this.username = username;
 		this.userId = userId;
 		this.body = body;
+		this.replyCount = replyCount;
 		this.ranges = ranges;
 		ranges.sort(new TextRangeComparator());
 	}
@@ -56,4 +60,19 @@ public class ClientComment {
 		this.body = body;
 	}
 	
+	public int getReplyCount() {
+		return replyCount;
+	}
+	
+	public void setReplyCount(int replyCount) {
+		this.replyCount = replyCount;
+	}
+
+	public void setReplies(List<ClientCommentReply> replies) {
+		this.replies = replies;
+	}
+	
+	public List<ClientCommentReply> getReplies() {
+		return replies;
+	}
 }

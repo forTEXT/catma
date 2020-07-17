@@ -35,6 +35,7 @@ import de.catma.ui.client.ui.tagger.editor.Line;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -149,6 +150,16 @@ public class VTagger extends Composite {
 				
 				taggerListener.addComment(ranges, x, y);
 			}
+			
+			@Override
+			public void replyTo(ClientComment comment, int x, int y) {
+				taggerListener.replyToComment(comment, x, y);
+			}
+			
+			@Override
+			public void loadReplies(String uuid) {
+				taggerListener.loadReplies(uuid);
+			}
 		});
 		
 		panel.add(commentPanel);
@@ -168,7 +179,7 @@ public class VTagger extends Composite {
 		taggerEditor.setTaggerID(taggerId);
 	}
 
-	public void setPage(String page, int lineCount) {
+	public void setPage(String page, int lineCount, List<ClientComment> comments) {
 
 		logger.info("setting page content");
 		Timer timer = new Timer() {
@@ -176,6 +187,9 @@ public class VTagger extends Composite {
 			public void run() {
 				taggerEditor.setHTML(new HTML(page), lineCount);
 				commentPanel.setLines(taggerEditor.getLines());
+				for (ClientComment comment : comments) {
+					addComment(comment);
+				}
 			}
 		};
 		
@@ -234,5 +248,33 @@ public class VTagger extends Composite {
 		if (line != null) {
 			commentPanel.addComment(comment, line);
 		}
+	}
+
+	public void updateComment(String uuid, String body, int startPos) {
+		if (startPos >= 0) {
+			Line line = taggerEditor.updateComment(uuid, body, startPos);
+			if (line != null) {
+				commentPanel.refreshComment(uuid, line);
+			}
+		}		
+	}
+
+	public void removeComment(String uuid, int startPos) {
+		if (startPos >= 0) {
+			Line line = taggerEditor.removeComment(uuid, startPos);
+			if (line != null) {
+				commentPanel.removeCommment(uuid, line);
+			}
+		}
+		
+	}
+
+	public void setReplies(String uuid, int startPos, List<ClientCommentReply> replies) {
+		if (startPos >= 0) {
+			Line line = taggerEditor.updateComment(uuid, replies, startPos);
+			if (line != null) {
+				commentPanel.refreshComment(uuid, line);
+			}
+		}		
 	}
 }

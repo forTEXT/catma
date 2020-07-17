@@ -19,6 +19,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.IssuesApi;
+import org.gitlab4j.api.NotesApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AccessLevel;
@@ -29,6 +30,7 @@ import org.gitlab4j.api.models.Issue;
 import org.gitlab4j.api.models.IssueFilter;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Namespace;
+import org.gitlab4j.api.models.Note;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
@@ -44,6 +46,7 @@ import com.google.gson.JsonParser;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
 import de.catma.project.ForkStatus;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
@@ -59,6 +62,7 @@ import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
+import de.catma.util.IDGenerator;
 
 public class GitlabManagerRestricted extends GitlabManagerCommon implements IRemoteGitManagerRestricted, IGitUserInformation {
 	
@@ -577,6 +581,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			
 			for (Issue issue : issuePager.all()) {
 				String description = issue.getDescription();
+				int noteCount = issue.getUserNotesCount();
 				try {
 					Author author = issue.getAuthor();
 					
@@ -584,6 +589,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 					comment.setId(issue.getId());
 					comment.setUserId(author.getId());
 					comment.setUsername(author.getName());
+					comment.setReplyCount(noteCount);
 					
 					result.add(comment);
 				}
@@ -596,8 +602,128 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to add a new Comment for resource %1$s in group %2$s!", resourceId, projectId), e);
+				"Failed to retrieve Comments resource %1$s in group %2$s!", resourceId, projectId), e);
 		}
 
+	}
+	
+	@Override
+	public void removeComment(String projectId, Comment comment) throws IOException {
+		String resourceId = comment.getDocumentId();
+
+		try {
+			
+			String projectPath = projectId + "/" + resourceId;
+			
+			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
+		
+			issuesApi.deleteIssue(projectPath, comment.getId());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format(
+				"Failed to remove Comment %1$s %2$d for resource %3$s in group %4$s!", 
+					comment.getUuid(), comment.getId(), resourceId, projectId),
+				e);
+		}
+	}
+	
+	@Override
+	public void updateComment(String projectId, Comment comment) throws IOException {
+		String resourceId = comment.getDocumentId();
+
+		try {
+			
+			String projectPath = projectId + "/" + resourceId;
+			
+			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
+			
+			
+			String title = comment.getBody().substring(0, Math.min(100, comment.getBody().length()));
+			if (title.length() < comment.getBody().length()) {
+				title += "...";
+			}
+			String description = new SerializationHelper<Comment>().serialize(comment);
+			
+			issuesApi.updateIssue(
+					projectPath, 
+					comment.getId(),
+					title, description, 
+					null, null, null, 
+					CATMA_COMMENT_LABEL, 
+					null, null, null);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format(
+				"Failed to update Comment %1$s %2$d for resource %3$s in group %4$s!", 
+					comment.getUuid(), comment.getId(), resourceId, projectId), 
+				e);
+		}
+	}
+	
+	@Override
+	public void addReply(String projectId, Comment comment, Reply reply) throws IOException {
+		String resourceId = comment.getDocumentId();
+		
+		String projectPath = projectId + "/" + resourceId;
+
+		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+	
+		try {
+			String noteBody = new SerializationHelper<Reply>().serialize(reply);
+			notesApi.createIssueNote(projectPath, comment.getId(), noteBody);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format(
+				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
+					comment.getUuid(), comment.getId(), resourceId, projectId), 
+				e);
+		}
+		
+	}
+	
+	@Override
+	public List<Reply> getCommentReplies(String projectId, Comment comment) throws IOException {
+		String resourceId = comment.getDocumentId();
+		
+		String projectPath = projectId + "/" + resourceId;
+
+		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+		List<Reply> result = new ArrayList<Reply>();
+		try {
+			
+			List<Note> notes = notesApi.getIssueNotes(projectPath, comment.getId());
+			
+			for (Note note : notes) {
+				String noteBody = note.getBody();
+				Reply reply = null;
+				try {
+					reply = new SerializationHelper<Reply>().deserialize(noteBody, Reply.class);
+					reply.setCommentUuid(comment.getUuid());
+					reply.setId(note.getId());
+					reply.setUserId(note.getAuthor().getId());
+					reply.setUsername(note.getAuthor().getUsername());
+				}
+				catch (Exception e) {
+					logger.log(Level.SEVERE, String.format("Error deserializing Reply #%1$d %2$s", note.getId(), noteBody), e);
+					IDGenerator idGenerator = new IDGenerator();
+					
+					reply = new Reply(
+						idGenerator.generate(), 
+						noteBody, note.getAuthor().getUsername(), 
+						note.getAuthor().getId(), 
+						comment.getUuid(), 
+						note.getId());
+				}
+				
+				result.add(reply);
+			}
+			
+			return result;
+		} catch (GitLabApiException e) {
+			throw new IOException(String.format(
+					"Failed to retrieve Replies for Comment %1$s %2$d for resource %3$s in group %4$s!", 
+						comment.getUuid(), comment.getId(), resourceId, projectId), 
+					e);
+		}
 	}
 }

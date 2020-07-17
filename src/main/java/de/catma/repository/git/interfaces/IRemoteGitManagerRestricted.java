@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
 import de.catma.project.ForkStatus;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
@@ -145,6 +146,12 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 
 	List<Comment> getComments(String projectId, String resourceId) throws IOException;
 
+	void removeComment(String projectId, Comment comment) throws IOException;
+	
+	void updateComment(String projectId, Comment comment) throws IOException;
+	
+	void addReply(String projectId, Comment comment, Reply reply) throws IOException;
 
+	List<Reply> getCommentReplies(String projectId, Comment comment) throws IOException;
 
 }

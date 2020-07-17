@@ -19,6 +19,8 @@ public class CommentPanel extends FlowPanel {
 		public void addComment(int x, int y);
 		public void edit(ClientComment comment, int x, int y);
 		public void remove(ClientComment comment);
+		public void replyTo(ClientComment comment, int x, int y);
+		public void loadReplies(String uuid);
 	}
 	
 	private static final int PANEL_OFFSET = 33; 
@@ -89,7 +91,10 @@ public class CommentPanel extends FlowPanel {
 				}
 			}
 		}
-		
+
+		currentMaxTop = panel.getLine().getLineElement().getOffsetTop()-PANEL_OFFSET;
+		currentHeightDown = panel.getElement().getOffsetHeight();
+
 		if (focusIdx != panels.size()-1) {
 			for (int idx=focusIdx+1; idx<panels.size(); idx++) {
 				CommentLinePanel curPanel = panels.get(idx);
@@ -104,6 +109,9 @@ public class CommentPanel extends FlowPanel {
 					currentMaxTop = currentTop;
 					currentHeightDown = curPanel.getElement().getOffsetHeight(); 
 				}
+				else {
+					currentMaxTop += currentHeightDown;
+				}
 				
 				currentHeightDown = 0;
 				
@@ -112,11 +120,15 @@ public class CommentPanel extends FlowPanel {
 	}
 
 	public void setLines(List<Line> lines) {
+		for (CommentLinePanel panel : panels) {
+			remove(panel);
+		}
+		
 		panels = new ArrayList<CommentLinePanel>(lines.size());
 		for (Line line : lines) {
 			CommentLinePanel panel = new CommentLinePanel(line, new CommentLinePanelListener() {
 				@Override
-				public void commentBubbleSelected(Line line) {
+				public void selected(ClientComment comment, Line line) {
 					CommentLinePanel selectedPanel = panels.get(line.getLineId());
 					for (CommentLinePanel panel : panels) {
 						if (!panel.equals(selectedPanel)) {
@@ -125,6 +137,10 @@ public class CommentPanel extends FlowPanel {
 					}
 					
 					alignCommentLinePanels(selectedPanel);
+					
+					if (comment.getReplyCount() > 0) {
+						commentPanelListener.loadReplies(comment.getUuid());
+					}
 				}
 				
 				@Override
@@ -136,6 +152,11 @@ public class CommentPanel extends FlowPanel {
 				public void remove(ClientComment comment) {
 					commentPanelListener.remove(comment);
 				}
+				
+				@Override
+				public void replyTo(ClientComment comment, int x, int y) {
+					commentPanelListener.replyTo(comment, x, y);
+				}
 			}); 
 			panels.add(panel);
 			add(panel);
@@ -144,6 +165,17 @@ public class CommentPanel extends FlowPanel {
 
 		}
 		
+	}
+
+	public void refreshComment(String uuid, Line line) {
+		CommentLinePanel panel = panels.get(line.getLineId());
+
+		panel.refreshComment(uuid);
+	}
+
+	public void removeCommment(String uuid, Line line) {
+		CommentLinePanel panel = panels.get(line.getLineId());
+		panel.removeComment(uuid);
 	}
 
 }

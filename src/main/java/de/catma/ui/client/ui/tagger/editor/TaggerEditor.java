@@ -60,6 +60,7 @@ import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener.TaggerEditorEven
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
@@ -717,6 +718,37 @@ public class TaggerEditor extends FocusWidget
 		if (line != null) {
 			line.addComment(comment);
 		}
+		
+		return line;
+	}
+
+	public Line updateComment(String uuid, String body, int startPos) {
+		
+		Line line = getLineForPos(startPos);
+		
+		if (line != null) {
+			line.updateComment(uuid, body);
+		
+		}		
+		
+		return line;
+	}
+
+	public Line removeComment(String uuid, int startPos) {
+		Line line = getLineForPos(startPos);
+		if (line != null) {
+			line.removeComment(uuid);
+		}
+		return line;
+	}
+
+	public Line updateComment(String uuid, List<ClientCommentReply> replies, int startPos) {
+		Line line = getLineForPos(startPos);
+		
+		if (line != null) {
+			line.updateComment(uuid, replies);
+		
+		}		
 		
 		return line;
 	}

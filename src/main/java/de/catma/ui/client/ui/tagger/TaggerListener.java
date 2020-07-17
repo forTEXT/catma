@@ -15,4 +15,6 @@ public interface TaggerListener {
 	public void addComment(List<TextRange> ranges, int x, int y);
 	public void editComment(ClientComment comment, int x, int y);
 	public void removeComment(ClientComment comment);
+	public void replyToComment(ClientComment comment, int x, int y);
+	public void loadReplies(String uuid);
 }

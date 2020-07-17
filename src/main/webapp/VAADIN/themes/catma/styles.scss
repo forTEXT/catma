@@ -265,28 +265,31 @@ $v-focus-color: #5A98A1;
 	.comment {
 	    border: 1px solid;
 	    border-radius: 10px;
+	    border-color: #D4D4D4;
 	    padding: 5px;
 	    margin: 5px;
 	    white-space: normal;
-	    width: 100px;
+	    width: 140px;
 	    overflow: auto;
 	    cursor: pointer;
+	    display: flex;
+	    flex-direction: row;
 	}
 	
 	.comment-content {
 		display: inline-block;		
 		vertical-align: top;
+		flex-grow: 2;
 	}
 	
 	.comment-button-panel {
 		display: inline-block;
-		float: right;
 	}
 	
 	.comment-line-panel {
 	    position: absolute;
 	    top: 10px;
-	    left: 60px;
+	    left: 5px;
 	}
 	
 	

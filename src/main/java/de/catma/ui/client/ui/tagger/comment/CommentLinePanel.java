@@ -9,9 +9,10 @@ import de.catma.ui.client.ui.tagger.shared.ClientComment;
 
 public class CommentLinePanel extends FlowPanel {
 	public static interface CommentLinePanelListener {
-		public void commentBubbleSelected(Line line);
+		public void selected(ClientComment comment, Line line);
 		public void edit(ClientComment comment, int x, int y);
 		public void remove(ClientComment comment);
+		public void replyTo(ClientComment comment, int x, int y);
 	}
 	
 	private Line line;
@@ -45,7 +46,7 @@ public class CommentLinePanel extends FlowPanel {
 					}
 				}
 				
-				listener.commentBubbleSelected(line);
+				listener.selected(comment, line);
 			}
 			
 			@Override
@@ -58,6 +59,10 @@ public class CommentLinePanel extends FlowPanel {
 				listener.remove(comment);
 			}
 			
+			@Override
+			public void replyTo(ClientComment comment, int x, int y) {
+				listener.replyTo(comment, x, y);
+			}
 		}), 0);
 	}
 	
@@ -73,6 +78,34 @@ public class CommentLinePanel extends FlowPanel {
 				commentBubble.deselect();
 			}
 		}	
+	}
+
+	public void refreshComment(String uuid) {
+		
+		for (int i=0; i<getWidgetCount(); i++) {
+			Widget w = getWidget(i);
+			if (w instanceof CommentBubble) {
+				CommentBubble commentBubble= (CommentBubble)w;
+				if (commentBubble.getComment().getUuid().equals(uuid)) {
+					commentBubble.refresh();
+				}
+			}
+		}	
+		
+		
+	}
+
+	public void removeComment(String uuid) {
+		for (int i=0; i<getWidgetCount(); i++) {
+			Widget w = getWidget(i);
+			if (w instanceof CommentBubble) {
+				CommentBubble commentBubble= (CommentBubble)w;
+				if (commentBubble.getComment().getUuid().equals(uuid)) {
+					commentBubble.removeFromParent();
+					break;
+				}
+			}
+		}			
 	}
 
 }

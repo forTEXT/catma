@@ -19,11 +19,15 @@ public class CommentDialog extends AbstractOkCancelDialog<String> {
 	private ScheduledFuture<?> scheduledClosing;
 
 	public CommentDialog(SaveCancelListener<String> saveCancelListener) {
-		this(null, saveCancelListener);
+		this(null, false, saveCancelListener);
 	}
 
-	public CommentDialog(String comment, SaveCancelListener<String> saveCancelListener) {
-		super(comment==null?"Add Comment":"Edit Comment", saveCancelListener);
+	public CommentDialog(boolean reply, SaveCancelListener<String> saveCancelListener) {
+		this(null, reply, saveCancelListener);
+	}
+	
+	public CommentDialog(String comment, boolean reply, SaveCancelListener<String> saveCancelListener) {
+		super(comment==null?("Add " + (reply?"Reply":"Comment")):("Edit " + (reply?"Reply":"Comment")), saveCancelListener);
 	}
 
 	@Override

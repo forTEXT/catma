@@ -408,5 +408,9 @@ public class Page {
 	public Optional<Comment> getComment(String uuid) {
 		return comments.stream().filter(comment -> comment.getUuid().equals(uuid)).findFirst();
 	}
+
+	public Collection<Comment> getComments() {
+		return Collections.unmodifiableCollection(comments);
+	}
 }
 
