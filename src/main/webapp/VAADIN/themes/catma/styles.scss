@@ -250,6 +250,12 @@ $v-focus-color: #5A98A1;
 		white-space: nowrap;
 		vertical-align: middle;
 		display: inline !important;
+		z-index: 30;
+		opacity: 1 !important;
+	    border: 1px solid black !important;
+	    background: white !important;
+	    border-radius: 16px !important;
+	    padding-top: 3px !important;
 	}
 	
 	.comment-container {
@@ -263,11 +269,6 @@ $v-focus-color: #5A98A1;
 	}
 	
 	.comment {
-	    border: 1px solid;
-	    border-radius: 10px;
-	    border-color: #D4D4D4;
-	    padding: 5px;
-	    margin: 5px;
 	    white-space: normal;
 	    width: 140px;
 	    overflow: auto;
@@ -275,7 +276,18 @@ $v-focus-color: #5A98A1;
 	    display: flex;
 	    flex-direction: row;
 	}
-	
+
+	.comment-bubble-container {
+		display:flex;
+		width: 140px;
+	    border: 1px solid;
+	    border-radius: 10px;
+	    border-color: #D4D4D4;
+	    padding: 5px;
+	    margin: 5px;
+	    flex-direction: column;
+	}
+		
 	.comment-content {
 		display: inline-block;		
 		vertical-align: top;
@@ -292,6 +304,15 @@ $v-focus-color: #5A98A1;
 	    left: 5px;
 	}
 	
+	.comment-reply-panel {
+	    border-top: 1px solid #C5C5C5;
+	    display: flex;
+    	flex-direction: row;
+	}
+	
+	.comment-reply-content {
+	    flex-grow: 2;
+	}
 	
 	.selection-layer {
 		-webkit-touch-callout: none;
@@ -414,7 +435,7 @@ $v-focus-color: #5A98A1;
         padding: 5px;
     }
 
-    /*New layout*/
+    
     
       /* homepage */
         .home {

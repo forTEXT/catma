@@ -337,16 +337,28 @@ public class Pager implements Iterable<Page> {
 		List<Page> pages = getPagesForAbsoluteTextRanges(ranges);
 		
 		for (Page page : pages) {
-			page.addComment(comment);
+			page.addAbsoluteComment(comment);
 		}
-	
 		if (pages.contains(getCurrentPage())) {
+			Page currentPage = getCurrentPage();
+			List<TextRange> overlappingRelativRanges = new ArrayList<>();
+			for (Range range : comment.getRanges()) {
+				Range overlappingRange = currentPage.getOverlappingRange(range);
+				if (overlappingRange != null) {
+					TextRange overlappingRelativeRange = currentPage.getRelativeRangeFor(overlappingRange);
+					overlappingRelativRanges.add(
+						new TextRange(overlappingRelativeRange));
+				}
+			}
+			
+			
+			
 			return new ClientComment(
 				comment.getUuid(), 
 				comment.getUsername(), comment.getUserId(), 
 				comment.getBody(), 
 				comment.getReplyCount(),
-				ranges);
+				overlappingRelativRanges);
 		}
 		else {
 			return null;
@@ -357,7 +369,7 @@ public class Pager implements Iterable<Page> {
 		if (hasPages()) {
 			Page currentPage = getCurrentPage();
 			
-			Optional<Comment> optionalComment = currentPage.getComment(uuid);
+			Optional<Comment> optionalComment = currentPage.getRelativeComment(uuid);
 			if (optionalComment.isPresent()) {
 				return optionalComment;
 			}
@@ -370,7 +382,7 @@ public class Pager implements Iterable<Page> {
 	private Optional<Comment> findComment(String uuid) {
 		if (hasPages()) {
 			for (Page page : pages) {
-				Optional<Comment> optionalComment = page.getComment(uuid);
+				Optional<Comment> optionalComment = page.getRelativeComment(uuid);
 				if (optionalComment.isPresent()) {
 					return optionalComment;
 				}
@@ -381,5 +393,11 @@ public class Pager implements Iterable<Page> {
 
 	public void setComments(Collection<Comment> comments) {
 		comments.forEach(comment -> addComment(comment));
+	}
+
+	public void removeComment(Comment comment) {
+		for (Page page : pages) {
+			page.removeAbsoluteComment(comment);
+		}
 	}
 }

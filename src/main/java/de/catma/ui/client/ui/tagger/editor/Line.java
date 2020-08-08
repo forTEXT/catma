@@ -67,9 +67,6 @@ public class Line implements Comparable<Line> {
 				else if (layerElement.hasClassName("highlight-layer")) {
 					handleHighlightLayer(layerElement);
 				}
-				else if (layerElement.hasClassName("comment-layer")) {
-//					handleCommentLayer(layerElement);
-				}
 			}
 		}
 		
@@ -79,50 +76,6 @@ public class Line implements Comparable<Line> {
 		
 		this.absoluteTagIntances = new HashSet<>(absoluteTagIntancesByID.values());
 	}
-//TODO:
-	private void handleCommentLayer(Element layerElement) {
-		
-//		NodeList<Element> nodes = layerElement.getElementsByTagName("div");
-//		for (int i=0; i<nodes.getLength(); i++) {
-//			Element element = nodes.getItem(i);
-//			if (element.hasClassName("comment-container")) {
-//				this.commentContainer = element;
-//				Style style = element.getStyle();
-//				style.setLeft(taggerEditorWidth-COMMENT_OFFSET_IN_PIXEL, Unit.PX);
-//				addCommentAddButton(element);
-//				break;
-//			}
-//		}
-	}
-
-//	private void addCommentAddButton(Element commentContainerElement) {
-//		addButtonElement = DOM.createDiv();
-//		addButtonElement.setAttribute(
-//			"class", 
-//			"add-comment-button v-button v-widget icon-only "
-//			+ "v-button-icon-only button__icon v-button-button__icon "
-//			+ "flat v-button-flat borderless v-button-borderless");
-//		
-//		commentContainerElement.appendChild(addButtonElement);
-//		
-//		addButtonElement.setInnerHTML("<span class=\"v-icon v-icon-plus"
-//                + "\" style=\"font-family: Vaadin-Icons;\">&#x"
-//                + Integer.toHexString(0xE801) + ";</span>");
-//		
-//	    Event.sinkEvents(addButtonElement, Event.ONCLICK);
-//	    Event.setEventListener(addButtonElement, new EventListener() {
-//
-//	        @Override
-//	        public void onBrowserEvent(Event event) {
-//	             if(Event.ONCLICK == event.getTypeInt()) {
-//	            	 lineListener.addCommentClicked(lineId, event.getClientX(), event.getClientY());
-//	             }
-//	        }
-//	    });
-//
-//		addButtonElement.getStyle().setVisibility(Visibility.HIDDEN);
-//		
-//	}
 
 	private void handleHighlightLayer(Element layerElement) {
 		for (int highlightedSegmentIdx = 0; 
@@ -325,34 +278,6 @@ public class Line implements Comparable<Line> {
 			}
 		}
 		
-		// comment layer
-//		Element commentLayer = DOM.createTR();
-//		commentLayer.setAttribute("class", "comment-layer"); 
-//		commentLayer.setAttribute("unselectable", "on"); //$NON-NLS-1$ //$NON-NLS-2$
-//		tbody.appendChild(commentLayer);
-//		
-//		Element commentContent = DOM.createTD();
-//		commentLayer.appendChild(commentContent);
-//		commentContent.setAttribute(
-//				"class", "empty-comment-layer");
-//		
-//		commentContent.setAttribute(
-//				"class", "comment-anchor");
-//
-//		this.commentContainer = DOM.createDiv();
-//		commentContent.appendChild(commentContainer);
-//		commentContainer.setAttribute(
-//				"class", "comment-container"); //$NON-NLS-1$ //$NON-NLS-2$
-//		
-//		Style style = commentContainer.getStyle();
-//		style.setLeft(taggerEditorWidth-Line.COMMENT_OFFSET_IN_PIXEL, Unit.PX);
-//
-//		
-//		addCommentAddButton(commentContainer);
-//
-//		for (ClientComment comment : comments) {
-//			addCommentToLine(comment);
-//		}
 		
 		// annotation layers
 		

@@ -160,6 +160,11 @@ public class VTagger extends Composite {
 			public void loadReplies(String uuid) {
 				taggerListener.loadReplies(uuid);
 			}
+			
+			@Override
+			public void showCommentHighlight(ClientComment comment) {
+				taggerEditor.showCommentHighlight(comment);
+			}
 		});
 		
 		panel.add(commentPanel);

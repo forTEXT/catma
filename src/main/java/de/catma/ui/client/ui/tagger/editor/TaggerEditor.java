@@ -753,5 +753,21 @@ public class TaggerEditor extends FocusWidget
 		return line;
 	}
 
+	public void showCommentHighlight(ClientComment comment) {
+		List<Line> lines = getLines();
+		
+		for (TextRange range : comment.getRanges()) {
+
+			for (Line line : lines) {
+				TextRange overlappingRange = 
+					line.getTextRange().getOverlappingRange(range);
+				if (overlappingRange != null) {
+					line.addHighlightedTextRange(overlappingRange);
+					line.updateLineElement();
+				}
+			}
+		}
+	}
+
 }
 

@@ -78,6 +78,9 @@ public class CommentLinePanel extends FlowPanel {
 				commentBubble.deselect();
 			}
 		}	
+		
+		getLine().removeHighlightedTextRanges();
+		getLine().updateLineElement();
 	}
 
 	public void refreshComment(String uuid) {

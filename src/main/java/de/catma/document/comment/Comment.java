@@ -1,6 +1,7 @@
 package de.catma.document.comment;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.catma.document.Range;
 
@@ -32,6 +33,18 @@ public class Comment {
 		this.id = id;
 	}
 	
+	public Comment(Comment comment, int base) {
+
+		this(comment.uuid, comment.username, comment.userId, comment.body, 
+			comment.getRanges()
+				.stream()
+				.map(range -> new Range(range.getStartPoint()+base, range.getEndPoint()+base))
+				.collect(Collectors.toList()),
+			comment.documentId,
+			comment.id);
+		this.replyCount = comment.replyCount;
+	}
+
 	public String getUsername() {
 		return username;
 	}

@@ -21,6 +21,7 @@ public class CommentPanel extends FlowPanel {
 		public void remove(ClientComment comment);
 		public void replyTo(ClientComment comment, int x, int y);
 		public void loadReplies(String uuid);
+		public void showCommentHighlight(ClientComment comment);
 	}
 	
 	private static final int PANEL_OFFSET = 33; 
@@ -42,6 +43,7 @@ public class CommentPanel extends FlowPanel {
 			@Override
 			public void onClick(ClickEvent event) {
 				commentPanelListener.addComment(event.getClientX(), event.getClientY());
+				btAddComment.setVisible(false);
 			}
 		});
 	}
@@ -138,9 +140,12 @@ public class CommentPanel extends FlowPanel {
 					
 					alignCommentLinePanels(selectedPanel);
 					
+					commentPanelListener.showCommentHighlight(comment);
+					
 					if (comment.getReplyCount() > 0) {
 						commentPanelListener.loadReplies(comment.getUuid());
 					}
+					
 				}
 				
 				@Override

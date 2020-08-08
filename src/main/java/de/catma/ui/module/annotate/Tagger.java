@@ -38,7 +38,6 @@ import de.catma.document.comment.Reply;
 import de.catma.project.Project;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.client.ui.tagger.CommentReplyJSONSerializer;
 import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.tagger.TaggerServerRpc;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
@@ -132,12 +131,17 @@ public class Tagger extends AbstractComponent {
 		
 		@Override
 		public void addComment(String textRanges, int x, int y) {
+			Page currentPage = pager.getCurrentPage();
+			
 			String[] textRangeSegments = textRanges.split(",");
 			List<Range> ranges = new ArrayList<>();
 			for (String textRangeSegment : textRangeSegments) {
 				String[] positions = textRangeSegment.split(":");
 				
-				ranges.add(new Range(Integer.valueOf(positions[0]), Integer.valueOf(positions[1])));
+				ranges.add(
+					new Range(
+						Integer.valueOf(positions[0])+currentPage.getPageStart(), 
+						Integer.valueOf(positions[1])+currentPage.getPageStart()));
 			}
 			taggerListener.addComment(ranges, x, y);
 		}
@@ -213,10 +217,10 @@ public class Tagger extends AbstractComponent {
 		}
 	}
 
-	private void setPage(String pageContent, int lineCount, Collection<Comment> comments) {
+	private void setPage(String pageContent, int lineCount, Collection<Comment> relativeComments) {
 		String serializedComments = "";
 		try {
-			serializedComments = new ClientCommentJSONSerializer().toJSON(comments);
+			serializedComments = new ClientCommentJSONSerializer().toJSON(relativeComments);
 		}
 		catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -237,7 +241,7 @@ public class Tagger extends AbstractComponent {
 	
 	public void setPage(int pageNumber) {
 		Page page = pager.getPage(pageNumber);
-		setPage(page.toHTML(), page.getLineCount(), page.getComments());
+		setPage(page.toHTML(), page.getLineCount(), page.getRelativeComments());
 	}
 	
 	void removeTagInstances(Collection<String> annotationIds) {
@@ -252,7 +256,7 @@ public class Tagger extends AbstractComponent {
 				setPage(
 					pager.getCurrentPage().toHTML(), 
 					pager.getCurrentPage().getLineCount(), 
-					pager.getCurrentPage().getComments());
+					pager.getCurrentPage().getRelativeComments());
 			}
 		}
 	}
@@ -291,7 +295,7 @@ public class Tagger extends AbstractComponent {
 				setPage(
 					pager.getCurrentPage().toHTML(), 
 					pager.getCurrentPage().getLineCount(), 
-					pager.getCurrentPage().getComments());
+					pager.getCurrentPage().getRelativeComments());
 			}
 		}
 	}
@@ -345,7 +349,7 @@ public class Tagger extends AbstractComponent {
 			setPage(
 				pager.getCurrentPage().toHTML(), 
 				pager.getCurrentPage().getLineCount(), 
-				pager.getCurrentPage().getComments());
+				pager.getCurrentPage().getRelativeComments());
 			if (firstLineId != -1) {
 								
 				if (pager.getCurrentPage().hasLine(pager.getCurrentPage().getLineCount()-1)) {
@@ -386,19 +390,16 @@ public class Tagger extends AbstractComponent {
 		}
 	}
 
-	public void setComments(List<Comment> comments) {
-		pager.setComments(comments);
-	}
-
 	public void updateComment(Comment comment) {
 		getRpcProxy(TaggerClientRpc.class).updateComment(comment.getUuid(), comment.getBody(), comment.getStartPos());
 	}
 
 	public void removeComment(Comment comment) {
+		pager.removeComment(comment);
 		getRpcProxy(TaggerClientRpc.class).removeComment(comment.getUuid(), comment.getStartPos());
 	}
 
-	public void setReplies(List<Reply> replies, Comment comment) {
+	public void setReplies(List<Reply> replies, Comment comment) throws IOException {
 		getRpcProxy(TaggerClientRpc.class).setReplies(comment.getUuid(), comment.getStartPos(), 
 				new CommentReplyJSONSerializer().toJSONArrayString(replies));
 	}

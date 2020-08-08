@@ -1060,6 +1060,7 @@ public class TaggerView extends HorizontalLayout
 			tagger.updateComment(commentChangeEvent.getComment());
 		}
 		case DELETED: {
+			this.comments.remove(commentChangeEvent.getComment());
 			tagger.removeComment(commentChangeEvent.getComment());
 		}
 		}
@@ -1080,6 +1081,7 @@ public class TaggerView extends HorizontalLayout
 							try {
 								List<Reply> replies = project.getCommentReplies(comment);
 								tagger.setReplies(replies, comment);
+								ui.push();
 							}
 							catch(IOException e) {
 								errorHandler.showAndLogError("Error loading Replies!", e);

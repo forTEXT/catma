@@ -1,16 +1,14 @@
 package de.catma.ui.client.ui.tagger.comment;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.MouseOverEvent;
-import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 
 public class CommentBubble extends FlowPanel {
 	
@@ -25,9 +23,11 @@ public class CommentBubble extends FlowPanel {
 	private EditCommentButton btEdit;
 	private RemoveCommentButton btRemove;
 	private ReplyCommentButton btReply;
+	private FlowPanel commentLayoutPanel;
 	private FlowPanel buttonPanel;
 	private HTML content;
 	private CommentBubbleListener listener;
+	private FlowPanel replyLayoutPanel;
 
 	public CommentBubble(ClientComment comment, CommentBubbleListener listener) {
 		
@@ -39,32 +39,14 @@ public class CommentBubble extends FlowPanel {
 	}
 
 	private void initActions() {
-//		addDomHandler(new MouseOverHandler() {
-//			
-//			@Override
-//			public void onMouseOver(MouseOverEvent event) {
-//				buttonPanel.setVisible(true);
-//				listener.selected(comment);
-//			}
-//		}, MouseOverEvent.getType());
-		
-//		addDomHandler(new MouseOutHandler() {
-//			
-//			@Override
-//			public void onMouseOut(MouseOutEvent event) {
-//				buttonPanel.setVisible(false);
-//				listener.selected();
-//			}
-//		}, MouseOutEvent.getType());
-		
-		
+
 		addDomHandler(new MouseUpHandler() {
 			
 			@Override
 			public void onMouseUp(MouseUpEvent event) {
 				buttonPanel.setVisible(true);
 				content.setHTML(comment.getBody());
-
+				addReplies();
 				listener.selected(comment);
 			}
 		}, MouseUpEvent.getType());
@@ -94,11 +76,22 @@ public class CommentBubble extends FlowPanel {
 		});
 	}
 
+	private void addReplies() {
+		replyLayoutPanel.clear();
+		for (ClientCommentReply reply : comment.getReplies()) {
+			replyLayoutPanel.add(new ReplyPanel(reply));
+		}
+	}
+
 	private void initComponents() {
-		addStyleName("comment");
+		addStyleName("comment-bubble-container");
+		
+		commentLayoutPanel = new FlowPanel();
+		commentLayoutPanel.addStyleName("comment");
+		
 		this.content = new HTML(getShortBody());
 		this.content.addStyleName("comment-content");
-		add(content);
+		commentLayoutPanel.add(content);
 		
 		buttonPanel = new FlowPanel();
 		buttonPanel.addStyleName("comment-button-panel");
@@ -113,8 +106,14 @@ public class CommentBubble extends FlowPanel {
 		btReply = new ReplyCommentButton();
 		buttonPanel.add(btReply);
 		
-		add(buttonPanel);
+		commentLayoutPanel.add(buttonPanel);
 		
+		add(commentLayoutPanel);
+		
+		replyLayoutPanel = new FlowPanel();
+		replyLayoutPanel.addStyleName("reply-container");
+		
+		add(replyLayoutPanel);
 	}
 	
 	private String getShortBody() {
@@ -130,6 +129,7 @@ public class CommentBubble extends FlowPanel {
 	public void deselect() {
 		buttonPanel.setVisible(false);
 		this.content.setHTML(getShortBody());
+		this.replyLayoutPanel.clear();
 	}
 
 	public ClientComment getComment() {
@@ -139,12 +139,14 @@ public class CommentBubble extends FlowPanel {
 	public void refresh() {
 		if (buttonPanel.isVisible()) {
 			this.content.setHTML(comment.getBody());
+			
+			
 		}
 		else {
 			this.content.setHTML(getShortBody());
 		}
 		
-		//TODO: update comments
+		addReplies();
 	}
 
 }

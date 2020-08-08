@@ -95,7 +95,7 @@ public class Page {
 	private boolean rightToLeftWriting;
 	private ArrayList<Line> lines;
 	private Element pageDiv;
-	private Set<Comment> comments;
+	private Set<Comment> relativeComments;
 	
 	public Page(int taggerID, String text, int pageStart, int pageEnd, int approxMaxLineLength, boolean rightToLeftWriting) {
 		this.taggerID = taggerID;
@@ -104,7 +104,7 @@ public class Page {
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
 		this.rightToLeftWriting = rightToLeftWriting;
-		this.comments = new HashSet<Comment>();
+		this.relativeComments = new HashSet<Comment>();
 		buildLines();
 	}
 	
@@ -401,16 +401,29 @@ public class Page {
 		return lines.stream().filter(line -> line.getLineId() == lineId).findAny().isPresent();
 	}
 
-	public void addComment(Comment comment) {
-		comments.add(comment);
+	public void addAbsoluteComment(Comment absoluteComment) {
+		Comment relativeComment = new Comment(absoluteComment, pageStart*-1);
+		relativeComments.add(relativeComment);
 	}
 
-	public Optional<Comment> getComment(String uuid) {
-		return comments.stream().filter(comment -> comment.getUuid().equals(uuid)).findFirst();
+	public Optional<Comment> getRelativeComment(String uuid) {
+		return relativeComments.stream().filter(comment -> comment.getUuid().equals(uuid)).findFirst();
 	}
 
-	public Collection<Comment> getComments() {
-		return Collections.unmodifiableCollection(comments);
+	public Collection<Comment> getRelativeComments() {
+		return Collections.unmodifiableCollection(relativeComments);
+	}
+
+	public void removeAbsoluteComment(Comment comment) {
+		
+		Iterator<Comment> relCommentIterator= relativeComments.iterator();
+		while(relCommentIterator.hasNext()) {
+			if (relCommentIterator.next().getUuid().equals(comment.getUuid())) {
+				relCommentIterator.remove();
+				break;
+			}
+		}
+		
 	}
 }
 

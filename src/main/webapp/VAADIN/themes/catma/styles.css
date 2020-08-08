@@ -17724,6 +17724,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	white-space: nowrap;
 	vertical-align: middle;
 	display: inline !important;
+	z-index: 30;
+	opacity: 1 !important;
+	border: 1px solid black !important;
+	background: white !important;
+	border-radius: 16px !important;
+	padding-top: 3px !important;
 }
 
 .catma .comment-container {
@@ -17737,17 +17743,23 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .comment {
-	border: 1px solid;
-	border-radius: 10px;
-	border-color: #D4D4D4;
-	padding: 5px;
-	margin: 5px;
 	white-space: normal;
 	width: 140px;
 	overflow: auto;
 	cursor: pointer;
 	display: flex;
 	flex-direction: row;
+}
+
+.catma .comment-bubble-container {
+	display: flex;
+	width: 140px;
+	border: 1px solid;
+	border-radius: 10px;
+	border-color: #D4D4D4;
+	padding: 5px;
+	margin: 5px;
+	flex-direction: column;
 }
 
 .catma .comment-content {
@@ -17764,6 +17776,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	top: 10px;
 	left: 5px;
+}
+
+.catma .comment-reply-panel {
+	border-top: 1px solid #C5C5C5;
+	display: flex;
+	flex-direction: row;
+}
+
+.catma .comment-reply-content {
+	flex-grow: 2;
 }
 
 .catma .selection-layer {

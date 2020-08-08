@@ -1,5 +1,6 @@
 package de.catma.ui.client.ui.tagger.shared;
 
+import java.util.Collections;
 import java.util.List;
 
 public class ClientComment {
@@ -73,6 +74,6 @@ public class ClientComment {
 	}
 	
 	public List<ClientCommentReply> getReplies() {
-		return replies;
+		return replies==null?Collections.emptyList():replies;
 	}
 }
