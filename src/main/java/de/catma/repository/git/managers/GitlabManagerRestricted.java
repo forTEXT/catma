@@ -670,7 +670,52 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	
 		try {
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
-			notesApi.createIssueNote(projectPath, comment.getId(), noteBody);
+			Note note = notesApi.createIssueNote(projectPath, comment.getId(), noteBody);
+			reply.setId(note.getId());
+			comment.addReply(reply);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format(
+				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
+					comment.getUuid(), comment.getId(), resourceId, projectId), 
+				e);
+		}
+		
+	}
+	
+	@Override
+	public void updateReply(String projectId, Comment comment, Reply reply) throws IOException {
+		String resourceId = comment.getDocumentId();
+		
+		String projectPath = projectId + "/" + resourceId;
+
+		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+		
+		
+		try {
+			String noteBody = new SerializationHelper<Reply>().serialize(reply);
+			notesApi.updateIssueNote(projectPath, comment.getId(), reply.getId(), noteBody);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format(
+				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
+					comment.getUuid(), comment.getId(), resourceId, projectId), 
+				e);
+		}
+	}
+	
+	@Override
+	public void removeReply(String projectId, Comment comment, Reply reply) throws IOException {
+		String resourceId = comment.getDocumentId();
+		
+		String projectPath = projectId + "/" + resourceId;
+
+		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+		
+		
+		try {
+			notesApi.deleteIssueNote(projectPath, comment.getId(), reply.getId());
+			comment.removeReply(reply);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
@@ -701,7 +746,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 					reply.setCommentUuid(comment.getUuid());
 					reply.setId(note.getId());
 					reply.setUserId(note.getAuthor().getId());
-					reply.setUsername(note.getAuthor().getUsername());
+					reply.setUsername(note.getAuthor().getName());
 				}
 				catch (Exception e) {
 					logger.log(Level.SEVERE, String.format("Error deserializing Reply #%1$d %2$s", note.getId(), noteBody), e);
@@ -717,6 +762,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 				
 				result.add(reply);
 			}
+			comment.setReplies(result);
 			
 			return result;
 		} catch (GitLabApiException e) {

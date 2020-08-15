@@ -154,4 +154,8 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 
 	List<Reply> getCommentReplies(String projectId, Comment comment) throws IOException;
 
+	void removeReply(String projectId, Comment comment, Reply reply) throws IOException;
+
+	void updateReply(String projectId, Comment comment, Reply reply) throws IOException;
+
 }

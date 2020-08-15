@@ -17,6 +17,7 @@ public class CommentDialog extends AbstractOkCancelDialog<String> {
 	private TextArea textInput;
 	private boolean abortClose = false;
 	private ScheduledFuture<?> scheduledClosing;
+	private String initialBody = null;
 
 	public CommentDialog(SaveCancelListener<String> saveCancelListener) {
 		this(null, false, saveCancelListener);
@@ -26,14 +27,18 @@ public class CommentDialog extends AbstractOkCancelDialog<String> {
 		this(null, reply, saveCancelListener);
 	}
 	
-	public CommentDialog(String comment, boolean reply, SaveCancelListener<String> saveCancelListener) {
-		super(comment==null?("Add " + (reply?"Reply":"Comment")):("Edit " + (reply?"Reply":"Comment")), saveCancelListener);
+	public CommentDialog(String initialBody, boolean reply, SaveCancelListener<String> saveCancelListener) {
+		super(initialBody==null?("Add " + (reply?"Reply":"Comment")):("Edit " + (reply?"Reply":"Comment")), saveCancelListener);
+		this.initialBody = initialBody;
 	}
 
 	@Override
 	protected void addContent(ComponentContainer content) {
 		this.textInput = new TextArea();
 		this.textInput.setSizeFull();
+		if (this.initialBody != null) {
+			this.textInput.setValue(this.initialBody);
+		}
 		this.textInput.focus();
 		content.addComponent(textInput);
 		if (content instanceof AbstractOrderedLayout) {

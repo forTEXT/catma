@@ -1628,13 +1628,28 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void addReply(Comment comment, Reply reply) throws IOException {
 		gitProjectHandler.addReply(comment, reply);
 		
-		
-		
-		eventBus.post(new ReplyChangeEvent(ChangeType.CREATED, reply));
+		eventBus.post(new ReplyChangeEvent(ChangeType.CREATED, comment, reply));
 	}
 	
 	@Override
 	public List<Reply> getCommentReplies(Comment comment) throws IOException {
 		return gitProjectHandler.getCommentReplies(comment);
 	}
+
+	@Override
+	public void updateReply(Comment comment, Reply reply) throws IOException {
+		gitProjectHandler.updateReply(comment, reply);
+		
+		eventBus.post(new ReplyChangeEvent(ChangeType.UPDATED, comment, reply));
+	}
+
+	@Override
+	public void removeReply(Comment comment, Reply reply) throws IOException {
+		gitProjectHandler.removeReply(comment, reply);
+		
+		eventBus.post(new ReplyChangeEvent(ChangeType.DELETED, comment, reply));
+
+	}
+	
+	
 }

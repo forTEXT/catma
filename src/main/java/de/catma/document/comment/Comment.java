@@ -110,7 +110,53 @@ public class Comment {
 		return replies;
 	}
 	
+	public void removeReply(Reply reply) {
+		this.replies.remove(reply);
+		this.replyCount--;
+	}
+	
 	public void setReplies(List<Reply> replies) {
 		this.replies = replies;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof Comment))
+			return false;
+		Comment other = (Comment) obj;
+		if (uuid == null) {
+			if (other.uuid != null)
+				return false;
+		} else if (!uuid.equals(other.uuid))
+			return false;
+		return true;
+	}
+
+	public Reply getReply(String replyUuid) {
+		for (Reply reply : replies) {
+			if (reply.getUuid().equals(replyUuid)) {
+				return reply;
+			}
+		}
+		return null;
+	}
+
+	public void addReply(Reply reply) {
+		replies.add(reply);
+		this.replyCount++;
+	}
+	
+	
 }

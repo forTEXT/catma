@@ -11,6 +11,7 @@ import com.vaadin.shared.ui.Connect;
 import com.vaadin.shared.ui.ContentMode;
 
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerState;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -156,6 +157,16 @@ public class TaggerConnector extends AbstractComponentConnector {
 			@Override
 			public void replyToComment(ClientComment comment, int x, int y) {
 				rpc.replyToComment(comment.getUuid(), x, y);
+			}
+			
+			@Override
+			public void editReply(ClientComment comment, ClientCommentReply reply, int x, int y) {
+				rpc.editReply(comment.getUuid(), reply.getUuid(), x, y);
+			}
+			
+			@Override
+			public void removeReply(ClientComment comment, ClientCommentReply reply) {
+				rpc.removeReply(comment.getUuid(), reply.getUuid());
 			}
 			
 			@Override

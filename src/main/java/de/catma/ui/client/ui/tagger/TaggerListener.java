@@ -3,6 +3,7 @@ package de.catma.ui.client.ui.tagger;
 import java.util.List;
 
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public interface TaggerListener {
@@ -17,4 +18,6 @@ public interface TaggerListener {
 	public void removeComment(ClientComment comment);
 	public void replyToComment(ClientComment comment, int x, int y);
 	public void loadReplies(String uuid);
+	public void editReply(ClientComment comment, ClientCommentReply reply, int x, int y);
+	public void removeReply(ClientComment comment, ClientCommentReply reply);
 }

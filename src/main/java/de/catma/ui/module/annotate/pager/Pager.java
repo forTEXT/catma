@@ -364,7 +364,7 @@ public class Pager implements Iterable<Page> {
 			return null;
 		}
 	}
-
+	
 	public Optional<Comment> getComment(String uuid) {
 		if (hasPages()) {
 			Page currentPage = getCurrentPage();

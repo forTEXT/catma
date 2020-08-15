@@ -75,6 +75,7 @@ import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.event.CommentChangeEvent;
+import de.catma.project.event.ReplyChangeEvent;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
@@ -1015,7 +1016,7 @@ public class TaggerView extends HorizontalLayout
 			});
 		}
 		else {
-			Notification.show("Info", "Couldn't find a Comment to edit!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Couldn't find the Comment to remove!", Type.HUMANIZED_MESSAGE);
 		}	
 	}
 	
@@ -1044,6 +1045,59 @@ public class TaggerView extends HorizontalLayout
 			Notification.show("Info", "Couldn't find a Comment to reply to!", Type.HUMANIZED_MESSAGE);
 		}
 	}
+	
+	public void updateReplyToComment(Optional<Comment> optionalComment, String replyUuid, int x, int y) {
+		if (optionalComment.isPresent()) {
+			Comment comment = optionalComment.get();
+			Reply reply = comment.getReply(replyUuid);
+			if (reply != null) {
+				
+				CommentDialog commentDialog = new CommentDialog(
+						reply.getBody(),
+						true,
+						replyBody -> {
+							try {
+								reply.setBody(replyBody);
+								project.updateReply(optionalComment.get(), reply);
+							} catch (IOException e) {
+								errorHandler.showAndLogError("Error updating Reply!", e);
+							}
+						});
+				commentDialog.show(x, y);
+			}
+			else {
+				Notification.show("Info", "Couldn't find a Reply to edit!", Type.HUMANIZED_MESSAGE);
+			}
+		}
+		else {
+			Notification.show("Info", "Couldn't find the Comment of the reply!", Type.HUMANIZED_MESSAGE);
+		}
+	}
+	
+	public void removeReplyToComment(Optional<Comment> optionalComment, String replyUuid) {
+		if (optionalComment.isPresent()) {
+			Comment comment = optionalComment.get();
+			Reply reply = comment.getReply(replyUuid);
+			if (reply != null) {
+	
+				ConfirmDialog.show(UI.getCurrent(),"Remove Reply", "Are you sure you want to remove the Reply?", "Yes", "Cancel", dlg -> {
+					if (dlg.isConfirmed()) {
+						try {
+							project.removeReply(optionalComment.get(), reply);
+						} catch (IOException e) {
+							errorHandler.showAndLogError("Error removing Comment!", e);
+						}
+					}
+				});
+			}
+			else {
+				Notification.show("Info", "Couldn't find a Reply to remove!", Type.HUMANIZED_MESSAGE);
+			}	
+		}
+		else {
+			Notification.show("Info", "Couldn't find the Comment of the Reply!", Type.HUMANIZED_MESSAGE);
+		}	
+	}
 
 
 	@Subscribe
@@ -1064,8 +1118,35 @@ public class TaggerView extends HorizontalLayout
 			tagger.removeComment(commentChangeEvent.getComment());
 		}
 		}
-		
-		
+
+	}
+	
+	@Subscribe
+	public void handleReplyChange(ReplyChangeEvent replyChangeEvent) {
+		switch(replyChangeEvent.getChangeType()) {
+		case CREATED: {
+			try {
+				tagger.addReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
+			} catch (IOException e) {
+				errorHandler.showAndLogError("Error adding Reply!", e);
+			}
+		}
+		case UPDATED: {
+			try {
+				tagger.updateReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
+			} catch (IOException e) {
+				errorHandler.showAndLogError("Error updating Reply!", e);
+			}
+		}
+		case DELETED: {
+			try {
+				tagger.removeReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
+			} catch (IOException e) {
+				errorHandler.showAndLogError("Error removing Reply!", e);
+			}
+		}
+		}
+
 	}
 	
 	@Override

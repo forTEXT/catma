@@ -425,5 +425,14 @@ public class Page {
 		}
 		
 	}
+	
+	public boolean hasComment(String commentUuid) {
+		for (Comment comment : relativeComments) {
+			if (comment.getUuid().equals(commentUuid)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
 

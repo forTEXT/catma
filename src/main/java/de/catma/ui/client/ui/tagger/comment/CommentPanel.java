@@ -12,6 +12,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import de.catma.ui.client.ui.tagger.comment.CommentLinePanel.CommentLinePanelListener;
 import de.catma.ui.client.ui.tagger.editor.Line;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 
 public class CommentPanel extends FlowPanel {
 	
@@ -22,6 +23,8 @@ public class CommentPanel extends FlowPanel {
 		public void replyTo(ClientComment comment, int x, int y);
 		public void loadReplies(String uuid);
 		public void showCommentHighlight(ClientComment comment);
+		public void edit(ClientComment comment, ClientCommentReply reply, int x, int y);
+		public void remove(ClientComment comment, ClientCommentReply reply);
 	}
 	
 	private static final int PANEL_OFFSET = 33; 
@@ -161,6 +164,16 @@ public class CommentPanel extends FlowPanel {
 				@Override
 				public void replyTo(ClientComment comment, int x, int y) {
 					commentPanelListener.replyTo(comment, x, y);
+				}
+				
+				@Override
+				public void edit(ClientComment comment, ClientCommentReply reply, int x, int y) {
+					commentPanelListener.edit(comment, reply, x, y);
+				}
+				
+				@Override
+				public void remove(ClientComment comment, ClientCommentReply reply) {
+					commentPanelListener.remove(comment, reply);
 				}
 			}); 
 			panels.add(panel);

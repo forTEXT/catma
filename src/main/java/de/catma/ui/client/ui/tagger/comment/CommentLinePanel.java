@@ -6,6 +6,7 @@ import com.google.gwt.user.client.ui.Widget;
 import de.catma.ui.client.ui.tagger.comment.CommentBubble.CommentBubbleListener;
 import de.catma.ui.client.ui.tagger.editor.Line;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 
 public class CommentLinePanel extends FlowPanel {
 	public static interface CommentLinePanelListener {
@@ -13,6 +14,8 @@ public class CommentLinePanel extends FlowPanel {
 		public void edit(ClientComment comment, int x, int y);
 		public void remove(ClientComment comment);
 		public void replyTo(ClientComment comment, int x, int y);
+		public void edit(ClientComment comment, ClientCommentReply reply, int x, int y);
+		public void remove(ClientComment comment, ClientCommentReply reply);
 	}
 	
 	private Line line;
@@ -63,6 +66,17 @@ public class CommentLinePanel extends FlowPanel {
 			public void replyTo(ClientComment comment, int x, int y) {
 				listener.replyTo(comment, x, y);
 			}
+			
+			@Override
+			public void edit(ClientComment comment, ClientCommentReply reply, int x, int y) {
+				listener.edit(comment, reply, x, y);
+			}
+			
+			@Override
+			public void remove(ClientComment comment, ClientCommentReply reply) {
+				listener.remove(comment, reply);
+			}
+			
 		}), 0);
 	}
 	

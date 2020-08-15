@@ -17781,11 +17781,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .comment-reply-panel {
 	border-top: 1px solid #C5C5C5;
 	display: flex;
+	flex-direction: column;
+}
+
+.catma .comment-reply-main-section {
+	display: flex;
 	flex-direction: row;
 }
 
 .catma .comment-reply-content {
 	flex-grow: 2;
+	display: inline-block;
+	white-space: normal;
 }
 
 .catma .selection-layer {

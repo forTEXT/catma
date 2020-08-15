@@ -165,6 +165,16 @@ public class VTagger extends Composite {
 			public void showCommentHighlight(ClientComment comment) {
 				taggerEditor.showCommentHighlight(comment);
 			}
+			
+			@Override
+			public void edit(ClientComment comment, ClientCommentReply reply, int x, int y) {
+				taggerListener.editReply(comment, reply, x, y);
+			}
+			
+			@Override
+			public void remove(ClientComment comment, ClientCommentReply reply) {
+				taggerListener.removeReply(comment, reply);
+			}
 		});
 		
 		panel.add(commentPanel);

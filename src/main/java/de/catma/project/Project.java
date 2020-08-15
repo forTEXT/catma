@@ -407,4 +407,9 @@ public interface Project {
 	public void addReply(Comment comment, Reply reply) throws IOException;
 
 	public List<Reply> getCommentReplies(Comment comment) throws IOException;
+	
+	void removeReply(Comment comment, Reply reply) throws IOException;
+
+	void updateReply(Comment comment, Reply reply) throws IOException;
+
 }

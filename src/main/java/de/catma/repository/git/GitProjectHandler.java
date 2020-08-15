@@ -1759,5 +1759,12 @@ public class GitProjectHandler {
 		return remoteGitServerManager.getCommentReplies(projectId, comment);
 	}
 	
+	public void updateReply(Comment comment, Reply reply) throws IOException {
+		remoteGitServerManager.updateReply(projectId, comment, reply);
+	}
+	
+	public void removeReply(Comment comment, Reply reply) throws IOException {
+		remoteGitServerManager.removeReply(projectId, comment, reply);
+	}
 	
 }

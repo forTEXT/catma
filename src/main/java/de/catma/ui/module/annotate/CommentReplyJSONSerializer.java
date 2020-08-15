@@ -1,7 +1,8 @@
 package de.catma.ui.module.annotate;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -40,7 +41,9 @@ public class CommentReplyJSONSerializer {
 	}
 
 
-	public String toJSONArrayString(Collection<Reply> replies) throws IOException {
+	public String toJSONArrayString(List<Reply> replies) throws IOException {
+		Collections.sort(replies, (r1, r2) -> r1.getId().compareTo(r2.getId()));
+		
 		JsonNodeFactory factory = JsonNodeFactory.instance;
 		ArrayNode collection = factory.arrayNode(replies.size());
 

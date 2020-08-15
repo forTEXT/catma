@@ -307,11 +307,18 @@ $v-focus-color: #5A98A1;
 	.comment-reply-panel {
 	    border-top: 1px solid #C5C5C5;
 	    display: flex;
-    	flex-direction: row;
+	    flex-direction: column;
+	}
+
+	.comment-reply-main-section {
+		display: flex;
+		flex-direction: row;
 	}
 	
 	.comment-reply-content {
 	    flex-grow: 2;
+	    display: inline-block;
+    	white-space: normal;
 	}
 	
 	.selection-layer {
