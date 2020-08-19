@@ -17,6 +17,7 @@ public class CommentBubble extends FlowPanel {
 	
 	public static interface CommentBubbleListener {
 		public void selected(ClientComment comment);
+		public void repliesLoaded(ClientComment comment);
 		public void edit(ClientComment comment, int x, int y);
 		public void remove(ClientComment comment);
 		public void replyTo(ClientComment comment, int x, int y);
@@ -101,6 +102,9 @@ public class CommentBubble extends FlowPanel {
 					listener.edit(comment, reply, x, y);
 				}
 			}));
+		}
+		if (!comment.getReplies().isEmpty()) {
+			listener.repliesLoaded(comment);			
 		}
 	}
 

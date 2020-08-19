@@ -16,6 +16,7 @@ public class CommentLinePanel extends FlowPanel {
 		public void replyTo(ClientComment comment, int x, int y);
 		public void edit(ClientComment comment, ClientCommentReply reply, int x, int y);
 		public void remove(ClientComment comment, ClientCommentReply reply);
+		public void repliesLoaded(ClientComment comment, Line line);
 	}
 	
 	private Line line;
@@ -75,6 +76,11 @@ public class CommentLinePanel extends FlowPanel {
 			@Override
 			public void remove(ClientComment comment, ClientCommentReply reply) {
 				listener.remove(comment, reply);
+			}
+			
+			@Override
+			public void repliesLoaded(ClientComment comment) {
+				listener.repliesLoaded(comment, line);
 			}
 			
 		}), 0);

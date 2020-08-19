@@ -175,6 +175,12 @@ public class CommentPanel extends FlowPanel {
 				public void remove(ClientComment comment, ClientCommentReply reply) {
 					commentPanelListener.remove(comment, reply);
 				}
+				
+				@Override
+				public void repliesLoaded(ClientComment comment, Line line) {
+					CommentLinePanel selectedPanel = panels.get(line.getLineId());
+					alignCommentLinePanels(selectedPanel);
+				}
 			}); 
 			panels.add(panel);
 			add(panel);
