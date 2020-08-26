@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -129,7 +130,7 @@ public class TaggerView extends HorizontalLayout
 	private PropertyChangeListener tagReferencesChangedListener;
 	private int approxMaxLineLength;
 	private int maxPageLengthInLines = 30;
-	private int initialSplitterPositionInPixels = 785;
+	private int initialSplitterPositionInPixels = 530; // this can't be higher! Due to a strange rendering bug in some browsers (e. g. Chrome)
 
 	private IconButton cbTraceSelection;
 	private Button btClearSearchHighlights;
@@ -146,6 +147,7 @@ public class TaggerView extends HorizontalLayout
 	private VerticalSplitPanel rightSplitPanel;
 	private TabCaptionChangeListener tabNameChangeListener;
 	private Collection<Comment> comments = Collections.emptyList();
+	private TaggerSplitPanel splitPanel;
 	
 	public TaggerView(
 			int taggerID, 
@@ -220,7 +222,6 @@ public class TaggerView extends HorizontalLayout
 							if (taggerContextMenu != null) {
 								taggerContextMenu.setTagsets(tagsets);
 							}
-							
 							
 							ui.push();
 						} catch (IOException e) {
@@ -661,7 +662,7 @@ public class TaggerView extends HorizontalLayout
 			eventBus);
 		rightSplitPanel.addComponent(annotationPanel);
 		
-		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
+		splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
 		splitPanel.addComponent(rightSplitPanel);
 		
