@@ -18,6 +18,7 @@
  */   
 package de.catma.ui.client.ui.tagger.shared;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,7 +27,9 @@ import java.util.List;
  * @author marco.petris@web.de
  *
  */
-public class TextRange implements Comparable<TextRange> {
+public class TextRange implements Comparable<TextRange>, Serializable {
+	
+	private static final long serialVersionUID = 4432309957370280636L;
 	
 	/**
 	 * Non Breakable Space.

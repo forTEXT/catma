@@ -15,6 +15,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 
 public class CommentBubble extends FlowPanel {
 	
+	
 	public static interface CommentBubbleListener {
 		public void selected(ClientComment comment);
 		public void repliesLoaded(ClientComment comment);

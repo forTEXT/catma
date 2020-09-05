@@ -1,5 +1,6 @@
 package de.catma.document.comment;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,7 @@ public class Comment {
 	private transient Integer userId;
 	private transient Integer id;
 	private transient int replyCount;
-	private transient List<Reply> replies;
+	private transient List<Reply> replies = new ArrayList<Reply>();
 
 	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId) {
 		this(uuid, username, userId, body, ranges, documentId, null);

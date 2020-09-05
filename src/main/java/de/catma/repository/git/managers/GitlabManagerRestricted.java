@@ -738,7 +738,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			
 			List<Note> notes = notesApi.getIssueNotes(projectPath, comment.getId());
 			
-			for (Note note : notes) {
+			for (Note note : notes.stream().filter(n -> !n.getSystem()).collect(Collectors.toList())) { // filter system notes
 				String noteBody = note.getBody();
 				Reply reply = null;
 				try {

@@ -330,11 +330,11 @@ public class Pager implements Iterable<Page> {
 	}
 
 	public ClientComment addComment(Comment comment) {
-		List<TextRange> ranges = comment.getRanges()
+		List<TextRange> absoluteRanges = comment.getRanges()
 				.stream()
 				.map(range -> new TextRange(range.getStartPoint(), range.getEndPoint()))
 				.collect(Collectors.toList()); 
-		List<Page> pages = getPagesForAbsoluteTextRanges(ranges);
+		List<Page> pages = getPagesForAbsoluteTextRanges(absoluteRanges);
 		
 		for (Page page : pages) {
 			page.addAbsoluteComment(comment);
@@ -342,10 +342,10 @@ public class Pager implements Iterable<Page> {
 		if (pages.contains(getCurrentPage())) {
 			Page currentPage = getCurrentPage();
 			List<TextRange> overlappingRelativRanges = new ArrayList<>();
-			for (Range range : comment.getRanges()) {
-				Range overlappingRange = currentPage.getOverlappingRange(range);
-				if (overlappingRange != null) {
-					TextRange overlappingRelativeRange = currentPage.getRelativeRangeFor(overlappingRange);
+			for (Range absoluteRange : comment.getRanges()) {
+				Range overlappingAbsoluteRange = currentPage.getOverlappingRange(absoluteRange);
+				if (overlappingAbsoluteRange != null) {
+					TextRange overlappingRelativeRange = currentPage.getRelativeRangeFor(overlappingAbsoluteRange);
 					overlappingRelativRanges.add(
 						new TextRange(overlappingRelativeRange));
 				}
@@ -369,7 +369,7 @@ public class Pager implements Iterable<Page> {
 		if (hasPages()) {
 			Page currentPage = getCurrentPage();
 			
-			Optional<Comment> optionalComment = currentPage.getRelativeComment(uuid);
+			Optional<Comment> optionalComment = currentPage.getAbsoluteComment(uuid);
 			if (optionalComment.isPresent()) {
 				return optionalComment;
 			}
@@ -382,7 +382,7 @@ public class Pager implements Iterable<Page> {
 	private Optional<Comment> findComment(String uuid) {
 		if (hasPages()) {
 			for (Page page : pages) {
-				Optional<Comment> optionalComment = page.getRelativeComment(uuid);
+				Optional<Comment> optionalComment = page.getAbsoluteComment(uuid);
 				if (optionalComment.isPresent()) {
 					return optionalComment;
 				}

@@ -1,6 +1,10 @@
 package de.catma.ui.client.ui.tagger.shared;
 
-public class ClientCommentReply {
+import java.io.Serializable;
+
+public class ClientCommentReply implements Serializable {
+	
+	private static final long serialVersionUID = 4432309957370280636L;
 
 	public static enum SerializationField {
 		username,

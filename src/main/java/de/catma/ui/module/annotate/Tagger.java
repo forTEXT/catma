@@ -62,7 +62,7 @@ public class Tagger extends AbstractComponent {
 		public void tagInstanceSelected(Set<String> tagInstanceIDs);
 		public Annotation getTagInstanceInfo(String tagInstanceId);
 		public void contextMenuSelected(int x, int y);
-		public void addComment(List<Range> ranges, int x, int y);
+		public void addComment(List<Range> absoluteRanges, int x, int y);
 		public void editComment(Optional<Comment> optionalComment, int x, int y);
 		public void removeComment(Optional<Comment> optionalComment);
 		public void replyToComment(Optional<Comment> optionalComment, int x, int y);
@@ -135,17 +135,17 @@ public class Tagger extends AbstractComponent {
 		public void addComment(String textRanges, int x, int y) {
 			Page currentPage = pager.getCurrentPage();
 			
-			String[] textRangeSegments = textRanges.split(",");
-			List<Range> ranges = new ArrayList<>();
-			for (String textRangeSegment : textRangeSegments) {
-				String[] positions = textRangeSegment.split(":");
+			String[] relativeTextRangeSegments = textRanges.split(",");
+			List<Range> absoluteRanges = new ArrayList<>();
+			for (String relativeTextRangeSegment : relativeTextRangeSegments) {
+				String[] positions = relativeTextRangeSegment.split(":");
 				
-				ranges.add(
+				absoluteRanges.add(
 					new Range(
 						Integer.valueOf(positions[0])+currentPage.getPageStart(), 
 						Integer.valueOf(positions[1])+currentPage.getPageStart()));
 			}
-			taggerListener.addComment(ranges, x, y);
+			taggerListener.addComment(absoluteRanges, x, y);
 		}
 		
 		@Override
@@ -257,7 +257,7 @@ public class Tagger extends AbstractComponent {
 	
 	public void setPage(int pageNumber) {
 		Page page = pager.getPage(pageNumber);
-		setPage(page.toHTML(), page.getLineCount(), page.getRelativeComments());
+		setPage(page.toHTML(), page.getLineCount(), page.getRelativeCommentsCopy());
 	}
 	
 	void removeTagInstances(Collection<String> annotationIds) {
@@ -272,7 +272,7 @@ public class Tagger extends AbstractComponent {
 				setPage(
 					pager.getCurrentPage().toHTML(), 
 					pager.getCurrentPage().getLineCount(), 
-					pager.getCurrentPage().getRelativeComments());
+					pager.getCurrentPage().getRelativeCommentsCopy());
 			}
 		}
 	}
@@ -311,7 +311,7 @@ public class Tagger extends AbstractComponent {
 				setPage(
 					pager.getCurrentPage().toHTML(), 
 					pager.getCurrentPage().getLineCount(), 
-					pager.getCurrentPage().getRelativeComments());
+					pager.getCurrentPage().getRelativeCommentsCopy());
 			}
 		}
 	}
@@ -365,7 +365,7 @@ public class Tagger extends AbstractComponent {
 			setPage(
 				pager.getCurrentPage().toHTML(), 
 				pager.getCurrentPage().getLineCount(), 
-				pager.getCurrentPage().getRelativeComments());
+				pager.getCurrentPage().getRelativeCommentsCopy());
 			if (firstLineId != -1) {
 								
 				if (pager.getCurrentPage().hasLine(pager.getCurrentPage().getLineCount()-1)) {
@@ -398,28 +398,39 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void addComment(Comment comment) throws IOException {
-		ClientComment clientComment = pager.addComment(comment);
+		ClientComment relativeClientComment = pager.addComment(comment);
 		
-		if (clientComment != null) {
+		if (relativeClientComment != null) {
 			getRpcProxy(TaggerClientRpc.class).addComment(
-				new ClientCommentJSONSerializer().toJSON(clientComment));
+				new ClientCommentJSONSerializer().toJSON(relativeClientComment));
 		}
 	}
 
 	public void updateComment(Comment comment) {
-		getRpcProxy(TaggerClientRpc.class).updateComment(comment.getUuid(), comment.getBody(), comment.getStartPos());
+		if (pager.hasPages()) {
+			getRpcProxy(TaggerClientRpc.class).updateComment(
+					comment.getUuid(), 
+					comment.getBody(), 
+					pager.getCurrentPage().getRelativePosFor(comment.getStartPos()));
+		}
 	}
 
 	public void removeComment(Comment comment) {
-		pager.removeComment(comment);
-		getRpcProxy(TaggerClientRpc.class).removeComment(comment.getUuid(), comment.getStartPos());
+		if (pager.hasPages()) {
+			pager.removeComment(comment);
+			getRpcProxy(TaggerClientRpc.class).removeComment(
+					comment.getUuid(),
+					pager.getCurrentPage().getRelativePosFor(comment.getStartPos()));
+		}
 	}
 
 	public void addReply(Comment comment, Reply reply) throws IOException {
 		if (pager.hasPages()) {
 			if (pager.getCurrentPage().hasComment(comment.getUuid())) {
-				getRpcProxy(TaggerClientRpc.class).setReplies(comment.getUuid(), comment.getStartPos(), 
-						new CommentReplyJSONSerializer().toJSONArrayString(comment.getReplies()));
+				getRpcProxy(TaggerClientRpc.class).setReplies(
+					comment.getUuid(), 
+					pager.getCurrentPage().getRelativePosFor(comment.getStartPos()), 
+					new CommentReplyJSONSerializer().toJSONArrayString(comment.getReplies()));
 			}
 		}
 	}
@@ -427,8 +438,10 @@ public class Tagger extends AbstractComponent {
 	public void updateReply(Comment comment, Reply reply) throws IOException {
 		if (pager.hasPages()) {
 			if (pager.getCurrentPage().hasComment(comment.getUuid())) {
-				getRpcProxy(TaggerClientRpc.class).setReplies(comment.getUuid(), comment.getStartPos(), 
-						new CommentReplyJSONSerializer().toJSONArrayString(comment.getReplies()));
+				getRpcProxy(TaggerClientRpc.class).setReplies(
+					comment.getUuid(), 
+					pager.getCurrentPage().getRelativePosFor(comment.getStartPos()), 
+					new CommentReplyJSONSerializer().toJSONArrayString(comment.getReplies()));
 			}
 		}
 	}
@@ -436,15 +449,19 @@ public class Tagger extends AbstractComponent {
 	public void removeReply(Comment comment, Reply reply) throws IOException {
 		if (pager.hasPages()) {
 			if (pager.getCurrentPage().hasComment(comment.getUuid())) {
-				getRpcProxy(TaggerClientRpc.class).setReplies(comment.getUuid(), comment.getStartPos(), 
-						new CommentReplyJSONSerializer().toJSONArrayString(comment.getReplies()));
+				getRpcProxy(TaggerClientRpc.class).setReplies(
+					comment.getUuid(), 
+					pager.getCurrentPage().getRelativePosFor(comment.getStartPos()), 
+					new CommentReplyJSONSerializer().toJSONArrayString(comment.getReplies()));
 			}
 		}
 	}
 
 
 	public void setReplies(List<Reply> replies, Comment comment) throws IOException {
-		getRpcProxy(TaggerClientRpc.class).setReplies(comment.getUuid(), comment.getStartPos(), 
+		getRpcProxy(TaggerClientRpc.class).setReplies(
+				comment.getUuid(), 
+				pager.getCurrentPage().getRelativePosFor(comment.getStartPos()), 
 				new CommentReplyJSONSerializer().toJSONArrayString(replies));
 	}
 }

@@ -31,9 +31,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
@@ -42,6 +42,8 @@ import org.vaadin.sliderpanel.client.SliderMode;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.hazelcast.core.ITopic;
+import com.hazelcast.core.Message;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
@@ -71,10 +73,13 @@ import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
+import de.catma.hazelcast.HazelCastService;
+import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.indexer.IndexedProject;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.event.ChangeType;
 import de.catma.project.event.CommentChangeEvent;
 import de.catma.project.event.ReplyChangeEvent;
 import de.catma.queryengine.result.QueryResultRow;
@@ -87,12 +92,16 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.UIMessageListener;
+import de.catma.ui.client.ui.tagger.shared.ClientComment;
+import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.tabbedview.ClosableTab;
 import de.catma.ui.component.tabbedview.TabCaptionChangeListener;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.events.CommentMessage;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
@@ -148,10 +157,13 @@ public class TaggerView extends HorizontalLayout
 	private TabCaptionChangeListener tabNameChangeListener;
 	private Collection<Comment> comments = Collections.emptyList();
 	private TaggerSplitPanel splitPanel;
+	private ITopic<CommentMessage> commentTopic;
+	private UIMessageListener<CommentMessage> commentMessageListener;
+	private String commentMessageListenerRegId;
 	
 	public TaggerView(
 			int taggerID, 
-			SourceDocument sourceDocument, Project project, 
+			SourceDocument sourceDocument, final Project project, 
 			EventBus eventBus){
 		this.tagManager = project.getTagManager();
 		this.project = project;
@@ -166,6 +178,84 @@ public class TaggerView extends HorizontalLayout
 		pager.setMaxPageLengthInLines(maxPageLengthInLines);
 		initData();
 		this.eventBus.register(this);
+		final UI ui = UI.getCurrent();
+		commentMessageListener = new UIMessageListener<CommentMessage>(ui) {
+			@Override
+			public void uiOnMessage(Message<CommentMessage> message) {
+				try {
+					CommentMessage commentMessage = message.getMessageObject();
+					final String documentId = commentMessage.getDocumentId();
+					final boolean replyMessage = commentMessage.isReplyMessage();
+					final int userId = replyMessage? commentMessage.getReplyUserId():commentMessage.getUserId();
+					final boolean deleted= commentMessage.isDeleted();
+					
+					if ((TaggerView.this.getSourceDocument() != null) 
+							&& TaggerView.this.getSourceDocument().getUuid().equals(documentId)) {
+						User user = project.getUser();
+						Integer currentUserId = user.getUserId();
+						
+						if (!currentUserId.equals(userId)) {
+							final Comment comment = commentMessage.toComment();
+							
+							Optional<Comment> optionalExistingComment = 
+									TaggerView.this.comments
+									.stream()
+									.filter(c -> c.getUuid().equals(comment.getUuid()))
+									.findFirst();
+
+							if (replyMessage) {
+								if (optionalExistingComment.isPresent()) {
+									Comment existingComment = optionalExistingComment.get();
+									Reply reply = commentMessage.toReply();
+									Reply existingReply = existingComment.getReply(reply.getUuid());
+
+									if (existingReply != null) {
+										if (deleted) {
+											existingComment.removeReply(existingReply);
+											tagger.removeReply(existingComment, existingReply);
+										}
+										else {
+											existingReply.setBody(reply.getBody());
+											tagger.updateReply(existingComment, existingReply);
+										}
+									}
+									else {
+										existingComment.addReply(reply);
+										tagger.addReply(existingComment, reply);
+									}
+									ui.push();
+								}
+							}
+							else {
+								if (deleted) {
+									optionalExistingComment.ifPresent(exitingComment -> {
+										TaggerView.this.comments.remove(exitingComment);
+										tagger.removeComment(exitingComment);
+										ui.push();
+									});
+								}
+								else {
+									if (optionalExistingComment.isPresent()) {
+										Comment existingComment = optionalExistingComment.get();
+										existingComment.setBody(comment.getBody());
+										tagger.updateComment(existingComment);
+										ui.push();
+									}
+									else {
+										comments.add(comment);
+										tagger.addComment(comment);
+										ui.push();
+									}
+								}
+							}
+						}
+					}
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "error processing an incoming Comment", e);
+				}
+			}
+		};
 	}
 
 	@Override
@@ -947,6 +1037,23 @@ public class TaggerView extends HorizontalLayout
 			tabNameChangeListener.tabCaptionChange(this);
 		}
 		this.drawer.collapse();
+		
+		try {
+			if ((this.commentTopic != null) && (commentMessageListenerRegId != null)) {
+				this.commentTopic.removeMessageListener(commentMessageListenerRegId);
+				this.commentMessageListenerRegId = null;
+			}
+			
+			HazelCastService hazelcastService = ((CatmaApplication)UI.getCurrent()).getHazelCastService();
+			this.commentTopic = 
+				hazelcastService.getHazelcastClient().getTopic(HazelcastConfiguration.TopicName.COMMENT + "_" + sd.getUuid());
+			
+			this.commentMessageListenerRegId = 
+				this.commentTopic.addMessageListener(this.commentMessageListener);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "error registering for comment messages", e);
+		}
 	}
 
 	@Override
@@ -965,7 +1072,7 @@ public class TaggerView extends HorizontalLayout
 	}
 	
 	@Override
-	public void addComment(List<Range> ranges, int x, int y) {
+	public void addComment(List<Range> absoluteRanges, int x, int y) {
 		User user = project.getUser();
 		IDGenerator idGenerator = new IDGenerator();
 		CommentDialog commentDialog = new CommentDialog(
@@ -975,7 +1082,7 @@ public class TaggerView extends HorizontalLayout
 							new Comment(
 								idGenerator.generate(), 
 								user.getName(), user.getUserId(), 
-								commentBody, ranges, this.sourceDocument.getUuid()));
+								commentBody, absoluteRanges, this.sourceDocument.getUuid()));
 					} catch (IOException e) {
 						errorHandler.showAndLogError("Error adding Comment!", e);
 					}
@@ -1106,20 +1213,50 @@ public class TaggerView extends HorizontalLayout
 		switch(commentChangeEvent.getChangeType()) {
 		case CREATED: {
 			try {
+				comments.add(commentChangeEvent.getComment());
 				tagger.addComment(commentChangeEvent.getComment());
 			} catch (IOException e) {
 				errorHandler.showAndLogError("Error adding Comment!", e);
 			}
+			break;
 		}
 		case UPDATED: {
 			tagger.updateComment(commentChangeEvent.getComment());
+			break;
 		}
 		case DELETED: {
 			this.comments.remove(commentChangeEvent.getComment());
 			tagger.removeComment(commentChangeEvent.getComment());
+			break;
 		}
 		}
+		try {
+			if (commentTopic != null) {
+				Comment comment = commentChangeEvent.getComment();
+				ClientComment clientComment = new ClientComment(
+						comment.getUuid(),
+						comment.getUsername(),
+						comment.getUserId(),
+						comment.getBody(),
+						comment.getReplyCount(),
+						comment.getRanges()
+							.stream()
+							.map(r -> new TextRange(r.getStartPoint(), r.getEndPoint()))
+							.collect(Collectors.toList()));
 
+				
+				commentTopic.publish(
+					new CommentMessage(
+						comment.getId(),
+						clientComment,
+						comment.getDocumentId(),
+						commentChangeEvent.getChangeType() == ChangeType.DELETED
+				));
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "error publishing a comment message", e);
+		}
 	}
 	
 	@Subscribe
@@ -1131,6 +1268,7 @@ public class TaggerView extends HorizontalLayout
 			} catch (IOException e) {
 				errorHandler.showAndLogError("Error adding Reply!", e);
 			}
+			break;
 		}
 		case UPDATED: {
 			try {
@@ -1138,6 +1276,7 @@ public class TaggerView extends HorizontalLayout
 			} catch (IOException e) {
 				errorHandler.showAndLogError("Error updating Reply!", e);
 			}
+			break;
 		}
 		case DELETED: {
 			try {
@@ -1145,9 +1284,46 @@ public class TaggerView extends HorizontalLayout
 			} catch (IOException e) {
 				errorHandler.showAndLogError("Error removing Reply!", e);
 			}
+			break;
 		}
 		}
+		try {
+			if (commentTopic != null) {
+				Comment comment = replyChangeEvent.getComment();
+				ClientComment clientComment = new ClientComment(
+						comment.getUuid(),
+						comment.getUsername(),
+						comment.getUserId(),
+						comment.getBody(),
+						comment.getReplyCount(),
+						comment.getRanges()
+							.stream()
+							.map(r -> new TextRange(r.getStartPoint(), r.getEndPoint()))
+							.collect(Collectors.toList()));
+				Reply reply = replyChangeEvent.getReply();
+				
+				ClientCommentReply clientCommentReply = new ClientCommentReply(
+						reply.getUuid(), 
+						reply.getBody(), 
+						reply.getUsername(), 
+						reply.getUserId(), 
+						reply.getCommentUuid());
+				
 
+				
+				commentTopic.publish(
+					new CommentMessage(
+						comment.getId(),
+						clientComment,
+						comment.getDocumentId(),
+						replyChangeEvent.getChangeType() == ChangeType.DELETED,
+						reply.getId(),
+						clientCommentReply));
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "error publishing a comment message", e);
+		}
 	}
 	
 	@Override
@@ -1166,7 +1342,7 @@ public class TaggerView extends HorizontalLayout
 								ui.push();
 							}
 							catch(IOException e) {
-								errorHandler.showAndLogError("Error loading Replies!", e);
+								logger.log(Level.WARNING, "error loading replies", e);
 							}
 						});
 						
@@ -1188,3 +1364,4 @@ public class TaggerView extends HorizontalLayout
 		
 	}
 }
+

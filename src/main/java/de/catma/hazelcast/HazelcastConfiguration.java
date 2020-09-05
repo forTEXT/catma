@@ -28,6 +28,7 @@ public final class HazelcastConfiguration {
 	public static enum TopicName {
 		PROJECT_INVITATION,
 		PROJECT_JOINED,
+		COMMENT,
 		;
 	}
 

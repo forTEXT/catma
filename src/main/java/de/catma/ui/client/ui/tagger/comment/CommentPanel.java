@@ -112,13 +112,11 @@ public class CommentPanel extends FlowPanel {
 					curPanel.getElement().getStyle().setTop(currentTop, Unit.PX);
 					
 					currentMaxTop = currentTop;
-					currentHeightDown = curPanel.getElement().getOffsetHeight(); 
 				}
 				else {
 					currentMaxTop += currentHeightDown;
 				}
-				
-				currentHeightDown = 0;
+				currentHeightDown = curPanel.getElement().getOffsetHeight();
 				
 			}
 		}

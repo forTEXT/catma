@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import de.catma.document.Range;
 import de.catma.document.comment.Comment;
@@ -95,7 +96,7 @@ public class Page {
 	private boolean rightToLeftWriting;
 	private ArrayList<Line> lines;
 	private Element pageDiv;
-	private Set<Comment> relativeComments;
+	private Set<Comment> absoluteComments;
 	
 	public Page(int taggerID, String text, int pageStart, int pageEnd, int approxMaxLineLength, boolean rightToLeftWriting) {
 		this.taggerID = taggerID;
@@ -104,7 +105,7 @@ public class Page {
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
 		this.rightToLeftWriting = rightToLeftWriting;
-		this.relativeComments = new HashSet<Comment>();
+		this.absoluteComments = new HashSet<Comment>();
 		buildLines();
 	}
 	
@@ -302,6 +303,10 @@ public class Page {
 		return (this.pageStart <= startPoint) && (this.pageEnd >= startPoint);
 	}
 
+	public int getRelativePosFor(int pos) {
+		return pos-pageStart;
+	}
+	
 	public TextRange getRelativeRangeFor(Range absoluteTextRange) {
 		return new TextRange(
 				absoluteTextRange.getStartPoint()-pageStart, 
@@ -402,21 +407,21 @@ public class Page {
 	}
 
 	public void addAbsoluteComment(Comment absoluteComment) {
-		Comment relativeComment = new Comment(absoluteComment, pageStart*-1);
-		relativeComments.add(relativeComment);
+		absoluteComments.add(absoluteComment);
 	}
 
-	public Optional<Comment> getRelativeComment(String uuid) {
-		return relativeComments.stream().filter(comment -> comment.getUuid().equals(uuid)).findFirst();
+	public Optional<Comment> getAbsoluteComment(String uuid) {
+		return absoluteComments.stream().filter(comment -> comment.getUuid().equals(uuid)).findFirst();
 	}
 
-	public Collection<Comment> getRelativeComments() {
-		return Collections.unmodifiableCollection(relativeComments);
+	public Collection<Comment> getRelativeCommentsCopy() {
+		return Collections.unmodifiableCollection(
+				absoluteComments.stream().map(c -> new Comment(c, pageStart*-1)).collect(Collectors.toSet()));
 	}
 
 	public void removeAbsoluteComment(Comment comment) {
 		
-		Iterator<Comment> relCommentIterator= relativeComments.iterator();
+		Iterator<Comment> relCommentIterator= absoluteComments.iterator();
 		while(relCommentIterator.hasNext()) {
 			if (relCommentIterator.next().getUuid().equals(comment.getUuid())) {
 				relCommentIterator.remove();
@@ -427,7 +432,7 @@ public class Page {
 	}
 	
 	public boolean hasComment(String commentUuid) {
-		for (Comment comment : relativeComments) {
+		for (Comment comment : absoluteComments) {
 			if (comment.getUuid().equals(commentUuid)) {
 				return true;
 			}
