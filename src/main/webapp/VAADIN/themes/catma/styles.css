@@ -18364,6 +18364,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	cursor: pointer;
 }
 
+.catma .commented-keyword-comment {
+	border: black 1px solid;
+	border-radius: 4px;
+	margin: 5px;
+	padding: 5px;
+}
+
 .catma .annotation-panel-button-right-align {
 	float: right;
 	margin-right: 5px;

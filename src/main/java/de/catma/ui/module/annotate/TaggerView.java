@@ -26,11 +26,11 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -43,7 +43,6 @@ import org.vaadin.sliderpanel.client.SliderMode;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Message;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
@@ -125,6 +124,10 @@ import de.catma.util.Pair;
 public class TaggerView extends HorizontalLayout 
 	implements TaggerListener, ClosableTab {
 	
+	public interface AfterDocumentLoadedOperation {
+		public void afterDocumentLoaded(TaggerView taggerView);
+	}
+	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
@@ -155,16 +158,18 @@ public class TaggerView extends HorizontalLayout
 	private KwicPanel kwicPanel;
 	private VerticalSplitPanel rightSplitPanel;
 	private TabCaptionChangeListener tabNameChangeListener;
-	private Collection<Comment> comments = Collections.emptyList();
+	private final List<Comment> comments = new ArrayList<Comment>();
 	private TaggerSplitPanel splitPanel;
 	private ITopic<CommentMessage> commentTopic;
 	private UIMessageListener<CommentMessage> commentMessageListener;
 	private String commentMessageListenerRegId;
+	private IconButton cbAutoShowComments;
 	
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, final Project project, 
-			EventBus eventBus){
+			EventBus eventBus,
+			AfterDocumentLoadedOperation afterDocumentLoadedOperation){
 		this.tagManager = project.getTagManager();
 		this.project = project;
 		this.sourceDocument = sourceDocument;
@@ -176,86 +181,17 @@ public class TaggerView extends HorizontalLayout
 		initActions();
 		initListeners();
 		pager.setMaxPageLengthInLines(maxPageLengthInLines);
-		initData();
+		initData(afterDocumentLoadedOperation);
 		this.eventBus.register(this);
 		final UI ui = UI.getCurrent();
-		commentMessageListener = new UIMessageListener<CommentMessage>(ui) {
-			@Override
-			public void uiOnMessage(Message<CommentMessage> message) {
-				try {
-					CommentMessage commentMessage = message.getMessageObject();
-					final String documentId = commentMessage.getDocumentId();
-					final boolean replyMessage = commentMessage.isReplyMessage();
-					final int userId = replyMessage? commentMessage.getReplyUserId():commentMessage.getUserId();
-					final boolean deleted= commentMessage.isDeleted();
-					
-					if ((TaggerView.this.getSourceDocument() != null) 
-							&& TaggerView.this.getSourceDocument().getUuid().equals(documentId)) {
-						User user = project.getUser();
-						Integer currentUserId = user.getUserId();
-						
-						if (!currentUserId.equals(userId)) {
-							final Comment comment = commentMessage.toComment();
-							
-							Optional<Comment> optionalExistingComment = 
-									TaggerView.this.comments
-									.stream()
-									.filter(c -> c.getUuid().equals(comment.getUuid()))
-									.findFirst();
-
-							if (replyMessage) {
-								if (optionalExistingComment.isPresent()) {
-									Comment existingComment = optionalExistingComment.get();
-									Reply reply = commentMessage.toReply();
-									Reply existingReply = existingComment.getReply(reply.getUuid());
-
-									if (existingReply != null) {
-										if (deleted) {
-											existingComment.removeReply(existingReply);
-											tagger.removeReply(existingComment, existingReply);
-										}
-										else {
-											existingReply.setBody(reply.getBody());
-											tagger.updateReply(existingComment, existingReply);
-										}
-									}
-									else {
-										existingComment.addReply(reply);
-										tagger.addReply(existingComment, reply);
-									}
-									ui.push();
-								}
-							}
-							else {
-								if (deleted) {
-									optionalExistingComment.ifPresent(exitingComment -> {
-										TaggerView.this.comments.remove(exitingComment);
-										tagger.removeComment(exitingComment);
-										ui.push();
-									});
-								}
-								else {
-									if (optionalExistingComment.isPresent()) {
-										Comment existingComment = optionalExistingComment.get();
-										existingComment.setBody(comment.getBody());
-										tagger.updateComment(existingComment);
-										ui.push();
-									}
-									else {
-										comments.add(comment);
-										tagger.addComment(comment);
-										ui.push();
-									}
-								}
-							}
-						}
-					}
-				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "error processing an incoming Comment", e);
-				}
-			}
-		};
+		
+		commentMessageListener = new CommentMessageListener(
+				ui, 
+				project, 
+				cbAutoShowComments, 
+				comments, 
+				tagger, 
+				() -> getSourceDocument());
 	}
 
 	@Override
@@ -270,8 +206,11 @@ public class TaggerView extends HorizontalLayout
 		}
 	}
 	
-	private void initData() {
+	private void initData(final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 		if (sourceDocument != null) {
+			
+			// loading of the Document is done in an extra step, 
+			// because of a client side rendering racing condition which prevents the first page to be displayed
 			final UI ui = UI.getCurrent();
 			((CatmaApplication)ui).submit("Load Document",
 			new DefaultProgressCallable<Void>() {
@@ -283,7 +222,8 @@ public class TaggerView extends HorizontalLayout
 							btAnalyze.setEnabled(project instanceof IndexedProject);
 							pagerComponent.setEnabled(true);
 							
-							TaggerView.this.comments = TaggerView.this.project.getComments(sourceDocument.getUuid());
+							TaggerView.this.comments.clear();
+							TaggerView.this.comments.addAll(TaggerView.this.project.getComments(sourceDocument.getUuid()));
 
 							tagger.setText(sourceDocument.getContent(), TaggerView.this.comments);
 							
@@ -311,6 +251,10 @@ public class TaggerView extends HorizontalLayout
 									new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
 							if (taggerContextMenu != null) {
 								taggerContextMenu.setTagsets(tagsets);
+							}
+							
+							if (afterDocumentLoadedOperation != null) {
+								afterDocumentLoadedOperation.afterDocumentLoaded(TaggerView.this);
 							}
 							
 							ui.push();
@@ -497,6 +441,25 @@ public class TaggerView extends HorizontalLayout
 					cbTraceSelection.removeStyleName("tagger-trace-checkbox-selected");
 				}
 		});
+		
+		cbAutoShowComments.addClickListener(clickEvent -> {
+			boolean autoShowComments = (boolean) cbAutoShowComments.getData();
+			autoShowComments = !autoShowComments;
+			cbAutoShowComments.setData(autoShowComments);
+			if (autoShowComments) {
+				cbAutoShowComments.setIcon(VaadinIcons.COMMENT);
+				try {
+					TaggerView.this.comments.clear();
+					TaggerView.this.comments.addAll(TaggerView.this.project.getComments(sourceDocument.getUuid()));
+					tagger.updateComments(comments);
+				} catch (IOException e) {
+					logger.log(Level.SEVERE, "unable to reload comments", e);
+				}
+			}
+			else {
+				cbAutoShowComments.setIcon(VaadinIcons.COMMENT_O);
+			}
+		});
 
 		btAnalyze.addClickListener(new ClickListener() {	
 		
@@ -581,7 +544,7 @@ public class TaggerView extends HorizontalLayout
 
 			@Override
 			public void documentSelected(SourceDocument sourceDocument) {
-				setSourceDocument(sourceDocument);
+				setSourceDocument(sourceDocument, null);
 			}
 
 			@Override
@@ -726,6 +689,10 @@ public class TaggerView extends HorizontalLayout
 		btClearSearchHighlights = new IconButton(VaadinIcons.ERASER);
 		btClearSearchHighlights.setDescription("Clear all search highlights");
 		actionPanel.addComponent(btClearSearchHighlights);
+		
+		cbAutoShowComments = new IconButton(VaadinIcons.COMMENT);
+		cbAutoShowComments.setData(true); //state
+		actionPanel.addComponent(cbAutoShowComments);
 		
 		btAnalyze = new Button("Analyze");
 		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
@@ -1021,7 +988,7 @@ public class TaggerView extends HorizontalLayout
 	
 	public void removeClickshortCuts() { /* noop*/ }
 
-	public void setSourceDocument(SourceDocument sd) {
+	public void setSourceDocument(SourceDocument sd, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 		this.sourceDocument = sd;
 		this.resourcePanel.setSelectedDocument(sd);
 		
@@ -1032,7 +999,7 @@ public class TaggerView extends HorizontalLayout
 			.getIndexInfoSet()
 			.isRightToLeftWriting());
 		
-		initData();
+		initData(afterDocumentLoadedOperation);
 		if (tabNameChangeListener != null) {
 			tabNameChangeListener.tabCaptionChange(this);
 		}
@@ -1247,6 +1214,7 @@ public class TaggerView extends HorizontalLayout
 				
 				commentTopic.publish(
 					new CommentMessage(
+						project.getUser().getUserId(),
 						comment.getId(),
 						clientComment,
 						comment.getDocumentId(),
@@ -1300,6 +1268,7 @@ public class TaggerView extends HorizontalLayout
 							.stream()
 							.map(r -> new TextRange(r.getStartPoint(), r.getEndPoint()))
 							.collect(Collectors.toList()));
+				
 				Reply reply = replyChangeEvent.getReply();
 				
 				ClientCommentReply clientCommentReply = new ClientCommentReply(
@@ -1314,6 +1283,7 @@ public class TaggerView extends HorizontalLayout
 				commentTopic.publish(
 					new CommentMessage(
 						comment.getId(),
+						project.getUser().getUserId(),
 						clientComment,
 						comment.getDocumentId(),
 						replyChangeEvent.getChangeType() == ChangeType.DELETED,

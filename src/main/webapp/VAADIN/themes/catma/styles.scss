@@ -928,6 +928,13 @@ $v-focus-color: #5A98A1;
     	/*width: 100%;*/
 	}
 	
+	.commented-keyword-comment {
+	    border: black 1px solid;
+	    border-radius: 4px;
+	    margin: 5px;
+	    padding: 5px;
+	}
+	
 	.annotation-panel-button-right-align {
 		float: right;
 		margin-right: 5px;

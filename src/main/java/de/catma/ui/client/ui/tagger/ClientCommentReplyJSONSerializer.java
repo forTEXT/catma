@@ -9,7 +9,6 @@ import com.google.gwt.json.client.JSONParser;
 
 import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 import de.catma.ui.client.ui.tagger.shared.ClientCommentReply.SerializationField;
-import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.client.ui.util.JSONSerializer;
 
 public class ClientCommentReplyJSONSerializer extends JSONSerializer {
@@ -46,6 +45,7 @@ public class ClientCommentReplyJSONSerializer extends JSONSerializer {
 		String commentUuid = 
 				getStringValueFromStringObject(
 					jsonObject.get(SerializationField.commentUuid.name()));
+
 		
 		return new ClientCommentReply(uuid, body, username, userId, commentUuid);
 	}

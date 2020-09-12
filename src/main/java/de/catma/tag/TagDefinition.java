@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import de.catma.util.IDGenerator;
+
 /**
  * A definition of a tag. That is a type of a {@link TagInstance}.
  * 
@@ -79,6 +81,11 @@ public class TagDefinition {
 	public TagDefinition() {
 		systemPropertyDefinitions = new HashMap<String, PropertyDefinition>();
 		userDefinedPropertyDefinitions = new HashMap<String, PropertyDefinition>();
+		addSystemPropertyDefinition(
+			new PropertyDefinition(
+				new IDGenerator().generate(PropertyDefinition.SystemPropertyName.catma_markuptimestamp.name()), 
+				PropertyDefinition.SystemPropertyName.catma_markuptimestamp.name(),
+				Collections.emptyList()));
 	}
 	
 	

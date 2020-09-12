@@ -131,7 +131,7 @@ public class CommentBubble extends FlowPanel {
 		
 		btRemove = new RemoveCommentButton();
 		buttonPanel.add(btRemove);
-
+		
 		btReply = new ReplyCommentButton();
 		buttonPanel.add(btReply);
 		

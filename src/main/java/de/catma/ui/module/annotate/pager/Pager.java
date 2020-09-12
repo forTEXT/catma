@@ -400,4 +400,11 @@ public class Pager implements Iterable<Page> {
 			page.removeAbsoluteComment(comment);
 		}
 	}
+
+	public void updateComments(Collection<Comment> comments) {
+		for (Page page : pages) {
+			page.clearComments();
+		}
+		setComments(comments);
+	}
 }

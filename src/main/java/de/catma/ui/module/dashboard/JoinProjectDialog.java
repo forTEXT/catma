@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Message;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -15,8 +14,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
@@ -27,10 +24,8 @@ import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.rbac.RBACRole;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
-import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.module.project.ProjectInvitation;
 import de.catma.user.User;
 import de.catma.util.DammAlgorithm;
@@ -86,24 +81,6 @@ public class JoinProjectDialog extends Window {
 		btnCancel.addClickListener(evt -> close());
 	}
 
-	private class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage>{
-		
-		public ProjectJoinHandler(UI ui) {
-			super(ui);
-		}
-
-		@Override
-		public void uiOnMessage(Message<JoinedProjectMessage> message) {
-			if(message.getMessageObject().getInvitation().getKey() == JoinProjectDialog.this.invitation.getKey()) {	
-				JoinProjectDialog.this.eventBus.post(new ProjectChangedEvent());
-				Notification.show("Joined successfully", "Sucessfully joined Project " + 
-						JoinProjectDialog.this.invitation.getName() , Type.HUMANIZED_MESSAGE);
-				JoinProjectDialog.this.getUI().push();
-				JoinProjectDialog.this.close();
-			}
-		}
-		
-	}
 	
 	private void initComponents() {	
 		setWidth("30%");
@@ -168,7 +145,13 @@ public class JoinProjectDialog extends Window {
 
 	private void handleJoinPressed(ClickEvent event) {
 		if(invitation != null) {
-		    String regid = joinedTopic.addMessageListener(new ProjectJoinHandler(UI.getCurrent()));      
+		    String regid = joinedTopic.addMessageListener(
+	    		new ProjectJoinHandler(
+	    				UI.getCurrent(), 
+	    				() -> this.close(),
+	    				invitation,
+	    				eventBus)
+		    );      
 			addCloseListener((evt) -> joinedTopic.removeMessageListener(regid));
 			invitationTopic.publish(
 				new InvitationRequestMessage(

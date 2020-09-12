@@ -28,6 +28,7 @@ import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.ui.component.tabbedview.TabbedView;
+import de.catma.ui.module.annotate.TaggerView.AfterDocumentLoadedOperation;
 
 public class TaggerManagerView extends TabbedView {
 	
@@ -37,7 +38,7 @@ public class TaggerManagerView extends TabbedView {
 	public TaggerManagerView(EventBus eventBus, Project project) {
 		super(() -> new TaggerView(
 				0, null, project,
-				eventBus));
+				eventBus, null));
 		this.eventBus = eventBus;
 		this.eventBus.register(this);
 	}
@@ -56,25 +57,29 @@ public class TaggerManagerView extends TabbedView {
 			SourceDocument document = documentChangeEvent.getDocument();
 			TaggerView taggerView = getTaggerView(document);
 			if (taggerView != null) {
-				taggerView.setSourceDocument(document);
+				taggerView.setSourceDocument(document, null);
 			}
 		}    
     }
     
 	public TaggerView openSourceDocument(
-			final SourceDocument sourceDocument, Project repository) {
+			final SourceDocument sourceDocument, Project repository,
+			AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 
 		TaggerView taggerView = getTaggerView(sourceDocument);
 		if (taggerView != null) {
 			setSelectedTab(taggerView);
 			if (taggerView.getSourceDocument() == null) {
-				taggerView.setSourceDocument(sourceDocument);
+				taggerView.setSourceDocument(sourceDocument, afterDocumentLoadedOperation);
+			}
+			else {
+				afterDocumentLoadedOperation.afterDocumentLoaded(taggerView);
 			}
 		}
 		else {
 			taggerView = new TaggerView(
 					nextTaggerID++, sourceDocument, repository,
-					eventBus);
+					eventBus, afterDocumentLoadedOperation);
 			addClosableTab(taggerView, sourceDocument.toString());
 			setSelectedTab(taggerView);
 		}

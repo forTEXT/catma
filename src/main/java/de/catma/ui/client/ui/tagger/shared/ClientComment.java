@@ -29,7 +29,9 @@ public class ClientComment implements Serializable {
 	private String body;
 	private List<ClientCommentReply> replies;
 	
-	public ClientComment(String uuid, String username, Integer userId, String body, int replyCount, List<TextRange> ranges) {
+	public ClientComment(
+			String uuid, String username, Integer userId, 
+			String body, int replyCount, List<TextRange> ranges) {
 		super();
 		this.uuid = uuid;
 		this.username = username;

@@ -229,7 +229,8 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			
 			if (routeToAnnotateEvent.getDocument() != null) {
 				taggerManagerView.openSourceDocument(
-					routeToAnnotateEvent.getDocument(), routeToAnnotateEvent.getProject());
+					routeToAnnotateEvent.getDocument(), routeToAnnotateEvent.getProject(), 
+					null);
 			}			
 			currentRoute = routeToAnnotateEvent.getClass();
 		}
@@ -245,13 +246,15 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			setContent(taggerManagerView);
 			
 			try {
-				TaggerView view = taggerManagerView.openSourceDocument(
+				taggerManagerView.openSourceDocument(
 					queryResultRowInAnnotateEvent.getProject().getSourceDocument(
 							queryResultRowInAnnotateEvent.getDocumentId()),
-					queryResultRowInAnnotateEvent.getProject());
-				view.showQueryResultRows(
-						queryResultRowInAnnotateEvent.getSelection(), 
-						queryResultRowInAnnotateEvent.getRows());
+					queryResultRowInAnnotateEvent.getProject(),
+					(taggerView) -> {
+						taggerView.showQueryResultRows(
+								queryResultRowInAnnotateEvent.getSelection(), 
+								queryResultRowInAnnotateEvent.getRows());
+					});
 			} catch (Exception e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("error opening Document in Annotate module", e);
 			}

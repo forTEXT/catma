@@ -102,6 +102,7 @@ selector returns [Query query]
 	|	freqQuery { $query = $freqQuery.query; }
 	|	similQuery { $query = $similQuery.query; }
 	|	wildQuery { $query = $wildQuery.query; }
+	|	commentQuery { $query = $commentQuery.query; }
 	;
 	catch[RecognitionException e] {throw e;}
 	
@@ -139,6 +140,11 @@ similQuery returns [Query query]
 	
 wildQuery returns [Query query]
 	:	^(ND_WILD phrase) { $query = new WildcardQuery($phrase.query); }
+	;
+	catch[RecognitionException e] {throw e;}
+
+commentQuery returns [Query query]
+	:	^(ND_COMMENT phrase) { $query = new CommentQuery($phrase.query); }
 	;
 	catch[RecognitionException e] {throw e;}
 

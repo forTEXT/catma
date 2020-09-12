@@ -20,4 +20,8 @@ public abstract class UIMessageListener<T> implements MessageListener<T> {
 			uiOnMessage(message);
 		});
 	}
+	
+	protected UI getUi() {
+		return ui;
+	}
 }

@@ -439,5 +439,9 @@ public class Page {
 		}
 		return false;
 	}
+
+	public void clearComments() {
+		this.absoluteComments.clear();
+	}
 }
 

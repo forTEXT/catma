@@ -214,7 +214,7 @@ public class GitProjectHandler {
 			if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
 				PropertyDefinition authorPropertyDefinition = 
 						new PropertyDefinition(
-							idGenerator.generate(),
+							idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()),
 							PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
 							Collections.singleton(user.getIdentifier()));
 				tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
@@ -1765,6 +1765,34 @@ public class GitProjectHandler {
 	
 	public void removeReply(Comment comment, Reply reply) throws IOException {
 		remoteGitServerManager.removeReply(projectId, comment, reply);
+	}
+
+	public List<Comment> getCommentsWithReplies(List<String> documentIdList) throws IOException {
+		List<Comment> comments = new ArrayList<Comment>();
+		if (documentIdList.isEmpty()) {
+			return comments;
+		}
+		
+		if (documentIdList.size() > 10) {
+			comments.addAll(remoteGitServerManager.getComments(this.projectId)
+					.stream()
+					.filter(comment -> documentIdList.contains(comment.getDocumentId()))
+					.collect(Collectors.toList()));
+		}
+		else {
+			for (String documentId : documentIdList) {
+				comments.addAll(
+					remoteGitServerManager.getComments(projectId, documentId));
+			}
+		}
+		
+		for (Comment comment : comments) {
+			if (comment.getReplyCount() > 0) {
+				getCommentReplies(comment);
+			}
+		}
+		
+		return comments;
 	}
 	
 }

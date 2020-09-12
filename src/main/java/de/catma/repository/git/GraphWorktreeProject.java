@@ -64,6 +64,7 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
+import de.catma.repository.git.graph.CommentProvider;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
@@ -98,7 +99,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	private PropertyChangeSupport propertyChangeSupport;
 
 	private User user;
-	private GitProjectHandler gitProjectHandler;
+	private final GitProjectHandler gitProjectHandler;
 	private ProjectReference projectReference;
 	private String rootRevisionHash;
 	private GraphProjectHandler graphProjectHandler;
@@ -144,6 +145,12 @@ public class GraphWorktreeProject implements IndexedProject {
 					@Override
 					public URI getSourceDocumentFileURI(String documentId) throws Exception {
 						return getSourceDocumentURI(documentId);
+					}
+				},
+				new CommentProvider() {
+					@Override
+					public List<Comment> getComments(List<String> documentIdList) throws Exception {
+						return GraphWorktreeProject.this.gitProjectHandler.getCommentsWithReplies(documentIdList);
 					}
 				});
 		this.tempDir = CATMAPropertyKey.TempDir.getValue();

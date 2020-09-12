@@ -62,7 +62,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 	private Grid<TagsetImport> tagsetGrid;
 	private ActionGridComponent<Grid<TagsetImport>> tagsetGridComponent;
 	private WizardContext wizardContext;
-	private Project project;
+	private final Project project;
 	private ArrayList<UploadFile> fileList;
 	private ArrayList<TagsetImport> tagsetImportList;
 	private StepChangeListener stepChangeListener;

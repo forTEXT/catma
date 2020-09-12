@@ -28,6 +28,7 @@ tokens {
 	ND_REFINE;
 	ND_ORREFINE;
 	ND_ANDREFINE;
+	ND_COMMENT;
 }
 
 
@@ -179,6 +180,7 @@ selector
 	|	freqQuery
 	|	similQuery
 	|	wildQuery
+	|	commentQuery
 	;
 	catch[RecognitionException e] {throw e;}
 	
@@ -222,7 +224,10 @@ wildQuery
 	;
 	catch[RecognitionException e] {throw e;}
 
-	
+commentQuery
+	:	COMMENT EQUAL phrase -> ^(ND_COMMENT phrase)
+	;
+	catch[RecognitionException e] {throw e;}
 
 /************************************************
 * refinement definition
@@ -284,6 +289,8 @@ SIMIL	:	'simil'
 	;
 	
 WILD	:	'wild'
+	;
+COMMENT :	'comment'
 	;
 	
 WHITESPACE 

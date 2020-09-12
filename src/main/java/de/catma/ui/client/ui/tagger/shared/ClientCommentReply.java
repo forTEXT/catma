@@ -49,7 +49,5 @@ public class ClientCommentReply implements Serializable {
 	public String getCommentUuid() {
 		return commentUuid;
 	}
-
-	
 	
 }

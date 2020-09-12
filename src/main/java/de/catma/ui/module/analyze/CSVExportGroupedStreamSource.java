@@ -40,7 +40,7 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 	private final Project project;
 	private final LoadingCache<String, KwicProvider> kwicProviderCache;
 	private final BackgroundServiceProvider backgroundServiceProvider;
-	private Supplier<Boolean> groupByTagSupplier;
+	private final Supplier<Boolean> groupByTagSupplier;
 	
 	public CSVExportGroupedStreamSource(
 			Supplier<QueryResult> queryResultSupplier, Project project, Supplier<Boolean> groupByTagSupplier,

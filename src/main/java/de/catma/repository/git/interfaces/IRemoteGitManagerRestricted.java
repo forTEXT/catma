@@ -158,4 +158,6 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 
 	void updateReply(String projectId, Comment comment, Reply reply) throws IOException;
 
+	List<Comment> getComments(String projectId) throws IOException;
+
 }

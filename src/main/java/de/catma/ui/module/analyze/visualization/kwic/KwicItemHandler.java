@@ -10,13 +10,16 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.comment.Comment;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
+import de.catma.queryengine.result.CommentQueryResultRow;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
+import de.catma.ui.util.Cleaner;
 
 public class KwicItemHandler {
 	private Logger logger = Logger.getLogger(KwicItemHandler.class.getName());
@@ -108,7 +111,15 @@ public class KwicItemHandler {
 				logger.log(Level.SEVERE, "error retrieving keyword description for " + row, e);
 			}
 		}
-		return row.getPhrase();
+		
+		if (row instanceof CommentQueryResultRow) {
+			CommentQueryResultRow cRow = (CommentQueryResultRow)row;
+			Comment comment = cRow.getComment();
+			
+			return AnnotatedTextProvider.buildCommentedKeyword(row.getPhrase(), comment);
+		}
+		
+		return Cleaner.clean(row.getPhrase());
 	}
 	
 	

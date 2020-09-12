@@ -20,6 +20,7 @@ package de.catma.indexer;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
@@ -95,6 +96,12 @@ public interface Indexer {
 
 	public QueryResult searchTagDiff(QueryId queryId, List<String> relevantUserMarkupCollIDs,
 			String propertyName, String tagPhrase) throws IOException;
+
+	public QueryResult searchCommentPhrase(
+			QueryId queryId, 
+			List<String> documentIdList,
+			List<String> termList, int limit, List<String> unseparableCharacterSequences,
+			List<Character> userDefinedSeparatingCharacters, Locale locale) throws Exception;
 
 
 }

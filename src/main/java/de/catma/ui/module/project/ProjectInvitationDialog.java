@@ -1,12 +1,7 @@
 package de.catma.ui.module.project;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,7 +13,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Message;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
@@ -44,12 +38,9 @@ import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.project.Project;
 import de.catma.rbac.RBACRole;
-import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.events.MembersChangedEvent;
-import de.catma.ui.module.main.ErrorHandler;
-import de.catma.util.ColorConverter;
 
 /**
  * Dialog to invite other member to a project
@@ -73,7 +64,6 @@ public class ProjectInvitationDialog extends Window {
     
 	private final List<String> joinedUsers = new ArrayList<>();
 	
-    private final ErrorHandler errorLogger;
     private final HazelcastInstance hazelcast;
     private final ITopic<InvitationRequestMessage> invitationTopic;
     private final ITopic<JoinedProjectMessage> joinedTopic;
@@ -95,7 +85,6 @@ public class ProjectInvitationDialog extends Window {
 		
 		this.project = project;
 		this.documentsForCollectionCreation = documentsForCollectionCreation;
-	    this.errorLogger = (ErrorHandler) UI.getCurrent();
 	    this.eventBus = eventBus;
 	    this.hazelcast = hazelcastService.getHazelcastClient();
 	    
@@ -112,91 +101,6 @@ public class ProjectInvitationDialog extends Window {
 		btnStopInvite.addClickListener(evt -> close());
 	}
 
-	private class ProjectInvitationHandler extends UIMessageListener<InvitationRequestMessage> {
-		
-		private final Map<String, DocumentResource> documentResourceByUuid =  
-			documentsForCollectionCreation.stream().collect(
-					Collectors.toMap(Resource::getResourceId, res -> res));
-		
-		private final Map<Integer, String> userId2Color = new HashMap<>();
-		private final Set<String> colors = ColorConverter.getColorNames();
-		private final Set<Integer> assignedUsers = new HashSet<>();
-		
-		public ProjectInvitationHandler(UI ui) {
-			super(ui);
-		}
-
-		@Override
-		public void uiOnMessage(Message<InvitationRequestMessage> message) {
-			if (message.getMessageObject().getCode() == projectInvitation.getKey()) {
-				try {
-					Integer userId = Integer.valueOf(message.getMessageObject().getUserId());
-					
-					if (!assignedUsers.contains(userId)) {
-						
-						assignedUsers.add(userId);
-						
-						project.assignOnProject(
-								() -> userId, 
-								RBACRole.forValue(projectInvitation.getDefaultRole()));
-						
-						if (projectInvitation.isCreateOwnCollection()) {
-							String color = userId2Color.get(userId);
-							
-							if (color == null && !colors.isEmpty()) {
-								color = colors.iterator().next();
-								colors.remove(color);
-								userId2Color.put(userId, color);
-							}
-							
-							for (String documentId : projectInvitation.getDocumentIds()) {
-								if (projectInvitation.getDefaultRole() < RBACRole.REPORTER.getAccessLevel()) {
-									// minimum role 
-									project.assignOnResource(
-											() -> userId, 
-											RBACRole.REPORTER, documentId);
-								}							
-								
-								DocumentResource docResource = 
-										(DocumentResource) documentResourceByUuid.get(documentId);
-								if (docResource != null) {
-									String collectionName = 
-										color 
-										+ " " 
-										+ message.getMessageObject().getName() 
-										+ " "
-										+ docResource.getName();
-									
-									// collection creation with minimum role assignment
-									project.createUserMarkupCollectionWithAssignment(
-										collectionName, 
-										docResource.getDocument(), 
-										projectInvitation.getDefaultRole() < RBACRole.ASSISTANT.getAccessLevel()?
-												userId:null,
-										RBACRole.ASSISTANT);
-								}
-								
-							}	
-						}
-						
-						joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
-						
-						joinedUsers.add(message.getMessageObject().getName());
-						joinedUsersConsole.getDataProvider().refreshAll();
-						joinedUsersConsole.setVisible(true);
-						
-						ProjectInvitationDialog.this.getUI().push();
-					}					
-				} catch (IOException e) {
-					errorLogger.showAndLogError(
-							"Can't assign User " 
-									+ message.getMessageObject().getName() 
-									+ " to this Project", e);
-				}
-			}
-		}
-	}
-	
 	private void setInvitationSettingsEnabled(boolean enabled) {
 		cbOwnCollection.setEnabled(enabled);
 		if (cbOwnCollection.getValue()) {
@@ -343,7 +247,17 @@ public class ProjectInvitationDialog extends Window {
 		lInvitationCode.setVisible(true);
 		btnInvite.setEnabled(false);
 		
-	    String regid = invitationTopic.addMessageListener(new ProjectInvitationHandler(UI.getCurrent()));      
+	    String regid = invitationTopic.addMessageListener(
+	    	new ProjectInvitationHandler(
+	    		UI.getCurrent(),
+	    		documentsForCollectionCreation.stream().collect(
+	    				Collectors.toMap(Resource::getResourceId, res -> res)),
+	    		projectInvitation,
+	    		project,
+	    		joinedTopic,
+	    		joinedUsers,
+	    		joinedUsersConsole
+	    ));      
 	    
 		addCloseListener((evt) -> invitationTopic.removeMessageListener(regid));
 	}

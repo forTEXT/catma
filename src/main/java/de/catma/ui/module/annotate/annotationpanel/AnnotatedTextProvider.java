@@ -10,6 +10,7 @@ import com.vaadin.ui.UI;
 
 import de.catma.document.Range;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.comment.Comment;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.KwicProvider;
 import de.catma.tag.TagDefinition;
@@ -192,6 +193,29 @@ public class AnnotatedTextProvider {
 		}		
 		builder.append("</div>");		
 		
+		return builder.toString();
+	}
+
+	public static String buildCommentedKeyword(String phrase, Comment comment) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("<div class=\"commented-keyword\">");
+		builder.append(Cleaner.clean(shorten(phrase, SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)));
+		builder.append("</div>");
+		builder.append("<div class=\"commented-keyword-comment\">");
+		builder.append("<div class=\"commented-keyword-username\">");
+		builder.append(Cleaner.clean(comment.getUsername()));
+		if (comment.getReplyCount() > 0) {
+			builder.append("(+");
+			builder.append(comment.getReplyCount());
+			builder.append(comment.getReplyCount()==1?" reply)":" replies)");
+		}
+		builder.append(":");
+		builder.append("</div>");
+		builder.append(Cleaner.clean(
+				shorten(
+						comment.getBody(), 
+						LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)));
+		builder.append("</div>");
 		return builder.toString();
 	}
 	

@@ -23,28 +23,32 @@ public class CommentMessage implements Serializable {
 
 
 	private final boolean deleted;
+
+	private final Integer senderId;
 	
 
 	public CommentMessage(
 			int commentId, 
-			ClientComment clientComment, 
+			Integer senderId, ClientComment clientComment, 
 			String sourceDocumentId, 
 			boolean deleted) {
 		super();
 		this.commentId = commentId;
+		this.senderId = senderId;
 		this.clientComment = clientComment;
 		this.documentId = sourceDocumentId;
 		this.deleted = deleted;
 	}
 	
 	public CommentMessage(
-			int commentId, 
+			int commentId,
+			Integer senderId,
 			ClientComment clientComment, 
 			String sourceDocumentId, 
 			boolean deleted,
 			int replyId,
 			ClientCommentReply clientCommentReply) {
-		this(commentId, clientComment, sourceDocumentId, deleted);
+		this(commentId, senderId, clientComment, sourceDocumentId, deleted);
 		this.replyId = replyId;
 		this.clientCommentReply = clientCommentReply;
 	}
@@ -102,6 +106,10 @@ public class CommentMessage implements Serializable {
 
 	public Integer getReplyUserId() {
 		return this.clientCommentReply.getUserId();
+	}
+	
+	public Integer getSenderId() {
+		return senderId;
 	}
 
 }

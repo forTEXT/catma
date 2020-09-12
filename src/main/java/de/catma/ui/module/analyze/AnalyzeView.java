@@ -303,6 +303,7 @@ public class AnalyzeView extends HorizontalLayout
 		queryProposals.add(new NamedQuery("Wildcard 'a'", "wild = \"a%\""));
 		queryProposals.add(new NamedQuery("Taglist", "tag=\"%\""));
 		queryProposals.add(new NamedQuery("Taglist with Properties", "property=\"%\""));
+		queryProposals.add(new NamedQuery("Comments", "comment=\"%\""));
 
 		queryBox = new ComboBox<>();
 		queryBox.setDataProvider(new ListDataProvider<>(queryProposals));

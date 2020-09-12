@@ -464,4 +464,11 @@ public class Tagger extends AbstractComponent {
 				pager.getCurrentPage().getRelativePosFor(comment.getStartPos()), 
 				new CommentReplyJSONSerializer().toJSONArrayString(replies));
 	}
+
+	public void updateComments(Collection<Comment> comments) {
+		if (pager.hasPages()) {
+			pager.updateComments(comments);
+			setPage(pager.getCurrentPageNumber());
+		}
+	}
 }

@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.gitlab4j.api.Constants.IssueState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GroupApi;
@@ -576,7 +577,54 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 			String projectPath = projectId + "/" + resourceId;
 			Pager<Issue> issuePager = 
-				issuesApi.getIssues(projectPath, new IssueFilter().withLabels(Collections.singletonList(CATMA_COMMENT_LABEL)), 100);
+				issuesApi.getIssues(
+						projectPath, 
+						new IssueFilter()
+							.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
+							.withState(IssueState.OPENED), 100);
+			
+			
+			for (Issue issue : issuePager.all()) {
+				String description = issue.getDescription();
+				int noteCount = issue.getUserNotesCount();
+				try {
+					Author author = issue.getAuthor();
+					
+					Comment comment = new SerializationHelper<Comment>().deserialize(description, Comment.class);
+					comment.setId(issue.getId());
+					comment.setUserId(author.getId());
+					comment.setUsername(author.getName());
+					comment.setReplyCount(noteCount);
+					comment.setReplies(new ArrayList<Reply>());
+					result.add(comment);
+				}
+				catch (Exception e) {
+					logger.log(Level.SEVERE, String.format("Error deserializing Comment #%1$d %2$s", issue.getId(), description), e);
+				}
+			}
+			
+			return result;
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format(
+				"Failed to retrieve Comments resource %1$s in group %2$s!", resourceId, projectId), e);
+		}
+
+	}
+	
+
+	@Override
+	public List<Comment> getComments(String projectId) throws IOException {
+		try {
+			List<Comment> result = new ArrayList<Comment>();
+			
+			IssuesExtApi issuesApi = new IssuesExtApi(restrictedGitLabApi);
+			String projectPath = projectId;
+			IssuesPager<Issue> issuePager = 
+				issuesApi.getGroupIssues(projectPath, 
+						new IssueFilter()
+							.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
+							.withState(IssueState.OPENED));
 			
 			
 			for (Issue issue : issuePager.all()) {
@@ -602,7 +650,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to retrieve Comments resource %1$s in group %2$s!", resourceId, projectId), e);
+				"Failed to retrieve Comments in group %1$s!", projectId), e);
 		}
 
 	}
@@ -617,7 +665,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 		
-			issuesApi.deleteIssue(projectPath, comment.getId());
+			issuesApi.closeIssue(projectPath, comment.getId());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(

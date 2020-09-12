@@ -67,7 +67,7 @@ public class ClientCommentJSONSerializer extends JSONSerializer {
 		String body = 
 			getStringValueFromStringObject(
 				jsonObject.get(SerializationField.body.name()));
-		
+
 		JSONArray rangesJSON = 
 			(JSONArray)jsonObject.get(SerializationField.ranges.name());
 		

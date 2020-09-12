@@ -51,6 +51,7 @@ import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.Indexer;
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.graph.CommentProvider;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.tag.Property;
@@ -70,12 +71,14 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	private User user;
 	private FileInfoProvider fileInfoProvider;
 	private GraphWriter graphWriter;
+	private final CommentProvider commentProvider;
 	
 	public TPGraphProjectHandler(ProjectReference projectReference, 
-			User user, FileInfoProvider fileInfoProvider) {
+			User user, FileInfoProvider fileInfoProvider, CommentProvider commentProvider) {
 		this.projectReference = projectReference;
 		this.user = user;
 		this.fileInfoProvider = fileInfoProvider;
+		this.commentProvider = commentProvider;
 		
 		graph = TinkerGraph.open();
 		this.graphWriter = new GraphWriter(graph, fileInfoProvider, projectReference, user);
@@ -677,7 +680,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 	
 	public Indexer createIndexer() {
-		return new TPGraphProjectIndexer(graph);
+		return new TPGraphProjectIndexer(graph, commentProvider);
 	}
 
 }

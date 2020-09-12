@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -46,18 +47,23 @@ import com.google.common.collect.Multimap;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
 import de.catma.document.annotation.TagReference;
+import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
+import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 import de.catma.indexer.wildcard2regex.SQLWildcard2RegexConverter;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.QueryId;
+import de.catma.queryengine.result.CommentQueryResultRow;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.repository.git.graph.CommentProvider;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.tag.TagDefinition;
@@ -67,11 +73,13 @@ import de.catma.util.IDGenerator;
 public class TPGraphProjectIndexer implements Indexer {
 	
 	private final Graph graph;
+	private final CommentProvider commentProvider;
 	private IDGenerator idGenerator;
 
-	public TPGraphProjectIndexer(Graph graph) {
+	public TPGraphProjectIndexer(Graph graph, CommentProvider commentProvider) {
 		super();
 		this.graph = graph;
+		this.commentProvider = commentProvider;
 		this.idGenerator = new IDGenerator();
 	}
 
@@ -671,6 +679,90 @@ public class TPGraphProjectIndexer implements Indexer {
 			throws IOException {
 		// TODO Auto-generated method stub
 		return new QueryResultRowArray();
+	}
+	
+	@Override
+	public QueryResult searchCommentPhrase(QueryId queryId, List<String> documentIdList, List<String> termList,
+			int limit, List<String> unseparableCharacterSequences,
+			List<Character> userDefinedSeparatingCharacters, Locale locale) throws Exception {
+		
+		List<Comment> comments = commentProvider.getComments(documentIdList);
+		
+		QueryResultRowArray result = new QueryResultRowArray();
+		
+		for (Comment comment : comments) {
+			
+			if (termList.size() == 1 && termList.get(0).equals("%")) {
+				result.add(new CommentQueryResultRow(queryId, comment));
+			}
+			else {
+				TermExtractor termExtractor = 
+					new TermExtractor(
+						comment.getBody(), unseparableCharacterSequences, userDefinedSeparatingCharacters, locale);
+				
+				List<String> commentTerms = termExtractor.getTermsInOrder();
+				
+				if (matches(commentTerms, termList)) {
+					result.add(new CommentQueryResultRow(queryId, comment));
+				}
+				else {
+					for (Reply reply : comment.getReplies()) {
+						TermExtractor replyTermExtractor = 
+								new TermExtractor(
+									reply.getBody(), 
+									unseparableCharacterSequences, 
+									userDefinedSeparatingCharacters, 
+									locale);
+						List<String> replyTerms = replyTermExtractor.getTermsInOrder();
+						if (matches(replyTerms, termList)) {
+							result.add(new CommentQueryResultRow(queryId, comment));
+							break;
+						}
+					}
+				}
+			}				
+		}
+		
+		
+		
+		return result;
+	}
+	
+	private boolean matches(List<String> commentTerms, List<String> termList) {
+		int startIdx = -1;
+		
+		String firstQueryTermRegEx = SQLWildcard2RegexConverter.convert(termList.get(0));
+		
+		for (int idx=0; idx<commentTerms.size(); idx++) {
+			if (commentTerms.get(idx).matches(firstQueryTermRegEx)) {
+				startIdx = idx;
+				break;
+			}
+		}
+		
+		if ((startIdx != -1)  
+				&& commentTerms.subList(startIdx, commentTerms.size()).size() >= termList.size()-1) {
+			
+			if (termList.size() > 1) {
+
+				List<String> remainingTerms = termList.subList(1, termList.size());
+				List<String> remainingCommentTerms = commentTerms.subList(startIdx+1, commentTerms.size());
+				
+				for (int i=0; i<remainingTerms.size(); i++) {
+					if (!remainingCommentTerms.get(i).matches(SQLWildcard2RegexConverter.convert(remainingTerms.get(i)))) {
+						return false;
+					}
+				}
+				
+				return true;
+			}
+			else {
+				return true;
+			}
+		}
+		else {
+			return false;
+		}
 	}
 
 }
