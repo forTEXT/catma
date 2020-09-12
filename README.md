@@ -2,7 +2,7 @@
 
 CATMA is a web based application for text annotation and analysis.
 
-It has two main components: an annotation component that allows the user to annotate text and an analysis component that supports pattern analysis of text and annotations in combination through a custom but easy query language and a data visualization facility based on [Vega] (https://vega.github.io/vega/). 
+It has two main components: an annotation component that allows the user to annotate text and an analysis component that supports pattern analysis of text and annotations in combination through a custom but easy query language and a data visualization facility based on [Vega](https://vega.github.io/vega/). 
 
 It also allows the project-centric management of text corpora, annotation collections, tagsets and team members. 
 
@@ -21,5 +21,3 @@ The CATMA war file can be build with
 CATMA is tested with the jetty servlet container. 
 
 Copy and configure the catma.properties file from the resource folder to the web app root folder.
-
-
