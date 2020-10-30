@@ -257,6 +257,7 @@ public class AnnotationPanel extends VerticalLayout {
 					final String tagId = tag.getUuid();
 					tagsetData.getChildren(parentItem)
 					.stream()
+					.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
 					.map(tagsetTreeItem -> (TagDataItem)tagsetTreeItem)
 					.filter(tagDataItem -> tagDataItem.getTag().getUuid().equals(tagId))
 					.findFirst()
