@@ -59,6 +59,7 @@ import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.dnd.FileDropTarget;
 import com.wcs.wcslib.vaadin.widget.multifileupload.component.MultiUpload;
 import com.wcs.wcslib.vaadin.widget.multifileupload.component.MultiUploadDropHandler;
@@ -298,6 +299,8 @@ class UploadStep extends VerticalLayout implements WizardStep {
 		}
 
 		UI.getCurrent().getPushConfiguration().setPushMode(originalPushMode);
+		Window window = upload.getUploadStatePanel().getWindow();
+		UI.getCurrent().removeWindow(window);
 		
 		super.detach();
 	}
