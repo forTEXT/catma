@@ -691,6 +691,7 @@ public class TaggerView extends HorizontalLayout
 		actionPanel.addComponent(btClearSearchHighlights);
 		
 		cbAutoShowComments = new IconButton(VaadinIcons.COMMENT);
+		cbAutoShowComments.setDescription("Toggle live Comments");
 		cbAutoShowComments.setData(true); //state
 		actionPanel.addComponent(cbAutoShowComments);
 		
@@ -1214,8 +1215,9 @@ public class TaggerView extends HorizontalLayout
 				
 				commentTopic.publish(
 					new CommentMessage(
-						project.getUser().getUserId(),
 						comment.getId(),
+						comment.getIid(),
+						project.getUser().getUserId(),
 						clientComment,
 						comment.getDocumentId(),
 						commentChangeEvent.getChangeType() == ChangeType.DELETED
@@ -1283,6 +1285,7 @@ public class TaggerView extends HorizontalLayout
 				commentTopic.publish(
 					new CommentMessage(
 						comment.getId(),
+						comment.getIid(),
 						project.getUser().getUserId(),
 						clientComment,
 						comment.getDocumentId(),

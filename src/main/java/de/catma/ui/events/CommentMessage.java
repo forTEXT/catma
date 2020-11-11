@@ -14,6 +14,7 @@ public class CommentMessage implements Serializable {
 	private static final long serialVersionUID = 4432309957370280636L;
 	
 	private final int commentId;
+	private final int commentIid;
 	private final ClientComment clientComment;
 	
 	private Integer replyId;
@@ -29,11 +30,13 @@ public class CommentMessage implements Serializable {
 
 	public CommentMessage(
 			int commentId, 
+			int commentIid,
 			Integer senderId, ClientComment clientComment, 
 			String sourceDocumentId, 
 			boolean deleted) {
 		super();
 		this.commentId = commentId;
+		this.commentIid = commentIid;
 		this.senderId = senderId;
 		this.clientComment = clientComment;
 		this.documentId = sourceDocumentId;
@@ -42,13 +45,14 @@ public class CommentMessage implements Serializable {
 	
 	public CommentMessage(
 			int commentId,
+			int commentIid,
 			Integer senderId,
 			ClientComment clientComment, 
 			String sourceDocumentId, 
 			boolean deleted,
 			int replyId,
 			ClientCommentReply clientCommentReply) {
-		this(commentId, senderId, clientComment, sourceDocumentId, deleted);
+		this(commentId, commentIid, senderId, clientComment, sourceDocumentId, deleted);
 		this.replyId = replyId;
 		this.clientCommentReply = clientCommentReply;
 	}
@@ -84,7 +88,8 @@ public class CommentMessage implements Serializable {
 				.map(tr -> new Range(tr.getStartPos(), tr.getEndPos()))
 				.collect(Collectors.toList()),
 			this.documentId,
-			this.commentId);
+			this.commentId,
+			this.commentIid);
 		
 		return comment;
 	}

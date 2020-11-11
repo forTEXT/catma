@@ -562,6 +562,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 					null, null, null, null);
 			
 			comment.setId(issue.getId());
+			comment.setIid(issue.getIid());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
@@ -592,6 +593,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 					
 					Comment comment = new SerializationHelper<Comment>().deserialize(description, Comment.class);
 					comment.setId(issue.getId());
+					comment.setIid(issue.getIid());
 					comment.setUserId(author.getId());
 					comment.setUsername(author.getName());
 					comment.setReplyCount(noteCount);
@@ -635,6 +637,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 					
 					Comment comment = new SerializationHelper<Comment>().deserialize(description, Comment.class);
 					comment.setId(issue.getId());
+					comment.setIid(issue.getIid());
 					comment.setUserId(author.getId());
 					comment.setUsername(author.getName());
 					comment.setReplyCount(noteCount);
@@ -665,12 +668,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 		
-			issuesApi.closeIssue(projectPath, comment.getId());
+			issuesApi.closeIssue(projectPath, comment.getIid());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
 				"Failed to remove Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getId(), resourceId, projectId),
+					comment.getUuid(), comment.getIid(), resourceId, projectId),
 				e);
 		}
 	}
@@ -694,7 +697,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			
 			issuesApi.updateIssue(
 					projectPath, 
-					comment.getId(),
+					comment.getIid(),
 					title, description, 
 					null, null, null, 
 					CATMA_COMMENT_LABEL, 
@@ -703,7 +706,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
 				"Failed to update Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getId(), resourceId, projectId), 
+					comment.getUuid(), comment.getIid(), resourceId, projectId), 
 				e);
 		}
 	}
@@ -718,14 +721,14 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	
 		try {
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
-			Note note = notesApi.createIssueNote(projectPath, comment.getId(), noteBody);
+			Note note = notesApi.createIssueNote(projectPath, comment.getIid(), noteBody);
 			reply.setId(note.getId());
 			comment.addReply(reply);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
 				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getId(), resourceId, projectId), 
+					comment.getUuid(), comment.getIid(), resourceId, projectId), 
 				e);
 		}
 		
@@ -742,12 +745,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		
 		try {
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
-			notesApi.updateIssueNote(projectPath, comment.getId(), reply.getId(), noteBody);
+			notesApi.updateIssueNote(projectPath, comment.getIid(), reply.getId(), noteBody);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
 				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getId(), resourceId, projectId), 
+					comment.getUuid(), comment.getIid(), resourceId, projectId), 
 				e);
 		}
 	}
@@ -762,13 +765,13 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		
 		
 		try {
-			notesApi.deleteIssueNote(projectPath, comment.getId(), reply.getId());
+			notesApi.deleteIssueNote(projectPath, comment.getIid(), reply.getId());
 			comment.removeReply(reply);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
 				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getId(), resourceId, projectId), 
+					comment.getUuid(), comment.getIid(), resourceId, projectId), 
 				e);
 		}
 		
@@ -784,7 +787,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		List<Reply> result = new ArrayList<Reply>();
 		try {
 			
-			List<Note> notes = notesApi.getIssueNotes(projectPath, comment.getId());
+			List<Note> notes = notesApi.getIssueNotes(projectPath, comment.getIid());
 			
 			for (Note note : notes.stream().filter(n -> !n.getSystem()).collect(Collectors.toList())) { // filter system notes
 				String noteBody = note.getBody();
@@ -816,7 +819,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		} catch (GitLabApiException e) {
 			throw new IOException(String.format(
 					"Failed to retrieve Replies for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-						comment.getUuid(), comment.getId(), resourceId, projectId), 
+						comment.getUuid(), comment.getIid(), resourceId, projectId), 
 					e);
 		}
 	}

@@ -16,14 +16,15 @@ public class Comment {
 	private transient String username;
 	private transient Integer userId;
 	private transient Integer id;
+	private transient Integer iid;
 	private transient int replyCount;
 	private transient List<Reply> replies = new ArrayList<Reply>();
 
 	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId) {
-		this(uuid, username, userId, body, ranges, documentId, null);
+		this(uuid, username, userId, body, ranges, documentId, null, null);
 	}
 
-	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId, Integer id) {
+	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId, Integer id, Integer iid) {
 		super();
 		this.uuid = uuid;
 		this.username = username;
@@ -32,6 +33,7 @@ public class Comment {
 		this.ranges = ranges;
 		this.documentId = documentId;
 		this.id = id;
+		this.iid = iid;
 	}
 	
 	public Comment(Comment comment, int base) {
@@ -42,7 +44,8 @@ public class Comment {
 				.map(range -> new Range(range.getStartPoint()+base, range.getEndPoint()+base))
 				.collect(Collectors.toList()),
 			comment.documentId,
-			comment.id);
+			comment.id,
+			comment.iid);
 		this.replyCount = comment.replyCount;
 	}
 
@@ -70,6 +73,10 @@ public class Comment {
 		return id;
 	}
 	
+	public Integer getIid() {
+		return iid;
+	}
+	
 	public String getUuid() {
 		return uuid;
 	}
@@ -88,6 +95,10 @@ public class Comment {
 	
 	public void setId(Integer id) {
 		this.id = id;
+	}
+	
+	public void setIid(Integer iid) {
+		this.iid = iid;
 	}
 	
 	@Override
