@@ -72,7 +72,7 @@ public class TaggerManagerView extends TabbedView {
 			if (taggerView.getSourceDocument() == null) {
 				taggerView.setSourceDocument(sourceDocument, afterDocumentLoadedOperation);
 			}
-			else {
+			else if (afterDocumentLoadedOperation != null) {
 				afterDocumentLoadedOperation.afterDocumentLoaded(taggerView);
 			}
 		}
