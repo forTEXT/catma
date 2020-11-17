@@ -57,6 +57,8 @@ public class VTagger extends Composite {
 	private TaggerListener taggerListener;
 
 	private CommentPanel commentPanel;
+
+	private FlowPanel taggerPanel;
 	
 	/**
 	 * The constructor should first call super() to initialize the component and
@@ -128,9 +130,9 @@ public class VTagger extends Composite {
 			}
 		});
 
-		FlowPanel panel = new FlowPanel();
-		panel.addStyleName("v-tagger-panel");
-		panel.add(taggerEditor);
+		taggerPanel = new FlowPanel();
+		taggerPanel.addStyleName("v-tagger-panel");
+		taggerPanel.add(taggerEditor);
 		
 		this.commentPanel = new CommentPanel(new CommentPanelListener() {
 			
@@ -177,9 +179,9 @@ public class VTagger extends Composite {
 			}
 		});
 		
-		panel.add(commentPanel);
+		taggerPanel.add(commentPanel);
 		
-		initWidget(panel);
+		initWidget(taggerPanel);
 	}
 	
 	public void logToServer(String logMsg) {
@@ -201,10 +203,13 @@ public class VTagger extends Composite {
 			@Override
 			public void run() {
 				taggerEditor.setHTML(new HTML(page), lineCount);
+				taggerPanel.remove(commentPanel); // removing the panel before setting the lines increases the performance
 				commentPanel.setLines(taggerEditor.getLines());
 				for (ClientComment comment : comments) {
 					addComment(comment);
 				}
+				
+				taggerPanel.add(commentPanel);
 			}
 		};
 		
