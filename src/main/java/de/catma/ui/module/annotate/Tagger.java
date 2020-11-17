@@ -133,6 +133,10 @@ public class Tagger extends AbstractComponent {
 		
 		@Override
 		public void addComment(String textRanges, int x, int y) {
+			if (textRanges.isEmpty()) {
+				return;
+			}
+
 			Page currentPage = pager.getCurrentPage();
 			
 			String[] relativeTextRangeSegments = textRanges.split(",");
