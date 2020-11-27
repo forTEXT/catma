@@ -228,7 +228,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
         				if (t != null) {
         					String name = t.getName();
         					if (name != null) {
-        						return name.toLowerCase().startsWith(searchInput.toLowerCase());
+        						return name.toLowerCase().contains(searchInput.toLowerCase());
         					}
         				}
         				return false;

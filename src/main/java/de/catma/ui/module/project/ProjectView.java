@@ -363,7 +363,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		"Import a Collection", 
         		mi -> handleImportCollectionRequest());
         MenuItem miExportCollections = documentsGridMoreOptionsContextMenu.addItem(
-        		"Export Collections");
+        		"Export Documents & Collections");
         
 		StreamResource collectionXmlExportResource = new StreamResource(
 				new CollectionXMLExportStreamSource(
@@ -472,7 +472,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         				if (t != null) {
 	        				String name = t.getName();
 	        				if (name != null) {
-	        					return name.toLowerCase().startsWith(searchInput.toLowerCase());
+	        					return name.toLowerCase().contains(searchInput.toLowerCase());
 	        				}
         				}
         				return false;
@@ -2133,17 +2133,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			@Override
 			public boolean test(Object r) {
 				if (r instanceof CollectionResource) {
-					return r.toString().toLowerCase().startsWith(searchInput.toLowerCase());
+					return r.toString().toLowerCase().contains(searchInput.toLowerCase());
 				}
 				else {
-					if (r.toString().toLowerCase().startsWith(searchInput.toLowerCase())) {
+					if (r.toString().toLowerCase().contains(searchInput.toLowerCase())) {
 						return true;
 					}
 					else {
 						return documentData.getChildren((Resource)r)
 								.stream()
 								.filter(child -> 
-									child.toString().toLowerCase().startsWith(searchInput.toLowerCase()))
+									child.toString().toLowerCase().contains(searchInput.toLowerCase()))
 								.findAny()
 								.isPresent();
 					}

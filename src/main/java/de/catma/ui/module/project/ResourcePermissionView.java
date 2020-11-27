@@ -118,7 +118,7 @@ public class ResourcePermissionView extends Window {
 						@Override
 						public boolean test(Resource t) {
 							if (t != null) {
-								if (t.getName().toLowerCase().startsWith(searchInput)) {
+								if (t.getName().toLowerCase().contains(searchInput)) {
 									return true;
 								}
 								List<Resource> children = 

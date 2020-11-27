@@ -492,7 +492,7 @@ public class AnnotationPanel extends VerticalLayout {
 					private boolean testTagsetTreeItem(TagsetTreeItem t) {
 						String strValue = t.toString();
 						
-						if (strValue != null && strValue.toLowerCase().startsWith(searchInput.toLowerCase())) {
+						if (strValue != null && strValue.toLowerCase().contains(searchInput.toLowerCase())) {
 							return true;
 						}
 

@@ -32,7 +32,7 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
 		@Override
 		public boolean test(Object arg) {
 			if (arg != null) {
-				return arg.toString().toLowerCase().startsWith(filterValue);
+				return arg.toString().toLowerCase().contains(filterValue);
 			}
 			return false;
 		}
@@ -56,7 +56,7 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
 		@Override
 		public boolean test(Object arg) {
 			if (arg != null) {
-				if (arg.toString().toLowerCase().startsWith(filterValue)) {
+				if (arg.toString().toLowerCase().contains(filterValue)) {
 					return true;
 				}
 				Set<Object> children = 
