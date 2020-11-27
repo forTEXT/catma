@@ -578,7 +578,17 @@ public class GitProjectHandler {
 					if ((resourceRole != null) && hasPermission(resourceRole, RBACPermission.COLLECTION_READ)) {
 						try {
 							collections.add(
-								gitMarkupCollectionHandler.getCollection(projectId, collectionId, tagLibrary, progressListener));
+								gitMarkupCollectionHandler.getCollection(
+										projectId, 
+										collectionId, 
+										tagLibrary, 
+										progressListener,
+										hasPermission(resourceRole, RBACPermission.COLLECTION_WRITE),
+										(tagsetId) -> {
+											RBACRole tagsetResourceRole = rolesPerResource.get(tagsetId);
+											return ((tagsetResourceRole != null) 
+												&& hasPermission(tagsetResourceRole, RBACPermission.TAGSET_READ));
+										}));
 						} catch (Exception e) {
 							logger.log(
 							Level.SEVERE, 

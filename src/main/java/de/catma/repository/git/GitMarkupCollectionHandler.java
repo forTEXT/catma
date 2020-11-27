@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.MergeResult;
@@ -36,6 +36,7 @@ import de.catma.document.source.ContentInfoSet;
 import de.catma.project.conflict.AnnotationConflict;
 import de.catma.project.conflict.CollectionConflict;
 import de.catma.properties.CATMAPropertyKey;
+import de.catma.rbac.RBACRole;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -320,7 +321,9 @@ public class GitMarkupCollectionHandler {
 	}
 	
 	public AnnotationCollection getCollection(
-			String projectId, String collectionId, TagLibrary tagLibrary, ProgressListener progressListener)
+			String projectId, String collectionId, TagLibrary tagLibrary, ProgressListener progressListener,
+			boolean hasWritePermission,
+			Function<String, Boolean> hasTagsetIdReadPermissionGetter)
 			throws Exception {
 		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -376,12 +379,15 @@ public class GitMarkupCollectionHandler {
 			while (tagReferenceIterator.hasNext()) {
 				TagReference tagReference = tagReferenceIterator.next();
 				if (!orphanAnnotationIds.contains(tagReference.getTagInstanceId())) {
+					String tagsetId = tagReference.getTagInstance().getTagsetId();
+					
+					boolean readPermission = hasTagsetIdReadPermissionGetter.apply(tagsetId);
+					
 					TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
-							tagReference.getTagInstance().getTagsetId());
+							tagsetId);
 					
 					String tagId = tagReference.getTagDefinitionId();
-					
-					if (tagset == null || tagset.isDeleted(tagId)) {
+					if (readPermission && (tagset == null || tagset.isDeleted(tagId))) {
 						// Tag/Tagset has been deleted, we remove the stale Annotation as well
 						orphanAnnotationIds.add(tagReference.getTagInstanceId());
 						tagReferenceIterator.remove();
@@ -394,30 +400,35 @@ public class GitMarkupCollectionHandler {
 					}
 				}
 			}
-			removeTagInstances(projectId, collectionId, orphanAnnotationIds);
-			
-			//handle orphan Properties
-			for (TagInstance tagInstance : tagInstances.keySet()) {
-				TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
-						tagInstance.getTagsetId());
-				Collection<Property> properties = tagInstance.getUserDefinedProperties();
-				for (Property property : new HashSet<>(properties)) {
-					// deleted property?
-					if (tagset.isDeleted(property.getPropertyDefinitionId())) {
-						// yes, we remove the stale property
-						tagInstance.removeUserDefinedProperty(property.getPropertyDefinitionId());
-						// and save the change
-						JsonLdWebAnnotation annotation = 
-								new JsonLdWebAnnotation(
-									CATMAPropertyKey.GitLabServerUrl.getValue(), 
-									projectId, 
-									tagInstances.get(tagInstance),
-									tagLibrary);
-						createTagInstance(projectId, collectionId, annotation);
-					}
-				}
+			if (hasWritePermission) {
+				removeTagInstances(projectId, collectionId, orphanAnnotationIds);
 			}
 			
+			//handle orphan Properties
+			if (hasWritePermission) {
+				for (TagInstance tagInstance : tagInstances.keySet()) {
+					TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
+							tagInstance.getTagsetId());
+					if (tagset != null) {
+						Collection<Property> properties = tagInstance.getUserDefinedProperties();
+						for (Property property : new HashSet<>(properties)) {
+							// deleted property?
+							if (tagset.isDeleted(property.getPropertyDefinitionId())) {
+								// yes, we remove the stale property
+								tagInstance.removeUserDefinedProperty(property.getPropertyDefinitionId());
+								// and save the change
+								JsonLdWebAnnotation annotation = 
+										new JsonLdWebAnnotation(
+											CATMAPropertyKey.GitLabServerUrl.getValue(), 
+											projectId, 
+											tagInstances.get(tagInstance),
+											tagLibrary);
+								createTagInstance(projectId, collectionId, annotation);
+							}
+						}
+					}
+				}
+			}			
 
 
 			AnnotationCollection userMarkupCollection = new AnnotationCollection(
