@@ -1731,13 +1731,17 @@ public class GitProjectHandler {
 				localGitRepoManager.detach();
 				
 				for (AnnotationCollectionReference collectionRef : collectionRefs) {
-					if (verifiedDeleted.contains(collectionRef.getSourceDocumentId())) {
-						logger.info(String.format(
-							"Removing stale Collection %1$s with ID %2$s due to removal of corresp. Document with ID %3$s",
-							collectionRef.getName(), 
-							collectionRef.getId(),
-							collectionRef.getSourceDocumentId()));
-						removeCollection(collectionRef);
+					String collectionId = collectionRef.getId();
+					RBACRole collectionRole = rolesPerResource.get(collectionId);
+					if (collectionRole != null && hasPermission(collectionRole, RBACPermission.COLLECTION_DELETE_OR_EDIT)) {
+						if (verifiedDeleted.contains(collectionRef.getSourceDocumentId())) {
+							logger.info(String.format(
+								"Removing stale Collection %1$s with ID %2$s due to removal of corresp. Document with ID %3$s",
+								collectionRef.getName(), 
+								collectionRef.getId(),
+								collectionRef.getSourceDocumentId()));
+							removeCollection(collectionRef);
+						}
 					}
 				}
 				
