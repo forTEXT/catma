@@ -204,8 +204,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 
 		try {
-			Group group = groupApi.getGroup(path);
-			List<Project> projects = group.getProjects();
+			List<Project> projects = groupApi.getProjects(path);
 			return projects.stream().map(Project::getName).collect(Collectors.toList());
 		}
 		catch (GitLabApiException e) {
