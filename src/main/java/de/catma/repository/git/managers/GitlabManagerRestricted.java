@@ -620,16 +620,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		try {
 			List<Comment> result = new ArrayList<Comment>();
 			
-			IssuesExtApi issuesApi = new IssuesExtApi(restrictedGitLabApi);
+			IssuesApi issuesApi = new IssuesApi(restrictedGitLabApi);
 			String projectPath = projectId;
-			IssuesPager<Issue> issuePager = 
+			List<Issue> issues =
 				issuesApi.getGroupIssues(projectPath, 
 						new IssueFilter()
 							.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
 							.withState(IssueState.OPENED));
 			
 			
-			for (Issue issue : issuePager.all()) {
+			for (Issue issue : issues) {
 				String description = issue.getDescription();
 				int noteCount = issue.getUserNotesCount();
 				try {
