@@ -486,7 +486,19 @@ $v-focus-color: #5A98A1;
 			text-align: end;
 			padding-right: 10px;
 		}
-        
+
+		.not-logged-in-main-view-noticepanel {
+			margin-top: 60px;
+
+			.vlayout {
+				text-align: center;
+			}
+
+			.title {
+				font-size: larger;
+			}
+		}
+
       /* signup */
         .g-recaptcha-response {
     		display: none !important;
@@ -657,6 +669,10 @@ $v-focus-color: #5A98A1;
             border: none; 
     		box-shadow: none;
         }
+
+		.button__label[disabled], .button__label[disabled]:hover {
+			background-color: #808080;
+		}
 
         .hugecard {
     	  background-color: white;

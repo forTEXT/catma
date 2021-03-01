@@ -8,6 +8,7 @@ import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.UI;
 
 import de.catma.hazelcast.HazelCastService;
@@ -85,6 +86,12 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		privacyLink.setTargetName("_blank");
 		menuLayout.addComponent(privacyLink);
 
+		Link statusLink = new Link("Status",
+				new ExternalResource(CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())));
+		statusLink.setTargetName("_blank");
+		statusLink.setIcon(VaadinIcons.WARNING);
+		menuLayout.addComponent(statusLink);
+
 		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE, click -> {
 			if (uiHelpWindow.getParent() == null) {
 				UI.getCurrent().addWindow(uiHelpWindow);
@@ -100,9 +107,32 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		contentPanel.addStyleName("home__content"); //$NON-NLS-1$
 	
 		ThemeResource logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$	
-		contentPanel.addComponent(new Image(null,logoResource));		
-		
+		contentPanel.addComponent(new Image(null,logoResource));
+
+		Label loginIssueTitle = new Label(
+				VaadinIcons.WARNING.getHtml() + " There is currently an issue affecting non-Google sign ups and logins!",
+				ContentMode.HTML
+		);
+		loginIssueTitle.addStyleName("title");
+
+		Label loginIssueHelpText = new Label(
+				"See the <a href=\""
+						+ CATMAPropertyKey.LoginWorkaroundURL.getValue(CATMAPropertyKey.LoginWorkaroundURL.getDefaultValue())
+						+ "\" target=\"_blank\">workaround for logging in</a> and the <a href=\""
+						+ CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())
+						+ "\" target=\"_blank\">status page</a> for more information", ContentMode.HTML);
+
+		VerticalLayout noticePanelVerticalLayout = new VerticalLayout(loginIssueTitle, loginIssueHelpText);
+		noticePanelVerticalLayout.addStyleName("vlayout");
+
+		HorizontalFlexLayout noticePanel = new HorizontalFlexLayout(noticePanelVerticalLayout);
+		noticePanel.addStyleName("not-logged-in-main-view-noticepanel");
+		noticePanel.setJustifyContent(JustifyContent.CENTER);
+		contentPanel.addComponent(noticePanel);
+
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
+		btn_signup.setEnabled(false);
+
 		LabelButton btn_login = new LabelButton("Sign in", event -> new AuthenticationDialog(
 				"Sign in",
 				CATMAPropertyKey.BaseURL.getValue(

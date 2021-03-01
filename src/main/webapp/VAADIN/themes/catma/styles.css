@@ -17948,6 +17948,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 10px;
 }
 
+.catma .not-logged-in-main-view-noticepanel {
+	margin-top: 60px;
+}
+
+.catma .not-logged-in-main-view-noticepanel .vlayout {
+	text-align: center;
+}
+
+.catma .not-logged-in-main-view-noticepanel .title {
+	font-size: larger;
+}
+
 .catma .g-recaptcha-response {
 	display: none !important;
 }
@@ -18113,6 +18125,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .button__label:focus:after, .catma .button__icon:after {
 	border: none;
 	box-shadow: none;
+}
+
+.catma .button__label[disabled], .catma .button__label[disabled]:hover {
+	background-color: #808080;
 }
 
 .catma .hugecard {
