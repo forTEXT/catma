@@ -110,7 +110,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		contentPanel.addComponent(new Image(null,logoResource));
 
 		Label loginIssueTitle = new Label(
-				VaadinIcons.WARNING.getHtml() + " There is currently an issue affecting non-Google sign ups and logins!",
+				VaadinIcons.WARNING.getHtml() + " There is currently an issue affecting non-Google logins!",
 				ContentMode.HTML
 		);
 		loginIssueTitle.addStyleName("title");
@@ -131,7 +131,6 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		contentPanel.addComponent(noticePanel);
 
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
-		btn_signup.setEnabled(false);
 
 		LabelButton btn_login = new LabelButton("Sign in", event -> new AuthenticationDialog(
 				"Sign in",
