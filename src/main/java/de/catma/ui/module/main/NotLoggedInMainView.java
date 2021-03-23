@@ -89,7 +89,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		Link statusLink = new Link("Status",
 				new ExternalResource(CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())));
 		statusLink.setTargetName("_blank");
-		statusLink.setIcon(VaadinIcons.WARNING);
+//		statusLink.setIcon(VaadinIcons.WARNING);
 		menuLayout.addComponent(statusLink);
 
 		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE, click -> {
@@ -109,26 +109,26 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		ThemeResource logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$	
 		contentPanel.addComponent(new Image(null,logoResource));
 
-		Label loginIssueTitle = new Label(
-				VaadinIcons.WARNING.getHtml() + " There is currently an issue affecting non-Google logins!",
-				ContentMode.HTML
-		);
-		loginIssueTitle.addStyleName("title");
-
-		Label loginIssueHelpText = new Label(
-				"See the <a href=\""
-						+ CATMAPropertyKey.LoginWorkaroundURL.getValue(CATMAPropertyKey.LoginWorkaroundURL.getDefaultValue())
-						+ "\" target=\"_blank\">workaround for logging in</a> and the <a href=\""
-						+ CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())
-						+ "\" target=\"_blank\">status page</a> for more information", ContentMode.HTML);
-
-		VerticalLayout noticePanelVerticalLayout = new VerticalLayout(loginIssueTitle, loginIssueHelpText);
-		noticePanelVerticalLayout.addStyleName("vlayout");
-
-		HorizontalFlexLayout noticePanel = new HorizontalFlexLayout(noticePanelVerticalLayout);
-		noticePanel.addStyleName("not-logged-in-main-view-noticepanel");
-		noticePanel.setJustifyContent(JustifyContent.CENTER);
-		contentPanel.addComponent(noticePanel);
+//		Label issueTitle = new Label(
+//				VaadinIcons.WARNING.getHtml() + " <issue description>",
+//				ContentMode.HTML
+//		);
+//		issueTitle.addStyleName("title");
+//
+//		Label issueHelpText = new Label(
+//				"See the <a href=\""
+//						+ CATMAPropertyKey.SomeProp.getValue(CATMAPropertyKey.SomeProp.getDefaultValue())
+//						+ "\" target=\"_blank\">link text</a> and the <a href=\""
+//						+ CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())
+//						+ "\" target=\"_blank\">status page</a> for more information", ContentMode.HTML);
+//
+//		VerticalLayout noticePanelVerticalLayout = new VerticalLayout(issueTitle, issueHelpText);
+//		noticePanelVerticalLayout.addStyleName("vlayout");
+//
+//		HorizontalFlexLayout noticePanel = new HorizontalFlexLayout(noticePanelVerticalLayout);
+//		noticePanel.addStyleName("not-logged-in-main-view-noticepanel");
+//		noticePanel.setJustifyContent(JustifyContent.CENTER);
+//		contentPanel.addComponent(noticePanel);
 
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
 

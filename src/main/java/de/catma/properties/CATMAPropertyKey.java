@@ -42,8 +42,7 @@ public enum CATMAPropertyKey {
 	PrivacyStatementURL("https://catma.de/documentation/privacy-policy/"),
 	ImprintURL("https://catma.de/about/imprint/"),
 	StatusURL("https://catma.de/status/"),
-	LoginWorkaroundURL("https://catma.de/status/workaround-for-the-current-login-issue/"),
-	
+
 	Google_oauthAuthorizationCodeRequestURL,
 	Google_oauthAccessTokenRequestURL,
 	Google_oauthClientId,
