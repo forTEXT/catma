@@ -71,7 +71,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		aboutLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(aboutLink);
 
-		Link termsOfUseLink = new Link("Terms of use",
+		Link termsOfUseLink = new Link("Terms of Use",
 				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue())));
 		termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(termsOfUseLink);
@@ -81,7 +81,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		imprintLink.setTargetName("_blank"); 
 		menuLayout.addComponent(imprintLink);
 
-		Link privacyLink = new Link("Privacy Statement",
+		Link privacyLink = new Link("Privacy Policy",
 				new ExternalResource(CATMAPropertyKey.PrivacyStatementURL.getValue(CATMAPropertyKey.PrivacyStatementURL.getDefaultValue()))); 
 		privacyLink.setTargetName("_blank");
 		menuLayout.addComponent(privacyLink);
