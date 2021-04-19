@@ -182,7 +182,8 @@
         <dependency>
             <groupId>org.gitlab4j</groupId>
             <artifactId>gitlab4j-api</artifactId>
-            <version>4.15.7</version>
+			<!-- https://github.com/forTEXT/gitlab4j-api/commit/f74be4b6c6b5e51ed0d5838a7955472366496dd9 -->
+			<version>4.17.0-SNAPSHOT</version>
         </dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>

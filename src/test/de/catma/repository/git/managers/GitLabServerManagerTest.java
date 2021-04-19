@@ -29,7 +29,7 @@ import com.google.common.collect.Maps;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
-import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
+import de.catma.repository.git.managers.gitlab4j_api_custom.models.PersonalAccessToken;
 import de.catma.user.UserProperty;
 import helpers.Randomizer;
 import helpers.UserIdentification;
@@ -140,7 +140,7 @@ public class GitLabServerManagerTest {
 
 		// assert that the user has the expected impersonation token
 		CustomUserApi customUserApi = new CustomUserApi(this.serverManager.getAdminGitLabApi());
-		List<ImpersonationToken> impersonationTokens = customUserApi.getImpersonationTokens(
+		List<PersonalAccessToken> impersonationTokens = customUserApi.getImpersonationTokens(
 			this.serverManager.getGitLabUser().getId(), null
 		);
 

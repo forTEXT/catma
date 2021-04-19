@@ -20,8 +20,8 @@ import org.gitlab4j.api.NotificationSettingsApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.CustomAttribute;
 import org.gitlab4j.api.models.Identity;
-import org.gitlab4j.api.models.ImpersonationToken;
-import org.gitlab4j.api.models.ImpersonationToken.Scope;
+import org.gitlab4j.api.models.PersonalAccessToken;
+import org.gitlab4j.api.models.PersonalAccessToken.Scope;
 import org.gitlab4j.api.models.NotificationSettings;
 import org.gitlab4j.api.models.User;
 
@@ -59,12 +59,12 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		UserApi customUserApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
-			List<ImpersonationToken> impersonationTokens = customUserApi.getImpersonationTokens(
+			List<PersonalAccessToken> impersonationTokens = customUserApi.getImpersonationTokens(
 				user.getId(), ImpersonationState.ACTIVE
 			);
 
 			// revoke the default token if it exists actively
-			for (ImpersonationToken token : impersonationTokens) {
+			for (PersonalAccessToken token : impersonationTokens) {
 				if (token.getName().equals(GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
 					privilegedGitLabApi.getUserApi().revokeImpersonationToken(user.getId(), token.getId());
 					break;
@@ -166,7 +166,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
-			ImpersonationToken impersonationToken = userApi.createImpersonationToken(
+			PersonalAccessToken impersonationToken = userApi.createImpersonationToken(
 				userId, tokenName, null, new Scope[] {Scope.API}
 			);
 			return impersonationToken.getToken();

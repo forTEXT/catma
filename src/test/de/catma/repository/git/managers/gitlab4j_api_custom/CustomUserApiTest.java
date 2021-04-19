@@ -1,7 +1,7 @@
 package de.catma.repository.git.managers.gitlab4j_api_custom;
 
 import de.catma.repository.git.managers.GitLabServerManagerTest;
-import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
+import de.catma.repository.git.managers.gitlab4j_api_custom.models.PersonalAccessToken;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.User;
@@ -65,7 +65,7 @@ public class CustomUserApiTest {
 		this.usersToDeleteOnTearDown.add(user.getId());
 
 		// create an impersonation token for the user
-		ImpersonationToken impersonationToken = this.customUserApi.createImpersonationToken(
+		PersonalAccessToken impersonationToken = this.customUserApi.createImpersonationToken(
 			user.getId(), "test-token", null, null
 		);
 
@@ -80,7 +80,7 @@ public class CustomUserApiTest {
 		assert impersonationToken.createdAt.length() > 0;
 		assertNull(impersonationToken.expiresAt);
 
-		List<ImpersonationToken> impersonationTokens = this.customUserApi.getImpersonationTokens(
+		List<PersonalAccessToken> impersonationTokens = this.customUserApi.getImpersonationTokens(
 			user.getId(), null
 		);
 
@@ -104,7 +104,7 @@ public class CustomUserApiTest {
 		cal.add(Calendar.DATE, 1);
 		Date expiryDate = cal.getTime();
 
-		ImpersonationToken impersonationToken = this.customUserApi.createImpersonationToken(
+		PersonalAccessToken impersonationToken = this.customUserApi.createImpersonationToken(
 			user.getId(), "test-token", expiryDate, new String[] {"api", "read_user"}
 		);
 
@@ -123,7 +123,7 @@ public class CustomUserApiTest {
 
 		assertEquals(expectedIsoFormattedExpiryDate, impersonationToken.expiresAt);
 
-		List<ImpersonationToken> impersonationTokens = this.customUserApi.getImpersonationTokens(
+		List<PersonalAccessToken> impersonationTokens = this.customUserApi.getImpersonationTokens(
 			user.getId(), null
 		);
 
