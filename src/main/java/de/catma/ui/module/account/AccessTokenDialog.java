@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class AccessTokenDialog extends Window {
 
-	private AccessTokenData accessTokenData = new AccessTokenData();
+	private final AccessTokenData accessTokenData = new AccessTokenData();
 
 	private final Binder<AccessTokenData> binder = new Binder<>();
 	private final IRemoteGitManagerPrivileged gitManagerPrivileged ;
@@ -31,6 +31,7 @@ public class AccessTokenDialog extends Window {
 
 	private Button btnClose;
 	private Button btnCreatePersonalAccessToken;
+	private HorizontalLayout tokenPanel;
 
 	public AccessTokenDialog(IRemoteGitManagerPrivileged gitManagerPrivileged,
                              LoginService loginService) {
@@ -39,7 +40,7 @@ public class AccessTokenDialog extends Window {
 		User user = Objects.requireNonNull(loginService.getAPI()).getUser();
 		this.userId = user.getUserId();
 	
-		this.setCaption("Get a Personal Access Token for GitLab");
+		this.setCaption("Create a Personal Access Token");
 		initComponents();
 		initActions();
 	}
@@ -76,6 +77,7 @@ public class AccessTokenDialog extends Window {
 						)
 				);
 				binder.readBean(accessTokenData);
+				tokenPanel.setVisible(true);
 
 			} catch (IOException e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't create personal access token", e);
@@ -86,28 +88,39 @@ public class AccessTokenDialog extends Window {
 
 
 	private void initComponents(){
-		setWidth("40%");
-		setHeight("80%");
+		setWidth("60%");
 		setModal(true);
 		
 		VerticalLayout content = new VerticalLayout();
-		content.setSizeFull();
+		content.setWidthFull();
 		
-		Label lDescription = new Label("Information about PATs - what are they and their purpose, how they can be managed, security", ContentMode.TEXT);
+		Label lDescription = new Label("A Personal Access Token allows you to give an external system read-only access to your CATMA data for a limited time.<br/><br/>"
+				+ "Personal Access Tokens are similar to your password, and should be handled with the same amount of care. "
+				+ "<strong>Keep created tokens secret and only share them with systems that you know and trust!</strong><br/><br/>"
+				+ "Some additional pointers:<br/>"
+				+ "<ul><li>Give your token a name that allows you, or our support team, to easily identify it later. For example: the name of the external system it is for</li>"
+				+ "<li>The token is valid for one month by default, up to a maximum of three months</li>"
+				+ "<li>The token is displayed only once - if you forget to copy it, you'll have to create a new one</li>"
+				+ "<li>The external system will have read-only access to <em>all</em> of your projects, as well as projects that you have joined"
+				+ "<li>For expert users: you can also manage your tokens directly by logging in to our GitLab backend</li></ul>"
+				, ContentMode.HTML
+		);
+		lDescription.addStyleName("label-with-word-wrap");
 		
-		TextField tfName = new TextField("Name (allowing you to identify this token within GitLab later, if necessary)");
+		TextField tfName = new TextField("Token Name");
 		tfName.setWidth("100%");
 
-		DateField dfDate = new DateField("Expires at (defaults to one month from now)");
+		DateField dfDate = new DateField("Expires at");
 		dfDate.setWidth("100%");
 		dfDate.setValue(LocalDate.now().plusMonths(1));
 
 		binder.forField(tfName)
-				.asRequired()
+				.asRequired("Token name is required")
 				.bind(AccessTokenData::getName, AccessTokenData::setName);
 		binder.forField(dfDate)
-				.asRequired()
+				.asRequired("Expiry date is required")
 				.withValidator(date -> date.compareTo(LocalDate.now()) > 0, "The expiry date must be in the future")
+				.withValidator(date -> date.compareTo(LocalDate.now().plusMonths(3)) <= 0, "The max. expiry date is three months from today")
 				.bind(AccessTokenData::getExpiresAt, AccessTokenData::setExpiresAt);
 
 		HorizontalLayout createButtonPanel = new HorizontalLayout();
@@ -117,8 +130,9 @@ public class AccessTokenDialog extends Window {
 		createButtonPanel.addComponent(btnCreatePersonalAccessToken);
 		createButtonPanel.setComponentAlignment(btnCreatePersonalAccessToken, Alignment.MIDDLE_CENTER);
 
-		HorizontalLayout tokenPanel = new HorizontalLayout();
+		tokenPanel = new HorizontalLayout();
 		tokenPanel.setWidth("100%");
+		tokenPanel.setVisible(false); // made visible when create button is clicked
 
 		TextField tfToken = new TextField("Personal Access Token");
 		tfToken.setWidth("100%");
@@ -127,6 +141,7 @@ public class AccessTokenDialog extends Window {
 		binder.bind(tfToken, AccessTokenData::getToken, AccessTokenData::setToken);
 
 		JSClipboardButton jsClipboardButton = new JSClipboardButton(tfToken, VaadinIcons.CLIPBOARD_TEXT);
+		jsClipboardButton.setDescription("Copy to clipboard");
 		jsClipboardButton.addSuccessListener((JSClipboard.SuccessListener) () -> Notification.show("Copy to clipboard successful"));
 
 		tokenPanel.addComponent(tfToken);
@@ -135,12 +150,12 @@ public class AccessTokenDialog extends Window {
 		tokenPanel.setComponentAlignment(jsClipboardButton, Alignment.BOTTOM_RIGHT);
 		tokenPanel.setExpandRatio(tfToken, 1f);
 
-		HorizontalLayout closeButtonPanel = new HorizontalLayout();
-		closeButtonPanel.setWidth("100%");
+		HorizontalLayout dialogButtonPanel = new HorizontalLayout();
+		dialogButtonPanel.setWidth("100%");
 
 		btnClose = new Button("Close");
-		closeButtonPanel.addComponent(btnClose);
-		closeButtonPanel.setComponentAlignment(btnClose, Alignment.BOTTOM_RIGHT);
+		dialogButtonPanel.addComponent(btnClose);
+		dialogButtonPanel.setComponentAlignment(btnClose, Alignment.BOTTOM_RIGHT);
 
 		content.addComponent(lDescription);
 		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
@@ -149,9 +164,9 @@ public class AccessTokenDialog extends Window {
 		content.addComponent(createButtonPanel);
 		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
 		content.addComponent(tokenPanel);
-		content.setExpandRatio(tokenPanel, 1f);
+		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
 
-		content.addComponent(closeButtonPanel);
+		content.addComponent(dialogButtonPanel);
 
 		setContent(content);
 
