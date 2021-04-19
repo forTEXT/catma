@@ -2,9 +2,12 @@ package de.catma.repository.git.managers;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -95,6 +98,25 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		Pair<GitUser, String> retVal = new Pair<>(new GitUser(user), impersonationToken);
 
 		return retVal;
+	}
+
+	@Override
+	public String createPersonalAccessToken(int userId, String tokenName, LocalDate expiresAt) throws IOException {
+		UserApi userApi = this.privilegedGitLabApi.getUserApi();
+
+		try {
+			PersonalAccessToken personalAccessToken = userApi.createPersonalAccessToken(
+					userId,
+					tokenName,
+					Date.from(expiresAt.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+					new Scope[] {Scope.READ_API}
+			);
+			logger.info(String.format("Created personal access token for user with ID %1$s.", userId));
+			return personalAccessToken.getToken();
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to create personal access token", e);
+		}
 	}
 	
 	@Override
