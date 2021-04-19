@@ -2,7 +2,8 @@
   <configuration default="false" name="Jetty 9.4.32.v20200930 [Dev GitLab]" type="JettyConfiguration" factoryName="Local" APPLICATION_SERVER_NAME="Jetty 9.4.32.v20200930" ALTERNATIVE_JRE_ENABLED="false">
     <option name="OPEN_IN_BROWSER_URL" value="http://apptest2.catma.de:8080/catma/" />
     <option name="COMMON_VM_ARGUMENTS" value="-Dprop=catma_local-dev.properties" />
-    <option name="UPDATING_POLICY" value="restart-server" />
+    <option name="SHOW_DIALOG_ON_UPDATE" value="false" />
+    <option name="UPDATING_POLICY" value="redeploy-artifacts" />
     <deployment>
       <artifact name="catma:war exploded">
         <settings DEPLOYMENT_METHOD="contexts">
