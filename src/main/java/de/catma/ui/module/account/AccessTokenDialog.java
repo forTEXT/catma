@@ -31,7 +31,8 @@ public class AccessTokenDialog extends Window {
 
 	private Button btnClose;
 	private Button btnCreatePersonalAccessToken;
-	private HorizontalLayout tokenPanel;
+	private VerticalLayout tokenRequestPanel;
+	private HorizontalLayout tokenDisplayPanel;
 
 	public AccessTokenDialog(IRemoteGitManagerPrivileged gitManagerPrivileged,
                              LoginService loginService) {
@@ -77,7 +78,8 @@ public class AccessTokenDialog extends Window {
 						)
 				);
 				binder.readBean(accessTokenData);
-				tokenPanel.setVisible(true);
+				tokenRequestPanel.setVisible(false);
+				tokenDisplayPanel.setVisible(true);
 
 			} catch (IOException e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't create personal access token", e);
@@ -101,11 +103,15 @@ public class AccessTokenDialog extends Window {
 				+ "<ul><li>Give your token a name that allows you, or our support team, to easily identify it later. For example: the name of the external system it is for</li>"
 				+ "<li>The token is valid for one month by default, up to a maximum of three months</li>"
 				+ "<li>The token is displayed only once - if you forget to copy it, you'll have to create a new one</li>"
-				+ "<li>The external system will have read-only access to <em>all</em> of your projects, as well as projects that you have joined"
+				+ "<li>The external system will have read-only access to <em>all</em> of your projects, as well as projects that you have joined</li>"
+				+ "<li>Contact our support team if you need to revoke a token, or if you have any other query related to the use of tokens</li>"
 				+ "<li>For expert users: you can also manage your tokens directly by logging in to our GitLab backend</li></ul>"
 				, ContentMode.HTML
 		);
 		lDescription.addStyleName("label-with-word-wrap");
+
+		tokenRequestPanel = new VerticalLayout();
+		tokenRequestPanel.setWidthFull();
 		
 		TextField tfName = new TextField("Token Name");
 		tfName.setWidth("100%");
@@ -125,14 +131,18 @@ public class AccessTokenDialog extends Window {
 
 		HorizontalLayout createButtonPanel = new HorizontalLayout();
 		createButtonPanel.setWidth("100%");
-		
+
 		btnCreatePersonalAccessToken = new Button("Create Personal Access Token");
 		createButtonPanel.addComponent(btnCreatePersonalAccessToken);
 		createButtonPanel.setComponentAlignment(btnCreatePersonalAccessToken, Alignment.MIDDLE_CENTER);
 
-		tokenPanel = new HorizontalLayout();
-		tokenPanel.setWidth("100%");
-		tokenPanel.setVisible(false); // made visible when create button is clicked
+		tokenRequestPanel.addComponent(tfName);
+		tokenRequestPanel.addComponent(dfDate);
+		tokenRequestPanel.addComponent(createButtonPanel);
+
+		tokenDisplayPanel = new HorizontalLayout();
+		tokenDisplayPanel.setWidth("100%");
+		tokenDisplayPanel.setVisible(false); // made visible when create button is clicked
 
 		TextField tfToken = new TextField("Personal Access Token");
 		tfToken.setWidth("100%");
@@ -144,11 +154,11 @@ public class AccessTokenDialog extends Window {
 		jsClipboardButton.setDescription("Copy to clipboard");
 		jsClipboardButton.addSuccessListener((JSClipboard.SuccessListener) () -> Notification.show("Copy to clipboard successful"));
 
-		tokenPanel.addComponent(tfToken);
-		tokenPanel.addComponent(jsClipboardButton);
-		tokenPanel.setComponentAlignment(tfToken, Alignment.BOTTOM_RIGHT);
-		tokenPanel.setComponentAlignment(jsClipboardButton, Alignment.BOTTOM_RIGHT);
-		tokenPanel.setExpandRatio(tfToken, 1f);
+		tokenDisplayPanel.addComponent(tfToken);
+		tokenDisplayPanel.addComponent(jsClipboardButton);
+		tokenDisplayPanel.setComponentAlignment(tfToken, Alignment.BOTTOM_RIGHT);
+		tokenDisplayPanel.setComponentAlignment(jsClipboardButton, Alignment.BOTTOM_RIGHT);
+		tokenDisplayPanel.setExpandRatio(tfToken, 1f);
 
 		HorizontalLayout dialogButtonPanel = new HorizontalLayout();
 		dialogButtonPanel.setWidth("100%");
@@ -159,11 +169,9 @@ public class AccessTokenDialog extends Window {
 
 		content.addComponent(lDescription);
 		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
-		content.addComponent(tfName);
-		content.addComponent(dfDate);
-		content.addComponent(createButtonPanel);
+		content.addComponent(tokenRequestPanel);
 		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
-		content.addComponent(tokenPanel);
+		content.addComponent(tokenDisplayPanel);
 		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
 
 		content.addComponent(dialogButtonPanel);
