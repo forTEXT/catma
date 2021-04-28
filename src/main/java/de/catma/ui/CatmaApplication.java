@@ -139,7 +139,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
-		Page.getCurrent().setTitle(Version.LATEST.toString());
+		Page.getCurrent().setTitle("CATMA " + Version.LATEST);
 		
 		try {
 			Component component = initService.newEntryPage(eventBus, loginservice, hazelCastService);
