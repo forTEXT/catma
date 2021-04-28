@@ -17,6 +17,7 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.LoginService;
+import de.catma.ui.module.account.AccessTokenDialog;
 import de.catma.ui.module.account.EditAccountDialog;
 import de.catma.ui.util.Version;
 
@@ -65,6 +66,10 @@ public class CatmaHeader extends HorizontalLayout {
         ctxAccount.addItem("Edit Account", (item) -> {
         	EditAccountDialog editAccount = new EditAccountDialog(gitManagerPrivileged, loginService, eventBus);
         	editAccount.show();
+        });
+        ctxAccount.addItem("Get Access Token", (item) -> {
+            AccessTokenDialog accessTokenDialog = new AccessTokenDialog(gitManagerPrivileged, loginService);
+            accessTokenDialog.show();
         });
         ctxAccount.addItem("Logout", (item) -> {
         	loginService.logout();

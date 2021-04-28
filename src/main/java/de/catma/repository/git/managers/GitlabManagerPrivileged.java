@@ -2,9 +2,12 @@ package de.catma.repository.git.managers;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -20,8 +23,8 @@ import org.gitlab4j.api.NotificationSettingsApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.CustomAttribute;
 import org.gitlab4j.api.models.Identity;
-import org.gitlab4j.api.models.ImpersonationToken;
-import org.gitlab4j.api.models.ImpersonationToken.Scope;
+import org.gitlab4j.api.models.PersonalAccessToken;
+import org.gitlab4j.api.models.PersonalAccessToken.Scope;
 import org.gitlab4j.api.models.NotificationSettings;
 import org.gitlab4j.api.models.User;
 
@@ -59,12 +62,12 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		UserApi customUserApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
-			List<ImpersonationToken> impersonationTokens = customUserApi.getImpersonationTokens(
+			List<PersonalAccessToken> impersonationTokens = customUserApi.getImpersonationTokens(
 				user.getId(), ImpersonationState.ACTIVE
 			);
 
 			// revoke the default token if it exists actively
-			for (ImpersonationToken token : impersonationTokens) {
+			for (PersonalAccessToken token : impersonationTokens) {
 				if (token.getName().equals(GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
 					privilegedGitLabApi.getUserApi().revokeImpersonationToken(user.getId(), token.getId());
 					break;
@@ -95,6 +98,25 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		Pair<GitUser, String> retVal = new Pair<>(new GitUser(user), impersonationToken);
 
 		return retVal;
+	}
+
+	@Override
+	public String createPersonalAccessToken(int userId, String tokenName, LocalDate expiresAt) throws IOException {
+		UserApi userApi = this.privilegedGitLabApi.getUserApi();
+
+		try {
+			PersonalAccessToken personalAccessToken = userApi.createPersonalAccessToken(
+					userId,
+					tokenName,
+					Date.from(expiresAt.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+					new Scope[] {Scope.READ_API}
+			);
+			logger.info(String.format("Created personal access token for user with ID %1$s.", userId));
+			return personalAccessToken.getToken();
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to create personal access token", e);
+		}
 	}
 	
 	@Override
@@ -166,7 +188,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
-			ImpersonationToken impersonationToken = userApi.createImpersonationToken(
+			PersonalAccessToken impersonationToken = userApi.createImpersonationToken(
 				userId, tokenName, null, new Scope[] {Scope.API}
 			);
 			return impersonationToken.getToken();

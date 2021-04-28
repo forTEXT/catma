@@ -1,6 +1,7 @@
 package de.catma.repository.git.interfaces;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
 import de.catma.repository.git.GitUser;
 import de.catma.util.Pair;
@@ -29,6 +30,20 @@ public interface IRemoteGitManagerPrivileged extends ICommonRemoteGitManager {
 	 *         impersonation token
 	 */
 	Pair<GitUser, String> acquireImpersonationToken(String identifier, String provider, String email, String name) throws IOException;
+
+	/**
+	 * Creates a new personal access token for the GitLab user identified by <code>userId</code>, with a default scope
+	 * of <code>Scope.API</code>.
+	 * <p>
+	 * This action is performed as a GitLab admin.
+	 *
+	 * @param userId the ID of the user for which to create the personal access token
+	 * @param tokenName the name of the personal access token to create
+	 * @param expiresAt the expiry date of the personal access token
+	 * @return the new token
+	 * @throws IOException if something went wrong while creating the personal access token
+	 */
+	public String createPersonalAccessToken(int userId, String tokenName, LocalDate expiresAt) throws IOException;
 
 	/**
 	 * Creates a new remote user.

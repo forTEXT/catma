@@ -28,15 +28,15 @@
 	<repositories>
 		<repository>
 			<id>vaadin-addons</id>
-			<url>http://maven.vaadin.com/vaadin-addons</url>
+			<url>https://maven.vaadin.com/vaadin-addons</url>
 		</repository>
         <repository>
             <id>Spring Plugins</id>
-            <url>http://repo.spring.io/plugins-release/</url>
+            <url>https://repo.spring.io/plugins-release/</url>
         </repository>
         <repository>
         	<id>Cogcomp Repository</id>
-        	<url>http://cogcomp.org/m2repo/</url>
+        	<url>https://cogcomp.org/m2repo/</url>
         </repository>
 	</repositories>
 	
@@ -59,6 +59,7 @@
 			<version>3.0.1</version>
 			<scope>provided</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-server</artifactId>
@@ -80,6 +81,15 @@
 		    <artifactId>vaadin-client</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-context-menu</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.vaadin</groupId>
+			<artifactId>elements</artifactId>
+			<version>0.2.1</version>
+		</dependency>
+		<dependency>
 		   <groupId>org.vaadin.addon</groupId>
 		   <artifactId>confirmdialog</artifactId>
 		   <version>3.2.0</version>
@@ -88,24 +98,19 @@
 		   <groupId>org.vaadin.addons</groupId>
 		   <artifactId>vaadin-sliderpanel</artifactId>
 		   <version>2.2.1</version>
-		</dependency>	
-		<dependency>
-		    <groupId>com.vaadin</groupId>
-		    <artifactId>vaadin-context-menu</artifactId>
 		</dependency>
-			
 		<dependency>
-		   <groupId>org.vaadin</groupId>
-		   <artifactId>elements</artifactId>
-		   <version>0.2.1</version>
-		  
-		</dependency>	
+			<groupId>com.github.vaadin4qbanos</groupId>
+			<artifactId>jsclipboard</artifactId>
+			<version>1.0.12</version>
+		</dependency>
+
 		<dependency>
    			<groupId>com.wcs.wcslib</groupId>
    			<artifactId>wcslib-vaadin-widget-multifileupload</artifactId>
    			<version>4.0</version>
 		</dependency>
-			
+
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr-runtime</artifactId>
@@ -179,11 +184,12 @@
             <artifactId>org.eclipse.jgit</artifactId>
             <version>4.11.8.201904181247-r</version>
         </dependency>
-        <dependency>
-            <groupId>org.gitlab4j</groupId>
-            <artifactId>gitlab4j-api</artifactId>
-            <version>4.15.7</version>
-        </dependency>
+		<dependency>
+			<groupId>org.gitlab4j</groupId>
+			<artifactId>gitlab4j-api</artifactId>
+			<!-- https://github.com/forTEXT/gitlab4j-api/commit/f74be4b6c6b5e51ed0d5838a7955472366496dd9 -->
+			<version>4.17.0-SNAPSHOT</version>
+		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>

@@ -35,6 +35,7 @@ import org.gitlab4j.api.models.Note;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
+import org.gitlab4j.api.models.ImportStatus.Status;
 import org.gitlab4j.api.models.Visibility;
 
 import com.google.common.cache.Cache;
@@ -498,14 +499,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			}
 			
 			restrictedGitLabApi.getProjectApi().forkProject(sourceResourceProject, targetProjectId);
-			
-			ProjectExtApi projectExtApi = new ProjectExtApi(restrictedGitLabApi);
-			ProjectExt projectExt = projectExtApi.getProjectExt(targetProjectId, resourceId);
 
-			String importStatus = projectExt.getImportStatus();
+			Project targetProject = restrictedGitLabApi.getProjectApi().getProject(targetProjectId, resourceId);
+			Status importStatus = targetProject.getImportStatus();
 			
 			int tries = 10;
-			while (!importStatus.equals("finished") && tries > 0) {
+			while (importStatus != Status.FINISHED && tries > 0) {
 				tries--;
 				
 				try {
@@ -519,10 +518,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 						resourceId,
 						targetProjectId,
 						10-tries));
-				importStatus = projectExt.getImportStatus();
+				importStatus = targetProject.getImportStatus();
 			}
 			
-			if (!importStatus.equals("finished")) {
+			if (importStatus != Status.FINISHED) {
 				logger.warning(String.format("Status is still '%1$s' and not 'finished'! Trying to continue anyway!", importStatus));
 			}
 			
