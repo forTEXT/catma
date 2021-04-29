@@ -98,7 +98,7 @@
     <orderEntry type="library" name="Maven: com.jcraft:jzlib:1.1.1" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.javaewah:JavaEWAH:1.1.6" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.2" level="project" />
-    <orderEntry type="module" module-name="gitlab4j-api" />
+    <orderEntry type="library" name="Maven: org.gitlab4j:gitlab4j-api:4.17.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: jakarta.activation:jakarta.activation-api:1.2.2" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.10.3" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.10.3" level="project" />
