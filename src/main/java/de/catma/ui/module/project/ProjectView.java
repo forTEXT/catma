@@ -38,7 +38,6 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
-import com.vaadin.event.HasUserOriginated;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.FileDownloader;
 import com.vaadin.server.SerializablePredicate;
@@ -114,7 +113,7 @@ import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
-import de.catma.ui.dialog.UploadDialog;
+import de.catma.ui.dialog.GenericUploadDialog;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.MembersChangedEvent;
@@ -742,8 +741,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		else {
 			final SourceDocument document = selectedDocuments.iterator().next();
 			
-			UploadDialog uploadDialog =
-					new UploadDialog(String.format("Upload a Collection for %1$s:", document.toString()),
+			GenericUploadDialog uploadDialog =
+					new GenericUploadDialog(String.format("Upload a Collection for %1$s:", document.toString()),
 							new SaveCancelListener<byte[]>() {
 				
 				public void savePressed(byte[] result) {
@@ -814,8 +813,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleImportTagsetsRequest() {
-		UploadDialog uploadDialog =
-				new UploadDialog("Upload a Tag Library with one or more Tagsets:",
+		GenericUploadDialog uploadDialog =
+				new GenericUploadDialog("Upload a Tag Library with one or more Tagsets:",
 						new SaveCancelListener<byte[]>() {
 			
 			public void savePressed(byte[] result) {
