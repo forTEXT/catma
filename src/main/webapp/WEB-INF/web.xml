@@ -2,20 +2,36 @@
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee"
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          id="WebApp_ID" version="3.0">
+
     <display-name>catma</display-name>
+
 	<context-param>
-		<description>
-		Vaadin production mode</description>
+		<description>Vaadin production mode</description>
 		<param-name>productionMode</param-name>
 		<param-value>true</param-value>
 	</context-param>
+
 	<session-config>
     	<session-timeout>120</session-timeout>
 	</session-config>
+	
+	<resource-ref>
+		<description>SQLite DataSource</description>
+		<res-ref-name>jdbc/sqlite</res-ref-name>
+		<res-type>javax.sql.DataSource</res-type>
+		<res-auth>Container</res-auth>
+	</resource-ref>
+
 	<servlet> 
 		<servlet-name>CATMAProperties</servlet-name> 
 		<servlet-class>de.catma.servlet.PropertiesInitializerServlet</servlet-class> 
 		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>SQLite</servlet-name>
+		<servlet-class>de.catma.servlet.SqliteInitializerServlet</servlet-class>
+		<load-on-startup>3</load-on-startup>
 	</servlet>
 	
 	<servlet>
@@ -37,15 +53,15 @@
 			<param-name>org.atmosphere.container.JSR356AsyncSupport.mappingPath</param-name>
 			<param-value>/PUSH</param-value>
 		</init-param>
-		<load-on-startup>3</load-on-startup>
-
+		<load-on-startup>4</load-on-startup>
 		<async-supported>true</async-supported>
-	</servlet>	
+	</servlet>
+
 	<servlet-mapping>
     	<servlet-name>default</servlet-name>
     	<url-pattern>/manual/*</url-pattern>
 	</servlet-mapping>
-    	<servlet-mapping>
+	<servlet-mapping>
 		<servlet-name>CATMAApp</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>

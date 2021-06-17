@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure_9_3.dtd">
+
+<Configure id='wac' class="org.eclipse.jetty.webapp.WebAppContext">
+    <New id="sqlite" class="org.eclipse.jetty.plus.jndi.Resource">
+        <Arg><Ref refid='wac'/></Arg>
+        <Arg>jdbc/sqlite</Arg>
+        <Arg>
+            <New class="org.sqlite.SQLiteDataSource">
+                <Set name="url">jdbc:sqlite:catma.db</Set>
+            </New>
+        </Arg>
+    </New>
+</Configure>
