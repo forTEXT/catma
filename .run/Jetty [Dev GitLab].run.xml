@@ -229,7 +229,6 @@
               <option name="path" value="modules\openid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="active" value="true" />
               <option name="path" value="modules\plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -593,7 +592,6 @@
               <option name="path" value="modules\openid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="active" value="true" />
               <option name="path" value="modules\plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>

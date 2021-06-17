@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.catma.sqlite.SqliteService;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -111,6 +112,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	private InitializationService initService;
 	private EventBus eventBus;
 	private HazelCastService hazelCastService;
+	private SqliteService sqliteService;
 	
 	@Override
 	protected void init(VaadinRequest request) {
@@ -136,6 +138,16 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		hazelCastService = new HazelCastService();
 		this.eventBus.register(this);
 
+
+		try {
+			this.sqliteService = new SqliteService();
+			ArrayList<SqliteService.SqliteModel.Notice> notices = this.sqliteService.getNotices();
+			notices.forEach(notice -> logger.log(Level.INFO, "NOTICE: " + notice.message));
+		}
+		catch (Exception e) {
+			showAndLogError("error initialising sqlite service", e);
+		}
+
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
@@ -145,7 +157,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			Component component = initService.newEntryPage(eventBus, loginservice, hazelCastService);
 			setContent(component);
 		} catch (IOException e) {
-			showAndLogError("error creating landing page",e);			
+			showAndLogError("error creating landing page", e);
 		}
 		eventBus.post(new RouteToDashboardEvent());
 
