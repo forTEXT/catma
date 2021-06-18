@@ -1,6 +1,7 @@
 package de.catma.ui.module.main;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.ThemeResource;
@@ -13,15 +14,19 @@ import com.vaadin.ui.UI;
 
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
+import de.catma.sqlite.SqliteService;
 import de.catma.ui.UIHelpWindow;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.LabelButton;
+import de.catma.ui.events.RefreshEvent;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.login.AuthenticationDialog;
 import de.catma.ui.module.main.signup.SignUpDialog;
+
+import java.util.ArrayList;
 
 /**
  * Main layout when not logged in
@@ -36,18 +41,23 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 	private final LoginService loginService;
 	private final EventBus eventBus;
 	private final HazelCastService hazelCastService;
-	
-	private IconButton btHelp;
+	private final SqliteService sqliteService;
+
+	private Link statusLink;
+	private VerticalLayout noticePanelVerticalLayout;
 
 	public NotLoggedInMainView(
-			InitializationService initService, 
-			LoginService loginService, 
-			HazelCastService hazelCastService, 
+			InitializationService initService,
+			LoginService loginService,
+			HazelCastService hazelCastService,
+			SqliteService sqliteService,
 			EventBus eventBus) {
 		this.initService = initService;
 		this.loginService = loginService;
 		this.hazelCastService = hazelCastService;
+		this.sqliteService = sqliteService;
 		this.eventBus = eventBus;
+		eventBus.register(this);
 		initComponents();
 	}
 	
@@ -86,13 +96,12 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		privacyLink.setTargetName("_blank");
 		menuLayout.addComponent(privacyLink);
 
-		Link statusLink = new Link("Status",
+		statusLink = new Link("Status",
 				new ExternalResource(CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())));
 		statusLink.setTargetName("_blank");
-//		statusLink.setIcon(VaadinIcons.WARNING);
 		menuLayout.addComponent(statusLink);
 
-		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE, click -> {
+		IconButton btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE, click -> {
 			if (uiHelpWindow.getParent() == null) {
 				UI.getCurrent().addWindow(uiHelpWindow);
 			} else {
@@ -109,26 +118,15 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		ThemeResource logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$	
 		contentPanel.addComponent(new Image(null,logoResource));
 
-//		Label issueTitle = new Label(
-//				VaadinIcons.WARNING.getHtml() + " <issue description>",
-//				ContentMode.HTML
-//		);
-//		issueTitle.addStyleName("title");
-//
-//		Label issueHelpText = new Label(
-//				"See the <a href=\""
-//						+ CATMAPropertyKey.SomeProp.getValue(CATMAPropertyKey.SomeProp.getDefaultValue())
-//						+ "\" target=\"_blank\">link text</a> and the <a href=\""
-//						+ CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())
-//						+ "\" target=\"_blank\">status page</a> for more information", ContentMode.HTML);
-//
-//		VerticalLayout noticePanelVerticalLayout = new VerticalLayout(issueTitle, issueHelpText);
-//		noticePanelVerticalLayout.addStyleName("vlayout");
-//
-//		HorizontalFlexLayout noticePanel = new HorizontalFlexLayout(noticePanelVerticalLayout);
-//		noticePanel.addStyleName("not-logged-in-main-view-noticepanel");
-//		noticePanel.setJustifyContent(JustifyContent.CENTER);
-//		contentPanel.addComponent(noticePanel);
+		noticePanelVerticalLayout = new VerticalLayout();
+		noticePanelVerticalLayout.addStyleName("vlayout");
+
+		HorizontalFlexLayout noticePanel = new HorizontalFlexLayout(noticePanelVerticalLayout);
+		noticePanel.addStyleName("not-logged-in-main-view-noticepanel");
+		noticePanel.setJustifyContent(JustifyContent.CENTER);
+		contentPanel.addComponent(noticePanel);
+
+		renderNotices();
 
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
 
@@ -139,6 +137,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 				loginService,
 				initService,
 				hazelCastService,
+				sqliteService,
 				eventBus).show());
 		Link newsLetterLink = new Link("Newsletter", new ExternalResource("https://catma.de/newsletter/"));
 		newsLetterLink.setTargetName("_blank");
@@ -167,6 +166,44 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		bottomPanel.addComponent(fortextLabel);
 		bottomPanel.addComponent(fortextButton);
 		
+	}
+
+	private void renderNotices() {
+		statusLink.setIcon(null);
+		noticePanelVerticalLayout.removeAllComponents();
+
+		ArrayList<SqliteService.SqliteModel.Notice> notices = sqliteService.getNotices();
+		boolean haveIssues = notices.stream().anyMatch(notice -> notice.isIssue);
+
+		if (!notices.isEmpty()) {
+			Label noticesTitle = new Label(
+					VaadinIcons.WARNING.getHtml() + " Current Notices",
+					ContentMode.HTML
+			);
+			noticesTitle.addStyleName("title");
+			noticePanelVerticalLayout.addComponent(noticesTitle);
+
+			notices.forEach(notice -> {
+				noticePanelVerticalLayout.addComponent(new Label(notice.message, ContentMode.HTML));
+			});
+
+			if (haveIssues) {
+				statusLink.setIcon(VaadinIcons.WARNING);
+
+				Label statusPageText = new Label(
+						"See the <a href=\"" +
+								CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue()) +
+								"\" target=\"_blank\">status page</a> for the latest information on current issues",
+						ContentMode.HTML
+				);
+				noticePanelVerticalLayout.addComponent(statusPageText);
+			}
+		}
+	}
+
+	@Subscribe
+	public void handleRefresh(RefreshEvent refreshEvent) {
+		renderNotices();
 	}
 	
 }

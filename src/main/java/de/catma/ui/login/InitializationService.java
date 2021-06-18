@@ -7,12 +7,12 @@ import com.vaadin.ui.Component;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.hazelcast.HazelCastService;
+import de.catma.sqlite.SqliteService;
 
 public interface InitializationService {	
-	BackgroundService accuireBackgroundService();
-	String accquirePersonalTempFolder() throws IOException;
-	Component newEntryPage(EventBus eventBus,
-			LoginService loginService, HazelCastService hazelcastService) throws IOException;
+	BackgroundService acquireBackgroundService();
+	String acquirePersonalTempFolder() throws IOException;
+	Component newEntryPage(EventBus eventBus, LoginService loginService, HazelCastService hazelcastService, SqliteService sqliteService) throws IOException;
 	
 	void shutdown();
 }

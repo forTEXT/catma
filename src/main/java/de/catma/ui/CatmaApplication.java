@@ -37,6 +37,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.catma.sqlite.SqliteService;
+import de.catma.ui.events.RefreshEvent;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -125,12 +126,12 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			public IRemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password)
 					throws IOException {
 				
-				return new GitlabManagerRestricted(eventBus, initService.accuireBackgroundService(), username, password);
+				return new GitlabManagerRestricted(eventBus, initService.acquireBackgroundService(), username, password);
 			}
 			
 			@Override
 			public IRemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
-				return new GitlabManagerRestricted(eventBus, initService.accuireBackgroundService(), userImpersonationToken);
+				return new GitlabManagerRestricted(eventBus, initService.acquireBackgroundService(), userImpersonationToken);
 			}
 
 		});
@@ -140,9 +141,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 
 
 		try {
-			this.sqliteService = new SqliteService();
-			ArrayList<SqliteService.SqliteModel.Notice> notices = this.sqliteService.getNotices();
-			notices.forEach(notice -> logger.log(Level.INFO, "NOTICE: " + notice.message));
+			sqliteService = new SqliteService();
 		}
 		catch (Exception e) {
 			showAndLogError("error initialising sqlite service", e);
@@ -154,7 +153,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		Page.getCurrent().setTitle("CATMA " + Version.LATEST);
 		
 		try {
-			Component component = initService.newEntryPage(eventBus, loginservice, hazelCastService);
+			Component component = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
 			setContent(component);
 		} catch (IOException e) {
 			showAndLogError("error creating landing page", e);
@@ -175,6 +174,8 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		super.refresh(request);
 		handleRequestToken(request);
 		handleRequestOauth(request);
+
+		eventBus.post(new RefreshEvent());
 	}
 	
 	private void storeParameters(Map<String, String[]> parameters) {
@@ -192,7 +193,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 				&& VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
 			handleOauth(request);
 			try {
-				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService);
+				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				getCurrent().getPage().pushState("/catma/");
@@ -233,11 +234,11 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	}
 
 	public String accquirePersonalTempFolder() throws IOException {
-		return initService.accquirePersonalTempFolder();
+		return initService.acquirePersonalTempFolder();
 	}
 
 	public BackgroundService accuireBackgroundService() {
-		return initService.accuireBackgroundService();
+		return initService.acquireBackgroundService();
 	}
 
 	public <T> void submit(String caption, final ProgressCallable<T> callable, final ExecutionListener<T> listener) {
@@ -437,5 +438,9 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	
 	public HazelCastService getHazelCastService() {
 		return hazelCastService;
+	}
+
+	public SqliteService getSqliteService() {
+		return sqliteService;
 	}
 }

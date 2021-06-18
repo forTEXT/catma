@@ -446,6 +446,8 @@ $v-focus-color: #5A98A1;
     
       /* homepage */
         .home {
+			overflow-x: hidden;
+			overflow-y: scroll;
         }
         
         .home__menu {
@@ -466,7 +468,8 @@ $v-focus-color: #5A98A1;
         }
         
         .not-logged-in-main-view-fortext-bottom-panel {
-        	margin-bottom: 10px;
+			margin-top: 60px;
+			padding-bottom: 10px;
         }
         
         .not-logged-in-main-view-fortext-button {
@@ -489,9 +492,14 @@ $v-focus-color: #5A98A1;
 
 		.not-logged-in-main-view-noticepanel {
 			margin-top: 60px;
+			padding: 0 80px;
 
 			.vlayout {
 				text-align: center;
+
+				.v-widget {
+					text-align: inherit;
+				}
 			}
 
 			.title {

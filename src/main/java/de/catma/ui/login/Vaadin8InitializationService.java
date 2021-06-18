@@ -15,6 +15,7 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.sqlite.SqliteService;
 import de.catma.ui.UIBackgroundService;
 import de.catma.ui.module.main.CatmaHeader;
 import de.catma.ui.module.main.MainView;
@@ -22,13 +23,12 @@ import de.catma.ui.module.main.NotLoggedInMainView;
 
 public class Vaadin8InitializationService implements InitializationService {
 
-	
 	private BackgroundService backgroundService;
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@Override
-	public BackgroundService accuireBackgroundService() {
+	public BackgroundService acquireBackgroundService() {
 		if(backgroundService == null) {
 			backgroundService = new UIBackgroundService(true);
 		}
@@ -41,10 +41,9 @@ public class Vaadin8InitializationService implements InitializationService {
 			backgroundService.shutdown();
 		}
 	}
-	
 
 	@Override
-	public String accquirePersonalTempFolder() throws IOException {
+	public String acquirePersonalTempFolder() throws IOException {
 		String tmpdir = (String)VaadinSession.getCurrent().getAttribute("TempDir");
 		if(tmpdir == null){
 			String result;
@@ -73,8 +72,7 @@ public class Vaadin8InitializationService implements InitializationService {
 
 	@Override
 	public Component newEntryPage(
-		EventBus eventBus,
-		LoginService loginService, HazelCastService hazelcastService) throws IOException {
+			EventBus eventBus, LoginService loginService, HazelCastService hazelcastService, SqliteService sqliteService) throws IOException {
 		
 		IRemoteGitManagerRestricted api = loginService.getAPI();
 
@@ -83,7 +81,7 @@ public class Vaadin8InitializationService implements InitializationService {
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					api,
 					(projectId) -> {}, //noop deletion handler
-					accuireBackgroundService(),
+					acquireBackgroundService(),
 					eventBus);
 			
 			hazelcastService.start();
@@ -99,8 +97,7 @@ public class Vaadin8InitializationService implements InitializationService {
 					termsOfUseConsentGiven,
 					consent -> gitlabManagerPrivileged.setTermsOfUseConsentGiven(api.getUser(), consent));
 		} else {
-			return new NotLoggedInMainView(this, loginService, hazelcastService, eventBus);
-
+			return new NotLoggedInMainView(this, loginService, hazelcastService, sqliteService, eventBus);
 		}
 	}
 }

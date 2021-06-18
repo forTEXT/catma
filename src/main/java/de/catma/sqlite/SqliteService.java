@@ -19,19 +19,27 @@ public class SqliteService {
 
     public static class SqliteModel {
         public static class Notice {
+            public Integer id;
             public String message;
             public Instant dateCreated;
+            public Instant dateStart;
+            public Instant dateEnd;
+            public Boolean isIssue;
 
-            public Notice(String message, Instant dateCreated) {
+            public Notice(Integer id, String message, Instant dateCreated, Instant dateStart, Instant dateEnd, Boolean isIssue) {
+                this.id = id;
                 this.message = message;
                 this.dateCreated = dateCreated;
+                this.dateStart = dateStart;
+                this.dateEnd = dateEnd;
+                this.isIssue = isIssue;
             }
         }
     }
 
     private Connection getConnection() throws IOException, SQLException {
         Path sqliteDbFilePath = Paths.get(sqliteDbBasePath, "catma.db");
-        return DriverManager.getConnection("jdbc:sqlite:" + sqliteDbFilePath.toRealPath());
+        return DriverManager.getConnection("jdbc:sqlite:" + sqliteDbFilePath.toAbsolutePath());
     }
 
     public SqliteService() throws IllegalStateException {
@@ -53,32 +61,53 @@ public class SqliteService {
                 Connection connection = getConnection();
         ) {
             Statement statement = connection.createStatement();
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS notices (id integer primary key autoincrement, message text, date_created text)");
-            statement.executeUpdate("INSERT INTO notices (message, date_created) VALUES ('This is a test notice', '" + Instant.now().toString() + "')");
-            ResultSet rs = statement.executeQuery("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name;");
-            while (rs.next()) {
-                logger.log(Level.INFO, "name = " + rs.getString("name"));
-            }
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS notice (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "message TEXT NOT NULL," +
+                    "date_created TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))," +
+                    "date_start TEXT," +
+                    "date_end TEXT," +
+                    "is_issue INTEGER NOT NULL DEFAULT 0" +
+                    ")"
+            );
         }
         catch (IOException | SQLException e) {
             throw new IllegalStateException("Failed to initialise Database", e);
         }
     }
 
-    public ArrayList<SqliteModel.Notice> getNotices() throws Exception {
+    public ArrayList<SqliteModel.Notice> getNotices() {
+        ArrayList<SqliteModel.Notice> notices = new ArrayList<>();
+
         try (
                 Connection connection = getConnection();
         ) {
             Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery("SELECT * FROM notices");
-            ArrayList<SqliteModel.Notice> notices = new ArrayList<>();
+            ResultSet rs = statement.executeQuery("SELECT * FROM notice WHERE (" +
+                    "(date_start IS NULL OR date_start <= strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))" +
+                    "AND (date_end IS NULL OR date_end > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))" +
+                    "ORDER BY date_start DESC"
+            );
+
             while (rs.next()) {
-                notices.add(new SqliteModel.Notice(rs.getString("message"), Instant.parse(rs.getString("date_created"))));
+                String dateStart = rs.getString("date_start");
+                String dateEnd = rs.getString("date_end");
+
+                notices.add(new SqliteModel.Notice(
+                        rs.getInt("id"),
+                        rs.getString("message"),
+                        Instant.parse(rs.getString("date_created")),
+                        dateStart != null ? Instant.parse(dateStart) : null,
+                        dateEnd != null ? Instant.parse(dateEnd) : null,
+                        rs.getBoolean("is_issue")
+                ));
             }
+
             return notices;
         }
         catch (IOException | SQLException e) {
-            throw new Exception("Couldn't fetch notices", e);
+            logger.log(Level.SEVERE, "Couldn't fetch notices: " + e.getMessage());
+            return notices;
         }
     }
 }
