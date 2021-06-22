@@ -17917,6 +17917,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 5px;
 }
 
+.catma .home {
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+
 .catma .home__menu {
 	margin-top: 10px;
 	margin-bottom: 10px;
@@ -17935,7 +17940,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .not-logged-in-main-view-fortext-bottom-panel {
-	margin-bottom: 10px;
+	margin-top: 60px;
+	padding-bottom: 10px;
 }
 
 .catma .not-logged-in-main-view-fortext-button {
@@ -17958,10 +17964,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .not-logged-in-main-view-noticepanel {
 	margin-top: 60px;
+	padding: 0 80px;
 }
 
 .catma .not-logged-in-main-view-noticepanel .vlayout {
 	text-align: center;
+}
+
+.catma .not-logged-in-main-view-noticepanel .vlayout .v-widget {
+	text-align: inherit;
 }
 
 .catma .not-logged-in-main-view-noticepanel .title {

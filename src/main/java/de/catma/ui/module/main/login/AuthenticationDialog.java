@@ -27,6 +27,7 @@ import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.catma.sqlite.SqliteService;
 import org.jboss.aerogear.security.otp.Totp;
 import org.jboss.aerogear.security.otp.api.Clock;
 
@@ -79,6 +80,7 @@ public class AuthenticationDialog extends Window implements Handler {
 	private final InitializationService initService;
 	private final EventBus eventBus;
 	private final HazelCastService hazelCastService;
+	private final SqliteService sqliteService;
 	private final Action personalAccessTokenAction = 
 			new ShortcutAction("Alt+P", ShortcutAction.KeyCode.P, new int[] { ShortcutAction.ModifierKey.ALT });
 
@@ -90,6 +92,7 @@ public class AuthenticationDialog extends Window implements Handler {
 			LoginService loginService,
 			InitializationService initService,
 			HazelCastService hazelCastService,
+			SqliteService sqliteService,
 			EventBus eventBus) { 
 		
 		super(caption);
@@ -98,6 +101,7 @@ public class AuthenticationDialog extends Window implements Handler {
 		this.loginservice = loginService;
 		this.initService = initService;
 		this.hazelCastService = hazelCastService;
+		this.sqliteService = sqliteService;
 		this.eventBus = eventBus;
 		
 	
@@ -136,7 +140,7 @@ public class AuthenticationDialog extends Window implements Handler {
 				else {
 					loginservice.login(tfUsername.getValue(), pfPassword.getValue());
 				}
-				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService);
+				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				close();

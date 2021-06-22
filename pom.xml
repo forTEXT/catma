@@ -272,6 +272,12 @@
 		    <version>5.6.2</version>
 		    <scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.34.0</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>
@@ -329,7 +335,7 @@
 					<scanIntervalSeconds>0</scanIntervalSeconds>
 				    <webApp>
 				    	<contextPath>/catma</contextPath>
-				    </webApp>					
+				    </webApp>
 				</configuration>
 				<dependencies>
 				    <dependency>

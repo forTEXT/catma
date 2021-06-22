@@ -7,8 +7,7 @@ WebContent/apiusers.json
 WebContent/catma_*.properties
 src/main/resources/catma_*.properties
 build
-db/local/*
-db/*.bak
+db
 dev
 graphdb/test
 notepad_session.txt

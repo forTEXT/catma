@@ -49,12 +49,14 @@ public enum CATMAPropertyKey {
 	Google_oauthClientSecret,
 	Google_recaptchaSiteKey,
 	Google_recaptchaSecretKey,
-	
-	GitBasedRepositoryBasePath, 
+
 	GitLabAdminPersonalAccessToken, 
-	GitLabServerUrl, 
-	
+	GitLabServerUrl,
+
+	GitBasedRepositoryBasePath,
 	GraphDbGitMountBasePath,
+
+	SqliteDbBasePath,
 	
 	MailHost,
 	MailPort,
