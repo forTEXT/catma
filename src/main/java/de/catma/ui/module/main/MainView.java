@@ -113,7 +113,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
         				+ "<br />Do you <b>accept</b> our <a href=\"%1$s\" target=\"_blank\">terms of use</a> and our "
         				+ "<a href=\"%2$s\" target=\"_blank\">privacy policy</a>?",
         				CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue()),
-        				CATMAPropertyKey.PrivacyStatementURL.getValue(CATMAPropertyKey.PrivacyStatementURL.getDefaultValue())),
+        				CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue())),
         		"Yes", "No", new ConfirmDialog.Listener() {
 				
 				@Override

@@ -410,15 +410,14 @@ $v-focus-color: #5A98A1;
     	font-weight: bold;
     }
     
-    .authdialog-loginlink {
-	    font-size: 14px;
-	    padding: 5px 0;
+    .v-button.authdialog-google-login-link {
+	    height: 46px;
+		padding: 0;
     }
-    
-    .authdialog-loginlink:focus::after {
-    	border-color: none;
-    	box-shadow: none;
-    }
+
+	.authdialog-forgot-password-link, .authdialog-tou-link, .authdialog-pp-link {
+		font-size: 14px;
+	}
 
     .application-loginlink {
 	    font-size: 14px;

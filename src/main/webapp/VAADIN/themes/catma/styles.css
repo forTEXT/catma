@@ -17885,14 +17885,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-weight: bold;
 }
 
-.catma .authdialog-loginlink {
-	font-size: 14px;
-	padding: 5px 0;
+.catma .v-button.authdialog-google-login-link {
+	height: 46px;
+	padding: 0;
 }
 
-.catma .authdialog-loginlink:focus::after {
-	border-color: none;
-	box-shadow: none;
+.catma .authdialog-forgot-password-link, .catma .authdialog-tou-link, .catma .authdialog-pp-link {
+	font-size: 14px;
 }
 
 .catma .application-loginlink {
