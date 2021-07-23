@@ -18,65 +18,64 @@
  */
 package de.catma.ui.module.main.login;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.net.URLEncoder;
-import java.security.SecureRandom;
-import java.text.MessageFormat;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import com.vaadin.server.ExternalResource;
-import com.vaadin.server.ThemeResource;
-import com.vaadin.ui.*;
-import de.catma.sqlite.SqliteService;
-import org.jboss.aerogear.security.otp.Totp;
-import org.jboss.aerogear.security.otp.api.Clock;
-
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.event.Action;
-import com.vaadin.event.Action.Handler;
 import com.vaadin.event.ShortcutAction;
-import com.vaadin.event.ShortcutAction.KeyCode;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.Notification.Type;
-
+import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
+import de.catma.sqlite.SqliteService;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.ExceptionUtil;
+import org.jboss.aerogear.security.otp.Totp;
+import org.jboss.aerogear.security.otp.api.Clock;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.net.URLEncoder;
+import java.security.SecureRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author marco.petris@web.de
  *
  */
-public class AuthenticationDialog extends Window implements Handler {
-	
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+public class AuthenticationDialog extends Window implements Action.Handler {
 
-	private Button btCancel;
-	private Button googleLogInLink;
-	private String baseUrl;
+	private final Logger logger = Logger.getLogger(this.getClass().getName());
+
+	private final String baseUrl;
+
+	private final LoginService loginservice;
+	private final InitializationService initService;
+	private final HazelCastService hazelCastService;
+	private final SqliteService sqliteService;
+	private final EventBus eventBus;
+
+	private final Action personalAccessTokenAction =
+			new ShortcutAction("Alt+P", ShortcutAction.KeyCode.P, new int[] { ShortcutAction.ModifierKey.ALT });
+
 	private VerticalLayout userPasswordLoginLayout;
 	private TextField tfUsername;
 	private PasswordField pfPassword;
-	private Button btLogin;
-	private final LoginService loginservice;
-	private final InitializationService initService;
-	private final EventBus eventBus;
-	private final HazelCastService hazelCastService;
-	private final SqliteService sqliteService;
-	private final Action personalAccessTokenAction = 
-			new ShortcutAction("Alt+P", ShortcutAction.KeyCode.P, new int[] { ShortcutAction.ModifierKey.ALT });
 
 	private PasswordField pfPersonalAccessToken;
-	
+
+	private Button googleLogInLink;
+
+	private Button btLogin;
+	private Button btCancel;
+
 	public AuthenticationDialog(
 			String caption, 
 			String baseUrl,
@@ -84,8 +83,9 @@ public class AuthenticationDialog extends Window implements Handler {
 			InitializationService initService,
 			HazelCastService hazelCastService,
 			SqliteService sqliteService,
-			EventBus eventBus) { 
-		
+			EventBus eventBus
+	) {
+
 		super(caption);
 
 		this.baseUrl = baseUrl;
@@ -94,19 +94,17 @@ public class AuthenticationDialog extends Window implements Handler {
 		this.hazelCastService = hazelCastService;
 		this.sqliteService = sqliteService;
 		this.eventBus = eventBus;
-		
-	
+
 		initComponents();
 		initActions();
 	}
-	
 
 	@Override
 	public Action[] getActions(Object target, Object sender) {
-	    if (sender == AuthenticationDialog.this) {
-	        return new Action[] {personalAccessTokenAction};
-	    }
-	    return null;
+		if (sender == AuthenticationDialog.this) {
+			return new Action[] { personalAccessTokenAction };
+		}
+		return null;
 	}
 
 	@Override
@@ -119,8 +117,8 @@ public class AuthenticationDialog extends Window implements Handler {
 
 	private void initActions() {
 		addActionHandler(this);
-		
-		btCancel.addClickListener(click -> close());			
+
+		btCancel.addClickListener(click -> close());
 
 		btLogin.addClickListener(click -> {
 			try {
@@ -134,83 +132,80 @@ public class AuthenticationDialog extends Window implements Handler {
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
 				close();
-				
-			} catch (IOException e) {
-				Notification.show("Login error", "Username or password wrong!", Type.ERROR_MESSAGE);
+			}
+			catch (IOException e) {
+				Notification.show("Login error", "Username or password wrong!", Notification.Type.ERROR_MESSAGE);
 				String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
 				if (message != null && !message.equals("invalid_grant")) {
-					logger.log(Level.SEVERE,"login services" , e);
+					logger.log(Level.SEVERE, "login services", e);
 				}
 			}
 		});
-		
-		
+
 		googleLogInLink.addClickListener(event -> {
 			try {
-				UI.getCurrent().getPage().setLocation(createLogInClick(
-					CATMAPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
-					CATMAPropertyKey.Google_oauthClientId.getValue(),
-					CATMAPropertyKey.Google_oauthClientSecret.getValue())); //$NON-NLS-1$
+				UI.getCurrent().getPage().setLocation(
+						createLogInClick(
+								CATMAPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
+								CATMAPropertyKey.Google_oauthClientId.getValue(),
+								CATMAPropertyKey.Google_oauthClientSecret.getValue()
+						)
+				);
 				close();
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError(
-						"Error during authentication!", e);
+				((ErrorHandler)UI.getCurrent()).showAndLogError("Error during authentication!", e);
 			}
 		});
 	}
-	
+
 	public String createLogInClick(
 			String oauthAuthorizationCodeRequestURL, 
 			String oauthClientId,
-			String openidRealm) throws UnsupportedEncodingException {
-		
+			String openidRealm
+	) throws UnsupportedEncodingException {
+
 		String token = new BigInteger(130, new SecureRandom()).toString(32);
 
-		VaadinSession.getCurrent().setAttribute("OAUTHTOKEN",token);
+		VaadinSession.getCurrent().setAttribute("OAUTHTOKEN", token);
 		
 		// state token generation
 		Totp totp = new Totp(
 				CATMAPropertyKey.otpSecret.getValue()+token, 
-				new Clock(Integer.valueOf(CATMAPropertyKey.otpDuration.getValue())));
+				new Clock(Integer.parseInt(CATMAPropertyKey.otpDuration.getValue()))
+		);
 
-		// creating the authorization request link 
-		StringBuilder authenticationUrlBuilder = new StringBuilder();
-		authenticationUrlBuilder.append(
-			oauthAuthorizationCodeRequestURL);
-		authenticationUrlBuilder.append("?client_id="); //$NON-NLS-1$
-		authenticationUrlBuilder.append(oauthClientId);
-			
-		authenticationUrlBuilder.append("&response_type=code"); //$NON-NLS-1$
-		authenticationUrlBuilder.append("&scope=openid%20email"); //$NON-NLS-1$
-		authenticationUrlBuilder.append("&redirect_uri="+URLEncoder.encode(baseUrl, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
-		authenticationUrlBuilder.append("&state=" + totp.now()); //$NON-NLS-1$
-		authenticationUrlBuilder.append("&openid.realm="+openidRealm); //$NON-NLS-1$
-	
-		return authenticationUrlBuilder.toString();
+		// creating the authorization request link
+		return oauthAuthorizationCodeRequestURL +
+				"?client_id=" +
+				oauthClientId +
+				"&response_type=code" +
+				"&scope=openid%20email" +
+				"&redirect_uri=" + URLEncoder.encode(baseUrl, "UTF-8") +
+				"&state=" + totp.now() +
+				"&openid.realm=" + openidRealm;
 	}
-	
+
 	@Override
 	public void attach() {
 		super.attach();
 		tfUsername.focus();
 	}
 
-
 	private void initComponents() {
 		setModal(true);
 		setWidth("50%");
 		setHeight("60%");
-		
+
 		VerticalLayout content = new VerticalLayout();
 		content.setSizeFull();
 
 		userPasswordLoginLayout = new VerticalLayout();
 		userPasswordLoginLayout.setMargin(false);
-		
+
 		tfUsername = new TextField("Username or email");
 		tfUsername.setWidth("100%");
-		
+
 		pfPassword = new PasswordField("Password");
 		pfPassword.setWidth("100%");
 
@@ -248,7 +243,7 @@ public class AuthenticationDialog extends Window implements Handler {
 
 		content.addComponent(gOauthPanel);
 		content.setExpandRatio(gOauthPanel, 1f);
-		
+
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setWidth("100%");
 
@@ -267,10 +262,10 @@ public class AuthenticationDialog extends Window implements Handler {
 		);
 		privacyPolicyLink.setTargetName("_blank");
 		privacyPolicyLink.setStyleName("authdialog-pp-link");
-		
+
 		btLogin = new Button("Sign in");
-		btLogin.setClickShortcut(KeyCode.ENTER);
-		
+		btLogin.setClickShortcut(ShortcutAction.KeyCode.ENTER);
+
 		btCancel = new Button("Cancel");
 
 		buttonPanel.addComponent(termsOfUseLink);
@@ -285,13 +280,12 @@ public class AuthenticationDialog extends Window implements Handler {
 		buttonPanel.setComponentAlignment(btCancel, Alignment.BOTTOM_RIGHT);
 		buttonPanel.setComponentAlignment(btLogin, Alignment.BOTTOM_RIGHT);
 		buttonPanel.setExpandRatio(btLogin, 1f);
-		
+
 		content.addComponent(buttonPanel);
 
 		setContent(content);
-
 	}
-	
+
 	public void show() {
 		UI.getCurrent().addWindow(this);
 	}
