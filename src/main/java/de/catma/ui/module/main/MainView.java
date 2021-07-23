@@ -106,16 +106,21 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
         if (!termsOfUseConsentGiven) {
         	ConfirmDialog dlg = ConfirmDialog.show(
         		UI.getCurrent(), 
-        		"Terms of use", 
-        		String.format("Please read our <a href=\"%1$s\" target=\"_blank\">terms of use</a> and our "
-        				+ "<a href=\"%2$s\" target=\"_blank\">privacy policy</a>. "
-        				+ "You need to accept both in order to continue to work with CATMA.<br />"
-        				+ "<br />Do you <b>accept</b> our <a href=\"%1$s\" target=\"_blank\">terms of use</a> and our "
-        				+ "<a href=\"%2$s\" target=\"_blank\">privacy policy</a>?",
+					"Terms of Use & Privacy Policy",
+					String.format(
+							"Please read our " +
+									"<a href=\"%1$s\" target=\"_blank\">Terms of Use</a> " +
+									"and our " +
+									"<a href=\"%2$s\" target=\"_blank\">Privacy Policy</a> " +
+									"carefully. You need to accept both in order to continue to work with CATMA.<br />" +
+									"<br />" +
+									"Do you <strong>accept</strong> our Terms of Use and our Privacy Policy?",
         				CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue()),
-        				CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue())),
-        		"Yes", "No", new ConfirmDialog.Listener() {
-				
+							CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue())
+					),
+					"Yes",
+					"No",
+					new ConfirmDialog.Listener() {
 				@Override
 				public void onClose(ConfirmDialog dialog) {
 					if (dialog.isConfirmed()) {
