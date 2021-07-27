@@ -8,16 +8,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import com.google.common.eventbus.EventBus;
 import de.catma.backgroundservice.BackgroundService;
+import de.catma.indexer.TermExtractor;
+import de.catma.indexer.TermInfo;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.api.Status;
 import org.gitlab4j.api.UserApi;
@@ -91,6 +92,12 @@ public class GitProjectHandlerTest {
 
 		if (directoriesToDeleteOnTearDown.size() > 0) {
 			for (File dir : directoriesToDeleteOnTearDown) {
+				// files have read-only attribute set on Windows, which we need to clear before the call to `deleteDirectory` will work
+				for (Iterator<File> it = FileUtils.iterateFiles(dir, null, true); it.hasNext(); ) {
+					File file = it.next();
+					file.setWritable(true);
+				}
+
 				FileUtils.deleteDirectory(dir);
 			}
 			directoriesToDeleteOnTearDown.clear();
@@ -272,81 +279,101 @@ public class GitProjectHandlerTest {
 //			);
 //		}
 //	}
-//
-//	@Test
-//	public void createSourceDocument() throws Exception {
-//		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
-//		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
-//
-//		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
-//		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
-//
-//		IndexInfoSet indexInfoSet = new IndexInfoSet();
-//		indexInfoSet.setLocale(Locale.ENGLISH);
-//
-//		ContentInfoSet contentInfoSet = new ContentInfoSet(
-//			"William Faulkner",
-//			"",
-//			"",
-//			"A Rose for Emily"
-//		);
-//
-//		TechInfoSet techInfoSet = new TechInfoSet(
-//			FileType.TEXT,
-//			StandardCharsets.UTF_8,
-//			FileOSType.DOS,
-//			705211438L
-//		);
-//
-//		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
-//			indexInfoSet, contentInfoSet, techInfoSet
-//		);
-//
-//		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-//				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), this.catmaUser)) {
-//			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
-//
-//			GitProjectManager gitProjectManager = new GitProjectManager(
-//					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
-//					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
-//
-//
-//			String projectId = gitProjectManager.create(
-//				"Test CATMA Project", "This is a test CATMA project"
-//			);
-//			this.projectsToDeleteOnTearDown.add(projectId);
-//
-//			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
-//			// return
-//			assertFalse(jGitRepoManager.isAttached());
-//
-//			GitProjectHandler gitProjectHandler = new GitProjectHandler(null, projectId, jGitRepoManager, gitLabServerManager);
-//
-//			String sourceDocumentId = gitProjectHandler.createSourceDocument(
-//					null,
-//					originalSourceDocumentStream, originalSourceDocument.getName(),
-//					convertedSourceDocumentStream, convertedSourceDocument.getName(),
-//					null, null,
-//					sourceDocumentInfo
-//			);
-//
-//			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
-//			// return
-//			assertFalse(jGitRepoManager.isAttached());
-//
-//			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-//			Status status = jGitRepoManager.getGitApi().status().call();
-//			Set<String> added = status.getAdded();
-//
-//			assert status.hasUncommittedChanges();
-//			assert added.contains(".gitmodules");
-//			assert added.contains(
-//					String.format(
-//							"%s/%s",
-//							GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
-//							sourceDocumentId
-//					)
-//			);
-//		}
-//	}
+
+	@Test
+	public void createSourceDocument() throws Exception {
+		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
+
+		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
+		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
+
+		IndexInfoSet indexInfoSet = new IndexInfoSet();
+		indexInfoSet.setLocale(Locale.ENGLISH);
+
+		ContentInfoSet contentInfoSet = new ContentInfoSet(
+			"William Faulkner",
+			"",
+			"",
+			"A Rose for Emily"
+		);
+
+		TechInfoSet techInfoSet = new TechInfoSet(
+			FileType.TEXT,
+			StandardCharsets.UTF_8,
+			FileOSType.DOS,
+			705211438L
+		);
+
+		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
+			indexInfoSet, contentInfoSet, techInfoSet
+		);
+
+		Map<String, List<TermInfo>> terms = new TermExtractor(
+				IOUtils.toString(convertedSourceDocumentStream, techInfoSet.getCharset()),
+				new ArrayList<>(),
+				new ArrayList<>(),
+				indexInfoSet.getLocale()
+		).getTerms();
+
+		String sourceDocumentUuid = new IDGenerator().generateDocumentId();
+		String tokenizedSourceDocumentFileName = sourceDocumentUuid + "." + "json"; // GraphWorktreeProject.TOKENIZED_FILE_EXTENSION
+
+		/*
+		All of the above circumvents file upload, *ContentHandler classes and SourceDocument class
+		See GraphWorktreeProject.insert
+		 */
+
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
+				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+		)) {
+
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+
+			BackgroundService mockBackgroundService = mock(BackgroundService.class);
+			EventBus mockEventBus = mock(EventBus.class);
+
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					gitlabManagerRestricted,
+					(projectId) -> {}, // noop deletion handler
+					mockBackgroundService,
+					mockEventBus
+			);
+
+			String projectId = gitProjectManager.create(
+				"Test CATMA Project", "This is a test CATMA project"
+			);
+
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(gitlabManagerRestricted.getUser(), projectId, jGitRepoManager, gitlabManagerRestricted);
+
+			String sourceDocumentId = gitProjectHandler.createSourceDocument(
+					sourceDocumentUuid,
+					originalSourceDocumentStream, originalSourceDocument.getName(),
+					convertedSourceDocumentStream, convertedSourceDocument.getName(),
+					terms, tokenizedSourceDocumentFileName,
+					sourceDocumentInfo
+			);
+
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			Status status = jGitRepoManager.getGitApi().status().call();
+			Set<String> added = status.getAdded();
+
+			assert status.hasUncommittedChanges();
+			assert added.contains(".gitmodules");
+			assert added.contains(
+					String.format(
+							"%s/%s",
+							GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+							sourceDocumentId
+					)
+			);
+		}
+	}
 }
