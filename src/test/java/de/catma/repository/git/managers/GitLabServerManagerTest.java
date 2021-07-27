@@ -51,7 +51,7 @@ public class GitLabServerManagerTest {
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
+		// create a fake CATMA user which we'll use to instantiate GitlabManagerRestricted (using the corresponding impersonation token)
 		Integer randomUserId = Integer.parseInt(RandomStringUtils.randomNumeric(3));
 		String username = String.format("testuser-%s", randomUserId);
 		String email = String.format("%s@catma.de", username);
@@ -72,36 +72,30 @@ public class GitLabServerManagerTest {
 		ProjectApi projectApi = adminGitLabApi.getProjectApi();
 		UserApi userApi = adminGitLabApi.getUserApi();
 
-		if (this.groupsToDeleteOnTearDown.size() > 0) {
-			for (String groupPath : this.groupsToDeleteOnTearDown) {
+		if (groupsToDeleteOnTearDown.size() > 0) {
+			for (String groupPath : groupsToDeleteOnTearDown) {
 				groupApi.deleteGroup(groupPath);
 				await().until(() -> groupApi.getGroups().isEmpty());
 			}
 		}
 
-		if (this.repositoriesToDeleteOnTearDown.size() > 0) {
-			for (Integer repositoryId : this.repositoriesToDeleteOnTearDown) {
+		if (repositoriesToDeleteOnTearDown.size() > 0) {
+			for (Integer repositoryId : repositoriesToDeleteOnTearDown) {
 				projectApi.deleteProject(repositoryId);
 				await().until(() -> projectApi.getProjects().isEmpty());
 			}
 		}
 
-		if (this.usersToDeleteOnTearDown.size() > 0) {
-			for (Integer userId : this.usersToDeleteOnTearDown) {
+		if (usersToDeleteOnTearDown.size() > 0) {
+			for (Integer userId : usersToDeleteOnTearDown) {
 				userApi.deleteUser(userId);
 				GitLabServerManagerTest.awaitUserDeleted(userApi, userId);
 			}
 		}
 
-		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
-		// created
-		// we do this last because GitLab seems to ignore deleteUser calls if the user still has
-		// contributions (groups or repos), but that's probably because gitlab4j doesn't pass the
-		// "hard_delete" parameter (which *is* safer, but it would be nice to have control over it)
-		// the fact that the UI only shows the hard delete option for users that still have
-		// contributions confirms this theory, as does the documentation at
-		// https://docs.gitlab.com/ee/user/profile/account/delete_account.html#associated-records
-		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId());
+		// delete the GitLab user that we created in setUp, including associated groups/repos
+		// TODO: explicit deletion of associated groups/repos (above) is now superfluous since we are doing a hard delete
+		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
 		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}
 
