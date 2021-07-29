@@ -107,7 +107,7 @@ public class GitProjectHandlerTest {
 		// TODO: explicit deletion of associated repos (above) is now superfluous since we are doing a hard delete
 		UserApi userApi = gitlabManagerPrivileged.getGitLabApi().getUserApi();
 		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
-		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
+//		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}
 
 	@Test

@@ -96,7 +96,7 @@ public class GitLabServerManagerTest {
 		// delete the GitLab user that we created in setUp, including associated groups/repos
 		// TODO: explicit deletion of associated groups/repos (above) is now superfluous since we are doing a hard delete
 		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
-		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
+//		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}
 
 	public static void awaitUserDeleted(UserApi userApi, int userId) {
