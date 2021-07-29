@@ -87,7 +87,7 @@ public class GitProjectHandlerTest {
 			for (String projectId : projectsToDeleteOnTearDown) {
 				gitProjectManager.delete(projectId);
 			}
-			this.projectsToDeleteOnTearDown.clear();
+			projectsToDeleteOnTearDown.clear();
 		}
 
 		if (directoriesToDeleteOnTearDown.size() > 0) {
@@ -132,11 +132,12 @@ public class GitProjectHandlerTest {
 			String projectId = gitProjectManager.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
+			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
 			assertNotNull(projectId);
 			assert projectId.startsWith("CATMA_");
 
-			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
 			String expectedRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -344,8 +345,9 @@ public class GitProjectHandlerTest {
 			String projectId = gitProjectManager.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
+			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
-			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
 			GitProjectHandler gitProjectHandler = new GitProjectHandler(gitlabManagerRestricted.getUser(), projectId, jGitRepoManager, gitlabManagerRestricted);

@@ -1,32 +1,39 @@
 package de.catma.repository.git;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
+import java.util.*;
 
+import com.google.common.eventbus.EventBus;
+import de.catma.backgroundservice.BackgroundService;
+import de.catma.indexer.TermExtractor;
+import de.catma.indexer.TermInfo;
+import de.catma.properties.CATMAProperties;
+import de.catma.properties.CATMAPropertyKey;
+import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+//import org.junit.Rule;
+//import org.junit.rules.ExpectedException;
 
-import de.catma.document.repository.RepositoryProperties;
-import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
@@ -35,17 +42,13 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
-import helpers.Randomizer;
-import helpers.UserIdentification;
+//import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 
 public class GitSourceDocumentHandlerTest {
-	private Properties catmaProperties;
-	private de.catma.user.User catmaUser;
-	private GitLabServerManager gitLabServerManager;
+	private GitlabManagerPrivileged gitlabManagerPrivileged;
+	private GitlabManagerRestricted gitlabManagerRestricted;
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<String> sourceDocumentReposToDeleteOnTearDown = new ArrayList<>();
@@ -55,61 +58,80 @@ public class GitSourceDocumentHandlerTest {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
-		this.catmaProperties = new Properties();
-		this.catmaProperties.load(new FileInputStream(propertiesFile));
+		Properties catmaProperties = new Properties();
+		catmaProperties.load(new FileInputStream(propertiesFile));
+		CATMAProperties.INSTANCE.setProperties(catmaProperties);
     }
 
-    @Before
+    @BeforeEach
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
-		this.catmaUser = Randomizer.getDbUser();
-		RepositoryProperties.INSTANCE.setProperties(catmaProperties);
-		this.gitLabServerManager = new GitLabServerManager(
-				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
+		// create a fake CATMA user which we'll use to instantiate GitlabManagerRestricted (using the corresponding impersonation token) & JGitRepoManager
+		Integer randomUserId = Integer.parseInt(RandomStringUtils.randomNumeric(3));
+		String username = String.format("testuser-%s", randomUserId);
+		String email = String.format("%s@catma.de", username);
+		String name = String.format("Test User %s", randomUserId);
+
+		gitlabManagerPrivileged = new GitlabManagerPrivileged();
+		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
+
+		EventBus mockEventBus = mock(EventBus.class);
+		BackgroundService mockBackgroundService = mock(BackgroundService.class);
+		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, mockBackgroundService, impersonationToken);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
-		if (this.directoriesToDeleteOnTearDown.size() > 0) {
-			for (File dir : this.directoriesToDeleteOnTearDown) {
+		if (directoriesToDeleteOnTearDown.size() > 0) {
+			for (File dir : directoriesToDeleteOnTearDown) {
+				// files have read-only attribute set on Windows, which we need to clear before the call to `deleteDirectory` will work
+				for (Iterator<File> it = FileUtils.iterateFiles(dir, null, true); it.hasNext(); ) {
+					File file = it.next();
+					file.setWritable(true);
+				}
+
 				FileUtils.deleteDirectory(dir);
 			}
-			this.directoriesToDeleteOnTearDown.clear();
+			directoriesToDeleteOnTearDown.clear();
 		}
 
-		if (this.sourceDocumentReposToDeleteOnTearDown.size() > 0) {
-			for (String sourceDocumentId : this.sourceDocumentReposToDeleteOnTearDown) {
-				List<Project> projects = this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(
+		if (sourceDocumentReposToDeleteOnTearDown.size() > 0) {
+			for (String sourceDocumentId : sourceDocumentReposToDeleteOnTearDown) {
+				List<Project> projects = gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(
 					sourceDocumentId
 				); // this getProjects overload does a search
 				for (Project project : projects) {
-					this.gitLabServerManager.deleteRepository(project.getId());
+					gitlabManagerRestricted.deleteRepository(project.getId());
 				}
 				await().until(
-					() -> this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+					() -> gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects().isEmpty()
 				);
 			}
-			this.sourceDocumentReposToDeleteOnTearDown.clear();
+			sourceDocumentReposToDeleteOnTearDown.clear();
 		}
 
-		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			GitProjectManager gitProjectHandler = new GitProjectManager(
-					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
-					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
+		if (projectsToDeleteOnTearDown.size() > 0) {
+			BackgroundService mockBackgroundService = mock(BackgroundService.class);
+			EventBus mockEventBus = mock(EventBus.class);
 
-			for (String projectId : this.projectsToDeleteOnTearDown) {
-				gitProjectHandler.delete(projectId);
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					gitlabManagerRestricted,
+					(projectId) -> {}, // noop deletion handler
+					mockBackgroundService,
+					mockEventBus
+			);
+
+			for (String projectId : projectsToDeleteOnTearDown) {
+				gitProjectManager.delete(projectId);
 			}
-			this.projectsToDeleteOnTearDown.clear();
+			projectsToDeleteOnTearDown.clear();
 		}
 
-		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
-		// created - see GitLabServerManagerTest tearDown() for more info
-		User user = this.gitLabServerManager.getGitLabUser();
-		this.gitLabServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
-		GitLabServerManagerTest.awaitUserDeleted(
-			this.gitLabServerManager.getAdminGitLabApi().getUserApi(), user.getId()
-		);
+		// delete the GitLab user that we created in setUp, including associated groups/repos
+		// TODO: explicit deletion of associated repos (above) is now superfluous since we are doing a hard delete
+		UserApi userApi = gitlabManagerPrivileged.getGitLabApi().getUserApi();
+		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
+		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}
 
 	@Test
@@ -143,46 +165,68 @@ public class GitSourceDocumentHandlerTest {
 			indexInfoSet, contentInfoSet, techInfoSet
 		);
 
-		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
-			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+		Map<String, List<TermInfo>> terms = new TermExtractor(
+				IOUtils.toString(convertedSourceDocumentStream, techInfoSet.getCharset()),
+				new ArrayList<>(),
+				new ArrayList<>(),
+				indexInfoSet.getLocale()
+		).getTerms();
 
-			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-				jGitRepoManager, this.gitLabServerManager
+		String sourceDocumentUuid = new IDGenerator().generateDocumentId();
+		String tokenizedSourceDocumentFileName = sourceDocumentUuid + "." + "json"; // GraphWorktreeProject.TOKENIZED_FILE_EXTENSION
+
+		/*
+		All of the above circumvents file upload, *ContentHandler classes and SourceDocument class
+		See GraphWorktreeProject.insert
+		 */
+
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
+				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+		)) {
+
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+
+			BackgroundService mockBackgroundService = mock(BackgroundService.class);
+			EventBus mockEventBus = mock(EventBus.class);
+
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					gitlabManagerRestricted,
+					(projectId) -> {}, // noop deletion handler
+					mockBackgroundService,
+					mockEventBus
 			);
 
-			GitProjectManager gitProjectHandler = new GitProjectManager(
-					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
-					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
-
-			String projectId = gitProjectHandler.create(
+			String projectId = gitProjectManager.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
-			this.projectsToDeleteOnTearDown.add(projectId);
+			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
-			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
-			// return
+			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					jGitRepoManager, gitlabManagerRestricted, new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword())
+			);
+
 			String sourceDocumentId = gitSourceDocumentHandler.create(
-					projectId, null,
+					projectId, sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
-					null, null,
+					terms, tokenizedSourceDocumentFileName,
 					sourceDocumentInfo
 			);
-			// we don't add the sourceDocumentId to this.sourceDocumentReposToDeleteOnTearDown as deletion of the
-			// project will take care of that for us
+			// we don't add the sourceDocumentId to sourceDocumentReposToDeleteOnTearDown as deletion of the project will take care of that for us
 
 			assertNotNull(sourceDocumentId);
-			assert sourceDocumentId.startsWith("CATMA_");
+			assert sourceDocumentId.startsWith("D_");
 
-			// the JGitRepoManager instance should always be in a detached state after GitSourceDocumentHandler
-			// calls return
+			// the JGitRepoManager instance should always be in a detached state after GitSourceDocumentHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
 			File expectedRepoPath = new File(
 				jGitRepoManager.getRepositoryBasePath(),
-				GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
+				sourceDocumentId
 			);
 
 			assert expectedRepoPath.exists();
@@ -230,55 +274,55 @@ public class GitSourceDocumentHandlerTest {
 		}
 	}
 
-	// how to test for exceptions: https://stackoverflow.com/a/31826781
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
-	@Test
-	public void delete() throws Exception {
-		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
-			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
-
-			thrown.expect(IOException.class);
-			thrown.expectMessage("Not implemented");
-			gitSourceDocumentHandler.delete("fakeProjectId", "fakeSourceDocumentId");
-		}
-	}
-
-	@Test
-	public void open() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
-			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
-
-			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
-					jGitRepoManager, this.gitLabServerManager, this.catmaUser
-			);
-
-			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");
-			String sourceDocumentId = (String)getJsonLdWebAnnotationResult.get("sourceDocumentUuid");
-
-			this.projectsToDeleteOnTearDown.add(projectId);
-
-			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-					jGitRepoManager, this.gitLabServerManager
-			);
-
-			SourceDocument loadedSourceDocument = gitSourceDocumentHandler.open(projectId, sourceDocumentId);
-
-			assertNotNull(loadedSourceDocument);
-			assertEquals(
-					"William Faulkner",
-					loadedSourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet()
-							.getAuthor()
-			);
-			assertEquals(
-					"A Rose for Emily",
-					loadedSourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet()
-							.getTitle()
-			);
-			assertNotNull(loadedSourceDocument.getRevisionHash());
-		}
-	}
+//	// how to test for exceptions: https://stackoverflow.com/a/31826781
+//	@Rule
+//	public ExpectedException thrown = ExpectedException.none();
+//
+//	@Test
+//	public void delete() throws Exception {
+//		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+//			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+//				jGitRepoManager, this.gitLabServerManager
+//			);
+//
+//			thrown.expect(IOException.class);
+//			thrown.expectMessage("Not implemented");
+//			gitSourceDocumentHandler.delete("fakeProjectId", "fakeSourceDocumentId");
+//		}
+//	}
+//
+//	@Test
+//	public void open() throws Exception {
+//		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+//			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+//
+//			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
+//					jGitRepoManager, this.gitLabServerManager, this.catmaUser
+//			);
+//
+//			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");
+//			String sourceDocumentId = (String)getJsonLdWebAnnotationResult.get("sourceDocumentUuid");
+//
+//			this.projectsToDeleteOnTearDown.add(projectId);
+//
+//			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+//					jGitRepoManager, this.gitLabServerManager
+//			);
+//
+//			SourceDocument loadedSourceDocument = gitSourceDocumentHandler.open(projectId, sourceDocumentId);
+//
+//			assertNotNull(loadedSourceDocument);
+//			assertEquals(
+//					"William Faulkner",
+//					loadedSourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet()
+//							.getAuthor()
+//			);
+//			assertEquals(
+//					"A Rose for Emily",
+//					loadedSourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet()
+//							.getTitle()
+//			);
+//			assertNotNull(loadedSourceDocument.getRevisionHash());
+//		}
+//	}
 }

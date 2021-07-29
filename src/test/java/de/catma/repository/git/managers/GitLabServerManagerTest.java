@@ -74,14 +74,14 @@ public class GitLabServerManagerTest {
 
 		if (groupsToDeleteOnTearDown.size() > 0) {
 			for (String groupPath : groupsToDeleteOnTearDown) {
-				groupApi.deleteGroup(groupPath);
+				gitlabManagerRestricted.deleteGroup(groupPath);
 				await().until(() -> groupApi.getGroups().isEmpty());
 			}
 		}
 
 		if (repositoriesToDeleteOnTearDown.size() > 0) {
 			for (Integer repositoryId : repositoriesToDeleteOnTearDown) {
-				projectApi.deleteProject(repositoryId);
+				gitlabManagerRestricted.deleteRepository(repositoryId);
 				await().until(() -> projectApi.getProjects().isEmpty());
 			}
 		}
