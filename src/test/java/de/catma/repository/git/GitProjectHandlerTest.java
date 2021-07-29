@@ -1,7 +1,6 @@
 package de.catma.repository.git;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
@@ -17,10 +16,12 @@ import de.catma.indexer.TermInfo;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.util.IDGenerator;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.UserApi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -316,6 +317,8 @@ public class GitProjectHandlerTest {
 				new ArrayList<>(),
 				indexInfoSet.getLocale()
 		).getTerms();
+		// need to re-instantiate the stream, otherwise an empty file will be written later on (FileInputStream does not support `reset`)
+		convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
 
 		String sourceDocumentUuid = new IDGenerator().generateDocumentId();
 		String tokenizedSourceDocumentFileName = sourceDocumentUuid + "." + "json"; // GraphWorktreeProject.TOKENIZED_FILE_EXTENSION
@@ -352,30 +355,48 @@ public class GitProjectHandlerTest {
 
 			GitProjectHandler gitProjectHandler = new GitProjectHandler(gitlabManagerRestricted.getUser(), projectId, jGitRepoManager, gitlabManagerRestricted);
 
-			String sourceDocumentId = gitProjectHandler.createSourceDocument(
+			gitProjectHandler.loadRolesPerResource(); // would usually happen when the project is opened via GraphWorktreeProject
+
+			String revisionHash = gitProjectHandler.createSourceDocument(
 					sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					terms, tokenizedSourceDocumentFileName,
 					sourceDocumentInfo
 			);
+			assertNotNull(revisionHash);
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
 			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 			Status status = jGitRepoManager.getGitApi().status().call();
-			Set<String> added = status.getAdded();
+//			Set<String> added = status.getAdded();
+//
+//			assert status.hasUncommittedChanges();
+//			assert added.contains(".gitmodules");
+//			assert added.contains(
+//					String.format(
+//							"%s/%s",
+//							GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+//							sourceDocumentId
+//					)
+//			);
 
-			assert status.hasUncommittedChanges();
-			assert added.contains(".gitmodules");
-			assert added.contains(
-					String.format(
-							"%s/%s",
-							GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
-							sourceDocumentId
-					)
-			);
+			assert status.isClean();
+			assertFalse(status.hasUncommittedChanges());
+
+			Iterable<RevCommit> commits = jGitRepoManager.getGitApi().log().all().call();
+			@SuppressWarnings("unchecked")
+			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+
+			assertEquals(1, commitsList.size());
+			// TODO: it would be good to check that the revision hash of the commit matches, however GitProjectHandler currently returns the revision hash
+			//       from the source document repo itself rather than from the root repo
+			assertEquals(gitlabManagerRestricted.getUser().getIdentifier(), commitsList.get(0).getCommitterIdent().getName());
+			assertEquals(gitlabManagerRestricted.getUser().getEmail(), commitsList.get(0).getCommitterIdent().getEmailAddress());
+			assert commitsList.get(0).getFullMessage().contains(String.format("Added Document %s with ID", contentInfoSet.getTitle()));
+			// TODO: add assertions for actual paths changed (see commented above - would need to be modified for already committed changes)
 		}
 	}
 }

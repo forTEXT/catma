@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.*;
 
 import com.google.common.eventbus.EventBus;
@@ -140,9 +141,7 @@ public class GitSourceDocumentHandlerTest {
 		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
 
 		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
-		FileInputStream convertedSourceDocumentStream = new FileInputStream(
-			convertedSourceDocument
-		);
+		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
 
 		IndexInfoSet indexInfoSet = new IndexInfoSet();
 		indexInfoSet.setLocale(Locale.ENGLISH);
@@ -171,6 +170,8 @@ public class GitSourceDocumentHandlerTest {
 				new ArrayList<>(),
 				indexInfoSet.getLocale()
 		).getTerms();
+		// need to re-instantiate the stream, otherwise an empty file will be written later on (FileInputStream does not support `reset`)
+		convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
 
 		String sourceDocumentUuid = new IDGenerator().generateDocumentId();
 		String tokenizedSourceDocumentFileName = sourceDocumentUuid + "." + "json"; // GraphWorktreeProject.TOKENIZED_FILE_EXTENSION
@@ -209,25 +210,23 @@ public class GitSourceDocumentHandlerTest {
 					jGitRepoManager, gitlabManagerRestricted, new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword())
 			);
 
-			String sourceDocumentId = gitSourceDocumentHandler.create(
+			String revisionHash = gitSourceDocumentHandler.create(
 					projectId, sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					terms, tokenizedSourceDocumentFileName,
 					sourceDocumentInfo
 			);
-			// we don't add the sourceDocumentId to sourceDocumentReposToDeleteOnTearDown as deletion of the project will take care of that for us
-
-			assertNotNull(sourceDocumentId);
-			assert sourceDocumentId.startsWith("D_");
+			assertNotNull(revisionHash);
 
 			// the JGitRepoManager instance should always be in a detached state after GitSourceDocumentHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			File expectedRepoPath = new File(
-				jGitRepoManager.getRepositoryBasePath(),
-				sourceDocumentId
-			);
+			File expectedRepoPath = Paths.get(
+					jGitRepoManager.getRepositoryBasePath().getPath(),
+					projectId,
+					sourceDocumentUuid
+			).toFile();
 
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
@@ -244,31 +243,30 @@ public class GitSourceDocumentHandlerTest {
 
 			String expectedSerializedSourceDocumentInfo = "" +
 					"{\n" +
-					"\t\"gitContentInfoSet\":{\n" +
-					"\t\t\"author\":\"William Faulkner\",\n" +
-					"\t\t\"description\":\"\",\n" +
-					"\t\t\"publisher\":\"\",\n" +
-					"\t\t\"title\":\"A Rose for Emily\"\n" +
-					"\t},\n" +
-					"\t\"gitIndexInfoSet\":{\n" +
-					"\t\t\"locale\":\"en\",\n" +
-					"\t\t\"unseparableCharacterSequences\":[],\n" +
-					"\t\t\"userDefinedSeparatingCharacters\":[]\n" +
-					"\t},\n" +
-					"\t\"gitTechInfoSet\":{\n" +
-					"\t\t\"charset\":\"UTF-8\",\n" +
-					"\t\t\"checksum\":705211438,\n" +
-					"\t\t\"fileName\":null,\n" +
-					"\t\t\"fileOSType\":\"DOS\",\n" +
-					"\t\t\"fileType\":\"TEXT\",\n" +
-					"\t\t\"mimeType\":null,\n" +
-					"\t\t\"uRI\":null,\n" +
-					"\t\t\"xsltDocumentLocalUri\":null\n" +
-					"\t}\n" +
+					"  \"gitContentInfoSet\": {\n" +
+					"    \"author\": \"William Faulkner\",\n" +
+					"    \"description\": \"\",\n" +
+					"    \"publisher\": \"\",\n" +
+					"    \"title\": \"A Rose for Emily\"\n" +
+					"  },\n" +
+					"  \"gitIndexInfoSet\": {\n" +
+					"    \"locale\": \"en\",\n" +
+					"    \"unseparableCharacterSequences\": [],\n" +
+					"    \"userDefinedSeparatingCharacters\": []\n" +
+					"  },\n" +
+					"  \"gitTechInfoSet\": {\n" +
+					"    \"charset\": \"UTF-8\",\n" +
+					"    \"checksum\": 705211438,\n" +
+					"    \"fileName\": null,\n" +
+					"    \"fileOSType\": \"DOS\",\n" +
+					"    \"fileType\": \"TEXT\",\n" +
+					"    \"mimeType\": \"text/plain\",\n" +
+					"    \"uri\": null\n" +
+					"  }\n" +
 					"}";
 
 			assertEquals(
-				expectedSerializedSourceDocumentInfo.replaceAll("[\n\t]", ""),
+				expectedSerializedSourceDocumentInfo,
 				FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
 			);
 		}
