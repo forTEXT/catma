@@ -12,16 +12,13 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import de.catma.document.source.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
 import com.google.common.collect.Maps;
 
-import de.catma.document.source.FileOSType;
-import de.catma.document.source.FileType;
-import de.catma.document.source.SourceDocument;
-import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermInfo;
@@ -209,6 +206,32 @@ public class GitSourceDocumentHandler {
 			sourceDocument.setRevisionHash(sourceDocumentRevisionHash);
 
 			return sourceDocument;
+		}
+	}
+
+	public String update(@Nonnull String projectId, @Nonnull SourceDocument sourceDocument) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			String sourceDocumentGitRepositoryName = String.format(
+					"%s/%s/%s", projectRootRepositoryName, GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocument.getUuid()
+			);
+			localGitRepoManager.open(projectId, sourceDocumentGitRepositoryName);
+
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+
+			SourceDocumentInfo sourceDocumentInfo = sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
+
+			String serializedHeader = new SerializationHelper<SourceDocumentInfo>().serialize(sourceDocumentInfo);
+
+			return localGitRepoManager.addAndCommit(
+					targetHeaderFile,
+					serializedHeader.getBytes(StandardCharsets.UTF_8),
+					String.format(
+							"Updated metadata of document \"%s\" with ID %s", sourceDocumentInfo.getContentInfoSet().getTitle(), sourceDocument.getUuid()
+					),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail()
+			);
 		}
 	}
 }

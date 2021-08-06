@@ -1,5 +1,6 @@
 package de.catma.repository.git;
 
+import static de.catma.repository.git.GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -323,4 +324,162 @@ public class GitSourceDocumentHandlerTest {
 //			assertNotNull(loadedSourceDocument.getRevisionHash());
 //		}
 //	}
+
+	@Test
+	public void update() throws Exception {
+		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
+
+		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
+		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
+
+		IndexInfoSet indexInfoSet = new IndexInfoSet();
+		indexInfoSet.setLocale(Locale.ENGLISH);
+
+		ContentInfoSet contentInfoSet = new ContentInfoSet(
+				"William Faulkner",
+				"",
+				"",
+				"A Rose for Emily"
+		);
+
+		TechInfoSet techInfoSet = new TechInfoSet(
+				FileType.TEXT,
+				StandardCharsets.UTF_8,
+				FileOSType.DOS,
+				705211438L
+		);
+
+		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
+				indexInfoSet, contentInfoSet, techInfoSet
+		);
+
+		Map<String, List<TermInfo>> terms = new TermExtractor(
+				IOUtils.toString(convertedSourceDocumentStream, techInfoSet.getCharset()),
+				new ArrayList<>(),
+				new ArrayList<>(),
+				indexInfoSet.getLocale()
+		).getTerms();
+		// need to re-instantiate the stream, otherwise an empty file will be written later on (FileInputStream does not support `reset`)
+		convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
+
+		String sourceDocumentUuid = new IDGenerator().generateDocumentId();
+		String tokenizedSourceDocumentFileName = sourceDocumentUuid + "." + "json"; // GraphWorktreeProject.TOKENIZED_FILE_EXTENSION
+
+		/*
+		All of the above circumvents file upload, *ContentHandler classes and SourceDocument class
+		See GraphWorktreeProject.insert
+		 */
+
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
+				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+		)) {
+
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+
+			BackgroundService mockBackgroundService = mock(BackgroundService.class);
+			EventBus mockEventBus = mock(EventBus.class);
+
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					gitlabManagerRestricted,
+					(projectId) -> {}, // noop deletion handler
+					mockBackgroundService,
+					mockEventBus
+			);
+
+			String projectId = gitProjectManager.create(
+					"Test CATMA Project", "This is a test CATMA project"
+			);
+			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
+
+			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					jGitRepoManager, gitlabManagerRestricted, new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword())
+			);
+
+			String revisionHash = gitSourceDocumentHandler.create(
+					projectId, sourceDocumentUuid,
+					originalSourceDocumentStream, originalSourceDocument.getName(),
+					convertedSourceDocumentStream, convertedSourceDocument.getName(),
+					terms, tokenizedSourceDocumentFileName,
+					sourceDocumentInfo
+			);
+			assertNotNull(revisionHash);
+
+			// the JGitRepoManager instance should always be in a detached state after GitSourceDocumentHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			// TODO: factor out a function that does all of the above
+
+			jGitRepoManager.open(projectId, sourceDocumentUuid);
+			jGitRepoManager.push(new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword()));
+
+			String remoteUri = jGitRepoManager.getRemoteUrl(null);
+			jGitRepoManager.detach();
+
+			// open the project root repository
+			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+
+			// create the submodule
+			File targetSubmodulePath = Paths.get(
+					jGitRepoManager.getRepositoryWorkTree().getAbsolutePath(),
+					SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+					sourceDocumentUuid
+			).toFile();
+
+			// submodule files and the changed .gitmodules file are automatically staged
+			jGitRepoManager.addSubmodule(
+					targetSubmodulePath,
+					remoteUri,
+					new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword())
+			);
+
+			jGitRepoManager.detach();
+
+			SourceDocument sourceDocument = gitSourceDocumentHandler.open(projectId, sourceDocumentUuid);
+			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
+					new ContentInfoSet(
+							"William Faulkner (updated)",
+							"Test description (new)",
+							"Test publisher (new)",
+							"A Rose for Emily (updated)"
+					)
+			);
+
+			String sourceDocumentRevision = gitSourceDocumentHandler.update(projectId, sourceDocument);
+			assertNotNull(sourceDocumentRevision);
+
+			String expectedSerializedSourceDocumentInfo = "" +
+					"{\n" +
+					"  \"gitContentInfoSet\": {\n" +
+					"    \"author\": \"William Faulkner (updated)\",\n" +
+					"    \"description\": \"Test description (new)\",\n" +
+					"    \"publisher\": \"Test publisher (new)\",\n" +
+					"    \"title\": \"A Rose for Emily (updated)\"\n" +
+					"  },\n" +
+					"  \"gitIndexInfoSet\": {\n" +
+					"    \"locale\": \"en\",\n" +
+					"    \"unseparableCharacterSequences\": [],\n" +
+					"    \"userDefinedSeparatingCharacters\": []\n" +
+					"  },\n" +
+					"  \"gitTechInfoSet\": {\n" +
+					"    \"charset\": \"UTF-8\",\n" +
+					"    \"checksum\": 705211438,\n" +
+					"    \"fileName\": null,\n" +
+					"    \"fileOSType\": \"DOS\",\n" +
+					"    \"fileType\": \"TEXT\",\n" +
+					"    \"mimeType\": \"text/plain\",\n" +
+					"    \"uri\": null\n" +
+					"  }\n" +
+					"}";
+
+			assertEquals(
+					expectedSerializedSourceDocumentInfo,
+					FileUtils.readFileToString(new File(targetSubmodulePath, "header.json"), StandardCharsets.UTF_8)
+			);
+		}
+	}
 }
