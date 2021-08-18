@@ -65,7 +65,7 @@ public class GitConflictedProject implements ConflictedProject {
 	@Override
 	public void resolveCollectionConflict(List<CollectionConflict> conflictedCollections, TagLibrary tagLibrary) throws Exception {
 		for (CollectionConflict collectionConflict : conflictedCollections) {
-			if (!collectionConflict.getAnnotationConflicts().isEmpty()) {
+			if (!collectionConflict.getAnnotationConflicts().isEmpty() || collectionConflict.isHeaderConflict()) {
 				for (AnnotationConflict annotationConflict : collectionConflict.getAnnotationConflicts()) {
 					gitProjectHandler.resolveAnnotationConflict(
 						collectionConflict.getCollectionId(), annotationConflict, tagLibrary);
