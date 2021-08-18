@@ -732,7 +732,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		String tagsetRevisionHash = 
 			gitProjectHandler.createTagset(
-				tagsetDefinition.getUuid(), tagsetDefinition.getName(), "");//TODO:
+				tagsetDefinition.getUuid(), tagsetDefinition.getName(), null);
 		
 		tagsetDefinition.setRevisionHash(tagsetRevisionHash);
 		

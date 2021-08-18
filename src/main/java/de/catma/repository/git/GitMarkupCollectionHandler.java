@@ -702,7 +702,7 @@ public class GitMarkupCollectionHandler {
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 
-			Status status = localGitRepositoryManager.getStatus();
+			Status status = localGitRepoManager.getStatus();
 			
 			File collectionHeaderFile = new File(
 					collectionSubmoduleAbsPath,
@@ -869,14 +869,16 @@ public class GitMarkupCollectionHandler {
 					new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
 							devVersion, GitMarkupCollectionHeader.class);
 			
-			String name = masterCollectionHeader.getName();
-			if (!name.trim().toLowerCase().equals(devCollectionHeader.getName().trim().toLowerCase())) {
-				name += " " + devCollectionHeader.getName();
+			String name = masterCollectionHeader.getName() == null ? "" : masterCollectionHeader.getName().trim();
+			String devName = devCollectionHeader.getName() == null ? "" : devCollectionHeader.getName().trim();
+			if (!name.equalsIgnoreCase(devName) && devName.length() > 0) {
+				name = String.format("%s %s", name, devName);
 			}
-			
-			String description = masterCollectionHeader.getDescription();
-			if (!description.trim().toLowerCase().equals(devCollectionHeader.getDescription().trim().toLowerCase())) {
-				description += " " + devCollectionHeader.getDescription();
+
+			String description = masterCollectionHeader.getDescription() == null ? "" : masterCollectionHeader.getDescription().trim();
+			String devDescription = devCollectionHeader.getDescription() == null ? "" : devCollectionHeader.getDescription().trim();
+			if (!description.equalsIgnoreCase(devDescription) && devDescription.length() > 0) {
+				description = String.format("%s %s", description, devDescription);
 			}
 			
 			return new GitMarkupCollectionHeader(

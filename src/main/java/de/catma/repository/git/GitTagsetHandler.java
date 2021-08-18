@@ -636,14 +636,16 @@ public class GitTagsetHandler {
 					new SerializationHelper<GitTagsetHeader>().deserialize(
 							devVersion, GitTagsetHeader.class);
 			
-			String name = masterTagsetHeader.getName();
-			if (!name.trim().toLowerCase().equals(devTagsetHeader.getName().trim().toLowerCase())) {
-				name += " " + devTagsetHeader.getName();
+			String name = masterTagsetHeader.getName() == null ? "" : masterTagsetHeader.getName().trim();
+			String devName = devTagsetHeader.getName() == null ? "" : devTagsetHeader.getName().trim();
+			if (!name.equalsIgnoreCase(devName) && devName.length() > 0) {
+				name = String.format("%s %s", name, devName);
 			}
-			
-			String description = masterTagsetHeader.getDescription();
-			if (!description.trim().toLowerCase().equals(devTagsetHeader.getDescription().trim().toLowerCase())) {
-				description += " " + devTagsetHeader.getDescription();
+
+			String description = masterTagsetHeader.getDescription() == null ? "" : masterTagsetHeader.getDescription().trim();
+			String devDescription = devTagsetHeader.getDescription() == null ? "" : devTagsetHeader.getDescription().trim();
+			if (!description.equalsIgnoreCase(devDescription) && devDescription.length() > 0) {
+				description = String.format("%s %s", description, devDescription);
 			}
 			
 			TreeSet<String> deletedDefinitions = new TreeSet<>();
