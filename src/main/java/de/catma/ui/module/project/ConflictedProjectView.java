@@ -55,24 +55,29 @@ public class ConflictedProjectView extends HugeCard {
 	}
 
 	private void showNextAnnotationConflict() throws IOException {
-		SourceDocument document = 
-				documents
-				.stream()
-				.filter(doc -> doc.getUuid().equals(currentCollectionConflict.getDocumentId()))
-				.findFirst()
-				.get();
-		KwicProvider kwicProvider = new KwicProvider(document);
-		
-		AnnotationConflict annotationConflict  = annotationConflictIterator.next();
-		AnnotationConflictView annotationConflictView = 
-				new AnnotationConflictView(
-					annotationConflict, 
-					currentCollectionConflict, 
-					tagManager, 
-					kwicProvider,
-					() -> showNextConflict());
-		mainPanel.removeAllComponents();
-		mainPanel.addComponent(annotationConflictView);
+		if (annotationConflictIterator.hasNext()) {
+			SourceDocument document =
+					documents
+							.stream()
+							.filter(doc -> doc.getUuid().equals(currentCollectionConflict.getDocumentId()))
+							.findFirst()
+							.get();
+			KwicProvider kwicProvider = new KwicProvider(document);
+
+			AnnotationConflict annotationConflict = annotationConflictIterator.next();
+			AnnotationConflictView annotationConflictView =
+					new AnnotationConflictView(
+							annotationConflict,
+							currentCollectionConflict,
+							tagManager,
+							kwicProvider,
+							() -> showNextConflict());
+			mainPanel.removeAllComponents();
+			mainPanel.addComponent(annotationConflictView);
+		}
+		else {
+			showNextConflict();
+		}
 	}
 
 	private void showNextConflict() {
