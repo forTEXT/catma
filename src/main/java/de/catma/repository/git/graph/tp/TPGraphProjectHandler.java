@@ -165,6 +165,17 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
+	public void updateSourceDocument(String rootRevisionHash, SourceDocument sourceDocument, String oldRootRevisionHash) throws Exception {
+		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "updateSourceDocument enter");
+
+		GraphTraversalSource g = graph.traversal();
+
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash).next().property("revisionHash", rootRevisionHash);
+
+		logRootRevisionHash("updateSourceDocument exit");
+	}
+
+	@Override
 	public Collection<SourceDocument> getDocuments(String rootRevisionHash) throws Exception {
 		GraphTraversalSource g = graph.traversal();
 		

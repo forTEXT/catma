@@ -929,8 +929,26 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) {
-        eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.UPDATED));
+	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) throws Exception {
+		String sourceDocumentRevision = gitProjectHandler.updateSourceDocument(sourceDocument);
+		sourceDocument.setRevisionHash(sourceDocumentRevision);
+
+		String oldRootRevisionHash = this.rootRevisionHash;
+
+		// project commit
+		this.rootRevisionHash = gitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit(
+				sourceDocument.getUuid(),
+				String.format(
+						"Updated metadata of document \"%s\" with ID %s",
+						sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle(),
+						sourceDocument.getUuid()
+				),
+				false
+		);
+
+		graphProjectHandler.updateSourceDocument(this.rootRevisionHash, sourceDocument, oldRootRevisionHash);
+
+		eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.UPDATED));
 	}
 
 	@Override
@@ -1494,6 +1512,8 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 		
 		for (SourceDocument document : getSourceDocuments()) {
+			gitProjectHandler.synchronizeSourceDocumentWithRemote(document.getUuid());
+
 			for (AnnotationCollectionReference collectionReference : document.getUserMarkupCollectionRefs()) {
 				gitProjectHandler.synchronizeCollectionWithRemote(collectionReference.getId());
 			}

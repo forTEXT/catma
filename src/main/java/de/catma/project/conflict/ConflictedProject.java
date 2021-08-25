@@ -11,6 +11,7 @@ import de.catma.tag.TagsetDefinition;
 public interface ConflictedProject {
 	public List<TagsetConflict> getTagsetConflicts() throws Exception;
 	public List<CollectionConflict> getCollectionConflicts() throws Exception;
+	List<SourceDocumentConflict> getSourceDocumentConflicts() throws Exception;
 	public Collection<TagsetDefinition> getTagsets() throws Exception;
 	public Collection<SourceDocument> getDocuments() throws Exception;
 	public void resolveCollectionConflict(
@@ -19,6 +20,7 @@ public interface ConflictedProject {
 	ProjectReference getProjectReference();
 	public Collection<DeletedResourceConflict> resolveRootConflicts() throws Exception;
 	public void resolveTagsetConflicts(List<TagsetConflict> tagsetConflicts) throws Exception;
+	void resolveSourceDocumentConflicts(List<SourceDocumentConflict> sourceDocumentConflicts) throws Exception;
 	public void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedReourceConflicts) throws Exception;
 	
 	

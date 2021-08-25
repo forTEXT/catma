@@ -6,7 +6,8 @@ public class DeletedResourceConflict {
 	
 	public static enum ResourceType {
 		ANNOTATION_COLLECTION,
-		TAGSET
+		TAGSET,
+		SOURCE_DOCUMENT
 	}
 	
 	private ResourceType resourceType;

@@ -959,39 +959,42 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			if (resource.isCollection()) {
 				final AnnotationCollectionReference collectionRef = 
 						((CollectionResource)selectedResources.iterator().next()).getCollectionReference();
-		    	SingleTextInputDialog collectionNameDlg = 
-	        		new SingleTextInputDialog("Edit Collection", "Please enter the new Collection name:", 
-        				new SaveCancelListener<String>() {
-    						@Override
-    						public void savePressed(String result) {
-    							collectionRef.getContentInfoSet().setTitle(result);
-    							try {
+				SingleTextInputDialog collectionNameDlg =
+					new SingleTextInputDialog("Edit Collection", "Please enter the new Collection name:",
+						new SaveCancelListener<String>() {
+							@Override
+							public void savePressed(String result) {
+								collectionRef.getContentInfoSet().setTitle(result);
+								try {
 									project.update(collectionRef, collectionRef.getContentInfoSet());
 									documentGrid.getDataProvider().refreshItem(resource);
 								} catch (Exception e) {
 									errorHandler.showAndLogError("error updating Collection", e);
 								}
-    						}
-    					});
-	            	
-	            collectionNameDlg.show();						
+							}
+						});
+
+				collectionNameDlg.show();
 			}
 			else {
 				final SourceDocument document = 
 						((DocumentResource)selectedResources.iterator().next()).getDocument();
-		    	SingleTextInputDialog collectionNameDlg = 
-	        		new SingleTextInputDialog("Edit Document", "Please enter the new Document name:", 
-        				new SaveCancelListener<String>() {
-    						@Override
-    						public void savePressed(String result) {
-    							document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().setTitle(result);
-    							project.update(
-    								document, 
-    								document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());
-    						}
-    					});
-	            	
-	            collectionNameDlg.show();								
+				SingleTextInputDialog collectionNameDlg =
+					new SingleTextInputDialog("Edit Document", "Please enter the new Document name:",
+						new SaveCancelListener<String>() {
+							@Override
+							public void savePressed(String result) {
+								document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().setTitle(result);
+								try {
+									project.update(document, document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());
+								}
+								catch (Exception e) {
+									errorHandler.showAndLogError("Error updating document", e);
+								}
+							}
+						});
+
+				collectionNameDlg.show();
 			}
 		}
 		

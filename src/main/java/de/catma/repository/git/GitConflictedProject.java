@@ -7,13 +7,7 @@ import java.util.function.Function;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
-import de.catma.project.conflict.AnnotationConflict;
-import de.catma.project.conflict.CollectionConflict;
-import de.catma.project.conflict.ConflictedProject;
-import de.catma.project.conflict.DeletedResourceConflict;
-import de.catma.project.conflict.Resolution;
-import de.catma.project.conflict.TagConflict;
-import de.catma.project.conflict.TagsetConflict;
+import de.catma.project.conflict.*;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
@@ -41,6 +35,11 @@ public class GitConflictedProject implements ConflictedProject {
 	@Override
 	public List<CollectionConflict> getCollectionConflicts() throws Exception {
 		return gitProjectHandler.getCollectionConflicts();
+	}
+
+	@Override
+	public List<SourceDocumentConflict> getSourceDocumentConflicts() throws Exception {
+		return gitProjectHandler.getSourceDocumentConflicts();
 	}
 
 	@Override
@@ -105,7 +104,23 @@ public class GitConflictedProject implements ConflictedProject {
 		}
 		
 	}
-	
+
+	@Override
+	public void resolveSourceDocumentConflicts(List<SourceDocumentConflict> sourceDocumentConflicts) throws Exception {
+		// for now there shouldn't be conflicts on anything other than the header file (nothing else about a document can currently be edited by users)
+		// those are resolved/merged automatically when they're fetched, but need to commit and push here
+		for (SourceDocumentConflict sourceDocumentConflict : sourceDocumentConflicts) {
+			gitProjectHandler.addSourceDocumentToStagedAndCommit(
+					sourceDocumentConflict.getSourceDocumentId(), "Auto-committing merged changes", true
+			);
+			gitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit(
+					sourceDocumentConflict.getSourceDocumentId(), "Auto-committing merged changes", false
+			);
+			gitProjectHandler.checkoutSourceDocumentDevBranchAndRebase(sourceDocumentConflict.getSourceDocumentId());
+			gitProjectHandler.synchronizeSourceDocumentWithRemote(sourceDocumentConflict.getSourceDocumentId());
+		}
+	}
+
 	@Override
 	public void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedResourceConflicts) throws Exception {
 		gitProjectHandler.resolveDeletedResourceConflicts(deletedResourceConflicts);

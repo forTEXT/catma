@@ -13,12 +13,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
-import de.catma.project.conflict.AnnotationConflict;
-import de.catma.project.conflict.CollectionConflict;
-import de.catma.project.conflict.ConflictedProject;
-import de.catma.project.conflict.DeletedResourceConflict;
-import de.catma.project.conflict.TagConflict;
-import de.catma.project.conflict.TagsetConflict;
+import de.catma.project.conflict.*;
 import de.catma.repository.git.CommitMissingException;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
@@ -43,6 +38,7 @@ public class ConflictedProjectView extends HugeCard {
 	private Iterator<TagsetConflict> tagsetConflictsIterator;
 	private TagsetConflict currentTagsetConflict;
 	private Iterator<TagConflict> tagConflictIterator;
+	private List<SourceDocumentConflict> sourceDocumentConflicts;
 
     public ConflictedProjectView(ConflictedProject conflictedProject, EventBus eventBus){
     	super("Resolve Project Conflicts");
@@ -110,8 +106,12 @@ public class ConflictedProjectView extends HugeCard {
 			else {
 				conflictedProject.resolveCollectionConflict(
 					this.collectionConflicts, this.tagManager.getTagLibrary());
+
+				// TODO: this may not be the right place to be doing this
+				conflictedProject.resolveSourceDocumentConflicts(sourceDocumentConflicts);
+
 				try {
-					Collection<DeletedResourceConflict> deletedReourceConflicts = 
+					Collection<DeletedResourceConflict> deletedReourceConflicts =
 							conflictedProject.resolveRootConflicts();
 					
 					if (!deletedReourceConflicts.isEmpty()) {
@@ -201,6 +201,8 @@ public class ConflictedProjectView extends HugeCard {
 			this.tagsetConflictsIterator = this.tagsetConflicts.iterator();
 			this.collectionConflicts = this.conflictedProject.getCollectionConflicts();
 			this.collectionConflictIterator = collectionConflicts.iterator();
+			sourceDocumentConflicts = conflictedProject.getSourceDocumentConflicts();
+
 			showNextConflict();
 		} catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading conflicted Project!", e);

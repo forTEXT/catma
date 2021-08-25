@@ -41,6 +41,8 @@ public interface GraphProjectHandler {
 	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document,
 			Path tokenizedSourceDocumentPath) throws Exception;
 
+	void updateSourceDocument(String rootRevisionHash, SourceDocument sourceDocument, String oldRootRevisionHash) throws Exception;
+
 	Collection<SourceDocument> getDocuments(String rootRevisionHash) throws Exception;
 
 	SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception;

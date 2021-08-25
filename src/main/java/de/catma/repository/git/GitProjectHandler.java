@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import de.catma.project.conflict.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.MergeResult;
@@ -37,13 +38,6 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.indexer.TermInfo;
 import de.catma.project.CommitInfo;
-import de.catma.project.conflict.AnnotationConflict;
-import de.catma.project.conflict.CollectionConflict;
-import de.catma.project.conflict.DeletedResourceConflict;
-import de.catma.project.conflict.DeletedResourceConflict.ResourceType;
-import de.catma.project.conflict.Resolution;
-import de.catma.project.conflict.TagConflict;
-import de.catma.project.conflict.TagsetConflict;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -61,6 +55,8 @@ import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
+
+import javax.annotation.Nonnull;
 
 public class GitProjectHandler {
 
@@ -403,6 +399,9 @@ public class GitProjectHandler {
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail(),
 				false);
+			localRepoManager.detach();
+
+			gitSourceDocumentHandler.checkout(projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 			
 			rolesPerResource.put(
 				sourceDocumentId, 
@@ -411,6 +410,39 @@ public class GitProjectHandler {
 			return revisionHash;
 		}
 
+	}
+
+	public String updateSourceDocument(@Nonnull SourceDocument sourceDocument) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localGitRepoManager, this.remoteGitServerManager, this.credentialsProvider
+			);
+			return gitSourceDocumentHandler.update(projectId, sourceDocument);
+		}
+	}
+
+	public String addSourceDocumentSubmoduleToStagedAndCommit(@Nonnull String sourceDocumentId, String commitMessage, boolean force) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			Path relativePath = Paths.get(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocumentId);
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.add(relativePath);
+			return localGitRepoManager.commit(commitMessage, remoteGitServerManager.getUsername(), remoteGitServerManager.getEmail(), force);
+		}
+	}
+
+	public String addSourceDocumentToStagedAndCommit(String sourceDocumentId, String commitMessage, boolean force) throws IOException {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(localRepoManager, remoteGitServerManager, credentialsProvider);
+			return gitSourceDocumentHandler.addAllAndCommit(projectId, sourceDocumentId, commitMessage, force);
+		}
+	}
+
+	public void checkoutSourceDocumentDevBranchAndRebase(String sourceDocumentId) throws Exception {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(localRepoManager, remoteGitServerManager, credentialsProvider);
+			gitSourceDocumentHandler.checkout(projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, false);
+			gitSourceDocumentHandler.rebaseToMaster(projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH);
+		}
 	}
 
 	public String getRootRevisionHash() throws Exception {
@@ -951,23 +983,25 @@ public class GitProjectHandler {
 		logger.info(String.format("Ensuring dev branches for Project %1$s", projectId));
 		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = 
-				new GitTagsetHandler(
-					localGitRepoManager, 
-					this.remoteGitServerManager,
-					this.credentialsProvider);
+			// tagsets
+			GitTagsetHandler gitTagsetHandler =
+					new GitTagsetHandler(
+							localGitRepoManager,
+							this.remoteGitServerManager,
+							this.credentialsProvider);
 
 			for (TagsetDefinition tagset : getTagsets()) {
 				logger.info(
 						String.format(
-							"Checking out dev branch for Tagset %1$s with ID %2$s", 
-							tagset.getName(),
-							tagset.getUuid()));
+								"Checking out dev branch for Tagset %1$s with ID %2$s",
+								tagset.getName(),
+								tagset.getUuid()));
 				gitTagsetHandler.checkout(
-					projectId, tagset.getUuid(), 
-					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+						projectId, tagset.getUuid(),
+						ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 			}
-			
+
+			// collections
 			GitMarkupCollectionHandler collectionHandler = 
 				new GitMarkupCollectionHandler(
 						localGitRepoManager, 
@@ -985,7 +1019,21 @@ public class GitProjectHandler {
 					collectionReference.getId(), 
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 			}
-		}		
+
+			// documents
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(localGitRepoManager, remoteGitServerManager, credentialsProvider);
+
+			for (SourceDocument sourceDocument : getDocuments()) {
+				logger.info(
+						String.format(
+								"Checking out dev branch for document \"%s\" with ID %s",
+								sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle(),
+								sourceDocument.getUuid()
+						)
+				);
+				gitSourceDocumentHandler.checkout(projectId, sourceDocument.getUuid(), ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+			}
+		}
 	}
 
 	public boolean hasUncommittedChanges() throws Exception {
@@ -1018,7 +1066,7 @@ public class GitProjectHandler {
 			return localGitRepoManager.getUnsynchronizedChanges();
 		}		
 	}
-	
+
 	public void synchronizeTagsetWithRemote(String tagsetId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
@@ -1079,6 +1127,7 @@ public class GitProjectHandler {
 			Path collectionDirPath = 
 					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
 					.resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+			Path sourceDocumentsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI()).resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
 
 			Status topLevelStatus = localGitRepoManager.getStatus(true);
 			boolean pushTopLevelConflictResolution = false;
@@ -1142,6 +1191,28 @@ public class GitProjectHandler {
 					}
 				}
 				
+			}
+
+			if (sourceDocumentsDirPath.toFile().exists()) {
+				List<Path> paths = Files.walk(sourceDocumentsDirPath, 1)
+						.filter(sourceDocumentPath -> !sourceDocumentsDirPath.equals(sourceDocumentPath))
+						.collect(Collectors.toList());
+
+				GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+						localGitRepoManager, remoteGitServerManager, credentialsProvider
+				);
+
+				for (Path sourceDocumentPath : paths) {
+					// empty directories are submodules not yet initialized or deleted
+					if (sourceDocumentPath.toFile().list() != null && sourceDocumentPath.toFile().list().length > 0) {
+						String sourceDocumentId = sourceDocumentPath.getFileName().toString();
+						Status status = gitSourceDocumentHandler.getStatus(projectId, sourceDocumentId);
+						if (!status.getConflicting().isEmpty()) {
+							StatusPrinter.print("Document #" + sourceDocumentId, status, System.out);
+							return true;
+						}
+					}
+				}
 			}
 			
 			if (!projectStatus.getConflicting().isEmpty()) {
@@ -1306,7 +1377,7 @@ public class GitProjectHandler {
 								deletedResourceConflict.setContentInfoSet(new ContentInfoSet("N/A"));
 							}
 							
-							deletedResourceConflict.setResourceType(ResourceType.ANNOTATION_COLLECTION);
+							deletedResourceConflict.setResourceType(DeletedResourceConflict.ResourceType.ANNOTATION_COLLECTION);
 						}
 						finally {
 							localGitRepoManager.detach();
@@ -1328,8 +1399,33 @@ public class GitProjectHandler {
 									tagsetId);
 							deletedResourceConflict.setResourceId(tagsetId);
 							deletedResourceConflict.setContentInfoSet(
-									contentInfoSet);
-							deletedResourceConflict.setResourceType(ResourceType.TAGSET);
+									contentInfoSet); // TODO: same conditional logic as for collections above?
+							deletedResourceConflict.setResourceType(DeletedResourceConflict.ResourceType.TAGSET);
+						}
+						finally {
+							localGitRepoManager.detach();
+						}
+					}
+					else if (deletedResourceConflict.getRelativeModulePath().startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)) {
+						try {
+							GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+									localGitRepoManager, remoteGitServerManager, credentialsProvider
+							);
+							String sourceDocumentId = deletedResourceConflict.getRelativeModulePath().substring(
+									SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME.length()+1
+							);
+
+							deletedResourceConflict.setResourceId(sourceDocumentId);
+
+							if (deletedResourceConflict.isDeletedByThem()) {
+								ContentInfoSet contentInfoSet = gitSourceDocumentHandler.getContentInfoSet(projectId, sourceDocumentId);
+								deletedResourceConflict.setContentInfoSet(contentInfoSet);
+							}
+							else {
+								deletedResourceConflict.setContentInfoSet(new ContentInfoSet("N/A"));
+							}
+
+							deletedResourceConflict.setResourceType(DeletedResourceConflict.ResourceType.SOURCE_DOCUMENT);
 						}
 						finally {
 							localGitRepoManager.detach();
@@ -1408,6 +1504,53 @@ public class GitProjectHandler {
 			}
 
 		}		
+	}
+
+	// TODO: refactoring - see hasConflicts, almost identical code (same for tagsets and collections)
+	//       also: are we unnecessarily opening the root repo here?
+	public List<SourceDocumentConflict> getSourceDocumentConflicts() throws Exception {
+		ArrayList<SourceDocumentConflict> sourceDocumentConflicts = new ArrayList<>();
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			Path sourceDocumentsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI()).resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
+			localGitRepoManager.detach();
+
+			if (sourceDocumentsDirPath.toFile().exists()) {
+				List<Path> paths = Files.walk(sourceDocumentsDirPath, 1)
+						.filter(sourceDocumentPath -> !sourceDocumentsDirPath.equals(sourceDocumentPath))
+						.collect(Collectors.toList());
+
+				GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+						localGitRepoManager, remoteGitServerManager, credentialsProvider
+				);
+
+				for (Path sourceDocumentPath : paths) {
+					String sourceDocumentId = sourceDocumentPath.getFileName().toString();
+					Status status = gitSourceDocumentHandler.getStatus(projectId, sourceDocumentId);
+					if (!status.getConflicting().isEmpty()) {
+						sourceDocumentConflicts.add(gitSourceDocumentHandler.getSourceDocumentConflict(projectId, sourceDocumentId));
+					}
+				}
+			}
+		}
+
+		return sourceDocumentConflicts;
+	}
+
+	public void synchronizeSourceDocumentWithRemote(String sourceDocumentId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(localGitRepoManager, remoteGitServerManager, credentialsProvider);
+
+			@SuppressWarnings("unused")
+			MergeResult mergeResult = gitSourceDocumentHandler.synchronizeBranchWithRemoteMaster(
+					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
+					projectId,
+					sourceDocumentId,
+					hasPermission(getRoleForDocument(sourceDocumentId), RBACPermission.DOCUMENT_WRITE)
+			);
+			// mergeResult is handled after all resources have been synchronized
+		}
 	}
 
 	public void synchronizeWithRemote() throws Exception {
