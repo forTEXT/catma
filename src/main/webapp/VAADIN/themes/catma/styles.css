@@ -17934,9 +17934,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .home__content__btns {
 	margin-top: 60px;
-	justify-content: space-around;
 	padding-left: 80px;
 	padding-right: 80px;
+}
+
+.catma .home__content__btns :nth-child(2) {
+	margin: 0 80px;
+}
+
+.catma .not-logged-in-main-view-logo {
+	width: 860px;
+	margin: 0 auto;
 }
 
 .catma .not-logged-in-main-view-fortext-bottom-panel {
@@ -17965,6 +17973,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .not-logged-in-main-view-noticepanel {
 	margin-top: 60px;
 	padding: 0 80px;
+	max-width: 1366px;
 }
 
 .catma .not-logged-in-main-view-noticepanel .vlayout {

@@ -114,9 +114,11 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		VerticalFlexLayout contentPanel = new VerticalFlexLayout();
 		contentPanel.setHeight("100%"); //$NON-NLS-1$
 		contentPanel.addStyleName("home__content"); //$NON-NLS-1$
-	
-		ThemeResource logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$	
-		contentPanel.addComponent(new Image(null,logoResource));
+
+		ThemeResource logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$
+		Image logoImage = new Image(null, logoResource);
+		logoImage.setStyleName("not-logged-in-main-view-logo");
+		contentPanel.addComponent(logoImage);
 
 		noticePanelVerticalLayout = new VerticalLayout();
 		noticePanelVerticalLayout.addStyleName("vlayout");
