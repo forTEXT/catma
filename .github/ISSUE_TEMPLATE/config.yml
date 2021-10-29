@@ -1,7 +1,7 @@
 contact_links:
   - name: Support and general enquiries
     url: https://catma.de/about/contact/
-    about: Please see this page for contact information.
+    about: See contact information
   - name: Community chat
     url: https://catma.de/documentation/mattermost/
-    about: Please see this page for information on how to join us on Mattermost.
+    about: Join us on Mattermost
