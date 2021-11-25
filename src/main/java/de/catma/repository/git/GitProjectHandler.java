@@ -6,14 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -1661,74 +1654,72 @@ public class GitProjectHandler {
 		return readableSubmodules;
 	}
 
-	public void removeStaleSubmoduleDirectories() throws Exception {
-		logger.info(String.format("Removing stale submodule directories for Project %1$s", projectId));
+	/**
+	 * Returns a mapping of submodule directories that exist on disk. Note that these are not necessarily valid submodules, as opposed to what
+	 * {@link de.catma.repository.git.managers.JGitRepoManager#getSubmodulePaths()} returns.
+	 *
+	 * @param localRepoManager an {@link ILocalGitRepositoryManager} instance
+	 * @param containerDirectory should be one of <code>SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME</code>,
+	 *                           <code>ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME</code>, or <code>TAGSET_SUBMODULES_DIRECTORY_NAME</code>
+	 * @return a mapping of relative paths to {@link Path} objects
+	 */
+	private Map<String, Path> getSubmodulePaths(ILocalGitRepositoryManager localRepoManager, String containerDirectory) throws IOException {
+		Path submoduleDirPath = Paths.get(localRepoManager.getRepositoryWorkTree().toURI()).resolve(containerDirectory);
+		Map<String, Path> relativePathToPathMap = new HashMap<>();
+
+		if (!submoduleDirPath.toFile().exists()) {
+			return relativePathToPathMap;
+		}
+
+		List<Path> paths = Files.walk(submoduleDirPath, 1).filter(submodulePath -> !submoduleDirPath.equals(submodulePath))
+				.collect(Collectors.toList());
+
+		for (Path submodulePath : paths) {
+			Path relativeSubmodulePath = Paths.get(containerDirectory, submodulePath.getFileName().toString());
+			String relativeSubmodulePathUnix = FilenameUtils.separatorsToUnix(relativeSubmodulePath.toString());
+			relativePathToPathMap.put(relativeSubmodulePathUnix, submodulePath);
+		}
+
+		return relativePathToPathMap;
+	}
+
+	/**
+	 * Returns a list of paths of stale submodules, i.e. submodules that exist on disk but are no longer registered as submodules.
+	 */
+	private List<Path> getStaleSubmodulePaths() throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			localRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-			
+
+			// note that this collection contains null entries for invalid submodules
 			List<String> validSubmodulePaths = localRepoManager.getSubmodulePaths();
 
-			Path collectionDirPath = 
-				 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-				 .resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
-			 
-			if (collectionDirPath.toFile().exists()) {
-				List<Path> paths = Files
-						.walk(collectionDirPath, 1)
-						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
-						.collect(Collectors.toList());
-				
-				for (Path collectionPath : paths) {
-					Path relCollectionPath = 
-						Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionPath.getFileName().toString());
-					String relCollectionPathUnix = FilenameUtils.separatorsToUnix(relCollectionPath.toString());
-					if (!validSubmodulePaths.contains(relCollectionPathUnix)) {
-						FileUtils.deleteDirectory(
-								collectionPath.toFile());
-					}
+			ArrayList<Path> stalePaths = new ArrayList<>();
+
+			Map<String, Path> submodulePathMapping = getSubmodulePaths(localRepoManager, ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME));
+			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, TAGSET_SUBMODULES_DIRECTORY_NAME));
+
+			for (Map.Entry<String, Path> entry : submodulePathMapping.entrySet()) {
+				if (!validSubmodulePaths.contains(entry.getKey())) {
+					stalePaths.add(entry.getValue());
 				}
 			}
-			Path docsDirPath = 
-					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
-				 
-			if (docsDirPath.toFile().exists()) {
-				List<Path> paths = Files
-						.walk(docsDirPath, 1)
-						.filter(collectionPath -> !docsDirPath.equals(collectionPath))
-						.collect(Collectors.toList());
-				
-				for (Path docPath : paths) {
-					Path relDocPath = 
-						Paths.get(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, docPath.getFileName().toString());
-					String relDocPathUnix = FilenameUtils.separatorsToUnix(relDocPath.toString());
-					if (!validSubmodulePaths.contains(relDocPathUnix)) {
-						FileUtils.deleteDirectory(
-								docPath.toFile());
-					}
-				}
+
+			return stalePaths;
+		}
+	}
+
+	public void removeStaleSubmoduleDirectories() throws Exception {
+		logger.info(String.format("Removing stale submodule directories for Project %1$s", projectId));
+
+		try {
+			List<Path> staleSubmodulePaths = getStaleSubmodulePaths();
+			for (Path path : staleSubmodulePaths) {
+				FileUtils.deleteDirectory(path.toFile());
 			}
-			
-			Path tagsetDirPath = 
-					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
-				 
-			if (tagsetDirPath.toFile().exists()) {
-				List<Path> paths = Files
-						.walk(tagsetDirPath, 1)
-						.filter(collectionPath -> !tagsetDirPath.equals(collectionPath))
-						.collect(Collectors.toList());
-				
-				for (Path tagsetPath : paths) {
-					Path relTagsetPath = 
-						Paths.get(TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetPath.getFileName().toString());
-					String relTagsetPathUnix = FilenameUtils.separatorsToUnix(relTagsetPath.toString());
-					if (!validSubmodulePaths.contains(relTagsetPathUnix)) {
-						FileUtils.deleteDirectory(
-								tagsetPath.toFile());
-					}
-				}
-			}			
+		}
+		catch (IOException e) {
+			throw new Exception("Failed to remove stale submodule directories", e);
 		}
 	}
 
