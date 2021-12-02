@@ -1386,13 +1386,20 @@ public class GitProjectHandler {
 							String tagsetId = 
 								deletedResourceConflict.getRelativeModulePath().substring(
 										TAGSET_SUBMODULES_DIRECTORY_NAME.length()+1);
-										
-							ContentInfoSet contentInfoSet = tagsetHandler.getContentInfoSet(
-									projectId, 
-									tagsetId);
+
 							deletedResourceConflict.setResourceId(tagsetId);
-							deletedResourceConflict.setContentInfoSet(
-									contentInfoSet); // TODO: same conditional logic as for collections above?
+
+							if (deletedResourceConflict.isDeletedByThem()) {
+								ContentInfoSet contentInfoSet = tagsetHandler.getContentInfoSet(
+										projectId,
+										tagsetId);
+								deletedResourceConflict.setContentInfoSet(
+										contentInfoSet);
+							}
+							else {
+								deletedResourceConflict.setContentInfoSet(new ContentInfoSet("N/A"));
+							}
+
 							deletedResourceConflict.setResourceType(DeletedResourceConflict.ResourceType.TAGSET);
 						}
 						finally {
@@ -1460,13 +1467,15 @@ public class GitProjectHandler {
 								this.credentialsProvider);
 
 				for (Path tagsetPath : paths) {
-					String tagsetId = tagsetPath.getFileName().toString();
-					Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
-					if (!status.getConflicting().isEmpty()) {
-						tagsetConflicts.add(
-								gitTagsetHandler.getTagsetConflict(
-										projectId, tagsetId));
-					}					
+					if (tagsetDirPath.resolve(tagsetPath).resolve(Constants.DOT_GIT).toFile().exists()) {
+						String tagsetId = tagsetPath.getFileName().toString();
+						Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
+						if (!status.getConflicting().isEmpty()) {
+							tagsetConflicts.add(
+									gitTagsetHandler.getTagsetConflict(
+											projectId, tagsetId));
+						}
+					}
 				}
 				
 			}
@@ -1519,10 +1528,12 @@ public class GitProjectHandler {
 				);
 
 				for (Path sourceDocumentPath : paths) {
-					String sourceDocumentId = sourceDocumentPath.getFileName().toString();
-					Status status = gitSourceDocumentHandler.getStatus(projectId, sourceDocumentId);
-					if (!status.getConflicting().isEmpty()) {
-						sourceDocumentConflicts.add(gitSourceDocumentHandler.getSourceDocumentConflict(projectId, sourceDocumentId));
+					if (sourceDocumentsDirPath.resolve(sourceDocumentPath).resolve(Constants.DOT_GIT).toFile().exists()) {
+						String sourceDocumentId = sourceDocumentPath.getFileName().toString();
+						Status status = gitSourceDocumentHandler.getStatus(projectId, sourceDocumentId);
+						if (!status.getConflicting().isEmpty()) {
+							sourceDocumentConflicts.add(gitSourceDocumentHandler.getSourceDocumentConflict(projectId, sourceDocumentId));
+						}
 					}
 				}
 			}
