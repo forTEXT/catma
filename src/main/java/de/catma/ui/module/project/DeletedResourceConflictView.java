@@ -34,14 +34,17 @@ public class DeletedResourceConflictView extends VerticalLayout {
 	private void initData() {
 		this.resourceNameField.setValue(deletedResourceConflict.getContentInfoSet().getTitle());
 		switch (deletedResourceConflict.getResourceType()) {
-		case ANNOTATION_COLLECTION:
-			this.resourceNameField.setCaption("Annotation Collection");
-			break;
-		case TAGSET:
-			this.resourceNameField.setCaption("Tagset");
-			break;
-		default:
-			this.resourceNameField.setCaption("Resource");
+			case ANNOTATION_COLLECTION:
+				this.resourceNameField.setCaption("Annotation Collection");
+				break;
+			case TAGSET:
+				this.resourceNameField.setCaption("Tagset");
+				break;
+			case SOURCE_DOCUMENT:
+				this.resourceNameField.setCaption("Document");
+				break;
+			default:
+				this.resourceNameField.setCaption("Resource");
 		}
 		
 		if (deletedResourceConflict.isDeletedByThem()) {
