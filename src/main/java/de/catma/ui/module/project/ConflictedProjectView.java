@@ -80,6 +80,7 @@ public class ConflictedProjectView extends HugeCard {
 		}
 	}
 
+	// TODO: refactor! (consider implementing a state machine)
 	private void showNextConflict() {
 		try {
 			if ((this.tagManager == null) // Tag/Tagset conflict resolution not applied yet

@@ -592,7 +592,7 @@ public class GitMarkupCollectionHandler {
 			
 			localGitRepoManager.add(
 					targetHeaderFile,
-					serializedHeader.getBytes(StandardCharsets.UTF_8));
+					serializedHeader.getBytes(StandardCharsets.UTF_8)); // TODO: why are we doing this and then calling addAndCommit?
 
 			String collectionRevision = localGitRepoManager.addAndCommit(
 					targetHeaderFile, 

@@ -1809,7 +1809,7 @@ public class GitProjectHandler {
 					 }
 					 
 				 }
-				 else {
+				 else { // deleted by us
 					if (deletedResourceConflict.getResolution().equals(Resolution.MINE)) {
 						 // delete theirs
 						String relativeModulePath = deletedResourceConflict.getRelativeModulePath();
@@ -1819,6 +1819,7 @@ public class GitProjectHandler {
 						localGitRepoManager.remove(collectionDirPath.toFile());						 
 					}
 					else {
+						// keep theirs
 						String relativeModulePath = deletedResourceConflict.getRelativeModulePath();
 						String submoduleId = relativeModulePath.substring(relativeModulePath.lastIndexOf('/')+1);
 						String submoduleUri = 
@@ -1874,7 +1875,8 @@ public class GitProjectHandler {
 						staleCollectionCandidates.stream().map(AnnotationCollectionReference::getSourceDocumentId).collect(Collectors.toSet()));
 				
 				localGitRepoManager.detach();
-				
+
+				// TODO: unnecessary to loop over all collections when only the stale candidates can end up in verifiedDeleted
 				for (AnnotationCollectionReference collectionRef : collectionRefs) {
 					String collectionId = collectionRef.getId();
 					RBACRole collectionRole = rolesPerResource.get(collectionId);

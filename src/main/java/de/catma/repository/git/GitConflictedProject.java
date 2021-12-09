@@ -90,10 +90,12 @@ public class GitConflictedProject implements ConflictedProject {
 				for (TagConflict tagConflict : tagsetConflict.getTagConflicts()) {
 					gitProjectHandler.resolveTagConflict(tagsetConflict.getUuid(), tagConflict);
 				}
+				// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?
 				gitProjectHandler.addTagsetToStagedAndCommit(
 						tagsetConflict.getUuid(), "Auto-committing merged changes");
 			}
-			
+
+			// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?
 			gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
 					tagsetConflict.getUuid(), "Auto-committing merged changes");
 			

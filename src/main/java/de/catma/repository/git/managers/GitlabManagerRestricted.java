@@ -220,7 +220,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 
 		try {
-			Group group = groupApi.getGroup(path);
+			Group group = groupApi.getGroup(path); // TODO: remove, deleteGroup can work with the path
 			groupApi.deleteGroup(group);
 		}
 		catch (GitLabApiException e) {
