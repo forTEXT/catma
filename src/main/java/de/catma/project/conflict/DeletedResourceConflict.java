@@ -3,13 +3,13 @@ package de.catma.project.conflict;
 import de.catma.document.source.ContentInfoSet;
 
 public class DeletedResourceConflict {
-	
-	public static enum ResourceType {
+
+	public enum ResourceType {
 		ANNOTATION_COLLECTION,
 		TAGSET,
 		SOURCE_DOCUMENT
 	}
-	
+
 	private ResourceType resourceType;
 	private String ourCommitName;
 	private String ourLastCommitMsg;

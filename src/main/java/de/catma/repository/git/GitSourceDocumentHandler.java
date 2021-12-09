@@ -32,8 +32,8 @@ public class GitSourceDocumentHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
 
 	private final Logger logger = Logger.getLogger(GitSourceDocumentHandler.class.getName());
-	
-    private final ILocalGitRepositoryManager localGitRepositoryManager;
+
+	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 
 	private final CredentialsProvider credentialsProvider;
@@ -76,8 +76,8 @@ public class GitSourceDocumentHandler {
 	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			logger.info("Adding SourceDocument to the local project " + projectId);
-			
+			logger.info("Adding document to the local project " + projectId);
+
 			// create the source document repository
 			CreateRepositoryResponse response = this.remoteGitServerManager.createRepository(sourceDocumentId, sourceDocumentId, projectId);
 
@@ -102,7 +102,7 @@ public class GitSourceDocumentHandler {
 				targetTokenizedSourceDocumentFile, 
 				new SerializationHelper<Map<String, List<GitTermInfo>>>().serialize(gitTermInfos).getBytes(StandardCharsets.UTF_8)
 			);
-			
+
 			// write header.json into the local repo
 			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), HEADER_FILE_NAME);
 
@@ -121,9 +121,9 @@ public class GitSourceDocumentHandler {
 			String revisionHash = localGitRepoManager.commit(
 					commitMessage, remoteGitServerManager.getUsername(), remoteGitServerManager.getEmail(), false
 			);
-			
-			logger.info("Finished adding SourceDocument to the local project " + projectId);
-			
+
+			logger.info("Finished adding document to the local project " + projectId);
+
 			return revisionHash;
 		}
 	}

@@ -728,21 +728,20 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 
 	}
-	
+
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
-		String tagsetRevisionHash = 
-			gitProjectHandler.createTagset(
-				tagsetDefinition.getUuid(), tagsetDefinition.getName(), null);
-		
+		String tagsetRevisionHash = gitProjectHandler.createTagset(
+				tagsetDefinition.getUuid(), tagsetDefinition.getName(), null
+		);
+
 		tagsetDefinition.setRevisionHash(tagsetRevisionHash);
-		
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-		
+
 		graphProjectHandler.addTagset(
-			rootRevisionHash, 
-			tagsetDefinition,
-			oldRootRevisionHash); 
+				rootRevisionHash, tagsetDefinition, oldRootRevisionHash
+		);
 	}
 
 	@Override
@@ -1506,11 +1505,11 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (hasUncommittedChanges()) {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
-		
+
 		for (TagsetDefinition tagset : getTagsets()) {
 			gitProjectHandler.synchronizeTagsetWithRemote(tagset.getUuid());
 		}
-		
+
 		for (SourceDocument document : getSourceDocuments()) {
 			gitProjectHandler.synchronizeSourceDocumentWithRemote(document.getUuid());
 
@@ -1518,39 +1517,37 @@ public class GraphWorktreeProject implements IndexedProject {
 				gitProjectHandler.synchronizeCollectionWithRemote(collectionReference.getId());
 			}
 		}
-		
+
 		gitProjectHandler.synchronizeWithRemote();
-		
+
 		if (gitProjectHandler.hasConflicts()) {
 			gitProjectHandler.initAndUpdateSubmodules();
-			openProjectListener.conflictResolutionNeeded(
-					new GitConflictedProject(
-						projectReference,
-						gitProjectHandler, 
-						documentId -> getSourceDocumentURI(documentId)));
+			openProjectListener.conflictResolutionNeeded(new GitConflictedProject(
+					projectReference,
+					gitProjectHandler,
+					documentId -> getSourceDocumentURI(documentId)
+			));
 		}
 		else {
 			boolean forceGraphReload = gitProjectHandler.loadRolesPerResource();
 			gitProjectHandler.initAndUpdateSubmodules();
 			gitProjectHandler.removeStaleSubmoduleDirectories();
-			gitProjectHandler.ensureDevBranches();		
+			gitProjectHandler.ensureDevBranches();
 			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			ProgressListener progressListener = new ProgressListener() {
-				
 				@Override
 				public void setProgress(String value, Object... args) {
 					openProjectListener.progress(value, args);
 				}
-			}
-			;
+			};
+
 			graphProjectHandler.ensureProjectRevisionIsLoaded(
 					new ExecutionListener<TagManager>() {
-						
 						@Override
 						public void error(Throwable t) {
 							openProjectListener.failure(t);
 						}
-						
+
 						@Override
 						public void done(TagManager result) {
 							tagManager.load(result.getTagLibrary());
@@ -1564,10 +1561,11 @@ public class GraphWorktreeProject implements IndexedProject {
 					() -> gitProjectHandler.getDocuments(),
 					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener),
 					forceGraphReload,
-					backgroundService);
+					backgroundService
+			);
 		}
 	}
-	
+
 	@Override
 	public RBACRole getRoleForDocument(String documentId) {
 		return gitProjectHandler.getRoleForDocument(documentId);

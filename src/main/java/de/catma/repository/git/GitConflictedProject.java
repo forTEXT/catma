@@ -1,15 +1,15 @@
 package de.catma.repository.git;
 
-import java.net.URI;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Function;
-
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
 import de.catma.project.conflict.*;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
+
+import java.net.URI;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Function;
 
 public class GitConflictedProject implements ConflictedProject {
 	
@@ -60,15 +60,17 @@ public class GitConflictedProject implements ConflictedProject {
 		
 		return documents;
 	}
-	
+
 	@Override
 	public void resolveCollectionConflict(List<CollectionConflict> conflictedCollections, TagLibrary tagLibrary) throws Exception {
 		for (CollectionConflict collectionConflict : conflictedCollections) {
 			if (!collectionConflict.getAnnotationConflicts().isEmpty() || collectionConflict.isHeaderConflict()) {
 				for (AnnotationConflict annotationConflict : collectionConflict.getAnnotationConflicts()) {
 					gitProjectHandler.resolveAnnotationConflict(
-						collectionConflict.getCollectionId(), annotationConflict, tagLibrary);
+							collectionConflict.getCollectionId(), annotationConflict, tagLibrary
+					);
 				}
+
 				gitProjectHandler.addCollectionToStagedAndCommit(
 						collectionConflict.getCollectionId(),
 						"Auto-committing merged changes (GitConflictedProject.resolveCollectionConflict -> " +
@@ -76,6 +78,7 @@ public class GitConflictedProject implements ConflictedProject {
 						true
 				);
 			}
+
 			gitProjectHandler.addCollectionSubmoduleToStagedAndCommit(
 					collectionConflict.getCollectionId(),
 					"Auto-committing merged changes (GitConflictedProject.resolveCollectionConflict -> " +
@@ -84,12 +87,11 @@ public class GitConflictedProject implements ConflictedProject {
 			);
 
 			gitProjectHandler.checkoutCollectionDevBranchAndRebase(collectionConflict.getCollectionId());
-			
+
 			gitProjectHandler.synchronizeCollectionWithRemote(collectionConflict.getCollectionId());
 		}
-		
 	}
-	
+
 	@Override
 	public void resolveTagsetConflicts(List<TagsetConflict> tagsetConflicts) throws Exception {
 		for (TagsetConflict tagsetConflict : tagsetConflicts) {
@@ -97,6 +99,7 @@ public class GitConflictedProject implements ConflictedProject {
 				for (TagConflict tagConflict : tagsetConflict.getTagConflicts()) {
 					gitProjectHandler.resolveTagConflict(tagsetConflict.getUuid(), tagConflict);
 				}
+
 				// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?
 				gitProjectHandler.addTagsetToStagedAndCommit(
 						tagsetConflict.getUuid(),
@@ -111,12 +114,11 @@ public class GitConflictedProject implements ConflictedProject {
 					"Auto-committing merged changes (GitConflictedProject.resolveTagsetConflicts -> " +
 							"GitProjectHandler.addTagsetSubmoduleToStagedAndCommit)"
 			);
-			gitProjectHandler.checkoutTagsetDevBranchAndRebase(tagsetConflict.getUuid());
-			
-			gitProjectHandler.synchronizeTagsetWithRemote(tagsetConflict.getUuid());
 
+			gitProjectHandler.checkoutTagsetDevBranchAndRebase(tagsetConflict.getUuid());
+
+			gitProjectHandler.synchronizeTagsetWithRemote(tagsetConflict.getUuid());
 		}
-		
 	}
 
 	@Override
@@ -130,13 +132,16 @@ public class GitConflictedProject implements ConflictedProject {
 							"GitProjectHandler.addSourceDocumentToStagedAndCommit)",
 					true
 			);
+
 			gitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit(
 					sourceDocumentConflict.getSourceDocumentId(),
 					"Auto-committing merged changes (GitConflictedProject.resolveSourceDocumentConflicts -> " +
 							"GitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit)",
 					false
 			);
+
 			gitProjectHandler.checkoutSourceDocumentDevBranchAndRebase(sourceDocumentConflict.getSourceDocumentId());
+
 			gitProjectHandler.synchronizeSourceDocumentWithRemote(sourceDocumentConflict.getSourceDocumentId());
 		}
 	}

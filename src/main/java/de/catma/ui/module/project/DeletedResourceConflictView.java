@@ -33,6 +33,7 @@ public class DeletedResourceConflictView extends VerticalLayout {
 
 	private void initData() {
 		this.resourceNameField.setValue(deletedResourceConflict.getContentInfoSet().getTitle());
+
 		switch (deletedResourceConflict.getResourceType()) {
 			case ANNOTATION_COLLECTION:
 				this.resourceNameField.setCaption("Annotation Collection");
@@ -46,7 +47,7 @@ public class DeletedResourceConflictView extends VerticalLayout {
 			default:
 				this.resourceNameField.setCaption("Resource");
 		}
-		
+
 		if (deletedResourceConflict.isDeletedByThem()) {
 			btMine.setCaption("Keep mine");
 			btTheirs.setCaption("Accept their deletion");
@@ -55,12 +56,13 @@ public class DeletedResourceConflictView extends VerticalLayout {
 			btMine.setCaption("Enforce my deletion");
 			btTheirs.setCaption("Keep theirs");			
 		}
-		
+
 		myCommitInfoField.setValue(
 				"'"
 				+ deletedResourceConflict.getOurLastCommitMsg()
 				+ "' \n\nCommit ID "
 				+ deletedResourceConflict.getOurCommitName());
+
 		theirCommitInfoField.setValue(
 				"'"
 				+ deletedResourceConflict.getTheirLastCommitMsg() 

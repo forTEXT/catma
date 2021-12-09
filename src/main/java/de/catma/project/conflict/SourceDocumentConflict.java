@@ -28,11 +28,11 @@ public class SourceDocumentConflict {
 	public ContentInfoSet getContentInfoSet() {
 		return contentInfoSet;
 	}
-	
+
 	public void setHeaderConflict(boolean headerConflict) {
 		this.headerConflict = headerConflict;
 	}
-	
+
 	public boolean isHeaderConflict() {
 		return headerConflict;
 	}

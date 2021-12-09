@@ -1,27 +1,23 @@
 package de.catma.project.conflict;
 
-import java.util.Collection;
-import java.util.List;
-
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
+import java.util.Collection;
+import java.util.List;
+
 public interface ConflictedProject {
-	public List<TagsetConflict> getTagsetConflicts() throws Exception;
-	public List<CollectionConflict> getCollectionConflicts() throws Exception;
+	List<TagsetConflict> getTagsetConflicts() throws Exception;
+	List<CollectionConflict> getCollectionConflicts() throws Exception;
 	List<SourceDocumentConflict> getSourceDocumentConflicts() throws Exception;
-	public Collection<TagsetDefinition> getTagsets() throws Exception;
-	public Collection<SourceDocument> getDocuments() throws Exception;
-	public void resolveCollectionConflict(
-		List<CollectionConflict> conflictedCollections, 
-		TagLibrary tagLibrary) throws Exception;
+	Collection<TagsetDefinition> getTagsets() throws Exception;
+	Collection<SourceDocument> getDocuments() throws Exception;
+	void resolveCollectionConflict(List<CollectionConflict> conflictedCollections, TagLibrary tagLibrary) throws Exception;
 	ProjectReference getProjectReference();
-	public Collection<DeletedResourceConflict> resolveRootConflicts() throws Exception;
-	public void resolveTagsetConflicts(List<TagsetConflict> tagsetConflicts) throws Exception;
+	Collection<DeletedResourceConflict> resolveRootConflicts() throws Exception;
+	void resolveTagsetConflicts(List<TagsetConflict> tagsetConflicts) throws Exception;
 	void resolveSourceDocumentConflicts(List<SourceDocumentConflict> sourceDocumentConflicts) throws Exception;
-	public void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedReourceConflicts) throws Exception;
-	
-	
+	void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedReourceConflicts) throws Exception;
 }
