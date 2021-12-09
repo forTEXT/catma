@@ -70,11 +70,18 @@ public class GitConflictedProject implements ConflictedProject {
 						collectionConflict.getCollectionId(), annotationConflict, tagLibrary);
 				}
 				gitProjectHandler.addCollectionToStagedAndCommit(
-					collectionConflict.getCollectionId(), "Auto-committing merged changes", true);
-				
+						collectionConflict.getCollectionId(),
+						"Auto-committing merged changes (GitConflictedProject.resolveCollectionConflict -> " +
+								"GitProjectHandler.addCollectionToStagedAndCommit)",
+						true
+				);
 			}
 			gitProjectHandler.addCollectionSubmoduleToStagedAndCommit(
-				collectionConflict.getCollectionId(), "Auto-committing merged changes", false);
+					collectionConflict.getCollectionId(),
+					"Auto-committing merged changes (GitConflictedProject.resolveCollectionConflict -> " +
+							"GitProjectHandler.addCollectionSubmoduleToStagedAndCommit)",
+					false
+			);
 
 			gitProjectHandler.checkoutCollectionDevBranchAndRebase(collectionConflict.getCollectionId());
 			
@@ -92,13 +99,18 @@ public class GitConflictedProject implements ConflictedProject {
 				}
 				// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?
 				gitProjectHandler.addTagsetToStagedAndCommit(
-						tagsetConflict.getUuid(), "Auto-committing merged changes");
+						tagsetConflict.getUuid(),
+						"Auto-committing merged changes (GitConflictedProject.resolveTagsetConflicts -> " +
+								"GitProjectHandler.addTagsetToStagedAndCommit)"
+				);
 			}
 
 			// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?
 			gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
-					tagsetConflict.getUuid(), "Auto-committing merged changes");
-			
+					tagsetConflict.getUuid(),
+					"Auto-committing merged changes (GitConflictedProject.resolveTagsetConflicts -> " +
+							"GitProjectHandler.addTagsetSubmoduleToStagedAndCommit)"
+			);
 			gitProjectHandler.checkoutTagsetDevBranchAndRebase(tagsetConflict.getUuid());
 			
 			gitProjectHandler.synchronizeTagsetWithRemote(tagsetConflict.getUuid());
@@ -113,10 +125,16 @@ public class GitConflictedProject implements ConflictedProject {
 		// those are resolved/merged automatically when they're fetched, but need to commit and push here
 		for (SourceDocumentConflict sourceDocumentConflict : sourceDocumentConflicts) {
 			gitProjectHandler.addSourceDocumentToStagedAndCommit(
-					sourceDocumentConflict.getSourceDocumentId(), "Auto-committing merged changes", true
+					sourceDocumentConflict.getSourceDocumentId(),
+					"Auto-committing merged changes (GitConflictedProject.resolveSourceDocumentConflicts -> " +
+							"GitProjectHandler.addSourceDocumentToStagedAndCommit)",
+					true
 			);
 			gitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit(
-					sourceDocumentConflict.getSourceDocumentId(), "Auto-committing merged changes", false
+					sourceDocumentConflict.getSourceDocumentId(),
+					"Auto-committing merged changes (GitConflictedProject.resolveSourceDocumentConflicts -> " +
+							"GitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit)",
+					false
 			);
 			gitProjectHandler.checkoutSourceDocumentDevBranchAndRebase(sourceDocumentConflict.getSourceDocumentId());
 			gitProjectHandler.synchronizeSourceDocumentWithRemote(sourceDocumentConflict.getSourceDocumentId());

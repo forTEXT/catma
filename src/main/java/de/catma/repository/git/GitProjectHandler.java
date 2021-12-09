@@ -1334,7 +1334,7 @@ public class GitProjectHandler {
 
 			if (deletedResourceConflicts.isEmpty()) {
 				localGitRepoManager.addAllAndCommit(
-						"Auto-committing merged changes",
+						"Auto-committing merged changes (resolveRootConflicts)",
 						remoteGitServerManager.getUsername(),
 						remoteGitServerManager.getEmail(),
 						true);
@@ -1841,7 +1841,7 @@ public class GitProjectHandler {
 			 }
 			 
 			 localGitRepoManager.commit(
-					 "Auto-committing merged changes", 
+					 "Auto-committing merged changes (resolveDeletedResourceConflicts)",
 					 remoteGitServerManager.getUsername(),
 					 remoteGitServerManager.getEmail(), true);
 
