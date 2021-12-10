@@ -962,7 +962,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 				SingleTextInputDialog collectionNameDlg = new SingleTextInputDialog(
 						"Edit Collection",
-						"Please enter the new Collection name:",
+						"Please enter the new collection name:",
 						new SaveCancelListener<String>() {
 							@Override
 							public void savePressed(String result) {
@@ -971,7 +971,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									project.update(collectionRef, collectionRef.getContentInfoSet());
 									documentGrid.getDataProvider().refreshItem(resource);
 								} catch (Exception e) {
-									errorHandler.showAndLogError("error updating Collection", e);
+									errorHandler.showAndLogError("Error updating collection", e);
 								}
 							}
 						}
@@ -985,7 +985,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 				SingleTextInputDialog collectionNameDlg = new SingleTextInputDialog(
 						"Edit Document",
-						"Please enter the new Document name:",
+						"Please enter the new document name:",
 						new SaveCancelListener<String>() {
 							@Override
 							public void savePressed(String result) {

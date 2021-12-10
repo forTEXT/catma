@@ -1,25 +1,5 @@
 package de.catma.repository.git;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import de.catma.project.conflict.*;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -31,6 +11,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.indexer.TermInfo;
 import de.catma.project.CommitInfo;
+import de.catma.project.conflict.*;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -39,17 +20,30 @@ import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagsetDefinition;
+import de.catma.tag.*;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class GitProjectHandler {
 
@@ -321,8 +315,8 @@ public class GitProjectHandler {
 	 * @param originalSourceDocumentFileName the file name of the original, unmodified source document
 	 * @param convertedSourceDocumentStream a {@link InputStream} object representing the converted, UTF-8 encoded source document
 	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source document
-	 * @param terms a {@link List<TermInfo>} object containing the terms (tokens) of the source document
-	 * @param tokenizedSourceDocumentFileName the name of the file that will contain the tokens of the source document
+	 * @param terms the collection of terms extracted from the converted source document
+	 * @param tokenizedSourceDocumentFileName name of the file within which the terms/tokens should be stored in serialized form
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
 	 * @return the revisionHash
 	 * @throws IOException if an error occurs while creating the source document
@@ -379,7 +373,7 @@ public class GitProjectHandler {
 			}
 
 			localRepoManager.commit(
-					String.format("Added Document %1$s with ID %2$s", name, sourceDocumentId),
+					String.format("Added document \"%1$s\" with ID %2$s", name, sourceDocumentId),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail(),
 					false
@@ -994,7 +988,7 @@ public class GitProjectHandler {
 			for (TagsetDefinition tagset : getTagsets()) {
 				logger.info(
 						String.format(
-								"Checking out dev branch for tagset %1$s with ID %2$s",
+								"Checking out dev branch for tagset \"%1$s\" with ID %2$s",
 								tagset.getName(),
 								tagset.getUuid()
 						)
@@ -1014,7 +1008,7 @@ public class GitProjectHandler {
 			for (AnnotationCollectionReference collectionReference : getCollectionReferences()) {
 				logger.info(
 						String.format(
-								"Checking out dev branch for collection %1$s with ID %2$s",
+								"Checking out dev branch for collection \"%1$s\" with ID %2$s",
 								collectionReference.getName(),
 								collectionReference.getId()
 						)
