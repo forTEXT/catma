@@ -217,7 +217,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				
 				gitProjectHandler.ensureDevBranches();
 				
-				gitProjectHandler.verifyCollections();
+//				gitProjectHandler.verifyCollections();
 				
 				ProgressListener progressListener = 
 					new ProgressListener() {
@@ -972,9 +972,9 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void delete(SourceDocument sourceDocument) throws Exception {
-		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocument.getUserMarkupCollectionRefs())) {
-			delete(collectionRef);
-		}
+//		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocument.getUserMarkupCollectionRefs())) {
+//			delete(collectionRef);
+//		}
 		documentCache.invalidate(sourceDocument.getUuid());
 		String oldRootRevisionHash = this.rootRevisionHash;
 		gitProjectHandler.removeDocument(sourceDocument);
@@ -1507,13 +1507,16 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 
 		for (TagsetDefinition tagset : getTagsets()) {
+			// mergeResult is handled after all resources have been synchronized
 			gitProjectHandler.synchronizeTagsetWithRemote(tagset.getUuid());
 		}
 
 		for (SourceDocument document : getSourceDocuments()) {
+			// mergeResult is handled after all resources have been synchronized
 			gitProjectHandler.synchronizeSourceDocumentWithRemote(document.getUuid());
 
 			for (AnnotationCollectionReference collectionReference : document.getUserMarkupCollectionRefs()) {
+				// mergeResult is handled after all resources have been synchronized
 				gitProjectHandler.synchronizeCollectionWithRemote(collectionReference.getId());
 			}
 		}

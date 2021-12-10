@@ -18,8 +18,11 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.StatusPrinter;
+import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.*;
 import de.catma.user.Member;
 import de.catma.user.User;
@@ -30,6 +33,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
@@ -37,6 +41,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -391,6 +396,7 @@ public class GitProjectHandler {
 		}
 	}
 
+	// TODO: check if these should be moved somewhere else within this file
 	public String updateSourceDocument(@Nonnull SourceDocument sourceDocument) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
@@ -1071,7 +1077,8 @@ public class GitProjectHandler {
 		}		
 	}
 
-	public void synchronizeTagsetWithRemote(String tagsetId) throws Exception {
+	// TODO: move to after resolveTagConflict
+	public MergeResult synchronizeTagsetWithRemote(String tagsetId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(
@@ -1079,12 +1086,10 @@ public class GitProjectHandler {
 					this.remoteGitServerManager,
 					this.credentialsProvider);
 			
-			@SuppressWarnings("unused")
-			MergeResult mergeResult = gitTagsetHandler.synchronizeBranchWithRemoteMaster(
+			return gitTagsetHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
 					projectId, tagsetId, hasPermission(
 								getRoleForTagset(tagsetId), RBACPermission.TAGSET_WRITE));
-			// mergeResult is handled after all resources have been synchronized
 		}
 	}
 
@@ -1313,7 +1318,7 @@ public class GitProjectHandler {
 		}		
 	}
 
-	public void synchronizeCollectionWithRemote(String collectionId) throws Exception {
+	public MergeResult synchronizeCollectionWithRemote(String collectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler collectionHandler = 
 					new GitMarkupCollectionHandler(
@@ -1321,15 +1326,14 @@ public class GitProjectHandler {
 						this.remoteGitServerManager,
 						this.credentialsProvider);
 			
-			@SuppressWarnings("unused")
-			MergeResult mergeResult = collectionHandler.synchronizeBranchWithRemoteMaster(
+			return collectionHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
 					projectId, collectionId,
 					hasPermission(getRoleForCollection(collectionId), RBACPermission.COLLECTION_WRITE));
-			// mergeResult is handled after all resources have been synchronized
 		}
 	}
 
+	// TODO: move to before synchronizeWithRemote
 	public Collection<DeletedResourceConflict> resolveRootConflicts() throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
@@ -1550,18 +1554,18 @@ public class GitProjectHandler {
 		return sourceDocumentConflicts;
 	}
 
-	public void synchronizeSourceDocumentWithRemote(String sourceDocumentId) throws Exception {
+	public MergeResult synchronizeSourceDocumentWithRemote(String sourceDocumentId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(localGitRepoManager, remoteGitServerManager, credentialsProvider);
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localGitRepoManager, remoteGitServerManager, credentialsProvider
+			);
 
-			@SuppressWarnings("unused")
-			MergeResult mergeResult = gitSourceDocumentHandler.synchronizeBranchWithRemoteMaster(
+			return gitSourceDocumentHandler.synchronizeBranchWithRemoteMaster(
 					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
 					projectId,
 					sourceDocumentId,
 					hasPermission(getRoleForDocument(sourceDocumentId), RBACPermission.DOCUMENT_WRITE)
 			);
-			// mergeResult is handled after all resources have been synchronized
 		}
 	}
 
@@ -1618,15 +1622,62 @@ public class GitProjectHandler {
 		logger.info(String.format("Init and update submodules for Project %1$s", projectId));
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project root repo
-			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
+
+			// get status ignoring submodules and generate a list of readable, non-conflicting submodules
 			Status projectStatus = localGitRepoManager.getStatus(true);
 			Set<String> conflicting = projectStatus.getConflicting();
 			Set<String> readableSubmodules = getReadableSubmodules(localGitRepoManager);
 			Set<String> validSubmodules = new HashSet<>(readableSubmodules);
 			validSubmodules.removeAll(conflicting);
+
+			// init any new submodules and update the valid ones
 			localGitRepoManager.initAndUpdateSubmodules(credentialsProvider, validSubmodules);
-		}		
-		
+			localGitRepoManager.detach();
+
+			// check for any submodules in a detached head state and re-sync them
+			for (String relativeSubmodulePath : validSubmodules) {
+				String resourceGitRepositoryName = String.format("%s/%s", projectRootRepositoryName, relativeSubmodulePath);
+				localGitRepoManager.open(projectId, resourceGitRepositoryName);
+
+				List<Ref> refs = ((JGitRepoManager)localGitRepoManager).getGitApi().branchList().call();
+				// if the objectId of the HEAD Ref is not equal to that of any of the others Refs (branches), then HEAD is detached
+				Ref head = refs.stream().filter(ref -> ref.getName().equals("HEAD")).findFirst().get();
+				Optional<Ref> matchingBranchRef = refs.stream().filter(ref -> ref != head && ref.getObjectId().equals(head.getObjectId())).findFirst();
+
+				localGitRepoManager.detach();
+
+				if (!matchingBranchRef.isPresent()) {
+					String resourceId = relativeSubmodulePath.substring(relativeSubmodulePath.lastIndexOf('/') + 1);
+					MergeResult mergeResult;
+
+					if (relativeSubmodulePath.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)) {
+						mergeResult = synchronizeSourceDocumentWithRemote(resourceId);
+					}
+					else if (relativeSubmodulePath.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)) {
+						mergeResult = synchronizeCollectionWithRemote(resourceId);
+					}
+					else if (relativeSubmodulePath.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
+						mergeResult = synchronizeTagsetWithRemote(resourceId);
+					}
+					else {
+						throw new Exception("Unhandled submodule type");
+					}
+
+					if (!mergeResult.getMergeStatus().isSuccessful()) {
+						throw new IllegalStateException(
+								String.format(
+										"Failed to synchronize dev branch of resource with ID %1$s of project with ID %2$s. Merge status is %3$s",
+										resourceId,
+										projectId,
+										mergeResult.getMergeStatus().toString()
+								)
+						);
+					}
+				}
+			}
+		}
 	}
 	
 	private Set<String> getReadableSubmodules(ILocalGitRepositoryManager localRepoManager) throws IOException {
@@ -1806,6 +1857,30 @@ public class GitProjectHandler {
 							CATMAPropertyKey.GitLabServerUrl.getValue() + "/" + projectId + "/" + submoduleId + ".git";
 						
 						localGitRepoManager.keepSubmodule(relativeModulePath, submoduleUri);
+
+						// if we are keeping a document, keep associated collection submodules too
+//						if (relativeModulePath.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)) {
+//							Map<String, Path> collectionPaths = getSubmodulePaths(localGitRepoManager, ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+//
+//							for (Map.Entry<String, Path> entry : collectionPaths.entrySet()) {
+//								String relativeCollectionPath = entry.getKey();
+//								Path collectionPath = entry.getValue();
+//
+//								File collectionHeaderFile = new File(collectionPath.toFile(), "header.json");
+//								String serializedCollectionHeaderFile = FileUtils.readFileToString(collectionHeaderFile, StandardCharsets.UTF_8);
+//								GitMarkupCollectionHeader gitMarkupCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
+//										serializedCollectionHeaderFile, GitMarkupCollectionHeader.class
+//								);
+//
+//								if (gitMarkupCollectionHeader.getSourceDocumentId().equals(submoduleId)) {
+//									String collectionId = collectionPath.getFileName().toString();
+//									String collectionUri = String.format(
+//											"%s/%s/%s.git", CATMAPropertyKey.GitLabServerUrl.getValue(), projectId, collectionId
+//									);
+//									localGitRepoManager.keepSubmodule(relativeCollectionPath, collectionUri);
+//								}
+//							}
+//						}
 					 }
 					 else {
 						 // delete mine
@@ -1844,6 +1919,34 @@ public class GitProjectHandler {
 						).toFile();
 						
 						localGitRepoManager.addSubmodule(targetSubmodulePath, submoduleUri, credentialsProvider);
+
+						// if we are keeping a document, keep associated collection submodules too
+						// this can't work because the submodules no longer exists locally
+						// even if we fetch them from the server, we don't know which ones should be kept
+//						if (relativeModulePath.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)) {
+//							Map<String, Path> collectionPaths = getSubmodulePaths(localGitRepoManager, ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+//
+//							for (Map.Entry<String, Path> entry : collectionPaths.entrySet()) {
+//								String relativeCollectionPath = entry.getKey();
+//								Path collectionPath = entry.getValue();
+//
+//								File collectionHeaderFile = new File(collectionPath.toFile(), "header.json");
+//								String serializedCollectionHeaderFile = FileUtils.readFileToString(collectionHeaderFile, StandardCharsets.UTF_8);
+//								GitMarkupCollectionHeader gitMarkupCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
+//										serializedCollectionHeaderFile, GitMarkupCollectionHeader.class
+//								);
+//
+//								if (gitMarkupCollectionHeader.getSourceDocumentId().equals(submoduleId)) {
+//									localGitRepoManager.remove(collectionPath.toFile());
+//
+//									String collectionId = collectionPath.getFileName().toString();
+//									String collectionUri = String.format(
+//											"%s/%s/%s.git", CATMAPropertyKey.GitLabServerUrl.getValue(), projectId, collectionId
+//									);
+//									localGitRepoManager.addSubmodule(collectionPath.toFile(), collectionUri, credentialsProvider);
+//								}
+//							}
+//						}
 					}				
 				 }
 			 }
