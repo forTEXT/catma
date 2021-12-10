@@ -681,7 +681,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				}
 			}
 			else {
-				System.out.println("FAKE PUSH");
+				System.out.println(String.format("FAKE PUSH - %1$s", this.getRemoteUrl(null)));
 			}
 		}
 		catch (GitAPIException e) {
