@@ -39,9 +39,10 @@ public enum CATMAPropertyKey {
 	LogoutURL("https://app.catma.de"),
 	AboutURL("https://catma.de"),
 	TermsOfUseURL("https://catma.de/documentation/terms-of-use/"),
-	PrivacyStatementURL("https://catma.de/documentation/privacy-policy/"),
+	PrivacyPolicyURL("https://catma.de/documentation/privacy-policy/"),
 	ImprintURL("https://catma.de/about/imprint/"),
 	StatusURL("https://catma.de/status/"),
+	ResetPasswordURL("https://git.catma.de/users/password/new"),
 
 	Google_oauthAuthorizationCodeRequestURL,
 	Google_oauthAccessTokenRequestURL,

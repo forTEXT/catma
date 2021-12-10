@@ -252,10 +252,16 @@
     <orderEntry type="library" name="Maven: io.netty:netty-resolver:4.1.59.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-codec:4.1.59.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-handler:4.1.59.Final" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-api:5.6.2" level="project" />
+    <orderEntry type="library" name="Maven: org.xerial:sqlite-jdbc:3.34.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-api:5.7.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apiguardian:apiguardian-api:1.1.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.opentest4j:opentest4j:1.2.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-commons:1.6.2" level="project" />
-    <orderEntry type="library" name="Maven: org.xerial:sqlite-jdbc:3.34.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-commons:1.7.2" level="project" />
+    <orderEntry type="library" name="Maven: org.mockito:mockito-core:3.11.2" level="project" />
+    <orderEntry type="library" name="Maven: net.bytebuddy:byte-buddy:1.11.3" level="project" />
+    <orderEntry type="library" name="Maven: net.bytebuddy:byte-buddy-agent:1.11.3" level="project" />
+    <orderEntry type="library" name="Maven: org.objenesis:objenesis:3.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.awaitility:awaitility:4.1.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest:2.1" level="project" />
   </component>
 </module>

@@ -623,38 +623,41 @@ public class GitTagsetHandler {
 			String masterVersion = serializedTagsetHeaderFile
 					.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
 					.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
-				
+
 			String devVersion = serializedTagsetHeaderFile
-				.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
-				.replaceAll("\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
-			
-			GitTagsetHeader masterTagsetHeader = 
-					new SerializationHelper<GitTagsetHeader>().deserialize(
-							masterVersion, GitTagsetHeader.class);
-			
-			GitTagsetHeader devTagsetHeader = 
-					new SerializationHelper<GitTagsetHeader>().deserialize(
-							devVersion, GitTagsetHeader.class);
-			
-			String name = masterTagsetHeader.getName();
-			if (!name.trim().toLowerCase().equals(devTagsetHeader.getName().trim().toLowerCase())) {
-				name += " " + devTagsetHeader.getName();
+					.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
+					.replaceAll("\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
+
+			GitTagsetHeader masterTagsetHeader = new SerializationHelper<GitTagsetHeader>().deserialize(
+					masterVersion, GitTagsetHeader.class
+			);
+
+			GitTagsetHeader devTagsetHeader = new SerializationHelper<GitTagsetHeader>().deserialize(
+					devVersion, GitTagsetHeader.class
+			);
+
+			String name = masterTagsetHeader.getName() == null ? "" : masterTagsetHeader.getName().trim();
+			String devName = devTagsetHeader.getName() == null ? "" : devTagsetHeader.getName().trim();
+			if (!name.equalsIgnoreCase(devName) && devName.length() > 0) {
+				name = String.format("%s %s", name, devName);
 			}
-			
-			String description = masterTagsetHeader.getDescription();
-			if (!description.trim().toLowerCase().equals(devTagsetHeader.getDescription().trim().toLowerCase())) {
-				description += " " + devTagsetHeader.getDescription();
+
+			String description = masterTagsetHeader.getDescription() == null ? "" : masterTagsetHeader.getDescription().trim();
+			String devDescription = devTagsetHeader.getDescription() == null ? "" : devTagsetHeader.getDescription().trim();
+			if (!description.equalsIgnoreCase(devDescription) && devDescription.length() > 0) {
+				description = String.format("%s %s", description, devDescription);
 			}
-			
+
 			TreeSet<String> deletedDefinitions = new TreeSet<>();
 			deletedDefinitions.addAll(masterTagsetHeader.getDeletedDefinitions());
 			deletedDefinitions.addAll(devTagsetHeader.getDeletedDefinitions());
-			
+
 			return new GitTagsetHeader(name, description, deletedDefinitions);
 		}
 		else {
 			 return new SerializationHelper<GitTagsetHeader>().deserialize(
-					 serializedTagsetHeaderFile, GitTagsetHeader.class);
+					 serializedTagsetHeaderFile, GitTagsetHeader.class
+			 );
 		}
 	}
 

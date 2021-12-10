@@ -239,11 +239,14 @@ public interface Project {
 	 * @param sourceDocument
 	 */
 	public void insert(SourceDocument sourceDocument) throws IOException;
+
 	/**
 	 * @param sourceDocument document to be updated
 	 * @param contentInfoSet new meta data
+	 * @throws Exception
 	 */
-	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet);
+	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) throws Exception;
+
 	/**
 	 * @return the available Source Documents
 	 * @throws Exception 

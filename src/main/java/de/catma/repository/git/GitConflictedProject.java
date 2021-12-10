@@ -1,21 +1,15 @@
 package de.catma.repository.git;
 
+import de.catma.document.source.SourceDocument;
+import de.catma.project.ProjectReference;
+import de.catma.project.conflict.*;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagsetDefinition;
+
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
-
-import de.catma.document.source.SourceDocument;
-import de.catma.project.ProjectReference;
-import de.catma.project.conflict.AnnotationConflict;
-import de.catma.project.conflict.CollectionConflict;
-import de.catma.project.conflict.ConflictedProject;
-import de.catma.project.conflict.DeletedResourceConflict;
-import de.catma.project.conflict.Resolution;
-import de.catma.project.conflict.TagConflict;
-import de.catma.project.conflict.TagsetConflict;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagsetDefinition;
 
 public class GitConflictedProject implements ConflictedProject {
 	
@@ -44,6 +38,11 @@ public class GitConflictedProject implements ConflictedProject {
 	}
 
 	@Override
+	public List<SourceDocumentConflict> getSourceDocumentConflicts() throws Exception {
+		return gitProjectHandler.getSourceDocumentConflicts();
+	}
+
+	@Override
 	public Collection<TagsetDefinition> getTagsets() throws Exception {
 		return gitProjectHandler.getTagsets();
 	}
@@ -61,29 +60,38 @@ public class GitConflictedProject implements ConflictedProject {
 		
 		return documents;
 	}
-	
+
 	@Override
 	public void resolveCollectionConflict(List<CollectionConflict> conflictedCollections, TagLibrary tagLibrary) throws Exception {
 		for (CollectionConflict collectionConflict : conflictedCollections) {
-			if (!collectionConflict.getAnnotationConflicts().isEmpty()) {
+			if (!collectionConflict.getAnnotationConflicts().isEmpty() || collectionConflict.isHeaderConflict()) {
 				for (AnnotationConflict annotationConflict : collectionConflict.getAnnotationConflicts()) {
 					gitProjectHandler.resolveAnnotationConflict(
-						collectionConflict.getCollectionId(), annotationConflict, tagLibrary);
+							collectionConflict.getCollectionId(), annotationConflict, tagLibrary
+					);
 				}
+
 				gitProjectHandler.addCollectionToStagedAndCommit(
-					collectionConflict.getCollectionId(), "Auto-committing merged changes", true);
-				
+						collectionConflict.getCollectionId(),
+						"Auto-committing merged changes (GitConflictedProject.resolveCollectionConflict -> " +
+								"GitProjectHandler.addCollectionToStagedAndCommit)",
+						true
+				);
 			}
+
 			gitProjectHandler.addCollectionSubmoduleToStagedAndCommit(
-				collectionConflict.getCollectionId(), "Auto-committing merged changes", false);
+					collectionConflict.getCollectionId(),
+					"Auto-committing merged changes (GitConflictedProject.resolveCollectionConflict -> " +
+							"GitProjectHandler.addCollectionSubmoduleToStagedAndCommit)",
+					false
+			);
 
 			gitProjectHandler.checkoutCollectionDevBranchAndRebase(collectionConflict.getCollectionId());
-			
+
 			gitProjectHandler.synchronizeCollectionWithRemote(collectionConflict.getCollectionId());
 		}
-		
 	}
-	
+
 	@Override
 	public void resolveTagsetConflicts(List<TagsetConflict> tagsetConflicts) throws Exception {
 		for (TagsetConflict tagsetConflict : tagsetConflicts) {
@@ -91,21 +99,53 @@ public class GitConflictedProject implements ConflictedProject {
 				for (TagConflict tagConflict : tagsetConflict.getTagConflicts()) {
 					gitProjectHandler.resolveTagConflict(tagsetConflict.getUuid(), tagConflict);
 				}
-				gitProjectHandler.addTagsetToStagedAndCommit(
-						tagsetConflict.getUuid(), "Auto-committing merged changes");
-			}
-			
-			gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
-					tagsetConflict.getUuid(), "Auto-committing merged changes");
-			
-			gitProjectHandler.checkoutTagsetDevBranchAndRebase(tagsetConflict.getUuid());
-			
-			gitProjectHandler.synchronizeTagsetWithRemote(tagsetConflict.getUuid());
 
+				// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?
+				gitProjectHandler.addTagsetToStagedAndCommit(
+						tagsetConflict.getUuid(),
+						"Auto-committing merged changes (GitConflictedProject.resolveTagsetConflicts -> " +
+								"GitProjectHandler.addTagsetToStagedAndCommit)"
+				);
+			}
+
+			// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?
+			gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
+					tagsetConflict.getUuid(),
+					"Auto-committing merged changes (GitConflictedProject.resolveTagsetConflicts -> " +
+							"GitProjectHandler.addTagsetSubmoduleToStagedAndCommit)"
+			);
+
+			gitProjectHandler.checkoutTagsetDevBranchAndRebase(tagsetConflict.getUuid());
+
+			gitProjectHandler.synchronizeTagsetWithRemote(tagsetConflict.getUuid());
 		}
-		
 	}
-	
+
+	@Override
+	public void resolveSourceDocumentConflicts(List<SourceDocumentConflict> sourceDocumentConflicts) throws Exception {
+		// for now there shouldn't be conflicts on anything other than the header file (nothing else about a document can currently be edited by users)
+		// those are resolved/merged automatically when they're fetched, but need to commit and push here
+		for (SourceDocumentConflict sourceDocumentConflict : sourceDocumentConflicts) {
+			gitProjectHandler.addSourceDocumentToStagedAndCommit(
+					sourceDocumentConflict.getSourceDocumentId(),
+					"Auto-committing merged changes (GitConflictedProject.resolveSourceDocumentConflicts -> " +
+							"GitProjectHandler.addSourceDocumentToStagedAndCommit)",
+					true
+			);
+
+			gitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit(
+					sourceDocumentConflict.getSourceDocumentId(),
+					"Auto-committing merged changes (GitConflictedProject.resolveSourceDocumentConflicts -> " +
+							"GitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit)",
+					false
+			);
+
+			gitProjectHandler.checkoutSourceDocumentDevBranchAndRebase(sourceDocumentConflict.getSourceDocumentId());
+
+			gitProjectHandler.synchronizeSourceDocumentWithRemote(sourceDocumentConflict.getSourceDocumentId());
+		}
+	}
+
 	@Override
 	public void resolveDeletedResourceConflicts(Collection<DeletedResourceConflict> deletedResourceConflicts) throws Exception {
 		gitProjectHandler.resolveDeletedResourceConflicts(deletedResourceConflicts);
