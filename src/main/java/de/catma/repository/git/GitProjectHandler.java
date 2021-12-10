@@ -820,10 +820,22 @@ public class GitProjectHandler {
 	public void removeDocument(SourceDocument sourceDocument) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String documentId = sourceDocument.getUuid();
-			
+
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localGitRepoManager, remoteGitServerManager, credentialsProvider
+			);
+
+			MergeResult mergeResult = gitSourceDocumentHandler.synchronizeBranchWithRemoteMaster(
+					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
+					projectId,
+					documentId,
+					hasPermission(getRoleForDocument(documentId), RBACPermission.DOCUMENT_WRITE)
+			);
+			// TODO: handle merge result -> take theirs
+
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-	
+
 			// remove the submodule only!!!
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
@@ -839,7 +851,7 @@ public class GitProjectHandler {
 					sourceDocument.getUuid()), 
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail());
-		}	
+		}
 	}
 
 	public void addCollectionToStaged(String collectionId) throws Exception {
