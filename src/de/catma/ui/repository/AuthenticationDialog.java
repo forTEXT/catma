@@ -277,24 +277,24 @@ public class AuthenticationDialog extends VerticalLayout {
 			}
 		});
 		
-		catmaLogInLink.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-				try {
-					UI.getCurrent().getPage().setLocation(createLogInClick(
-						UI.getCurrent(), 
-						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
-						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
-						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
-						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
-						URLEncoder.encode("/", "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				catch (Exception e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
-				}
-			}
-		});
+//		catmaLogInLink.addClickListener(new ClickListener() {
+//			
+//			@Override
+//			public void buttonClick(ClickEvent event) {
+//				try {
+//					UI.getCurrent().getPage().setLocation(createLogInClick(
+//						UI.getCurrent(), 
+//						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
+//						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
+//						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
+//						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
+//						URLEncoder.encode("/", "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
+//				}
+//				catch (Exception e) {
+//					((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
+//				}
+//			}
+//		});
 		
 		
 		googleLogInLink.addClickListener(new ClickListener() {
@@ -377,6 +377,14 @@ public class AuthenticationDialog extends VerticalLayout {
 		catmaLogInLink.setIcon(new ClassResource("repository/resources/catma.png")); //$NON-NLS-1$
 		catmaLogInLink.setStyleName(BaseTheme.BUTTON_LINK);
 		catmaLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
+		catmaLogInLink.addClickListener(
+				clickEvent -> Notification.show(
+					"Info", 
+					"Support for CATMA accounts has been deactivated in CATMA 5. "
+					+ "If for whatever reason you still need access to CATMA 5 with a CATMA account "
+					+ "please get in contact with us directly via catma-support@catma.de",
+					Type.HUMANIZED_MESSAGE));
+
 		addComponent(catmaLogInLink);
 		
 //		Link catmaCreateAccountLink = 
