@@ -830,6 +830,16 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	public void close() {
+		try {
+			if ((this.commentTopic != null) && (commentMessageListenerRegId != null)) {
+				this.commentTopic.removeMessageListener(commentMessageListenerRegId);
+				this.commentMessageListenerRegId = null;
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "error removing comment listener", e);
+		}
+
 		this.eventBus.unregister(this);
 		annotationPanel.close();
 		resourcePanel.close();
