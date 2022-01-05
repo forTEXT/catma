@@ -1081,7 +1081,7 @@
  */
 
 .v-vaadin-version:after {
-	content: "8.14.3";
+	content: "8.13.3";
 }
 
 .v-widget {
@@ -11167,11 +11167,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-table-table td {
 	border-top: 0 solid #d9d9d9;
-	box-sizing: border-box;
 }
 
 .catma .v-table-table tr:first-child > td {
-	height: 29px;
 	border-top: none;
 }
 
