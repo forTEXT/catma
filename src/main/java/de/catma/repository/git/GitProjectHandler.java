@@ -1,31 +1,5 @@
 package de.catma.repository.git;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -37,13 +11,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.indexer.TermInfo;
 import de.catma.project.CommitInfo;
-import de.catma.project.conflict.AnnotationConflict;
-import de.catma.project.conflict.CollectionConflict;
-import de.catma.project.conflict.DeletedResourceConflict;
-import de.catma.project.conflict.DeletedResourceConflict.ResourceType;
-import de.catma.project.conflict.Resolution;
-import de.catma.project.conflict.TagConflict;
-import de.catma.project.conflict.TagsetConflict;
+import de.catma.project.conflict.*;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -52,15 +20,30 @@ import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagsetDefinition;
+import de.catma.tag.*;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+
+import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class GitProjectHandler {
 
@@ -327,18 +310,14 @@ public class GitProjectHandler {
 	/**
 	 * Creates a new source document within the project identified by <code>projectId</code>.
 	 *
-	 * @param sourceDocumentId the ID of the source document to create. If none is provided, a new
-	 *                         ID will be generated.
-	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original,
-	 *                                     unmodified source document
-	 * @param originalSourceDocumentFileName the file name of the original, unmodified source
-	 *                                       document
-	 * @param convertedSourceDocumentStream a {@link InputStream} object representing the converted,
-	 *                                      UTF-8 encoded source document
-	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
-	 *                                        document
+	 * @param sourceDocumentId the ID of the source document to create. If none is provided, a new ID will be generated.
+	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original, unmodified source document
+	 * @param originalSourceDocumentFileName the file name of the original, unmodified source document
+	 * @param convertedSourceDocumentStream a {@link InputStream} object representing the converted, UTF-8 encoded source document
+	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source document
+	 * @param terms the collection of terms extracted from the converted source document
+	 * @param tokenizedSourceDocumentFileName name of the file within which the terms/tokens should be stored in serialized form
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
-	 * @param terms 
 	 * @return the revisionHash
 	 * @throws IOException if an error occurs while creating the source document
 	 */
@@ -350,12 +329,11 @@ public class GitProjectHandler {
 			SourceDocumentInfo sourceDocumentInfo
 	) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			GitSourceDocumentHandler gitSourceDocumentHandler =
-				new GitSourceDocumentHandler(
-						localRepoManager, 
-						this.remoteGitServerManager,
-						this.credentialsProvider
-				);
+			GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
+					localRepoManager,
+					this.remoteGitServerManager,
+					this.credentialsProvider
+			);
 
 			// create the source document within the project
 			String revisionHash = gitSourceDocumentHandler.create(
@@ -365,7 +343,7 @@ public class GitProjectHandler {
 					terms, tokenizedSourceDocumentFileName,
 					sourceDocumentInfo
 			);
-			
+
 			localRepoManager.open(projectId, sourceDocumentId);
 			localRepoManager.push(credentialsProvider);
 
@@ -383,34 +361,71 @@ public class GitProjectHandler {
 			).toFile();
 			
 			sourceDocumentInfo.getTechInfoSet().setURI(
-					Paths.get(
-						targetSubmodulePath.getAbsolutePath(), 
-						convertedSourceDocumentFileName)
-					.toUri());
+					Paths.get(targetSubmodulePath.getAbsolutePath(), convertedSourceDocumentFileName).toUri()
+			);
 
 			// submodule files and the changed .gitmodules file are automatically staged
-			localRepoManager.addSubmodule(
-				targetSubmodulePath, remoteUri,
-				credentialsProvider
-			);
-			
+			localRepoManager.addSubmodule(targetSubmodulePath, remoteUri, credentialsProvider);
+
 			String name = sourceDocumentInfo.getContentInfoSet().getTitle();
 			if ((name == null) || name.isEmpty()) {
 				name = "N/A";
 			}
+
 			localRepoManager.commit(
-				String.format("Added Document %1$s with ID %2$s", name, sourceDocumentId),
-				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getEmail(),
-				false);
-			
-			rolesPerResource.put(
-				sourceDocumentId, 
-				RBACRole.OWNER);
-			
+					String.format("Added document \"%1$s\" with ID %2$s", name, sourceDocumentId),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail(),
+					false
+			);
+
+			localRepoManager.detach();
+
+			gitSourceDocumentHandler.checkout(
+					projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true
+			);
+
+			rolesPerResource.put(sourceDocumentId, RBACRole.OWNER);
+
 			return revisionHash;
 		}
+	}
 
+	public String updateSourceDocument(@Nonnull SourceDocument sourceDocument) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localGitRepoManager, this.remoteGitServerManager, this.credentialsProvider
+			);
+			return gitSourceDocumentHandler.update(projectId, sourceDocument);
+		}
+	}
+
+	public String addSourceDocumentSubmoduleToStagedAndCommit(@Nonnull String sourceDocumentId, String commitMessage, boolean force) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			Path relativePath = Paths.get(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocumentId);
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.add(relativePath);
+			return localGitRepoManager.commit(commitMessage, remoteGitServerManager.getUsername(), remoteGitServerManager.getEmail(), force);
+		}
+	}
+
+	public String addSourceDocumentToStagedAndCommit(String sourceDocumentId, String commitMessage, boolean force) throws IOException {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localRepoManager, remoteGitServerManager, credentialsProvider
+			);
+			return gitSourceDocumentHandler.addAllAndCommit(projectId, sourceDocumentId, commitMessage, force);
+		}
+	}
+
+	public void checkoutSourceDocumentDevBranchAndRebase(String sourceDocumentId) throws Exception {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localRepoManager, remoteGitServerManager, credentialsProvider
+			);
+			gitSourceDocumentHandler.checkout(projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, false);
+			gitSourceDocumentHandler.rebaseToMaster(projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH);
+		}
 	}
 
 	public String getRootRevisionHash() throws Exception {
@@ -799,10 +814,22 @@ public class GitProjectHandler {
 	public void removeDocument(SourceDocument sourceDocument) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String documentId = sourceDocument.getUuid();
-			
+
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localGitRepoManager, remoteGitServerManager, credentialsProvider
+			);
+
+			MergeResult mergeResult = gitSourceDocumentHandler.synchronizeBranchWithRemoteMaster(
+					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
+					projectId,
+					documentId,
+					hasPermission(getRoleForDocument(documentId), RBACPermission.DOCUMENT_WRITE)
+			);
+			// TODO: handle merge result -> take theirs
+
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-	
+
 			// remove the submodule only!!!
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
@@ -818,7 +845,7 @@ public class GitProjectHandler {
 					sourceDocument.getUuid()), 
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail());
-		}	
+		}
 	}
 
 	public void addCollectionToStaged(String collectionId) throws Exception {
@@ -948,44 +975,69 @@ public class GitProjectHandler {
 	}
 
 	public void ensureDevBranches() throws Exception {
-		logger.info(String.format("Ensuring dev branches for Project %1$s", projectId));
-		
+		logger.info(String.format("Ensuring dev branches for project %1$s", projectId));
+
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = 
-				new GitTagsetHandler(
-					localGitRepoManager, 
+			// tagsets
+			GitTagsetHandler gitTagsetHandler =	new GitTagsetHandler(
+					localGitRepoManager,
 					this.remoteGitServerManager,
-					this.credentialsProvider);
+					this.credentialsProvider
+			);
 
 			for (TagsetDefinition tagset : getTagsets()) {
 				logger.info(
 						String.format(
-							"Checking out dev branch for Tagset %1$s with ID %2$s", 
-							tagset.getName(),
-							tagset.getUuid()));
+								"Checking out dev branch for tagset \"%1$s\" with ID %2$s",
+								tagset.getName(),
+								tagset.getUuid()
+						)
+				);
 				gitTagsetHandler.checkout(
-					projectId, tagset.getUuid(), 
-					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+						projectId, tagset.getUuid(), ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true
+				);
 			}
-			
-			GitMarkupCollectionHandler collectionHandler = 
-				new GitMarkupCollectionHandler(
-						localGitRepoManager, 
-						this.remoteGitServerManager,
-						this.credentialsProvider);
-			
+
+			// collections
+			GitMarkupCollectionHandler collectionHandler = new GitMarkupCollectionHandler(
+					localGitRepoManager,
+					this.remoteGitServerManager,
+					this.credentialsProvider
+			);
+
 			for (AnnotationCollectionReference collectionReference : getCollectionReferences()) {
 				logger.info(
 						String.format(
-							"Checking out dev branch for Collection %1$s with ID %2$s", 
-							collectionReference.getName(),
-							collectionReference.getId()));
+								"Checking out dev branch for collection \"%1$s\" with ID %2$s",
+								collectionReference.getName(),
+								collectionReference.getId()
+						)
+				);
 				collectionHandler.checkout(
-					projectId, 
-					collectionReference.getId(), 
-					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+					projectId, collectionReference.getId(),	ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true
+				);
 			}
-		}		
+
+			// documents
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localGitRepoManager,
+					remoteGitServerManager,
+					credentialsProvider
+			);
+
+			for (SourceDocument sourceDocument : getDocuments()) {
+				logger.info(
+						String.format(
+								"Checking out dev branch for document \"%s\" with ID %s",
+								sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle(),
+								sourceDocument.getUuid()
+						)
+				);
+				gitSourceDocumentHandler.checkout(
+						projectId, sourceDocument.getUuid(), ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true
+				);
+			}
+		}
 	}
 
 	public boolean hasUncommittedChanges() throws Exception {
@@ -1018,7 +1070,7 @@ public class GitProjectHandler {
 			return localGitRepoManager.getUnsynchronizedChanges();
 		}		
 	}
-	
+
 	public void synchronizeTagsetWithRemote(String tagsetId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
@@ -1068,99 +1120,123 @@ public class GitProjectHandler {
 
 	public boolean hasConflicts() throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
-			localGitRepoManager.open(
-				 projectId,
-				 GitProjectManager.getProjectRootRepositoryName(projectId));
-			 
-			Path tagsetsDirPath = 
-					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+
+			Path tagsetsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
 					.resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
-			Path collectionDirPath = 
-					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+			Path collectionDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
 					.resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+			Path sourceDocumentsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+					.resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
 
 			Status topLevelStatus = localGitRepoManager.getStatus(true);
 			boolean pushTopLevelConflictResolution = false;
 			if (!topLevelStatus.getConflicting().isEmpty()) {
 				if (topLevelStatus.getConflicting().contains(Constants.DOT_GIT_MODULES)) {
-					logger.info(String.format(
-						"Found conflicts in %1$s of Project %2$s, trying auto resolution", 
-						Constants.DOT_GIT_MODULES, 
-						projectId));
+					logger.info(
+							String.format(
+									"Found conflicts in %1$s of project %2$s, trying auto resolution",
+									Constants.DOT_GIT_MODULES,
+									projectId
+							)
+					);
 
 					localGitRepoManager.resolveGitSubmoduleFileConflicts();
 					pushTopLevelConflictResolution = true;
 				}
 			}
-			
+
 			Status projectStatus = localGitRepoManager.getStatus();
 			localGitRepoManager.detach();
-			 
+
 			if (tagsetsDirPath.toFile().exists()) {
-				GitTagsetHandler gitTagsetHandler = 
-						new GitTagsetHandler(
-							localGitRepoManager, 
-							this.remoteGitServerManager,
-							this.credentialsProvider);
+				GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
+						localGitRepoManager,
+						this.remoteGitServerManager,
+						this.credentialsProvider
+				);
+
 				List<Path> paths = Files
 						.walk(tagsetsDirPath, 1)
 						.filter(tagsetPath -> !tagsetsDirPath.equals(tagsetPath))
 						.collect(Collectors.toList());
+
 				for (Path tagsetPath : paths) {
-					if (tagsetPath.toFile().list() != null && tagsetPath.toFile().list().length > 0) { // empty directories are submodules not yet initialized or deleted 
-						String tagsetId = tagsetPath.getFileName().toString();						 
+					// empty directories are submodules not yet initialized or deleted
+					if (tagsetPath.toFile().list() != null && tagsetPath.toFile().list().length > 0) {
+						String tagsetId = tagsetPath.getFileName().toString();
 						Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
 						if (!status.getConflicting().isEmpty()) {
-							StatusPrinter.print("Tagset #" +tagsetId , status, System.out); 
+							StatusPrinter.print("Tagset #" + tagsetId, status, System.out);
 							return true;
 						}
 					}
 				}
 			}
-			
+
 			if (collectionDirPath.toFile().exists()) {
 				List<Path> paths = Files
 						.walk(collectionDirPath, 1)
 						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
 						.collect(Collectors.toList());
-				
-				GitMarkupCollectionHandler gitCollectionHandler = 
-						new GitMarkupCollectionHandler(
-								localGitRepoManager, 
-								this.remoteGitServerManager,
-								this.credentialsProvider);
+
+				GitMarkupCollectionHandler gitCollectionHandler = new GitMarkupCollectionHandler(
+						localGitRepoManager,
+						this.remoteGitServerManager,
+						this.credentialsProvider
+				);
 
 				for (Path collectionPath : paths) {
-					if (collectionPath.toFile().list() != null && collectionPath.toFile().list().length > 0) { // empty directories are submodules not yet initialized or deleted 
+					// empty directories are submodules not yet initialized or deleted
+					if (collectionPath.toFile().list() != null && collectionPath.toFile().list().length > 0) {
 						String collectionId = collectionPath.getFileName().toString();
 						Status status = gitCollectionHandler.getStatus(projectId, collectionId);
 						if (!status.getConflicting().isEmpty()) {
-							StatusPrinter.print("Collection #" +collectionId , status, System.out); 
+							StatusPrinter.print("Collection #" + collectionId, status, System.out);
 							return true;
-						}					
+						}
 					}
 				}
-				
 			}
-			
+
+			if (sourceDocumentsDirPath.toFile().exists()) {
+				List<Path> paths = Files
+						.walk(sourceDocumentsDirPath, 1)
+						.filter(sourceDocumentPath -> !sourceDocumentsDirPath.equals(sourceDocumentPath))
+						.collect(Collectors.toList());
+
+				GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+						localGitRepoManager,
+						remoteGitServerManager,
+						credentialsProvider
+				);
+
+				for (Path sourceDocumentPath : paths) {
+					// empty directories are submodules not yet initialized or deleted
+					if (sourceDocumentPath.toFile().list() != null && sourceDocumentPath.toFile().list().length > 0) {
+						String sourceDocumentId = sourceDocumentPath.getFileName().toString();
+						Status status = gitSourceDocumentHandler.getStatus(projectId, sourceDocumentId);
+						if (!status.getConflicting().isEmpty()) {
+							StatusPrinter.print("Document #" + sourceDocumentId, status, System.out);
+							return true;
+						}
+					}
+				}
+			}
+
 			if (!projectStatus.getConflicting().isEmpty()) {
-				StatusPrinter.print("Project #" +projectId , projectStatus, System.out); 
-				return true;				
+				StatusPrinter.print("Project #" + projectId, projectStatus, System.out);
+				return true;
 			}
-			
-			
+
 			if (pushTopLevelConflictResolution) {
 				if (projectStatus.hasUncommittedChanges()) {
-					localGitRepoManager.open(
-							 projectId,
-							 GitProjectManager.getProjectRootRepositoryName(projectId));
-						 
+					localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 					localGitRepoManager.push(credentialsProvider);
 				}
 			}
 		} 
-		
+
 		return false;
 	}
 
@@ -1256,57 +1332,54 @@ public class GitProjectHandler {
 
 	public Collection<DeletedResourceConflict> resolveRootConflicts() throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
 			localGitRepoManager.open(
-				 projectId,
-				 GitProjectManager.getProjectRootRepositoryName(projectId));
-			
+					projectId, GitProjectManager.getProjectRootRepositoryName(projectId)
+			);
+
 			Status status = localGitRepoManager.getStatus();
-			
+
 			StatusPrinter.print("Project status", status, System.out);
 
-			Collection<DeletedResourceConflict> deletedResourceConflicts = 
-					localGitRepoManager.resolveRootConflicts(projectId, this.credentialsProvider);
+			Collection<DeletedResourceConflict> deletedResourceConflicts = localGitRepoManager.resolveRootConflicts(
+					projectId, this.credentialsProvider
+			);
 
 			if (deletedResourceConflicts.isEmpty()) {
 				localGitRepoManager.addAllAndCommit(
-						"Auto-committing merged changes",
+						"Auto-committing merged changes (resolveRootConflicts)",
 						remoteGitServerManager.getUsername(),
 						remoteGitServerManager.getEmail(),
-						true);
-				
+						true
+				);
+
 				localGitRepoManager.push(credentialsProvider);
 			}
 			else {
 				localGitRepoManager.detach();
-				
+
 				for (DeletedResourceConflict deletedResourceConflict : deletedResourceConflicts) {
 					if (deletedResourceConflict.getRelativeModulePath().startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)) {
 						try {
-							GitMarkupCollectionHandler collectionHandler = 
-									new GitMarkupCollectionHandler(
-										localGitRepoManager, 
-										this.remoteGitServerManager,
-										this.credentialsProvider);
-							String collectionId =
-								deletedResourceConflict.getRelativeModulePath().substring(
-										ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME.length()+1);
-							
+							GitMarkupCollectionHandler collectionHandler = new GitMarkupCollectionHandler(
+									localGitRepoManager, this.remoteGitServerManager, this.credentialsProvider
+							);
+							String collectionId = deletedResourceConflict.getRelativeModulePath().substring(
+									ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME.length() + 1
+							);
+
 							deletedResourceConflict.setResourceId(collectionId);
 
 							if (deletedResourceConflict.isDeletedByThem()) {
-								ContentInfoSet contentInfoSet = 
-									collectionHandler.getContentInfoSet(
-									projectId, 
-									collectionId);
-								deletedResourceConflict.setContentInfoSet(
-										contentInfoSet);
+								ContentInfoSet contentInfoSet = collectionHandler.getContentInfoSet(
+										projectId, collectionId
+								);
+								deletedResourceConflict.setContentInfoSet(contentInfoSet);
 							}
 							else {
 								deletedResourceConflict.setContentInfoSet(new ContentInfoSet("N/A"));
 							}
-							
-							deletedResourceConflict.setResourceType(ResourceType.ANNOTATION_COLLECTION);
+
+							deletedResourceConflict.setResourceType(DeletedResourceConflict.ResourceType.ANNOTATION_COLLECTION);
 						}
 						finally {
 							localGitRepoManager.detach();
@@ -1314,22 +1387,53 @@ public class GitProjectHandler {
 					}
 					else if (deletedResourceConflict.getRelativeModulePath().startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
 						try {
-							GitTagsetHandler tagsetHandler = 
-									new GitTagsetHandler(
-											localGitRepoManager, 
-											this.remoteGitServerManager,
-											this.credentialsProvider);
-							String tagsetId = 
-								deletedResourceConflict.getRelativeModulePath().substring(
-										TAGSET_SUBMODULES_DIRECTORY_NAME.length()+1);
-										
-							ContentInfoSet contentInfoSet = tagsetHandler.getContentInfoSet(
-									projectId, 
-									tagsetId);
+							GitTagsetHandler tagsetHandler = new GitTagsetHandler(
+									localGitRepoManager, this.remoteGitServerManager, this.credentialsProvider
+							);
+							String tagsetId = deletedResourceConflict.getRelativeModulePath().substring(
+									TAGSET_SUBMODULES_DIRECTORY_NAME.length() + 1
+							);
+
 							deletedResourceConflict.setResourceId(tagsetId);
-							deletedResourceConflict.setContentInfoSet(
-									contentInfoSet);
-							deletedResourceConflict.setResourceType(ResourceType.TAGSET);
+
+							if (deletedResourceConflict.isDeletedByThem()) {
+								ContentInfoSet contentInfoSet = tagsetHandler.getContentInfoSet(
+										projectId, tagsetId
+								);
+								deletedResourceConflict.setContentInfoSet(contentInfoSet);
+							}
+							else {
+								deletedResourceConflict.setContentInfoSet(new ContentInfoSet("N/A"));
+							}
+
+							deletedResourceConflict.setResourceType(DeletedResourceConflict.ResourceType.TAGSET);
+						}
+						finally {
+							localGitRepoManager.detach();
+						}
+					}
+					else if (deletedResourceConflict.getRelativeModulePath().startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)) {
+						try {
+							GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+									localGitRepoManager, remoteGitServerManager, credentialsProvider
+							);
+							String sourceDocumentId = deletedResourceConflict.getRelativeModulePath().substring(
+									SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME.length() + 1
+							);
+
+							deletedResourceConflict.setResourceId(sourceDocumentId);
+
+							if (deletedResourceConflict.isDeletedByThem()) {
+								ContentInfoSet contentInfoSet = gitSourceDocumentHandler.getContentInfoSet(
+										projectId, sourceDocumentId
+								);
+								deletedResourceConflict.setContentInfoSet(contentInfoSet);
+							}
+							else {
+								deletedResourceConflict.setContentInfoSet(new ContentInfoSet("N/A"));
+							}
+
+							deletedResourceConflict.setResourceType(DeletedResourceConflict.ResourceType.SOURCE_DOCUMENT);
 						}
 						finally {
 							localGitRepoManager.detach();
@@ -1337,23 +1441,20 @@ public class GitProjectHandler {
 					}
 				}
 			}
-			
-			
+
 			return deletedResourceConflicts;
 		}
 	}
 
 	public List<TagsetConflict> getTagsetConflicts() throws Exception {
-		
 		ArrayList<TagsetConflict> tagsetConflicts = new ArrayList<>();
+
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
 			localGitRepoManager.open(
-				 projectId,
-				 GitProjectManager.getProjectRootRepositoryName(projectId));
-			 
-			Path tagsetDirPath = 
-					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+					projectId, GitProjectManager.getProjectRootRepositoryName(projectId)
+			);
+
+			Path tagsetDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
 					.resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
 
 			localGitRepoManager.detach();
@@ -1363,28 +1464,29 @@ public class GitProjectHandler {
 						.walk(tagsetDirPath, 1)
 						.filter(tagsetPath -> !tagsetDirPath.equals(tagsetPath))
 						.collect(Collectors.toList());
-				
-				GitTagsetHandler gitTagsetHandler = 
-						new GitTagsetHandler(
-								localGitRepoManager, 
-								this.remoteGitServerManager,
-								this.credentialsProvider);
+
+				GitTagsetHandler gitTagsetHandler =	new GitTagsetHandler(
+						localGitRepoManager,
+						this.remoteGitServerManager,
+						this.credentialsProvider
+				);
 
 				for (Path tagsetPath : paths) {
-					String tagsetId = tagsetPath.getFileName().toString();
-					Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
-					if (!status.getConflicting().isEmpty()) {
-						tagsetConflicts.add(
-								gitTagsetHandler.getTagsetConflict(
-										projectId, tagsetId));
-					}					
+					if (tagsetDirPath.resolve(tagsetPath).resolve(Constants.DOT_GIT).toFile().exists()) {
+						String tagsetId = tagsetPath.getFileName().toString();
+						Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
+
+						if (!status.getConflicting().isEmpty()) {
+							tagsetConflicts.add(
+									gitTagsetHandler.getTagsetConflict(projectId, tagsetId)
+							);
+						}
+					}
 				}
-				
 			}
 		}
-		
-		return tagsetConflicts;	
-		
+
+		return tagsetConflicts;
 	}
 
 	public void resolveTagConflict(String tagsetId, TagConflict tagConflict) throws Exception {
@@ -1408,6 +1510,59 @@ public class GitProjectHandler {
 			}
 
 		}		
+	}
+
+	// TODO: refactoring - see hasConflicts, almost identical code (same for tagsets and collections)
+	//       also: are we unnecessarily opening the root repo here?
+	public List<SourceDocumentConflict> getSourceDocumentConflicts() throws Exception {
+		ArrayList<SourceDocumentConflict> sourceDocumentConflicts = new ArrayList<>();
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			Path sourceDocumentsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
+					.resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
+			localGitRepoManager.detach();
+
+			if (sourceDocumentsDirPath.toFile().exists()) {
+				List<Path> paths = Files
+						.walk(sourceDocumentsDirPath, 1)
+						.filter(sourceDocumentPath -> !sourceDocumentsDirPath.equals(sourceDocumentPath))
+						.collect(Collectors.toList());
+
+				GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+						localGitRepoManager, remoteGitServerManager, credentialsProvider
+				);
+
+				for (Path sourceDocumentPath : paths) {
+					if (sourceDocumentsDirPath.resolve(sourceDocumentPath).resolve(Constants.DOT_GIT).toFile().exists()) {
+						String sourceDocumentId = sourceDocumentPath.getFileName().toString();
+						Status status = gitSourceDocumentHandler.getStatus(projectId, sourceDocumentId);
+						if (!status.getConflicting().isEmpty()) {
+							sourceDocumentConflicts.add(
+									gitSourceDocumentHandler.getSourceDocumentConflict(projectId, sourceDocumentId)
+							);
+						}
+					}
+				}
+			}
+		}
+
+		return sourceDocumentConflicts;
+	}
+
+	public void synchronizeSourceDocumentWithRemote(String sourceDocumentId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(localGitRepoManager, remoteGitServerManager, credentialsProvider);
+
+			@SuppressWarnings("unused")
+			MergeResult mergeResult = gitSourceDocumentHandler.synchronizeBranchWithRemoteMaster(
+					ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
+					projectId,
+					sourceDocumentId,
+					hasPermission(getRoleForDocument(sourceDocumentId), RBACPermission.DOCUMENT_WRITE)
+			);
+			// mergeResult is handled after all resources have been synchronized
+		}
 	}
 
 	public void synchronizeWithRemote() throws Exception {
@@ -1518,74 +1673,72 @@ public class GitProjectHandler {
 		return readableSubmodules;
 	}
 
-	public void removeStaleSubmoduleDirectories() throws Exception {
-		logger.info(String.format("Removing stale submodule directories for Project %1$s", projectId));
+	/**
+	 * Returns a mapping of submodule directories that exist on disk. Note that these are not necessarily valid submodules, as opposed to what
+	 * {@link de.catma.repository.git.managers.JGitRepoManager#getSubmodulePaths()} returns.
+	 *
+	 * @param localRepoManager an {@link ILocalGitRepositoryManager} instance
+	 * @param containerDirectory should be one of <code>SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME</code>,
+	 *                           <code>ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME</code>, or <code>TAGSET_SUBMODULES_DIRECTORY_NAME</code>
+	 * @return a mapping of relative paths to {@link Path} objects
+	 */
+	private Map<String, Path> getSubmodulePaths(ILocalGitRepositoryManager localRepoManager, String containerDirectory) throws IOException {
+		Path submoduleDirPath = Paths.get(localRepoManager.getRepositoryWorkTree().toURI()).resolve(containerDirectory);
+		Map<String, Path> relativePathToPathMap = new HashMap<>();
+
+		if (!submoduleDirPath.toFile().exists()) {
+			return relativePathToPathMap;
+		}
+
+		List<Path> paths = Files.walk(submoduleDirPath, 1).filter(submodulePath -> !submoduleDirPath.equals(submodulePath))
+				.collect(Collectors.toList());
+
+		for (Path submodulePath : paths) {
+			Path relativeSubmodulePath = Paths.get(containerDirectory, submodulePath.getFileName().toString());
+			String relativeSubmodulePathUnix = FilenameUtils.separatorsToUnix(relativeSubmodulePath.toString());
+			relativePathToPathMap.put(relativeSubmodulePathUnix, submodulePath);
+		}
+
+		return relativePathToPathMap;
+	}
+
+	/**
+	 * Returns a list of paths of stale submodules, i.e. submodules that exist on disk but are no longer registered as submodules.
+	 */
+	private List<Path> getStaleSubmodulePaths() throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			localRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-			
+
+			// note that this collection contains null entries for invalid submodules
 			List<String> validSubmodulePaths = localRepoManager.getSubmodulePaths();
 
-			Path collectionDirPath = 
-				 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-				 .resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
-			 
-			if (collectionDirPath.toFile().exists()) {
-				List<Path> paths = Files
-						.walk(collectionDirPath, 1)
-						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
-						.collect(Collectors.toList());
-				
-				for (Path collectionPath : paths) {
-					Path relCollectionPath = 
-						Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionPath.getFileName().toString());
-					String relCollectionPathUnix = FilenameUtils.separatorsToUnix(relCollectionPath.toString());
-					if (!validSubmodulePaths.contains(relCollectionPathUnix)) {
-						FileUtils.deleteDirectory(
-								collectionPath.toFile());
-					}
+			ArrayList<Path> stalePaths = new ArrayList<>();
+
+			Map<String, Path> submodulePathMapping = getSubmodulePaths(localRepoManager, ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME));
+			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, TAGSET_SUBMODULES_DIRECTORY_NAME));
+
+			for (Map.Entry<String, Path> entry : submodulePathMapping.entrySet()) {
+				if (!validSubmodulePaths.contains(entry.getKey())) {
+					stalePaths.add(entry.getValue());
 				}
 			}
-			Path docsDirPath = 
-					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
-				 
-			if (docsDirPath.toFile().exists()) {
-				List<Path> paths = Files
-						.walk(docsDirPath, 1)
-						.filter(collectionPath -> !docsDirPath.equals(collectionPath))
-						.collect(Collectors.toList());
-				
-				for (Path docPath : paths) {
-					Path relDocPath = 
-						Paths.get(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, docPath.getFileName().toString());
-					String relDocPathUnix = FilenameUtils.separatorsToUnix(relDocPath.toString());
-					if (!validSubmodulePaths.contains(relDocPathUnix)) {
-						FileUtils.deleteDirectory(
-								docPath.toFile());
-					}
-				}
+
+			return stalePaths;
+		}
+	}
+
+	public void removeStaleSubmoduleDirectories() throws Exception {
+		logger.info(String.format("Removing stale submodule directories for Project %1$s", projectId));
+
+		try {
+			List<Path> staleSubmodulePaths = getStaleSubmodulePaths();
+			for (Path path : staleSubmodulePaths) {
+				FileUtils.deleteDirectory(path.toFile());
 			}
-			
-			Path tagsetDirPath = 
-					 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-					 .resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
-				 
-			if (tagsetDirPath.toFile().exists()) {
-				List<Path> paths = Files
-						.walk(tagsetDirPath, 1)
-						.filter(collectionPath -> !tagsetDirPath.equals(collectionPath))
-						.collect(Collectors.toList());
-				
-				for (Path tagsetPath : paths) {
-					Path relTagsetPath = 
-						Paths.get(TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetPath.getFileName().toString());
-					String relTagsetPathUnix = FilenameUtils.separatorsToUnix(relTagsetPath.toString());
-					if (!validSubmodulePaths.contains(relTagsetPathUnix)) {
-						FileUtils.deleteDirectory(
-								tagsetPath.toFile());
-					}
-				}
-			}			
+		}
+		catch (IOException e) {
+			throw new Exception("Failed to remove stale submodule directories", e);
 		}
 	}
 
@@ -1664,7 +1817,7 @@ public class GitProjectHandler {
 					 }
 					 
 				 }
-				 else {
+				 else { // deleted by us
 					if (deletedResourceConflict.getResolution().equals(Resolution.MINE)) {
 						 // delete theirs
 						String relativeModulePath = deletedResourceConflict.getRelativeModulePath();
@@ -1674,6 +1827,7 @@ public class GitProjectHandler {
 						localGitRepoManager.remove(collectionDirPath.toFile());						 
 					}
 					else {
+						// keep theirs
 						String relativeModulePath = deletedResourceConflict.getRelativeModulePath();
 						String submoduleId = relativeModulePath.substring(relativeModulePath.lastIndexOf('/')+1);
 						String submoduleUri = 
@@ -1695,7 +1849,7 @@ public class GitProjectHandler {
 			 }
 			 
 			 localGitRepoManager.commit(
-					 "Auto-committing merged changes", 
+					 "Auto-committing merged changes (resolveDeletedResourceConflicts)",
 					 remoteGitServerManager.getUsername(),
 					 remoteGitServerManager.getEmail(), true);
 
@@ -1729,7 +1883,8 @@ public class GitProjectHandler {
 						staleCollectionCandidates.stream().map(AnnotationCollectionReference::getSourceDocumentId).collect(Collectors.toSet()));
 				
 				localGitRepoManager.detach();
-				
+
+				// TODO: unnecessary to loop over all collections when only the stale candidates can end up in verifiedDeleted
 				for (AnnotationCollectionReference collectionRef : collectionRefs) {
 					String collectionId = collectionRef.getId();
 					RBACRole collectionRole = rolesPerResource.get(collectionId);

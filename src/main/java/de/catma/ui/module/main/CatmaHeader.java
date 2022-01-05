@@ -71,7 +71,7 @@ public class CatmaHeader extends HorizontalLayout {
             AccessTokenDialog accessTokenDialog = new AccessTokenDialog(gitManagerPrivileged, loginService);
             accessTokenDialog.show();
         });
-        ctxAccount.addItem("Logout", (item) -> {
+        ctxAccount.addItem("Sign Out", (item) -> {
         	loginService.logout();
     	});
         

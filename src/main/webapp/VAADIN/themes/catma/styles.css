@@ -320,16 +320,6 @@
  */
 
 @font-face {
-	font-family: "Vaadin-Icons";
-	src: url(../valo/fonts/vaadin-icons/Vaadin-Icons.eot);
-	src: url(../valo/fonts/vaadin-icons/Vaadin-Icons.eot?#iefix) format("embedded-opentype"), url(../valo/fonts/vaadin-icons/Vaadin-Icons.woff) format("woff"), url(../valo/fonts/vaadin-icons/Vaadin-Icons.ttf) format("truetype"), url(../valo/fonts/vaadin-icons/Vaadin-Icons.svg#icomoon) format("svg");
-}
-
-.Vaadin-Icons {
-	font-family: "Vaadin-Icons";
-}
-
-@font-face {
 	font-family: ThemeIcons;
 	font-weight: normal;
 	font-style: normal;
@@ -345,6 +335,16 @@
 	-moz-osx-font-smoothing: grayscale;
 	display: inline-block;
 	text-align: center;
+}
+
+@font-face {
+	font-family: "Vaadin-Icons";
+	src: url(../valo/fonts/vaadin-icons/Vaadin-Icons.eot);
+	src: url(../valo/fonts/vaadin-icons/Vaadin-Icons.eot?#iefix) format("embedded-opentype"), url(../valo/fonts/vaadin-icons/Vaadin-Icons.woff) format("woff"), url(../valo/fonts/vaadin-icons/Vaadin-Icons.ttf) format("truetype"), url(../valo/fonts/vaadin-icons/Vaadin-Icons.svg#icomoon) format("svg");
+}
+
+.Vaadin-Icons {
+	font-family: "Vaadin-Icons";
 }
 
 @font-face {
@@ -1081,7 +1081,7 @@
  */
 
 .v-vaadin-version:after {
-	content: "8.12.3";
+	content: "8.14.3";
 }
 
 .v-widget {
@@ -4652,7 +4652,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 7.5px;
 }
 
-.catma .v-grid-editor-cells  > div input[type="checkbox"] {
+.catma .v-grid-editor-cells  > div :not(.v-assistive-device-only-label).v-widget > input[type="checkbox"] {
 	margin-left: 15px;
 }
 
@@ -4888,15 +4888,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 8px;
 }
 
-.catma .v-grid-editor-cells > div .v-checkbox {
+.catma .v-grid-editor-cells > div .v-checkbox.v-widget {
 	margin: 0 8px 0 15px;
 }
 
-.catma .v-grid-editor-cells > div .v-checkbox  > input[type="checkbox"] {
+.catma .v-grid-editor-cells > div .v-checkbox.v-widget  > input[type="checkbox"] {
 	margin-left: 0;
 }
 
-.catma .v-grid-editor-cells > div .v-checkbox  > label {
+.catma .v-grid-editor-cells > div .v-checkbox.v-widget  > label {
 	white-space: nowrap;
 }
 
@@ -9329,7 +9329,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 7.5px;
 }
 
-.catma .v-tree8-editor-cells  > div input[type="checkbox"] {
+.catma .v-tree8-editor-cells  > div :not(.v-assistive-device-only-label).v-widget > input[type="checkbox"] {
 	margin-left: 15px;
 }
 
@@ -9565,15 +9565,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 8px;
 }
 
-.catma .v-tree8-editor-cells > div .v-checkbox {
+.catma .v-tree8-editor-cells > div .v-checkbox.v-widget {
 	margin: 0 8px 0 15px;
 }
 
-.catma .v-tree8-editor-cells > div .v-checkbox  > input[type="checkbox"] {
+.catma .v-tree8-editor-cells > div .v-checkbox.v-widget  > input[type="checkbox"] {
 	margin-left: 0;
 }
 
-.catma .v-tree8-editor-cells > div .v-checkbox  > label {
+.catma .v-tree8-editor-cells > div .v-checkbox.v-widget  > label {
 	white-space: nowrap;
 }
 
@@ -10459,7 +10459,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 7.5px;
 }
 
-.catma .v-treegrid-editor-cells  > div input[type="checkbox"] {
+.catma .v-treegrid-editor-cells  > div :not(.v-assistive-device-only-label).v-widget > input[type="checkbox"] {
 	margin-left: 15px;
 }
 
@@ -10695,15 +10695,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 8px;
 }
 
-.catma .v-treegrid-editor-cells > div .v-checkbox {
+.catma .v-treegrid-editor-cells > div .v-checkbox.v-widget {
 	margin: 0 8px 0 15px;
 }
 
-.catma .v-treegrid-editor-cells > div .v-checkbox  > input[type="checkbox"] {
+.catma .v-treegrid-editor-cells > div .v-checkbox.v-widget  > input[type="checkbox"] {
 	margin-left: 0;
 }
 
-.catma .v-treegrid-editor-cells > div .v-checkbox  > label {
+.catma .v-treegrid-editor-cells > div .v-checkbox.v-widget  > label {
 	white-space: nowrap;
 }
 
@@ -11167,9 +11167,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-table-table td {
 	border-top: 0 solid #d9d9d9;
+	box-sizing: border-box;
 }
 
 .catma .v-table-table tr:first-child > td {
+	height: 29px;
 	border-top: none;
 }
 
@@ -17885,14 +17887,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-weight: bold;
 }
 
-.catma .authdialog-loginlink {
-	font-size: 14px;
-	padding: 5px 0;
+.catma .v-button.authdialog-google-login-link {
+	height: 46px;
+	padding: 0;
 }
 
-.catma .authdialog-loginlink:focus::after {
-	border-color: none;
-	box-shadow: none;
+.catma .authdialog-forgot-password-link, .catma .authdialog-tou-link, .catma .authdialog-pp-link {
+	font-size: 14px;
 }
 
 .catma .application-loginlink {

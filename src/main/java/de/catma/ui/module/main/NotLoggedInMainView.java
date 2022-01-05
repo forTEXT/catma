@@ -81,18 +81,18 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		aboutLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(aboutLink);
 
+		Link imprintLink = new Link("Imprint",
+				new ExternalResource(CATMAPropertyKey.ImprintURL.getValue(CATMAPropertyKey.ImprintURL.getDefaultValue())));
+		imprintLink.setTargetName("_blank");
+		menuLayout.addComponent(imprintLink);
+
 		Link termsOfUseLink = new Link("Terms of Use",
 				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue())));
 		termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(termsOfUseLink);
 
-		Link imprintLink = new Link("Imprint",
-				new ExternalResource(CATMAPropertyKey.ImprintURL.getValue(CATMAPropertyKey.ImprintURL.getDefaultValue())));
-		imprintLink.setTargetName("_blank"); 
-		menuLayout.addComponent(imprintLink);
-
 		Link privacyLink = new Link("Privacy Policy",
-				new ExternalResource(CATMAPropertyKey.PrivacyStatementURL.getValue(CATMAPropertyKey.PrivacyStatementURL.getDefaultValue()))); 
+				new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue())));
 		privacyLink.setTargetName("_blank");
 		menuLayout.addComponent(privacyLink);
 
@@ -133,7 +133,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
 
 		LabelButton btn_login = new LabelButton("Sign in", event -> new AuthenticationDialog(
-				"Sign in",
+				"Sign In",
 				CATMAPropertyKey.BaseURL.getValue(
 						CATMAPropertyKey.BaseURL.getDefaultValue()),
 				loginService,

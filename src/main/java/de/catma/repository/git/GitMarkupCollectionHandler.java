@@ -592,7 +592,7 @@ public class GitMarkupCollectionHandler {
 			
 			localGitRepoManager.add(
 					targetHeaderFile,
-					serializedHeader.getBytes(StandardCharsets.UTF_8));
+					serializedHeader.getBytes(StandardCharsets.UTF_8)); // TODO: why are we doing this and then calling addAndCommit?
 
 			String collectionRevision = localGitRepoManager.addAndCommit(
 					targetHeaderFile, 
@@ -682,132 +682,134 @@ public class GitMarkupCollectionHandler {
 
 	public CollectionConflict getCollectionConflict(String projectId, String collectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			
+
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String collectionSubmoduleRelDir = 
 					GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME + "/" + collectionId;
-			
+
 			File collectionSubmoduleAbsPath = new File(
-					localGitRepoManager.getRepositoryWorkTree().toString(),
-					collectionSubmoduleRelDir
+					localGitRepoManager.getRepositoryWorkTree().toString(),	collectionSubmoduleRelDir
 			);
 
 			localGitRepoManager.detach(); 
-			
-			String collectionGitRepositoryName =
-					projectRootRepositoryName + "/" + collectionSubmoduleRelDir;
+
+			String collectionGitRepositoryName = projectRootRepositoryName + "/" + collectionSubmoduleRelDir;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 
-			Status status = localGitRepositoryManager.getStatus();
-			
+			Status status = localGitRepoManager.getStatus();
+
 			File collectionHeaderFile = new File(
-					collectionSubmoduleAbsPath,
-					HEADER_FILE_NAME
+					collectionSubmoduleAbsPath,	HEADER_FILE_NAME
 			);
 
 			String serializedCollectionHeaderFile = FileUtils.readFileToString(
 					collectionHeaderFile, StandardCharsets.UTF_8
 			);
 
-			CollectionConflict collectionConflict = null; 
+			CollectionConflict collectionConflict;
+
 			if (status.getConflictingStageState().containsKey(HEADER_FILE_NAME)) {
 				GitMarkupCollectionHeader gitCollectionHeader = resolveCollectionHeaderConflict(
-					serializedCollectionHeaderFile, 
-					status.getConflictingStageState().get(HEADER_FILE_NAME));
-				
-				serializedCollectionHeaderFile = 
-					new SerializationHelper<GitMarkupCollectionHeader>().serialize(gitCollectionHeader);
-				
+						serializedCollectionHeaderFile,	status.getConflictingStageState().get(HEADER_FILE_NAME)
+				);
+
+				serializedCollectionHeaderFile = new SerializationHelper<GitMarkupCollectionHeader>()
+						.serialize(gitCollectionHeader);
+
 				localGitRepoManager.add(
-						collectionHeaderFile.getAbsoluteFile(), 
-						serializedCollectionHeaderFile.getBytes(StandardCharsets.UTF_8));
-				
+						collectionHeaderFile.getAbsoluteFile(), serializedCollectionHeaderFile.getBytes(StandardCharsets.UTF_8)
+				);
+
 				ContentInfoSet contentInfoSet = new ContentInfoSet(
 						gitCollectionHeader.getAuthor(),
 						gitCollectionHeader.getDescription(),
 						gitCollectionHeader.getPublisher(),
 						gitCollectionHeader.getName()
 				);
-				collectionConflict = 
-						new CollectionConflict(
-							projectId, collectionId, contentInfoSet, 
-							gitCollectionHeader.getSourceDocumentId());
 
+				collectionConflict = new CollectionConflict(
+						projectId, collectionId, contentInfoSet, gitCollectionHeader.getSourceDocumentId()
+				);
 				collectionConflict.setHeaderConflict(true);
+
 				status = localGitRepoManager.getStatus();
 			}
 			else {
 				GitMarkupCollectionHeader gitCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
-						.deserialize(
-								serializedCollectionHeaderFile,
-								GitMarkupCollectionHeader.class
-						);
+						.deserialize(serializedCollectionHeaderFile, GitMarkupCollectionHeader.class);
+
 				ContentInfoSet contentInfoSet = new ContentInfoSet(
 						gitCollectionHeader.getAuthor(),
 						gitCollectionHeader.getDescription(),
 						gitCollectionHeader.getPublisher(),
 						gitCollectionHeader.getName()
 				);
-				collectionConflict = 
-						new CollectionConflict(
-							projectId, collectionId, contentInfoSet, 
-							gitCollectionHeader.getSourceDocumentId());
-			}			
-			
+
+				collectionConflict = new CollectionConflict(
+						projectId, collectionId, contentInfoSet, gitCollectionHeader.getSourceDocumentId()
+				);
+			}
+
 			for (Entry<String, StageState> entry : status.getConflictingStageState().entrySet()) {
 				String relativeAnnotationPathname = entry.getKey();
 				String absAnnotationPathname = collectionSubmoduleAbsPath + "/" + relativeAnnotationPathname;
 
 				StageState stageState = entry.getValue();
-				
-				
-				switch (stageState) {
-				case BOTH_MODIFIED: {
-					String serializedConflictingAnnotation = FileUtils.readFileToString(
-						new File(absAnnotationPathname), StandardCharsets.UTF_8);
-					
-					AnnotationConflict annotationConflict = 
-							getBothModifiedAnnotationConflict(
-								projectId, collectionId, serializedConflictingAnnotation);
-					collectionConflict.addAnnotationConflict(annotationConflict);
-					break;
-				}
-				case DELETED_BY_THEM: { // them is the user on the dev branch here
 
-					// in this case the file comes from us (the team on the master branch)
-					String serializedConflictingAnnotation = FileUtils.readFileToString(
-							new File(absAnnotationPathname), StandardCharsets.UTF_8);
-					
-					AnnotationConflict annotationConflict = 
-							getDeleteByThemAnnotationConflict(
-								projectId, collectionId, serializedConflictingAnnotation);
-					collectionConflict.addAnnotationConflict(annotationConflict);
-					break;					
+				switch (stageState) {
+					case BOTH_MODIFIED: {
+						String serializedConflictingAnnotation = FileUtils.readFileToString(
+								new File(absAnnotationPathname), StandardCharsets.UTF_8
+						);
+
+						AnnotationConflict annotationConflict =	getBothModifiedAnnotationConflict(
+								projectId, collectionId, serializedConflictingAnnotation
+						);
+						collectionConflict.addAnnotationConflict(annotationConflict);
+
+						break;
+					}
+					case DELETED_BY_THEM: { // them is the user on the dev branch here
+
+						// in this case the file comes from us (the team on the master branch)
+						String serializedConflictingAnnotation = FileUtils.readFileToString(
+								new File(absAnnotationPathname), StandardCharsets.UTF_8
+						);
+
+						AnnotationConflict annotationConflict =	getDeleteByThemAnnotationConflict(
+								projectId, collectionId, serializedConflictingAnnotation
+						);
+						collectionConflict.addAnnotationConflict(annotationConflict);
+
+						break;
+					}
+					case DELETED_BY_US: { // us is the team on the master branch here
+
+						// in this case the file comes from them (the user on the dev branch)
+						String serializedConflictingAnnotation = FileUtils.readFileToString(
+								new File(absAnnotationPathname), StandardCharsets.UTF_8
+						);
+
+						AnnotationConflict annotationConflict =	getDeleteByUsAnnotationConflict(
+								projectId, collectionId, serializedConflictingAnnotation
+						);
+						collectionConflict.addAnnotationConflict(annotationConflict);
+
+						break;
+					}
+					default: {
+						System.out.println("not handled"); //TODO:
+					}
 				}
-				case DELETED_BY_US: { // us is the team on the master branch here
-					
-					// in this case the file comes from them (the user on the dev branch)
-					String serializedConflictingAnnotation = FileUtils.readFileToString(
-							new File(absAnnotationPathname), StandardCharsets.UTF_8);
-					
-					AnnotationConflict annotationConflict = 
-							getDeleteByUsAnnotationConflict(
-								projectId, collectionId, serializedConflictingAnnotation);
-					collectionConflict.addAnnotationConflict(annotationConflict);
-					break;						
-				}				
-				default: System.out.println("not handled"); //TODO:
-				}
-				
 			}
+
 			return collectionConflict;
-		}		
+		}
 	}
-	
+
 	private AnnotationConflict getDeleteByThemAnnotationConflict(
 			String projectId, String collectionId, 
 			String serializedConflictingAnnotation) throws Exception {
@@ -849,48 +851,47 @@ public class GitMarkupCollectionHandler {
 		return annotationConflict;		
 	}
 
-	private GitMarkupCollectionHeader resolveCollectionHeaderConflict(
-			String serializedCollectionHeaderFile, StageState stageState) {
-		
+	private GitMarkupCollectionHeader resolveCollectionHeaderConflict(String serializedCollectionHeaderFile, StageState stageState) {
 		if (stageState.equals(StageState.BOTH_MODIFIED)) {
 			String masterVersion = serializedCollectionHeaderFile
 					.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n)", "")
 					.replaceAll("\\Q=======\\E(\\r\\n|\\r|\\n|.)*?\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
-				
+
 			String devVersion = serializedCollectionHeaderFile
-				.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
-				.replaceAll("\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
+					.replaceAll("\\Q<<<<<<< HEAD\\E(\\r\\n|\\r|\\n|.)*?\\Q=======\\E(\\r\\n|\\r|\\n)", "")
+					.replaceAll("\\Q>>>>>>> \\E.+?(\\r\\n|\\r|\\n)", "");
+
+			GitMarkupCollectionHeader masterCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
+					.deserialize(masterVersion, GitMarkupCollectionHeader.class);
 			
-			GitMarkupCollectionHeader masterCollectionHeader = 
-					new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
-							masterVersion, GitMarkupCollectionHeader.class);
-			
-			GitMarkupCollectionHeader devCollectionHeader = 
-					new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
-							devVersion, GitMarkupCollectionHeader.class);
-			
-			String name = masterCollectionHeader.getName();
-			if (!name.trim().toLowerCase().equals(devCollectionHeader.getName().trim().toLowerCase())) {
-				name += " " + devCollectionHeader.getName();
+			GitMarkupCollectionHeader devCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
+					.deserialize(devVersion, GitMarkupCollectionHeader.class);
+
+			String name = masterCollectionHeader.getName() == null ? "" : masterCollectionHeader.getName().trim();
+			String devName = devCollectionHeader.getName() == null ? "" : devCollectionHeader.getName().trim();
+			if (!name.equalsIgnoreCase(devName) && devName.length() > 0) {
+				name = String.format("%s %s", name, devName);
 			}
-			
-			String description = masterCollectionHeader.getDescription();
-			if (!description.trim().toLowerCase().equals(devCollectionHeader.getDescription().trim().toLowerCase())) {
-				description += " " + devCollectionHeader.getDescription();
+
+			String description = masterCollectionHeader.getDescription() == null ? "" : masterCollectionHeader.getDescription().trim();
+			String devDescription = devCollectionHeader.getDescription() == null ? "" : devCollectionHeader.getDescription().trim();
+			if (!description.equalsIgnoreCase(devDescription) && devDescription.length() > 0) {
+				description = String.format("%s %s", description, devDescription);
 			}
-			
+
 			return new GitMarkupCollectionHeader(
-				name, description, 
-				masterCollectionHeader.getSourceDocumentId(), // cannot change
-				masterCollectionHeader.getSourceDocumentVersion() // cannot change yet
+					name,
+					description,
+					masterCollectionHeader.getSourceDocumentId(), // cannot change
+					masterCollectionHeader.getSourceDocumentVersion() // cannot change yet
 			);
 		}
 		else {
-			 return new SerializationHelper<GitMarkupCollectionHeader>().deserialize(
-					 serializedCollectionHeaderFile, GitMarkupCollectionHeader.class);
+			 return new SerializationHelper<GitMarkupCollectionHeader>()
+					 .deserialize(serializedCollectionHeaderFile, GitMarkupCollectionHeader.class);
 		}
 	}
-	
+
 	private AnnotationConflict getBothModifiedAnnotationConflict(
 			String projectId, String collectionId, String serializedConflictingAnnotation) throws Exception {
 
