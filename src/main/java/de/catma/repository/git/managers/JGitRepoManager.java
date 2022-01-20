@@ -78,6 +78,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 	private Git gitApi;
 	private JGitFactory jGitFactory;
+	private Logger logger = Logger.getLogger(JGitRepoManager.class.getName());
 	
 
 	/**
@@ -676,7 +677,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				Iterable<PushResult> pushResults = pushCommand.call();
 				for (PushResult pushResult : pushResults) {
 					for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
-						System.out.println(remoteRefUpdate);
+						logger.info("PushResult " + remoteRefUpdate);
 					}
 				}
 			}

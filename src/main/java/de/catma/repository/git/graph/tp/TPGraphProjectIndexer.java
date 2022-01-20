@@ -593,8 +593,6 @@ public class TPGraphProjectIndexer implements Indexer {
 				new Range(firstToken.getRange().getStartPoint(), lastToken.getRange().getEndPoint()));
 		}
 		
-		System.out.println(spanContext.getForwardRange());
-
 		return spanContext;
 	}
 	

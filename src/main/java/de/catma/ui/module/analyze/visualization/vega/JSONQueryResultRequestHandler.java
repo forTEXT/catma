@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.vaadin.server.RequestHandler;
@@ -21,6 +22,7 @@ import de.catma.queryengine.result.json.JSONQueryResultBuilder;
 import de.catma.ui.module.analyze.QueryOptionsProvider;
 
 public class JSONQueryResultRequestHandler implements RequestHandler {
+	private Logger logger = Logger.getLogger(JSONQueryResultRequestHandler.class.getName());
 	
 	private CopyOnWriteArrayList<QueryResultRow> queryResult; // concurrent access!
 	private final String queryResultUrlPath;
@@ -53,7 +55,7 @@ public class JSONQueryResultRequestHandler implements RequestHandler {
 				String pathInfo = request.getPathInfo();
 				String encodedQuery = pathInfo.substring(queryUrlPath.length());
 				String query = URLDecoder.decode(encodedQuery, "UTF-8");
-				System.out.println("query: " + query);
+				logger.info("query: " + query);
 				
 				QueryJob queryJob = new QueryJob(query, queryOptionsProvider.getQueryOptions());
 				queryJob.setProgressListener(new LogProgressListener());

@@ -1,6 +1,5 @@
 package de.catma.ui.module.annotate;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -68,7 +67,6 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 				
 				if (!receiverId.equals(senderId)) {
 					final Comment comment = commentMessage.toComment();
-					System.out.println("handling comment " + comment + "  " + user);
 					Optional<Comment> optionalExistingComment = 
 						this.comments
 							.stream()
@@ -100,7 +98,6 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 					else {
 						if (deleted) {
 							optionalExistingComment.ifPresent(existingComment -> {
-								System.out.println("auto removing existingComment");
 								this.comments.remove(existingComment);
 								tagger.removeComment(existingComment);
 							});
