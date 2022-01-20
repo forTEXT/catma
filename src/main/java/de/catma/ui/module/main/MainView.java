@@ -1,18 +1,30 @@
 package de.catma.ui.module.main;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.function.Consumer;
+
+import org.vaadin.dialogs.ConfirmDialog;
+import org.vaadin.dialogs.ConfirmDialog.ContentMode;
+
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+
 import de.catma.project.ProjectManager;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
-import de.catma.ui.events.RegisterCloseableEvent;
-import de.catma.ui.events.routing.*;
+import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnnotateEvent;
+import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
+import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.events.routing.RouteToProjectEvent;
+import de.catma.ui.events.routing.RouteToTagsEvent;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.analyze.AnalyzeManagerView;
 import de.catma.ui.module.annotate.TaggerManagerView;
@@ -20,12 +32,6 @@ import de.catma.ui.module.dashboard.DashboardView;
 import de.catma.ui.module.project.ConflictedProjectView;
 import de.catma.ui.module.project.ProjectView;
 import de.catma.ui.module.tags.TagsView;
-import org.vaadin.dialogs.ConfirmDialog;
-import org.vaadin.dialogs.ConfirmDialog.ContentMode;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.function.Consumer;
 
 /**
  * Main entrypoint for CATMA, it renders a header and a main section
@@ -84,7 +90,6 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 		initComponents();
 
 		eventBus.register(this);
-		eventBus.post(new RegisterCloseableEvent(this));
 
 		if (!termsOfUseConsentGiven) {
 			ConfirmDialog dlg = ConfirmDialog.show(

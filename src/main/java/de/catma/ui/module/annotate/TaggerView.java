@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -192,6 +191,39 @@ public class TaggerView extends HorizontalLayout
 				comments, 
 				tagger, 
 				() -> getSourceDocument());
+		
+		addCommentMessageListener();
+	}
+
+	private void addCommentMessageListener() {
+		try {
+			removeCommentMessageListener();
+			if (this.sourceDocument != null) {
+				HazelCastService hazelcastService = ((CatmaApplication)UI.getCurrent()).getHazelCastService();
+				this.commentTopic = 
+					hazelcastService.getHazelcastClient().getTopic(
+							HazelcastConfiguration.TopicName.COMMENT + "_" + this.sourceDocument.getUuid());
+				
+				this.commentMessageListenerRegId = 
+					this.commentTopic.addMessageListener(this.commentMessageListener);
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "error registering for comment messages", e);
+		}	
+	}
+	
+	private void removeCommentMessageListener() {
+		try {
+			if ((this.commentTopic != null) && (commentMessageListenerRegId != null)) {
+				boolean result = this.commentTopic.removeMessageListener(commentMessageListenerRegId);
+				logger.info("Removal of comment message listener from topic: " + result);
+				this.commentMessageListenerRegId = null;
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "error removing comment listener", e);
+		}
 	}
 
 	@Override
@@ -830,15 +862,7 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	public void close() {
-		try {
-			if ((this.commentTopic != null) && (commentMessageListenerRegId != null)) {
-				this.commentTopic.removeMessageListener(commentMessageListenerRegId);
-				this.commentMessageListenerRegId = null;
-			}
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "error removing comment listener", e);
-		}
+		removeCommentMessageListener();
 
 		this.eventBus.unregister(this);
 		annotationPanel.close();
@@ -1016,22 +1040,7 @@ public class TaggerView extends HorizontalLayout
 		}
 		this.drawer.collapse();
 		
-		try {
-			if ((this.commentTopic != null) && (commentMessageListenerRegId != null)) {
-				this.commentTopic.removeMessageListener(commentMessageListenerRegId);
-				this.commentMessageListenerRegId = null;
-			}
-			
-			HazelCastService hazelcastService = ((CatmaApplication)UI.getCurrent()).getHazelCastService();
-			this.commentTopic = 
-				hazelcastService.getHazelcastClient().getTopic(HazelcastConfiguration.TopicName.COMMENT + "_" + sd.getUuid());
-			
-			this.commentMessageListenerRegId = 
-				this.commentTopic.addMessageListener(this.commentMessageListener);
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "error registering for comment messages", e);
-		}
+		addCommentMessageListener();
 	}
 
 	@Override
