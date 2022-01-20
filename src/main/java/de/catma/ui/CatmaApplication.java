@@ -22,7 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,8 +35,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import de.catma.sqlite.SqliteService;
-import de.catma.ui.events.RefreshEvent;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -53,7 +50,6 @@ import org.jboss.aerogear.security.otp.api.Clock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.annotations.PreserveOnRefresh;
@@ -78,9 +74,10 @@ import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.sqlite.SqliteService;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.di.IRemoteGitManagerFactory;
-import de.catma.ui.events.RegisterCloseableEvent;
+import de.catma.ui.events.RefreshEvent;
 import de.catma.ui.events.TokenInvalidEvent;
 import de.catma.ui.events.TokenValidEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -102,8 +99,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String, String[]> parameters = new HashMap<String, String[]>();
 		
-	private final List<WeakReference<Closeable>> closeListener = Lists.newArrayList();
-	
     private final ConcurrentHashMap<String,Object> _attributes = new ConcurrentHashMap<String, Object>();
 	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
 	 
@@ -165,8 +160,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		
 		handleRequestToken(request);
 		handleRequestOauth(request);
-
-//		this.setPollInterval(1000);
 	}
 	
 	@Override
@@ -255,16 +248,15 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	}
 
 	@Override
-	public void close() {
-
-		for (WeakReference<Closeable> weakReference : closeListener) {
-			Closeable ref = weakReference.get();
-			if (ref != null) {
-				try {
-					ref.close();
-				} catch (IOException e) {
-					logger.log(Level.INFO,"couldn't cleanup resource",e);
-				}
+	public void detach() {
+		logger.info("Detaching UI");
+		
+		Component content = getContent();
+		if (content instanceof Closeable) {
+			try {
+				((Closeable) content).close();
+			} catch (IOException e) {
+				logger.log(Level.WARNING, "couldn't cleanup UI content", e);
 			}
 		}
 		
@@ -272,7 +264,15 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		
 		initService.shutdown();
 		hazelCastService.stop();
+		
+		super.detach();
+	}
+	
+	@Override
+	public void close() {
+		logger.info("Closing UI");
 		getPage().setLocation(CATMAPropertyKey.LogoutURL.getValue(CATMAPropertyKey.LogoutURL.getDefaultValue()));
+
 		super.close();
 	}
 
@@ -429,11 +429,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		getUI().access(() -> {
 			Notification.show(tokenInvalidEvent.getReason(), Type.WARNING_MESSAGE);
 		});
-	}
-	
-	@Subscribe
-	public void handleClosableResources(RegisterCloseableEvent registerCloseableEvent ){
-		closeListener.add(new WeakReference<Closeable>(registerCloseableEvent.getCloseable()));
 	}
 	
 	public HazelCastService getHazelCastService() {
