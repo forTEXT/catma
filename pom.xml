@@ -205,7 +205,7 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>3.11.1</version>
+			<version>4.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>com.hazelcast</groupId>
