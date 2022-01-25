@@ -2,13 +2,16 @@ package de.catma.project;
 
 public class ProjectReference {
 	
-	private String projectId;
+	private final String projectId;
+	private final String namespace;
 	private String name;
 	private String description;
 	
-	public ProjectReference(String projectId, String name, String description) {
+	public ProjectReference(
+			String projectId, String namespace, String name, String description) {
 		super();
 		this.projectId = projectId;
+		this.namespace = namespace;
 		this.name = name;
 		this.description = description;
 	}
@@ -35,7 +38,10 @@ public class ProjectReference {
 	
 	@Override
 	public String toString() {
-		return "Project " + name + " #" + projectId;
+		return "Project " + name + " #" + namespace + "/" + projectId;
 	}
 	
+	public String getNamespace() {
+		return namespace;
+	}
 }

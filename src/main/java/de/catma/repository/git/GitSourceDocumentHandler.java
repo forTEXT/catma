@@ -82,7 +82,7 @@ public class GitSourceDocumentHandler {
 			CreateRepositoryResponse response = this.remoteGitServerManager.createRepository(sourceDocumentId, sourceDocumentId, projectId);
 
 			// clone the repository locally
-			localGitRepoManager.clone(projectId, response.repositoryHttpUrl, null, credentialsProvider);
+			localGitRepoManager.clone(projectId, response.repositoryHttpUrl, (File)null, credentialsProvider);
 
 			// write files into the local repo
 			File targetOriginalSourceDocumentFile = new File(localGitRepoManager.getRepositoryWorkTree(), originalSourceDocumentFileName);

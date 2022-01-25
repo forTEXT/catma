@@ -9,33 +9,31 @@ import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
-import com.google.common.eventbus.EventBus;
-import de.catma.backgroundservice.BackgroundService;
-import de.catma.indexer.TermExtractor;
-import de.catma.indexer.TermInfo;
-import de.catma.properties.CATMAProperties;
-import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.GitlabManagerRestricted;
-import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 //import org.junit.Rule;
 //import org.junit.rules.ExpectedException;
 
+import com.google.common.eventbus.EventBus;
+
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
@@ -43,9 +41,16 @@ import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
+import de.catma.indexer.TermExtractor;
+import de.catma.indexer.TermInfo;
+import de.catma.project.ProjectReference;
+import de.catma.properties.CATMAProperties;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.GitLabServerManagerTest;
+import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.util.IDGenerator;
 //import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 
 public class GitSourceDocumentHandlerTest {
@@ -199,7 +204,7 @@ public class GitSourceDocumentHandlerTest {
 					mockEventBus
 			);
 
-			String projectId = gitProjectManager.create(
+			ProjectReference projectReference = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
@@ -212,7 +217,7 @@ public class GitSourceDocumentHandlerTest {
 			);
 
 			String revisionHash = gitSourceDocumentHandler.create(
-					projectId, sourceDocumentUuid,
+					projectReference.getProjectId(), sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					terms, tokenizedSourceDocumentFileName,
@@ -225,7 +230,7 @@ public class GitSourceDocumentHandlerTest {
 
 			File expectedRepoPath = Paths.get(
 					jGitRepoManager.getRepositoryBasePath().getPath(),
-					projectId,
+					projectReference.getProjectId(),
 					sourceDocumentUuid
 			).toFile();
 
@@ -388,7 +393,7 @@ public class GitSourceDocumentHandlerTest {
 					mockEventBus
 			);
 
-			String projectId = gitProjectManager.create(
+			ProjectReference projectReference = gitProjectManager.createProject(
 					"Test CATMA Project", "This is a test CATMA project"
 			);
 			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
@@ -401,7 +406,7 @@ public class GitSourceDocumentHandlerTest {
 			);
 
 			String revisionHash = gitSourceDocumentHandler.create(
-					projectId, sourceDocumentUuid,
+					projectReference.getProjectId(), sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					terms, tokenizedSourceDocumentFileName,
@@ -414,14 +419,15 @@ public class GitSourceDocumentHandlerTest {
 
 			// TODO: factor out a function that does all of the above
 
-			jGitRepoManager.open(projectId, sourceDocumentUuid);
+			jGitRepoManager.open(projectReference.getProjectId(), sourceDocumentUuid);
 			jGitRepoManager.push(new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword()));
 
 			String remoteUri = jGitRepoManager.getRemoteUrl(null);
 			jGitRepoManager.detach();
 
 			// open the project root repository
-			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(
+					projectReference.getProjectId(), GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
 
 			// create the submodule
 			File targetSubmodulePath = Paths.get(
@@ -439,7 +445,7 @@ public class GitSourceDocumentHandlerTest {
 
 			jGitRepoManager.detach();
 
-			SourceDocument sourceDocument = gitSourceDocumentHandler.open(projectId, sourceDocumentUuid);
+			SourceDocument sourceDocument = gitSourceDocumentHandler.open(projectReference.getProjectId(), sourceDocumentUuid);
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
 					new ContentInfoSet(
 							"William Faulkner (updated)",
@@ -449,7 +455,7 @@ public class GitSourceDocumentHandlerTest {
 					)
 			);
 
-			String sourceDocumentRevision = gitSourceDocumentHandler.update(projectId, sourceDocument);
+			String sourceDocumentRevision = gitSourceDocumentHandler.update(projectReference.getProjectId(), sourceDocument);
 			assertNotNull(sourceDocumentRevision);
 
 			String expectedSerializedSourceDocumentInfo = "" +

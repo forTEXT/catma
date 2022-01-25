@@ -9,9 +9,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 
-public interface ProjectManager {
-	String create(String name, String description) throws Exception;
-
+public interface ProjectsManager {
 	void delete(String projectId) throws Exception;
 
 	public User getUser();
@@ -19,7 +17,6 @@ public interface ProjectManager {
 	public List<ProjectReference> getProjectReferences() throws Exception;
 	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws Exception;
 
-	ProjectReference findProjectReferenceById(String projectId) throws IOException;
 
 	public ProjectReference createProject(String name, String description) throws Exception;
 
@@ -28,9 +25,8 @@ public interface ProjectManager {
 			ProjectReference projectReference,
 			OpenProjectListener openProjectListener);
 
-	void leaveProject(String projectId) throws IOException;
-
-	boolean isAuthorizedOnProject(RBACPermission permission, String projectId);
+	void leaveProject(ProjectReference projectReference) throws IOException;
+	boolean isAuthorizedOnProject(RBACPermission permission, ProjectReference projectReference);
 
 	void updateProject(ProjectReference projectReference) throws IOException;
 

@@ -31,8 +31,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 
-@Deprecated
-public class GitProjectManager implements ProjectsManager {
+public class GitProjectsManager implements ProjectsManager {
 	private final Logger logger = Logger.getLogger(getClass().getName());
 	
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -46,13 +45,7 @@ public class GitProjectManager implements ProjectsManager {
 	private final CredentialsProvider credentialsProvider;
 	private EventBus eventBus;
 
-	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_root";
-
-	public static String getProjectRootRepositoryName(String projectId) {
-		return String.format(PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
-	}
-
-	public GitProjectManager(
+	public GitProjectsManager(
             String gitBasedRepositoryBasePath,
             IRemoteGitManagerRestricted remoteGitServerManager,
             GraphProjectDeletionHandler graphProjectDeletionHandler,
@@ -65,7 +58,8 @@ public class GitProjectManager implements ProjectsManager {
 		this.backgroundService = backgroundService;
 		this.eventBus = eventBus;
 		this.user = remoteGitServerManager.getUser();
-		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
+		this.localGitRepositoryManager = 
+				new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
 		this.credentialsProvider = 
 			new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
 		this.idGenerator = new IDGenerator();
@@ -81,30 +75,24 @@ public class GitProjectManager implements ProjectsManager {
 	 */
 	private String create(String name, String description) throws IOException {
 
-		//TODO: consider creating local git projects for offline use
 		String marshalledDescription = marshallProjectMetadata(name, description);
-		
-		String projectId = idGenerator.generate() + "_" + name.replaceAll("[^\\p{Alnum}]", "_");
+		String human_readable_info = "_" + name.replaceAll("[^\\p{Alnum}]", "_");
+		if (human_readable_info.matches("\\_+")) {
+			human_readable_info = ""; // no real information value could be gathered from the name
+		}
+		String projectId = idGenerator.generate() + human_readable_info;
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			// create the group
-			String groupPath = this.remoteGitServerManager.createGroup(
-				projectId, projectId, marshalledDescription
+			// create the remote repository
+			CreateRepositoryResponse response = this.remoteGitServerManager.createRepository(
+				projectId, marshalledDescription
 			);
 
-			// create the root repository
-			String projectNameAndPath = GitProjectManager.getProjectRootRepositoryName(projectId);
-
-			CreateRepositoryResponse response =
-					this.remoteGitServerManager.createRepository(
-				projectNameAndPath, projectNameAndPath, groupPath
-			);
-
-			// clone the root repository locally
+			// clone the repository locally
 			localGitRepoManager.clone(
+				user.getIdentifier(),
 				projectId,
 				response.repositoryHttpUrl,
-				(File)null,
 				credentialsProvider
 			);
 		}
@@ -128,7 +116,7 @@ public class GitProjectManager implements ProjectsManager {
 			Paths.get(this.localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(), projectId).toFile()
 		);
 
-		this.remoteGitServerManager.deleteGroup(projectId);
+		this.remoteGitServerManager.deleteRepository(projectId);
 		try {
 			graphProjectDeletionHandler.deleteProject(projectId);
 		} catch (Exception e) {
@@ -165,7 +153,7 @@ public class GitProjectManager implements ProjectsManager {
 			OpenProjectListener openProjectListener) {
 		try {
 			
-			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
+			cloneLocallyIfNotExists(projectReference, openProjectListener);
 
 
 			Project project =
@@ -193,22 +181,20 @@ public class GitProjectManager implements ProjectsManager {
 
 	@Override
 	public void leaveProject(ProjectReference projectReference) throws IOException {
-		List<String> repositoryNames = this.remoteGitServerManager.getGroupRepositoryNames(
-				projectReference.getProjectId()
-			);
+		FileUtils.deleteDirectory(
+			new File(
+				this.localGitRepositoryManager.getRepositoryBasePath(), 
+				projectReference.getProjectId())
+		);
 
-			for (String name : repositoryNames) {
-				FileUtils.deleteDirectory(
-					new File(this.localGitRepositoryManager.getRepositoryBasePath(), name)
-				);
-			}
-
-			this.remoteGitServerManager.leaveGroup(projectReference.getProjectId());
-			try {
-				graphProjectDeletionHandler.deleteProject(projectReference.getProjectId());
-			} catch (Exception e) {
-				throw new IOException(e);
-			};
+		this.remoteGitServerManager.leaveProject(
+				projectReference.getNamespace(), projectReference.getProjectId());
+		
+		try {
+			graphProjectDeletionHandler.deleteProject(projectReference.getProjectId());
+		} catch (Exception e) {
+			throw new IOException(e);
+		};
 
 	}
 	
@@ -219,11 +205,11 @@ public class GitProjectManager implements ProjectsManager {
 				.exists();
 	}
 
-	private void cloneRootLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws Exception {
+	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws Exception {
 		if (!Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
 			.resolve(user.getIdentifier())
+			.resolve(projectReference.getNamespace())
 			.resolve(projectReference.getProjectId())
-			.resolve(GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()))
 			.toFile()
 			.exists()) {
 			try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
@@ -231,12 +217,10 @@ public class GitProjectManager implements ProjectsManager {
 				
 				// clone the repository locally
 				localRepoManager.clone(
+					projectReference.getNamespace(),
 					projectReference.getProjectId(),
-					remoteGitServerManager.getProjectRootRepositoryUrl(projectReference),
-					null,
-					credentialsProvider,
-					true // init and update submodules
-				);
+					remoteGitServerManager.getProjectRepositoryUrl(projectReference),
+					credentialsProvider);
 				
 			}
 		}
@@ -255,11 +239,14 @@ public class GitProjectManager implements ProjectsManager {
 	
 	@Override
 	public void updateProject(ProjectReference projectReference) throws IOException {
-		String marshalledDescription = marshallProjectMetadata(projectReference.getName(), projectReference.getDescription());
+		String marshalledDescription = 
+				marshallProjectMetadata(
+						projectReference.getName(), projectReference.getDescription());
 		
 		String projectId = projectReference.getProjectId();
 		
-		remoteGitServerManager.updateProject(projectId, projectId, marshalledDescription);
+		remoteGitServerManager.updateProject(
+			projectReference.getNamespace(), projectId, marshalledDescription);
 		
 	}
 	
@@ -269,7 +256,7 @@ public class GitProjectManager implements ProjectsManager {
 		String targetProjectId = targetProject.getProjectId();
 		String tagsetId = tagset.getUuid();
 
-		cloneRootLocallyIfNotExists(targetProject, new OpenProjectListener() {
+		cloneLocallyIfNotExists(targetProject, new OpenProjectListener() {
 			@Override
 			public void ready(Project project) {/** not used **/}
 			@Override

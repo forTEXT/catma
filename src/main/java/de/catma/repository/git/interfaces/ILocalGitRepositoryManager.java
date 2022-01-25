@@ -28,8 +28,15 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void init(String group, String name, String description) throws IOException;
 
+	@Deprecated
+	String clone(String group, String uri, File path, CredentialsProvider credentialsProvider, boolean initSubmodules)
+			throws IOException;
+	@Deprecated
 	String clone(String group, String uri, File path, CredentialsProvider credentialsProvider)
 			throws IOException;
+	String clone(
+			String namespace, String projectId, 
+			String uri, CredentialsProvider credentialsProvider) throws IOException;
 
 	void open(String group, String name) throws IOException;
 
@@ -59,8 +66,6 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	File getRepositoryBasePath();
 
-	String clone(String group, String uri, File path, CredentialsProvider credentialsProvider, boolean initSubmodules)
-			throws IOException;
 
 	String getRevisionHash() throws IOException;
 
@@ -108,6 +113,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	List<CommitInfo> getUnsynchronizedChanges() throws Exception;
 
 	Set<String> verifyDeletedResources(Set<String> collect) throws IOException;
+
 
 
 }

@@ -214,6 +214,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 
+	@Deprecated
 	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider)
 			throws IOException {
 		return clone(group, uri, path, credentialsProvider, false);
@@ -230,7 +231,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @return the name of the cloned repository
 	 */
 	@Override
-	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider, boolean initSubmodules)
+	@Deprecated
+	public String clone(String projectId, String uri, File path, CredentialsProvider credentialsProvider, boolean initSubmodules)
 			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
@@ -241,7 +243,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			if (repositoryName.endsWith(".git")) {
 				repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
 			}
-			path = Paths.get(this.getRepositoryBasePath().toURI()).resolve(group).resolve(repositoryName).toFile();
+			path = Paths.get(this.getRepositoryBasePath().toURI()).resolve(repositoryName).toFile();
 		}
 
 		try {
@@ -263,6 +265,39 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 //				submoduleUpdateCommand.call();
 				
 			}
+		}
+		catch (GitAPIException e) {
+			throw new IOException(
+				"Failed to clone remote Git repository", e
+			);
+		}
+
+		return path.getName();
+	}
+	
+	@Override
+	public String clone(
+			String namespace, String projectId, String uri, 
+			CredentialsProvider credentialsProvider)
+			throws IOException {
+		if (isAttached()) {
+			throw new IllegalStateException("Can't call `clone` on an attached instance");
+		}
+
+		File path = 
+			Paths.get(this.getRepositoryBasePath().toURI())
+				.resolve(namespace)
+				.resolve(projectId)
+				.toFile();
+
+		try {
+			CloneCommand cloneCommand = 
+					jGitFactory.newCloneCommand()
+					.setURI(uri).setDirectory(path);
+
+			cloneCommand.setCredentialsProvider(credentialsProvider);
+			
+			this.gitApi = cloneCommand.call();			
 		}
 		catch (GitAPIException e) {
 			throw new IOException(

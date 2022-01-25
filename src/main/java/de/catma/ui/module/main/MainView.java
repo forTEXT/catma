@@ -13,7 +13,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
@@ -62,7 +62,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	 */
 	private final EventBus eventBus;
 
-	private final ProjectManager projectManager;
+	private final ProjectsManager projectManager;
 
 	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
 
@@ -73,7 +73,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	private AnalyzeManagerView analyzeManagerView;
 
 	public MainView(
-			ProjectManager projectManager,
+			ProjectsManager projectManager,
 			CatmaHeader catmaHeader,
 			EventBus eventBus,
 			IRemoteGitManagerRestricted remoteGitManagerRestricted,

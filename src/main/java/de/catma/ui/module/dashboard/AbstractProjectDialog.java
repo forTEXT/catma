@@ -14,7 +14,7 @@ import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -30,7 +30,7 @@ public abstract class AbstractProjectDialog extends AbstractOkCancelDialog<Proje
 
 	protected final TextField name = new TextField("Name");
 	protected final TextArea description = new TextArea("Description");
-	protected final ProjectManager projectManager;
+	protected final ProjectsManager projectManager;
 	protected Binder<ProjectData> projectBinder = new Binder<>();
 	protected ErrorHandler errorLogger;
 	
@@ -54,7 +54,7 @@ public abstract class AbstractProjectDialog extends AbstractOkCancelDialog<Proje
 		
 	}
 	
-	public AbstractProjectDialog(String title, ProjectManager projectManager, SaveCancelListener<ProjectReference> saveCancelListener) {
+	public AbstractProjectDialog(String title, ProjectsManager projectManager, SaveCancelListener<ProjectReference> saveCancelListener) {
 		super(title, saveCancelListener);
 	
 	    this.errorLogger = (ErrorHandler) UI.getCurrent();

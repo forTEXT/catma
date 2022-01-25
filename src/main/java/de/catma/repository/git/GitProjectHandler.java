@@ -1,5 +1,34 @@
 package de.catma.repository.git;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -11,7 +40,14 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.indexer.TermInfo;
 import de.catma.project.CommitInfo;
-import de.catma.project.conflict.*;
+import de.catma.project.ProjectReference;
+import de.catma.project.conflict.AnnotationConflict;
+import de.catma.project.conflict.CollectionConflict;
+import de.catma.project.conflict.DeletedResourceConflict;
+import de.catma.project.conflict.Resolution;
+import de.catma.project.conflict.SourceDocumentConflict;
+import de.catma.project.conflict.TagConflict;
+import de.catma.project.conflict.TagsetConflict;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -20,30 +56,15 @@ import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
-import de.catma.tag.*;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagsetDefinition;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class GitProjectHandler {
 
@@ -62,12 +83,15 @@ public class GitProjectHandler {
 	private final CredentialsProvider credentialsProvider;
 
 	private Map<String, RBACRole> rolesPerResource;
+
+	private ProjectReference projectReference;
 	
-	public GitProjectHandler(User user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
+	public GitProjectHandler(User user, ProjectReference projectReference, ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitManagerRestricted remoteGitServerManager) {
 		super();
 		this.user = user;
-		this.projectId = projectId;
+		this.projectReference = projectReference;
+		this.projectId = projectReference.getProjectId();
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 		this.credentialsProvider = new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
@@ -1759,7 +1783,7 @@ public class GitProjectHandler {
 	}
 	
 	public boolean isAuthorizedOnProject(RBACPermission permission) {
-		return remoteGitServerManager.isAuthorizedOnProject(remoteGitServerManager.getUser(), permission, projectId);
+		return remoteGitServerManager.isAuthorizedOnProject(remoteGitServerManager.getUser(), permission, this.projectReference);
 	}
 	
 	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {

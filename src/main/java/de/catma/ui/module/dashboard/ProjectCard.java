@@ -11,7 +11,7 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACConstraint;
@@ -40,7 +40,7 @@ public class ProjectCard extends VerticalFlexLayout  {
     private ProjectReference projectReference;
 
     private final ErrorHandler errorLogger;
-    private final ProjectManager projectManager;
+    private final ProjectsManager projectManager;
 
 	private final EventBus eventBus;
 
@@ -53,20 +53,20 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 	private final ClickAction clickAction;
 	
-	ProjectCard(ProjectReference projectReference, ProjectManager projectManager, 
+	ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, 
     		EventBus eventBus, IRBACManager rbacManager) {
 		this(projectReference, projectManager, eventBus, rbacManager, 
 				ref -> eventBus.post(new RouteToProjectEvent(ref, false)));
 	}
 	
-	public ProjectCard(ProjectReference projectReference, ProjectManager projectManager, 
+	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, 
     		EventBus eventBus, ClickAction clickAction) {
 		this(projectReference, projectManager, eventBus, new NoopRBACManager(), 
 				ref -> clickAction.projectCardClicked(ref));
 	}
 
     private ProjectCard(
-    		ProjectReference projectReference, ProjectManager projectManager, 
+    		ProjectReference projectReference, ProjectsManager projectManager, 
     		EventBus eventBus, IRBACManager rbacManager, 
     		ClickAction clickAction){
         this.projectReference = Objects.requireNonNull(projectReference) ;
@@ -163,7 +163,7 @@ public class ProjectCard extends VerticalFlexLayout  {
                , (evt) -> {
                    try {
                        if(evt.isConfirmed()) {
-                    	   projectManager.leaveProject(projectReference.getProjectId());
+                    	   projectManager.leaveProject(projectReference);
                        }
                    } catch (Exception e) {
                        errorLogger.showAndLogError("can't leave project " + projectReference.getName(), e);

@@ -73,7 +73,7 @@ public class GitTagsetHandler {
 			localGitRepoManager.clone(
 					projectId,
 					createRepositoryResponse.repositoryHttpUrl,
-					null, // destination path is created by the repo manager 
+					(File)null, // destination path is created by the repo manager 
 					credentialsProvider
 			);
 

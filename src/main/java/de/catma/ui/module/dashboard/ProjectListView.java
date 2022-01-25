@@ -13,7 +13,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
@@ -27,7 +27,7 @@ import de.catma.ui.module.main.ErrorHandler;
  */
 public class ProjectListView extends VerticalLayout {
 
-    private final ProjectManager projectManager;
+    private final ProjectsManager projectManager;
 	private final EventBus eventBus;
 	private final Comparator<ProjectReference> sortByNameAsc = 
 			(ref1,ref2) -> String.CASE_INSENSITIVE_ORDER.compare(ref1.getName(), ref2.getName());
@@ -41,7 +41,7 @@ public class ProjectListView extends VerticalLayout {
 	private IconButton helpButton;
 	private ProjectManagerHelpWindow helpWindow;
 
-    public ProjectListView(ProjectManager projectManager, 
+    public ProjectListView(ProjectsManager projectManager, 
     		EventBus eventBus, 
     		IRemoteGitManagerRestricted remoteGitManagerRestricted){ 
         this.projectManager = projectManager;

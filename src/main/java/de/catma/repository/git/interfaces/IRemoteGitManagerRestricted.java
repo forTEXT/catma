@@ -41,6 +41,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 *         repository
 	 */
 	CreateRepositoryResponse createRepository(String name, String path, String groupPath) throws IOException;
+	CreateRepositoryResponse createRepository(String name, String description) throws IOException;
 
 	/**
 	 * Deletes an existing remote repository identified by <code>repositoryId</code>.
@@ -49,7 +50,9 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @throws IOException if something went wrong while deleting the remote
 	 *         repository
 	 */
+	@Deprecated
 	void deleteRepository(int repositoryId) throws IOException;
+	void deleteRepository(String projectId) throws IOException;
 
 	/**
 	 * Creates a new remote group with the <code>name</code>, <code>path</code> and
@@ -86,14 +89,6 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	void deleteGroup(String path) throws IOException;
 	
 	/**
-	 * finds a Project by id
-	 * @param projectId
-	 * @return
-	 * @throws IOException
-	 */
-	ProjectReference findProjectReferenceById(String projectId) throws IOException;
-
-	/**
 	 * fetches a list of all project members
 	 * @param projectId
 	 * @return
@@ -115,7 +110,9 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @return
 	 * @throws IOException
 	 */
+	@Deprecated
 	String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException;
+	String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException;
 
 	/**
 	 * 
@@ -133,12 +130,12 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
 
 	void leaveGroup(String path) throws IOException;
-
+	void leaveProject(String namespace, String projectId) throws IOException;
 	Set<Member> getResourceMembers(String projectId, String resourceId) throws IOException;
 	
 	Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException ;
 
-	void updateGroup(String name, String path, String description) throws IOException;
+	void updateProject(String namespace, String projectId, String description) throws IOException;
 
 	ForkStatus forkResource(String resourceId, String sourceProjectId, String targetProjectId) throws IOException;
 
@@ -159,5 +156,6 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	void updateReply(String projectId, Comment comment, Reply reply) throws IOException;
 
 	List<Comment> getComments(String projectId) throws IOException;
+
 
 }

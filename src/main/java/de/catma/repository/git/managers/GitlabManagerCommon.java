@@ -11,6 +11,7 @@ import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Project;
 
+import de.catma.project.ProjectReference;
 import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -33,21 +34,23 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	public abstract GitLabApi getGitLabApi();
 	
 	@Override
-	public final boolean isAuthorizedOnProject(RBACSubject subject, RBACPermission permission, String projectId) {
+	public final boolean isAuthorizedOnProject(
+			RBACSubject subject, RBACPermission permission, ProjectReference projectReference ) {
 		try {
-			Group group = getGitLabApi().getGroupApi().getGroup(projectId);
-			if(group == null) {
+			Project project = getGitLabApi().getProjectApi().getProject(
+					projectReference.getNamespace(), projectReference.getProjectId());
+			if(project == null) {
 				getLogger().log(Level.WARNING, 
-						String.format("CATMA-Project/git-Group unknown %1$s", projectId));
+						String.format("CATMA-Project/git-Project unknown %1$s", projectReference));
 				return false;
 			}
 			return isMemberAuthorized(
 					permission, 
-					getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId()));
+					getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId()));
 		} catch (GitLabApiException e) {
 			getLogger().log(
 				Level.SEVERE, 
-				String.format("Error retrieving permissions for CATMA-Project/git-Group unknown %1$s", projectId),
+				String.format("Error retrieving permissions for CATMA-Project/git-Project %1$s", projectReference),
 				e);
 			return false;
 		}

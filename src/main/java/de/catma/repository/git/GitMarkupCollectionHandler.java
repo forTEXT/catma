@@ -98,7 +98,7 @@ public class GitMarkupCollectionHandler {
 			localGitRepoManager.clone(
 					projectId,
 					createRepositoryResponse.repositoryHttpUrl,
-					null,
+					(File)null,
 					credentialsProvider
 			);
 

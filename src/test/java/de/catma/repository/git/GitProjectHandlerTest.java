@@ -1,21 +1,21 @@
 package de.catma.repository.git;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
-import com.google.common.eventbus.EventBus;
-import de.catma.backgroundservice.BackgroundService;
-import de.catma.indexer.TermExtractor;
-import de.catma.indexer.TermInfo;
-import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.GitlabManagerRestricted;
-import de.catma.util.IDGenerator;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -27,17 +27,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.catma.properties.CATMAProperties;
-import de.catma.properties.CATMAPropertyKey;
+import com.google.common.eventbus.EventBus;
+
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
+import de.catma.indexer.TermExtractor;
+import de.catma.indexer.TermInfo;
+import de.catma.project.ProjectReference;
+import de.catma.properties.CATMAProperties;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.GitLabServerManagerTest;
+import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.util.IDGenerator;
 
 public class GitProjectHandlerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
@@ -130,9 +138,9 @@ public class GitProjectHandlerTest {
 					mockEventBus
 			);
 
-			String projectId = gitProjectManager.create(
+			String projectId = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
-			);
+			).getProjectId();
 			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
 			assertNotNull(projectId);
@@ -345,7 +353,7 @@ public class GitProjectHandlerTest {
 					mockEventBus
 			);
 
-			String projectId = gitProjectManager.create(
+			ProjectReference projectReference = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
@@ -353,7 +361,8 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(gitlabManagerRestricted.getUser(), projectId, jGitRepoManager, gitlabManagerRestricted);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(
+					gitlabManagerRestricted.getUser(), projectReference, jGitRepoManager, gitlabManagerRestricted);
 
 			gitProjectHandler.loadRolesPerResource(); // would usually happen when the project is opened via GraphWorktreeProject
 
@@ -369,7 +378,7 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(projectReference.getProjectId(), GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
 			Status status = jGitRepoManager.getGitApi().status().call();
 //			Set<String> added = status.getAdded();
 //

@@ -26,7 +26,7 @@ import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Author;
 import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.GroupFilter;
+import org.gitlab4j.api.models.ImportStatus.Status;
 import org.gitlab4j.api.models.Issue;
 import org.gitlab4j.api.models.IssueFilter;
 import org.gitlab4j.api.models.Member;
@@ -35,7 +35,6 @@ import org.gitlab4j.api.models.Note;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
-import org.gitlab4j.api.models.ImportStatus.Status;
 import org.gitlab4j.api.models.Visibility;
 
 import com.google.common.cache.Cache;
@@ -145,6 +144,29 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			throw new IOException("Failed to create remote Git repository", e);
 		}
 	}
+	
+	@Override
+	public CreateRepositoryResponse createRepository(
+			String name, String description)
+			throws IOException {
+		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+
+		try {
+			Project project = new Project();
+			project.setName(name);
+			project.setDescription(description);
+			
+			project = projectApi.createProject(project);
+			return new CreateRepositoryResponse(
+				null, project.getId(),
+				GitlabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to create remote Git repository", e);
+		}
+	}
 
 	/**
 	 * Deletes an existing remote repository identified by <code>repositoryId</code>.
@@ -154,6 +176,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	 *         repository
 	 */
 	@Override
+	@Deprecated
 	public void deleteRepository(int repositoryId) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
@@ -164,7 +187,18 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			throw new IOException("Failed to delete remote Git repository", e);
 		}
 	}
-	
+
+	@Override
+	public void deleteRepository(String projectId) throws IOException {
+		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+
+		try {
+			projectApi.deleteProject(projectId);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to delete remote Git repository", e);
+		}
+	}
 
 	@Override
 	public String createGroup(String name, String path, String description)
@@ -187,10 +221,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
-	public void updateGroup(String name, String path, String description) throws IOException {
+	public void updateProject(String namespace, String projectId, String description) throws IOException {
 		try {
-			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-			groupApi.updateGroup(path, name, path, description, null, null, null, null);
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project project= projectApi.getProject(namespace, projectId);
+			project.setDescription(description);			
+			projectApi.updateProject(project);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -200,6 +236,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 
 	@Override
+	@Deprecated
 	public List<String> getGroupRepositoryNames(String path)
 			throws IOException {
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
@@ -216,6 +253,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
+	@Deprecated
 	public void deleteGroup(String path) throws IOException {
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 
@@ -225,17 +263,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to delete remote group", e);
-		}
-	}
-	
-	@Override
-	public ProjectReference findProjectReferenceById(String projectId) throws IOException {
-		try {
-
-			Group group = restrictedGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
-			return unmarshallProjectReference(group.getPath(),group.getDescription());
-		} catch (GitLabApiException e) {
-			throw new IOException("failed to fetch project ", e);
 		}
 	}
 
@@ -254,7 +281,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 
 	@Override
 	public List<ProjectReference> getProjectReferences() throws IOException {
-		return getProjectReferences(AccessLevel.forValue(RBACRole.GUEST.getAccessLevel()));
+		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()));
 	}
 	
 	@Override
@@ -263,13 +290,18 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 	
 	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
-		GroupApi groupApi = new GroupApi(restrictedGitLabApi);
+		ProjectApi projectApi = new ProjectApi(restrictedGitLabApi);
+		
 		try {
 			return projectsCache.get("projects", () -> 
-			 groupApi.getGroups(new GroupFilter().withMinAccessLevel(minAccessLevel))
+			projectApi.getProjects(
+					new ProjectFilter()
+						.withMinAccessLevel(minAccessLevel)
+						.withMembership(true))
 			 	.stream()
-			 	.map(group -> 
-			 		unmarshallProjectReference(group.getPath(),  group.getDescription()))
+			 	.map(project -> 
+			 		unmarshallProjectReference(
+			 			project.getNamespace().getPath(), project.getPath(), project.getDescription()))
 				.collect(Collectors.toList()));
 		}
 		catch (Exception e) {
@@ -278,6 +310,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
+	@Deprecated
 	public String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
@@ -286,6 +319,23 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 				GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
 			
 			return GitlabUtils.rewriteGitLabServerUrl(rootProject.getHttpUrlToRepo());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+				"Failed to load Project's Root Repository URL: " 
+					+ GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()), e);
+		}
+	}
+	
+	@Override
+	public String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project project = projectApi.getProject(
+					projectReference.getNamespace(),
+					projectReference.getProjectId());
+			
+			return GitlabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -331,6 +381,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override 
+	@Deprecated
 	public void leaveGroup(String path) throws IOException {
 		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 		
@@ -345,6 +396,22 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			}
 		} catch (GitLabApiException ge){
 			throw new IOException("Couldn't leave group",ge);
+		}
+	}
+	
+	@Override
+	public void leaveProject(String namespace, String projectId) throws IOException {
+		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+		try {
+			Project project = projectApi.getProject(namespace, projectId);
+			Member member = projectApi.getMember(project.getId(), user.getUserId());
+			if (member != null 
+					&& member.getAccessLevel().value >= AccessLevel.GUEST.value 
+					&& member.getAccessLevel().value < AccessLevel.OWNER.value) {
+				projectApi.removeMember(project.getId(), user.getUserId());
+			}
+		} catch  (GitLabApiException ge){
+			throw new IOException("Couldn't leave project",ge);
 		}
 	}
 	
@@ -429,7 +496,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
         return resultMap;
     }
 
-	private ProjectReference unmarshallProjectReference(String path, String eventuallyMarshalledMetadata) {
+	private ProjectReference unmarshallProjectReference(
+			String namespace, String path, String eventuallyMarshalledMetadata) {
 		String name = "unknown";
 		String description = "unknown";
 		try {
@@ -447,7 +515,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 					eventuallyMarshalledMetadata), 
 				e);
 		}
-		return new ProjectReference(path, name, description);
+		return new ProjectReference(path, namespace, name, description);
 	}
 
 	@Override

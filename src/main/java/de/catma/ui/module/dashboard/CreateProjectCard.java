@@ -6,7 +6,7 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
@@ -20,10 +20,10 @@ import de.catma.ui.layout.VerticalFlexLayout;
  */
 public class CreateProjectCard extends VerticalFlexLayout {
 
-	private final ProjectManager projectManager;
+	private final ProjectsManager projectManager;
 	private final EventBus eventBus;
 	
-	public CreateProjectCard(ProjectManager projectManager, EventBus eventBus){
+	public CreateProjectCard(ProjectsManager projectManager, EventBus eventBus){
 		this.projectManager = Objects.requireNonNull(projectManager);
         this.eventBus = eventBus;
         initComponents();

@@ -81,7 +81,7 @@ import de.catma.project.CommitInfo;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.project.event.ChangeType;
@@ -161,7 +161,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private Logger logger = Logger.getLogger(ProjectView.class.getName());
 	private final TagManager tagManager;
 
-	private ProjectManager projectManager;
+	private ProjectsManager projectManager;
     private ProjectReference projectReference;
     private Project project;
 
@@ -190,7 +190,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private final ProgressListener progressListener;
 
     public ProjectView(
-    		ProjectManager projectManager, 
+    		ProjectsManager projectManager, 
     		EventBus eventBus) {
     	super("Project");
     	this.projectManager = projectManager;
@@ -1955,7 +1955,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         boolean membersEditAllowed = 
         		projectManager.isAuthorizedOnProject(
-        				RBACPermission.PROJECT_MEMBERS_EDIT, projectReference.getProjectId());
+        				RBACPermission.PROJECT_MEMBERS_EDIT, projectReference);
         miInvite.setVisible(membersEditAllowed);
         teamPanel.setVisible(membersEditAllowed);
         

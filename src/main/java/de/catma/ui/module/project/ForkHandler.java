@@ -13,7 +13,7 @@ import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.project.ForkStatus;
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.module.main.ErrorHandler;
@@ -26,11 +26,11 @@ public class ForkHandler {
 	private final ProgressListener progressListener;
 	private final ExecutionListener<Void> executionListener;
 	private String projectId;
-	private ProjectManager projectManager;
+	private ProjectsManager projectManager;
 
 	public ForkHandler(
 			UI ui, 
-			String projectId, ProjectManager projectManager, 
+			String projectId, ProjectsManager projectManager, 
 			Set<TagsetDefinition> tagsets, ProjectReference targetProject,
 			ExecutionListener<Void> executionListener, ProgressListener progressListener) {
 		this.ui = ui;
