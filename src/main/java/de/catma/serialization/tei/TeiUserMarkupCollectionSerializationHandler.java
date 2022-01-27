@@ -34,11 +34,13 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 
 	private TagManager tagManager;
 	private boolean withText;
+	private String version;
 	
 	public TeiUserMarkupCollectionSerializationHandler(
-			TagManager tagManager, boolean withText) {
+			TagManager tagManager, String version, boolean withText) {
 		super();
 		this.tagManager = tagManager;
+		this.version = version;
 		this.withText = withText;
 	}
 
@@ -55,7 +57,7 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 				userMarkupCollection.getContentInfoSet());
 			
 			new TeiTagLibrarySerializationHandler(
-					teiDocument, tagManager).serialize(
+					teiDocument, tagManager, version).serialize(
 							userMarkupCollection.getTagLibrary());
     		
 			new TeiUserMarkupCollectionSerializer(teiDocument, withText).serialize(
@@ -78,7 +80,7 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 					factory.createDocumentFromStream(id, inputStream);
 			TagLibrary tagLibrary = 
 					new TeiTagLibrarySerializationHandler(
-							teiDocument, tagManager).deserialize();
+							teiDocument, tagManager, version).deserialize();
 			
 			TeiUserMarkupCollectionDeserializer deserializer = 
 					new TeiUserMarkupCollectionDeserializer(

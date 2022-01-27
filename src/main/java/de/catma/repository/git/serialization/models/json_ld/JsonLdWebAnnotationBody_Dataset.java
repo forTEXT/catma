@@ -93,7 +93,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 						"%s%s/%s/%s",
 						gitServerUrl.getPath(),
 						projectRootRepositoryName,
-						GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+						GitProjectHandler.TAGSETS_DIRECTORY_NAME,
 						tagsetUuid
 				)
 		);

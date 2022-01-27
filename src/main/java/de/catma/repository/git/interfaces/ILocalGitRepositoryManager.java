@@ -38,7 +38,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 			String namespace, String projectId, 
 			String uri, CredentialsProvider credentialsProvider) throws IOException;
 
-	void open(String group, String name) throws IOException;
+	void open(String namespace, String name) throws IOException;
 
 	void add(File targetFile, byte[] bytes) throws IOException;
 	
@@ -53,7 +53,8 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 			throws IOException;
 
 	void push(CredentialsProvider credentialsProvider) throws IOException;
-
+	void push_master(CredentialsProvider credentialsProvider) throws IOException;
+	
 	void fetch(CredentialsProvider credentialsProvider) throws IOException;
 
 	void checkout(String name) throws IOException;

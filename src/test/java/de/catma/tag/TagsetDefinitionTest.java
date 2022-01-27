@@ -18,7 +18,7 @@ class TagsetDefinitionTest {
 	void testTagIteration() {
 		IDGenerator idGenerator = new IDGenerator();
 		
-		TagsetDefinition tagset = new TagsetDefinition(idGenerator.generate(), "Test", new Version());
+		TagsetDefinition tagset = new TagsetDefinition(idGenerator.generate(), "Test");
 		
 		TagDefinition root1 = new TagDefinition(idGenerator.generate(), "root1", null, tagset.getUuid());
 		tagset.addTagDefinition(root1);

@@ -18,13 +18,10 @@
  */
 package de.catma.document.annotation;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import de.catma.document.source.ContentInfoSet;
@@ -32,7 +29,6 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
-import de.catma.util.IDGenerator;
 
 /**
  * A collection of user generated markup in the form of {@link TagReference}s.
@@ -210,27 +206,6 @@ public class AnnotationCollection {
 	public void setRevisionHash(String revisionHash) {
 		this.revisionHash = revisionHash;
 	}
-	
-	/**
-	 * {@link TagInstance#synchronizeProperties() Synchronizes} all the Tag Instances. 
-	 */
-	@Deprecated
-	public void synchronizeTagInstances() {
-		HashSet<TagInstance> tagInstances = new HashSet<TagInstance>();
-		for (TagReference tr : tagReferences) {
-			tagInstances.add(tr.getTagInstance());
-		}
-		
-		for (TagInstance ti : tagInstances) {
-//			if (getTagLibrary().getTagsetDefinition(ti.getTagDefinition()) != null) {
-//				ti.synchronizeProperties();
-//			}
-//			else {
-//				tagReferences.removeAll(getTagReferences(ti.getUuid()));
-//			}
-		}
-	}
-
 	
 	/**
 	 * @param tagInstanceID

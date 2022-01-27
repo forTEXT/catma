@@ -27,7 +27,6 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 
@@ -65,8 +64,7 @@ public class TeiTagLibraryDeserializer {
 			TagsetDefinition tagsetDefinition = 
 					new TagsetDefinition(
 							tagsetDefinitionElement.getID(),
-							tagsetName, 
-							new Version());
+							tagsetName);
 			
 			tagManager.addTagsetDefinition(tagsetDefinition);
 			

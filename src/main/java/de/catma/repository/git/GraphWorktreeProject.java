@@ -196,9 +196,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			logger.info(
 				String.format("Revision Hash for Project %1$s is %2$s", projectReference.getProjectId(), this.rootRevisionHash));
-			
-			this.gitProjectHandler.loadRolesPerResource();
-			
+						
 			logger.info(
 				String.format("Checking for conflicts in Project %1$s", projectReference.getProjectId()));
 			if (gitProjectHandler.hasConflicts()) {
@@ -437,7 +435,6 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	protected void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		String tagsetRevisionHash = gitProjectHandler.updateTagset(tagsetDefinition);
-		tagsetDefinition.setRevisionHash(tagsetRevisionHash);
 		
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
@@ -493,7 +490,6 @@ public class GraphWorktreeProject implements IndexedProject {
 				tagDefinition.getName(),
 				tagDefinition.getUuid()));
 		
-		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		// project commit
@@ -569,9 +565,6 @@ public class GraphWorktreeProject implements IndexedProject {
 		String tagsetRevision = gitProjectHandler.removePropertyDefinition(
 				propertyDefinition, tagDefinition, tagsetDefinition);
 		
-		tagsetDefinition.setRevisionHash(tagsetRevision);
-		
-		
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		this.rootRevisionHash = 
@@ -604,7 +597,6 @@ public class GraphWorktreeProject implements IndexedProject {
 					tagDefinition.getName(),
 					tagDefinition.getUuid()));
 		
-		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		// project commit
@@ -631,7 +623,6 @@ public class GraphWorktreeProject implements IndexedProject {
 						"Added Tag %1$s with ID %2$s",
 						tagDefinition.getName(),
 						tagDefinition.getUuid()));
-		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		// project commit
@@ -656,7 +647,6 @@ public class GraphWorktreeProject implements IndexedProject {
 				"Updated Tag %1$s with ID %2$s",
 				tagDefinition.getName(),
 				tagDefinition.getUuid()));
-		tagsetDefinition.setRevisionHash(tagsetRevision);
 		
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
@@ -703,7 +693,6 @@ public class GraphWorktreeProject implements IndexedProject {
 		
 		// remove Tag
 		String tagsetRevision = gitProjectHandler.removeTag(tagDefinition);
-		tagsetDefinition.setRevisionHash(tagsetRevision);
 
 		// commit Project
 		String oldRootRevisionHash = this.rootRevisionHash;
@@ -730,11 +719,14 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
-		String tagsetRevisionHash = gitProjectHandler.createTagset(
-				tagsetDefinition.getUuid(), tagsetDefinition.getName(), null
+		String projectRevisionHash = gitProjectHandler.createTagset(
+				tagsetDefinition.getUuid(), 
+				tagsetDefinition.getName(), 
+				tagsetDefinition.getDescription(),
+				tagsetDefinition.getForkedFromCommitURL()
 		);
-
-		tagsetDefinition.setRevisionHash(tagsetRevisionHash);
+		
+		tagsetDefinition.setResponsableUser(this.user.getIdentifier());
 
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
@@ -1163,7 +1155,8 @@ public class GraphWorktreeProject implements IndexedProject {
 			InputStream inputStream, SourceDocument document) throws IOException {
 		TagManager tagManager = new TagManager(new TagLibrary());
 		
-		TeiTagLibrarySerializationHandler tagLibrarySerializationHandler = new TeiTagLibrarySerializationHandler(tagManager);
+		TeiTagLibrarySerializationHandler tagLibrarySerializationHandler = 
+				new TeiTagLibrarySerializationHandler(tagManager, this.rootRevisionHash);
 
 		TagLibrary importedLibrary =
 			tagLibrarySerializationHandler.deserialize(null, inputStream);
@@ -1277,7 +1270,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public List<TagsetDefinitionImportStatus> loadTagLibrary(InputStream inputStream) throws IOException {
-		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory();
+		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory(this.rootRevisionHash);
 		factory.setTagManager(new TagManager(new TagLibrary()));
 		TagLibrarySerializationHandler tagLibrarySerializationHandler = 
 				factory.getTagLibrarySerializationHandler();
@@ -1529,7 +1522,6 @@ public class GraphWorktreeProject implements IndexedProject {
 			));
 		}
 		else {
-			boolean forceGraphReload = gitProjectHandler.loadRolesPerResource();
 			gitProjectHandler.initAndUpdateSubmodules();
 			gitProjectHandler.removeStaleSubmoduleDirectories();
 			gitProjectHandler.ensureDevBranches();
@@ -1560,7 +1552,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					() -> gitProjectHandler.getTagsets(),
 					() -> gitProjectHandler.getDocuments(),
 					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener),
-					forceGraphReload,
+					false,
 					backgroundService
 			);
 		}
@@ -1676,5 +1668,9 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	}
 	
+	@Override
+	public String getVersion() {
+		return rootRevisionHash;
+	}
 	
 }

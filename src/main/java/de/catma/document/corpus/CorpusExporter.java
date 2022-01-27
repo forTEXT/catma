@@ -21,14 +21,14 @@ import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 public class CorpusExporter {
 	private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("yyMMddhhmm");
 
-	private Project repo;
+	private Project project;
 
 	private String date;
 
 	private boolean simpleEntryStyle;
 	
-	public CorpusExporter(Project repo, boolean simpleEntryStyle) {
-		this.repo = repo;
+	public CorpusExporter(Project project, boolean simpleEntryStyle) {
+		this.project = project;
 		this.simpleEntryStyle = simpleEntryStyle;
 		this.date = FORMATTER.format(new Date());
 	}
@@ -64,14 +64,16 @@ public class CorpusExporter {
 						: corpus.getUserMarkupCollectionRefs(sd)) {
 					
 					AnnotationCollection umc = 
-							repo.getUserMarkupCollection(umcRef);
+							project.getUserMarkupCollection(umcRef);
 
 					TeiUserMarkupCollectionSerializationHandler handler =
 							new TeiUserMarkupCollectionSerializationHandler(
-									repo.getTagManager(), false);
+									project.getTagManager(), 
+									project.getVersion(), 
+									false);
 					ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
 					handler.serialize(
-						repo.getUserMarkupCollection(umcRef), sd, teiDocOut);
+						project.getUserMarkupCollection(umcRef), sd, teiDocOut);
 
 					byte[] umcContent = teiDocOut.toByteArray();
 					

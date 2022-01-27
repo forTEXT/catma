@@ -20,6 +20,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
@@ -35,6 +36,7 @@ import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleInitCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
+import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoFilepatternException;
@@ -64,7 +66,6 @@ import org.eclipse.jgit.util.FS;
 
 import de.catma.project.CommitInfo;
 import de.catma.project.conflict.DeletedResourceConflict;
-import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -311,17 +312,19 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	/**
 	 * Opens an existing Git repository with the directory name <code>name</code>.
 	 *
+	 * @param namespace the Gitlab namespace of the Git repository to open
 	 * @param name the directory name of the Git repository to open
 	 * @throws IOException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
 	@Override
-	public void open(String group, String name) throws IOException {
+	public void open(String namespace, String name) throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `open` on an attached instance");
 		}
 
-		File repositoryPath = Paths.get(getRepositoryBasePath().toURI()).resolve(group).resolve(name).toFile();
+		File repositoryPath = 
+				Paths.get(getRepositoryBasePath().toURI()).resolve(namespace).resolve(name).toFile();
 
 		// could also check for the absence of a child .git directory
 		if (!repositoryPath.exists() || !repositoryPath.isDirectory()) {
@@ -691,6 +694,16 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 
+	@Override
+	public void push(CredentialsProvider credentialsProvider) throws IOException {
+		push(credentialsProvider, null);
+	}
+	
+	@Override
+	public void push_master(CredentialsProvider credentialsProvider) throws IOException {
+		push(credentialsProvider, Constants.MASTER);
+	}
+
 	/**
 	 * Pushes commits made locally to the associated remote repository ('origin' remote).
 	 *
@@ -698,14 +711,23 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @param password the password to authenticate with
 	 * @throws IOException if the push operation failed
 	 */
-	@Override
-	public void push(CredentialsProvider credentialsProvider) throws IOException {
+	private void push(CredentialsProvider credentialsProvider, String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
 
 		try {
 			if (!CATMAPropertyKey.devPreventPush.getValue(false)) {
+				
+				String currentBranch = this.gitApi.getRepository().getBranch();
+				if ((branch.equals(Constants.MASTER) && !currentBranch.equals(Constants.MASTER))
+					|| (branch == null && !currentBranch.equals(this.username))) {
+					throw new IOException(
+							String.format(
+								"Can only push branch %1$s, got %2$s!", 
+								this.username, currentBranch));
+				}
+				
 				PushCommand pushCommand = this.gitApi.push();
 				pushCommand.setCredentialsProvider(credentialsProvider);
 				pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
@@ -861,6 +883,17 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				}
 				checkoutCommand.setCreateBranch(createBranch);
 				checkoutCommand.setName(name).call();
+				
+				if (createBranch) {
+					StoredConfig config = this.gitApi.getRepository().getConfig();
+					config.setString(
+							ConfigConstants.CONFIG_BRANCH_SECTION, name, 
+							ConfigConstants.CONFIG_KEY_REMOTE, "origin");
+					config.setString(
+							ConfigConstants.CONFIG_BRANCH_SECTION, name, 
+							ConfigConstants.CONFIG_KEY_MERGE, "refs/heads/" + name);
+					config.save();
+				}
 			}
 		}
 		catch (GitAPIException e) {

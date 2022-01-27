@@ -44,7 +44,8 @@ public class TagsetXMLExportStreamSource implements StreamSource {
 			try {
 				final TeiDocument teiDocument = teiDocumentFactory.createEmptyDocument(null);
 				
-				final TeiTagLibrarySerializer teiTagSerializer = new TeiTagLibrarySerializer(teiDocument);
+				final TeiTagLibrarySerializer teiTagSerializer = 
+						new TeiTagLibrarySerializer(teiDocument, project.getVersion());
 				final TagManager tagManager = new TagManager(new TagLibrary());
 				tagsets.forEach(tagset -> tagManager.addTagsetDefinition(tagset));
 				

@@ -12,13 +12,12 @@ import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.RadioButtonGroup;
 import com.vaadin.ui.TextField;
-import com.vaadin.ui.Notification.Type;
 
 import de.catma.project.Project;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.IDGenerator;
@@ -121,7 +120,7 @@ public class ChangeImportActionDialog extends AbstractOkCancelDialog<TagsetDefin
 		if (choices.getValue().equals(choice1)) {
 			String name = tagsetNameInput.getValue();
 			IDGenerator idGenerator = new IDGenerator();
-			return new TagsetDefinition(idGenerator.generateTagsetId(), name, new Version());
+			return new TagsetDefinition(idGenerator.generateTagsetId(), name);
 		}
 		else if (choices.getValue().equals(choice2)) {
 			return this.tagsetGrid.getSelectedItems().iterator().next();

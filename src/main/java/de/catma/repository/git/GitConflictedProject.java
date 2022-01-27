@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
+@Deprecated
 public class GitConflictedProject implements ConflictedProject {
 	
 	private GitProjectHandler gitProjectHandler;
@@ -29,7 +30,8 @@ public class GitConflictedProject implements ConflictedProject {
 
 	@Override
 	public List<TagsetConflict> getTagsetConflicts() throws Exception {
-		return gitProjectHandler.getTagsetConflicts();
+		// return gitProjectHandler.getTagsetConflicts();
+		return null;
 	}
 
 	@Override
@@ -101,11 +103,11 @@ public class GitConflictedProject implements ConflictedProject {
 				}
 
 				// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?
-				gitProjectHandler.addTagsetToStagedAndCommit(
-						tagsetConflict.getUuid(),
-						"Auto-committing merged changes (GitConflictedProject.resolveTagsetConflicts -> " +
-								"GitProjectHandler.addTagsetToStagedAndCommit)"
-				);
+//				gitProjectHandler.addTagsetToStagedAndCommit(
+//						tagsetConflict.getUuid(),
+//						"Auto-committing merged changes (GitConflictedProject.resolveTagsetConflicts -> " +
+//								"GitProjectHandler.addTagsetToStagedAndCommit)"
+//				);
 			}
 
 			// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?

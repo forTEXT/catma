@@ -95,6 +95,17 @@ public class GitProjectsManager implements ProjectsManager {
 				response.repositoryHttpUrl,
 				credentialsProvider
 			);
+			
+			String initialCommit = String.format("Created Project %1$s", name);
+			localGitRepoManager.commit(
+				initialCommit, 
+				remoteGitServerManager.getUsername(), 
+				remoteGitServerManager.getEmail(), true);
+			
+			localGitRepoManager.push_master(credentialsProvider);
+			
+			localGitRepoManager.checkout(user.getIdentifier(), true);
+			
 		}
 
 		return projectId;
@@ -162,6 +173,11 @@ public class GitProjectsManager implements ProjectsManager {
 						new GitProjectHandler(
 							this.user, 
 							projectReference, 
+							Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
+								.resolve(this.user.getIdentifier())
+								.resolve(projectReference.getNamespace())
+								.resolve(projectReference.getProjectId())
+								.toFile(),
 							this.localGitRepositoryManager, 
 							this.remoteGitServerManager),
 						projectReference,
@@ -200,6 +216,8 @@ public class GitProjectsManager implements ProjectsManager {
 	
 	public boolean existsLocally(ProjectReference projectReference) {
 		return Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
+				.resolve(user.getIdentifier())
+				.resolve(projectReference.getNamespace())
 				.resolve(projectReference.getProjectId())
 				.toFile()
 				.exists();
@@ -270,10 +288,14 @@ public class GitProjectsManager implements ProjectsManager {
 		GitProjectHandler targetProjectHandler = new GitProjectHandler(
 				this.user, 
 				targetProject, 
+				Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
+					.resolve(user.getIdentifier())
+					.resolve(targetProject.getNamespace())
+					.resolve(targetProject.getProjectId())
+					.toFile(),
 				this.localGitRepositoryManager, 
 				this.remoteGitServerManager);
 		
-		targetProjectHandler.loadRolesPerResource();
 		if (targetProjectHandler.hasConflicts()) {
 			return ForkStatus.targetHasConflicts();
 		}

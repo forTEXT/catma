@@ -28,6 +28,11 @@ public class TeiSerializationHandlerFactory implements
 		SerializationHandlerFactory {
 	
 	private TagManager tagManager;
+	private String version;
+
+	public TeiSerializationHandlerFactory(String version) {
+		this.version = version;
+	}
 
 	public void setTagManager(TagManager tagManager) {
 		this.tagManager = tagManager;
@@ -38,11 +43,11 @@ public class TeiSerializationHandlerFactory implements
 	}
 
 	public TagLibrarySerializationHandler getTagLibrarySerializationHandler() {
-		return new TeiTagLibrarySerializationHandler(tagManager);
+		return new TeiTagLibrarySerializationHandler(tagManager, version);
 	}
 
 	public AnnotationCollectionSerializationHandler getAnnotationCollectionSerializationHandler() {
-		return new TeiUserMarkupCollectionSerializationHandler(tagManager, false);
+		return new TeiUserMarkupCollectionSerializationHandler(tagManager, version, false);
 	}
 
 }

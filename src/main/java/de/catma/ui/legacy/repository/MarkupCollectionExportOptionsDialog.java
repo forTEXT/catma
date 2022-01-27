@@ -68,16 +68,16 @@ public class MarkupCollectionExportOptionsDialog extends Window {
 		new FileDownloader(resultWithTextStreamResource).extend(btExportWithText);	
 	}
 
-	private InputStream createExportResultStream(Project repository,
+	private InputStream createExportResultStream(Project project,
 			SourceDocument sd, AnnotationCollectionReference umcRef, boolean withText) {
 
 		TeiUserMarkupCollectionSerializationHandler handler =
 				new TeiUserMarkupCollectionSerializationHandler(
-						repository.getTagManager(), withText);
+						project.getTagManager(), project.getVersion(), withText);
 		ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
 		try {
 			handler.serialize(
-				repository.getUserMarkupCollection(umcRef), sd, teiDocOut);
+				project.getUserMarkupCollection(umcRef), sd, teiDocOut);
 			
 			final ByteArrayInputStream teiDownloadStream = 
 					new ByteArrayInputStream(teiDocOut.toByteArray());

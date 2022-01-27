@@ -415,4 +415,6 @@ public interface Project {
 
 	void updateReply(Comment comment, Reply reply) throws IOException;
 
+	String getVersion();
+
 }

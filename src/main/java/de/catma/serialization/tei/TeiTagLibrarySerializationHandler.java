@@ -29,22 +29,23 @@ public class TeiTagLibrarySerializationHandler implements TagLibrarySerializatio
 	
 	private TagManager tagManager;
 	private TeiDocument teiDocument;
+	private String version;
 	
 	public TeiTagLibrarySerializationHandler(
-			TeiDocument teiDocument, TagManager tagManager) {
+			TeiDocument teiDocument, TagManager tagManager, String version) {
 		super();
 		this.tagManager = tagManager;
 		this.teiDocument = teiDocument;
+		this.version = version;
 	}
 
-	public TeiTagLibrarySerializationHandler(TagManager tagManager) {
-		super();
-		this.tagManager = tagManager;
+	public TeiTagLibrarySerializationHandler(TagManager tagManager, String version) {
+		this(null, tagManager, version);
 	}
 	
 	public void serialize(TagLibrary tagLibrary) {
 		TeiTagLibrarySerializer serializer = 
-				new TeiTagLibrarySerializer(teiDocument);
+				new TeiTagLibrarySerializer(teiDocument, version);
 		serializer.serialize(tagLibrary);
 	}
 	

@@ -147,7 +147,6 @@ public class TagManager {
 			TagsetDefinition tagsetDefinition, String name) {
 		String oldName = tagsetDefinition.getName();
 		tagsetDefinition.setName(name);
-		tagsetDefinition.setVersion();
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagsetDefinitionChanged.name(),
 				oldName,
@@ -166,7 +165,6 @@ public class TagManager {
 	public void addTagDefinition(TagsetDefinition tagsetDefinition,
 			TagDefinition tagDefinition) {
 		tagsetDefinition.addTagDefinition(tagDefinition);
-		tagsetDefinition.setVersion();
 		this.propertyChangeSupport.firePropertyChange(
 			TagManagerEvent.tagDefinitionChanged.name(),
 			null,
@@ -180,7 +178,6 @@ public class TagManager {
 			removeTagDefinition(tagsetDefinition, child);
 		}
 		tagsetDefinition.remove(tagDefinition);
-		tagsetDefinition.setVersion();
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionChanged.name(),
 				new Pair<TagsetDefinition, TagDefinition>(tagsetDefinition, tagDefinition),

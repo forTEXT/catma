@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.UserApi;
 import org.junit.jupiter.api.AfterEach;
@@ -64,6 +65,10 @@ class GitProjectsManagerTest {
 	public void tearDown() throws Exception {
 //		UserApi userApi = gitlabManagerPrivileged.getGitLabApi().getUserApi();
 //		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
+//		FileUtils.deleteDirectory(
+//				Paths.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+//				.resolve(gitlabManagerRestricted.getUser().getIdentifier())
+//				.toFile());
 	}
 
 	@Test
@@ -89,41 +94,47 @@ class GitProjectsManagerTest {
 		assertNotNull(projectId);
 		assert projectId.startsWith("CATMA_");
 
-		String expectedRootRepositoryName = 
-				GitProjectManager.getProjectRootRepositoryName(projectId);
 
-		File expectedRootRepositoryPath = 
+		File expectedProjectPath = 
 			Paths.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+				.resolve(gitProjectsManager.getUser().getIdentifier())
+				.resolve(projectReference.getNamespace())
 				.resolve(projectId)
-				.resolve(expectedRootRepositoryName).toFile();
+				.toFile();
 
-		assert expectedRootRepositoryPath.exists();
-		assert expectedRootRepositoryPath.isDirectory();
-	}
-	
-	@Test
-	void getProjectList() throws Exception {
-		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(
-				"testuser-159","catma", "testuser-159@catma.de", 
-				"Test User 159").getSecond();
-
-		BackgroundService mockBackgroundService = mock(BackgroundService.class);
-		EventBus mockEventBus = mock(EventBus.class);
-		gitlabManagerRestricted = 
-				new GitlabManagerRestricted(mockEventBus, mockBackgroundService, impersonationToken);
-
-		GitProjectsManager gitProjectsManager = 
-			new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
-					gitlabManagerRestricted,
-					(projectId) -> {}, // noop deletion handler
-					mockBackgroundService,
-					mockEventBus
-			);
-
+		assert expectedProjectPath.exists();
+		assert expectedProjectPath.isDirectory();
+		
+		
 		List<ProjectReference> projectReferences = 
 				gitProjectsManager.getProjectReferences();
-		
-		System.out.println(projectReferences); //TODO: check and create/delete
+
+		assert projectReferences.contains(projectReference);
 	}
+	
+//	@Test
+//	void getProjectList() throws Exception {
+//		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(
+//				"testuser-159","catma", "testuser-159@catma.de", 
+//				"Test User 159").getSecond();
+//
+//		BackgroundService mockBackgroundService = mock(BackgroundService.class);
+//		EventBus mockEventBus = mock(EventBus.class);
+//		gitlabManagerRestricted = 
+//				new GitlabManagerRestricted(mockEventBus, mockBackgroundService, impersonationToken);
+//
+//		GitProjectsManager gitProjectsManager = 
+//			new GitProjectsManager(
+//					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+//					gitlabManagerRestricted,
+//					(projectId) -> {}, // noop deletion handler
+//					mockBackgroundService,
+//					mockEventBus
+//			);
+//
+//		List<ProjectReference> projectReferences = 
+//				gitProjectsManager.getProjectReferences();
+//		
+//		System.out.println(projectReferences); //TODO: check and create/delete
+//	}
 }

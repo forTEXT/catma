@@ -70,7 +70,7 @@ public class GitProjectHandler {
 
 	private Logger logger = Logger.getLogger(GitProjectHandler.class.getName());
 	
-	public static final String TAGSET_SUBMODULES_DIRECTORY_NAME = "tagsets";
+	public static final String TAGSETS_DIRECTORY_NAME = "tagsets";
 	public static final String ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
 
@@ -82,15 +82,21 @@ public class GitProjectHandler {
 	private final IDGenerator idGenerator = new IDGenerator();
 	private final CredentialsProvider credentialsProvider;
 
+	@Deprecated
 	private Map<String, RBACRole> rolesPerResource;
 
 	private ProjectReference projectReference;
+	private File projectPath;
 	
-	public GitProjectHandler(User user, ProjectReference projectReference, ILocalGitRepositoryManager localGitRepositoryManager,
+	public GitProjectHandler(
+			User user, ProjectReference projectReference, 
+			File projectPath,
+			ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitManagerRestricted remoteGitServerManager) {
 		super();
 		this.user = user;
 		this.projectReference = projectReference;
+		this.projectPath = projectPath;
 		this.projectId = projectReference.getProjectId();
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
@@ -102,77 +108,59 @@ public class GitProjectHandler {
 	 * @return true if we encountered changes and a graph reload is appropriate
 	 * @throws Exception
 	 */
+	@Deprecated
 	public boolean loadRolesPerResource() throws Exception {
-		Map<String, RBACRole> oldRolesPerResource = this.rolesPerResource;
-		this.rolesPerResource = remoteGitServerManager.getRolesPerResource(projectId);
-		return oldRolesPerResource == null || !oldRolesPerResource.equals(this.rolesPerResource);
+		return false;
 	}
 
 	// tagset operations
 	public String createTagset(String tagsetId,
 							   String name,
-							   String description
+							   String description,
+							   String forkedFromCommitURL
 	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
 			GitTagsetHandler gitTagsetHandler = 
 					new GitTagsetHandler(
 							localGitRepoManager, 
-							this.remoteGitServerManager,
-							this.credentialsProvider);
-
-			// create the tagset
-			String tagsetRevisionHash = gitTagsetHandler.create(projectId, tagsetId, name, description);
-
-			localGitRepoManager.open(projectId, tagsetId);
-			localGitRepoManager.push(credentialsProvider);
-			String tagsetRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
-			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
-
-			// open the project root repo
-			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-
-			// add the submodule
-			File targetSubmodulePath = Paths.get(
+							this.projectPath,
+							this.remoteGitServerManager.getUsername(),
+							this.remoteGitServerManager.getEmail());
+			
+			File tagsetFolder = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					TAGSET_SUBMODULES_DIRECTORY_NAME,
+					TAGSETS_DIRECTORY_NAME,
 					tagsetId
 			).toFile();
 
-			// submodule files and the changed .gitmodules file are automatically staged
-			localGitRepoManager.addSubmodule(
-					targetSubmodulePath,
-					tagsetRepoRemoteUrl,
-					credentialsProvider
-			);
-			
-			localGitRepoManager.commit(
-					String.format("Added Tagset %1$s with ID %2$s", name, tagsetId),
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(),
-					false);
 
-			localGitRepoManager.detach(); 
-			
-			gitTagsetHandler.checkout(
-				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+			// create the tagset
+			String projectRevisionHash = 
+				gitTagsetHandler.create(
+						tagsetFolder, tagsetId, name, description, forkedFromCommitURL);
 
-			rolesPerResource.put(
-				tagsetId, 
-				RBACRole.OWNER);
-			
-			return tagsetRevisionHash;
+			localGitRepoManager.push(credentialsProvider);
+
+
+			return projectRevisionHash;
 		}
 	}
 	
+	@Deprecated
 	public Pair<TagsetDefinition, String> cloneAndAddTagset(String tagsetId, String name, String commitMsg) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = 
 					new GitTagsetHandler(
 							localGitRepoManager, 
-							this.remoteGitServerManager,
-							this.credentialsProvider);
+							this.projectPath,
+							this.remoteGitServerManager.getUsername(),
+							this.remoteGitServerManager.getEmail());
 
 
 			String tagsetRepoRemoteUrl = 
@@ -184,7 +172,7 @@ public class GitProjectHandler {
 			// add the submodule
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					TAGSET_SUBMODULES_DIRECTORY_NAME,
+					TAGSETS_DIRECTORY_NAME,
 					tagsetId
 			).toFile();
 
@@ -203,8 +191,8 @@ public class GitProjectHandler {
 
 			localGitRepoManager.detach(); 
 			
-			gitTagsetHandler.checkout(
-				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+//			gitTagsetHandler.checkout(
+//				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
 			if (!rolesPerResource.containsKey(tagsetId)) {
 				rolesPerResource.put(tagsetId, RBACRole.OWNER);
@@ -216,7 +204,9 @@ public class GitProjectHandler {
 	
 	public String createOrUpdateTag(String tagsetId, TagDefinition tagDefinition, String commitMsg) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
 			
 			if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
 				PropertyDefinition authorPropertyDefinition = 
@@ -230,32 +220,87 @@ public class GitProjectHandler {
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(
 					localGitRepoManager, 
-					this.remoteGitServerManager,
-					this.credentialsProvider);
+					this.projectPath,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail());
 
-			String tagsetRevision = 
+			String projectRevision = 
 				gitTagsetHandler.createOrUpdateTagDefinition(
 						projectId, tagsetId, tagDefinition, commitMsg);
 
-			return tagsetRevision;
+			localGitRepoManager.push(credentialsProvider);
+
+			return projectRevision;
 		}
 	}
 	
 	public String removeTag(TagDefinition tagDefinition) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(
 					localGitRepoManager, 
-					this.remoteGitServerManager, 
-					this.credentialsProvider);
+					this.projectPath,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail());
 
-			String tagsetRevision = 
+			String projectRevision = 
 				gitTagsetHandler.removeTagDefinition(projectId, tagDefinition);
+
+			localGitRepoManager.push(credentialsProvider);
+	
+			return projectRevision;
+		}
+	}
+	
+
+	public String removePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition,
+			TagsetDefinition tagsetDefinition) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(
+					localGitRepoManager, 
+					this.projectPath,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail());
+
+			String projectRevision = 
+				gitTagsetHandler.removePropertyDefinition(projectId, tagsetDefinition, tagDefinition, propertyDefinition);
 			
-			return tagsetRevision;
+			localGitRepoManager.push(credentialsProvider);
+
+			return projectRevision;
 		}
 	}
 
+	public String updateTagset(TagsetDefinition tagsetDefinition) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(
+					localGitRepoManager, 
+					this.projectPath,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail());
+
+			String projectRevision = 
+				gitTagsetHandler.updateTagsetDefinition(projectId, tagsetDefinition);
+			
+			localGitRepoManager.push(credentialsProvider);
+
+			
+			return projectRevision;
+		}
+	}
+	
+	
 	// markup collection operations
 	public String createMarkupCollection(String collectionId,
 										 String name,
@@ -720,22 +765,6 @@ public class GitProjectHandler {
 		}	
 		
 	}
-
-	public String removePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition,
-			TagsetDefinition tagsetDefinition) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = 
-				new GitTagsetHandler(
-					localGitRepoManager, 
-					this.remoteGitServerManager,
-					this.credentialsProvider);
-
-			String tagsetRevision = 
-				gitTagsetHandler.removePropertyDefinition(projectId, tagsetDefinition, tagDefinition, propertyDefinition);
-			
-			return tagsetRevision;
-		}
-	}
 	
 	public Set<Member> getProjectMembers() throws IOException {
 		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
@@ -766,7 +795,7 @@ public class GitProjectHandler {
 			// remove the submodule only!!!
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					TAGSET_SUBMODULES_DIRECTORY_NAME,
+					TAGSETS_DIRECTORY_NAME,
 					tagsetId
 			).toFile();
 	
@@ -781,21 +810,6 @@ public class GitProjectHandler {
 		}		
 	}
 
-	public String updateTagset(TagsetDefinition tagsetDefinition) throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = 
-				new GitTagsetHandler(
-					localGitRepoManager, 
-					this.remoteGitServerManager,
-					this.credentialsProvider);
-
-			String tagsetRevision = 
-				gitTagsetHandler.updateTagsetDefinition(projectId, tagsetDefinition);
-			
-			
-			return tagsetRevision;
-		}
-	}
 
 	public String removeCollection(AnnotationCollectionReference userMarkupCollectionReference) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -899,22 +913,9 @@ public class GitProjectHandler {
 		}	
 	}
 	
-	public String addTagsetToStagedAndCommit(String tagsetId, String commitMsg) throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
-			GitTagsetHandler gitTagsetHandler = 
-					new GitTagsetHandler(
-						localGitRepoManager, 
-						this.remoteGitServerManager,
-						this.credentialsProvider);
-			
-			return gitTagsetHandler.addAllAndCommit(projectId, tagsetId, commitMsg, true);
-		}		
-	}
-	
 	public String addTagsetSubmoduleToStagedAndCommit(String tagsetId, String commitMsg) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			Path relativePath = Paths.get(TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId);
+			Path relativePath = Paths.get(TAGSETS_DIRECTORY_NAME, tagsetId);
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
@@ -950,7 +951,7 @@ public class GitProjectHandler {
 					 GitProjectManager.getProjectRootRepositoryName(projectId));
 			List<Path> paths = localRepoManager.getSubmodulePaths()
 				.stream()
-				.filter(path -> path != null && path.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME))
+				.filter(path -> path != null && path.startsWith(TAGSETS_DIRECTORY_NAME))
 				.map(path -> 
 					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 						 .resolve(path))
@@ -1147,7 +1148,7 @@ public class GitProjectHandler {
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
 			Path tagsetsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
-					.resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
+					.resolve(TAGSETS_DIRECTORY_NAME);
 			Path collectionDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
 					.resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
 			Path sourceDocumentsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
@@ -1409,13 +1410,13 @@ public class GitProjectHandler {
 							localGitRepoManager.detach();
 						}
 					}
-					else if (deletedResourceConflict.getRelativeModulePath().startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
+					else if (deletedResourceConflict.getRelativeModulePath().startsWith(TAGSETS_DIRECTORY_NAME)) {
 						try {
 							GitTagsetHandler tagsetHandler = new GitTagsetHandler(
 									localGitRepoManager, this.remoteGitServerManager, this.credentialsProvider
 							);
 							String tagsetId = deletedResourceConflict.getRelativeModulePath().substring(
-									TAGSET_SUBMODULES_DIRECTORY_NAME.length() + 1
+									TAGSETS_DIRECTORY_NAME.length() + 1
 							);
 
 							deletedResourceConflict.setResourceId(tagsetId);
@@ -1470,71 +1471,6 @@ public class GitProjectHandler {
 		}
 	}
 
-	public List<TagsetConflict> getTagsetConflicts() throws Exception {
-		ArrayList<TagsetConflict> tagsetConflicts = new ArrayList<>();
-
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			localGitRepoManager.open(
-					projectId, GitProjectManager.getProjectRootRepositoryName(projectId)
-			);
-
-			Path tagsetDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
-					.resolve(TAGSET_SUBMODULES_DIRECTORY_NAME);
-
-			localGitRepoManager.detach();
-
-			if (tagsetDirPath.toFile().exists()) {
-				List<Path> paths = Files
-						.walk(tagsetDirPath, 1)
-						.filter(tagsetPath -> !tagsetDirPath.equals(tagsetPath))
-						.collect(Collectors.toList());
-
-				GitTagsetHandler gitTagsetHandler =	new GitTagsetHandler(
-						localGitRepoManager,
-						this.remoteGitServerManager,
-						this.credentialsProvider
-				);
-
-				for (Path tagsetPath : paths) {
-					if (tagsetDirPath.resolve(tagsetPath).resolve(Constants.DOT_GIT).toFile().exists()) {
-						String tagsetId = tagsetPath.getFileName().toString();
-						Status status = gitTagsetHandler.getStatus(projectId, tagsetId);
-
-						if (!status.getConflicting().isEmpty()) {
-							tagsetConflicts.add(
-									gitTagsetHandler.getTagsetConflict(projectId, tagsetId)
-							);
-						}
-					}
-				}
-			}
-		}
-
-		return tagsetConflicts;
-	}
-
-	public void resolveTagConflict(String tagsetId, TagConflict tagConflict) throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = 
-				new GitTagsetHandler(
-					localGitRepoManager, 
-					this.remoteGitServerManager,
-					this.credentialsProvider);
-
-			TagDefinition tagDefinition = tagConflict.getResolvedTagDefinition();
-			if (tagDefinition == null) {
-				gitTagsetHandler.removeTagDefinition(
-					projectId,
-					tagConflict.getDismissedTagDefinition());
-			}
-			else {
-				gitTagsetHandler.removeFromDeletedJournal(projectId, tagsetId, tagDefinition.getUuid());
-				gitTagsetHandler.createOrUpdateTagDefinition(
-						projectId, tagsetId, tagDefinition);
-			}
-
-		}		
-	}
 
 	// TODO: refactoring - see hasConflicts, almost identical code (same for tagsets and collections)
 	//       also: are we unnecessarily opening the root repo here?
@@ -1681,7 +1617,7 @@ public class GitProjectHandler {
 						readableSubmodules.add(relativeSubmodulePath);
 					}
 				}
-				else if (relativeSubmodulePath.startsWith(TAGSET_SUBMODULES_DIRECTORY_NAME)) {
+				else if (relativeSubmodulePath.startsWith(TAGSETS_DIRECTORY_NAME)) {
 					String tagsetId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 						 .resolve(relativeSubmodulePath)
 						 .getFileName()
@@ -1740,7 +1676,7 @@ public class GitProjectHandler {
 
 			Map<String, Path> submodulePathMapping = getSubmodulePaths(localRepoManager, ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
 			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME));
-			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, TAGSET_SUBMODULES_DIRECTORY_NAME));
+			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, TAGSETS_DIRECTORY_NAME));
 
 			for (Map.Entry<String, Path> entry : submodulePathMapping.entrySet()) {
 				if (!validSubmodulePaths.contains(entry.getKey())) {

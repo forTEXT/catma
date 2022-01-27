@@ -84,7 +84,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 		        		TagsetDefinition tagsetDefinition = 
 		        				new TagsetDefinition(
 		        						tagsetId, 
-		        						namespaceURI, new Version());
+		        						namespaceURI);
 		        		tagManager.addTagsetDefinition(tagsetDefinition);
 		        	}
 		        	namespacePrefixToTagsetIdMap.put(prefix, tagsetId);
@@ -100,7 +100,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        	TagsetDefinition tagsetDefinition = 
 	        			new TagsetDefinition(
 	        					defaultIntrinsicXmlTagsetId, 
-	        					null, new Version());
+	        					null);
 	        	
 	        	tagManager.addTagsetDefinition(tagsetDefinition);
 	        }

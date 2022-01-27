@@ -361,10 +361,14 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
+			File projectPath = Paths.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+			.resolve(gitlabManagerRestricted.getUsername())
+			.resolve(projectReference.getNamespace())
+			.resolve(projectReference.getProjectId())
+			.toFile();
 			GitProjectHandler gitProjectHandler = new GitProjectHandler(
-					gitlabManagerRestricted.getUser(), projectReference, jGitRepoManager, gitlabManagerRestricted);
-
-			gitProjectHandler.loadRolesPerResource(); // would usually happen when the project is opened via GraphWorktreeProject
+					gitlabManagerRestricted.getUser(), projectReference, projectPath, 
+					jGitRepoManager, gitlabManagerRestricted);
 
 			String revisionHash = gitProjectHandler.createSourceDocument(
 					sourceDocumentUuid,
