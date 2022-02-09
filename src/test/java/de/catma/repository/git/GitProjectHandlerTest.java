@@ -46,6 +46,7 @@ import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 public class GitProjectHandlerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
@@ -65,18 +66,10 @@ public class GitProjectHandlerTest {
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate GitlabManagerRestricted (using the corresponding impersonation token) & JGitRepoManager
-		Integer randomUserId = Integer.parseInt(RandomStringUtils.randomNumeric(3));
-		String username = String.format("testuser-%s", randomUserId);
-		String email = String.format("%s@catma.de", username);
-		String name = String.format("Test User %s", randomUserId);
-
-		gitlabManagerPrivileged = new GitlabManagerPrivileged();
-		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
-
-		EventBus mockEventBus = mock(EventBus.class);
-		BackgroundService mockBackgroundService = mock(BackgroundService.class);
-		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, mockBackgroundService, impersonationToken);
+		Pair<GitlabManagerRestricted, GitlabManagerPrivileged> result = 
+				GitlabTestHelper.createGitlabManagers();
+		this.gitlabManagerRestricted = result.getFirst();
+		this.gitlabManagerPrivileged = result.getSecond();
 	}
 
 	@AfterEach

@@ -198,7 +198,7 @@ public class GitProjectHandler {
 				rolesPerResource.put(tagsetId, RBACRole.OWNER);
 			}
 
-			return new Pair<>(gitTagsetHandler.getTagset(projectId, tagsetId), rootRevisionHash);
+			return new Pair<>(gitTagsetHandler.getTagset(tagsetId), rootRevisionHash);
 		}
 	}
 	
@@ -226,7 +226,7 @@ public class GitProjectHandler {
 
 			String projectRevision = 
 				gitTagsetHandler.createOrUpdateTagDefinition(
-						projectId, tagsetId, tagDefinition, commitMsg);
+						tagsetId, tagDefinition, commitMsg);
 
 			localGitRepoManager.push(credentialsProvider);
 
@@ -247,7 +247,7 @@ public class GitProjectHandler {
 					this.remoteGitServerManager.getEmail());
 
 			String projectRevision = 
-				gitTagsetHandler.removeTagDefinition(projectId, tagDefinition);
+				gitTagsetHandler.removeTagDefinition(tagDefinition);
 
 			localGitRepoManager.push(credentialsProvider);
 	
@@ -270,7 +270,7 @@ public class GitProjectHandler {
 					this.remoteGitServerManager.getEmail());
 
 			String projectRevision = 
-				gitTagsetHandler.removePropertyDefinition(projectId, tagsetDefinition, tagDefinition, propertyDefinition);
+				gitTagsetHandler.removePropertyDefinition(tagsetDefinition, tagDefinition, propertyDefinition);
 			
 			localGitRepoManager.push(credentialsProvider);
 
@@ -291,7 +291,7 @@ public class GitProjectHandler {
 					this.remoteGitServerManager.getEmail());
 
 			String projectRevision = 
-				gitTagsetHandler.updateTagsetDefinition(projectId, tagsetDefinition);
+				gitTagsetHandler.updateTagsetDefinition(tagsetDefinition);
 			
 			localGitRepoManager.push(credentialsProvider);
 
@@ -300,6 +300,26 @@ public class GitProjectHandler {
 		}
 	}
 	
+	public String removeTagset(TagsetDefinition tagset) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(
+					localGitRepoManager, 
+					this.projectPath,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail());
+
+			String projectRevision = gitTagsetHandler.removeTagsetDefinition(tagset);
+			
+			localGitRepoManager.push(credentialsProvider);
+
+			return projectRevision;		
+		}
+	}
+
 	
 	// markup collection operations
 	public String createMarkupCollection(String collectionId,
@@ -768,46 +788,6 @@ public class GitProjectHandler {
 	
 	public Set<Member> getProjectMembers() throws IOException {
 		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
-	}
-
-	public void removeTagset(TagsetDefinition tagset) throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String tagsetId = tagset.getUuid();
-			
-			GitTagsetHandler gitTagsetHandler = 
-					new GitTagsetHandler(
-						localGitRepoManager, 
-						this.remoteGitServerManager,
-						this.credentialsProvider);
-
-			MergeResult mergeResult = gitTagsetHandler.synchronizeBranchWithRemoteMaster(
-				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH,
-				projectId, tagsetId, hasPermission(
-						getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE));
-			//TODO: handle mergeresult -> take theirs
-			
-			
-			localGitRepoManager.detach();
-			
-			// open the project root repo
-			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-	
-			// remove the submodule only!!!
-			File targetSubmodulePath = Paths.get(
-					localGitRepoManager.getRepositoryWorkTree().toString(),
-					TAGSETS_DIRECTORY_NAME,
-					tagsetId
-			).toFile();
-	
-			localGitRepoManager.removeSubmodule(
-					targetSubmodulePath,
-					String.format(
-						"Removed Tagset %1$s with ID %2$s", 
-						tagset.getName(), 
-						tagset.getUuid()),
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail());
-		}		
 	}
 
 

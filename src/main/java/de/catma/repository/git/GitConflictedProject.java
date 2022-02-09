@@ -99,7 +99,7 @@ public class GitConflictedProject implements ConflictedProject {
 		for (TagsetConflict tagsetConflict : tagsetConflicts) {
 			if (!tagsetConflict.getTagConflicts().isEmpty() || tagsetConflict.isHeaderConflict()) {
 				for (TagConflict tagConflict : tagsetConflict.getTagConflicts()) {
-					gitProjectHandler.resolveTagConflict(tagsetConflict.getUuid(), tagConflict);
+//					gitProjectHandler.resolveTagConflict(tagsetConflict.getUuid(), tagConflict);
 				}
 
 				// TODO: why does this function not have a 'force' param, like the equivalent functions for collections and documents?

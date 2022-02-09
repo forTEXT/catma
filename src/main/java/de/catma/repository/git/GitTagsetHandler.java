@@ -101,7 +101,7 @@ class GitTagsetHandler {
 		return tagDefinitions;
 	}
 	
-	public TagsetDefinition getTagset(String projectId, String tagsetId) throws IOException {
+	public TagsetDefinition getTagset(String tagsetId) throws IOException {
 
 		String tagsetSubdir = String.format(
 				"%s/%s", GitProjectHandler.TAGSETS_DIRECTORY_NAME, tagsetId
@@ -132,7 +132,7 @@ class GitTagsetHandler {
 		return tagsetdefinition;
 	}
 
-	public ContentInfoSet getContentInfoSet(String projectId, String tagsetId) throws IOException {
+	public ContentInfoSet getContentInfoSet(String tagsetId) throws IOException {
 
 		String tagsetSubdir = String.format(
 				"%s/%s", GitProjectHandler.TAGSETS_DIRECTORY_NAME, tagsetId
@@ -159,7 +159,6 @@ class GitTagsetHandler {
 	/**
 	 * Creates a tag definition within the tagset identified by <code>tagsetId</code>.
 	 *
-	 * @param projectId the ID of the project that contains the tagset within which the tag definition should be created
 	 * @param tagsetId the ID of the tagset within which to create the tag definition
 	 * @param tagDefinition a {@link TagDefinition} object
 	 * @param commitMsg a commit message
@@ -167,7 +166,6 @@ class GitTagsetHandler {
 	 * @throws IOException if an error occurs while creating the tag definition
 	 */
 	public String createOrUpdateTagDefinition(
-			String projectId,
 			String tagsetId,
 			TagDefinition tagDefinition,
 			String commitMsg
@@ -202,7 +200,7 @@ class GitTagsetHandler {
 		return projectRevision;
 	}
 
-	public String removeTagDefinition(String projectId, TagDefinition tagDefinition) 
+	public String removeTagDefinition(TagDefinition tagDefinition) 
 			throws IOException {
 		
 		String tagsetSubdir = String.format(
@@ -259,7 +257,7 @@ class GitTagsetHandler {
 	}
 
 	public String removePropertyDefinition(
-			String projectId, TagsetDefinition tagsetDefinition,
+			TagsetDefinition tagsetDefinition,
 			TagDefinition tagDefinition, PropertyDefinition propertyDefinition) 
 		throws IOException {
 		
@@ -317,7 +315,7 @@ class GitTagsetHandler {
 		return projectRevision;
 	}
 
-	public String updateTagsetDefinition(String projectId, TagsetDefinition tagsetDefinition) throws Exception {
+	public String updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		String tagsetSubdir = String.format(
 				"%s/%s", 
 				GitProjectHandler.TAGSETS_DIRECTORY_NAME, 
@@ -350,6 +348,34 @@ class GitTagsetHandler {
 				this.email);
 
 		return projectRevision;
+	}
+
+
+	public String removeTagsetDefinition(TagsetDefinition tagset) throws IOException {
+		String tagsetSubdir = String.format(
+				"%s/%s", 
+				GitProjectHandler.TAGSETS_DIRECTORY_NAME, 
+				tagset.getUuid()
+		);
+
+		File targetTagsetDefinitionsFolderAbsolutePath = Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				tagsetSubdir
+		).toFile();
+		
+		String projectRevision = this.localGitRepositoryManager.removeAndCommit(
+				targetTagsetDefinitionsFolderAbsolutePath, 
+				false, // do not delete the parent folder
+				String.format(
+					"Removing Tagset %1$s with ID %2$s", 
+					tagset.getName(), 
+					tagset.getUuid()),
+				this.username,
+				this.email);
+		
+			
+		return projectRevision;
+		
 	}
 
 }

@@ -720,7 +720,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			if (!CATMAPropertyKey.devPreventPush.getValue(false)) {
 				
 				String currentBranch = this.gitApi.getRepository().getBranch();
-				if ((branch.equals(Constants.MASTER) && !currentBranch.equals(Constants.MASTER))
+				if ((branch != null && branch.equals(Constants.MASTER) && !currentBranch.equals(Constants.MASTER))
 					|| (branch == null && !currentBranch.equals(this.username))) {
 					throw new IOException(
 							String.format(
