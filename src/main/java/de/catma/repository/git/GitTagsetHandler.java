@@ -40,6 +40,19 @@ class GitTagsetHandler {
 	}
 
 
+	/**
+	 * Creates a Tagset with the given parameters. 
+	 * The localGitRepositoryManager needs to be attached to a Project git
+	 * repository!
+	 * 
+	 * @param tagsetFolder The folder of the new Tagset.
+	 * @param tagsetId The ID of the new Tagset.
+	 * @param name The name of the new Tagset.
+	 * @param description The description of the new Tagset.
+	 * @param forkedFromCommitURL An optional source URL when the Tagset is based on a fork.
+	 * @return the new revision hash of the Project
+	 * @throws IOException in case of errors
+	 */
 	public String create(File tagsetFolder,
 						 String tagsetId,
 						 String name,
@@ -107,10 +120,11 @@ class GitTagsetHandler {
 				"%s/%s", GitProjectHandler.TAGSETS_DIRECTORY_NAME, tagsetId
 		);
 
-		File tagsetHeaderFile = new File(
-			this.projectDirectory,
-			tagsetSubdir + "/" + HEADER_FILE_NAME
-		);
+		File tagsetHeaderFile = Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				tagsetSubdir,
+				HEADER_FILE_NAME
+		).toFile();
 
 		String serialized = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);
 		GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
@@ -247,9 +261,13 @@ class GitTagsetHandler {
 				targetTagDefinitionsFolderAbsolutePath, 
 				!StringUtils.isEmpty(tagDefinition.getParentUuid()), // delete empty parent tag directory
 				String.format(
-					"Removing Tag %1$s with ID %2$s", 
+					"Removing Tag %1$s with ID %2$s "
+					+ "from Tagset %3$s with ID %4$s "
+					+ "and corresponding Annotations", 
 					tagDefinition.getName(), 
-					tagDefinition.getUuid()),
+					tagDefinition.getUuid(),
+					gitTagsetHeader.getName(),
+					tagDefinition.getTagsetDefinitionUuid()),
 				this.username,
 				this.email);
 				
@@ -367,7 +385,8 @@ class GitTagsetHandler {
 				targetTagsetDefinitionsFolderAbsolutePath, 
 				false, // do not delete the parent folder
 				String.format(
-					"Removing Tagset %1$s with ID %2$s", 
+					"Removing Tagset %1$s with ID %2$s "
+					+ "and corresponding Annotations", 
 					tagset.getName(), 
 					tagset.getUuid()),
 				this.username,

@@ -42,10 +42,10 @@ public class AnnotationCollection {
 	private ContentInfoSet contentInfoSet;
 	private TagLibrary tagLibrary;
 	private List<TagReference> tagReferences;
-	private String revisionHash;
 	private String sourceDocumentId;
-	private String sourceDocumentRevisionHash;
-	
+	private String forkedFromCommitURL;
+	private String responsableUser;
+
 	/**
 	 * @param id the identifier of the collections (depends on the repository)
 	 * @param uuid the CATMA uuid, see {@link de.catma.util.IDGenerator}
@@ -54,21 +54,24 @@ public class AnnotationCollection {
 	 */
 	public AnnotationCollection(
 			String uuid, ContentInfoSet contentInfoSet, TagLibrary tagLibrary, 
-			String sourceDocumentId, String sourceDocumentRevisionHash) {
+			String sourceDocumentId, String forkedFromCommitURL,
+			String responsableUser) {
 		this(uuid ,contentInfoSet, tagLibrary, new ArrayList<TagReference>(), 
-				sourceDocumentId, sourceDocumentRevisionHash);
+				sourceDocumentId, forkedFromCommitURL, responsableUser);
 	}
 	
 	public AnnotationCollection(
 			String uuid, ContentInfoSet contentInfoSet, TagLibrary tagLibrary, List<TagReference> tagReferences,
-			String sourceDocumentId, String sourceDocumentRevisionHash) {
+			String sourceDocumentId, String forkedFromCommitURL,
+			String responsableUser) {
 		this.uuid = uuid;
 		this.contentInfoSet = contentInfoSet;
 		this.tagLibrary = tagLibrary;
 		this.tagReferences = new ArrayList<TagReference>();
 		this.tagReferences.addAll(tagReferences);
 		this.sourceDocumentId = sourceDocumentId;
-		this.sourceDocumentRevisionHash = sourceDocumentRevisionHash;
+		this.forkedFromCommitURL = forkedFromCommitURL;
+		this.responsableUser = responsableUser;
 	}
 
 	/**
@@ -199,12 +202,21 @@ public class AnnotationCollection {
 		this.tagLibrary = tagLibrary;
 	}
 
-	public String getRevisionHash() {
-		return this.revisionHash;
-	}
 
-	public void setRevisionHash(String revisionHash) {
-		this.revisionHash = revisionHash;
+	public String getForkedFromCommitURL() {
+		return forkedFromCommitURL;
+	}
+	
+	public void setForkedFromCommitURL(String forkedFromCommitURL) {
+		this.forkedFromCommitURL = forkedFromCommitURL;
+	}
+	
+	public String getResponsableUser() {
+		return responsableUser;
+	}
+	
+	public void setResponsableUser(String responsableUser) {
+		this.responsableUser = responsableUser;
 	}
 	
 	/**
@@ -330,7 +342,4 @@ public class AnnotationCollection {
 		return sourceDocumentId;
 	}
 	
-	public String getSourceDocumentRevisionHash() {
-		return sourceDocumentRevisionHash;
-	}
 }

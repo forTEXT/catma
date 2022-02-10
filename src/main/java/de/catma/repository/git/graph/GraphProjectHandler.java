@@ -1,6 +1,13 @@
 package de.catma.repository.git.graph;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.google.common.collect.Multimap;
+
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.ProgressListener;
@@ -8,17 +15,18 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
-import de.catma.tag.*;
-
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Supplier;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
 
 public interface GraphProjectHandler {
 
 	interface CollectionsSupplier {
-		List<AnnotationCollection> get(TagLibrary tagLibrary);
+		List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException;
 	}
 
 	void ensureProjectRevisionIsLoaded(
@@ -82,7 +90,7 @@ public interface GraphProjectHandler {
 			String rootRevisionHash, PropertyDefinition propertyDefinition, TagDefinition tag
 	) throws Exception;
 
-	void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds, String collectionRevisionHash) throws Exception;
+	void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds) throws Exception;
 
 	void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception;
 

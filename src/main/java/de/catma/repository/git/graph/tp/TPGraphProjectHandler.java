@@ -544,8 +544,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds,
-			String collectionRevisionHash) throws Exception {
+	public void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds) throws Exception {
 		logger.info("Removing " + tagInstanceIds.size() + " Annotations, graph size: " + graph);
 		
 		GraphTraversalSource g = graph.traversal();

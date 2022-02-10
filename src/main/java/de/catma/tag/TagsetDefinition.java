@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,7 +38,6 @@ import java.util.stream.Stream;
  */
 public class TagsetDefinition implements Iterable<TagDefinition> {
 	
-	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private String uuid;
 	private String name;
 

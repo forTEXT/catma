@@ -434,46 +434,33 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	protected void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
-		String tagsetRevisionHash = gitProjectHandler.updateTagset(tagsetDefinition);
-		
 		String oldRootRevisionHash = this.rootRevisionHash;
-		
-		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
-			tagsetDefinition.getUuid(), 
-			String.format("Updated metadata of Tagset %1$s with ID %2$s", 
-					tagsetDefinition.getName(), tagsetDefinition.getUuid()));
+
+		this.rootRevisionHash = gitProjectHandler.updateTagset(tagsetDefinition);
 		
 		graphProjectHandler.updateTagset(this.rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
-		// remove Annotations
+
+		String oldRootRevisionHash = this.rootRevisionHash;
+		// collect Annotations
 		Multimap<String, String> annotationIdsByCollectionId =
 			graphProjectHandler.getAnnotationIdsByCollectionId(this.rootRevisionHash, tagsetDefinition);
 		
+		// remove Tagset and Annotations from repo and commit
+		this.rootRevisionHash = 
+				gitProjectHandler.removeTagsetAndAnnotations(
+						tagsetDefinition, annotationIdsByCollectionId);
+		
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
-			// TODO: check permissions if commit is allowed, if that is not the case skip git removal
-			String collectionRevisionHash = gitProjectHandler.removeTagInstancesAndCommit(
-				collectionId, annotationIdsByCollectionId.get(collectionId), 
-				String.format(
-						"Annotations removed, "
-						+ "caused by the removal of Tagset %1$s with ID %2$s", 
-						tagsetDefinition.getName(),
-						tagsetDefinition.getUuid()));
-			
-			gitProjectHandler.addCollectionToStaged(collectionId);
-			
 			graphProjectHandler.removeTagInstances(
 				this.rootRevisionHash, collectionId,
-				annotationIdsByCollectionId.get(collectionId), 
-				collectionRevisionHash);
+				annotationIdsByCollectionId.get(collectionId));
 		}
 		
-		String oldRootRevisionHash = this.rootRevisionHash;
-		gitProjectHandler.removeTagset(tagsetDefinition);
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
-		graphProjectHandler.removeTagset(this.rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
+		graphProjectHandler.removeTagset(
+				this.rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void addPropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
@@ -512,22 +499,22 @@ public class GraphWorktreeProject implements IndexedProject {
 			PropertyDefinition propertyDefinition, 
 			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 		
-		// remove AnnotationProperties
+		// collect Annotations
 		Multimap<String, TagReference> annotationIdsByCollectionId =
 			graphProjectHandler.getTagReferencesByCollectionId(
 					this.rootRevisionHash, propertyDefinition, tagDefinition);
 		
-		for (String collectionId : annotationIdsByCollectionId.keySet()) {
-			// TODO: check permissions if commit is allowed, if that is not the case skip git update
-			
-			gitProjectHandler.addCollectionToStagedAndCommit(
-					collectionId,
-					String.format(
+		gitProjectHandler.addCollectionsToStagedAndCommit(
+				annotationIdsByCollectionId.keySet(),
+				String.format(
 						"Autocommitting changes before performing an update of Annotations "
-						+ "as part of a Property Definition deletion operation",
-						propertyDefinition.getName()),
-					false);
-			
+						+ "as part of the deletion of the Property Definition %1$s with ID %2$s",
+						propertyDefinition.getName(),
+						propertyDefinition.getUuid()),
+				false);
+		
+		
+		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			Collection<TagReference> tagReferences = 
 					annotationIdsByCollectionId.get(collectionId);
 			Set<TagInstance> tagInstances = 
@@ -562,8 +549,8 @@ public class GraphWorktreeProject implements IndexedProject {
 				propertyDefinition.getUuid());
 		}
 		
-		String tagsetRevision = gitProjectHandler.removePropertyDefinition(
-				propertyDefinition, tagDefinition, tagsetDefinition);
+		String tagsetRevision = gitProjectHandler.removePropertyDefinitionAndAnnotations(
+				propertyDefinition, tagDefinition, tagsetDefinition, annotationIdsByCollectionId);
 		
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
@@ -664,52 +651,32 @@ public class GraphWorktreeProject implements IndexedProject {
 				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 	
-	private void removeTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+	private void removeTagDefinition(
+			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 
-		// remove Annotations
+		String oldRootRevisionHash = this.rootRevisionHash;
+
+		// collect Annotations
 		Multimap<String, String> annotationIdsByCollectionId =
 			graphProjectHandler.getAnnotationIdsByCollectionId(this.rootRevisionHash, tagDefinition);
 		
+		// remove Tag and Annotations from repo and commit
+		this.rootRevisionHash = 
+				gitProjectHandler.removeTagAndAnnotations(
+						tagDefinition, annotationIdsByCollectionId);
+				
+		// remove Annotations from index
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
-			// TODO: check permissions if commit is allowed, if that is not the case skip git removal
-			String collectionRevisionHash = gitProjectHandler.removeTagInstancesAndCommit(
-				collectionId, annotationIdsByCollectionId.get(collectionId), 
-				String.format(
-						"Annotations removed, "
-						+ "caused by the removal of Tag %1$s with ID %2$s "
-						+ "from Tagset %3$s with ID %4$s", 
-						tagDefinition.getName(),
-						tagDefinition.getUuid(),
-						tagsetDefinition.getName(),
-						tagsetDefinition.getUuid()));
-			
-			gitProjectHandler.addCollectionToStaged(collectionId);
-			
 			graphProjectHandler.removeTagInstances(
 				this.rootRevisionHash, collectionId,
-				annotationIdsByCollectionId.get(collectionId), 
-				collectionRevisionHash);
+				annotationIdsByCollectionId.get(collectionId));
 		}
 		
-		// remove Tag
-		String tagsetRevision = gitProjectHandler.removeTag(tagDefinition);
-
-		// commit Project
-		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
-				tagsetDefinition.getUuid(),
-				String.format(
-						"Removed Tag %1$s with ID %2$s "
-								+ "from Tagset %3$s with ID %4$s "
-								+ "and corresponding Annotations",
-								tagDefinition.getName(),
-								tagDefinition.getUuid(),
-								tagsetDefinition.getName(),
-								tagsetDefinition.getUuid()));
-		
+		// remove Tag from index
 		graphProjectHandler.removeTagDefinition(
 				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 			
+		// fire annotation change events for each Collection
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.tagReferencesChanged.name(), 
@@ -987,7 +954,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		try {
 			String collectionId = idGenerator.generateCollectionId();
 			
-			String umcRevisionHash = gitProjectHandler.createMarkupCollection(
+			String umcRevisionHash = gitProjectHandler.createAnnotationCollection(
 						collectionId, 
 						name, 
 						null, //description
@@ -1046,6 +1013,9 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void update(AnnotationCollection userMarkupCollection, List<TagReference> tagReferences) {
 		try {
+			// TODO: check that the tag instance is for the correct document
+			
+
 			if (userMarkupCollection.getTagReferences().containsAll(
 					tagReferences)) {
 				gitProjectHandler.addOrUpdate(
@@ -1087,6 +1057,9 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void update(
 			AnnotationCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
+		// TODO: check that the tag instance is for the correct document
+		
+
 		try {
 			for (Property property : properties) {
 				tagInstance.addUserDefinedProperty(property);
@@ -1114,18 +1087,10 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void update(
 			AnnotationCollectionReference collectionReference, 
 			ContentInfoSet contentInfoSet) throws Exception {
-		String collectionRevision = 
-			gitProjectHandler.updateCollection(collectionReference);
-		collectionReference.setRevisionHash(collectionRevision);
-		
 		String oldRootRevisionHash = this.rootRevisionHash;
-		
-		// project commit
-		this.rootRevisionHash = gitProjectHandler.addCollectionSubmoduleToStagedAndCommit(
-			collectionReference.getId(), 
-			String.format("Updated metadata of Collection %1$s with ID %2$s", 
-					collectionReference.getName(), collectionReference.getId()),
-			false);
+
+		this.rootRevisionHash = 
+			gitProjectHandler.updateCollection(collectionReference);
 		
 		graphProjectHandler.updateCollection(
 			this.rootRevisionHash, collectionReference, oldRootRevisionHash);		
@@ -1209,7 +1174,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		try {
 			SourceDocument sourceDocument = 
 					getSourceDocument(importAnnotationCollection.getSourceDocumentId());
-			String umcRevisionHash = gitProjectHandler.createMarkupCollection(
+			String umcRevisionHash = gitProjectHandler.createAnnotationCollection(
 					importAnnotationCollection.getId(), 
 					importAnnotationCollection.getName(), 
 					importAnnotationCollection.getContentInfoSet().getDescription(), //description

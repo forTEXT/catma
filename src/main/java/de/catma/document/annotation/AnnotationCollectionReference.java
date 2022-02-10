@@ -29,30 +29,31 @@ import de.catma.document.source.ContentInfoSet;
 public class AnnotationCollectionReference {
 	
 	private String id;
-	private String revisionHash;
 	private ContentInfoSet contentInfoSet;
 	private String sourceDocumentId;
-	private String sourceDocumentRevisiohHash;
+	private String forkedFromCommitURL;
+	private String responsableUser;
 	
 	public AnnotationCollectionReference(AnnotationCollection annotationCollection) {
 		this(annotationCollection.getId(),
-				annotationCollection.getRevisionHash(),
 				annotationCollection.getContentInfoSet(),
 				annotationCollection.getSourceDocumentId(),
-				annotationCollection.getRevisionHash());
+				annotationCollection.getForkedFromCommitURL(),
+				annotationCollection.getResponsableUser());
 	}
 	
 	public AnnotationCollectionReference(
-		String id, String revisionHash, 
+		String id,
 		ContentInfoSet contentInfoSet, 
 		String sourceDocumentId,
-		String sourceDocumentRevisiohHash) {
+		String forkedFromCommitURL,
+		String responsableUser) {
 		super();
 		this.id = id;
-		this.revisionHash = revisionHash;
 		this.contentInfoSet = contentInfoSet;
 		this.sourceDocumentId = sourceDocumentId;
-		this.sourceDocumentRevisiohHash = sourceDocumentRevisiohHash;
+		this.forkedFromCommitURL = forkedFromCommitURL;
+		this.responsableUser = responsableUser;
 	}
 
 	@Override
@@ -107,19 +108,23 @@ public class AnnotationCollectionReference {
 		return true;
 	}
 	
-	public String getRevisionHash() {
-		return this.revisionHash;
-	}
-	
-	public void setRevisionHash(String revisionHash) {
-		this.revisionHash = revisionHash;
-	}
-
 	public String getSourceDocumentId() {
 		return sourceDocumentId;
 	}
 
-	public String getSourceDocumentRevisiohHash() {
-		return sourceDocumentRevisiohHash;
+	public String getForkedFromCommitURL() {
+		return forkedFromCommitURL;
+	}
+	
+	public void setForkedFromCommitURL(String forkedFromCommitURL) {
+		this.forkedFromCommitURL = forkedFromCommitURL;
+	}
+	
+	public String getResponsableUser() {
+		return responsableUser;
+	}
+	
+	public void setResponsableUser(String responsableUser) {
+		this.responsableUser = responsableUser;
 	}
 }

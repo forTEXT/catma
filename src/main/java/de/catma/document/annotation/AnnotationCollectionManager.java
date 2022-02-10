@@ -310,10 +310,11 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 			.stream()
 			.filter(collection -> collection.containsTag(tag))
 			.map(collection -> new AnnotationCollectionReference(
-				collection.getUuid(), collection.getRevisionHash(), 
+				collection.getUuid(), 
 				collection.getContentInfoSet(),
 				collection.getSourceDocumentId(),
-				collection.getSourceDocumentRevisionHash()))
+				collection.getForkedFromCommitURL(),
+				collection.getResponsableUser()))
 			.collect(Collectors.toSet());
 			
 	}
