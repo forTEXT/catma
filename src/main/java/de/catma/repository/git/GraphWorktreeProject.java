@@ -448,9 +448,9 @@ public class GraphWorktreeProject implements IndexedProject {
 		Multimap<String, String> annotationIdsByCollectionId =
 			graphProjectHandler.getAnnotationIdsByCollectionId(this.rootRevisionHash, tagsetDefinition);
 		
-		// remove Tagset and Annotations from repo and commit
+		// remove Tagset and affected Annotations from repo and commit
 		this.rootRevisionHash = 
-				gitProjectHandler.removeTagsetAndAnnotations(
+				gitProjectHandler.removeTagset(
 						tagsetDefinition, annotationIdsByCollectionId);
 		
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
@@ -463,27 +463,21 @@ public class GraphWorktreeProject implements IndexedProject {
 				this.rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
 	}
 
-	private void addPropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
-		
-		TagsetDefinition tagsetDefinition = 
-			tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
-		
-		String tagsetRevision = gitProjectHandler.createOrUpdateTag(
-			tagsetDefinition.getUuid(), 
-			tagDefinition,
-			String.format("Added Property Definition %1$s with ID %2$s to Tag %3$s with ID %4$s",
-				propertyDefinition.getName(),
-				propertyDefinition.getUuid(),
-				tagDefinition.getName(),
-				tagDefinition.getUuid()));
+	private void addPropertyDefinition(
+			PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
 		
 		String oldRootRevisionHash = this.rootRevisionHash;
 
-		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
+		TagsetDefinition tagsetDefinition = 
+			tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
+		
+		this.rootRevisionHash = gitProjectHandler.createOrUpdateTag(
 			tagsetDefinition.getUuid(), 
+			tagDefinition,
 			String.format(
-				"Added Property Definition %1$s with ID %2$s to Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
+				"Added Property Definition %1$s with ID %2$s "
+				+ "to Tag %3$s with ID %4$s "
+				+ "in Tagset %5$s with ID %6$s",
 				propertyDefinition.getName(),
 				propertyDefinition.getUuid(),
 				tagDefinition.getName(),
@@ -492,7 +486,8 @@ public class GraphWorktreeProject implements IndexedProject {
 				tagsetDefinition.getUuid()));
 		
 		graphProjectHandler.addPropertyDefinition(
-			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, 
+			oldRootRevisionHash);
 	}
 
 	private void removePropertyDefinition(
@@ -507,13 +502,13 @@ public class GraphWorktreeProject implements IndexedProject {
 		gitProjectHandler.addCollectionsToStagedAndCommit(
 				annotationIdsByCollectionId.keySet(),
 				String.format(
-						"Autocommitting changes before performing an update of Annotations "
+						"Auto-committing changes before performing an update of Annotations "
 						+ "as part of the deletion of the Property Definition %1$s with ID %2$s",
 						propertyDefinition.getName(),
 						propertyDefinition.getUuid()),
 				false);
 		
-		
+		// delete Annotations Properties in affected Annotations
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			Collection<TagReference> tagReferences = 
 					annotationIdsByCollectionId.get(collectionId);
@@ -526,6 +521,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			tagInstances.forEach(
 				tagInstance -> tagInstance.removeUserDefinedProperty(propertyDefinition.getUuid()));
 			
+			// save updates to git project
 			for (TagInstance tagInstance : tagInstances) {
 				gitProjectHandler.addOrUpdate(
 					collectionId, 
@@ -535,118 +531,76 @@ public class GraphWorktreeProject implements IndexedProject {
 					tagManager.getTagLibrary());
 			}
 			
-			String collectionRevisionHash = 
-				gitProjectHandler.addCollectionToStagedAndCommit(
-					collectionId,
-					String.format(
-						"Annotation Properties removed, caused by the removal of Tag Property %1$s ", 
-						propertyDefinition.getName()),
-					false);
-			
+			// save updates to index
 			graphProjectHandler.removeProperties(
-				this.rootRevisionHash, 
-				collectionId, collectionRevisionHash, 
-				propertyDefinition.getUuid());
+				this.rootRevisionHash, collectionId, propertyDefinition.getUuid());
 		}
 		
-		String tagsetRevision = gitProjectHandler.removePropertyDefinitionAndAnnotations(
-				propertyDefinition, tagDefinition, tagsetDefinition, annotationIdsByCollectionId);
-		
 		String oldRootRevisionHash = this.rootRevisionHash;
+		// remove Property Definition from git project
+		this.rootRevisionHash = gitProjectHandler.removePropertyDefinition(
+				propertyDefinition, tagDefinition, tagsetDefinition, 
+				annotationIdsByCollectionId.keySet());
 		
-		this.rootRevisionHash = 
-				gitProjectHandler.commitProject(
-					String.format(
-						"Removed Property Definition %1$s with ID %2$s "
-						+ "from Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s", 
-						propertyDefinition.getName(),
-						propertyDefinition.getUuid(),
-						tagDefinition.getName(),
-						tagDefinition.getUuid(),
-						tagsetDefinition.getName(),
-						tagsetDefinition.getUuid()));
-		
+		// remove PropertyDefinition from index
 		graphProjectHandler.removePropertyDefinition(
-			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, 
+			oldRootRevisionHash);
 	}
 
 	private void updatePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
 		
+		String oldRootRevisionHash = this.rootRevisionHash;
+
 		TagsetDefinition tagsetDefinition = 
 			tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
 		
-		String tagsetRevision = gitProjectHandler.createOrUpdateTag(
+		this.rootRevisionHash = gitProjectHandler.createOrUpdateTag(
 				tagsetDefinition.getUuid(), tagDefinition,
 				String.format(
-					"Updated Property Definition %1$s with ID %2$s in Tag %3$s with ID %4$s",
+					"Updated Property Definition %1$s with ID %2$s "
+					+ "in Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
 					propertyDefinition.getName(),
 					propertyDefinition.getUuid(),
 					tagDefinition.getName(),
-					tagDefinition.getUuid()));
-		
-		String oldRootRevisionHash = this.rootRevisionHash;
-
-		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
-			tagsetDefinition.getUuid(), 
-			String.format(
-				"Updated Property Definition %1$s with ID %2$s in Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
-				propertyDefinition.getName(),
-				propertyDefinition.getUuid(),
-				tagDefinition.getName(),
-				tagDefinition.getUuid(),
-				tagsetDefinition.getName(),
-				tagsetDefinition.getUuid()));
-		
+					tagDefinition.getUuid(),
+					tagsetDefinition.getName(),
+					tagsetDefinition.getUuid()));
+				
 		graphProjectHandler.createOrUpdatePropertyDefinition(
 			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
-		String tagsetRevision = 
-			gitProjectHandler.createOrUpdateTag(
-					tagsetDefinition.getUuid(), tagDefinition,
-					String.format(
-						"Added Tag %1$s with ID %2$s",
-						tagDefinition.getName(),
-						tagDefinition.getUuid()));
 		String oldRootRevisionHash = this.rootRevisionHash;
-		
-		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
-			tagsetDefinition.getUuid(), 
-			String.format(
-				"Added Tag %1$s with ID %2$s to Tagset %3$s with ID %4$s",
-				tagDefinition.getName(),
-				tagDefinition.getUuid(),
-				tagsetDefinition.getName(),
-				tagsetDefinition.getUuid()));
+
+		this.rootRevisionHash = 
+			gitProjectHandler.createOrUpdateTag(
+				tagsetDefinition.getUuid(), tagDefinition,
+				String.format(
+						"Added Tag %1$s with ID %2$s to Tagset %3$s with ID %4$s",
+						tagDefinition.getName(),
+						tagDefinition.getUuid(),
+						tagsetDefinition.getName(),
+						tagsetDefinition.getUuid()));
 		
 		graphProjectHandler.addTagDefinition(
 				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void updateTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
-		String tagsetRevision = gitProjectHandler.createOrUpdateTag(
+		String oldRootRevisionHash = this.rootRevisionHash;
+
+		this.rootRevisionHash = gitProjectHandler.createOrUpdateTag(
 			tagsetDefinition.getUuid(), 
 			tagDefinition,
-			String.format(
-				"Updated Tag %1$s with ID %2$s",
-				tagDefinition.getName(),
-				tagDefinition.getUuid()));
-		
-		String oldRootRevisionHash = this.rootRevisionHash;
-		
-		// project commit
-		this.rootRevisionHash = gitProjectHandler.addTagsetSubmoduleToStagedAndCommit(
-			tagsetDefinition.getUuid(), 
 			String.format(
 				"Updated Tag %1$s with ID %2$s in Tagset %3$s with ID %4$s",
 				tagDefinition.getName(),
 				tagDefinition.getUuid(),
 				tagsetDefinition.getName(),
 				tagsetDefinition.getUuid()));
-		
+
 		graphProjectHandler.updateTagDefinition(
 				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
@@ -686,7 +640,8 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
-		String projectRevisionHash = gitProjectHandler.createTagset(
+		String oldRootRevisionHash = this.rootRevisionHash;
+		this.rootRevisionHash = gitProjectHandler.createTagset(
 				tagsetDefinition.getUuid(), 
 				tagsetDefinition.getName(), 
 				tagsetDefinition.getDescription(),
@@ -694,9 +649,6 @@ public class GraphWorktreeProject implements IndexedProject {
 		);
 		
 		tagsetDefinition.setResponsableUser(this.user.getIdentifier());
-
-		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 
 		graphProjectHandler.addTagset(
 				rootRevisionHash, tagsetDefinition, oldRootRevisionHash
@@ -764,32 +716,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	public String getProjectId() {
 		return projectReference.getProjectId();
 	}
-
-	@Override
-	public String getIdFromURI(URI uri) {
-		// TODO: is this really necessary?
-		if (uri.getScheme().toLowerCase().equals("file")) {
-			File file = new File(uri);
-			return file.getName();
-		}
-		else {
-			return new IDGenerator().generate();
-		}
-	}
-
-	/**
-	 * @deprecated still necessary for Source Document Wizard 
-	 */
-	@Override
-	@Deprecated
-	public String getFileURL(String sourceDocumentID, String... path) {
-		StringBuilder builder = new StringBuilder("file://");
-		for (String folder : path) {
-			builder.append(folder);
-		}
-		builder.append(sourceDocumentID);
-		return builder.toString();
-	}
 	
 	private URI getSourceDocumentURI(String sourceDocumentId) {
 		return Paths
@@ -807,12 +733,17 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException {
 		try {
-			File sourceTempFile = Paths.get(new File(this.tempDir).toURI()).resolve(sourceDocument.getUuid()).toFile();
+			File sourceTempFile = 
+					Paths.get(new File(this.tempDir).toURI())
+					.resolve(sourceDocument.getUuid())
+					.toFile();
 	
 			String convertedFilename = 
 					sourceDocument.getUuid() + "." + UTF8_CONVERSION_FILE_EXTENSION;
 
-			logger.info("start tokenizing sourcedocument");
+			logger.info(
+				String.format("Start tokenizing Document %1$s with ID %2$s", 
+						sourceDocument.toString(), sourceDocument.getUuid()));
 			
 			List<String> unseparableCharacterSequences = 
 					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
@@ -833,7 +764,11 @@ public class GraphWorktreeProject implements IndexedProject {
 			
 			final Map<String, List<TermInfo>> terms = termExtractor.getTerms();
 			
-			logger.info("tokenization finished");
+			logger.info(
+					String.format("Tokenizing finished: Document %1$s with ID %2$s", 
+							sourceDocument.toString(), sourceDocument.getUuid()));
+			
+			String oldRootRevisionHash = this.rootRevisionHash;
 			
 			try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
 				MediaType mediaType = 
@@ -842,7 +777,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				if (extension == null || extension.isEmpty()) {
 					extension = "unknown";
 				}
-				String sourceDocRevisionHash = gitProjectHandler.createSourceDocument(
+				this.rootRevisionHash = gitProjectHandler.createSourceDocument(
 					sourceDocument.getUuid(), 
 					originalFileInputStream,
 					sourceDocument.getUuid() 
@@ -861,20 +796,18 @@ public class GraphWorktreeProject implements IndexedProject {
 				contentHandler.setSourceDocumentInfo(
 					sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
 				sourceDocument.setSourceContentHandler(contentHandler);
+				sourceDocument.setResponsableUser(this.user.getIdentifier());
 				sourceDocument.setRevisionHash(sourceDocRevisionHash);
+
+				graphProjectHandler.addSourceDocument(
+						oldRootRevisionHash, this.rootRevisionHash,
+						sourceDocument,
+						getTokenizedSourceDocumentPath(sourceDocument.getUuid()));
 			}
 			
 			if (deleteTempFile) {
 				sourceTempFile.delete();
 			}
-
-			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-	
-			graphProjectHandler.addSourceDocument(
-				oldRootRevisionHash, this.rootRevisionHash,
-				sourceDocument,
-				getTokenizedSourceDocumentPath(sourceDocument.getUuid()));
 
 	        eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.CREATED));
 		}

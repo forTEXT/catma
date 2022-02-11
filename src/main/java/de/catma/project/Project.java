@@ -221,18 +221,6 @@ public interface Project {
 	
 	
 	public String getProjectId();
-	
-	/**
-	 * @param uri may be used for ID creation
-	 * @return an ID for the given URI, subsequent calls can produce different results
-	 */
-	public String getIdFromURI(URI uri);
-	/**
-	 * @param catmaID the {@link SourceDocument#getUuid()}
-	 * @param path a list of path elements
-	 * @return the constructed file url
-	 */
-	public String getFileURL(String sourceDocumentID, String... path);
 
 	/**
 	 * Inserts the given SourceDocument into the repository.

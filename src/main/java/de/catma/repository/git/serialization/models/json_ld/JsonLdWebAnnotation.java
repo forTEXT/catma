@@ -102,7 +102,7 @@ public class JsonLdWebAnnotation {
 						"%s%s/%s/%s/annotations/%s.json",
 						gitServerUrl.getPath(),
 						projectRootRepositoryName,
-						GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+						GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME,
 						userMarkupCollectionUuid,
 						tagInstanceUuid
 				)

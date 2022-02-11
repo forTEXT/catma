@@ -149,7 +149,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	public CreateRepositoryResponse createRepository(
 			String name, String description)
 			throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
 		try {

@@ -35,7 +35,7 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
-public class GitMarkupCollectionHandler {
+public class GitAnnotationCollectionHandler {
 	
 	private static final String HEADER_FILE_NAME = "header.json";
 	private static final String ANNNOTATIONS_DIR = "annotations";
@@ -46,7 +46,7 @@ public class GitMarkupCollectionHandler {
 	private final File projectDirectory;
 	private final String projectId;
 
-	public GitMarkupCollectionHandler(
+	public GitAnnotationCollectionHandler(
 			ILocalGitRepositoryManager localGitRepositoryManager, File projectDirectory,
 			String projectId,
 			String username, String email) {
@@ -98,7 +98,7 @@ public class GitMarkupCollectionHandler {
 
 		String collectionSubdir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
 				collectionId
 		);
 		
@@ -188,7 +188,7 @@ public class GitMarkupCollectionHandler {
 	public AnnotationCollectionReference getCollectionReference(String collectionId) throws Exception {
 		
 		String collectionSubdir = String.format(
-				"%s/%s", GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionId
+				"%s/%s", GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, collectionId
 		);
 		File markupCollectionHeaderFile = Paths.get(
 				this.projectDirectory.getAbsolutePath(),
@@ -233,7 +233,7 @@ public class GitMarkupCollectionHandler {
 		
 		String collectionSubdir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
 				collectionId
 		);
 		AtomicInteger counter = new AtomicInteger();
@@ -313,7 +313,7 @@ public class GitMarkupCollectionHandler {
 	public void removeTagInstances(String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
 		String collectionSubdir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
 				collectionId
 		);
 
@@ -333,7 +333,7 @@ public class GitMarkupCollectionHandler {
 	public String removeCollection(AnnotationCollectionReference collection) throws IOException {
 		String collectionSubDir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
 				collection.getId()
 		);
 
@@ -360,7 +360,7 @@ public class GitMarkupCollectionHandler {
 	public String updateCollection(AnnotationCollectionReference collectionRef) throws Exception {
 		String collectionSubDir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
 				collectionRef.getId()
 		);
 

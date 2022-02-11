@@ -323,9 +323,13 @@ class GitTagsetHandler {
 		String projectRevision = this.localGitRepositoryManager.addAndCommit(
 			targetPropertyDefinitionsFileAbsolutePath, 
 			serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8), 
-			String.format("Removed Property Definition %1$s with ID %2$s from Tag %3$s with ID %4$s",
+			String.format(
+				"Removed Property Definition %1$s with ID %2$s "
+				+ "from Tag %3$s with ID %4$s "
+				+ "in Tagset %5$s with ID %6$s ",
 				propertyDefinition.getName(), propertyDefinition.getUuid(),
-				tagDefinition.getName(), tagDefinition.getUuid()),
+				tagDefinition.getName(), tagDefinition.getUuid(),
+				tagsetDefinition.getName(), tagsetDefinition.getUuid()),
 			this.username,
 			this.email);
 		

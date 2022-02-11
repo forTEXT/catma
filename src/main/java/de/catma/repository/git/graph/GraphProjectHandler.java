@@ -80,7 +80,7 @@ public interface GraphProjectHandler {
 
 	void removeTagReferences(String rootRevisionHash, AnnotationCollection collection, List<TagReference> tagReferences) throws Exception;
 
-	void removeProperties(String rootRevisionHash, String collectionId, String collectionRevisionHash, String propertyDefId) throws Exception;
+	void removeProperties(String rootRevisionHash, String collectionId, String propertyDefId) throws Exception;
 
 	void updateProperties(String rootRevisionHash, AnnotationCollection collection, TagInstance tagInstance, Collection<Property> properties) throws Exception;
 

@@ -430,7 +430,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void removeProperties(String rootRevisionHash, String collectionId, String collectionRevisionHash,
+	public void removeProperties(String rootRevisionHash, String collectionId,
 			String propertyDefId) throws Exception {
 		
 		logger.info(
@@ -449,7 +449,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			"Finished removing Properties for PropertyDefinition ID " 
 				+ propertyDefId 
 				+ "in Collection ID " + collectionId 
-				+ " rev " + collectionRevisionHash + ", graph size: " + graph);
+				+ ", graph size: " + graph);
 	}
 
 	@Override

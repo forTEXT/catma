@@ -70,10 +70,10 @@ import de.catma.util.Pair;
 
 public class GitProjectHandler {
 
-	private Logger logger = Logger.getLogger(GitProjectHandler.class.getName());
+	private final Logger logger = Logger.getLogger(GitProjectHandler.class.getName());
 	
 	public static final String TAGSETS_DIRECTORY_NAME = "tagsets";
-	public static final String ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
+	public static final String ANNOTATION_COLLECTION_DIRECTORY_NAME = "collections";
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
 
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -87,8 +87,8 @@ public class GitProjectHandler {
 	@Deprecated
 	private Map<String, RBACRole> rolesPerResource;
 
-	private ProjectReference projectReference;
-	private File projectPath;
+	private final ProjectReference projectReference;
+	private final File projectPath;
 	
 	public GitProjectHandler(
 			User user, ProjectReference projectReference, 
@@ -269,11 +269,15 @@ public class GitProjectHandler {
 
 	public String removePropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition,
-			TagsetDefinition tagsetDefinition) throws IOException {
+			TagsetDefinition tagsetDefinition, Set<String> affectedCollectionIds) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
+			for (String collectionId : affectedCollectionIds) {
+				addCollectionToStaged(collectionId);
+			}
+			
 			GitTagsetHandler gitTagsetHandler = 
 				new GitTagsetHandler(
 					localGitRepoManager, 
@@ -282,7 +286,8 @@ public class GitProjectHandler {
 					this.remoteGitServerManager.getEmail());
 
 			String projectRevision = 
-				gitTagsetHandler.removePropertyDefinition(tagsetDefinition, tagDefinition, propertyDefinition);
+				gitTagsetHandler.removePropertyDefinition(
+						tagsetDefinition, tagDefinition, propertyDefinition);
 			
 			localGitRepoManager.push(credentialsProvider);
 
@@ -312,17 +317,17 @@ public class GitProjectHandler {
 		}
 	}
 	
-	public String removeTagsetAndAnnotations(
+	public String removeTagset(
 			TagsetDefinition tagset, 
-			Multimap<String, String> annotationIdsByCollectionId) throws Exception {
+			Multimap<String, String> affectedAnnotationIdsByCollectionId) throws Exception {
 		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
-			for (String collectionId : annotationIdsByCollectionId.keySet()) {
+			for (String collectionId : affectedAnnotationIdsByCollectionId.keySet()) {
 				removeTagInstances(
-						collectionId, annotationIdsByCollectionId.get(collectionId));
+						collectionId, affectedAnnotationIdsByCollectionId.get(collectionId));
 				
 				addCollectionToStaged(collectionId);
 			}
@@ -396,8 +401,11 @@ public class GitProjectHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			
-			GitMarkupCollectionHandler gitMarkupCollectionHandler = 
-					new GitMarkupCollectionHandler(
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
+			GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+					new GitAnnotationCollectionHandler(
 							localGitRepoManager, 
 							this.projectPath,
 							this.projectId,
@@ -406,7 +414,7 @@ public class GitProjectHandler {
 			);
 			File collectionFolder = Paths.get(
 					this.projectPath.getAbsolutePath(),
-					ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					ANNOTATION_COLLECTION_DIRECTORY_NAME,
 					collectionId
 			).toFile();
 
@@ -432,7 +440,7 @@ public class GitProjectHandler {
 		
 		File collectionsDir = Paths.get(
 				this.projectPath.getAbsolutePath(),
-				ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)
+				ANNOTATION_COLLECTION_DIRECTORY_NAME)
 			.toFile();
 		
 		if (!collectionsDir.exists()) {
@@ -442,8 +450,8 @@ public class GitProjectHandler {
 		File[] collectionDirs = 
 				collectionsDir.listFiles(file -> file.isDirectory());
 		
-		GitMarkupCollectionHandler gitMarkupCollectionHandler = 
-				new GitMarkupCollectionHandler(
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+				new GitAnnotationCollectionHandler(
 						this.localGitRepositoryManager, 
 						this.projectPath,
 						this.projectId,
@@ -475,7 +483,7 @@ public class GitProjectHandler {
 		ArrayList<AnnotationCollection> collections = new ArrayList<>();
 		File collectionsDir = Paths.get(
 				this.projectPath.getAbsolutePath(),
-				ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)
+				ANNOTATION_COLLECTION_DIRECTORY_NAME)
 			.toFile();
 		
 		if (!collectionsDir.exists()) {
@@ -485,8 +493,8 @@ public class GitProjectHandler {
 		File[] collectionDirs = 
 				collectionsDir.listFiles(file -> file.isDirectory());			
 
-		GitMarkupCollectionHandler gitMarkupCollectionHandler = 
-				new GitMarkupCollectionHandler(
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+				new GitAnnotationCollectionHandler(
 						this.localGitRepositoryManager, 
 						this.projectPath,
 						this.projectId,
@@ -530,7 +538,7 @@ public class GitProjectHandler {
 	}	
 	
 	private void addCollectionToStaged(String collectionId) throws IOException {
-		Path relativePath = Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionId);
+		Path relativePath = Paths.get(ANNOTATION_COLLECTION_DIRECTORY_NAME, collectionId);
 		this.localGitRepositoryManager.add(relativePath);
 	}
 	
@@ -556,8 +564,8 @@ public class GitProjectHandler {
 			String collectionId, Collection<TagReference> tagReferenceList, 
 			TagLibrary tagLibrary) throws IOException {
 		
-		GitMarkupCollectionHandler gitMarkupCollectionHandler = 
-				new GitMarkupCollectionHandler(
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+				new GitAnnotationCollectionHandler(
 						this.localGitRepositoryManager, 
 						this.projectPath,
 						this.projectId,
@@ -577,8 +585,8 @@ public class GitProjectHandler {
 
 	public void removeTagInstances(
 		String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
-		GitMarkupCollectionHandler gitMarkupCollectionHandler = 
-				new GitMarkupCollectionHandler(
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+				new GitAnnotationCollectionHandler(
 						this.localGitRepositoryManager, 
 						this.projectPath,
 						this.projectId,
@@ -591,8 +599,8 @@ public class GitProjectHandler {
 
 	public void removeTagInstance(
 		String collectionId, String deletedTagInstanceId) throws IOException {
-		GitMarkupCollectionHandler gitMarkupCollectionHandler = 
-				new GitMarkupCollectionHandler(
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+				new GitAnnotationCollectionHandler(
 						this.localGitRepositoryManager, 
 						this.projectPath,
 						this.projectId,
@@ -606,8 +614,8 @@ public class GitProjectHandler {
 	public String removeCollection(AnnotationCollectionReference userMarkupCollectionReference) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			
-			GitMarkupCollectionHandler gitMarkupCollectionHandler = 
-					new GitMarkupCollectionHandler(
+			GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+					new GitAnnotationCollectionHandler(
 							localGitRepoManager, 
 							this.projectPath,
 							this.projectId,
@@ -626,8 +634,8 @@ public class GitProjectHandler {
 
 	public String updateCollection(AnnotationCollectionReference userMarkupCollectionReference) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitMarkupCollectionHandler collectionHandler = 
-					new GitMarkupCollectionHandler(
+			GitAnnotationCollectionHandler collectionHandler = 
+					new GitAnnotationCollectionHandler(
 							localGitRepoManager, 
 							this.projectPath,
 							this.projectId,
@@ -645,134 +653,97 @@ public class GitProjectHandler {
 
 
 
-	// source document operations
+	// Document operations
 
 	/**
-	 * Creates a new source document within the project identified by <code>projectId</code>.
+	 * Creates a new Document within the Project.
 	 *
-	 * @param sourceDocumentId the ID of the source document to create. If none is provided, a new ID will be generated.
-	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original, unmodified source document
-	 * @param originalSourceDocumentFileName the file name of the original, unmodified source document
-	 * @param convertedSourceDocumentStream a {@link InputStream} object representing the converted, UTF-8 encoded source document
-	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source document
-	 * @param terms the collection of terms extracted from the converted source document
+	 * @param documentId the ID of the Document to create.
+	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original, unmodified document
+	 * @param originalSourceDocumentFileName the file name of the original, unmodified document
+	 * @param convertedSourceDocumentStream a {@link InputStream} object representing the converted, UTF-8 encoded Document
+	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded Document
+	 * @param terms the collection of terms extracted from the converted Document
 	 * @param tokenizedSourceDocumentFileName name of the file within which the terms/tokens should be stored in serialized form
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
 	 * @return the revisionHash
-	 * @throws IOException if an error occurs while creating the source document
+	 * @throws IOException if an error occurs while creating the Document
 	 */
 	public String createSourceDocument(
-			String sourceDocumentId,
+			String documentId,
 			InputStream originalSourceDocumentStream, String originalSourceDocumentFileName,
 			InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
 			Map<String, List<TermInfo>> terms, String tokenizedSourceDocumentFileName,
 			SourceDocumentInfo sourceDocumentInfo
 	) throws IOException {
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
-					localRepoManager,
-					this.remoteGitServerManager,
-					this.credentialsProvider
-			);
+		
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
 
-			// create the source document within the project
+
+			GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
+					localGitRepoManager, 
+					this.projectPath,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail());
+
+			File documentFolder = Paths.get(
+					this.projectPath.getAbsolutePath(),
+					SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+					documentId
+			).toFile();
+			
+			// create the Document within the project
 			String revisionHash = gitSourceDocumentHandler.create(
-					projectId, sourceDocumentId,
+					documentFolder, documentId,
 					originalSourceDocumentStream, originalSourceDocumentFileName,
 					convertedSourceDocumentStream, convertedSourceDocumentFileName,
 					terms, tokenizedSourceDocumentFileName,
 					sourceDocumentInfo
 			);
 
-			localRepoManager.open(projectId, sourceDocumentId);
-			localRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(credentialsProvider);
 
-			String remoteUri = localRepoManager.getRemoteUrl(null);
-			localRepoManager.close();
-
-			// open the project root repository
-			localRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-
-			// create the submodule
-			File targetSubmodulePath = Paths.get(
-					localRepoManager.getRepositoryWorkTree().getAbsolutePath(),
-					SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
-					sourceDocumentId
-			).toFile();
-			
 			sourceDocumentInfo.getTechInfoSet().setURI(
-					Paths.get(targetSubmodulePath.getAbsolutePath(), convertedSourceDocumentFileName).toUri()
+					Paths.get(
+							documentFolder.getAbsolutePath(), 
+							convertedSourceDocumentFileName).toUri()
 			);
 
-			// submodule files and the changed .gitmodules file are automatically staged
-			localRepoManager.addSubmodule(targetSubmodulePath, remoteUri, credentialsProvider);
 
 			String name = sourceDocumentInfo.getContentInfoSet().getTitle();
 			if ((name == null) || name.isEmpty()) {
 				name = "N/A";
 			}
 
-			localRepoManager.commit(
-					String.format("Added document \"%1$s\" with ID %2$s", name, sourceDocumentId),
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(),
-					false
-			);
-
-			localRepoManager.detach();
-
-			gitSourceDocumentHandler.checkout(
-					projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true
-			);
-
-			rolesPerResource.put(sourceDocumentId, RBACRole.OWNER);
-
 			return revisionHash;
 		}
 	}
 
-	public String updateSourceDocument(@Nonnull SourceDocument sourceDocument) throws IOException {
+	public String updateSourceDocument(SourceDocument sourceDocument) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-					localGitRepoManager, this.remoteGitServerManager, this.credentialsProvider
-			);
-			return gitSourceDocumentHandler.update(projectId, sourceDocument);
-		}
-	}
-
-	public String addSourceDocumentSubmoduleToStagedAndCommit(@Nonnull String sourceDocumentId, String commitMessage, boolean force) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			Path relativePath = Paths.get(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocumentId);
-			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-			localGitRepoManager.add(relativePath);
-			return localGitRepoManager.commit(commitMessage, remoteGitServerManager.getUsername(), remoteGitServerManager.getEmail(), force);
-		}
-	}
-
-	public String addSourceDocumentToStagedAndCommit(String sourceDocumentId, String commitMessage, boolean force) throws IOException {
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-					localRepoManager, remoteGitServerManager, credentialsProvider
-			);
-			return gitSourceDocumentHandler.addAllAndCommit(projectId, sourceDocumentId, commitMessage, force);
-		}
-	}
-
-	public void checkoutSourceDocumentDevBranchAndRebase(String sourceDocumentId) throws Exception {
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-					localRepoManager, remoteGitServerManager, credentialsProvider
-			);
-			gitSourceDocumentHandler.checkout(projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, false);
-			gitSourceDocumentHandler.rebaseToMaster(projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH);
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());	
+		
+			GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
+					localGitRepoManager, 
+					this.projectPath,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail());
+			String revisionHash = gitSourceDocumentHandler.update(sourceDocument);
+			
+			localGitRepoManager.push(credentialsProvider);
+			return revisionHash;
 		}
 	}
 
 	public String getRootRevisionHash() throws Exception {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			localRepoManager.open(
-				projectId,
-				GitProjectManager.getProjectRootRepositoryName(projectId));
+				projectReference.getNamespace(),
+				projectReference.getProjectId());
 			return localRepoManager.getRevisionHash();
 		}
 	}
@@ -780,8 +751,8 @@ public class GitProjectHandler {
 	public Path getSourceDocumentSubmodulePath(String sourceDocumentId) {
 		return Paths.get(
 			user.getIdentifier(), 
-			projectId, 
-			GitProjectManager.getProjectRootRepositoryName(projectId), 
+			projectReference.getNamespace(), 
+			projectReference.getProjectId(), 
 			SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
 			sourceDocumentId);
 	}
@@ -789,54 +760,38 @@ public class GitProjectHandler {
 	public List<SourceDocument> getDocuments() {
 		ArrayList<SourceDocument> documents = new ArrayList<>();
 		
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			
-			localRepoManager.open(
-					projectId,
-					GitProjectManager.getProjectRootRepositoryName(projectId));
+		File documentsDir = Paths.get(
+				this.projectPath.getAbsolutePath(),
+				SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME)
+			.toFile();
 		
-			List<Path> paths = localRepoManager.getSubmodulePaths()
-				.stream()
-				.filter(path -> path != null && path.startsWith(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME))
-				.map(path -> 
-					Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
-						 .resolve(path))
-				.collect(Collectors.toList());
+		if (!documentsDir.exists()) {
+			return documents;
+		}
 
-			localRepoManager.detach();
-			
-			GitSourceDocumentHandler gitSourceDocumentHandler = 
-				new GitSourceDocumentHandler(
-					localRepoManager, 
-					this.remoteGitServerManager,
-					this.credentialsProvider);
+		File[] documentDirs = 
+				documentsDir.listFiles(file -> file.isDirectory());			
 
-			for (Path sourceDocPath : paths) {
-				String sourceDocumentId = sourceDocPath.getFileName().toString();
-				if (hasPermission(getRoleForDocument(sourceDocumentId), RBACPermission.DOCUMENT_READ)) {
-					try {
-						documents.add(gitSourceDocumentHandler.open(projectId, sourceDocumentId));
-					} catch (Exception e) {
-						logger.log(
-							Level.SEVERE,
-							String.format(
-								"error loading Document %1$s for project %2$s",
-								sourceDocPath,
-								projectId), 
-							e);					
-					}
-				}
+		GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
+				this.localGitRepositoryManager, 
+				this.projectPath,
+				this.remoteGitServerManager.getUsername(),
+				this.remoteGitServerManager.getEmail());
+
+		for (File documentDir : documentDirs) {
+			String sourceDocumentId = documentDir.getName().toString();
+			try {
+				documents.add(gitSourceDocumentHandler.open(sourceDocumentId));
+			} catch (Exception e) {
+				logger.log(
+					Level.SEVERE,
+					String.format(
+						"error loading Document %1$s for Project %2$s",
+						documentDir,
+						projectId), 
+					e);					
 			}
 		}
-		catch (Exception e) {
-			logger.log(
-				Level.SEVERE,
-				String.format(
-					"error loading Documents for project %1$s",
-					projectId), 
-				e);					
-		}
-		
 		return documents;
 	}
 
@@ -845,10 +800,18 @@ public class GitProjectHandler {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			// open the project root repo
-			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
 			
-			return localGitRepoManager.commitWithSubmodules(msg, remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(), getReadableSubmodules(localGitRepoManager));
+			String revisionHash = localGitRepoManager.commit(
+					msg, 
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail(), 
+					false);
+			
+			localGitRepoManager.push(credentialsProvider);
+			
+			return revisionHash;
 		}
 	}
 
@@ -897,7 +860,7 @@ public class GitProjectHandler {
 	public String addCollectionSubmoduleToStagedAndCommit(
 			String collectionId, String commitMsg, boolean force) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			Path relativePath = Paths.get(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME, collectionId);
+			Path relativePath = Paths.get(ANNOTATION_COLLECTION_DIRECTORY_NAME, collectionId);
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
@@ -953,7 +916,7 @@ public class GitProjectHandler {
 			}
 
 			// collections
-			GitMarkupCollectionHandler collectionHandler = new GitMarkupCollectionHandler(
+			GitAnnotationCollectionHandler collectionHandler = new GitAnnotationCollectionHandler(
 					localGitRepoManager,
 					this.remoteGitServerManager,
 					this.credentialsProvider
@@ -996,8 +959,8 @@ public class GitProjectHandler {
 
 	public boolean hasUncommittedChanges() throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitMarkupCollectionHandler collectionHandler = 
-					new GitMarkupCollectionHandler(
+			GitAnnotationCollectionHandler collectionHandler = 
+					new GitAnnotationCollectionHandler(
 							localGitRepoManager, 
 							this.remoteGitServerManager,
 							this.credentialsProvider);
@@ -1052,8 +1015,8 @@ public class GitProjectHandler {
 	
 	public Status getStatus(AnnotationCollectionReference collectionReference) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitMarkupCollectionHandler collectionHandler = 
-					new GitMarkupCollectionHandler(
+			GitAnnotationCollectionHandler collectionHandler = 
+					new GitAnnotationCollectionHandler(
 						localGitRepoManager, 
 						this.remoteGitServerManager,
 						this.credentialsProvider);
@@ -1079,7 +1042,7 @@ public class GitProjectHandler {
 			Path tagsetsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
 					.resolve(TAGSETS_DIRECTORY_NAME);
 			Path collectionDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
-					.resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+					.resolve(ANNOTATION_COLLECTION_DIRECTORY_NAME);
 			Path sourceDocumentsDirPath = Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
 					.resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
 
@@ -1134,7 +1097,7 @@ public class GitProjectHandler {
 						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
 						.collect(Collectors.toList());
 
-				GitMarkupCollectionHandler gitCollectionHandler = new GitMarkupCollectionHandler(
+				GitAnnotationCollectionHandler gitCollectionHandler = new GitAnnotationCollectionHandler(
 						localGitRepoManager,
 						this.remoteGitServerManager,
 						this.credentialsProvider
@@ -1205,7 +1168,7 @@ public class GitProjectHandler {
 			 
 			Path collectionDirPath = 
 					Paths.get(localGitRepoManager.getRepositoryWorkTree().toURI())
-					.resolve(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+					.resolve(ANNOTATION_COLLECTION_DIRECTORY_NAME);
 
 			localGitRepoManager.detach();
 
@@ -1215,8 +1178,8 @@ public class GitProjectHandler {
 						.filter(collectionPath -> !collectionDirPath.equals(collectionPath))
 						.collect(Collectors.toList());
 				
-				GitMarkupCollectionHandler gitCollectionHandler = 
-						new GitMarkupCollectionHandler(
+				GitAnnotationCollectionHandler gitCollectionHandler = 
+						new GitAnnotationCollectionHandler(
 								localGitRepoManager, 
 								this.remoteGitServerManager,
 								this.credentialsProvider);
@@ -1244,7 +1207,7 @@ public class GitProjectHandler {
 			AnnotationConflict annotationConflict,
 			TagLibrary tagLibrary) throws Exception {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+			GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
 					localRepoManager, 
 					this.remoteGitServerManager,
 					this.credentialsProvider);
@@ -1269,8 +1232,8 @@ public class GitProjectHandler {
 
 	public void synchronizeCollectionWithRemote(String collectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitMarkupCollectionHandler collectionHandler = 
-					new GitMarkupCollectionHandler(
+			GitAnnotationCollectionHandler collectionHandler = 
+					new GitAnnotationCollectionHandler(
 						localGitRepoManager, 
 						this.remoteGitServerManager,
 						this.credentialsProvider);
@@ -1312,13 +1275,13 @@ public class GitProjectHandler {
 				localGitRepoManager.detach();
 
 				for (DeletedResourceConflict deletedResourceConflict : deletedResourceConflicts) {
-					if (deletedResourceConflict.getRelativeModulePath().startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)) {
+					if (deletedResourceConflict.getRelativeModulePath().startsWith(ANNOTATION_COLLECTION_DIRECTORY_NAME)) {
 						try {
-							GitMarkupCollectionHandler collectionHandler = new GitMarkupCollectionHandler(
+							GitAnnotationCollectionHandler collectionHandler = new GitAnnotationCollectionHandler(
 									localGitRepoManager, this.remoteGitServerManager, this.credentialsProvider
 							);
 							String collectionId = deletedResourceConflict.getRelativeModulePath().substring(
-									ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME.length() + 1
+									ANNOTATION_COLLECTION_DIRECTORY_NAME.length() + 1
 							);
 
 							deletedResourceConflict.setResourceId(collectionId);
@@ -1480,8 +1443,8 @@ public class GitProjectHandler {
 
 	public void checkoutCollectionDevBranchAndRebase(String collectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitMarkupCollectionHandler collectionHandler = 
-					new GitMarkupCollectionHandler(
+			GitAnnotationCollectionHandler collectionHandler = 
+					new GitAnnotationCollectionHandler(
 						localGitRepoManager, 
 						this.remoteGitServerManager,
 						this.credentialsProvider);
@@ -1536,7 +1499,7 @@ public class GitProjectHandler {
 						readableSubmodules.add(relativeSubmodulePath);
 					}
 				}
-				else if (relativeSubmodulePath.startsWith(ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME)) {
+				else if (relativeSubmodulePath.startsWith(ANNOTATION_COLLECTION_DIRECTORY_NAME)) {
 					String collectionId = Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 						 .resolve(relativeSubmodulePath)
 						 .getFileName()
@@ -1603,7 +1566,7 @@ public class GitProjectHandler {
 
 			ArrayList<Path> stalePaths = new ArrayList<>();
 
-			Map<String, Path> submodulePathMapping = getSubmodulePaths(localRepoManager, ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+			Map<String, Path> submodulePathMapping = getSubmodulePaths(localRepoManager, ANNOTATION_COLLECTION_DIRECTORY_NAME);
 			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME));
 			submodulePathMapping.putAll(getSubmodulePaths(localRepoManager, TAGSETS_DIRECTORY_NAME));
 
@@ -1792,6 +1755,8 @@ public class GitProjectHandler {
 			}
 		}
 	}
+	
+	// Comment operations  
 	
 	public List<Comment> getComments(String documentId) throws IOException {
 		return remoteGitServerManager.getComments(projectId, documentId);
