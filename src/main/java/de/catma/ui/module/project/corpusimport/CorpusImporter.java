@@ -290,7 +290,6 @@ public class CorpusImporter {
 													Collections.singletonList(
 														new TagsetDefinitionImportStatus(
 																extractedTagset, 
-																project.inProjectHistory(extractedTagset.getUuid()), 
 																project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
 											}
 											catch (Exception e) {

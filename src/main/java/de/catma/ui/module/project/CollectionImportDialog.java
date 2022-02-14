@@ -4,8 +4,6 @@ import java.util.List;
 
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.AbstractOrderedLayout;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -48,21 +46,13 @@ public class CollectionImportDialog extends AbstractOkCancelDialog<List<TagsetDe
 			
 			Label rowLabel = new Label("", ContentMode.HTML);
 			
-			if (!tagsetDefinitionImportStatus.isInProjectHistory()) {
+			if (!tagsetDefinitionImportStatus.isCurrent()) {
 				
 				String doImportText = 
 						String.format(
 								"<b>%1$s</b> is new to this Project and will be imported!", 
 								tagsetDefinitionImportStatus.getTagset().getName()); 
 
-				rowLabel.setValue(doImportText);
-			}
-			else if (!tagsetDefinitionImportStatus.isCurrent()) {
-				String doImportText = 
-						String.format("<b>%1$s</b> was part of this Project, but had been removed!<br />"
-						+ "Importing the Collection will re-add the removed Tagset and create a new version of it with the imported content.<br />"
-						+ "%1$s will be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
 				rowLabel.setValue(doImportText);
 			}
 			else {

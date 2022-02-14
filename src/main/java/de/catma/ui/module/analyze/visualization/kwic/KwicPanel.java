@@ -393,6 +393,9 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 					tagReferences,
 					collectionRef.getId());
 		}
+		
+		project.addAndCommitCollections(collectionRefsByDocId.values(), 
+				"Auto-Committing KWIC Annotations");
 	}
 
 	private void handleMaxMinRequest() {

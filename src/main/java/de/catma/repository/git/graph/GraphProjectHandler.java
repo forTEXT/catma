@@ -52,7 +52,6 @@ public interface GraphProjectHandler {
 			String rootRevisionHash,
 			String collectionId,
 			String name,
-			String umcRevisionHash,
 			SourceDocument document,
 			TagLibrary tagLibrary,
 			String oldRootRevisionHash
@@ -111,4 +110,6 @@ public interface GraphProjectHandler {
 	boolean hasDocument(String rootRevisionHash, String documentId);
 
 	Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagsetDefinition tagsetDefinition) throws Exception;
+
+	void updateProject(String oldRootRevisionHash, String rootRevisionHash) throws IOException;
 }

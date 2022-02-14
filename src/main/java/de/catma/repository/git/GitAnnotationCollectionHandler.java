@@ -98,7 +98,7 @@ public class GitAnnotationCollectionHandler {
 
 		String collectionSubdir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
 				collectionId
 		);
 		
@@ -188,7 +188,7 @@ public class GitAnnotationCollectionHandler {
 	public AnnotationCollectionReference getCollectionReference(String collectionId) throws Exception {
 		
 		String collectionSubdir = String.format(
-				"%s/%s", GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, collectionId
+				"%s/%s", GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, collectionId
 		);
 		File markupCollectionHeaderFile = Paths.get(
 				this.projectDirectory.getAbsolutePath(),
@@ -233,7 +233,7 @@ public class GitAnnotationCollectionHandler {
 		
 		String collectionSubdir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
 				collectionId
 		);
 		AtomicInteger counter = new AtomicInteger();
@@ -313,7 +313,7 @@ public class GitAnnotationCollectionHandler {
 	public void removeTagInstances(String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
 		String collectionSubdir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
 				collectionId
 		);
 
@@ -333,7 +333,7 @@ public class GitAnnotationCollectionHandler {
 	public String removeCollection(AnnotationCollectionReference collection) throws IOException {
 		String collectionSubDir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
 				collection.getId()
 		);
 
@@ -353,14 +353,30 @@ public class GitAnnotationCollectionHandler {
 				this.email);
 		
 			
-		return projectRevision;
-		
+		return projectRevision;		
 	}
-
-	public String updateCollection(AnnotationCollectionReference collectionRef) throws Exception {
+	
+	public void removeCollectionWithoutCommit(AnnotationCollectionReference collection) throws IOException {
 		String collectionSubDir = String.format(
 				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTION_DIRECTORY_NAME, 
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
+				collection.getId()
+		);
+
+		File targetCollectionFolderAbsolutePath = Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				collectionSubDir
+		).toFile();
+		
+		this.localGitRepositoryManager.remove(
+				targetCollectionFolderAbsolutePath); 
+	}
+	
+
+	public String updateCollection(AnnotationCollectionReference collectionRef) throws IOException {
+		String collectionSubDir = String.format(
+				"%s/%s", 
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
 				collectionRef.getId()
 		);
 

@@ -266,10 +266,13 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 
 	@Override
-	public Set<de.catma.user.Member> getProjectMembers(String projectId) throws IOException {
+	public Set<de.catma.user.Member> getProjectMembers(ProjectReference projectReference) throws IOException {
 		try {
-			Group group = restrictedGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
-			return restrictedGitLabApi.getGroupApi().getMembers(group.getId())
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project project = projectApi.getProject(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
+			return projectApi.getMembers(project.getId())
 					.stream()
 					.map(member -> new GitMember(member))
 					.collect(Collectors.toSet());

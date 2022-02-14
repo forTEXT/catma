@@ -20,7 +20,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
@@ -36,7 +35,6 @@ import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleInitCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
-import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoFilepatternException;
@@ -58,7 +56,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
-import org.eclipse.jgit.submodule.SubmoduleWalk.IgnoreSubmoduleMode;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
@@ -802,6 +799,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
+	@Deprecated
 	public MergeResult mergeWithDeletedByThemWorkaroundStrategyRecursive(String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `merge` on a detached instance");
@@ -1026,21 +1024,17 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public Status getStatus(boolean ignoreSubmodules) throws IOException {
+	public Status getStatus() throws IOException {
 		try {
 			if (!isAttached()) {
 				throw new IllegalStateException("Can't call `getStatus` on a detached instance");
 			}
 			
-			return gitApi.status().setIgnoreSubmodules(ignoreSubmodules?IgnoreSubmoduleMode.ALL:IgnoreSubmoduleMode.NONE).call();
+			return gitApi.status().call();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to retrieve the status", e);
 		}
-	}
-	@Override
-	public Status getStatus() throws IOException {
-		return getStatus(false);
 	}
 
 	@Override
@@ -1473,8 +1467,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			}
 			else {
 				commits = this.gitApi.log().addRange(
-						this.gitApi.getRepository().resolve("refs/remotes/origin/master"), 
-						this.gitApi.getRepository().resolve("refs/heads/master")).call();
+						this.gitApi.getRepository().resolve("refs/remotes/origin/" + username), 
+						this.gitApi.getRepository().resolve("refs/heads/" + username)).call();
 			}
 			
 			
@@ -1491,18 +1485,19 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	
 
 	@Override
-	public Set<String> verifyDeletedResources(Set<String> resourceIds) throws IOException {
+	public Set<String> getDeletedResourcesFromLog(
+			Set<String> resourceIds, String resourceDir) throws IOException {
 		try {
 			Set<String> result = new HashSet<String>();
-			ObjectId objectId = gitApi.getRepository().resolve("refs/heads/master");
+			ObjectId objectId = gitApi.getRepository().resolve("refs/heads/"+username);
 			if (objectId != null) {
 				Iterator<RevCommit> remoteCommitIterator =
-						gitApi.log().add(objectId).addPath(Constants.DOT_GIT_MODULES).call().iterator();
+						gitApi.log().add(objectId).addPath(resourceDir).call().iterator();
 				
 				while(remoteCommitIterator.hasNext()) {
 					RevCommit revCommit = remoteCommitIterator.next();
 					String fullMsg = revCommit.getFullMessage();
-					if (fullMsg.startsWith("Removed Document")) {
+					if (fullMsg.startsWith("Removing Document")) {
 						for (String resourceId : resourceIds) {
 							if (!result.contains(resourceId) && fullMsg.endsWith(resourceId)) {
 								result.add(resourceId);

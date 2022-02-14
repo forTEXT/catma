@@ -20,10 +20,8 @@ package de.catma.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -256,11 +254,6 @@ public interface Project {
 	 */
 	public SourceDocument getSourceDocument(String id) throws Exception;
 	public void delete(SourceDocument sourceDocument) throws Exception;
-	/**
-	 * @param umcRef
-	 * @return the SourceDocument that belongs to the given UserMarkupCollection
-	 */
-	public SourceDocument getSourceDocument(AnnotationCollectionReference umcRef);
 
 	public boolean hasDocument(String documentId) throws Exception;
 
@@ -326,14 +319,7 @@ public interface Project {
 	 * @return the Tag Manager for this repository
 	 */
 	public TagManager getTagManager();
-	
-	
-	/**
-	 * @param sourceDocument
-	 * @return the file object that belongs to the given SourceDocument
-	 */
-	public File getFile(SourceDocument sourceDocument);
-	
+		
 	public Set<Member> getProjectMembers() throws IOException;
 
 	public boolean hasUncommittedChanges() throws Exception;
@@ -370,9 +356,6 @@ public interface Project {
 
 	RBACRole getRoleOnProject() throws IOException;
 
-	void createUserMarkupCollectionWithAssignment(
-		String name, SourceDocument sourceDocument, Integer userId, RBACRole role);
-
 	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException;
 
 	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadAnnotationCollection(
@@ -380,8 +363,6 @@ public interface Project {
 
 	public void importCollection(
 		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList, AnnotationCollection annotationCollection) throws IOException;
-
-	boolean inProjectHistory(String resourceId) throws IOException;
 
 	void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
 
@@ -404,5 +385,8 @@ public interface Project {
 	void updateReply(Comment comment, Reply reply) throws IOException;
 
 	String getVersion();
+
+	public void addAndCommitCollections(
+			Collection<AnnotationCollectionReference> collectionReferences, String msg) throws IOException;
 
 }

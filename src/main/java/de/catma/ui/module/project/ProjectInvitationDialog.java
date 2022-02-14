@@ -160,7 +160,6 @@ public class ProjectInvitationDialog extends Window {
         documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name");
-//        	.setExpandRatio(1);
         
         documentGrid.setEnabled(false);
         
@@ -250,8 +249,6 @@ public class ProjectInvitationDialog extends Window {
 	    String regid = invitationTopic.addMessageListener(
 	    	new ProjectInvitationHandler(
 	    		UI.getCurrent(),
-	    		documentsForCollectionCreation.stream().collect(
-	    				Collectors.toMap(Resource::getResourceId, res -> res)),
 	    		projectInvitation,
 	    		project,
 	    		joinedTopic,

@@ -260,10 +260,10 @@ class GraphWriter {
 					((SourceDocument)doc).addUserMarkupCollectionReference(
 						new AnnotationCollectionReference(
 								collection.getUuid(),  
-								collection.getRevisionHash(),  
 								collection.getContentInfoSet(),  
 								collection.getSourceDocumentId(), 
-								collection.getSourceDocumentRevisionHash())));
+								collection.getForkedFromCommitURL(),
+								collection.getResponsableUser())));
 			Vertex collectionV = graph.addVertex(nt(MarkupCollection));
 			
 			collectionV.property("collectionId", collection.getId());

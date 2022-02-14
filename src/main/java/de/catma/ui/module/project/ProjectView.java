@@ -81,8 +81,8 @@ import de.catma.project.CommitInfo;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
-import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
+import de.catma.project.ProjectsManager;
 import de.catma.project.conflict.ConflictedProject;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
@@ -102,7 +102,6 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
 import de.catma.ui.component.HTMLNotification;
@@ -111,9 +110,9 @@ import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.dialog.GenericUploadDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
-import de.catma.ui.dialog.GenericUploadDialog;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.MembersChangedEvent;
@@ -1194,7 +1193,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 										Collections.singletonList(
 											new TagsetDefinitionImportStatus(
 													extractedTagset, 
-													project.inProjectHistory(extractedTagset.getUuid()), 
 													project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
 								}
 								catch (Exception e) {

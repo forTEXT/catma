@@ -19,7 +19,6 @@ import java.util.Properties;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.UserApi;
@@ -78,7 +77,7 @@ public class GitProjectHandlerTest {
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
@@ -123,7 +122,7 @@ public class GitProjectHandlerTest {
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
@@ -338,7 +337,7 @@ public class GitProjectHandlerTest {
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler

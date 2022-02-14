@@ -14,6 +14,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.common.collect.Maps;
 
+import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
@@ -115,7 +116,7 @@ public class GitSourceDocumentHandler {
 
 	public SourceDocument open(String documentId) throws IOException {
 		String documentSubDir = String.format(
-				"%s/%s", GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, documentId
+				"%s/%s", GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, documentId
 		);
 		File headerFile = Paths.get(
 				this.projectDirectory.getAbsolutePath(),
@@ -143,7 +144,7 @@ public class GitSourceDocumentHandler {
 	public String update(SourceDocument sourceDocument) throws IOException {
 		String documentSubDir = String.format(
 				"%s/%s", 
-				GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, 
+				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, 
 				sourceDocument.getUuid()
 		);
 		File headerFile = Paths.get(
@@ -179,5 +180,30 @@ public class GitSourceDocumentHandler {
 				this.username,
 				this.email
 		);
+	}
+	
+	public String removeDocument(SourceDocument document) throws IOException {
+		String documentSubDir = String.format(
+				"%s/%s", 
+				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, 
+				document.getUuid()
+		);
+
+		File documentFolderAbsolutePath = Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				documentSubDir
+		).toFile();
+		
+		String projectRevision = this.localGitRepositoryManager.removeAndCommit(
+				documentFolderAbsolutePath, 
+				false, // do not delete the parent folder
+				String.format(
+					"Removing Document %1$s with ID %2$s", 
+					document.toString(), 
+					document.getUuid()),
+				this.username,
+				this.email);
+			
+		return projectRevision;
 	}
 }

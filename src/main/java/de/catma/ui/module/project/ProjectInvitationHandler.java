@@ -1,10 +1,8 @@
 package de.catma.ui.module.project;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.hazelcast.core.ITopic;
@@ -18,13 +16,9 @@ import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.InvitationRequestMessage;
 import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.util.ColorConverter;
 
 public class ProjectInvitationHandler extends UIMessageListener<InvitationRequestMessage> {
 	
-	private final Map<String, DocumentResource> documentResourceByUuid;
-	private final Map<Integer, String> userId2Color = new HashMap<>();
-	private final Set<String> colors = ColorConverter.getColorNames();
 	private final Set<Integer> assignedUsers = new HashSet<>();
 	private final ProjectInvitation projectInvitation;
 	private final Project project;
@@ -34,14 +28,12 @@ public class ProjectInvitationHandler extends UIMessageListener<InvitationReques
 	
 	public ProjectInvitationHandler(
 			UI ui, 
-			Map<String, DocumentResource> documentResourceByUuid, 
 			ProjectInvitation projectInvitation, 
 			Project project,
 			ITopic<JoinedProjectMessage> joinedTopic, 
 			List<String> joinedUsers, 
 			ListSelect<String> joinedUsersConsole) {
 		super(ui);
-		this.documentResourceByUuid = documentResourceByUuid;
 		this.projectInvitation = projectInvitation;
 		this.project = project;
 		this.joinedTopic = joinedTopic;
@@ -62,46 +54,7 @@ public class ProjectInvitationHandler extends UIMessageListener<InvitationReques
 					project.assignOnProject(
 							() -> userId, 
 							RBACRole.forValue(projectInvitation.getDefaultRole()));
-					
-					if (projectInvitation.isCreateOwnCollection()) {
-						String color = userId2Color.get(userId);
-						
-						if (color == null && !colors.isEmpty()) {
-							color = colors.iterator().next();
-							colors.remove(color);
-							userId2Color.put(userId, color);
-						}
-						
-						for (String documentId : projectInvitation.getDocumentIds()) {
-							if (projectInvitation.getDefaultRole() < RBACRole.REPORTER.getAccessLevel()) {
-								// minimum role 
-								project.assignOnResource(
-										() -> userId, 
-										RBACRole.REPORTER, documentId);
-							}							
-							
-							DocumentResource docResource = 
-									(DocumentResource) documentResourceByUuid.get(documentId);
-							if (docResource != null) {
-								String collectionName = 
-									color 
-									+ " " 
-									+ message.getMessageObject().getName() 
-									+ " "
-									+ docResource.getName();
-								
-								// collection creation with minimum role assignment
-								project.createUserMarkupCollectionWithAssignment(
-									collectionName, 
-									docResource.getDocument(), 
-									projectInvitation.getDefaultRole() < RBACRole.ASSISTANT.getAccessLevel()?
-											userId:null,
-									RBACRole.ASSISTANT);
-							}
-							
-						}	
-					}
-					
+
 					joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
 					
 					joinedUsers.add(message.getMessageObject().getName());

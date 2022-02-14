@@ -12,7 +12,7 @@ import com.vaadin.ui.Component;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.GitProjectManager;
+import de.catma.repository.git.GitProjectsManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.sqlite.SqliteService;
@@ -77,7 +77,7 @@ public class Vaadin8InitializationService implements InitializationService {
 		IRemoteGitManagerRestricted api = loginService.getAPI();
 
 		if(api != null ){
-			GitProjectManager projectManager = new GitProjectManager(
+			GitProjectsManager projectManager = new GitProjectsManager(
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					api,
 					(projectId) -> {}, //noop deletion handler

@@ -111,10 +111,14 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        	new AnnotationCollection(
 	        		id,
 	        		new ContentInfoSet(
-	        			"", "Intrinsic Markup", "", DEFAULT_COLLECTION_TITLE), 
+	        			"", 
+	        			sourceDocument.toString() + " Intrinsic Markup", 
+	        			"", 
+	        			DEFAULT_COLLECTION_TITLE), 
 	        		tagManager.getTagLibrary(),
 	        		sourceDocument.getUuid(),
-	        		sourceDocument.getRevisionHash());
+	        		null,
+	        		null);
 	        
 	        scanElements(
 	        		contentBuilder, 

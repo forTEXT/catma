@@ -49,7 +49,7 @@ public class TagsetImportDialog extends AbstractOkCancelDialog<List<TagsetDefini
 			
 			CheckBox cbImport = new CheckBox(null, true);
 			
-			if (!tagsetDefinitionImportStatus.isInProjectHistory()) {
+			if (!tagsetDefinitionImportStatus.isCurrent()) {
 				
 				String doImportText = 
 						String.format(
@@ -59,28 +59,6 @@ public class TagsetImportDialog extends AbstractOkCancelDialog<List<TagsetDefini
 						String.format(
 								"<b>%1$s</b> will <b>NOT</b> be imported!", 
 								tagsetDefinitionImportStatus.getTagset().getName());
-				rowLabel.setValue(doImportText);
-				
-				cbImport.addValueChangeListener(event -> {
-					if (event.getValue()) {
-						rowLabel.setValue(doImportText);
-					}  
-					else {
-						rowLabel.setValue(doNotImportText);
-					}
-				});
-			}
-			else if (!tagsetDefinitionImportStatus.isCurrent()) {
-				String doImportText = 
-						String.format("<b>%1$s</b> was part of this Project, but had been removed!<br />"
-						+ "Importing it will re-add the removed Tagset and create a new version of it with the imported content.<br />"
-						+ "%1$s will be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
-				String doNotImportText = 
-					String.format("<b>%1$s</b> was part of this Project, but had been removed!<br />"
-						+ "Importing it will re-add the removed Tagset and create a new version of it with the imported content.<br />"
-						+ "%1$s will <b>NOT</b> be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
 				rowLabel.setValue(doImportText);
 				
 				cbImport.addValueChangeListener(event -> {

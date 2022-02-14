@@ -7,15 +7,17 @@ import de.catma.tag.TagsetDefinition;
 public class TagsetDefinitionImportStatus {
 	
 	private TagsetDefinition tagset;
-	private boolean inProjectHistory;
 	private boolean current;
 	private boolean doImport = true;
 	private Set<String> tagDefinitionIds;
 	
-	public TagsetDefinitionImportStatus(TagsetDefinition tagset, boolean inProjectHistory, boolean current) {
+	/**
+	 * @param tagset
+	 * @param current <code>true</code> if currently present in the Project
+	 */
+	public TagsetDefinitionImportStatus(TagsetDefinition tagset, boolean current) {
 		super();
 		this.tagset = tagset;
-		this.inProjectHistory = inProjectHistory;
 		this.current = current;
 	}
 
@@ -23,10 +25,9 @@ public class TagsetDefinitionImportStatus {
 		return tagset;
 	}
 
-	public boolean isInProjectHistory() {
-		return inProjectHistory;
-	}
-
+	/**
+	 * @return <code>true</code> if currently present in the Project, else <code>false</code>
+	 */
 	public boolean isCurrent() {
 		return current;
 	}

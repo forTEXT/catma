@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -179,7 +178,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	private Path getTokenizedSourceDocumentPath(String documentId) {
 		return Paths
 			.get(new File(CATMAPropertyKey.GraphDbGitMountBasePath.getValue()).toURI())
-			.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(documentId))
+			.resolve(gitProjectHandler.getSourceDocumentPath(documentId))
 			.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
 
@@ -200,20 +199,15 @@ public class GraphWorktreeProject implements IndexedProject {
 			logger.info(
 				String.format("Checking for conflicts in Project %1$s", projectReference.getProjectId()));
 			if (gitProjectHandler.hasConflicts()) {
-				gitProjectHandler.initAndUpdateSubmodules();
-
-				openProjectListener.conflictResolutionNeeded(
-						new GitConflictedProject(
-							projectReference,
-							gitProjectHandler, documentId -> getSourceDocumentURI(documentId)));
+				openProjectListener.failure(new IllegalStateException(
+						String.format(
+							"There are conflicts in Project %1$s with ID %2$s,"
+							+ "please contact our support.",
+							projectReference.getName(),
+							projectReference.getProjectId())));						
 			}
 			else {
-				
-				gitProjectHandler.initAndUpdateSubmodules();
-
-				gitProjectHandler.removeStaleSubmoduleDirectories();
-				
-				gitProjectHandler.ensureDevBranches();
+				gitProjectHandler.ensureUserBranch();
 				
 				gitProjectHandler.verifyCollections();
 				
@@ -268,26 +262,9 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void printStatus() {
 		try {
 			Status status = gitProjectHandler.getStatus();
-			
-			StatusPrinter.print(projectReference.toString(), status, System.out);
-			
-			for (TagsetDefinition tagset : gitProjectHandler.getTagsets()) {
-				status = gitProjectHandler.getStatus(tagset);
-				StatusPrinter.print(
-						"Tagset " + tagset.getName() + " #"+tagset.getUuid(), 
-						status, System.out);
-			}
-			
-			for (AnnotationCollectionReference collectionRef : gitProjectHandler.getDocuments().stream()
-					.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
-					.collect(Collectors.toList())) {
-				
-				status = gitProjectHandler.getStatus(collectionRef);
-				StatusPrinter.print(
-					"Collection " + collectionRef.toString() + " #" + collectionRef.getId(), 
-					status, System.out);
-				
-			}
+			StringBuilder builder = new StringBuilder();
+			StatusPrinter.print(projectReference.toString(), status, builder);
+			logger.info(builder.toString());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -659,11 +636,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void close() {
 		try {
 			if (!gitProjectHandler.hasConflicts()) {
-				commitAllChanges(
-					collectionRef -> String.format(
-							"Auto-committing Collection %1$s with ID %2$s on Project close",
-							collectionRef.getName(),
-							collectionRef.getId()),
+				commitChanges(
 					String.format(
 							"Auto-committing Project %1$s with ID %2$s on close", 
 							projectReference.getName(),
@@ -720,7 +693,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	private URI getSourceDocumentURI(String sourceDocumentId) {
 		return Paths
 		.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
-		.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(sourceDocumentId))
+		.resolve(gitProjectHandler.getSourceDocumentPath(sourceDocumentId))
 		.resolve(sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION)
 		.toUri();
 	}
@@ -796,8 +769,6 @@ public class GraphWorktreeProject implements IndexedProject {
 				contentHandler.setSourceDocumentInfo(
 					sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
 				sourceDocument.setSourceContentHandler(contentHandler);
-				sourceDocument.setResponsableUser(this.user.getIdentifier());
-				sourceDocument.setRevisionHash(sourceDocRevisionHash);
 
 				graphProjectHandler.addSourceDocument(
 						oldRootRevisionHash, this.rootRevisionHash,
@@ -821,23 +792,13 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) throws Exception {
-		String sourceDocumentRevision = gitProjectHandler.updateSourceDocument(sourceDocument);
-		sourceDocument.setRevisionHash(sourceDocumentRevision);
-
+		
 		String oldRootRevisionHash = this.rootRevisionHash;
 
-		// project commit
-		this.rootRevisionHash = gitProjectHandler.addSourceDocumentSubmoduleToStagedAndCommit(
-				sourceDocument.getUuid(),
-				String.format(
-						"Updated metadata of document \"%s\" with ID %s",
-						sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle(),
-						sourceDocument.getUuid()
-				),
-				false
-		);
-
-		graphProjectHandler.updateSourceDocument(this.rootRevisionHash, sourceDocument, oldRootRevisionHash);
+		this.rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocument);
+		
+		graphProjectHandler.updateSourceDocument(
+				this.rootRevisionHash, sourceDocument, oldRootRevisionHash);
 
 		eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.UPDATED));
 	}
@@ -864,50 +825,44 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void delete(SourceDocument sourceDocument) throws Exception {
-		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocument.getUserMarkupCollectionRefs())) {
-			delete(collectionRef);
-		}
-		documentCache.invalidate(sourceDocument.getUuid());
 		String oldRootRevisionHash = this.rootRevisionHash;
-		gitProjectHandler.removeDocument(sourceDocument);
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
-		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocument, oldRootRevisionHash);	
+		this.rootRevisionHash = gitProjectHandler.removeDocument(sourceDocument);
+		
+		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocument.getUserMarkupCollectionRefs())) {
+			graphProjectHandler.removeCollection(this.rootRevisionHash, collectionRef, oldRootRevisionHash);	
+			
+			eventBus.post(
+				new CollectionChangeEvent(
+					collectionRef, sourceDocument, ChangeType.DELETED));
+		}
+		
+		documentCache.invalidate(sourceDocument.getUuid());
+		
+		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocument, oldRootRevisionHash);
+		
         eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.DELETED));
 	}
 
 	@Override
-	public SourceDocument getSourceDocument(AnnotationCollectionReference umcRef) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void createUserMarkupCollectionWithAssignment(
-			String name, SourceDocument sourceDocument, Integer userId, RBACRole role) {
+	public void createUserMarkupCollection(
+			String name, SourceDocument sourceDocument) {
 		try {
 			String collectionId = idGenerator.generateCollectionId();
 			
-			String umcRevisionHash = gitProjectHandler.createAnnotationCollection(
+			String oldRootRevisionHash = this.rootRevisionHash;
+			this.rootRevisionHash = gitProjectHandler.createAnnotationCollection(
 						collectionId, 
 						name, 
 						null, //description
 						sourceDocument.getUuid(), 
-						sourceDocument.getRevisionHash());
+						null);
 			
-			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-
 			graphProjectHandler.addCollection(
 				rootRevisionHash, 
-				collectionId, name, umcRevisionHash, 
+				collectionId, name,  
 				sourceDocument,
 				tagManager.getTagLibrary(),
 				oldRootRevisionHash);
-			
-			if ((userId != null) && !role.equals(RBACRole.OWNER)) {
-				assignOnResource(() -> userId, 
-						role, collectionId);		
-			}
 			
 			eventBus.post(
 				new CollectionChangeEvent(
@@ -924,16 +879,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void createUserMarkupCollection(String name, SourceDocument sourceDocument) {
-		createUserMarkupCollectionWithAssignment(
-				name, 
-				sourceDocument, 
-				null, // no assignment
-				null // no assignment
-		);
-	}
-
-	@Override
 	public AnnotationCollection getUserMarkupCollection(AnnotationCollectionReference userMarkupCollectionReference)
 			throws IOException {
 		try {
@@ -946,14 +891,24 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void update(AnnotationCollection userMarkupCollection, List<TagReference> tagReferences) {
 		try {
-			// TODO: check that the tag instance is for the correct document
-			
+			if (!tagReferences.isEmpty()) {				
+				URI annotationTarget = tagReferences.iterator().next().getTarget();
+				URI collectionTarget = 
+					getSourceDocumentURI(userMarkupCollection.getSourceDocumentId()); 
+				if (!annotationTarget.equals(collectionTarget)) {
+					throw new IllegalStateException(
+						String.format(
+							"Annotations don't reference the same "
+							+ "Document as the Collection: %1$s != %2$s",
+							annotationTarget.toString(), 
+							collectionTarget.toString()));
+				}
+			}
 
 			if (userMarkupCollection.getTagReferences().containsAll(
 					tagReferences)) {
 				gitProjectHandler.addOrUpdate(
 						userMarkupCollection.getUuid(), tagReferences, tagManager.getTagLibrary());
-				//TODO: check update
 				graphProjectHandler.addTagReferences(
 						GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
 				propertyChangeSupport.firePropertyChange(
@@ -986,13 +941,21 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 	}
 
+	public void addAndCommitCollections(
+			Collection<AnnotationCollectionReference> collectionReferences, String msg) throws IOException {
+		String oldRootRevisionHash = this.rootRevisionHash;
+		
+		this.rootRevisionHash = gitProjectHandler.addCollectionsToStagedAndCommit(
+			collectionReferences.stream().map(ref -> ref.getId()).collect(Collectors.toSet()), 
+			msg, false);
+		
+		this.graphProjectHandler.updateProject(oldRootRevisionHash, this.rootRevisionHash);
+	}
+
 	@Override
 	public void update(
 			AnnotationCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
-		// TODO: check that the tag instance is for the correct document
-		
-
 		try {
 			for (Property property : properties) {
 				tagInstance.addUserDefinedProperty(property);
@@ -1002,7 +965,8 @@ public class GraphWorktreeProject implements IndexedProject {
 					collection.getTagReferences(tagInstance), 
 					tagManager.getTagLibrary());
 			graphProjectHandler.updateProperties(
-					GraphWorktreeProject.this.rootRevisionHash, collection, tagInstance, properties);
+					GraphWorktreeProject.this.rootRevisionHash, 
+					collection, tagInstance, properties);
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.propertyValueChanged.name(),
 					tagInstance, properties);
@@ -1059,14 +1023,11 @@ public class GraphWorktreeProject implements IndexedProject {
 		TagLibrary importedLibrary =
 			tagLibrarySerializationHandler.deserialize(null, inputStream);
 		
-		List<String> resourceIds = gitProjectHandler.getResourceIds();
 		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = new ArrayList<>();
 		for (TagsetDefinition tagset : importedLibrary) {
-			boolean inProjectHistory = resourceIds.contains(tagset.getUuid());
-			boolean current = 
-				inProjectHistory && (getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid()) != null);
+			boolean current = (getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid()) != null);
 			tagsetDefinitionImportStatusList.add(
-				new TagsetDefinitionImportStatus(tagset, inProjectHistory, current));
+				new TagsetDefinitionImportStatus(tagset, current));
 		}
 		
 		String collectionId = idGenerator.generate();
@@ -1080,7 +1041,8 @@ public class GraphWorktreeProject implements IndexedProject {
 				collectionId, tagLibrarySerializationHandler.getTeiDocument().getContentInfoSet(),
 				tagManager.getTagLibrary(), deserializer.getTagReferences(),
 				document.getUuid(),
-				document.getRevisionHash());
+				null,
+				this.user.getIdentifier());
 		
 		return new Pair<>(annotationCollection, tagsetDefinitionImportStatusList);
 	}
@@ -1107,21 +1069,19 @@ public class GraphWorktreeProject implements IndexedProject {
 		try {
 			SourceDocument sourceDocument = 
 					getSourceDocument(importAnnotationCollection.getSourceDocumentId());
-			String umcRevisionHash = gitProjectHandler.createAnnotationCollection(
+			
+			String oldRootRevisionHash = this.rootRevisionHash;
+			this.rootRevisionHash = gitProjectHandler.createAnnotationCollection(
 					importAnnotationCollection.getId(), 
 					importAnnotationCollection.getName(), 
 					importAnnotationCollection.getContentInfoSet().getDescription(), //description
 					importAnnotationCollection.getSourceDocumentId(), 
-					importAnnotationCollection.getSourceDocumentRevisionHash());
-		
-			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-	
+					null);
 			
 			graphProjectHandler.addCollection(
 				rootRevisionHash, 
 				importAnnotationCollection.getId(), 
-				importAnnotationCollection.getName(), umcRevisionHash, 
+				importAnnotationCollection.getName(),
 				sourceDocument,
 				tagManager.getTagLibrary(),
 				oldRootRevisionHash);
@@ -1162,11 +1122,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 	
 	@Override
-	public boolean inProjectHistory(String resourceId) throws IOException {
-		return gitProjectHandler.getResourceIds().contains(resourceId);
-	}
-
-	@Override
 	public List<TagsetDefinitionImportStatus> loadTagLibrary(InputStream inputStream) throws IOException {
 		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory(this.rootRevisionHash);
 		factory.setTagManager(new TagManager(new TagLibrary()));
@@ -1175,14 +1130,11 @@ public class GraphWorktreeProject implements IndexedProject {
 		TagLibrary importedLibrary =
 			tagLibrarySerializationHandler.deserialize(null, inputStream);
 		
-		List<String> resourceIds = gitProjectHandler.getResourceIds();
 		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = new ArrayList<>();
 		for (TagsetDefinition tagset : importedLibrary) {
-			boolean inProjectHistory = resourceIds.contains(tagset.getUuid());
-			boolean current = 
-				inProjectHistory && (getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid()) != null);
+			boolean current = (getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid()) != null);
 			tagsetDefinitionImportStatusList.add(
-				new TagsetDefinitionImportStatus(tagset, inProjectHistory, current));
+				new TagsetDefinitionImportStatus(tagset, current));
 		}
 		return tagsetDefinitionImportStatusList;
 	}
@@ -1195,7 +1147,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				TagsetDefinition tagset = tagsetDefinitionImportStatus.getTagset();
 				
 				// new Tagset
-				if (!tagsetDefinitionImportStatus.isInProjectHistory()) {
+				if (!tagsetDefinitionImportStatus.isCurrent()) {
 					try {
 						tagManagerListenersEnabled = false;
 						try {
@@ -1217,61 +1169,6 @@ public class GraphWorktreeProject implements IndexedProject {
 						
 						importTagHierarchy(tag, tagset, tagset);
 					}					
-				}
-				// removed, but exists in version history
-				else if (!tagsetDefinitionImportStatus.isCurrent()) {
-					
-					String oldRootRevisionHash = this.rootRevisionHash;
-					
-					Pair<TagsetDefinition, String> result = 
-							gitProjectHandler.cloneAndAddTagset(
-								tagset.getUuid(), 
-								tagset.getName(),
-								String.format(
-										"Re-Added Tagset %1$s with ID %2$s", 
-										tagset.getName(), tagset.getUuid()));
-					
-					TagsetDefinition oldTagset = result.getFirst();
-					this.rootRevisionHash = result.getSecond();
-					
-					// remove old Tags
-					for (TagDefinition tagDefinition : oldTagset.getRootTagDefinitions()) {
-						gitProjectHandler.removeTag(tagDefinition);
-						oldTagset.remove(tagDefinition);
-					}
-					
-					try {
-						// add empty Tagset
-						graphProjectHandler.addTagset(
-								this.rootRevisionHash, oldTagset, oldRootRevisionHash);
-					
-						
-						try {
-							tagManagerListenersEnabled = false;
-							tagManager.addTagsetDefinition(tagset);
-						}
-						finally {
-							tagManagerListenersEnabled = true;
-						}						
-						
-						// add imported Tags
-						for (TagDefinition tag : tagset.getRootTagDefinitions()) {
-							tagManager.addTagDefinition(oldTagset, tag);
-							
-							importTagHierarchy(tag, tagset, oldTagset);
-						}						
-						
-						// update meta data
-						oldTagset.setName(tagset.getName());
-						
-						updateTagsetDefinition(oldTagset);
-					} catch (Exception e) {
-						throw new IOException(
-								String.format(
-									"Import of Tagset %1$s failed! The import has been aborted.",
-									tagset.getName()), 
-								e);
-					}
 				}
 				// exists already in project
 				else {
@@ -1345,12 +1242,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public File getFile(SourceDocument sourceDocument) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Set<Member> getProjectMembers() throws IOException {
 		return gitProjectHandler.getProjectMembers();
 	}
@@ -1367,27 +1258,9 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void commitChanges(String commitMsg) throws Exception {
-		commitAllChanges(collectionRef -> commitMsg, commitMsg);
-	}
-
-	private void commitAllChanges(
-		Function<AnnotationCollectionReference, String> collectionCcommitMsgProvider, 
-		String projectCommitMsg) throws Exception {
-		List<AnnotationCollectionReference> collectionRefs = 
-				getSourceDocuments().stream()
-				.flatMap(doc -> doc.getUserMarkupCollectionRefs().stream())
-				.collect(Collectors.toList());
-		
-		for (AnnotationCollectionReference collectionRef : collectionRefs) {
-			
-			gitProjectHandler.addCollectionToStagedAndCommit(
-				collectionRef.getId(), 
-				collectionCcommitMsgProvider.apply(collectionRef),
-				false);
-		}
-		
-		gitProjectHandler.commitProject(projectCommitMsg);
-		
+		String oldRootRevisionHash = this.rootRevisionHash;
+		this.rootRevisionHash = gitProjectHandler.commitProject(commitMsg);
+		this.graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
 		printStatus();
 	}
 	
@@ -1397,32 +1270,19 @@ public class GraphWorktreeProject implements IndexedProject {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
 
-		for (TagsetDefinition tagset : getTagsets()) {
-			gitProjectHandler.synchronizeTagsetWithRemote(tagset.getUuid());
-		}
-
-		for (SourceDocument document : getSourceDocuments()) {
-			gitProjectHandler.synchronizeSourceDocumentWithRemote(document.getUuid());
-
-			for (AnnotationCollectionReference collectionReference : document.getUserMarkupCollectionRefs()) {
-				gitProjectHandler.synchronizeCollectionWithRemote(collectionReference.getId());
-			}
-		}
-
 		gitProjectHandler.synchronizeWithRemote();
 
 		if (gitProjectHandler.hasConflicts()) {
-			gitProjectHandler.initAndUpdateSubmodules();
-			openProjectListener.conflictResolutionNeeded(new GitConflictedProject(
-					projectReference,
-					gitProjectHandler,
-					documentId -> getSourceDocumentURI(documentId)
-			));
+			openProjectListener.failure(new IllegalStateException(
+					String.format(
+						"There are conflicts in Project %1$s with ID %2$s,"
+						+ "please contact our support.",
+						projectReference.getName(),
+						projectReference.getProjectId())));						
 		}
 		else {
-			gitProjectHandler.initAndUpdateSubmodules();
-			gitProjectHandler.removeStaleSubmoduleDirectories();
-			gitProjectHandler.ensureDevBranches();
+			gitProjectHandler.ensureUserBranch();
+			
 			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			ProgressListener progressListener = new ProgressListener() {
 				@Override
@@ -1458,17 +1318,29 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public RBACRole getRoleForDocument(String documentId) {
-		return gitProjectHandler.getRoleForDocument(documentId);
+		try {
+			return gitProjectHandler.getRoleOnProject(getUser());
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 	
 	@Override
 	public RBACRole getRoleForCollection(String collectionId) {
-		return gitProjectHandler.getRoleForCollection(collectionId);
+		try {
+			return gitProjectHandler.getRoleOnProject(getUser());
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 	
 	@Override
 	public RBACRole getRoleForTagset(String tagsetId) {	
-		return gitProjectHandler.getRoleForTagset(tagsetId);
+		try {
+			return gitProjectHandler.getRoleOnProject(getUser());
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	@Override

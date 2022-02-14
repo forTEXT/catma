@@ -21,6 +21,7 @@ import static de.catma.repository.git.graph.RelationType.hasTagset;
 import static de.catma.repository.git.graph.RelationType.isPartOf;
 import static de.catma.repository.git.graph.RelationType.rt;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -207,7 +208,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void addCollection(String rootRevisionHash, String collectionId, String name, String umcRevisionHash,
+	public void addCollection(String rootRevisionHash, String collectionId, String name,
 			SourceDocument document, TagLibrary tagLibrary, String oldRootRevisionHash) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addCollection enter");
 		
@@ -217,7 +218,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 			oldRootRevisionHash,
 			rootRevisionHash,
 			new AnnotationCollection(collectionId, new ContentInfoSet(name), tagLibrary, 
-					document.getUuid(), document.getRevisionHash()));
+					document.getUuid(), null, user.getIdentifier()));
 		logRootRevisionHash("addCollection exit");
 	}
 
@@ -691,6 +692,15 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	
 	public Indexer createIndexer() {
 		return new TPGraphProjectIndexer(graph, commentProvider);
+	}
+	
+	public void updateProject(String oldRootRevisionHash, String rootRevisionHash) throws IOException {
+		GraphTraversalSource g = graph.traversal();
+
+		g.V().has(nt(ProjectRevision), "revisionHash", oldRootRevisionHash)
+		.next()
+		.property("revisionHash", rootRevisionHash);
+
 	}
 
 }

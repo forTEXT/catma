@@ -75,6 +75,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @throws IOException if something went wrong while fetching the repository
 	 *         names of the remote group
 	 */
+	@Deprecated
 	List<String> getGroupRepositoryNames(String path) throws IOException;
 
 	/**
@@ -94,7 +95,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @return
 	 * @throws Exception
 	 */
-	Set<Member> getProjectMembers(String projectId) throws IOException;
+	Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException;
 
 	/**
 	 * Get a Pager to a ProjectReferences

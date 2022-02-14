@@ -1,6 +1,6 @@
 package de.catma.repository.git;
 
-import static de.catma.repository.git.GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME;
+import static de.catma.repository.git.GitProjectHandler.DOCUMENTS_DIRECTORY_NAME;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -120,7 +120,7 @@ public class GitSourceDocumentHandlerTest {
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
@@ -196,7 +196,7 @@ public class GitSourceDocumentHandlerTest {
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
@@ -213,11 +213,17 @@ public class GitSourceDocumentHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-					jGitRepoManager, gitlabManagerRestricted, new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword())
+					jGitRepoManager,
+					jGitRepoManager.getRepositoryBasePath(),
+					gitlabManagerRestricted.getUsername(), 
+					gitlabManagerRestricted.getEmail()
 			);
 
 			String revisionHash = gitSourceDocumentHandler.create(
-					projectReference.getProjectId(), sourceDocumentUuid,
+					Paths.get(jGitRepoManager.getRepositoryBasePath().toURI())
+						.resolve(GitProjectHandler.DOCUMENTS_DIRECTORY_NAME)
+						.resolve(sourceDocumentUuid).toFile(), 
+					sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					terms, tokenizedSourceDocumentFileName,
@@ -385,7 +391,7 @@ public class GitSourceDocumentHandlerTest {
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
@@ -402,11 +408,17 @@ public class GitSourceDocumentHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
-					jGitRepoManager, gitlabManagerRestricted, new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword())
+					jGitRepoManager,
+					jGitRepoManager.getRepositoryBasePath(),
+					gitlabManagerRestricted.getUsername(),
+					gitlabManagerRestricted.getEmail()
 			);
 
 			String revisionHash = gitSourceDocumentHandler.create(
-					projectReference.getProjectId(), sourceDocumentUuid,
+					Paths.get(jGitRepoManager.getRepositoryBasePath().toURI())
+						.resolve(GitProjectHandler.DOCUMENTS_DIRECTORY_NAME)
+						.resolve(sourceDocumentUuid).toFile(), 
+					sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					terms, tokenizedSourceDocumentFileName,
@@ -427,12 +439,12 @@ public class GitSourceDocumentHandlerTest {
 
 			// open the project root repository
 			jGitRepoManager.open(
-					projectReference.getProjectId(), GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
+					projectReference.getNamespace(), projectReference.getProjectId());
 
 			// create the submodule
 			File targetSubmodulePath = Paths.get(
 					jGitRepoManager.getRepositoryWorkTree().getAbsolutePath(),
-					SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+					DOCUMENTS_DIRECTORY_NAME,
 					sourceDocumentUuid
 			).toFile();
 
@@ -445,7 +457,7 @@ public class GitSourceDocumentHandlerTest {
 
 			jGitRepoManager.detach();
 
-			SourceDocument sourceDocument = gitSourceDocumentHandler.open(projectReference.getProjectId(), sourceDocumentUuid);
+			SourceDocument sourceDocument = gitSourceDocumentHandler.open(sourceDocumentUuid);
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
 					new ContentInfoSet(
 							"William Faulkner (updated)",
@@ -455,7 +467,7 @@ public class GitSourceDocumentHandlerTest {
 					)
 			);
 
-			String sourceDocumentRevision = gitSourceDocumentHandler.update(projectReference.getProjectId(), sourceDocument);
+			String sourceDocumentRevision = gitSourceDocumentHandler.update(sourceDocument);
 			assertNotNull(sourceDocumentRevision);
 
 			String expectedSerializedSourceDocumentInfo = "" +

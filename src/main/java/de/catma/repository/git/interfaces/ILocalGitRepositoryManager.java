@@ -103,8 +103,6 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	boolean hasRef(String branch) throws IOException;
 
-	Status getStatus(boolean ignoreSubmodules) throws IOException;
-
 	void resolveGitSubmoduleFileConflicts() throws IOException;
 
 	MergeResult mergeWithDeletedByThemWorkaroundStrategyRecursive(String branch) throws IOException;
@@ -113,7 +111,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	List<CommitInfo> getUnsynchronizedChanges() throws Exception;
 
-	Set<String> verifyDeletedResources(Set<String> collect) throws IOException;
+	Set<String> getDeletedResourcesFromLog(Set<String> resourceIds, String resourceDir) throws IOException;
 
 
 

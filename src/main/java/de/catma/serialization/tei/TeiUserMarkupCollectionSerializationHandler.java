@@ -89,7 +89,8 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 				id, teiDocument.getContentInfoSet(),
 				tagLibrary, deserializer.getTagReferences(),
 				sourceDocument.getUuid(),
-				sourceDocument.getRevisionHash());
+				null,
+				null);
 			
 		} catch (Exception exc) {
 			throw new IOException(exc);
