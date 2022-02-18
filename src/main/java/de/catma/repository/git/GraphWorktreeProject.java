@@ -894,7 +894,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			if (!tagReferences.isEmpty()) {				
 				URI annotationTarget = tagReferences.iterator().next().getTarget();
 				URI collectionTarget = 
-					getSourceDocumentURI(userMarkupCollection.getSourceDocumentId()); 
+					new URI(userMarkupCollection.getSourceDocumentId()); 
 				if (!annotationTarget.equals(collectionTarget)) {
 					throw new IllegalStateException(
 						String.format(

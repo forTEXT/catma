@@ -102,6 +102,11 @@ public class GitAnnotationCollectionHandler {
 				collectionId
 		);
 		
+		Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				collectionSubdir,
+				ANNNOTATIONS_DIR).toFile().mkdirs();
+		
 		// write the serialized tag instance to the AnnotationCollection's annotation dir
 		File targetTagInstanceFilePath = 
 				Paths.get(
@@ -137,7 +142,11 @@ public class GitAnnotationCollectionHandler {
 
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
-		List<String> contents = Arrays.asList(parentDirectory.list());
+		if (!parentDirectory.exists()) {
+			return tagReferences;
+		}
+		
+		String[] contents = parentDirectory.list();
 		
 		for (String item : contents) {
 			File target = new File(parentDirectory, item);

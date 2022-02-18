@@ -996,35 +996,35 @@ public class GitProjectHandler {
 	// Comment operations  
 	
 	public List<Comment> getComments(String documentId) throws IOException {
-		return remoteGitServerManager.getComments(projectId, documentId);
+		return remoteGitServerManager.getComments(projectReference, documentId);
 	}
 
 	public void addComment(Comment comment) throws IOException {
-		remoteGitServerManager.addComment(projectId, comment);
+		remoteGitServerManager.addComment(projectReference, comment);
 	}
 
 	public void removeComment(Comment comment) throws IOException {
-		remoteGitServerManager.removeComment(projectId, comment);
+		remoteGitServerManager.removeComment(projectReference, comment);
 	}
 
 	public void updateComment(Comment comment) throws IOException {
-		remoteGitServerManager.updateComment(projectId, comment);
+		remoteGitServerManager.updateComment(projectReference, comment);
 	}
 
 	public void addReply(Comment comment, Reply reply) throws IOException {
-		remoteGitServerManager.addReply(projectId, comment, reply);
+		remoteGitServerManager.addReply(projectReference, comment, reply);
 	}
 
 	public List<Reply> getCommentReplies(Comment comment) throws IOException {
-		return remoteGitServerManager.getCommentReplies(projectId, comment);
+		return remoteGitServerManager.getCommentReplies(projectReference, comment);
 	}
 	
 	public void updateReply(Comment comment, Reply reply) throws IOException {
-		remoteGitServerManager.updateReply(projectId, comment, reply);
+		remoteGitServerManager.updateReply(projectReference, comment, reply);
 	}
 	
 	public void removeReply(Comment comment, Reply reply) throws IOException {
-		remoteGitServerManager.removeReply(projectId, comment, reply);
+		remoteGitServerManager.removeReply(projectReference, comment, reply);
 	}
 
 	public List<Comment> getCommentsWithReplies(List<String> documentIdList) throws IOException {
@@ -1034,7 +1034,7 @@ public class GitProjectHandler {
 		}
 		
 		if (documentIdList.size() > 10) {
-			comments.addAll(remoteGitServerManager.getComments(this.projectId)
+			comments.addAll(remoteGitServerManager.getComments(this.projectReference)
 					.stream()
 					.filter(comment -> documentIdList.contains(comment.getDocumentId()))
 					.collect(Collectors.toList()));
@@ -1042,7 +1042,7 @@ public class GitProjectHandler {
 		else {
 			for (String documentId : documentIdList) {
 				comments.addAll(
-					remoteGitServerManager.getComments(projectId, documentId));
+					remoteGitServerManager.getComments(projectReference, documentId));
 			}
 		}
 		

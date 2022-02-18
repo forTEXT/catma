@@ -138,23 +138,23 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 
 	ForkStatus forkResource(String resourceId, String sourceProjectId, String targetProjectId) throws IOException;
 
-	void addComment(String projectId, Comment comment) throws IOException;
+	void addComment(ProjectReference projectReference, Comment comment) throws IOException;
 
-	List<Comment> getComments(String projectId, String resourceId) throws IOException;
+	List<Comment> getComments(ProjectReference projectReference, String resourceId) throws IOException;
 
-	void removeComment(String projectId, Comment comment) throws IOException;
+	void removeComment(ProjectReference projectReference, Comment comment) throws IOException;
 	
-	void updateComment(String projectId, Comment comment) throws IOException;
+	void updateComment(ProjectReference projectReference, Comment comment) throws IOException;
 	
-	void addReply(String projectId, Comment comment, Reply reply) throws IOException;
+	void addReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
 
-	List<Reply> getCommentReplies(String projectId, Comment comment) throws IOException;
+	List<Reply> getCommentReplies(ProjectReference projectReference, Comment comment) throws IOException;
 
-	void removeReply(String projectId, Comment comment, Reply reply) throws IOException;
+	void removeReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
 
-	void updateReply(String projectId, Comment comment, Reply reply) throws IOException;
+	void updateReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
 
-	List<Comment> getComments(String projectId) throws IOException;
+	List<Comment> getComments(ProjectReference projectReference) throws IOException;
 
 
 }

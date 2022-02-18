@@ -38,6 +38,7 @@ import org.gitlab4j.api.models.Visibility;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -586,13 +587,13 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 
 	
 	@Override
-	public void addComment(String projectId, Comment comment) throws IOException {
+	public void addComment(ProjectReference projectReference, Comment comment) throws IOException {
 		
 		String resourceId = comment.getDocumentId();
 
 		try {
 			
-			String projectPath = projectId + "/" + resourceId;
+			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 			
@@ -606,7 +607,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			Issue issue = issuesApi.createIssue(
 					projectPath, title, description, 
 					null, null, null, 
-					CATMA_COMMENT_LABEL, 
+					CATMA_COMMENT_LABEL + "," + resourceId, 
 					null, null, null, null);
 			
 			comment.setId(issue.getId());
@@ -614,22 +615,22 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to add a new Comment for resource %1$s in group %2$s!", resourceId, projectId), e);
+				"Failed to add a new Comment for resource %1$s in project %2$s!", resourceId, projectReference), e);
 		}
 	}
 
 	@Override
-	public List<Comment> getComments(String projectId, String resourceId) throws IOException {
+	public List<Comment> getComments(ProjectReference projectReference, String resourceId) throws IOException {
 		try {
 			List<Comment> result = new ArrayList<Comment>();
 			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-			String projectPath = projectId + "/" + resourceId;
+			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 			Pager<Issue> issuePager = 
 				issuesApi.getIssues(
 						projectPath, 
 						new IssueFilter()
-							.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
+							.withLabels(Lists.asList(CATMA_COMMENT_LABEL, new String[] {resourceId}))
 							.withState(IssueState.OPENED), 100);
 			
 			
@@ -657,19 +658,19 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to retrieve Comments resource %1$s in group %2$s!", resourceId, projectId), e);
+				"Failed to retrieve Comments resource %1$s in project %2$s!", resourceId, projectReference), e);
 		}
 
 	}
 	
 
 	@Override
-	public List<Comment> getComments(String projectId) throws IOException {
+	public List<Comment> getComments(ProjectReference projectReference) throws IOException {
 		try {
 			List<Comment> result = new ArrayList<Comment>();
 			
 			IssuesApi issuesApi = new IssuesApi(restrictedGitLabApi);
-			String projectPath = projectId;
+			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 			List<Issue> issues =
 				issuesApi.getGroupIssues(projectPath, 
 						new IssueFilter()
@@ -701,18 +702,18 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to retrieve Comments in group %1$s!", projectId), e);
+				"Failed to retrieve Comments in project %1$s!", projectReference), e);
 		}
 
 	}
 	
 	@Override
-	public void removeComment(String projectId, Comment comment) throws IOException {
+	public void removeComment(ProjectReference projectReference, Comment comment) throws IOException {
 		String resourceId = comment.getDocumentId();
 
 		try {
 			
-			String projectPath = projectId + "/" + resourceId;
+			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 		
@@ -720,19 +721,19 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to remove Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId),
+				"Failed to remove Comment %1$s %2$d for resource %3$s in project %4$s!", 
+					comment.getUuid(), comment.getIid(), resourceId, projectReference),
 				e);
 		}
 	}
 	
 	@Override
-	public void updateComment(String projectId, Comment comment) throws IOException {
+	public void updateComment(ProjectReference projectReference, Comment comment) throws IOException {
 		String resourceId = comment.getDocumentId();
 
 		try {
 			
-			String projectPath = projectId + "/" + resourceId;
+			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 			
@@ -753,17 +754,17 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to update Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId), 
+				"Failed to update Comment %1$s %2$d for resource %3$s in project %4$s!", 
+					comment.getUuid(), comment.getIid(), resourceId, projectReference), 
 				e);
 		}
 	}
 	
 	@Override
-	public void addReply(String projectId, Comment comment, Reply reply) throws IOException {
+	public void addReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
 		String resourceId = comment.getDocumentId();
 		
-		String projectPath = projectId + "/" + resourceId;
+		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 
 		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
 	
@@ -775,18 +776,18 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId), 
+				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in project %4$s!", 
+					comment.getUuid(), comment.getIid(), resourceId, projectReference), 
 				e);
 		}
 		
 	}
 	
 	@Override
-	public void updateReply(String projectId, Comment comment, Reply reply) throws IOException {
+	public void updateReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
 		String resourceId = comment.getDocumentId();
 		
-		String projectPath = projectId + "/" + resourceId;
+		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 
 		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
 		
@@ -797,17 +798,17 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId), 
+				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in project %4$s!", 
+					comment.getUuid(), comment.getIid(), resourceId, projectReference), 
 				e);
 		}
 	}
 	
 	@Override
-	public void removeReply(String projectId, Comment comment, Reply reply) throws IOException {
+	public void removeReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
 		String resourceId = comment.getDocumentId();
 		
-		String projectPath = projectId + "/" + resourceId;
+		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 
 		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
 		
@@ -818,18 +819,18 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId), 
+				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in project %4$s!", 
+					comment.getUuid(), comment.getIid(), resourceId, projectReference), 
 				e);
 		}
 		
 	}
 	
 	@Override
-	public List<Reply> getCommentReplies(String projectId, Comment comment) throws IOException {
+	public List<Reply> getCommentReplies(ProjectReference projectReference, Comment comment) throws IOException {
 		String resourceId = comment.getDocumentId();
 		
-		String projectPath = projectId + "/" + resourceId;
+		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 
 		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
 		List<Reply> result = new ArrayList<Reply>();
@@ -866,8 +867,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			return result;
 		} catch (GitLabApiException e) {
 			throw new IOException(String.format(
-					"Failed to retrieve Replies for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-						comment.getUuid(), comment.getIid(), resourceId, projectId), 
+					"Failed to retrieve Replies for Comment %1$s %2$d for resource %3$s in project %4$s!", 
+						comment.getUuid(), comment.getIid(), resourceId, projectReference), 
 					e);
 		}
 	}

@@ -106,6 +106,8 @@ public class GitProjectsManager implements ProjectsManager {
 			
 			localGitRepoManager.checkout(user.getIdentifier(), true);
 			
+			// create remote user specific branch 
+			localGitRepoManager.push(credentialsProvider);
 		}
 
 		return projectId;
