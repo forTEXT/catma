@@ -342,4 +342,12 @@ public class AnnotationCollection {
 		return sourceDocumentId;
 	}
 	
+	
+	public boolean isResponable(String userIdentifier) {
+		if (this.responsableUser != null) {
+			return this.responsableUser.equals(userIdentifier);
+		}
+		return true; //shared repsonsibility
+	}
+	
 }

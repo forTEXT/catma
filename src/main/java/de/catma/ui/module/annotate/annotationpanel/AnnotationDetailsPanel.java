@@ -43,7 +43,6 @@ import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -306,33 +305,22 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		final Annotation annotation = item.getAnnotation();
 		
-		if (project.hasPermission(project.getRoleForCollection(
-				annotation.getUserMarkupCollection().getUuid()), 
-				RBACPermission.COLLECTION_WRITE)) {
-			if (!isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid())) {
-				changeCollectionListener.accept(annotation.getUserMarkupCollection().getUuid());
-				annotationDetailsProvider.refreshAll();
-			}
-			else {
-				ConfirmDialog.show(
-						UI.getCurrent(), 
-						"Info", 
-						"Are you sure you want to delete this Annotation?", 
-						"Delete", 
-						"Cancel", dlg -> {
-							if (dlg.isConfirmed()) {
-								collectionManager.removeTagInstance(annotation.getTagInstance().getUuid());
-							}
-						}	
-				);
-			}
+		if (!isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid())) {
+			changeCollectionListener.accept(annotation.getUserMarkupCollection().getUuid());
+			annotationDetailsProvider.refreshAll();
 		}
 		else {
-			Notification.show(
-				"Info", 
-				"You do not have the permission to make changes to the Collection of this Annotation, "
-				+ "please contact the Project maintainer!",
-				Type.HUMANIZED_MESSAGE);
+			ConfirmDialog.show(
+					UI.getCurrent(), 
+					"Info", 
+					"Are you sure you want to delete this Annotation?", 
+					"Delete", 
+					"Cancel", dlg -> {
+						if (dlg.isConfirmed()) {
+							collectionManager.removeTagInstance(annotation.getTagInstance().getUuid());
+						}
+					}	
+			);
 		}
 	}
 	
@@ -342,48 +330,36 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		final Annotation annotation = item.getAnnotation();
 		
-		if (project.hasPermission(project.getRoleForCollection(
-				annotation.getUserMarkupCollection().getUuid()), 
-				RBACPermission.COLLECTION_WRITE)) {
-
-			String tagId = annotation.getTagInstance().getTagDefinitionId();
-			TagDefinition tag = project.getTagManager().getTagLibrary().getTagDefinition(tagId);
-			if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
-				Notification.show(
-						"Info", 
-						"There are no Properties defined for the Tag of this Annotation!", 
-						Type.HUMANIZED_MESSAGE);
-			}
-			else {
-				EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-					new EditAnnotationPropertiesDialog(project, annotation, 
-							new SaveCancelListener<List<Property>>() {
-					
-					
-					@Override
-					public void savePressed(List<Property> result) {
-						try {
-							collectionManager.updateProperty(
-								annotation.getUserMarkupCollection(), 
-								annotation.getTagInstance(), result);
-							
-							
-						} catch (IOException e) {
-							((ErrorHandler)UI.getCurrent()).showAndLogError("error updating Annotation Properties", e);
-						}
-					}
-				});
-				
-				editAnnotationPropertiesDialog.show();
-			}
+		String tagId = annotation.getTagInstance().getTagDefinitionId();
+		TagDefinition tag = project.getTagManager().getTagLibrary().getTagDefinition(tagId);
+		if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
+			Notification.show(
+					"Info", 
+					"There are no Properties defined for the Tag of this Annotation!", 
+					Type.HUMANIZED_MESSAGE);
 		}
 		else {
-			Notification.show(
-				"Info", 
-				"You do not have the permission to make changes to the Collection of this Annotation, "
-				+ "please contact the Project maintainer!",
-				Type.HUMANIZED_MESSAGE);
-		}			
+			EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
+				new EditAnnotationPropertiesDialog(project, annotation, 
+						new SaveCancelListener<List<Property>>() {
+				
+				
+				@Override
+				public void savePressed(List<Property> result) {
+					try {
+						collectionManager.updateProperty(
+							annotation.getUserMarkupCollection(), 
+							annotation.getTagInstance(), result);
+						
+						
+					} catch (IOException e) {
+						((ErrorHandler)UI.getCurrent()).showAndLogError("error updating Annotation Properties", e);
+					}
+				}
+			});
+			
+			editAnnotationPropertiesDialog.show();
+		}
 	}
 
 	public Registration addMinimizeButtonClickListener(ClickListener listener) {
@@ -411,9 +387,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 						project.getTagManager().getTagLibrary().getTagsetDefinition(
 							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider,
-						project.hasPermission(
-							project.getRoleForCollection(annotation.getUserMarkupCollection().getId()), 
-							RBACPermission.COLLECTION_WRITE),
+						annotation.getUserMarkupCollection().isResponable(project.getUser().getIdentifier()),
 						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
 			
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());

@@ -30,7 +30,6 @@ import de.catma.document.source.SourceDocument;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -106,41 +105,36 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
             		new DocumentResource(
             			srcDoc, 
             			project.getProjectId(), 
-            			project.hasPermission(project.getRoleForDocument(srcDoc.getUuid()), RBACPermission.DOCUMENT_WRITE));
+            			true);
             
-            if(project.hasPermission(project.getRoleForDocument(srcDoc.getUuid()), RBACPermission.DOCUMENT_READ)) {
-                documentData.addItem(null,docResource);
-                
-                List<AnnotationCollectionReference> collections = 
-                		srcDoc.getUserMarkupCollectionRefs();
-                
-            	List<Resource> readableCollectionResources = collections
-        		.stream()
-        		.map(collectionRef -> 
-        			(Resource)new CollectionResource(
-        				collectionRef, 
-        				project.getProjectId(),
-        				project.hasPermission(project.getRoleForCollection(collectionRef.getId()), RBACPermission.COLLECTION_WRITE))
-        		)
-        		.filter(colRes -> project.hasPermission(
-        			project.getRoleForCollection(colRes.getResourceId()), RBACPermission.COLLECTION_WRITE))
-        		.collect(Collectors.toList());
-        		
-                
-                if(!collections.isEmpty()){
-                	
-                    documentData.addItems(
-                    	docResource,
-                    	readableCollectionResources
-                    );
-                }
-                else {
-                	//TODO: improve message
-                	Notification.show(
-                		"Info", 
-                		String.format("You do not have a writable Collection available for Document %1$s", srcDoc.toString()), 
-                		Type.HUMANIZED_MESSAGE);
-                }
+            documentData.addItem(null,docResource);
+            
+            List<AnnotationCollectionReference> collections = 
+            		srcDoc.getUserMarkupCollectionRefs();
+            
+        	List<Resource> collectionResources = collections
+    		.stream()
+    		.map(collectionRef -> 
+    			(Resource)new CollectionResource(
+    				collectionRef, 
+    				project.getProjectId(),
+    				collectionRef.isResponable(project.getUser().getIdentifier()))
+    		)
+    		.collect(Collectors.toList());
+    		
+            
+            if(!collections.isEmpty()){
+            	
+                documentData.addItems(
+                	docResource,
+                	collectionResources
+                );
+            }
+            else {
+            	Notification.show(
+            		"Info", 
+            		String.format("There is no Collection yet for Document %1$s", srcDoc.toString()), 
+            		Type.HUMANIZED_MESSAGE);
             }
         }
         
@@ -206,15 +200,6 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	
 	private void handleAddCollectionRequest() {
 		try {
-			if (!project.hasPermission(project.getRoleOnProject(), RBACPermission.COLLECTION_CREATE)) {
-				Notification.show(
-						"Info", 
-						"You do not have the permission to create Collections, please contact a Project maintainer!", 
-						Type.HUMANIZED_MESSAGE);
-				return;
-			}
-			
-			
 			@SuppressWarnings("unchecked")
 			TreeDataProvider<Resource> resourceDataProvider = 
 					(TreeDataProvider<Resource>) documentGrid.getDataProvider();

@@ -3,6 +3,7 @@ package de.catma.repository.git;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -492,6 +493,7 @@ public class GitProjectHandler {
 			try {
 				collections.add(
 					gitMarkupCollectionHandler.getCollection(
+							new URL(this.remoteGitServerManager.getProjectRepositoryUrl(projectReference)),
 							collectionId, 
 							tagLibrary, 
 							progressListener));
@@ -560,8 +562,7 @@ public class GitProjectHandler {
 			
 		JsonLdWebAnnotation annotation = 
 				new JsonLdWebAnnotation(
-					CATMAPropertyKey.GitLabServerUrl.getValue(), 
-					projectId, 
+					new URL(this.remoteGitServerManager.getProjectRepositoryUrl(projectReference)), //TODO: can we avoid call to Gitlab?
 					tagReferenceList,
 					tagLibrary);
 		gitMarkupCollectionHandler.createTagInstance(collectionId, annotation);
@@ -917,61 +918,30 @@ public class GitProjectHandler {
 		}
 	}
 	
-	@Deprecated
-	public RBACRole getRoleForDocument(String documentId) {
-		return rolesPerResource.get(documentId);
-	}
-
-	@Deprecated
-	public RBACRole getRoleForCollection(String collectionId) {
-		return rolesPerResource.get(collectionId);
-	}
-	
-	@Deprecated
-	public RBACRole getRoleForTagset(String tagsetId) {
-		return rolesPerResource.get(tagsetId);
-	}
-
-	@Deprecated
 	public boolean hasPermission(RBACRole role, RBACPermission permission) {
 		return remoteGitServerManager.hasPermission(role, permission);
 	}
 	
-	@Deprecated
 	public boolean isAuthorizedOnProject(RBACPermission permission) {
-		return remoteGitServerManager.isAuthorizedOnProject(remoteGitServerManager.getUser(), permission, this.projectReference);
+		return remoteGitServerManager.isAuthorizedOnProject(
+				remoteGitServerManager.getUser(), permission, this.projectReference);
 	}
 	
 	@Deprecated
 	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {
-		return remoteGitServerManager.assignOnProject(subject, role, projectId);
+		return remoteGitServerManager.assignOnProject(subject, role, projectReference);
 	}
 	
 	public void unassignFromProject(RBACSubject subject) throws IOException {
-		remoteGitServerManager.unassignFromProject(subject, projectId);
+		remoteGitServerManager.unassignFromProject(subject, projectReference);
 	}
-	
-	@Deprecated
-	public RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String resourceId) throws IOException {
-		return remoteGitServerManager.assignOnResource(subject, role, projectId, resourceId);
-	}
-	
-	@Deprecated
-	public void unassignFromResource(RBACSubject subject, String resourceId) throws IOException {
-		remoteGitServerManager.unassignFromResource(subject, projectId, resourceId);
-	}
-
+		
 	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
 		return remoteGitServerManager.findUser(usernameOrEmail, offset, limit);
 	}
 
-	@Deprecated
-	public Set<Member> getResourceMembers(String resourceId) throws IOException {
-		return remoteGitServerManager.getResourceMembers(projectId, resourceId);
-	}
-	
 	public RBACRole getRoleOnProject(RBACSubject subject) throws IOException {
-		return remoteGitServerManager.getRoleOnProject(subject, projectId);
+		return remoteGitServerManager.getRoleOnProject(subject, projectReference);
 	}
 
 	/**

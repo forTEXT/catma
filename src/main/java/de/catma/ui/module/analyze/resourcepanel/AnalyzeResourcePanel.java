@@ -17,7 +17,6 @@ import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -34,7 +33,6 @@ import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.module.main.ErrorHandler;
@@ -80,9 +78,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 						documentDataItem, 
 						new CollectionDataItem(
 							umcRef,
-							project.hasPermission(
-									project.getRoleForCollection(umcRef.getId()),
-									RBACPermission.COLLECTION_WRITE)));
+							umcRef.isResponable(project.getUser().getIdentifier())));
 				}
 			}
 			
@@ -191,10 +187,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 			CollectionDataItem collectionDataItem = 
 				new CollectionDataItem(
 					collectionReference, 
-					project.hasPermission(
-						project.getRoleForCollection(
-							collectionReference.getId()), 
-							RBACPermission.COLLECTION_WRITE));
+					collectionReference.isResponable(project.getUser().getIdentifier()));
 			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))

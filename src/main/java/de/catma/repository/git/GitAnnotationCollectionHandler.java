@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -25,7 +26,6 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
-import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
@@ -224,7 +224,7 @@ public class GitAnnotationCollectionHandler {
 	}
 	
 	public AnnotationCollection getCollection(
-			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener)
+			URL gitProjectURL, String collectionId, TagLibrary tagLibrary, ProgressListener progressListener)
 			throws Exception {
 		
 		AnnotationCollectionReference collectionReference = 
@@ -292,8 +292,7 @@ public class GitAnnotationCollectionHandler {
 						// and save the change
 						JsonLdWebAnnotation annotation = 
 								new JsonLdWebAnnotation(
-									CATMAPropertyKey.GitLabServerUrl.getValue(), 
-									projectId, 
+									gitProjectURL, 
 									tagInstances.get(tagInstance),
 									tagLibrary);
 						createTagInstance(collectionId, annotation);

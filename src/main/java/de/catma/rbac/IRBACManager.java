@@ -26,18 +26,7 @@ public interface IRBACManager {
 			RBACSubject subject, RBACPermission permission, ProjectReference projectReference);
 
 	/**
-	 * Authorized a <code>RBACPermission</code> on <code>RBACSubject</code> for a resource e.g. 
-	 * {@link SourceDocument}, {@link TagsetDefinition} and so on.
-	 *
-	 * @param subject
-	 * @param permission
-	 * @param projectId
-	 * @return
-	 */
-	boolean isAuthorizedOnResource(RBACSubject subject, RBACPermission permission, String projectId, String resourceId);
-
-	/**
-	 * assigns given role to subject in a given context here a projectId}
+	 * assigns given role to subject in a given context here a CATMA Project}
 	 * 
 	 * @param subject
 	 * @param role
@@ -45,17 +34,7 @@ public interface IRBACManager {
 	 * @return
 	 * @throws IOException
 	 */
-	RBACSubject assignOnProject(RBACSubject subject, RBACRole role, String projectId) throws IOException;
-
-	/**
-	 * assigns given role to subject in a given context here a resource like {@link SourceDocument}, {@link TagsetDefinition} etc...
-	 * @param subject
-	 * @param role
-	 * @param resource
-	 * @return
-	 * @throws IOException
-	 */
-	RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String projectId, String resourceId) throws IOException;
+	RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference) throws IOException;
 
 	/**
 	 * unassigns a subject from a project
@@ -63,15 +42,8 @@ public interface IRBACManager {
 	 * @param projectId
 	 * @throws IOException
 	 */
-	void unassignFromProject(RBACSubject subject, String projectId) throws IOException;
-	
-	/**
-	 * unassigns a subject from a resource
-	 * @param subject
-	 * @param projectId
-	 * @throws IOException
-	 */
-	void unassignFromResource(RBACSubject subject, String projectId, String resourceId) throws IOException;
+	void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
+
 	
 	/**
 	 * checks if a role has a permission assigned
@@ -86,16 +58,7 @@ public interface IRBACManager {
 			return role.getAccessLevel() >= permission.getRoleRequired().getAccessLevel();
 		}
 	};
-	
-	/**
-	 * get's the defined Role for a subject on a specific resource
-	 * 
-	 * @param subject
-	 * @param resource
-	 * @return
-	 * @throws IOException 
-	 */
-	RBACRole getRoleOnResource(RBACSubject subject, String projectId, String resourceId) throws IOException;
+
 	
 	/**
 	 * get's the defined Role for a subject on a specific project
@@ -105,7 +68,7 @@ public interface IRBACManager {
 	 * @return
 	 * @throws IOException 
 	 */
-	RBACRole getRoleOnProject(RBACSubject subject, String projectId) throws IOException;
+	RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
 
 	
 }

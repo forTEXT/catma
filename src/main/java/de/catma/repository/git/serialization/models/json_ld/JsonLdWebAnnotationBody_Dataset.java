@@ -17,7 +17,6 @@ import com.google.gson.annotations.SerializedName;
 import de.catma.document.annotation.TagReference;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.GitProjectManager;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -48,7 +47,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 	}
 
 	public JsonLdWebAnnotationBody_Dataset(
-		String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
+		URL gitProjectURL, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		this();
 		this.context.put("tagset", CATMAPropertyKey.BaseURL.getValue() + "/tagset");
@@ -69,11 +68,9 @@ public class JsonLdWebAnnotationBody_Dataset {
 		
 		TagInstance tagInstance = tagReferences.iterator().next().getTagInstance();
 
-		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-
-		this.tagset = this.buildTagsetUrl(
-			gitServerBaseUrl, projectRootRepositoryName, tagInstance.getTagsetId()
-		).toString();
+		this.tagset = 
+				this.buildTagsetUrl(
+						gitProjectURL, tagInstance.getTagsetId()).toString();
 
 		this.tag = this.buildTagDefinitionUrl(this.tagset, tagDefinition).toString();
 
@@ -81,18 +78,15 @@ public class JsonLdWebAnnotationBody_Dataset {
 		this.addProperties(this.tag, tagInstance.getSystemProperties(), true);
 	}
 
-	private URL buildTagsetUrl(String gitServerBaseUrl, String projectRootRepositoryName, String tagsetUuid)
+	private URL buildTagsetUrl(URL gitProjectURL, String tagsetUuid)
 			throws MalformedURLException {
-		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
-
 		return new URL(
-				gitServerUrl.getProtocol(),
-				gitServerUrl.getHost(),
-				gitServerUrl.getPort(),
+				gitProjectURL.getProtocol(),
+				gitProjectURL.getHost(),
+				gitProjectURL.getPort(),
 				String.format(
-						"%s%s/%s/%s",
-						gitServerUrl.getPath(),
-						projectRootRepositoryName,
+						"%s/%s/%s",
+						gitProjectURL.getPath(),
 						GitProjectHandler.TAGSETS_DIRECTORY_NAME,
 						tagsetUuid
 				)

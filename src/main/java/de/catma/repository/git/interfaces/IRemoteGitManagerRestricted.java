@@ -106,13 +106,11 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException;
 
 	/**
-	 * finds the root project and constructs the URL
+	 * Get the Project's repo URL
 	 * @param projectReference
 	 * @return
 	 * @throws IOException
 	 */
-	@Deprecated
-	String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException;
 	String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException;
 
 	/**

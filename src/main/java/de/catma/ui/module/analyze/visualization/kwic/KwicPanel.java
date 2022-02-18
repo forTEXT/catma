@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
@@ -50,7 +48,6 @@ import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -63,7 +60,6 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.module.analyze.CSVExportFlatStreamSource;
-import de.catma.ui.module.analyze.CSVExportGroupedStreamSource;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
@@ -186,16 +182,6 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		Set<QueryResultRow> rowsToBeRemoved = new HashSet<>();
 		
 		try {
-			LoadingCache<String, Boolean> collectionIdToHasWritePermission = 
-					CacheBuilder.newBuilder().build(new CacheLoader<String, Boolean>() {
-
-						@Override
-						public Boolean load(String collectionId) throws Exception {
-							return project.hasPermission(project.getRoleForCollection(
-									collectionId), RBACPermission.COLLECTION_WRITE);
-						}
-						
-					});
 			for (QueryResultRow row : selectedRows) {
 				if (row instanceof TagQueryResultRow) {
 					annotationRows++;
@@ -206,7 +192,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 									((TagQueryResultRow) row).getMarkupCollectionId());
 						
 						if (collRef != null) {
-							if (collectionIdToHasWritePermission.get(collRef.getId())) {
+							if (collRef.isResponable(project.getUser().getIdentifier())) {
 								annotationCollectionReferences.add(collRef);
 								tagInstanceIdsToBeRemoved.add(((TagQueryResultRow) row).getTagInstanceId());
 								rowsToBeRemoved.add(row);

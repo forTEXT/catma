@@ -1317,33 +1317,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public RBACRole getRoleForDocument(String documentId) {
-		try {
-			return gitProjectHandler.getRoleOnProject(getUser());
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-	
-	@Override
-	public RBACRole getRoleForCollection(String collectionId) {
-		try {
-			return gitProjectHandler.getRoleOnProject(getUser());
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-	
-	@Override
-	public RBACRole getRoleForTagset(String tagsetId) {	
-		try {
-			return gitProjectHandler.getRoleOnProject(getUser());
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	@Override
 	public boolean hasPermission(RBACRole role, RBACPermission permission) {
 		return gitProjectHandler.hasPermission(role, permission);
 	}
@@ -1364,23 +1337,8 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String resourceId) throws IOException {
-		return gitProjectHandler.assignOnResource(subject, role, resourceId);
-	}
-
-	@Override
-	public void unassignFromResource(RBACSubject subject, String resourceId) throws IOException {
-		gitProjectHandler.unassignFromResource(subject, resourceId);
-	}
-
-	@Override
 	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
 		return gitProjectHandler.findUser(usernameOrEmail, offset, limit);
-	}
-
-	@Override
-	public Set<Member> getResourceMembers(String resourceId) throws IOException {
-		return gitProjectHandler.getResourceMembers(resourceId);
 	}
 
 	@Override

@@ -24,11 +24,9 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.Project;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
@@ -183,50 +181,20 @@ public class TagSelectionPanel extends VerticalLayout {
 			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
 			.findFirst()
 			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
-			
-		if (selectedTagset.isPresent() 
-				&& !project.hasPermission(
-						project.getRoleForTagset(selectedTagset.get().getUuid()), 
-						RBACPermission.TAGSET_WRITE)) {
+
+		if (tagsetData.getRootItems().isEmpty()) {
 			Notification.show(
 				"Info", 
-				String.format(
-					"You do not have the permission to make changes to Tagset %1$s, "
-					+ "Please contact the Project maintainer!", 
-					selectedTagset.get().getName()), 
+				"You do not have any Tagsets to add Tags to yet, please create a Tagset first!", 
 				Type.HUMANIZED_MESSAGE);
-			return;
-		}
-		
-		
-		if (tagsetData.getRootItems().isEmpty()) {
-			if (project.isAuthorizedOnProject(RBACPermission.TAGSET_CREATE_OR_UPLOAD)) {
-				Notification.show(
-					"Info", 
-					"You do not have any Tagsets to add Tags to yet, please create a Tagset first!", 
-					Type.HUMANIZED_MESSAGE);
-			}
-			else {
-				Notification.show(
-					"Info", 
-					"You do not have any Tagsets to add Tags to yet, please contact the Project maintainer!", 
-					Type.HUMANIZED_MESSAGE);
-			}
 			return;
 		}
 	
 		List<TagsetDefinition> editableTagsets = 
 				tagsetData.getRootItems().stream()
 				.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset())
-				.filter(tagset -> project.hasPermission(project.getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE))
 				.collect(Collectors.toList());
-		if (editableTagsets.isEmpty()) {
-			Notification.show(
-				"Info",
-				"You do not have the permission to make changes to any of the available Tagsets! "
-				+ "Please contact the Project maintainer for changes!",
-				Type.HUMANIZED_MESSAGE);
-		}
+
 		AddParenttagDialog addTagDialog = 
 			new AddParenttagDialog(
 				editableTagsets, 
@@ -249,22 +217,6 @@ public class TagSelectionPanel extends VerticalLayout {
 		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
-		
-		for (TagDefinition parentTag : parentTags) {
-			if (!project.hasPermission(project.getRoleForTagset(
-					parentTag.getTagsetDefinitionUuid()), 
-					RBACPermission.TAGSET_WRITE)) {
-				
-				Notification.show(
-					"Info", 
-					String.format(
-						"You do not have the permission to make changes to the Tagset of Tag %1$s, "
-						+ "Please contact the Project maintainer!", 
-						parentTag.getName()), 
-					Type.HUMANIZED_MESSAGE);
-				return;
-			}
-		}
 		
 		if (!parentTags.isEmpty()) {
 			AddSubtagDialog addTagDialog =

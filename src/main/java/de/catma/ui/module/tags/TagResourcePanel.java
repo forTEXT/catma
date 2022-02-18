@@ -21,10 +21,8 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -201,9 +199,7 @@ public class TagResourcePanel extends VerticalLayout {
 			.setWidth(150);
 		
 		tagsetGrid.addColumn(
-				tagset -> project.hasPermission(
-					project.getRoleForTagset(tagset.getUuid()),
-					RBACPermission.TAGSET_WRITE)?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
+				tagset -> tagset.isResponable(project.getUser().getIdentifier())?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
 				new HtmlRenderer())
 		.setWidth(50);
 		

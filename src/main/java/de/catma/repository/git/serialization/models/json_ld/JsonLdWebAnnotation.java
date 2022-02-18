@@ -22,7 +22,6 @@ import com.google.gson.annotations.SerializedName;
 import de.catma.document.Range;
 import de.catma.document.annotation.TagReference;
 import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.GitProjectManager;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -52,7 +51,7 @@ public class JsonLdWebAnnotation {
 	}
 
 	public JsonLdWebAnnotation(
-			String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
+			URL gitProjectURL, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -64,14 +63,12 @@ public class JsonLdWebAnnotation {
 			);
 		}
 
-		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-
 		this.id = this.buildTagInstanceUrl(
-			gitServerBaseUrl, projectRootRepositoryName, tagReferences.iterator().next().getUserMarkupCollectionUuid(),
+			gitProjectURL, tagReferences.iterator().next().getUserMarkupCollectionUuid(),
 			tagReferences.iterator().next().getTagInstance().getUuid()
 		).toString();
 
-		this.body = new JsonLdWebAnnotationBody_Dataset(gitServerBaseUrl, projectId, tagReferences, tagLibrary);
+		this.body = new JsonLdWebAnnotationBody_Dataset(gitProjectURL, tagReferences, tagLibrary);
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
 	}
 
@@ -88,20 +85,17 @@ public class JsonLdWebAnnotation {
 		return new URL(_url.getProtocol(), _url.getHost(), _url.getPort(), path);
 	}
 
-	private URL buildTagInstanceUrl(String gitServerBaseUrl, String projectRootRepositoryName,
+	private URL buildTagInstanceUrl(URL gitProjectURL,
 									String userMarkupCollectionUuid, String tagInstanceUuid)
 			throws MalformedURLException {
 
-		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
-
 		return new URL(
-				gitServerUrl.getProtocol(),
-				gitServerUrl.getHost(),
-				gitServerUrl.getPort(),
+				gitProjectURL.getProtocol(),
+				gitProjectURL.getHost(),
+				gitProjectURL.getPort(),
 				String.format(
-						"%s%s/%s/%s/annotations/%s.json",
-						gitServerUrl.getPath(),
-						projectRootRepositoryName,
+						"%s/%s/%s/annotations/%s.json",
+						gitProjectURL.getPath(),
 						GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME,
 						userMarkupCollectionUuid,
 						tagInstanceUuid

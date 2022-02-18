@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +54,6 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitMember;
-import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitlabUtils;
 import de.catma.repository.git.interfaces.IGitUserInformation;
@@ -312,24 +310,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
-	@Deprecated
-	public String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException {
-		try {
-			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project rootProject = projectApi.getProject(
-				projectReference.getProjectId(), 
-				GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
-			
-			return GitlabUtils.rewriteGitLabServerUrl(rootProject.getHttpUrlToRepo());
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-				"Failed to load Project's Root Repository URL: " 
-					+ GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()), e);
-		}
-	}
-	
-	@Override
 	public String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
@@ -342,7 +322,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		catch (GitLabApiException e) {
 			throw new IOException(
 				"Failed to load Project's Root Repository URL: " 
-					+ GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()), e);
+					+ projectReference, e);
 		}
 	}
 	

@@ -89,7 +89,6 @@ import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -284,13 +283,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				new CollectionResource(
 					collectionReference, 
 					project.getProjectId(), 
-					project.hasPermission(project.getRoleForCollection(collectionReference.getId()), RBACPermission.COLLECTION_WRITE));
+					collectionReference.isResponable(project.getUser().getIdentifier()));
 			
 			DocumentResource documentResource = 
 				new DocumentResource(
 					document, 
-					project.getProjectId(), 
-					project.hasPermission(project.getRoleForDocument(document.getUuid()), RBACPermission.DOCUMENT_WRITE));
+					project.getProjectId(),	
+					true); // no user specific responsability for Documents so far
 			
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
@@ -319,40 +318,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
         ContextMenu addContextMenu = 
         	documentGridComponent.getActionGridBar().getBtnAddContextMenu();
-        MenuItem addDocumentBtn = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
-        addDocumentBtn.setEnabled(false);
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.DOCUMENT_CREATE_OR_UPLOAD)),
-        		() -> addDocumentBtn.setEnabled(true))
-        		);
-
-        MenuItem addCollectionBtn = addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
-        addCollectionBtn.setEnabled(false);
-        
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.COLLECTION_CREATE)),
-        		() -> addCollectionBtn.setEnabled(true))
-        		);
+        addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
+        addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
         
         ContextMenu documentsGridMoreOptionsContextMenu = 
         	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         
-        MenuItem editDocBtn = documentsGridMoreOptionsContextMenu.addItem(
+        documentsGridMoreOptionsContextMenu.addItem(
             	"Edit Documents / Collections",(menuItem) -> handleEditResources());
-        editDocBtn.setEnabled(false);
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
-        				project.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
-        		() -> editDocBtn.setEnabled(true))
-        		);
-        MenuItem deleteDocsBtn = documentsGridMoreOptionsContextMenu.addItem(
+
+        documentsGridMoreOptionsContextMenu.addItem(
         	"Delete Documents / Collections",(menuItem) -> handleDeleteResources(menuItem, documentGrid));
-        deleteDocsBtn.setEnabled(false);
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.COLLECTION_DELETE_OR_EDIT) || 
-        				project.hasPermission(role, RBACPermission.DOCUMENT_DELETE_OR_EDIT)),
-        		() -> deleteDocsBtn.setEnabled(true))
-        		);
         
         documentsGridMoreOptionsContextMenu.addItem(
             	"Analyze Documents / Collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
@@ -384,34 +360,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
         
         tagsetGridComponent.getActionGridBar().addBtnAddClickListener(click -> handleAddTagsetRequest());
-        tagsetGridComponent.getActionGridBar().setAddBtnEnabled(false);
-        rbacEnforcer.register(
-        	RBACConstraint.ifAuthorized(
-        		role -> project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD),
-        		() -> tagsetGridComponent.getActionGridBar().setAddBtnEnabled(true)));
    
         ContextMenu moreOptionsMenu = 
         	tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        MenuItem editTagset = moreOptionsMenu.addItem("Edit Tagset", mi -> handleEditTagsetRequest());
-        editTagset.setEnabled(false);
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
-        		() -> editTagset.setEnabled(true))
-        		);
+        moreOptionsMenu.addItem("Edit Tagset", mi -> handleEditTagsetRequest());
 
-        MenuItem deleteTagSetBtn = moreOptionsMenu.addItem("Delete Tagset", mi -> handleDeleteTagsetRequest());
-        deleteTagSetBtn.setEnabled(false);
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.TAGSET_DELETE_OR_EDIT)),
-        		() -> deleteTagSetBtn.setEnabled(true))
-        		);
+        moreOptionsMenu.addItem("Delete Tagset", mi -> handleDeleteTagsetRequest());
         
-        MenuItem importTagSetBtn = moreOptionsMenu.addItem("Import Tagsets", mi -> handleImportTagsetsRequest());
-        importTagSetBtn.setEnabled(false);
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.TAGSET_CREATE_OR_UPLOAD)),
-        		() -> importTagSetBtn.setEnabled(true))
-        		);
+        moreOptionsMenu.addItem("Import Tagsets", mi -> handleImportTagsetsRequest());
         
         MenuItem miExportTagsets = moreOptionsMenu.addItem("Export Tagsets");
         MenuItem miExportTagsetsAsXML = miExportTagsets.addItem("as XML");
@@ -456,9 +412,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
 
         btSynchBell.addClickListener(event -> handleBtSynchBellClick(event));
-        
-        //TODO:
-//        hugeCardMoreOptions.addItem("Print status", e -> project.printStatus());
         
         tagsetGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
         	@Override
@@ -546,7 +499,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		try {
 			SelectProjectDialog selectProjectDialog = new SelectProjectDialog(
 				projectManager, eventBus,
-				projectManager.getProjectReferences(RBACPermission.TAGSET_CREATE_OR_UPLOAD)
+				projectManager.getProjectReferences()
 					.stream()
 					.filter(ref -> !ref.getProjectId().equals(this.project.getProjectId()))
 					.collect(Collectors.toList()), 
@@ -1651,34 +1604,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         miInvite = moreOptionsContextMenu.addItem(
         	"Invite someone to the Project", click -> handleProjectInvitationRequest());
         
-        MenuItem editResBtn = moreOptionsContextMenu.addItem(
-        		"Resource permissions", 
-        		click -> {
-        			@SuppressWarnings("unchecked")
-					TreeDataProvider<Resource> resourceDataProvider = 
-        					(TreeDataProvider<Resource>) documentGrid.getDataProvider();
-        			TreeData<Resource> resourceData = resourceDataProvider.getTreeData();
-        			if (!resourceData.getRootItems().isEmpty()) {
-	        			new ResourcePermissionView(
-	        				resourceData,
-			        		tagsetData.getItems(),
-			        		this.project)
-	        			.show();
-        			}
-        			else {
-        				Notification.show(
-        					"Info", 
-        					"You do not have any Documents yet, please add a Document first!", 
-        					Type.HUMANIZED_MESSAGE);
-        			}
-		        }
-        );
-        editResBtn.setEnabled(false);
-        rbacEnforcer.register(RBACConstraint.ifAuthorized(
-        		role -> (project.hasPermission(role, RBACPermission.PROJECT_MEMBERS_EDIT)),
-        		() -> editResBtn.setEnabled(true))
-        		);
-        
         teamContent.addComponent(membersGridComponent);
         return teamContent;
     }
@@ -1890,44 +1815,31 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 DocumentResource docResource = 
                 		new DocumentResource(
                 			srcDoc, 
-                			project.getProjectId(), 
-                			project.hasPermission(
-                					project.getRoleForDocument(srcDoc.getUuid()), 
-                					RBACPermission.DOCUMENT_WRITE));
+                			project.getProjectId(),
+                			true);
                 
-                if(project.hasPermission(
-                		project.getRoleForDocument(srcDoc.getUuid()), 
-                		RBACPermission.DOCUMENT_READ)) {
+                treeData.addItem(null, docResource);
+                
+                List<AnnotationCollectionReference> collections = 
+                		srcDoc.getUserMarkupCollectionRefs();
+                
+            	List<Resource> collectionResources = collections
+        		.stream()
+        		.map(collectionRef -> 
+        			new CollectionResource(
+        				collectionRef, 
+        				project.getProjectId(),
+        				collectionRef.isResponable(project.getUser().getIdentifier()))
+        		)
+        		.collect(Collectors.toList());
+        		
+                
+                if(!collections.isEmpty()){
                 	
-	                treeData.addItem(null, docResource);
-	                
-	                List<AnnotationCollectionReference> collections = 
-	                		srcDoc.getUserMarkupCollectionRefs();
-	                
-	            	List<Resource> readableCollectionResources = collections
-            		.stream()
-            		.filter(collectionRef -> project.hasPermission(
-            				project.getRoleForCollection(
-            						collectionRef.getId()), RBACPermission.COLLECTION_READ))
-            		.map(collectionRef -> 
-            			new CollectionResource(
-            				collectionRef, 
-            				project.getProjectId(),
-            				project.hasPermission(
-            						project.getRoleForCollection(collectionRef.getId()), 
-            						RBACPermission.COLLECTION_WRITE))
-            		)
-            		.collect(Collectors.toList());
-            		
-                    
-	                if(!collections.isEmpty()){
-	                	
-	                    treeData.addItems(
-	                    	docResource,
-	                    	readableCollectionResources
-	                    );
-	                }
-	                
+                    treeData.addItems(
+                    	docResource,
+                    	collectionResources
+                    );
                 }
             }
             Collator collator = Collator.getInstance(locale);

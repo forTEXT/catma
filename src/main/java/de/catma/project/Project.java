@@ -330,27 +330,15 @@ public interface Project {
 
 	void printStatus();
 
-	RBACRole getRoleForTagset(String tagsetId);
-
-	RBACRole getRoleForCollection(String collectionId);
-
-	RBACRole getRoleForDocument(String documentId);
-
 	boolean hasPermission(RBACRole role, RBACPermission permission);
 
 	boolean isAuthorizedOnProject(RBACPermission permission);
-
-	void unassignFromResource(RBACSubject subject, String resourceId) throws IOException;
-
-	RBACSubject assignOnResource(RBACSubject subject, RBACRole role, String resourceId) throws IOException;
 
 	void unassignFromProject(RBACSubject subject) throws IOException;
 
 	RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException;
 
 	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
-
-	Set<Member> getResourceMembers(String resourceId) throws IOException;
 
 	String getDescription();
 

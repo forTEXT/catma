@@ -40,10 +40,8 @@ import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
@@ -168,10 +166,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			CollectionDataItem collectionDataItem = 
 				new CollectionDataItem(
 					collectionReference, 
-					project.hasPermission(
-						project.getRoleForCollection(
-							collectionReference.getId()), 
-							RBACPermission.COLLECTION_WRITE));
+					collectionReference.isResponable(project.getUser().getIdentifier()));
 			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
@@ -332,9 +327,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 						documentDataItem, 
 						new CollectionDataItem(
 							umcRef,
-							project.hasPermission(
-									project.getRoleForCollection(umcRef.getId()),
-									RBACPermission.COLLECTION_WRITE),
+							umcRef.isResponable(project.getUser().getIdentifier()),
 							(currentlysSelectedColletionIds.isEmpty() || currentlysSelectedColletionIds.contains(umcRef.getId()))
 						)
 					);
@@ -442,9 +435,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			.setWidth(150);
 		
 		tagsetGrid.addColumn(
-				tagset -> project.hasPermission(
-					project.getRoleForTagset(tagset.getUuid()),
-					RBACPermission.TAGSET_WRITE)?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
+				tagset -> tagset.isResponable(project.getUser().getIdentifier())?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
 				new HtmlRenderer())
 		.setWidth(50);
 		

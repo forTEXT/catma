@@ -83,7 +83,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 
     private void initData() {
 		try {
-			RBACRole projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference.getProjectId());
+			RBACRole projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference);
 			rbacEnforcer.enforceConstraints(projectRole); // normally done in reload();
 		} catch (IOException e) {
             errorLogger.showAndLogError("can't fetch permissions" + projectReference.getName(), e);

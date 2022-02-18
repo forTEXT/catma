@@ -337,4 +337,12 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	public String getResponsableUser() {
 		return responsableUser;
 	}
+	
+	public boolean isResponable(String userIdentifier) {
+		if (this.responsableUser != null) {
+			return this.responsableUser.equals(userIdentifier);
+		}
+		return true; //shared repsonsibility
+	}
+	
 }

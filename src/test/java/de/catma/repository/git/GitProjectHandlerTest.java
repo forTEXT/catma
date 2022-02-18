@@ -130,23 +130,26 @@ public class GitProjectHandlerTest {
 					mockEventBus
 			);
 
-			String projectId = gitProjectManager.createProject(
+			ProjectReference projectReference = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
-			).getProjectId();
+			);
 			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
-			assertNotNull(projectId);
-			assert projectId.startsWith("CATMA_");
+			assertNotNull(projectReference.getProjectId());
+			assert projectReference.getProjectId().startsWith("CATMA_");
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
+			
 
-			String expectedRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			File expectedRepositoryPath = 
+					Paths.get(
+						jGitRepoManager.getRepositoryBasePath().getPath(),
+						projectReference.getNamespace(),
+						projectReference.getProjectId()).toFile();
 
-			File expectedRootRepositoryPath = Paths.get(jGitRepoManager.getRepositoryBasePath().getPath(), projectId, expectedRootRepositoryName).toFile();
-
-			assert expectedRootRepositoryPath.exists();
-			assert expectedRootRepositoryPath.isDirectory();
+			assert expectedRepositoryPath.exists();
+			assert expectedRepositoryPath.isDirectory();
 		}
 	}
 
@@ -374,7 +377,7 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(projectReference.getProjectId(), GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
+			jGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 			Status status = jGitRepoManager.getGitApi().status().call();
 //			Set<String> added = status.getAdded();
 //
