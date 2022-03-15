@@ -88,6 +88,8 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	String removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException;
 
 	MergeResult merge(String branch) throws IOException;
+	
+	boolean canMerge(String branch) throws IOException;
 
 	void rebase(String branch) throws IOException;
 
@@ -113,6 +115,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	Set<String> getDeletedResourcesFromLog(Set<String> resourceIds, String resourceDir) throws IOException;
 
+	void revert(MergeResult mergeResult) throws IOException;
 
 
 }

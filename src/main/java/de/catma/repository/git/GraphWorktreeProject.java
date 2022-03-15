@@ -483,7 +483,8 @@ public class GraphWorktreeProject implements IndexedProject {
 						+ "as part of the deletion of the Property Definition %1$s with ID %2$s",
 						propertyDefinition.getName(),
 						propertyDefinition.getUuid()),
-				false);
+				false, // don't force
+				false); // don't push now, we push everything when the removal happens below
 		
 		// delete Annotations Properties in affected Annotations
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
@@ -945,9 +946,14 @@ public class GraphWorktreeProject implements IndexedProject {
 			Collection<AnnotationCollectionReference> collectionReferences, String msg) throws IOException {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
-		this.rootRevisionHash = gitProjectHandler.addCollectionsToStagedAndCommit(
-			collectionReferences.stream().map(ref -> ref.getId()).collect(Collectors.toSet()), 
-			msg, false);
+		this.rootRevisionHash = 
+			gitProjectHandler.addCollectionsToStagedAndCommit(
+				collectionReferences.stream()
+					.map(ref -> ref.getId())
+					.collect(Collectors.toSet()), 
+				msg, 
+				false, // don't force
+				true); // withCommit
 		
 		this.graphProjectHandler.updateProject(oldRootRevisionHash, this.rootRevisionHash);
 	}
@@ -1254,6 +1260,17 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public List<CommitInfo> getUnsynchronizedCommits() throws Exception {
 		return gitProjectHandler.getUnsynchronizedChanges();
+	}
+	
+	@Override
+	public boolean hasUntrackedChanges() throws IOException {
+		return gitProjectHandler.hasUntrackedChanges();
+	}
+	
+	public boolean hasChangesToCommitOrPush() throws Exception {
+		return hasUncommittedChanges() 
+				|| hasUntrackedChanges() || 
+				!getUnsynchronizedCommits().isEmpty();
 	}
 
 	@Override

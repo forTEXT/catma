@@ -1391,8 +1391,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void checkForUnsynchronizedCommits() {
         
         try {
-			btSynchBell.setVisible(
-				!project.getUnsynchronizedCommits().isEmpty() || project.hasUncommittedChanges());
+			btSynchBell.setVisible(project.hasChangesToCommitOrPush());
 		} catch (Exception e) {
 			String msg = "Checking for unsynchronized changes failed!";
 			logger.log(Level.SEVERE, msg, e);

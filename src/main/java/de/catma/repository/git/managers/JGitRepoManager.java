@@ -28,6 +28,7 @@ import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
+import org.eclipse.jgit.api.RevertCommand;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
@@ -52,6 +53,8 @@ import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.merge.MergeStrategy;
+import org.eclipse.jgit.merge.ThreeWayMerger;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
@@ -774,6 +777,21 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 		
 		return this.gitApi.getRepository().findRef(branch) != null;
+	}
+	
+	public boolean canMerge(String branch) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `canMerge` on a detached instance");
+		}
+		ThreeWayMerger merger = 
+				MergeStrategy.RECURSIVE.newMerger(this.gitApi.getRepository(), true);
+		
+		Ref ref = this.gitApi.getRepository().findRef(branch);
+		if (ref != null) {
+			return merger.merge(
+					true, this.gitApi.getRepository().resolve(Constants.HEAD), ref.getObjectId());
+		}
+		return false;
 	}
 	
 	@Override
@@ -1510,6 +1528,24 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Cannot verify deleted resources!", e);
+		}
+	}
+	
+	public void revert(MergeResult mergeResult) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `hasUnsynchronizedChanges` on a detached instance");
+		}		
+		
+		RevertCommand revertCommand = this.gitApi.revert();
+		
+		for (ObjectId oid : mergeResult.getMergedCommits()) {
+			revertCommand.include(oid);
+		}
+		try {
+			revertCommand.call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Could not revert conflicted merge!", e);
 		}
 	}
 }

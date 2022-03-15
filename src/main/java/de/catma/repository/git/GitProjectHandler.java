@@ -3,7 +3,6 @@ package de.catma.repository.git;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -70,9 +69,6 @@ public class GitProjectHandler {
 	private final IDGenerator idGenerator = new IDGenerator();
 	private final CredentialsProvider credentialsProvider;
 
-	@Deprecated
-	private Map<String, RBACRole> rolesPerResource;
-
 	private final ProjectReference projectReference;
 	private final File projectPath;
 	
@@ -90,16 +86,7 @@ public class GitProjectHandler {
 		this.remoteGitServerManager = remoteGitServerManager;
 		this.credentialsProvider = new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
 	}
-	
-	/**
-	 * Loads the roles per resources
-	 * @return true if we encountered changes and a graph reload is appropriate
-	 * @throws Exception
-	 */
-	@Deprecated
-	public boolean loadRolesPerResource() throws Exception {
-		return false;
-	}
+
 
 	// Tagset operations
 	public String createTagset(String tagsetId,
@@ -180,10 +167,6 @@ public class GitProjectHandler {
 			
 //			gitTagsetHandler.checkout(
 //				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
-
-			if (!rolesPerResource.containsKey(tagsetId)) {
-				rolesPerResource.put(tagsetId, RBACRole.OWNER);
-			}
 
 			return new Pair<>(gitTagsetHandler.getTagset(tagsetId), rootRevisionHash);
 		}
@@ -493,7 +476,6 @@ public class GitProjectHandler {
 			try {
 				collections.add(
 					gitMarkupCollectionHandler.getCollection(
-							new URL(this.remoteGitServerManager.getProjectRepositoryUrl(projectReference)),
 							collectionId, 
 							tagLibrary, 
 							progressListener));
@@ -530,7 +512,10 @@ public class GitProjectHandler {
 	}
 	
 
-	public String addCollectionsToStagedAndCommit(Set<String> collectionIds, String commitMsg, boolean force) throws IOException {
+	public String addCollectionsToStagedAndCommit(
+			Set<String> collectionIds, 
+			String commitMsg, 
+			boolean force, boolean withPush) throws IOException {
 		
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 
@@ -538,10 +523,16 @@ public class GitProjectHandler {
 				addCollectionToStaged(collectionId);
 			}
 			
-			return localRepoManager.commit(
+			String projectRevision = localRepoManager.commit(
 				commitMsg,
 				this.remoteGitServerManager.getUsername(),
 				this.remoteGitServerManager.getEmail(), force);
+			
+			if (withPush) {
+				localRepoManager.push(credentialsProvider);
+			}
+			
+			return projectRevision;
 		}	
 		
 	}
@@ -560,11 +551,9 @@ public class GitProjectHandler {
 						this.remoteGitServerManager.getEmail()
 		);
 			
-		JsonLdWebAnnotation annotation = 
-				new JsonLdWebAnnotation(
-					new URL(this.remoteGitServerManager.getProjectRepositoryUrl(projectReference)), //TODO: can we avoid call to Gitlab?
-					tagReferenceList,
-					tagLibrary);
+		JsonLdWebAnnotation annotation = new JsonLdWebAnnotation(
+			tagReferenceList,
+			tagLibrary);
 		gitMarkupCollectionHandler.createTagInstance(collectionId, annotation);
 		
 	}
@@ -789,7 +778,7 @@ public class GitProjectHandler {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 			
-			String revisionHash = localGitRepoManager.commit(
+			String revisionHash = localGitRepoManager.addAllAndCommit(
 					msg, 
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail(), 
@@ -896,13 +885,19 @@ public class GitProjectHandler {
 			if (localGitRepoManager.hasRef(
 					Constants.DEFAULT_REMOTE_NAME + "/" + remoteGitServerManager.getUsername())) {
 				
-				MergeResult mergeWithOriginMasterResult = 
-					localGitRepoManager.merge(
-							Constants.DEFAULT_REMOTE_NAME + "/" + remoteGitServerManager.getUsername());
-				
-				if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
-					localGitRepoManager.push(credentialsProvider);
+				if (localGitRepoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {					
+					MergeResult mergeWithOriginMasterResult = 
+						localGitRepoManager.merge(
+								Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+					
+					if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
+						localGitRepoManager.push(credentialsProvider);
+					}
+					else {
+						localGitRepoManager.revert(mergeWithOriginMasterResult);
+					}
 				}
+				
 			}
 			else if (!localGitRepoManager.getRevisionHash().equals(ILocalGitRepositoryManager.NO_COMMITS_YET)) {
 				localGitRepoManager.push(credentialsProvider);
@@ -914,7 +909,7 @@ public class GitProjectHandler {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
-			localGitRepoManager.checkout(remoteGitServerManager.getUsername());
+			localGitRepoManager.checkout(remoteGitServerManager.getUsername(), true);
 		}
 	}
 	
@@ -927,7 +922,6 @@ public class GitProjectHandler {
 				remoteGitServerManager.getUser(), permission, this.projectReference);
 	}
 	
-	@Deprecated
 	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {
 		return remoteGitServerManager.assignOnProject(subject, role, projectReference);
 	}
@@ -1053,6 +1047,17 @@ public class GitProjectHandler {
 		}
 		
 		return comments;
+	}
+
+
+	public boolean hasUntrackedChanges() throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			// open the project repo
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+			
+			return localGitRepoManager.hasUntrackedChanges();
+		}
 	}
 
 }

@@ -1,9 +1,8 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -51,7 +50,7 @@ public class JsonLdWebAnnotation {
 	}
 
 	public JsonLdWebAnnotation(
-			URL gitProjectURL, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
+			Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -64,43 +63,29 @@ public class JsonLdWebAnnotation {
 		}
 
 		this.id = this.buildTagInstanceUrl(
-			gitProjectURL, tagReferences.iterator().next().getUserMarkupCollectionUuid(),
+			tagReferences.iterator().next().getUserMarkupCollectionUuid(),
 			tagReferences.iterator().next().getTagInstance().getUuid()
 		).toString();
 
-		this.body = new JsonLdWebAnnotationBody_Dataset(gitProjectURL, tagReferences, tagLibrary);
+		this.body = new JsonLdWebAnnotationBody_Dataset(tagReferences, tagLibrary);
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
 	}
 
-	static URL sanitizeUrl(String url) throws MalformedURLException {
-		// absence of a trailing slash on the file/path component is handled really badly by both URI and URL
-		// URL(URL context, String spec) only works if the file/path component of context has a trailing slash...
-		// URI normalize or resolve methods do not fix it either
-		// NB: this method does not care about query params and will strip them if they exist in the URL
-		URL _url = new URL(url);
-		String path = _url.getPath();
-		if (!path.endsWith("/")) {
-			path = path + "/";
+	private URI buildTagInstanceUrl(String userMarkupCollectionUuid, String tagInstanceUuid)
+			throws IOException {
+
+		try {
+			return new URI(
+					String.format(
+							"%s/%s/annotations/%s.json",
+							GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME,
+							userMarkupCollectionUuid,
+							tagInstanceUuid
+					)
+			);
+		} catch (URISyntaxException ue) {
+			throw new IOException(ue);
 		}
-		return new URL(_url.getProtocol(), _url.getHost(), _url.getPort(), path);
-	}
-
-	private URL buildTagInstanceUrl(URL gitProjectURL,
-									String userMarkupCollectionUuid, String tagInstanceUuid)
-			throws MalformedURLException {
-
-		return new URL(
-				gitProjectURL.getProtocol(),
-				gitProjectURL.getHost(),
-				gitProjectURL.getPort(),
-				String.format(
-						"%s/%s/%s/annotations/%s.json",
-						gitProjectURL.getPath(),
-						GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME,
-						userMarkupCollectionUuid,
-						tagInstanceUuid
-				)
-		);
 	}
 
 	public String getContext() {

@@ -324,6 +324,10 @@ public interface Project {
 
 	public boolean hasUncommittedChanges() throws Exception;
 
+	public boolean hasUntrackedChanges() throws IOException;
+
+	public boolean hasChangesToCommitOrPush() throws Exception;
+
 	public void commitChanges(String commitMsg) throws Exception;
 
 	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;

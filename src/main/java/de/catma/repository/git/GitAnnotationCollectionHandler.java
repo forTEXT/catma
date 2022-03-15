@@ -4,16 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -233,7 +231,7 @@ public class GitAnnotationCollectionHandler {
 	}
 	
 	public AnnotationCollection getCollection(
-			URL gitProjectURL, String collectionId, TagLibrary tagLibrary, ProgressListener progressListener)
+			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener)
 			throws Exception {
 		
 		AnnotationCollectionReference collectionReference = 
@@ -301,7 +299,6 @@ public class GitAnnotationCollectionHandler {
 						// and save the change
 						JsonLdWebAnnotation annotation = 
 								new JsonLdWebAnnotation(
-									gitProjectURL, 
 									tagInstances.get(tagInstance),
 									tagLibrary);
 						createTagInstance(collectionId, annotation);

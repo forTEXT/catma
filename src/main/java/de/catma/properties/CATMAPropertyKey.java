@@ -38,6 +38,7 @@ public enum CATMAPropertyKey {
 	version,
 	LogoutURL("https://app.catma.de"),
 	AboutURL("https://catma.de"),
+	ContextDefinitionURL("https://www.catma.de/"),
 	TermsOfUseURL("https://catma.de/documentation/terms-of-use/"),
 	PrivacyPolicyURL("https://catma.de/documentation/privacy-policy/"),
 	ImprintURL("https://catma.de/about/imprint/"),
@@ -159,6 +160,7 @@ public enum CATMAPropertyKey {
 	public String getValue() {
 		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name());
 	}
+	
 	public String getValue(String defaultValue) {
 		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValue);
 	}
