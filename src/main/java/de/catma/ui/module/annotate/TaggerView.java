@@ -746,7 +746,7 @@ public class TaggerView extends HorizontalLayout
 			project, 
 			userMarkupCollectionManager,
 			selectedAnnotationId -> tagger.setTagInstanceSelected(selectedAnnotationId),
-			collection -> handleCollectionValueChange(collection),
+			collectionChangeEvent -> handleCollectionValueChange(collectionChangeEvent),
 			tag -> tagger.addTagInstanceWith(tag),
 			() -> sourceDocument,
 			eventBus);
@@ -817,7 +817,8 @@ public class TaggerView extends HorizontalLayout
 		setExpandRatio(splitPanel, 1.0f);
 	}
 	
-	private void handleCollectionValueChange(AnnotationCollection collection) {
+	private void handleCollectionValueChange(ValueChangeEvent<AnnotationCollection> collectionChangeEvent) {
+		AnnotationCollection collection = collectionChangeEvent.getValue();
 		if (collection == null) {
 			if (taggerContextMenu != null) {
 				taggerContextMenu.close();
@@ -835,7 +836,17 @@ public class TaggerView extends HorizontalLayout
 					new HashSet<>(resourcePanel.getSelectedTagsets());
 			taggerContextMenu.setTagsets(tagsets);
 		}
-		
+	
+		if (collectionChangeEvent.getOldValue() != null) {
+			try {
+				project.commitChanges("Auto-committing Annotations");
+			} catch (Exception e) {
+				logger.log(
+					Level.WARNING, 
+					"error auto-committing Annotations due to a switch to a "
+					+ "different editable target collection", e);
+			}
+		}
 	}
 
 	public int getApproximateMaxLineLengthForSplitterPanel(float width){
@@ -879,7 +890,15 @@ public class TaggerView extends HorizontalLayout
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);
-				
+		
+		try {
+			project.commitChanges("Auto-committing Annotations");
+		} catch (Exception e) {
+			logger.log(
+				Level.WARNING, 
+				"error auto-committing Annotations due to closing the TaggerView", e);
+		}	
+		
 		project = null;
 	}
 	
@@ -1024,6 +1043,8 @@ public class TaggerView extends HorizontalLayout
 	public void removeClickshortCuts() { /* noop*/ }
 
 	public void setSourceDocument(SourceDocument sd, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
+		boolean tryAutoCommit = this.sourceDocument != null;
+		
 		this.sourceDocument = sd;
 		this.resourcePanel.setSelectedDocument(sd);
 		
@@ -1041,6 +1062,17 @@ public class TaggerView extends HorizontalLayout
 		this.drawer.collapse();
 		
 		addCommentMessageListener();
+		
+		if (tryAutoCommit) {
+			try {
+				project.commitChanges("Auto-committing Annotations");
+			} catch (Exception e) {
+				logger.log(
+					Level.WARNING, 
+					"error auto-committing Annotations due to a switch to a "
+					+ "different Document", e);
+			}			
+		}
 	}
 
 	@Override

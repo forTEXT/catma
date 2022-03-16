@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -283,7 +284,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				new CollectionResource(
 					collectionReference, 
 					project.getProjectId(), 
-					collectionReference.isResponable(project.getUser().getIdentifier()));
+					collectionReference.isResponsable(project.getUser().getIdentifier()),
+					project.getUser());
 			
 			DocumentResource documentResource = 
 				new DocumentResource(
@@ -1528,11 +1530,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	.setCaption("Name")
         	.setId(DocumentGridColumn.NAME.name())
         	.setWidth(300);
+//        
+//        documentGrid
+//    	.addColumn(res -> res.getPermissionIcon() , new HtmlRenderer())
+//    	.setCaption("Permission")
+//    	.setExpandRatio(1);      
         
         documentGrid
-    	.addColumn(res -> res.getPermissionIcon() , new HtmlRenderer())
-    	.setCaption("Permission")
-    	.setExpandRatio(1);      
+		  	.addColumn(res -> res.getResponsableUser())
+		  	.setCaption("Responsable")
+		  	.setExpandRatio(1);      
         
         Label documentsAnnotations = new Label("Documents & Annotations");
 
@@ -1555,6 +1562,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			.setCaption("Name")
 			.setWidth(300);
 	
+		tagsetGrid
+		  	.addColumn(res -> res.getResponsableUser())
+		  	.setCaption("Responsable")
+		  	.setExpandRatio(1);      
 
         Label tagsetsAnnotations = new Label("Tagsets");
         tagsetGridComponent = new ActionGridComponent<Grid<TagsetDefinition>> (
@@ -1786,14 +1797,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
     private void initData() {
         try {
-        	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
+        	Set<Member> projectMembers = project.getProjectMembers();
+        	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(projectMembers); 
         	documentGrid.setDataProvider(resourceDataProvider);
         	documentGrid.sort(DocumentGridColumn.NAME.name());
         	documentGrid.expand(resourceDataProvider.getTreeData().getRootItems());
         	
         	tagsetData = new ListDataProvider<>(project.getTagsets());
         	tagsetGrid.setDataProvider(tagsetData);
-        	ListDataProvider<Member> memberData = new ListDataProvider<>(project.getProjectMembers());
+        	ListDataProvider<Member> memberData = new ListDataProvider<>(projectMembers);
         	teamGrid.setDataProvider(memberData);
         	tagsetGrid.sort(TagsetGridColumn.NAME.name());
 		} catch (Exception e) {
@@ -1801,9 +1813,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 	}
 
-    private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
+    private TreeDataProvider<Resource> buildResourceDataProvider(Set<Member> projectMembers) throws Exception {
         if(project != null){
-
+        	Map<String, Member> membersByIdentfier = 
+        			projectMembers.stream()
+        			.collect(Collectors.toMap(
+        					Member::getIdentifier, 
+        					Function.identity()));
             TreeData<Resource> treeData = new TreeData<>();
             Collection<SourceDocument> srcDocs = project.getSourceDocuments();
             Locale locale = Locale.getDefault();
@@ -1828,7 +1844,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         			new CollectionResource(
         				collectionRef, 
         				project.getProjectId(),
-        				collectionRef.isResponable(project.getUser().getIdentifier()))
+        				collectionRef.isResponsable(project.getUser().getIdentifier()),
+        				collectionRef.getResponsableUser()!= null?membersByIdentfier.get(collectionRef.getResponsableUser()):null)
         		)
         		.collect(Collectors.toList());
         		

@@ -1,5 +1,6 @@
 package de.catma.ui.module.analyze.visualization.kwic.annotation;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import com.google.common.eventbus.EventBus;
@@ -43,6 +45,7 @@ import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.CollectionResource;
 import de.catma.ui.module.project.DocumentResource;
 import de.catma.ui.module.project.Resource;
+import de.catma.user.Member;
 
 public class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 
@@ -89,11 +92,20 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 			.ifPresent(sourceDocResource -> 
 				documentData.addItem(
 						sourceDocResource, 
-						new CollectionResource(userMarkupCollectionReference, project.getProjectId(), true)));
+						new CollectionResource(
+								userMarkupCollectionReference, 
+								project.getProjectId(), 
+								true,
+								project.getUser())));
 		documentDataProvider.refreshAll();
 	}
 
 	private void initData() throws Exception {
+    	Map<String, Member> membersByIdentfier = project.getProjectMembers().stream()
+			.collect(Collectors.toMap(
+					Member::getIdentifier, 
+					Function.identity()));
+
         documentData = new TreeData<>();
         
         @SuppressWarnings("unchecked")
@@ -118,7 +130,8 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
     			(Resource)new CollectionResource(
     				collectionRef, 
     				project.getProjectId(),
-    				collectionRef.isResponable(project.getUser().getIdentifier()))
+    				collectionRef.isResponsable(project.getUser().getIdentifier()),
+    				collectionRef.getResponsableUser()!= null?membersByIdentfier.get(collectionRef.getResponsableUser()):null)
     		)
     		.collect(Collectors.toList());
     		

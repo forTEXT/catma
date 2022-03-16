@@ -78,7 +78,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 						documentDataItem, 
 						new CollectionDataItem(
 							umcRef,
-							umcRef.isResponable(project.getUser().getIdentifier())));
+							umcRef.isResponsable(project.getUser().getIdentifier())));
 				}
 			}
 			
@@ -187,7 +187,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 			CollectionDataItem collectionDataItem = 
 				new CollectionDataItem(
 					collectionReference, 
-					collectionReference.isResponable(project.getUser().getIdentifier()));
+					collectionReference.isResponsable(project.getUser().getIdentifier()));
 			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))

@@ -120,7 +120,7 @@ public class AnnotationCollectionReference {
 		this.forkedFromCommitURL = forkedFromCommitURL;
 	}
 	
-	public boolean isResponable(String userIdentifier) {
+	public boolean isResponsable(String userIdentifier) {
 		if (this.responsableUser != null) {
 			return this.responsableUser.equals(userIdentifier);
 		}

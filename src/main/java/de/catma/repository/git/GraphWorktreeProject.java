@@ -1275,8 +1275,25 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void commitChanges(String commitMsg) throws Exception {
+		logger.info(
+				String.format(
+					"Commiting and pushing possible changes in Project %1$s.", 
+					projectReference.toString()));
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.commitProject(commitMsg);
+		if (oldRootRevisionHash.equals(this.rootRevisionHash)) {
+			logger.info(
+				String.format(
+						"No changes in %1$s.", 
+						projectReference.toString()));			
+		}
+		else {			
+			logger.info(
+				String.format(
+						"New revision of %1$s is %2$s.", 
+						projectReference.toString(), 
+						this.rootRevisionHash));
+		}
 		this.graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
 		printStatus();
 	}
@@ -1418,4 +1435,8 @@ public class GraphWorktreeProject implements IndexedProject {
 		return rootRevisionHash;
 	}
 	
+	@Override
+	public String toString() {
+		return this.projectReference.toString();
+	}
 }

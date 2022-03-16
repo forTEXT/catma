@@ -166,7 +166,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			CollectionDataItem collectionDataItem = 
 				new CollectionDataItem(
 					collectionReference, 
-					collectionReference.isResponable(project.getUser().getIdentifier()));
+					collectionReference.isResponsable(project.getUser().getIdentifier()));
 			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
@@ -327,7 +327,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 						documentDataItem, 
 						new CollectionDataItem(
 							umcRef,
-							umcRef.isResponable(project.getUser().getIdentifier()),
+							umcRef.isResponsable(project.getUser().getIdentifier()),
 							(currentlysSelectedColletionIds.isEmpty() || currentlysSelectedColletionIds.contains(umcRef.getId()))
 						)
 					);

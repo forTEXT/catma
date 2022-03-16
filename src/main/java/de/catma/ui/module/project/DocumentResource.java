@@ -99,4 +99,10 @@ public class DocumentResource implements Resource {
 	public boolean hasWritePermission() {
 		return hasWritePermission;
 	}
+	
+	@Override
+	public String getResponsableUser() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -64,4 +64,10 @@ public class TagsetResource implements Resource {
 	public boolean isTagset() {
 		return true;
 	}
+	
+	@Override
+	public String getResponsableUser() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

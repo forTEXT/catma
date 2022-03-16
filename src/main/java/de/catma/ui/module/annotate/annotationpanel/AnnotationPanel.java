@@ -20,6 +20,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
+import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
@@ -53,7 +54,6 @@ import de.catma.document.source.SourceDocument;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -106,7 +106,7 @@ public class AnnotationPanel extends VerticalLayout {
 			Project project, 
 			AnnotationCollectionManager collectionManager, 
 			Consumer<String> annotationSelectionListener,
-			Consumer<AnnotationCollection> collectionSelectionListener,
+			Consumer<ValueChangeEvent<AnnotationCollection>> collectionSelectionListener,
 			Consumer<TagDefinition> tagSelectionListener,
 			Supplier<SourceDocument> currentDocumentProvider,
 			EventBus eventBus) {
@@ -413,7 +413,7 @@ public class AnnotationPanel extends VerticalLayout {
     }
 
 	private void initActions(
-			Consumer<AnnotationCollection> collectionSelectionListener, 
+			Consumer<ValueChangeEvent<AnnotationCollection>> collectionSelectionListener, 
 			Consumer<TagDefinition> tagSelectionListener) {
 		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Tagsets")
@@ -519,7 +519,7 @@ public class AnnotationPanel extends VerticalLayout {
 		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
 		
 		currentEditableCollectionBox.addValueChangeListener(
-			event -> collectionSelectionListener.accept(event.getValue()));
+			event -> collectionSelectionListener.accept(event));
 		annotationDetailsPanel.addMinimizeButtonClickListener(
 				clickEvent -> setAnnotationDetailsPanelVisible(false));
 		btMaximizeAnnotationDetailsRibbon.addClickListener(

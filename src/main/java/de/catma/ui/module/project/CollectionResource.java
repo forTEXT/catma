@@ -4,17 +4,23 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.project.Project;
+import de.catma.user.User;
 
 public class CollectionResource implements Resource {
 
     private final AnnotationCollectionReference collectionReference;
 	private final String projectId;
 	private boolean hasWritePermission;
+	private User responsableUser;
 
-    public CollectionResource(AnnotationCollectionReference userMarkupCollectionReference, String projectId, boolean hasWritePermission){
+    public CollectionResource(
+    		AnnotationCollectionReference userMarkupCollectionReference, 
+    		String projectId, boolean hasWritePermission,
+    		User responsableUser){
         this.collectionReference = userMarkupCollectionReference;
         this.projectId = projectId;
         this.hasWritePermission = hasWritePermission;
+        this.responsableUser = responsableUser;
     }
 
     @Override
@@ -76,4 +82,8 @@ public class CollectionResource implements Resource {
 		return hasWritePermission;
 	}
 
+	@Override
+	public String getResponsableUser() {
+		return responsableUser != null ? responsableUser.getName() : null;
+	}
 }

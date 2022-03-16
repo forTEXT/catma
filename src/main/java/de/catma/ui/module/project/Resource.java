@@ -38,5 +38,7 @@ public interface Resource {
 	public String getPermissionIcon();
 	
 	public boolean hasWritePermission();
+	
+	public String getResponsableUser();
 
 }

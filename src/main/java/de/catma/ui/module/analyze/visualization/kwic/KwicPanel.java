@@ -192,7 +192,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 									((TagQueryResultRow) row).getMarkupCollectionId());
 						
 						if (collRef != null) {
-							if (collRef.isResponable(project.getUser().getIdentifier())) {
+							if (collRef.isResponsable(project.getUser().getIdentifier())) {
 								annotationCollectionReferences.add(collRef);
 								tagInstanceIdsToBeRemoved.add(((TagQueryResultRow) row).getTagInstanceId());
 								rowsToBeRemoved.add(row);
