@@ -8,6 +8,7 @@ import de.catma.tag.TagsetDefinition;
 import java.util.Collection;
 import java.util.List;
 
+@Deprecated
 public interface ConflictedProject {
 	List<TagsetConflict> getTagsetConflicts() throws Exception;
 	List<CollectionConflict> getCollectionConflicts() throws Exception;

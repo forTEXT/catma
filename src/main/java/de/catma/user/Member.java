@@ -2,7 +2,7 @@ package de.catma.user;
 
 import de.catma.rbac.RBACRole;
 
-public interface Member extends User {
+public interface Member extends User, Comparable<Member> {
 
 	/**
 	 * 

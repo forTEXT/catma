@@ -6,6 +6,7 @@ import de.catma.project.conflict.ConflictedProject;
  * This event indicates that a conflicted project nees conflict resolution.
  *
  */
+@Deprecated
 public class RouteToConflictedProjectEvent {
 
 	private final ConflictedProject conflictedProject;

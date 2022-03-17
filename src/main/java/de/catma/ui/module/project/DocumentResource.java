@@ -9,12 +9,10 @@ public class DocumentResource implements Resource {
 
     private final SourceDocument sourceDocument;
 	private final String projectId;
-	private boolean hasWritePermission;
 
-    public DocumentResource(SourceDocument sourceDocument, String projectId, boolean hasWritePermission){
+    public DocumentResource(SourceDocument sourceDocument, String projectId){
         this.sourceDocument = sourceDocument;
         this.projectId = projectId;
-        this.hasWritePermission = hasWritePermission;
     }
     
     @Override
@@ -90,19 +88,7 @@ public class DocumentResource implements Resource {
 	}
 
 	@Override
-	public String getPermissionIcon() {
-		return null; // documents aren't editable yet
-		//return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
-	}
-	
-	@Override
-	public boolean hasWritePermission() {
-		return hasWritePermission;
-	}
-	
-	@Override
 	public String getResponsableUser() {
-		// TODO Auto-generated method stub
-		return null;
+		return null; // no repsonsibilites for Documents so far
 	}
 }

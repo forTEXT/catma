@@ -2,6 +2,8 @@ package de.catma.ui.module.tags;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.vaadin.icons.VaadinIcons;
@@ -9,21 +11,24 @@ import com.vaadin.icons.VaadinIcons;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.util.Cleaner;
+import de.catma.user.Member;
 
 class TagsetDataItem implements TagsetTreeItem {
 	
 	private TagsetDefinition tagset;
 	private boolean editable;
 	private boolean expanded = false;
+	private String responsableUser;
 
 	public TagsetDataItem(TagsetDefinition tagset) {
-		this(tagset, false);
+		this(tagset, null, false);
 	}
 	
-	public TagsetDataItem(TagsetDefinition tagset, boolean editable) {
+	public TagsetDataItem(TagsetDefinition tagset, String responsableUser, boolean editable) {
 		super();
 		this.tagset = tagset;
 		this.editable = editable;
+		this.responsableUser = responsableUser;
 	}
 
 	@Override
@@ -118,5 +123,10 @@ class TagsetDataItem implements TagsetTreeItem {
 	@Override
 	public void setTagsetExpanded(boolean expanded) {
 		this.expanded = expanded;
+	}
+	
+	@Override
+	public String getResponsableUser() {
+		return responsableUser;
 	}
 }

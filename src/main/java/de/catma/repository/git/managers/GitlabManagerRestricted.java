@@ -154,6 +154,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			Project project = new Project();
 			project.setName(name);
 			project.setDescription(description);
+			project.setRemoveSourceBranchAfterMerge(false);
 			
 			project = projectApi.createProject(project);
 			return new CreateRepositoryResponse(

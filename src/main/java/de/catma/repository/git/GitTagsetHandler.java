@@ -133,17 +133,19 @@ class GitTagsetHandler {
 						GitTagsetHeader.class
 				);
 
-		TagsetDefinition tagsetdefinition = new TagsetDefinition(
+		TagsetDefinition tagsetDefinition = new TagsetDefinition(
 			tagsetId, gitTagsetHeader.getName(), gitTagsetHeader.getDeletedDefinitions()
 		);
-
+		tagsetDefinition.setForkedFromCommitURL(gitTagsetHeader.getForkedFromCommitURL());
+		tagsetDefinition.setResponsableUser(gitTagsetHeader.getResponsableUser());
+		tagsetDefinition.setDescription(gitTagsetHeader.getDescription());
 		ArrayList<TagDefinition> tagDefinitions = this.openTagDefinitions(tagsetHeaderFile.getParentFile());
 
 		for(TagDefinition tagdefinition : tagDefinitions){
-			tagsetdefinition.addTagDefinition(tagdefinition);
+			tagsetDefinition.addTagDefinition(tagdefinition);
 		}
 
-		return tagsetdefinition;
+		return tagsetDefinition;
 	}
 
 	public ContentInfoSet getContentInfoSet(String tagsetId) throws IOException {

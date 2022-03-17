@@ -518,7 +518,9 @@ public class GitProjectHandler {
 			boolean force, boolean withPush) throws IOException {
 		
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-
+			localRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+			
 			for (String collectionId : collectionIds) {
 				addCollectionToStaged(collectionId);
 			}
@@ -588,7 +590,9 @@ public class GitProjectHandler {
 
 	public String removeCollection(AnnotationCollectionReference userMarkupCollectionReference) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+
 			GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
 					new GitAnnotationCollectionHandler(
 							localGitRepoManager, 
@@ -609,6 +613,9 @@ public class GitProjectHandler {
 
 	public String updateCollection(AnnotationCollectionReference userMarkupCollectionReference) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());
+			
 			GitAnnotationCollectionHandler collectionHandler = 
 					new GitAnnotationCollectionHandler(
 							localGitRepoManager, 

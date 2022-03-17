@@ -85,6 +85,8 @@ public class XmlMarkupCollectionSerializationHandler implements
 		        				new TagsetDefinition(
 		        						tagsetId, 
 		        						namespaceURI);
+		        		tagsetDefinition.setResponsableUser(author);
+		        		
 		        		tagManager.addTagsetDefinition(tagsetDefinition);
 		        	}
 		        	namespacePrefixToTagsetIdMap.put(prefix, tagsetId);

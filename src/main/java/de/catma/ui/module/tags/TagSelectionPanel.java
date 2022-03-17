@@ -165,9 +165,11 @@ public class TagSelectionPanel extends VerticalLayout {
     						@Override
     						public void savePressed(String result) {
     							IDGenerator idGenerator = new IDGenerator();
+    							TagsetDefinition tagset = new TagsetDefinition(
+    									idGenerator.generateTagsetId(), result);
+    							tagset.setResponsableUser(project.getUser().getIdentifier());
     							project.getTagManager().addTagsetDefinition(
-    								new TagsetDefinition(
-    									idGenerator.generateTagsetId(), result));
+    								tagset);
     						}
     					});
             	

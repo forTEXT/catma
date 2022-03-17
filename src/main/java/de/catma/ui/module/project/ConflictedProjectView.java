@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+@Deprecated
 public class ConflictedProjectView extends HugeCard {
 
 	private VerticalLayout mainPanel;

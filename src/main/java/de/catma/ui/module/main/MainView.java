@@ -203,6 +203,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	}
 
 	@Override
+	@Deprecated
 	public void handleRouteToConflictedProject(RouteToConflictedProjectEvent routeToConflictedProjectEvent) {
 		if (isNewTarget(routeToConflictedProjectEvent.getClass())) {
 			ConflictedProjectView conflictedProjectView = new ConflictedProjectView(routeToConflictedProjectEvent.getConflictedProject(), eventBus);

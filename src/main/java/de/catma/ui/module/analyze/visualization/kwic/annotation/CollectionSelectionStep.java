@@ -95,7 +95,6 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 						new CollectionResource(
 								userMarkupCollectionReference, 
 								project.getProjectId(), 
-								true,
 								project.getUser())));
 		documentDataProvider.refreshAll();
 	}
@@ -116,8 +115,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
             DocumentResource docResource = 
             		new DocumentResource(
             			srcDoc, 
-            			project.getProjectId(), 
-            			true);
+            			project.getProjectId());
             
             documentData.addItem(null,docResource);
             
@@ -130,7 +128,6 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
     			(Resource)new CollectionResource(
     				collectionRef, 
     				project.getProjectId(),
-    				collectionRef.isResponsable(project.getUser().getIdentifier()),
     				collectionRef.getResponsableUser()!= null?membersByIdentfier.get(collectionRef.getResponsableUser()):null)
     		)
     		.collect(Collectors.toList());
@@ -291,13 +288,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
       
         documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
-        	.setCaption("Name")
-        	.setWidth(300);
-        
-        documentGrid
-    	.addColumn(res -> res.getPermissionIcon() , new HtmlRenderer())
-    	.setCaption("Permission")
-    	.setExpandRatio(1);      
+        	.setCaption("Name");
 
         Label documentsAnnotations = new Label("Select one Collection per Document");
 

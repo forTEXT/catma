@@ -37,7 +37,6 @@ public class EditAccountDialog extends Window {
 	private final IRemoteGitManagerPrivileged gitManagerPrivileged ;
 	private final EventBus eventBus;
 
-	private final String email;
 	private final String username;
 	private final String name;
 	private final int userId;
@@ -56,7 +55,6 @@ public class EditAccountDialog extends Window {
 		this.eventBus = eventBus;
 		
 		User user = Objects.requireNonNull(loginService.getAPI()).getUser();
-		this.email = user.getEmail();
 		this.username = user.getIdentifier();
 		this.name = user.getName();
 		this.userId = user.getUserId();
@@ -129,11 +127,6 @@ public class EditAccountDialog extends Window {
 			tfUsername.setValue(username);
 		}
 		tfUsername.setEnabled(false);
-		TextField tfEmail = new TextField("Email");
-		tfEmail.setWidth("100%");
-		tfEmail.setValue(email);
-		tfEmail.setEnabled(false);
-		tfEmail.setDescription("Email has already been verified");
 		
 		tfPassword = new PasswordField("Password");
 		tfPassword.setWidth("100%");
@@ -157,7 +150,6 @@ public class EditAccountDialog extends Window {
 		content.addComponent(lDescription);
 		content.addComponent(tfName);
 		content.addComponent(tfUsername);
-		content.addComponent(tfEmail);
 		content.addComponent(tfPassword);
 		content.addComponent(tfVerifyPassword);
 		content.setExpandRatio(tfVerifyPassword, 1f);

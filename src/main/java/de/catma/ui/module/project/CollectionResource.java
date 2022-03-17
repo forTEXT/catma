@@ -10,16 +10,13 @@ public class CollectionResource implements Resource {
 
     private final AnnotationCollectionReference collectionReference;
 	private final String projectId;
-	private boolean hasWritePermission;
 	private User responsableUser;
 
     public CollectionResource(
     		AnnotationCollectionReference userMarkupCollectionReference, 
-    		String projectId, boolean hasWritePermission,
-    		User responsableUser){
+    		String projectId, User responsableUser){
         this.collectionReference = userMarkupCollectionReference;
         this.projectId = projectId;
-        this.hasWritePermission = hasWritePermission;
         this.responsableUser = responsableUser;
     }
 
@@ -73,17 +70,7 @@ public class CollectionResource implements Resource {
 	}
 
 	@Override
-	public String getPermissionIcon() {
-		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
-	}
-	
-	@Override
-	public boolean hasWritePermission() {
-		return hasWritePermission;
-	}
-
-	@Override
 	public String getResponsableUser() {
-		return responsableUser != null ? responsableUser.getName() : null;
+		return responsableUser != null ? responsableUser.getName() : "Not assigned";
 	}
 }

@@ -397,11 +397,14 @@ public class GitAnnotationCollectionHandler {
 
 		GitMarkupCollectionHeader header = new GitMarkupCollectionHeader(
 				contentInfoSet.getTitle(), 
-				contentInfoSet.getDescription(), 
-				collectionRef.getSourceDocumentId(), 
+				contentInfoSet.getDescription(),  
 				collectionRef.getResponsableUser(),
-				collectionRef.getForkedFromCommitURL());
-
+				collectionRef.getForkedFromCommitURL(),
+				collectionRef.getSourceDocumentId());
+		
+		header.setPublisher(contentInfoSet.getPublisher());
+		header.setAuthor(contentInfoSet.getAuthor());
+		
 		SerializationHelper<GitMarkupCollectionHeader> serializationHelper = new SerializationHelper<>();
 		String serializedHeader = serializationHelper.serialize(header);
 			

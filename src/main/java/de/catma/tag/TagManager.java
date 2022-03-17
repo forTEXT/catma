@@ -143,13 +143,21 @@ public class TagManager {
 				listener);
 	}
 
-	public void setTagsetDefinitionName(
-			TagsetDefinition tagsetDefinition, String name) {
-		String oldName = tagsetDefinition.getName();
-		tagsetDefinition.setName(name);
+	public void setTagsetMetadata(
+			TagsetDefinition tagsetDefinition, TagsetMetadata tagsetMetadata) {
+		TagsetMetadata oldMetadata = 
+				new TagsetMetadata(
+						tagsetDefinition.getName(), 
+						tagsetDefinition.getDescription(), 
+						tagsetDefinition.getResponsableUser());
+		
+		tagsetDefinition.setName(tagsetMetadata.getName());
+		tagsetDefinition.setDescription(tagsetMetadata.getDescription());
+		tagsetDefinition.setResponsableUser(tagsetMetadata.getResponsableUser());
+		
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagsetDefinitionChanged.name(),
-				oldName,
+				oldMetadata,
 				tagsetDefinition);
 	}
 

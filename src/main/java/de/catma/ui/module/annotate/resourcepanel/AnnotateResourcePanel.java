@@ -242,9 +242,11 @@ public class AnnotateResourcePanel extends VerticalLayout {
 						@Override
 						public void savePressed(String result) {
 							IDGenerator idGenerator = new IDGenerator();
+							TagsetDefinition tagset = new TagsetDefinition(
+									idGenerator.generateTagsetId(), result);
+							tagset.setResponsableUser(project.getUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
-								new TagsetDefinition(
-									idGenerator.generateTagsetId(), result));
+								tagset);
 						}
 					});
         	
@@ -435,7 +437,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			.setWidth(150);
 		
 		tagsetGrid.addColumn(
-				tagset -> tagset.isResponable(project.getUser().getIdentifier())?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
+				tagset -> tagset.isResponsable(project.getUser().getIdentifier())?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
 				new HtmlRenderer())
 		.setWidth(50);
 		

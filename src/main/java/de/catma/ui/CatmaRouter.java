@@ -19,6 +19,7 @@ public interface CatmaRouter {
 	void handleRouteToProject(RouteToProjectEvent routeToProjectEvent);
 
 	@Subscribe
+	@Deprecated
 	void handleRouteToConflictedProject(RouteToConflictedProjectEvent routeToConflictedProjectEvent);
 	
 	@Subscribe

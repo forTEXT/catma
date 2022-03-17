@@ -69,6 +69,7 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.corpus.Corpus;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
@@ -102,6 +103,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.TagsetMetadata;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
 import de.catma.ui.component.HTMLNotification;
@@ -149,11 +151,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 	private enum DocumentGridColumn {
 		NAME,
+		RESPONABLE,
 		;
 	}
 	
 	private enum TagsetGridColumn {
-		NAME,
+		NAME, 
+		RESPONSABLE,
 		;
 	}
 
@@ -187,6 +191,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private Button btSynchBell;
 	private final ProgressListener progressListener;
+	private MenuItem miToggleResponsibiltityFilter;
+	private Map<String, Member> membersByIdentfier;
 
     public ProjectView(
     		ProjectsManager projectManager, 
@@ -284,14 +290,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				new CollectionResource(
 					collectionReference, 
 					project.getProjectId(), 
-					collectionReference.isResponsable(project.getUser().getIdentifier()),
 					project.getUser());
 			
 			DocumentResource documentResource = 
 				new DocumentResource(
 					document, 
-					project.getProjectId(),	
-					true); // no user specific responsability for Documents so far
+					project.getProjectId());
 			
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
@@ -360,6 +364,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		
         documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
+        
+        miToggleResponsibiltityFilter = 
+        	documentsGridMoreOptionsContextMenu.addItem(
+        			"Hide other's responsibilities", mi -> toggleResponsibilityFilter());
+        
+        miToggleResponsibiltityFilter.setCheckable(true);
+        miToggleResponsibiltityFilter.setChecked(true);
         
         tagsetGridComponent.getActionGridBar().addBtnAddClickListener(click -> handleAddTagsetRequest());
    
@@ -439,6 +450,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
 	}
 	
+	private void toggleResponsibilityFilter() {
+
+		documentGrid.getColumn(DocumentGridColumn.RESPONABLE.name()).setHidden(
+				miToggleResponsibiltityFilter.isChecked());
+		documentGrid.getColumn(DocumentGridColumn.NAME.name()).setWidth(
+				miToggleResponsibiltityFilter.isChecked()?300:200);
+
+		initData();
+	}
+
 	private void handleBtSynchBellClick(ClickEvent event) {
 		try {
 			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedCommits();
@@ -908,53 +929,49 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			if (selectedResources.size() > 1) {
 				documentGridComponent.setSelectionMode(SelectionMode.SINGLE);
 			}
-			// TODO: add proper edit metadata dialog including document level annotations!
 
 			if (resource.isCollection()) {
 				final AnnotationCollectionReference collectionRef = 
 						((CollectionResource)selectedResources.iterator().next()).getCollectionReference();
 
-				SingleTextInputDialog collectionNameDlg = new SingleTextInputDialog(
-						"Edit Collection",
-						"Please enter the new collection name:",
-						new SaveCancelListener<String>() {
-							@Override
-							public void savePressed(String result) {
-								collectionRef.getContentInfoSet().setTitle(result);
-								try {
-									project.update(collectionRef, collectionRef.getContentInfoSet());
-									documentGrid.getDataProvider().refreshItem(resource);
-								} catch (Exception e) {
-									errorHandler.showAndLogError("Error updating collection", e);
-								}
-							}
-						}
-				);
+				EditResourceDialog editCollectionDlg = 
+						new EditResourceDialog(
+								collectionRef.getResponsableUser(), 
+								collectionRef.getContentInfoSet(),
+								this.membersByIdentfier.values(),
+								new SaveCancelListener<Pair<String,ContentInfoSet>>() {
+									@Override
+									public void savePressed(Pair<String, ContentInfoSet> result) {
+										collectionRef.setResponsableUser(result.getFirst());
+										try {
+											project.update(collectionRef, result.getSecond());
+										} catch (Exception e) {
+											errorHandler.showAndLogError("Error updating collection", e);
+											reloadAll();
+										}
+									}
+								});
+				editCollectionDlg.show();
 
-				collectionNameDlg.show();
 			}
 			else {
 				final SourceDocument document = 
 						((DocumentResource)selectedResources.iterator().next()).getDocument();
 
-				SingleTextInputDialog collectionNameDlg = new SingleTextInputDialog(
-						"Edit Document",
-						"Please enter the new document name:",
-						new SaveCancelListener<String>() {
-							@Override
-							public void savePressed(String result) {
-								document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().setTitle(result);
-								try {
-									project.update(document, document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());
-								}
-								catch (Exception e) {
-									errorHandler.showAndLogError("Error updating document", e);
-								}
+				EditResourceDialog editDocumentDlg = new EditResourceDialog(
+					document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet(), 
+					new SaveCancelListener<Pair<String,ContentInfoSet>>() {
+						@Override
+						public void savePressed(Pair<String, ContentInfoSet> result) {
+							try {
+								project.update(document, document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());
+							}
+							catch (Exception e) {
+								errorHandler.showAndLogError("Error updating document", e);
 							}
 						}
-				);
-
-				collectionNameDlg.show();
+					});
+				editDocumentDlg.show();
 			}
 		}
 	}
@@ -989,16 +1006,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
 		if (!tagsets.isEmpty()) {
 			final TagsetDefinition tagset = tagsets.iterator().next();
-	    	SingleTextInputDialog tagsetNameDlg = 
-	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:", tagset.getName(), 
-	        				new SaveCancelListener<String>() {
-	    						@Override
-	    						public void savePressed(String result) {
-	    							project.getTagManager().setTagsetDefinitionName(tagset, result);
-	    						}
-	    					});
-	            	
-	            tagsetNameDlg.show();			
+			
+			EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
+					new TagsetMetadata(tagset.getName(), tagset.getDescription(), tagset.getResponsableUser()),
+					this.membersByIdentfier.values(),
+					new SaveCancelListener<TagsetMetadata>() {
+						@Override
+						public void savePressed(TagsetMetadata result) {
+							project.getTagManager().setTagsetMetadata(
+									tagset, result);
+						}
+					});
+			editTagsetDlg.show();			
 		}
 		else {
 			Notification.show(
@@ -1016,9 +1035,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						@Override
 						public void savePressed(String result) {
 							IDGenerator idGenerator = new IDGenerator();
+							TagsetDefinition tagset = new TagsetDefinition(
+									idGenerator.generateTagsetId(), result);
+							tagset.setResponsableUser(project.getUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
-								new TagsetDefinition(
-									idGenerator.generateTagsetId(), result));
+								tagset);
 						}
 					});
         	
@@ -1452,7 +1473,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			.stream()
 			.filter(resource -> resource instanceof DocumentResource)
 			.map(resource -> (DocumentResource)resource)
-			.filter(resource -> resource.hasWritePermission())
 			.collect(Collectors.toList());
 		
 		new ProjectInvitationDialog(
@@ -1525,22 +1545,33 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    return sb.toString();
 		};
 		
+		Function<Resource,String> buildResponsableFunction = (resource) -> {
+			
+			if (resource.getResponsableUser() == null) {
+				return "";
+			}
+			
+			StringBuilder sb = new StringBuilder()
+			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
+		      .append(resource.getResponsableUser())
+		      .append("</div>"); //$NON-NLS-1$
+			sb.append("</div>"); //$NON-NLS-1$
+				        
+		    return sb.toString();
+		};
+		
         documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
-        	.setId(DocumentGridColumn.NAME.name())
-        	.setWidth(300);
-//        
-//        documentGrid
-//    	.addColumn(res -> res.getPermissionIcon() , new HtmlRenderer())
-//    	.setCaption("Permission")
-//    	.setExpandRatio(1);      
-        
+        	.setId(DocumentGridColumn.NAME.name());
+        	
         documentGrid
-		  	.addColumn(res -> res.getResponsableUser())
+		  	.addColumn(res -> buildResponsableFunction.apply(res), new HtmlRenderer())
 		  	.setCaption("Responsable")
-		  	.setExpandRatio(1);      
-        
+		  	.setId(DocumentGridColumn.RESPONABLE.name())
+		  	.setExpandRatio(1)
+		  	.setHidden(true);
+
         Label documentsAnnotations = new Label("Documents & Annotations");
 
         documentGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
@@ -1559,13 +1590,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setId(TagsetGridColumn.NAME.name())
-			.setCaption("Name")
-			.setWidth(300);
+			.setCaption("Name");
 	
 		tagsetGrid
-		  	.addColumn(res -> res.getResponsableUser())
+		  	.addColumn(tagset -> 
+		  		tagset.getResponsableUser() == null?
+		  				"Not assigned"
+		  				:this.membersByIdentfier.get(tagset.getResponsableUser()))
 		  	.setCaption("Responsable")
-		  	.setExpandRatio(1);      
+		  	.setId(TagsetGridColumn.RESPONSABLE.name())
+		  	.setExpandRatio(1)
+		  	.setHidden(true)
+		  	.setHidable(true);
 
         Label tagsetsAnnotations = new Label("Tagsets");
         tagsetGridComponent = new ActionGridComponent<Grid<TagsetDefinition>> (
@@ -1790,7 +1826,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             public void failure(Throwable t) {
             	setProgressBarVisible(false);
             	setEnabled(true);
-                errorHandler.showAndLogError("error opening project", t);
+                errorHandler.showAndLogError("Error opening Project.", t);
             }
         });
     }
@@ -1798,28 +1834,30 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private void initData() {
         try {
         	Set<Member> projectMembers = project.getProjectMembers();
-        	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(projectMembers); 
+        	this.membersByIdentfier = 
+        		projectMembers.stream()
+        			.collect(Collectors.toMap(
+        					Member::getIdentifier, 
+        					Function.identity()));
+
+        	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
         	documentGrid.setDataProvider(resourceDataProvider);
         	documentGrid.sort(DocumentGridColumn.NAME.name());
         	documentGrid.expand(resourceDataProvider.getTreeData().getRootItems());
         	
         	tagsetData = new ListDataProvider<>(project.getTagsets());
         	tagsetGrid.setDataProvider(tagsetData);
+        	
         	ListDataProvider<Member> memberData = new ListDataProvider<>(projectMembers);
         	teamGrid.setDataProvider(memberData);
         	tagsetGrid.sort(TagsetGridColumn.NAME.name());
 		} catch (Exception e) {
-			errorHandler.showAndLogError("error initializing data", e);
+			errorHandler.showAndLogError("Error initializing data.", e);
 		}
 	}
 
-    private TreeDataProvider<Resource> buildResourceDataProvider(Set<Member> projectMembers) throws Exception {
+    private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
         if(project != null){
-        	Map<String, Member> membersByIdentfier = 
-        			projectMembers.stream()
-        			.collect(Collectors.toMap(
-        					Member::getIdentifier, 
-        					Function.identity()));
             TreeData<Resource> treeData = new TreeData<>();
             Collection<SourceDocument> srcDocs = project.getSourceDocuments();
             Locale locale = Locale.getDefault();
@@ -1830,8 +1868,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 DocumentResource docResource = 
                 		new DocumentResource(
                 			srcDoc, 
-                			project.getProjectId(),
-                			true);
+                			project.getProjectId());
                 
                 treeData.addItem(null, docResource);
                 
@@ -1840,11 +1877,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 
             	List<Resource> collectionResources = collections
         		.stream()
+        		.filter(collectionRef -> 
+        			!miToggleResponsibiltityFilter.isChecked() 
+        			|| collectionRef.getResponsableUser() == null 
+        			|| collectionRef.getResponsableUser().equals(project.getUser().getIdentifier()))
         		.map(collectionRef -> 
         			new CollectionResource(
         				collectionRef, 
         				project.getProjectId(),
-        				collectionRef.isResponsable(project.getUser().getIdentifier()),
         				collectionRef.getResponsableUser()!= null?membersByIdentfier.get(collectionRef.getResponsableUser()):null)
         		)
         		.collect(Collectors.toList());

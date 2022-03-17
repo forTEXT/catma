@@ -56,7 +56,7 @@ public class GitMember implements Member {
 
     @Override
     public String getEmail() {
-        return "/nonexistent"; //TODO: ok?
+        return delegate.getEmail();
     }
     
     public RBACRole getRole(){
@@ -67,4 +67,25 @@ public class GitMember implements Member {
 	public String toString() {
 		return getName();
 	}
+    
+    @Override
+    public int compareTo(Member o) {
+    	
+    	String n1 = this.getName();
+    	if (n1 == null) {
+    		n1 = this.getIdentifier();
+    	}
+    	String n2 = o.getName();
+    	if (n2 == null) {
+    		n2 = o.getIdentifier();
+    	}
+    	
+    	if (n1 != null && n2 != null && !n1.equals(n2)) {
+    		return n1.compareTo(n2);
+    	}
+    	
+    	
+    	
+    	return this.getIdentifier().compareTo(o.getIdentifier());
+    }
 }
