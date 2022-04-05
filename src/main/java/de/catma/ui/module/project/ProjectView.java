@@ -39,9 +39,7 @@ import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.FileDownloader;
-import com.vaadin.server.SerializablePredicate;
-import com.vaadin.server.StreamResource;
+import com.vaadin.server.*;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -188,6 +186,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private Button btSynchBell;
 	private final ProgressListener progressListener;
+
+	private ProjectResourceExportApiDialog projectResourceExportApiDialog;
 
     public ProjectView(
     		ProjectManager projectManager, 
@@ -451,6 +451,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", mi -> handleSynchronizeRequest());
+		hugeCardMoreOptions.addSeparator();
+		hugeCardMoreOptions.addItem("Share project resources (experimental API)", mi -> handleShareProjectResources());
         MenuItem miImportCorpus = hugeCardMoreOptions.addItem("Import CATMA 5 Corpus", mi -> handleCorpusImport());
         miImportCorpus.setVisible(CATMAPropertyKey.EXPERT.getValue(false) 
         		|| Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
@@ -2101,6 +2103,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	public void close() {
 		try {
 			this.eventBus.unregister(this);
+			if (projectResourceExportApiDialog != null) {
+				projectResourceExportApiDialog.removeRequestHandlerFromVaadinService();
+			}
 			if (project != null) {
 				if (projectExceptionListener != null) {
 					project.removePropertyChangeListener(
@@ -2159,4 +2164,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		};
 	}
 
+	private void handleShareProjectResources() {
+		if (projectResourceExportApiDialog == null) {
+			projectResourceExportApiDialog = new ProjectResourceExportApiDialog(this.project);
+		}
+		projectResourceExportApiDialog.show();
+	}
  }

@@ -56,8 +56,10 @@ public class CatmaApplicationServlet extends VaadinServlet {
 		@Override
 		public boolean handleRequest(VaadinSession session, VaadinRequest request, VaadinResponse response)
 				throws IOException {
+			String requestPath = request.getPathInfo().toLowerCase();
 			if (!delegates.isEmpty() 
-					&& request.getPathInfo().toLowerCase().endsWith("/queryresult/selection.json")) {
+					&& (requestPath.endsWith("/queryresult/selection.json") || requestPath.startsWith("/api"))) {
+				// TODO: turn delegates into a map so that we can do exact path matches?
 				for (RequestHandler handler : delegates) {
 					if (handler.handleRequest(session, request, response)) {
 						return true;
