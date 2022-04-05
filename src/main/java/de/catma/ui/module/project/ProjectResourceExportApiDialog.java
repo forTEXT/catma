@@ -10,7 +10,7 @@ import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import de.catma.api.pre.ProjectResourceExportApiRequestHandler;
 import de.catma.project.Project;
-import de.catma.ui.CatmaApplicationServlet.DelegateQueryResultRequestHandler;
+import de.catma.ui.CatmaApplicationServlet.DelegateRequestHandler;
 import de.catma.ui.i18n.Messages;
 
 public class ProjectResourceExportApiDialog extends Window {
@@ -38,8 +38,8 @@ public class ProjectResourceExportApiDialog extends Window {
             projectResourceExportApiRequestHandler = new ProjectResourceExportApiRequestHandler(this.project);
 
             for (RequestHandler handler : VaadinService.getCurrent().getRequestHandlers()) {
-                if (handler instanceof DelegateQueryResultRequestHandler) {
-                    ((DelegateQueryResultRequestHandler) handler).add(projectResourceExportApiRequestHandler);
+                if (handler instanceof DelegateRequestHandler) {
+                    ((DelegateRequestHandler) handler).add(projectResourceExportApiRequestHandler);
                     break;
                 }
             }
@@ -117,8 +117,8 @@ public class ProjectResourceExportApiDialog extends Window {
     public void removeRequestHandlerFromVaadinService() {
         if (projectResourceExportApiRequestHandler != null) {
             for (RequestHandler handler : VaadinService.getCurrent().getRequestHandlers()) {
-                if (handler instanceof DelegateQueryResultRequestHandler) {
-                    ((DelegateQueryResultRequestHandler) handler).remove(projectResourceExportApiRequestHandler);
+                if (handler instanceof DelegateRequestHandler) {
+                    ((DelegateRequestHandler) handler).remove(projectResourceExportApiRequestHandler);
                     break;
                 }
             }

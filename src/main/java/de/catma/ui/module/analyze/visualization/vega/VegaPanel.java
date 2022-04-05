@@ -38,7 +38,7 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.CatmaApplicationServlet.DelegateQueryResultRequestHandler;
+import de.catma.ui.CatmaApplicationServlet.DelegateRequestHandler;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.module.analyze.QueryOptionsProvider;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
@@ -155,8 +155,8 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 		if (event.getValue()) {
 			VaadinSession.getCurrent().removeRequestHandler(queryResultRequestHandler);
 			for (RequestHandler handler : VaadinService.getCurrent().getRequestHandlers()) {
-				if (handler instanceof DelegateQueryResultRequestHandler) {
-					((DelegateQueryResultRequestHandler) handler).add(queryResultRequestHandler);
+				if (handler instanceof DelegateRequestHandler) {
+					((DelegateRequestHandler) handler).add(queryResultRequestHandler);
 					break;
 				}
 			}
@@ -174,8 +174,8 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 			}
 
 			for (RequestHandler handler : VaadinService.getCurrent().getRequestHandlers()) {
-				if (handler instanceof DelegateQueryResultRequestHandler) {
-					((DelegateQueryResultRequestHandler) handler).remove(queryResultRequestHandler);
+				if (handler instanceof DelegateRequestHandler) {
+					((DelegateRequestHandler) handler).remove(queryResultRequestHandler);
 					break;
 				}
 			}
@@ -357,8 +357,8 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 	public void close() {
 		VaadinSession.getCurrent().removeRequestHandler(queryResultRequestHandler);
 		for (RequestHandler handler : VaadinService.getCurrent().getRequestHandlers()) {
-			if (handler instanceof DelegateQueryResultRequestHandler) {
-				((DelegateQueryResultRequestHandler) handler).remove(queryResultRequestHandler);
+			if (handler instanceof DelegateRequestHandler) {
+				((DelegateRequestHandler) handler).remove(queryResultRequestHandler);
 				break;
 			}
 		}

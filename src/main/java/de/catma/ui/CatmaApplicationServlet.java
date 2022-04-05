@@ -46,19 +46,17 @@ import de.catma.properties.CATMAPropertyKey;
 
 public class CatmaApplicationServlet extends VaadinServlet {
 	
-	public static final class DelegateQueryResultRequestHandler implements RequestHandler {
+	public static final class DelegateRequestHandler implements RequestHandler {
 		private final CopyOnWriteArrayList<RequestHandler> delegates;
 		
-		public DelegateQueryResultRequestHandler() {
-			this.delegates = new CopyOnWriteArrayList<RequestHandler>();
+		public DelegateRequestHandler() {
+			this.delegates = new CopyOnWriteArrayList<>();
 		}
 		
 		@Override
-		public boolean handleRequest(VaadinSession session, VaadinRequest request, VaadinResponse response)
-				throws IOException {
+		public boolean handleRequest(VaadinSession session, VaadinRequest request, VaadinResponse response) throws IOException {
 			String requestPath = request.getPathInfo().toLowerCase();
-			if (!delegates.isEmpty() 
-					&& (requestPath.endsWith("/queryresult/selection.json") || requestPath.startsWith("/api"))) {
+			if (!delegates.isEmpty() && (requestPath.endsWith("/queryresult/selection.json") || requestPath.startsWith("/api"))) {
 				// TODO: turn delegates into a map so that we can do exact path matches?
 				for (RequestHandler handler : delegates) {
 					if (handler.handleRequest(session, request, response)) {
@@ -204,7 +202,7 @@ public class CatmaApplicationServlet extends VaadinServlet {
                 deploymentConfiguration) {
         	protected java.util.List<com.vaadin.server.RequestHandler> createRequestHandlers() throws ServiceException {
         		java.util.List<com.vaadin.server.RequestHandler> handlers = super.createRequestHandlers();
-        		handlers.add(new DelegateQueryResultRequestHandler());
+        		handlers.add(new DelegateRequestHandler());
         		return handlers;
         	};
         };
