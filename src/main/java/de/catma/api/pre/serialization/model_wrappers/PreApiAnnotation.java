@@ -1,4 +1,4 @@
-package de.catma.repository.git.serialization.model_wrappers;
+package de.catma.api.pre.serialization.model_wrappers;
 
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;

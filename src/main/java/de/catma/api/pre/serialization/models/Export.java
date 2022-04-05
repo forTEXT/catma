@@ -1,4 +1,4 @@
-package de.catma.repository.git.serialization.models.api.pre;
+package de.catma.api.pre.serialization.models;
 
 import de.catma.util.IDGenerator;
 

@@ -1,8 +1,8 @@
-package de.catma.repository.git.serialization.models.api.pre;
+package de.catma.api.pre.serialization.models;
 
-import de.catma.repository.git.serialization.model_wrappers.PreApiAnnotation;
-import de.catma.repository.git.serialization.model_wrappers.PreApiSourceDocument;
-import de.catma.repository.git.serialization.model_wrappers.PreApiTagDefinition;
+import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
+import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
 
 import java.util.List;
 

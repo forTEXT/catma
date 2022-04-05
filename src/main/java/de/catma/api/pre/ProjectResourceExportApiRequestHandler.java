@@ -1,10 +1,15 @@
-package de.catma.api;
+package de.catma.api.pre;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinSession;
+import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
+import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
+import de.catma.api.pre.serialization.models.Export;
+import de.catma.api.pre.serialization.models.ExportDocument;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -12,11 +17,6 @@ import de.catma.document.source.SourceDocument;
 import de.catma.project.Project;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.model_wrappers.PreApiAnnotation;
-import de.catma.repository.git.serialization.model_wrappers.PreApiSourceDocument;
-import de.catma.repository.git.serialization.model_wrappers.PreApiTagDefinition;
-import de.catma.repository.git.serialization.models.api.pre.ExportDocument;
-import de.catma.repository.git.serialization.models.api.pre.Export;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
