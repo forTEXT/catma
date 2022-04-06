@@ -185,7 +185,7 @@ public class TagDefinition {
 		int red = (rgb >> 16) & 0xFF;
 		int green = (rgb >> 8) & 0xFF;
 		int blue = rgb & 0xFF;
-		return String.format("#%2x%2x%2x", red, green, blue);
+		return String.format("#%02x%02x%02x", red, green, blue);
 
 	}
 	
