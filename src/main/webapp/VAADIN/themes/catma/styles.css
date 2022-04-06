@@ -18603,3 +18603,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	direction: rtl;
 	text-align: right;
 }
+
+.catma .pre-api-dialog .jsclipboardbutton-label-invisible {
+	color: transparent;
+}
