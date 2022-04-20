@@ -3,12 +3,12 @@ package de.catma.tag;
 public final class TagsetMetadata {
 	private String name;
 	private String description;
-	private String responsableUser;
-	public TagsetMetadata(String name, String description, String responsableUser) {
+	private String responsibleUser;
+	public TagsetMetadata(String name, String description, String responsibleUser) {
 		super();
 		this.name = name;
 		this.description = description;
-		this.responsableUser = responsableUser;
+		this.responsibleUser = responsibleUser;
 	}
 	public String getName() {
 		return name;
@@ -22,10 +22,10 @@ public final class TagsetMetadata {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public String getResponsableUser() {
-		return responsableUser;
+	public String getResponsibleUser() {
+		return responsibleUser;
 	}
-	public void setResponsableUser(String responsableUser) {
-		this.responsableUser = responsableUser;
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
 	}
 }

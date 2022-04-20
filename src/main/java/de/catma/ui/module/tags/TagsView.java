@@ -48,6 +48,8 @@ import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.module.main.ErrorHandler;
@@ -298,8 +300,8 @@ public class TagsView extends HugeCard {
 		btRemovalRenderer.setHtmlContentAllowed(true);
 		
 		tagsetGrid.addColumn(
-				tagsetTreeItem -> tagsetTreeItem.getResponsableUser())
-		.setCaption("Responsable")
+				tagsetTreeItem -> tagsetTreeItem.getResponsibleUser())
+		.setCaption("Responsible")
 		.setSortable(false)
 		.setHidable(true)
 		.setWidth(150);
@@ -505,21 +507,40 @@ public class TagsView extends HugeCard {
 	}
 
 	void deleteTagsets(Collection<TagsetDefinition> selectedTagsets) {
-		for (TagsetDefinition tagset : selectedTagsets) {
-			ConfirmDialog.show(
-				UI.getCurrent(), 
-				"Warning", 
-				String.format(
-						"Are you sure you want to delete Tagset %1$s and all related data?", 
-						tagset.getName()),
-				"Yes",
-				"Cancel",
-				dlg -> {
-					if (dlg.isConfirmed()) {
-						project.getTagManager().removeTagsetDefinition(tagset);
-					}
-				});
-		}
+		boolean beyondUsersResponsibility = 
+				selectedTagsets.stream()
+				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.findAny()
+				.isPresent();
+		
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+			beyondUsersResponsibility, 
+			new Action() {
+				@Override
+				public void execute() {
+
+					List<String> tagsetNames = 
+							selectedTagsets.stream()
+							.map(TagsetDefinition::getName)
+							.sorted()
+							.collect(Collectors.toList());
+					ConfirmDialog.show(
+						UI.getCurrent(), 
+						"Warning", 
+						String.format(
+							"Are you sure you want to delete Tagset(s) %1$s and all related data?", 
+							String.join(",", tagsetNames)),
+						"Delete",
+						"Cancel",
+						dlg -> {
+							if (dlg.isConfirmed()) {
+								for (TagsetDefinition tagset : selectedTagsets) {
+									project.getTagManager().removeTagsetDefinition(tagset);
+								}
+							}
+						});
+				}
+			});
 	}
 
 	private void handleEditTagsetRequest() {
@@ -531,22 +552,40 @@ public class TagsView extends HugeCard {
 		
 		if (!selectedTagsets.isEmpty()) {
 			final TagsetDefinition tagset = selectedTagsets.iterator().next();
-			try {
-				EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
-						new TagsetMetadata(tagset.getName(), tagset.getDescription(), tagset.getResponsableUser()),
-						this.project.getProjectMembers(),
-						new SaveCancelListener<TagsetMetadata>() {
-							@Override
-							public void savePressed(TagsetMetadata result) {
-								project.getTagManager().setTagsetMetadata(
-										tagset, result);
-							}
-						});
-				editTagsetDlg.show();
-			}
-			catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading project members!", e);
-			}
+			
+			boolean beyondUsersResponsibility = !tagset.isResponsible(project.getUser().getIdentifier());
+				
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				new Action() {
+					@Override
+					public void execute() {
+						Set<Member> projectMembers = null;
+						try {
+							projectMembers = TagsView.this.project.getProjectMembers();
+						}
+						catch (IOException e) {
+							((ErrorHandler)UI.getCurrent()).showAndLogError(
+									"Error loading project members!", e);
+						}
+						if (projectMembers != null) {
+							EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
+									new TagsetMetadata(
+											tagset.getName(), 
+											tagset.getDescription(), 
+											tagset.getResponsibleUser()),
+									projectMembers,
+									new SaveCancelListener<TagsetMetadata>() {
+										@Override
+										public void savePressed(TagsetMetadata result) {
+											project.getTagManager().setTagsetMetadata(
+													tagset, result);
+										}
+									});
+							editTagsetDlg.show();
+						}
+					}
+				});
 		}
 		else {
 			Notification.show(
@@ -575,22 +614,39 @@ public class TagsView extends HugeCard {
 	}
 
 	void deleteTags(List<TagDefinition> targetTags) {
-		String msg = String.format(
-				"Are you sure you want to delete the following Tags: %1$s?", 
-				targetTags
-				.stream()
-				.map(TagDefinition::getName)
-				.collect(Collectors.joining(",")));
-			
-		ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
-			if (dlg.isConfirmed()) {
-				for (TagDefinition tag : targetTags) {
-					TagsetDefinition tagset =
-							project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
-					project.getTagManager().removeTagDefinition(tagset, tag);
+		boolean beyondUsersResponsibility =
+				targetTags.stream()
+				.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
+				.distinct()
+				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.findAny()
+				.isPresent();
+
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+			new Action() {
+				@Override
+				public void execute() {
+					String msg = String.format(
+							"Are you sure you want to delete the following Tags: %1$s?", 
+							targetTags
+							.stream()
+							.map(TagDefinition::getName)
+							.collect(Collectors.joining(",")));
+					
+					ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
+						if (dlg.isConfirmed()) {
+							for (TagDefinition tag : targetTags) {
+								TagsetDefinition tagset =
+										project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
+								project.getTagManager().removeTagDefinition(tagset, tag);
+							}
+						}
+					});
 				}
-			}
 		});
+
+
 	}
 
 	private void handleEditTagRequest() {
@@ -610,13 +666,27 @@ public class TagsView extends HugeCard {
 			
 			final TagDefinition targetTag = targetTags.get(0);
 			
-			EditTagDialog editTagDialog = new EditTagDialog(new TagDefinition(targetTag), 
-					new SaveCancelListener<TagDefinition>() {
-						public void savePressed(TagDefinition result) {
-							project.getTagManager().updateTagDefinition(targetTag, result);
-						};
-					});
-			editTagDialog.show();
+			boolean beyondUsersResponsibility =
+					!project.getTagManager().getTagLibrary()
+						.getTagsetDefinition(targetTag)
+						.isResponsible(project.getUser().getIdentifier());
+			
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+				new Action() {
+					@Override
+					public void execute() {
+						EditTagDialog editTagDialog = 
+							new EditTagDialog(new TagDefinition(targetTag), 
+								new SaveCancelListener<TagDefinition>() {
+							public void savePressed(TagDefinition result) {
+								project.getTagManager().updateTagDefinition(targetTag, result);
+							};
+						});
+						editTagDialog.show();
+					}
+			});
+
 		}
 		
 	}
@@ -671,58 +741,40 @@ public class TagsView extends HugeCard {
 			final boolean bulkEdit = targetTags.size() > 1; // just a single tag's properties or is it a bulk(>1) edit?
 			
 			
-			boolean containsOutOfUsersResponsibilityTagset =
+			boolean beyondUsersResponsibility =
 					targetTags.stream()
 					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
 					.distinct()
-					.filter(tagset -> !tagset.isResponsable(project.getUser().getIdentifier()))
+					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
 					.findAny()
 					.isPresent();
 			
-			if (containsOutOfUsersResponsibilityTagset) {
-				ConfirmDialog.show(UI.getCurrent(), 
-					"Warning",
-					"One or more selected Tagsets are out of your responsibility! "
-					+ "Altering these Tagsets might result in conflicts with operations of other Project members!\n\n"
-					+ "Do you want to proceed?",
-					"Yes",
-					"No",
-					new ConfirmDialog.Listener() {
-						
-						@Override
-						public void onClose(ConfirmDialog dialog) {
-							if (dialog.isConfirmed()) {
-								showAddPropertyDialog(bulkEdit, commonProperties, targetTags);
-							}
-						}
-					});
-			}
-			else {
-				showAddPropertyDialog(bulkEdit, commonProperties, targetTags);
-			}
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				new Action() {
+					@Override
+					public void execute() {
+						AddEditPropertyDialog addPropertyDialog = new AddEditPropertyDialog(
+								bulkEdit,
+								commonProperties,
+								new SaveCancelListener<List<PropertyDefinition>>() {
+									@Override
+									public void savePressed(List<PropertyDefinition> result) {
+										if (bulkEdit) {
+											handleBulkEditProperties(result,
+													commonProperties, targetTags);
+										}
+										else {
+											handleSingleEditProperties(result, targetTags.iterator().next());
+										}
+										
+									}
+							});
+							
+							addPropertyDialog.show();
+					}
+			});
 		}
-	}
-	
-	private void showAddPropertyDialog(
-			boolean bulkEdit, List<PropertyDefinition> commonProperties, List<TagDefinition> targetTags) {
-		AddEditPropertyDialog addPropertyDialog = new AddEditPropertyDialog(
-			bulkEdit,
-			commonProperties,
-			new SaveCancelListener<List<PropertyDefinition>>() {
-				@Override
-				public void savePressed(List<PropertyDefinition> result) {
-					if (bulkEdit) {
-						handleBulkEditProperties(result,
-								commonProperties, targetTags);
-					}
-					else {
-						handleSingleEditProperties(result, targetTags.iterator().next());
-					}
-					
-				}
-		});
-		
-		addPropertyDialog.show();
 	}
 	
 	void deletePropertyDataItem(PropertyDataItem propertyDataItem) {
@@ -882,63 +934,46 @@ public class TagsView extends HugeCard {
 		
 		if (!parentTags.isEmpty()) {
 			
-			boolean containsOutOfUsersResponsibilityTagset =
-					parentTags.stream()
-					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
-					.distinct()
-					.filter(tagset -> !tagset.isResponsable(project.getUser().getIdentifier()))
-					.findAny()
-					.isPresent();
+			boolean beyondUsersResponsibility =
+				parentTags.stream()
+				.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
+				.distinct()
+				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.findAny()
+				.isPresent();
 			
-			if (containsOutOfUsersResponsibilityTagset) {
-				ConfirmDialog.show(UI.getCurrent(), 
-					"Warning",
-					"One or more selected Tagsets are out of your responsibility! "
-					+ "Altering these Tagsets might result in conflicts with operations of other Project members!\n\n"
-					+ "Do you want to proceed?",
-					"Yes",
-					"No",
-					new ConfirmDialog.Listener() {
-						
-						@Override
-						public void onClose(ConfirmDialog dialog) {
-							if (dialog.isConfirmed()) {
-								showAddSubtagDialog(parentTags);
-							}
-						}
-					});
-			}
-			else {
-				showAddSubtagDialog(parentTags);
-			}
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				new Action() {
+					@Override
+					public void execute() {
+						AddSubtagDialog addTagDialog =
+							new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
+								public void savePressed(TagDefinition result) {
+									for (TagDefinition parent : parentTags) {
+										
+										TagsetDefinition tagset = 
+											project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
+										
+										TagDefinition tag = new TagDefinition(result);
+										tag.setUuid(idGenerator.generate());
+										tag.setParentUuid(parent.getUuid());
+										tag.setTagsetDefinitionUuid(tagset.getUuid());
+										
+										project.getTagManager().addTagDefinition(
+												tagset, tag);
+									}
+								};
+							});
+						addTagDialog.show();
+					}
+				});
 		}
 		else {
 			Notification.show("Info", "Please select at least one parent Tag!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 	
-	private void showAddSubtagDialog(List<TagDefinition> parentTags) {
-		AddSubtagDialog addTagDialog =
-				new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
-					public void savePressed(TagDefinition result) {
-						for (TagDefinition parent : parentTags) {
-							
-							TagsetDefinition tagset = 
-								project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
-							
-							TagDefinition tag = new TagDefinition(result);
-							tag.setUuid(idGenerator.generate());
-							tag.setParentUuid(parent.getUuid());
-							tag.setTagsetDefinitionUuid(tagset.getUuid());
-							
-							project.getTagManager().addTagDefinition(
-									tagset, tag);
-						}
-					};
-				});
-			addTagDialog.show();
-	}
-
 	private void handleAddTagRequest() {
 		
 		final Optional<TagsetDefinition> selectedTagset = tagsetGrid.getSelectedItems()
@@ -959,55 +994,34 @@ public class TagsView extends HugeCard {
 				tagsets.stream()
 				.collect(Collectors.toList());
 		
-		boolean containsOutOfUsersResponsibilityTagset =
+		boolean beyondUsersResponsibility =
 				editableTagsets.stream()
-				.filter(tagset -> !tagset.isResponsable(project.getUser().getIdentifier()))
+				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
 				.findAny()
 				.isPresent();
 		
-		if (containsOutOfUsersResponsibilityTagset) {
-			ConfirmDialog.show(UI.getCurrent(), 
-				"Warning",
-				"One or more selected Tagsets are out of your responsibility! "
-				+ "Altering these Tagsets might result in conflicts with operations of other Project members!\n\n"
-				+ "Do you want to proceed?",
-				"Yes",
-				"No",
-				new ConfirmDialog.Listener() {
-					
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				new Action() {
 					@Override
-					public void onClose(ConfirmDialog dialog) {
-						if (dialog.isConfirmed()) {
-							showAddParentTagDialog(editableTagsets, selectedTagset);
-						}
+					public void execute() {
+						AddParenttagDialog addTagDialog = 
+							new AddParenttagDialog(
+								editableTagsets, 
+								selectedTagset, 
+								new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
+								
+								@Override
+								public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
+									project.getTagManager().addTagDefinition(
+											result.getFirst(), result.getSecond());
+								}
+							});
+						addTagDialog.show();		
 					}
 				});
-		}
-		else {
-			showAddParentTagDialog(editableTagsets, selectedTagset);
-		}
-		
-		
 	}
 	
-	private void showAddParentTagDialog(
-			List<TagsetDefinition> editableTagsets, Optional<TagsetDefinition> selectedTagset) {
-		
-		AddParenttagDialog addTagDialog = 
-			new AddParenttagDialog(
-				editableTagsets, 
-				selectedTagset, 
-				new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
-				
-				@Override
-				public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
-					project.getTagManager().addTagDefinition(
-							result.getFirst(), result.getSecond());
-				}
-			});
-		addTagDialog.show();		
-	}
-
 	private void initData() {
         try {
             tagsetData = new TreeData<TagsetTreeItem>();
@@ -1017,21 +1031,21 @@ public class TagsView extends HugeCard {
         					Member::getIdentifier, 
         					Function.identity()));
             for (TagsetDefinition tagset : tagsets) {
-            	String responsableUser = null;
+            	String responsibleUser = null;
             	
 
-        		if (tagset.getResponsableUser() != null) {
-        			Member member = projectMembersByIdentifier.get(tagset.getResponsableUser());
+        		if (tagset.getResponsibleUser() != null) {
+        			Member member = projectMembersByIdentifier.get(tagset.getResponsibleUser());
         			if (member != null) {
-        				responsableUser = member.getName();
+        				responsibleUser = member.getName();
         			}
         		}
             	
             	TagsetTreeItem tagsetItem = 
         			new TagsetDataItem(
     					tagset, 
-    					responsableUser,
-    					tagset.isResponsable(project.getUser().getIdentifier()));
+    					responsibleUser,
+    					true);
             	tagsetData.addItem(null, tagsetItem);
             	addTags(tagsetItem, tagset);
             }
@@ -1063,7 +1077,7 @@ public class TagsView extends HugeCard {
     							IDGenerator idGenerator = new IDGenerator();
     							TagsetDefinition tagset = new TagsetDefinition(
     									idGenerator.generateTagsetId(), result);
-    							tagset.setResponsableUser(project.getUser().getIdentifier());
+    							tagset.setResponsibleUser(project.getUser().getIdentifier());
     							project.getTagManager().addTagsetDefinition(
     								tagset);
     						}

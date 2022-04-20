@@ -18,6 +18,6 @@ interface TagsetTreeItem {
 	
 	public default void setTagsetExpanded(boolean expanded) {};
 	
-	public default String getResponsableUser() { return null; };
+	public default String getResponsibleUser() { return null; };
 
 }

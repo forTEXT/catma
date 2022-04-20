@@ -19,16 +19,16 @@ public class EditResourceDialog extends AbstractOkCancelDialog<Pair<String, Cont
 	private TextField authorField;
 	private TextField descriptionField;
 	private TextField publisherField;
-	private ComboBox<Member> responsableBox;
+	private ComboBox<Member> responsibleBox;
 	private ContentInfoSet contentInfoSet;
 
 	public EditResourceDialog(
-			String responsableUser, ContentInfoSet contentInfoSet,
+			String responsibleUser, ContentInfoSet contentInfoSet,
 			Collection<Member> projectMembers,
 			SaveCancelListener<Pair<String, ContentInfoSet>> saveCancelListener) {
 		super("Edit Collection metadata", saveCancelListener);
 		this.contentInfoSet = contentInfoSet;
-		initComponents(responsableUser, contentInfoSet, projectMembers);
+		initComponents(responsibleUser, contentInfoSet, projectMembers);
 	}
 	
 	public EditResourceDialog(ContentInfoSet contentInfoSet,
@@ -39,7 +39,7 @@ public class EditResourceDialog extends AbstractOkCancelDialog<Pair<String, Cont
 	}
 	
 
-	private void initComponents(String responsableUser, ContentInfoSet contentInfoSet, Collection<Member> projectMembers) {
+	private void initComponents(String responsibleUser, ContentInfoSet contentInfoSet, Collection<Member> projectMembers) {
 		titleField = new TextField("Title");
 		if (contentInfoSet.getTitle() != null) {
 			titleField.setValue(contentInfoSet.getTitle());
@@ -58,20 +58,20 @@ public class EditResourceDialog extends AbstractOkCancelDialog<Pair<String, Cont
 		}
 		
 		Member currentMember = null; 
-		if (responsableUser != null) {
+		if (responsibleUser != null) {
 			currentMember = 
 				projectMembers.stream()
-				.filter(member -> member.getIdentifier().equals(responsableUser))
+				.filter(member -> member.getIdentifier().equals(responsibleUser))
 				.findFirst()
 				.orElse(null);
 		}
 		if (projectMembers != null) {
-			responsableBox = new ComboBox<Member>(
-					"Responsable member", projectMembers.stream().sorted().collect(Collectors.toList()));
-			responsableBox.setEmptySelectionAllowed(true);
+			responsibleBox = new ComboBox<Member>(
+					"Responsible member", projectMembers.stream().sorted().collect(Collectors.toList()));
+			responsibleBox.setEmptySelectionAllowed(true);
 			
 			if (currentMember != null) {
-				responsableBox.setValue(currentMember);
+				responsibleBox.setValue(currentMember);
 			}
 		}
 	}
@@ -86,17 +86,17 @@ public class EditResourceDialog extends AbstractOkCancelDialog<Pair<String, Cont
 		descriptionField.setWidth("75%");
 		content.addComponent(publisherField);
 		publisherField.setWidth("75%");
-		if (responsableBox != null) {
-			content.addComponent(responsableBox);
-			responsableBox.setWidth("75%");
+		if (responsibleBox != null) {
+			content.addComponent(responsibleBox);
+			responsibleBox.setWidth("75%");
 		}
 	}
 
 	@Override
 	protected Pair<String, ContentInfoSet> getResult() {
 		Member currentMember = null;
-		if (responsableBox != null) {
-			currentMember = responsableBox.getValue();
+		if (responsibleBox != null) {
+			currentMember = responsibleBox.getValue();
 		}
 		this.contentInfoSet.setAuthor(trimNonNull(authorField.getValue()));
 		this.contentInfoSet.setTitle(trimNonNull(titleField.getValue()));

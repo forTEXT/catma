@@ -10,14 +10,14 @@ public class CollectionResource implements Resource {
 
     private final AnnotationCollectionReference collectionReference;
 	private final String projectId;
-	private User responsableUser;
+	private User responsibleUser;
 
     public CollectionResource(
     		AnnotationCollectionReference userMarkupCollectionReference, 
-    		String projectId, User responsableUser){
+    		String projectId, User responsibleUser){
         this.collectionReference = userMarkupCollectionReference;
         this.projectId = projectId;
-        this.responsableUser = responsableUser;
+        this.responsibleUser = responsibleUser;
     }
 
     @Override
@@ -70,7 +70,12 @@ public class CollectionResource implements Resource {
 	}
 
 	@Override
-	public String getResponsableUser() {
-		return responsableUser != null ? responsableUser.getName() : "Not assigned";
+	public String getResponsibleUser() {
+		return responsibleUser != null ? responsibleUser.getName() : "Not assigned";
+	}
+	
+	@Override
+	public boolean isResponsible(String userIdentifier) {
+		return collectionReference.isResponsible(userIdentifier);
 	}
 }

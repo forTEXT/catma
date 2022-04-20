@@ -1,6 +1,5 @@
 package de.catma.ui.module.analyze.visualization.kwic.annotation;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import com.google.common.eventbus.EventBus;
@@ -20,6 +18,7 @@ import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
@@ -48,6 +47,12 @@ import de.catma.ui.module.project.Resource;
 import de.catma.user.Member;
 
 public class CollectionSelectionStep extends VerticalLayout implements WizardStep {
+	
+	private enum DocumentGridColumn {
+		NAME,
+		RESPONABLE,
+		;
+	}
 
 	private ProgressStep progressStep;
     private TreeGrid<Resource> documentGrid;
@@ -58,6 +63,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	private TreeDataProvider<Resource> documentDataProvider;
 	private StepChangeListener stepChangeListener;
 	private EventBus eventBus;
+	private MenuItem miToggleResponsibiltityFilter;
     
 	public CollectionSelectionStep(EventBus eventBus, Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		this.eventBus = eventBus;
@@ -69,7 +75,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		try {
 			initData();
 		} catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error loading available Collections", e);
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading available Collections.", e);
 		}
 	}
 	
@@ -124,11 +130,14 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
             
         	List<Resource> collectionResources = collections
     		.stream()
+    		.filter(collectionRef -> 
+    			!miToggleResponsibiltityFilter.isChecked() 
+    			|| collectionRef.isResponsible(project.getUser().getIdentifier()))
     		.map(collectionRef -> 
     			(Resource)new CollectionResource(
     				collectionRef, 
     				project.getProjectId(),
-    				collectionRef.getResponsableUser()!= null?membersByIdentfier.get(collectionRef.getResponsableUser()):null)
+    				collectionRef.getResponsibleUser()!= null?membersByIdentfier.get(collectionRef.getResponsibleUser()):null)
     		)
     		.collect(Collectors.toList());
     		
@@ -285,10 +294,33 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 				        
 		    return sb.toString();
 		};
-      
+		
+		Function<Resource,String> buildResponsibleFunction = (resource) -> {
+			
+			if (resource.getResponsibleUser() == null) {
+				return "";
+			}
+			
+			StringBuilder sb = new StringBuilder()
+			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
+		      .append(resource.getResponsibleUser())
+		      .append("</div>"); //$NON-NLS-1$
+			sb.append("</div>"); //$NON-NLS-1$
+				        
+		    return sb.toString();
+		};
+		
         documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
-        	.setCaption("Name");
+        	.setCaption("Name")
+        	.setId(DocumentGridColumn.NAME.name());
+        	
+        documentGrid
+		  	.addColumn(res -> buildResponsibleFunction.apply(res), new HtmlRenderer())
+		  	.setCaption("Responsible")
+		  	.setId(DocumentGridColumn.RESPONABLE.name())
+		  	.setExpandRatio(1)
+		  	.setHidden(true);
 
         Label documentsAnnotations = new Label("Select one Collection per Document");
 
@@ -297,8 +329,33 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
                 documentGrid
         );
         documentGridComponent.setSizeFull();
+        miToggleResponsibiltityFilter = 
+        	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(
+        			"Hide other's responsibilities", mi -> toggleResponsibilityFilter());
+        
+        miToggleResponsibiltityFilter.setCheckable(true);
+        miToggleResponsibiltityFilter.setChecked(true);
+
         
         addComponent(documentGridComponent);
+	}
+
+	private void toggleResponsibilityFilter() {
+		if (!miToggleResponsibiltityFilter.isChecked()) {
+			Notification.show(
+				"Warning", 
+				"Selecting Collections that are beyond your repsonsibility, "
+				+ "might result in conflicts with operations of other Project members!", 
+				Type.WARNING_MESSAGE);
+		}
+		documentGrid.getColumn(DocumentGridColumn.RESPONABLE.name()).setHidden(
+				miToggleResponsibiltityFilter.isChecked());
+		try {
+			initData();
+		} catch (Exception e) {
+			((ErrorHandler)UI.getCurrent()).showAndLogError(
+					"Error loading available Collections.", e);
+		}
 	}
 
 	@Override

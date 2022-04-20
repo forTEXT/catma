@@ -43,7 +43,7 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 
 	private String description;
 	private String forkedFromCommitURL;
-	private String responsableUser;
+	private String responsibleUser;
 	
 	private Map<String,TagDefinition> tagDefinitions;
 	private Map<String,Set<String>> tagDefinitionChildren;
@@ -330,17 +330,17 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 		this.forkedFromCommitURL = forkedFromCommitURL;
 	}
 	
-	public void setResponsableUser(String responsableUser) {
-		this.responsableUser = responsableUser;
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
 	}
 	
-	public String getResponsableUser() {
-		return responsableUser;
+	public String getResponsibleUser() {
+		return responsibleUser;
 	}
 	
-	public boolean isResponsable(String userIdentifier) {
-		if (this.responsableUser != null) {
-			return this.responsableUser.equals(userIdentifier);
+	public boolean isResponsible(String userIdentifier) {
+		if (this.responsibleUser != null) {
+			return this.responsibleUser.equals(userIdentifier);
 		}
 		return true; //shared repsonsibility
 	}

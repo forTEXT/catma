@@ -314,7 +314,7 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 				collection.getContentInfoSet(),
 				collection.getSourceDocumentId(),
 				collection.getForkedFromCommitURL(),
-				collection.getResponsableUser()))
+				collection.getResponsibleUser()))
 			.collect(Collectors.toSet());
 			
 	}

@@ -10,9 +10,9 @@ public class GitMarkupCollectionHeader extends GitHeaderBase {
 	}
 
 	public GitMarkupCollectionHeader(
-			String name, String description, String responsableUser,
+			String name, String description, String responsibleUser,
 			String forkedFromCommitURL, String sourceDocumentId) {
-		super(name, description, responsableUser, forkedFromCommitURL);
+		super(name, description, responsibleUser, forkedFromCommitURL);
 
 		this.sourceDocumentId = sourceDocumentId;
 	}

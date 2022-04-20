@@ -38,6 +38,7 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.annotation.Annotation;
+import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
@@ -51,6 +52,8 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.module.main.ErrorHandler;
 
@@ -154,12 +157,9 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-				
-				if ((evt.getOldValue() != null) && (evt.getNewValue() == null)) {
-					
+				if (evt.getOldValue() != null) { // update or deletion					
+					refreshAnnotations();
 				}
-				
-				refreshAnnotations();
 			}
 		};
 		
@@ -197,6 +197,10 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	public void setDocument(SourceDocument document) throws IOException {
 		this.kwicProvider = new KwicProvider(document);
 		handleClearSelected();
+	}
+	
+	public void refreshAnnotationDetailsProvider() {
+		annotationDetailsProvider.refreshAll();
 	}
 	
 	private void initComponents() {
@@ -304,24 +308,34 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		AnnotationDataItem item = (AnnotationDataItem) clickEvent.getItem();
 		
 		final Annotation annotation = item.getAnnotation();
+		final AnnotationCollection collection = annotation.getUserMarkupCollection();
 		
-		if (!isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid())) {
-			changeCollectionListener.accept(annotation.getUserMarkupCollection().getUuid());
-			annotationDetailsProvider.refreshAll();
-		}
-		else {
-			ConfirmDialog.show(
-					UI.getCurrent(), 
-					"Info", 
-					"Are you sure you want to delete this Annotation?", 
-					"Delete", 
-					"Cancel", dlg -> {
-						if (dlg.isConfirmed()) {
-							collectionManager.removeTagInstance(annotation.getTagInstance().getUuid());
-						}
-					}	
-			);
-		}
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+			!collection.isResponsible(project.getUser().getIdentifier()),
+			new Action() {
+				
+				@Override
+				public void execute() {
+					if (!isCurrentEditedCollection.apply(collection.getUuid())) {
+						changeCollectionListener.accept(collection.getUuid());
+						annotationDetailsProvider.refreshAll();
+					}
+					else {
+						ConfirmDialog.show(
+								UI.getCurrent(), 
+								"Info", 
+								"Are you sure you want to delete this Annotation?", 
+								"Delete", 
+								"Cancel", dlg -> {
+									if (dlg.isConfirmed()) {
+										collectionManager.removeTagInstance(annotation.getTagInstance().getUuid());
+									}
+								}	
+								);
+					}
+				}
+			});
+		
 	}
 	
 	
@@ -339,26 +353,37 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 					Type.HUMANIZED_MESSAGE);
 		}
 		else {
-			EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-				new EditAnnotationPropertiesDialog(project, annotation, 
-						new SaveCancelListener<List<Property>>() {
-				
-				
-				@Override
-				public void savePressed(List<Property> result) {
-					try {
-						collectionManager.updateProperty(
-							annotation.getUserMarkupCollection(), 
-							annotation.getTagInstance(), result);
-						
-						
-					} catch (IOException e) {
-						((ErrorHandler)UI.getCurrent()).showAndLogError("error updating Annotation Properties", e);
-					}
-				}
-			});
+			final AnnotationCollection collection = annotation.getUserMarkupCollection();
 			
-			editAnnotationPropertiesDialog.show();
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				!collection.isResponsible(project.getUser().getIdentifier()),
+				new Action() {
+					
+					@Override
+					public void execute() {
+						
+						EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
+							new EditAnnotationPropertiesDialog(project, annotation, 
+									new SaveCancelListener<List<Property>>() {
+							
+							
+							@Override
+							public void savePressed(List<Property> result) {
+								try {
+									collectionManager.updateProperty(
+										annotation.getUserMarkupCollection(), 
+										annotation.getTagInstance(), result);
+									
+									
+								} catch (IOException e) {
+									((ErrorHandler)UI.getCurrent()).showAndLogError("error updating Annotation Properties", e);
+								}
+							}
+						});
+						
+						editAnnotationPropertiesDialog.show();
+					}
+				});
 		}
 	}
 
@@ -387,7 +412,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 						project.getTagManager().getTagLibrary().getTagsetDefinition(
 							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider,
-						annotation.getUserMarkupCollection().isResponable(project.getUser().getIdentifier()),
+						annotation.getUserMarkupCollection().isResponsible(project.getUser().getIdentifier()),
 						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
 			
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());

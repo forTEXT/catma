@@ -2,6 +2,7 @@ package de.catma.ui.module.project;
 
 import com.vaadin.icons.VaadinIcons;
 
+import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.project.Project;
 
@@ -88,7 +89,19 @@ public class DocumentResource implements Resource {
 	}
 
 	@Override
-	public String getResponsableUser() {
+	public String getResponsibleUser() {
 		return null; // no repsonsibilites for Documents so far
+	}
+	
+	@Override
+	public boolean isResponsible(String userIdentifier) {
+		
+		for (AnnotationCollectionReference ref : sourceDocument.getUserMarkupCollectionRefs()) {
+			if (!ref.isResponsible(userIdentifier)) {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 }

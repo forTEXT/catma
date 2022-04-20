@@ -118,7 +118,7 @@ class PropertyDataItem implements TagsetTreeItem {
 		if (editable) {
 			return VaadinIcons.TRASH.getHtml();
 		}
-		return VaadinIcons.LOCK.getHtml();
+		return null;
 	}
 
 	@Override

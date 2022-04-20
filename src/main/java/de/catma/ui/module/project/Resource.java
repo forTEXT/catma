@@ -35,6 +35,8 @@ public interface Resource {
 	public default boolean isCollection() { return false; }
 	public default boolean isTagset() { return false; }
 
-	public String getResponsableUser();
+	public String getResponsibleUser();
+	
+	public boolean isResponsible(String userIdentifier);
 
 }

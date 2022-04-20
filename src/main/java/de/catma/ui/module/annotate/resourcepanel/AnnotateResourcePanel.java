@@ -166,7 +166,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			CollectionDataItem collectionDataItem = 
 				new CollectionDataItem(
 					collectionReference, 
-					collectionReference.isResponsable(project.getUser().getIdentifier()));
+					collectionReference.isResponsible(project.getUser().getIdentifier()));
 			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
@@ -244,7 +244,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 							IDGenerator idGenerator = new IDGenerator();
 							TagsetDefinition tagset = new TagsetDefinition(
 									idGenerator.generateTagsetId(), result);
-							tagset.setResponsableUser(project.getUser().getIdentifier());
+							tagset.setResponsibleUser(project.getUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
 								tagset);
 						}
@@ -329,7 +329,6 @@ public class AnnotateResourcePanel extends VerticalLayout {
 						documentDataItem, 
 						new CollectionDataItem(
 							umcRef,
-							umcRef.isResponsable(project.getUser().getIdentifier()),
 							(currentlysSelectedColletionIds.isEmpty() || currentlysSelectedColletionIds.contains(umcRef.getId()))
 						)
 					);
@@ -404,13 +403,9 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		documentTree
 			.addColumn(documentTreeItem -> documentTreeItem.getName())
 			.setCaption("Name")
-			.setWidth(150);
+			.setWidth(300);
 		
 		documentTree.setHeight("250px");
-
-		documentTree.addColumn(
-				documentTreeItem -> documentTreeItem.getPermissionIcon(), new HtmlRenderer())
-		.setWidth(50);
 			
 		documentTree.addColumn(
 				documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer())
@@ -434,12 +429,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")
-			.setWidth(150);
-		
-		tagsetGrid.addColumn(
-				tagset -> tagset.isResponsable(project.getUser().getIdentifier())?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
-				new HtmlRenderer())
-		.setWidth(50);
+			.setWidth(300);
 		
 		tagsetGrid
 			.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())

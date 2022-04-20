@@ -223,7 +223,7 @@ public class GitAnnotationCollectionHandler {
 				contentInfoSet, 
 				annotationCollectionHeader.getSourceDocumentId(),
 				annotationCollectionHeader.getForkedFromCommitURL(),
-				annotationCollectionHeader.getResponsableUser());
+				annotationCollectionHeader.getResponsibleUser());
 	}
 
 	public ContentInfoSet getContentInfoSet(String collectionId) throws Exception {
@@ -311,7 +311,7 @@ public class GitAnnotationCollectionHandler {
 				collectionId, contentInfoSet, tagLibrary, tagReferences,
 				collectionReference.getSourceDocumentId(),
 				collectionReference.getForkedFromCommitURL(),
-				collectionReference.getResponsableUser()
+				collectionReference.getResponsibleUser()
 		);
 	}
 
@@ -398,7 +398,7 @@ public class GitAnnotationCollectionHandler {
 		GitMarkupCollectionHeader header = new GitMarkupCollectionHeader(
 				contentInfoSet.getTitle(), 
 				contentInfoSet.getDescription(),  
-				collectionRef.getResponsableUser(),
+				collectionRef.getResponsibleUser(),
 				collectionRef.getForkedFromCommitURL(),
 				collectionRef.getSourceDocumentId());
 		

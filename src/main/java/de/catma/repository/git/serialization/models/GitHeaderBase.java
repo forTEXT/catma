@@ -3,17 +3,17 @@ package de.catma.repository.git.serialization.models;
 public class GitHeaderBase {
 	private String name;
 	private String description;
-	private String responsableUser;
+	private String responsibleUser;
 	private String forkedFromCommitURL;
 
 	public GitHeaderBase(){}
 
 	public GitHeaderBase(
 			String name, String description, 
-			String responsableUser, String forkedFromCommitURL) {
+			String responsibleUser, String forkedFromCommitURL) {
 		this.name = name;
 		this.description = description;
-		this.responsableUser = responsableUser;
+		this.responsibleUser = responsibleUser;
 		this.forkedFromCommitURL = forkedFromCommitURL;
 	}
 
@@ -33,12 +33,12 @@ public class GitHeaderBase {
 		this.description = description;
 	}
 	
-	public String getResponsableUser() {
-		return responsableUser;
+	public String getResponsibleUser() {
+		return responsibleUser;
 	}
 	
-	public void setResponsableUser(String responsableUser) {
-		this.responsableUser = responsableUser;
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
 	}
 	
 	public String getForkedFromCommitURL() {

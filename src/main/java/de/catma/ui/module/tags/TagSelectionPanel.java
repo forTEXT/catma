@@ -30,8 +30,10 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -167,7 +169,7 @@ public class TagSelectionPanel extends VerticalLayout {
     							IDGenerator idGenerator = new IDGenerator();
     							TagsetDefinition tagset = new TagsetDefinition(
     									idGenerator.generateTagsetId(), result);
-    							tagset.setResponsableUser(project.getUser().getIdentifier());
+    							tagset.setResponsibleUser(project.getUser().getIdentifier());
     							project.getTagManager().addTagsetDefinition(
     								tagset);
     						}
@@ -197,19 +199,32 @@ public class TagSelectionPanel extends VerticalLayout {
 				.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset())
 				.collect(Collectors.toList());
 
-		AddParenttagDialog addTagDialog = 
-			new AddParenttagDialog(
-				editableTagsets, 
-				selectedTagset, 
-				new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
-				
-				@Override
-				public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
-					project.getTagManager().addTagDefinition(
-							result.getFirst(), result.getSecond());
-				}
-			});
-		addTagDialog.show();
+		boolean beyondUsersResponsibility =
+				editableTagsets.stream()
+				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.findAny()
+				.isPresent();
+		
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				new Action() {
+					@Override
+					public void execute() {
+						AddParenttagDialog addTagDialog = 
+							new AddParenttagDialog(
+								editableTagsets, 
+								selectedTagset, 
+								new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
+								
+								@Override
+								public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
+									project.getTagManager().addTagDefinition(
+											result.getFirst(), result.getSecond());
+								}
+							});
+						addTagDialog.show();
+					}
+				});
 		
 	}
 	
@@ -221,25 +236,41 @@ public class TagSelectionPanel extends VerticalLayout {
 		.collect(Collectors.toList());
 		
 		if (!parentTags.isEmpty()) {
-			AddSubtagDialog addTagDialog =
-				new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
-					public void savePressed(TagDefinition result) {
-						for (TagDefinition parent : parentTags) {
-							
-							TagsetDefinition tagset = 
-								project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
-							
-							TagDefinition tag = new TagDefinition(result);
-							tag.setUuid(idGenerator.generate());
-							tag.setParentUuid(parent.getUuid());
-							tag.setTagsetDefinitionUuid(tagset.getUuid());
-							
-							project.getTagManager().addTagDefinition(
-									tagset, tag);
+			boolean beyondUsersResponsibility =
+					parentTags.stream()
+					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
+					.distinct()
+					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+					.findAny()
+					.isPresent();
+				
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+					new Action() {
+						@Override
+						public void execute() {
+				
+							AddSubtagDialog addTagDialog =
+								new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
+									public void savePressed(TagDefinition result) {
+										for (TagDefinition parent : parentTags) {
+											
+											TagsetDefinition tagset = 
+												project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
+											
+											TagDefinition tag = new TagDefinition(result);
+											tag.setUuid(idGenerator.generate());
+											tag.setParentUuid(parent.getUuid());
+											tag.setTagsetDefinitionUuid(tagset.getUuid());
+											
+											project.getTagManager().addTagDefinition(
+													tagset, tag);
+										}
+									};
+								});
+							addTagDialog.show();
 						}
-					};
-				});
-			addTagDialog.show();
+					});
 		}
 		else {
 			Notification.show("Info", "Please select at least one parent Tag!", Type.HUMANIZED_MESSAGE);

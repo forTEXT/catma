@@ -112,6 +112,8 @@ import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.GenericUploadDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
@@ -151,13 +153,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 	private enum DocumentGridColumn {
 		NAME,
-		RESPONABLE,
+		RESPONSIBLE,
 		;
 	}
 	
 	private enum TagsetGridColumn {
 		NAME, 
-		RESPONSABLE,
+		RESPONSIBLE,
 		;
 	}
 
@@ -370,7 +372,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         			"Hide other's responsibilities", mi -> toggleResponsibilityFilter());
         
         miToggleResponsibiltityFilter.setCheckable(true);
-        miToggleResponsibiltityFilter.setChecked(true);
+        miToggleResponsibiltityFilter.setChecked(false);
         
         tagsetGridComponent.getActionGridBar().addBtnAddClickListener(click -> handleAddTagsetRequest());
    
@@ -452,7 +454,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 	private void toggleResponsibilityFilter() {
 
-		documentGrid.getColumn(DocumentGridColumn.RESPONABLE.name()).setHidden(
+		documentGrid.getColumn(DocumentGridColumn.RESPONSIBLE.name()).setHidden(
 				miToggleResponsibiltityFilter.isChecked());
 		documentGrid.getColumn(DocumentGridColumn.NAME.name()).setWidth(
 				miToggleResponsibiltityFilter.isChecked()?300:200);
@@ -931,33 +933,41 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			}
 
 			if (resource.isCollection()) {
+				
 				final AnnotationCollectionReference collectionRef = 
 						((CollectionResource)selectedResources.iterator().next()).getCollectionReference();
+				boolean beyondUsersResponsibility = 
+						!collectionRef.isResponsible(project.getUser().getIdentifier());
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+					new Action() {
+						@Override
+						public void execute() {
 
-				EditResourceDialog editCollectionDlg = 
-						new EditResourceDialog(
-								collectionRef.getResponsableUser(), 
-								collectionRef.getContentInfoSet(),
-								this.membersByIdentfier.values(),
-								new SaveCancelListener<Pair<String,ContentInfoSet>>() {
-									@Override
-									public void savePressed(Pair<String, ContentInfoSet> result) {
-										collectionRef.setResponsableUser(result.getFirst());
-										try {
-											project.update(collectionRef, result.getSecond());
-										} catch (Exception e) {
-											errorHandler.showAndLogError("Error updating collection", e);
-											reloadAll();
+							EditResourceDialog editCollectionDlg = 
+								new EditResourceDialog(
+									collectionRef.getResponsibleUser(), 
+									collectionRef.getContentInfoSet(),
+									ProjectView.this.membersByIdentfier.values(),
+									new SaveCancelListener<Pair<String,ContentInfoSet>>() {
+										@Override
+										public void savePressed(Pair<String, ContentInfoSet> result) {
+											collectionRef.setResponsibleUser(result.getFirst());
+											try {
+												project.update(collectionRef, result.getSecond());
+											} catch (Exception e) {
+												errorHandler.showAndLogError("Error updating collection", e);
+												reloadAll();
+											}
 										}
-									}
-								});
-				editCollectionDlg.show();
-
+									});
+							editCollectionDlg.show();
+						}
+					});
 			}
 			else {
 				final SourceDocument document = 
 						((DocumentResource)selectedResources.iterator().next()).getDocument();
-
 				EditResourceDialog editDocumentDlg = new EditResourceDialog(
 					document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet(), 
 					new SaveCancelListener<Pair<String,ContentInfoSet>>() {
@@ -979,20 +989,41 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void handleDeleteTagsetRequest() {
 		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
 		if (!tagsets.isEmpty()) {
-			ConfirmDialog.show(
-					UI.getCurrent(), 
-					"Warning", 
-					"Are you sure you want to delete the selected Tagsets with all their contents?", 
-					"Delete",
-					"Cancel", 
-					dlg -> {
-						if (dlg.isConfirmed()) {
-							for (TagsetDefinition tagset : tagsets) {
-								project.getTagManager().removeTagsetDefinition(tagset);
-							}
-						}
+			boolean beyondUsersResponsibility = 
+					tagsets.stream()
+					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+					.findAny()
+					.isPresent();
+			
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				new Action() {
+					@Override
+					public void execute() {
+
+						List<String> tagsetNames = 
+								tagsets.stream()
+								.map(TagsetDefinition::getName)
+								.sorted()
+								.collect(Collectors.toList());
+			
+						ConfirmDialog.show(
+								UI.getCurrent(), 
+								"Warning", 
+								"Are you sure you want to delete Tagset(s) %1$s and all related data?", 
+									String.join(",", tagsetNames),
+								"Delete",
+								"Cancel", 
+								dlg -> {
+									if (dlg.isConfirmed()) {
+										for (TagsetDefinition tagset : tagsets) {
+											project.getTagManager().removeTagsetDefinition(tagset);
+										}
+									}
+								}
+						);
 					}
-			);
+				});
 		}
 		else {
 			Notification.show(
@@ -1006,18 +1037,30 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
 		if (!tagsets.isEmpty()) {
 			final TagsetDefinition tagset = tagsets.iterator().next();
+			boolean beyondUsersResponsibility = !tagset.isResponsible(project.getUser().getIdentifier());
 			
-			EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
-					new TagsetMetadata(tagset.getName(), tagset.getDescription(), tagset.getResponsableUser()),
-					this.membersByIdentfier.values(),
-					new SaveCancelListener<TagsetMetadata>() {
-						@Override
-						public void savePressed(TagsetMetadata result) {
-							project.getTagManager().setTagsetMetadata(
-									tagset, result);
-						}
-					});
-			editTagsetDlg.show();			
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				new Action() {
+					@Override
+					public void execute() {
+			
+						EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
+							new TagsetMetadata(
+									tagset.getName(), 
+									tagset.getDescription(), 
+									tagset.getResponsibleUser()),
+							ProjectView.this.membersByIdentfier.values(),
+							new SaveCancelListener<TagsetMetadata>() {
+								@Override
+								public void savePressed(TagsetMetadata result) {
+									project.getTagManager().setTagsetMetadata(
+											tagset, result);
+								}
+							});
+						editTagsetDlg.show();
+					}
+				});
 		}
 		else {
 			Notification.show(
@@ -1037,7 +1080,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							IDGenerator idGenerator = new IDGenerator();
 							TagsetDefinition tagset = new TagsetDefinition(
 									idGenerator.generateTagsetId(), result);
-							tagset.setResponsableUser(project.getUser().getIdentifier());
+							tagset.setResponsibleUser(project.getUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
 								tagset);
 						}
@@ -1545,15 +1588,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    return sb.toString();
 		};
 		
-		Function<Resource,String> buildResponsableFunction = (resource) -> {
+		Function<Resource,String> buildResponsibleFunction = (resource) -> {
 			
-			if (resource.getResponsableUser() == null) {
+			if (resource.getResponsibleUser() == null) {
 				return "";
 			}
 			
 			StringBuilder sb = new StringBuilder()
 			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
-		      .append(resource.getResponsableUser())
+		      .append(resource.getResponsibleUser())
 		      .append("</div>"); //$NON-NLS-1$
 			sb.append("</div>"); //$NON-NLS-1$
 				        
@@ -1566,11 +1609,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	.setId(DocumentGridColumn.NAME.name());
         	
         documentGrid
-		  	.addColumn(res -> buildResponsableFunction.apply(res), new HtmlRenderer())
-		  	.setCaption("Responsable")
-		  	.setId(DocumentGridColumn.RESPONABLE.name())
+		  	.addColumn(res -> buildResponsibleFunction.apply(res), new HtmlRenderer())
+		  	.setCaption("Responsible")
+		  	.setId(DocumentGridColumn.RESPONSIBLE.name())
 		  	.setExpandRatio(1)
-		  	.setHidden(true);
+		  	.setHidden(false);
 
         Label documentsAnnotations = new Label("Documents & Annotations");
 
@@ -1594,11 +1637,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 		tagsetGrid
 		  	.addColumn(tagset -> 
-		  		tagset.getResponsableUser() == null?
+		  		tagset.getResponsibleUser() == null?
 		  				"Not assigned"
-		  				:this.membersByIdentfier.get(tagset.getResponsableUser()))
-		  	.setCaption("Responsable")
-		  	.setId(TagsetGridColumn.RESPONSABLE.name())
+		  				:this.membersByIdentfier.get(tagset.getResponsibleUser()))
+		  	.setCaption("Responsible")
+		  	.setId(TagsetGridColumn.RESPONSIBLE.name())
 		  	.setExpandRatio(1)
 		  	.setHidden(true)
 		  	.setHidable(true);
@@ -1879,13 +1922,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		.stream()
         		.filter(collectionRef -> 
         			!miToggleResponsibiltityFilter.isChecked() 
-        			|| collectionRef.getResponsableUser() == null 
-        			|| collectionRef.getResponsableUser().equals(project.getUser().getIdentifier()))
+        			|| collectionRef.isResponsible(project.getUser().getIdentifier()))
         		.map(collectionRef -> 
         			new CollectionResource(
         				collectionRef, 
         				project.getProjectId(),
-        				collectionRef.getResponsableUser()!= null?membersByIdentfier.get(collectionRef.getResponsableUser()):null)
+        				collectionRef.getResponsibleUser()!= null?membersByIdentfier.get(collectionRef.getResponsibleUser()):null)
         		)
         		.collect(Collectors.toList());
         		
@@ -1982,51 +2024,66 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @param resourceGrid
      */
     private void handleDeleteResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
+    	
     	if (!resourceGrid.getSelectedItems().isEmpty()) {
-	    	ConfirmDialog.show( 
-	    		UI.getCurrent(), 
-	    		"Info", 
-	    		"Are you sure you want to delete the selected resources: "
-	    		+ resourceGrid.getSelectedItems()
-	    			.stream()
-	    			.map(resource -> resource.getName())
-	    			.collect(Collectors.joining(",")) //$NON-NLS-1$
-	    		+ "?", 
-	    		"Yes", 
-	    		"Cancel", dlg -> {
-	    			if (dlg.isConfirmed()) {
-			           Stream<Resource> sortedResources =  resourceGrid.getSelectedItems()
-			            .stream()
-			            .sorted(new Comparator<Resource>() {
-
-							@Override
-							public int compare(Resource o1, Resource o2) {
-								if (o1.isCollection() && o2.isCollection()) {
-									return o1.getResourceId().compareTo(o2.getResourceId());
-								}
-								else if (o1.isCollection()) {
-									return -1;
-								}
-								else if (o2.isCollection()){
-									return 1;
-								}
-								else {
-									return o1.getResourceId().compareTo(o2.getResourceId());
-								}
-							}
-			            	
-						});
-			            
-			            	
-			            for (Resource resource: sortedResources.collect(Collectors.toList())) {
-			            	try {
-			            		resource.deleteFrom(project);
-			                } catch (Exception e) {
-			                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
-			                }
-			            }
-	    			}
-	    		});
+    		
+    		boolean beyondUsersResponsibility = 
+    			resourceGrid.getSelectedItems().stream()
+    			.filter(res -> !res.isResponsible(project.getUser().getIdentifier()))
+    			.findAny()
+    			.isPresent();
+    		
+    		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+    				beyondUsersResponsibility, 
+    				new Action() {
+    					@Override
+    					public void execute() {
+					    	ConfirmDialog.show( 
+					    		UI.getCurrent(), 
+					    		"Info", 
+					    		"Are you sure you want to delete the selected resources: "
+					    		+ resourceGrid.getSelectedItems()
+					    			.stream()
+					    			.map(resource -> resource.getName())
+					    			.collect(Collectors.joining(",")) //$NON-NLS-1$
+					    		+ "?", 
+					    		"Delete", 
+					    		"Cancel", dlg -> {
+					    			if (dlg.isConfirmed()) {
+							           Stream<Resource> sortedResources =  resourceGrid.getSelectedItems()
+							            .stream()
+							            .sorted(new Comparator<Resource>() {
+				
+											@Override
+											public int compare(Resource o1, Resource o2) {
+												if (o1.isCollection() && o2.isCollection()) {
+													return o1.getResourceId().compareTo(o2.getResourceId());
+												}
+												else if (o1.isCollection()) {
+													return -1;
+												}
+												else if (o2.isCollection()){
+													return 1;
+												}
+												else {
+													return o1.getResourceId().compareTo(o2.getResourceId());
+												}
+											}
+							            	
+										});
+							            
+							            	
+							            for (Resource resource: sortedResources.collect(Collectors.toList())) {
+							            	try {
+							            		resource.deleteFrom(project);
+							                } catch (Exception e) {
+							                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
+							                }
+							            }
+					    			}
+					    		});
+    					}
+    				});
     	}
     	else {
     		Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE);

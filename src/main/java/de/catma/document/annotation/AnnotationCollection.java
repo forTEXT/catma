@@ -44,7 +44,7 @@ public class AnnotationCollection {
 	private List<TagReference> tagReferences;
 	private String sourceDocumentId;
 	private String forkedFromCommitURL;
-	private String responsableUser;
+	private String responsibleUser;
 
 	/**
 	 * @param id the identifier of the collections (depends on the repository)
@@ -55,15 +55,15 @@ public class AnnotationCollection {
 	public AnnotationCollection(
 			String uuid, ContentInfoSet contentInfoSet, TagLibrary tagLibrary, 
 			String sourceDocumentId, String forkedFromCommitURL,
-			String responsableUser) {
+			String responsibleUser) {
 		this(uuid ,contentInfoSet, tagLibrary, new ArrayList<TagReference>(), 
-				sourceDocumentId, forkedFromCommitURL, responsableUser);
+				sourceDocumentId, forkedFromCommitURL, responsibleUser);
 	}
 	
 	public AnnotationCollection(
 			String uuid, ContentInfoSet contentInfoSet, TagLibrary tagLibrary, List<TagReference> tagReferences,
 			String sourceDocumentId, String forkedFromCommitURL,
-			String responsableUser) {
+			String responsibleUser) {
 		this.uuid = uuid;
 		this.contentInfoSet = contentInfoSet;
 		this.tagLibrary = tagLibrary;
@@ -71,7 +71,7 @@ public class AnnotationCollection {
 		this.tagReferences.addAll(tagReferences);
 		this.sourceDocumentId = sourceDocumentId;
 		this.forkedFromCommitURL = forkedFromCommitURL;
-		this.responsableUser = responsableUser;
+		this.responsibleUser = responsibleUser;
 	}
 
 	/**
@@ -211,12 +211,12 @@ public class AnnotationCollection {
 		this.forkedFromCommitURL = forkedFromCommitURL;
 	}
 	
-	public String getResponsableUser() {
-		return responsableUser;
+	public String getResponsibleUser() {
+		return responsibleUser;
 	}
 	
-	public void setResponsableUser(String responsableUser) {
-		this.responsableUser = responsableUser;
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
 	}
 	
 	/**
@@ -343,9 +343,9 @@ public class AnnotationCollection {
 	}
 	
 	
-	public boolean isResponable(String userIdentifier) {
-		if (this.responsableUser != null) {
-			return this.responsableUser.equals(userIdentifier);
+	public boolean isResponsible(String userIdentifier) {
+		if (this.responsibleUser != null) {
+			return this.responsibleUser.equals(userIdentifier);
 		}
 		return true; //shared repsonsibility
 	}

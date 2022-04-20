@@ -149,11 +149,11 @@ public class TagManager {
 				new TagsetMetadata(
 						tagsetDefinition.getName(), 
 						tagsetDefinition.getDescription(), 
-						tagsetDefinition.getResponsableUser());
+						tagsetDefinition.getResponsibleUser());
 		
 		tagsetDefinition.setName(tagsetMetadata.getName());
 		tagsetDefinition.setDescription(tagsetMetadata.getDescription());
-		tagsetDefinition.setResponsableUser(tagsetMetadata.getResponsableUser());
+		tagsetDefinition.setResponsibleUser(tagsetMetadata.getResponsibleUser());
 		
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagsetDefinitionChanged.name(),

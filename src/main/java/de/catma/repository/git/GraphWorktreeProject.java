@@ -626,7 +626,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				tagsetDefinition.getForkedFromCommitURL()
 		);
 		
-		tagsetDefinition.setResponsableUser(this.user.getIdentifier());
+		tagsetDefinition.setResponsibleUser(this.user.getIdentifier());
 
 		graphProjectHandler.addTagset(
 				rootRevisionHash, tagsetDefinition, oldRootRevisionHash

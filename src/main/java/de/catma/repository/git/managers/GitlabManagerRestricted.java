@@ -14,11 +14,14 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.lib.Constants;
 import org.gitlab4j.api.Constants.IssueState;
+import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.IssuesApi;
+import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.NotesApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.ProjectApi;
@@ -29,6 +32,8 @@ import org.gitlab4j.api.models.ImportStatus.Status;
 import org.gitlab4j.api.models.Issue;
 import org.gitlab4j.api.models.IssueFilter;
 import org.gitlab4j.api.models.Member;
+import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.MergeRequestFilter;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Note;
 import org.gitlab4j.api.models.Permissions;
@@ -49,6 +54,7 @@ import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.ForkStatus;
+import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
@@ -871,6 +877,38 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 					"Failed to retrieve Replies for Comment %1$s %2$d for resource %3$s in project %4$s!", 
 						comment.getUuid(), comment.getIid(), resourceId, projectReference), 
 					e);
+		}
+	}
+	
+	@Override
+	public List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException {
+		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
+		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+		
+		try {
+			MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
+			MergeRequestFilter filter = new MergeRequestFilter();
+			filter.setSourceBranch(user.getIdentifier());
+			filter.setTargetBranch(Constants.MASTER);
+			filter.setState(MergeRequestState.OPENED);
+		
+			Integer glProjectId = projectApi.getProject(projectPath).getId();
+			filter.setProjectId(glProjectId);
+			List<MergeRequest> mergeRequests = api.getMergeRequests(filter);
+			
+			return mergeRequests.stream().map(
+					mr -> new MergeRequestInfo(
+							mr.getIid(), mr.getTitle(),
+							mr.getDescription(), mr.getCreatedAt()))
+					.sorted((mr1, mr2) -> mr1.getCreatedAt().compareTo(mr2.getCreatedAt()))
+					.collect(Collectors.toList());
+			
+		} catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+						"Failed to retriev open merge requests for Project %1$s and User %2$s", 
+						projectReference,
+						user.getIdentifier()));
 		}
 	}
 }

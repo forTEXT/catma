@@ -8,6 +8,7 @@ import java.util.Set;
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.ForkStatus;
+import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -155,6 +156,8 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	void updateReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
 
 	List<Comment> getComments(ProjectReference projectReference) throws IOException;
+	
+	List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException;
 
 
 }

@@ -84,10 +84,5 @@ class DocumentDataItem implements DocumentTreeItem {
 	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener) {
 		resourceSelectionListener.documentSelected(document);
 	}
-	
-	@Override
-	public String getPermissionIcon() {
-		return null; //writable Documents not supported yet
-	}
 
 }

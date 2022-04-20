@@ -101,7 +101,7 @@ public class TagResourcePanel extends VerticalLayout {
 							IDGenerator idGenerator = new IDGenerator();
 							TagsetDefinition tagset = new TagsetDefinition(
 									idGenerator.generateTagsetId(), result);
-							tagset.setResponsableUser(project.getUser().getIdentifier());
+							tagset.setResponsibleUser(project.getUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
 								tagset);
 						}
@@ -198,12 +198,7 @@ public class TagResourcePanel extends VerticalLayout {
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")
-			.setWidth(150);
-		
-		tagsetGrid.addColumn(
-				tagset -> tagset.isResponsable(project.getUser().getIdentifier())?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
-				new HtmlRenderer())
-		.setWidth(50);
+			.setWidth(250);
 		
 		tagsetGrid
 			.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())

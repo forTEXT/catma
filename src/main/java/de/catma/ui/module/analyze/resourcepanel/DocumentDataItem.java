@@ -28,11 +28,6 @@ public class DocumentDataItem implements DocumentTreeItem {
 	}
 	
 	@Override
-	public String getPermissionIcon() {
-		return null; //writable docs not supported yet
-	}
-	
-	@Override
 	public void addToCorpus(Corpus corpus) {
 		corpus.addSourceDocument(document);
 	}

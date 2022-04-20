@@ -32,14 +32,14 @@ public class AnnotationCollectionReference {
 	private ContentInfoSet contentInfoSet;
 	private String sourceDocumentId;
 	private String forkedFromCommitURL;
-	private String responsableUser;
+	private String responsibleUser;
 	
 	public AnnotationCollectionReference(AnnotationCollection annotationCollection) {
 		this(annotationCollection.getId(),
 				annotationCollection.getContentInfoSet(),
 				annotationCollection.getSourceDocumentId(),
 				annotationCollection.getForkedFromCommitURL(),
-				annotationCollection.getResponsableUser());
+				annotationCollection.getResponsibleUser());
 	}
 	
 	public AnnotationCollectionReference(
@@ -47,13 +47,13 @@ public class AnnotationCollectionReference {
 		ContentInfoSet contentInfoSet, 
 		String sourceDocumentId,
 		String forkedFromCommitURL,
-		String responsableUser) {
+		String responsibleUser) {
 		super();
 		this.id = id;
 		this.contentInfoSet = contentInfoSet;
 		this.sourceDocumentId = sourceDocumentId;
 		this.forkedFromCommitURL = forkedFromCommitURL;
-		this.responsableUser = responsableUser;
+		this.responsibleUser = responsibleUser;
 	}
 
 	@Override
@@ -120,18 +120,18 @@ public class AnnotationCollectionReference {
 		this.forkedFromCommitURL = forkedFromCommitURL;
 	}
 	
-	public boolean isResponsable(String userIdentifier) {
-		if (this.responsableUser != null) {
-			return this.responsableUser.equals(userIdentifier);
+	public boolean isResponsible(String userIdentifier) {
+		if (this.responsibleUser != null) {
+			return this.responsibleUser.equals(userIdentifier);
 		}
 		return true; //shared repsonsibility
 	}
 	
-	public String getResponsableUser() {
-		return responsableUser;
+	public String getResponsibleUser() {
+		return responsibleUser;
 	}
 	
-	public void setResponsableUser(String responsableUser) {
-		this.responsableUser = responsableUser;
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
 	}
 }

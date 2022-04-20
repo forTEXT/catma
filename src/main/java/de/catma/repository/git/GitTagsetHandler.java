@@ -137,7 +137,7 @@ class GitTagsetHandler {
 			tagsetId, gitTagsetHeader.getName(), gitTagsetHeader.getDeletedDefinitions()
 		);
 		tagsetDefinition.setForkedFromCommitURL(gitTagsetHeader.getForkedFromCommitURL());
-		tagsetDefinition.setResponsableUser(gitTagsetHeader.getResponsableUser());
+		tagsetDefinition.setResponsibleUser(gitTagsetHeader.getResponsibleUser());
 		tagsetDefinition.setDescription(gitTagsetHeader.getDescription());
 		ArrayList<TagDefinition> tagDefinitions = this.openTagDefinitions(tagsetHeaderFile.getParentFile());
 
@@ -297,7 +297,7 @@ class GitTagsetHandler {
 				new GitTagsetHeader(
 						tagsetDefinition.getName(), 
 						tagsetDefinition.getDescription(),
-						tagsetDefinition.getResponsableUser(),
+						tagsetDefinition.getResponsibleUser(),
 						tagsetDefinition.getForkedFromCommitURL(),
 						new TreeSet<>(tagsetDefinition.getDeletedDefinitions()));
 		String serializedHeader = 
@@ -354,7 +354,7 @@ class GitTagsetHandler {
 				new GitTagsetHeader(
 						tagsetDefinition.getName(), 
 						tagsetDefinition.getDescription(),
-						tagsetDefinition.getResponsableUser(),
+						tagsetDefinition.getResponsibleUser(),
 						tagsetDefinition.getForkedFromCommitURL(),
 						new TreeSet<>(tagsetDefinition.getDeletedDefinitions()));
 		String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);

@@ -75,10 +75,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 				for (AnnotationCollectionReference umcRef : 
 					((DocumentDataItem)documentDataItem).getDocument().getUserMarkupCollectionRefs()) {
 					documentData.addItem(
-						documentDataItem, 
-						new CollectionDataItem(
-							umcRef,
-							umcRef.isResponsable(project.getUser().getIdentifier())));
+						documentDataItem, new CollectionDataItem(umcRef));
 				}
 			}
 			
@@ -185,9 +182,8 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 
     		
 			CollectionDataItem collectionDataItem = 
-				new CollectionDataItem(
-					collectionReference, 
-					collectionReference.isResponsable(project.getUser().getIdentifier()));
+				new CollectionDataItem(collectionReference); 
+
 			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
@@ -247,14 +243,9 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 		documentTree
 			.addColumn(documentTreeItem -> documentTreeItem.getName())
 			.setCaption("Name")
-			.setWidth(150);
+			.setWidth(300);
 	
 
-		documentTree
-			.addColumn(
-				documentTreeItem -> documentTreeItem.getPermissionIcon(), new HtmlRenderer())
-			.setWidth(50);
-		
 		documentTree
 			.addColumn(
 				documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer())

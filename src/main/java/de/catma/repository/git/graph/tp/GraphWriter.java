@@ -263,7 +263,7 @@ class GraphWriter {
 								collection.getContentInfoSet(),  
 								collection.getSourceDocumentId(), 
 								collection.getForkedFromCommitURL(),
-								collection.getResponsableUser())));
+								collection.getResponsibleUser())));
 			Vertex collectionV = graph.addVertex(nt(MarkupCollection));
 			
 			collectionV.property("collectionId", collection.getId());
