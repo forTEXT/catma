@@ -968,6 +968,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			}
 			gitProjectHandler.addOrUpdate(
 					collection.getUuid(), 
+					tagInstance,
 					collection.getTagReferences(tagInstance), 
 					tagManager.getTagLibrary());
 			graphProjectHandler.updateProperties(

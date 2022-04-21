@@ -1978,7 +1978,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     @Override
     public void attach() {
     	super.attach();
-    	if (project != null && !btSynchBell.isVisible()) {
+    	if (project != null) {
     		checkForUnsynchronizedCommits();
     	}
     }

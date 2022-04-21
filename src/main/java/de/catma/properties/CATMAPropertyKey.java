@@ -58,6 +58,8 @@ public enum CATMAPropertyKey {
 	GitBasedRepositoryBasePath,
 	GraphDbGitMountBasePath,
 
+	MaxPageFileSizeBytes("200000"),
+	
 	SqliteDbBasePath,
 	
 	MailHost,

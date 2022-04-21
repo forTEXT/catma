@@ -41,6 +41,7 @@ public class TagInstance {
 	private String tagsetId;
 	private String author;
 	private String timestamp;
+	private String pageFilename;
 	
 	/**
 	 * System properties get the {@link PropertyDefinition#getFirstValue() default} value set.
@@ -133,46 +134,7 @@ public class TagInstance {
 	public Collection<Property> getUserDefinedProperties() {
 		return Collections.unmodifiableCollection(userDefinedProperties.values());
 	}
-	
-	/**
-	 * Sychnronizes the properties of this instance which the attached 
-	 * {@link PropertyDefinition}, property values don't get overridden 
-	 */
-	@Deprecated
-	public void synchronizeProperties() {
 		
-//		Iterator<Map.Entry<String, Property>> iterator = systemProperties.entrySet().iterator();
-//		while (iterator.hasNext()) {
-//			Map.Entry<String, Property> entry = iterator.next();
-//			Property p = entry.getValue();
-////			if (getTagDefinition().getPropertyDefinition(entry.getKey())==null) {
-////				iterator.remove();
-////			}
-////			else {
-////				p.synchronize();
-////			}
-//		}
-		
-		// we do not update Property values, therefore we handle only ...
-		
-		// ... deletion and ...
-//		iterator = userDefinedProperties.entrySet().iterator();
-//		while (iterator.hasNext()) {
-//			Map.Entry<String, Property> entry = iterator.next();
-//			
-////			if (getTagDefinition().getPropertyDefinition(entry.getKey())==null) {
-////				iterator.remove();
-////			}
-//		}
-//		
-////		// ... addition of properties
-////		for (PropertyDefinition pd : getTagDefinition().getUserDefinedPropertyDefinitions()) {
-////			if (!userDefinedProperties.containsKey(pd.getUuid())) {
-//////				addUserDefinedProperty(new Property(pd, Collections.<String>emptySet()));
-////			}
-////		}
-	}
-	
 	public void removeUserDefinedProperty(String propertyDefId) {
 		this.userDefinedProperties.remove(propertyDefId);
 	}
@@ -218,4 +180,11 @@ public class TagInstance {
 		this.author = author;	
 	}
 	
+	public String getPageFilename() {
+		return pageFilename;
+	}
+	
+	public void setPageFilename(String pageFilename) {
+		this.pageFilename = pageFilename;
+	}
 }

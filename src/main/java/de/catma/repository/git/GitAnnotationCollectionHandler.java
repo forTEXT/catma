@@ -1,29 +1,35 @@
 package de.catma.repository.git;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.charset.Charset;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.gson.reflect.TypeToken;
 
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
@@ -43,6 +49,7 @@ public class GitAnnotationCollectionHandler {
 	private final String email;
 	private final File projectDirectory;
 	private final String projectId;
+	private int maxPageSizeBytes;
 
 	public GitAnnotationCollectionHandler(
 			ILocalGitRepositoryManager localGitRepositoryManager, File projectDirectory,
@@ -53,6 +60,8 @@ public class GitAnnotationCollectionHandler {
 		this.projectId = projectId;
 		this.username = username;
 		this.email = email;
+		this.maxPageSizeBytes = CATMAPropertyKey.MaxPageFileSizeBytes.getValue(
+				Integer.valueOf(CATMAPropertyKey.MaxPageFileSizeBytes.getDefaultValue()));
 	}
 
 	public String create(
@@ -89,6 +98,61 @@ public class GitAnnotationCollectionHandler {
 		return revisionHash;
 	}
 
+	public void updateTagInstance(
+			String collectionId,
+			JsonLdWebAnnotation annotation
+	) throws IOException {
+		
+		String collectionSubdir = String.format(
+				"%s/%s", 
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
+				collectionId
+		);
+		
+		File annotationsDir = Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				collectionSubdir,
+				ANNNOTATIONS_DIR).toFile();
+		annotationsDir.mkdirs();
+
+		// write the serialized tag instance to the AnnotationCollection's annotation dir
+		File pageFile = 
+				Paths.get(
+					this.projectDirectory.getAbsolutePath(),
+					collectionSubdir,
+					ANNNOTATIONS_DIR,
+					annotation.getPageFilename()
+		).toFile();
+
+		String pageContent =  
+				new String(Files.readAllBytes(pageFile.toPath()), StandardCharsets.UTF_8);
+		
+		Type listType = new TypeToken<ArrayList<JsonLdWebAnnotation>>(){}.getType();
+		
+		ArrayList<JsonLdWebAnnotation> annotationList = 
+				new SerializationHelper<ArrayList<JsonLdWebAnnotation>>().deserialize(
+						pageContent, listType);
+
+		JsonLdWebAnnotation existingAnno = 
+			annotationList.stream().filter(anno -> anno.getId().equals(annotation.getId())).findFirst().orElse(null);
+		
+		if (existingAnno != null) {
+			existingAnno.setBody(annotation.getBody());
+		}
+		else {
+			annotationList.add(annotation);
+		}
+		
+		String serializedTagInstance = 
+				new SerializationHelper<JsonLdWebAnnotation>().serialize(annotationList);
+		
+		try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(pageFile)) {
+			fileOutputStream.write(serializedTagInstance.getBytes(StandardCharsets.UTF_8));
+		}
+
+	}
+	
+	
 	public String createTagInstance(
 			String collectionId,
 			JsonLdWebAnnotation annotation
@@ -100,32 +164,153 @@ public class GitAnnotationCollectionHandler {
 				collectionId
 		);
 		
-		Paths.get(
+		File annotationsDir = Paths.get(
 				this.projectDirectory.getAbsolutePath(),
 				collectionSubdir,
-				ANNNOTATIONS_DIR).toFile().mkdirs();
+				ANNNOTATIONS_DIR).toFile();
+		annotationsDir.mkdirs();
 		
+		String pageFilename = getCurrentPageFilename(annotationsDir);  // <username>_<pagenumber>.json
+
 		// write the serialized tag instance to the AnnotationCollection's annotation dir
-		File targetTagInstanceFilePath = 
+		File pageFile = 
 				Paths.get(
 					this.projectDirectory.getAbsolutePath(),
 					collectionSubdir,
 					ANNNOTATIONS_DIR,
-					annotation.getTagInstanceUuid() + ".json"
+					pageFilename
 		).toFile();
 		
 		String serializedTagInstance = 
-				new SerializationHelper<JsonLdWebAnnotation>().serialize(annotation);
-
-		try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(targetTagInstanceFilePath)) {
-			fileOutputStream.write(serializedTagInstance.getBytes(StandardCharsets.UTF_8));
+				new SerializationHelper<JsonLdWebAnnotation>().serialize(Collections.singletonList(annotation));
+		
+		if (pageFile.length() > 0) {			
+			try (RandomAccessFile rafTargetTagInstanceFile = 
+					new RandomAccessFile(pageFile, "rw")) {
+				serializedTagInstance = "," + serializedTagInstance.substring(1); // remove opening list bracket
+				rafTargetTagInstanceFile.seek(pageFile.length()-2); // set pos before linefeed and closing list bracket
+				rafTargetTagInstanceFile.write(serializedTagInstance.getBytes(StandardCharsets.UTF_8));
+			}
 		}
-
+		else {
+			try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(pageFile)) {
+				
+				fileOutputStream.write(serializedTagInstance.getBytes(StandardCharsets.UTF_8));
+			}			
+		}
+		
+		annotation.setPageFilename(pageFilename);
+		
+		return pageFilename;
+		
 		// not doing Git add/commit because Annotations get commited in bulk
-
-		return annotation.getTagInstanceUuid();
 	}
 
+
+	public void createTagInstances(
+			String collectionId,
+			Map<JsonLdWebAnnotation, TagInstance> annotationToTagInstanceMapping
+	) throws IOException {
+
+		String collectionSubdir = String.format(
+				"%s/%s", 
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
+				collectionId
+		);
+		
+		File annotationsDir = Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				collectionSubdir,
+				ANNNOTATIONS_DIR).toFile();
+		annotationsDir.mkdirs();
+		
+		String pageFilename = getCurrentPageFilename(annotationsDir);  // <username>_<pagenumber>.json
+		// write the serialized tag instance to the AnnotationCollection's annotation dir
+		File pageFile = 
+				Paths.get(
+					this.projectDirectory.getAbsolutePath(),
+					collectionSubdir,
+					ANNNOTATIONS_DIR,
+					pageFilename
+		).toFile();
+		
+		ArrayList<JsonLdWebAnnotation> annotations = new ArrayList<>(annotationToTagInstanceMapping.keySet());
+		
+		String serializedTagInstance = 
+				new SerializationHelper<JsonLdWebAnnotation>().serialize(annotations);
+		
+		if (pageFile.length() > 0) {			
+			serializedTagInstance = "," + serializedTagInstance.substring(1); // remove opening list bracket
+			try (RandomAccessFile rafTargetTagInstanceFile = 
+					new RandomAccessFile(pageFile, "rw")) {
+				rafTargetTagInstanceFile.seek(pageFile.length()-2); // set position right before line break and closing list bracket
+				// overwriting closing bracket with new annotations + new closing bracket
+				rafTargetTagInstanceFile.write(serializedTagInstance.getBytes(StandardCharsets.UTF_8));
+			}
+		}
+		else {
+			try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(pageFile)) {
+				
+				fileOutputStream.write(serializedTagInstance.getBytes(StandardCharsets.UTF_8));
+			}			
+		}
+
+
+		annotations.forEach(annotation -> annotation.setPageFilename(pageFilename));
+		annotationToTagInstanceMapping.values().forEach(tagInstance -> tagInstance.setPageFilename(pageFilename));
+		//TODO: handle writing batches to different page files
+		
+		// not doing Git add/commit because Annotations get commited in bulk
+	}
+
+	
+	private String getCurrentPageFilename(File annotationsDir) {
+		File[] pages = annotationsDir.listFiles(
+				file -> 
+					file.isFile() 
+					&& isUserPage(file) 
+					&& file.getName().toLowerCase().endsWith(".json"));
+		
+		Integer pageNumber = 0;
+		
+		if (pages.length > 0) {
+			Arrays.sort(pages, (page1, page2) -> getPageNumber(page1).compareTo(getPageNumber(page2)));
+			pageNumber = pages.length-1;
+			
+			File lastPage = pages[pageNumber];
+			
+			if (lastPage.length() >= maxPageSizeBytes) {
+				pageNumber++;
+			}
+		}
+
+		return username + "_" + pageNumber + ".json";
+	}
+
+	private Integer getPageNumber(File page) {
+		
+		try {
+			String pageNumber = 
+					page.getName().substring(
+							page.getName().lastIndexOf("_")+1,
+							page.getName().lastIndexOf('.'));			
+					
+			return Integer.valueOf(pageNumber);
+		}
+		catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+			Logger.getLogger(getClass().getName()).warning(
+					String.format("%s doesn't seem to be a page name! Full path was: %s", 
+							page.getName(), 
+							page.getAbsolutePath()));
+		}
+		
+		return -1;
+	}
+
+	private boolean isUserPage(File pagefile) {
+		String pageFileUser = pagefile.getName().substring(0, pagefile.getName().lastIndexOf("_"));
+		return pageFileUser.equals(username);		
+	}
 
 	private boolean isAnnotationFilename(String fileName){
 		return !(
@@ -146,51 +331,40 @@ public class GitAnnotationCollectionHandler {
 		
 		String[] contents = parentDirectory.list();
 		
-		for (String item : contents) {
-			File target = new File(parentDirectory, item);
+		
+		for (String pageFilename : contents) {
+			File pageFile = new File(parentDirectory, pageFilename);
 
 			// if it is a directory, recurse into it adding results to the current tagReferences list
-			if (target.isDirectory() && !target.getName().equalsIgnoreCase(".git")) {
+			if (pageFile.isDirectory() && !pageFile.getName().equalsIgnoreCase(".git")) {
 				tagReferences.addAll(
-					this.openTagReferences(collectionId, collectionName, target, progressListener, counter));
+					this.openTagReferences(collectionId, collectionName, pageFile, progressListener, counter));
 			}
-			// if item is <CATMA_UUID>.json, read it into a list of TagReference objects
-			else if (target.isFile() && isAnnotationFilename(target.getName())) {
+			// if item is <user>_<pagenumber>.json, read it into a list of TagReference objects
+			else if (pageFile.isFile() && isAnnotationFilename(pageFile.getName())) {
 				counter.incrementAndGet();
 				if (counter.intValue() % 1000 == 0) {
 					progressListener.setProgress("Loading Annotations %1$s %2$d", collectionName, counter.intValue());
 				}
-				String serialized = readFileToString(target, StandardCharsets.UTF_8);
-				JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
-						.deserialize(serialized, JsonLdWebAnnotation.class);
+				String pageContent =  
+						new String(Files.readAllBytes(pageFile.toPath()), StandardCharsets.UTF_8);
+				
+				Type listType = new TypeToken<ArrayList<JsonLdWebAnnotation>>(){}.getType();
+				
+				ArrayList<JsonLdWebAnnotation> list = 
+						new SerializationHelper<ArrayList<JsonLdWebAnnotation>>().deserialize(
+								pageContent, listType);
 
-				tagReferences.addAll(
-						jsonLdWebAnnotation.toTagReferenceList(
-								this.projectId, 
-								collectionId
-						)
-				);
+				for (JsonLdWebAnnotation webAnnotation : list) {
+					webAnnotation.setPageFilename(pageFile.getName());
+					tagReferences.addAll(webAnnotation.toTagReferenceList(projectId, collectionId));
+				}
 			}
 		}
 
 		return tagReferences;
 	}
-	
-	private String readFileToString(File file, Charset encoding) throws IOException {
-		StringBuilder builder = new StringBuilder();
-		try (FileInputStream fis = new FileInputStream(file)) {
-			byte[] buffer = new byte[(int)file.length()];
-			int read = 0;
-			while((read=fis.read(buffer)) != -1) {
-				builder.append(new String(buffer, 0, read, encoding));
-				if (read == file.length()) {
-					break;
-				}
-			}
-		}
-		
-		return builder.toString();
-	}
+
 
 	public AnnotationCollectionReference getCollectionReference(String collectionId) throws Exception {
 		
@@ -300,7 +474,8 @@ public class GitAnnotationCollectionHandler {
 						JsonLdWebAnnotation annotation = 
 								new JsonLdWebAnnotation(
 									tagInstances.get(tagInstance),
-									tagLibrary);
+									tagLibrary,
+									tagInstance.getPageFilename());
 						createTagInstance(collectionId, annotation);
 					}
 				}

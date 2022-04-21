@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -23,7 +24,9 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
@@ -46,6 +49,7 @@ import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.Member;
@@ -552,11 +556,62 @@ public class GitProjectHandler {
 						this.remoteGitServerManager.getUsername(),
 						this.remoteGitServerManager.getEmail()
 		);
+		
+		
+		tagReferenceList.stream().collect(
+				Collectors.toMap(
+						TagReference::getTagInstance, 
+						Function.identity()));
+		
+		Multimap<TagInstance, TagReference> tagInstances = 
+				Multimaps.index(tagReferenceList, TagReference::getTagInstance);
+		
+		Map<JsonLdWebAnnotation, TagInstance> annotationToTagInstanceMapping =
+				Maps.newHashMap();
+		
+		for (TagInstance tagInstance : tagInstances.keys()) {
+			
+			 Collection<TagReference> references = tagInstances.get(tagInstance);
+			 
+			JsonLdWebAnnotation annotation = new JsonLdWebAnnotation(
+					references,
+					tagLibrary,
+					tagInstance.getPageFilename());
+			annotationToTagInstanceMapping.put(annotation, tagInstance);
+		}
+		
+		
+		gitMarkupCollectionHandler.createTagInstances(collectionId, annotationToTagInstanceMapping);
+		
+	}
+	
+	public void addOrUpdate(
+			String collectionId, TagInstance tagInstance, Collection<TagReference> tagReferenceList, 
+			TagLibrary tagLibrary) throws IOException {
+		
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+				new GitAnnotationCollectionHandler(
+						this.localGitRepositoryManager, 
+						this.projectPath,
+						this.projectId,
+						this.remoteGitServerManager.getUsername(),
+						this.remoteGitServerManager.getEmail()
+		);
 			
 		JsonLdWebAnnotation annotation = new JsonLdWebAnnotation(
 			tagReferenceList,
-			tagLibrary);
-		gitMarkupCollectionHandler.createTagInstance(collectionId, annotation);
+			tagLibrary,
+			tagInstance.getPageFilename());
+		
+		if (tagInstance.getPageFilename() == null) {			
+			String pageFilename = 
+					gitMarkupCollectionHandler.createTagInstance(collectionId, annotation);
+			tagInstance.setPageFilename(pageFilename);
+		}
+		else {
+			gitMarkupCollectionHandler.updateTagInstance(collectionId, annotation);
+			
+		}
 		
 	}
 

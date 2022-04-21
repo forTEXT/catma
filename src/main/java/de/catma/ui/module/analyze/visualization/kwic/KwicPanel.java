@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
@@ -346,7 +348,9 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		for (AnnotationCollectionReference ref : collectionRefsByDocId.values()) {
 			collectionManager.add(project.getUserMarkupCollection(ref));
 		}
-
+	
+		ArrayListMultimap<String, TagReference> referencesByCollectionId = ArrayListMultimap.create();
+		
 		for (QueryResultRow row : selectedRows) {
 			AnnotationCollectionReference collectionRef = collectionRefsByDocId.get(row.getSourceDocumentId());
 			
@@ -359,7 +363,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			        	tag.getUserDefinedPropertyDefinitions(),
 			        	tag.getTagsetDefinitionUuid());
 			
-			List<TagReference> tagReferences = new ArrayList<TagReference>();
+			
 			
 			for (Property protoProp : properties) {
 				tagInstance.getUserDefinedPropetyByUuid(
@@ -373,11 +377,13 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			for (Range range : ranges) {
 				TagReference tagReference = 
 						new TagReference(tagInstance, row.getSourceDocumentId(), range, collectionRef.getId());
-				tagReferences.add(tagReference);
+				referencesByCollectionId.put(collectionRef.getId(), tagReference);
 			}
+		}
+		for (String collectionId : referencesByCollectionId.keySet()) {			
 			collectionManager.addTagReferences(
-					tagReferences,
-					collectionRef.getId());
+					referencesByCollectionId.get(collectionId),
+					collectionId);
 		}
 		
 		project.addAndCommitCollections(collectionRefsByDocId.values(), 

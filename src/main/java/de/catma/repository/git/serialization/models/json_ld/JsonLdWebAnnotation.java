@@ -40,7 +40,7 @@ public class JsonLdWebAnnotation {
 	private String id;
 	private JsonLdWebAnnotationBody_Dataset body;
 	private JsonLdWebAnnotationTarget_List target;
-
+	private transient String pageFilename;
 	
 	/**
 	 * Constructor for deserialization
@@ -50,7 +50,8 @@ public class JsonLdWebAnnotation {
 	}
 
 	public JsonLdWebAnnotation(
-			Collection<TagReference> tagReferences, TagLibrary tagLibrary)
+			Collection<TagReference> tagReferences, TagLibrary tagLibrary, 
+			String pageFilename)
 			throws IOException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -69,6 +70,7 @@ public class JsonLdWebAnnotation {
 
 		this.body = new JsonLdWebAnnotationBody_Dataset(tagReferences, tagLibrary);
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
+		this.pageFilename = pageFilename;
 	}
 
 	private URI buildTagInstanceUrl(String userMarkupCollectionUuid, String tagInstanceUuid)
@@ -77,7 +79,7 @@ public class JsonLdWebAnnotation {
 		try {
 			return new URI(
 					String.format(
-							"%s/%s/annotations/%s.json",
+							"%s/%s/annotations/%s",
 							GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME,
 							userMarkupCollectionUuid,
 							tagInstanceUuid
@@ -102,6 +104,10 @@ public class JsonLdWebAnnotation {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+	
+	public void setPageFilename(String pageFilename) {
+		this.pageFilename = pageFilename;
 	}
 
 	public JsonLdWebAnnotationBody_Dataset getBody() {
@@ -169,7 +175,8 @@ public class JsonLdWebAnnotation {
 			Collections.emptyList(), //these get added with the user defined properties below
 			getBody().getTagset().substring(getBody().getTagset().lastIndexOf('/')+1)
 		);
-
+		tagInstance.setPageFilename(pageFilename);
+		
 		TreeMap<String, TreeMap<String, TreeSet<String>>> properties = this.body.getProperties();
 
 		for (Map.Entry<String, TreeMap<String, TreeSet<String>>> entry : properties.entrySet()) {
@@ -193,5 +200,9 @@ public class JsonLdWebAnnotation {
 
 	private String getLastPathSegmentFromUrl(String url) {
 		return url.substring(url.lastIndexOf("/") + 1);
+	}
+	
+	public String getPageFilename() {
+		return pageFilename;
 	}
 }
