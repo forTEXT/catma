@@ -3,6 +3,7 @@ package de.catma.repository.git.serialization.models.json_ld;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import com.google.gson.annotations.SerializedName;
 import de.catma.document.Range;
 import de.catma.document.annotation.TagReference;
 import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -41,7 +43,8 @@ public class JsonLdWebAnnotation {
 	private JsonLdWebAnnotationBody_Dataset body;
 	private JsonLdWebAnnotationTarget_List target;
 	private transient String pageFilename;
-	
+	private transient String serializedListItem; 
+			
 	/**
 	 * Constructor for deserialization
 	 */
@@ -103,6 +106,10 @@ public class JsonLdWebAnnotation {
 	}
 
 	public void setId(String id) {
+		if (serializedListItem != null) {
+			throw new IllegalStateException("This Annotation instance has already been serializd and cannot be modified anymore!");
+		}
+
 		this.id = id;
 	}
 	
@@ -115,6 +122,9 @@ public class JsonLdWebAnnotation {
 	}
 
 	public void setBody(JsonLdWebAnnotationBody_Dataset body) {
+		if (serializedListItem != null) {
+			throw new IllegalStateException("This Annotation instance has already been serializd and cannot be modified anymore!");
+		}
 		this.body = body;
 	}
 
@@ -123,6 +133,10 @@ public class JsonLdWebAnnotation {
 	}
 
 	public void setTarget(JsonLdWebAnnotationTarget_List target) {
+		if (serializedListItem != null) {
+			throw new IllegalStateException("This Annotation instance has already been serializd and cannot be modified anymore!");
+		}
+
 		this.target = target;
 	}
 
@@ -204,5 +218,18 @@ public class JsonLdWebAnnotation {
 	
 	public String getPageFilename() {
 		return pageFilename;
+	}
+	
+	public String asSerializedListItem() {
+		if (this.serializedListItem == null) {
+			this.serializedListItem =
+				new SerializationHelper<JsonLdWebAnnotation>().serialize(Collections.singletonList(this));
+		}
+		
+		return serializedListItem;
+	}
+	
+	public int getSerializedItemUTF8ByteSize() {
+		return asSerializedListItem().getBytes(StandardCharsets.UTF_8).length;
 	}
 }

@@ -1010,8 +1010,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						ConfirmDialog.show(
 								UI.getCurrent(), 
 								"Warning", 
-								"Are you sure you want to delete Tagset(s) %1$s and all related data?", 
-									String.join(",", tagsetNames),
+								String.format("Are you sure you want to delete Tagset(s) %1$s and all related data?", 
+									String.join(",", tagsetNames)),
 								"Delete",
 								"Cancel", 
 								dlg -> {

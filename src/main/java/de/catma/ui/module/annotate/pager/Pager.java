@@ -116,10 +116,13 @@ public class Pager implements Iterable<Page> {
 		int pageLines = 0;
 		
 		int lineLength = 0;
-
+		
+		totalLineCount = 0;
+		
 		while(matcher.find()) {
 			if (lineLength + matcher.group().length()>approxMaxLineLength) {
 				pageLines++;
+				totalLineCount++;
 				pageEnd+=lineLength;
 				lineLength = 0;
 			}			
@@ -138,6 +141,7 @@ public class Pager implements Iterable<Page> {
 			
 			if (matcher.group(LINE_SEPARATOR_GROUP) != null) {
 				pageLines++;
+				totalLineCount++;
 				pageEnd+=lineLength;
 				lineLength = 0;
 			}
@@ -146,6 +150,7 @@ public class Pager implements Iterable<Page> {
 		if (lineLength != 0) {
 			pageEnd+=lineLength;
 			pageLines++;
+			totalLineCount++;
 		}
 		
 		if (pageLines != 0) {
@@ -155,12 +160,7 @@ public class Pager implements Iterable<Page> {
 					text.substring(pageStart, pageEnd), 
 					pageStart, pageEnd, approxMaxLineLength,
 					rightToLeftWriting));
-		}
-		
-		totalLineCount = 0;
-		for (Page p : pages) {
-			totalLineCount += p.getLineCount();
-		}
+		}		
 	}
 	
 	@Override

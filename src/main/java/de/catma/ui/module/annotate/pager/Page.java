@@ -106,7 +106,6 @@ public class Page {
 		this.text = text;
 		this.rightToLeftWriting = rightToLeftWriting;
 		this.absoluteComments = new HashSet<Comment>();
-		buildLines();
 	}
 	
 	@Override
@@ -114,6 +113,16 @@ public class Page {
 		return "Page["+pageStart+","+pageEnd+"]\n"+text; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
+	private ArrayList<Line> getLines() {
+		if (lines == null) {
+			buildLines();
+			for (ClientTagInstance relativeTagInstance : relativeTagInstances.values()) {
+				addRelativeTagInstanceToLine(relativeTagInstance);
+			}
+		}
+		
+		return lines;
+	}
 	
 	private void buildLines() {
 		this.lines = new ArrayList<>();
@@ -195,7 +204,7 @@ public class Page {
 			pageDiv.addAttribute(new Attribute(
 					HTMLAttribute.clazz.getAttributeName(),
 					"tagger-editor-content"));
-			for (Line line : lines) {
+			for (Line line : getLines()) {
 				pageDiv.appendChild(line.toHTML());
 			}
 		}
@@ -220,12 +229,14 @@ public class Page {
 					relativeTagInstance.getInstanceID(),relativeTagInstance);
 		}
 		
-		addRelativeTagInstanceToLine(relativeTagInstance);
+		if (this.lines != null) {
+			addRelativeTagInstanceToLine(relativeTagInstance);
+		}
 	}
 	
 	private void addRelativeTagInstanceToLine(ClientTagInstance relativeTagInstance) {
 		for (TextRange tr : relativeTagInstance.getRanges()) {
-			for (Line line : lines) {
+			for (Line line : getLines()) {
 				if (line.containsTextRange(tr)) {
 					line.addRelativeTagInstanceTextRange(tr, relativeTagInstance);
 				}
@@ -238,11 +249,13 @@ public class Page {
 	public void removeRelativeTagInstance(String tagInstanceID) {
 		pageDiv = null; // page needs rebuild
 		this.relativeTagInstances.remove(tagInstanceID);
-		removeRelativeTagInstanceFromLine(tagInstanceID);
+		if (this.lines != null) {
+			removeRelativeTagInstanceFromLine(tagInstanceID);
+		}
 	}
 	
 	private void removeRelativeTagInstanceFromLine(String tagInstanceID) {
-		for (Line line : lines) {
+		for (Line line : getLines()) {
 			line.removeRelativeTagInstance(tagInstanceID);
 		}
 	}
@@ -290,7 +303,7 @@ public class Page {
 		pageDiv = null; // page needs rebuild
 		
 		relativeTagInstances.clear();
-		for (Line line : lines) {
+		for (Line line : getLines()) {
 			line.clearRelativeTagInstanes();
 		}
 	}
@@ -370,7 +383,7 @@ public class Page {
 		
 		TextRange highlightedRelativeRange = getRelativeRangeFor(highlightedAbsoluteRange);
 		
-		for (Line line : lines) {
+		for (Line line : getLines()) {
 			TextRange overlappingRange = line.getOverlappingRange(highlightedRelativeRange);
 			if (overlappingRange != null) {
 				line.addHighlight(overlappingRange);
@@ -390,7 +403,7 @@ public class Page {
 	}
 
 	public void removeHighlights() {
-		for (Line line : lines) {
+		for (Line line : getLines()) {
 			if (line.hasHighlights()) {
 				line.removeHighlights();
 				pageDiv = null;
@@ -403,7 +416,7 @@ public class Page {
 	}
 
 	public boolean hasLine(int lineId) {
-		return lines.stream().filter(line -> line.getLineId() == lineId).findAny().isPresent();
+		return getLines().stream().filter(line -> line.getLineId() == lineId).findAny().isPresent();
 	}
 
 	public void addAbsoluteComment(Comment absoluteComment) {

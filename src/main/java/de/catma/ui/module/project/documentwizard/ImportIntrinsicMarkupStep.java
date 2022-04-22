@@ -247,7 +247,9 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 				.filter(uploadFile -> uploadFile.getMimetype().equals(FileType.XML2.getMimeType()))
 				.collect(Collectors.toList()));
 		final TagManager tagmanager = new TagManager(new TagLibrary());
-		
+		final boolean useApostropheAsSeparator = 
+				(Boolean)wizardContext.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
+
 		BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
 		
 		backgroundServiceProvider.submit("inspecting-intrinsic-markup", new DefaultProgressCallable<List<UploadFile>>() {
@@ -259,9 +261,10 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 					XML2ContentHandler contentHandler = new XML2ContentHandler();
 					SourceDocument doc = new SourceDocument(uploadFile.getUuid(), contentHandler);
 					SourceDocumentInfo documentInfo = new SourceDocumentInfo();
-					TechInfoSet techInfoSet = new TechInfoSet();
-					techInfoSet.setURI(uploadFile.getTempFilename());
-					documentInfo.setTechInfoSet(techInfoSet);
+					documentInfo.setTechInfoSet(uploadFile.getTechInfoSet());
+					documentInfo.setContentInfoSet(uploadFile.getContentInfoSet());
+
+					documentInfo.setIndexInfoSet(uploadFile.getIndexInfoSet(useApostropheAsSeparator));
 					contentHandler.setSourceDocumentInfo(documentInfo);
 					
 					XmlMarkupCollectionSerializationHandler handler =

@@ -18,13 +18,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.apache.commons.compress.utils.Lists;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
-import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
@@ -566,8 +566,8 @@ public class GitProjectHandler {
 		Multimap<TagInstance, TagReference> tagInstances = 
 				Multimaps.index(tagReferenceList, TagReference::getTagInstance);
 		
-		Map<JsonLdWebAnnotation, TagInstance> annotationToTagInstanceMapping =
-				Maps.newHashMap();
+		List<Pair<JsonLdWebAnnotation, TagInstance>> annotationToTagInstanceMapping =
+				Lists.newArrayList();
 		
 		for (TagInstance tagInstance : tagInstances.keys()) {
 			
@@ -577,7 +577,7 @@ public class GitProjectHandler {
 					references,
 					tagLibrary,
 					tagInstance.getPageFilename());
-			annotationToTagInstanceMapping.put(annotation, tagInstance);
+			annotationToTagInstanceMapping.add(new Pair<>(annotation, tagInstance));
 		}
 		
 		
@@ -604,9 +604,8 @@ public class GitProjectHandler {
 			tagInstance.getPageFilename());
 		
 		if (tagInstance.getPageFilename() == null) {			
-			String pageFilename = 
-					gitMarkupCollectionHandler.createTagInstance(collectionId, annotation);
-			tagInstance.setPageFilename(pageFilename);
+			gitMarkupCollectionHandler.createTagInstances(
+				collectionId, Collections.singletonList(new Pair<>(annotation, tagInstance)));
 		}
 		else {
 			gitMarkupCollectionHandler.updateTagInstance(collectionId, annotation);
@@ -856,7 +855,9 @@ public class GitProjectHandler {
 
 	public String removeDocument(SourceDocument sourceDocument) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
+			localGitRepoManager.open(
+					projectReference.getNamespace(), projectReference.getProjectId());	
+
 			GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
 					new GitAnnotationCollectionHandler(
 							localGitRepoManager, 

@@ -1103,15 +1103,10 @@ public class GraphWorktreeProject implements IndexedProject {
 			
 			AnnotationCollection createdAnnotationCollection = getUserMarkupCollection(annotationCollectionReference);
 			createdAnnotationCollection.addTagReferences(importAnnotationCollection.getTagReferences());
-			ArrayListMultimap<String, TagReference> tagReferencesByTagInstanceId = ArrayListMultimap.create();
-			
-			importAnnotationCollection.getTagReferences().stream().forEach(
-				tagReference -> tagReferencesByTagInstanceId.put(tagReference.getTagInstanceId(), tagReference));
-			for (String tagInstanceId : tagReferencesByTagInstanceId.keySet()) {
-				update(
-						createdAnnotationCollection, 
-						tagReferencesByTagInstanceId.get(tagInstanceId));
-			}
+
+			update(
+					createdAnnotationCollection, 
+					importAnnotationCollection.getTagReferences());
 			
 			commitChanges(
 				String.format(

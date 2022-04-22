@@ -23,6 +23,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import de.catma.document.source.ContentInfoSet;
 import de.catma.tag.TagDefinition;
@@ -41,7 +45,8 @@ public class AnnotationCollection {
 	private final String uuid;
 	private ContentInfoSet contentInfoSet;
 	private TagLibrary tagLibrary;
-	private List<TagReference> tagReferences;
+	private ArrayListMultimap<String, TagReference> tagReferencesByInstanceId;
+	private ArrayListMultimap<String, TagReference> tagReferencesByTagId;
 	private String sourceDocumentId;
 	private String forkedFromCommitURL;
 	private String responsibleUser;
@@ -67,8 +72,9 @@ public class AnnotationCollection {
 		this.uuid = uuid;
 		this.contentInfoSet = contentInfoSet;
 		this.tagLibrary = tagLibrary;
-		this.tagReferences = new ArrayList<TagReference>();
-		this.tagReferences.addAll(tagReferences);
+		this.tagReferencesByInstanceId = ArrayListMultimap.create();
+		this.tagReferencesByTagId = ArrayListMultimap.create();
+		this.addTagReferences(tagReferences);
 		this.sourceDocumentId = sourceDocumentId;
 		this.forkedFromCommitURL = forkedFromCommitURL;
 		this.responsibleUser = responsibleUser;
@@ -85,7 +91,7 @@ public class AnnotationCollection {
 	 * @return unmodifiable version of referenced text ranges and referencing {@link TagInstance}s.
 	 */
 	public List<TagReference> getTagReferences() {
-		return Collections.unmodifiableList(tagReferences);
+		return Collections.unmodifiableList(new ArrayList<>(tagReferencesByInstanceId.values()));
 	}
 
 	/**
@@ -117,10 +123,8 @@ public class AnnotationCollection {
 			tagDefinitionIDs.addAll(getChildIDs(tagDefinition));
 		}
 		
-		for (TagReference tr : tagReferences) {
-			if (tagDefinitionIDs.contains(tr.getTagDefinitionId())) {
-				result.add(tr);
-			}
+		for (String tagDefinitionID : tagDefinitionIDs) {
+			result.addAll(tagReferencesByTagId.get(tagDefinitionID));
 		}
 		
 		return result;
@@ -150,11 +154,14 @@ public class AnnotationCollection {
 	}
 	
 	public void addTagReferences(List<TagReference> tagReferences) {
-		this.tagReferences.addAll(tagReferences);	
+		tagReferences.forEach(tr -> {
+			tagReferencesByInstanceId.put(tr.getTagInstanceId(), tr);
+			tagReferencesByTagId.put(tr.getTagDefinitionId(), tr);
+		});
 	}
 	
 	public void addTagReference(TagReference tagReference) {
-		this.tagReferences.add(tagReference);
+		this.addTagReferences(Collections.singletonList(tagReference));
 	}
 	
 	/**
@@ -190,7 +197,7 @@ public class AnnotationCollection {
 	 * @return <code>true</code> if there are no tag references in this collection
 	 */
 	public boolean isEmpty() {
-		return tagReferences.isEmpty();
+		return tagReferencesByInstanceId.isEmpty();
 	}
 	
 	/**
@@ -225,12 +232,7 @@ public class AnnotationCollection {
 	 */
 	public List<TagReference> getTagReferences(String tagInstanceID) {
 		List<TagReference> result = new ArrayList<TagReference>();
-		
-		for (TagReference tr : getTagReferences()) {
-			if (tr.getTagInstanceId().equals(tagInstanceID)) {
-				result.add(tr);
-			}
-		}
+		result.addAll(tagReferencesByInstanceId.get(tagInstanceID));
 		
 		return result;
 	}
@@ -248,19 +250,20 @@ public class AnnotationCollection {
 	 * @return <code>true</code> if there is a TagReference with the given TagInstance's ID
 	 */
 	public boolean hasTagInstance(String instanceID) {
-		for (TagReference tr : getTagReferences()) {
-			if (tr.getTagInstanceId().equals(instanceID)) {
-				return true;
-			}
-		}
-		return false;
+		return tagReferencesByInstanceId.containsKey(instanceID);
 	}
 	
 	/**
 	 * @param tagReferences references to be removed
 	 */
 	public void removeTagReferences(List<TagReference> tagReferences) {
-		this.tagReferences.removeAll(tagReferences);
+		tagReferences.stream()
+		.map(tr -> tr.getTagInstance())
+		.collect(Collectors.toSet())
+		.forEach(tagInstance -> {
+			this.tagReferencesByInstanceId.removeAll(tagInstance.getUuid());
+			this.tagReferencesByTagId.removeAll(tagInstance.getTagDefinitionId());
+		});
 	}
 
 
@@ -329,13 +332,7 @@ public class AnnotationCollection {
 	}
 
 	public boolean containsTag(TagDefinition tag) {
-		for (TagReference t : tagReferences) {
-			if (t.getTagDefinitionId().equals(tag.getUuid())) {
-				return true;
-			}
-		}
-		
-		return false;
+		return this.tagReferencesByTagId.containsKey(tag.getUuid());
 	}
 
 	public String getSourceDocumentId() {
