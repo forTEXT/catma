@@ -142,7 +142,7 @@ public class TaggerContextMenu {
 		tagMenuItem.setStyleName("tagger-contextmenu-menuitem");
 		entryToMenuItemMap.put(tag, tagMenuItem);
 		
-		for (TagDefinition childTag : tagset.getChildren(tag)) {
+		for (TagDefinition childTag : tagset.getDirectChildren(tag)) {
 			addToMenuItem(tagMenuItem, tagset, childTag);
 		}
 	}
