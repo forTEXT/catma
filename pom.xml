@@ -22,7 +22,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<!-- If there are no local customizations, this can also be "fetch" or "cdn" -->
 		<vaadin.widgetset.mode>local</vaadin.widgetset.mode>
-        <jetty.plugin.version>9.4.40.v20210413</jetty.plugin.version>
+        <jetty.plugin.version>9.4.46.v20220331</jetty.plugin.version>
     </properties>
 
 	<repositories>
