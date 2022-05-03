@@ -49,9 +49,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class GitProjectHandler {
-
-	private Logger logger = Logger.getLogger(GitProjectHandler.class.getName());
-	
 	public static final String TAGSET_SUBMODULES_DIRECTORY_NAME = "tagsets";
 	public static final String ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
@@ -59,15 +56,17 @@ public class GitProjectHandler {
 	private static final int ADD_AND_COMMIT_SUBMODULE_MAX_RETRIES = 3;
 
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final CredentialsProvider credentialsProvider;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
 	private final User user;
 	private final String projectId;
 
 	private final IDGenerator idGenerator = new IDGenerator();
-	private final CredentialsProvider credentialsProvider;
+
+	private Logger logger = Logger.getLogger(GitProjectHandler.class.getName());
 
 	private Map<String, RBACRole> rolesPerResource;
-	
+
 	public GitProjectHandler(User user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitManagerRestricted remoteGitServerManager) {
 		super();
@@ -139,21 +138,13 @@ public class GitProjectHandler {
 	}
 
 	// tagset operations
-	public String createTagset(String tagsetId,
-							   String name,
-							   String description
-	) throws IOException {
-
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = 
-					new GitTagsetHandler(
-							localGitRepoManager, 
-							this.remoteGitServerManager,
-							this.credentialsProvider);
-
+	public String createTagset(String tagsetId, String name, String description) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// create the tagset
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, remoteGitServerManager, credentialsProvider);
 			String tagsetRevisionHash = gitTagsetHandler.create(projectId, tagsetId, name, description);
 
+			// push the newly created tagset repo to the server in preparation for adding it to the project root repo as a submodule
 			localGitRepoManager.open(projectId, tagsetId);
 			localGitRepoManager.push(credentialsProvider);
 			String tagsetRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
@@ -172,34 +163,20 @@ public class GitProjectHandler {
 			String commitMessage = String.format("Added tagset \"%1$s\" with ID %2$s", name, tagsetId);
 			addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, tagsetRepoRemoteUrl, commitMessage);
 
-			localGitRepoManager.detach(); 
+			localGitRepoManager.detach();  // need to explicitly detach so that we can call checkout below
 
-			// create submodule dev branch
-			gitTagsetHandler.checkout(
-				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+			// create and checkout submodule dev branch
+			gitTagsetHandler.checkout(projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
-			// update permissions
-			rolesPerResource.put(
-				tagsetId, 
-				RBACRole.OWNER);
-			
+			// update cached permissions
+			rolesPerResource.put(tagsetId, RBACRole.OWNER);
+
 			return tagsetRevisionHash;
 		}
 	}
-	
-	public Pair<TagsetDefinition, String> cloneAndAddTagset(String tagsetId, String name, String commitMsg) throws IOException {
 
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = 
-					new GitTagsetHandler(
-							localGitRepoManager, 
-							this.remoteGitServerManager,
-							this.credentialsProvider);
-
-
-			String tagsetRepoRemoteUrl = 
-					CATMAPropertyKey.GitLabServerUrl.getValue() + "/" + projectId + "/" + tagsetId + ".git";
-
+	public Pair<TagsetDefinition, String> cloneAndAddTagset(String tagsetId, String name, String commitMessage) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// open the project root repo
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
@@ -210,15 +187,16 @@ public class GitProjectHandler {
 					tagsetId
 			).toFile();
 
-			String rootRevisionHash = addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, tagsetRepoRemoteUrl, commitMsg);
+			String tagsetRepoRemoteUrl = String.format("%s/%s/%s.git", CATMAPropertyKey.GitLabServerUrl.getValue(), projectId, tagsetId);
+			String rootRevisionHash = addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, tagsetRepoRemoteUrl, commitMessage);
 
-			localGitRepoManager.detach();
+			localGitRepoManager.detach(); // need to explicitly detach so that we can call checkout below
 
-			// create submodule dev branch
-			gitTagsetHandler.checkout(
-				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+			// create and checkout submodule dev branch
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, remoteGitServerManager, credentialsProvider);
+			gitTagsetHandler.checkout(projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
-			// update permissions
+			// update cached permissions
 			if (!rolesPerResource.containsKey(tagsetId)) {
 				rolesPerResource.put(tagsetId, RBACRole.OWNER);
 			}
@@ -226,7 +204,7 @@ public class GitProjectHandler {
 			return new Pair<>(gitTagsetHandler.getTagset(projectId, tagsetId), rootRevisionHash);
 		}
 	}
-	
+
 	public String createOrUpdateTag(String tagsetId, TagDefinition tagDefinition, String commitMsg) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			
@@ -270,38 +248,18 @@ public class GitProjectHandler {
 	}
 
 	// markup collection operations
-	public String createMarkupCollection(String collectionId,
-										 String name,
-										 String description,
-										 String sourceDocumentId,
-										 String sourceDocumentVersion
+	public String createMarkupCollection(
+			String collectionId, String name, String description, String sourceDocumentId, String sourceDocumentVersion
 	) throws IOException {
-
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
-			GitMarkupCollectionHandler gitMarkupCollectionHandler = 
-					new GitMarkupCollectionHandler(
-							localGitRepoManager, 
-							this.remoteGitServerManager, 
-							this.credentialsProvider
-			);
-
+		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// create the markup collection
-			String revisionHash = gitMarkupCollectionHandler.create(
-					projectId,
-					collectionId,
-					name,
-					description,
-					sourceDocumentId,
-					sourceDocumentVersion
+			GitMarkupCollectionHandler gitMarkupCollectionHandler =	new GitMarkupCollectionHandler(
+					localGitRepoManager, remoteGitServerManager, credentialsProvider
 			);
+			String revisionHash = gitMarkupCollectionHandler.create(projectId, collectionId, name, description, sourceDocumentId, sourceDocumentVersion);
 
-			// push the newly created markup collection repo to the server in preparation for adding it to the project
-			// root repo as a submodule
-
-			localGitRepoManager.open(
-					projectId, 
-					collectionId);
+			// push the newly created markup collection repo to the server in preparation for adding it to the project root repo as a submodule
+			localGitRepoManager.open(projectId, collectionId);
 			localGitRepoManager.push(credentialsProvider);
 			String markupCollectionRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
@@ -319,24 +277,19 @@ public class GitProjectHandler {
 			String commitMessage = String.format("Added collection \"%1$s\" with ID %2$s", name, collectionId);
 			addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, markupCollectionRepoRemoteUrl, commitMessage);
 
-			localGitRepoManager.detach();
+			localGitRepoManager.detach(); // need to explicitly detach so that we can call checkout below
 
-			// create submodule dev branch
-			gitMarkupCollectionHandler.checkout(
-				projectId, collectionId,
-				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+			// create and checkout submodule dev branch
+			gitMarkupCollectionHandler.checkout(projectId, collectionId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
-			// update permissions
-			rolesPerResource.put(
-				collectionId,
-				RBACRole.OWNER);
-			
+			// update cached permissions
+			rolesPerResource.put(collectionId, RBACRole.OWNER);
+
 			return revisionHash;
 		}
 	}
 
 	// source document operations
-
 	/**
 	 * Creates a new source document within the project identified by <code>projectId</code>.
 	 *
@@ -358,14 +311,11 @@ public class GitProjectHandler {
 			Map<String, List<TermInfo>> terms, String tokenizedSourceDocumentFileName,
 			SourceDocumentInfo sourceDocumentInfo
 	) throws IOException {
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+		try (ILocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
+			// create the source document
 			GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
-					localRepoManager,
-					this.remoteGitServerManager,
-					this.credentialsProvider
+					localRepoManager, remoteGitServerManager, credentialsProvider
 			);
-
-			// create the source document within the project
 			String revisionHash = gitSourceDocumentHandler.create(
 					projectId, sourceDocumentId,
 					originalSourceDocumentStream, originalSourceDocumentFileName,
@@ -374,11 +324,11 @@ public class GitProjectHandler {
 					sourceDocumentInfo
 			);
 
+			// push the newly created source document repo to the server in preparation for adding it to the project root repo as a submodule
 			localRepoManager.open(projectId, sourceDocumentId);
 			localRepoManager.push(credentialsProvider);
-
 			String remoteUri = localRepoManager.getRemoteUrl(null);
-			localRepoManager.close();
+			localRepoManager.detach(); // need to explicitly detach so that we can call open below
 
 			// open the project root repository
 			localRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
@@ -389,7 +339,7 @@ public class GitProjectHandler {
 					SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
 					sourceDocumentId
 			).toFile();
-			
+
 			sourceDocumentInfo.getTechInfoSet().setURI(
 					Paths.get(targetSubmodulePath.getAbsolutePath(), convertedSourceDocumentFileName).toUri()
 			);
@@ -402,14 +352,12 @@ public class GitProjectHandler {
 
 			addAndCommitSubmoduleWithRetry(localRepoManager, targetSubmodulePath, remoteUri, commitMessage);
 
-			localRepoManager.detach();
+			localRepoManager.detach(); // need to explicitly detach so that we can call checkout below
 
-			// create submodule dev branch
-			gitSourceDocumentHandler.checkout(
-					projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true
-			);
+			// create and checkout submodule dev branch
+			gitSourceDocumentHandler.checkout(projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
-			// update permissions
+			// update cached permissions
 			rolesPerResource.put(sourceDocumentId, RBACRole.OWNER);
 
 			return revisionHash;
