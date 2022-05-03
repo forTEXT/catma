@@ -18,6 +18,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.*;
@@ -29,6 +30,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -52,6 +55,8 @@ public class GitProjectHandler {
 	public static final String TAGSET_SUBMODULES_DIRECTORY_NAME = "tagsets";
 	public static final String ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
+
+	private static final int ADD_AND_COMMIT_SUBMODULE_MAX_RETRIES = 3;
 
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
@@ -82,6 +87,55 @@ public class GitProjectHandler {
 		Map<String, RBACRole> oldRolesPerResource = this.rolesPerResource;
 		this.rolesPerResource = remoteGitServerManager.getRolesPerResource(projectId);
 		return oldRolesPerResource == null || !oldRolesPerResource.equals(this.rolesPerResource);
+	}
+
+	private String addAndCommitSubmoduleWithRetry(
+			ILocalGitRepositoryManager localGitRepoManager, File targetSubmodulePath, String submoduleRepoRemoteUrl, String commitMessage
+	) throws IOException {
+		return addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, submoduleRepoRemoteUrl, commitMessage, 0);
+	}
+
+	private String addAndCommitSubmoduleWithRetry (
+			ILocalGitRepositoryManager localGitRepoManager, File targetSubmodulePath, String submoduleRepoRemoteUrl, String commitMessage, int retryCount
+	) throws IOException {
+		// submodule files and the changed .gitmodules file are automatically staged
+		localGitRepoManager.addSubmodule(targetSubmodulePath, submoduleRepoRemoteUrl, credentialsProvider);
+
+		try {
+			return localGitRepoManager.commit(commitMessage, remoteGitServerManager.getUsername(), remoteGitServerManager.getEmail(), false);
+		}
+		catch (JGitInternalException e) {
+			// https://github.com/forTEXT/catma/issues/310
+			if (!e.getMessage().equals("Missing unknown 0000000000000000000000000000000000000000") || retryCount >= ADD_AND_COMMIT_SUBMODULE_MAX_RETRIES) {
+				throw new IOException("Exhausted max. no. of retries in addAndCommitSubmoduleWithRetry", e);
+			}
+
+			logger.warning(
+					String.format(
+							"\"Missing unknown\" error encountered in addAndCommitSubmoduleWithRetry for submodule %s, retry %s of %s",
+							String.join("/", targetSubmodulePath.getParentFile().getName(), targetSubmodulePath.getName()),
+							retryCount + 1,
+							ADD_AND_COMMIT_SUBMODULE_MAX_RETRIES
+					)
+			);
+
+			Path rootRepositoryBasePath = localGitRepoManager.getRepositoryWorkTree().toPath();
+			Path absoluteTargetSubmodulePath = Paths.get(targetSubmodulePath.getAbsolutePath());
+			Path relativeTargetSubmodulePath = rootRepositoryBasePath.relativize(absoluteTargetSubmodulePath);
+			String relativeTargetSubmodulePathUnixStyle = FilenameUtils.separatorsToUnix(relativeTargetSubmodulePath.toString());
+			File submoduleGitDir = rootRepositoryBasePath.resolve(Constants.DOT_GIT).resolve(Constants.MODULES).resolve(relativeTargetSubmodulePath).toFile();
+			try {
+				((JGitRepoManager) localGitRepoManager).getGitApi().rm().setCached(true).addFilepattern(relativeTargetSubmodulePathUnixStyle).call();
+			}
+			catch (GitAPIException ie) {
+				throw new IOException(ie);
+			}
+
+			FileUtils.deleteDirectory(submoduleGitDir);
+			FileUtils.deleteDirectory(absoluteTargetSubmodulePath.toFile());
+
+			return addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, submoduleRepoRemoteUrl, commitMessage, retryCount + 1);
+		}
 	}
 
 	// tagset operations
@@ -115,24 +169,16 @@ public class GitProjectHandler {
 					tagsetId
 			).toFile();
 
-			// submodule files and the changed .gitmodules file are automatically staged
-			localGitRepoManager.addSubmodule(
-					targetSubmodulePath,
-					tagsetRepoRemoteUrl,
-					credentialsProvider
-			);
-			
-			localGitRepoManager.commit(
-					String.format("Added Tagset %1$s with ID %2$s", name, tagsetId),
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(),
-					false);
+			String commitMessage = String.format("Added tagset \"%1$s\" with ID %2$s", name, tagsetId);
+			addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, tagsetRepoRemoteUrl, commitMessage);
 
 			localGitRepoManager.detach(); 
-			
+
+			// create submodule dev branch
 			gitTagsetHandler.checkout(
 				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
+			// update permissions
 			rolesPerResource.put(
 				tagsetId, 
 				RBACRole.OWNER);
@@ -164,24 +210,15 @@ public class GitProjectHandler {
 					tagsetId
 			).toFile();
 
-			// submodule files and the changed .gitmodules file are automatically staged
-			localGitRepoManager.addSubmodule(
-					targetSubmodulePath,
-					tagsetRepoRemoteUrl,
-					credentialsProvider
-			);
-			
-			String rootRevisionHash = localGitRepoManager.commit(
-					commitMsg,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(),
-					false);
+			String rootRevisionHash = addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, tagsetRepoRemoteUrl, commitMsg);
 
-			localGitRepoManager.detach(); 
-			
+			localGitRepoManager.detach();
+
+			// create submodule dev branch
 			gitTagsetHandler.checkout(
 				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
 
+			// update permissions
 			if (!rolesPerResource.containsKey(tagsetId)) {
 				rolesPerResource.put(tagsetId, RBACRole.OWNER);
 			}
@@ -279,26 +316,19 @@ public class GitProjectHandler {
 					collectionId
 			).toFile();
 
-			// submodule files and the changed .gitmodules file are automatically staged
-			localGitRepoManager.addSubmodule(
-					targetSubmodulePath,
-					markupCollectionRepoRemoteUrl,
-					credentialsProvider
-			);
-			
-			localGitRepoManager.commit(
-				String.format("Added Collection %1$s with ID %2$s", name, collectionId),
-				remoteGitServerManager.getUsername(),
-				remoteGitServerManager.getEmail(),
-				false);
-			localGitRepoManager.detach(); 
-			
-			gitMarkupCollectionHandler.checkout(
-				projectId, collectionId, 
-				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);			
+			String commitMessage = String.format("Added collection \"%1$s\" with ID %2$s", name, collectionId);
+			addAndCommitSubmoduleWithRetry(localGitRepoManager, targetSubmodulePath, markupCollectionRepoRemoteUrl, commitMessage);
 
+			localGitRepoManager.detach();
+
+			// create submodule dev branch
+			gitMarkupCollectionHandler.checkout(
+				projectId, collectionId,
+				ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+
+			// update permissions
 			rolesPerResource.put(
-				collectionId, 
+				collectionId,
 				RBACRole.OWNER);
 			
 			return revisionHash;
@@ -364,27 +394,22 @@ public class GitProjectHandler {
 					Paths.get(targetSubmodulePath.getAbsolutePath(), convertedSourceDocumentFileName).toUri()
 			);
 
-			// submodule files and the changed .gitmodules file are automatically staged
-			localRepoManager.addSubmodule(targetSubmodulePath, remoteUri, credentialsProvider);
-
 			String name = sourceDocumentInfo.getContentInfoSet().getTitle();
 			if ((name == null) || name.isEmpty()) {
 				name = "N/A";
 			}
+			String commitMessage = String.format("Added document \"%1$s\" with ID %2$s", name, sourceDocumentId);
 
-			localRepoManager.commit(
-					String.format("Added document \"%1$s\" with ID %2$s", name, sourceDocumentId),
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(),
-					false
-			);
+			addAndCommitSubmoduleWithRetry(localRepoManager, targetSubmodulePath, remoteUri, commitMessage);
 
 			localRepoManager.detach();
 
+			// create submodule dev branch
 			gitSourceDocumentHandler.checkout(
 					projectId, sourceDocumentId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true
 			);
 
+			// update permissions
 			rolesPerResource.put(sourceDocumentId, RBACRole.OWNER);
 
 			return revisionHash;
