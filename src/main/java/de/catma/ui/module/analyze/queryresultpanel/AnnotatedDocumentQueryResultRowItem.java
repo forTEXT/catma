@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.vaadin.data.TreeData;
 import com.vaadin.ui.UI;
 
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.queryengine.result.GroupedQueryResult;
@@ -52,9 +52,8 @@ public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowI
 			}
 			
 			for (String collectionId : rowsByCollectionId.keySet()) {
-				SourceDocument document = kwicProviderCache.get(getDocumentId()).getSourceDocument();
-				String collectionName = 
-					document.getUserMarkupCollectionReference(collectionId).getName();
+				SourceDocumentReference documentRef = kwicProviderCache.get(getDocumentId()).getSourceDocumentReference();
+				String collectionName = documentRef.getUserMarkupCollectionReference(collectionId).getName();
 				QueryResultRowArray rows = rowsByCollectionId.get(collectionId);
 				CollectionQueryResultRowItem item = 
 					new CollectionQueryResultRowItem(

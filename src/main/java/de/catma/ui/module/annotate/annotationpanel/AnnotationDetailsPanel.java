@@ -40,7 +40,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.annotation.Annotation;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionManager;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
@@ -194,8 +194,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		return Optional.empty();
 	}
 
-	public void setDocument(SourceDocument document) throws IOException {
-		this.kwicProvider = new KwicProvider(document);
+	public void setDocument(SourceDocumentReference sdRef) throws Exception {
+		this.kwicProvider = new KwicProvider(project.getSourceDocument(sdRef.getUuid()), sdRef);
 		handleClearSelected();
 	}
 	

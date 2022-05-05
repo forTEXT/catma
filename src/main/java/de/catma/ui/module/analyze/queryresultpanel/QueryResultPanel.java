@@ -1034,8 +1034,7 @@ public class QueryResultPanel extends VerticalLayout {
 									tagDefinition, 
 									tRow.getTagDefinitionPath()),
 							kwicProvider.getSourceDocumentName(),
-							kwicProvider
-								.getSourceDocument()
+							kwicProvider.getSourceDocumentReference()
 								.getUserMarkupCollectionReference(tRow.getMarkupCollectionId())
 								.getName(),
 							true
@@ -1100,8 +1099,7 @@ public class QueryResultPanel extends VerticalLayout {
 								tagDefinition, 
 								masterRow.getTagDefinitionPath()),
 						kwicProvider.getSourceDocumentName(),
-						kwicProvider
-							.getSourceDocument()
+						kwicProvider.getSourceDocumentReference()
 							.getUserMarkupCollectionReference(masterRow.getMarkupCollectionId())
 							.getName()
 					);

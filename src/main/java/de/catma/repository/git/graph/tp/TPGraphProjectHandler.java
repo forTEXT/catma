@@ -50,6 +50,7 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.Indexer;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.CommentProvider;
@@ -166,7 +167,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void updateSourceDocument(String rootRevisionHash, SourceDocument sourceDocument, String oldRootRevisionHash) throws Exception {
+	public void updateSourceDocument(String rootRevisionHash, SourceDocumentReference sourceDocument, String oldRootRevisionHash) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "updateSourceDocument enter");
 
 		GraphTraversalSource g = graph.traversal();
@@ -209,7 +210,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void addCollection(String rootRevisionHash, String collectionId, String name,
-			SourceDocument document, TagLibrary tagLibrary, String oldRootRevisionHash) throws Exception {
+			SourceDocumentReference document, TagLibrary tagLibrary, String oldRootRevisionHash) throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "addCollection enter");
 		
 		logger.info("Adding Collection " + name);
@@ -672,7 +673,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void removeDocument(String rootRevisionHash, SourceDocument document, String oldRootRevisionHash)
+	public void removeDocument(String rootRevisionHash, SourceDocumentReference document, String oldRootRevisionHash)
 			throws Exception {
 		logRootRevisionHash(rootRevisionHash, oldRootRevisionHash, "removeDocument enter");
 		

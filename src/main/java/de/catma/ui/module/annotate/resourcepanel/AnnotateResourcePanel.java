@@ -33,7 +33,7 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.event.ChangeType;
@@ -65,7 +65,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent;
 	private EventBus eventBus;
 
-	public AnnotateResourcePanel(Project project, SourceDocument currentlySelectedSourceDocument, EventBus eventBus) {
+	public AnnotateResourcePanel(Project project, SourceDocumentReference currentlySelectedSourceDocument, EventBus eventBus) {
 		super();
 		this.project = project;
         this.errorHandler = (ErrorHandler)UI.getCurrent();
@@ -158,7 +158,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
 			
-    		SourceDocument document = collectionChangeEvent.getDocument();
+    		SourceDocumentReference document = collectionChangeEvent.getDocument();
     		AnnotationCollectionReference collectionReference = 
     				collectionChangeEvent.getCollectionReference();
 
@@ -263,7 +263,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private void handleAddCollectionRequest() {
     	Set<DocumentTreeItem> selectedItems = documentTree.getSelectedItems();
     	
-    	Set<SourceDocument> selectedDocuments = new HashSet<>();
+    	Set<SourceDocumentReference> selectedDocuments = new HashSet<>();
     	
     	for (DocumentTreeItem resource : selectedItems) {
     		DocumentTreeItem root = documentData.getParent(resource);
@@ -277,7 +277,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	}
     	
     	if (selectedDocuments.isEmpty()) {
-    		SourceDocument document = getSelectedDocument();
+    		SourceDocumentReference document = getSelectedDocument();
     		if (document != null) {
     			selectedDocuments.add(document);
     		}
@@ -292,7 +292,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 							
 							@Override
 							public void savePressed(String result) {
-								for (SourceDocument document : selectedDocuments) {
+								for (SourceDocumentReference document : selectedDocuments) {
 									project.createUserMarkupCollection(result, document);
 								}
 							}
@@ -302,13 +302,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	}
     }
     
-	private void initData(SourceDocument currentlySelectedSourceDocument, Set<String> currentlysSelectedColletionIds) {
+	private void initData(SourceDocumentReference currentlySelectedSourceDocument, Set<String> currentlysSelectedColletionIds) {
 		try {
 			documentData = new TreeData<>();
 			
-			Collection<SourceDocument> documents = project.getSourceDocuments(); 
+			Collection<SourceDocumentReference> documents = project.getSourceDocuments(); 
 			
-			final SourceDocument preselection = currentlySelectedSourceDocument;
+			final SourceDocumentReference preselection = currentlySelectedSourceDocument;
 			
 			documentData.addRootItems(
 				documents
@@ -495,8 +495,8 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	
     @Subscribe
     public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
-    	SourceDocument currentlySelectedDocument = getSelectedDocument();
-    	SourceDocument nextSelectedDocument = null;
+    	SourceDocumentReference currentlySelectedDocument = getSelectedDocument();
+    	SourceDocumentReference nextSelectedDocument = null;
     	if ((currentlySelectedDocument != null)
     			&& !(documentChangeEvent.getChangeType().equals(ChangeType.DELETED)
     					&& documentChangeEvent.getDocument().equals(currentlySelectedDocument))) {
@@ -506,7 +506,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	initData(nextSelectedDocument, Collections.emptySet());
     }
     
-    private SourceDocument getSelectedDocument() {
+    private SourceDocumentReference getSelectedDocument() {
     	for (DocumentTreeItem documentTreeItem : documentData.getRootItems()) {
     		if ((documentTreeItem instanceof DocumentDataItem) && documentTreeItem.isSelected()) {
     			return ((DocumentDataItem)documentTreeItem).getDocument();
@@ -516,13 +516,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	return null;
     }
     
-    public void setSelectedDocument(SourceDocument sourceDocument) {
-    	SourceDocument selected = getSelectedDocument();
-    	if ((selected == null) || !selected.equals(sourceDocument)) {
+    public void setSelectedDocument(SourceDocumentReference sourceDocumentReference) {
+    	SourceDocumentReference selected = getSelectedDocument();
+    	if ((selected == null) || !selected.equals(sourceDocumentReference)) {
     		for (DocumentTreeItem documentTreeItem : documentData.getRootItems()) {
     			if (documentTreeItem instanceof DocumentDataItem) {
     				DocumentDataItem documentDataItem = (DocumentDataItem)documentTreeItem;
-    				if (documentDataItem.getDocument().equals(sourceDocument)) {
+    				if (documentDataItem.getDocument().equals(sourceDocumentReference)) {
     					documentDataItem.setSelected(true);
     					documentTree.getDataProvider().refreshItem(documentDataItem);
     					documentTree.expand(documentDataItem);

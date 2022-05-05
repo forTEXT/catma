@@ -15,6 +15,7 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -42,7 +43,7 @@ public interface GraphProjectHandler {
 
 	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document, Path tokenizedSourceDocumentPath) throws Exception;
 
-	void updateSourceDocument(String rootRevisionHash, SourceDocument sourceDocument, String oldRootRevisionHash) throws Exception;
+	void updateSourceDocument(String rootRevisionHash, SourceDocumentReference sourceDocument, String oldRootRevisionHash) throws Exception;
 
 	Collection<SourceDocument> getDocuments(String rootRevisionHash) throws Exception;
 
@@ -52,7 +53,7 @@ public interface GraphProjectHandler {
 			String rootRevisionHash,
 			String collectionId,
 			String name,
-			SourceDocument document,
+			SourceDocumentReference document,
 			TagLibrary tagLibrary,
 			String oldRootRevisionHash
 	) throws Exception;
@@ -105,7 +106,7 @@ public interface GraphProjectHandler {
 
 	void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference, String oldRootRevisionHash) throws Exception;
 
-	void removeDocument(String rootRevisionHash, SourceDocument document, String oldRootRevisionHash) throws Exception;
+	void removeDocument(String rootRevisionHash, SourceDocumentReference document, String oldRootRevisionHash) throws Exception;
 
 	boolean hasDocument(String rootRevisionHash, String documentId);
 

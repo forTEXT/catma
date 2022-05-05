@@ -50,7 +50,7 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
@@ -64,9 +64,9 @@ import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
-import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.tags.AddEditPropertyDialog;
 import de.catma.ui.module.tags.AddParenttagDialog;
@@ -101,7 +101,7 @@ public class AnnotationPanel extends VerticalLayout {
 	private Button btMaximizeAnnotationDetailsRibbon;
 	private VerticalSplitPanel rightSplitPanel;
 	private AnnotationCollectionManager collectionManager;
-	private Supplier<SourceDocument> currentDocumentProvider;
+	private Supplier<SourceDocumentReference> currentDocumentProvider;
 	private EventBus eventBus;
 	private IconButton btFilterCollection;
 
@@ -111,7 +111,7 @@ public class AnnotationPanel extends VerticalLayout {
 			Consumer<String> annotationSelectionListener,
 			Consumer<ValueChangeEvent<AnnotationCollection>> collectionSelectionListener,
 			Consumer<TagDefinition> tagSelectionListener,
-			Supplier<SourceDocument> currentDocumentProvider,
+			Supplier<SourceDocumentReference> currentDocumentProvider,
 			EventBus eventBus) {
 		this.project = project;
 		this.collectionManager = collectionManager;
@@ -319,7 +319,7 @@ public class AnnotationPanel extends VerticalLayout {
 	@Subscribe
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
-			SourceDocument document = currentDocumentProvider.get();
+			SourceDocumentReference document = currentDocumentProvider.get();
 			if (document != null) {
 	    		AnnotationCollectionReference collectionReference = 
 	    				collectionChangeEvent.getCollectionReference();
@@ -599,7 +599,7 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handelAddCollectionRequest() {
-		final SourceDocument document = currentDocumentProvider.get();
+		final SourceDocumentReference document = currentDocumentProvider.get();
 		
 		if (document != null) {
 	    	SingleTextInputDialog collectionNameDlg = 
@@ -1126,12 +1126,12 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	public void setData(
-			SourceDocument document, 
+			SourceDocumentReference sdRef,
 			Collection<TagsetDefinition> tagsets, 
-			List<AnnotationCollection> collections) throws IOException {
+			List<AnnotationCollection> collections) throws Exception {
 		this.tagsets = tagsets;
 		this.collections = collections;
-		this.annotationDetailsPanel.setDocument(document);
+		this.annotationDetailsPanel.setDocument(sdRef);
 		initData();
 	}
 	

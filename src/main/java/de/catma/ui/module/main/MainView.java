@@ -21,7 +21,6 @@ import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
-import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.events.routing.RouteToTagsEvent;
@@ -29,7 +28,6 @@ import de.catma.ui.login.LoginService;
 import de.catma.ui.module.analyze.AnalyzeManagerView;
 import de.catma.ui.module.annotate.TaggerManagerView;
 import de.catma.ui.module.dashboard.DashboardView;
-import de.catma.ui.module.project.ConflictedProjectView;
 import de.catma.ui.module.project.ProjectView;
 import de.catma.ui.module.tags.TagsView;
 
@@ -203,16 +201,6 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	}
 
 	@Override
-	@Deprecated
-	public void handleRouteToConflictedProject(RouteToConflictedProjectEvent routeToConflictedProjectEvent) {
-		if (isNewTarget(routeToConflictedProjectEvent.getClass())) {
-			ConflictedProjectView conflictedProjectView = new ConflictedProjectView(routeToConflictedProjectEvent.getConflictedProject(), eventBus);
-			setContent(conflictedProjectView);
-			currentRoute = routeToConflictedProjectEvent.getClass();
-		}
-	}
-
-	@Override
 	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
 		if (isNewTarget(routeToAnnotateEvent.getClass())) {
 			if (taggerManagerView == null) {
@@ -240,7 +228,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 
 			try {
 				taggerManagerView.openSourceDocument(
-					queryResultRowInAnnotateEvent.getProject().getSourceDocument(queryResultRowInAnnotateEvent.getDocumentId()),
+					queryResultRowInAnnotateEvent.getProject().getSourceDocumentReference(queryResultRowInAnnotateEvent.getDocumentId()),
 					queryResultRowInAnnotateEvent.getProject(),
 					(taggerView) -> {
 						taggerView.showQueryResultRows(queryResultRowInAnnotateEvent.getSelection(), queryResultRowInAnnotateEvent.getRows());

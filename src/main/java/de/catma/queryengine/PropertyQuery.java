@@ -86,7 +86,7 @@ public class PropertyQuery extends Query {
         	for (String sourceDocumentId 
         			: queryOptions.getRelevantSourceDocumentIDs()) {
         		for (AnnotationCollectionReference umcRef : 
-        			repository.getSourceDocument(sourceDocumentId).getUserMarkupCollectionRefs()) {
+        			repository.getSourceDocumentReference(sourceDocumentId).getUserMarkupCollectionRefs()) {
         			relevantUserMarkupCollIDs.add(umcRef.getId());
         		}
         	}

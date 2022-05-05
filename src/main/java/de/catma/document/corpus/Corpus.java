@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 
 /**
  * A corpus is a collection of {@link SourceDocument}s and a (sub-)set of the attached
@@ -35,15 +35,15 @@ import de.catma.document.source.SourceDocument;
  */
 public class Corpus {
 
-	private List<SourceDocument> sourceDocuments;
+	private List<SourceDocumentReference> sourceDocuments;
 	private List<AnnotationCollectionReference> userMarkupCollectionRefs;
 	
 	public Corpus() {
-		this.sourceDocuments = new ArrayList<SourceDocument>();
+		this.sourceDocuments = new ArrayList<SourceDocumentReference>();
 		this.userMarkupCollectionRefs = new ArrayList<AnnotationCollectionReference>();
 	}
 
-	public void addSourceDocument(SourceDocument sourceDocument) {
+	public void addSourceDocument(SourceDocumentReference sourceDocument) {
 		sourceDocuments.add(sourceDocument);
 	}
 
@@ -55,7 +55,7 @@ public class Corpus {
 	/**
 	 * @return non modifiable list
 	 */
-	public List<SourceDocument> getSourceDocuments() {
+	public List<SourceDocumentReference> getSourceDocuments() {
 		return Collections.unmodifiableList(sourceDocuments);
 	}
 
@@ -73,7 +73,7 @@ public class Corpus {
 	 * all user markup collections of that source document).
 	 */
 	public List<AnnotationCollectionReference> getUserMarkupCollectionRefs(
-			SourceDocument sd) {
+			SourceDocumentReference sd) {
 		List<AnnotationCollectionReference> result = 
 				new ArrayList<AnnotationCollectionReference>();
 		
@@ -91,7 +91,7 @@ public class Corpus {
 
 	public List<String> getDocumentIds() {
 		return sourceDocuments.stream()
-				.map(SourceDocument::getUuid)
+				.map(SourceDocumentReference::getUuid)
 				.collect(Collectors.toList());
 	}
 

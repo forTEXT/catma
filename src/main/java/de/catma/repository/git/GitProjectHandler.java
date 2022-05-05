@@ -36,6 +36,7 @@ import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.TermInfo;
 import de.catma.project.CommitInfo;
 import de.catma.project.ProjectReference;
@@ -758,7 +759,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public String updateSourceDocument(SourceDocument sourceDocument) throws IOException {
+	public String updateSourceDocument(SourceDocumentReference sourceDocument) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());	
@@ -853,7 +854,7 @@ public class GitProjectHandler {
 	
 
 
-	public String removeDocument(SourceDocument sourceDocument) throws Exception {
+	public String removeDocument(SourceDocumentReference sourceDocument) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());	

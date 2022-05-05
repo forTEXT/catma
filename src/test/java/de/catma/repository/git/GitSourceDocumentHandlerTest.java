@@ -40,6 +40,7 @@ import de.catma.document.source.FileType;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.TechInfoSet;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
@@ -467,7 +468,8 @@ public class GitSourceDocumentHandlerTest {
 					)
 			);
 
-			String sourceDocumentRevision = gitSourceDocumentHandler.update(sourceDocument);
+			String sourceDocumentRevision = gitSourceDocumentHandler.update(
+					new SourceDocumentReference(sourceDocumentUuid, sourceDocument.getSourceContentHandler()));
 			assertNotNull(sourceDocumentRevision);
 
 			String expectedSerializedSourceDocumentInfo = "" +

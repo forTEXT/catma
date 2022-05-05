@@ -27,7 +27,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
@@ -117,7 +117,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		Set<String> documentIds = (Set<String>) context.get(AnnotationWizardContextKey.DOCUMENTIDS);
         
         for(String documentId : documentIds) {
-        	SourceDocument srcDoc = project.getSourceDocument(documentId);
+        	SourceDocumentReference srcDoc = project.getSourceDocumentReference(documentId);
             DocumentResource docResource = 
             		new DocumentResource(
             			srcDoc, 
@@ -225,7 +225,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 			
 	    	Set<Resource> selectedResources = documentGrid.getSelectedItems();
 	    	
-	    	Set<SourceDocument> selectedDocuments = new HashSet<>();
+	    	Set<SourceDocumentReference> selectedDocuments = new HashSet<>();
 	    	
 	    	for (Resource resource : selectedResources) {
 	    		Resource root = 
@@ -246,8 +246,8 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 								
 								@Override
 								public void savePressed(String result) {
-									for (SourceDocument document : selectedDocuments) {
-										project.createUserMarkupCollection(result, document);
+									for (SourceDocumentReference documentRef : selectedDocuments) {
+										project.createUserMarkupCollection(result, documentRef);
 									}
 								}
 							});

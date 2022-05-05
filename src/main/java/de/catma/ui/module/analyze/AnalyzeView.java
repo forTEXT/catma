@@ -263,7 +263,7 @@ public class AnalyzeView extends HorizontalLayout
 		if (!corpus.isEmpty()) {
 			
 			//TODO: provide a facility where the user can select between different IndexInfoSets -> AnalyzeResourcePanel
-			indexInfoSet = corpus.getSourceDocuments().get(0).getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
+			indexInfoSet = corpus.getSourceDocuments().get(0).getSourceDocumentInfo().getIndexInfoSet();
 			btQueryBuilder.setEnabled(true);
 			btExecuteSearch.setEnabled(true);
 		}

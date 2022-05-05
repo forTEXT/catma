@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.catma.document.Range;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -67,40 +67,36 @@ public class RegQuery extends Query {
     	
     	List<String> relevantSourceDocIDs = 
     			queryOptions.getRelevantSourceDocumentIDs();
-    	Collection<SourceDocument> relevantSourceDocuments = null;
+    	Collection<SourceDocumentReference> relevantSourceDocuments = null;
     	if ((relevantSourceDocIDs != null) && !relevantSourceDocIDs.isEmpty()) {
-    		relevantSourceDocuments = new ArrayList<SourceDocument>();
+    		relevantSourceDocuments = new ArrayList<SourceDocumentReference>();
     		for (String sourceDocumentID : relevantSourceDocIDs) {
     			relevantSourceDocuments.add(
-    					repository.getSourceDocument(sourceDocumentID));
+    					repository.getSourceDocumentReference(sourceDocumentID));
     		}
     	}
     	else {
     		relevantSourceDocuments = repository.getSourceDocuments();
     	}
     	
-    	for (SourceDocument sourceDoc : relevantSourceDocuments) {
-    		boolean sourceDocWasLoaded = sourceDoc.isLoaded();
-    		
+    	for (SourceDocumentReference sourceDocRef : relevantSourceDocuments) {    		
 	        int flags = Pattern.DOTALL;
 	        if (caseInsensitive) {
 	            flags |= Pattern.CASE_INSENSITIVE;
 	        }
 	        Pattern pattern = Pattern.compile(phrase.getPhrase(), flags);
 	
-	        Matcher matcher = pattern.matcher(sourceDoc.getContent());
+	        Matcher matcher = 
+        		pattern.matcher(
+        			repository.getSourceDocument(sourceDocRef.getUuid()).getContent());
 	
 	        while(matcher.find()) {
 	            result.add(
 	            	new QueryResultRow(
 	            		queryOptions.getQueryId(),
-	            		sourceDoc.getUuid(), 
+	            		sourceDocRef.getUuid(), 
 	            		new Range(matcher.start(), matcher.end()), 
 	            		matcher.group()));
-	        }
-	        
-	        if (!sourceDocWasLoaded) {
-	        	sourceDoc.unload();
 	        }
     	}	
 	    

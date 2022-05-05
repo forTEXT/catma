@@ -31,7 +31,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.UI;
@@ -46,6 +45,7 @@ import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.IndexedProject;
 import de.catma.indexer.Indexer;
@@ -171,7 +171,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			});
 	}
 	
-	public SourceDocument getUncachedSourceDocument(String sourceDocumentId) throws Exception {
+	private SourceDocument getUncachedSourceDocument(String sourceDocumentId) throws Exception {
 		return graphProjectHandler.getSourceDocument(this.rootRevisionHash, sourceDocumentId);
 	}
 
@@ -781,7 +781,10 @@ public class GraphWorktreeProject implements IndexedProject {
 				sourceTempFile.delete();
 			}
 
-	        eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.CREATED));
+	        eventBus.post(new DocumentChangeEvent(
+	        	new SourceDocumentReference(
+	        		sourceDocument.getUuid(), sourceDocument.getSourceContentHandler()), 
+	        	ChangeType.CREATED));
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -792,16 +795,17 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) throws Exception {
+	public void update(
+			SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet) throws Exception {
 		
 		String oldRootRevisionHash = this.rootRevisionHash;
 
-		this.rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocument);
+		this.rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocumentRef);
 		
 		graphProjectHandler.updateSourceDocument(
-				this.rootRevisionHash, sourceDocument, oldRootRevisionHash);
+				this.rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
 
-		eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.UPDATED));
+		eventBus.post(new DocumentChangeEvent(sourceDocumentRef, ChangeType.UPDATED));
 	}
 
 	@Override
@@ -810,8 +814,11 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public Collection<SourceDocument> getSourceDocuments() throws Exception {
-		return graphProjectHandler.getDocuments(this.rootRevisionHash);
+	public Collection<SourceDocumentReference> getSourceDocuments() throws Exception {
+		return graphProjectHandler.getDocuments(this.rootRevisionHash)
+				.stream()
+				.map(sd -> new SourceDocumentReference(sd.getUuid(), sd.getSourceContentHandler()))
+				.collect(Collectors.toList());
 	}
 	
 	@Override
@@ -823,30 +830,36 @@ public class GraphWorktreeProject implements IndexedProject {
 	public SourceDocument getSourceDocument(String sourceDocumentId) throws Exception {
 		return documentCache.get(sourceDocumentId);
 	}
+	
+	@Override
+	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentID) throws Exception {
+		SourceDocument sd = getSourceDocument(sourceDocumentID);
+		return new SourceDocumentReference(sd.getUuid(), sd.getSourceContentHandler());
+	}
 
 	@Override
-	public void delete(SourceDocument sourceDocument) throws Exception {
+	public void delete(SourceDocumentReference sourceDocumentRef) throws Exception {
 		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.removeDocument(sourceDocument);
+		this.rootRevisionHash = gitProjectHandler.removeDocument(sourceDocumentRef);
 		
-		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocument.getUserMarkupCollectionRefs())) {
+		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocumentRef.getUserMarkupCollectionRefs())) {
 			graphProjectHandler.removeCollection(this.rootRevisionHash, collectionRef, oldRootRevisionHash);	
 			
 			eventBus.post(
 				new CollectionChangeEvent(
-					collectionRef, sourceDocument, ChangeType.DELETED));
+					collectionRef, sourceDocumentRef, ChangeType.DELETED));
 		}
 		
-		documentCache.invalidate(sourceDocument.getUuid());
+		documentCache.invalidate(sourceDocumentRef.getUuid());
 		
-		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocument, oldRootRevisionHash);
+		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
 		
-        eventBus.post(new DocumentChangeEvent(sourceDocument, ChangeType.DELETED));
+        eventBus.post(new DocumentChangeEvent(sourceDocumentRef, ChangeType.DELETED));
 	}
 
 	@Override
 	public void createUserMarkupCollection(
-			String name, SourceDocument sourceDocument) {
+			String name, SourceDocumentReference sourceDocumentReference) {
 		try {
 			String collectionId = idGenerator.generateCollectionId();
 			
@@ -855,20 +868,20 @@ public class GraphWorktreeProject implements IndexedProject {
 						collectionId, 
 						name, 
 						null, //description
-						sourceDocument.getUuid(), 
+						sourceDocumentReference.getUuid(), 
 						null);
 			
 			graphProjectHandler.addCollection(
 				rootRevisionHash, 
 				collectionId, name,  
-				sourceDocument,
+				sourceDocumentReference,
 				tagManager.getTagLibrary(),
 				oldRootRevisionHash);
 			
 			eventBus.post(
 				new CollectionChangeEvent(
-					sourceDocument.getUserMarkupCollectionReference(collectionId), 
-					sourceDocument, 
+					sourceDocumentReference.getUserMarkupCollectionReference(collectionId), 
+					sourceDocumentReference, 
 					ChangeType.CREATED));
 		}
 		catch (Exception e) {
@@ -999,29 +1012,29 @@ public class GraphWorktreeProject implements IndexedProject {
 		graphProjectHandler.updateCollection(
 			this.rootRevisionHash, collectionReference, oldRootRevisionHash);		
 		
-		SourceDocument document = getSourceDocument(collectionReference.getSourceDocumentId());
+		SourceDocumentReference documentRef = getSourceDocumentReference(collectionReference.getSourceDocumentId());
 		eventBus.post(
 			new CollectionChangeEvent(
-				collectionReference, document, ChangeType.UPDATED));
+				collectionReference, documentRef, ChangeType.UPDATED));
 	}
 
 	@Override
 	public void delete(AnnotationCollectionReference collectionReference) throws Exception {
 		String oldRootRevisionHash = this.rootRevisionHash;
-		SourceDocument document = getSourceDocument(collectionReference.getSourceDocumentId());
+		SourceDocumentReference documentRef = getSourceDocumentReference(collectionReference.getSourceDocumentId());
 		
 		this.rootRevisionHash = gitProjectHandler.removeCollection(collectionReference);
 		
 		graphProjectHandler.removeCollection(this.rootRevisionHash, collectionReference, oldRootRevisionHash);	
-		document.removeUserMarkupCollectionReference(collectionReference);
+		documentRef.removeUserMarkupCollectionReference(collectionReference);
 		
 		eventBus.post(
 			new CollectionChangeEvent(
-				collectionReference, document, ChangeType.DELETED));
+				collectionReference, documentRef, ChangeType.DELETED));
 	}
 	
 	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadAnnotationCollection(
-			InputStream inputStream, SourceDocument document) throws IOException {
+			InputStream inputStream, SourceDocumentReference documentRef) throws IOException {
 		TagManager tagManager = new TagManager(new TagLibrary());
 		
 		TeiTagLibrarySerializationHandler tagLibrarySerializationHandler = 
@@ -1047,7 +1060,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		AnnotationCollection annotationCollection = new AnnotationCollection(
 				collectionId, tagLibrarySerializationHandler.getTeiDocument().getContentInfoSet(),
 				tagManager.getTagLibrary(), deserializer.getTagReferences(),
-				document.getUuid(),
+				documentRef.getUuid(),
 				null,
 				this.user.getIdentifier());
 		
@@ -1074,8 +1087,8 @@ public class GraphWorktreeProject implements IndexedProject {
 		importAnnotationCollection.setTagLibrary(tagManager.getTagLibrary());
 		
 		try {
-			SourceDocument sourceDocument = 
-					getSourceDocument(importAnnotationCollection.getSourceDocumentId());
+			SourceDocumentReference sourceDocumentRef = 
+					getSourceDocumentReference(importAnnotationCollection.getSourceDocumentId());
 			
 			String oldRootRevisionHash = this.rootRevisionHash;
 			this.rootRevisionHash = gitProjectHandler.createAnnotationCollection(
@@ -1089,16 +1102,16 @@ public class GraphWorktreeProject implements IndexedProject {
 				rootRevisionHash, 
 				importAnnotationCollection.getId(), 
 				importAnnotationCollection.getName(),
-				sourceDocument,
+				sourceDocumentRef,
 				tagManager.getTagLibrary(),
 				oldRootRevisionHash);
 		
 			AnnotationCollectionReference annotationCollectionReference =
-					sourceDocument.getUserMarkupCollectionReference(importAnnotationCollection.getId());
+					sourceDocumentRef.getUserMarkupCollectionReference(importAnnotationCollection.getId());
 			eventBus.post(
 				new CollectionChangeEvent(
 					annotationCollectionReference, 
-					sourceDocument, 
+					sourceDocumentRef, 
 					ChangeType.CREATED));		
 			
 			AnnotationCollection createdAnnotationCollection = getUserMarkupCollection(annotationCollectionReference);

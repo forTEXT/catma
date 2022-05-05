@@ -14,12 +14,12 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.common.collect.Maps;
 
-import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermInfo;
@@ -141,7 +141,7 @@ public class GitSourceDocumentHandler {
 		return sourceDocument;
 	}
 
-	public String update(SourceDocument sourceDocument) throws IOException {
+	public String update(SourceDocumentReference sourceDocument) throws IOException {
 		String documentSubDir = String.format(
 				"%s/%s", 
 				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, 
@@ -159,7 +159,7 @@ public class GitSourceDocumentHandler {
 				SourceDocumentInfo.class);
 
 		SourceDocumentInfo newSourceDocumentInfo = 
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
+				sourceDocument.getSourceDocumentInfo();
 		
 		// the source document file URI is updated when a document is loaded into the graph (see GraphWorktreeProject.getSourceDocumentURI)
 		// however, we don't actually want to write that to disk, as it's different for every user
@@ -182,7 +182,7 @@ public class GitSourceDocumentHandler {
 		);
 	}
 	
-	public String removeDocument(SourceDocument document) throws IOException {
+	public String removeDocument(SourceDocumentReference document) throws IOException {
 		String documentSubDir = String.format(
 				"%s/%s", 
 				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, 

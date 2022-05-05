@@ -1,22 +1,22 @@
 package de.catma.ui.events.routing;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 
 
 public class RouteToAnnotateEvent {
 
 	private final Project project;
-	private SourceDocument document;
+	private SourceDocumentReference documentRef;
 	private AnnotationCollectionReference collectionReference;
 	
 
-	public RouteToAnnotateEvent(Project project, SourceDocument document,
+	public RouteToAnnotateEvent(Project project, SourceDocumentReference documentRef,
 			AnnotationCollectionReference collectionReference) {
 		super();
 		this.project = project;
-		this.document = document;
+		this.documentRef = documentRef;
 		this.collectionReference = collectionReference;
 	}
 
@@ -28,8 +28,8 @@ public class RouteToAnnotateEvent {
 		return project;
 	}
 
-	public SourceDocument getDocument() {
-		return document;
+	public SourceDocumentReference getDocument() {
+		return documentRef;
 	}
 
 	public AnnotationCollectionReference getCollectionReference() {

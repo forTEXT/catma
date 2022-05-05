@@ -19,11 +19,11 @@ import static de.catma.repository.git.graph.RelationType.hasPosition;
 import static de.catma.repository.git.graph.RelationType.hasProperty;
 import static de.catma.repository.git.graph.RelationType.hasTag;
 import static de.catma.repository.git.graph.RelationType.hasTagset;
-import static de.catma.repository.git.graph.RelationType.isAdjacentTo;
 import static de.catma.repository.git.graph.RelationType.isPartOf;
 import static de.catma.repository.git.graph.RelationType.rt;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +41,8 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.MutableGraph;
 import com.google.gson.Gson;
 
 import de.catma.document.Range;
@@ -57,6 +59,104 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
+
+class Position {
+	private final int startOffset;
+	private final int endOffset;
+	private final int tokenOffset;
+	public Position(int startOffset, int endOffset, int tokenOffset) {
+		super();
+		this.startOffset = startOffset;
+		this.endOffset = endOffset;
+		this.tokenOffset = tokenOffset;
+	}
+	public int getStartOffset() {
+		return startOffset;
+	}
+	public int getEndOffset() {
+		return endOffset;
+	}
+	public int getTokenOffset() {
+		return tokenOffset;
+	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + endOffset;
+		result = prime * result + startOffset;
+		result = prime * result + tokenOffset;
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof Position))
+			return false;
+		Position other = (Position) obj;
+		if (endOffset != other.endOffset)
+			return false;
+		if (startOffset != other.startOffset)
+			return false;
+		if (tokenOffset != other.tokenOffset)
+			return false;
+		return true;
+	}
+	@Override
+	public String toString() {
+		return "Position [startOffset=" + startOffset + ", endOffset=" + endOffset + ", tokenOffset=" + tokenOffset
+				+ "]";
+	}
+	
+	
+}
+
+class Term {
+	
+	private final String literal;
+	private final int frequency;
+	
+	public Term(String literal, int frequency) {
+		super();
+		this.literal = literal;
+		this.frequency = frequency;
+	}
+	public String getLiteral() {
+		return literal;
+	}
+	public int getFrequency() {
+		return frequency;
+	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((literal == null) ? 0 : literal.hashCode());
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof Term))
+			return false;
+		Term other = (Term) obj;
+		if (literal == null) {
+			if (other.literal != null)
+				return false;
+		} else if (!literal.equals(other.literal))
+			return false;
+		return true;
+	}
+	
+	
+}
+
 
 class GraphWriter {
 	
@@ -167,6 +267,68 @@ class GraphWriter {
 	
 	void addDocument(Vertex projectRevV, SourceDocument document) throws Exception {
 		logger.info("Starting to add Document " + document + " to the graph");
+		
+		MutableGraph graph2 = GraphBuilder.directed()
+			    .build();
+		
+		logger.info("Starting to add Document to the graph");
+		
+		graph2.addNode(projectRevV);
+		
+		Object documentNode = new Object();
+
+		// hasDocument
+		graph2.putEdge(projectRevV, documentNode);
+		
+		try {
+			Path tokensPath = fileInfoProvider.getTokenizedSourceDocumentPath(document.getUuid());
+			@SuppressWarnings("rawtypes")
+			Map content = new Gson().fromJson(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"), Map.class);
+			
+			Map<Integer, Position> adjacencyMap = new HashMap<>();
+			for (Object entry : content.entrySet()) {
+				
+				String literal = (String)((Map.Entry)entry).getKey();
+				List positionList = (List)((Map.Entry)entry).getValue();
+				Term term = new Term(literal, positionList.size());
+				
+				// hasTerm, opposite of isPartOf
+				graph2.putEdge(documentNode, term);
+								
+				for (Object posEntry : positionList) {
+					int startOffset = ((Double)((Map)posEntry).get("startOffset")).intValue();
+					int endOffset = ((Double)((Map)posEntry).get("endOffset")).intValue();
+					int tokenOffset = ((Double)((Map)posEntry).get("tokenOffset")).intValue();
+					Position pos = new Position(startOffset, endOffset, tokenOffset);
+					// hasPosition
+					graph2.putEdge(term, pos);
+					adjacencyMap.put(tokenOffset, pos);
+					
+				}
+			}
+			for (int i=0; i<adjacencyMap.size()-1; i++) {
+				// isAdjacentTo
+				graph2.putEdge(adjacencyMap.get(i), adjacencyMap.get(i+1));
+			}
+			
+			logger.info("Finished adding Document to the graph: " +  graph2.nodes().size() + "/" + graph2.edges().size());	
+		
+			Object doc = graph2.successors(projectRevV).stream().findAny().get();
+			
+			List<Term> terms = 
+					(List<Term>) graph2.successors(doc).stream().filter(node -> ((Term)node).getLiteral().equals("nicht")).collect(Collectors.toList());
+			
+			
+//			
+//			logger.info("Found: " + terms.parallelStream().map(t ->  graph.successors(t).size()).reduce(0, Integer::sum));
+			
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}		
+		
+		
+		
 		Vertex documentV = graph.addVertex(nt(SourceDocument));
 		SourceDocumentInfo info = 
 			document.getSourceContentHandler().getSourceDocumentInfo();
@@ -189,55 +351,56 @@ class GraphWriter {
 //		documentV.property("userDefinedSeparatingCharacters", info.getIndexInfoSet().getUserDefinedSeparatingCharacters());
 		
 		projectRevV.addEdge(rt(hasDocument), documentV);
-		
-		try {
-			Path tokensPath = fileInfoProvider.getTokenizedSourceDocumentPath(document.getUuid());
-			@SuppressWarnings("rawtypes")
-			Map content = new Gson().fromJson(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"), Map.class);
-			
-			Map<Integer, Vertex> adjacencyMap = new HashMap<>();
-			for (Object entry : content.entrySet()) {
-				
-				String term = (String)((Map.Entry)entry).getKey();
-				Vertex termV = graph.addVertex(nt(Term));
-				termV.property("literal", term);
-				List positionList = (List)((Map.Entry)entry).getValue();
-				termV.property("freq", positionList.size());
-				
-				termV.addEdge(rt(isPartOf), documentV);
-				
-				for (Object posEntry : positionList) {
-					int startOffset = ((Double)((Map)posEntry).get("startOffset")).intValue();
-					int endOffset = ((Double)((Map)posEntry).get("endOffset")).intValue();
-					int tokenOffset = ((Double)((Map)posEntry).get("tokenOffset")).intValue();
-					
-					Vertex positionV = graph.addVertex(nt(Position));
-					positionV.property(
-						"startOffset", startOffset);
-					positionV.property( 
-						"endOffset", endOffset);
-					positionV.property(
-						"tokenOffset", tokenOffset);
-					
-					termV.addEdge(rt(hasPosition), positionV);
-					adjacencyMap.put(tokenOffset, positionV);
-					
-				}
-			}
-			for (int i=0; i<adjacencyMap.size()-1; i++) {
-				adjacencyMap.get(i).addEdge(rt(isAdjacentTo), adjacencyMap.get(i+1));
-			}
-			logger.info("Finished adding Document " + document + " to the graph");	
-		}
-		catch (Exception e) {
-			logger.log(
-				Level.SEVERE, 
-				String.format(
-					"error loading tokens for Document %1$s in project %2$s", 
-					document.getUuid(), 
-					projectReference.getProjectId()), 
-				e);
-		}
+//		
+//		try {
+//			Path tokensPath = fileInfoProvider.getTokenizedSourceDocumentPath(document.getUuid());
+//			@SuppressWarnings("rawtypes")
+//			Map content = new Gson().fromJson(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"), Map.class);
+//			
+//			Map<Integer, Vertex> adjacencyMap = new HashMap<>();
+//			
+//			for (Object entry : content.entrySet()) {
+//				
+//				String term = (String)((Map.Entry)entry).getKey();
+//				Vertex termV = graph.addVertex(nt(Term));
+//				termV.property("literal", term);
+//				List positionList = (List)((Map.Entry)entry).getValue();
+//				termV.property("freq", positionList.size());
+//				
+//				termV.addEdge(rt(isPartOf), documentV);
+//				
+//				for (Object posEntry : positionList) {
+//					int startOffset = ((Double)((Map)posEntry).get("startOffset")).intValue();
+//					int endOffset = ((Double)((Map)posEntry).get("endOffset")).intValue();
+//					int tokenOffset = ((Double)((Map)posEntry).get("tokenOffset")).intValue();
+//					
+//					Vertex positionV = graph.addVertex(nt(Position));
+//					positionV.property(
+//						"startOffset", startOffset);
+//					positionV.property( 
+//						"endOffset", endOffset);
+//					positionV.property(
+//						"tokenOffset", tokenOffset);
+//					
+//					termV.addEdge(rt(hasPosition), positionV);
+////					adjacencyMap.put(tokenOffset, positionV);
+//					
+//				}
+//			}
+////			for (int i=0; i<adjacencyMap.size()-1; i++) {
+////				adjacencyMap.get(i).addEdge(rt(isAdjacentTo), adjacencyMap.get(i+1));
+////			}
+//			logger.info("Finished adding Document " + document + " to the graph");	
+//		}
+//		catch (Exception e) {
+//			logger.log(
+//				Level.SEVERE, 
+//				String.format(
+//					"error loading tokens for Document %1$s in project %2$s", 
+//					document.getUuid(), 
+//					projectReference.getProjectId()), 
+//				e);
+//		}
 			
 	}
 	
@@ -252,18 +415,18 @@ class GraphWriter {
 		if (graphTraversal.hasNext()) {
 			Vertex documentV = 
 				graphTraversal.next();
-		
-			documentV
-			.property("document")
-			.ifPresent(
-				doc -> 
-					((SourceDocument)doc).addUserMarkupCollectionReference(
-						new AnnotationCollectionReference(
-								collection.getUuid(),  
-								collection.getContentInfoSet(),  
-								collection.getSourceDocumentId(), 
-								collection.getForkedFromCommitURL(),
-								collection.getResponsibleUser())));
+		//TODO: this needs to be done on collection creation, import and load
+//			documentV
+//			.property("document")
+//			.ifPresent(
+//				doc -> 
+//					((SourceDocument)doc).addUserMarkupCollectionReference(
+//						new AnnotationCollectionReference(
+//								collection.getUuid(),  
+//								collection.getContentInfoSet(),  
+//								collection.getSourceDocumentId(), 
+//								collection.getForkedFromCommitURL(),
+//								collection.getResponsibleUser())));
 			Vertex collectionV = graph.addVertex(nt(MarkupCollection));
 			
 			collectionV.property("collectionId", collection.getId());

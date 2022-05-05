@@ -136,7 +136,7 @@ public class KwicItemHandler {
 				String documentId = row.getSourceDocumentId();
 				String collectionId =  ((TagQueryResultRow) row).getMarkupCollectionId();
 				AnnotationCollectionReference colRef = 
-					kwicProviderCache.get(documentId).getSourceDocument().getUserMarkupCollectionReference(collectionId);
+					kwicProviderCache.get(documentId).getSourceDocumentReference().getUserMarkupCollectionReference(collectionId);
 				String collectionName = colRef.getName();
 				
 				return collectionName;

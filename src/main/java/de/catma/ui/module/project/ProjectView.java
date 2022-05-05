@@ -74,6 +74,7 @@ import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.TikaContentHandler;
@@ -85,7 +86,6 @@ import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
-import de.catma.project.conflict.ConflictedProject;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
@@ -123,7 +123,6 @@ import de.catma.ui.events.MembersChangedEvent;
 import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
-import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
 import de.catma.ui.events.routing.RouteToTagsEvent;
 import de.catma.ui.layout.FlexLayout.FlexWrap;
 import de.catma.ui.layout.HorizontalFlexLayout;
@@ -280,7 +279,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	@Subscribe
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
-    		SourceDocument document = collectionChangeEvent.getDocument();
+    		SourceDocumentReference document = collectionChangeEvent.getDocument();
     		AnnotationCollectionReference collectionReference = 
     				collectionChangeEvent.getCollectionReference();
     		
@@ -416,8 +415,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		tagsetCsvExportFileDownloader.extend(miExportTagsetsAsCSV);
 		
 		
-		moreOptionsMenu.addItem("Fork Tagsets into another Project", miForkTagset -> handleForkTagsetRequest());
-        
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
         hugeCardMoreOptions.addItem("Synchronize with the team", mi -> handleSynchronizeRequest());
@@ -482,103 +479,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("Checking for unsynchronized changes failed!", e);
 		}
 	}
-
-	
-	private void handleForkTagsetRequest() {
-		Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
-		
-		if (tagsets.isEmpty()) {
-			Notification.show("Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
-			return;
-		}
-		
-		try {
-			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedCommits();
-			if (!unsynchronizedChanges.isEmpty()) {
-				ConfirmDialog.show(
-					UI.getCurrent(), 
-					"Unsynchronized commits", 
-					String.format(
-						"You have %1$d unsynchronized commit%2$s! "
-						+ "Forked Tagsets will only contain synchronized changes, "
-						+ "so you might want to synchronize first!", unsynchronizedChanges.size(), unsynchronizedChanges.size()==1?"":"s"), 
-					"Synch the Project now", 
-					"Continue without", dlg -> {
-						if (dlg.isConfirmed()) {
-							handleSynchronizeRequest();
-						}
-						else {
-							forkTagsets(tagsets);
-						}
-					});
-			}
-			else {
-				forkTagsets(tagsets);
-			}
-		} catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Checking for unsynchronized changes failed!", e);
-		}
-	}
-
-	private void forkTagsets(Set<TagsetDefinition> tagsets) {
-		try {
-			SelectProjectDialog selectProjectDialog = new SelectProjectDialog(
-				projectManager, eventBus,
-				projectManager.getProjectReferences()
-					.stream()
-					.filter(ref -> !ref.getProjectId().equals(this.project.getProjectId()))
-					.collect(Collectors.toList()), 
-				new SaveCancelListener<ProjectReference>() {
-	
-				@Override
-				public void savePressed(ProjectReference targetProject) {
-					new ForkHandler(
-						UI.getCurrent(),
-						project.getProjectId(),
-						projectManager,
-						tagsets,
-						targetProject,
-						new ExecutionListener<Void>() {
-	
-							@Override
-							public void done(Void result) {
-				            	setProgressBarVisible(false);
-				            	setEnabled(true);
-							}
-							@Override
-							public void error(Throwable t) {
-				            	setProgressBarVisible(false);
-				            	setEnabled(true);
-				    			Logger.getLogger(ProjectView.class.getName()).log(
-				    					Level.SEVERE, 
-				    					"Error forking Tagsets!", 
-				    					t);
-				    			String errorMsg = t.getMessage();
-				    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-				    				errorMsg = "";
-				    			}
-			
-				    			Notification.show(
-				    				"Error", 
-				    				String.format(
-				    						"Error forking Tagsets! "
-				    						+ "This import will be aborted!\n The underlying error message was:\n%1$s", 
-				    						errorMsg), 
-				    				Type.ERROR_MESSAGE);					
-							}
-						},
-						progressListener).fork();
-				} 
-				
-			});
-			
-			selectProjectDialog.show();
-		}
-		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading Project references!", e);
-		}
-	}
-
 	private void handleCorpusImport() {
 		try {
 	    	if (project.hasUncommittedChanges()) {
@@ -710,13 +610,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	}		
 	}
 	private void importCollection() {
-		Set<SourceDocument> selectedDocuments = getSelectedDocuments();
+		Set<SourceDocumentReference> selectedDocuments = getSelectedDocuments();
 		
 		if (selectedDocuments.size() != 1) {
 			Notification.show("Info", "Please select the corresponding Document first!", Type.HUMANIZED_MESSAGE);
 		}
 		else {
-			final SourceDocument document = selectedDocuments.iterator().next();
+			final SourceDocumentReference document = selectedDocuments.iterator().next();
 			
 			GenericUploadDialog uploadDialog =
 					new GenericUploadDialog(String.format("Upload a Collection for %1$s:", document.toString()),
@@ -897,13 +797,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             }
             
             @Override
-            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
-            	setProgressBarVisible(false);
-            	setEnabled(true);
-				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
-            }
-
-            @Override
             public void failure(Throwable t) {
             	setProgressBarVisible(false);
             	setEnabled(true);
@@ -966,15 +859,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					});
 			}
 			else {
-				final SourceDocument document = 
+				final SourceDocumentReference document = 
 						((DocumentResource)selectedResources.iterator().next()).getDocument();
 				EditResourceDialog editDocumentDlg = new EditResourceDialog(
-					document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet(), 
+					document.getSourceDocumentInfo().getContentInfoSet(), 
 					new SaveCancelListener<Pair<String,ContentInfoSet>>() {
 						@Override
 						public void savePressed(Pair<String, ContentInfoSet> result) {
 							try {
-								project.update(document, document.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());
+								project.update(document, document.getSourceDocumentInfo().getContentInfoSet());
 							}
 							catch (Exception e) {
 								errorHandler.showAndLogError("Error updating document", e);
@@ -1090,14 +983,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
 	}
 	
-	private Set<SourceDocument> getSelectedDocuments() {
+	private Set<SourceDocumentReference> getSelectedDocuments() {
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<Resource> resourceDataProvider = 
 				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
 		
     	Set<Resource> selectedResources = documentGrid.getSelectedItems();
     	
-    	Set<SourceDocument> selectedDocuments = new HashSet<>();
+    	Set<SourceDocumentReference> selectedDocuments = new HashSet<>();
     	
     	for (Resource resource : selectedResources) {
     		Resource root = 
@@ -1116,7 +1009,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleAddCollectionRequest() {
 
-    	Set<SourceDocument> selectedDocuments = getSelectedDocuments();
+    	Set<SourceDocumentReference> selectedDocuments = getSelectedDocuments();
     	
     	if (!selectedDocuments.isEmpty()) {
 	    	SingleTextInputDialog collectionNameDlg = 
@@ -1125,7 +1018,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							
 							@Override
 							public void savePressed(String result) {
-								for (SourceDocument document : selectedDocuments) {
+								for (SourceDocumentReference document : selectedDocuments) {
 									project.createUserMarkupCollection(result, document);
 								}
 							}
@@ -1402,10 +1295,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			
 			if (collectionNamePattern != null && !collectionNamePattern.isEmpty()) {
 				String collectionName = collectionNamePattern.replace("{{Title}}", uploadFile.getTitle());
-				project.createUserMarkupCollection(collectionName, document);
+				project.createUserMarkupCollection(collectionName, project.getSourceDocumentReference(document.getUuid()));
 			}
 			
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Logger.getLogger(ProjectView.class.getName()).log(
 					Level.SEVERE, 
 					String.format("Error loading content of %1$s", uploadFile.getTempFilename().toString()), 
@@ -1445,7 +1338,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		}
     		
     		if (root != null) {
-	    		SourceDocument document = ((DocumentResource)root).getDocument();
+	    		SourceDocumentReference document = ((DocumentResource)root).getDocument();
 	    		AnnotationCollectionReference collectionReference = 
 	    			(child==null?null:((CollectionResource)child).getCollectionReference());
 	    		
@@ -1798,13 +1691,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	            }
 	            
 	            @Override
-	            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
-	            	setProgressBarVisible(false);
-	            	setEnabled(true);
-					eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
-	            }
-	
-	            @Override
 	            public void failure(Throwable t) {
 	            	setProgressBarVisible(false);
 	            	setEnabled(true);
@@ -1857,13 +1743,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 
                 checkForUnsynchronizedCommits();
             }
-            
-            @Override
-            public void conflictResolutionNeeded(ConflictedProject conflictedProject) {
-            	setProgressBarVisible(false);
-            	setEnabled(true);
-				eventBus.post(new RouteToConflictedProjectEvent(conflictedProject));
-            }
 
             @Override
             public void failure(Throwable t) {
@@ -1902,11 +1781,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
         if(project != null){
             TreeData<Resource> treeData = new TreeData<>();
-            Collection<SourceDocument> srcDocs = project.getSourceDocuments();
+            Collection<SourceDocumentReference> srcDocs = project.getSourceDocuments();
             Locale locale = Locale.getDefault();
-            for(SourceDocument srcDoc : srcDocs) {
+            for(SourceDocumentReference srcDoc : srcDocs) {
             	locale = 
-            		srcDoc.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet().getLocale();
+            		srcDoc.getSourceDocumentInfo().getIndexInfoSet().getLocale();
             	
                 DocumentResource docResource = 
                 		new DocumentResource(

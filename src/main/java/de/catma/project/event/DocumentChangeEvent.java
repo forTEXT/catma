@@ -1,14 +1,14 @@
 package de.catma.project.event;
 
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 
 public class DocumentChangeEvent {
-	private final SourceDocument document;
+	private final SourceDocumentReference docRef;
 	private final ChangeType changeType;
 
-	public DocumentChangeEvent(SourceDocument document, ChangeType changeType) {
+	public DocumentChangeEvent(SourceDocumentReference docRef, ChangeType changeType) {
 		super();
-		this.document = document;
+		this.docRef = docRef;
 		this.changeType = changeType;
 	}
 
@@ -16,7 +16,7 @@ public class DocumentChangeEvent {
 		return changeType;
 	}
 
-	public SourceDocument getDocument() {
-		return document;
+	public SourceDocumentReference getDocument() {
+		return docRef;
 	}
 }

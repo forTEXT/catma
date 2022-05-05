@@ -4,31 +4,32 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 
 public class DocumentResource implements Resource {
 
-    private final SourceDocument sourceDocument;
+    private final SourceDocumentReference sourceDocument;
 	private final String projectId;
 
-    public DocumentResource(SourceDocument sourceDocument, String projectId){
+    public DocumentResource(SourceDocumentReference sourceDocument, String projectId){
         this.sourceDocument = sourceDocument;
         this.projectId = projectId;
     }
     
     @Override
     public String getDetail() {
-        return sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor();
+        return sourceDocument.getSourceDocumentInfo().getContentInfoSet().getAuthor();
     }
 
-    public SourceDocument getDocument() {
+    public SourceDocumentReference getDocument() {
 		return sourceDocument;
 	}
     
     @Override
     public boolean hasDetail() {
     	String author = 
-    		sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor();
+    		sourceDocument.getSourceDocumentInfo().getContentInfoSet().getAuthor();
     	
     	return author != null && !author.trim().isEmpty();
     }

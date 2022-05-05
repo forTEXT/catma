@@ -34,6 +34,7 @@ import de.catma.document.comment.Reply;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.rbac.RBACPermission;
@@ -231,13 +232,13 @@ public interface Project {
 	 * @param contentInfoSet new meta data
 	 * @throws Exception
 	 */
-	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) throws Exception;
+	public void update(SourceDocumentReference sourceDocument, ContentInfoSet contentInfoSet) throws Exception;
 
 	/**
 	 * @return the available Source Documents
 	 * @throws Exception 
 	 */
-	public Collection<SourceDocument> getSourceDocuments() throws Exception;
+	public Collection<SourceDocumentReference> getSourceDocuments() throws Exception;
 
 	/**
 	 *
@@ -253,7 +254,7 @@ public interface Project {
 	 * @throws Exception 
 	 */
 	public SourceDocument getSourceDocument(String id) throws Exception;
-	public void delete(SourceDocument sourceDocument) throws Exception;
+	public void delete(SourceDocumentReference sourceDocument) throws Exception;
 
 	public boolean hasDocument(String documentId) throws Exception;
 
@@ -263,7 +264,7 @@ public interface Project {
 	 * @param sourceDocument
 	 * @throws IOException
 	 */
-	public void createUserMarkupCollection(String name, SourceDocument sourceDocument);
+	public void createUserMarkupCollection(String name, SourceDocumentReference sourceDocument);
 
 	/**
 	 * @param userMarkupCollectionReference
@@ -351,7 +352,7 @@ public interface Project {
 	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException;
 
 	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadAnnotationCollection(
-			InputStream inputStream, SourceDocument document) throws IOException;
+			InputStream inputStream, SourceDocumentReference documentRef) throws IOException;
 
 	public void importCollection(
 		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList, AnnotationCollection annotationCollection) throws IOException;
@@ -380,5 +381,7 @@ public interface Project {
 
 	public void addAndCommitCollections(
 			Collection<AnnotationCollectionReference> collectionReferences, String msg) throws IOException;
+
+	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentID) throws Exception;
 
 }

@@ -45,6 +45,7 @@ import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.queryengine.result.QueryResultRow;
@@ -188,7 +189,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 				if (row instanceof TagQueryResultRow) {
 					annotationRows++;
 					if (project.hasDocument(row.getSourceDocumentId())) {
-						SourceDocument document = project.getSourceDocument(row.getSourceDocumentId());
+						SourceDocumentReference document = 
+								project.getSourceDocumentReference(row.getSourceDocumentId());
 						AnnotationCollectionReference collRef = 
 							document.getUserMarkupCollectionReference(
 									((TagQueryResultRow) row).getMarkupCollectionId());

@@ -280,8 +280,6 @@ public class GitProjectsManager implements ProjectsManager {
 			@Override
 			public void ready(Project project) {/** not used **/}
 			@Override
-			public void conflictResolutionNeeded(ConflictedProject project) {/** not used **/}
-			@Override
 			public void failure(Throwable t) {/** not used **/}
 			@Override
 			public void progress(String msg, Object... params) {logger.info(String.format(msg, params));}

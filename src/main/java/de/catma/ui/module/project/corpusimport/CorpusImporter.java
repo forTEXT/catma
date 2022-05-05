@@ -39,6 +39,7 @@ import de.catma.document.source.FileType;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.AbstractSourceContentHandler;
 import de.catma.document.source.contenthandler.OldXMLContentHandler;
@@ -107,9 +108,9 @@ public class CorpusImporter {
 							final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 							IOUtils.copy(taIs, buffer);
 							
-							SourceDocument document = project.getSourceDocument(documentId);
+							SourceDocumentReference documentRef = project.getSourceDocumentReference(documentId);
 							Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
-									project.loadAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), document);
+									project.loadAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), documentRef);
 							
 							List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
 							final AnnotationCollection annotationCollection = loadResult.getFirst();

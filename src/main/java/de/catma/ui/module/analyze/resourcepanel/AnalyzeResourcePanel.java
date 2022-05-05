@@ -28,6 +28,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
@@ -64,7 +65,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	private void initData() {
 		documentData = new TreeData<>();
 		try {
-			Collection<SourceDocument> documents = project.getSourceDocuments(); 
+			Collection<SourceDocumentReference> documents = project.getSourceDocuments(); 
 			
 			documentData.addRootItems(
 				documents
@@ -81,7 +82,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 			
 			documentTree.setDataProvider(new TreeDataProvider<>(documentData));			
 			
-			Collection<SourceDocument> selectedDocuments = corpus.getSourceDocuments();
+			Collection<SourceDocumentReference> selectedDocuments = corpus.getSourceDocuments();
 			Collection<AnnotationCollectionReference> selectedCollections = 
 					corpus.getUserMarkupCollectionRefs();
 			
@@ -134,8 +135,8 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	@Subscribe
     public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
     	if (documentChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
-    		SourceDocument document = documentChangeEvent.getDocument();
-			documentData.addItem(null, new DocumentDataItem(document));    		
+    		SourceDocumentReference documentRef = documentChangeEvent.getDocument();
+			documentData.addItem(null, new DocumentDataItem(documentRef));    		
     	}
     	else if (documentChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
     		Optional<DocumentTreeItem> optionalDocItem = 
@@ -176,7 +177,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
 			
-    		SourceDocument document = collectionChangeEvent.getDocument();
+    		SourceDocumentReference documentRef = collectionChangeEvent.getDocument();
     		AnnotationCollectionReference collectionReference = 
     				collectionChangeEvent.getCollectionReference();
 
@@ -186,7 +187,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 
 			documentData.getRootItems()
 			.stream()
-			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
+			.filter(item -> ((DocumentDataItem)item).getDocument().equals(documentRef))
 			.findAny().ifPresent(documentDataItem -> {
 				documentData.addItem(
 	    				documentDataItem, collectionDataItem);

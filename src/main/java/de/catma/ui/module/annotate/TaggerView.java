@@ -71,6 +71,7 @@ import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.indexer.IndexedProject;
@@ -166,12 +167,19 @@ public class TaggerView extends HorizontalLayout
 	
 	public TaggerView(
 			int taggerID, 
-			SourceDocument sourceDocument, final Project project, 
+			SourceDocumentReference sourceDocumentReference, final Project project, 
 			EventBus eventBus,
-			AfterDocumentLoadedOperation afterDocumentLoadedOperation){
+			AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 		this.tagManager = project.getTagManager();
 		this.project = project;
-		this.sourceDocument = sourceDocument;
+		try {
+			if (sourceDocumentReference != null) {
+				this.sourceDocument = project.getSourceDocument(sourceDocumentReference.getUuid());
+			}
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Error showing the Document!", e);
+		}
 		this.eventBus = eventBus;
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 		this.userMarkupCollectionManager = new AnnotationCollectionManager(project);
@@ -180,7 +188,7 @@ public class TaggerView extends HorizontalLayout
 		initActions();
 		initListeners();
 		pager.setMaxPageLengthInLines(maxPageLengthInLines);
-		initData(afterDocumentLoadedOperation);
+		initData(sourceDocumentReference, afterDocumentLoadedOperation);
 		this.eventBus.register(this);
 		final UI ui = UI.getCurrent();
 		
@@ -190,7 +198,7 @@ public class TaggerView extends HorizontalLayout
 				cbAutoShowComments, 
 				comments, 
 				tagger, 
-				() -> getSourceDocument());
+				() -> getSourceDocumentReference());
 		
 		addCommentMessageListener();
 	}
@@ -238,7 +246,7 @@ public class TaggerView extends HorizontalLayout
 		}
 	}
 	
-	private void initData(final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
+	private void initData(final SourceDocumentReference sdRef, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 		if (sourceDocument != null) {
 			
 			// loading of the Document is done in an extra step, 
@@ -278,7 +286,7 @@ public class TaggerView extends HorizontalLayout
 									new HashSet<>(resourcePanel.getSelectedTagsets());
 							
 							annotationPanel.setData(
-									sourceDocument, 
+									sdRef,
 									tagsets, 
 									new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
 							if (taggerContextMenu != null) {
@@ -290,7 +298,7 @@ public class TaggerView extends HorizontalLayout
 							}
 							
 							ui.push();
-						} catch (IOException e) {
+						} catch (Exception e) {
 							errorHandler.showAndLogError("Error showing the Document!", e);
 						}
 					});
@@ -438,19 +446,25 @@ public class TaggerView extends HorizontalLayout
 
 	public void  analyzeDocument(){
 		Corpus corpus = new Corpus();
-		corpus.addSourceDocument(sourceDocument);
-		for (AnnotationCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
-			AnnotationCollectionReference userMarkupCollRef =
-				sourceDocument.getUserMarkupCollectionReference(
-						umc.getId());
-			if (userMarkupCollRef != null) {
-				corpus.addUserMarkupCollectionReference(
-						userMarkupCollRef);
+		try {
+			SourceDocumentReference docRef = getSourceDocumentReference();
+			corpus.addSourceDocument(docRef);
+			
+			for (AnnotationCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
+				AnnotationCollectionReference userMarkupCollRef =
+					docRef.getUserMarkupCollectionReference(umc.getId());
+				if (userMarkupCollRef != null) {
+					corpus.addUserMarkupCollectionReference(
+							userMarkupCollRef);
+				}
+			}	
+			if (project instanceof IndexedProject) {
+				eventBus.post(new RouteToAnalyzeEvent((IndexedProject)project, corpus));
 			}
-		}	
-		if (project instanceof IndexedProject) {
-			eventBus.post(new RouteToAnalyzeEvent((IndexedProject)project, corpus));
-		}	
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Error analyzing the Document!", e);
+		}
 	}
 
 	private void initActions() {
@@ -575,8 +589,8 @@ public class TaggerView extends HorizontalLayout
 			}
 
 			@Override
-			public void documentSelected(SourceDocument sourceDocument) {
-				setSourceDocument(sourceDocument, null);
+			public void documentSelected(SourceDocumentReference sourceDocumentReference) {
+				setSourceDocument(sourceDocumentReference, null);
 			}
 
 			@Override
@@ -748,7 +762,7 @@ public class TaggerView extends HorizontalLayout
 			selectedAnnotationId -> tagger.setTagInstanceSelected(selectedAnnotationId),
 			collectionChangeEvent -> handleCollectionValueChange(collectionChangeEvent),
 			tag -> tagger.addTagInstanceWith(tag),
-			() -> sourceDocument,
+			() -> getSourceDocumentReference(),
 			eventBus);
 		rightSplitPanel.addComponent(annotationPanel);
 		
@@ -806,8 +820,17 @@ public class TaggerView extends HorizontalLayout
 		
 		splitPanel.addListener(SplitterPositionChangedEvent.class,
                 listener, SplitterPositionChangedListener.positionChangedMethod);
+		SourceDocumentReference preselection = null;
 		
-		resourcePanel = new AnnotateResourcePanel(project, sourceDocument, eventBus); 
+		try {
+			preselection = project.getSourceDocumentReference(this.sourceDocument.getUuid());
+		} catch (Exception e) {
+			errorHandler.showAndLogError("Error loading Document!", e);
+		} 
+		resourcePanel = new AnnotateResourcePanel(
+				project, 
+				preselection, eventBus);
+
 		drawer = new SliderPanelBuilder(resourcePanel)
 				.mode(SliderMode.LEFT).expanded(sourceDocument == null).build();
 		
@@ -856,8 +879,13 @@ public class TaggerView extends HorizontalLayout
 		return approxMaxLineLength;
 	}
 
-	public SourceDocument getSourceDocument() {
-		return sourceDocument;
+	public SourceDocumentReference getSourceDocumentReference() {
+		try {
+			return project.getSourceDocumentReference(this.sourceDocument.getUuid());
+		} catch (Exception e) {
+			errorHandler.showAndLogError("Error loading Document!", e);
+			return null;
+		}
 	}
 	
 	public AnnotationCollection openUserMarkupCollection(
@@ -1042,26 +1070,30 @@ public class TaggerView extends HorizontalLayout
 	
 	public void removeClickshortCuts() { /* noop*/ }
 
-	public void setSourceDocument(SourceDocument sd, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
+	public void setSourceDocument(SourceDocumentReference sdRef, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 		boolean tryAutoCommit = this.sourceDocument != null;
-		
-		this.sourceDocument = sd;
-		this.resourcePanel.setSelectedDocument(sd);
-		
-		pager.setRightToLeftWriting(
-			this.sourceDocument
-			.getSourceContentHandler()
-			.getSourceDocumentInfo()
-			.getIndexInfoSet()
-			.isRightToLeftWriting());
-		
-		initData(afterDocumentLoadedOperation);
-		if (tabNameChangeListener != null) {
-			tabNameChangeListener.tabCaptionChange(this);
+		try {
+			this.sourceDocument = project.getSourceDocument(sdRef.getUuid());
+			
+			this.resourcePanel.setSelectedDocument(sdRef);
+			
+			pager.setRightToLeftWriting(
+				this.sourceDocument
+				.getSourceContentHandler()
+				.getSourceDocumentInfo()
+				.getIndexInfoSet()
+				.isRightToLeftWriting());
+			
+			initData(sdRef, afterDocumentLoadedOperation);
+			if (tabNameChangeListener != null) {
+				tabNameChangeListener.tabCaptionChange(this);
+			}
+			this.drawer.collapse();
+			
+			addCommentMessageListener();
+		} catch (Exception e) {
+			errorHandler.showAndLogError("Error opening Document!", e);
 		}
-		this.drawer.collapse();
-		
-		addCommentMessageListener();
 		
 		if (tryAutoCommit) {
 			try {
