@@ -347,4 +347,14 @@ public class AnnotationCollection {
 		return true; //shared repsonsibility
 	}
 	
+	public Multimap<String, TagReference> getTagReferencesByInstanceId(TagDefinition tag) {
+		Multimap<String, TagReference> tagReferencesByInstanceId = ArrayListMultimap.create();
+		
+		getTagReferences(tag).stream()
+			.forEach(tr -> tagReferencesByInstanceId.put(tr.getTagInstanceId(), tr));
+		
+		return tagReferencesByInstanceId;
+
+	}
+	
 }

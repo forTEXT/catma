@@ -823,7 +823,9 @@ public class TaggerView extends HorizontalLayout
 		SourceDocumentReference preselection = null;
 		
 		try {
-			preselection = project.getSourceDocumentReference(this.sourceDocument.getUuid());
+			if (this.sourceDocument != null) {
+				preselection = project.getSourceDocumentReference(this.sourceDocument.getUuid());
+			}
 		} catch (Exception e) {
 			errorHandler.showAndLogError("Error loading Document!", e);
 		} 
@@ -880,6 +882,10 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	public SourceDocumentReference getSourceDocumentReference() {
+		if (this.sourceDocument == null) {
+			return null;
+		}
+		
 		try {
 			return project.getSourceDocumentReference(this.sourceDocument.getUuid());
 		} catch (Exception e) {

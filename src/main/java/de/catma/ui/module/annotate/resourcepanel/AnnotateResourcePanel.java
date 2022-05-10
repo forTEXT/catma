@@ -306,7 +306,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		try {
 			documentData = new TreeData<>();
 			
-			Collection<SourceDocumentReference> documents = project.getSourceDocuments(); 
+			Collection<SourceDocumentReference> documents = project.getSourceDocumentReferences(); 
 			
 			final SourceDocumentReference preselection = currentlySelectedSourceDocument;
 			

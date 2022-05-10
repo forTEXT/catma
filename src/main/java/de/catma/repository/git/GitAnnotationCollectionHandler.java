@@ -293,7 +293,7 @@ public class GitAnnotationCollectionHandler {
 	private ArrayList<TagReference> openTagReferences(
 		String collectionId, String collectionName, File parentDirectory, 
 		ProgressListener progressListener, AtomicInteger counter)
-			throws Exception {
+			throws IOException {
 
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
@@ -314,10 +314,6 @@ public class GitAnnotationCollectionHandler {
 			}
 			// if item is <user>_<pagenumber>.json, read it into a list of TagReference objects
 			else if (pageFile.isFile() && isAnnotationFilename(pageFile.getName())) {
-				counter.incrementAndGet();
-				if (counter.intValue() % 1000 == 0) {
-					progressListener.setProgress("Loading Annotations %1$s %2$d", collectionName, counter.intValue());
-				}
 				String pageContent =  
 						new String(Files.readAllBytes(pageFile.toPath()), StandardCharsets.UTF_8);
 				
@@ -328,6 +324,11 @@ public class GitAnnotationCollectionHandler {
 								pageContent, listType);
 
 				for (JsonLdWebAnnotation webAnnotation : list) {
+					counter.incrementAndGet();
+					if (counter.intValue() % 1000 == 0) {
+						progressListener.setProgress("Loading Annotations %1$s %2$d", collectionName, counter.intValue());
+					}
+
 					webAnnotation.setPageFilename(pageFile.getName());
 					tagReferences.addAll(webAnnotation.toTagReferenceList(projectId, collectionId));
 				}
@@ -338,7 +339,7 @@ public class GitAnnotationCollectionHandler {
 	}
 
 
-	public AnnotationCollectionReference getCollectionReference(String collectionId) throws Exception {
+	public AnnotationCollectionReference getCollectionReference(String collectionId) throws IOException {
 		
 		String collectionSubdir = String.format(
 				"%s/%s", GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, collectionId
@@ -377,8 +378,13 @@ public class GitAnnotationCollectionHandler {
 	}
 	
 	public AnnotationCollection getCollection(
-			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener)
-			throws Exception {
+			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener) throws IOException {
+		return getCollection(collectionId, tagLibrary, progressListener, true);
+	}
+	
+	public AnnotationCollection getCollection(
+			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener, boolean handleOrphans)
+			throws IOException {
 		
 		AnnotationCollectionReference collectionReference = 
 				getCollectionReference(collectionId);
@@ -399,63 +405,65 @@ public class GitAnnotationCollectionHandler {
 				progressListener, counter
 		);
 		
-		// handle orphan Annotations
-		ArrayListMultimap<TagInstance, TagReference> tagInstances = ArrayListMultimap.create();
-		
-		Set<String> orphanAnnotationIds = new HashSet<>();
-		Iterator<TagReference> tagReferenceIterator = tagReferences.iterator();
-		while (tagReferenceIterator.hasNext()) {
-			TagReference tagReference = tagReferenceIterator.next();
-			if (!orphanAnnotationIds.contains(tagReference.getTagInstanceId())) {
-				String tagsetId = tagReference.getTagInstance().getTagsetId();
-				
-				TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
-						tagsetId);
-				
-				String tagId = tagReference.getTagDefinitionId();
-				if (tagset == null || tagset.isDeleted(tagId)) {
-					// Tag/Tagset has been deleted, we remove the stale Annotation as well
-					orphanAnnotationIds.add(tagReference.getTagInstanceId());
-					tagReferenceIterator.remove();
-				}
-				else {
-					// other orphan Annotations get ignored upon indexing
-					// until the corresponding Tag or its "deletion" info come along
+		if (handleOrphans) {
+			// handle orphan Annotations
+			ArrayListMultimap<TagInstance, TagReference> tagInstances = ArrayListMultimap.create();
+			
+			Set<String> orphanAnnotationIds = new HashSet<>();
+			Iterator<TagReference> tagReferenceIterator = tagReferences.iterator();
+			while (tagReferenceIterator.hasNext()) {
+				TagReference tagReference = tagReferenceIterator.next();
+				if (!orphanAnnotationIds.contains(tagReference.getTagInstanceId())) {
+					String tagsetId = tagReference.getTagInstance().getTagsetId();
 					
-					tagInstances.put(tagReference.getTagInstance(), tagReference);
+					TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
+							tagsetId);
+					
+					String tagId = tagReference.getTagDefinitionId();
+					if (tagset == null || tagset.isDeleted(tagId)) {
+						// Tag/Tagset has been deleted, we remove the stale Annotation as well
+						orphanAnnotationIds.add(tagReference.getTagInstanceId());
+						tagReferenceIterator.remove();
+					}
+					else {
+						// other orphan Annotations get ignored upon indexing
+						// until the corresponding Tag or its "deletion" info come along
+						
+						tagInstances.put(tagReference.getTagInstance(), tagReference);
+					}
 				}
 			}
-		}
-		
-		if (!orphanAnnotationIds.isEmpty()) {
-			removeTagInstances(collectionId, orphanAnnotationIds);
-		}
-		
-		//handle orphan Properties
-		for (TagInstance tagInstance : tagInstances.keySet()) {
-			TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
-					tagInstance.getTagsetId());
-			if (tagset != null) {
-				Collection<Property> properties = tagInstance.getUserDefinedProperties();
-				for (Property property : new HashSet<>(properties)) {
-					// deleted property?
-					if (tagset.isDeleted(property.getPropertyDefinitionId())) {
-						// yes, we remove the stale property
-						tagInstance.removeUserDefinedProperty(property.getPropertyDefinitionId());
-						// and save the change
-						JsonLdWebAnnotation annotation = 
-								new JsonLdWebAnnotation(
-									tagInstances.get(tagInstance),
-									tagLibrary,
-									tagInstance.getPageFilename());
-						createTagInstances(
-							collectionId, 
-							Collections.singletonList(new Pair<>(annotation, tagInstance)));
+			
+			if (!orphanAnnotationIds.isEmpty()) {
+				removeTagInstances(collectionId, orphanAnnotationIds);
+			}
+			
+			//handle orphan Properties
+			for (TagInstance tagInstance : tagInstances.keySet()) {
+				TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
+						tagInstance.getTagsetId());
+				if (tagset != null) {
+					Collection<Property> properties = tagInstance.getUserDefinedProperties();
+					for (Property property : new HashSet<>(properties)) {
+						// deleted property?
+						if (tagset.isDeleted(property.getPropertyDefinitionId())) {
+							// yes, we remove the stale property
+							tagInstance.removeUserDefinedProperty(property.getPropertyDefinitionId());
+							// and save the change
+							JsonLdWebAnnotation annotation = 
+									new JsonLdWebAnnotation(
+										tagInstances.get(tagInstance),
+										tagLibrary,
+										tagInstance.getPageFilename());
+							createTagInstances(
+								collectionId, 
+								Collections.singletonList(new Pair<>(annotation, tagInstance)));
+						}
 					}
 				}
 			}
 		}
-
+		
 		return new AnnotationCollection(
 				collectionId, contentInfoSet, tagLibrary, tagReferences,
 				collectionReference.getSourceDocumentId(),

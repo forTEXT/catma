@@ -178,14 +178,16 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public Collection<SourceDocument> getDocuments(String rootRevisionHash) throws Exception {
-		GraphTraversalSource g = graph.traversal();
+	public Collection<SourceDocumentReference> getDocuments(String rootRevisionHash) throws Exception {
+//		GraphTraversalSource g = graph.traversal();
+//		
+//		return g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
+//		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
+//		.properties("document")
+//		.map(prop -> (SourceDocument)prop.get().orElse(null))
+//		.toList();
 		
-		return g.V().has(nt(ProjectRevision), "revisionHash", rootRevisionHash)
-		.outE(rt(hasDocument)).inV().hasLabel(nt(SourceDocument))
-		.properties("document")
-		.map(prop -> (SourceDocument)prop.get().orElse(null))
-		.toList();
+		return null;
 	}
 	
 	@Override
@@ -691,6 +693,7 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		logRootRevisionHash("removeDocument exit");
 	}
 	
+	@Override
 	public Indexer createIndexer() {
 		return new TPGraphProjectIndexer(graph, commentProvider);
 	}
@@ -702,6 +705,12 @@ public class TPGraphProjectHandler implements GraphProjectHandler {
 		.next()
 		.property("revisionHash", rootRevisionHash);
 
+	}
+	
+	@Override
+	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentID) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -452,7 +452,8 @@ public class GitProjectHandler {
 		return collectionReferences;
 	}
 
-	public List<AnnotationCollection> getCollections(TagLibrary tagLibrary, ProgressListener progressListener) throws IOException {
+	public List<AnnotationCollection> getCollectionsWithOrphansHandling(
+			TagLibrary tagLibrary, ProgressListener progressListener) throws IOException {
 		
 		ArrayList<AnnotationCollection> collections = new ArrayList<>();
 		File collectionsDir = Paths.get(
@@ -510,6 +511,35 @@ public class GitProjectHandler {
 		
 		return collections;
 	}	
+	
+	public AnnotationCollection getCollection(
+			String collectionId, 
+			TagLibrary tagLibrary) throws IOException {
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+				new GitAnnotationCollectionHandler(
+						this.localGitRepositoryManager, 
+						this.projectPath,
+						this.projectId,
+						this.remoteGitServerManager.getUsername(),
+						this.remoteGitServerManager.getEmail()
+		);
+
+		return gitMarkupCollectionHandler.getCollection(
+				collectionId, 
+				tagLibrary, 
+				new ProgressListener() {
+					
+					@Override
+					public void setProgress(String value, Object... args) {
+						logger.info(
+							String.format(
+									"Loading AnnotationCollection with %1$s: %2$s", 
+									collectionId, 
+									String.format(value, args)));
+					}
+				},
+				false);
+	}
 	
 	private void addCollectionToStaged(String collectionId) throws IOException {
 		Path relativePath = Paths.get(ANNOTATION_COLLECTIONS_DIRECTORY_NAME, collectionId);
@@ -830,6 +860,16 @@ public class GitProjectHandler {
 			}
 		}
 		return documents;
+	}
+	
+	public SourceDocument getDocument(String documentId) throws IOException{
+		GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
+				this.localGitRepositoryManager, 
+				this.projectPath,
+				this.remoteGitServerManager.getUsername(),
+				this.remoteGitServerManager.getEmail());
+		
+		return gitSourceDocumentHandler.open(documentId);
 	}
 
 	

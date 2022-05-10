@@ -16,6 +16,7 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
+import de.catma.indexer.Indexer;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -28,6 +29,14 @@ public interface GraphProjectHandler {
 
 	interface CollectionsSupplier {
 		List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException;
+	}
+
+	interface CollectionSupplier {
+		AnnotationCollection get(String collectionId, TagLibrary tagLibrary) throws IOException;
+	}
+
+	interface DocumentSupplier {
+		SourceDocument get(String documentId) throws IOException;
 	}
 
 	void ensureProjectRevisionIsLoaded(
@@ -45,7 +54,7 @@ public interface GraphProjectHandler {
 
 	void updateSourceDocument(String rootRevisionHash, SourceDocumentReference sourceDocument, String oldRootRevisionHash) throws Exception;
 
-	Collection<SourceDocument> getDocuments(String rootRevisionHash) throws Exception;
+	Collection<SourceDocumentReference> getDocuments(String rootRevisionHash) throws Exception;
 
 	SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception;
 
@@ -113,4 +122,8 @@ public interface GraphProjectHandler {
 	Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagsetDefinition tagsetDefinition) throws Exception;
 
 	void updateProject(String oldRootRevisionHash, String rootRevisionHash) throws IOException;
+
+	Indexer createIndexer();
+
+	SourceDocumentReference getSourceDocumentReference(String sourceDocumentID);
 }

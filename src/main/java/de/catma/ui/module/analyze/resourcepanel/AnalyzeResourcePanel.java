@@ -65,7 +65,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	private void initData() {
 		documentData = new TreeData<>();
 		try {
-			Collection<SourceDocumentReference> documents = project.getSourceDocuments(); 
+			Collection<SourceDocumentReference> documents = project.getSourceDocumentReferences(); 
 			
 			documentData.addRootItems(
 				documents

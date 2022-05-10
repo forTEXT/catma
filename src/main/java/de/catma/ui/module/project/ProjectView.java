@@ -1781,7 +1781,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
         if(project != null){
             TreeData<Resource> treeData = new TreeData<>();
-            Collection<SourceDocumentReference> srcDocs = project.getSourceDocuments();
+            Collection<SourceDocumentReference> srcDocs = project.getSourceDocumentReferences();
             Locale locale = Locale.getDefault();
             for(SourceDocumentReference srcDoc : srcDocs) {
             	locale = 

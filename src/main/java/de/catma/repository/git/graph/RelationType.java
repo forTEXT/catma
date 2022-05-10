@@ -5,6 +5,7 @@ public enum RelationType{
 	hasRevision,
 	hasDocument,
 	isPartOf,
+	hasTerm, // opposite of isPartOf
 	isAdjacentTo,
 	hasPosition,
 	hasCollection,

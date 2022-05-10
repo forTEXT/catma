@@ -238,7 +238,7 @@ public interface Project {
 	 * @return the available Source Documents
 	 * @throws Exception 
 	 */
-	public Collection<SourceDocumentReference> getSourceDocuments() throws Exception;
+	public Collection<SourceDocumentReference> getSourceDocumentReferences() throws Exception;
 
 	/**
 	 *

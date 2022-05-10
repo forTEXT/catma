@@ -26,11 +26,6 @@ import java.util.stream.Collectors;
 import org.apache.tika.mime.MediaType;
 import org.eclipse.jgit.api.Status;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.UI;
@@ -66,7 +61,9 @@ import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.graph.CommentProvider;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
-import de.catma.repository.git.graph.tp.TPGraphProjectHandler;
+import de.catma.repository.git.graph.GraphProjectHandler.DocumentSupplier;
+import de.catma.repository.git.graph.GraphProjectHandler.CollectionSupplier;
+import de.catma.repository.git.graph.gcg.GcGraphProjectHandler;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.TagsetDefinitionImportStatus;
@@ -115,8 +112,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	private Indexer indexer;
 	private EventBus eventBus;
 	
-	private LoadingCache<String, SourceDocument> documentCache;
-
 	public GraphWorktreeProject(User user,
 								GitProjectHandler gitProjectHandler,
 								ProjectReference projectReference,
@@ -131,7 +126,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		this.eventBus = eventBus;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = 
-			new TPGraphProjectHandler(
+			new GcGraphProjectHandler(
 				this.projectReference, 
 				this.user,
 				new FileInfoProvider() {
@@ -151,28 +146,37 @@ public class GraphWorktreeProject implements IndexedProject {
 					public List<Comment> getComments(List<String> documentIdList) throws Exception {
 						return GraphWorktreeProject.this.gitProjectHandler.getCommentsWithReplies(documentIdList);
 					}
+				},
+				new DocumentSupplier() {
+					
+					@Override
+					public SourceDocument get(String documentId) throws IOException {
+						return gitProjectHandler.getDocument(documentId);
+					}
+				},
+				new CollectionSupplier() {
+					@Override
+					public AnnotationCollection get(String collectionId, TagLibrary tagLibrary) throws IOException {
+						return gitProjectHandler.getCollection(collectionId, tagLibrary);
+					}
 				});
 		this.tempDir = CATMAPropertyKey.TempDir.getValue();
-		this.indexer = ((TPGraphProjectHandler)this.graphProjectHandler).createIndexer();
-    	this.documentCache = 
-			CacheBuilder.newBuilder()
-			.maximumSize(10)
-			.removalListener(new RemovalListener<String, SourceDocument>() {
-				@Override
-				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
-					notification.getValue().unload();
-				}
-			})
-			.build(new CacheLoader<String, SourceDocument>() {
-				@Override
-				public SourceDocument load(String key) throws Exception {
-					return getUncachedSourceDocument(key);
-				}
-			});
-	}
-	
-	private SourceDocument getUncachedSourceDocument(String sourceDocumentId) throws Exception {
-		return graphProjectHandler.getSourceDocument(this.rootRevisionHash, sourceDocumentId);
+		this.indexer = this.graphProjectHandler.createIndexer();
+//    	this.documentCache = 
+//			CacheBuilder.newBuilder()
+//			.maximumSize(10)
+//			.removalListener(new RemovalListener<String, SourceDocument>() {
+//				@Override
+//				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
+//					notification.getValue().unload();
+//				}
+//			})
+//			.build(new CacheLoader<String, SourceDocument>() {
+//				@Override
+//				public SourceDocument load(String key) throws Exception {
+//					return getUncachedSourceDocument(key);
+//				}
+//			});
 	}
 
 	private Path getTokenizedSourceDocumentPath(String documentId) {
@@ -248,7 +252,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						tagManager,
 						() -> gitProjectHandler.getTagsets(),
 						() -> gitProjectHandler.getDocuments(),
-						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener),
+						(tagLibrary) -> gitProjectHandler.getCollectionsWithOrphansHandling(tagLibrary, progressListener),
 						false, //forceGraphReload
 						backgroundService);
 			}
@@ -814,11 +818,8 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public Collection<SourceDocumentReference> getSourceDocuments() throws Exception {
-		return graphProjectHandler.getDocuments(this.rootRevisionHash)
-				.stream()
-				.map(sd -> new SourceDocumentReference(sd.getUuid(), sd.getSourceContentHandler()))
-				.collect(Collectors.toList());
+	public Collection<SourceDocumentReference> getSourceDocumentReferences() throws Exception {
+		return graphProjectHandler.getDocuments(this.rootRevisionHash);
 	}
 	
 	@Override
@@ -828,15 +829,14 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public SourceDocument getSourceDocument(String sourceDocumentId) throws Exception {
-		return documentCache.get(sourceDocumentId);
+		return graphProjectHandler.getSourceDocument(this.rootRevisionHash, sourceDocumentId);
 	}
 	
 	@Override
 	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentID) throws Exception {
-		SourceDocument sd = getSourceDocument(sourceDocumentID);
-		return new SourceDocumentReference(sd.getUuid(), sd.getSourceContentHandler());
+		return graphProjectHandler.getSourceDocumentReference(sourceDocumentID);
 	}
-
+	
 	@Override
 	public void delete(SourceDocumentReference sourceDocumentRef) throws Exception {
 		String oldRootRevisionHash = this.rootRevisionHash;
@@ -850,7 +850,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					collectionRef, sourceDocumentRef, ChangeType.DELETED));
 		}
 		
-		documentCache.invalidate(sourceDocumentRef.getUuid());
+//		documentCache.invalidate(sourceDocumentRef.getUuid());
 		
 		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
 		
@@ -1352,7 +1352,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					tagManager,
 					() -> gitProjectHandler.getTagsets(),
 					() -> gitProjectHandler.getDocuments(),
-					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener),
+					(tagLibrary) -> gitProjectHandler.getCollectionsWithOrphansHandling(tagLibrary, progressListener),
 					false,
 					backgroundService
 			);

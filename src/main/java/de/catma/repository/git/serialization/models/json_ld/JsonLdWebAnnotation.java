@@ -141,7 +141,7 @@ public class JsonLdWebAnnotation {
 	}
 
 	public List<TagReference> toTagReferenceList(String projectId, String markupCollectionId)
-				throws Exception {
+				throws IOException {
 		TagInstance tagInstance = this.getTagInstance();
 		String sourceDocumentUri = this.getSourceDocumentUri();
 		List<Range> ranges = this.getRanges();
@@ -179,7 +179,7 @@ public class JsonLdWebAnnotation {
 	}
 
 	public TagInstance getTagInstance()
-			throws Exception {
+			throws IOException {
 
 		TagInstance tagInstance = new TagInstance(
 			this.getTagInstanceUuid(),

@@ -76,7 +76,7 @@ public class RegQuery extends Query {
     		}
     	}
     	else {
-    		relevantSourceDocuments = repository.getSourceDocuments();
+    		relevantSourceDocuments = repository.getSourceDocumentReferences();
     	}
     	
     	for (SourceDocumentReference sourceDocRef : relevantSourceDocuments) {    		
