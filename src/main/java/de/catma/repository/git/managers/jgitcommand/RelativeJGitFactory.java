@@ -8,7 +8,6 @@ import org.eclipse.jgit.lib.Repository;
 import de.catma.repository.git.managers.JGitFactory;
 
 public class RelativeJGitFactory implements JGitFactory {
-
 	@Override
 	public CloneCommand newCloneCommand() {
 		return new RelativeCloneCommand();

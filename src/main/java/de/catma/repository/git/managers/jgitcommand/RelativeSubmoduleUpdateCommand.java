@@ -1,116 +1,35 @@
 package de.catma.repository.git.managers.jgitcommand;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.MergeCommand;
-import org.eclipse.jgit.api.RebaseCommand;
-import org.eclipse.jgit.api.SubmoduleUpdateCommand;
-import org.eclipse.jgit.api.errors.CheckoutConflictException;
-import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidConfigurationException;
-import org.eclipse.jgit.api.errors.InvalidMergeHeadsException;
-import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.api.errors.NoHeadException;
-import org.eclipse.jgit.api.errors.NoMessageException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
-import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.errors.ConfigInvalidException;
-import org.eclipse.jgit.lib.ConfigConstants;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.NullProgressMonitor;
-import org.eclipse.jgit.lib.ProgressMonitor;
-import org.eclipse.jgit.lib.RefUpdate;
-import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilterGroup;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
-	
-	//mpetris: added to workaround protected constructor
-	private static class RelativeMergeCommand extends MergeCommand {
-
-		RelativeMergeCommand(Repository repo) {
-			super(repo);
+	public static class RelativeSubmoduleUpdateCommandReflectionException extends GitAPIException {
+		public RelativeSubmoduleUpdateCommandReflectionException(String message, Throwable cause) {
+			super(message, cause);
 		}
 	}
-	
-	//mpetris: added to workaround protected constructor
-	private static class RelativeRebaseCommand extends RebaseCommand {
-
-		RelativeRebaseCommand(Repository repo) {
-			super(repo);
-		}
-		
-	}
-
-	private ProgressMonitor monitor;
-
-	private final Collection<String> paths;
-
-	private MergeStrategy strategy = MergeStrategy.RECURSIVE;
-
-	private CloneCommand.Callback callback;
-
-	/**
-	 * @param repo
-	 */
 
 	public RelativeSubmoduleUpdateCommand(final Repository repo) {
 		super(repo);
-		paths = new ArrayList<>();
 	}
 
-	/**
-	 * The progress monitor associated with the clone operation. By default,
-	 * this is set to <code>NullProgressMonitor</code>
-	 *
-	 * @see NullProgressMonitor
-	 * @param monitor
-	 * @return this command
-	 */
-	public SubmoduleUpdateCommand setProgressMonitor(
-			final ProgressMonitor monitor) {
-		this.monitor = monitor;
-		return this;
-	}
-
-	/**
-	 * Add repository-relative submodule path to initialize
-	 *
-	 * @param path
-	 *            (with <code>/</code> as separator)
-	 * @return this command
-	 */
-	public SubmoduleUpdateCommand addPath(final String path) {
-		paths.add(path);
-		return this;
-	}
-
-	/**
-	 * Execute the SubmoduleUpdateCommand command.
-	 *
-	 * @return a collection of updated submodule paths
-	 * @throws ConcurrentRefUpdateException
-	 * @throws CheckoutConflictException
-	 * @throws InvalidMergeHeadsException
-	 * @throws InvalidConfigurationException
-	 * @throws NoHeadException
-	 * @throws NoMessageException
-	 * @throws RefNotFoundException
-	 * @throws WrongRepositoryStateException
-	 * @throws GitAPIException
-	 */
+	// copied from superclass and modified to use RelativeCloneCommand, RelativeMergeCommand & RelativeRebaseCommand
 	@Override
 	public Collection<String> call() throws InvalidConfigurationException,
 			NoHeadException, ConcurrentRefUpdateException,
@@ -120,6 +39,7 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 		checkCallable();
 
 		try (SubmoduleWalk generator = SubmoduleWalk.forIndex(repo)) {
+			Collection<String> paths = getPaths();
 			if (!paths.isEmpty())
 				generator.setFilter(PathFilterGroup.createFromStrings(paths));
 			List<String> updated = new ArrayList<>();
@@ -132,13 +52,15 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 				if (url == null)
 					continue;
 
+				CloneCommand.Callback callback = getCallback();
+				ProgressMonitor monitor = getMonitor();
+
 				Repository submoduleRepo = generator.getRepository();
-				// Clone repository is not present
+				// Clone repository if not present
 				if (submoduleRepo == null) {
 					if (callback != null) {
 						callback.cloningSubmodule(generator.getPath());
 					}
-					// mpetris: changed to use the RelativeCloneCommand 
 					CloneCommand clone = new RelativeCloneCommand();
 					configure(clone);
 					clone.setURI(url);
@@ -148,6 +70,17 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 					if (monitor != null)
 						clone.setProgressMonitor(monitor);
 					submoduleRepo = clone.call().getRepository();
+				} else if (getFetch()) {
+					FetchCommand.Callback fetchCallback = getFetchCallback();
+					if (fetchCallback != null) {
+						fetchCallback.fetchingSubmodule(generator.getPath());
+					}
+					FetchCommand fetchCommand = Git.wrap(submoduleRepo).fetch();
+					if (monitor != null) {
+						fetchCommand.setProgressMonitor(monitor);
+					}
+					configure(fetchCommand);
+					fetchCommand.call();
 				}
 
 				try (RevWalk walk = new RevWalk(submoduleRepo)) {
@@ -155,14 +88,15 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 							.parseCommit(generator.getObjectId());
 
 					String update = generator.getConfigUpdate();
+					MergeStrategy strategy = getStrategy();
 					if (ConfigConstants.CONFIG_KEY_MERGE.equals(update)) {
-						MergeCommand merge = new RelativeMergeCommand(submoduleRepo); //mpetris: changed to workaround protected constructor
+						MergeCommand merge = new RelativeMergeCommand(submoduleRepo);
 						merge.include(commit);
 						merge.setProgressMonitor(monitor);
 						merge.setStrategy(strategy);
 						merge.call();
 					} else if (ConfigConstants.CONFIG_KEY_REBASE.equals(update)) {
-						RebaseCommand rebase = new RelativeRebaseCommand(submoduleRepo); //mpetris: changed to workaround protected constructor
+						RebaseCommand rebase = new RelativeRebaseCommand(submoduleRepo);
 						rebase.setUpstream(commit);
 						rebase.setProgressMonitor(monitor);
 						rebase.setStrategy(strategy);
@@ -174,6 +108,7 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 								submoduleRepo, submoduleRepo.lockDirCache(),
 								commit.getTree());
 						co.setFailOnConflict(true);
+						co.setProgressMonitor(monitor);
 						co.checkout();
 						RefUpdate refUpdate = submoduleRepo.updateRef(
 								Constants.HEAD, true);
@@ -197,27 +132,70 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 		}
 	}
 
-	/**
-	 * @param strategy
-	 *            The merge strategy to use during this update operation.
-	 * @return {@code this}
-	 * @since 3.4
-	 */
-	public SubmoduleUpdateCommand setStrategy(MergeStrategy strategy) {
-		this.strategy = strategy;
-		return this;
+	// reflective private field getters
+	private Collection<String> getPaths() throws RelativeSubmoduleUpdateCommandReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Field field = superclass.getDeclaredField("paths");
+			field.setAccessible(true);
+			return (Collection<String>) field.get(this);
+		} catch (Exception e) {
+			throw new RelativeSubmoduleUpdateCommandReflectionException("getPaths", e);
+		}
 	}
 
-	/**
-	 * Set status callback for submodule clone operation.
-	 *
-	 * @param callback
-	 *            the callback
-	 * @return {@code this}
-	 * @since 4.8
-	 */
-	public SubmoduleUpdateCommand setCallback(CloneCommand.Callback callback) {
-		this.callback = callback;
-		return this;
-	}	
+	private CloneCommand.Callback getCallback() throws RelativeSubmoduleUpdateCommandReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Field field = superclass.getDeclaredField("callback");
+			field.setAccessible(true);
+			return (CloneCommand.Callback) field.get(this);
+		} catch (Exception e) {
+			throw new RelativeSubmoduleUpdateCommandReflectionException("getCallback", e);
+		}
+	}
+
+	private ProgressMonitor getMonitor() throws RelativeSubmoduleUpdateCommandReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Field field = superclass.getDeclaredField("monitor");
+			field.setAccessible(true);
+			return (ProgressMonitor) field.get(this);
+		} catch (Exception e) {
+			throw new RelativeSubmoduleUpdateCommandReflectionException("getMonitor", e);
+		}
+	}
+
+	private boolean getFetch() throws RelativeSubmoduleUpdateCommandReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Field field = superclass.getDeclaredField("fetch");
+			field.setAccessible(true);
+			return field.getBoolean(this);
+		} catch (Exception e) {
+			throw new RelativeSubmoduleUpdateCommandReflectionException("getFetch", e);
+		}
+	}
+
+	private FetchCommand.Callback getFetchCallback() throws RelativeSubmoduleUpdateCommandReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Field field = superclass.getDeclaredField("fetchCallback");
+			field.setAccessible(true);
+			return (FetchCommand.Callback) field.get(this);
+		} catch (Exception e) {
+			throw new RelativeSubmoduleUpdateCommandReflectionException("getFetchCallback", e);
+		}
+	}
+
+	private MergeStrategy getStrategy() throws RelativeSubmoduleUpdateCommandReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Field field = superclass.getDeclaredField("strategy");
+			field.setAccessible(true);
+			return (MergeStrategy) field.get(this);
+		} catch (Exception e) {
+			throw new RelativeSubmoduleUpdateCommandReflectionException("getStrategy", e);
+		}
+	}
 }
