@@ -452,8 +452,9 @@ public class GitProjectHandler {
 		return collectionReferences;
 	}
 
-	public List<AnnotationCollection> getCollectionsWithOrphansHandling(
-			TagLibrary tagLibrary, ProgressListener progressListener) throws IOException {
+	public List<AnnotationCollection> getCollections(
+			TagLibrary tagLibrary, ProgressListener progressListener, 
+			boolean withOrphansHandling) throws IOException {
 		
 		ArrayList<AnnotationCollection> collections = new ArrayList<>();
 		File collectionsDir = Paths.get(
@@ -484,7 +485,8 @@ public class GitProjectHandler {
 					gitMarkupCollectionHandler.getCollection(
 							collectionId, 
 							tagLibrary, 
-							progressListener));
+							progressListener,
+							withOrphansHandling));
 			} catch (Exception e) {
 				logger.log(
 				Level.SEVERE, 
@@ -497,18 +499,21 @@ public class GitProjectHandler {
 			}
 		}
 		
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			localRepoManager.open(this.projectReference.getNamespace(), this.projectId);
-			localRepoManager.addAllAndCommit(
-					String.format(
-						"Auto committing removal of orphan Annotations "
-						+ "and orphan Properties for Project %1$s", this.projectId),
-					this.remoteGitServerManager.getUsername(), 
-					this.remoteGitServerManager.getEmail(), 
-					false);
-			localRepoManager.push(credentialsProvider);
-		}
-		
+		if (withOrphansHandling) {
+			try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+				localRepoManager.open(this.projectReference.getNamespace(), this.projectId);
+				if (localRepoManager.hasUncommitedChanges() || localRepoManager.hasUntrackedChanges()) {
+					localRepoManager.addAllAndCommit(
+							String.format(
+								"Auto committing removal of orphan Annotations "
+								+ "and orphan Properties for Project %1$s", this.projectId),
+							this.remoteGitServerManager.getUsername(), 
+							this.remoteGitServerManager.getEmail(), 
+							false);
+					localRepoManager.push(credentialsProvider);
+				}
+			}
+		}		
 		return collections;
 	}	
 	
@@ -879,16 +884,20 @@ public class GitProjectHandler {
 			// open the project root repo
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
-			
-			String revisionHash = localGitRepoManager.addAllAndCommit(
-					msg, 
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(), 
-					false);
-			
-			localGitRepoManager.push(credentialsProvider);
-			
-			return revisionHash;
+			if (localGitRepoManager.hasUncommitedChanges() || localGitRepoManager.hasUntrackedChanges()) {
+	
+				String revisionHash = localGitRepoManager.addAllAndCommit(
+						msg, 
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail(), 
+						false);
+				
+				localGitRepoManager.push(credentialsProvider);
+				return revisionHash;
+			}
+			else {
+				return localGitRepoManager.getRevisionHash();
+			}
 		}
 	}
 	

@@ -1,8 +1,9 @@
-package de.catma.repository.git.graph.gcg;
+package de.catma.repository.git.graph.lazy;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import com.google.common.collect.Maps;
 
@@ -63,6 +64,8 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager,  Map<String, Sour
 			
 		}
 		
+		Logger.getLogger(getClass().getName()).info(String.format(
+				"Finished loading Collections for Project %1$s", projectReference));
 		return new Pair<>(this.tagManager, docRefsById);
 	}
 }

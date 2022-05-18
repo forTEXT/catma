@@ -54,16 +54,6 @@ public class Property {
 		this.propertyValueList = new ArrayList<String>(propertyValueList);
 	}
 
-	/**
-	 * The internal list of values is replaced with the possible values
-	 * proposed by the definition.
-	 * @see PropertyDefinition#getPossibleValueList()
-	 */
-	@Deprecated
-	public void synchronize() {
-//		setPropertyValueList(propertyDefinition.getPossibleValueList());
-	}
-
 	public String getFirstValue() {
 		return propertyValueList.isEmpty()?null:propertyValueList.get(0);
 	}

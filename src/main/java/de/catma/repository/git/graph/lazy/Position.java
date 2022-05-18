@@ -1,15 +1,18 @@
-package de.catma.repository.git.graph.gcg;
+package de.catma.repository.git.graph.lazy;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
+
+import de.catma.document.Range;
 
 class Position {
 	private final int startOffset;
 	private final int endOffset;
 	private final int tokenOffset;
 	private final Term term;
-	private Position adjacentPostion;
+	private Position forwardAdjacentPostion;
+	private Position backwardAdjacentPosition;
 	
 	public Position(int startOffset, int endOffset, int tokenOffset, Term term) {
 		super();
@@ -27,6 +30,11 @@ class Position {
 	public int getTokenOffset() {
 		return tokenOffset;
 	}
+	
+	public Range getRange() {
+		return new Range(startOffset, endOffset);
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -63,19 +71,28 @@ class Position {
 		return term;
 	}
 	
-	public void setAdjacentPostion(Position adjacentPostion) {
-		this.adjacentPostion = adjacentPostion;
+	public void setForwardAdjacentPostion(Position adjacentPostion) {
+		this.forwardAdjacentPostion = adjacentPostion;
 	}
 	
-	public Position getAdjacentPostion() {
-		return adjacentPostion;
+	public Position getForwardAdjacentPostion() {
+		return forwardAdjacentPostion;
 	}
+	
+	public void setBackwardAdjacentPosition(Position backwardAdjacentPosition) {
+		this.backwardAdjacentPosition = backwardAdjacentPosition;
+	}
+	
+	public Position getBackwardAdjacentPosition() {
+		return backwardAdjacentPosition;
+	}
+	
 	public List<Position> getPositionChain(List<String> termLiteralList, BiPredicate<String, String> termTestFunction) {
 		List<Position> positions = new ArrayList<Position>();
 		positions.add(this);
 		Position curPos = this;
 		for (String termLiteral : termLiteralList) {
-			curPos = curPos.getAdjacentPostion();
+			curPos = curPos.getForwardAdjacentPostion();
 			if ((curPos != null) && termTestFunction.test(curPos.getTerm().getLiteral(), termLiteral)) {
 				positions.add(curPos);
 			}

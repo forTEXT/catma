@@ -1,16 +1,12 @@
-package de.catma.repository.git.graph.tp;
+package de.catma.repository.git.graph.lazy;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
-import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.apache.tinkerpop.gremlin.structure.VertexProperty;
-
 import de.catma.indexer.wildcard2regex.SQLWildcard2RegexConverter;
+import de.catma.tag.Property;
 
-public class PropertyValueFilter implements Predicate<Traverser<Vertex>> {
+public class PropertyValueFilter implements Predicate<Property> {
 
 	private String propertyValueRegex;
 
@@ -21,16 +17,12 @@ public class PropertyValueFilter implements Predicate<Traverser<Vertex>> {
 
 	
 	@Override
-	public boolean test(Traverser<Vertex> t) {
+	public boolean test(Property property) {
 		if (propertyValueRegex == null) {
 			return true;
 		}
 		
-		VertexProperty<Object> valuesProperty = t.get().property("values");
-		
-		@SuppressWarnings("unchecked")
-		List<String> values = 
-			(List<String>) valuesProperty.orElse(Collections.<String>emptyList());
+		List<String> values = property.getPropertyValueList();
 		
 		for (String value : values) {
 			if (value.matches(propertyValueRegex)) {

@@ -62,8 +62,8 @@ import de.catma.repository.git.graph.CommentProvider;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.GraphProjectHandler.DocumentSupplier;
+import de.catma.repository.git.graph.lazy.LazyGraphProjectHandler;
 import de.catma.repository.git.graph.GraphProjectHandler.CollectionSupplier;
-import de.catma.repository.git.graph.gcg.GcGraphProjectHandler;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.TagsetDefinitionImportStatus;
@@ -126,7 +126,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		this.eventBus = eventBus;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = 
-			new GcGraphProjectHandler(
+			new LazyGraphProjectHandler(
 				this.projectReference, 
 				this.user,
 				new FileInfoProvider() {
@@ -162,21 +162,6 @@ public class GraphWorktreeProject implements IndexedProject {
 				});
 		this.tempDir = CATMAPropertyKey.TempDir.getValue();
 		this.indexer = this.graphProjectHandler.createIndexer();
-//    	this.documentCache = 
-//			CacheBuilder.newBuilder()
-//			.maximumSize(10)
-//			.removalListener(new RemovalListener<String, SourceDocument>() {
-//				@Override
-//				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
-//					notification.getValue().unload();
-//				}
-//			})
-//			.build(new CacheLoader<String, SourceDocument>() {
-//				@Override
-//				public SourceDocument load(String key) throws Exception {
-//					return getUncachedSourceDocument(key);
-//				}
-//			});
 	}
 
 	private Path getTokenizedSourceDocumentPath(String documentId) {
@@ -252,7 +237,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						tagManager,
 						() -> gitProjectHandler.getTagsets(),
 						() -> gitProjectHandler.getDocuments(),
-						(tagLibrary) -> gitProjectHandler.getCollectionsWithOrphansHandling(tagLibrary, progressListener),
+						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener, true),
 						false, //forceGraphReload
 						backgroundService);
 			}
@@ -1352,7 +1337,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					tagManager,
 					() -> gitProjectHandler.getTagsets(),
 					() -> gitProjectHandler.getDocuments(),
-					(tagLibrary) -> gitProjectHandler.getCollectionsWithOrphansHandling(tagLibrary, progressListener),
+					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener, true),
 					false,
 					backgroundService
 			);

@@ -89,9 +89,7 @@ public interface Indexer {
 			QueryId queryId, 
 			QueryResult baseResult, QueryResult collocationConditionResult,
 			int spanContextSize, SpanDirection direction) throws IOException;
-	
-	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException;
-	
+		
 	public void close();
 
 	public QueryResult searchTagDiff(QueryId queryId, List<String> relevantUserMarkupCollIDs,

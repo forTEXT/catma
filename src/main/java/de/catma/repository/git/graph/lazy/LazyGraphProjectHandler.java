@@ -1,4 +1,4 @@
-package de.catma.repository.git.graph.gcg;
+package de.catma.repository.git.graph.lazy;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -46,9 +46,9 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
-public class GcGraphProjectHandler implements GraphProjectHandler {
+public class LazyGraphProjectHandler implements GraphProjectHandler {
 	
-	private Logger logger = Logger.getLogger(GcGraphProjectHandler.class.getName());
+	private Logger logger = Logger.getLogger(LazyGraphProjectHandler.class.getName());
 	private ProjectReference projectReference;
 	private User user;
 	private FileInfoProvider fileInfoProvider;
@@ -60,7 +60,7 @@ public class GcGraphProjectHandler implements GraphProjectHandler {
 	private LoadingCache<String, AnnotationCollection> collectionCache;
 
 	
-	public GcGraphProjectHandler(ProjectReference projectReference, 
+	public LazyGraphProjectHandler(ProjectReference projectReference, 
 			User user, FileInfoProvider fileInfoProvider, CommentProvider commentProvider,
 			final DocumentSupplier documentSupplier, final CollectionSupplier collectionSupplier) {
 		this.projectReference = projectReference;
@@ -98,7 +98,7 @@ public class GcGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void ensureProjectRevisionIsLoaded(ExecutionListener<TagManager> openProjectListener,
-			ProgressListener progressListener, String revisionHash, TagManager tagManager,
+			final ProgressListener progressListener, String revisionHash, TagManager tagManager,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
 			CollectionsSupplier collectionsSupplier, boolean forceGraphReload, BackgroundService backgroundService)
 			throws Exception {
@@ -114,9 +114,10 @@ public class GcGraphProjectHandler implements GraphProjectHandler {
 					new ExecutionListener<Pair<TagManager, Map<String, SourceDocumentReference>>>() {
 						@Override
 						public void done(Pair<TagManager, Map<String, SourceDocumentReference>> result) {
-							GcGraphProjectHandler.this.docRefsById.putAll(result.getSecond());
-							GcGraphProjectHandler.this.tagManager = result.getFirst();
-							GcGraphProjectHandler.this.revisionHash = revisionHash;
+							logger.info(String.format("LoadJob has finished for Project %1$s", projectReference));
+							LazyGraphProjectHandler.this.docRefsById.putAll(result.getSecond());
+							LazyGraphProjectHandler.this.tagManager = result.getFirst();
+							LazyGraphProjectHandler.this.revisionHash = revisionHash;
 							openProjectListener.done(result.getFirst());
 						}
 						@Override
@@ -385,7 +386,7 @@ public class GcGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public Indexer createIndexer() {
-		return new GcGraphProjectIndexer(
+		return new LazyGraphProjectIndexer(
 				fileInfoProvider, commentProvider, 
 				(documentId) -> {
 					try {

@@ -1,8 +1,12 @@
-package de.catma.repository.git.graph.gcg;
+package de.catma.repository.git.graph.lazy;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
+
+import de.catma.document.Range;
 
 class Term {
 	
@@ -63,5 +67,9 @@ class Term {
 			}
 		}
 		return result;
+	}
+	
+	public Collection<? extends Position> getPositions(Range range) {
+		return positions.stream().filter(pos -> range.hasOverlappingRange(pos.getRange())).collect(Collectors.toSet());
 	}	
 }

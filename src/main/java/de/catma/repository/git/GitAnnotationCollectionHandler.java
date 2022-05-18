@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
@@ -378,25 +377,24 @@ public class GitAnnotationCollectionHandler {
 	}
 	
 	public AnnotationCollection getCollection(
-			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener) throws IOException {
-		return getCollection(collectionId, tagLibrary, progressListener, true);
-	}
-	
-	public AnnotationCollection getCollection(
-			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener, boolean handleOrphans)
+			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener,
+			boolean handleOrphans)
 			throws IOException {
-		
 		AnnotationCollectionReference collectionReference = 
 				getCollectionReference(collectionId);
 		ContentInfoSet contentInfoSet = collectionReference.getContentInfoSet();
+		
+		progressListener.setProgress("Loaded Collection %1$s", contentInfoSet.getTitle());
 		
 		String collectionSubdir = String.format(
 				"%s/%s", 
 				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
 				collectionId
 		);
+		
 		AtomicInteger counter = new AtomicInteger();
-		ArrayList<TagReference> tagReferences = this.openTagReferences(
+		
+		ArrayList<TagReference>tagReferences = this.openTagReferences(
 				collectionId, contentInfoSet.getTitle(),  
 				Paths.get(
 						this.projectDirectory.getAbsolutePath(),
@@ -406,6 +404,13 @@ public class GitAnnotationCollectionHandler {
 		);
 		
 		if (handleOrphans) {
+			
+			Logger.getLogger(getClass().getName()).info(
+				String.format(
+					"Checking for orphans for Collection %1$s with ID %2$s",
+					collectionId, 
+					contentInfoSet.getTitle()));
+			
 			// handle orphan Annotations
 			ArrayListMultimap<TagInstance, TagReference> tagInstances = ArrayListMultimap.create();
 			
@@ -463,7 +468,6 @@ public class GitAnnotationCollectionHandler {
 				}
 			}
 		}
-		
 		return new AnnotationCollection(
 				collectionId, contentInfoSet, tagLibrary, tagReferences,
 				collectionReference.getSourceDocumentId(),

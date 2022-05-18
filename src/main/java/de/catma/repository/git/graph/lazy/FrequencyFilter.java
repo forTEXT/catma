@@ -1,13 +1,10 @@
-package de.catma.repository.git.graph.tp;
+package de.catma.repository.git.graph.lazy;
 
 import java.util.function.Predicate;
 
-import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-
 import de.catma.queryengine.CompareOperator;
 
-public class FrequencyFilter implements Predicate<Traverser<Vertex>> {
+public class FrequencyFilter implements Predicate<Term> {
 
 	private CompareOperator comp1;
 	private int freq1;
@@ -22,8 +19,8 @@ public class FrequencyFilter implements Predicate<Traverser<Vertex>> {
 	}
 
 	@Override
-	public boolean test(Traverser<Vertex> t) {
-		int freq = (int)t.get().property("freq").value();
+	public boolean test(Term t) {
+		int freq = t.getFrequency();
 		
 		if (comp1.getCondition().isTrue(freq, freq1)) {
 			if (comp2 == null) {

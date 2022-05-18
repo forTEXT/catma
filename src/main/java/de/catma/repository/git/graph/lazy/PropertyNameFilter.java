@@ -1,14 +1,14 @@
-package de.catma.repository.git.graph.gcg;
+package de.catma.repository.git.graph.lazy;
 
 import java.util.function.Predicate;
 
-import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-
 import de.catma.indexer.wildcard2regex.SQLWildcard2RegexConverter;
+import de.catma.tag.Property;
+import de.catma.tag.TagDefinition;
+import de.catma.util.Pair;
 
 
-class PropertyNameFilter implements Predicate<Traverser<Vertex>> {
+class PropertyNameFilter implements Predicate<Pair<Property, TagDefinition>> {
 
 	private String propertyNameRegex;
 
@@ -17,13 +17,16 @@ class PropertyNameFilter implements Predicate<Traverser<Vertex>> {
 	}
 
 	@Override
-	public boolean test(Traverser<Vertex> t) {
+	public boolean test(Pair<Property, TagDefinition> propertyTagPair) {
 		
 		if (propertyNameRegex == null) {
 			return true;
 		}
 		
-		String propertyName = (String)t.get().property("name").value();
+		String propertyName = 
+				propertyTagPair.getSecond().getPropertyDefinitionByUuid(
+						propertyTagPair.getFirst().getPropertyDefinitionId())
+				.getName();
 		
 		return propertyName.matches(propertyNameRegex);
 	}
