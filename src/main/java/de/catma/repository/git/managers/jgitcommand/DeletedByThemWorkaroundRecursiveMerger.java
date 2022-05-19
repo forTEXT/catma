@@ -10,12 +10,17 @@ import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.merge.MergeResult;
 import org.eclipse.jgit.merge.RecursiveMerger;
+import org.eclipse.jgit.submodule.SubmoduleConflict;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.WorkingTreeIterator;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
+
+import static java.time.Instant.EPOCH;
 
 public class DeletedByThemWorkaroundRecursiveMerger extends RecursiveMerger {
 	private static class DeletedByThemWorkaroundRecursiveMergerReflectionException extends IOException {
@@ -27,7 +32,25 @@ public class DeletedByThemWorkaroundRecursiveMerger extends RecursiveMerger {
 	private static class ConflictedMergeResult extends MergeResult<RawText> {
 		public ConflictedMergeResult() {
 			super(Collections.emptyList());
-			setContainsConflicts(true);
+			super.setContainsConflicts(true);
+		}
+
+		// workaround for protected setContainsConflicts method on MergeResult
+		@Override
+		protected void setContainsConflicts(boolean containsConflicts) {
+			super.setContainsConflicts(containsConflicts);
+		}
+	}
+
+	// workaround for protected setContainsConflicts method on MergeResult
+	private static class SubmoduleConflictMergeResult extends MergeResult<SubmoduleConflict> {
+		public SubmoduleConflictMergeResult(List<SubmoduleConflict> sequences) {
+			super(sequences);
+		}
+
+		@Override
+		protected void setContainsConflicts(boolean containsConflicts) {
+			super.setContainsConflicts(containsConflicts);
 		}
 	}
 
@@ -46,7 +69,8 @@ public class DeletedByThemWorkaroundRecursiveMerger extends RecursiveMerger {
 		final int modeO = tw.getRawMode(T_OURS);
 		final int modeT = tw.getRawMode(T_THEIRS);
 		final int modeB = tw.getRawMode(T_BASE);
-
+		boolean gitLinkMerging = isGitLink(modeO) || isGitLink(modeT)
+				|| isGitLink(modeB);
 		if (modeO == 0 && modeT == 0 && modeB == 0)
 			// File is either untracked or new, staged but uncommitted
 			return true;
@@ -88,10 +112,7 @@ public class DeletedByThemWorkaroundRecursiveMerger extends RecursiveMerger {
 			// conflict between ours and theirs. file/folder conflicts between
 			// base/index/workingTree and something else are not relevant or
 			// detected later
-			if (nonTree(modeO) && !nonTree(modeT)) {
-				return super.processEntry(base, ours, theirs, index, work, ignoreConflicts, attributes);
-			}
-			if (nonTree(modeT) && !nonTree(modeO)) {
+			if (nonTree(modeO) != nonTree(modeT)) {
 				return super.processEntry(base, ours, theirs, index, work, ignoreConflicts, attributes);
 			}
 
@@ -112,39 +133,75 @@ public class DeletedByThemWorkaroundRecursiveMerger extends RecursiveMerger {
 			// OURS or THEIRS has been deleted
 			if (((modeO != 0 && !tw.idEqual(T_BASE, T_OURS)) || (modeT != 0 && !tw
 					.idEqual(T_BASE, T_THEIRS)))) {
-				// mpetris: when merging .gitmodules and descending into the submodules
-				// this contentMerge fails because it tries to get the base of the submodule repo
-				// from the container repo
-				// since we're not interested in a content merge as either OURS or THEIRS
-				// has been deleted anyway
-				// we just generate the conflict and handle resolution later within the submodule
-//				MergeResult<RawText> result = contentMerge(base, ours, theirs,
-//						attributes);
+				if (gitLinkMerging && ignoreConflicts) {
+					add(tw.getRawPath(), ours, DirCacheEntry.STAGE_0, EPOCH, 0);
+				} else if (gitLinkMerging) {
+					add(tw.getRawPath(), base, DirCacheEntry.STAGE_1, EPOCH, 0);
+					add(tw.getRawPath(), ours, DirCacheEntry.STAGE_2, EPOCH, 0);
+					add(tw.getRawPath(), theirs, DirCacheEntry.STAGE_3, EPOCH, 0);
+					SubmoduleConflictMergeResult result = createGitLinksMergeResult(
+							base, ours, theirs);
+					result.setContainsConflicts(true);
+					mergeResults.put(tw.getPathString(), result);
+					unmergedPaths.add(tw.getPathString());
+				} else {
+					// mpetris: when merging .gitmodules and descending into the submodules
+					// this contentMerge fails because it tries to get the base of the submodule repo
+					// from the container repo
+					// since we're not interested in a content merge as either OURS or THEIRS
+					// has been deleted anyway
+					// we just generate the conflict and handle resolution later within the submodule
 
-				MergeResult<RawText> result = new ConflictedMergeResult();
+					// Content merge strategy does not apply to delete-modify
+					// conflicts!
+//					MergeResult<RawText> result;
+//					try {
+//						result = contentMerge(base, ours, theirs, attributes,
+//								ContentMergeStrategy.CONFLICT);
+//					} catch (BinaryBlobException e) {
+//						result = new MergeResult<>(Collections.emptyList());
+//						result.setContainsConflicts(true);
+//					}
 
-				add(tw.getRawPath(), base, DirCacheEntry.STAGE_1, 0, 0);
-				add(tw.getRawPath(), ours, DirCacheEntry.STAGE_2, 0, 0);
-				DirCacheEntry e = add(tw.getRawPath(), theirs,
-						DirCacheEntry.STAGE_3, 0, 0);
+					ConflictedMergeResult result = new ConflictedMergeResult();
 
-				// OURS was deleted checkout THEIRS
-				if (modeO == 0) {
-					// Check worktree before checking out THEIRS
-					if (isWorktreeDirty(work, ourDce))
-						return false;
-					if (nonTree(modeT)) {
-						if (e != null)
-							toBeCheckedOut.put(tw.getPathString(), e);
+					if (ignoreConflicts) {
+						// In case a conflict is detected the working tree file
+						// is again filled with new content (containing conflict
+						// markers). But also stage 0 of the index is filled
+						// with that content.
+						result.setContainsConflicts(false);
+						updateIndex(base, ours, theirs, result, attributes);
+					} else {
+						add(tw.getRawPath(), base, DirCacheEntry.STAGE_1, EPOCH,
+								0);
+						add(tw.getRawPath(), ours, DirCacheEntry.STAGE_2, EPOCH,
+								0);
+						DirCacheEntry e = add(tw.getRawPath(), theirs,
+								DirCacheEntry.STAGE_3, EPOCH, 0);
+
+						// OURS was deleted checkout THEIRS
+						if (modeO == 0) {
+							// Check worktree before checking out THEIRS
+							if (isWorktreeDirty(work, ourDce)) {
+								return false;
+							}
+							if (nonTree(modeT)) {
+								if (e != null) {
+									addToCheckout(tw.getPathString(), e,
+											attributes);
+								}
+							}
+						}
+
+						unmergedPaths.add(tw.getPathString());
+
+						// generate a MergeResult for the deleted file
+						mergeResults.put(tw.getPathString(), result);
 					}
+
+					return true;
 				}
-
-				unmergedPaths.add(tw.getPathString());
-
-				// generate a MergeResult for the deleted file
-				mergeResults.put(tw.getPathString(), result);
-
-				return true;
 			}
 		}
 		return super.processEntry(base, ours, theirs, index, work, ignoreConflicts, attributes);
@@ -175,11 +232,11 @@ public class DeletedByThemWorkaroundRecursiveMerger extends RecursiveMerger {
 		}
 	}
 
-	private DirCacheEntry add(byte[] path, CanonicalTreeParser p, int stage, long lastMod, long len)
+	private DirCacheEntry add(byte[] path, CanonicalTreeParser p, int stage, Instant lastMod, long len)
 			throws DeletedByThemWorkaroundRecursiveMergerReflectionException {
 		try {
 			Class<?> superclass = getClass().getSuperclass().getSuperclass();
-			Method method = superclass.getDeclaredMethod("add", byte[].class, CanonicalTreeParser.class, int.class, long.class, long.class);
+			Method method = superclass.getDeclaredMethod("add", byte[].class, CanonicalTreeParser.class, int.class, Instant.class, long.class);
 			method.setAccessible(true);
 			Object result = method.invoke(this, path, p, stage, lastMod, len);
 			return result == null ? null : (DirCacheEntry) result;
@@ -198,6 +255,49 @@ public class DeletedByThemWorkaroundRecursiveMerger extends RecursiveMerger {
 		}
 		catch (Exception e) {
 			throw new DeletedByThemWorkaroundRecursiveMergerReflectionException("isWorktreeDirty", e);
+		}
+	}
+
+	private static boolean isGitLink(int mode) throws DeletedByThemWorkaroundRecursiveMergerReflectionException {
+		try {
+			Class<?> superclass = DeletedByThemWorkaroundRecursiveMerger.class.getSuperclass().getSuperclass();
+			Method method = superclass.getDeclaredMethod("isGitLink", int.class);
+			method.setAccessible(true);
+			return (boolean) method.invoke(null, mode);
+		}
+		catch (Exception e) {
+			throw new DeletedByThemWorkaroundRecursiveMergerReflectionException("isGitLink", e);
+		}
+	}
+
+	private static SubmoduleConflictMergeResult createGitLinksMergeResult(CanonicalTreeParser base, CanonicalTreeParser ours, CanonicalTreeParser theirs)
+			throws DeletedByThemWorkaroundRecursiveMergerReflectionException {
+		try {
+			Class<?> superclass = DeletedByThemWorkaroundRecursiveMerger.class.getSuperclass().getSuperclass();
+			Method method = superclass.getDeclaredMethod(
+					"createGitLinksMergeResult", CanonicalTreeParser.class, CanonicalTreeParser.class, CanonicalTreeParser.class
+			);
+			method.setAccessible(true);
+			return (SubmoduleConflictMergeResult) method.invoke(null, base, ours, theirs);
+		}
+		catch (Exception e) {
+			throw new DeletedByThemWorkaroundRecursiveMergerReflectionException("createGitLinksMergeResult", e);
+		}
+	}
+
+	private void updateIndex(CanonicalTreeParser base, CanonicalTreeParser ours, CanonicalTreeParser theirs, MergeResult<RawText> result, Attributes attributes)
+			throws DeletedByThemWorkaroundRecursiveMergerReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass().getSuperclass();
+			Method method = superclass.getDeclaredMethod(
+					"updateIndex", CanonicalTreeParser.class, CanonicalTreeParser.class, CanonicalTreeParser.class,
+					MergeResult.class, Attributes.class
+			);
+			method.setAccessible(true);
+			method.invoke(this, base, ours, theirs, result, attributes);
+		}
+		catch (Exception e) {
+			throw new DeletedByThemWorkaroundRecursiveMergerReflectionException("updateIndex", e);
 		}
 	}
 }

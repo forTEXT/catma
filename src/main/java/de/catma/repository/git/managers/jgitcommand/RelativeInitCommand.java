@@ -4,10 +4,13 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.InitCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.util.FS;
+import org.eclipse.jgit.util.StringUtils;
 import org.eclipse.jgit.util.SystemReader;
 
 import java.io.File;
@@ -73,11 +76,17 @@ public class RelativeInitCommand extends InitCommand {
 					builder.setWorkTree(new File(dStr));
 				}
 			}
+			String initialBranch = getInitialBranch();
+			builder.setInitialBranch(StringUtils.isEmptyOrNull(initialBranch)
+					? SystemReader.getInstance().getUserConfig().getString(
+					ConfigConstants.CONFIG_INIT_SECTION, null,
+					ConfigConstants.CONFIG_KEY_DEFAULT_BRANCH)
+					: initialBranch);
 			Repository repository = new RelativeFileRepository(builder.setup());
 			if (!repository.getObjectDatabase().exists())
 				repository.create(bare);
 			return new Git(repository);
-		} catch (IOException e) {
+		} catch (IOException | ConfigInvalidException e) {
 			throw new JGitInternalException(e.getMessage(), e);
 		}
 	}
@@ -128,6 +137,18 @@ public class RelativeInitCommand extends InitCommand {
 		}
 		catch (Exception e) {
 			throw new RelativeInitCommandReflectionException("getGitDir", e);
+		}
+	}
+
+	private String getInitialBranch() throws RelativeInitCommandReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Field field = superclass.getDeclaredField("initialBranch");
+			field.setAccessible(true);
+			return (String) field.get(this);
+		}
+		catch (Exception e) {
+			throw new RelativeInitCommandReflectionException("getInitialBranch", e);
 		}
 	}
 }

@@ -26,7 +26,7 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 		}
 	}
 
-	public RelativeSubmoduleAddCommand(final Repository repo) {
+	public RelativeSubmoduleAddCommand(Repository repo) {
 		super(repo);
 	}
 
@@ -40,9 +40,15 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 		String uri = getUri();
 		if (uri == null || uri.length() == 0)
 			throw new IllegalArgumentException(JGitText.get().uriNotConfigured);
+		String name = getName();
+		if (name == null || name.length() == 0) {
+			// Use the path as the default.
+			name = path;
+			setName(path);
+		}
 
 		try {
-			SubmoduleValidator.assertValidSubmoduleName(path);
+			SubmoduleValidator.assertValidSubmoduleName(name);
 			SubmoduleValidator.assertValidSubmodulePath(path);
 			SubmoduleValidator.assertValidSubmoduleUri(uri);
 		} catch (SubmoduleValidator.SubmoduleValidationException e) {
@@ -82,7 +88,7 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 
 		// Save submodule URL to parent repository's config
 		StoredConfig config = repo.getConfig();
-		config.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION, path,
+		config.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name,
 				ConfigConstants.CONFIG_KEY_URL, resolvedUri);
 		try {
 			config.save();
@@ -96,13 +102,11 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 		try {
 			modulesConfig.load();
 			modulesConfig.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION,
-					path, ConfigConstants.CONFIG_KEY_PATH, path);
+					name, ConfigConstants.CONFIG_KEY_PATH, path);
 			modulesConfig.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION,
-					path, ConfigConstants.CONFIG_KEY_URL, uri);
+					name, ConfigConstants.CONFIG_KEY_URL, uri);
 			modulesConfig.save();
-		} catch (IOException e) {
-			throw new JGitInternalException(e.getMessage(), e);
-		} catch (ConfigInvalidException e) {
+		} catch (IOException | ConfigInvalidException e) {
 			throw new JGitInternalException(e.getMessage(), e);
 		}
 
@@ -127,7 +131,8 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 			Field field = superclass.getDeclaredField("path");
 			field.setAccessible(true);
 			return (String) field.get(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleAddCommandReflectionException("getPath", e);
 		}
 	}
@@ -138,7 +143,8 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 			Field field = superclass.getDeclaredField("uri");
 			field.setAccessible(true);
 			return (String) field.get(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleAddCommandReflectionException("getUri", e);
 		}
 	}
@@ -149,8 +155,21 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 			Field field = superclass.getDeclaredField("monitor");
 			field.setAccessible(true);
 			return (ProgressMonitor) field.get(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleAddCommandReflectionException("getMonitor", e);
+		}
+	}
+
+	private String getName() throws RelativeSubmoduleAddCommandReflectionException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Field field = superclass.getDeclaredField("name");
+			field.setAccessible(true);
+			return (String) field.get(this);
+		}
+		catch (Exception e) {
+			throw new RelativeSubmoduleAddCommandReflectionException("getName", e);
 		}
 	}
 }

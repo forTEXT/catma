@@ -21,11 +21,12 @@ import java.text.MessageFormat;
 import java.util.Locale;
 
 public class RelativeFileRepository extends FileRepository {
-	public RelativeFileRepository(final BaseRepositoryBuilder options) throws IOException {
+	public RelativeFileRepository(BaseRepositoryBuilder options) throws IOException {
 		super(options);
 	}
 
 	// copied from superclass and modified to use relative unix paths
+	@Override
 	public void create(boolean bare) throws IOException {
 		final FileBasedConfig cfg = getConfig();
 		if (cfg.getFile().exists()) {
@@ -48,7 +49,7 @@ public class RelativeFileRepository extends FileRepository {
 
 		RefUpdate head = updateRef(Constants.HEAD);
 		head.disableRefLog();
-		head.link(Constants.R_HEADS + Constants.MASTER);
+		head.link(Constants.R_HEADS + getInitialBranch());
 
 		final boolean fileMode;
 		if (getFS().supportsExecute()) {

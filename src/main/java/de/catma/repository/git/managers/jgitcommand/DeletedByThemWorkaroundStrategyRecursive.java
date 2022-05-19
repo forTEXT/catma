@@ -9,6 +9,7 @@ public class DeletedByThemWorkaroundStrategyRecursive extends StrategyRecursive 
 		super();
 	}
 
+	// copied from superclass and modified to use DeletedByThemWorkaroundRecursiveMerger
 	@Override
 	public ThreeWayMerger newMerger(Repository db) {
 		return new DeletedByThemWorkaroundRecursiveMerger(db, false);

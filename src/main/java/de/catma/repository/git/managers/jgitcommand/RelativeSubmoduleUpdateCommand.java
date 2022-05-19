@@ -11,9 +11,9 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilterGroup;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,7 +25,7 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 		}
 	}
 
-	public RelativeSubmoduleUpdateCommand(final Repository repo) {
+	public RelativeSubmoduleUpdateCommand(Repository repo) {
 		super(repo);
 	}
 
@@ -55,35 +55,8 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 				CloneCommand.Callback callback = getCallback();
 				ProgressMonitor monitor = getMonitor();
 
-				Repository submoduleRepo = generator.getRepository();
-				// Clone repository if not present
-				if (submoduleRepo == null) {
-					if (callback != null) {
-						callback.cloningSubmodule(generator.getPath());
-					}
-					CloneCommand clone = new RelativeCloneCommand();
-					configure(clone);
-					clone.setURI(url);
-					clone.setDirectory(generator.getDirectory());
-					clone.setGitDir(new File(new File(repo.getDirectory(),
-							Constants.MODULES), generator.getPath()));
-					if (monitor != null)
-						clone.setProgressMonitor(monitor);
-					submoduleRepo = clone.call().getRepository();
-				} else if (getFetch()) {
-					FetchCommand.Callback fetchCallback = getFetchCallback();
-					if (fetchCallback != null) {
-						fetchCallback.fetchingSubmodule(generator.getPath());
-					}
-					FetchCommand fetchCommand = Git.wrap(submoduleRepo).fetch();
-					if (monitor != null) {
-						fetchCommand.setProgressMonitor(monitor);
-					}
-					configure(fetchCommand);
-					fetchCommand.call();
-				}
-
-				try (RevWalk walk = new RevWalk(submoduleRepo)) {
+				try (Repository submoduleRepo = getOrCloneSubmodule(generator,
+						url); RevWalk walk = new RevWalk(submoduleRepo)) {
 					RevCommit commit = walk
 							.parseCommit(generator.getObjectId());
 
@@ -119,8 +92,6 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 									generator.getPath());
 						}
 					}
-				} finally {
-					submoduleRepo.close();
 				}
 				updated.add(generator.getPath());
 			}
@@ -139,7 +110,8 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 			Field field = superclass.getDeclaredField("paths");
 			field.setAccessible(true);
 			return (Collection<String>) field.get(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleUpdateCommandReflectionException("getPaths", e);
 		}
 	}
@@ -150,7 +122,8 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 			Field field = superclass.getDeclaredField("callback");
 			field.setAccessible(true);
 			return (CloneCommand.Callback) field.get(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleUpdateCommandReflectionException("getCallback", e);
 		}
 	}
@@ -161,7 +134,8 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 			Field field = superclass.getDeclaredField("monitor");
 			field.setAccessible(true);
 			return (ProgressMonitor) field.get(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleUpdateCommandReflectionException("getMonitor", e);
 		}
 	}
@@ -172,7 +146,8 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 			Field field = superclass.getDeclaredField("fetch");
 			field.setAccessible(true);
 			return field.getBoolean(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleUpdateCommandReflectionException("getFetch", e);
 		}
 	}
@@ -183,7 +158,8 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 			Field field = superclass.getDeclaredField("fetchCallback");
 			field.setAccessible(true);
 			return (FetchCommand.Callback) field.get(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleUpdateCommandReflectionException("getFetchCallback", e);
 		}
 	}
@@ -194,8 +170,23 @@ public class RelativeSubmoduleUpdateCommand extends SubmoduleUpdateCommand {
 			Field field = superclass.getDeclaredField("strategy");
 			field.setAccessible(true);
 			return (MergeStrategy) field.get(this);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RelativeSubmoduleUpdateCommandReflectionException("getStrategy", e);
+		}
+	}
+
+	// reflective private method wrappers
+	private Repository getOrCloneSubmodule(SubmoduleWalk generator, String url) throws IOException, GitAPIException {
+		try {
+			Class<?> superclass = getClass().getSuperclass();
+			Method method = superclass.getDeclaredMethod("getOrCloneSubmodule", SubmoduleWalk.class, String.class);
+			method.setAccessible(true);
+			Object result = method.invoke(this, generator, url);
+			return result == null ? null : (Repository) result;
+		}
+		catch (Exception e) {
+			throw new RelativeSubmoduleUpdateCommandReflectionException("getOrCloneSubmodule", e);
 		}
 	}
 }
