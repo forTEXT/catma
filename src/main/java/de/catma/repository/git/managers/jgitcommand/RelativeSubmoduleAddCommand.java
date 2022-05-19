@@ -80,6 +80,7 @@ public class RelativeSubmoduleAddCommand extends SubmoduleAddCommand {
 		ProgressMonitor monitor = getMonitor();
 		if (monitor != null)
 			clone.setProgressMonitor(monitor);
+		clone.setBranch(Constants.MASTER); // workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=572737, TODO: investigate further
 		Repository subRepo = null;
 		try (Git git = clone.call()) {
 			subRepo = git.getRepository();

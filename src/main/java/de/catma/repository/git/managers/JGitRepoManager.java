@@ -68,8 +68,8 @@ import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.repository.git.managers.jgitcommand.DeletedByThemWorkaroundStrategyRecursive;
+import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
 
 public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
