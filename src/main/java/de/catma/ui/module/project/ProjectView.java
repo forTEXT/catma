@@ -487,7 +487,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    			"You have changes, that need to be committed first, please enter a short description for this commit:", 
 	    			commitMsg -> {
 	    				try {
-		    				project.commitChanges(commitMsg);
+		    				project.commitAndPushChanges(commitMsg);
 		    				importCollection();
 	    				}
 	    				catch (Exception e) {
@@ -591,7 +591,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    			"You have changes, that need to be committed first, please enter a short description for this commit:", 
 	    			commitMsg -> {
 	    				try {
-		    				project.commitChanges(commitMsg);
+		    				project.commitAndPushChanges(commitMsg);
 		    				importCollection();
 	    				}
 	    				catch (Exception e) {
@@ -745,7 +745,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    			"You have uncommitted changes, please enter a short description for this commit:", 
 	    			commitMsg -> {
 	    				try {
-		    				project.commitChanges(commitMsg);
+		    				project.commitAndPushChanges(commitMsg);
 		    				synchronizeProject();
 	    				}
 	    				catch (Exception e) {
@@ -1426,7 +1426,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    			"Please enter a short description for this commit:", 
 	    			commitMsg -> {
 	    				try {
-		    				project.commitChanges(commitMsg);
+		    				project.commitAndPushChanges(commitMsg);
 		    				Notification.show(
 		    					"Info", 
 		    					"Your changes have been committed!", 

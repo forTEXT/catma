@@ -864,7 +864,7 @@ public class TaggerView extends HorizontalLayout
 	
 		if (collectionChangeEvent.getOldValue() != null) {
 			try {
-				project.commitChanges("Auto-committing Annotations");
+				project.commitAndPushChanges("Auto-committing Annotations");
 			} catch (Exception e) {
 				logger.log(
 					Level.WARNING, 
@@ -926,7 +926,7 @@ public class TaggerView extends HorizontalLayout
 				tagChangedListener);
 		
 		try {
-			project.commitChanges("Auto-committing Annotations");
+			project.commitAndPushChanges("Auto-committing Annotations");
 		} catch (Exception e) {
 			logger.log(
 				Level.WARNING, 
@@ -1103,7 +1103,7 @@ public class TaggerView extends HorizontalLayout
 		
 		if (tryAutoCommit) {
 			try {
-				project.commitChanges("Auto-committing Annotations");
+				project.commitAndPushChanges("Auto-committing Annotations");
 			} catch (Exception e) {
 				logger.log(
 					Level.WARNING, 

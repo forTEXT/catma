@@ -626,7 +626,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void close() {
 		try {
 			if (!gitProjectHandler.hasConflicts()) {
-				commitChanges(
+				commitAndPushChanges(
 					String.format(
 							"Auto-committing Project %1$s with ID %2$s on close", 
 							projectReference.getName(),
@@ -852,9 +852,10 @@ public class GraphWorktreeProject implements IndexedProject {
 			this.rootRevisionHash = gitProjectHandler.createAnnotationCollection(
 						collectionId, 
 						name, 
-						null, //description
+						null, // description
 						sourceDocumentReference.getUuid(), 
-						null);
+						null, // not originated from a fork
+						true); // with push
 			
 			graphProjectHandler.addCollection(
 				rootRevisionHash, 
@@ -1081,7 +1082,8 @@ public class GraphWorktreeProject implements IndexedProject {
 					importAnnotationCollection.getName(), 
 					importAnnotationCollection.getContentInfoSet().getDescription(), //description
 					importAnnotationCollection.getSourceDocumentId(), 
-					null);
+					null, // not originated from a fork
+					false); // no push, because we push as part of the commit down the line after adding the Annotations
 			
 			graphProjectHandler.addCollection(
 				rootRevisionHash, 
@@ -1106,7 +1108,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					createdAnnotationCollection, 
 					importAnnotationCollection.getTagReferences());
 			
-			commitChanges(
+			commitAndPushChanges(
 				String.format(
 					"Imported Annotations from Collection %1$s with ID %2$s", 
 					createdAnnotationCollection.getName(), 
@@ -1268,7 +1270,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void commitChanges(String commitMsg) throws Exception {
+	public void commitAndPushChanges(String commitMsg) throws Exception {
 		logger.info(
 				String.format(
 					"Commiting and pushing possible changes in Project %1$s.", 
@@ -1289,7 +1291,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						this.rootRevisionHash));
 		}
 		this.graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
-		printStatus();
+//		printStatus();
 	}
 	
 	@Override

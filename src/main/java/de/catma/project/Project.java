@@ -235,7 +235,7 @@ public interface Project {
 
 	public boolean hasChangesToCommitOrPush() throws Exception;
 
-	public void commitChanges(String commitMsg) throws Exception;
+	public void commitAndPushChanges(String commitMsg) throws Exception;
 
 	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;
 

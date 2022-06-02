@@ -321,7 +321,8 @@ public class GitProjectHandler {
 										 String name,
 										 String description,
 										 String sourceDocumentId,
-										 String forkedFromCommitURL
+										 String forkedFromCommitURL,
+										 boolean withPush
 	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -353,7 +354,9 @@ public class GitProjectHandler {
 					forkedFromCommitURL
 			);
 
-			localGitRepoManager.push(credentialsProvider);
+			if (withPush) {
+				localGitRepoManager.push(credentialsProvider);
+			}
 
 
 			return projectRevisionHash;
