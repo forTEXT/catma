@@ -240,7 +240,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 	}
 
-	@Override
+
 	@Deprecated
 	public List<String> getGroupRepositoryNames(String path)
 			throws IOException {

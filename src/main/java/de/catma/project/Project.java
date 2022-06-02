@@ -31,12 +31,9 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
-import de.catma.document.corpus.Corpus;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
-import de.catma.project.event.CollectionChangeEvent;
-import de.catma.project.event.DocumentChangeEvent;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
@@ -44,7 +41,6 @@ import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.Member;
@@ -70,96 +66,6 @@ public interface Project {
 	 *
 	 */
 	public static enum RepositoryChangeEvent {
-		/**
-		 * @deprecated use {@link DocumentChangeEvent}
-		 * <p>{@link SourceDocument} added:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = {@link SourceDocument#getID()}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = <code>null</code></li>
-		 * </p><br />
-		 * <p>{@link SourceDocument} removed:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = <code>null</code></li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = {@link SourceDocument}</li>
-		 * </p><br />
-		 * <p>{@link SourceDocument} Metadata changed or a document reload has taken place
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = new {@link SourceDocument}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = {@link SourceDocument#getID()}</li>
-		 * </p>
-		 */
-		@Deprecated
-		sourceDocumentChanged,
-		/**
-		 * @deprecated use {@link CollectionChangeEvent}
-		 * <p>{@link UserMarkupCollection} added:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = a {@link Pair} of 
-		 * {@link UserMarkupCollectionReference} and corresponding {@link SourceDocument}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = <code>null</code></li>
-		 * </p><br />
-		 * <p>{@link UserMarkupCollection} removed:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = <code>null</code></li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = {@link UserMarkupCollection}</li>
-		 * </p><br />
-		 * <p>{@link UserMarkupCollection} Metadata changed:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = {@link UserMarkupCollectionReference}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = old {@link ContentInfoSet}</li>
-		 * </p>
-		 */
-		@Deprecated
-		userMarkupCollectionChanged,
-		/**
-		 * @deprecated obsolet <br>
-		 * 
-		 * Updates on the User Markup Collection's inner Tag Library.
-		 * <li>{@link PropertyChangeEvent#getNewValue()} =
-		 *  {@link java.util.List List} of updated {@link UserMarkupCollection}s</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = changed {@link TagsetDefinition}</li>
-		 */
-		@Deprecated
-		userMarkupCollectionTagLibraryChanged,
-		/**
-		 * <p>{@link TagLibrary} added:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = a {@link Pair} of 
-		 * {@link TagLibraryReference} and corresponding {@link SourceDocument}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = <code>null</code></li>
-		 * </p><br />
-		 * <p>{@link TagLibrary} removed:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = <code>null</code></li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = {@link TagLibraryReference}</li>
-		 * </p><br />
-		 * <p>{@link TagLibrary} Metadata changed:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = {@link TagLibraryReference}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = old {@link ContentInfoSet}</li>
-		 * </p>
-		 */
-		@Deprecated
-		tagLibraryChanged,
-		/**
-		 * <p>{@link Corpus} added:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = {@link Corpus}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = <code>null</code></li>
-		 * </p><br />
-		 * <p>{@link Corpus} removed:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = <code>null</code></li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = {@link SourceDocument}</li>
-		 * </p><br />
-		 * <p>{@link SourceDocument} added to {@link Corpus}:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = {@link Corpus}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = {@link SourceDocument}</li>
-		 * </p>
-		 * <p>{@link UserMarkupCollection} added to {@link Corpus}:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = {@link Corpus}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = {@link UserMarkupCollectionReference}</li>
-		 * </p>
-		 * <p>{@link Corpus} name changed:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = {@link Corpus}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = the new name</li>
-		 * </p>
-		 * <p>{@link Corpus} reload:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = current {@link Corpus}</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = old {@link Corpus}</li>
-		 * </p>
-		 */
-		@Deprecated
-		corpusChanged,
 		/**
 		 * Signals an exception:
 		 * <li>{@link PropertyChangeEvent#getNewValue()} = the {@link Exception}</li>

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -40,7 +39,6 @@ import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.TermInfo;
 import de.catma.project.CommitInfo;
 import de.catma.project.ProjectReference;
-import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
@@ -127,53 +125,6 @@ public class GitProjectHandler {
 
 
 			return projectRevisionHash;
-		}
-	}
-	
-	@Deprecated
-	public Pair<TagsetDefinition, String> cloneAndAddTagset(String tagsetId, String name, String commitMsg) throws IOException {
-
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = 
-					new GitTagsetHandler(
-							localGitRepoManager, 
-							this.projectPath,
-							this.remoteGitServerManager.getUsername(),
-							this.remoteGitServerManager.getEmail());
-
-
-			String tagsetRepoRemoteUrl = 
-					CATMAPropertyKey.GitLabServerUrl.getValue() + "/" + projectId + "/" + tagsetId + ".git";
-
-			// open the project root repo
-			//localGitRepoManager.open(projectId, GitProjectsManager.getProjectRootRepositoryName(projectId));
-
-			// add the submodule
-			File targetSubmodulePath = Paths.get(
-					localGitRepoManager.getRepositoryWorkTree().toString(),
-					TAGSETS_DIRECTORY_NAME,
-					tagsetId
-			).toFile();
-
-			// submodule files and the changed .gitmodules file are automatically staged
-			localGitRepoManager.addSubmodule(
-					targetSubmodulePath,
-					tagsetRepoRemoteUrl,
-					credentialsProvider
-			);
-			
-			String rootRevisionHash = localGitRepoManager.commit(
-					commitMsg,
-					remoteGitServerManager.getUsername(),
-					remoteGitServerManager.getEmail(),
-					false);
-
-			localGitRepoManager.detach(); 
-			
-//			gitTagsetHandler.checkout(
-//				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
-
-			return new Pair<>(gitTagsetHandler.getTagset(tagsetId), rootRevisionHash);
 		}
 	}
 	
@@ -592,12 +543,7 @@ public class GitProjectHandler {
 						this.remoteGitServerManager.getUsername(),
 						this.remoteGitServerManager.getEmail()
 		);
-		
-		
-		tagReferenceList.stream().collect(
-				Collectors.toMap(
-						TagReference::getTagInstance, 
-						Function.identity()));
+
 		
 		Multimap<TagInstance, TagReference> tagInstances = 
 				Multimaps.index(tagReferenceList, TagReference::getTagInstance);

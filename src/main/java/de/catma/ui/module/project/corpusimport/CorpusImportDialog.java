@@ -253,7 +253,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 
 		URL url = new URL(CATMAPropertyKey.CATMA5API.getValue(CATMAPropertyKey.CATMA5API.getDefaultValue())+apiPath);
 		URLConnection urlConnection = url.openConnection();
-		
+		urlConnection.setReadTimeout(7200000); // 2h, corpus generation in CATMA 5 can take a while
 		urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);	
 		return urlConnection.getInputStream();
 	}

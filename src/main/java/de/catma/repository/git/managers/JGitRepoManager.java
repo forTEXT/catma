@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
@@ -25,29 +23,22 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RevertCommand;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
-import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleInitCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.api.errors.NoFilepatternException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
-import org.eclipse.jgit.dircache.DirCache;
-import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
@@ -65,11 +56,8 @@ import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.util.FS;
 
 import de.catma.project.CommitInfo;
-import de.catma.project.conflict.DeletedResourceConflict;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.jgitcommand.DeletedByThemWorkaroundStrategyRecursive;
 import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
 
@@ -214,67 +202,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IOException("Failed to init Git repository", e);
 		}
 	}
-
-	@Deprecated
-	public String clone(String group, String uri, File path, CredentialsProvider credentialsProvider)
-			throws IOException {
-		return clone(group, uri, path, credentialsProvider, false);
-	}
-	
-	/**
-	 * Clones a remote repository whose address is specified via the <code>uri</code> parameter.
-	 *
-	 * @param uri the URI of the remote repository to clone
-	 * @param path the destination path of the clone operation
-	 * @param username the username to authenticate with
-	 * @param password the password to authenticate with
-	 * @param initSubmodules init submodules
-	 * @return the name of the cloned repository
-	 */
-	@Override
-	@Deprecated
-	public String clone(String projectId, String uri, File path, CredentialsProvider credentialsProvider, boolean initSubmodules)
-			throws IOException {
-		if (isAttached()) {
-			throw new IllegalStateException("Can't call `clone` on an attached instance");
-		}
-
-		if (path == null) {
-			String repositoryName = uri.substring(uri.lastIndexOf("/") + 1);
-			if (repositoryName.endsWith(".git")) {
-				repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
-			}
-			path = Paths.get(this.getRepositoryBasePath().toURI()).resolve(repositoryName).toFile();
-		}
-
-		try {
-			CloneCommand cloneCommand = 
-					jGitFactory.newCloneCommand()
-					.setURI(uri).setDirectory(path);
-
-			cloneCommand.setCredentialsProvider(credentialsProvider);
-			
-			this.gitApi = cloneCommand.call();
-			
-			if (initSubmodules) {
-				this.gitApi.submoduleInit().call();
-				
-//				SubmoduleUpdateCommand submoduleUpdateCommand = 
-//					jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
-//				
-//				submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
-//				submoduleUpdateCommand.call();
-				
-			}
-		}
-		catch (GitAPIException e) {
-			throw new IOException(
-				"Failed to clone remote Git repository", e
-			);
-		}
-
-		return path.getName();
-	}
 	
 	@Override
 	public String clone(
@@ -362,7 +289,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 	
-	@Override
+	@Deprecated
 	public List<String> getSubmodulePaths() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't determine submodules from a detached instance");
@@ -484,7 +411,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 	
-	@Override
+	@Deprecated
 	public String removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `removeSubmodule` on a detached instance");
@@ -595,45 +522,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 
 	@Override
-	public String commitWithSubmodules(
-			String message, String committerName, String committerEmail, Set<String> submodules) throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `commit` on a detached instance");
-		}
-
-		try {
-			
-			StatusCommand statusCommand = gitApi.status();
-			for (String submodule : submodules) {
-				statusCommand.addPath(submodule);
-			}
-			
-			statusCommand.addPath(".");
-			
-			if (statusCommand.call().hasUncommittedChanges()) {
-				AddCommand addCommand = this.gitApi.add();
-				for (String submodule : submodules) {
-					addCommand
-					.addFilepattern(submodule);
-				}
-				addCommand.call();
-				
-				return this.gitApi
-					.commit()
-					.setMessage(message)
-					.setCommitter(committerName, committerEmail)
-					.call()
-					.getName();
-			}
-			else {
-				return getRevisionHash();
-			}
-		}
-		catch (GitAPIException e) {
-			throw new IOException("Failed to commit", e);
-		}
-	}
-	@Override
 	public String commit(String message, String committerName, String committerEmail, boolean all, boolean force) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `commit` on a detached instance");
@@ -657,51 +545,15 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IOException("Failed to commit", e);
 		}
 	}
-	/**
-	 * Adds a new submodule to the attached Git repository.
-	 *
-	 * @param path a {@link File} object representing the target path of the submodule
-	 * @param uri the URI of the remote repository to add as a submodule
-	 * @param username the username to authenticate with
-	 * @param password the password to authenticate with
-	 * @throws IOException if the submodule couldn't be added
-	 */
-	@Override
-	public void addSubmodule(File path, String uri, CredentialsProvider credentialsProvider)
-			throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `addSubmodule` on a detached instance");
-		}
-
-		Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
-		Path relativeSubmodulePath = basePath.relativize(path.toPath());
-		// NB: Git doesn't understand Windows path separators (\) in the .gitmodules file
-		String unixStyleRelativeSubmodulePath = FilenameUtils.separatorsToUnix(relativeSubmodulePath.toString());
-
-		try {
-			SubmoduleAddCommand submoduleAddCommand = 
-				jGitFactory.newSubmoduleAddCommand(gitApi.getRepository())
-					.setURI(uri)
-					.setPath(unixStyleRelativeSubmodulePath);
-			//needs permissions because the submodule is cloned from remote first and then added locally
-			submoduleAddCommand.setCredentialsProvider(credentialsProvider);
-
-			Repository repository = submoduleAddCommand.call();
-			repository.close();
-		}
-		catch (GitAPIException e) {
-			throw new IOException("Failed to add submodule", e);
-		}
-	}
 
 	@Override
 	public void push(CredentialsProvider credentialsProvider) throws IOException {
-		push(credentialsProvider, null);
+		push(credentialsProvider, null, 0);
 	}
 	
 	@Override
 	public void push_master(CredentialsProvider credentialsProvider) throws IOException {
-		push(credentialsProvider, Constants.MASTER);
+		push(credentialsProvider, Constants.MASTER, 0);
 	}
 
 	/**
@@ -709,9 +561,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *
 	 * @param username the username to authenticate with
 	 * @param password the password to authenticate with
+	 * @param tryCount the number of attempts this push has been tried already 
 	 * @throws IOException if the push operation failed
 	 */
-	private void push(CredentialsProvider credentialsProvider, String branch) throws IOException {
+	private void push(CredentialsProvider credentialsProvider, String branch, int tryCount) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
@@ -743,7 +596,20 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			}
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Failed to push", e);
+			// sometimes Gitlab refuses to accept the push and gives this error messages
+			// subsequent push attempts however pass through
+			// so we try to push up to 3 times before giving up
+			if (e.getMessage().contains("authentication not supported") && tryCount<3) {
+				try {
+					Thread.sleep(3);
+				} catch (InterruptedException notOfInterest) {
+				}
+				push(credentialsProvider, branch, tryCount+1);
+			}
+			else {
+				// give up, push not possible
+				throw new IOException(String.format("Failed to push, tried %1$d times!", tryCount-1), e);
+			}
 		}
 	}
 
@@ -809,31 +675,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				mergeCommand.include(ref);
 			} 
 
-			return mergeCommand.call();
-		}
-		catch (GitAPIException e) {
-			throw new IOException("Failed to merge", e);
-		}		
-	}
-	
-	@Override
-	@Deprecated
-	public MergeResult mergeWithDeletedByThemWorkaroundStrategyRecursive(String branch) throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `merge` on a detached instance");
-		}
-
-		try {
-			MergeCommand mergeCommand = this.gitApi.merge();
-			
-			
-			Ref ref = this.gitApi.getRepository().findRef(branch);
-			if (ref != null) {
-				mergeCommand.include(ref);
-			} 
-
-			mergeCommand.setStrategy(new DeletedByThemWorkaroundStrategyRecursive());
-			
 			return mergeCommand.call();
 		}
 		catch (GitAPIException e) {
@@ -925,7 +766,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws IOException if a submodule with the name <code>submoduleName</code> doesn't exist
 	 *                                            or if the operation failed for another reason
 	 */
-	@Override
+	@Deprecated
 	public String getSubmoduleHeadRevisionHash(String submoduleName) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getSubmoduleHeadRevisionHash` on a detached instance");
@@ -964,7 +805,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 
-	@Override
+	@Deprecated
 	public boolean hasUncommitedChangesWithSubmodules(Set<String> submodules) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `status` on a detached instance");
@@ -1055,240 +896,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 
-	@Override
-	public Collection<DeletedResourceConflict> resolveRootConflicts(String projectId, CredentialsProvider credentialsProvider) throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `resolveRootConflicts` on a detached instance");
-		}
-
-		List<DeletedResourceConflict> deletedResourceConflicts = new ArrayList<>();
-		DirCache dirCache = gitApi.getRepository().lockDirCache();
-		
-		try {
-			if (dirCache.hasUnmergedPaths()) {
-				
-				Status status = gitApi.status().call();
-				
-				for (String conflictingSubmodule : status.getConflicting()) {
-					
-					StageState conflictState = 
-							status.getConflictingStageState().get(conflictingSubmodule);
-					
-					switch (conflictState) {
-					
-					case BOTH_MODIFIED: {
-						// get the base entry from where the branches diverge, the common ancestor version
-						int baseIdx = dirCache.findEntry(conflictingSubmodule);
-						DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
-						
-						// get their version, the being-merged in version
-						DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2);
-						
-					    //Stage 0: 'normal', un-conflicted, all-is-well entry.
-					    //Stage 1: 'base', the common ancestor version.
-					    //Stage 2: 'ours', the target (HEAD) version.
-					    //Stage 3: 'theirs', the being-merged-in version.
-						
-						if (theirEntry.getPathString().equals(conflictingSubmodule)
-								&& theirEntry.getStage() == 3) {
-							// we try to make sure that their version is included (merged) in the latest version
-							// of this submodule
-							ensureLatestSubmoduleRevision(
-									baseEntry, theirEntry, conflictingSubmodule, credentialsProvider);
-							try (Repository subModuleRepo = 
-									SubmoduleWalk.getSubmoduleRepository(
-											this.gitApi.getRepository(), conflictingSubmodule)) {
-								// now get the current submodule revision (which includes the merge)
-								ObjectId subModuleHeadRevision = 
-										subModuleRepo.resolve(Constants.HEAD);
-								
-								baseEntry.setObjectId(subModuleHeadRevision);
-							}
-							break;
-						}
-						else {
-							Logger.getLogger(this.getClass().getName()).severe(
-									String.format(
-										"Cannot resolve root conflict for submodule %1$s expected a 'theirs'-stage-3 commit entry but found none!",
-									conflictingSubmodule));
-							throw new CommitMissingException(
-								"Failed to synchronize the Project because of an unexpected merge conflict, "
-								+ "please contact the system administrator!");
-						}
-					}
-					case DELETED_BY_THEM: {
-						String ourTreeName = "refs/heads/master"; 
-						RevCommit ourCommit = 
-							gitApi.log().add(gitApi.getRepository().resolve(ourTreeName)).addPath(conflictingSubmodule).call().iterator().next();
-						String ourLastCommitMsg = ourCommit.getFullMessage();
-						
-						String theirTreeName = "refs/remotes/origin/master"; 
-						
-						RevCommit theirCommit = 
-							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(conflictingSubmodule).call().iterator().next();
-						
-						if (theirCommit == null) {
-							
-							// couldn't find their commit based on the conflicting submodule path
-							// we try to find it based on the DOT_GIT_MODULES file and the resourceId in the commit message
-							Iterator<RevCommit> remoteCommitIterator =
-								gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(Constants.DOT_GIT_MODULES).call().iterator();
-							String resourceId = conflictingSubmodule.substring(conflictingSubmodule.indexOf('/')+1);
-							while(remoteCommitIterator.hasNext()) {
-								RevCommit revCommit = remoteCommitIterator.next();
-								if (revCommit.getFullMessage().contains(resourceId)) {
-									theirCommit = revCommit;
-									break;
-								}
-							}
-						}
-						
-						String theirLastCommitMsg = "no commit found";
-						if (theirCommit != null) {
-							theirLastCommitMsg = theirCommit.getFullMessage();
-						}
-						
-						deletedResourceConflicts.add(
-							new DeletedResourceConflict(
-								projectId,
-								conflictingSubmodule,
-								ourCommit.getName(), 
-								ourLastCommitMsg, 
-								theirCommit != null?theirCommit.getName():"", 
-								theirLastCommitMsg, 
-								theirCommit != null?theirCommit.getCommitterIdent().getName():"",
-								true));
-						break;		
-					}
-					case DELETED_BY_US: {
-						
-						String ourTreeName = "refs/heads/master"; 
-						RevCommit ourCommit = 
-							gitApi.log().add(gitApi.getRepository().resolve(ourTreeName)).addPath(conflictingSubmodule).call().iterator().next();
-						String ourLastCommitMsg = ourCommit.getFullMessage();
-						
-						String theirTreeName = "refs/remotes/origin/master"; 
-						RevCommit theirCommit = 
-							gitApi.log().add(gitApi.getRepository().resolve(theirTreeName)).addPath(conflictingSubmodule).call().iterator().next();
-						String theirLastCommitMsg = theirCommit.getFullMessage();
-						
-						deletedResourceConflicts.add(
-								new DeletedResourceConflict(
-									projectId,
-									conflictingSubmodule,
-									ourCommit.getName(), 
-									ourLastCommitMsg, 
-									theirCommit.getName(), 
-									theirLastCommitMsg, 
-									theirCommit.getCommitterIdent().getName(),
-									false));
-						break;		
-					}
-					default: {
-						
-						Logger.getLogger(this.getClass().getName()).severe(
-								String.format(
-									"Cannot resolve root conflict for submodule %1$s %2$s not supported yet!",
-								conflictingSubmodule, conflictState.name()));
-						throw new CommitMissingException(
-								"Failed to synchronize the Project because of an unexpected merge conflict, "
-								+ "please contact the system administrator!");
-					}
-					}
-
-				}
-
-				dirCache.write();
-				dirCache.commit();
-			}
-			else {
-				dirCache.unlock();
-			}
-		}
-		catch (Exception e) {
-			try  {
-				dirCache.unlock();
-			}
-			catch (Exception e2) {
-				e2.printStackTrace();
-			}
-			throw new IOException("Failed to resolve root conflicts", e);
-		}
-		
-		return deletedResourceConflicts;
-	}
-
-	private void ensureLatestSubmoduleRevision(DirCacheEntry baseEntry, 
-			DirCacheEntry theirEntry, String conflictingSubmodule,
-			CredentialsProvider credentialsProvider) throws Exception {
-		
-		try (Repository submoduleRepo = 
-			SubmoduleWalk.getSubmoduleRepository(this.gitApi.getRepository(), conflictingSubmodule)) {
-			Git submoduleGitApi = Git.wrap(submoduleRepo);
-			
-			boolean foundTheirs = false;
-			int tries = 10;
-			while (!foundTheirs && tries > 0) {
-				// iterate over the revisions until we find their commit or until we reach
-				// the the common ancestor version (base)
-				Iterator<RevCommit> revIterator = submoduleGitApi
-				.log()
-				.call()
-				.iterator();
-				while (revIterator.hasNext()) {
-					RevCommit revCommit = revIterator.next();
-					if (revCommit.getId().equals(theirEntry.getObjectId())) {
-						// we found their version
-						foundTheirs = true;
-						break;
-					}
-					else if (revCommit.getId().equals(baseEntry.getObjectId())) {
-						// we reached the common ancestor
-						break;
-					}
-				}
-				
-				if (!foundTheirs) {
-					// we reached the common ancestor without finding
-					// their commit, so we pull again to see if it comes in now
-					// and then we start over
-					
-					submoduleGitApi.checkout()
-					.setName(Constants.MASTER)
-					.setCreateBranch(false)
-					.call();
-					
-					PullResult pullResult = 
-						submoduleGitApi.pull().setCredentialsProvider(credentialsProvider).call();
-					if (!pullResult.isSuccessful()) {
-						throw new IllegalStateException(
-							String.format(
-							"Trying to get the latest commits for %1$s failed!", conflictingSubmodule));
-					}
-					
-					submoduleGitApi
-						.checkout()
-						.setName(ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH)
-						.setCreateBranch(false)
-						.call();
-					
-					submoduleGitApi.rebase().setUpstream(Constants.MASTER).call();
-				}
-				tries --;
-			}
-			
-			if (!foundTheirs) {
-				Logger.getLogger(this.getClass().getName()).severe(
-						String.format("Cannot resolve root conflict for submodule %1$s commit %2$s is missing!",
-						conflictingSubmodule, theirEntry.getObjectId().toString()));
-				throw new CommitMissingException(
-					"Failed to synchronize the Project because of a missing commit, "
-					+ "try again later or contact the system administrator!");
-			}
-		}
-	}
-	
-	@Override
+	@Deprecated
 	public void initAndUpdateSubmodules(CredentialsProvider credentialsProvider, Set<String> submodules) throws Exception {
 		
 		if (!isAttached()) {
@@ -1307,106 +915,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}		
 	}
 	
-	@Override
-	public void resolveGitSubmoduleFileConflicts() throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `resolveGitSubmoduleFileConflicts` on a detached instance");
-		}		
-		
-		DirCache dirCache = gitApi.getRepository().lockDirCache();
-		try {
-			int baseIdx = dirCache.findEntry(Constants.DOT_GIT_MODULES);
-
-			// get base version
-			DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
-
-			Set<String> baseModules = null;
-			Set<String> ourModules = null;
-			Set<String> theirModules = null;
-
-			Config ourConfig = null;
-			Config theirConfig = null;
-			
-			if (baseEntry.getStage() == DirCacheEntry.STAGE_1) {
-				// get our version
-				DirCacheEntry ourEntry = dirCache.getEntry(baseIdx+1);
-				// get their version, the being-merged in version
-				DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2);
-
-				
-				Config baseConfig = getDotGitModulesConfig(baseEntry.getObjectId());
-
-				ourConfig = getDotGitModulesConfig(ourEntry.getObjectId());
-
-				theirConfig = getDotGitModulesConfig(theirEntry.getObjectId());
-				
-				baseModules = baseConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
-				ourModules = ourConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
-				theirModules = theirConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
-				
-			}
-			else if (baseEntry.getStage() == DirCacheEntry.STAGE_2) { // no common ancestor
-				DirCacheEntry ourEntry = baseEntry;
-				DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+1);
-				
-				ourConfig = getDotGitModulesConfig(ourEntry.getObjectId());
-				theirConfig = getDotGitModulesConfig(theirEntry.getObjectId());
-				
-				baseModules = new HashSet<String>();
-				ourModules = ourConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
-				theirModules = theirConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
-			}
-			
-			for (String name : theirModules) {
-				if (!ourModules.contains(name)) {
-					if (baseModules.contains(name)) {
-						//deleted by us
-					}
-					else {
-						//added by them
-						
-						ourConfig.setString(
-							ConfigConstants.CONFIG_SUBMODULE_SECTION, name,
-							"path", 
-							theirConfig.getString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name, "path"));
-						ourConfig.setString(
-							ConfigConstants.CONFIG_SUBMODULE_SECTION, name,
-							"url", 
-							theirConfig.getString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name, "url"));
-					}
-				}
-			}
-			
-			for (String name : ourModules) {
-				if (!theirModules.contains(name)) {
-					if (baseModules.contains(name)) {
-						//deleted by them
-						ourConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, name);
-					}
-					else {
-						//added by us
-					}
-				}
-			}
-
-			dirCache.unlock();
-
-			add(
-				new File(this.gitApi.getRepository().getWorkTree(), Constants.DOT_GIT_MODULES), 
-				ourConfig.toText().getBytes("UTF-8"));
-			
-		}
-		catch (Exception e) {
-			try  {
-				dirCache.unlock();
-			}
-			catch (Exception e2) {
-				e2.printStackTrace();
-			}
-			throw new IOException("Failed to resolve root conflicts", e);
-		}		
-		
-	}
 	
 	private Config getDotGitModulesConfig(ObjectId objectId) throws Exception {
         ObjectLoader loader = gitApi.getRepository().open(objectId);
@@ -1416,52 +924,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
         config.fromText(content);
         return config;
 	}
-	
-	@Override
-	public void keepSubmodule(String relativeModulePath, String submoduleUri) throws Exception {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `keepSubmodule` on a detached instance");
-		}		
 		
-		// Save submodule URL to parent repository's config
-		StoredConfig config = gitApi.getRepository().getConfig();
-		config.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeModulePath,
-				ConfigConstants.CONFIG_KEY_URL, submoduleUri);
-		try {
-			config.save();
-		} catch (IOException e) {
-			throw new JGitInternalException(e.getMessage(), e);
-		}
-
-		// Save path and URL to parent repository's .gitmodules file
-		FileBasedConfig modulesConfig = new FileBasedConfig(new File(
-				gitApi.getRepository().getWorkTree(), Constants.DOT_GIT_MODULES), gitApi.getRepository().getFS());
-		try {
-			modulesConfig.load();
-			modulesConfig.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION,
-					relativeModulePath, ConfigConstants.CONFIG_KEY_PATH, relativeModulePath);
-			modulesConfig.setString(ConfigConstants.CONFIG_SUBMODULE_SECTION,
-					relativeModulePath, ConfigConstants.CONFIG_KEY_URL, submoduleUri);
-			modulesConfig.save();
-		} catch (IOException e) {
-			throw new JGitInternalException(e.getMessage(), e);
-		} catch (ConfigInvalidException e) {
-			throw new JGitInternalException(e.getMessage(), e);
-		}
-
-		AddCommand add = new AddCommand(gitApi.getRepository());
-		// Add .gitmodules file to parent repository's index
-		add.addFilepattern(Constants.DOT_GIT_MODULES);
-		// Add submodule directory to parent repository's index
-		add.addFilepattern(relativeModulePath);
-		try {
-			add.call();
-		} catch (NoFilepatternException e) {
-			throw new JGitInternalException(e.getMessage(), e);
-		}
-		
-	}
-	
 	@Override
 	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
 		List<CommitInfo> result = new ArrayList<>();

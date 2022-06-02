@@ -69,17 +69,6 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	String createGroup(String name, String path, String description) throws IOException;
 
 	/**
-	 * Gets the names of all repositories in the remote group identified by <code>path</code>.
-	 *
-	 * @param path the path of the group whose repository names you want to get
-	 * @return a {@link List<String>} of names
-	 * @throws IOException if something went wrong while fetching the repository
-	 *         names of the remote group
-	 */
-	@Deprecated
-	List<String> getGroupRepositoryNames(String path) throws IOException;
-
-	/**
 	 * Deletes an existing remote group identified by <code>path</code>.
 	 * <p>
 	 * NB: Also deletes any child repositories!

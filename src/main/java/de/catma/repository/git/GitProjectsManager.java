@@ -14,12 +14,10 @@ import com.google.common.eventbus.EventBus;
 import com.google.gson.JsonObject;
 
 import de.catma.backgroundservice.BackgroundService;
-import de.catma.project.ForkStatus;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
-import de.catma.project.conflict.ConflictedProject;
 import de.catma.rbac.RBACPermission;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -27,7 +25,6 @@ import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted.GroupSerializationField;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.tag.TagManager;
-import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 
@@ -268,57 +265,5 @@ public class GitProjectsManager implements ProjectsManager {
 		remoteGitServerManager.updateProject(
 			projectReference.getNamespace(), projectId, marshalledDescription);
 		
-	}
-	
-	@Override
-	public ForkStatus forkTagset(TagsetDefinition tagset, String sourceProjectId, ProjectReference targetProject) throws Exception {
-	
-		String targetProjectId = targetProject.getProjectId();
-		String tagsetId = tagset.getUuid();
-
-		cloneLocallyIfNotExists(targetProject, new OpenProjectListener() {
-			@Override
-			public void ready(Project project) {/** not used **/}
-			@Override
-			public void failure(Throwable t) {/** not used **/}
-			@Override
-			public void progress(String msg, Object... params) {logger.info(String.format(msg, params));}
-		});
-		
-		GitProjectHandler targetProjectHandler = new GitProjectHandler(
-				this.user, 
-				targetProject, 
-				Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
-					.resolve(user.getIdentifier())
-					.resolve(targetProject.getNamespace())
-					.resolve(targetProject.getProjectId())
-					.toFile(),
-				this.localGitRepositoryManager, 
-				this.remoteGitServerManager);
-		
-		if (targetProjectHandler.hasConflicts()) {
-			return ForkStatus.targetHasConflicts();
-		}
-		else if (targetProjectHandler.hasUncommittedChanges()) {
-			return ForkStatus.targetNotClean();
-		}
-		ForkStatus forkStatus = remoteGitServerManager.forkResource(tagsetId, sourceProjectId, targetProjectId);
-		
-		if (forkStatus.isSuccess()) {
-			targetProjectHandler.cloneAndAddTagset(
-					tagset.getUuid(), 
-					tagset.getName(),
-					String.format(
-							"Forked Tagset %1$s with ID %2$s from %3$s with ID %4$s", 
-							tagset.getName(), tagset.getUuid(),
-							targetProject.getName(),
-							targetProjectId));
-		}
-		else {
-			return forkStatus;
-		}
-		
-		
-		return ForkStatus.success();
 	}
 }

@@ -435,28 +435,6 @@ public class GitSourceDocumentHandlerTest {
 			jGitRepoManager.open(projectReference.getProjectId(), sourceDocumentUuid);
 			jGitRepoManager.push(new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword()));
 
-			String remoteUri = jGitRepoManager.getRemoteUrl(null);
-			jGitRepoManager.detach();
-
-			// open the project root repository
-			jGitRepoManager.open(
-					projectReference.getNamespace(), projectReference.getProjectId());
-
-			// create the submodule
-			File targetSubmodulePath = Paths.get(
-					jGitRepoManager.getRepositoryWorkTree().getAbsolutePath(),
-					DOCUMENTS_DIRECTORY_NAME,
-					sourceDocumentUuid
-			).toFile();
-
-			// submodule files and the changed .gitmodules file are automatically staged
-			jGitRepoManager.addSubmodule(
-					targetSubmodulePath,
-					remoteUri,
-					new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword())
-			);
-
-			jGitRepoManager.detach();
 
 			SourceDocument sourceDocument = gitSourceDocumentHandler.open(sourceDocumentUuid);
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
@@ -498,7 +476,7 @@ public class GitSourceDocumentHandlerTest {
 
 			assertEquals(
 					expectedSerializedSourceDocumentInfo,
-					FileUtils.readFileToString(new File(targetSubmodulePath, "header.json"), StandardCharsets.UTF_8)
+					FileUtils.readFileToString(new File("documents/"+sourceDocumentUuid, "header.json"), StandardCharsets.UTF_8)
 			);
 		}
 	}

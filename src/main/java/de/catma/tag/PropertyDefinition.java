@@ -134,18 +134,6 @@ public class PropertyDefinition {
 	public void setPossibleValueList(Collection<String> possibleValueList) {
 		this.possibleValueList = new ArrayList<>(possibleValueList);
 	}
-
-	/**
-	 * Replaces this definition with the given definition. (The {@link #getUuid() id}
-	 * and the {@link #getUuid() uuid} will not be overridden.
-	 * 
-	 * @param pd 
-	 */
-	@Deprecated
-	public void synchronizeWith(PropertyDefinition pd) {
-		this.name = pd.name;
-		this.setPossibleValueList(pd.possibleValueList);
-	}
 	
 	public boolean isSystemProperty() {
 		return SystemPropertyName.hasPropertyName(getName());
