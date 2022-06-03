@@ -2,9 +2,7 @@ package de.catma.rbac;
 
 import java.io.IOException;
 
-import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
-import de.catma.tag.TagsetDefinition;
 
 /**
  * Manages all access controls

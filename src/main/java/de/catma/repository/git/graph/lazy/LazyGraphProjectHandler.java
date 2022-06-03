@@ -34,7 +34,7 @@ import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.Indexer;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.CommentProvider;
-import de.catma.repository.git.graph.FileInfoProvider;
+import de.catma.repository.git.graph.DocumentFileURIProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -51,18 +51,24 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	private Logger logger = Logger.getLogger(LazyGraphProjectHandler.class.getName());
 	private ProjectReference projectReference;
 	private User user;
-	private FileInfoProvider fileInfoProvider;
+	private DocumentFileURIProvider fileInfoProvider;
 	private final CommentProvider commentProvider;
 	private TagManager tagManager;
 	private String revisionHash = "";
 	private Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
 	private LoadingCache<String, SourceDocument> documentCache;
 	private LoadingCache<String, AnnotationCollection> collectionCache;
+	private DocumentIndexSupplier documentIndexSupplier;
 
 	
-	public LazyGraphProjectHandler(ProjectReference projectReference, 
-			User user, FileInfoProvider fileInfoProvider, CommentProvider commentProvider,
-			final DocumentSupplier documentSupplier, final CollectionSupplier collectionSupplier) {
+	public LazyGraphProjectHandler(
+			ProjectReference projectReference, 
+			User user, 
+			final DocumentFileURIProvider fileInfoProvider, 
+			final CommentProvider commentProvider,
+			final DocumentSupplier documentSupplier, 
+			final DocumentIndexSupplier documentIndexSupplier,
+			final CollectionSupplier collectionSupplier) {
 		this.projectReference = projectReference;
 		this.user = user;
 		this.fileInfoProvider = fileInfoProvider;
@@ -84,6 +90,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 					return new SourceDocument(key, contentHandler);
 				}
 			});
+    	this.documentIndexSupplier = documentIndexSupplier;
 
     	this.collectionCache = 
     		CacheBuilder.newBuilder()
@@ -387,7 +394,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public Indexer createIndexer() {
 		return new LazyGraphProjectIndexer(
-				fileInfoProvider, commentProvider, 
+				commentProvider, 
 				(documentId) -> {
 					try {
 						return documentCache.get(documentId);
@@ -396,6 +403,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 						return null;
 					}
 				},
+				documentIndexSupplier,
 				(collectionId) -> {
 					try {
 						return collectionCache.get(collectionId);

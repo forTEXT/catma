@@ -13,7 +13,7 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.graph.FileInfoProvider;
+import de.catma.repository.git.graph.DocumentFileURIProvider;
 import de.catma.repository.git.graph.GraphProjectHandler.CollectionsSupplier;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
@@ -27,11 +27,11 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager,  Map<String, Sour
 	private final Supplier<List<TagsetDefinition>> tagsetsSupplier;
 	private final Supplier<List<SourceDocument>> documentsSupplier;
 	private final CollectionsSupplier collectionsSupplier;
-	private FileInfoProvider fileInfoProvider;
+	private DocumentFileURIProvider fileInfoProvider;
 	
 	public LoadJob(ProjectReference projectReference, String revisionHash, TagManager tagManager,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
-			CollectionsSupplier collectionsSupplier, FileInfoProvider fileInfoProvider) {
+			CollectionsSupplier collectionsSupplier, DocumentFileURIProvider fileInfoProvider) {
 		super();
 		this.projectReference = projectReference;
 		this.revisionHash = revisionHash;

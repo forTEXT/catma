@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Multimap;
@@ -38,7 +39,11 @@ public interface GraphProjectHandler {
 	interface DocumentSupplier {
 		SourceDocument get(String documentId) throws IOException;
 	}
-
+	
+	interface DocumentIndexSupplier {
+		Map get(String documentId) throws IOException;
+	}
+	
 	void ensureProjectRevisionIsLoaded(
 			ExecutionListener<TagManager> openProjectListener,
 			ProgressListener progressListener,

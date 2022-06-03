@@ -87,5 +87,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void revert(MergeResult mergeResult) throws IOException;
 
+	Set<String> getAdditiveBranchDifferences(String otherBranchName) throws IOException;
+
 
 }

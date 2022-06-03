@@ -59,11 +59,12 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.graph.CommentProvider;
-import de.catma.repository.git.graph.FileInfoProvider;
+import de.catma.repository.git.graph.DocumentFileURIProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
+import de.catma.repository.git.graph.GraphProjectHandler.CollectionSupplier;
+import de.catma.repository.git.graph.GraphProjectHandler.DocumentIndexSupplier;
 import de.catma.repository.git.graph.GraphProjectHandler.DocumentSupplier;
 import de.catma.repository.git.graph.lazy.LazyGraphProjectHandler;
-import de.catma.repository.git.graph.GraphProjectHandler.CollectionSupplier;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.TagsetDefinitionImportStatus;
@@ -129,12 +130,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			new LazyGraphProjectHandler(
 				this.projectReference, 
 				this.user,
-				new FileInfoProvider() {
-					
-					@Override
-					public Path getTokenizedSourceDocumentPath(String documentId) throws Exception {
-						return GraphWorktreeProject.this.getTokenizedSourceDocumentPath(documentId);
-					}
+				new DocumentFileURIProvider() {
 					
 					@Override
 					public URI getSourceDocumentFileURI(String documentId) throws Exception {
@@ -152,6 +148,14 @@ public class GraphWorktreeProject implements IndexedProject {
 					@Override
 					public SourceDocument get(String documentId) throws IOException {
 						return gitProjectHandler.getDocument(documentId);
+					}
+				},
+				new DocumentIndexSupplier() {
+					
+					@Override
+					public Map get(String documentId) throws IOException {
+						Path tokensPath = GraphWorktreeProject.this.getTokenizedSourceDocumentPath(documentId);
+						return gitProjectHandler.getDocumentIndex(documentId, tokensPath);
 					}
 				},
 				new CollectionSupplier() {
@@ -826,7 +830,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void delete(SourceDocumentReference sourceDocumentRef) throws Exception {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.removeDocument(sourceDocumentRef);
-		
+		// TODO: remove/close all participating comments
 		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocumentRef.getUserMarkupCollectionRefs())) {
 			graphProjectHandler.removeCollection(this.rootRevisionHash, collectionRef, oldRootRevisionHash);	
 			
@@ -835,7 +839,6 @@ public class GraphWorktreeProject implements IndexedProject {
 					collectionRef, sourceDocumentRef, ChangeType.DELETED));
 		}
 		
-//		documentCache.invalidate(sourceDocumentRef.getUuid());
 		
 		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
 		

@@ -18,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.DiffCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
@@ -35,24 +36,28 @@ import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.diff.DiffEntry.Side;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.merge.ThreeWayMerger;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.FS;
 
 import de.catma.project.CommitInfo;
@@ -742,6 +747,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				checkoutCommand.setName(name).call();
 				
 				if (createBranch) {
+					try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
+						ObjectId commitId = this.gitApi.getRepository().resolve("refs/heads/"+Constants.MASTER);
+						RevCommit commit = revWalk.parseCommit(commitId);
+						checkoutCommand.setStartPoint(commit);
+					}
 					StoredConfig config = this.gitApi.getRepository().getConfig();
 					config.setString(
 							ConfigConstants.CONFIG_BRANCH_SECTION, name, 
@@ -1010,5 +1020,51 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		catch (GitAPIException e) {
 			throw new IOException("Could not revert conflicted merge!", e);
 		}
+	}
+	
+	@Override
+	public Set<String> getAdditiveBranchDifferences(String otherBranchName) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getBranchDifferences` on a detached instance");
+		}		
+		
+		checkout(username, true);  // the user branch has to be present at this point
+		
+		DiffCommand diffCommand = this.gitApi.diff();
+		
+		ObjectId thisUserBranchHeadRevisionTree = 
+				this.gitApi.getRepository().resolve("refs/heads/" + username + "^{tree}");
+		ObjectId otherBranchRevisionTree = 
+				this.gitApi.getRepository().resolve("refs/remotes/origin/" + otherBranchName + "^{tree}");
+			
+		Set<String> paths = new HashSet<String>();
+
+		if (thisUserBranchHeadRevisionTree != null && otherBranchRevisionTree != null) {
+			
+			ObjectReader reader = this.gitApi.getRepository().newObjectReader();
+			
+            CanonicalTreeParser thisUserBranchHeadRevisionTreeParser = 
+            		new CanonicalTreeParser();
+            thisUserBranchHeadRevisionTreeParser.reset(reader, thisUserBranchHeadRevisionTree);
+            
+            CanonicalTreeParser otherBranchRevisionTreeParser = new CanonicalTreeParser();
+            otherBranchRevisionTreeParser.reset(reader, otherBranchRevisionTree);
+
+			diffCommand.setOldTree(thisUserBranchHeadRevisionTreeParser);
+			diffCommand.setNewTree(otherBranchRevisionTreeParser);
+			
+			try {
+				List<DiffEntry> result = diffCommand.call();
+				for (DiffEntry diffEntry : result) {
+					if (!diffEntry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
+						System.out.println(diffEntry);
+						paths.add(diffEntry.getNewPath());
+					}
+				}
+			} catch (GitAPIException e) {
+				throw new IOException("Could not get git log info!", e);
+			}
+		}
+		return paths;
 	}
 }

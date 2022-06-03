@@ -244,4 +244,16 @@ public class TagDefinition {
 	Stream<TagDefinition> directChildrenStream(TagsetDefinition tagset) {
 		return Stream.concat(Stream.of(this), tagset.getDirectChildren(this).stream().flatMap(child -> child.directChildrenStream(tagset)));
 	}
+
+	public void mergeAdditive(TagDefinition tag) {
+		for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
+			if (!this.userDefinedPropertyDefinitions.containsKey(propertyDef.getUuid())) {
+				tag.addUserDefinedPropertyDefinition(propertyDef);
+			}
+			
+			// we do not alter the list of possible values for already exising PropertyDefinitions
+			// because we expect to be in readonly mode anyway and possible values
+			// are only relevant for adding new Annotations 
+		}
+	}
 }

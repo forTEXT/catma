@@ -344,5 +344,18 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 		}
 		return true; //shared repsonsibility
 	}
+
+	public void mergeAdditive(TagsetDefinition tagset) {
+		
+		for (TagDefinition tag: tagset) {
+			if (hasTagDefinition(tag.getUuid())) {
+				getTagDefinition(tag.getUuid()).mergeAdditive(tag);
+			}
+			else {
+				addTagDefinition(tag);
+			}
+		}
+		
+	}
 	
 }

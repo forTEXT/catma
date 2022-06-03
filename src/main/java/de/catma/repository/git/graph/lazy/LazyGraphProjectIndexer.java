@@ -1,7 +1,6 @@
 package de.catma.repository.git.graph.lazy;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,7 +18,6 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 
 import com.google.common.cache.CacheBuilder;
@@ -27,7 +25,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.gson.Gson;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
@@ -50,7 +47,8 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.repository.git.graph.CommentProvider;
-import de.catma.repository.git.graph.FileInfoProvider;
+import de.catma.repository.git.graph.DocumentFileURIProvider;
+import de.catma.repository.git.graph.GraphProjectHandler.DocumentIndexSupplier;
 import de.catma.repository.git.graph.GraphProjectHandler.DocumentSupplier;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
@@ -64,17 +62,19 @@ import de.catma.util.Pair;
 public class LazyGraphProjectIndexer implements Indexer {
 	private final Logger logger = Logger.getLogger(LazyGraphProjectIndexer.class.getName());
 	private final CommentProvider commentProvider;
-	private FileInfoProvider fileInfoProvider;
 	private Function<String, AnnotationCollection> collectionSupplier;
 	private LoadingCache<String, Set<Term>> documentIndexCache;
 	private Supplier<TagLibrary> tagLibrarySupplier;
-	private IDGenerator idGenerator = new IDGenerator();	
+	private IDGenerator idGenerator = new IDGenerator();
+	private DocumentIndexSupplier documentIndexSupplier;	
 
-	public LazyGraphProjectIndexer(FileInfoProvider fileInfoProvider, CommentProvider commentProvider,
-			final DocumentSupplier documentSupplier, final Function<String, AnnotationCollection> collectionSupplier, 
+	public LazyGraphProjectIndexer(CommentProvider commentProvider,
+			final DocumentSupplier documentSupplier,
+			final DocumentIndexSupplier documentIndexSupplier,
+			final Function<String, AnnotationCollection> collectionSupplier, 
 			final Supplier<TagLibrary> tagLibrarySupplier) {
 		super();
-		this.fileInfoProvider = fileInfoProvider;
+		this.documentIndexSupplier = documentIndexSupplier;
 		this.commentProvider = commentProvider;
 		this.collectionSupplier = collectionSupplier;
 		this.tagLibrarySupplier = tagLibrarySupplier;
@@ -94,12 +94,10 @@ public class LazyGraphProjectIndexer implements Indexer {
 	@SuppressWarnings({ "rawtypes" })
 	private Set<Term> loadDocumentIndex(String documentId) throws Exception {
 		Set<Term> terms = new HashSet<>();
-		
-		Path tokensPath = fileInfoProvider.getTokenizedSourceDocumentPath(documentId);
-		Map content = new Gson().fromJson(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"), Map.class);
+		Map documentIndexContent = this.documentIndexSupplier.get(documentId);
 		
 		Map<Integer, Position> adjacencyMap = new HashMap<>();
-		for (Object entry : content.entrySet()) {
+		for (Object entry : documentIndexContent.entrySet()) {
 			
 			String literal = (String)((Map.Entry)entry).getKey();
 			List positionList = (List)((Map.Entry)entry).getValue();
