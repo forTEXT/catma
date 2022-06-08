@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -1023,6 +1024,20 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
+	public List<String> getRemoteBranches() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getRemoteBranches` on a detached instance");
+		}		
+		try {
+			List<Ref> branches = 
+					this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
+			return branches.stream().map(ref -> ref.getName()).collect(Collectors.toList());
+		} catch (GitAPIException e) {
+			throw new IOException("Could not retrieve remote branches", e);
+		}
+	}
+	
+	@Override
 	public Set<String> getAdditiveBranchDifferences(String otherBranchName) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getBranchDifferences` on a detached instance");
@@ -1035,7 +1050,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		ObjectId thisUserBranchHeadRevisionTree = 
 				this.gitApi.getRepository().resolve("refs/heads/" + username + "^{tree}");
 		ObjectId otherBranchRevisionTree = 
-				this.gitApi.getRepository().resolve("refs/remotes/origin/" + otherBranchName + "^{tree}");
+				this.gitApi.getRepository().resolve(otherBranchName + "^{tree}");
 			
 		Set<String> paths = new HashSet<String>();
 

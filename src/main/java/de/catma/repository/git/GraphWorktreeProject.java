@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import org.apache.tika.mime.MediaType;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.transport.CredentialsProvider;
 
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
@@ -65,6 +66,8 @@ import de.catma.repository.git.graph.GraphProjectHandler.CollectionSupplier;
 import de.catma.repository.git.graph.GraphProjectHandler.DocumentIndexSupplier;
 import de.catma.repository.git.graph.GraphProjectHandler.DocumentSupplier;
 import de.catma.repository.git.graph.lazy.LazyGraphProjectHandler;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.TagsetDefinitionImportStatus;
@@ -1437,5 +1440,88 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public String toString() {
 		return this.projectReference.toString();
+	}
+	
+	@Override
+	public void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception {
+		if (hasUncommittedChanges()) {
+			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
+		}
+
+		if (gitProjectHandler.hasConflicts()) {
+			openProjectListener.failure(new IllegalStateException(
+					String.format(
+						"There are conflicts in Project %1$s with ID %2$s,"
+						+ "please contact our support.",
+						projectReference.getName(),
+						projectReference.getProjectId())));						
+		}
+		else {
+			gitProjectHandler.ensureUserBranch();
+
+			Set<Member> members = gitProjectHandler.getProjectMembers();
+			List<String> possibleBranches =
+					members.stream()
+					.filter(member -> !member.getIdentifier().equals(getUser().getIdentifier()))
+					.map(member -> "refs/remotes/origin/" + member.getIdentifier())
+					.collect(Collectors.toList());
+			
+			if (enabled) {
+				Set<LatestContribution> latestContributions = 
+						gitProjectHandler.getLatestContributions(possibleBranches);
+	
+				gitProjectHandler.setResourceProvider(
+						(projectId, projectReference, projectPath, 
+								localGitRepositoryManager, remoteGitServerManager, 
+								credentialsProvider) -> new LatestContributionsResourceProvider(
+						projectId, projectReference, 
+						projectPath, 
+						localGitRepositoryManager, 
+						remoteGitServerManager, 
+						credentialsProvider, 
+						latestContributions));
+			}
+			else {
+				gitProjectHandler.setResourceProvider(
+						(projectId, projectReference,projectPath, 
+								localGitRepositoryManager, remoteGitServerManager, 
+								credentialsProvider) -> new SynchronizedResourceProvider(
+							projectId, projectReference, 
+							projectPath, 
+							localGitRepositoryManager, 
+							remoteGitServerManager, 
+							credentialsProvider));
+	
+			}
+			ProgressListener progressListener = new ProgressListener() {
+				@Override
+				public void setProgress(String value, Object... args) {
+					openProjectListener.progress(value, args);
+				}
+			};
+
+			graphProjectHandler.ensureProjectRevisionIsLoaded(
+					new ExecutionListener<TagManager>() {
+						@Override
+						public void error(Throwable t) {
+							openProjectListener.failure(t);
+						}
+
+						@Override
+						public void done(TagManager result) {
+							tagManager.load(result.getTagLibrary());
+							openProjectListener.ready(GraphWorktreeProject.this);
+						}
+					},
+					progressListener,
+					rootRevisionHash,
+					tagManager,
+					() -> gitProjectHandler.getTagsets(),
+					() -> gitProjectHandler.getDocuments(),
+					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener, true),
+					true,
+					backgroundService
+			);
+		}		
 	}
 }

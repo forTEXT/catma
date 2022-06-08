@@ -337,6 +337,18 @@ public class GitAnnotationCollectionHandler {
 		return tagReferences;
 	}
 
+	public boolean collectionExists(String collectionId) {
+		String collectionSubdir = String.format(
+				"%s/%s", GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, collectionId
+		);
+		File markupCollectionHeaderFile = Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				collectionSubdir,
+				HEADER_FILE_NAME
+		).toFile();
+
+		return markupCollectionHeaderFile.exists(); 
+	}
 
 	public AnnotationCollectionReference getCollectionReference(String collectionId) throws IOException {
 		

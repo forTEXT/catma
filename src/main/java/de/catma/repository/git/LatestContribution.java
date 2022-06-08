@@ -43,4 +43,9 @@ public class LatestContribution {
 		this.tagsetIds.add(tagsetId);
 	}
 
+	public boolean isEmpty() {
+		return this.collectionIds.isEmpty() 
+				&& this.documentIds.isEmpty() 
+				&& this.tagsetIds.isEmpty();
+	}
 }

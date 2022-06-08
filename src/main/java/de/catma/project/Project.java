@@ -290,4 +290,6 @@ public interface Project {
 
 	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentID) throws Exception;
 
+	public void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception;
+
 }

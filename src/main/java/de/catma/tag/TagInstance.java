@@ -18,11 +18,14 @@
  */
 package de.catma.tag;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
+import com.google.common.collect.Lists;
 
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.util.IDGenerator;
@@ -186,5 +189,24 @@ public class TagInstance {
 	
 	public void setPageFilename(String pageFilename) {
 		this.pageFilename = pageFilename;
+	}
+
+	public void mergeAdditive(TagInstance tagInstance) {
+		for (Property property : tagInstance.getUserDefinedProperties()) {
+			if (userDefinedProperties.containsKey(property.getPropertyDefinitionId())) {
+				Property existingProperty = userDefinedProperties.get(property.getPropertyDefinitionId());
+				ArrayList<String> values = new ArrayList<>(existingProperty.getPropertyValueList());
+				for (String value : property.getPropertyValueList()) {
+					if (!values.contains(value)) {
+						values.add(value);
+					}
+				}
+				existingProperty.setPropertyValueList(values);
+			}
+			else {
+				addUserDefinedProperty(property);
+			}
+		}
+		
 	}
 }

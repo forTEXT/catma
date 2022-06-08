@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -291,7 +292,11 @@ public class GitProjectHandler {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
-			
+			List<String> availableBranches = localGitRepoManager.getRemoteBranches();
+			branches = branches
+					.stream()
+					.filter(branch -> availableBranches.contains(branch))
+					.collect(Collectors.toList());
 			for (String branch : branches) {
 				Set<String> modifiedOrAddedPaths = 
 					localGitRepoManager.getAdditiveBranchDifferences(branch);
@@ -321,6 +326,10 @@ public class GitProjectHandler {
 											TAGSETS_DIRECTORY_NAME.length()+1)));
 					}
 
+				}
+				
+				if (!latestContribution.isEmpty()) {
+					latestContributions.add(latestContribution);
 				}
 			}
 		
@@ -976,9 +985,13 @@ public class GitProjectHandler {
 		}
 	}
 
-
 	public Map getDocumentIndex(String documentId, Path tokensPath) throws IOException {
 		return new Gson().fromJson(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"), Map.class);
 	}
 
+	public void setResourceProvider(IGitProjectResourceProviderFactory resourceProviderFactory) {
+		this.resourceProvider = resourceProviderFactory.createResourceProvider(
+				projectId, projectReference, projectPath, 
+				localGitRepositoryManager, remoteGitServerManager, credentialsProvider);
+	}
 }

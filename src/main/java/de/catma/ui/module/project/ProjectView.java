@@ -194,6 +194,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private final ProgressListener progressListener;
 	private MenuItem miToggleResponsibiltityFilter;
 	private Map<String, Member> membersByIdentfier;
+	private IconButton btSynchLatestContribToggle;
 
     public ProjectView(
     		ProjectsManager projectManager, 
@@ -446,9 +447,85 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         tagsetGrid.addItemClickListener(clickEvent -> handleTagsetClick(clickEvent));
         
+        btSynchLatestContribToggle.addClickListener(event -> handleBtSynchLatestContribToggle(event));
         
 	}
 	
+	private void handleBtSynchLatestContribToggle(ClickEvent event) {
+		boolean latestContribView = !(Boolean)btSynchLatestContribToggle.getData();
+
+    	try {
+    		setEnabled(false);
+    		
+	    	if (latestContribView && project.hasUncommittedChanges()) {
+	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
+	    			"Commit all changes", 
+	    			"You have uncommitted changes, please enter a short description for this commit:", 
+	    			commitMsg -> {
+	    				try {
+		    				project.commitAndPushChanges(commitMsg);
+		    				setLatestContributionView(latestContribView);
+	    				}
+	    				catch (Exception e) {
+	    					setEnabled(true);
+	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
+	    				}
+	    			});
+	    		dlg.show();
+	    	}
+	    	else {
+				setLatestContributionView(latestContribView);
+	    	}
+    	}
+    	catch (Exception e) {
+            errorHandler.showAndLogError("error accessing project", e);
+    	}	
+	}
+
+	private void setLatestContributionView(boolean latestContribView) throws Exception {
+		btSynchLatestContribToggle.setData(latestContribView);
+		btSynchLatestContribToggle.setIcon(latestContribView?VaadinIcons.CUBES:VaadinIcons.CUBE);
+
+    	setProgressBarVisible(true);
+    	
+    	final UI ui = UI.getCurrent();
+    	
+		project.setLatestContributionView(latestContribView, new OpenProjectListener() {
+
+            @Override
+            public void progress(String msg, Object... params) {
+            	ui.access(() -> {
+	            	if (params != null) {
+	            		progressBar.setCaption(String.format(msg, params));
+	            	}
+	            	else {
+	            		progressBar.setCaption(msg);
+	            	}
+	            	ui.push();
+            	});
+            }
+
+            @Override
+            public void ready(Project project) {
+            	setProgressBarVisible(false);
+            	reloadAll();
+            	setEnabled(true);
+				Notification.show(
+    					"Info", 
+    					"Your Project has been synchronized!", 
+    					Type.HUMANIZED_MESSAGE);		    						
+				checkForUnsynchronizedCommits();
+            }
+            
+            @Override
+            public void failure(Throwable t) {
+            	setProgressBarVisible(false);
+            	setEnabled(true);
+                errorHandler.showAndLogError("error opening project", t);
+            }
+        });
+	}
+
 	private void toggleResponsibilityFilter() {
 
 		documentGrid.getColumn(DocumentGridColumn.RESPONSIBLE.name()).setHidden(
@@ -1397,6 +1474,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         getHugeCardBar().addComponentBeforeMoreOptions(btSynchBell);
         btSynchBell.setVisible(false);
         
+        btSynchLatestContribToggle = new IconButton(VaadinIcons.CUBE);
+        btSynchLatestContribToggle.setData(false);
+        getHugeCardBar().addComponentBeforeMoreOptions(btSynchLatestContribToggle);
+        //TODO: set visibility according to project role
     }
 
     private void handleProjectInvitationRequest() {

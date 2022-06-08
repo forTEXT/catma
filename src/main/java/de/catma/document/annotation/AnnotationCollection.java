@@ -356,5 +356,23 @@ public class AnnotationCollection {
 		return tagReferencesByInstanceId;
 
 	}
+
+	public void mergeAdditive(AnnotationCollection collection) {
+		Set<TagInstance> toBeMerged = new HashSet<TagInstance>();
+		for (TagReference reference : collection.getTagReferences()) {
+			if (!hasTagInstance(reference.getTagInstanceId())) {
+				addTagReference(reference);
+			}
+			else {
+				toBeMerged.add(reference.getTagInstance());
+			}
+		}
+		
+		for (TagInstance tagInstance : toBeMerged) {
+			tagReferencesByInstanceId.get(
+					tagInstance.getUuid()).get(0).getTagInstance().mergeAdditive(tagInstance);
+		}
+		
+	}
 	
 }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.logging.Logger;
 
 import org.eclipse.jgit.transport.CredentialsProvider;
 
+import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.ArrayListMultimap;
 
 import de.catma.backgroundservice.ProgressListener;
@@ -33,8 +35,10 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 	private final File projectPath;
 
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private ArrayListMultimap<String, String> latestDocumentContributions;
+	
 	private final Set<LatestContribution> latestContributions;
+	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	
 	
 	
 	public LatestContributionsResourceProvider(String projectId, ProjectReference projectReference,
@@ -48,25 +52,21 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 		this.projectPath = projectPath;
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
-		this.credentialsProvider = credentialsProvider;
 		this.latestContributions = latestContributions;
 	}
-
-	private final IRemoteGitManagerRestricted remoteGitServerManager;
-	private final CredentialsProvider credentialsProvider;
 
 	
 
 	@Override
 	public List<TagsetDefinition> getTagsets() {
-		ArrayList<TagsetDefinition> result = new ArrayList<>();
+		Map<String, TagsetDefinition> tagsetsById = new HashMap<>();
 		File tagsetsDir = Paths.get(
 				this.projectPath.getAbsolutePath(),
 				GitProjectHandler.TAGSETS_DIRECTORY_NAME)
 			.toFile();
 		
 		if (!tagsetsDir.exists()) {
-			return result;
+			return new ArrayList<>(tagsetsById.values());
 		}
 		
 		File[] tagsetDirs = tagsetsDir.listFiles(file -> file.isDirectory());			
@@ -78,13 +78,11 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 					this.remoteGitServerManager.getUsername(),
 					this.remoteGitServerManager.getEmail());
 		
-		Map<String, TagsetDefinition> tagsetsById = new HashMap<>();
 		
 		for (File tagsetDir : tagsetDirs) {
 			try {
 				String tagsetId = tagsetDir.getName();
 				TagsetDefinition tagset = gitTagsetHandler.getTagset(tagsetId);						 
-				result.add(tagset);
 				tagsetsById.put(tagset.getUuid(), tagset);
 			}
 			catch (Exception e) {
@@ -105,25 +103,48 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 				if (!latestContribution.getTagsetIds().isEmpty()) {
 					localGitRepManager.checkout(latestContribution.getBranch(), false);
 					for (String tagsetId : latestContribution.getTagsetIds()) {
-						TagsetDefinition tagset = 
-								gitTagsetHandler.getTagset(tagsetId);
-						
-						if (tagsetsById.containsKey(tagset.getUuid())) {
-							tagsetsById.get(tagset.getUuid()).mergeAdditive(tagset);
+						try {
+							TagsetDefinition tagset = 
+									gitTagsetHandler.getTagset(tagsetId);
+							
+							if (tagsetsById.containsKey(tagset.getUuid())) {
+								tagsetsById.get(tagset.getUuid()).mergeAdditive(tagset);
+							}
+							else {
+								tagsetsById.put(tagset.getUuid(), tagset);
+							}
 						}
-						else {
-							tagsetsById.put(tagset.getUuid(), tagset);
+						catch (IOException e) {
+							logger.log(
+									Level.SEVERE,
+									String.format(
+										"error loading latest contributions for"
+										+ "Tagset %1$s for project %2$s branch %3$s",
+										tagsetId,
+										projectId,
+										latestContribution.getBranch()), 
+									e);
+							
 						}
 					}
 				}
 			}
-			
+			localGitRepManager.checkout(
+					remoteGitServerManager.getUsername(), false);
+
 		}
 		catch (IOException e) {
-			e.printStackTrace();
-			//TODO: handle e
+			logger.log(
+					Level.SEVERE,
+					String.format(
+						"error loading latest contributions for"
+						+ "project %1$s",
+						projectId), 
+					e);
+			
 		}
-		return result;
+		
+		return new ArrayList<>(tagsetsById.values());
 	}
 
 
@@ -151,12 +172,14 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 						this.remoteGitServerManager.getUsername(),
 						this.remoteGitServerManager.getEmail()
 		);
-
+		Set<String> collectionIds = new HashSet<>();
+		
 		for (File collectionDir : collectionDirs) {
 			String collectionId = collectionDir.getName();
 			try {
 				collectionReferences.add(
 					gitMarkupCollectionHandler.getCollectionReference(collectionId));
+				collectionIds.add(collectionId);
 			} catch (Exception e) {
 				logger.log(
 				Level.SEVERE, 
@@ -169,7 +192,48 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 			}
 		}
 		
-		//TODO: integrate collections from latest contributions, headers only!
+		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
+			for (LatestContribution latestContribution : latestContributions) {
+				if (!latestContribution.getCollectionIds().isEmpty()) {
+					localGitRepManager.checkout(latestContribution.getBranch(), false);
+					for (String collectionId : latestContribution.getCollectionIds()) {
+						try {
+							if (!collectionIds.contains(collectionId)) {
+								collectionReferences.add(gitMarkupCollectionHandler.getCollectionReference(collectionId));
+								collectionIds.add(collectionId);
+							}
+						}
+						catch (IOException e) {
+							logger.log(
+									Level.SEVERE,
+									String.format(
+										"error loading latest contributions for"
+										+ "Annotation Collection %1$s for project %2$s branch %3$s",
+										collectionId,
+										projectId,
+										latestContribution.getBranch()), 
+									e);
+							
+						}
+					}
+				}
+			}
+			localGitRepManager.checkout(
+					remoteGitServerManager.getUsername(), false);
+
+		}
+		catch (IOException e) {
+			logger.log(
+					Level.SEVERE,
+					String.format(
+						"error loading latest contributions for"
+						+ "project %1$s",
+						projectId), 
+					e);
+			
+		}
+
 		
 		return collectionReferences;
 	}
@@ -179,14 +243,14 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 			TagLibrary tagLibrary, ProgressListener progressListener, 
 			boolean withOrphansHandling) throws IOException {
 		
-		ArrayList<AnnotationCollection> collections = new ArrayList<>();
+		Map<String, AnnotationCollection> collectionsById = Maps.newHashMap();
 		File collectionsDir = Paths.get(
 				this.projectPath.getAbsolutePath(),
 				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME)
 			.toFile();
 		
 		if (!collectionsDir.exists()) {
-			return collections;
+			return new ArrayList<>(collectionsById.values());
 		}
 		
 		File[] collectionDirs = 
@@ -204,12 +268,15 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 		for (File collectionDir : collectionDirs) {
 			String collectionId = collectionDir.getName();
 			try {
-				collections.add(
-					gitMarkupCollectionHandler.getCollection(
-							collectionId, 
-							tagLibrary, 
-							progressListener,
-							withOrphansHandling));
+				AnnotationCollection collection = 
+						gitMarkupCollectionHandler.getCollection(
+								collectionId, 
+								tagLibrary, 
+								progressListener,
+								false);
+
+				collectionsById.put(collectionId, collection);
+				
 			} catch (Exception e) {
 				logger.log(
 				Level.SEVERE, 
@@ -221,25 +288,58 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 				 
 			}
 		}
-		
-		if (withOrphansHandling) {
-			try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-				localRepoManager.open(this.projectReference.getNamespace(), this.projectId);
-				if (localRepoManager.hasUncommitedChanges() || localRepoManager.hasUntrackedChanges()) {
-					localRepoManager.addAllAndCommit(
-							String.format(
-								"Auto committing removal of orphan Annotations "
-								+ "and orphan Properties for Project %1$s", this.projectId),
-							this.remoteGitServerManager.getUsername(), 
-							this.remoteGitServerManager.getEmail(), 
-							false);
-					localRepoManager.push(credentialsProvider);
+
+		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
+			for (LatestContribution latestContribution : latestContributions) {
+				if (!latestContribution.getCollectionIds().isEmpty()) {
+					localGitRepManager.checkout(latestContribution.getBranch(), false);
+					for (String collectionId : latestContribution.getCollectionIds()) {
+						try {
+							AnnotationCollection collection = gitMarkupCollectionHandler.getCollection(
+									collectionId, 
+									tagLibrary, 
+									progressListener,
+									false);
+							
+							if (collectionsById.containsKey(collectionId)) {
+								collectionsById.get(collectionId).mergeAdditive(collection);
+							}
+							else {
+								collectionsById.put(collectionId, collection);
+							}
+						}
+						catch (IOException e) {
+							logger.log(
+									Level.SEVERE,
+									String.format(
+										"error loading latest contributions for"
+										+ "Annotation Collection %1$s for project %2$s branch %3$s",
+										collectionId,
+										projectId,
+										latestContribution.getBranch()), 
+									e);
+							
+						}
+					}
 				}
 			}
-		}		
+			localGitRepManager.checkout(
+					remoteGitServerManager.getUsername(), false);
+
+		}
+		catch (IOException e) {
+			logger.log(
+					Level.SEVERE,
+					String.format(
+						"error loading latest contributions for"
+						+ "project %1$s",
+						projectId), 
+					e);
+			
+		}
 		
-		// TODO: integrate collections from latest contributions
-		return collections;
+		return new ArrayList<>(collectionsById.values());
 	}	
 	
 	@Override
@@ -255,27 +355,92 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 						this.remoteGitServerManager.getEmail()
 		);
 
-		// TODO: integrate collections from latest contributions
 
-		return gitMarkupCollectionHandler.getCollection(
-				collectionId, 
-				tagLibrary, 
-				new ProgressListener() {
-					
-					@Override
-					public void setProgress(String value, Object... args) {
-						logger.info(
-							String.format(
-									"Loading AnnotationCollection with %1$s: %2$s", 
-									collectionId, 
-									String.format(value, args)));
+		AnnotationCollection collection = null;
+		if (gitMarkupCollectionHandler.collectionExists(collectionId)) {
+			collection = gitMarkupCollectionHandler.getCollection(
+					collectionId, 
+					tagLibrary, 
+					new ProgressListener() {
+						
+						@Override
+						public void setProgress(String value, Object... args) {
+							logger.info(
+								String.format(
+										"Loading AnnotationCollection with %1$s: %2$s", 
+										collectionId, 
+										String.format(value, args)));
+						}
+					},
+					false);
+		}
+		
+		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
+			for (LatestContribution latestContribution : latestContributions) {
+				if (latestContribution.getCollectionIds().contains(collectionId)) {
+					localGitRepManager.checkout(latestContribution.getBranch(), false);
+					try {
+						AnnotationCollection contribution = gitMarkupCollectionHandler.getCollection(
+								collectionId, 
+								tagLibrary, 
+								new ProgressListener() {
+									
+									@Override
+									public void setProgress(String value, Object... args) {
+										logger.info(
+											String.format(
+													"Loading contributions from %1$s for AnnotationCollection with %2$s: %3$s",
+													latestContribution.getBranch(),
+													collectionId, 
+													String.format(value, args)));
+									}
+								},
+								false);
+						
+						if (collection != null) {							
+							collection.mergeAdditive(contribution);
+						}
+						else {
+							collection = contribution;
+						}
 					}
-				},
-				false);
+					catch (IOException e) {
+						logger.log(
+								Level.SEVERE,
+								String.format(
+									"error loading latest contributions for"
+									+ "Annotation Collection %1$s for project %2$s branch %3$s",
+									collectionId,
+									projectId,
+									latestContribution.getBranch()), 
+								e);
+						
+					}
+				}
+			}
+			localGitRepManager.checkout(
+					remoteGitServerManager.getUsername(), false);
+
+		}
+		catch (IOException e) {
+			logger.log(
+					Level.SEVERE,
+					String.format(
+						"error loading latest contributions for"
+						+ "project %1$s",
+						projectId), 
+					e);
+			
+		}
+
+		
+		return collection;
 	}
+	
 	@Override
 	public List<SourceDocument> getDocuments() {
-		ArrayList<SourceDocument> documents = new ArrayList<>();
+		Map<String, SourceDocument> documentsById = Maps.newHashMap();
 		
 		File documentsDir = Paths.get(
 				this.projectPath.getAbsolutePath(),
@@ -283,7 +448,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 			.toFile();
 		
 		if (!documentsDir.exists()) {
-			return documents;
+			return new ArrayList<>(0);
 		}
 
 		File[] documentDirs = 
@@ -298,7 +463,8 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 		for (File documentDir : documentDirs) {
 			String sourceDocumentId = documentDir.getName().toString();
 			try {
-				documents.add(gitSourceDocumentHandler.open(sourceDocumentId));
+				documentsById.put(
+						sourceDocumentId, gitSourceDocumentHandler.open(sourceDocumentId));
 			} catch (Exception e) {
 				logger.log(
 					Level.SEVERE,
@@ -310,9 +476,62 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 			}
 		}
 		
-		// TODO: integrate collections from latest contributions, if necessary
+		
+		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
+			for (LatestContribution latestContribution : latestContributions) {
+				if (!latestContribution.getDocumentIds().isEmpty()) {
+					localGitRepManager.checkout(latestContribution.getBranch(), false);
+					for (String documentId : latestContribution.getDocumentIds()) {
+						try {
+							SourceDocument document = 
+									gitSourceDocumentHandler.open(documentId);
+							
+							if (documentsById.containsKey(document.getUuid())) {
+								documentsById.put(document.getUuid(), document);
+							}
+							
+							
+							document.setSourceContentHandler(
+								new BranchAwareSourceContentHandler(
+										this.localGitRepositoryManager, 
+										this.remoteGitServerManager.getUsername(),
+										this.projectReference,
+										latestContribution.getBranch(),
+										document.getSourceContentHandler()));
+							
+						}
+						catch (IOException e) {
+							logger.log(
+									Level.SEVERE,
+									String.format(
+										"error loading latest contributions for"
+										+ "Document %1$s for project %2$s branch %3$s",
+										documentId,
+										projectId,
+										latestContribution.getBranch()), 
+									e);
+							
+						}
+					}
+				}
+			}
+			localGitRepManager.checkout(
+					remoteGitServerManager.getUsername(), false);
 
-		return documents;
+		}
+		catch (IOException e) {
+			logger.log(
+					Level.SEVERE,
+					String.format(
+						"error loading latest contributions for"
+						+ "project %1$s",
+						projectId), 
+					e);
+			
+		}
+		
+		return new ArrayList<SourceDocument>(documentsById.values());
 	}
 	
 	@Override
@@ -323,8 +542,29 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 				this.remoteGitServerManager.getUsername(),
 				this.remoteGitServerManager.getEmail());
 
-		// TODO: change branch from latest contributions, if necessary
+		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
+			for (LatestContribution latestContribution : latestContributions) {
+				if (latestContribution.getDocumentIds().contains(documentId)) {
+					localGitRepManager.checkout(latestContribution.getBranch(), false);
+					SourceDocument document = 
+							gitSourceDocumentHandler.open(documentId);
+					
+					document.setSourceContentHandler(
+						new BranchAwareSourceContentHandler(
+								this.localGitRepositoryManager, 
+								this.remoteGitServerManager.getUsername(),
+								this.projectReference,
+								latestContribution.getBranch(),
+								document.getSourceContentHandler()));
 
+					localGitRepManager.checkout(
+							remoteGitServerManager.getUsername(), false);
+					
+					return document;
+				}
+			}
+		}
 		return gitSourceDocumentHandler.open(documentId);
 	}
 }
