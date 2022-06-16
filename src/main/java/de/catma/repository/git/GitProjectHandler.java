@@ -292,6 +292,8 @@ public class GitProjectHandler {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
+			localGitRepoManager.fetch(credentialsProvider);
+
 			List<String> availableBranches = localGitRepoManager.getRemoteBranches();
 			branches = branches
 					.stream()
