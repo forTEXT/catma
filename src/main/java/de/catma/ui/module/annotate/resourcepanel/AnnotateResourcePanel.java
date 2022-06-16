@@ -85,13 +85,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		this.resourceSelectionListener = null;
 		
 		Collection<TagsetDefinition> tagsets = getSelectedTagsets();
-
+		
+		SourceDocumentReference selectedDocumentReference = 
+				getSelectedDocument();
+		
 		initData(
-			getSelectedDocument(), 
-			getSelectedAnnotationCollectionReferences()
-				.stream()
-				.map(AnnotationCollectionReference::getId)
-				.collect(Collectors.toSet()));
+			selectedDocumentReference, 
+			Collections.emptySet()); // select all collections visible
 		
 		tagsetData.getItems().forEach(tagset -> {
 			if (tagsets.contains(tagset)) {

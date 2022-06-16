@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -958,9 +959,16 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				commits = this.gitApi.log().call();
 			}
 			else {
-				commits = this.gitApi.log().addRange(
-						this.gitApi.getRepository().resolve("refs/remotes/origin/" + username), 
-						this.gitApi.getRepository().resolve("refs/heads/" + username)).call();
+				ObjectId remote =
+					this.gitApi.getRepository().resolve("refs/remotes/origin/" + username); 
+				if (remote != null) {
+					commits = this.gitApi.log().addRange(
+							remote, 
+							this.gitApi.getRepository().resolve("refs/heads/" + username)).call();
+				}
+				else {
+					commits = Collections.<RevCommit>emptyList();
+				}
 			}
 			
 			
