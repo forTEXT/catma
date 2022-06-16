@@ -8,7 +8,7 @@ import de.catma.tag.TagManager;
 import de.catma.user.User;
 
 public interface ProjectsManager {
-	void delete(String projectId) throws Exception;
+	void delete(ProjectReference projectReference) throws Exception;
 
 	public User getUser();
 

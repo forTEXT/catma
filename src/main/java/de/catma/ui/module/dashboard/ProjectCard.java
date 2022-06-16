@@ -125,7 +125,7 @@ public class ProjectCard extends VerticalFlexLayout  {
                 , (evt) -> {
                     try {
                         if(evt.isConfirmed()){
-                        	projectManager.delete(projectReference.getProjectId());
+                        	projectManager.delete(projectReference);
                         	eventBus.post(new ProjectChangedEvent(projectReference.getProjectId()));
                         }
                     } catch (Exception e) {

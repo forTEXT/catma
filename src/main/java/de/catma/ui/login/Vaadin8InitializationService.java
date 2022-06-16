@@ -80,7 +80,7 @@ public class Vaadin8InitializationService implements InitializationService {
 			GitProjectsManager projectManager = new GitProjectsManager(
 					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					api,
-					(projectId) -> {}, //noop deletion handler
+					(projectReference) -> {}, //noop deletion handler, currently there is no persistent Project on graph level
 					acquireBackgroundService(),
 					eventBus);
 			

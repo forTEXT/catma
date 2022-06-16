@@ -60,7 +60,7 @@ public class GitSourceDocumentHandlerTest {
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<String> sourceDocumentReposToDeleteOnTearDown = new ArrayList<>();
-	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<ProjectReference> projectsToDeleteOnTearDown = new ArrayList<>();
 
     public GitSourceDocumentHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -108,7 +108,12 @@ public class GitSourceDocumentHandlerTest {
 					sourceDocumentId
 				); // this getProjects overload does a search
 				for (Project project : projects) {
-					gitlabManagerRestricted.deleteRepository(project.getId());
+					gitlabManagerRestricted.deleteRepository(
+							new ProjectReference(
+									project.getName(), 
+									project.getNamespace().getName(), 
+									project.getName(), 
+									null));
 				}
 				await().until(
 					() -> gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects().isEmpty()
@@ -129,8 +134,8 @@ public class GitSourceDocumentHandlerTest {
 					mockEventBus
 			);
 
-			for (String projectId : projectsToDeleteOnTearDown) {
-				gitProjectManager.delete(projectId);
+			for (ProjectReference projectRef : projectsToDeleteOnTearDown) {
+				gitProjectManager.delete(projectRef);
 			}
 			projectsToDeleteOnTearDown.clear();
 		}

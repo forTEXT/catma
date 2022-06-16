@@ -51,7 +51,7 @@ public class GitProjectHandlerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
-	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<ProjectReference> projectsToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 
 	public GitProjectHandlerTest() throws Exception {
@@ -85,8 +85,8 @@ public class GitProjectHandlerTest {
 					mockEventBus
 			);
 
-			for (String projectId : projectsToDeleteOnTearDown) {
-				gitProjectManager.delete(projectId);
+			for (ProjectReference projectRef : projectsToDeleteOnTearDown) {
+				gitProjectManager.delete(projectRef);
 			}
 			projectsToDeleteOnTearDown.clear();
 		}

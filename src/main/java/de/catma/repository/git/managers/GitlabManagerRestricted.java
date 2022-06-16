@@ -173,32 +173,15 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 	}
 
-	/**
-	 * Deletes an existing remote repository identified by <code>repositoryId</code>.
-	 *
-	 * @param repositoryId the ID of the repository to delete
-	 * @throws IOException if something went wrong while deleting the remote
-	 *         repository
-	 */
+
 	@Override
-	@Deprecated
-	public void deleteRepository(int repositoryId) throws IOException {
+	public void deleteRepository(ProjectReference projectReference) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
 		try {
-			projectApi.deleteProject(repositoryId);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to delete remote Git repository", e);
-		}
-	}
+			Project project= projectApi.getProject(projectReference.getNamespace(), projectReference.getProjectId());
 
-	@Override
-	public void deleteRepository(String projectId) throws IOException {
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
-		try {
-			projectApi.deleteProject(projectId);
+			projectApi.deleteProject(project);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to delete remote Git repository", e);

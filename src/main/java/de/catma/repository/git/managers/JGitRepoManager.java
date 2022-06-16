@@ -743,16 +743,16 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 						.isPresent()) {
 						createBranch = false;
 					}
-				}
-				checkoutCommand.setCreateBranch(createBranch);
-				checkoutCommand.setName(name).call();
-				
-				if (createBranch) {
 					try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
 						ObjectId commitId = this.gitApi.getRepository().resolve("refs/heads/"+Constants.MASTER);
 						RevCommit commit = revWalk.parseCommit(commitId);
 						checkoutCommand.setStartPoint(commit);
 					}
+				}
+				checkoutCommand.setCreateBranch(createBranch);
+				checkoutCommand.setName(name).call();
+				
+				if (createBranch) {
 					StoredConfig config = this.gitApi.getRepository().getConfig();
 					config.setString(
 							ConfigConstants.CONFIG_BRANCH_SECTION, name, 

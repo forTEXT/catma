@@ -2,7 +2,14 @@ package de.catma.repository.git;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -121,14 +128,29 @@ public class GitProjectsManager implements ProjectsManager {
 	 * @throws IOException if an error occurs when deleting the project
 	 */
 	@Override
-	public void delete(String projectId) throws IOException {
+	public void delete(ProjectReference projectReference) throws IOException {
+		Path projectDir = Paths.get(
+				this.localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(), 
+				projectReference.getNamespace(),
+				projectReference.getProjectId());
+		// shouldn't be necessary but at lease on windows some git objects didn't have write permissions 
+		// during testing and prevented Projected deletion
+		Files.walkFileTree(projectDir, new SimpleFileVisitor<Path>() {
+			public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
+				filePath.toFile().setWritable(true, true);
+				return FileVisitResult.CONTINUE;
+			}
+		});
 		FileUtils.deleteDirectory(
-			Paths.get(this.localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(), projectId).toFile()
+			Paths.get(
+				this.localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(), 
+				projectReference.getNamespace(),
+				projectReference.getProjectId()).toFile()
 		);
 
-		this.remoteGitServerManager.deleteRepository(projectId);
+		this.remoteGitServerManager.deleteRepository(projectReference);
 		try {
-			graphProjectDeletionHandler.deleteProject(projectId);
+			graphProjectDeletionHandler.deleteProject(projectReference);
 		} catch (Exception e) {
 			throw new IOException(e);
 		};
@@ -206,7 +228,7 @@ public class GitProjectsManager implements ProjectsManager {
 				projectReference.getNamespace(), projectReference.getProjectId());
 		
 		try {
-			graphProjectDeletionHandler.deleteProject(projectReference.getProjectId());
+			graphProjectDeletionHandler.deleteProject(projectReference);
 		} catch (Exception e) {
 			throw new IOException(e);
 		};

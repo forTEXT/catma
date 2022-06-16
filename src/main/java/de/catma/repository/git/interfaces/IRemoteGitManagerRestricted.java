@@ -47,13 +47,11 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	/**
 	 * Deletes an existing remote repository identified by <code>repositoryId</code>.
 	 *
-	 * @param repositoryId the ID of the repository to delete
+	 * @param projectReference the ID and namespace of the repository to delete
 	 * @throws IOException if something went wrong while deleting the remote
 	 *         repository
 	 */
-	@Deprecated
-	void deleteRepository(int repositoryId) throws IOException;
-	void deleteRepository(String projectId) throws IOException;
+	void deleteRepository(ProjectReference projectReference) throws IOException;
 
 	/**
 	 * Creates a new remote group with the <code>name</code>, <code>path</code> and

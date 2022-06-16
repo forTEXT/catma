@@ -162,6 +162,9 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			if(member == null ){
 				throw new IOException("member not found " + subject);
 			}
+			if (project.getOwner().getId().equals(subject.getUserId())) {
+				return RBACRole.OWNER;
+			}
 			return RBACRole.forValue(member.getAccessLevel().value);
 			
 		} catch (GitLabApiException e) {
