@@ -22,4 +22,6 @@ public interface IGitProjectResourceProvider {
 	
 	public List<SourceDocument> getDocuments();
 	public SourceDocument getDocument(String documentId) throws IOException;
+	
+	public boolean isReadOnly();
 }

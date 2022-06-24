@@ -850,7 +850,7 @@ public class TaggerView extends HorizontalLayout
 				taggerContextMenu = null;
 			}
 		}
-		else if (taggerContextMenu == null) {
+		else if (taggerContextMenu == null && !project.isReadOnly()) {
 			taggerContextMenu = new TaggerContextMenu(
 					tagger, 
 					this.tagManager);
@@ -862,7 +862,7 @@ public class TaggerView extends HorizontalLayout
 			taggerContextMenu.setTagsets(tagsets);
 		}
 	
-		if (collectionChangeEvent.getOldValue() != null) {
+		if (collectionChangeEvent.getOldValue() != null && !project.isReadOnly()) {
 			try {
 				project.commitAndPushChanges("Auto-committing Annotations");
 			} catch (Exception e) {

@@ -39,6 +39,7 @@ public class TagDefinition {
 	private Map<String,PropertyDefinition> userDefinedPropertyDefinitions;
 	private String parentUuid;
 	private String tagsetDefinitionUuid;
+	private transient boolean contribution = false;
 
 	/**
 	 * @param uuid a CATMA uuid see {@link de.catma.util.IDGenerator}
@@ -245,15 +246,28 @@ public class TagDefinition {
 		return Stream.concat(Stream.of(this), tagset.getDirectChildren(this).stream().flatMap(child -> child.directChildrenStream(tagset)));
 	}
 
-	public void mergeAdditive(TagDefinition tag) {
+	public boolean mergeAdditive(TagDefinition tag) {
+		
 		for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
 			if (!this.userDefinedPropertyDefinitions.containsKey(propertyDef.getUuid())) {
-				tag.addUserDefinedPropertyDefinition(propertyDef);
+				propertyDef.setContribution(true);
+				addUserDefinedPropertyDefinition(propertyDef);
+				contribution = true;
 			}
 			
 			// we do not alter the list of possible values for already exising PropertyDefinitions
-			// because we expect to be in readonly mode anyway and possible values
-			// are only relevant for adding new Annotations 
+			// because when working with latest contributions we expect to be in readonly mode anyway 
+			// and possible values are only relevant for adding new Annotations 
 		}
+		
+		return contribution;
+	}
+	
+	public boolean isContribution() {
+		return contribution;
+	}
+	
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
 	}
 }

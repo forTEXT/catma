@@ -111,6 +111,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 								tagsetsById.get(tagset.getUuid()).mergeAdditive(tagset);
 							}
 							else {
+								tagset.setContribution(true);
 								tagsetsById.put(tagset.getUuid(), tagset);
 							}
 						}
@@ -567,4 +568,10 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 		}
 		return gitSourceDocumentHandler.open(documentId);
 	}
+	
+	@Override
+	public boolean isReadOnly() {
+		return true;
+	}
+
 }

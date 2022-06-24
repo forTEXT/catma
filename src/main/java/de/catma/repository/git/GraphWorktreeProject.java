@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import org.apache.tika.mime.MediaType;
 import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.transport.CredentialsProvider;
 
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
@@ -66,8 +65,6 @@ import de.catma.repository.git.graph.GraphProjectHandler.CollectionSupplier;
 import de.catma.repository.git.graph.GraphProjectHandler.DocumentIndexSupplier;
 import de.catma.repository.git.graph.GraphProjectHandler.DocumentSupplier;
 import de.catma.repository.git.graph.lazy.LazyGraphProjectHandler;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.TagsetDefinitionImportStatus;
@@ -406,7 +403,12 @@ public class GraphWorktreeProject implements IndexedProject {
 				userDefinedPropertyChangedListener);
 	}
 
-	protected void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+	private void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, tagsetDefinition));
+		}
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		this.rootRevisionHash = gitProjectHandler.updateTagset(tagsetDefinition);
@@ -415,6 +417,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot remove %2$s", 
+						this.projectReference, tagsetDefinition));
+		}
+
 
 		String oldRootRevisionHash = this.rootRevisionHash;
 		// collect Annotations
@@ -438,7 +446,12 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	private void addPropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
-		
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, tagDefinition));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		TagsetDefinition tagsetDefinition = 
@@ -466,7 +479,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	private void removePropertyDefinition(
 			PropertyDefinition propertyDefinition, 
 			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
-		
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, tagDefinition));
+		}
+
 		// collect Annotations
 		Multimap<String, TagReference> annotationIdsByCollectionId =
 			graphProjectHandler.getTagReferencesByCollectionId(
@@ -523,7 +541,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void updatePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
-		
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, tagDefinition));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		TagsetDefinition tagsetDefinition = 
@@ -546,6 +569,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, tagsetDefinition));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		this.rootRevisionHash = 
@@ -563,6 +592,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void updateTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, tagsetDefinition));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		this.rootRevisionHash = gitProjectHandler.createOrUpdateTag(
@@ -581,6 +616,11 @@ public class GraphWorktreeProject implements IndexedProject {
 	
 	private void removeTagDefinition(
 			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, tagsetDefinition));
+		}
 
 		String oldRootRevisionHash = this.rootRevisionHash;
 
@@ -614,6 +654,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot add %2$s", 
+						this.projectReference, tagsetDefinition));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.createTagset(
 				tagsetDefinition.getUuid(), 
@@ -702,6 +748,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	
 	@Override
 	public void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot add %2$s", 
+						this.projectReference, sourceDocument));
+		}
+
 		try {
 			File sourceTempFile = 
 					Paths.get(new File(this.tempDir).toURI())
@@ -793,7 +845,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void update(
 			SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet) throws Exception {
-		
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, sourceDocumentRef));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		this.rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocumentRef);
@@ -831,6 +888,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	
 	@Override
 	public void delete(SourceDocumentReference sourceDocumentRef) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot delete %2$s", 
+						this.projectReference, sourceDocumentRef));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.removeDocument(sourceDocumentRef);
 		// TODO: remove/close all participating comments
@@ -851,6 +914,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void createUserMarkupCollection(
 			String name, SourceDocumentReference sourceDocumentReference) {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot add Collection %2$s", 
+						this.projectReference, name));
+		}
+
 		try {
 			String collectionId = idGenerator.generateCollectionId();
 			
@@ -896,6 +965,12 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void update(AnnotationCollection userMarkupCollection, List<TagReference> tagReferences) {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, userMarkupCollection));
+		}
+
 		try {
 			if (!tagReferences.isEmpty()) {				
 				URI annotationTarget = tagReferences.iterator().next().getTarget();
@@ -949,6 +1024,12 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	public void addAndCommitCollections(
 			Collection<AnnotationCollectionReference> collectionReferences, String msg) throws IOException {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot add Collections", 
+						this.projectReference));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 		
 		this.rootRevisionHash = 
@@ -967,6 +1048,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void update(
 			AnnotationCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, collection));
+		}
+
 		try {
 			for (Property property : properties) {
 				tagInstance.addUserDefinedProperty(property);
@@ -996,6 +1083,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void update(
 			AnnotationCollectionReference collectionReference, 
 			ContentInfoSet contentInfoSet) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot update %2$s", 
+						this.projectReference, collectionReference));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 
 		this.rootRevisionHash = 
@@ -1012,6 +1105,12 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void delete(AnnotationCollectionReference collectionReference) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot delete %2$s", 
+						this.projectReference, collectionReference));
+		}
+
 		String oldRootRevisionHash = this.rootRevisionHash;
 		SourceDocumentReference documentRef = getSourceDocumentReference(collectionReference.getSourceDocumentId());
 		
@@ -1062,7 +1161,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void importCollection(
 		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList, 
 		AnnotationCollection importAnnotationCollection) throws IOException {
-	
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot import %2$s", 
+						this.projectReference, importAnnotationCollection));
+		}
+
 		// if updates to existing Tagsets are needed, update only the Tags
 		// that are actually referenced in the Collection
 		Set<String> tagDefinitionIds = 
@@ -1149,6 +1253,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	
 	@Override
 	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot import Tagsets", 
+						this.projectReference));
+		}
+
 		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatusList) {
 			
 			if (tagsetDefinitionImportStatus.isDoImport()) {
@@ -1277,6 +1387,12 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void commitAndPushChanges(String commitMsg) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot commit and push changes!", 
+						this.projectReference));
+		}
+
 		logger.info(
 				String.format(
 					"Commiting and pushing possible changes in Project %1$s.", 
@@ -1302,6 +1418,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	
 	@Override
 	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+				String.format("%1$s is in readonly mode! Cannot synchronize with remote!", 
+						this.projectReference));
+		}
+
 		if (hasUncommittedChanges()) {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
@@ -1524,4 +1646,10 @@ public class GraphWorktreeProject implements IndexedProject {
 			);
 		}		
 	}
+	
+	@Override
+	public boolean isReadOnly() {
+		return this.gitProjectHandler.isReadOnly();
+	}
+
 }

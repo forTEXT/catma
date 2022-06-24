@@ -18315,6 +18315,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 12px;
 }
 
+.catma .annotate-panel-tagset-with-contributions {
+	color: blue;
+}
+
 .catma div.annotation-panel-property-summary {
 	display: inline;
 	font-size: 12px;

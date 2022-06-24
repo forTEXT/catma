@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
@@ -44,7 +43,6 @@ import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
@@ -93,6 +91,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	private Registration defaultDoubleClickRegistration;
 	private MenuItem miRemoveAnnotations;
 	private IconButton btnClearSelectedRows;
+	private MenuItem miAnnotateRows;
 
 	public KwicPanel(
 			EventBus eventBus,
@@ -106,7 +105,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 
 	private void initActions(EventBus eventBus) {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
+		miAnnotateRows = moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
 		
 		ActionGridBar actionBar = kwicGridComponent.getActionGridBar();
 		

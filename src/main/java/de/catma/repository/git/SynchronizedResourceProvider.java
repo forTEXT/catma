@@ -280,4 +280,9 @@ public class SynchronizedResourceProvider implements IGitProjectResourceProvider
 
 		return gitSourceDocumentHandler.open(documentId);
 	}
+	
+	@Override
+	public boolean isReadOnly() {
+		return false;
+	}
 }

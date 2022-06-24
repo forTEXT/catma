@@ -292,4 +292,6 @@ public interface Project {
 
 	public void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception;
 
+	boolean isReadOnly();
+
 }

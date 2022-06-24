@@ -28,6 +28,7 @@ import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.RevertCommand;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
@@ -38,7 +39,6 @@ import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
-import org.eclipse.jgit.diff.DiffEntry.Side;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
@@ -1013,21 +1013,21 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 	
-	public void revert(MergeResult mergeResult) throws IOException {
+	public void abortMerge(MergeResult mergeResult) throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `hasUnsynchronizedChanges` on a detached instance");
+			throw new IllegalStateException("Can't call `abortMerge` on a detached instance");
 		}		
 		
-		RevertCommand revertCommand = this.gitApi.revert();
-		
-		for (ObjectId oid : mergeResult.getMergedCommits()) {
-			revertCommand.include(oid);
-		}
+		// clear the merge state
+		this.gitApi.getRepository().writeMergeCommitMsg(null);
+		this.gitApi.getRepository().writeMergeHeads(null);
+
+		// reset the index and work directory to HEAD
 		try {
-			revertCommand.call();
+			Git.wrap(this.gitApi.getRepository()).reset().setMode(ResetType.HARD).call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Could not revert conflicted merge!", e);
+			throw new IOException("Could not abort conflicted merge!", e);
 		}
 	}
 	

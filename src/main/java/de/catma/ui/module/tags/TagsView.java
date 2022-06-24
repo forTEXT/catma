@@ -1045,7 +1045,7 @@ public class TagsView extends HugeCard {
         			new TagsetDataItem(
     					tagset, 
     					responsibleUser,
-    					true);
+    					!project.isReadOnly());
             	tagsetData.addItem(null, tagsetItem);
             	addTags(tagsetItem, tagset);
             }
@@ -1054,6 +1054,9 @@ public class TagsView extends HugeCard {
             for (TagsetDefinition tagset : tagsets) {
             	expandTagsetDefinition(tagset);
             }
+            
+            tagsetGridComponent.getActionGridBar().setAddBtnEnabled(!project.isReadOnly());
+            tagsetGridComponent.getActionGridBar().setMoreOptionsBtnEnabled(!project.isReadOnly());
             
         } catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);

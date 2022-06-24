@@ -195,6 +195,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private MenuItem miToggleResponsibiltityFilter;
 	private Map<String, Member> membersByIdentfier;
 	private IconButton btSynchLatestContribToggle;
+	private MenuItem miAddDocument;
+	private MenuItem miAddCollection;
+	private MenuItem miEditDocumentOrCollection;
+	private MenuItem miDeleteDocumentOrCollection;
+	private MenuItem miImportCollection;
+	private MenuItem miEditTagset;
+	private MenuItem miDeleteTaget;
+	private MenuItem miImportTagset;
+	private MenuItem miCommit;
+	private MenuItem miSynchronize;
+	private MenuItem miImportCorpus;
 
     public ProjectView(
     		ProjectsManager projectManager, 
@@ -318,6 +329,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		
 		btSynchBell.setVisible(true);
 	}
+	
+	private void toggleProjectReadOnly() {
+		miAddDocument.setEnabled(!project.isReadOnly());
+		miAddCollection.setEnabled(!project.isReadOnly());
+		miEditDocumentOrCollection.setEnabled(!project.isReadOnly());
+		miDeleteDocumentOrCollection.setEnabled(!project.isReadOnly());
+		miImportCollection.setEnabled(!project.isReadOnly());
+		miEditTagset.setEnabled(!project.isReadOnly());
+		miImportTagset.setEnabled(!project.isReadOnly());
+		miDeleteTaget.setEnabled(!project.isReadOnly());
+		miCommit.setEnabled(!project.isReadOnly());
+		miSynchronize.setEnabled(!project.isReadOnly());
+		miImportCorpus.setEnabled(!project.isReadOnly());
+		tagsetGridComponent.getActionGridBar().setAddBtnEnabled(!project.isReadOnly());
+	}
 
 	private void initActions() {
 		documentGridComponent.setSearchFilterProvider(searchInput -> createSearchFilter(searchInput));
@@ -326,22 +352,22 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
         ContextMenu addContextMenu = 
         	documentGridComponent.getActionGridBar().getBtnAddContextMenu();
-        addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
-        addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
+        miAddDocument = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
+        miAddCollection = addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
         
         ContextMenu documentsGridMoreOptionsContextMenu = 
         	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         
-        documentsGridMoreOptionsContextMenu.addItem(
+        miEditDocumentOrCollection = documentsGridMoreOptionsContextMenu.addItem(
             	"Edit Documents / Collections",(menuItem) -> handleEditResources());
 
-        documentsGridMoreOptionsContextMenu.addItem(
+        miDeleteDocumentOrCollection = documentsGridMoreOptionsContextMenu.addItem(
         	"Delete Documents / Collections",(menuItem) -> handleDeleteResources(menuItem, documentGrid));
         
         documentsGridMoreOptionsContextMenu.addItem(
             	"Analyze Documents / Collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
 
-        documentsGridMoreOptionsContextMenu.addItem(
+        miImportCollection = documentsGridMoreOptionsContextMenu.addItem(
         		"Import a Collection", 
         		mi -> handleImportCollectionRequest());
         MenuItem miExportCollections = documentsGridMoreOptionsContextMenu.addItem(
@@ -378,11 +404,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
    
         ContextMenu moreOptionsMenu = 
         	tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        moreOptionsMenu.addItem("Edit Tagset", mi -> handleEditTagsetRequest());
+        miEditTagset = moreOptionsMenu.addItem("Edit Tagset", mi -> handleEditTagsetRequest());
 
-        moreOptionsMenu.addItem("Delete Tagset", mi -> handleDeleteTagsetRequest());
+        miDeleteTaget = moreOptionsMenu.addItem("Delete Tagset", mi -> handleDeleteTagsetRequest());
         
-        moreOptionsMenu.addItem("Import Tagsets", mi -> handleImportTagsetsRequest());
+        miImportTagset = moreOptionsMenu.addItem("Import Tagsets", mi -> handleImportTagsetsRequest());
         
         MenuItem miExportTagsets = moreOptionsMenu.addItem("Export Tagsets");
         MenuItem miExportTagsetsAsXML = miExportTagsets.addItem("as XML");
@@ -417,9 +443,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		
 		
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
-        hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
-        hugeCardMoreOptions.addItem("Synchronize with the team", mi -> handleSynchronizeRequest());
-        MenuItem miImportCorpus = hugeCardMoreOptions.addItem("Import CATMA 5 Corpus", mi -> handleCorpusImport());
+        miCommit = hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
+        miSynchronize = hugeCardMoreOptions.addItem("Synchronize with the team", mi -> handleSynchronizeRequest());
+        miImportCorpus = hugeCardMoreOptions.addItem("Import CATMA 5 Corpus", mi -> handleCorpusImport());
         miImportCorpus.setVisible(CATMAPropertyKey.EXPERT.getValue(false) 
         		|| Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
         
@@ -1928,6 +1954,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamPanel.setVisible(membersEditAllowed);
         
 		initData();
+		toggleProjectReadOnly();
 		eventBus.post(new ProjectReadyEvent(project));
     	try {
 			rbacEnforcer.enforceConstraints(project.getRoleOnProject());

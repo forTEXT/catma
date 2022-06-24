@@ -126,4 +126,9 @@ class TagsetDataItem implements TagsetTreeItem {
 	public String getResponsibleUser() {
 		return responsibleUser;
 	}
+	
+	@Override
+	public String generateStyle() {
+		return tagset.isContribution()? "annotate-panel-tagset-with-contributions" : TagsetTreeItem.super.generateStyle();
+	}
 }

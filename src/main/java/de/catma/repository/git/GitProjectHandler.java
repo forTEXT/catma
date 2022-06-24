@@ -821,7 +821,7 @@ public class GitProjectHandler {
 						localGitRepoManager.push(credentialsProvider);
 					}
 					else {
-						localGitRepoManager.revert(mergeWithOriginMasterResult);
+						localGitRepoManager.abortMerge(mergeWithOriginMasterResult);
 					}
 				}
 				
@@ -996,4 +996,9 @@ public class GitProjectHandler {
 				projectId, projectReference, projectPath, 
 				localGitRepositoryManager, remoteGitServerManager, credentialsProvider);
 	}
+	
+	public boolean isReadOnly() {
+		return this.resourceProvider.isReadOnly();
+	}
+
 }

@@ -305,6 +305,14 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	}
 	
 	private void handleDeleteAnnotationRequest(RendererClickEvent<AnnotationTreeItem> clickEvent) {
+		if (project.isReadOnly()) {
+			Notification.show(
+					"Info", 
+					"This Project is currently in read only mode!", 
+					Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
 		AnnotationDataItem item = (AnnotationDataItem) clickEvent.getItem();
 		
 		final Annotation annotation = item.getAnnotation();
@@ -340,6 +348,14 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	
 	
 	private void handleEditAnnotationRequest(RendererClickEvent<AnnotationTreeItem> clickEvent) {
+		if (project.isReadOnly()) {
+			Notification.show(
+					"Info", 
+					"This Project is currently in read only mode!", 
+					Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
 		AnnotationDataItem item = (AnnotationDataItem) clickEvent.getItem();
 		
 		final Annotation annotation = item.getAnnotation();

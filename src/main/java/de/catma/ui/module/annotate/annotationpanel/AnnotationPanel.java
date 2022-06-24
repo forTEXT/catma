@@ -357,6 +357,8 @@ public class AnnotationPanel extends VerticalLayout {
             }
             
             initEditableCollectionData(null);
+            tagsetGridComponent.getActionGridBar().setAddBtnEnabled(!project.isReadOnly());
+            tagsetGridComponent.getActionGridBar().setMoreOptionsBtnEnabled(!project.isReadOnly());
         } catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
         }
@@ -386,7 +388,9 @@ public class AnnotationPanel extends VerticalLayout {
 					"Please select a Collection...");    			
 		}
 		
-		if (preselectedCollection != null && editableCollections.contains(preselectedCollection)) {
+		if (preselectedCollection != null 
+				&& editableCollections.contains(preselectedCollection) 
+				&& !project.isReadOnly()) {
 			currentEditableCollectionBox.setValue(preselectedCollection);
 		}
 		else if (editableCollectionProvider.getItems().size() == 1) {
@@ -1116,12 +1120,14 @@ public class AnnotationPanel extends VerticalLayout {
 			if (!editableCollections.contains(collection)) {
 				editableCollections.add(collection);
 			}
-			currentEditableCollectionBox.setValue(collection);
-			Notification.show("Info", 
-				String.format(
-					"The Collection currently being edited has been changed to '%1$s'!",  
-					collection.getName()),
-				Type.HUMANIZED_MESSAGE);
+			if (!project.isReadOnly()) {
+				currentEditableCollectionBox.setValue(collection);
+				Notification.show("Info", 
+					String.format(
+						"The Collection currently being edited has been changed to '%1$s'!",  
+						collection.getName()),
+					Type.HUMANIZED_MESSAGE);
+			}
 		});
 	}
 
@@ -1164,7 +1170,8 @@ public class AnnotationPanel extends VerticalLayout {
 				currentEditableCollectionBox.getDataProvider().refreshAll();
 			}
 			if ((currentEditableCollectionBox.getValue() == null) 
-					&& !this.editableCollections.isEmpty()) {
+					&& !this.editableCollections.isEmpty()
+					&& !project.isReadOnly()) {
 				currentEditableCollectionBox.setValue(collection);
 				Notification.show("Info", 
 						String.format(
@@ -1188,6 +1195,10 @@ public class AnnotationPanel extends VerticalLayout {
 		annotationDetailsPanel.removeAnnotations(
 			collection.getTagReferences().stream().map(
 					tr -> tr.getTagInstanceId()).collect(Collectors.toSet()));
+		
+		currentEditableCollectionBox.setEnabled(!project.isReadOnly());
+		btAddCollection.setEnabled(!project.isReadOnly());
+		btFilterCollection.setEnabled(!project.isReadOnly());
 	}
 
 	public void removeCollection(String collectionId) {

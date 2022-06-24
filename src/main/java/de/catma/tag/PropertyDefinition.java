@@ -68,6 +68,7 @@ public class PropertyDefinition {
 	private String uuid;
 	private String name;
 	private List<String> possibleValueList;
+	private transient boolean contribution;
 
 	public PropertyDefinition() {
 		this.possibleValueList = new ArrayList<String>();
@@ -173,5 +174,12 @@ public class PropertyDefinition {
 		return true;
 	}
 	
+	public boolean isContribution() {
+		return contribution;
+	}
+	
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
+	}
 	
 }

@@ -48,6 +48,7 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	private Map<String,TagDefinition> tagDefinitions;
 	private Map<String,Set<String>> tagDefinitionChildren;
 	private Set<String> deletedDefinitions;
+	private transient boolean contribution = false;
 
 	/**
 	 * @param id a repository dependent identifier
@@ -349,13 +350,25 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 		
 		for (TagDefinition tag: tagset) {
 			if (hasTagDefinition(tag.getUuid())) {
-				getTagDefinition(tag.getUuid()).mergeAdditive(tag);
+				boolean tagHashContributions = getTagDefinition(tag.getUuid()).mergeAdditive(tag);
+				if (tagHashContributions) {
+					contribution = true;
+				}
 			}
 			else {
+				tag.setContribution(true);
 				addTagDefinition(tag);
+				contribution = true;
 			}
 		}
 		
 	}
 	
+	public boolean isContribution() {
+		return contribution;
+	}
+	
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
+	}
 }

@@ -112,16 +112,18 @@ public class AnnotatedTextProvider {
 				builder.append(Cleaner.clean(kwic.getBackwardContext()));
 
 				builder.append("<span");
-				builder.append(" class=\"annotation-details-tag-color\"");
-				builder.append(" style=\"");
-				builder.append(" background-color:");
-				builder.append("#"+ColorConverter.toHex(
-						tagDefinition.getColor()));
-				builder.append(";");
-				builder.append(" color:");
-				builder.append(ColorConverter.isLightColor(
-					tagDefinition.getColor())?"black":"white");
-				builder.append(";");
+				if (tagDefinition != null) { // can happen when switching back to synch mode
+					builder.append(" class=\"annotation-details-tag-color\"");
+					builder.append(" style=\"");
+					builder.append(" background-color:");
+					builder.append("#"+ColorConverter.toHex(
+							tagDefinition.getColor()));
+					builder.append(";");
+					builder.append(" color:");
+					builder.append(ColorConverter.isLightColor(
+						tagDefinition.getColor())?"black":"white");
+					builder.append(";");
+				}
 				builder.append("\">");
 				builder.append(
 					Cleaner.clean(
