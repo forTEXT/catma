@@ -6,15 +6,15 @@ public class Reply {
 	private String body;
 	
 	private transient String username;
-	private transient Integer userId;
+	private transient Long userId;
 	private transient String commentUuid;
-	private transient Integer id;
+	private transient Long id;
 	
-	public Reply(String uuid, String body, String username, Integer userId, String commentUuid) {
+	public Reply(String uuid, String body, String username, Long userId, String commentUuid) {
 		this(uuid, body, username, userId, commentUuid, null);
 	}
 	
-	public Reply(String uuid, String body, String username, Integer userId, String commentUuid, Integer id) {
+	public Reply(String uuid, String body, String username, Long userId, String commentUuid, Long id) {
 		super();
 		this.uuid = uuid;
 		this.body = body;
@@ -24,11 +24,11 @@ public class Reply {
 		this.id = id;
 	}
 
-	public Integer getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -44,7 +44,7 @@ public class Reply {
 		return username;
 	}
 
-	public Integer getUserId() {
+	public Long getUserId() {
 		return userId;
 	}
 
@@ -60,7 +60,7 @@ public class Reply {
 		this.username = username;
 	}
 
-	public void setUserId(Integer userId) {
+	public void setUserId(Long userId) {
 		this.userId = userId;
 	}
 

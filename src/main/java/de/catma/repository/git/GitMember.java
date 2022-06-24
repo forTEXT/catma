@@ -40,7 +40,7 @@ public class GitMember implements Member {
     }
 
     @Override
-    public Integer getUserId() {
+    public Long getUserId() {
         return delegate.getId();
     }
 

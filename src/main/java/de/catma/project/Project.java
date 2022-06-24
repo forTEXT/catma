@@ -383,7 +383,7 @@ public interface Project {
 	RBACRole getRoleOnProject() throws IOException;
 
 	void createUserMarkupCollectionWithAssignment(
-		String name, SourceDocument sourceDocument, Integer userId, RBACRole role);
+		String name, SourceDocument sourceDocument, Long userId, RBACRole role);
 
 	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException;
 

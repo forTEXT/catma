@@ -991,7 +991,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void createUserMarkupCollectionWithAssignment(
-			String name, SourceDocument sourceDocument, Integer userId, RBACRole role) {
+			String name, SourceDocument sourceDocument, Long userId, RBACRole role) {
 		try {
 			String collectionId = idGenerator.generateCollectionId();
 			

@@ -57,13 +57,13 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 			CommentMessage commentMessage = message.getMessageObject();
 			final String documentId = commentMessage.getDocumentId();
 			final boolean replyMessage = commentMessage.isReplyMessage();
-			final int senderId = commentMessage.getSenderId();
+			final long senderId = commentMessage.getSenderId();
 			final boolean deleted= commentMessage.isDeleted();
 			final SourceDocument document = documentSupplier.get();
 			if ((document != null) 
 					&& document.getUuid().equals(documentId)) {
 				User user = project.getUser();
-				Integer receiverId = user.getUserId();
+				Long receiverId = user.getUserId();
 				
 				if (!receiverId.equals(senderId)) {
 					final Comment comment = commentMessage.toComment();

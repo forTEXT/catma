@@ -40,7 +40,7 @@ public class EditAccountDialog extends Window {
 	private final String email;
 	private final String username;
 	private final String name;
-	private final int userId;
+	private final long userId;
 
 	private Button btnCancel;
 

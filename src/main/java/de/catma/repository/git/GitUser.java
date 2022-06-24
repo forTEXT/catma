@@ -12,7 +12,7 @@ public class GitUser implements User {
 	}
 
 	@Override
-	public Integer getUserId() {
+	public Long getUserId() {
 		return gitlabUser.getId();
 	}
 

@@ -206,7 +206,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		
 	};
 	
-	private de.catma.user.Member createGroupMember(RBACSubject subject, RBACRole role, Integer groupId) throws IOException {
+	private de.catma.user.Member createGroupMember(RBACSubject subject, RBACRole role, long groupId) throws IOException {
 		try {
 			return new GitMember(getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
@@ -214,7 +214,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		}		
 	}
 	
-	private RBACSubject assignDefaultAccessToRootProject(RBACSubject subject, Integer groupId) throws IOException {
+	private RBACSubject assignDefaultAccessToRootProject(RBACSubject subject, long groupId) throws IOException {
 		try {
 			Group group = getGitLabApi().getGroupApi().getGroup(groupId);
 			Project rootProject = getGitLabApi().getProjectApi().getProject(group.getName(), GitProjectManager.getProjectRootRepositoryName(group.getName()));
@@ -236,7 +236,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		}	
 	}
 	
-	private de.catma.user.Member updateGroupMember(RBACSubject subject, RBACRole role, Integer groupId) throws IOException {
+	private de.catma.user.Member updateGroupMember(RBACSubject subject, RBACRole role, long groupId) throws IOException {
 		try {
 			return new GitMember(getGitLabApi().getGroupApi().updateMember(groupId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
@@ -244,7 +244,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		}		
 	}
 	
-	private de.catma.user.Member createProjectMember(RBACSubject subject, RBACRole role, Integer projectId) throws IOException {
+	private de.catma.user.Member createProjectMember(RBACSubject subject, RBACRole role, long projectId) throws IOException {
 		try {
 			return new GitMember(getGitLabApi().getProjectApi().addMember(projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
@@ -253,7 +253,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	}
 	
 	
-	private de.catma.user.Member updateProjectMember(RBACSubject subject, RBACRole role, Integer projectId) throws IOException {
+	private de.catma.user.Member updateProjectMember(RBACSubject subject, RBACRole role, long projectId) throws IOException {
 		try {
 			return new GitMember(getGitLabApi().getProjectApi().updateMember(projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {

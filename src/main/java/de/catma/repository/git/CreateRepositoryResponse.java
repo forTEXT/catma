@@ -4,10 +4,10 @@ import javax.annotation.Nullable;
 
 public class CreateRepositoryResponse {
 	public String groupPath;
-	public int repositoryId;
+	public long repositoryId;
 	public String repositoryHttpUrl;
 
-	public CreateRepositoryResponse(@Nullable String groupPath, int repositoryId,
+	public CreateRepositoryResponse(@Nullable String groupPath, long repositoryId,
 									String repositoryHttpUrl) {
 		this.groupPath = groupPath;
 		this.repositoryId = repositoryId;

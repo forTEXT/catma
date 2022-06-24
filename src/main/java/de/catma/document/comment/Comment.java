@@ -14,17 +14,17 @@ public class Comment {
 	private final String documentId;
 	
 	private transient String username;
-	private transient Integer userId;
-	private transient Integer id;
-	private transient Integer iid;
+	private transient Long userId;
+	private transient Long id;
+	private transient Long iid;
 	private transient int replyCount;
 	private transient List<Reply> replies = new ArrayList<Reply>();
 
-	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId) {
+	public Comment(String uuid, String username, Long userId, String body, List<Range> ranges, String documentId) {
 		this(uuid, username, userId, body, ranges, documentId, null, null);
 	}
 
-	public Comment(String uuid, String username, Integer userId, String body, List<Range> ranges, String documentId, Integer id, Integer iid) {
+	public Comment(String uuid, String username, Long userId, String body, List<Range> ranges, String documentId, Long id, Long iid) {
 		super();
 		this.uuid = uuid;
 		this.username = username;
@@ -53,7 +53,7 @@ public class Comment {
 		return username;
 	}
 	
-	public Integer getUserId() {
+	public Long getUserId() {
 		return userId;
 	}
 	
@@ -69,11 +69,11 @@ public class Comment {
 		return ranges;
 	}
 	
-	public Integer getId() {
+	public Long getId() {
 		return id;
 	}
 	
-	public Integer getIid() {
+	public Long getIid() {
 		return iid;
 	}
 	
@@ -85,7 +85,7 @@ public class Comment {
 		this.body = body;
 	}
 	
-	public void setUserId(Integer userId) {
+	public void setUserId(Long userId) {
 		this.userId = userId;
 	}
 	
@@ -93,11 +93,11 @@ public class Comment {
 		this.username = username;
 	}
 	
-	public void setId(Integer id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 	
-	public void setIid(Integer iid) {
+	public void setIid(Long iid) {
 		this.iid = iid;
 	}
 	

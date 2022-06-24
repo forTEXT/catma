@@ -359,7 +359,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 						.map(member -> new GitMember(member))
 						.collect(Collectors.toList());
 				
-				Map<Integer,de.catma.user.Member> mergedList = new HashMap<>();
+				Map<Long,de.catma.user.Member> mergedList = new HashMap<>();
 				
 				for(de.catma.user.Member m : allMembers){
 					if(! mergedList.containsKey(m.getUserId()) 
@@ -393,7 +393,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 	}
 
-	private Map<String, AccessLevel> getResourcePermissions(Integer groupId) throws GitLabApiException {
+	private Map<String, AccessLevel> getResourcePermissions(Long groupId) throws GitLabApiException {
 
         Map<String, AccessLevel> resultMap = Maps.newHashMap();
         ProjectApi projectApi = new ProjectApi(restrictedGitLabApi);

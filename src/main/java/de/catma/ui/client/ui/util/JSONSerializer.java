@@ -34,6 +34,16 @@ public class JSONSerializer {
 			throw new IllegalArgumentException("jsonValue cannot be null");
 		}
 	}
+
+	public long getLongValueFromNumberObject(JSONValue jsonValue) {
+		if (jsonValue != null) {
+			double result = ((JSONNumber)jsonValue).doubleValue();
+			return Double.valueOf(result).longValue();
+		}
+		else {
+			throw new IllegalArgumentException("jsonValue cannot be null");
+		}
+	}
 	
 	public String getStringValueFromStringObject(JSONValue jsonValue) {
 		if (jsonValue != null) {

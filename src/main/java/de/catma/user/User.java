@@ -30,7 +30,7 @@ public interface User extends RBACSubject {
 	/**
 	 * @return the numeric ID of the user
 	 */
-	Integer getUserId();
+	Long getUserId();
 
 	/**
 	 * @return an identifier like an email address

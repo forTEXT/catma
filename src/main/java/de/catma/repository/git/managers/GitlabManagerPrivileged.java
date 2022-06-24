@@ -101,7 +101,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	}
 
 	@Override
-	public String createPersonalAccessToken(int userId, String tokenName, LocalDate expiresAt) throws IOException {
+	public String createPersonalAccessToken(long userId, String tokenName, LocalDate expiresAt) throws IOException {
 		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
@@ -120,7 +120,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
-	public int createUser(String email, String username, String password,
+	public long createUser(String email, String username, String password,
 			   String publicname)
 					   throws IOException {
 		User user = this.createUser(email, username, password, publicname, null);
@@ -183,7 +183,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	 * @throws IOException if something went wrong while creating the
 	 *         impersonation token
 	 */
-	private String createImpersonationToken(int userId, String tokenName)
+	private String createImpersonationToken(long userId, String tokenName)
 			throws IOException {
 		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 
@@ -199,7 +199,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
-	public void modifyUserAttributes(int userId, String name, String password) throws IOException {
+	public void modifyUserAttributes(long userId, String name, String password) throws IOException {
 		try {
 			User user = privilegedGitLabApi.getUserApi().getUser(userId);
 			
