@@ -37,8 +37,8 @@ public class GitLabServerManagerTest {
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
 	private ArrayList<String> groupsToDeleteOnTearDown = new ArrayList<>();
-	private ArrayList<Integer> repositoriesToDeleteOnTearDown = new ArrayList<>();
-	private ArrayList<Integer> usersToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<Long> repositoriesToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<Long> usersToDeleteOnTearDown = new ArrayList<>();
 
 	public GitLabServerManagerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -80,14 +80,14 @@ public class GitLabServerManagerTest {
 		}
 
 		if (repositoriesToDeleteOnTearDown.size() > 0) {
-			for (Integer repositoryId : repositoriesToDeleteOnTearDown) {
+			for (Long repositoryId : repositoriesToDeleteOnTearDown) {
 				gitlabManagerRestricted.deleteRepository(repositoryId);
 				await().until(() -> projectApi.getProjects().isEmpty());
 			}
 		}
 
 		if (usersToDeleteOnTearDown.size() > 0) {
-			for (Integer userId : usersToDeleteOnTearDown) {
+			for (Long userId : usersToDeleteOnTearDown) {
 				userApi.deleteUser(userId);
 				GitLabServerManagerTest.awaitUserDeleted(userApi, userId);
 			}
@@ -99,7 +99,7 @@ public class GitLabServerManagerTest {
 //		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}
 
-	public static void awaitUserDeleted(UserApi userApi, int userId) {
+	public static void awaitUserDeleted(UserApi userApi, long userId) {
 		await().until(() -> {
 			try {
 				userApi.getUser(userId);
@@ -116,8 +116,8 @@ public class GitLabServerManagerTest {
 		UserApi userApi = gitlabManagerPrivileged.getGitLabApi().getUserApi();
 		List<User> users = userApi.getUsers();
 
-		// we should have an admin user, the "ghost" user & one representing the CATMA user
-		assertEquals(3, users.size());
+		// we should have an admin user, the default "ghost" user, two default bot users (support and alert) & one representing the CATMA user
+		assertEquals(5, users.size());
 
 		// hamcrest's hasItem(T item) matcher is not behaving as documented and is expecting the
 		// users collection to contain *only* this.serverManager.getGitLabUser()
