@@ -87,7 +87,8 @@
 		<dependency>
 			<groupId>org.vaadin</groupId>
 			<artifactId>elements</artifactId>
-			<version>0.2.1</version>
+			<!-- https://github.com/forTEXT/serverside-elements/commit/5745bbf32ab9e31a1eb6bb81ce490bcdabc4fcf2 -->
+			<version>0.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 		   <groupId>org.vaadin.addon</groupId>
