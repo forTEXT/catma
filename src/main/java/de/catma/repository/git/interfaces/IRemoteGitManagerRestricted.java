@@ -49,7 +49,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	 * @throws IOException if something went wrong while deleting the remote
 	 *         repository
 	 */
-	void deleteRepository(int repositoryId) throws IOException;
+	void deleteRepository(long repositoryId) throws IOException;
 
 	/**
 	 * Creates a new remote group with the <code>name</code>, <code>path</code> and

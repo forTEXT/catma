@@ -154,7 +154,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	 *         repository
 	 */
 	@Override
-	public void deleteRepository(int repositoryId) throws IOException {
+	public void deleteRepository(long repositoryId) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
 		try {
