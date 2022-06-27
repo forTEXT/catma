@@ -6,10 +6,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.antlr.runtime.RecognitionException;
@@ -22,7 +24,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
@@ -61,7 +62,6 @@ import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.module.analyze.queryresultpanel.RefreshQueryResultPanel;
 import de.catma.ui.module.analyze.resourcepanel.AnalyzeResourcePanel;
-import de.catma.ui.module.analyze.visualization.doubletree.DoubleTreePanel;
 import de.catma.ui.module.analyze.visualization.doubletree.DoubleTreePanel;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.analyze.visualization.vega.DistributionDisplaySettingHandler;
@@ -287,6 +287,25 @@ public class AnalyzeView extends HorizontalLayout
 			    QueryResultPanel queryResultPanel = (QueryResultPanel)component;
 			    handleMarkAsStale(queryResultPanel);
 			}
+		}
+		
+		for (int i=0; i<getComponentCount(); i++) {
+			Component component = getComponent(i);
+			if (component instanceof VizMaxPanel) {
+				setContent(contentPanel, component);
+				break;
+			}
+		}
+		
+		Set<Component> staleVizMinPanels = new HashSet<Component>();
+		for (Iterator<Component> compIter=vizCardsPanel.iterator(); compIter.hasNext();) {
+			VizMinPanel vizMinPanel = (VizMinPanel)compIter.next();
+			staleVizMinPanels.add(vizMinPanel);
+			vizMinPanel.close();
+		}
+		
+		for (Component comp : staleVizMinPanels) {
+			vizCardsPanel.removeComponent(comp);
 		}
 	}
 

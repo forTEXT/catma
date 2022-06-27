@@ -1387,33 +1387,30 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void commitAndPushChanges(String commitMsg) throws Exception {
-		if (isReadOnly()) {
-			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot commit and push changes!", 
-						this.projectReference));
-		}
-
-		logger.info(
-				String.format(
-					"Commiting and pushing possible changes in Project %1$s.", 
-					projectReference.toString()));
-		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.commitProject(commitMsg);
-		if (oldRootRevisionHash.equals(this.rootRevisionHash)) {
+		if (!isReadOnly()) {
+			
 			logger.info(
-				String.format(
-						"No changes in %1$s.", 
-						projectReference.toString()));			
-		}
-		else {			
-			logger.info(
-				String.format(
-						"New revision of %1$s is %2$s.", 
-						projectReference.toString(), 
-						this.rootRevisionHash));
-		}
-		this.graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
+					String.format(
+							"Commiting and pushing possible changes in Project %1$s.", 
+							projectReference.toString()));
+			String oldRootRevisionHash = this.rootRevisionHash;
+			this.rootRevisionHash = gitProjectHandler.commitProject(commitMsg);
+			if (oldRootRevisionHash.equals(this.rootRevisionHash)) {
+				logger.info(
+						String.format(
+								"No changes in %1$s.", 
+								projectReference.toString()));			
+			}
+			else {			
+				logger.info(
+						String.format(
+								"New revision of %1$s is %2$s.", 
+								projectReference.toString(), 
+								this.rootRevisionHash));
+			}
+			this.graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
 //		printStatus();
+		}
 	}
 	
 	@Override
