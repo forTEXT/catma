@@ -882,16 +882,91 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			return mergeRequests.stream().map(
 					mr -> new MergeRequestInfo(
 							mr.getIid(), mr.getTitle(),
-							mr.getDescription(), mr.getCreatedAt()))
+							mr.getDescription(), 
+							mr.getCreatedAt(),
+							mr.getState(),
+							mr.getMergeStatus(),
+							glProjectId))
 					.sorted((mr1, mr2) -> mr1.getCreatedAt().compareTo(mr2.getCreatedAt()))
 					.collect(Collectors.toList());
 			
 		} catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-						"Failed to retriev open merge requests for Project %1$s and User %2$s", 
+						"Failed to retrieve open merge requests for Project %1$s and User %2$s", 
 						projectReference,
-						user.getIdentifier()));
+						user.getIdentifier()),
+					e);
 		}
+	}
+	
+	@Override
+	public MergeRequestInfo createMergeRequest(ProjectReference projectReference) throws IOException {
+		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
+		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+		
+		try {
+			MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
+			Integer glProjectId = projectApi.getProject(projectPath).getId();
+			
+			MergeRequest mr = api.createMergeRequest(
+					glProjectId, 
+					user.getIdentifier(),
+					Constants.MASTER, 
+					String.format(
+							"Integration of latest changes by %1$s (%2$s)",  
+							user.getName(), user.getIdentifier()), 
+					String.format(
+							"Integration of latest changes by %1$s (%2$s)",  
+							user.getName(), user.getIdentifier()), 
+					null,
+					null,
+					null,
+					null,
+					false); // do not remove source branch
+			
+			return new MergeRequestInfo(
+					mr.getIid(), mr.getTitle(),
+					mr.getDescription(), 
+					mr.getCreatedAt(),
+					mr.getState(),
+					mr.getMergeStatus(),
+					glProjectId);
+			
+		} catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+						"Failed to create Merge Request for Project %1$s and User %2$s", 
+						projectReference,
+						user.getIdentifier()),
+						e);
+		}
+	
+	}
+	
+	@Override
+	public MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException {
+		MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
+		try {
+			MergeRequest result = api.acceptMergeRequest(
+					mergeRequestInfo.getGlProjectId(), mergeRequestInfo.getIid());
+			return new MergeRequestInfo(
+					result.getIid(), result.getTitle(),
+					result.getDescription(), 
+					result.getCreatedAt(),
+					result.getState(),
+					result.getMergeStatus(),
+					mergeRequestInfo.getGlProjectId());
+					
+		} catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+						"Failed to merge MergeRequest ID %1$s for GL-ProjectID %2$s and User %3$s",
+						mergeRequestInfo.getIid(),
+						mergeRequestInfo.getGlProjectId(),
+						user.getIdentifier()),
+					e);
+		}
+	
 	}
 }

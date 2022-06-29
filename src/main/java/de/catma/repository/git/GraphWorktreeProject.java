@@ -31,6 +31,7 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.UI;
 
 import de.catma.backgroundservice.BackgroundService;
+import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
@@ -1424,51 +1425,84 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (hasUncommittedChanges()) {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
+		
+		final ProgressListener progressListener = new ProgressListener() {
+			@Override
+			public void setProgress(String value, Object... args) {
+				openProjectListener.progress(value, args);
+			}
+		};
 
-		gitProjectHandler.synchronizeWithRemote();
-
-		if (gitProjectHandler.hasConflicts()) {
-			openProjectListener.failure(new IllegalStateException(
-					String.format(
-						"There are conflicts in Project %1$s with ID %2$s,"
-						+ "please contact our support.",
-						projectReference.getName(),
-						projectReference.getProjectId())));						
-		}
-		else {
-			gitProjectHandler.ensureUserBranch();
+		backgroundService.submit(new DefaultProgressCallable<Boolean>() {
 			
-			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-			ProgressListener progressListener = new ProgressListener() {
-				@Override
-				public void setProgress(String value, Object... args) {
-					openProjectListener.progress(value, args);
+			@Override
+			public Boolean call() throws Exception {
+				try {
+					progressListener.setProgress("Synchronizing...");
+					boolean success = gitProjectHandler.synchronizeWithRemote();
+					progressListener.setProgress("Finished synchronization!");
+					return success;
 				}
-			};
-
-			graphProjectHandler.ensureProjectRevisionIsLoaded(
-					new ExecutionListener<TagManager>() {
-						@Override
-						public void error(Throwable t) {
-							openProjectListener.failure(t);
+				catch (Exception e) {
+					e.printStackTrace();
+					return false;
+				}
+			}
+		}, new ExecutionListener<Boolean>() {
+			@Override
+			public void done(Boolean result) {
+				if (result) {
+					try {
+						if (gitProjectHandler.hasConflicts()) {
+							openProjectListener.failure(new IllegalStateException(
+									String.format(
+										"There are conflicts in Project %1$s with ID %2$s,"
+										+ "please contact our support.",
+										projectReference.getName(),
+										projectReference.getProjectId())));						
 						}
-
-						@Override
-						public void done(TagManager result) {
-							tagManager.load(result.getTagLibrary());
-							openProjectListener.ready(GraphWorktreeProject.this);
+						else {
+							gitProjectHandler.ensureUserBranch();
+							
+							rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+	
+							graphProjectHandler.ensureProjectRevisionIsLoaded(
+									new ExecutionListener<TagManager>() {
+										@Override
+										public void error(Throwable t) {
+											openProjectListener.failure(t);
+										}
+	
+										@Override
+										public void done(TagManager result) {
+											tagManager.load(result.getTagLibrary());
+											openProjectListener.ready(GraphWorktreeProject.this);
+										}
+									},
+									progressListener,
+									rootRevisionHash,
+									tagManager,
+									() -> gitProjectHandler.getTagsets(),
+									() -> gitProjectHandler.getDocuments(),
+									(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener, true),
+									false,
+									backgroundService
+							);
 						}
-					},
-					progressListener,
-					rootRevisionHash,
-					tagManager,
-					() -> gitProjectHandler.getTagsets(),
-					() -> gitProjectHandler.getDocuments(),
-					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener, true),
-					false,
-					backgroundService
-			);
-		}
+					}
+					catch (Exception e) {
+						openProjectListener.failure(e);
+					}
+				}
+				else {
+					openProjectListener.ready(null);
+				}
+			}
+			@Override
+			public void error(Throwable t) {
+				openProjectListener.failure(t);				
+			}
+		}, progressListener);
 	}
 
 	@Override

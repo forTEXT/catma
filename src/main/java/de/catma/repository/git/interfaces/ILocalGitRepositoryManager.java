@@ -91,5 +91,9 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	List<String> getRemoteBranches() throws IOException;
 
+	List<CommitInfo> getTheirPublishedChanges() throws IOException;
+
+	List<CommitInfo> getOurUnpublishedChanges() throws IOException;
+
 
 }

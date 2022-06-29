@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,6 +39,7 @@ import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.TermInfo;
 import de.catma.project.CommitInfo;
+import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -802,33 +802,143 @@ public class GitProjectHandler {
 	}
 
 
-	public void synchronizeWithRemote() throws IOException {
+	public boolean synchronizeWithRemote() throws IOException {
+		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 			
-			localGitRepoManager.fetch(credentialsProvider);
+			boolean pushedAlready = false;
 			
-			if (localGitRepoManager.hasRef(
-					Constants.DEFAULT_REMOTE_NAME + "/" + remoteGitServerManager.getUsername())) {
+			// everything commmitted?
+			if (localGitRepoManager.hasUncommitedChanges()) {
+				// we perfom an auto commit and push everything
+				commitProject("Auto-committing changes");
+				localGitRepoManager.push(credentialsProvider);
+				pushedAlready = true;
+			}
+			
+			// do we have commits in the user branch that are not present in the master branch? 
+			// user branch -> origin/master
+			List<CommitInfo> ourUnpublishedChanges = 
+					localGitRepoManager.getOurUnpublishedChanges();
+
+			if (!ourUnpublishedChanges.isEmpty()) {
+				logger.info(
+					String.format(
+						"Commits that need to be merged %1$s -> origin/master: %2$s",
+						this.user.getIdentifier(),
+						ourUnpublishedChanges
+							.stream()
+							.map(CommitInfo::toString)
+							.collect(Collectors.joining(System.lineSeparator()))
+					)
+				);
 				
-				if (localGitRepoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {					
-					MergeResult mergeWithOriginMasterResult = 
-						localGitRepoManager.merge(
-								Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
-					
-					if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
-						localGitRepoManager.push(credentialsProvider);
-					}
-					else {
-						localGitRepoManager.abortMerge(mergeWithOriginMasterResult);
-					}
+				// make sure everyting is pushed
+				if (!pushedAlready) {
+					localGitRepoManager.push(credentialsProvider);
+					pushedAlready = true;
 				}
 				
+				// check for existing merge requests origin/userBranch -> origin/master
+				List<MergeRequestInfo> openMergeRequests =  
+						this.remoteGitServerManager.getOpenMergeRequests(projectReference);
+				
+				if (openMergeRequests.isEmpty()) {
+					// create and merge a merge request origin/userBranch -> origin/master
+					MergeRequestInfo mi = 
+						this.remoteGitServerManager.createMergeRequest(projectReference);
+					
+					logger.info(
+							String.format("Created Merge Request %1$s", mi));
+					MergeRequestInfo result = 
+							this.remoteGitServerManager.mergeMergeRequest(mi);
+					logger.info(
+							String.format("Merged Merge Request %1$s", result));
+					
+					if (!result.isMerged()) {
+						return false;
+					}
+				}
+				else {
+					logger.info(
+						String.format(
+							"Merge requests origin/%1$s -> origin/master: %2$s",
+							this.user.getIdentifier(),
+							openMergeRequests
+								.stream()
+								.map(MergeRequestInfo::toString)
+								.collect(Collectors.joining(System.lineSeparator()))
+						)
+					);
+					// merge all open merge requests origin/userBranch -> origin/master
+					for (MergeRequestInfo mi : openMergeRequests) {
+						if (mi.isOpen() && mi.canBeMerged()) {
+							MergeRequestInfo result = 
+									this.remoteGitServerManager.mergeMergeRequest(mi);
+							logger.info(
+									String.format("Merged Merge Request %1$s", result));
+							if (!result.isMerged()) {
+								return false;
+							}
+						}
+					}
+				}
 			}
-			else if (!localGitRepoManager.getRevisionHash().equals(ILocalGitRepositoryManager.NO_COMMITS_YET)) {
-				localGitRepoManager.push(credentialsProvider);
+			
+			// fetch latest commits 
+			// we are interested in updating the local origin/master here
+			localGitRepoManager.fetch(credentialsProvider);
+			
+			
+			// get commits that need to be merged to the local user branch 
+			// origin/master -> userBranch
+			List<CommitInfo> theirPublishedChanges = localGitRepoManager.getTheirPublishedChanges();
+
+			if (!theirPublishedChanges.isEmpty()) {
+				logger.info(
+					String.format(
+						"Commits that need to be merged origin/master -> %1$s: %2$s",
+						this.user.getIdentifier(),
+						theirPublishedChanges
+							.stream()
+							.map(CommitInfo::toString)
+							.collect(Collectors.joining(System.lineSeparator()))
+					)
+				);				
+				// did we already push the local user branch?
+				if (localGitRepoManager.hasRef(
+						Constants.DEFAULT_REMOTE_NAME + "/" + remoteGitServerManager.getUsername())) {
+					
+					// can we merge origin/master -> userBranch?
+					if (localGitRepoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {					
+						MergeResult mergeWithOriginMasterResult = 
+								localGitRepoManager.merge(
+										Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+						
+						// push merge commit if successfull
+						if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
+							localGitRepoManager.push(credentialsProvider);
+						}
+						else { // or abort
+							localGitRepoManager.abortMerge(mergeWithOriginMasterResult);
+							return false;
+						}
+					}
+					else {
+						return false;
+					}
+					
+				}
 			}
+			
+//			else if (!localGitRepoManager.getRevisionHash().equals(ILocalGitRepositoryManager.NO_COMMITS_YET)) {
+//				localGitRepoManager.push(credentialsProvider);
+//			}
+			
+			
+			return true;
 		}	
 	}
 

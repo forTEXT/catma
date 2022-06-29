@@ -18,4 +18,9 @@ public class CommitInfo {
 	public String getCommitMsg() {
 		return commitMsg;
 	}
+	
+	@Override
+	public String toString() {
+		return commitId + " "  + commitMsg;
+	}
 }

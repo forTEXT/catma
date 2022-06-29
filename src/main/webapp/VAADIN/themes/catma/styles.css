@@ -18212,11 +18212,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-left: 25px;
 }
 
-.catma .project-view-synch-bell {
-	color: yellow !important;
-	font-weight: bold;
-}
-
 .catma .dashboard-view {
 	background-color: white;
 	overflow: auto;

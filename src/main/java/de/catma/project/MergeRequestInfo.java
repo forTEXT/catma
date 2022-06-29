@@ -8,13 +8,22 @@ public class MergeRequestInfo {
 	public final String title;
 	public final String description;
 	public final Date createdAt;
+	public final int glProjectId;
+	private String state;
+	private String mergeStatus;
 	
-	public MergeRequestInfo(int iid, String title, String description, Date createdAt) {
+	public MergeRequestInfo(
+			int iid, 
+			String title, String description, Date createdAt, 
+			String state, String mergeStatus, Integer glProjectId) {
 		super();
 		this.iid = iid;
 		this.title = title;
 		this.description = description;
 		this.createdAt = createdAt;
+		this.glProjectId = glProjectId;
+		this.state = state;
+		this.mergeStatus = mergeStatus;
 	}
 	public int getIid() {
 		return iid;
@@ -27,5 +36,37 @@ public class MergeRequestInfo {
 	}
 	public Date getCreatedAt() {
 		return createdAt;
+	}
+	
+	public int getGlProjectId() {
+		return glProjectId;
+	}
+	
+	public boolean canBeMerged() {
+		return this.mergeStatus != null 
+				&& this.mergeStatus.equals("can_be_merged");
+	}
+	
+	public boolean isOpen() {
+		return this.state != null && this.state.equals("opened");
+	}
+	
+	
+	public boolean isMerged() {
+		return this.state != null && this.state.equals("merged");
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("MergeRequest #");
+		builder.append(iid);
+		builder.append(" ");
+		builder.append(title);
+		builder.append(" Status: ");
+		builder.append(state);
+		builder.append(" MergeStatus: " );
+		builder.append(mergeStatus);
+		return builder.toString();
 	}
 }

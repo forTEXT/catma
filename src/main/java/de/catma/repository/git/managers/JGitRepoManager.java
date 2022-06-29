@@ -23,6 +23,7 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.DiffCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
@@ -1085,9 +1086,101 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					}
 				}
 			} catch (GitAPIException e) {
-				throw new IOException("Could not get git log info!", e);
+				throw new IOException("Could not get git diff info!", e);
 			}
 		}
 		return paths;
 	}
+	
+	@Override
+	public List<CommitInfo> getTheirPublishedChanges() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getTheirPublishedChanges` on a detached instance");
+		}		
+		
+		List<CommitInfo> result = new ArrayList<>();
+		
+		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
+			return result; // no HEAD -> new empty Project, no commits yet
+		}
+		
+		
+		try {
+			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
+			Iterable<RevCommit> commits = null;
+			
+			if (!refs.isEmpty()) { // otherwise project has never been never synchronized
+
+				ObjectId remote =
+					this.gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER); 
+				
+				if (remote != null) {
+					commits = this.gitApi.log().addRange(
+							this.gitApi.getRepository().resolve("refs/heads/" + username),
+							remote).call();
+				}
+				else {
+					commits = Collections.<RevCommit>emptyList();
+				}
+			}
+			
+			
+			for (RevCommit c : commits) {
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+			}
+			
+			
+		} catch (GitAPIException e) {
+			throw new IOException("Could not get git log info!", e);
+		}
+		
+		return result;
+	}
+	
+	
+	@Override
+	public List<CommitInfo> getOurUnpublishedChanges() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getOurUnpublishedChanges` on a detached instance");
+		}		
+		
+		List<CommitInfo> result = new ArrayList<>();
+		
+		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
+			return result; // no HEAD -> new empty Project, no commits yet
+		}
+		
+		
+		try {
+			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
+			Iterable<RevCommit> commits = null;
+			
+			if (!refs.isEmpty()) { // otherwise project has never been never synchronized
+
+				ObjectId remote =
+					this.gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER); 
+				
+				if (remote != null) {
+					commits = this.gitApi.log().addRange(
+							remote,
+							this.gitApi.getRepository().resolve("refs/heads/" + username)).call();
+				}
+				else {
+					commits = Collections.<RevCommit>emptyList();
+				}
+			}
+			
+			
+			for (RevCommit c : commits) {
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+			}
+			
+			
+		} catch (GitAPIException e) {
+			throw new IOException("Could not get git log info!", e);
+		}
+		
+		return result;
+	}
+	
 }
