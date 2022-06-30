@@ -35,7 +35,7 @@ class JGitRepoManagerTest {
 			"c:/data/catmadata/localgit/",
 			new User() {
 				@Override
-				public Integer getUserId() {return null;}
+				public Long getUserId() {return null;}
 				@Override
 				public String getName() {return null;}
 				@Override

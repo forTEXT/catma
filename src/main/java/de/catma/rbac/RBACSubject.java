@@ -14,5 +14,5 @@ public interface RBACSubject {
 	 * Retrieves the identifier of a subject
 	 * @return the identifier
 	 */
-	Integer getUserId();
+	Long getUserId();
 }

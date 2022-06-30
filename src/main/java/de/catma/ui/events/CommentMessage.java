@@ -13,11 +13,11 @@ public class CommentMessage implements Serializable {
 	
 	private static final long serialVersionUID = 4432309957370280636L;
 	
-	private final int commentId;
-	private final int commentIid;
+	private final Long commentId;
+	private final Long commentIid;
 	private final ClientComment clientComment;
 	
-	private Integer replyId;
+	private Long replyId;
 	private ClientCommentReply clientCommentReply;
 
 	private final String documentId;
@@ -25,13 +25,13 @@ public class CommentMessage implements Serializable {
 
 	private final boolean deleted;
 
-	private final Integer senderId;
+	private final Long senderId;
 	
 
 	public CommentMessage(
-			int commentId, 
-			int commentIid,
-			Integer senderId, ClientComment clientComment, 
+			Long commentId, 
+			Long commentIid,
+			Long senderId, ClientComment clientComment, 
 			String sourceDocumentId, 
 			boolean deleted) {
 		super();
@@ -44,13 +44,13 @@ public class CommentMessage implements Serializable {
 	}
 	
 	public CommentMessage(
-			int commentId,
-			int commentIid,
-			Integer senderId,
+			Long commentId,
+			Long commentIid,
+			Long senderId,
 			ClientComment clientComment, 
 			String sourceDocumentId, 
 			boolean deleted,
-			int replyId,
+			Long replyId,
 			ClientCommentReply clientCommentReply) {
 		this(commentId, commentIid, senderId, clientComment, sourceDocumentId, deleted);
 		this.replyId = replyId;
@@ -61,11 +61,11 @@ public class CommentMessage implements Serializable {
 		return deleted;
 	}
 
-	public int getCommentId() {
+	public Long getCommentId() {
 		return commentId;
 	}
 
-	public Integer getUserId() {
+	public Long getUserId() {
 		return clientComment.getUserId();
 	}
 
@@ -109,11 +109,11 @@ public class CommentMessage implements Serializable {
 		return reply;
 	}
 
-	public Integer getReplyUserId() {
+	public Long getReplyUserId() {
 		return this.clientCommentReply.getUserId();
 	}
 	
-	public Integer getSenderId() {
+	public Long getSenderId() {
 		return senderId;
 	}
 

@@ -26,6 +26,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.MergeCommand.FastForwardMode;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
@@ -676,13 +677,13 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		try {
 			MergeCommand mergeCommand = this.gitApi.merge();
-			
+			mergeCommand.setFastForward(FastForwardMode.FF);
 			
 			Ref ref = this.gitApi.getRepository().findRef(branch);
 			if (ref != null) {
 				mergeCommand.include(ref);
 			} 
-
+			
 			return mergeCommand.call();
 		}
 		catch (GitAPIException e) {

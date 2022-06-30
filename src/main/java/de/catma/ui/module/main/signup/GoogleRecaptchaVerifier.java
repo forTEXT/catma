@@ -10,8 +10,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.client.ClientConfig;
-
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
 import de.catma.properties.CATMAPropertyKey;
@@ -33,7 +31,7 @@ public class GoogleRecaptchaVerifier {
 	    client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
 	    webtarget = client.target("https://www.google.com/recaptcha/api/siteverify");
 	}
-	
+		
 	/**
 	 * Verifies a given token by using a restclient. It blocks during request.
 	 *   

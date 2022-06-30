@@ -4,18 +4,18 @@ import java.util.Date;
 
 public class MergeRequestInfo {
 	
-	public final int iid;
+	public final Long iid;
 	public final String title;
 	public final String description;
 	public final Date createdAt;
-	public final int glProjectId;
+	public final Long glProjectId;
 	private String state;
 	private String mergeStatus;
 	
 	public MergeRequestInfo(
-			int iid, 
+			Long iid, 
 			String title, String description, Date createdAt, 
-			String state, String mergeStatus, Integer glProjectId) {
+			String state, String mergeStatus, Long glProjectId) {
 		super();
 		this.iid = iid;
 		this.title = title;
@@ -25,7 +25,7 @@ public class MergeRequestInfo {
 		this.state = state;
 		this.mergeStatus = mergeStatus;
 	}
-	public int getIid() {
+	public Long getIid() {
 		return iid;
 	}
 	public String getTitle() {
@@ -38,7 +38,7 @@ public class MergeRequestInfo {
 		return createdAt;
 	}
 	
-	public int getGlProjectId() {
+	public Long getGlProjectId() {
 		return glProjectId;
 	}
 	
@@ -68,5 +68,10 @@ public class MergeRequestInfo {
 		builder.append(" MergeStatus: " );
 		builder.append(mergeStatus);
 		return builder.toString();
+	}
+	
+	public boolean isMergeStatusCheckInProgress() {
+		return this.mergeStatus != null 
+			&& (this.mergeStatus.equals("checking") || this.mergeStatus.equals("unchecked"));
 	}
 }

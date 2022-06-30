@@ -8,7 +8,7 @@
         <dependent-module archiveName="elements-0.2.3-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/elements/elements">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="gitlab4j-api-4.17.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gitlab4j-api/gitlab4j-api">
+        <dependent-module archiveName="gitlab4j-api-5.0.1-CATMA.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gitlab4j-api/gitlab4j-api">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="java-output-path" value="/catma/build/classes"/>

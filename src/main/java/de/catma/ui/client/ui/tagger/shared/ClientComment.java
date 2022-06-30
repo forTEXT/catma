@@ -22,7 +22,7 @@ public class ClientComment implements Serializable {
 	
 	private final String uuid;
 	private final String username;
-	private final Integer userId;
+	private final Long userId;
 	private final List<TextRange> ranges;
 	private int replyCount;
 	
@@ -30,7 +30,7 @@ public class ClientComment implements Serializable {
 	private List<ClientCommentReply> replies;
 	
 	public ClientComment(
-			String uuid, String username, Integer userId, 
+			String uuid, String username, Long userId, 
 			String body, int replyCount, List<TextRange> ranges) {
 		super();
 		this.uuid = uuid;
@@ -50,7 +50,7 @@ public class ClientComment implements Serializable {
 		return username;
 	}
 
-	public Integer getUserId() {
+	public Long getUserId() {
 		return userId;
 	}
 

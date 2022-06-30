@@ -18,10 +18,10 @@ public class ClientCommentReply implements Serializable {
 	private final String uuid;
 	private String body;
 	private String username;
-	private Integer userId;
+	private Long userId;
 	private String commentUuid;
 	
-	public ClientCommentReply(String uuid, String body, String username, Integer userId, String commentUuid) {
+	public ClientCommentReply(String uuid, String body, String username, Long userId, String commentUuid) {
 		super();
 		this.uuid = uuid;
 		this.body = body;
@@ -42,7 +42,7 @@ public class ClientCommentReply implements Serializable {
 		return username;
 	}
 
-	public Integer getUserId() {
+	public Long getUserId() {
 		return userId;
 	}
 

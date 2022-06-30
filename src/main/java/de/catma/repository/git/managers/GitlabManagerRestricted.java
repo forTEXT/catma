@@ -29,6 +29,7 @@ import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Author;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.ImportStatus.Status;
+import org.gitlab4j.api.models.Project.MergeMethod;
 import org.gitlab4j.api.models.Issue;
 import org.gitlab4j.api.models.IssueFilter;
 import org.gitlab4j.api.models.Member;
@@ -161,6 +162,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			project.setName(name);
 			project.setDescription(description);
 			project.setRemoveSourceBranchAfterMerge(false);
+			project.setMergeMethod(MergeMethod.FF);
 			
 			project = projectApi.createProject(project);
 			return new CreateRepositoryResponse(
@@ -399,7 +401,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 						.map(member -> new GitMember(member))
 						.collect(Collectors.toList());
 				
-				Map<Integer,de.catma.user.Member> mergedList = new HashMap<>();
+				Map<Long,de.catma.user.Member> mergedList = new HashMap<>();
 				
 				for(de.catma.user.Member m : allMembers){
 					if(! mergedList.containsKey(m.getUserId()) 
@@ -433,7 +435,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 	}
 
-	private Map<String, AccessLevel> getResourcePermissions(Integer groupId) throws GitLabApiException {
+	private Map<String, AccessLevel> getResourcePermissions(Long groupId) throws GitLabApiException {
 
         Map<String, AccessLevel> resultMap = Maps.newHashMap();
         ProjectApi projectApi = new ProjectApi(restrictedGitLabApi);
@@ -864,6 +866,33 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
+	public MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException {
+		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
+		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+		
+		try {
+			MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
+			Long glProjectId = projectApi.getProject(projectPath).getId();
+			MergeRequest mr = api.getMergeRequest(glProjectId, mergeRequestIid);
+			return new MergeRequestInfo(
+					mr.getIid(), 
+					mr.getTitle(), mr.getDescription(), 
+					mr.getCreatedAt(), 
+					mr.getState(), mr.getMergeStatus(),
+					glProjectId);
+			
+		} catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+						"Failed to retrieve merge request for Project %1$s and MR IID %2$d", 
+						projectReference,
+						mergeRequestIid),
+					e);
+		}
+
+	}
+	
+	@Override
 	public List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException {
 		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
@@ -875,7 +904,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			filter.setTargetBranch(Constants.MASTER);
 			filter.setState(MergeRequestState.OPENED);
 		
-			Integer glProjectId = projectApi.getProject(projectPath).getId();
+			Long glProjectId = projectApi.getProject(projectPath).getId();
 			filter.setProjectId(glProjectId);
 			List<MergeRequest> mergeRequests = api.getMergeRequests(filter);
 			
@@ -907,7 +936,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		
 		try {
 			MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
-			Integer glProjectId = projectApi.getProject(projectPath).getId();
+			Long glProjectId = projectApi.getProject(projectPath).getId();
 			
 			MergeRequest mr = api.createMergeRequest(
 					glProjectId, 

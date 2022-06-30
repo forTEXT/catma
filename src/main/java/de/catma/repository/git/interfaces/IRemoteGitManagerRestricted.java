@@ -147,6 +147,7 @@ public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommo
 	List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException;
 	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
 	MergeRequestInfo createMergeRequest(ProjectReference projectReference) throws IOException;
+	MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException;
 
 
 }

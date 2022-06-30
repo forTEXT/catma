@@ -34,7 +34,7 @@ public class GitLabServerManagerTest {
 
 	private ArrayList<String> groupsToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<ProjectReference> repositoriesToDeleteOnTearDown = new ArrayList<>();
-	private ArrayList<Integer> usersToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<Long> usersToDeleteOnTearDown = new ArrayList<>();
 
 	public GitLabServerManagerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -83,7 +83,7 @@ public class GitLabServerManagerTest {
 		}
 
 		if (usersToDeleteOnTearDown.size() > 0) {
-			for (Integer userId : usersToDeleteOnTearDown) {
+			for (Long userId : usersToDeleteOnTearDown) {
 				userApi.deleteUser(userId);
 				GitLabServerManagerTest.awaitUserDeleted(userApi, userId);
 			}
@@ -95,7 +95,7 @@ public class GitLabServerManagerTest {
 //		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}
 
-	public static void awaitUserDeleted(UserApi userApi, int userId) {
+	public static void awaitUserDeleted(UserApi userApi, Long userId) {
 		await().until(() -> {
 			try {
 				userApi.getUser(userId);

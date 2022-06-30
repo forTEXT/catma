@@ -800,7 +800,21 @@ public class GitProjectHandler {
 
 		return false;
 	}
-
+	
+	private MergeRequestInfo refreshMergeRequestInfo(MergeRequestInfo mi) throws IOException {
+		int tries = 10;
+		while (tries > 0 && mi.isMergeStatusCheckInProgress()) {
+			try {
+				Thread.sleep(1000);
+				mi = this.remoteGitServerManager.getMergeRequest(projectReference, mi.getIid());
+				tries--;
+			} catch (InterruptedException e) {
+				break;
+			}
+		}
+		
+		return mi;
+	}
 
 	public boolean synchronizeWithRemote() throws IOException {
 		
@@ -849,7 +863,7 @@ public class GitProjectHandler {
 					// create and merge a merge request origin/userBranch -> origin/master
 					MergeRequestInfo mi = 
 						this.remoteGitServerManager.createMergeRequest(projectReference);
-					
+					mi = refreshMergeRequestInfo(mi);
 					logger.info(
 							String.format("Created Merge Request %1$s", mi));
 					MergeRequestInfo result = 
@@ -874,6 +888,7 @@ public class GitProjectHandler {
 					);
 					// merge all open merge requests origin/userBranch -> origin/master
 					for (MergeRequestInfo mi : openMergeRequests) {
+						mi = refreshMergeRequestInfo(mi);
 						if (mi.isOpen() && mi.canBeMerged()) {
 							MergeRequestInfo result = 
 									this.remoteGitServerManager.mergeMergeRequest(mi);
@@ -932,12 +947,7 @@ public class GitProjectHandler {
 					
 				}
 			}
-			
-//			else if (!localGitRepoManager.getRevisionHash().equals(ILocalGitRepositoryManager.NO_COMMITS_YET)) {
-//				localGitRepoManager.push(credentialsProvider);
-//			}
-			
-			
+
 			return true;
 		}	
 	}

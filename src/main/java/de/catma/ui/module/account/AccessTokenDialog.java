@@ -28,7 +28,7 @@ public class AccessTokenDialog extends Window {
 	private final Binder<AccessTokenData> binder = new Binder<>();
 	private final IRemoteGitManagerPrivileged gitManagerPrivileged ;
 
-	private final int userId;
+	private final Long userId;
 
 	private Button btnClose;
 	private Button btnCreatePersonalAccessToken;

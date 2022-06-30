@@ -19,7 +19,7 @@ import de.catma.ui.module.main.ErrorHandler;
 
 public class ProjectInvitationHandler extends UIMessageListener<InvitationRequestMessage> {
 	
-	private final Set<Integer> assignedUsers = new HashSet<>();
+	private final Set<Long> assignedUsers = new HashSet<>();
 	private final ProjectInvitation projectInvitation;
 	private final Project project;
 	private final ITopic<JoinedProjectMessage> joinedTopic;
@@ -45,7 +45,7 @@ public class ProjectInvitationHandler extends UIMessageListener<InvitationReques
 	public void uiOnMessage(Message<InvitationRequestMessage> message) {
 		if (message.getMessageObject().getCode() == projectInvitation.getKey()) {
 			try {
-				Integer userId = Integer.valueOf(message.getMessageObject().getUserId());
+				Long userId = Long.valueOf(message.getMessageObject().getUserId());
 				
 				if (!assignedUsers.contains(userId)) {
 					

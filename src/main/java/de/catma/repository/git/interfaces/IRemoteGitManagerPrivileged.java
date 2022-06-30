@@ -43,7 +43,7 @@ public interface IRemoteGitManagerPrivileged extends ICommonRemoteGitManager {
 	 * @return the new token
 	 * @throws IOException if something went wrong while creating the personal access token
 	 */
-	public String createPersonalAccessToken(int userId, String tokenName, LocalDate expiresAt) throws IOException;
+	public String createPersonalAccessToken(Long userId, String tokenName, LocalDate expiresAt) throws IOException;
 
 	/**
 	 * Creates a new remote user.
@@ -59,7 +59,7 @@ public interface IRemoteGitManagerPrivileged extends ICommonRemoteGitManager {
 	 * @throws IOException if something went wrong while creating the remote
 	 *         user
 	 */
-	int createUser(String email, String username, String password, String name) throws IOException;
+	Long createUser(String email, String username, String password, String name) throws IOException;
 
 	/**
 	 * Changes a user 
@@ -68,6 +68,6 @@ public interface IRemoteGitManagerPrivileged extends ICommonRemoteGitManager {
 	 * @param password
 	 * @throws IOException
 	 */
-	void modifyUserAttributes(int userId, String name, String password) throws IOException;
+	void modifyUserAttributes(Long userId, String name, String password) throws IOException;
 
 }
