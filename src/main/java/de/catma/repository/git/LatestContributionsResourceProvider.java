@@ -151,7 +151,6 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 
 	@Override
 	public List<AnnotationCollectionReference> getCollectionReferences() {
-		ArrayList<AnnotationCollectionReference> collectionReferences = new ArrayList<>();
 		
 		File collectionsDir = Paths.get(
 				this.projectPath.getAbsolutePath(),
@@ -159,8 +158,11 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 			.toFile();
 		
 		if (!collectionsDir.exists()) {
-			return collectionReferences;
+			return new ArrayList<>();
 		}
+		
+		Map<String, AnnotationCollectionReference> collectionReferences = 
+				Maps.newHashMap();
 		
 		File[] collectionDirs = 
 				collectionsDir.listFiles(file -> file.isDirectory());
@@ -173,14 +175,13 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 						this.remoteGitServerManager.getUsername(),
 						this.remoteGitServerManager.getEmail()
 		);
-		Set<String> collectionIds = new HashSet<>();
 		
 		for (File collectionDir : collectionDirs) {
 			String collectionId = collectionDir.getName();
 			try {
-				collectionReferences.add(
+				collectionReferences.put(
+					collectionId,
 					gitMarkupCollectionHandler.getCollectionReference(collectionId));
-				collectionIds.add(collectionId);
 			} catch (Exception e) {
 				logger.log(
 				Level.SEVERE, 
@@ -200,9 +201,14 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 					localGitRepManager.checkout(latestContribution.getBranch(), false);
 					for (String collectionId : latestContribution.getCollectionIds()) {
 						try {
-							if (!collectionIds.contains(collectionId)) {
-								collectionReferences.add(gitMarkupCollectionHandler.getCollectionReference(collectionId));
-								collectionIds.add(collectionId);
+							if (!collectionReferences.containsKey(collectionId)) {
+								AnnotationCollectionReference colRef =
+										gitMarkupCollectionHandler.getCollectionReference(collectionId);
+								colRef.setContribution(true);
+								collectionReferences.put(collectionId, colRef);
+							}
+							else {
+								collectionReferences.get(collectionId).setContribution(true);
 							}
 						}
 						catch (IOException e) {
@@ -236,7 +242,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 		}
 
 		
-		return collectionReferences;
+		return new ArrayList<>(collectionReferences.values());
 	}
 
 	@Override
@@ -302,6 +308,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 									tagLibrary, 
 									progressListener,
 									false);
+							collection.setContribution(true);
 							
 							if (collectionsById.containsKey(collectionId)) {
 								collectionsById.get(collectionId).mergeAdditive(collection);
@@ -398,6 +405,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 									}
 								},
 								false);
+						contribution.setContribution(true);
 						
 						if (collection != null) {							
 							collection.mergeAdditive(contribution);

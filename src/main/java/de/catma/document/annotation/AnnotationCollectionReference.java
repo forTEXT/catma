@@ -33,6 +33,7 @@ public class AnnotationCollectionReference {
 	private String sourceDocumentId;
 	private String forkedFromCommitURL;
 	private String responsibleUser;
+	private transient boolean contribution = false;
 	
 	public AnnotationCollectionReference(AnnotationCollection annotationCollection) {
 		this(annotationCollection.getId(),
@@ -40,6 +41,7 @@ public class AnnotationCollectionReference {
 				annotationCollection.getSourceDocumentId(),
 				annotationCollection.getForkedFromCommitURL(),
 				annotationCollection.getResponsibleUser());
+		this.contribution = annotationCollection.isContribution();
 	}
 	
 	public AnnotationCollectionReference(
@@ -134,4 +136,13 @@ public class AnnotationCollectionReference {
 	public void setResponsibleUser(String responsibleUser) {
 		this.responsibleUser = responsibleUser;
 	}
+	
+	public boolean isContribution() {
+		return contribution;
+	}
+	
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
+	}
+
 }

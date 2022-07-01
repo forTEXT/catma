@@ -72,7 +72,9 @@ class PropertyDataItem implements TagsetTreeItem {
 	
 	@Override
 	public String generateStyle() {
-		return "annotate-panel-property-data-item";
+		return (propertyDefinition.isContribution()
+				?"annotate-panel-property-with-contributions "
+				:"") + "annotate-panel-property-data-item";
 	}
 	
 	public PropertyDefinition getPropertyDefinition() {

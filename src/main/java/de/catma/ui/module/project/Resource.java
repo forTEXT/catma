@@ -39,4 +39,5 @@ public interface Resource {
 	
 	public boolean isResponsible(String userIdentifier);
 
+	public boolean isContribution();
 }

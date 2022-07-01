@@ -1,17 +1,19 @@
 package de.catma.ui.module.main;
 
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
+
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.Page;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
 
-import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.HeaderContextChangeEvent;
@@ -31,7 +33,7 @@ public class CatmaHeader extends HorizontalLayout {
 
 	private final EventBus eventBus;
 	private final LoginService loginService;
-	private final Label contextInformation = new Label();
+	private final Label contextInformation = new Label("", ContentMode.HTML);
 	private Button btHome;
 
 	public CatmaHeader(EventBus eventBus, LoginService loginService, IRemoteGitManagerPrivileged gitManagerPrivileged){
@@ -84,7 +86,19 @@ public class CatmaHeader extends HorizontalLayout {
 
     @Subscribe
     public void headerChangeEvent(HeaderContextChangeEvent headerContextChangeEvent){
-        contextInformation.setValue(headerContextChangeEvent.getValue());
+    	String contextInfo = headerContextChangeEvent.getValue();
+    	
+    	if (headerContextChangeEvent.isReadonly()) {
+    		contextInfo = Jsoup.clean(contextInfo, Safelist.basic()) + VaadinIcons.RANDOM.getHtml() + VaadinIcons.LOCK.getHtml();
+    	}
+    	else if (!headerContextChangeEvent.isDashboard()) {
+    		contextInfo = Jsoup.clean(contextInfo, Safelist.basic()) + VaadinIcons.ROAD_BRANCH.getHtml();
+    	}
+    	else {
+    		contextInfo = "";
+    	}
+    	
+        contextInformation.setValue(contextInfo);
         if (headerContextChangeEvent.isDashboard()) {
         	btHome.setIcon(null);
         }

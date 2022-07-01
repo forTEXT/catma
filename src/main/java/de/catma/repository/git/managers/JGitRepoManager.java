@@ -1082,7 +1082,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				List<DiffEntry> result = diffCommand.call();
 				for (DiffEntry diffEntry : result) {
 					if (!diffEntry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
-						System.out.println(diffEntry);
 						paths.add(diffEntry.getNewPath());
 					}
 				}

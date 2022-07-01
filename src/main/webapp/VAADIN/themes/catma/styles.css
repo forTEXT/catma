@@ -18029,6 +18029,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 1.5em;
 }
 
+.catma div.v-label-header__context > .v-icon.v-icon-lock, .catma div.v-label-header__context > .v-icon.v-icon-road_branch, .catma div.v-label-header__context > .v-icon.v-icon-random {
+	font-size: smaller;
+	padding-left: 5px;
+}
+
 .catma .nav {
 	background-color: #e0e0e0;
 	color: rgba(0, 0, 0, 0.87);
@@ -18198,9 +18203,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	justify-content: center;
 }
 
+.catma .documentsgrid__doc_contrib {
+	color: blue;
+}
+
 .catma .documentsgrid__doc__author {
 	font-size: 0.75em;
 	color: rgba(0, 0, 0, 0.54);
+}
+
+.catma .project-view-tagset-with-contribution {
+	color: blue;
 }
 
 .catma .project-view-action-grid {
@@ -18310,7 +18323,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 12px;
 }
 
-.catma .annotate-panel-tagset-with-contributions {
+.catma .annotate-panel-tagset-with-contributions span.annotate-panel-tagsetname {
+	color: blue;
+}
+
+.catma .annotate-panel-tag-with-contributions {
+	color: blue;
+}
+
+.catma tr.annotate-panel-property-with-contributions div.annotation-panel-property-summary {
 	color: blue;
 }
 

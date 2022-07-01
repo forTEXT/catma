@@ -54,6 +54,7 @@ import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
+import de.catma.project.event.ProjectReadyEvent;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -124,7 +125,7 @@ public class AnnotationPanel extends VerticalLayout {
 		initListeners();
 		initData();
 	}
-
+	
 	private void initListeners() {
 		tagChangedListener = new PropertyChangeListener() {
 			
@@ -357,8 +358,6 @@ public class AnnotationPanel extends VerticalLayout {
             }
             
             initEditableCollectionData(null);
-            tagsetGridComponent.getActionGridBar().setAddBtnEnabled(!project.isReadOnly());
-            tagsetGridComponent.getActionGridBar().setMoreOptionsBtnEnabled(!project.isReadOnly());
         } catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
         }
@@ -549,6 +548,8 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		btAddCollection.addClickListener(clickEvent -> handelAddCollectionRequest());
 		btFilterCollection.addClickListener(clickEvent -> handleFilterCollectionChangeRequest());
+		
+        toggleEditComponentsEnabledState();
 	}
 
 	private void handleFilterCollectionChangeRequest() {
@@ -1055,7 +1056,7 @@ public class AnnotationPanel extends VerticalLayout {
 		currentEditableCollectionBox.setWidth("100%");
 		currentEditableCollectionBox.setPlaceholder(
 				"Please select a Document first!");
-
+		
 		btAddCollection = new IconButton(VaadinIcons.PLUS);
 		btFilterCollection = new IconButton(VaadinIcons.LOCK);
 		btFilterCollection.setData(Boolean.TRUE); //editable colletions are filtered
@@ -1098,6 +1099,7 @@ public class AnnotationPanel extends VerticalLayout {
         btMaximizeAnnotationDetailsRibbon = new IconButton(VaadinIcons.ANGLE_DOUBLE_UP);
         btMaximizeAnnotationDetailsRibbon.addStyleName("annotation-panel-button-right-align");
         rightSplitPanel.addComponent(btMaximizeAnnotationDetailsRibbon);
+        
         
         annotationDetailsPanel = new AnnotationDetailsPanel(
         		project, 
@@ -1196,9 +1198,15 @@ public class AnnotationPanel extends VerticalLayout {
 			collection.getTagReferences().stream().map(
 					tr -> tr.getTagInstanceId()).collect(Collectors.toSet()));
 		
+		toggleEditComponentsEnabledState();		
+	}
+	
+	private void toggleEditComponentsEnabledState() {
 		currentEditableCollectionBox.setEnabled(!project.isReadOnly());
 		btAddCollection.setEnabled(!project.isReadOnly());
-		btFilterCollection.setEnabled(!project.isReadOnly());
+		btFilterCollection.setEnabled(!project.isReadOnly());	
+        tagsetGridComponent.getActionGridBar().setAddBtnEnabled(!project.isReadOnly());
+        tagsetGridComponent.getActionGridBar().setMoreOptionsBtnEnabled(!project.isReadOnly());
 	}
 
 	public void removeCollection(String collectionId) {

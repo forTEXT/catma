@@ -191,7 +191,8 @@ public class TagInstance {
 		this.pageFilename = pageFilename;
 	}
 
-	public void mergeAdditive(TagInstance tagInstance) {
+	public boolean mergeAdditive(TagInstance tagInstance) {
+		boolean merged = false;
 		for (Property property : tagInstance.getUserDefinedProperties()) {
 			if (userDefinedProperties.containsKey(property.getPropertyDefinitionId())) {
 				Property existingProperty = userDefinedProperties.get(property.getPropertyDefinitionId());
@@ -199,14 +200,16 @@ public class TagInstance {
 				for (String value : property.getPropertyValueList()) {
 					if (!values.contains(value)) {
 						values.add(value);
+						merged = true;
 					}
 				}
 				existingProperty.setPropertyValueList(values);
 			}
 			else {
 				addUserDefinedProperty(property);
+				merged = true;
 			}
 		}
-		
+		return merged;
 	}
 }

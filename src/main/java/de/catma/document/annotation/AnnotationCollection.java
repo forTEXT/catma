@@ -50,7 +50,8 @@ public class AnnotationCollection {
 	private String sourceDocumentId;
 	private String forkedFromCommitURL;
 	private String responsibleUser;
-
+	private transient boolean contribution = false;
+	
 	/**
 	 * @param id the identifier of the collections (depends on the repository)
 	 * @param uuid the CATMA uuid, see {@link de.catma.util.IDGenerator}
@@ -358,10 +359,12 @@ public class AnnotationCollection {
 	}
 
 	public void mergeAdditive(AnnotationCollection collection) {
+		
 		Set<TagInstance> toBeMerged = new HashSet<TagInstance>();
 		for (TagReference reference : collection.getTagReferences()) {
 			if (!hasTagInstance(reference.getTagInstanceId())) {
 				addTagReference(reference);
+				setContribution(true);
 			}
 			else {
 				toBeMerged.add(reference.getTagInstance());
@@ -369,10 +372,26 @@ public class AnnotationCollection {
 		}
 		
 		for (TagInstance tagInstance : toBeMerged) {
-			tagReferencesByInstanceId.get(
-					tagInstance.getUuid()).get(0).getTagInstance().mergeAdditive(tagInstance);
+			boolean merged = 
+				tagReferencesByInstanceId
+				.get(tagInstance.getUuid())
+				.get(0)
+				.getTagInstance()
+				.mergeAdditive(tagInstance);
+			if (merged) {
+				setContribution(true);
+			}
 		}
 		
 	}
+
+	public boolean isContribution() {
+		return contribution;
+	}
 	
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
+	}
+
+
 }

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.Query;
@@ -46,6 +47,7 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
+import de.catma.project.event.ProjectReadyEvent;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -92,20 +94,32 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	private MenuItem miRemoveAnnotations;
 	private IconButton btnClearSelectedRows;
 	private MenuItem miAnnotateRows;
+	private EventBus eventBus;
 
 	public KwicPanel(
 			EventBus eventBus,
 			Project project, 
 			LoadingCache<String, KwicProvider> kwicProviderCache) {
+		this.eventBus = eventBus;
 		this.project = project;
 		this.kwicItemHandler = new KwicItemHandler(project, kwicProviderCache);
+		
 		initComponents();
+
+		eventBus.register(this);
 		initActions(eventBus);
+	}
+
+	@Subscribe
+	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
+		miAnnotateRows.setEnabled(!projectReadyEvent.getProject().isReadOnly());
+		miRemoveAnnotations.setEnabled(!projectReadyEvent.getProject().isReadOnly());
 	}
 
 	private void initActions(EventBus eventBus) {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		miAnnotateRows = moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
+		miAnnotateRows.setEnabled(!this.project.isReadOnly());
 		
 		ActionGridBar actionBar = kwicGridComponent.getActionGridBar();
 		
@@ -525,7 +539,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 				kwicGrid.getColumn(ColumnId.PROPERTY_NAME.name()).setHidden(false);
 				kwicGrid.getColumn(ColumnId.PROPERTY_VALUE.name()).setHidden(false);
 			}
-			miRemoveAnnotations.setEnabled(true);
+			miRemoveAnnotations.setEnabled(!project.isReadOnly());
 		}
 		
 		kwicGrid.getDataProvider().refreshAll();
@@ -570,7 +584,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	
 	@Override
 	public void close() {
-		// noop
+		this.eventBus.unregister(this);
 	}
 	
 	@Override

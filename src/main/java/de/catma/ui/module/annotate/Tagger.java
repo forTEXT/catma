@@ -321,15 +321,17 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void addTagInstanceWith(TagDefinition tagDefinition) {
-		try {
-			getRpcProxy(TaggerClientRpc.class).addTagInstanceWith(
-				new ClientTagDefinitionJSONSerializer().toJSON(
-						new ClientTagDefinition(
-							tagDefinition.getUuid(),
-							ColorConverter.toHex(tagDefinition.getColor()))));
-		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error adding Annotation!", e); 
+		if (!project.isReadOnly()) {
+			try {
+				getRpcProxy(TaggerClientRpc.class).addTagInstanceWith(
+					new ClientTagDefinitionJSONSerializer().toJSON(
+							new ClientTagDefinition(
+								tagDefinition.getUuid(),
+								ColorConverter.toHex(tagDefinition.getColor()))));
+			} catch (IOException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error adding Annotation!", e); 
+			}
 		}
 	}
 

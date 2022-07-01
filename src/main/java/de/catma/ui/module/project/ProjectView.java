@@ -80,7 +80,6 @@ import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.TikaContentHandler;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.indexer.IndexedProject;
-import de.catma.project.CommitInfo;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
 import de.catma.project.Project.RepositoryChangeEvent;
@@ -189,8 +188,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private MenuItem miInvite;
 	private ProgressBar progressBar;
 
-	private Button btGetPublished;
-	private Button btPublish;
+	private Button btSynchronize;
 	private final ProgressListener progressListener;
 	private MenuItem miToggleResponsibiltityFilter;
 	private Map<String, Member> membersByIdentfier;
@@ -204,7 +202,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private MenuItem miDeleteTaget;
 	private MenuItem miImportTagset;
 	private MenuItem miCommit;
-	private MenuItem miSynchronize;
 	private MenuItem miImportCorpus;
 
     public ProjectView(
@@ -332,9 +329,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		miImportTagset.setEnabled(!project.isReadOnly());
 		miDeleteTaget.setEnabled(!project.isReadOnly());
 		miCommit.setEnabled(!project.isReadOnly());
-		miSynchronize.setEnabled(!project.isReadOnly());
 		miImportCorpus.setEnabled(!project.isReadOnly());
 		tagsetGridComponent.getActionGridBar().setAddBtnEnabled(!project.isReadOnly());
+		btSynchronize.setEnabled(!project.isReadOnly());
 	}
 
 	private void initActions() {
@@ -436,14 +433,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		
         ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
         miCommit = hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
-        miSynchronize = hugeCardMoreOptions.addItem("Synchronize with the team", mi -> handleSynchronizeRequest());
         miImportCorpus = hugeCardMoreOptions.addItem("Import CATMA 5 Corpus", mi -> handleCorpusImport());
         miImportCorpus.setVisible(CATMAPropertyKey.EXPERT.getValue(false) 
         		|| Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
         
 
-        btPublish.addClickListener(event -> handlePublishClick(event));
-//        btGetPublished.addClickListener(event -> handleGetPublishedClick(event));
+        btSynchronize.addClickListener(event -> handleSynchronizeClick(event));
         
         tagsetGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
         	@Override
@@ -501,9 +496,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	}	
 	}
 
-	private void setLatestContributionView(boolean latestContribView) throws Exception {
+	private void setLatestContributionView(final boolean latestContribView) throws Exception {
 		btSynchLatestContribToggle.setData(latestContribView);
-		btSynchLatestContribToggle.setIcon(latestContribView?VaadinIcons.CUBES:VaadinIcons.CUBE);
+		btSynchLatestContribToggle.setIcon(latestContribView?VaadinIcons.RANDOM:VaadinIcons.ROAD_BRANCH);
 
     	setProgressBarVisible(true);
     	
@@ -529,10 +524,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             	setProgressBarVisible(false);
             	reloadAll();
             	setEnabled(true);
-				Notification.show(
-    					"Info", 
-    					"Your Project has been synchronized!", 
-    					Type.HUMANIZED_MESSAGE);		    						
+		        eventBus.post(new HeaderContextChangeEvent(projectReference.getName(), latestContribView));
             }
             
             @Override
@@ -554,36 +546,24 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		initData();
 	}
 
-	private void handlePublishClick(ClickEvent event) {
+	private void handleSynchronizeClick(ClickEvent event) {
 		try {
 			synchronizeProject();
-//			List<CommitInfo> unsynchronizedChanges = project.getUnsynchronizedCommits();
-//			if (unsynchronizedChanges.isEmpty() && project.hasUncommittedChanges()) {
-//				ConfirmDialog.show(UI.getCurrent(), "You have uncommited changes, do you want to commit now?", dlg -> {
-//					if (dlg.isConfirmed()) {
-//						handleCommitRequest();
-//					}
-//				});
-//			}
-//			else {
-//				UnsychronizedCommitsDialog dlg = 
-//					new UnsychronizedCommitsDialog(
-//							unsynchronizedChanges, ()->handleSynchronizeRequest());
-//				dlg.show();
-//			}
 		} catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Publishing changes failed!", e);
+			logger.log(
+				Level.WARNING,
+				String.format(
+						"Error synchronizing Project %1$s by user %2$s", 
+						this.projectReference, 
+						this.project.getUser()), 
+				e);
+			Notification.show(
+					"Info", 
+					"Your Project cannot be synchronized right now, "
+					+ "try again later or have a look at the CATMA Gitlab backend!", 
+					Type.HUMANIZED_MESSAGE);
 		}
 	}
-	
-	private void handleGetPublishedClick(ClickEvent event) {
-		
-	
-	
-	
-	}
-	
-	
 	
 	private void handleCorpusImport() {
 		try {
@@ -841,35 +821,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		uploadDialog.show();	
 	}
 
-	private void handleSynchronizeRequest() {
-    	try {
-    		setEnabled(false);
-    		
-	    	if (project.hasUncommittedChanges()) {
-	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit all changes", 
-	    			"You have uncommitted changes, please enter a short description for this commit:", 
-	    			commitMsg -> {
-	    				try {
-		    				project.commitAndPushChanges(commitMsg);
-		    				synchronizeProject();
-	    				}
-	    				catch (Exception e) {
-	    					setEnabled(true);
-	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
-	    				}
-	    			});
-	    		dlg.show();
-	    	}
-	    	else {
-	    		synchronizeProject();
-	    	}
-    	}
-    	catch (Exception e) {
-            errorHandler.showAndLogError("error accessing project", e);
-    	}	
-    }
-
 	private void synchronizeProject() throws Exception {
     	setProgressBarVisible(true);
     	
@@ -904,9 +855,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             	else {
 					Notification.show(
 	    					"Info", 
-	    					"Your Project needs conflict resolution!", 
+	    					"Your Project cannot be synchronized right now, "
+	    					+ "try again later or have a look at the CATMA Gitlab backend!", 
 	    					Type.HUMANIZED_MESSAGE);
-            		
             	}
             }
             
@@ -1494,12 +1445,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         mainPanel.addComponent(teamPanel);
         teamPanel.addComponent(initTeamContent());
         
-        btPublish = new IconButton(VaadinIcons.CLOUD_DOWNLOAD);
-        getHugeCardBar().addComponentBeforeMoreOptions(btPublish);
+        btSynchronize = new IconButton(VaadinIcons.SHARE);
+        getHugeCardBar().addComponentBeforeMoreOptions(btSynchronize);
         
-        btSynchLatestContribToggle = new IconButton(VaadinIcons.CUBE);
+        btSynchLatestContribToggle = new IconButton(VaadinIcons.ROAD_BRANCH);
         btSynchLatestContribToggle.setData(false);
         getHugeCardBar().addComponentBeforeMoreOptions(btSynchLatestContribToggle);
+        btSynchLatestContribToggle.setDescription(
+        		"Switch between 'Latest contributions view' and 'Synchronized view'");
+
         //TODO: set visibility according to project role
     }
 
@@ -1571,7 +1525,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		Function<Resource,String> buildNameFunction = (resource) -> {
 			StringBuilder sb = new StringBuilder()
 			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
-		      .append("<div class='documentsgrid__doc__title'> ") //$NON-NLS-1$
+		      .append("<div class='documentsgrid__doc__title") //$NON-NLS-1$
+		      .append(resource.isContribution()?" documentsgrid__doc_contrib'> ":"'> ")
 		      .append(resource.getName())
 		      .append("</div>"); //$NON-NLS-1$
 			if(resource.hasDetail()){
@@ -1630,6 +1585,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setId(TagsetGridColumn.NAME.name())
+			.setStyleGenerator(tagset -> tagset.isContribution()?"project-view-tagset-with-contribution":null)
 			.setCaption("Name");
 	
 		tagsetGrid
@@ -1899,7 +1855,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         			new CollectionResource(
         				collectionRef, 
         				project.getProjectId(),
-        				collectionRef.getResponsibleUser()!= null?membersByIdentfier.get(collectionRef.getResponsibleUser()):null)
+        				collectionRef.getResponsibleUser()!= null?
+        						membersByIdentfier.get(collectionRef.getResponsibleUser())
+        						:null)
         		)
         		.collect(Collectors.toList());
         		

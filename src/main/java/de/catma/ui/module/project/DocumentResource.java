@@ -105,4 +105,9 @@ public class DocumentResource implements Resource {
 		
 		return true;
 	}
+	
+	@Override
+	public boolean isContribution() {
+		return false; // TODO
+	}
 }

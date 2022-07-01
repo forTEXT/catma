@@ -129,7 +129,7 @@ class TagDataItem implements TagsetTreeItem {
 	
 	@Override
 	public String generateStyle() {
-		return tag.isContribution()?"annotate-panel-tagset-with-contributions":TagsetTreeItem.super.generateStyle();
+		return tag.isContribution()?"annotate-panel-tag-with-contributions":TagsetTreeItem.super.generateStyle();
 	}
 	
 }

@@ -78,4 +78,9 @@ public class CollectionResource implements Resource {
 	public boolean isResponsible(String userIdentifier) {
 		return collectionReference.isResponsible(userIdentifier);
 	}
+	
+	@Override
+	public boolean isContribution() {
+		return collectionReference.isContribution();
+	}
 }
