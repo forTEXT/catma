@@ -207,6 +207,7 @@ public class TagSelectionPanel extends VerticalLayout {
 		
 		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 				beyondUsersResponsibility, 
+				true,
 				new Action() {
 					@Override
 					public void execute() {
@@ -246,6 +247,7 @@ public class TagSelectionPanel extends VerticalLayout {
 				
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 					beyondUsersResponsibility, 
+					true,
 					new Action() {
 						@Override
 						public void execute() {

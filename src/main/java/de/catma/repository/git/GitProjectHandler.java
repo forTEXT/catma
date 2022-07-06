@@ -621,6 +621,8 @@ public class GitProjectHandler {
 					documentId
 			).toFile();
 			
+			sourceDocumentInfo.getTechInfoSet().setRepsonsibleUser(user.getIdentifier());
+			
 			// create the Document within the project
 			String revisionHash = gitSourceDocumentHandler.create(
 					documentFolder, documentId,

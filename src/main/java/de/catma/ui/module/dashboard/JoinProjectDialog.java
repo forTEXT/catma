@@ -108,7 +108,7 @@ public class JoinProjectDialog extends Window {
 		content.addComponent(tfName);
 		
 		cbRole = new ComboBox<RBACRole>("Role", 
-				Lists.newArrayList(RBACRole.values()));
+				Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 		cbRole.setWidth("100%");
 		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);
 		cbRole.setEmptySelectionAllowed(false);

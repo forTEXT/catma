@@ -845,7 +845,8 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void update(
-			SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet) throws Exception {
+			SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet,
+			String repsonsibleUser) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format("%1$s is in readonly mode! Cannot update %2$s", 
@@ -853,7 +854,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 
 		String oldRootRevisionHash = this.rootRevisionHash;
-
+		sourceDocumentRef.getSourceDocumentInfo().getTechInfoSet().setRepsonsibleUser(repsonsibleUser);
 		this.rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocumentRef);
 		
 		graphProjectHandler.updateSourceDocument(

@@ -121,7 +121,8 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
             DocumentResource docResource = 
             		new DocumentResource(
             			srcDoc, 
-            			project.getProjectId());
+            			project.getProjectId(),
+            			srcDoc.getResponsibleUser()!= null?membersByIdentfier.get(srcDoc.getResponsibleUser()):null);
             
             documentData.addItem(null,docResource);
             

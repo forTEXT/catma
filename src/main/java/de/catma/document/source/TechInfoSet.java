@@ -35,24 +35,11 @@ public class TechInfoSet {
 	private FileOSType fileOSType;
 	private Long checksum;
 	private String mimeType;
-	private URI uri;
+	private String repsonsibleUser;
+	private transient URI uri;
 	
 	public TechInfoSet() {
 		
-	}
-	
-	/**
-	 * Copy constructor
-	 * @param another the TechInfoSet object to copy
-	 */
-	public TechInfoSet(TechInfoSet another) {
-		this.fileName = another.fileName;
-		this.fileType = another.fileType;
-		this.charset = another.charset;
-		this.fileOSType = another.fileOSType;
-		this.checksum = another.checksum;
-		this.mimeType = another.mimeType;
-		this.uri = another.uri;
 	}
 	
 	/**
@@ -135,6 +122,14 @@ public class TechInfoSet {
 	
 	public void setURI(URI uri) {
 		this.uri = uri;
+	}
+	
+	public void setRepsonsibleUser(String repsonsibleUser) {
+		this.repsonsibleUser = repsonsibleUser;
+	}
+	
+	public String getRepsonsibleUser() {
+		return repsonsibleUser;
 	}
 
 }

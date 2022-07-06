@@ -136,9 +136,10 @@ public interface Project {
 	/**
 	 * @param sourceDocument document to be updated
 	 * @param contentInfoSet new meta data
+	 * @param responsibleUser 
 	 * @throws Exception
 	 */
-	public void update(SourceDocumentReference sourceDocument, ContentInfoSet contentInfoSet) throws Exception;
+	public void update(SourceDocumentReference sourceDocument, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
 
 	/**
 	 * @return the available Source Documents

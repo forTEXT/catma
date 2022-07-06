@@ -3,18 +3,22 @@ package de.catma.ui.module.project;
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
+import de.catma.user.User;
 
 public class DocumentResource implements Resource {
 
     private final SourceDocumentReference sourceDocument;
 	private final String projectId;
+	private User responsibleUser;
 
-    public DocumentResource(SourceDocumentReference sourceDocument, String projectId){
+    public DocumentResource(
+    		SourceDocumentReference sourceDocument, 
+    		String projectId, User responsibleUser){
         this.sourceDocument = sourceDocument;
         this.projectId = projectId;
+        this.responsibleUser = responsibleUser;
     }
     
     @Override
@@ -91,7 +95,7 @@ public class DocumentResource implements Resource {
 
 	@Override
 	public String getResponsibleUser() {
-		return null; // no repsonsibilites for Documents so far
+		return responsibleUser != null ? responsibleUser.getName() : "Not assigned";
 	}
 	
 	@Override

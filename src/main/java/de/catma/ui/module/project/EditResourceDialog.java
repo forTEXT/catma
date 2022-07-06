@@ -73,6 +73,7 @@ public class EditResourceDialog extends AbstractOkCancelDialog<Pair<String, Cont
 			if (currentMember != null) {
 				responsibleBox.setValue(currentMember);
 			}
+			
 		}
 	}
 

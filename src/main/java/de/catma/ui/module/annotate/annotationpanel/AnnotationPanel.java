@@ -556,6 +556,7 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 				(Boolean)btFilterCollection.getData(), 
+				true,
 				new Action() {
 					@Override
 					public void execute() {
@@ -651,6 +652,7 @@ public class AnnotationPanel extends VerticalLayout {
 			
 			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 					beyondUsersResponsibility, 
+					true,
 					new Action() {
 						@Override
 						public void execute() {
@@ -726,6 +728,7 @@ public class AnnotationPanel extends VerticalLayout {
 			
 			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 				beyondUsersResponsibility, 
+				true,
 				new Action() {
 					@Override
 					public void execute() {
@@ -870,6 +873,7 @@ public class AnnotationPanel extends VerticalLayout {
 				
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 					beyondUsersResponsibility, 
+					true,
 					new Action() {
 						@Override
 						public void execute() {
@@ -930,6 +934,7 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 				beyondUsersResponsibility, 
+				true,
 				new Action() {
 					@Override
 					public void execute() {

@@ -110,4 +110,14 @@ public class SourceDocumentReference {
 		return sourceContentHandler.getSourceDocumentInfo();
 	}
 
+	public boolean isResponsible(String identifier) {
+		String responsible = 
+				 this.sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getRepsonsibleUser();
+		return responsible == null || responsible.equals(identifier);
+	}
+
+	public String getResponsibleUser() {
+		return getSourceDocumentInfo().getTechInfoSet().getRepsonsibleUser();
+	}
+
 }

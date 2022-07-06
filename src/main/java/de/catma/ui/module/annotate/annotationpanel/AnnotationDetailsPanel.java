@@ -320,6 +320,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		
 		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 			!collection.isResponsible(project.getUser().getIdentifier()),
+			true,
 			new Action() {
 				
 				@Override
@@ -373,6 +374,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			
 			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 				!collection.isResponsible(project.getUser().getIdentifier()),
+				true,
 				new Action() {
 					
 					@Override
@@ -392,7 +394,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 									
 									
 								} catch (IOException e) {
-									((ErrorHandler)UI.getCurrent()).showAndLogError("error updating Annotation Properties", e);
+									((ErrorHandler)UI.getCurrent()).showAndLogError("Error updating Annotation Properties", e);
 								}
 							}
 						});

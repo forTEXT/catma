@@ -37,7 +37,7 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 		super("Update Members","Change the role of the selected Members", saveCancelListener);
 		this.members = members;
 		this.assignment = assignment;
-		this.accesslevel = members.isEmpty() ?  RBACRole.REPORTER : members.iterator().next().getRole();
+		this.accesslevel = members.isEmpty() ?  RBACRole.ASSISTANT : members.iterator().next().getRole();
 	}
 	
 	@Override

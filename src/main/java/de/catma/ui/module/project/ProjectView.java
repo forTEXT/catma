@@ -298,7 +298,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			DocumentResource documentResource = 
 				new DocumentResource(
 					document, 
-					project.getProjectId());
+					project.getProjectId(),
+					document.getResponsibleUser()!= null?
+    						membersByIdentfier.get(document.getResponsibleUser())
+    						:null);
 			
 			resourceDataProvider.getTreeData().addItem(
     				documentResource, collectionResource);
@@ -896,50 +899,83 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						((CollectionResource)selectedResources.iterator().next()).getCollectionReference();
 				boolean beyondUsersResponsibility = 
 						!collectionRef.isResponsible(project.getUser().getIdentifier());
-				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-					beyondUsersResponsibility, 
-					new Action() {
-						@Override
-						public void execute() {
-
-							EditResourceDialog editCollectionDlg = 
-								new EditResourceDialog(
-									collectionRef.getResponsibleUser(), 
-									collectionRef.getContentInfoSet(),
-									ProjectView.this.membersByIdentfier.values(),
-									new SaveCancelListener<Pair<String,ContentInfoSet>>() {
-										@Override
-										public void savePressed(Pair<String, ContentInfoSet> result) {
-											collectionRef.setResponsibleUser(result.getFirst());
-											try {
-												project.update(collectionRef, result.getSecond());
-											} catch (Exception e) {
-												errorHandler.showAndLogError("Error updating collection", e);
-												reloadAll();
+				try {
+					BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+						beyondUsersResponsibility, 
+						project.hasPermission(project.getRoleOnProject(), RBACPermission.COLLECTION_DELETE_OR_EDIT),
+						new Action() {
+							@Override
+							public void execute() {
+	
+								EditResourceDialog editCollectionDlg = 
+									new EditResourceDialog(
+										collectionRef.getResponsibleUser(), 
+										collectionRef.getContentInfoSet(),
+										ProjectView.this.membersByIdentfier.values(),
+										new SaveCancelListener<Pair<String,ContentInfoSet>>() {
+											@Override
+											public void savePressed(Pair<String, ContentInfoSet> result) {
+												collectionRef.setResponsibleUser(result.getFirst());
+												try {
+													project.update(collectionRef, result.getSecond());
+												} catch (Exception e) {
+													errorHandler.showAndLogError("Error updating collection", e);
+													reloadAll();
+												}
 											}
-										}
-									});
-							editCollectionDlg.show();
-						}
-					});
+										});
+								editCollectionDlg.show();
+							}
+						});
+				}
+				catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							"Error editing Collection!", e);					
+				}
 			}
 			else {
+				
 				final SourceDocumentReference document = 
 						((DocumentResource)selectedResources.iterator().next()).getDocument();
-				EditResourceDialog editDocumentDlg = new EditResourceDialog(
-					document.getSourceDocumentInfo().getContentInfoSet(), 
-					new SaveCancelListener<Pair<String,ContentInfoSet>>() {
-						@Override
-						public void savePressed(Pair<String, ContentInfoSet> result) {
-							try {
-								project.update(document, document.getSourceDocumentInfo().getContentInfoSet());
-							}
-							catch (Exception e) {
-								errorHandler.showAndLogError("Error updating document", e);
-							}
-						}
-					});
-				editDocumentDlg.show();
+				
+				boolean beyondUsersResponsibility = 
+						!document.isResponsible(project.getUser().getIdentifier());
+				try {
+					BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+							beyondUsersResponsibility, 
+							project.hasPermission(project.getRoleOnProject(), RBACPermission.COLLECTION_DELETE_OR_EDIT),
+							new Action() {
+								@Override
+								public void execute() {
+		
+	
+									EditResourceDialog editDocumentDlg = new EditResourceDialog(
+										document.getSourceDocumentInfo().getTechInfoSet().getRepsonsibleUser(),
+										document.getSourceDocumentInfo().getContentInfoSet(),
+										ProjectView.this.membersByIdentfier.values(),
+										new SaveCancelListener<Pair<String,ContentInfoSet>>() {
+											@Override
+											public void savePressed(Pair<String, ContentInfoSet> result) {
+												try {
+													project.update(
+														document, 
+														document.getSourceDocumentInfo().getContentInfoSet(),
+														result.getFirst());
+												}
+												catch (Exception e) {
+													errorHandler.showAndLogError("Error updating document", e);
+												}
+											}
+										});
+									editDocumentDlg.show();
+								}
+							});
+				}
+				catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							"Error editing Document!", e);					
+				}
+						
 			}
 		}
 	}
@@ -952,36 +988,42 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
 					.findAny()
 					.isPresent();
-			
-			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-				beyondUsersResponsibility, 
-				new Action() {
-					@Override
-					public void execute() {
-
-						List<String> tagsetNames = 
-								tagsets.stream()
-								.map(TagsetDefinition::getName)
-								.sorted()
-								.collect(Collectors.toList());
-			
-						ConfirmDialog.show(
-								UI.getCurrent(), 
-								"Warning", 
-								String.format("Are you sure you want to delete Tagset(s) %1$s and all related data?", 
-									String.join(",", tagsetNames)),
-								"Delete",
-								"Cancel", 
-								dlg -> {
-									if (dlg.isConfirmed()) {
-										for (TagsetDefinition tagset : tagsets) {
-											project.getTagManager().removeTagsetDefinition(tagset);
+			try {
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+					project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+					new Action() {
+						@Override
+						public void execute() {
+	
+							List<String> tagsetNames = 
+									tagsets.stream()
+									.map(TagsetDefinition::getName)
+									.sorted()
+									.collect(Collectors.toList());
+				
+							ConfirmDialog.show(
+									UI.getCurrent(), 
+									"Warning", 
+									String.format("Are you sure you want to delete Tagset(s) %1$s and all related data?", 
+										String.join(",", tagsetNames)),
+									"Delete",
+									"Cancel", 
+									dlg -> {
+										if (dlg.isConfirmed()) {
+											for (TagsetDefinition tagset : tagsets) {
+												project.getTagManager().removeTagsetDefinition(tagset);
+											}
 										}
 									}
-								}
-						);
-					}
-				});
+							);
+						}
+					});
+			}
+			catch (IOException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error deleting Tagset!", e);					
+			}
 		}
 		else {
 			Notification.show(
@@ -996,29 +1038,36 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		if (!tagsets.isEmpty()) {
 			final TagsetDefinition tagset = tagsets.iterator().next();
 			boolean beyondUsersResponsibility = !tagset.isResponsible(project.getUser().getIdentifier());
-			
-			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-				beyondUsersResponsibility, 
-				new Action() {
-					@Override
-					public void execute() {
-			
-						EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
-							new TagsetMetadata(
-									tagset.getName(), 
-									tagset.getDescription(), 
-									tagset.getResponsibleUser()),
-							ProjectView.this.membersByIdentfier.values(),
-							new SaveCancelListener<TagsetMetadata>() {
-								@Override
-								public void savePressed(TagsetMetadata result) {
-									project.getTagManager().setTagsetMetadata(
-											tagset, result);
-								}
-							});
-						editTagsetDlg.show();
-					}
-				});
+			try {
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility,
+					project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+					new Action() {
+						@Override
+						public void execute() {
+				
+							EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
+								new TagsetMetadata(
+										tagset.getName(), 
+										tagset.getDescription(), 
+										tagset.getResponsibleUser()),
+								ProjectView.this.membersByIdentfier.values(),
+								new SaveCancelListener<TagsetMetadata>() {
+									@Override
+									public void savePressed(TagsetMetadata result) {
+										project.getTagManager().setTagsetMetadata(
+												tagset, result);
+									}
+								});
+							editTagsetDlg.show();
+						}
+					});
+			}
+			catch (IOException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error deleting Tagset!", e);					
+			}
+
 		}
 		else {
 			Notification.show(
@@ -1749,7 +1798,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	            public void failure(Throwable t) {
 	            	setProgressBarVisible(false);
 	            	setEnabled(true);
-	                errorHandler.showAndLogError("error opening project", t);
+	                errorHandler.showAndLogError("Error opening Project", t);
 	            }
 	        });
     	}
@@ -1839,7 +1888,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 DocumentResource docResource = 
                 		new DocumentResource(
                 			srcDoc, 
-                			project.getProjectId());
+                			project.getProjectId(),
+                			srcDoc.getResponsibleUser()!= null?
+            						membersByIdentfier.get(srcDoc.getResponsibleUser())
+            						:null);
                 
                 treeData.addItem(null, docResource);
                 
@@ -1956,58 +2008,64 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     			.filter(res -> !res.isResponsible(project.getUser().getIdentifier()))
     			.findAny()
     			.isPresent();
-    		
-    		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-    				beyondUsersResponsibility, 
-    				new Action() {
-    					@Override
-    					public void execute() {
-					    	ConfirmDialog.show( 
-					    		UI.getCurrent(), 
-					    		"Info", 
-					    		"Are you sure you want to delete the selected resources: "
-					    		+ resourceGrid.getSelectedItems()
-					    			.stream()
-					    			.map(resource -> resource.getName())
-					    			.collect(Collectors.joining(",")) //$NON-NLS-1$
-					    		+ "?", 
-					    		"Delete", 
-					    		"Cancel", dlg -> {
-					    			if (dlg.isConfirmed()) {
-							           Stream<Resource> sortedResources =  resourceGrid.getSelectedItems()
-							            .stream()
-							            .sorted(new Comparator<Resource>() {
-				
-											@Override
-											public int compare(Resource o1, Resource o2) {
-												if (o1.isCollection() && o2.isCollection()) {
-													return o1.getResourceId().compareTo(o2.getResourceId());
+    		try {
+	    		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+	    				beyondUsersResponsibility, 
+						project.hasPermission(project.getRoleOnProject(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
+	    				new Action() {
+	    					@Override
+	    					public void execute() {
+						    	ConfirmDialog.show( 
+						    		UI.getCurrent(), 
+						    		"Info", 
+						    		"Are you sure you want to delete the selected resources: "
+						    		+ resourceGrid.getSelectedItems()
+						    			.stream()
+						    			.map(resource -> resource.getName())
+						    			.collect(Collectors.joining(",")) //$NON-NLS-1$
+						    		+ "?", 
+						    		"Delete", 
+						    		"Cancel", dlg -> {
+						    			if (dlg.isConfirmed()) {
+								           Stream<Resource> sortedResources =  resourceGrid.getSelectedItems()
+								            .stream()
+								            .sorted(new Comparator<Resource>() {
+					
+												@Override
+												public int compare(Resource o1, Resource o2) {
+													if (o1.isCollection() && o2.isCollection()) {
+														return o1.getResourceId().compareTo(o2.getResourceId());
+													}
+													else if (o1.isCollection()) {
+														return -1;
+													}
+													else if (o2.isCollection()){
+														return 1;
+													}
+													else {
+														return o1.getResourceId().compareTo(o2.getResourceId());
+													}
 												}
-												else if (o1.isCollection()) {
-													return -1;
-												}
-												else if (o2.isCollection()){
-													return 1;
-												}
-												else {
-													return o1.getResourceId().compareTo(o2.getResourceId());
-												}
-											}
-							            	
-										});
-							            
-							            	
-							            for (Resource resource: sortedResources.collect(Collectors.toList())) {
-							            	try {
-							            		resource.deleteFrom(project);
-							                } catch (Exception e) {
-							                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
-							                }
-							            }
-					    			}
-					    		});
-    					}
-    				});
+								            	
+											});
+								            
+								            	
+								            for (Resource resource: sortedResources.collect(Collectors.toList())) {
+								            	try {
+								            		resource.deleteFrom(project);
+								                } catch (Exception e) {
+								                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
+								                }
+								            }
+						    			}
+						    		});
+	    					}
+	    				});
+    		}
+    		catch (IOException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error deleting Resources!", e);					
+    		}
     	}
     	else {
     		Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE);
