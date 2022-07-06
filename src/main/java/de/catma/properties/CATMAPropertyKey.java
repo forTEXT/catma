@@ -74,6 +74,7 @@ public enum CATMAPropertyKey {
 	CATMA5API("https://portal.catma.de/catma/api/"), 
 	EXPERT("false"),
 	devPreventPush("false"),
+	MinTimeBetweenSynchronizationsInSeconds("30"),
 	;
 
 	private final String defaultValue;

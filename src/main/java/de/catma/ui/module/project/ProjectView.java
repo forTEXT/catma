@@ -10,7 +10,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.text.Collator;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -203,6 +205,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private MenuItem miImportTagset;
 	private MenuItem miCommit;
 	private MenuItem miImportCorpus;
+	private LocalTime lastSynchronization;
 
     public ProjectView(
     		ProjectsManager projectManager, 
@@ -550,21 +553,33 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleSynchronizeClick(ClickEvent event) {
-		try {
-			synchronizeProject();
-		} catch (Exception e) {
-			logger.log(
-				Level.WARNING,
-				String.format(
-						"Error synchronizing Project %1$s by user %2$s", 
-						this.projectReference, 
-						this.project.getUser()), 
-				e);
+		if (lastSynchronization != null && lastSynchronization.plus(
+				CATMAPropertyKey.MinTimeBetweenSynchronizationsInSeconds.getValue(30), 
+				ChronoUnit.SECONDS).isAfter(LocalTime.now())) {
 			Notification.show(
 					"Info", 
-					"Your Project cannot be synchronized right now, "
-					+ "try again later or have a look at the CATMA Gitlab backend!", 
+					"You just synchronized a few seconds ago, be patient, "
+					+ "next synchronization will be possible in a few seconds!", 
 					Type.HUMANIZED_MESSAGE);
+		}
+		else {
+			try {
+				lastSynchronization = LocalTime.now();
+				synchronizeProject();
+			} catch (Exception e) {
+				logger.log(
+					Level.WARNING,
+					String.format(
+							"Error synchronizing Project %1$s by user %2$s", 
+							this.projectReference, 
+							this.project.getUser()), 
+					e);
+				Notification.show(
+						"Info", 
+						"Your Project cannot be synchronized right now, "
+						+ "try again later or have a look at the CATMA Gitlab backend!", 
+						Type.HUMANIZED_MESSAGE);
+			}
 		}
 	}
 	
@@ -1495,6 +1510,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamPanel.addComponent(initTeamContent());
         
         btSynchronize = new IconButton(VaadinIcons.SHARE);
+        btSynchronize.setDescription("Synchronize with the team");
+        
         getHugeCardBar().addComponentBeforeMoreOptions(btSynchronize);
         
         btSynchLatestContribToggle = new IconButton(VaadinIcons.ROAD_BRANCH);
