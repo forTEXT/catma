@@ -97,7 +97,6 @@ public class GitlabLoginService implements LoginService {
 	@Override
 	public void logout() {
 		VaadinSession.getCurrent().close();
-    	VaadinSession.getCurrent().getSession().invalidate();
 	}
 	
 }
