@@ -134,15 +134,15 @@ public class TaggerContextMenu {
 	}
 
 	private void addToMenuItem(MenuItem parentMenuItem, TagsetDefinition tagset, TagDefinition tag) {
-		
 		MenuItem tagMenuItem = parentMenuItem.addItem(
 			createTagMenuItemCaption(tag), 
-			new TagDefinitionCommand(tag, tagSelectionListener));	
-		
+			new TagDefinitionCommand(tag, tagSelectionListener)
+		);
 		tagMenuItem.setStyleName("tagger-contextmenu-menuitem");
+
 		entryToMenuItemMap.put(tag, tagMenuItem);
-		
-		for (TagDefinition childTag : tagset.getChildren(tag)) {
+
+		for (TagDefinition childTag : tagset.getDirectChildren(tag)) {
 			addToMenuItem(tagMenuItem, tagset, childTag);
 		}
 	}

@@ -13,8 +13,8 @@ public class CommentMessage implements Serializable {
 	
 	private static final long serialVersionUID = 4432309957370280636L;
 	
-	private final Long commentId;
-	private final Long commentIid;
+	private final long commentId;
+	private final long commentIid;
 	private final ClientComment clientComment;
 	
 	private Long replyId;
@@ -29,9 +29,9 @@ public class CommentMessage implements Serializable {
 	
 
 	public CommentMessage(
-			Long commentId, 
-			Long commentIid,
-			Long senderId, ClientComment clientComment, 
+			long commentId,
+			long commentIid,
+			Long senderId, ClientComment clientComment,
 			String sourceDocumentId, 
 			boolean deleted) {
 		super();
@@ -44,13 +44,13 @@ public class CommentMessage implements Serializable {
 	}
 	
 	public CommentMessage(
-			Long commentId,
-			Long commentIid,
+			long commentId,
+			long commentIid,
 			Long senderId,
 			ClientComment clientComment, 
 			String sourceDocumentId, 
 			boolean deleted,
-			Long replyId,
+			long replyId,
 			ClientCommentReply clientCommentReply) {
 		this(commentId, commentIid, senderId, clientComment, sourceDocumentId, deleted);
 		this.replyId = replyId;
@@ -61,7 +61,7 @@ public class CommentMessage implements Serializable {
 		return deleted;
 	}
 
-	public Long getCommentId() {
+	public long getCommentId() {
 		return commentId;
 	}
 

@@ -22,13 +22,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AccessTokenDialog extends Window {
-
 	private final AccessTokenData accessTokenData = new AccessTokenData();
 
 	private final Binder<AccessTokenData> binder = new Binder<>();
-	private final IRemoteGitManagerPrivileged gitManagerPrivileged ;
+	private final IRemoteGitManagerPrivileged gitManagerPrivileged;
 
-	private final Long userId;
+	private final long userId;
 
 	private Button btnClose;
 	private Button btnCreatePersonalAccessToken;
@@ -46,8 +45,6 @@ public class AccessTokenDialog extends Window {
 		initComponents();
 		initActions();
 	}
-
-
 
 	private void initActions() {
 		btnClose.addClickListener(evt -> close());
@@ -87,8 +84,6 @@ public class AccessTokenDialog extends Window {
 			}
 		});
 	}
-
-
 
 	private void initComponents(){
 		setWidth("60%");
@@ -141,9 +136,9 @@ public class AccessTokenDialog extends Window {
 		binder.bind(tfToken, AccessTokenData::getToken, AccessTokenData::setToken);
 
 		JSClipboardButton jsClipboardButton = new JSClipboardButton(tfToken, VaadinIcons.CLIPBOARD_TEXT);
-		jsClipboardButton.setDescription(Messages.getString("AccessTokenDialog.copyToClipboard"));
+		jsClipboardButton.setDescription(Messages.getString("Dialog.copyToClipboard"));
 		jsClipboardButton.addSuccessListener((JSClipboard.SuccessListener) () ->
-				Notification.show(Messages.getString("AccessTokenDialog.copyToClipboardSuccessful"))
+				Notification.show(Messages.getString("Dialog.copyToClipboardSuccessful"))
 		);
 
 		tokenDisplayPanel.addComponent(tfToken);
@@ -155,7 +150,7 @@ public class AccessTokenDialog extends Window {
 		HorizontalLayout dialogButtonPanel = new HorizontalLayout();
 		dialogButtonPanel.setWidth("100%");
 
-		btnClose = new Button(Messages.getString("AccessTokenDialog.close"));
+		btnClose = new Button(Messages.getString("Dialog.close"));
 		dialogButtonPanel.addComponent(btnClose);
 		dialogButtonPanel.setComponentAlignment(btnClose, Alignment.BOTTOM_RIGHT);
 
@@ -175,5 +170,4 @@ public class AccessTokenDialog extends Window {
 	public void show() {
 		UI.getCurrent().addWindow(this);
 	}
-	
 }

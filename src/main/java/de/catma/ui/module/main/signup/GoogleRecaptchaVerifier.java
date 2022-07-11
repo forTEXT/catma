@@ -1,7 +1,7 @@
 package de.catma.ui.module.main.signup;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import de.catma.properties.CATMAPropertyKey;
+import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -9,10 +9,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-
-import de.catma.properties.CATMAPropertyKey;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * verifies reCaptcha v2 / v3 by using restclient and wraps the result in a

@@ -180,6 +180,15 @@ public class TagDefinition {
 		return getPropertyDefinition(
 			PropertyDefinition.SystemPropertyName.catma_displaycolor.name()).getFirstValue();
 	}
+
+	public String getHexColor() {
+		int rgb = Integer.parseInt(getColor());
+		int red = (rgb >> 16) & 0xFF;
+		int green = (rgb >> 8) & 0xFF;
+		int blue = rgb & 0xFF;
+		return String.format("#%02x%02x%02x", red, green, blue);
+
+	}
 	
 	public String getAuthor() {
 		PropertyDefinition authorPropertyDef =  getPropertyDefinition(

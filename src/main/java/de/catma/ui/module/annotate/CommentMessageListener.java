@@ -11,7 +11,6 @@ import com.vaadin.ui.UI;
 
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.ui.UIMessageListener;
@@ -58,7 +57,7 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 			CommentMessage commentMessage = message.getMessageObject();
 			final String documentId = commentMessage.getDocumentId();
 			final boolean replyMessage = commentMessage.isReplyMessage();
-			final Long senderId = commentMessage.getSenderId();
+			final long senderId = commentMessage.getSenderId();
 			final boolean deleted= commentMessage.isDeleted();
 			final SourceDocumentReference document = documentSupplier.get();
 			if ((document != null) 

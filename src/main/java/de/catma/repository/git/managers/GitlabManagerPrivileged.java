@@ -23,9 +23,9 @@ import org.gitlab4j.api.NotificationSettingsApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.CustomAttribute;
 import org.gitlab4j.api.models.Identity;
+import org.gitlab4j.api.models.NotificationSettings;
 import org.gitlab4j.api.models.PersonalAccessToken;
 import org.gitlab4j.api.models.PersonalAccessToken.Scope;
-import org.gitlab4j.api.models.NotificationSettings;
 import org.gitlab4j.api.models.User;
 
 import de.catma.properties.CATMAPropertyKey;
@@ -101,7 +101,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	}
 
 	@Override
-	public String createPersonalAccessToken(Long userId, String tokenName, LocalDate expiresAt) throws IOException {
+	public String createPersonalAccessToken(long userId, String tokenName, LocalDate expiresAt) throws IOException {
 		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
@@ -120,14 +120,14 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
-	public Long createUser(String email, String username, String password,
+	public long createUser(String email, String username, String password,
 			   String publicname)
 					   throws IOException {
 		User user = this.createUser(email, username, password, publicname, null);
 		String token = this.createImpersonationToken(user.getId(),GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
-		NotificationSettingsApi userNotificationSettingsApi = 
-			new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), token).getNotificationSettingsApi();
-		try {
+		try (GitLabApi gitlabApi = new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), token)) {
+			NotificationSettingsApi userNotificationSettingsApi = 
+				gitlabApi.getNotificationSettingsApi();
 			NotificationSettings settings = userNotificationSettingsApi.getGlobalNotificationSettings();
 			settings.setLevel(NotificationSettings.Level.DISABLED);
 			userNotificationSettingsApi.updateGlobalNotificationSettings(settings);
@@ -183,7 +183,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	 * @throws IOException if something went wrong while creating the
 	 *         impersonation token
 	 */
-	private String createImpersonationToken(Long userId, String tokenName)
+	private String createImpersonationToken(long userId, String tokenName)
 			throws IOException {
 		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 
@@ -199,7 +199,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	}
 	
 	@Override
-	public void modifyUserAttributes(Long userId, String name, String password) throws IOException {
+	public void modifyUserAttributes(long userId, String name, String password) throws IOException {
 		try {
 			User user = privilegedGitLabApi.getUserApi().getUser(userId);
 			

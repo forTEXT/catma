@@ -1180,4 +1180,10 @@ $contribution-color: blue;
 		direction: rtl;
     	text-align: right;
 	}
+
+	/* Project Resource Export API Dialog */
+	.pre-api-dialog .jsclipboardbutton-label-invisible {
+		//display: none; // breaks the clipboard button
+		color: transparent;
+	}
 }

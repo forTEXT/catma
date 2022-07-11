@@ -8,9 +8,10 @@ public class InvitationRequestMessage implements Serializable {
 	
 	private final int code;
 	private final String name;
-	private final Long userId;
 
-	public InvitationRequestMessage(Long userId, String name, int code){
+	private final long userId;
+
+	public InvitationRequestMessage(long userId, String name, int code){
 		this.code = code;
 		this.name = name;
 		this.userId = userId;
@@ -24,7 +25,7 @@ public class InvitationRequestMessage implements Serializable {
 		return name;
 	}
 
-	public Long getUserId() {
+	public long getUserId() {
 		return userId;
 	}
 }

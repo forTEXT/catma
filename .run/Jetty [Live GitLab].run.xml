@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Jetty [Live GitLab]" type="JettyConfiguration" factoryName="Local" APPLICATION_SERVER_NAME="Jetty 9.4.40.v20210413" ALTERNATIVE_JRE_ENABLED="false">
+  <configuration default="false" name="Jetty [Live GitLab]" type="JettyConfiguration" factoryName="Local" APPLICATION_SERVER_NAME="Jetty 9.4.46.v20220331" ALTERNATIVE_JRE_ENABLED="false">
     <option name="OPEN_IN_BROWSER_URL" value="http://apptest2.catma.de:8080/catma/" />
     <option name="COMMON_VM_ARGUMENTS" value="-Dprop=catma_local-live.properties" />
     <option name="UPDATING_POLICY" value="restart-server" />
@@ -30,6 +30,9 @@
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\apache-jstl.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\bytebufferpool-logarithmic.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\bytebufferpool.mod" />
@@ -395,6 +398,9 @@
               <option name="path" value="modules\apache-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
+              <option name="path" value="modules\bytebufferpool-logarithmic.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
               <option name="path" value="modules\bytebufferpool.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -742,6 +748,21 @@
       </data>
     </server-settings>
     <predefined_log_file enabled="true" id="Jetty" />
+    <ConfigurationWrapper VM_VAR="" RunnerId="Debug">
+      <option name="USE_ENV_VARIABLES" value="true" />
+      <STARTUP>
+        <option name="USE_DEFAULT" value="true" />
+        <option name="SCRIPT" value="" />
+        <option name="VM_PARAMETERS" value="" />
+        <option name="PROGRAM_PARAMETERS" value="" />
+      </STARTUP>
+      <SHUTDOWN>
+        <option name="USE_DEFAULT" value="true" />
+        <option name="SCRIPT" value="" />
+        <option name="VM_PARAMETERS" value="" />
+        <option name="PROGRAM_PARAMETERS" value="" />
+      </SHUTDOWN>
+    </ConfigurationWrapper>
     <method v="2">
       <option name="Make" enabled="true" />
       <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="vaadin:compile-theme" />

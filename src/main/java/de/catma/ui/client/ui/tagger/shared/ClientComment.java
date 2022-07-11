@@ -30,7 +30,7 @@ public class ClientComment implements Serializable {
 	private List<ClientCommentReply> replies;
 	
 	public ClientComment(
-			String uuid, String username, Long userId, 
+			String uuid, String username, Long userId,
 			String body, int replyCount, List<TextRange> ranges) {
 		super();
 		this.uuid = uuid;

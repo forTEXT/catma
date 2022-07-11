@@ -6,7 +6,7 @@
 
     <groupId>de.catma</groupId>
     <artifactId>catma</artifactId>
-    <version>6.4-SNAPSHOT</version>
+    <version>6.5-SNAPSHOT</version>
     <name>catma</name>
     <packaging>war</packaging>
 
@@ -15,14 +15,14 @@
 	</prerequisites>
 	
     <properties>
-		<vaadin.version>8.14.1</vaadin.version>
-		<vaadin.plugin.version>8.14.1</vaadin.plugin.version>
+		<vaadin.version>8.16.0</vaadin.version>
+		<vaadin.plugin.version>8.16.0</vaadin.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<!-- If there are no local customizations, this can also be "fetch" or "cdn" -->
 		<vaadin.widgetset.mode>local</vaadin.widgetset.mode>
-        <jetty.plugin.version>9.4.40.v20210413</jetty.plugin.version>
+        <jetty.plugin.version>9.4.46.v20220331</jetty.plugin.version>
     </properties>
 
 	<repositories>
@@ -87,7 +87,7 @@
 		<dependency>
 			<groupId>org.vaadin</groupId>
 			<artifactId>elements</artifactId>
-			<!-- https://github.com/forTEXT/serverside-elements -->
+			<!-- https://github.com/forTEXT/serverside-elements/commit/5745bbf32ab9e31a1eb6bb81ce490bcdabc4fcf2 -->
 			<version>0.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
@@ -194,26 +194,15 @@
 		<dependency>
 			<groupId>org.gitlab4j</groupId>
 			<artifactId>gitlab4j-api</artifactId>
-			<!-- https://github.com/forTEXT/gitlab4j-api/commit/f74be4b6c6b5e51ed0d5838a7955472366496dd9 -->
+			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA -->
 			<version>5.0.1-CATMA</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
-			<version>2.8.6</version>
+			<version>2.8.9</version>
 		</dependency>
-		<!-- recaptcha -->
-		<dependency>
-		    <groupId>com.fasterxml.jackson.jaxrs</groupId>
-		    <artifactId>jackson-jaxrs-json-provider</artifactId>
-		    <version>2.13.3</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.fasterxml.jackson.core</groupId>
-		    <artifactId>jackson-databind</artifactId>
-		    <version>2.13.3</version>
-		</dependency>
-  		
+
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
@@ -263,7 +252,7 @@
 		<dependency>
 		    <groupId>io.netty</groupId>
 		    <artifactId>netty-codec-http</artifactId>
-		    <version>4.1.71.Final</version>
+		    <version>4.1.77.Final</version>
 		</dependency>
 
 		<dependency>
@@ -284,6 +273,7 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>3.11.2</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
