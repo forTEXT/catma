@@ -28,6 +28,7 @@ import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Author;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.GroupFilter;
 import org.gitlab4j.api.models.ImportStatus.Status;
 import org.gitlab4j.api.models.Project.MergeMethod;
 import org.gitlab4j.api.models.Issue;
@@ -301,6 +302,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			throw new IOException("Failed to load groups", e);
 		}
 	}
+	
 	
 	@Override
 	public String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException {

@@ -75,6 +75,9 @@ public enum CATMAPropertyKey {
 	EXPERT("false"),
 	devPreventPush("false"),
 	MinTimeBetweenSynchronizationsInSeconds("30"),
+	
+	Repo6MigrationMaxScannedUsers("10"),
+	Repo6MigrationUserList,
 	;
 
 	private final String defaultValue;

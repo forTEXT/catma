@@ -1183,4 +1183,102 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		return result;
 	}
 	
+	@Deprecated
+	public List<CommitInfo> getLegacyUnmergedChanges() throws Exception {
+		List<CommitInfo> result = new ArrayList<>();
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getLegacyUnsynchronizedChanges` on a detached instance");
+		}		
+	
+		try {
+			if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
+				return result; // no HEAD -> new empty Project, no commits yet
+			}
+			
+			
+			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
+			Iterable<RevCommit> commits = null;
+			
+			if (refs.isEmpty()) {
+				// project never synchronized
+				
+				commits = this.gitApi.log().call();
+			}
+			else {
+				ObjectId remote =
+					this.gitApi.getRepository().resolve("refs/heads/master"); 
+				ObjectId dev = 
+					this.gitApi.getRepository().resolve("refs/heads/dev");
+				
+				if (dev != null) {
+					if (remote != null) {
+						commits = this.gitApi.log().addRange(remote, dev).call();
+					}
+					else {
+						commits = this.gitApi.log().call();
+					}
+				}
+				else {
+					commits = Collections.<RevCommit>emptyList();
+				}
+			}
+			
+			
+			for (RevCommit c : commits) {
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+			}
+			
+		} catch (GitAPIException e) {
+			throw new IOException("Cannot check for unsynchronized changes!", e);
+		}
+		
+		return result;
+	}
+	
+	@Deprecated
+	public List<CommitInfo> getLegacyUnpushedChanges() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getLegacyOurUnpublishedChanges` on a detached instance");
+		}		
+		
+		List<CommitInfo> result = new ArrayList<>();
+		
+		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
+			return result; // no HEAD -> new empty Project, no commits yet
+		}
+		
+		
+		try {
+			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
+			Iterable<RevCommit> commits = null;
+			
+			if (!refs.isEmpty()) { // otherwise project has never been never synchronized
+
+				ObjectId remote =
+					this.gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER); 
+				
+				if (remote != null) {
+					commits = this.gitApi.log().addRange(
+							remote,
+							this.gitApi.getRepository().resolve("refs/heads/" + Constants.MASTER)).call();
+				}
+				else {
+					commits = this.gitApi.log().call();
+				}
+			}
+			else {
+				commits = this.gitApi.log().call();
+			}
+			
+			for (RevCommit c : commits) {
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+			}
+			
+			
+		} catch (GitAPIException e) {
+			throw new IOException("Could not get git log info!", e);
+		}
+		
+		return result;
+	}
 }
