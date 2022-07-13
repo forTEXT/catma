@@ -94,6 +94,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		this.username = catmaUser.getIdentifier();
 		this.jGitFactory = new RelativeJGitFactory();
 	}
+	
+	public String getUsername() {
+		return username;
+	}
 
 	public Git getGitApi() {
 		return this.gitApi;
@@ -975,7 +979,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			
 			
 			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
 			}
 			
 		} catch (GitAPIException e) {
@@ -1126,7 +1130,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			
 			
 			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
 			}
 			
 			
@@ -1172,7 +1176,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			
 			
 			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
 			}
 			
 			
@@ -1184,10 +1188,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Deprecated
-	public List<CommitInfo> getLegacyUnmergedChanges() throws Exception {
+	public List<CommitInfo> getCommitsNeedToBeMergedFromDevToMaster() throws Exception {
 		List<CommitInfo> result = new ArrayList<>();
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `getLegacyUnsynchronizedChanges` on a detached instance");
+			throw new IllegalStateException("Can't call `getCommitsNeedsToBeMergedFromDevToMaster` on a detached instance");
 		}		
 	
 		try {
@@ -1196,36 +1200,28 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			}
 			
 			
-			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
 			Iterable<RevCommit> commits = null;
+
+			ObjectId master =
+				this.gitApi.getRepository().resolve("refs/heads/master"); 
+			ObjectId dev = 
+				this.gitApi.getRepository().resolve("refs/heads/dev");
 			
-			if (refs.isEmpty()) {
-				// project never synchronized
-				
-				commits = this.gitApi.log().call();
-			}
-			else {
-				ObjectId remote =
-					this.gitApi.getRepository().resolve("refs/heads/master"); 
-				ObjectId dev = 
-					this.gitApi.getRepository().resolve("refs/heads/dev");
-				
-				if (dev != null) {
-					if (remote != null) {
-						commits = this.gitApi.log().addRange(remote, dev).call();
-					}
-					else {
-						commits = this.gitApi.log().call();
-					}
+			if (dev != null) {
+				if (master != null) {
+					commits = this.gitApi.log().addRange(master, dev).call();
 				}
 				else {
-					commits = Collections.<RevCommit>emptyList();
+					commits = this.gitApi.log().call();
 				}
+			}
+			else {
+				commits = Collections.<RevCommit>emptyList();
 			}
 			
 			
 			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
 			}
 			
 		} catch (GitAPIException e) {
@@ -1236,9 +1232,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Deprecated
-	public List<CommitInfo> getLegacyUnpushedChanges() throws IOException {
+	public List<CommitInfo> getCommitsNeedToBeMergedFromMasterToOriginMaster() throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `getLegacyOurUnpublishedChanges` on a detached instance");
+			throw new IllegalStateException("Can't call `getCommitsNeedsToBeMergedFromMasterIntoOriginMaster` on a detached instance");
 		}		
 		
 		List<CommitInfo> result = new ArrayList<>();
@@ -1271,7 +1267,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			}
 			
 			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage()));
+				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
 			}
 			
 			

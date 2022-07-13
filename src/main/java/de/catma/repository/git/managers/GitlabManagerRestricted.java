@@ -420,7 +420,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			throw new IOException("resource unknown");
 		}
 	}
-
+	
+	@Deprecated
 	public Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException {
 		try {
 			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
