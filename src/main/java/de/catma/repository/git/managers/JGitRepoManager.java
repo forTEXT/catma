@@ -934,6 +934,17 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	@Override // AutoCloseable
 	public void close() {
 		if (this.gitApi != null) {
+			try {
+				// apparently JGit doesn't close Git's internal Repository instance
+				// on its close. We need to call the close method of the Repository explicitly 
+				// to avoid open handles to pack files
+				// see https://stackoverflow.com/questions/31764311/how-do-i-release-file-system-locks-after-cloning-repo-via-jgit
+				// see maybe related https://bugs.eclipse.org/bugs/show_bug.cgi?id=439305
+				this.gitApi.getRepository().close();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
 			this.gitApi.close();
 			this.gitApi = null;
 		}
