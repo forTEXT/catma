@@ -2,7 +2,9 @@ package de.catma.repository.git.migration;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,53 +12,47 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import java.util.stream.Collectors;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.gitlab4j.api.Constants.ImpersonationState;
 import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.Pager;
-import org.gitlab4j.api.ProjectApi;
-import org.gitlab4j.api.UserApi;
-import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.GroupFilter;
-import org.gitlab4j.api.models.Permissions;
-import org.gitlab4j.api.models.PersonalAccessToken;
-import org.gitlab4j.api.models.PersonalAccessToken.Scope;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectAccess;
+
+import com.beust.jcommander.internal.Maps;
 
 import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACRole;
-import de.catma.repository.git.GitMember;
-import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
-public class ProjectScanner  implements AutoCloseable { 
+public class ProjectScanner implements AutoCloseable { 
 	
+	private static final String SCAN_RESULTS_FILE_NAME = "project_scan_result.csv";
+
 	private final Logger logger = Logger.getLogger(ProjectScanner.class.getName());
 	
 	private final GitLabApi privilegedGitLabApi;
 
-	private ProjectReport projectReport;
+	private Map<String,ProjectReport> projectReportsById;
+
+	private LegacyProjectHandler legacyProjectHandler;
 	
 	
 	public ProjectScanner() throws Exception {
@@ -74,10 +70,19 @@ public class ProjectScanner  implements AutoCloseable {
 				 CATMAPropertyKey.GitLabServerUrl.getValue(), 
 				 CATMAPropertyKey.GitLabAdminPersonalAccessToken.getValue()
 		);
+		this.legacyProjectHandler = new LegacyProjectHandler(privilegedGitLabApi);
 		
-		this.projectReport = new ProjectReport();
+		this.projectReportsById = Maps.newHashMap();
 	}
 	
+	private ProjectReport getProjectReport(String projectId) {
+		ProjectReport projectReport = this.projectReportsById.get(projectId);
+		if (projectReport == null) {
+			projectReport = new ProjectReport(projectId);
+			this.projectReportsById.put(projectId, projectReport);
+		}
+		return projectReport;
+	}
 	
 	private boolean isValidLegacyProject(File projectDir, List<Group> projects) {
 		
@@ -90,99 +95,6 @@ public class ProjectScanner  implements AutoCloseable {
 		return false;
 	}
 	
-	private void deleteUserTempPath(Path userTempPath) throws IOException {
-		Files.walkFileTree(userTempPath, new SimpleFileVisitor<Path>() {
-			public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
-				filePath.toFile().setWritable(true, true);
-				return FileVisitResult.CONTINUE;
-			}
-		});
-		FileUtils.deleteDirectory(userTempPath.toFile());
-	}
-	
-	private Pair<User, String> aquireUser(String username) throws Exception {
-		String tokenName = "migration_admin_token";
-		UserApi userApi = this.privilegedGitLabApi.getUserApi();
-		
-		org.gitlab4j.api.models.User user = userApi.getUser(username);
-		
-		if (user == null) {
-			return null;
-		}
-		else {
-			List<PersonalAccessToken> impersonationTokens = userApi.getImpersonationTokens(
-				user.getId(), ImpersonationState.ACTIVE
-			);
-	
-			// revoke the default token if it exists actively
-			for (PersonalAccessToken token : impersonationTokens) {
-				if (token.getName().equals(tokenName)) {
-					privilegedGitLabApi.getUserApi().revokeImpersonationToken(user.getId(), token.getId());
-					break;
-				}
-			}
-	
-			PersonalAccessToken pat = userApi.createImpersonationToken(
-					user.getId(), tokenName, null, new Scope[] {Scope.API}
-				);
-			
-			String impersonationToken = pat.getToken();
-			
-			return new Pair<User, String>(new GitUser(user), impersonationToken);
-		}
-	}
-	
-
-	private List<Group> getLegacyUserProjectReferences(GitLabApi restrictedGitLabApi) throws Exception {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-		return groupApi.getGroups(new GroupFilter().withMinAccessLevel(AccessLevel.forValue(RBACRole.GUEST.getAccessLevel())));
-	}
-	
-	private Pager<Group> getLegacyProjectReferences() throws Exception {
-		GroupApi groupApi = privilegedGitLabApi.getGroupApi();
-		return groupApi.getGroups(10);
-	}	
-	
-	private RBACRole getLegacyResourcePermissions(GitLabApi restrictedGitLabApi, String projectId, String resource) throws Exception {
-		
-		String resourceId = resource.substring(resource.lastIndexOf('/')+1);
-		
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-		Project project = projectApi.getProject(projectId, resourceId);
-		Permissions permissions = project.getPermissions();
-		
-		int level = RBACRole.GUEST.getAccessLevel();
-		
-		ProjectAccess groupAccess = permissions.getGroupAccess();
-		if (groupAccess != null) {
-			AccessLevel groupAccessLevel = groupAccess.getAccessLevel();
-			if (groupAccessLevel.value.intValue() > level) {
-				level = groupAccessLevel.value.intValue();
-			}
-		}
-		
-		ProjectAccess projectAccess = permissions.getProjectAccess(); 
-		if (projectAccess != null) {
-			AccessLevel projectAccessLevel = projectAccess.getAccessLevel();
-			if (projectAccessLevel.value.intValue() > level) {
-				level = projectAccessLevel.value.intValue();
-			}
-		}
-		return RBACRole.forValue(level);
-	}
-	
-	private Set<Member> getLegacyProjectMembers(String projectId) throws IOException {
-		try {
-			Group group = privilegedGitLabApi.getGroupApi().getGroup(projectId);
-			return privilegedGitLabApi.getGroupApi().getMembers(group.getId())
-					.stream()
-					.map(member -> new GitMember(member))
-					.collect(Collectors.toSet());
-		} catch (GitLabApiException e) {
-			throw new IOException("group unknown",e);
-		}
-	}
-
 	private void scanProject(
 			String projectId, 
 			JGitRepoManager userRepoManager, 
@@ -203,7 +115,7 @@ public class ProjectScanner  implements AutoCloseable {
 
 			for (String resource : resources) {
 				
-				RBACRole role = getLegacyResourcePermissions(
+				RBACRole role = this.legacyProjectHandler.getLegacyResourcePermissions(
 						restrictedGitLabApi, projectId, resource);
 				
 				if (role.equals(RBACRole.GUEST)) {
@@ -216,7 +128,7 @@ public class ProjectScanner  implements AutoCloseable {
 					repoManager.open(projectId, rootRepoName + "/" + resource);
 					Status status = repoManager.getStatus();
 		
-					this.projectReport.addStatus(projectId, resource, status);
+					getProjectReport(projectId).addStatus(resource, status);
 					
 					if (status.isClean()) {
 						logger.info(String.format("Fetching resource %1$s/%2$s", projectId, resource));
@@ -226,28 +138,27 @@ public class ProjectScanner  implements AutoCloseable {
 						
 						List<CommitInfo> commitsDevToMaster = 
 								repoManager.getCommitsNeedToBeMergedFromDevToMaster();
-						this.projectReport.addNeedMergeDevToMaster(
-								projectId, resource, commitsDevToMaster);
+						getProjectReport(projectId).addNeedMergeDevToMaster(
+								resource, commitsDevToMaster);
 						
 						if (!commitsDevToMaster.isEmpty()) {
 							boolean canMergeDevToMaster = 
 									repoManager.canMerge(Constants.MASTER);
 							
-							this.projectReport.addCanMergeDevToMaster(
-								projectId, resource, canMergeDevToMaster);
+							getProjectReport(projectId).addCanMergeDevToMaster(
+								resource, canMergeDevToMaster);
 							
 						}
 						
 						List<CommitInfo> commitsMasterToOriginMaster = 
 								repoManager.getCommitsNeedToBeMergedFromMasterToOriginMaster();
-						this.projectReport.addNeedMergeMasterToOriginMaster(
-								projectId, resource, commitsMasterToOriginMaster);
+						getProjectReport(projectId).addNeedMergeMasterToOriginMaster(
+								resource, commitsMasterToOriginMaster);
 						
 						if (!commitsMasterToOriginMaster.isEmpty() || !commitsDevToMaster.isEmpty()) {
 							// we are checking dev against origin master here
 							// because ultimately that's where all dev commits need to end up without conflicts
-							this.projectReport.addCanMergeDevToOriginMaster(
-								projectId,
+							getProjectReport(projectId).addCanMergeDevToOriginMaster(
 								resource, 
 								repoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER));
 						}
@@ -255,36 +166,34 @@ public class ProjectScanner  implements AutoCloseable {
 					
 					repoManager.detach();
 				}
-				
-				repoManager.open(
-						projectId,
-						rootRepoName);
-				
-				Status rootStatus = repoManager.getStatus();
-				
-				this.projectReport.addStatus(projectId, projectId, rootStatus);
-				if (rootStatus.isClean()) {
-					logger.info(String.format("Fetching root %1$s", projectId));
-					
-					repoManager.fetch(credentialsProvider);
-					List<CommitInfo> commits = repoManager.getCommitsNeedToBeMergedFromMasterToOriginMaster();
-					this.projectReport.addNeedMergeMasterToOriginMaster(
-							projectId, projectId, commits);
-					
-					if (!commits.isEmpty()) {
-						this.projectReport.addCanMergeMasterToOriginMaster(
-							projectId,
-							projectId, 
-							repoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER));
-					}
-				}
-				
-				repoManager.detach();
 			}
+			repoManager.open(
+					projectId,
+					rootRepoName);
+			
+			Status rootStatus = repoManager.getStatus();
+			
+			getProjectReport(projectId).addStatus(projectId, rootStatus);
+			if (rootStatus.isClean()) {
+				logger.info(String.format("Fetching root %1$s", projectId));
+				
+				repoManager.fetch(credentialsProvider);
+				List<CommitInfo> commits = repoManager.getCommitsNeedToBeMergedFromMasterToOriginMaster();
+				getProjectReport(projectId).addNeedMergeMasterToOriginMaster(
+						projectId, commits);
+				
+				if (!commits.isEmpty()) {
+					getProjectReport(projectId).addCanMergeMasterToOriginMaster(
+						projectId, 
+						repoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER));
+				}
+			}
+			
+			repoManager.detach();
 		}
 		catch (Exception e) {
 			logger.log(Level.INFO, String.format("Error scanning Project %1$s", projectId), e);
-			this.projectReport.addError(projectId);
+			getProjectReport(projectId).addError(e);
 		}
 	}
 	
@@ -293,11 +202,11 @@ public class ProjectScanner  implements AutoCloseable {
 		
 		Path userTempPath = null;
 		try {
-			this.projectReport.addUser(projectId, username);
+			getProjectReport(projectId).addUser(username);
 			
-			Pair<User, String> result = aquireUser(username);
+			Pair<User, String> result = this.legacyProjectHandler.aquireUser(username);
 			if (result == null) {
-				this.projectReport.addStaleUser(projectId, username);
+				getProjectReport(projectId).addStaleUser(username);
 				return;
 			}
 			try (GitLabApi restrictedGitLabApi = 
@@ -315,7 +224,7 @@ public class ProjectScanner  implements AutoCloseable {
 				String repositoryTempPath = new File(CATMAPropertyKey.TempDir.getValue(), "project_migration").getAbsolutePath();
 				userTempPath = Paths.get(repositoryTempPath, username);
 				if (userTempPath.toFile().exists()) {
-					deleteUserTempPath(userTempPath);
+					this.legacyProjectHandler.deleteUserTempPath(userTempPath);
 				}
 				
 				if (!userTempPath.toFile().mkdirs()) {
@@ -331,36 +240,44 @@ public class ProjectScanner  implements AutoCloseable {
 					copySrc = copySrc.resolve(projectId);
 					copyDest = copyDest.resolve(projectId);
 				}
-				logger.info(String.format("Creating temp directory %1$s...", copyDest.toString()));				
-				FileUtils.copyDirectory(copySrc.toFile(), copyDest.toFile());
-				logger.info(String.format("Finished creation of temp directory %1$s", copyDest.toString()));
 				
-				try (JGitRepoManager repoManager = 
-						new JGitRepoManager(
-								repositoryTempPath, 
-								result.getFirst())) {
-					
-					File[] projectDirs = 
-							userTempPath
-								.toFile()
-								.listFiles(file -> 
-									file.isDirectory()
-									&& file.getName().startsWith("CATMA"));
-					
-					List<Group> projects = getLegacyUserProjectReferences(restrictedGitLabApi);
-					
-					for (File projectDir : projectDirs) {
-						if (isValidLegacyProject(projectDir, projects)) {
-							scanProject(projectDir.getName(), repoManager, credentialsProvider, restrictedGitLabApi);
-						}
-						else {
-							logger.info(
-								String.format(
-									"Found stale Project for user %1$s: %2$s", 
-									username, projectDir.getName()));
-							this.projectReport.addStaleProject(projectDir);
+				if (copySrc.toFile().exists()) {
+					logger.info(String.format("Creating temp directory %1$s...", copyDest.toString()));				
+					FileUtils.copyDirectory(copySrc.toFile(), copyDest.toFile());
+					logger.info(String.format("Finished creation of temp directory %1$s", copyDest.toString()));
+				
+					try (JGitRepoManager repoManager = 
+							new JGitRepoManager(
+									repositoryTempPath, 
+									result.getFirst())) {
+						
+						File[] projectDirs = 
+								userTempPath
+									.toFile()
+									.listFiles(file -> 
+										file.isDirectory()
+										&& file.getName().startsWith("CATMA"));
+						
+						List<Group> projects = this.legacyProjectHandler.getLegacyUserProjectReferences(restrictedGitLabApi);
+						
+						for (File projectDir : projectDirs) {
+							if (isValidLegacyProject(projectDir, projects)) {
+								scanProject(projectDir.getName(), repoManager, credentialsProvider, restrictedGitLabApi);
+							}
+							else {
+								logger.info(
+									String.format(
+										"Found stale Project for user %1$s: %2$s", 
+										username, projectDir.getName()));
+								getProjectReport(projectId).addStaleProject(projectDir);
+							}
 						}
 					}
+				}
+				else {
+					logger.info(String.format(
+							"Project %1$s has not been cloned by user %2$s, skipping!", 
+							projectId, username));
 				}
 			}
 		}
@@ -371,7 +288,7 @@ public class ProjectScanner  implements AutoCloseable {
 			if (userTempPath != null) {
 				logger.info(String.format("Removing temp directory %1$s", userTempPath.toFile()));
 				try {
-					deleteUserTempPath(userTempPath);
+					this.legacyProjectHandler.deleteUserTempPath(userTempPath);
 				} catch (Exception e) {
 					logger.log(Level.SEVERE, "Error removing temp file!", e);
 				}
@@ -383,11 +300,24 @@ public class ProjectScanner  implements AutoCloseable {
 	public void scanProject(String projectId) throws IOException {
 		logger.info(String.format("Scanning Project %1$s", projectId));
 		
-		Set<Member> members = getLegacyProjectMembers(projectId);
+		Set<Member> members = this.legacyProjectHandler.getLegacyProjectMembers(projectId);
+		Member owner = members.stream()
+				.filter(member -> member.getRole().equals(RBACRole.OWNER))
+				.findAny()
+				.orElse(null);
+		if (owner != null) {
+			getProjectReport(projectId).setOwnerEmail(
+				owner.getEmail()==null?owner.getIdentifier():owner.getEmail());
+		}
 		
 		for (Member member : members) {
 			scanProjects(member.getIdentifier(), projectId);
 		}
+		
+		exportProjectReport(getProjectReport(projectId));
+
+		Logger.getLogger(ProjectScanner.class.getName()).info(
+				getProjectReport(projectId).toString());
 	}
 	
 	public void scanProjects(int limit) throws Exception {
@@ -395,16 +325,18 @@ public class ProjectScanner  implements AutoCloseable {
 		
 		boolean hasLimit = limit != -1;
 		
-		Pager<Group> pager = getLegacyProjectReferences();
+		Pager<Group> pager = this.legacyProjectHandler.getLegacyProjectReferences();
 		
 		while(pager.hasNext()) {
 			for (Group group : pager.next()) {
 				if (hasLimit && limit <= 0) {
 					return;
 				}
-				
-				scanProject(group.getName());
-				limit--;
+				 // we are interested in Group-based CATMA Projects only
+				if (group.getName().startsWith("CATMA")) {
+					scanProject(group.getName());
+					limit--;
+				}
 				
 			}
 		}
@@ -433,7 +365,7 @@ public class ProjectScanner  implements AutoCloseable {
 			scanProjects(userDir.getName());
 			if (limit%2==0) {
 				Logger.getLogger(ProjectScanner.class.getName()).info(
-						getMigrationReport().toString());
+						getSummaryProjectReport().toString());
 			}
 			limit--;
 		}
@@ -441,22 +373,83 @@ public class ProjectScanner  implements AutoCloseable {
 		
 	}
 
-	public ProjectReport getMigrationReport() {
-		return projectReport;
+	public ProjectReport getSummaryProjectReport() {
+		return new ProjectReport(this.projectReportsById.values());
 	}
 
+	public void logSummaryProjectReport() {
+		logger.info(
+				"\n\n\nFinal Project Scan Report\n"+getSummaryProjectReport());
+	}
+	
+	public void exportProjectReport(ProjectReport projectReport) {
+		try {
+
+			File scanResultsFile = new File(SCAN_RESULTS_FILE_NAME);
+			boolean addHeader = !scanResultsFile.exists();
+			
+			OutputStreamWriter writer = 
+					new OutputStreamWriter(new FileOutputStream(SCAN_RESULTS_FILE_NAME, true), "UTF-8");
+            try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.withDelimiter(';'))) {
+            	if (addHeader) {
+                	ProjectReport.exportHeaderToCsv(csvPrinter);
+            	}
+        		projectReport.exportToCsv(csvPrinter);
+            	csvPrinter.flush();
+            }
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Error exporting scan result!", e);
+		}		
+	}
+	
+	
+	public void exportSummaryProjectReport() {
+		try {
+
+			OutputStreamWriter writer = 
+					new OutputStreamWriter(new FileOutputStream(SCAN_RESULTS_FILE_NAME), "UTF-8");
+            try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.withDelimiter(';'))) {
+            	ProjectReport.exportHeaderToCsv(csvPrinter);
+            	for (ProjectReport report : this.projectReportsById.values()) {
+            		report.exportToCsv(csvPrinter);
+            	}
+            	csvPrinter.flush();
+            }
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Error exporting scan result!", e);
+		}
+	}
+	
 	@Override
 	public void close() throws Exception {
 		this.privilegedGitLabApi.close();
 	}
 	
+
+	
 	public static void main(String[] args) throws Exception {
+		
 		FileHandler fileHandler = new FileHandler("project_scanner.log");
 		fileHandler.setFormatter(new SimpleFormatter());
 		
 		Logger.getLogger("").addHandler(fileHandler);
 		
-		try (ProjectScanner projectScanner = new ProjectScanner()) {	
+		try (final ProjectScanner projectScanner = new ProjectScanner()) {
+			Thread finalReportHook = 
+					new Thread() {
+		        public void run() {
+	    			projectScanner.logSummaryProjectReport();
+		        }
+		    };
+			Runtime.getRuntime().addShutdownHook(finalReportHook);
+			
+			File exportFile = new File(SCAN_RESULTS_FILE_NAME);
+			if (exportFile.exists()) {
+				exportFile.delete();
+			}
+			
 			ScanMode scanMode = 
 				ScanMode.valueOf(
 						CATMAPropertyKey.Repo6MigrationScanMode.getValue(
@@ -489,11 +482,12 @@ public class ProjectScanner  implements AutoCloseable {
 					int limit = CATMAPropertyKey.Repo6MigrationMaxScannedProjects.getValue(1);
 					projectScanner.scanProjects(limit);
 				}
-
-				Logger.getLogger(ProjectScanner.class.getName()).info(
-						"\n\n\nFinal Project Scan Report"+projectScanner.getMigrationReport());
-
 			}
+			
+			projectScanner.logSummaryProjectReport();
+
+			// if we got that far this hook is no longer necessary
+			Runtime.getRuntime().removeShutdownHook(finalReportHook);
 		}
 	}
 

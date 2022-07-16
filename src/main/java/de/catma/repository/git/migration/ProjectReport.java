@@ -1,15 +1,24 @@
 package de.catma.repository.git.migration;
 
 import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.commons.csv.CSVPrinter;
 import org.eclipse.jgit.api.Status;
 
 import de.catma.project.CommitInfo;
 
 public class ProjectReport {
 	private final Logger logger = Logger.getLogger(ProjectReport.class.getName());
+	
+	private String projectId;
+	private String ownerEmail;
 	
 	private int totalUsers;
 	
@@ -70,9 +79,79 @@ public class ProjectReport {
 	private int	documentsConflictingMergeDevToOriginMaster;
 	private int collectionsConflictingMergeDevToOriginMaster;
 	private int tagsetsConflictingMergeDevToOriginMaster;
-
 	
-	public void addStatus(String projectId, String resource, Status status) {
+	private String lastError;
+	private LocalDateTime lastUnsynchronizedCommitTime;
+	
+	public ProjectReport(String projectId) {
+		this.projectId = projectId;
+	}
+	
+	public ProjectReport(Collection<ProjectReport> reports) {
+		for (ProjectReport report : reports) {
+			totalUsers+=report.totalUsers;
+			
+			totalRoots+=report.totalRoots;	
+			totalDocuments+=report.totalDocuments;
+			totalCollections+=report.totalCollections;
+			totalTagsets+=report.totalTagsets;
+			
+			cleanRoots+=report.cleanRoots;
+			cleanDocuments+=report.cleanDocuments;
+			cleanCollections+=report.cleanCollections;
+			cleanTagsets+=report.cleanTagsets;
+
+			dirtyRoots+=report.dirtyRoots;
+			dirtyDocuments+=report.dirtyDocuments;
+			dirtyCollections+=report.dirtyCollections;
+			dirtyTagsets+=report.dirtyTagsets;
+
+			uncommittedRoots+=report.uncommittedRoots;
+			uncommittedDocuments+=report.uncommittedDocuments;
+			uncommittedCollections+=report.uncommittedCollections;
+			uncommittedTagsets+=report.uncommittedTagsets;
+
+			conflictingRoots+=report.conflictingRoots;
+			conflictingDocuments+=report.conflictingDocuments;
+			conflictingCollections+=report.conflictingCollections;
+			conflictingTagsets+=report.conflictingTagsets;
+			
+			staleProjects+=report.staleProjects;
+			staleUsers+=report.staleUsers;
+			errorProjects+=report.errorProjects;
+			
+			documentsNeedMergeDevToMaster+=report.documentsNeedMergeDevToMaster;
+			collectionsNeedMergeDevToMaster+=report.collectionsNeedMergeDevToMaster;
+			tagsetsNeedMergeDevToMaster+=report.tagsetsNeedMergeDevToMaster;
+
+			rootsNeedMergeMasterToOriginMaster+=report.rootsNeedMergeMasterToOriginMaster;
+			documentsNeedMergeMasterToOriginMaster+=report.documentsNeedMergeMasterToOriginMaster;
+			collectionsNeedMergeMasterToOriginMaster+=report.collectionsNeedMergeMasterToOriginMaster;
+			tagsetsNeedMergeMasterToOriginMaster+=report.tagsetsNeedMergeMasterToOriginMaster;
+			
+			rootsCanMergeMastertoOriginMaster+=report.rootsCanMergeMastertoOriginMaster;
+
+			rootsConflictingMergeMastertoOriginMaster+=report.rootsConflictingMergeMastertoOriginMaster;
+
+			documentsCanMergeDevToMaster+=report.documentsCanMergeDevToMaster;
+			collectionsCanMergeDevToMaster+=report.collectionsCanMergeDevToMaster;
+			tagsetsCanMergeDevToMaster+=report.tagsetsCanMergeDevToMaster;
+
+			documentsConflictingMergeDevToMaster+=report.documentsConflictingMergeDevToMaster;
+			collectionsConflictingMergeDevToMaster+=report.collectionsConflictingMergeDevToMaster;
+			tagsetsConflictingMergeDevToMaster+=report.tagsetsConflictingMergeDevToMaster;
+
+			documentsCanMergeDevToOriginMaster+=report.documentsCanMergeDevToOriginMaster;
+			collectionsCanMergeDevToOriginMaster+=report.collectionsCanMergeDevToOriginMaster;
+			tagsetsCanMergeDevToOriginMaster+=report.tagsetsCanMergeDevToOriginMaster;
+
+			documentsConflictingMergeDevToOriginMaster+=report.documentsConflictingMergeDevToOriginMaster;
+			collectionsConflictingMergeDevToOriginMaster+=report.collectionsConflictingMergeDevToOriginMaster;
+			tagsetsConflictingMergeDevToOriginMaster+=report.tagsetsConflictingMergeDevToOriginMaster;			
+		}
+	}
+
+	public void addStatus(String resource, Status status) {
 		if (resource.startsWith("collection")) {
 			totalCollections++;
 			if (status.isClean()) {
@@ -163,8 +242,23 @@ public class ProjectReport {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		
-		builder.append("\n");
+		if (projectId != null) {
+			builder.append("\n\nPROJECT REPORT ");
+			builder.append(projectId);
+			if (ownerEmail != null) {
+				builder.append("\n\nOwner: ");
+				builder.append(ownerEmail);
+			}
+			if (lastUnsynchronizedCommitTime != null) {
+				builder.append("\nLast unsynchronized commit time: ");
+				builder.append(lastUnsynchronizedCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+			}
+			if (lastError != null) {
+				builder.append("\nError");
+				builder.append(lastError);
+			}
+			builder.append("\n\n");
+		}
 		builder.append("\ntotalUsers: ");
 		builder.append(totalUsers);
 		builder.append("\ntotalRoots: ");
@@ -298,7 +392,7 @@ public class ProjectReport {
 	}
 
 
-	public void addNeedMergeDevToMaster(String projectId, String resource, List<CommitInfo> commits) {
+	public void addNeedMergeDevToMaster(String resource, List<CommitInfo> commits) {
 		if (!commits.isEmpty()) {
 			logger.info(String.format("%1$s has changes to be merged dev->master!", resource));
 
@@ -314,11 +408,25 @@ public class ProjectReport {
 			else {
 				logger.warning(String.format("Unexpected unmerged resource type: %1$s", resource));
 			}
+			
+			setLastUnsynchronizedCommitTime(commits);
+		}
+	}
+	
+	
+	private void setLastUnsynchronizedCommitTime(List<CommitInfo> commits) {
+		for (CommitInfo commit : commits) {
+			LocalDateTime commitTime = commit.getCommitTime().toInstant()
+				      .atZone(ZoneId.systemDefault())
+				      .toLocalDateTime();
+			if (this.lastUnsynchronizedCommitTime == null || this.lastUnsynchronizedCommitTime.isBefore(commitTime)) {
+				this.lastUnsynchronizedCommitTime = commitTime;
+			}
 		}
 	}
 
-
-	public void addNeedMergeMasterToOriginMaster(String projectId, String resource, List<CommitInfo> commits) {
+	
+	public void addNeedMergeMasterToOriginMaster(String resource, List<CommitInfo> commits) {
 		if (!commits.isEmpty()) {
 			logger.info(String.format("%1$s has changes to be merged master->origin/master!", resource));
 
@@ -337,22 +445,25 @@ public class ProjectReport {
 			else {
 				logger.warning(String.format("Unexpected resource type needs merge master->origin/master: %1$s", resource));
 			}	
+			
+			setLastUnsynchronizedCommitTime(commits);
 		}
 	}
 
 
-	public void addError(String projectId) {
+	public void addError(Exception e) {
 		errorProjects++;
+		lastError = e.getClass().getName() + ": " + e.getMessage();
 	}
 
 
-	public void addStaleUser(String projectId, String username) {
+	public void addStaleUser(String username) {
 		logger.info(String.format("Found stale user %1$s", username));
 		this.staleUsers++;
 	}
 
 
-	public void addCanMergeMasterToOriginMaster(String projectId, String resource, boolean canMerge) {
+	public void addCanMergeMasterToOriginMaster(String resource, boolean canMerge) {
 		
 		if (canMerge) {
 			logger.info(String.format("%1$s can be merged master->origin/master!", resource));
@@ -376,7 +487,7 @@ public class ProjectReport {
 		}		
 	}
 	
-	public void addCanMergeDevToMaster(String projectId, String resource, boolean canMerge) {
+	public void addCanMergeDevToMaster(String resource, boolean canMerge) {
 		
 		if (canMerge) {
 			logger.info(String.format("%1$s can be merged dev->master!", resource));
@@ -412,7 +523,7 @@ public class ProjectReport {
 		}		
 	}
 	
-	public void addCanMergeDevToOriginMaster(String projectId, String resource, boolean canMerge) {
+	public void addCanMergeDevToOriginMaster(String resource, boolean canMerge) {
 		
 		if (canMerge) {
 			logger.info(String.format("%1$s can be merged dev->origin/master!", resource));
@@ -449,7 +560,120 @@ public class ProjectReport {
 	}
 
 
-	public void addUser(String projectId, String username) {
+	public void addUser(String username) {
 		totalUsers++;
+	}
+	
+	public void setOwnerEmail(String ownerEmail) {
+		this.ownerEmail = ownerEmail;
+	}
+
+	public void exportToCsv(CSVPrinter csvPrinter) throws IOException {
+		csvPrinter.printRecord(
+			projectId,
+			ownerEmail,
+			lastUnsynchronizedCommitTime==null?null:lastUnsynchronizedCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+			lastError,
+			totalUsers,
+			totalRoots,	
+			totalDocuments,
+			totalCollections,
+			totalTagsets,
+			cleanRoots,
+			cleanDocuments,
+			cleanCollections,
+			cleanTagsets,
+			dirtyRoots,
+			dirtyDocuments,
+			dirtyCollections,
+			dirtyTagsets,
+			uncommittedRoots,
+			uncommittedDocuments,
+			uncommittedCollections,
+			uncommittedTagsets,
+			conflictingRoots,
+			conflictingDocuments,
+			conflictingCollections,
+			conflictingTagsets,
+			staleProjects,
+			staleUsers,
+			errorProjects,
+			documentsNeedMergeDevToMaster,
+			collectionsNeedMergeDevToMaster,
+			tagsetsNeedMergeDevToMaster,
+			rootsNeedMergeMasterToOriginMaster,
+			documentsNeedMergeMasterToOriginMaster,
+			collectionsNeedMergeMasterToOriginMaster,
+			tagsetsNeedMergeMasterToOriginMaster,
+			rootsCanMergeMastertoOriginMaster,
+			rootsConflictingMergeMastertoOriginMaster,
+			documentsCanMergeDevToMaster,
+			collectionsCanMergeDevToMaster,
+			tagsetsCanMergeDevToMaster,
+			documentsConflictingMergeDevToMaster,
+			collectionsConflictingMergeDevToMaster,
+			tagsetsConflictingMergeDevToMaster,
+			documentsCanMergeDevToOriginMaster,
+			collectionsCanMergeDevToOriginMaster,
+			tagsetsCanMergeDevToOriginMaster,
+			documentsConflictingMergeDevToOriginMaster,
+			collectionsConflictingMergeDevToOriginMaster,
+			tagsetsConflictingMergeDevToOriginMaster
+		);
+	}
+
+	public static void exportHeaderToCsv(CSVPrinter csvPrinter) throws IOException {
+		csvPrinter.printRecord(
+				"projectId",
+				"ownerEmail",
+				"lastUnsynchronizedCommitTime",
+				"lastError",
+				"totalUsers",
+				"totalRoots",	
+				"totalDocuments",
+				"totalCollections",
+				"totalTagsets",
+				"cleanRoots",
+				"cleanDocuments",
+				"cleanCollections",
+				"cleanTagsets",
+				"dirtyRoots",
+				"dirtyDocuments",
+				"dirtyCollections",
+				"dirtyTagsets",
+				"uncommittedRoots",
+				"uncommittedDocuments",
+				"uncommittedCollections",
+				"uncommittedTagsets",
+				"conflictingRoots",
+				"conflictingDocuments",
+				"conflictingCollections",
+				"conflictingTagsets",
+				"staleProjects",
+				"staleUsers",
+				"errorProjects",
+				"documentsNeedMergeDevToMaster",
+				"collectionsNeedMergeDevToMaster",
+				"tagsetsNeedMergeDevToMaster",
+				"rootsNeedMergeMasterToOriginMaster",
+				"documentsNeedMergeMasterToOriginMaster",
+				"collectionsNeedMergeMasterToOriginMaster",
+				"tagsetsNeedMergeMasterToOriginMaster",
+				"rootsCanMergeMastertoOriginMaster",
+				"rootsConflictingMergeMastertoOriginMaster",
+				"documentsCanMergeDevToMaster",
+				"collectionsCanMergeDevToMaster",
+				"tagsetsCanMergeDevToMaster",
+				"documentsConflictingMergeDevToMaster",
+				"collectionsConflictingMergeDevToMaster",
+				"tagsetsConflictingMergeDevToMaster",
+				"documentsCanMergeDevToOriginMaster",
+				"collectionsCanMergeDevToOriginMaster",
+				"tagsetsCanMergeDevToOriginMaster",
+				"documentsConflictingMergeDevToOriginMaster",
+				"collectionsConflictingMergeDevToOriginMaster",
+				"tagsetsConflictingMergeDevToOriginMaster"
+			);
+		
 	}
 }

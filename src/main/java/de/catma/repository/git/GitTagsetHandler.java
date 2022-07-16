@@ -21,7 +21,7 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 
-class GitTagsetHandler {
+public class GitTagsetHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
 	
 	private final ILocalGitRepositoryManager localGitRepositoryManager;

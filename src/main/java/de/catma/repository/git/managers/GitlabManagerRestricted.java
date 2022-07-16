@@ -293,6 +293,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 						.withMinAccessLevel(minAccessLevel)
 						.withMembership(true))
 			 	.stream()
+			 	.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy Projects
 			 	.map(project -> 
 			 		unmarshallProjectReference(
 			 			project.getNamespace().getPath(), project.getPath(), project.getDescription()))

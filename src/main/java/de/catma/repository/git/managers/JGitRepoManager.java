@@ -3,6 +3,7 @@ package de.catma.repository.git.managers;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,15 +24,15 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.DiffCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeCommand.FastForwardMode;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
+import org.eclipse.jgit.api.RemoteAddCommand;
+import org.eclipse.jgit.api.RemoteRemoveCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
-import org.eclipse.jgit.api.RevertCommand;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
@@ -61,6 +62,7 @@ import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
+import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.FS;
 
@@ -249,6 +251,47 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		return path.getName();
 	}
 
+	@Deprecated
+	public String cloneWithSubmodules(String group, String uri, CredentialsProvider credentialsProvider)
+			throws IOException {
+		if (isAttached()) {
+			throw new IllegalStateException("Can't call `cloneWithSubmodules` on an attached instance");
+		}
+
+		String repositoryName = uri.substring(uri.lastIndexOf("/") + 1);
+		if (repositoryName.endsWith(".git")) {
+			repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
+		}
+		File path = 
+			Paths.get(this.getRepositoryBasePath().toURI())
+				.resolve(group)
+				.resolve(repositoryName).toFile();
+
+		try {
+			CloneCommand cloneCommand = 
+					jGitFactory.newCloneCommand()
+					.setURI(uri).setDirectory(path);
+
+			cloneCommand.setCredentialsProvider(credentialsProvider);
+			
+			this.gitApi = cloneCommand.call();
+			
+			this.gitApi.submoduleInit().call();
+
+			SubmoduleUpdateCommand submoduleUpdateCommand = 
+					jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+			submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
+			submoduleUpdateCommand.call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException(
+				"Failed to clone remote Git repository", e
+			);
+		}
+
+		return path.getName();
+	}
+	
 	/**
 	 * Opens an existing Git repository with the directory name <code>name</code>.
 	 *
@@ -425,7 +468,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Deprecated
-	public String removeSubmodule(File submodulePath, String commitMsg, String committerName, String committerEmail) throws IOException {
+	public void removeSubmodule(File submodulePath) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `removeSubmodule` on a detached instance");
 		}
@@ -440,7 +483,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		    			this.gitApi.getRepository().getWorkTree(), 
 		    			Constants.DOT_GIT_MODULES );
 		    FileBasedConfig gitSubmodulesConfig = 
-		    		new FileBasedConfig(null, gitSubmodulesFile, FS.DETECTED );		
+		    		new FileBasedConfig(null, gitSubmodulesFile, FS.DETECTED);		
 		    gitSubmodulesConfig.load();
 		    gitSubmodulesConfig.unsetSection(
 		    		ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
@@ -453,8 +496,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		    gitApi.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
 		    gitApi.rm().setCached(true).addFilepattern(relativeUnixStyleFilePath).call();
 
-		    String projectRevisionHash = commit(commitMsg, committerName, committerEmail, false);
-			
 			File submoduleGitDir = 
 				basePath
 				.resolve(Constants.DOT_GIT)
@@ -466,8 +507,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			FileUtils.deleteDirectory(submoduleGitDir);
 			
 			FileUtils.deleteDirectory(absoluteFilePath.toFile());
-
-			return projectRevisionHash;
 		}
 		catch (GitAPIException | ConfigInvalidException e) {
 			throw new IOException(e);
@@ -1277,4 +1316,36 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		
 		return result;
 	}
-}
+	
+	public void remoteAdd(String name, String uri) throws IOException {
+		
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `remoteAdd` on a detached instance");
+		}		
+		try {
+			RemoteAddCommand remoteAddCommand = this.gitApi.remoteAdd();
+			remoteAddCommand.setName(name);
+			remoteAddCommand.setUri(new URIish(uri));
+			remoteAddCommand.call();
+		}
+		catch (GitAPIException | URISyntaxException e) {
+			throw new IOException("Could not add remote!", e);
+		}
+	}
+	
+	public void remoteRemove(String name) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `remoteRemove` on a detached instance");
+		}		
+	
+		try {
+			RemoteRemoveCommand remoteRemoveCommand = this.gitApi.remoteRemove();
+			remoteRemoveCommand.setName(name);
+			remoteRemoveCommand.call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Could not remove remote!", e);
+		}
+	}
+	
+} 

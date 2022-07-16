@@ -80,7 +80,7 @@ public enum CATMAPropertyKey {
 	Repo6MigrationUserList,
 	Repo6MigrationMaxScannedProjects("10"),
 	Repo6MigrationProjectIdList,
-	
+	Repo6MigrationBackupPath,
 	Repo6MigrationExecuteMerge("false"),
 	Repo6MigrationScanMode("ByProject"),
 	;
