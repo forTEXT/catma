@@ -9,6 +9,7 @@ import java.util.Set;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.PushResult;
 
 import de.catma.project.CommitInfo;
 
@@ -41,8 +42,8 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	String commit(String message, String committerName, String committerEmail, boolean force) throws IOException;
 
-	void push(CredentialsProvider credentialsProvider) throws IOException;
-	void push_master(CredentialsProvider credentialsProvider) throws IOException;
+	List<PushResult> push(CredentialsProvider credentialsProvider) throws IOException;
+	List<PushResult> push_master(CredentialsProvider credentialsProvider) throws IOException;
 	
 	void fetch(CredentialsProvider credentialsProvider) throws IOException;
 

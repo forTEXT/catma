@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.commons.compress.utils.Lists;
@@ -30,6 +32,7 @@ import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.AccessLevel;
+import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.GroupFilter;
 import org.gitlab4j.api.models.Permissions;
@@ -293,5 +296,26 @@ public class LegacyProjectHandler {
 		}
 		
 		return builder.toString();
+	}
+
+	public void removeC6MigrationBranches(String projectId, String branchName) {
+		try {
+			List<Project> projects = 
+					privilegedGitLabApi.getGroupApi().getProjects(projectId);
+			for (Project project : projects) {
+				List<Branch> branches = 
+					privilegedGitLabApi.getRepositoryApi().getBranches(project.getId());
+				Branch migrationBranch = 
+						branches.stream()
+							.filter(branch -> branch.getName().equals(branchName))
+							.findFirst().orElse(null);
+				if (migrationBranch != null) {
+					privilegedGitLabApi.getRepositoryApi().deleteBranch(project.getId(), migrationBranch.getName());
+				}
+			}
+		} catch (GitLabApiException e) {
+			Logger.getLogger(getClass().getName()).log(
+				Level.WARNING, String.format("Could delete %1$s branches!", branchName), e);
+		}
 	}
 }

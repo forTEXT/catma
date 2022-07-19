@@ -76,12 +76,14 @@ public enum CATMAPropertyKey {
 	devPreventPush("false"),
 	MinTimeBetweenSynchronizationsInSeconds("30"),
 	
-	Repo6MigrationMaxScannedUsers("10"),
+	Repo6MigrationMaxUsers("10"),
 	Repo6MigrationUserList,
-	Repo6MigrationMaxScannedProjects("10"),
+	
+	Repo6MigrationMaxProjects("10"),
 	Repo6MigrationProjectIdList,
+	
 	Repo6MigrationBackupPath,
-	Repo6MigrationExecuteMerge("false"),
+	Repo6MigrationScanWithMergeAndPush("false"),
 	Repo6MigrationScanMode("ByProject"),
 	;
 

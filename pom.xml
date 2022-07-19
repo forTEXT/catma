@@ -283,14 +283,6 @@
 			<scope>test</scope>
 		</dependency>
 
-
-		<!-- ProjectMigration -->
-		<dependency>
-		    <groupId>org.glassfish.jersey.core</groupId>
-		    <artifactId>jersey-client</artifactId>
-		    <version>2.35</version>
-		</dependency>
-
     </dependencies>
 	<build>
 		<plugins>

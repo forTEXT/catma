@@ -5,12 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -23,6 +20,7 @@ import java.util.logging.SimpleFormatter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -45,6 +43,7 @@ import de.catma.util.Pair;
 public class ProjectScanner implements AutoCloseable { 
 	
 	private static final String SCAN_RESULTS_FILE_NAME = "project_scan_result.csv";
+	private static final String MIGRATION_BRANCH_NAME = "c6migration";
 
 	private final Logger logger = Logger.getLogger(ProjectScanner.class.getName());
 	
@@ -99,7 +98,8 @@ public class ProjectScanner implements AutoCloseable {
 			String projectId, 
 			JGitRepoManager userRepoManager, 
 			CredentialsProvider credentialsProvider,
-			GitLabApi restrictedGitLabApi) throws Exception {
+			GitLabApi restrictedGitLabApi,
+			User user) throws Exception {
 		
 		try (JGitRepoManager repoManager = userRepoManager) {
 			
@@ -112,7 +112,9 @@ public class ProjectScanner implements AutoCloseable {
 			List<String> resources = repoManager.getSubmodulePaths();
 			
 			repoManager.detach();
-
+			
+			List<String> readableResources = new ArrayList<String>();
+			
 			for (String resource : resources) {
 				
 				RBACRole role = this.legacyProjectHandler.getLegacyResourcePermissions(
@@ -124,6 +126,7 @@ public class ProjectScanner implements AutoCloseable {
 						repoManager.getUsername(), projectId, resource));
 				}
 				else {
+					readableResources.add(resource);
 					
 					repoManager.open(projectId, rootRepoName + "/" + resource);
 					Status status = repoManager.getStatus();
@@ -167,6 +170,7 @@ public class ProjectScanner implements AutoCloseable {
 					repoManager.detach();
 				}
 			}
+			
 			repoManager.open(
 					projectId,
 					rootRepoName);
@@ -188,8 +192,30 @@ public class ProjectScanner implements AutoCloseable {
 						repoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER));
 				}
 			}
-			
+
 			repoManager.detach();
+			
+			if (CATMAPropertyKey.Repo6MigrationScanWithMergeAndPush.getValue(false)) {
+				for (String resource : readableResources) {
+					repoManager.open(projectId, rootRepoName + "/" + resource);
+					Status status = repoManager.getStatus();
+		
+					if (status.isClean()) {
+						mergeAndPushResource(repoManager, credentialsProvider, projectId, resource);
+					}
+					
+					repoManager.detach();
+				}
+				
+				 // Did we have a clean rootStatus before merging resources?
+				if (rootStatus.isClean()) { 
+					repoManager.open(
+							projectId,
+							rootRepoName);
+					mergeAndPushRoot(repoManager, user, credentialsProvider, projectId);
+					repoManager.detach();
+				}
+			}
 		}
 		catch (Exception e) {
 			logger.log(Level.INFO, String.format("Error scanning Project %1$s", projectId), e);
@@ -197,6 +223,113 @@ public class ProjectScanner implements AutoCloseable {
 		}
 	}
 	
+	private boolean resolveRootConflicts(
+			JGitRepoManager repoManager, 
+			User user, CredentialsProvider credentialsProvider, 
+			MergeResult mergeResult, String projectId) throws Exception {
+		boolean clean = true;
+		if (!mergeResult.getMergeStatus().isSuccessful()) {
+			if (mergeResult.getConflicts().keySet().contains(Constants.DOT_GIT_MODULES)) {
+				logger.info(
+						String.format(
+								"Found conflicts in %1$s of project %2$s, trying auto resolution",
+								Constants.DOT_GIT_MODULES,
+								projectId
+						)
+				);
+
+				repoManager.resolveGitSubmoduleFileConflicts();
+			}
+			
+			clean = repoManager.resolveRootConflicts(projectId, credentialsProvider);
+			repoManager.addAllAndCommit(
+					"Auto-committing merged changes (resolveRootConflicts)",
+					user.getIdentifier(),
+					user.getEmail(),
+					true
+			);					
+		}
+		return clean;
+	}
+
+	private void mergeAndPushRoot(JGitRepoManager repoManager, User user, CredentialsProvider credentialsProvider,
+			String projectId) throws Exception {
+	
+		repoManager.checkout(MIGRATION_BRANCH_NAME, true);
+		
+		Status status = repoManager.getStatus();
+		if (!status.isClean()) {
+			repoManager.addAllAndCommit(
+					"Auto-committing merged resource changes",
+					user.getIdentifier(),
+					user.getEmail(),
+					false
+			);								
+		}
+		
+		repoManager.fetch(credentialsProvider);
+		
+		boolean hasRemoteC6Migration = repoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + MIGRATION_BRANCH_NAME);
+		boolean clean = true; 
+		if (hasRemoteC6Migration) {
+			MergeResult mrOriginC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + MIGRATION_BRANCH_NAME);
+			getProjectReport(projectId).addMergeResultOriginC6MigrationToC6Migration(projectId, mrOriginC6Migration);
+			clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrOriginC6Migration, projectId);
+		}
+		if (clean) {
+			MergeResult mrOriginMaster = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+			getProjectReport(projectId).addMergeResultOriginMasterToC6Migration(projectId, mrOriginMaster);
+			clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrOriginMaster, projectId);
+			if (clean) {
+				MergeResult mrMaster = repoManager.merge(Constants.MASTER);
+				getProjectReport(projectId).addMergeResulMasterToC6Migration(projectId, mrMaster);
+				clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrMaster, projectId);
+				if (clean) {
+					repoManager.push(credentialsProvider, true);
+					List<CommitInfo> commits = repoManager.getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration();
+					if (commits.size() >0) {
+						getProjectReport(projectId).addPushC6MigrationToOriginC6MigrationFailed(projectId);
+					}
+					else {
+						getProjectReport(projectId).addPushC6MigrationToOriginC6MigrationSuccessful(projectId);
+						getProjectReport(projectId).addReadyToMigrateRoot(projectId);
+					}
+				}
+			}
+		}		
+	}
+	private void mergeAndPushResource(JGitRepoManager repoManager, CredentialsProvider credentialsProvider,
+			String projectId, String resource) throws Exception {
+	
+		repoManager.checkout(MIGRATION_BRANCH_NAME, true);
+		repoManager.fetch(credentialsProvider);
+		
+		boolean hasRemoteC6Migration = repoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + MIGRATION_BRANCH_NAME);
+		MergeResult mrOriginC6Migration = null; 
+		if (hasRemoteC6Migration) {
+			mrOriginC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + MIGRATION_BRANCH_NAME);
+			getProjectReport(projectId).addMergeResultOriginC6MigrationToC6Migration(resource, mrOriginC6Migration);
+		}
+		if (!hasRemoteC6Migration || mrOriginC6Migration.getMergeStatus().isSuccessful()) {
+			MergeResult mrOriginMaster = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+			getProjectReport(projectId).addMergeResultOriginMasterToC6Migration(resource, mrOriginMaster);
+			if (mrOriginMaster.getMergeStatus().isSuccessful()) {
+				MergeResult mrDev = repoManager.merge("dev");
+				getProjectReport(projectId).addMergeResultDevToC6Migration(resource, mrDev);
+				if (mrDev.getMergeStatus().isSuccessful()) {
+					repoManager.push(credentialsProvider, true);
+					List<CommitInfo> commits = repoManager.getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration();
+					if (commits.size() >0) {
+						getProjectReport(projectId).addPushC6MigrationToOriginC6MigrationFailed(resource);
+					}
+					else {
+						getProjectReport(projectId).addPushC6MigrationToOriginC6MigrationSuccessful(resource);
+					}
+				}
+			}
+		}		
+	}
+
 	private void scanProjects(String username, String projectId) {
 		logger.info(String.format("Scanning user %1$s Projects: %2$s", username, projectId==null?"all":projectId));
 		
@@ -262,7 +395,7 @@ public class ProjectScanner implements AutoCloseable {
 						
 						for (File projectDir : projectDirs) {
 							if (isValidLegacyProject(projectDir, projects)) {
-								scanProject(projectDir.getName(), repoManager, credentialsProvider, restrictedGitLabApi);
+								scanProject(projectDir.getName(), repoManager, credentialsProvider, restrictedGitLabApi, result.getFirst());
 							}
 							else {
 								logger.info(
@@ -309,6 +442,8 @@ public class ProjectScanner implements AutoCloseable {
 			getProjectReport(projectId).setOwnerEmail(
 				owner.getEmail()==null?owner.getIdentifier():owner.getEmail());
 		}
+		
+		this.legacyProjectHandler.removeC6MigrationBranches(projectId, MIGRATION_BRANCH_NAME);
 		
 		for (Member member : members) {
 			scanProjects(member.getIdentifier(), projectId);
@@ -465,7 +600,7 @@ public class ProjectScanner implements AutoCloseable {
 					}
 				}
 				else {
-					int limit = CATMAPropertyKey.Repo6MigrationMaxScannedUsers.getValue(1);
+					int limit = CATMAPropertyKey.Repo6MigrationMaxUsers.getValue(1);
 					projectScanner.scanUsers(limit);
 				}
 				
@@ -479,7 +614,7 @@ public class ProjectScanner implements AutoCloseable {
 					}
 				}
 				else {
-					int limit = CATMAPropertyKey.Repo6MigrationMaxScannedProjects.getValue(1);
+					int limit = CATMAPropertyKey.Repo6MigrationMaxProjects.getValue(1);
 					projectScanner.scanProjects(limit);
 				}
 			}

@@ -18,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
@@ -289,7 +290,23 @@ public class ProjectConverter implements AutoCloseable {
 						}
 					}
 				}
+				
+				logger.info(String.format("Deleting legacy Project (group) %1$s", projectId)); 
+//				restrictedGitLabApi.getGroupApi().deleteGroup(legacyProject.getId());
 			}
+			
+			logger.info(String.format("Removing local git projects for %1$s", projectId));
+			File gitRepositoryBaseDir = 
+					new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue());
+			for(File userDir : gitRepositoryBaseDir.listFiles()) {
+				for (File projectDir : userDir.listFiles()) {
+					if (projectDir.getName().equals(projectId)) {
+						this.legacyProjectHandler.setUserWritablePermissions(Paths.get(projectDir.getAbsolutePath()));
+						FileUtils.deleteDirectory(projectDir);
+					}
+				}
+			}
+			
 			if (userTempPath != null) {
 				logger.info(String.format("Removing temp directory %1$s", userTempPath.toFile()));
 				try {
@@ -303,6 +320,28 @@ public class ProjectConverter implements AutoCloseable {
 			logger.log(Level.SEVERE, String.format("Error converting Project %1$s", projectId), e);
 		}
 
+	}
+	
+	public void convertProjects(int limit) throws Exception {
+		logger.info("Converting Projects");
+		
+		boolean hasLimit = limit != -1;
+		
+		Pager<Group> pager = this.legacyProjectHandler.getLegacyProjectReferences();
+		
+		while(pager.hasNext()) {
+			for (Group group : pager.next()) {
+				if (hasLimit && limit <= 0) {
+					return;
+				}
+				 // we are interested in Group-based CATMA Projects only
+				if (group.getName().startsWith("CATMA")) {
+					convertProject(group.getName());
+					limit--;
+				}
+				
+			}
+		}
 	}
 	
 	private void convertCollection(
@@ -345,11 +384,21 @@ public class ProjectConverter implements AutoCloseable {
 	public static void main(String[] args) throws Exception {
 		FileHandler fileHandler = new FileHandler("project_converter.log");
 		fileHandler.setFormatter(new SimpleFormatter());
-		try (ProjectConverter projectConverter = new ProjectConverter()) {
-			projectConverter.convertProject(
-				"CATMA_8198C8E3-E653-41DC-984D-44FC23916041_Legacy_of_the_Beast");
-		}
 		Logger.getLogger("").addHandler(fileHandler);
+
+		try (ProjectConverter projectConverter = new ProjectConverter()) {
+			String projectList = CATMAPropertyKey.Repo6MigrationProjectIdList.getValue();
+			
+			if ((projectList != null) && !projectList.isEmpty()) {
+				for (String projectId : projectList.split(",")) {
+					projectConverter.convertProject(projectId);
+				}
+			}
+			else {
+				int limit = CATMAPropertyKey.Repo6MigrationMaxProjects.getValue(1);
+				projectConverter.convertProjects(limit);
+			}
+		}
 
 	}
 }
