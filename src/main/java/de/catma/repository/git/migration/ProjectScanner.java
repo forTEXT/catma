@@ -367,7 +367,7 @@ public class ProjectScanner implements AutoCloseable {
 		}		
 	}
 
-	private void scanProjects(String username, String projectId) {
+	private void scanProjects(String username, String projectId, String authenticationUsername) {
 		logger.info(String.format("Scanning user %1$s Projects: %2$s", username, projectId==null?"all":projectId));
 		
 		Path userTempPath = null;
@@ -379,11 +379,14 @@ public class ProjectScanner implements AutoCloseable {
 				getProjectReport(projectId).addStaleUser(username);
 				return;
 			}
-			//TODO: take owner for credentials and restrictedGitLabApi
+			
+			Pair<User, String> authenticationResult = 
+					this.legacyProjectHandler.aquireUser(authenticationUsername);
+			
 			try (GitLabApi restrictedGitLabApi = 
 					new GitLabApi(
 							CATMAPropertyKey.GitLabServerUrl.getValue(), 
-							result.getSecond())) {
+							authenticationResult.getSecond())) {
 				
 				UsernamePasswordCredentialsProvider credentialsProvider = 
 					new UsernamePasswordCredentialsProvider(
@@ -484,7 +487,8 @@ public class ProjectScanner implements AutoCloseable {
 		this.legacyProjectHandler.removeC6MigrationBranches(projectId, migrationBranchName);
 		
 		for (Member member : members) {
-			scanProjects(member.getIdentifier(), projectId);
+			// we use the owner for authentication, since merging requires full access to all resources
+			scanProjects(member.getIdentifier(), projectId, owner.getIdentifier());
 		}
 		
 		exportProjectReport(getProjectReport(projectId));
@@ -516,7 +520,7 @@ public class ProjectScanner implements AutoCloseable {
 	}
 
 	public void scanProjects(String username) {
-		scanProjects(username, null);
+		scanProjects(username, null, username);
 	}
 	
 
