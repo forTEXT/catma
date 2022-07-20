@@ -106,7 +106,7 @@ public class GitProjectsManager implements ProjectsManager {
 				remoteGitServerManager.getUsername(), 
 				remoteGitServerManager.getEmail(), true);
 			
-			localGitRepoManager.push_master(credentialsProvider);
+			localGitRepoManager.pushMaster(credentialsProvider);
 			
 			localGitRepoManager.checkout(user.getIdentifier(), true);
 			

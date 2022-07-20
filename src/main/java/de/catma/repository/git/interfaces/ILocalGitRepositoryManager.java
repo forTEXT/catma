@@ -43,7 +43,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	String commit(String message, String committerName, String committerEmail, boolean force) throws IOException;
 
 	List<PushResult> push(CredentialsProvider credentialsProvider) throws IOException;
-	List<PushResult> push_master(CredentialsProvider credentialsProvider) throws IOException;
+	List<PushResult> pushMaster(CredentialsProvider credentialsProvider) throws IOException;
 	
 	void fetch(CredentialsProvider credentialsProvider) throws IOException;
 

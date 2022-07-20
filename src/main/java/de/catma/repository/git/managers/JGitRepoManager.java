@@ -38,6 +38,7 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleInitCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
@@ -76,6 +77,7 @@ import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
+import de.catma.util.Pair;
 
 public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
 	
@@ -389,7 +391,26 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IOException(e);
 		}			
 	}
-	
+
+	@Deprecated
+	public List<Pair<String, String>> getSubmoduleConfigs() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't determine submodules from a detached instance");
+		}
+		try {
+			List<Pair<String, String>> paths = new ArrayList<>();
+			try (SubmoduleWalk submoduleWalk = SubmoduleWalk.forIndex(this.gitApi.getRepository())) {
+				while (submoduleWalk.next()) {
+					paths.add(new Pair<>(submoduleWalk.getModulesPath(), submoduleWalk.getConfigUrl()));
+				}
+				
+				return paths;
+			}
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}			
+	}
 	@Override
 	public String getRevisionHash(String submodule) throws IOException {
 		if (!isAttached()) {
@@ -629,7 +650,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Override
-	public List<PushResult> push_master(CredentialsProvider credentialsProvider) throws IOException {
+	public List<PushResult> pushMaster(CredentialsProvider credentialsProvider) throws IOException {
 		return push(credentialsProvider, Constants.MASTER, 0, false);
 	}
 	
@@ -829,6 +850,49 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 						RevCommit commit = revWalk.parseCommit(commitId);
 						checkoutCommand.setStartPoint(commit);
 					}
+				}
+				checkoutCommand.setCreateBranch(createBranch);
+				checkoutCommand.setName(name).call();
+				
+				if (createBranch) {
+					StoredConfig config = this.gitApi.getRepository().getConfig();
+					config.setString(
+							ConfigConstants.CONFIG_BRANCH_SECTION, name, 
+							ConfigConstants.CONFIG_KEY_REMOTE, "origin");
+					config.setString(
+							ConfigConstants.CONFIG_BRANCH_SECTION, name, 
+							ConfigConstants.CONFIG_KEY_MERGE, "refs/heads/" + name);
+					config.save();
+				}
+			}
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to checkout", e);
+		}
+	}
+	
+	public void checkoutFromOrigin(String name) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `checkoutFromOrigin` on a detached instance");
+		}
+
+		try {
+			boolean createBranch = true;
+			if (!this.gitApi.getRepository().getBranch().equals(name)) {
+				CheckoutCommand checkoutCommand = this.gitApi.checkout();
+				List<Ref> refs = this.gitApi.branchList().call();
+				if (refs
+					.stream()
+					.map(rev -> rev.getName())
+					.filter(revName -> revName.equals("refs/heads/"+name))
+					.findFirst()
+					.isPresent()) {
+					createBranch = false;
+				}
+				try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
+					ObjectId commitId = this.gitApi.getRepository().resolve("refs/remotes/origin/"+name);
+					RevCommit commit = revWalk.parseCommit(commitId);
+					checkoutCommand.setStartPoint(commit);
 				}
 				checkoutCommand.setCreateBranch(createBranch);
 				checkoutCommand.setName(name).call();
@@ -1364,7 +1428,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 	
 	@Deprecated
-	public List<CommitInfo> getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration() throws IOException {
+	public List<CommitInfo> getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration(String migrationBranch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration` on a detached instance");
 		}		
@@ -1383,12 +1447,12 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			if (!refs.isEmpty()) { // otherwise project has never been never synchronized
 
 				ObjectId remote =
-					this.gitApi.getRepository().resolve("refs/remotes/origin/c6migration"); 
+					this.gitApi.getRepository().resolve("refs/remotes/origin/" + migrationBranch); 
 				
 				if (remote != null) {
 					commits = this.gitApi.log().addRange(
 							remote,
-							this.gitApi.getRepository().resolve("refs/heads/c6migration")).call();
+							this.gitApi.getRepository().resolve("refs/heads/" + migrationBranch)).call();
 				}
 				else {
 					commits = this.gitApi.log().call();
@@ -1774,4 +1838,75 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		
 	}
 
+	public CommitInfo getHeadCommit() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `resolveGitSubmoduleFileConflicts` on a detached instance");
+		}		
+		try {
+			ObjectId headCommit = gitApi.getRepository().resolve(Constants.HEAD);
+			if (headCommit != null) {
+				Iterator<RevCommit> iterator = gitApi.log().add(headCommit).call().iterator();
+				if (iterator.hasNext()) {
+					RevCommit c = iterator.next();
+					return new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen());
+				}
+			}
+			return null;
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Faild to retrieve HEAD commit!", e);
+		}
+	}
+
+	public void reAddSubmodule(File submodulePath, String uri, CredentialsProvider credentialsProvider)
+			throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `reAddSubmodule` on a detached instance");
+		}
+		try {
+
+			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteFilePath = Paths.get(submodulePath.getAbsolutePath());
+			Path relativeFilePath = basePath.relativize(absoluteFilePath);
+			String relativeUnixStyleFilePath = FilenameUtils.separatorsToUnix(relativeFilePath.toString());
+			
+		
+		    if (absoluteFilePath.toFile().list().length == 0) {
+		    	File gitSubmodulesFile = 
+		    			new File(
+		    					this.gitApi.getRepository().getWorkTree(), 
+		    					Constants.DOT_GIT_MODULES );
+		    	FileBasedConfig gitSubmodulesConfig = 
+		    			new FileBasedConfig(null, gitSubmodulesFile, FS.DETECTED );		
+		    	gitSubmodulesConfig.load();
+		    	gitSubmodulesConfig.unsetSection(
+		    			ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
+		    	gitSubmodulesConfig.save();
+		    	StoredConfig repositoryConfig = this.getGitApi().getRepository().getConfig();
+		    	repositoryConfig.unsetSection(
+		    			ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
+		    	repositoryConfig.save();
+
+		    	gitApi.rm().setCached(true).addFilepattern(relativeUnixStyleFilePath).call();
+
+		    	FileUtils.deleteDirectory(absoluteFilePath.toFile());
+		    	
+		    	// NB: Git doesn't understand Windows path separators (\) in the .gitmodules file
+		    	String unixStyleRelativeSubmodulePath = FilenameUtils.separatorsToUnix(relativeFilePath.toString());
+		    	
+		    	SubmoduleAddCommand submoduleAddCommand = 
+		    			jGitFactory.newSubmoduleAddCommand(gitApi.getRepository())
+		    			.setURI(uri)
+		    			.setPath(unixStyleRelativeSubmodulePath);
+		    	//needs permissions because the submodule is cloned from remote first and then added locally
+		    	submoduleAddCommand.setCredentialsProvider(credentialsProvider);
+		    	
+		    	Repository repository = submoduleAddCommand.call();
+		    	repository.close();
+		    }
+		}
+		catch (GitAPIException | ConfigInvalidException e) {
+			throw new IOException(e);
+		}
+	}
 } 

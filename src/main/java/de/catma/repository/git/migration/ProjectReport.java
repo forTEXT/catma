@@ -128,6 +128,7 @@ public class ProjectReport {
 	
 	private String lastError;
 	private LocalDateTime lastUnsynchronizedCommitTime;
+	private LocalDateTime lastHeadCommitTime;
 	
 	public ProjectReport(String projectId) {
 		this.projectId = projectId;
@@ -348,6 +349,10 @@ public class ProjectReport {
 			if (lastUnsynchronizedCommitTime != null) {
 				builder.append("\nLast unsynchronized commit time: ");
 				builder.append(lastUnsynchronizedCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+			}
+			if (lastHeadCommitTime != null) {
+				builder.append("\nLast HEAD commit time: ");
+				builder.append(lastHeadCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 			}
 			if (lastError != null) {
 				builder.append("\nError");
@@ -915,6 +920,7 @@ public class ProjectReport {
 			projectId,
 			ownerEmail,
 			lastUnsynchronizedCommitTime==null?null:lastUnsynchronizedCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+			lastHeadCommitTime==null?null:lastHeadCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
 			lastError,
 			totalUsers,
 			totalRoots,	
@@ -1012,6 +1018,7 @@ public class ProjectReport {
 				formatColumnName("projectId"),
 				formatColumnName("ownerEmail"),
 				formatColumnName("lastUnsynchronizedCommitTime"),
+				formatColumnName("lastHeadCommitTime"),
 				formatColumnName("lastError"),
 				formatColumnName("totalUsers"),
 				formatColumnName("totalRoots"),	
@@ -1093,5 +1100,14 @@ public class ProjectReport {
 				formatColumnName("rootsPushFailedC6MigrationToOriginC6Migration")
 			);
 		
+	}
+
+	public void addLastHeadCommit(CommitInfo commit) {
+		LocalDateTime commitTime = commit.getCommitTime().toInstant()
+			      .atZone(ZoneId.systemDefault())
+			      .toLocalDateTime();
+		if (this.lastHeadCommitTime == null || this.lastHeadCommitTime.isBefore(commitTime)) {
+			this.lastHeadCommitTime = commitTime;
+		}
 	}
 }

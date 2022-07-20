@@ -3,8 +3,10 @@ package de.catma.repository.git.migration;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -15,6 +17,7 @@ import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.GitLabApi;
@@ -142,7 +145,6 @@ public class ProjectConverter implements AutoCloseable {
 							credentialsProvider
 						);
 				}
-//				Project project = restrictedGitLabApi.getProjectApi().getProject("mp", projectId);
 				
 				logger.info(String.format("Creating new target Project %1$s in the owner's namespace %2$s", projectId, ownerUser));
 				Project project = restrictedGitLabApi.getProjectApi().createProject(
@@ -163,11 +165,16 @@ public class ProjectConverter implements AutoCloseable {
 				Path projectBackupPath = backupPath.resolve(projectId);
 				
 				if (projectBackupPath.toFile().exists() && projectBackupPath.toFile().list().length>0) {
-					FileUtils.deleteDirectory(projectBackupPath.toFile());
-//					throw new IllegalStateException(
-//						String.format(
-//							"Project already has a non empty backup at %1$s!", 
-//							projectBackupPath.toString()));
+					if (CATMAPropertyKey.Repo6MigrationOverwriteC6ProjectBackup.getValue(false)) {
+						this.legacyProjectHandler.setUserWritablePermissions(projectBackupPath);
+						FileUtils.deleteDirectory(projectBackupPath.toFile());
+					}
+					else {						
+						throw new IllegalStateException(
+								String.format(
+										"Project already has a non empty backup at %1$s!", 
+										projectBackupPath.toString()));
+					}
 				}
 				logger.info(String.format("Creating backup for Project %1$s", projectId));
 
@@ -185,7 +192,13 @@ public class ProjectConverter implements AutoCloseable {
 					repoManager.open(
 							projectId,
 							rootRepoName);
+					
+					String migrationBranch = CATMAPropertyKey.Repo6MigrationBranch.getValue(
+							CATMAPropertyKey.Repo6MigrationBranch.getDefaultValue()); 
+					repoManager.checkoutFromOrigin(migrationBranch);
 
+					repoManager.initAndUpdateSubmodules(credentialsProvider, new HashSet<>(repoManager.getSubmodulePaths()));
+					
 					List<String> relativeSubmodulePaths = repoManager.getSubmodulePaths();
 					
 					logger.info(String.format("Integrating submodule resources into the Project %1$s", projectId));
@@ -194,6 +207,8 @@ public class ProjectConverter implements AutoCloseable {
 						FileUtils.copyDirectory(
 							projectRootPath.resolve(relativeSubmodulePath).toFile(), 
 							projectRootPath.resolve(relativeSubmodulePath + "_temp").toFile());
+						
+						this.legacyProjectHandler.setUserWritablePermissions(projectRootPath);
 						
 						repoManager.removeSubmodule(
 							projectRootPath.resolve(relativeSubmodulePath).toFile());
@@ -268,41 +283,57 @@ public class ProjectConverter implements AutoCloseable {
 					repoManager.addAllAndCommit(
 						"Converted Collections", ownerUser.getIdentifier(), ownerUser.getEmail(), false);
 					
-					logger.info(
-							String.format(
-								"Pushing changes to remote origin %1$s/%2$s ",
-								ownerUser.getIdentifier(), projectId));
-					
-					repoManager.push_master(credentialsProvider);
-					
-					logger.info("Adding team members to the new Project");
-					for (Member member : members) {
-						if (!member.getIdentifier().equals(ownerUser.getIdentifier())) {
-							RBACRole role = member.getRole();
-							if (role.getAccessLevel() < RBACRole.ASSISTANT.getAccessLevel()) {
-								role = RBACRole.ASSISTANT;
+					repoManager.checkout(Constants.MASTER);
+					MergeResult mergeResult = repoManager.merge(migrationBranch);
+					if (mergeResult.getMergeStatus().isSuccessful()) {
+						
+						logger.info(
+								String.format(
+									"Pushing changes to remote origin %1$s/%2$s ",
+									ownerUser.getIdentifier(), projectId));
+						
+						repoManager.pushMaster(credentialsProvider);
+						
+						logger.info("Adding team members to the new Project");
+						for (Member member : members) {
+							if (!member.getIdentifier().equals(ownerUser.getIdentifier())) {
+								RBACRole role = member.getRole();
+								if (role.getAccessLevel() < RBACRole.ASSISTANT.getAccessLevel()) {
+									role = RBACRole.ASSISTANT;
+								}
+								
+								restrictedGitLabApi.getProjectApi().addMember(
+										project.getId(), 
+										member.getUserId(),
+										AccessLevel.forValue(role.getAccessLevel()));
 							}
-							
-							restrictedGitLabApi.getProjectApi().addMember(
-									project.getId(), 
-									member.getUserId(),
-									AccessLevel.forValue(role.getAccessLevel()));
+						}
+						if (CATMAPropertyKey.Repo6MigrationCleanupConvertedC6Project.getValue(false)) {
+							logger.info(String.format("Deleting legacy Project (group) %1$s", projectId)); 
+							// restrictedGitLabApi.getGroupApi().deleteGroup(legacyProject.getId());
 						}
 					}
+					else {
+						logger.log(Level.SEVERE, String.format("Failed to merge %1$s into %2$s: %3$s", migrationBranch, Constants.MASTER, mergeResult.toString()));
+					}
 				}
-				
-				logger.info(String.format("Deleting legacy Project (group) %1$s", projectId)); 
-//				restrictedGitLabApi.getGroupApi().deleteGroup(legacyProject.getId());
 			}
-			
-			logger.info(String.format("Removing local git projects for %1$s", projectId));
-			File gitRepositoryBaseDir = 
-					new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue());
-			for(File userDir : gitRepositoryBaseDir.listFiles()) {
-				for (File projectDir : userDir.listFiles()) {
-					if (projectDir.getName().equals(projectId)) {
-						this.legacyProjectHandler.setUserWritablePermissions(Paths.get(projectDir.getAbsolutePath()));
-						FileUtils.deleteDirectory(projectDir);
+
+			if (CATMAPropertyKey.Repo6MigrationCleanupConvertedC6Project.getValue(false)) {
+				logger.info(String.format("Removing local git projects for %1$s", projectId));
+				File gitRepositoryBaseDir = 
+						new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue());
+				for(File userDir : gitRepositoryBaseDir.listFiles()) {
+					for (File projectDir : userDir.listFiles()) {
+						if (projectDir.getName().equals(projectId)) {
+							this.legacyProjectHandler.setUserWritablePermissions(Paths.get(projectDir.getAbsolutePath()));
+							try {
+								FileUtils.deleteDirectory(projectDir);
+							}
+							catch (FileSystemException fse) {
+								logger.log(Level.WARNING, String.format("Could cleanup Project directory %1$s!", projectDir.toString()));
+							}
+						}
 					}
 				}
 			}
@@ -312,7 +343,7 @@ public class ProjectConverter implements AutoCloseable {
 				try {
 					this.legacyProjectHandler.deleteUserTempPath(userTempPath);
 				} catch (Exception e) {
-					logger.log(Level.SEVERE, "Error removing temp file!", e);
+					logger.log(Level.WARNING, String.format("Could not cleanup uer temp directory %1$s!", userTempPath.toString()));
 				}
 			}
 		}

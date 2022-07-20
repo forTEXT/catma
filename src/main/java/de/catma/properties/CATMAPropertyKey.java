@@ -83,8 +83,12 @@ public enum CATMAPropertyKey {
 	Repo6MigrationProjectIdList,
 	
 	Repo6MigrationBackupPath,
-	Repo6MigrationScanWithMergeAndPush("false"),
+	Repo6MigrationScanWithMergeAndPush,
+	Repo6MigrationCleanupConvertedC6Project,
+	Repo6MigrationRemoveUserTempDirectory,
+	Repo6MigrationOverwriteC6ProjectBackup,
 	Repo6MigrationScanMode("ByProject"),
+	Repo6MigrationBranch("c6migration"),
 	;
 
 	private final String defaultValue;
