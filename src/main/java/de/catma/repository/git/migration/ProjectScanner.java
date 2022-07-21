@@ -291,49 +291,55 @@ public class ProjectScanner implements AutoCloseable {
 
 	private void mergeAndPushRoot(JGitRepoManager repoManager, User user, CredentialsProvider credentialsProvider,
 			String projectId, String rootRepoName) throws Exception {
-	
-		repoManager.checkout(migrationBranchName, true);
-		
-		Status status = repoManager.getStatus();
-		if (!status.isClean()) {
-			repoManager.addAllAndCommit(
-					"Auto-committing merged resource changes",
-					user.getIdentifier(),
-					user.getEmail(),
-					false
-			);								
-		}
-		
-		repoManager.fetch(credentialsProvider);
-		
-		boolean hasRemoteC6Migration = repoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
-		boolean clean = true; 
-		if (hasRemoteC6Migration) {
-			MergeResult mrOriginC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
-			getProjectReport(projectId).addMergeResultOriginC6MigrationToC6Migration(projectId, mrOriginC6Migration);
-			clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrOriginC6Migration, projectId, rootRepoName);
-		}
-		if (clean) {
-			MergeResult mrOriginMaster = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
-			getProjectReport(projectId).addMergeResultOriginMasterToC6Migration(projectId, mrOriginMaster);
-			clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrOriginMaster, projectId, rootRepoName);
+		if (repoManager.hasRef(Constants.MASTER)) {
+			repoManager.checkout(migrationBranchName, true);
+			
+			Status status = repoManager.getStatus();
+			if (!status.isClean()) {
+				repoManager.addAllAndCommit(
+						"Auto-committing merged resource changes",
+						user.getIdentifier(),
+						user.getEmail(),
+						false
+				);								
+			}
+			
+			repoManager.fetch(credentialsProvider);
+			
+			boolean hasRemoteC6Migration = repoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
+			boolean clean = true; 
+			if (hasRemoteC6Migration) {
+				MergeResult mrOriginC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
+				getProjectReport(projectId).addMergeResultOriginC6MigrationToC6Migration(projectId, mrOriginC6Migration);
+				clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrOriginC6Migration, projectId, rootRepoName);
+			}
 			if (clean) {
-				MergeResult mrMaster = repoManager.merge(Constants.MASTER);
-				getProjectReport(projectId).addMergeResulMasterToC6Migration(projectId, mrMaster);
-				clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrMaster, projectId, rootRepoName);
+				if (repoManager.hasRemoteRef(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {
+					MergeResult mrOriginMaster = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+					getProjectReport(projectId).addMergeResultOriginMasterToC6Migration(projectId, mrOriginMaster);
+					clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrOriginMaster, projectId, rootRepoName);
+				}
 				if (clean) {
-					repoManager.push(credentialsProvider, true);
-					List<CommitInfo> commits = repoManager.getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration(migrationBranchName);
-					if (commits.size() >0) {
-						getProjectReport(projectId).addPushC6MigrationToOriginC6MigrationFailed(projectId);
-					}
-					else {
-						getProjectReport(projectId).addPushC6MigrationToOriginC6MigrationSuccessful(projectId);
-						getProjectReport(projectId).addReadyToMigrateRoot(projectId);
+					MergeResult mrMaster = repoManager.merge(Constants.MASTER);
+					getProjectReport(projectId).addMergeResulMasterToC6Migration(projectId, mrMaster);
+					clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrMaster, projectId, rootRepoName);
+					if (clean) {
+						repoManager.push(credentialsProvider, true);
+						List<CommitInfo> commits = repoManager.getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration(migrationBranchName);
+						if (commits.size() >0) {
+							getProjectReport(projectId).addPushC6MigrationToOriginC6MigrationFailed(projectId);
+						}
+						else {
+							getProjectReport(projectId).addPushC6MigrationToOriginC6MigrationSuccessful(projectId);
+							getProjectReport(projectId).addReadyToMigrateRoot(projectId);
+						}
 					}
 				}
 			}
-		}		
+		}
+		else {
+			logger.info(String.format("Project %1$s for user %2$s does not have any commits yet!", projectId, user.getIdentifier()));
+		}
 	}
 	private void mergeAndPushResource(JGitRepoManager repoManager, CredentialsProvider credentialsProvider,
 			String projectId, String resource) throws Exception {

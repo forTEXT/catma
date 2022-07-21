@@ -750,6 +750,13 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		return this.gitApi.getRepository().findRef(branch) != null;
 	}
 	
+	public boolean hasRemoteRef(String branch) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `hasRef` on a detached instance");
+		}		
+		return this.gitApi.getRepository().resolve("refs/remotes/"+branch) != null;
+	}
+	
 	public boolean canMerge(String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `canMerge` on a detached instance");
@@ -847,8 +854,12 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					}
 					try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
 						ObjectId commitId = this.gitApi.getRepository().resolve("refs/heads/"+Constants.MASTER);
-						RevCommit commit = revWalk.parseCommit(commitId);
-						checkoutCommand.setStartPoint(commit);
+						// can be null, if a Project is still empty, 
+						// branch creation will fail nevertheless, because JGit cannot create a branch wihtout a startpoint
+						if (commitId != null) { 
+							RevCommit commit = revWalk.parseCommit(commitId);
+							checkoutCommand.setStartPoint(commit);
+						}
 					}
 				}
 				checkoutCommand.setCreateBranch(createBranch);
@@ -871,6 +882,48 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 	
+	public void checkoutNewFromBranch(String name, String baseBranch) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `checkout` on a detached instance");
+		}
+
+		try {
+			if (!this.gitApi.getRepository().getBranch().equals(name)) {
+				CheckoutCommand checkoutCommand = this.gitApi.checkout();
+				List<Ref> refs = this.gitApi.branchList().call();
+				if (refs
+					.stream()
+					.map(rev -> rev.getName())
+					.filter(revName -> revName.equals("refs/heads/"+name))
+					.findFirst()
+					.isPresent()) {
+				}
+				try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
+					ObjectId commitId = this.gitApi.getRepository().resolve("refs/heads/"+baseBranch);
+					// can be null, if a Project is still empty, 
+					// branch creation will fail nevertheless, because JGit cannot create a branch wihtout a startpoint
+					if (commitId != null) { 
+						RevCommit commit = revWalk.parseCommit(commitId);
+						checkoutCommand.setStartPoint(commit);
+					}
+				}
+				checkoutCommand.setCreateBranch(true);
+				checkoutCommand.setName(name).call();
+				
+				StoredConfig config = this.gitApi.getRepository().getConfig();
+				config.setString(
+						ConfigConstants.CONFIG_BRANCH_SECTION, name, 
+						ConfigConstants.CONFIG_KEY_REMOTE, "origin");
+				config.setString(
+						ConfigConstants.CONFIG_BRANCH_SECTION, name, 
+						ConfigConstants.CONFIG_KEY_MERGE, "refs/heads/" + name);
+				config.save();
+			}
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to checkout", e);
+		}
+	}
 	public void checkoutFromOrigin(String name) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `checkoutFromOrigin` on a detached instance");
