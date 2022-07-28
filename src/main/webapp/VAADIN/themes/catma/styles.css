@@ -1,7 +1,3 @@
-.catma.v-app, .catma.v-app-loading {
-	cursor: unset !important;
-}
-
 /**
  * Checks if a list contains a certain value.
  * 
@@ -1895,6 +1891,10 @@ body:not(.v-touch) .v-upload:not(.v-disabled).borderless.custom:hover {
 
 body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.3);
+}
+
+.catma.v-app, .catma.v-app-loading {
+	cursor: unset !important;
 }
 
 .catma.v-app, .catma.v-app-loading {
