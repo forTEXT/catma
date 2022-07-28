@@ -115,7 +115,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		contentPanel.setHeight("100%"); //$NON-NLS-1$
 		contentPanel.addStyleName("home__content"); //$NON-NLS-1$
 
-		ThemeResource logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$
+		ThemeResource logoResource = new ThemeResource("img/catma-tailright-final-cmyk.svg"); //$NON-NLS-1$
 		Image logoImage = new Image(null, logoResource);
 		logoImage.setStyleName("not-logged-in-main-view-logo");
 		contentPanel.addComponent(logoImage);
@@ -157,7 +157,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		addComponent(bottomPanel);
 		
 		Link fortextButton = new Link("", new ExternalResource("https://fortext.net"));
-		fortextButton.setIcon(new ThemeResource("fortext_logo.png"));
+		fortextButton.setIcon(new ThemeResource("img/fortext_logo.png"));
 		fortextButton.setTargetName("_blank");
 		fortextButton.addStyleName("not-logged-in-main-view-fortext-button");
 

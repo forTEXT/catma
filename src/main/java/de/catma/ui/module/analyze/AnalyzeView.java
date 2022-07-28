@@ -332,28 +332,28 @@ public class AnalyzeView extends HorizontalLayout
 		
 		
 		kwicBt = new Button("");
-		kwicBt.setIcon(new ThemeResource("kwic_xs.png"));
+		kwicBt.setIcon(new ThemeResource("img/kwic_xs.png"));
 		kwicBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		kwicBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		kwicBt.addStyleName("analyze_viz_icon");
 		kwicBt.setSizeFull();
 
 		distBt = new Button("");
-		distBt.setIcon(new ThemeResource("distribution_xs.png"));
+		distBt.setIcon(new ThemeResource("img/distribution_xs.png"));
 		distBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		distBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		distBt.addStyleName("analyze_viz_icon");
 		distBt.setSizeFull();
 
 		wordCloudBt = new Button("");
-		wordCloudBt.setIcon(new ThemeResource("wordcloud_xs.png"));
+		wordCloudBt.setIcon(new ThemeResource("img/wordcloud_xs.png"));
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		wordCloudBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		wordCloudBt.addStyleName("analyze_viz_icon");
 		wordCloudBt.setSizeFull();
 
 		doubleTreeBt = new Button("");
-		doubleTreeBt.setIcon(new ThemeResource("doubletree_xs.png"));
+		doubleTreeBt.setIcon(new ThemeResource("img/doubletree_xs.png"));
 		doubleTreeBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
 		doubleTreeBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		doubleTreeBt.addStyleName("analyze_viz_icon");

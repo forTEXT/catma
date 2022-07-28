@@ -84,7 +84,7 @@ public class SpamProtectionDialog extends Window {
 		
 		setContent(content);
 		
-		Image image = new Image("", new ThemeResource("catma-logo.png")); //$NON-NLS-1$ //$NON-NLS-2$
+		Image image = new Image("", new ThemeResource("img/legacy/catma-logo.png")); //$NON-NLS-1$ //$NON-NLS-2$
 		content.addComponent(image);
 		content.setComponentAlignment(image, Alignment.TOP_CENTER);
 		input = new TextField(CATMAPropertyKey.SpamProtectionQuestion.getValue());
