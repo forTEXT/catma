@@ -24,7 +24,6 @@ import com.vaadin.event.Action;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.ThemeResource;
-import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
@@ -34,15 +33,10 @@ import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.main.signup.AuthenticationDialog;
 import de.catma.util.ExceptionUtil;
-import org.jboss.aerogear.security.otp.Totp;
-import org.jboss.aerogear.security.otp.api.Clock;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.net.URLEncoder;
-import java.security.SecureRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,11 +44,9 @@ import java.util.logging.Logger;
  * @author marco.petris@web.de
  *
  */
-public class AuthenticationDialog extends Window implements Action.Handler {
+public class SignInDialog extends AuthenticationDialog implements Action.Handler {
 
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
-
-	private final String baseUrl;
 
 	private final LoginService loginservice;
 	private final InitializationService initService;
@@ -76,9 +68,8 @@ public class AuthenticationDialog extends Window implements Action.Handler {
 	private Button btLogin;
 	private Button btCancel;
 
-	public AuthenticationDialog(
+	public SignInDialog(
 			String caption, 
-			String baseUrl,
 			LoginService loginService,
 			InitializationService initService,
 			HazelCastService hazelCastService,
@@ -88,7 +79,6 @@ public class AuthenticationDialog extends Window implements Action.Handler {
 
 		super(caption);
 
-		this.baseUrl = baseUrl;
 		this.loginservice = loginService;
 		this.initService = initService;
 		this.hazelCastService = hazelCastService;
@@ -101,7 +91,7 @@ public class AuthenticationDialog extends Window implements Action.Handler {
 
 	@Override
 	public Action[] getActions(Object target, Object sender) {
-		if (sender == AuthenticationDialog.this) {
+		if (sender == SignInDialog.this) {
 			return new Action[] { personalAccessTokenAction };
 		}
 		return null;
@@ -109,7 +99,7 @@ public class AuthenticationDialog extends Window implements Action.Handler {
 
 	@Override
 	public void handleAction(Action action, Object sender, Object target) {
-		if (action.equals(personalAccessTokenAction) && sender.equals(AuthenticationDialog.this)) {
+		if (action.equals(personalAccessTokenAction) && sender.equals(SignInDialog.this)) {
 			pfPersonalAccessToken.setVisible(!pfPersonalAccessToken.isVisible());
 			userPasswordLoginLayout.setVisible(!userPasswordLoginLayout.isVisible());
 		}
@@ -144,46 +134,13 @@ public class AuthenticationDialog extends Window implements Action.Handler {
 
 		googleLogInLink.addClickListener(event -> {
 			try {
-				UI.getCurrent().getPage().setLocation(
-						createLogInClick(
-								CATMAPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
-								CATMAPropertyKey.Google_oauthClientId.getValue(),
-								CATMAPropertyKey.Google_oauthClientSecret.getValue()
-						)
-				);
+				UI.getCurrent().getPage().setLocation(getGoogleOauthAuthorisationRequestUrl());
 				close();
 			}
 			catch (Exception e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("Error during authentication!", e);
 			}
 		});
-	}
-
-	public String createLogInClick(
-			String oauthAuthorizationCodeRequestURL, 
-			String oauthClientId,
-			String openidRealm
-	) throws UnsupportedEncodingException {
-
-		String token = new BigInteger(130, new SecureRandom()).toString(32);
-
-		VaadinSession.getCurrent().setAttribute("OAUTHTOKEN", token);
-		
-		// state token generation
-		Totp totp = new Totp(
-				CATMAPropertyKey.otpSecret.getValue()+token, 
-				new Clock(Integer.parseInt(CATMAPropertyKey.otpDuration.getValue()))
-		);
-
-		// creating the authorization request link
-		return oauthAuthorizationCodeRequestURL +
-				"?client_id=" +
-				oauthClientId +
-				"&response_type=code" +
-				"&scope=openid%20email" +
-				"&redirect_uri=" + URLEncoder.encode(baseUrl, "UTF-8") +
-				"&state=" + totp.now() +
-				"&openid.realm=" + openidRealm;
 	}
 
 	@Override

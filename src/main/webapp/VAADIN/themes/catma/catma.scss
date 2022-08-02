@@ -413,6 +413,10 @@ $v-focus-color: #5A98A1;
     font-size: 14px;
   }
 
+  .g-recaptcha-response {
+    display: none !important;
+  }
+
   .application-loginlink {
     font-size: 14px;
     padding: 0px 0;
@@ -508,8 +512,28 @@ $v-focus-color: #5A98A1;
   }
 
   /* Signup */
-  .g-recaptcha-response {
-    display: none !important;
+  .signup-dialog {
+    .v-panel-caption {
+      font-size: 16px;
+      background-color: #E0E0E0;
+      padding: 5px 0 5px 10px;
+    }
+
+    .email-panel {
+      margin-top: 10px;
+
+      .description {
+        font-size: 12px;
+      }
+    }
+
+    .google-panel {
+      margin-top: 10px;
+    }
+
+    .links {
+      margin-top: 20px;
+    }
   }
 
   /* Main Views */

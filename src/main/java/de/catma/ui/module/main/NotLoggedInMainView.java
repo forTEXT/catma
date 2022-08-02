@@ -23,7 +23,7 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
-import de.catma.ui.module.main.login.AuthenticationDialog;
+import de.catma.ui.module.main.login.SignInDialog;
 import de.catma.ui.module.main.signup.SignUpDialog;
 
 import java.util.ArrayList;
@@ -132,10 +132,8 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
 
-		LabelButton btn_login = new LabelButton("Sign in", event -> new AuthenticationDialog(
+		LabelButton btn_login = new LabelButton("Sign in", event -> new SignInDialog(
 				"Sign In",
-				CATMAPropertyKey.BaseURL.getValue(
-						CATMAPropertyKey.BaseURL.getDefaultValue()),
 				loginService,
 				initService,
 				hazelCastService,

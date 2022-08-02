@@ -17896,6 +17896,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 14px;
 }
 
+.catma .g-recaptcha-response {
+	display: none !important;
+}
+
 .catma .application-loginlink {
 	font-size: 14px;
 	padding: 0px 0;
@@ -17989,8 +17993,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: larger;
 }
 
-.catma .g-recaptcha-response {
-	display: none !important;
+.catma .signup-dialog .v-panel-caption {
+	font-size: 16px;
+	background-color: #E0E0E0;
+	padding: 5px 0 5px 10px;
+}
+
+.catma .signup-dialog .email-panel {
+	margin-top: 10px;
+}
+
+.catma .signup-dialog .email-panel .description {
+	font-size: 12px;
+}
+
+.catma .signup-dialog .google-panel {
+	margin-top: 10px;
+}
+
+.catma .signup-dialog .links {
+	margin-top: 20px;
 }
 
 .catma .main-view {

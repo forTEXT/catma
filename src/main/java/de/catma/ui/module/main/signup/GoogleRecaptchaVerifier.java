@@ -40,7 +40,9 @@ public class GoogleRecaptchaVerifier {
 		Form form = new Form();
 		form.param("secret", CATMAPropertyKey.Google_recaptchaSecretKey.getValue());
 		form.param("response", token);
-		logger.log(Level.INFO,"verifying token: " + token );
+
+		logger.info("Verifying reCAPTCHA token: " + token);
+
 		return webtarget
 	            .request(MediaType.APPLICATION_JSON)
 	            .post(
