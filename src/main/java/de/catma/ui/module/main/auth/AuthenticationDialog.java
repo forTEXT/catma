@@ -1,4 +1,4 @@
-package de.catma.ui.module.main.signup;
+package de.catma.ui.module.main.auth;
 
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Window;

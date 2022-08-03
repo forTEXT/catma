@@ -1,4 +1,4 @@
-package de.catma.ui.module.main.signup;
+package de.catma.ui.module.main.auth;
 
 import com.vaadin.data.ValidationResult;
 import com.vaadin.data.Validator;
@@ -9,11 +9,11 @@ import com.vaadin.data.ValueContext;
  * @author db
  *
  */
-public class PasswordValidator implements Validator<String> {
+public class ChangePasswordValidator implements Validator<String> {
 
 	private int min;
 	
-	public PasswordValidator(int min) {
+	public ChangePasswordValidator(int min) {
 		this.min = min;
 	}
 	
@@ -21,10 +21,7 @@ public class PasswordValidator implements Validator<String> {
 
 	@Override
 	public ValidationResult apply(String value, ValueContext context) {
-		if(value == null || value.isEmpty()){
-			return ValidationResult.error("Password can't be empty!");
-		}
-		if(value.length() < min ){
+		if(value != null && ! value.isEmpty() && value.length() < min ){
 			return ValidationResult.error("Password must be longer than " + (min-1) + " characters");
 		}
 		return ValidationResult.ok();

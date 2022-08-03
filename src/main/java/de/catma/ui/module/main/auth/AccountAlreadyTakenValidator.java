@@ -1,4 +1,4 @@
-package de.catma.ui.module.main.signup;
+package de.catma.ui.module.main.auth;
 
 import java.io.IOException;
 

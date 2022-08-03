@@ -1,4 +1,4 @@
-package de.catma.ui.module.main.signup;
+package de.catma.ui.module.main.auth;
 
 import de.catma.properties.CATMAPropertyKey;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
@@ -9,7 +9,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**

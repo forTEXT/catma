@@ -24,7 +24,7 @@ import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.login.SignInDialog;
-import de.catma.ui.module.main.signup.SignUpDialog;
+import de.catma.ui.module.main.auth.SignUpDialog;
 
 import java.util.ArrayList;
 
