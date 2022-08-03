@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.ui.module.main.login;
+package de.catma.ui.module.main.auth;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.eventbus.EventBus;
@@ -33,7 +33,6 @@ import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.module.main.auth.AuthenticationDialog;
 import de.catma.util.ExceptionUtil;
 
 import java.io.IOException;
