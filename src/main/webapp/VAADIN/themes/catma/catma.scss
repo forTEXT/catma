@@ -413,10 +413,6 @@ $v-focus-color: #5A98A1;
     font-size: 14px;
   }
 
-  .g-recaptcha-response {
-    display: none !important;
-  }
-
   .application-loginlink {
     font-size: 14px;
     padding: 0px 0;
@@ -524,6 +520,10 @@ $v-focus-color: #5A98A1;
 
       .description {
         font-size: 12px;
+      }
+
+      .g-recaptcha-response {
+        display: none !important;
       }
     }
 

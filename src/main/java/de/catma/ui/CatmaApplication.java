@@ -425,7 +425,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	}
 	
 	@Subscribe
-	public void handleTokenValid(TokenInvalidEvent tokenInvalidEvent){
+	public void handleTokenInvalid(TokenInvalidEvent tokenInvalidEvent){
 		getUI().access(() -> {
 			Notification.show(tokenInvalidEvent.getReason(), Type.WARNING_MESSAGE);
 		});

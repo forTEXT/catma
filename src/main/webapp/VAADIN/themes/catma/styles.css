@@ -17896,10 +17896,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 14px;
 }
 
-.catma .g-recaptcha-response {
-	display: none !important;
-}
-
 .catma .application-loginlink {
 	font-size: 14px;
 	padding: 0px 0;
@@ -18005,6 +18001,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .signup-dialog .email-panel .description {
 	font-size: 12px;
+}
+
+.catma .signup-dialog .email-panel .g-recaptcha-response {
+	display: none !important;
 }
 
 .catma .signup-dialog .google-panel {
