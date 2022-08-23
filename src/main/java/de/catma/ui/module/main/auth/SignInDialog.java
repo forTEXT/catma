@@ -19,12 +19,15 @@
 package de.catma.ui.module.main.auth;
 
 import com.github.appreciated.material.MaterialTheme;
+import com.google.common.base.Joiner;
 import com.google.common.eventbus.EventBus;
+import com.vaadin.data.Binder;
+import com.vaadin.data.ValidationException;
+import com.vaadin.data.ValidationResult;
 import com.vaadin.event.Action;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.ThemeResource;
-import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
@@ -38,13 +41,13 @@ import de.catma.util.ExceptionUtil;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * @author marco.petris@web.de
  *
  */
 public class SignInDialog extends AuthenticationDialog implements Action.Handler {
-
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
 	private final LoginService loginservice;
@@ -53,19 +56,22 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 	private final SqliteService sqliteService;
 	private final EventBus eventBus;
 
+	private final UserData userData = new UserData();
+
+	private final Binder<UserData> userDataBinder = new Binder<>();
+
 	private final Action personalAccessTokenAction =
 			new ShortcutAction("Alt+P", ShortcutAction.KeyCode.P, new int[] { ShortcutAction.ModifierKey.ALT });
 
-	private VerticalLayout userPasswordLoginLayout;
+	private VerticalLayout regularSignInLayout;
 	private TextField tfUsername;
 	private PasswordField pfPassword;
+	private Button btnRegularSignIn;
+	private Button googleSignInLink;
 
+	private VerticalLayout patSignInLayout;
 	private PasswordField pfPersonalAccessToken;
-
-	private Button googleLogInLink;
-
-	private Button btLogin;
-	private Button btCancel;
+	private Button btnPatSignIn;
 
 	public SignInDialog(
 			String caption, 
@@ -75,7 +81,6 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 			SqliteService sqliteService,
 			EventBus eventBus
 	) {
-
 		super(caption);
 
 		this.loginservice = loginService;
@@ -99,31 +104,60 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 	@Override
 	public void handleAction(Action action, Object sender, Object target) {
 		if (action.equals(personalAccessTokenAction) && sender.equals(SignInDialog.this)) {
-			pfPersonalAccessToken.setVisible(!pfPersonalAccessToken.isVisible());
-			userPasswordLoginLayout.setVisible(!userPasswordLoginLayout.isVisible());
+			regularSignInLayout.setVisible(!regularSignInLayout.isVisible());
+			patSignInLayout.setVisible(!patSignInLayout.isVisible());
+
+			if (regularSignInLayout.isVisible()) {
+				btnPatSignIn.removeClickShortcut();
+				tfUsername.focus();
+				btnRegularSignIn.setClickShortcut(ShortcutAction.KeyCode.ENTER);
+			}
+			else if (patSignInLayout.isVisible()) {
+				btnRegularSignIn.removeClickShortcut();
+				pfPersonalAccessToken.focus();
+				btnPatSignIn.setClickShortcut(ShortcutAction.KeyCode.ENTER);
+			}
 		}
+	}
+
+	private void initMainView() throws IOException {
+		Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
+		UI.getCurrent().setContent(mainView);
+		eventBus.post(new RouteToDashboardEvent());
+		close();
 	}
 
 	private void initActions() {
 		addActionHandler(this);
 
-		btCancel.addClickListener(click -> close());
-
-		btLogin.addClickListener(click -> {
+		btnRegularSignIn.addClickListener(click -> {
+			// validate the bean
 			try {
-				if (pfPersonalAccessToken.isVisible()) {
-					loginservice.login(pfPersonalAccessToken.getValue());
-				}
-				else {
-					loginservice.login(tfUsername.getValue(), pfPassword.getValue());
-				}
-				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
-				UI.getCurrent().setContent(mainView);
-				eventBus.post(new RouteToDashboardEvent());
-				close();
+				userDataBinder.writeBean(userData);
+			}
+			catch (ValidationException e) {
+				Notification.show(
+						Joiner
+						.on("\n")
+						.join(e.getValidationErrors()
+								.stream()
+								.map(ValidationResult::getErrorMessage)
+								.collect(Collectors.toList())
+						)
+						, Notification.Type.ERROR_MESSAGE
+				);
+				return;
+			}
+
+			try {
+				loginservice.login(userData.getUsername(), userData.getPassword());
+				initMainView();
 			}
 			catch (IOException e) {
+				// TODO: distinguish between different types of exception, don't assume...
 				Notification.show("Login error", "Username or password wrong!", Notification.Type.ERROR_MESSAGE);
+
+				// TODO: under which circumstances does this occur (and is it relevant for btnPatSignIn's click listener too)?
 				String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
 				if (message != null && !message.equals("invalid_grant")) {
 					logger.log(Level.SEVERE, "login services", e);
@@ -131,7 +165,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 			}
 		});
 
-		googleLogInLink.addClickListener(event -> {
+		googleSignInLink.addClickListener(event -> {
 			try {
 				UI.getCurrent().getPage().setLocation(getGoogleOauthAuthorisationRequestUrl());
 				close();
@@ -140,30 +174,53 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 				((ErrorHandler)UI.getCurrent()).showAndLogError("Error during authentication!", e);
 			}
 		});
-	}
 
-	@Override
-	public void attach() {
-		super.attach();
-		tfUsername.focus();
+		btnPatSignIn.addClickListener(event -> {
+			try {
+				loginservice.login(pfPersonalAccessToken.getValue());
+				initMainView();
+			}
+			catch (IOException e) {
+				// TODO: distinguish between different types of exception, don't assume...
+				Notification.show("Login error", "Invalid token!", Notification.Type.ERROR_MESSAGE);
+			}
+		});
 	}
 
 	private void initComponents() {
+		setWidth("60%");
 		setModal(true);
-		setWidth("50%");
-		setHeight("60%");
 
 		VerticalLayout content = new VerticalLayout();
-		content.setSizeFull();
+		content.setWidthFull();
+		content.setStyleName("signin-dialog");
 
-		userPasswordLoginLayout = new VerticalLayout();
-		userPasswordLoginLayout.setMargin(false);
+		regularSignInLayout = new VerticalLayout();
+		regularSignInLayout.setMargin(false);
 
-		tfUsername = new TextField("Username or email");
+		Label lblChoice = new Label("Please choose one of the options below:");
+		lblChoice.setWidth("100%");
+
+		Panel pnlEmail = new Panel("Option 1: Username / Email Address and Password");
+		pnlEmail.setStyleName("email-panel");
+		VerticalLayout pnlEmailContent = new VerticalLayout();
+
+		tfUsername = new TextField("Username or Email Address");
 		tfUsername.setWidth("100%");
+
+		userDataBinder.forField(tfUsername)
+				.asRequired("Username / email address is required")
+				.bind(UserData::getUsername, UserData::setUsername);
 
 		pfPassword = new PasswordField("Password");
 		pfPassword.setWidth("100%");
+
+		userDataBinder.forField(pfPassword)
+				.asRequired("Password is required")
+				.bind(UserData::getPassword, UserData::setPassword);
+
+		HorizontalLayout hlForgotPasswordAndButton = new HorizontalLayout();
+		hlForgotPasswordAndButton.setWidth("100%");
 
 		Link forgotPasswordLink = new Link(
 				"Forgot your password?",
@@ -171,37 +228,51 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		);
 		forgotPasswordLink.setStyleName("authdialog-forgot-password-link");
 
-		userPasswordLoginLayout.addComponent(tfUsername);
-		userPasswordLoginLayout.addComponent(pfPassword);
-		userPasswordLoginLayout.addComponent(forgotPasswordLink);
-		
+		btnRegularSignIn = new Button("Sign In");
+		btnRegularSignIn.setClickShortcut(ShortcutAction.KeyCode.ENTER);
+
+		hlForgotPasswordAndButton.addComponent(forgotPasswordLink);
+		hlForgotPasswordAndButton.addComponent(btnRegularSignIn);
+		hlForgotPasswordAndButton.setComponentAlignment(btnRegularSignIn, Alignment.BOTTOM_RIGHT);
+		hlForgotPasswordAndButton.setExpandRatio(forgotPasswordLink, 1f);
+
+		pnlEmailContent.addComponent(tfUsername);
+		pnlEmailContent.addComponent(pfPassword);
+		pnlEmailContent.addComponent(hlForgotPasswordAndButton);
+		pnlEmail.setContent(pnlEmailContent);
+
+		Panel pnlGoogle = new Panel("Option 2: Google Account");
+		pnlGoogle.setStyleName("google-panel");
+		VerticalLayout pnlGoogleContent = new VerticalLayout();
+
+		googleSignInLink = new Button();
+		googleSignInLink.setIcon(new ThemeResource("img/google_buttons/btn_google_light_normal_sign_in.svg"));
+		googleSignInLink.setStyleName(MaterialTheme.BUTTON_LINK);
+		googleSignInLink.addStyleName("authdialog-google-login-link");
+
+		pnlGoogleContent.addComponent(googleSignInLink);
+		pnlGoogle.setContent(pnlGoogleContent);
+
+		regularSignInLayout.addComponent(lblChoice);
+		regularSignInLayout.addComponent(pnlEmail);
+		regularSignInLayout.addComponent(pnlGoogle);
+
+		patSignInLayout = new VerticalLayout();
+		patSignInLayout.setMargin(false);
+		patSignInLayout.setVisible(false);
+
 		pfPersonalAccessToken = new PasswordField("Personal Access Token");
 		pfPersonalAccessToken.setWidth("100%");
-		pfPersonalAccessToken.setVisible(false);
 
-		content.addComponent(userPasswordLoginLayout);
-		content.addComponent(pfPersonalAccessToken);
+		btnPatSignIn = new Button("Sign In");
 
-		HorizontalLayout gOauthPanel = new HorizontalLayout();
-		gOauthPanel.setMargin(new MarginInfo(true, false, true, false));
+		patSignInLayout.addComponent(pfPersonalAccessToken);
+		patSignInLayout.addComponent(btnPatSignIn);
+		patSignInLayout.setComponentAlignment(btnPatSignIn, Alignment.BOTTOM_RIGHT);
 
-		Label lblOr = new Label("or");
-		gOauthPanel.addComponent(lblOr);
-
-		googleLogInLink = new Button();
-		googleLogInLink.setIcon(new ThemeResource("img/google_buttons/btn_google_light_normal_sign_in.svg")); //$NON-NLS-1$
-		googleLogInLink.setStyleName(MaterialTheme.BUTTON_LINK);
-		googleLogInLink.addStyleName("authdialog-google-login-link"); //$NON-NLS-1$
-		gOauthPanel.addComponent(googleLogInLink);
-
-		gOauthPanel.setComponentAlignment(lblOr, Alignment.MIDDLE_LEFT);
-		gOauthPanel.setComponentAlignment(googleLogInLink, Alignment.MIDDLE_LEFT);
-
-		content.addComponent(gOauthPanel);
-		content.setExpandRatio(gOauthPanel, 1f);
-
-		HorizontalLayout buttonPanel = new HorizontalLayout();
-		buttonPanel.setWidth("100%");
+		HorizontalLayout hlLinks = new HorizontalLayout();
+		hlLinks.setWidth("100%");
+		hlLinks.setStyleName("links");
 
 		Link termsOfUseLink = new Link(
 				"Terms of Use",
@@ -219,27 +290,26 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		privacyPolicyLink.setTargetName("_blank");
 		privacyPolicyLink.setStyleName("authdialog-pp-link");
 
-		btLogin = new Button("Sign in");
-		btLogin.setClickShortcut(ShortcutAction.KeyCode.ENTER);
+		hlLinks.addComponent(termsOfUseLink);
+		hlLinks.addComponent(lblPipe);
+		hlLinks.addComponent(privacyPolicyLink);
 
-		btCancel = new Button("Cancel");
+		hlLinks.setComponentAlignment(termsOfUseLink, Alignment.BOTTOM_LEFT);
+		hlLinks.setComponentAlignment(lblPipe, Alignment.BOTTOM_LEFT);
+		hlLinks.setComponentAlignment(privacyPolicyLink, Alignment.BOTTOM_LEFT);
+		hlLinks.setExpandRatio(privacyPolicyLink, 1f);
 
-		buttonPanel.addComponent(termsOfUseLink);
-		buttonPanel.addComponent(lblPipe);
-		buttonPanel.addComponent(privacyPolicyLink);
-		buttonPanel.addComponent(btLogin);
-		buttonPanel.addComponent(btCancel);
-
-		buttonPanel.setComponentAlignment(termsOfUseLink, Alignment.BOTTOM_LEFT);
-		buttonPanel.setComponentAlignment(lblPipe, Alignment.BOTTOM_LEFT);
-		buttonPanel.setComponentAlignment(privacyPolicyLink, Alignment.BOTTOM_LEFT);
-		buttonPanel.setComponentAlignment(btCancel, Alignment.BOTTOM_RIGHT);
-		buttonPanel.setComponentAlignment(btLogin, Alignment.BOTTOM_RIGHT);
-		buttonPanel.setExpandRatio(btLogin, 1f);
-
-		content.addComponent(buttonPanel);
+		content.addComponent(regularSignInLayout);
+		content.addComponent(patSignInLayout);
+		content.addComponent(hlLinks);
 
 		setContent(content);
+	}
+
+	@Override
+	public void attach() {
+		super.attach();
+		tfUsername.focus();
 	}
 
 	public void show() {

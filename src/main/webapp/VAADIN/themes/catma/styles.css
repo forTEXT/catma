@@ -17887,15 +17887,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-weight: bold;
 }
 
-.catma .v-button.authdialog-google-login-link {
-	height: 46px;
-	padding: 0;
-}
-
-.catma .authdialog-forgot-password-link, .catma .authdialog-tou-link, .catma .authdialog-pp-link {
-	font-size: 14px;
-}
-
 .catma .application-loginlink {
 	font-size: 14px;
 	padding: 0px 0;
@@ -17989,30 +17980,43 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: larger;
 }
 
-.catma .signup-dialog .v-panel-caption {
+.catma .signup-dialog .v-panel-caption, .catma .signin-dialog .v-panel-caption {
 	font-size: 16px;
 	background-color: #E0E0E0;
 	padding: 5px 0 5px 10px;
 }
 
-.catma .signup-dialog .email-panel {
+.catma .signup-dialog .email-panel, .catma .signin-dialog .email-panel {
 	margin-top: 10px;
 }
 
-.catma .signup-dialog .email-panel .description {
+.catma .signup-dialog .email-panel .description, .catma .signin-dialog .email-panel .description {
 	font-size: 12px;
 }
 
-.catma .signup-dialog .email-panel .g-recaptcha-response {
+.catma .signup-dialog .email-panel .g-recaptcha-response, .catma .signin-dialog .email-panel .g-recaptcha-response {
 	display: none !important;
 }
 
-.catma .signup-dialog .google-panel {
+.catma .signup-dialog .email-panel .authdialog-forgot-password-link, .catma .signin-dialog .email-panel .authdialog-forgot-password-link {
+	font-size: 14px;
+}
+
+.catma .signup-dialog .google-panel, .catma .signin-dialog .google-panel {
 	margin-top: 10px;
 }
 
-.catma .signup-dialog .links {
+.catma .signup-dialog .google-panel .v-button.authdialog-google-login-link, .catma .signin-dialog .google-panel .v-button.authdialog-google-login-link {
+	height: 46px;
+	padding: 0;
+}
+
+.catma .signup-dialog .links, .catma .signin-dialog .links {
 	margin-top: 20px;
+}
+
+.catma .signup-dialog .links .authdialog-tou-link, .catma .signup-dialog .links .authdialog-pp-link, .catma .signin-dialog .links .authdialog-tou-link, .catma .signin-dialog .links .authdialog-pp-link {
+	font-size: 14px;
 }
 
 .catma .main-view {

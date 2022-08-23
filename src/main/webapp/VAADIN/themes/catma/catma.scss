@@ -404,15 +404,6 @@ $v-focus-color: #5A98A1;
     font-weight: bold;
   }
 
-  .v-button.authdialog-google-login-link {
-    height: 46px;
-    padding: 0;
-  }
-
-  .authdialog-forgot-password-link, .authdialog-tou-link, .authdialog-pp-link {
-    font-size: 14px;
-  }
-
   .application-loginlink {
     font-size: 14px;
     padding: 0px 0;
@@ -507,8 +498,8 @@ $v-focus-color: #5A98A1;
     }
   }
 
-  /* Signup */
-  .signup-dialog {
+  /* Signup & Signin */
+  .signup-dialog, .signin-dialog {
     .v-panel-caption {
       font-size: 16px;
       background-color: #E0E0E0;
@@ -525,14 +516,27 @@ $v-focus-color: #5A98A1;
       .g-recaptcha-response {
         display: none !important;
       }
+
+      .authdialog-forgot-password-link {
+        font-size: 14px;
+      }
     }
 
     .google-panel {
       margin-top: 10px;
+
+      .v-button.authdialog-google-login-link {
+        height: 46px;
+        padding: 0;
+      }
     }
 
     .links {
       margin-top: 20px;
+
+      .authdialog-tou-link, .authdialog-pp-link {
+        font-size: 14px;
+      }
     }
   }
 
