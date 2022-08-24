@@ -25,13 +25,13 @@ public class GoogleRecaptchaVerifier {
 
 	
 	public GoogleRecaptchaVerifier(){
-	    client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-	    webtarget = client.target("https://www.google.com/recaptcha/api/siteverify");
+		client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
+		webtarget = client.target("https://www.google.com/recaptcha/api/siteverify");
 	}
 	
 	/**
 	 * Verifies a given token by using a restclient. It blocks during request.
-	 *   
+	 *
 	 * @param token
 	 * @return verification result
 	 */
@@ -43,10 +43,10 @@ public class GoogleRecaptchaVerifier {
 		logger.info("Verifying reCAPTCHA token: " + token);
 
 		return webtarget
-	            .request(MediaType.APPLICATION_JSON)
-	            .post(
-	            	Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), 
-	            	GoogleVerificationResult.class);
+				.request(MediaType.APPLICATION_JSON)
+				.post(
+					Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE),
+					GoogleVerificationResult.class);
 	}
 
 }

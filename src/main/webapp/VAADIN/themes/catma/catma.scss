@@ -404,16 +404,6 @@ $v-focus-color: #5A98A1;
     font-weight: bold;
   }
 
-  .application-loginlink {
-    font-size: 14px;
-    padding: 0px 0;
-  }
-
-  .application-loginlink:focus::after {
-    border-color: none;
-    box-shadow: none;
-  }
-
   .catma-embedded-vega {
     margin-left: 10px;
     margin-top: 10px;

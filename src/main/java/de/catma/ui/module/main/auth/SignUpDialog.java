@@ -1,38 +1,35 @@
 package de.catma.ui.module.main.auth;
 
-import java.time.LocalTime;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import com.vaadin.event.ShortcutAction;
-import com.vaadin.server.ExternalResource;
-import com.vaadin.server.Page;
-import org.apache.commons.codec.digest.HmacUtils;
-import org.apache.commons.mail.DefaultAuthenticator;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
-
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.base.Joiner;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.data.ValidationResult;
 import com.vaadin.data.validator.EmailValidator;
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
-
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.ui.module.main.ErrorHandler;
 import io.netty.handler.codec.http.QueryStringEncoder;
+import org.apache.commons.codec.digest.HmacUtils;
+import org.apache.commons.mail.DefaultAuthenticator;
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.SimpleEmail;
+
+import java.time.LocalTime;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
- * Signup dialog asks for an email address, and verifies via google recaptcha that no bots 
- * sign up.
- * @author db
+ * SignUpDialog allows users to sign up either by entering an email address (the password is set later), or via Google (OpenID Connect).
+ * The email address option is protected against bots using Google reCAPTCHA.
  *
  */
 public class SignUpDialog extends AuthenticationDialog {
