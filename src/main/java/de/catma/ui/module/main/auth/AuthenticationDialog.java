@@ -29,12 +29,11 @@ public abstract class AuthenticationDialog extends Window {
 
         return String.format(
                 // note %% escape, otherwise an exception is thrown
-                "%s?client_id=%s&response_type=code&scope=openid%%20email&redirect_uri=%s&state=%s&openid.realm=%s",
+                "%s?client_id=%s&response_type=code&scope=openid%%20email&redirect_uri=%s&state=%s",
                 CATMAPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
                 CATMAPropertyKey.Google_oauthClientId.getValue(),
                 URLEncoder.encode(CATMAPropertyKey.BaseURL.getValue(CATMAPropertyKey.BaseURL.getDefaultValue()), "UTF-8"),
-                totp.now(),
-                CATMAPropertyKey.Google_oauthClientSecret.getValue() // TODO: why are we passing this as openid.realm? remove and re-check implementation & URLs
+                totp.now()
         );
     }
 }
