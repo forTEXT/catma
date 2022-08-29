@@ -245,7 +245,9 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		user.setName(publicname);
 		user.setIsAdmin(false);
 		user.setSkipConfirmation(true);
-		
+
+		// TODO: remove, this doesn't actually do anything (gitlab4j-api doesn't do anything with the information)
+		//       test whether user.setExternUid and user.setProvider have any effect, and if so, whether that results in a valid identity
 		if (provider != null) {
 			Identity identity = new Identity();
 			identity.setExternUid(username);
