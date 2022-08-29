@@ -78,13 +78,15 @@ public class GitProjectsManager implements ProjectsManager {
 	 * @throws IOException if an error occurs when creating the project
 	 */
 	private String create(String name, String description) throws IOException {
-
 		String marshalledDescription = marshallProjectMetadata(name, description);
-		String human_readable_info = "_" + name.replaceAll("[^\\p{Alnum}]", "_");
-		if (human_readable_info.matches("\\_+")) {
-			human_readable_info = ""; // no real information value could be gathered from the name
-		}
-		String projectId = idGenerator.generate() + human_readable_info;
+
+		// note restrictions on project path: https://docs.gitlab.com/ee/api/projects.html#create-project
+		String cleanedName = name.trim()
+				.replaceAll("[\\p{Punct}\\p{Space}]", "_") // replace punctuation and whitespace characters with underscore ( _ )
+				.replaceAll("_+", "_") // collapse multiple consecutive underscores into one
+				.replaceAll("[^\\p{Alnum}_]", "x") // replace any remaining non-alphanumeric characters with x (excluding underscore)
+				.replaceAll("^_|_$", ""); // strip any leading or trailing underscore
+		String projectId = String.format("%s_%s", idGenerator.generate(), cleanedName);
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the remote repository
