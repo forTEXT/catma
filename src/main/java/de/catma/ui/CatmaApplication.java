@@ -86,8 +86,8 @@ import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.login.Vaadin8InitializationService;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.module.main.signup.CreateUserDialog;
-import de.catma.ui.module.main.signup.SignupTokenManager;
+import de.catma.ui.module.main.auth.CreateUserDialog;
+import de.catma.ui.module.main.auth.SignupTokenManager;
 import de.catma.ui.util.Version;
 
 @Theme("catma")
@@ -425,7 +425,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	}
 	
 	@Subscribe
-	public void handleTokenValid(TokenInvalidEvent tokenInvalidEvent){
+	public void handleTokenInvalid(TokenInvalidEvent tokenInvalidEvent){
 		getUI().access(() -> {
 			Notification.show(tokenInvalidEvent.getReason(), Type.WARNING_MESSAGE);
 		});

@@ -1,4 +1,4 @@
-package de.catma.ui.module.main.signup;
+package de.catma.ui.module.main.auth;
 
 import de.catma.properties.CATMAPropertyKey;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
@@ -9,7 +9,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -26,13 +25,13 @@ public class GoogleRecaptchaVerifier {
 
 	
 	public GoogleRecaptchaVerifier(){
-	    client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-	    webtarget = client.target("https://www.google.com/recaptcha/api/siteverify");
+		client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
+		webtarget = client.target("https://www.google.com/recaptcha/api/siteverify");
 	}
 		
 	/**
 	 * Verifies a given token by using a restclient. It blocks during request.
-	 *   
+	 *
 	 * @param token
 	 * @return verification result
 	 */
@@ -40,12 +39,14 @@ public class GoogleRecaptchaVerifier {
 		Form form = new Form();
 		form.param("secret", CATMAPropertyKey.Google_recaptchaSecretKey.getValue());
 		form.param("response", token);
-		logger.log(Level.INFO,"verifying token: " + token );
+
+		logger.info("Verifying reCAPTCHA token: " + token);
+
 		return webtarget
-	            .request(MediaType.APPLICATION_JSON)
-	            .post(
-	            	Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), 
-	            	GoogleVerificationResult.class);
+				.request(MediaType.APPLICATION_JSON)
+				.post(
+					Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE),
+					GoogleVerificationResult.class);
 	}
 
 }

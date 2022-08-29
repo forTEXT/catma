@@ -1,12 +1,10 @@
-package de.catma.ui.module.main.signup;
+package de.catma.ui.module.main.auth;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
-import com.vaadin.annotations.JavaScript;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.server.Page;
@@ -34,11 +32,9 @@ import de.catma.ui.module.main.ErrorHandler;
  * @author db
  *
  */
-@JavaScript({"https://www.google.com/recaptcha/api.js?render=6LenwosUAAAAAKfYcN4ZAGMu1QwfECD2cZPjLoFG"})
 public class CreateUserDialog extends Window {
 
 	private UserData user = new UserData();
-	private GoogleVerificationResult recaptchaResult = new GoogleVerificationResult();
 
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final Binder<UserData> userBinder = new Binder<>();
@@ -75,16 +71,10 @@ public class CreateUserDialog extends Window {
 		
 		PasswordField tfVerifyPassword = new PasswordField("Verify password");
 		tfVerifyPassword.setWidth("100%");
-		
-		TextField hiddenVerification = new TextField();
-		hiddenVerification.addStyleName("g-recaptcha-response");
-		
 
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setWidth("100%");
 		Button btnCreate = new Button("Create");
-		btnCreate.setEnabled(false);
-		btnCreate.setDescription("Awaiting Google recaptcha verification...");
 		Button btnCancel = new Button("Cancel");
 		
 		buttonPanel.addComponent(btnCreate);
@@ -99,22 +89,6 @@ public class CreateUserDialog extends Window {
 			this.close();
 		});
 
-		hiddenVerification.addValueChangeListener(event -> 		{
-			recaptchaResult = new GoogleRecaptchaVerifier().verify(hiddenVerification.getValue());
-			if (recaptchaResult.isSuccess()) {
-				btnCreate.setEnabled(true);
-				btnCreate.setDescription("Create user account");
-			}
-			else {
-				Notification.show(
-					"Error", 
-					"Recaptcha verfication failed: " 
-							+ Arrays.asList(recaptchaResult.getErrorCodes()), 
-					Type.ERROR_MESSAGE);
-			}			
-			logger.info(recaptchaResult.toString());
-		});
-		
 		content.addComponent(lDescription);
 		content.addComponent(tfUsername);
 		content.addComponent(tfEmail);
@@ -122,7 +96,6 @@ public class CreateUserDialog extends Window {
 		content.addComponent(tfVerifyPassword);
 		content.setExpandRatio(tfVerifyPassword, 1f);
 		
-		content.addComponent(hiddenVerification);
 		content.addComponent(buttonPanel);
 		
 		userBinder.forField(tfUsername) 
@@ -135,21 +108,8 @@ public class CreateUserDialog extends Window {
 		userBinder.forField(tfPassword)
 	    .withValidator(new PasswordValidator(8))
 	    .bind(UserData::getPassword, UserData::setPassword);
-		
 
 		btnCreate.addClickListener(click -> {
-			// Check google recaptcha
-			if(hiddenVerification.getValue() == null || hiddenVerification.getValue().isEmpty()){
-				Notification.show("reCaptcha verification failed!",Type.ERROR_MESSAGE);
-				return;
-			}
-						
-			if(! recaptchaResult.isSuccess() && recaptchaResult.getScore() < 0.5f){
-				Notification.show("reCaptcha verification failed!",Type.ERROR_MESSAGE);
-				logger.warning("recaptcha failed: " + recaptchaResult);
-				return;
-			}
-
 			// sanity check the password
 			if(tfPassword.getValue() == null || tfVerifyPassword.getValue() == null || 
 					(! tfPassword.getValue().equals(tfVerifyPassword.getValue()))) {
@@ -188,20 +148,8 @@ public class CreateUserDialog extends Window {
 		setContent(content);
 	}
 
-	/**
-	 * Displays this dialog and registers the javascript callback for google recaptcha
-	 */
 	public void show() {
 		UI.getCurrent().addWindow(this);
-		com.vaadin.ui.JavaScript.getCurrent().execute(
-		  "grecaptcha.ready(function() {"+
-		  " grecaptcha.execute('6LenwosUAAAAAKfYcN4ZAGMu1QwfECD2cZPjLoFG', {action: 'CreateUserCatma'})"+
-		  " .then(function(token) {"+
-		  "  document.getElementsByClassName('g-recaptcha-response')[0].value = token;"+
-		  "  document.getElementsByClassName('g-recaptcha-response')[0].dispatchEvent(new Event('change'));"+
-		  " }); "+
-		  "}); ");
-		  
 	}
 	
 	@Override

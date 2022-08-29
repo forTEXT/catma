@@ -1,7 +1,3 @@
-.catma.v-app, .catma.v-app-loading {
-	cursor: unset !important;
-}
-
 /**
  * Checks if a list contains a certain value.
  * 
@@ -1895,6 +1891,10 @@ body:not(.v-touch) .v-upload:not(.v-disabled).borderless.custom:hover {
 
 body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.3);
+}
+
+.catma.v-app, .catma.v-app-loading {
+	cursor: unset !important;
 }
 
 .catma.v-app, .catma.v-app-loading {
@@ -17887,25 +17887,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-weight: bold;
 }
 
-.catma .v-button.authdialog-google-login-link {
-	height: 46px;
-	padding: 0;
-}
-
-.catma .authdialog-forgot-password-link, .catma .authdialog-tou-link, .catma .authdialog-pp-link {
-	font-size: 14px;
-}
-
-.catma .application-loginlink {
-	font-size: 14px;
-	padding: 0px 0;
-}
-
-.catma .application-loginlink:focus::after {
-	border-color: none;
-	box-shadow: none;
-}
-
 .catma .catma-embedded-vega {
 	margin-left: 10px;
 	margin-top: 10px;
@@ -17989,8 +17970,43 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: larger;
 }
 
-.catma .g-recaptcha-response {
+.catma .signup-dialog .v-panel-caption, .catma .signin-dialog .v-panel-caption {
+	font-size: 16px;
+	background-color: #E0E0E0;
+	padding: 5px 0 5px 10px;
+}
+
+.catma .signup-dialog .email-panel, .catma .signin-dialog .email-panel {
+	margin-top: 10px;
+}
+
+.catma .signup-dialog .email-panel .description, .catma .signin-dialog .email-panel .description {
+	font-size: 12px;
+}
+
+.catma .signup-dialog .email-panel .g-recaptcha-response, .catma .signin-dialog .email-panel .g-recaptcha-response {
 	display: none !important;
+}
+
+.catma .signup-dialog .email-panel .authdialog-forgot-password-link, .catma .signin-dialog .email-panel .authdialog-forgot-password-link {
+	font-size: 14px;
+}
+
+.catma .signup-dialog .google-panel, .catma .signin-dialog .google-panel {
+	margin-top: 10px;
+}
+
+.catma .signup-dialog .google-panel .v-button.authdialog-google-login-link, .catma .signin-dialog .google-panel .v-button.authdialog-google-login-link {
+	height: 46px;
+	padding: 0;
+}
+
+.catma .signup-dialog .links, .catma .signin-dialog .links {
+	margin-top: 20px;
+}
+
+.catma .signup-dialog .links .authdialog-tou-link, .catma .signup-dialog .links .authdialog-pp-link, .catma .signin-dialog .links .authdialog-tou-link, .catma .signin-dialog .links .authdialog-pp-link {
+	font-size: 14px;
 }
 
 .catma .main-view {

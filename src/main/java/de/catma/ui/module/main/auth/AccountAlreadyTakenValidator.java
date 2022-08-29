@@ -1,4 +1,4 @@
-package de.catma.ui.module.main.signup;
+package de.catma.ui.module.main.auth;
 
 import java.io.IOException;
 
@@ -15,8 +15,7 @@ import de.catma.ui.module.main.ErrorHandler;
  * @author db
  *
  */
-public class AccountAlreadyTakenValidator implements Validator<String>{
-
+public class AccountAlreadyTakenValidator implements Validator<String> {
 	private final ICommonRemoteGitManager commonGitManagerApi;
 
 	public AccountAlreadyTakenValidator(ICommonRemoteGitManager commonGitManagerApi) {
@@ -26,19 +25,20 @@ public class AccountAlreadyTakenValidator implements Validator<String>{
 	@Override
 	public ValidationResult apply(String value, ValueContext context) {
 		if (value == null || value.isEmpty()) {
-			return ValidationResult.error("Username or email can't be empty");
+			return ValidationResult.error("Username or email address can't be empty");
 		}
 		
 		try {
-			if(commonGitManagerApi.existsUserOrEmail(value) ) {
-				return ValidationResult.error("username or email already taken");
-			}else {
+			if (commonGitManagerApi.existsUserOrEmail(value)) {
+				return ValidationResult.error("Username or email address already taken");
+			}
+			else {
 				return ValidationResult.ok();
 			}
-		} catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("username or email can't be checked", e);
-			return ValidationResult.error("username or email can't be checked");
+		}
+		catch (IOException e) {
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Failed to check username or email address", e);
+			return ValidationResult.error("Failed to check username or email address");
 		}
 	}
-
 }

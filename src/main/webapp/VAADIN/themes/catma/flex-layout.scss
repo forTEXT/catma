@@ -3,7 +3,6 @@
     display: inline-flex;
   }
 
-
   // Align content
   .align-content-center {
     align-content: center;
@@ -24,7 +23,6 @@
     align-content: stretch;
   }
 
-
   // Align items
   .align-items-baseline {
     align-items: baseline;
@@ -41,7 +39,6 @@
   .align-items-stretch   {
     align-items: stretch;
   }
-
 
   // Align self
   .align-self-baseline {
@@ -60,7 +57,6 @@
     align-self: stretch;
   }
 
-
   // Justify content
   .justify-content-center {
     justify-content: center;
@@ -78,7 +74,6 @@
     justify-content: space-between;
   }
 
-
   // Flex wrap
   .flex-nowrap {
     flex-wrap: nowrap;
@@ -89,7 +84,6 @@
   .flex-wrap-reverse {
     flex-wrap: wrap-reverse;
   }
-
 
   // Flex direction
   .column {
@@ -105,7 +99,6 @@
     flex-direction: row-reverse;
   }
 
-
   // Overflow
   .overflow-auto {
     overflow: auto;
@@ -119,7 +112,6 @@
   .overflow-visible {
     overflow: visible;
   }
-
 
   // Position
   .position-absolute {
@@ -138,8 +130,7 @@
     position: relative;
   }
   
-  /* Horizonal Layout */
-  
+  // Horizontal Layout
   .flex-horizontal {
   	display: flex;
     flex-direction: row;
@@ -151,8 +142,7 @@
     box-sizing: border-box;
   }
 
-  /* spacing */
-  
+  // Spacing
   .flexlayout-spacing > * {
   	margin: 10px;
   }
@@ -165,8 +155,7 @@
   	margin: 10px;
   }
   
-    .flexlayout-margin-left-right  {
+  .flexlayout-margin-left-right  {
   	margin: 0px 10px 0px 10px;
   }
-  
 }

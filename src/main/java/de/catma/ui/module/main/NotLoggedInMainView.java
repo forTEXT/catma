@@ -23,8 +23,8 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
-import de.catma.ui.module.main.login.AuthenticationDialog;
-import de.catma.ui.module.main.signup.SignUpDialog;
+import de.catma.ui.module.main.auth.SignInDialog;
+import de.catma.ui.module.main.auth.SignUpDialog;
 
 import java.util.ArrayList;
 
@@ -115,7 +115,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		contentPanel.setHeight("100%"); //$NON-NLS-1$
 		contentPanel.addStyleName("home__content"); //$NON-NLS-1$
 
-		ThemeResource logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$
+		ThemeResource logoResource = new ThemeResource("img/catma-tailright-final-cmyk.svg"); //$NON-NLS-1$
 		Image logoImage = new Image(null, logoResource);
 		logoImage.setStyleName("not-logged-in-main-view-logo");
 		contentPanel.addComponent(logoImage);
@@ -132,10 +132,8 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 
 		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
 
-		LabelButton btn_login = new LabelButton("Sign in", event -> new AuthenticationDialog(
+		LabelButton btn_login = new LabelButton("Sign in", event -> new SignInDialog(
 				"Sign In",
-				CATMAPropertyKey.BaseURL.getValue(
-						CATMAPropertyKey.BaseURL.getDefaultValue()),
 				loginService,
 				initService,
 				hazelCastService,
@@ -157,7 +155,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		addComponent(bottomPanel);
 		
 		Link fortextButton = new Link("", new ExternalResource("https://fortext.net"));
-		fortextButton.setIcon(new ThemeResource("fortext_logo.png"));
+		fortextButton.setIcon(new ThemeResource("img/fortext_logo.png"));
 		fortextButton.setTargetName("_blank");
 		fortextButton.addStyleName("not-logged-in-main-view-fortext-button");
 

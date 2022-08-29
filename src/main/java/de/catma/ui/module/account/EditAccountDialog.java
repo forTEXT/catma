@@ -25,8 +25,8 @@ import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.module.main.signup.ChangePasswordValidator;
-import de.catma.ui.module.main.signup.UserData;
+import de.catma.ui.module.main.auth.ChangePasswordValidator;
+import de.catma.ui.module.main.auth.UserData;
 import de.catma.user.User;
 
 public class EditAccountDialog extends Window {

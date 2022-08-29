@@ -1,4 +1,4 @@
-package de.catma.ui.module.main.signup;
+package de.catma.ui.module.main.auth;
 
 /**
  * Signup token bean class. It can be marshalled to json and back. This is useful for verification purpose.
