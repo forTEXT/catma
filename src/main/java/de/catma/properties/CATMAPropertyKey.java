@@ -52,7 +52,6 @@ public enum CATMAPropertyKey {
 	GitLabServerUrl,
 
 	GitBasedRepositoryBasePath,
-	GraphDbGitMountBasePath,
 
 	MaxPageFileSizeBytes("200000"),
 	

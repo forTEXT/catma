@@ -171,7 +171,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	private Path getTokenizedSourceDocumentPath(String documentId) {
 		return Paths
-			.get(new File(CATMAPropertyKey.GraphDbGitMountBasePath.getValue()).toURI())
+			.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
 			.resolve(gitProjectHandler.getSourceDocumentPath(documentId))
 			.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
