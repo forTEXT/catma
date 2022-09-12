@@ -27,15 +27,11 @@ import java.util.Properties;
  *
  */
 public enum CATMAPropertyKey {
-
 	TempDir,
-	LoginType,
-	InitType,
 	BaseURL("http://localhost:8080/catma/"),
 	otpSecret,
 	otpDuration,
 	signup_tokenKey,
-	version,
 	LogoutURL("https://app.catma.de"),
 	AboutURL("https://catma.de"),
 	ContextDefinitionURL("https://www.catma.de/"),
@@ -69,9 +65,7 @@ public enum CATMAPropertyKey {
 	MailPass,
 	MailFrom, 
 	
-	SpamProtectionAnswer, 
-	SpamProtectionQuestion, 
-	CATMA5API("https://portal.catma.de/catma/api/"), 
+	CATMA5API("https://portal.catma.de/catma/api/"),
 	EXPERT("false"),
 	devPreventPush("false"),
 	MinTimeBetweenSynchronizationsInSeconds("30"),
