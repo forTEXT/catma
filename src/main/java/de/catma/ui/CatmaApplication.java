@@ -271,7 +271,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	@Override
 	public void close() {
 		logger.info("Closing UI");
-		getPage().setLocation(CATMAPropertyKey.LogoutURL.getValue(CATMAPropertyKey.LogoutURL.getDefaultValue()));
+		getPage().setLocation(CATMAPropertyKey.LogoutURL.getValue());
 
 		super.close();
 	}
@@ -343,13 +343,13 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		
 			String token = (String)VaadinSession.getCurrent().getAttribute("OAUTHTOKEN");
 			
-			// do we have a authorization request error?
+			// do we have an authorization request error?
 			if (error == null) {
 				// no, so we validate the state token
 				Totp totp = new Totp(
-						CATMAPropertyKey.otpSecret.getValue()+token, 
-						new Clock(Integer.valueOf(
-							CATMAPropertyKey.otpDuration.getValue())));
+						CATMAPropertyKey.otpSecret.getValue() + token,
+						new Clock(CATMAPropertyKey.otpDuration.getIntValue())
+				);
 				if (!totp.verify(state)) {
 					error = "state token verification failed"; //$NON-NLS-1$
 				}
@@ -358,17 +358,13 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			// state token get validation success?	
 			if (error == null) {
 				CloseableHttpClient httpclient = HttpClients.createDefault();
-				HttpPost httpPost = 
-					new HttpPost(CATMAPropertyKey.Google_oauthAccessTokenRequestURL.getValue());
-				List <NameValuePair> data = new ArrayList <NameValuePair>();
+				HttpPost httpPost = new HttpPost(CATMAPropertyKey.Google_oauthAccessTokenRequestURL.getValue());
+				List <NameValuePair> data = new ArrayList<>();
 				data.add(new BasicNameValuePair("code", authorizationCode)); //$NON-NLS-1$
 				data.add(new BasicNameValuePair("grant_type", "authorization_code")); //$NON-NLS-1$ //$NON-NLS-2$
-				data.add(new BasicNameValuePair(
-					"client_id", CATMAPropertyKey.Google_oauthClientId.getValue())); //$NON-NLS-1$
-				data.add(new BasicNameValuePair(
-					"client_secret", CATMAPropertyKey.Google_oauthClientSecret.getValue())); //$NON-NLS-1$
-				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BaseURL.getValue(
-						CATMAPropertyKey.BaseURL.getDefaultValue()))); //$NON-NLS-1$
+				data.add(new BasicNameValuePair("client_id", CATMAPropertyKey.Google_oauthClientId.getValue())); //$NON-NLS-1$
+				data.add(new BasicNameValuePair("client_secret", CATMAPropertyKey.Google_oauthClientSecret.getValue())); //$NON-NLS-1$
+				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BaseURL.getValue())); //$NON-NLS-1$
 				httpPost.setEntity(new UrlEncodedFormEntity(data));
 				CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
 				HttpEntity entity = tokenRequestResponse.getEntity();

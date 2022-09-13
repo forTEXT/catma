@@ -24,7 +24,7 @@ public abstract class AuthenticationDialog extends Window {
 
         Totp totp = new Totp(
                 CATMAPropertyKey.otpSecret.getValue() + token,
-                new Clock(Integer.parseInt(CATMAPropertyKey.otpDuration.getValue()))
+                new Clock(CATMAPropertyKey.otpDuration.getIntValue())
         );
 
         return String.format(
@@ -32,7 +32,7 @@ public abstract class AuthenticationDialog extends Window {
                 "%s?client_id=%s&response_type=code&scope=openid%%20email&redirect_uri=%s&state=%s",
                 CATMAPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
                 CATMAPropertyKey.Google_oauthClientId.getValue(),
-                URLEncoder.encode(CATMAPropertyKey.BaseURL.getValue(CATMAPropertyKey.BaseURL.getDefaultValue()), "UTF-8"),
+                URLEncoder.encode(CATMAPropertyKey.BaseURL.getValue(), "UTF-8"),
                 totp.now()
         );
     }

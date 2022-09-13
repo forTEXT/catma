@@ -168,10 +168,7 @@ public class CatmaApplicationServlet extends VaadinServlet {
 					SystemMessagesInfo systemMessagesInfo) {
 				CustomizedSystemMessages messages = new CustomizedSystemMessages();
 				try {
-					String problemRedirectURL = 
-							CATMAPropertyKey.BaseURL.getValue( 
-									CATMAPropertyKey.BaseURL.getDefaultValue());
-
+					String problemRedirectURL = CATMAPropertyKey.BaseURL.getValue();
 					messages.setAuthenticationErrorURL(problemRedirectURL);
 					messages.setInternalErrorURL(problemRedirectURL);
 					messages.setSessionExpiredURL(problemRedirectURL);

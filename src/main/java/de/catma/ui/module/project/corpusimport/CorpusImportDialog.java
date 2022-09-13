@@ -251,7 +251,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
 
-		URL url = new URL(CATMAPropertyKey.CATMA5API.getValue(CATMAPropertyKey.CATMA5API.getDefaultValue())+apiPath);
+		URL url = new URL(CATMAPropertyKey.CATMA5API.getValue() + apiPath);
 		URLConnection urlConnection = url.openConnection();
 		urlConnection.setReadTimeout(7200000); // 2h, corpus generation in CATMA 5 can take a while
 		urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);	

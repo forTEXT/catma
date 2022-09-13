@@ -103,11 +103,7 @@ public class ProjectConverter implements AutoCloseable {
 	
 			Pair<User, String> result = this.legacyProjectHandler.aquireUser(owner.getIdentifier());
 	
-			try (GitLabApi restrictedGitLabApi = 
-					new GitLabApi(
-							CATMAPropertyKey.GitLabServerUrl.getValue(), 
-							result.getSecond())) {
-				
+			try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), result.getSecond())) {
 				logger.info(String.format("Retrieving legacy Project %1$s (Group)", projectId));
 				Group legacyProject = 
 					restrictedGitLabApi.getGroupApi().getGroup(projectId);
@@ -120,10 +116,7 @@ public class ProjectConverter implements AutoCloseable {
 				
 				logger.info(String.format("Creating temp directory for Project %1$s and owner %2$s", projectId, ownerUser));
 
-				String repositoryTempPath = 
-						new File(
-							CATMAPropertyKey.TempDir.getValue(), 
-							"project_migration").getAbsolutePath();
+				String repositoryTempPath = new File(CATMAPropertyKey.TempDir.getValue(), "project_migration").getAbsolutePath();
 				userTempPath = Paths.get(repositoryTempPath, ownerUser.getIdentifier());
 				if (userTempPath.toFile().exists()) {
 					this.legacyProjectHandler.deleteUserTempPath(userTempPath);
@@ -156,7 +149,7 @@ public class ProjectConverter implements AutoCloseable {
 				Path projectBackupPath = backupPath.resolve(projectId);
 				
 				if (projectBackupPath.toFile().exists() && projectBackupPath.toFile().list().length>0) {
-					if (CATMAPropertyKey.Repo6MigrationOverwriteC6ProjectBackup.getValue(false)) {
+					if (CATMAPropertyKey.Repo6MigrationOverwriteC6ProjectBackup.getBooleanValue()) {
 						this.legacyProjectHandler.setUserWritablePermissions(projectBackupPath);
 						FileUtils.deleteDirectory(projectBackupPath.toFile());
 					}
@@ -184,8 +177,7 @@ public class ProjectConverter implements AutoCloseable {
 							projectId,
 							rootRepoName);
 					
-					String migrationBranch = CATMAPropertyKey.Repo6MigrationBranch.getValue(
-							CATMAPropertyKey.Repo6MigrationBranch.getDefaultValue()); 
+					String migrationBranch = CATMAPropertyKey.Repo6MigrationBranch.getValue();
 					
 					if (!repoManager.hasRemoteRef(
 							Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranch)) {
@@ -341,13 +333,12 @@ public class ProjectConverter implements AutoCloseable {
 											AccessLevel.forValue(role.getAccessLevel()));
 								}
 							}
-							if (CATMAPropertyKey.Repo6MigrationCleanupConvertedC6Project.getValue(false)) {
+							if (CATMAPropertyKey.Repo6MigrationCleanupConvertedC6Project.getBooleanValue()) {
 								logger.info(String.format("Deleting legacy Project (group) %1$s", projectId)); 
 								restrictedGitLabApi.getGroupApi().deleteGroup(legacyProject.getId());
 
 								logger.info(String.format("Removing local git projects for %1$s", projectId));
-								File gitRepositoryBaseDir = 
-										new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue());
+								File gitRepositoryBaseDir = new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue());
 								for(File userDir : gitRepositoryBaseDir.listFiles()) {
 									for (File projectDir : userDir.listFiles()) {
 										if (projectDir.getName().equals(projectId)) {
@@ -374,7 +365,7 @@ public class ProjectConverter implements AutoCloseable {
 				}
 			}
 
-			if ((userTempPath != null) && CATMAPropertyKey.Repo6MigrationRemoveUserTempDirectory.getValue(false)) {
+			if ((userTempPath != null) && CATMAPropertyKey.Repo6MigrationRemoveUserTempDirectory.getBooleanValue()) {
 				logger.info(String.format("Removing temp directory %1$s", userTempPath.toFile()));
 				try {
 					this.legacyProjectHandler.deleteUserTempPath(userTempPath);
@@ -462,7 +453,7 @@ public class ProjectConverter implements AutoCloseable {
 				}
 			}
 			else {
-				int limit = CATMAPropertyKey.Repo6MigrationMaxProjects.getValue(1);
+				int limit = CATMAPropertyKey.Repo6MigrationMaxProjects.getIntValue();
 				projectConverter.convertProjects(limit);
 			}
 		}

@@ -101,8 +101,8 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 									"carefully. You need to accept both in order to continue to work with CATMA.<br />" +
 									"<br />" +
 									"Do you <strong>accept</strong> our Terms of Use and our Privacy Policy?",
-							CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue()),
-							CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue())
+							CATMAPropertyKey.TermsOfUseURL.getValue(),
+							CATMAPropertyKey.PrivacyPolicyURL.getValue()
 					),
 					"Yes",
 					"No",

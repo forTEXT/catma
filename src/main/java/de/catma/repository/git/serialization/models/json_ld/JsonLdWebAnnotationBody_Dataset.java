@@ -48,9 +48,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 		Collection<TagReference> tagReferences, TagLibrary tagLibrary)
 			throws IOException {
 		this();
-		String contextDefinitionURL =
-				CATMAPropertyKey.ContextDefinitionURL.getValue(
-						CATMAPropertyKey.ContextDefinitionURL.getDefaultValue()); 
+		String contextDefinitionURL = CATMAPropertyKey.ContextDefinitionURL.getValue();
 		
 		if (!contextDefinitionURL.endsWith("/")) {
 			contextDefinitionURL += "/";

@@ -76,28 +76,23 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		
 		addComponent(menuLayout);
 		
-		Link aboutLink = new Link("About",
-				new ExternalResource(CATMAPropertyKey.AboutURL.getValue(CATMAPropertyKey.AboutURL.getDefaultValue())));
+		Link aboutLink = new Link("About", new ExternalResource(CATMAPropertyKey.AboutURL.getValue()));
 		aboutLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(aboutLink);
 
-		Link imprintLink = new Link("Imprint",
-				new ExternalResource(CATMAPropertyKey.ImprintURL.getValue(CATMAPropertyKey.ImprintURL.getDefaultValue())));
+		Link imprintLink = new Link("Imprint", new ExternalResource(CATMAPropertyKey.ImprintURL.getValue()));
 		imprintLink.setTargetName("_blank");
 		menuLayout.addComponent(imprintLink);
 
-		Link termsOfUseLink = new Link("Terms of Use",
-				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue())));
+		Link termsOfUseLink = new Link("Terms of Use", new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue()));
 		termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(termsOfUseLink);
 
-		Link privacyLink = new Link("Privacy Policy",
-				new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue())));
+		Link privacyLink = new Link("Privacy Policy", new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue()));
 		privacyLink.setTargetName("_blank");
 		menuLayout.addComponent(privacyLink);
 
-		statusLink = new Link("Status",
-				new ExternalResource(CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())));
+		statusLink = new Link("Status", new ExternalResource(CATMAPropertyKey.StatusURL.getValue()));
 		statusLink.setTargetName("_blank");
 		menuLayout.addComponent(statusLink);
 
@@ -191,9 +186,10 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 				statusLink.setIcon(VaadinIcons.WARNING);
 
 				Label statusPageText = new Label(
-						"See the <a href=\"" +
-								CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue()) +
-								"\" target=\"_blank\">status page</a> for the latest information on current issues",
+						String.format(
+								"See the <a href=\"%s\" target=\"_blank\">status page</a> for the latest information on current issues",
+								CATMAPropertyKey.StatusURL.getValue()
+						),
 						ContentMode.HTML
 				);
 				noticePanelVerticalLayout.addComponent(statusPageText);

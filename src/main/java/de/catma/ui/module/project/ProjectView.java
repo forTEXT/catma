@@ -447,8 +447,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		hugeCardMoreOptions.addItem("Share project resources (experimental API)", mi -> handleShareProjectResources());
         miImportCorpus = hugeCardMoreOptions.addItem("Import CATMA 5 Corpus", mi -> handleCorpusImport());
 
-        miImportCorpus.setVisible(CATMAPropertyKey.EXPERT.getValue(false) 
-        		|| Boolean.valueOf(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, Boolean.FALSE.toString())));
+        miImportCorpus.setVisible(CATMAPropertyKey.EXPERT.getBooleanValue()
+        		|| Boolean.parseBoolean(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, "false")));
         
 
         btSynchronize.addClickListener(event -> handleSynchronizeClick(event));
@@ -561,7 +561,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleSynchronizeClick(ClickEvent event) {
 		if (lastSynchronization != null && lastSynchronization.plus(
-				CATMAPropertyKey.MinTimeBetweenSynchronizationsInSeconds.getValue(30), 
+				CATMAPropertyKey.MinTimeBetweenSynchronizationsInSeconds.getIntValue(),
 				ChronoUnit.SECONDS).isAfter(LocalTime.now())) {
 			Notification.show(
 					"Info", 

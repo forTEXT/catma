@@ -75,9 +75,7 @@ public class ProjectScanner implements AutoCloseable {
 		
 		this.projectReportsById = Maps.newHashMap();
 		
-		this.migrationBranchName = 
-			CATMAPropertyKey.Repo6MigrationBranch.getValue(
-					CATMAPropertyKey.Repo6MigrationBranch.getDefaultValue());
+		this.migrationBranchName = CATMAPropertyKey.Repo6MigrationBranch.getValue();
 	}
 	
 	private ProjectReport getProjectReport(String projectId) {
@@ -214,7 +212,7 @@ public class ProjectScanner implements AutoCloseable {
 
 			repoManager.detach();
 			
-			if (CATMAPropertyKey.Repo6MigrationScanWithMergeAndPush.getValue(false)) {
+			if (CATMAPropertyKey.Repo6MigrationScanWithMergeAndPush.getBooleanValue()) {
 				for (String resource : readableResources) {
 					repoManager.open(projectId, rootRepoName + "/" + resource);
 					Status status = repoManager.getStatus();
@@ -389,11 +387,7 @@ public class ProjectScanner implements AutoCloseable {
 			Pair<User, String> authenticationResult = 
 					this.legacyProjectHandler.aquireUser(authenticationUsername);
 			
-			try (GitLabApi restrictedGitLabApi = 
-					new GitLabApi(
-							CATMAPropertyKey.GitLabServerUrl.getValue(), 
-							authenticationResult.getSecond())) {
-				
+			try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(),	authenticationResult.getSecond())) {
 				UsernamePasswordCredentialsProvider credentialsProvider = 
 					new UsernamePasswordCredentialsProvider(
 							"oauth2", restrictedGitLabApi.getAuthToken());
@@ -465,7 +459,7 @@ public class ProjectScanner implements AutoCloseable {
 			logger.log(Level.SEVERE, String.format("Error scanning user %1$s", username), e);
 		}
 		finally {
-			if (userTempPath != null && CATMAPropertyKey.Repo6MigrationRemoveUserTempDirectory.getValue(true)) {
+			if (userTempPath != null && CATMAPropertyKey.Repo6MigrationRemoveUserTempDirectory.getBooleanValue(true)) {
 				logger.info(String.format("Removing temp directory %1$s", userTempPath.toFile()));
 				try {
 					this.legacyProjectHandler.deleteUserTempPath(userTempPath);
@@ -531,10 +525,7 @@ public class ProjectScanner implements AutoCloseable {
 	
 
 	public void scanUsers(int limit) {
-		File repositoryBasePath = 
-				new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue());
-
-		
+		File repositoryBasePath = new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue());
 		File[] userDirs = repositoryBasePath.listFiles(file -> file.isDirectory());
 		
 		if (limit == -1) {
@@ -633,10 +624,7 @@ public class ProjectScanner implements AutoCloseable {
 				exportFile.delete();
 			}
 			
-			ScanMode scanMode = 
-				ScanMode.valueOf(
-						CATMAPropertyKey.Repo6MigrationScanMode.getValue(
-								CATMAPropertyKey.Repo6MigrationScanMode.getDefaultValue()));
+			ScanMode scanMode = ScanMode.valueOf(CATMAPropertyKey.Repo6MigrationScanMode.getValue());
 			
 			switch (scanMode) {
 			case ByUser: {
@@ -648,7 +636,7 @@ public class ProjectScanner implements AutoCloseable {
 					}
 				}
 				else {
-					int limit = CATMAPropertyKey.Repo6MigrationMaxUsers.getValue(1);
+					int limit = CATMAPropertyKey.Repo6MigrationMaxUsers.getIntValue();
 					projectScanner.scanUsers(limit);
 				}
 				
@@ -662,7 +650,7 @@ public class ProjectScanner implements AutoCloseable {
 					}
 				}
 				else {
-					int limit = CATMAPropertyKey.Repo6MigrationMaxProjects.getValue(1);
+					int limit = CATMAPropertyKey.Repo6MigrationMaxProjects.getIntValue();
 					projectScanner.scanProjects(limit);
 				}
 			}

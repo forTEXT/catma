@@ -18,15 +18,13 @@
  */
 package de.catma.properties;
 
-import java.util.Properties;
-
 /**
- * All possible keys for a CATMA property. 
- * 
- * @author marco.petris@web.de
+ * The available property (settings) keys and their default values.
+ * @see "/src/main/resources/catma.properties"
  *
  */
 public enum CATMAPropertyKey {
+	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
 	BaseURL("http://localhost:8080/catma/"),
 
 	TempDir,
@@ -43,9 +41,9 @@ public enum CATMAPropertyKey {
 
 	SqliteDbBasePath,
 
-	MailHost,
-	MailPort,
-	MailAuthenticationNeeded,
+	MailHost("localhost"),
+	MailPort("587"),
+	MailAuthenticationNeeded("false"),
 	MailUser,
 	MailPass,
 	MailFrom,
@@ -54,8 +52,8 @@ public enum CATMAPropertyKey {
 	Google_recaptchaSecretKey,
 	signup_tokenKey,
 
-	Google_oauthAuthorizationCodeRequestURL,
-	Google_oauthAccessTokenRequestURL,
+	Google_oauthAuthorizationCodeRequestURL("https://accounts.google.com/o/oauth2/v2/auth"),
+	Google_oauthAccessTokenRequestURL("https://oauth2.googleapis.com/token"),
 	Google_oauthClientId,
 	Google_oauthClientSecret,
 	otpSecret,
@@ -70,124 +68,56 @@ public enum CATMAPropertyKey {
 	LogoutURL("https://app.catma.de"),
 	ContextDefinitionURL("https://www.catma.de/"),
 
+	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
 	CATMA5API("https://portal.catma.de/catma/api/"),
 	EXPERT("false"),
 
-	Repo6MigrationMaxUsers("10"),
+	Repo6MigrationMaxUsers("1"),
 	Repo6MigrationUserList,
 
-	Repo6MigrationMaxProjects("10"),
+	Repo6MigrationMaxProjects("1"),
 	Repo6MigrationProjectIdList,
 
 	Repo6MigrationBackupPath,
-	Repo6MigrationScanWithMergeAndPush,
-	Repo6MigrationCleanupConvertedC6Project,
-	Repo6MigrationRemoveUserTempDirectory,
-	Repo6MigrationOverwriteC6ProjectBackup,
+	Repo6MigrationScanWithMergeAndPush("false"),
+	Repo6MigrationCleanupConvertedC6Project("false"),
+	Repo6MigrationRemoveUserTempDirectory("false"),
+	Repo6MigrationOverwriteC6ProjectBackup("false"),
 	Repo6MigrationScanMode("ByProject"),
 	Repo6MigrationBranch("c6migration"),
 	;
 
 	private final String defaultValue;
 	
-	private CATMAPropertyKey() {
+	CATMAPropertyKey() {
 		this(null);
 	}
 
-	private CATMAPropertyKey(String defaultValue) {
+	CATMAPropertyKey(String defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 
-	public String getDefaultValue() {
-		return defaultValue;
-	}
-
-	/**
-	 * @param properties the key/value store
-	 * @param index the index of this property
-	 * @param defaultValue a default value if the given properties do not contain
-	 * this key 
-	 * @return if the key exist either true or false depending on the value present
-	 * or if the key does not exist the default value
-	 */
-	public boolean isTrue(Properties properties, int index, boolean defaultValue) {
-		if (properties.containsKey(this.name()+index)) {
-			return isTrue(properties, index);
-		}
-		else {
-			return defaultValue;
-		}
-	}
-	
-	public boolean isTrue(Properties properties, boolean defaultValue) {
-		if (properties.containsKey(this.name())) {
-			return isTrue(properties);
-		}
-		else {
-			return defaultValue;
-		}
-	}
-	
-	/**
-	 * @param properties the key/value store
-	 * @param index the index of this property
-	 * @return <code>true</code> if the key is present and its value is true, else <code>false</code>
-	 */
-	public boolean isTrue(Properties properties, int index) {
-		return Boolean.parseBoolean(properties.getProperty(this.name()+index));
-	}
-
-	public boolean isTrue(Properties properties) {
-		return Boolean.parseBoolean(properties.getProperty(this.name()));
-	}
-	
-	/**
-	 * @param properties the key/value store
-	 * @param index the index of this property
-	 * @return the value or <code>null</code> if the key is not present
-	 */
-	public String getProperty(Properties properties, int index) {
-		return properties.getProperty(this.name()+index);
-	}
-	
-	/**
-	 * @param properties the key/value store
-	 * @param index the index of this property
-	 * @return <code>true</code> if the key is present, else <code>false</code>
-	 */
-	public boolean exists(Properties properties, int index) {
-		return properties.containsKey(this.name()+index);
-	}
-	
-	public String getIndexedValue(int index) {
-		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name()+index);
-	}
-	
-	public String getIndexedValue(int index, String defaultValue) {
-		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name()+index, defaultValue);
-	}
-	
-	public int getIndexedValue(int index, int defaultValue) {
-		return Integer.valueOf(CATMAProperties.INSTANCE.getProperties().getProperty(this.name()+index, String.valueOf(defaultValue)));
-	}
-	
 	public String getValue() {
-		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name());
-	}
-	
-	public String getValue(String defaultValue) {
 		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValue);
 	}
-	
-	public long getValue(long defaultValue) {
-		return Long.valueOf(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValue)));
+
+	public String getValue(String defaultValueOverride) {
+		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValueOverride);
 	}
 
-	public int getValue(int defaultValue) {
-		return Integer.valueOf(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValue)));
+	public int getIntValue() {
+		return Integer.parseInt(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValue));
 	}
 
-	public boolean getValue(boolean defaultValue) {
-		return Boolean.valueOf(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValue)));
+	public int getIntValue(int defaultValueOverride) {
+		return Integer.parseInt(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValueOverride)));
+	}
+
+	public boolean getBooleanValue() {
+		return Boolean.parseBoolean(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValue));
+	}
+
+	public boolean getBooleanValue(boolean defaultValueOverride) {
+		return Boolean.parseBoolean(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValueOverride)));
 	}
 }

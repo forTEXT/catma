@@ -74,10 +74,10 @@ public class SignUpDialog extends AuthenticationDialog {
 		qs.addParam("token", token);
 
 		Email email = new SimpleEmail();
-		email.setHostName(CATMAPropertyKey.MailHost.getValue("localhost"));
-		email.setSmtpPort(CATMAPropertyKey.MailPort.getValue(587));
+		email.setHostName(CATMAPropertyKey.MailHost.getValue());
+		email.setSmtpPort(CATMAPropertyKey.MailPort.getIntValue());
 
-		if (CATMAPropertyKey.MailAuthenticationNeeded.getValue(false)) {
+		if (CATMAPropertyKey.MailAuthenticationNeeded.getBooleanValue()) {
 			email.setAuthenticator(
 					new DefaultAuthenticator(
 							CATMAPropertyKey.MailUser.getValue(),
@@ -87,7 +87,7 @@ public class SignUpDialog extends AuthenticationDialog {
 			email.setStartTLSEnabled(true);
 		}
 
-		email.setFrom(CATMAPropertyKey.MailFrom.getValue("support@catma.de"));
+		email.setFrom(CATMAPropertyKey.MailFrom.getValue());
 		email.setSubject("CATMA Email Verification");
 		email.setMsg("Please visit the following link in order to verify your email address and complete your sign up:\n" + qs);
 		email.addTo(userData.getEmail());
@@ -247,7 +247,7 @@ public class SignUpDialog extends AuthenticationDialog {
 
 		Link termsOfUseLink = new Link(
 				"Terms of Use",
-				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue()))
+				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue())
 		);
 		termsOfUseLink.setTargetName("_blank");
 		termsOfUseLink.setStyleName("authdialog-tou-link");
@@ -256,7 +256,7 @@ public class SignUpDialog extends AuthenticationDialog {
 
 		Link privacyPolicyLink = new Link(
 				"Privacy Policy",
-				new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue()))
+				new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue())
 		);
 		privacyPolicyLink.setTargetName("_blank");
 		privacyPolicyLink.setStyleName("authdialog-pp-link");
