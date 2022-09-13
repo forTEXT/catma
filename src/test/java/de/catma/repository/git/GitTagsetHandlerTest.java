@@ -46,7 +46,7 @@ class GitTagsetHandlerTest {
 
 		GitProjectsManager gitProjectsManager = 
 			new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
@@ -77,10 +77,10 @@ class GitTagsetHandlerTest {
 		IDGenerator idGenerator = new IDGenerator();
 		
 		String gitBasedRepositoryBasePath = 
-				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue();
+				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue();
 		
 		File projectDirectory = 			
-			Paths.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+			Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 				.resolve(gitlabManagerRestricted.getUser().getIdentifier())
 				.resolve(projectReference.getNamespace())
 				.resolve(projectReference.getProjectId())

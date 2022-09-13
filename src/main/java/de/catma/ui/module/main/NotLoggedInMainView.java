@@ -76,23 +76,23 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		
 		addComponent(menuLayout);
 		
-		Link aboutLink = new Link("About", new ExternalResource(CATMAPropertyKey.AboutURL.getValue()));
+		Link aboutLink = new Link("About", new ExternalResource(CATMAPropertyKey.ABOUT_URL.getValue()));
 		aboutLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(aboutLink);
 
-		Link imprintLink = new Link("Imprint", new ExternalResource(CATMAPropertyKey.ImprintURL.getValue()));
+		Link imprintLink = new Link("Imprint", new ExternalResource(CATMAPropertyKey.IMPRINT_URL.getValue()));
 		imprintLink.setTargetName("_blank");
 		menuLayout.addComponent(imprintLink);
 
-		Link termsOfUseLink = new Link("Terms of Use", new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue()));
+		Link termsOfUseLink = new Link("Terms of Use", new ExternalResource(CATMAPropertyKey.TERMS_OF_USE_URL.getValue()));
 		termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(termsOfUseLink);
 
-		Link privacyLink = new Link("Privacy Policy", new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue()));
+		Link privacyLink = new Link("Privacy Policy", new ExternalResource(CATMAPropertyKey.PRIVACY_POLICY_URL.getValue()));
 		privacyLink.setTargetName("_blank");
 		menuLayout.addComponent(privacyLink);
 
-		statusLink = new Link("Status", new ExternalResource(CATMAPropertyKey.StatusURL.getValue()));
+		statusLink = new Link("Status", new ExternalResource(CATMAPropertyKey.STATUS_URL.getValue()));
 		statusLink.setTargetName("_blank");
 		menuLayout.addComponent(statusLink);
 
@@ -188,7 +188,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 				Label statusPageText = new Label(
 						String.format(
 								"See the <a href=\"%s\" target=\"_blank\">status page</a> for the latest information on current issues",
-								CATMAPropertyKey.StatusURL.getValue()
+								CATMAPropertyKey.STATUS_URL.getValue()
 						),
 						ContentMode.HTML
 				);

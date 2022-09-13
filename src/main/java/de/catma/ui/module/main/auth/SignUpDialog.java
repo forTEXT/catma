@@ -42,7 +42,7 @@ public class SignUpDialog extends AuthenticationDialog {
 
 	private final String recaptchaVerificationStyleName = "g-recaptcha-response";
 	private final String recaptchaVerificationAction = "CatmaSignUpForm";
-	private final String recaptchaSiteKey = CATMAPropertyKey.Google_recaptchaSiteKey.getValue();
+	private final String recaptchaSiteKey = CATMAPropertyKey.GOOGLE_RECAPTCHA_SITE_KEY.getValue();
 
 	private GoogleVerificationResult recaptchaResult = new GoogleVerificationResult();
 
@@ -65,29 +65,29 @@ public class SignUpDialog extends AuthenticationDialog {
 	// TODO: this shouldn't be in the UI code
 	// TODO: document how this interacts with handleRequestToken in CatmaApplication
 	private void generateSignupTokenAndSendVerificationEmail() throws EmailException {
-		String token = HmacUtils.hmacSha256Hex(CATMAPropertyKey.signup_tokenKey.getValue(), userData.getEmail());
+		String token = HmacUtils.hmacSha256Hex(CATMAPropertyKey.SIGNUP_TOKEN_KEY.getValue(), userData.getEmail());
 
 		SignupTokenManager tokenManager = new SignupTokenManager();
 		tokenManager.put(new SignupToken(LocalTime.now().toString(), userData.getEmail(), token));
 
-		QueryStringEncoder qs = new QueryStringEncoder(CATMAPropertyKey.BaseURL.getValue().trim() + "verify");
+		QueryStringEncoder qs = new QueryStringEncoder(CATMAPropertyKey.BASE_URL.getValue().trim() + "verify");
 		qs.addParam("token", token);
 
 		Email email = new SimpleEmail();
-		email.setHostName(CATMAPropertyKey.MailHost.getValue());
-		email.setSmtpPort(CATMAPropertyKey.MailPort.getIntValue());
+		email.setHostName(CATMAPropertyKey.MAIL_SMTP_HOST.getValue());
+		email.setSmtpPort(CATMAPropertyKey.MAIL_SMTP_PORT.getIntValue());
 
-		if (CATMAPropertyKey.MailAuthenticationNeeded.getBooleanValue()) {
+		if (CATMAPropertyKey.MAIL_SMTP_AUTHENTICATION_REQUIRED.getBooleanValue()) {
 			email.setAuthenticator(
 					new DefaultAuthenticator(
-							CATMAPropertyKey.MailUser.getValue(),
-							CATMAPropertyKey.MailPass.getValue()
+							CATMAPropertyKey.MAIL_SMTP_USER.getValue(),
+							CATMAPropertyKey.MAIL_SMTP_PASS.getValue()
 					)
 			);
 			email.setStartTLSEnabled(true);
 		}
 
-		email.setFrom(CATMAPropertyKey.MailFrom.getValue());
+		email.setFrom(CATMAPropertyKey.MAIL_FROM.getValue());
 		email.setSubject("CATMA Email Verification");
 		email.setMsg("Please visit the following link in order to verify your email address and complete your sign up:\n" + qs);
 		email.addTo(userData.getEmail());
@@ -247,7 +247,7 @@ public class SignUpDialog extends AuthenticationDialog {
 
 		Link termsOfUseLink = new Link(
 				"Terms of Use",
-				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue())
+				new ExternalResource(CATMAPropertyKey.TERMS_OF_USE_URL.getValue())
 		);
 		termsOfUseLink.setTargetName("_blank");
 		termsOfUseLink.setStyleName("authdialog-tou-link");
@@ -256,7 +256,7 @@ public class SignUpDialog extends AuthenticationDialog {
 
 		Link privacyPolicyLink = new Link(
 				"Privacy Policy",
-				new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue())
+				new ExternalResource(CATMAPropertyKey.PRIVACY_POLICY_URL.getValue())
 		);
 		privacyPolicyLink.setTargetName("_blank");
 		privacyPolicyLink.setStyleName("authdialog-pp-link");

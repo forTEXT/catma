@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 public class SqliteService {
     private final Logger logger = Logger.getLogger(SqliteService.class.getName());
 
-    private final String sqliteDbBasePath = CATMAPropertyKey.SqliteDbBasePath.getValue();
+    private final String sqliteDbBasePath = CATMAPropertyKey.SQLITE_DB_BASE_PATH.getValue();
 
     public static class SqliteModel {
         public static class Notice {

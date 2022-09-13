@@ -208,7 +208,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 		Link forgotPasswordLink = new Link(
 				"Forgot your password?",
-				new ExternalResource(CATMAPropertyKey.ResetPasswordURL.getValue())
+				new ExternalResource(CATMAPropertyKey.RESET_PASSWORD_URL.getValue())
 		);
 		forgotPasswordLink.setStyleName("authdialog-forgot-password-link");
 
@@ -260,7 +260,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 		Link termsOfUseLink = new Link(
 				"Terms of Use",
-				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue())
+				new ExternalResource(CATMAPropertyKey.TERMS_OF_USE_URL.getValue())
 		);
 		termsOfUseLink.setTargetName("_blank");
 		termsOfUseLink.setStyleName("authdialog-tou-link");
@@ -269,7 +269,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 		Link privacyPolicyLink = new Link(
 				"Privacy Policy",
-				new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue())
+				new ExternalResource(CATMAPropertyKey.PRIVACY_POLICY_URL.getValue())
 		);
 		privacyPolicyLink.setTargetName("_blank");
 		privacyPolicyLink.setStyleName("authdialog-pp-link");

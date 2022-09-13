@@ -127,7 +127,7 @@ public class GitSourceDocumentHandlerTest {
 			EventBus mockEventBus = mock(EventBus.class);
 
 			GitProjectsManager gitProjectManager = new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
@@ -194,7 +194,7 @@ public class GitSourceDocumentHandlerTest {
 		 */
 
 		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
-				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
 			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
@@ -203,7 +203,7 @@ public class GitSourceDocumentHandlerTest {
 			EventBus mockEventBus = mock(EventBus.class);
 
 			GitProjectsManager gitProjectManager = new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
@@ -389,7 +389,7 @@ public class GitSourceDocumentHandlerTest {
 		 */
 
 		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
-				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
 			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
@@ -398,7 +398,7 @@ public class GitSourceDocumentHandlerTest {
 			EventBus mockEventBus = mock(EventBus.class);
 
 			GitProjectsManager gitProjectManager = new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,

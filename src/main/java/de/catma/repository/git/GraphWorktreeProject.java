@@ -165,13 +165,13 @@ public class GraphWorktreeProject implements IndexedProject {
 						return gitProjectHandler.getCollection(collectionId, tagLibrary);
 					}
 				});
-		this.tempDir = CATMAPropertyKey.TempDir.getValue();
+		this.tempDir = CATMAPropertyKey.TEMP_DIR.getValue();
 		this.indexer = this.graphProjectHandler.createIndexer();
 	}
 
 	private Path getTokenizedSourceDocumentPath(String documentId) {
 		return Paths
-			.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+			.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 			.resolve(gitProjectHandler.getSourceDocumentPath(documentId))
 			.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
@@ -736,7 +736,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	
 	private URI getSourceDocumentURI(String sourceDocumentId) {
 		return Paths
-		.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+		.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 		.resolve(gitProjectHandler.getSourceDocumentPath(sourceDocumentId))
 		.resolve(sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION)
 		.toUri();

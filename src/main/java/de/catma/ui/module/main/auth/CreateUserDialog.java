@@ -155,6 +155,6 @@ public class CreateUserDialog extends Window {
 	@Override
 	public void close() {
 		super.close();
-		Page.getCurrent().replaceState(CATMAPropertyKey.BaseURL.getValue());
+		Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
 	}
 }

@@ -78,7 +78,7 @@ public class GitProjectHandlerTest {
 			EventBus mockEventBus = mock(EventBus.class);
 
 			GitProjectsManager gitProjectManager = new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
@@ -114,7 +114,7 @@ public class GitProjectHandlerTest {
 	@Test
 	public void create() throws Exception {
 		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
-				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
 			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
@@ -123,7 +123,7 @@ public class GitProjectHandlerTest {
 			EventBus mockEventBus = mock(EventBus.class);
 
 			GitProjectsManager gitProjectManager = new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
@@ -332,7 +332,7 @@ public class GitProjectHandlerTest {
 		 */
 
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
 			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
@@ -341,7 +341,7 @@ public class GitProjectHandlerTest {
 			EventBus mockEventBus = mock(EventBus.class);
 
 			GitProjectsManager gitProjectManager = new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
@@ -356,7 +356,7 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			File projectPath = Paths.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+			File projectPath = Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 			.resolve(gitlabManagerRestricted.getUsername())
 			.resolve(projectReference.getNamespace())
 			.resolve(projectReference.getProjectId())

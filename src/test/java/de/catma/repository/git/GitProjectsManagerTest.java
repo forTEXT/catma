@@ -54,7 +54,7 @@ class GitProjectsManagerTest {
 
 		GitProjectsManager gitProjectsManager = 
 			new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
@@ -72,7 +72,7 @@ class GitProjectsManagerTest {
 
 
 		File expectedProjectPath = 
-			Paths.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+			Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 				.resolve(gitProjectsManager.getUser().getIdentifier())
 				.resolve(projectReference.getNamespace())
 				.resolve(projectId)

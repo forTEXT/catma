@@ -47,7 +47,7 @@ public class Vaadin8InitializationService implements InitializationService {
 		String tmpdir = (String)VaadinSession.getCurrent().getAttribute("TempDir");
 		if(tmpdir == null){
 			String result;
-			String tempDirProp = CATMAPropertyKey.TempDir.getValue();
+			String tempDirProp = CATMAPropertyKey.TEMP_DIR.getValue();
 			File tempDir = new File(tempDirProp);
 	
 			if (!tempDir.isAbsolute()) {
@@ -78,7 +78,7 @@ public class Vaadin8InitializationService implements InitializationService {
 
 		if(api != null ){
 			GitProjectsManager projectManager = new GitProjectsManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					api,
 					(projectReference) -> {}, //noop deletion handler, currently there is no persistent Project on graph level
 					acquireBackgroundService(),

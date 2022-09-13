@@ -93,7 +93,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 		
 		this.vegaViewId = new IDGenerator().generate().toLowerCase();
 		String queryResultPath = vegaViewId+"/queryresult/selection.json";
-		this.queryResultUrl = CATMAPropertyKey.BaseURL.getValue() + queryResultPath;
+		this.queryResultUrl = CATMAPropertyKey.BASE_URL.getValue() + queryResultPath;
 
 		this.queryResultRequestHandler = 
 				new JSONQueryResultRequestHandler(
@@ -258,7 +258,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 				else {
 					catmaQuery = catmaQuery.substring(CATMA_QUERY_URL.length()+1, catmaQuery.length()-1);
 					catmaQuery = URLEncoder.encode(catmaQuery, "UTF-8");
-					String url = CATMAPropertyKey.BaseURL.getValue() + vegaViewId + "/query/" + catmaQuery;
+					String url = CATMAPropertyKey.BASE_URL.getValue() + vegaViewId + "/query/" + catmaQuery;
 					dataNode.set("url", new TextNode(url));
 				}
 			}

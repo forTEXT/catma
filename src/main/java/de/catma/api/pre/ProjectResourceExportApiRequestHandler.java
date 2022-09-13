@@ -33,7 +33,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
 
 public class ProjectResourceExportApiRequestHandler implements RequestHandler {
-    private static final String BASE_URL = CATMAPropertyKey.BaseURL.getValue();
+    private static final String BASE_URL = CATMAPropertyKey.BASE_URL.getValue();
     private static final String API_BASE_PATH = "/api";
     private static final String API_PACKAGE = "pre"; // project resource export
     private static final String API_VERSION = "beta";

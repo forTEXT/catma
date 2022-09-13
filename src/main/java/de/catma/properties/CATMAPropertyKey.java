@@ -25,66 +25,66 @@ package de.catma.properties;
  */
 public enum CATMAPropertyKey {
 	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
-	BaseURL("http://localhost:8080/catma/"),
+	BASE_URL("http://localhost:8080/catma/"),
 
-	TempDir,
+	TEMP_DIR,
 
-	GitLabServerUrl,
-	GitLabAdminPersonalAccessToken,
+	GITLAB_SERVER_URL,
+	GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN,
 
-	GitBasedRepositoryBasePath,
+	GIT_REPOSITORY_BASE_PATH,
 
-	MaxPageFileSizeBytes("200000"),
+	MAX_PAGE_FILE_SIZE_BYTES("200000"),
 
-	MinTimeBetweenSynchronizationsInSeconds("30"),
-	devPreventPush("false"),
+	MIN_TIME_BETWEEN_SYNCHRONIZATIONS_SECONDS("30"),
+	DEV_PREVENT_PUSH("false"),
 
-	SqliteDbBasePath,
+	SQLITE_DB_BASE_PATH,
 
-	MailHost("localhost"),
-	MailPort("587"),
-	MailAuthenticationNeeded("false"),
-	MailUser,
-	MailPass,
-	MailFrom,
+	MAIL_SMTP_HOST("localhost"),
+	MAIL_SMTP_PORT("587"),
+	MAIL_SMTP_AUTHENTICATION_REQUIRED("false"),
+	MAIL_SMTP_USER,
+	MAIL_SMTP_PASS,
+	MAIL_FROM,
 
-	Google_recaptchaSiteKey,
-	Google_recaptchaSecretKey,
-	signup_tokenKey,
+	GOOGLE_RECAPTCHA_SITE_KEY,
+	GOOGLE_RECAPTCHA_SECRET_KEY,
+	SIGNUP_TOKEN_KEY,
 
-	Google_oauthAuthorizationCodeRequestURL("https://accounts.google.com/o/oauth2/v2/auth"),
-	Google_oauthAccessTokenRequestURL("https://oauth2.googleapis.com/token"),
-	Google_oauthClientId,
-	Google_oauthClientSecret,
-	otpSecret,
-	otpDuration,
+	GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL("https://accounts.google.com/o/oauth2/v2/auth"),
+	GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL("https://oauth2.googleapis.com/token"),
+	GOOGLE_OAUTH_CLIENT_ID,
+	GOOGLE_OAUTH_CLIENT_SECRET,
+	OTP_SECRET,
+	OTP_DURATION,
 
-	AboutURL("https://catma.de"),
-	ImprintURL("https://catma.de/about/imprint/"),
-	TermsOfUseURL("https://catma.de/documentation/terms-of-use/"),
-	PrivacyPolicyURL("https://catma.de/documentation/privacy-policy/"),
-	StatusURL("https://catma.de/status/"),
-	ResetPasswordURL("https://git.catma.de/users/password/new"),
-	LogoutURL("https://app.catma.de"),
-	ContextDefinitionURL("https://www.catma.de/"),
+	ABOUT_URL("https://catma.de"),
+	IMPRINT_URL("https://catma.de/about/imprint/"),
+	TERMS_OF_USE_URL("https://catma.de/documentation/terms-of-use/"),
+	PRIVACY_POLICY_URL("https://catma.de/documentation/privacy-policy/"),
+	STATUS_URL("https://catma.de/status/"),
+	RESET_PASSWORD_URL("https://git.catma.de/users/password/new"),
+	LOGOUT_URL("https://app.catma.de"),
+	CONTEXT_DEFINITION_URL("https://www.catma.de/"),
 
 	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
-	CATMA5API("https://portal.catma.de/catma/api/"),
-	EXPERT("false"),
+	CATMA_5_API_URL("https://portal.catma.de/catma/api/"),
+	EXPERT_MODE("false"),
 
-	Repo6MigrationMaxUsers("1"),
-	Repo6MigrationUserList,
+	V6_REPO_MIGRATION_MAX_USERS("1"),
+	V6_REPO_MIGRATION_USER_LIST,
 
-	Repo6MigrationMaxProjects("1"),
-	Repo6MigrationProjectIdList,
+	V6_REPO_MIGRATION_MAX_PROJECTS("1"),
+	V6_REPO_MIGRATION_PROJECT_ID_LIST,
 
-	Repo6MigrationBackupPath,
-	Repo6MigrationScanWithMergeAndPush("false"),
-	Repo6MigrationCleanupConvertedC6Project("false"),
-	Repo6MigrationRemoveUserTempDirectory("false"),
-	Repo6MigrationOverwriteC6ProjectBackup("false"),
-	Repo6MigrationScanMode("ByProject"),
-	Repo6MigrationBranch("c6migration"),
+	V6_REPO_MIGRATION_BACKUP_PATH,
+	V6_REPO_MIGRATION_SCAN_WITH_MERGE_AND_PUSH("false"),
+	V6_REPO_MIGRATION_CLEANUP_CONVERTED_V6_PROJECT("false"),
+	V6_REPO_MIGRATION_REMOVE_USER_TEMP_DIRECTORY("false"),
+	V6_REPO_MIGRATION_OVERWRITE_V6_PROJECT_BACKUP("false"),
+	V6_REPO_MIGRATION_SCAN_MODE("ByProject"),
+	V6_REPO_MIGRATION_BRANCH("v6migration"),
 	;
 
 	private final String defaultValue;

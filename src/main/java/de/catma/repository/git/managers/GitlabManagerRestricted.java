@@ -85,11 +85,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		       .build();
 	
 	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, String userImpersonationToken) throws IOException {
-		this(eventBus, backgroundService, new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
+		this(eventBus, backgroundService, new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
 	}
 	
 	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, String username, String password) throws IOException {
-		this(eventBus, backgroundService, oauth2Login(CATMAPropertyKey.GitLabServerUrl.getValue(), username, password));
+		this(eventBus, backgroundService, oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
 	}
 
 	private GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, GitLabApi api) throws IOException {
@@ -114,7 +114,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	 */
 	private static GitLabApi oauth2Login(String url, String username, String password) throws IOException {
 		try {
-			return GitLabApi.oauth2Login(CATMAPropertyKey.GitLabServerUrl.getValue(), username, password);
+			return GitLabApi.oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password);
 		} catch (GitLabApiException e) {
 			throw new IOException(e);
 		}

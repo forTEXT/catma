@@ -37,7 +37,7 @@ public class GoogleRecaptchaVerifier {
 	 */
 	public GoogleVerificationResult verify(String token){
 		Form form = new Form();
-		form.param("secret", CATMAPropertyKey.Google_recaptchaSecretKey.getValue());
+		form.param("secret", CATMAPropertyKey.GOOGLE_RECAPTCHA_SECRET_KEY.getValue());
 		form.param("response", token);
 
 		logger.info("Verifying reCAPTCHA token: " + token);

@@ -61,7 +61,7 @@ public class GitAnnotationCollectionHandler {
 		this.projectId = projectId;
 		this.username = username;
 		this.email = email;
-		this.maxPageSizeBytes = CATMAPropertyKey.MaxPageFileSizeBytes.getIntValue();
+		this.maxPageSizeBytes = CATMAPropertyKey.MAX_PAGE_FILE_SIZE_BYTES.getIntValue();
 	}
 
 	public String create(

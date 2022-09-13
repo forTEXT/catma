@@ -45,7 +45,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	public static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
 	private final GitLabApi privilegedGitLabApi = new GitLabApi(
-			 CATMAPropertyKey.GitLabServerUrl.getValue(), CATMAPropertyKey.GitLabAdminPersonalAccessToken.getValue()
+			 CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), CATMAPropertyKey.GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN.getValue()
 	);
 	
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -125,7 +125,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 					   throws IOException {
 		User user = this.createUser(email, username, password, publicname, null);
 		String token = this.createImpersonationToken(user.getId(),GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
-		try (GitLabApi gitlabApi = new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), token)) {
+		try (GitLabApi gitlabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), token)) {
 			NotificationSettingsApi userNotificationSettingsApi = 
 				gitlabApi.getNotificationSettingsApi();
 			NotificationSettings settings = userNotificationSettingsApi.getGlobalNotificationSettings();

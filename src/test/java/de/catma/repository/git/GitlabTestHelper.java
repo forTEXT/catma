@@ -42,7 +42,7 @@ public class GitlabTestHelper {
 		UserApi userApi = gitlabManagerPrivileged.getGitLabApi().getUserApi();
 		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
 		FileUtils.deleteDirectory(
-				Paths.get(new File(CATMAPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+				Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 				.resolve(gitlabManagerRestricted.getUser().getIdentifier())
 				.toFile());		
 	}

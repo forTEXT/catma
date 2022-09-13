@@ -672,7 +672,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 		List<PushResult> result = new ArrayList<>();
 		try {
-			if (!CATMAPropertyKey.devPreventPush.getBooleanValue()) {
+			if (!CATMAPropertyKey.DEV_PREVENT_PUSH.getBooleanValue()) {
 				
 				String currentBranch = this.gitApi.getRepository().getBranch();
 				if (!force && 
