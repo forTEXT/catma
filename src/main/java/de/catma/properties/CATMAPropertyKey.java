@@ -27,54 +27,58 @@ import java.util.Properties;
  *
  */
 public enum CATMAPropertyKey {
-	TempDir,
 	BaseURL("http://localhost:8080/catma/"),
-	otpSecret,
-	otpDuration,
-	signup_tokenKey,
-	LogoutURL("https://app.catma.de"),
-	AboutURL("https://catma.de"),
-	ContextDefinitionURL("https://www.catma.de/"),
-	TermsOfUseURL("https://catma.de/documentation/terms-of-use/"),
-	PrivacyPolicyURL("https://catma.de/documentation/privacy-policy/"),
-	ImprintURL("https://catma.de/about/imprint/"),
-	StatusURL("https://catma.de/status/"),
-	ResetPasswordURL("https://git.catma.de/users/password/new"),
 
-	Google_oauthAuthorizationCodeRequestURL,
-	Google_oauthAccessTokenRequestURL,
-	Google_oauthClientId,
-	Google_oauthClientSecret,
-	Google_recaptchaSiteKey,
-	Google_recaptchaSecretKey,
+	TempDir,
 
-	GitLabAdminPersonalAccessToken, 
 	GitLabServerUrl,
+	GitLabAdminPersonalAccessToken,
 
 	GitBasedRepositoryBasePath,
 
 	MaxPageFileSizeBytes("200000"),
-	
+
+	MinTimeBetweenSynchronizationsInSeconds("30"),
+	devPreventPush("false"),
+
 	SqliteDbBasePath,
-	
+
 	MailHost,
 	MailPort,
 	MailAuthenticationNeeded,
 	MailUser,
 	MailPass,
-	MailFrom, 
-	
+	MailFrom,
+
+	Google_recaptchaSiteKey,
+	Google_recaptchaSecretKey,
+	signup_tokenKey,
+
+	Google_oauthAuthorizationCodeRequestURL,
+	Google_oauthAccessTokenRequestURL,
+	Google_oauthClientId,
+	Google_oauthClientSecret,
+	otpSecret,
+	otpDuration,
+
+	AboutURL("https://catma.de"),
+	ImprintURL("https://catma.de/about/imprint/"),
+	TermsOfUseURL("https://catma.de/documentation/terms-of-use/"),
+	PrivacyPolicyURL("https://catma.de/documentation/privacy-policy/"),
+	StatusURL("https://catma.de/status/"),
+	ResetPasswordURL("https://git.catma.de/users/password/new"),
+	LogoutURL("https://app.catma.de"),
+	ContextDefinitionURL("https://www.catma.de/"),
+
 	CATMA5API("https://portal.catma.de/catma/api/"),
 	EXPERT("false"),
-	devPreventPush("false"),
-	MinTimeBetweenSynchronizationsInSeconds("30"),
-	
+
 	Repo6MigrationMaxUsers("10"),
 	Repo6MigrationUserList,
-	
+
 	Repo6MigrationMaxProjects("10"),
 	Repo6MigrationProjectIdList,
-	
+
 	Repo6MigrationBackupPath,
 	Repo6MigrationScanWithMergeAndPush,
 	Repo6MigrationCleanupConvertedC6Project,
