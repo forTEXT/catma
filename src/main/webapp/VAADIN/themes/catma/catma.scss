@@ -2,6 +2,7 @@ $v-font-family: "Open Sans", sans-serif;
 $v-font-size: 16px;
 $v-unit-size: round(1.8 * $v-font-size);
 $v-focus-color: #5A98A1;
+$contribution-color: blue;
 
 @import "../material/material.scss";
 @import "flex-layout.scss";
@@ -570,6 +571,13 @@ $v-focus-color: #5A98A1;
     font-size: 1.5em;
   }
 
+  div.v-label-header__context > .v-icon.v-icon-lock,
+  div.v-label-header__context > .v-icon.v-icon-road_branch,
+  div.v-label-header__context > .v-icon.v-icon-random {
+    font-size: smaller;
+    padding-left: 5px;
+  }
+
   /* Navigation */
   .nav {
     background-color: #e0e0e0;
@@ -745,9 +753,17 @@ $v-focus-color: #5A98A1;
   .documentsgrid__doc__title {
   }
 
+  .documentsgrid__doc_contrib {
+    color: $contribution-color;
+  }
+
   .documentsgrid__doc__author {
     font-size: 0.75em;
     color: rgba(0, 0, 0, 0.54);
+  }
+
+  .project-view-tagset-with-contribution {
+    color: $contribution-color;
   }
 
   .project-view-action-grid {
@@ -757,11 +773,6 @@ $v-focus-color: #5A98A1;
   .project-view-main-panel {
     padding-top: 10px;
     padding-left: 25px;
-  }
-
-  .project-view-synch-bell {
-    color: yellow !important;
-    font-weight: bold;
   }
 
   /* Dashboard */
@@ -862,6 +873,18 @@ $v-focus-color: #5A98A1;
 
   .annotate-panel-tagsetname {
     font-size: 12px;
+  }
+
+  .annotate-panel-tagset-with-contributions span.annotate-panel-tagsetname {
+    color: $contribution-color;
+  }
+
+  .annotate-panel-tag-with-contributions {
+    color: $contribution-color;
+  }
+
+  tr.annotate-panel-property-with-contributions div.annotation-panel-property-summary {
+    color: $contribution-color;
   }
 
   div.annotation-panel-property-summary {
