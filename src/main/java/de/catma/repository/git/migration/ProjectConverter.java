@@ -349,7 +349,7 @@ public class ProjectConverter implements AutoCloseable {
 											catch (FileSystemException fse) {
 												logger.log(
 													Level.WARNING, 
-													String.format("Could cleanup Project directory %1$s!", projectDir.toString()));
+													String.format("Couldn't cleanup Project directory %1$s!", projectDir.toString()));
 											}
 										}
 									}
