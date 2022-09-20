@@ -1,30 +1,23 @@
-src/main/webapp/catma_*.properties
-src/main/java/catma_*.properties
-WebContent/VAADIN/gwt-unitCache
-WebContent/VAADIN/doubletreejs_debug
-WebContent/VAADIN/themes/cleanew/styles.css
-WebContent/apiusers.json
-WebContent/catma_*.properties
-src/main/resources/catma_*.properties
+.gwt
+.idea
+.settings
 build
 db
-dev
-graphdb/test
-notepad_session.txt
-oldcode
 out
 repo
-scratch.jpage
-scratch.sql
+target
 temp
 tmp
-testlib
+
+# Properties files that may contain secrets
+catma*.properties
+
+# Eclipse config files
+.classpath
+.project
+
 # MS Office temp files
 ~$$*.*
-.classpath
-.gwt
-.project
-.settings
-target
-.idea
+
+# Mac
 .DS_Store
