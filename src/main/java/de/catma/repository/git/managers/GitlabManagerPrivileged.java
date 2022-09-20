@@ -59,10 +59,10 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 			throws IOException {
 		User user = this.acquireUser(identifier,provider,email,name);
 		
-		UserApi customUserApi = this.privilegedGitLabApi.getUserApi();
+		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 
 		try {
-			List<PersonalAccessToken> impersonationTokens = customUserApi.getImpersonationTokens(
+			List<PersonalAccessToken> impersonationTokens = userApi.getImpersonationTokens(
 				user.getId(), ImpersonationState.ACTIVE
 			);
 
@@ -150,10 +150,10 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	 */
 	private User acquireUser(String identifier, String provider, String email, String name)
 			throws IOException {
-		UserApi customUserApi = this.privilegedGitLabApi.getUserApi();
+		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 		
 		try {
-			User user = customUserApi.getUser(identifier + provider);
+			User user = userApi.getUser(identifier + provider);
 			
 			if (user == null) {
 
