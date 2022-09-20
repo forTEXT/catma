@@ -18,6 +18,22 @@
         <option name="configFiles">
           <list>
             <JettyConfigFile>
+              <option name="path" value="modules\deploy.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\http.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="active" value="true" />
+              <option name="path" value="modules\jmx.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\jsp.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\webapp.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
               <option name="path" value="modules\acceptratelimit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -78,9 +94,6 @@
               <option name="path" value="modules\decorate.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\deploy.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
               <option name="path" value="modules\ext.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -109,9 +122,6 @@
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\http-forwarded.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
-              <option name="path" value="modules\http.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\http2.mod" />
@@ -162,17 +172,10 @@
               <option name="path" value="modules\jmx-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="active" value="true" />
-              <option name="path" value="modules\jmx.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
               <option name="path" value="modules\jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\jolokia.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
-              <option name="path" value="modules\jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\jstl.mod" />
@@ -371,9 +374,6 @@
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\unixsocket.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
-              <option name="path" value="modules\webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\websocket.mod" />
@@ -384,6 +384,22 @@
         <option name="myConfigFiles">
           <list>
             <JettyConfigFile>
+              <option name="path" value="modules\deploy.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\http.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="active" value="true" />
+              <option name="path" value="modules\jmx.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\jsp.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\webapp.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
               <option name="path" value="modules\acceptratelimit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -444,9 +460,6 @@
               <option name="path" value="modules\decorate.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\deploy.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
               <option name="path" value="modules\ext.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -475,9 +488,6 @@
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\http-forwarded.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
-              <option name="path" value="modules\http.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\http2.mod" />
@@ -528,17 +538,10 @@
               <option name="path" value="modules\jmx-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="active" value="true" />
-              <option name="path" value="modules\jmx.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
               <option name="path" value="modules\jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\jolokia.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
-              <option name="path" value="modules\jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\jstl.mod" />
@@ -737,9 +740,6 @@
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\unixsocket.mod" />
-            </JettyConfigFile>
-            <JettyConfigFile>
-              <option name="path" value="modules\webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\websocket.mod" />
