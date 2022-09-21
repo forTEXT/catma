@@ -972,7 +972,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		
 	
 									EditResourceDialog editDocumentDlg = new EditResourceDialog(
-										document.getSourceDocumentInfo().getTechInfoSet().getRepsonsibleUser(),
+										document.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser(),
 										document.getSourceDocumentInfo().getContentInfoSet(),
 										ProjectView.this.membersByIdentfier.values(),
 										new SaveCancelListener<Pair<String,ContentInfoSet>>() {

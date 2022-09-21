@@ -35,7 +35,7 @@ public class TechInfoSet {
 	private FileOSType fileOSType;
 	private Long checksum;
 	private String mimeType;
-	private String repsonsibleUser;
+	private String responsibleUser;
 	private transient URI uri;
 	
 	public TechInfoSet() {
@@ -124,12 +124,12 @@ public class TechInfoSet {
 		this.uri = uri;
 	}
 	
-	public void setRepsonsibleUser(String repsonsibleUser) {
-		this.repsonsibleUser = repsonsibleUser;
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
 	}
 	
-	public String getRepsonsibleUser() {
-		return repsonsibleUser;
+	public String getResponsibleUser() {
+		return responsibleUser;
 	}
 
 }
