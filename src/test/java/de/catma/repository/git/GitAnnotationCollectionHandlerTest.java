@@ -13,8 +13,8 @@ import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 class GitAnnotationCollectionHandlerTest {
 
 	@Test
-	void loadCatma641CollectionHeader() throws IOException {
-		File catma641AnnotationCollectionHeaderFile = new File("testdocs/header_641.json");
+	void loadSampleAnnotationCollectionHeader() throws IOException {
+		File catma641AnnotationCollectionHeaderFile = new File("testdocs/sample_headers/annotation_collection.json");
 		
 		String serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
 				catma641AnnotationCollectionHeaderFile, StandardCharsets.UTF_8
