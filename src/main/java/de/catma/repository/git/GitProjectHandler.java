@@ -459,7 +459,7 @@ public class GitProjectHandler {
 		List<Pair<JsonLdWebAnnotation, TagInstance>> annotationToTagInstanceMapping =
 				Lists.newArrayList();
 		
-		for (TagInstance tagInstance : tagInstances.keys()) {
+		for (TagInstance tagInstance : tagInstances.keySet()) {
 			
 			 Collection<TagReference> references = tagInstances.get(tagInstance);
 			 
@@ -469,10 +469,10 @@ public class GitProjectHandler {
 					tagInstance.getPageFilename());
 			annotationToTagInstanceMapping.add(new Pair<>(annotation, tagInstance));
 		}
-		
+
 		
 		gitMarkupCollectionHandler.createTagInstances(collectionId, annotationToTagInstanceMapping);
-		
+
 	}
 	
 	public void addOrUpdate(
