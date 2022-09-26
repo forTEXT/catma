@@ -488,6 +488,7 @@ public class GitAnnotationCollectionHandler {
 	}
 
 	public void removeTagInstances(String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
+		// TODO: broken, make this work with the new annotations paging mechanism
 		String collectionSubdir = String.format(
 				"%s/%s", 
 				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 

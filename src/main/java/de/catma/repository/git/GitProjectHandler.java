@@ -504,32 +504,36 @@ public class GitProjectHandler {
 		
 	}
 
-	public void removeTagInstances(
-		String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
-		);
-		gitMarkupCollectionHandler.removeTagInstances(
-			collectionId, deletedTagInstanceIds);
+	public void removeTagInstances(String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			localRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
+			GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
+					localRepoManager,
+					this.projectPath,
+					this.projectId,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail()
+			);
+
+			gitMarkupCollectionHandler.removeTagInstances(collectionId, deletedTagInstanceIds);
+		}
 	}
 
-	public void removeTagInstance(
-		String collectionId, String deletedTagInstanceId) throws IOException {
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
-		);
-		gitMarkupCollectionHandler.removeTagInstances(
-			collectionId, Collections.singleton(deletedTagInstanceId));
+	public void removeTagInstance(String collectionId, String deletedTagInstanceId) throws IOException {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			localRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
+			GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
+					localRepoManager,
+					this.projectPath,
+					this.projectId,
+					this.remoteGitServerManager.getUsername(),
+					this.remoteGitServerManager.getEmail()
+			);
+
+			gitMarkupCollectionHandler.removeTagInstances(collectionId, Collections.singleton(deletedTagInstanceId));
+		}
 	}
 
 	public String removeCollection(AnnotationCollectionReference userMarkupCollectionReference) throws IOException {
