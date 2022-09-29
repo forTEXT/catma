@@ -254,11 +254,8 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tag)
-			throws Exception {
-		
+	public Multimap<String, String> getAnnotationIdsByCollectionId(TagDefinition tag) throws Exception {
 		Multimap<String, String> result = HashMultimap.create();
-
 		
 		for (AnnotationCollectionReference ref : 
 			this.docRefsById.values()
@@ -274,14 +271,13 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 				.forEach(instanceId -> result.put(ref.getId(), instanceId));
 		}
 		
-		
 		return result;
 	}
 
 	@Override
-	public Multimap<String, TagReference> getTagReferencesByCollectionId(String rootRevisionHash,
-			PropertyDefinition propertyDefinition, TagDefinition tag) throws Exception {
+	public Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception {
 		Multimap<String, TagReference> result = ArrayListMultimap.create();
+
 		for (AnnotationCollectionReference ref : 
 			this.docRefsById.values()
 				.stream()
@@ -362,11 +358,8 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash,
-			TagsetDefinition tagsetDefinition) throws Exception {
-		
+	public Multimap<String, String> getAnnotationIdsByCollectionId(TagsetDefinition tagsetDefinition) throws Exception {
 		Multimap<String, String> result = HashMultimap.create();
-
 		
 		for (AnnotationCollectionReference ref : 
 			this.docRefsById.values()
@@ -382,7 +375,25 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 				.forEach(instanceId -> result.put(ref.getId(), instanceId));
 		}
 		
-		
+		return result;
+	}
+
+	@Override
+	public Multimap<String, TagReference> getTagReferencesByCollectionId(TagsetDefinition tagsetDefinition) throws Exception {
+		Multimap<String, TagReference> result = ArrayListMultimap.create();
+
+		for (AnnotationCollectionReference ref :
+				this.docRefsById.values()
+						.stream()
+						.map(docRef -> docRef.getUserMarkupCollectionRefs())
+						.flatMap(Collection::stream)
+						.collect(Collectors.toSet())) {
+			AnnotationCollection collection = collectionCache.get(ref.getId());
+			collection.getTagReferences(tagsetDefinition)
+					.stream()
+					.forEach(tagReference -> result.put(ref.getId(), tagReference));
+		}
+
 		return result;
 	}
 

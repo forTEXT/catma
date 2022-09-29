@@ -98,11 +98,9 @@ public interface GraphProjectHandler {
 
 	void updateProperties(String rootRevisionHash, AnnotationCollection collection, TagInstance tagInstance, Collection<Property> properties) throws Exception;
 
-	Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagDefinition tag) throws Exception;
+	Multimap<String, String> getAnnotationIdsByCollectionId(TagDefinition tag) throws Exception;
 
-	Multimap<String, TagReference> getTagReferencesByCollectionId(
-			String rootRevisionHash, PropertyDefinition propertyDefinition, TagDefinition tag
-	) throws Exception;
+	Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception;
 
 	void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds) throws Exception;
 
@@ -124,7 +122,9 @@ public interface GraphProjectHandler {
 
 	boolean hasDocument(String rootRevisionHash, String documentId);
 
-	Multimap<String, String> getAnnotationIdsByCollectionId(String rootRevisionHash, TagsetDefinition tagsetDefinition) throws Exception;
+	Multimap<String, String> getAnnotationIdsByCollectionId(TagsetDefinition tagsetDefinition) throws Exception;
+
+	Multimap<String, TagReference> getTagReferencesByCollectionId(TagsetDefinition tagsetDefinition) throws Exception;
 
 	void updateProject(String oldRootRevisionHash, String rootRevisionHash) throws IOException;
 

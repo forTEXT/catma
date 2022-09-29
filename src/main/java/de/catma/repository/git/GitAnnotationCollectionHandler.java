@@ -8,21 +8,17 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
-
-import org.apache.commons.io.FileUtils;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.gson.reflect.TypeToken;
+
+import org.apache.commons.io.FileUtils;
 
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
@@ -44,6 +40,8 @@ public class GitAnnotationCollectionHandler {
 	
 	private static final String HEADER_FILE_NAME = "header.json";
 	private static final String ANNNOTATIONS_DIR = "annotations";
+
+	private final Logger logger = Logger.getLogger(GitAnnotationCollectionHandler.class.getName());
 	
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final String username;
@@ -268,10 +266,9 @@ public class GitAnnotationCollectionHandler {
 			return Integer.valueOf(pageNumber);
 		}
 		catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-			Logger.getLogger(getClass().getName()).warning(
-					String.format("%s doesn't seem to be a page name! Full path was: %s", 
-							page.getName(), 
-							page.getAbsolutePath()));
+			logger.warning(
+					String.format("%s doesn't seem to be a page name! Full path was: %s", page.getName(), page.getAbsolutePath())
+			);
 		}
 		
 		return -1;
@@ -415,30 +412,26 @@ public class GitAnnotationCollectionHandler {
 		);
 		
 		if (handleOrphans) {
-			
-			Logger.getLogger(getClass().getName()).info(
-				String.format(
-					"Checking for orphans for Collection %1$s with ID %2$s",
-					collectionId, 
-					contentInfoSet.getTitle()));
+			logger.info(
+					String.format("Checking for orphans for Collection %1$s with ID %2$s", collectionId, contentInfoSet.getTitle())
+			);
 			
 			// handle orphan Annotations
 			ArrayListMultimap<TagInstance, TagReference> tagInstances = ArrayListMultimap.create();
 			
-			Set<String> orphanAnnotationIds = new HashSet<>();
+			Set<TagInstance> orphanedTagInstances = new HashSet<>();
 			Iterator<TagReference> tagReferenceIterator = tagReferences.iterator();
 			while (tagReferenceIterator.hasNext()) {
 				TagReference tagReference = tagReferenceIterator.next();
-				if (!orphanAnnotationIds.contains(tagReference.getTagInstanceId())) {
+
+				if (!orphanedTagInstances.contains(tagReference.getTagInstance())) {
 					String tagsetId = tagReference.getTagInstance().getTagsetId();
-					
-					TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
-							tagsetId);
-					
+					TagsetDefinition tagset = tagLibrary.getTagsetDefinition(tagsetId);
 					String tagId = tagReference.getTagDefinitionId();
+
 					if (tagset == null || tagset.isDeleted(tagId)) {
 						// Tag/Tagset has been deleted, we remove the stale Annotation as well
-						orphanAnnotationIds.add(tagReference.getTagInstanceId());
+						orphanedTagInstances.add(tagReference.getTagInstance());
 						tagReferenceIterator.remove();
 					}
 					else {
@@ -450,11 +443,11 @@ public class GitAnnotationCollectionHandler {
 				}
 			}
 			
-			if (!orphanAnnotationIds.isEmpty()) {
-				removeTagInstances(collectionId, orphanAnnotationIds);
+			if (!orphanedTagInstances.isEmpty()) {
+				removeTagInstances(collectionId, orphanedTagInstances);
 			}
 			
-			//handle orphan Properties
+			// handle orphan Properties
 			for (TagInstance tagInstance : tagInstances.keySet()) {
 				TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
 						tagInstance.getTagsetId());
@@ -471,7 +464,7 @@ public class GitAnnotationCollectionHandler {
 										tagInstances.get(tagInstance),
 										tagLibrary,
 										tagInstance.getPageFilename());
-							createTagInstances(
+							createTagInstances( // TODO: should be updateTagInstance?
 								collectionId, 
 								Collections.singletonList(new Pair<>(annotation, tagInstance)));
 						}
@@ -487,25 +480,53 @@ public class GitAnnotationCollectionHandler {
 		);
 	}
 
-	public void removeTagInstances(String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
-		// TODO: broken, make this work with the new annotations paging mechanism
+	public void removeTagInstances(String collectionId, Collection<TagInstance> deletedTagInstances) throws IOException {
 		String collectionSubdir = String.format(
-				"%s/%s", 
-				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
+				"%s/%s",
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME,
 				collectionId
 		);
 
-		for (String deletedTagInstanceId : deletedTagInstanceIds) {
-			// remove TagInstance file
-			File targetTagInstanceFilePath = Paths.get(
+		Multimap<String, TagInstance> deletedTagInstancesByPageFilename = Multimaps.index(deletedTagInstances, TagInstance::getPageFilename);
+
+		for (String pageFilename : deletedTagInstancesByPageFilename.keySet()) {
+			File pageFile =	Paths.get(
 					this.projectDirectory.getAbsolutePath(),
 					collectionSubdir,
 					ANNNOTATIONS_DIR,
-					deletedTagInstanceId+".json"
+					pageFilename
 			).toFile();
 
-			this.localGitRepositoryManager.remove(targetTagInstanceFilePath);
+			String pageContent = new String(Files.readAllBytes(pageFile.toPath()), StandardCharsets.UTF_8);
+
+			Type listType = new TypeToken<ArrayList<JsonLdWebAnnotation>>(){}.getType();
+
+			ArrayList<JsonLdWebAnnotation> annotations =
+					new SerializationHelper<ArrayList<JsonLdWebAnnotation>>().deserialize(
+							pageContent, listType
+					);
+
+			Collection<String> tagInstanceUuidsToRemove = deletedTagInstancesByPageFilename.get(pageFilename).stream()
+					.map(TagInstance::getUuid).collect(Collectors.toList());
+
+			boolean anyRemoved = annotations.removeIf(anno -> tagInstanceUuidsToRemove.contains(anno.getTagInstanceUuid()));
+
+			if (anyRemoved) {
+				String serializedAnnotations = new SerializationHelper<JsonLdWebAnnotation>().serialize(annotations);
+				try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(pageFile)) {
+					fileOutputStream.write(serializedAnnotations.getBytes(StandardCharsets.UTF_8));
+				}
+			}
+			else {
+				logger.warning(String.format(
+						"Tag instances to be deleted were not found in the expected page. Collection ID: %1$s, tag instance IDs: %2$s",
+						collectionId,
+						String.join(",", tagInstanceUuidsToRemove)
+				));
+			}
 		}
+		// TODO: consider performing some kind of page file "compression"
+		//       (fill gaps by shifting annotations and utilise max. page file size as far as possible)
 	}
 	
 	public String removeCollection(AnnotationCollectionReference collection) throws IOException {

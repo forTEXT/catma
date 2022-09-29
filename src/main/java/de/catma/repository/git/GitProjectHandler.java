@@ -170,14 +170,14 @@ public class GitProjectHandler {
 	}
 	
 	public String removeTagAndAnnotations(
-			TagDefinition tagDefinition, Multimap<String, String> annotationIdsByCollectionId) throws IOException {
+			TagDefinition tagDefinition, Multimap<String, TagInstance> tagInstancesByCollectionId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
-			for (String collectionId : annotationIdsByCollectionId.keySet()) {
+			for (String collectionId : tagInstancesByCollectionId.keySet()) {
 				removeTagInstances(
-					collectionId, annotationIdsByCollectionId.get(collectionId));
+					collectionId, tagInstancesByCollectionId.get(collectionId));
 
 				addCollectionToStaged(collectionId);
 			}
@@ -251,15 +251,15 @@ public class GitProjectHandler {
 	
 	public String removeTagset(
 			TagsetDefinition tagset, 
-			Multimap<String, String> affectedAnnotationIdsByCollectionId) throws Exception {
+			Multimap<String, TagInstance> affectedTagInstancesByCollectionId) throws Exception {
 		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
-			for (String collectionId : affectedAnnotationIdsByCollectionId.keySet()) {
+			for (String collectionId : affectedTagInstancesByCollectionId.keySet()) {
 				removeTagInstances(
-						collectionId, affectedAnnotationIdsByCollectionId.get(collectionId));
+						collectionId, affectedTagInstancesByCollectionId.get(collectionId));
 				
 				addCollectionToStaged(collectionId);
 			}
@@ -504,36 +504,28 @@ public class GitProjectHandler {
 		
 	}
 
-	public void removeTagInstances(String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			localRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+	public void removeTagInstances(String collectionId, Collection<TagInstance> deletedTagInstances) throws IOException {
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
+				this.localGitRepositoryManager,
+				this.projectPath,
+				this.projectId,
+				this.remoteGitServerManager.getUsername(),
+				this.remoteGitServerManager.getEmail()
+		);
 
-			GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
-					localRepoManager,
-					this.projectPath,
-					this.projectId,
-					this.remoteGitServerManager.getUsername(),
-					this.remoteGitServerManager.getEmail()
-			);
-
-			gitMarkupCollectionHandler.removeTagInstances(collectionId, deletedTagInstanceIds);
-		}
+		gitMarkupCollectionHandler.removeTagInstances(collectionId, deletedTagInstances);
 	}
 
-	public void removeTagInstance(String collectionId, String deletedTagInstanceId) throws IOException {
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-			localRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+	public void removeTagInstance(String collectionId, TagInstance deletedTagInstance) throws IOException {
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
+				this.localGitRepositoryManager,
+				this.projectPath,
+				this.projectId,
+				this.remoteGitServerManager.getUsername(),
+				this.remoteGitServerManager.getEmail()
+		);
 
-			GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
-					localRepoManager,
-					this.projectPath,
-					this.projectId,
-					this.remoteGitServerManager.getUsername(),
-					this.remoteGitServerManager.getEmail()
-			);
-
-			gitMarkupCollectionHandler.removeTagInstances(collectionId, Collections.singleton(deletedTagInstanceId));
-		}
+		gitMarkupCollectionHandler.removeTagInstances(collectionId, Collections.singleton(deletedTagInstance));
 	}
 
 	public String removeCollection(AnnotationCollectionReference userMarkupCollectionReference) throws IOException {
