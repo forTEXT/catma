@@ -608,7 +608,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			comment.setId(issue.getId());
 			comment.setIid(issue.getIid());
 		}
-		catch (GitLabApiException e) {
+		catch (Exception e) {
 			throw new IOException(String.format(
 				"Failed to add a new Comment for resource %1$s in project %2$s!", resourceId, projectReference), e);
 		}

@@ -34,6 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -1134,51 +1135,72 @@ public class TaggerView extends HorizontalLayout
 		IDGenerator idGenerator = new IDGenerator();
 		CommentDialog commentDialog = new CommentDialog(
 				commentBody -> {
-					try {
-						project.addComment(
-							new Comment(
-								idGenerator.generate(), 
-								user.getName(), user.getUserId(), 
-								commentBody, absoluteRanges, this.sourceDocument.getUuid()));
-					} catch (IOException e) {
-						errorHandler.showAndLogError("Error adding Comment!", e);
+					if (!StringUtils.isBlank(commentBody)) {
+						try {
+							project.addComment(
+									new Comment(
+											idGenerator.generate(),
+											user.getName(), user.getUserId(),
+											commentBody, absoluteRanges, this.sourceDocument.getUuid()
+									)
+							);
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Error adding Comment!", e);
+						}
 					}
-				});
+				}
+		);
 		commentDialog.show(x, y);
 	}
 	
 	@Override
 	public void editComment(Optional<Comment> optionalComment, int x, int y) {
 		if (optionalComment.isPresent()) {
-			CommentDialog commentDialog = new CommentDialog(optionalComment.get().getBody(), false, commentBody -> {
-				final String oldBody = optionalComment.get().getBody();
-				optionalComment.get().setBody(commentBody);
-				try {
-					project.updateComment(optionalComment.get());
-				} catch (IOException e) {
-					errorHandler.showAndLogError("Error updating Comment!", e);
-					optionalComment.get().setBody(oldBody);
-				}
-			});
+			CommentDialog commentDialog = new CommentDialog(
+					optionalComment.get().getBody(),
+					false,
+					commentBody -> {
+						if (!StringUtils.isBlank(commentBody)) {
+							final String oldBody = optionalComment.get().getBody();
+							optionalComment.get().setBody(commentBody);
+							try {
+								project.updateComment(optionalComment.get());
+							}
+							catch (IOException e) {
+								errorHandler.showAndLogError("Error updating Comment!", e);
+								optionalComment.get().setBody(oldBody);
+							}
+						}
+					}
+			);
 			commentDialog.show(x, y);
 		}
 		else {
-			Notification.show("Info", "Couldn't find a Comment to edit!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Couldn't find the Comment to edit!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 	
 	@Override
 	public void removeComment(Optional<Comment> optionalComment) {
 		if (optionalComment.isPresent()) {
-			ConfirmDialog.show(UI.getCurrent(),"Remove Comment", "Are you sure you want to remove the Comment?", "Yes", "Cancel", dlg -> {
-				if (dlg.isConfirmed()) {
-					try {
-						project.removeComment(optionalComment.get());
-					} catch (IOException e) {
-						errorHandler.showAndLogError("Error removing Comment!", e);
+			ConfirmDialog.show(
+					UI.getCurrent(),
+					"Remove Comment",
+					"Are you sure you want to remove the Comment?",
+					"Yes",
+					"Cancel",
+					dlg -> {
+						if (dlg.isConfirmed()) {
+							try {
+								project.removeComment(optionalComment.get());
+							}
+							catch (IOException e) {
+								errorHandler.showAndLogError("Error removing Comment!", e);
+							}
+						}
 					}
-				}
-			});
+			);
 		}
 		else {
 			Notification.show("Info", "Couldn't find the Comment to remove!", Type.HUMANIZED_MESSAGE);
@@ -1193,21 +1215,28 @@ public class TaggerView extends HorizontalLayout
 			CommentDialog commentDialog = new CommentDialog(
 					true,
 					replyBody -> {
-						try {
-							project.addReply(optionalComment.get(), 
-								new Reply(
-									idGenerator.generate(),
-									replyBody, 
-									user.getName(), user.getUserId(), 
-									optionalComment.get().getUuid()));
-						} catch (IOException e) {
-							errorHandler.showAndLogError("Error adding Reply!", e);
+						if (!StringUtils.isBlank(replyBody)) {
+							try {
+								project.addReply(
+										optionalComment.get(),
+										new Reply(
+												idGenerator.generate(),
+												replyBody,
+												user.getName(), user.getUserId(),
+												optionalComment.get().getUuid()
+										)
+								);
+							}
+							catch (IOException e) {
+								errorHandler.showAndLogError("Error adding Reply!", e);
+							}
 						}
-					});
+					}
+			);
 			commentDialog.show(x, y);
 		}
 		else {
-			Notification.show("Info", "Couldn't find a Comment to reply to!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Couldn't find the Comment to reply to!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 	
@@ -1215,27 +1244,33 @@ public class TaggerView extends HorizontalLayout
 		if (optionalComment.isPresent()) {
 			Comment comment = optionalComment.get();
 			Reply reply = comment.getReply(replyUuid);
+
 			if (reply != null) {
-				
 				CommentDialog commentDialog = new CommentDialog(
 						reply.getBody(),
 						true,
 						replyBody -> {
-							try {
+							if (!StringUtils.isBlank(replyBody)) {
+								final String oldBody = reply.getBody();
 								reply.setBody(replyBody);
-								project.updateReply(optionalComment.get(), reply);
-							} catch (IOException e) {
-								errorHandler.showAndLogError("Error updating Reply!", e);
+								try {
+									project.updateReply(optionalComment.get(), reply);
+								}
+								catch (IOException e) {
+									errorHandler.showAndLogError("Error updating Reply!", e);
+									reply.setBody(oldBody);
+								}
 							}
-						});
+						}
+				);
 				commentDialog.show(x, y);
 			}
 			else {
-				Notification.show("Info", "Couldn't find a Reply to edit!", Type.HUMANIZED_MESSAGE);
+				Notification.show("Info", "Couldn't find the Reply to edit!", Type.HUMANIZED_MESSAGE);
 			}
 		}
 		else {
-			Notification.show("Info", "Couldn't find the Comment of the reply!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Couldn't find the Comment of the Reply!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 	
@@ -1243,20 +1278,28 @@ public class TaggerView extends HorizontalLayout
 		if (optionalComment.isPresent()) {
 			Comment comment = optionalComment.get();
 			Reply reply = comment.getReply(replyUuid);
+
 			if (reply != null) {
-	
-				ConfirmDialog.show(UI.getCurrent(),"Remove Reply", "Are you sure you want to remove the Reply?", "Yes", "Cancel", dlg -> {
-					if (dlg.isConfirmed()) {
-						try {
-							project.removeReply(optionalComment.get(), reply);
-						} catch (IOException e) {
-							errorHandler.showAndLogError("Error removing Comment!", e);
+				ConfirmDialog.show(
+						UI.getCurrent(),
+						"Remove Reply",
+						"Are you sure you want to remove the Reply?",
+						"Yes",
+						"Cancel",
+						dlg -> {
+							if (dlg.isConfirmed()) {
+								try {
+									project.removeReply(optionalComment.get(), reply);
+								}
+								catch (IOException e) {
+									errorHandler.showAndLogError("Error removing Comment!", e);
+								}
+							}
 						}
-					}
-				});
+				);
 			}
 			else {
-				Notification.show("Info", "Couldn't find a Reply to remove!", Type.HUMANIZED_MESSAGE);
+				Notification.show("Info", "Couldn't find the Reply to remove!", Type.HUMANIZED_MESSAGE);
 			}	
 		}
 		else {
