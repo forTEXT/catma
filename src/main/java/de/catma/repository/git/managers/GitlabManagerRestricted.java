@@ -260,15 +260,14 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	public Set<de.catma.user.Member> getProjectMembers(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project project = projectApi.getProject(
-					projectReference.getNamespace(), projectReference.getProjectId());
-
+			Project project = projectApi.getProject(projectReference.getNamespace(), projectReference.getProjectId());
 			return projectApi.getMembers(project.getId())
 					.stream()
 					.map(member -> new GitMember(member))
 					.collect(Collectors.toSet());
-		} catch (GitLabApiException e) {
-			throw new IOException("group unknown",e);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to fetch project members", e);
 		}
 	}
 
@@ -299,7 +298,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 				.collect(Collectors.toList()));
 		}
 		catch (Exception e) {
-			throw new IOException("Failed to load groups", e);
+			throw new IOException("Failed to load projects", e);
 		}
 	}
 	

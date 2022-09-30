@@ -702,7 +702,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		catch (GitAPIException e) {
 			// sometimes Gitlab refuses to accept the push and gives this error messages
 			// subsequent push attempts however pass through
-			// so we try to push up to 3 times before giving up
+			// so we retry the push up to 3 times before giving up
 			if (e.getMessage().contains("authentication not supported") && tryCount<3) {
 				try {
 					Thread.sleep(3);
@@ -711,8 +711,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				push(credentialsProvider, branch, tryCount+1, force);
 			}
 			else {
-				// give up, push not possible
-				throw new IOException(String.format("Failed to push, tried %1$d times!", tryCount-1), e);
+				// give up, push not possible or unexpected error
+				throw new IOException(String.format("Failed to push, tried %1$d times!", tryCount+1), e);
 			}
 		}
 		return result;
