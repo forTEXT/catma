@@ -1723,57 +1723,55 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         return teamContent;
     }
 
+	private void handleRemoveMembers() {
+		if (teamGrid.getSelectedItems().isEmpty()) {
+			Notification.show("Info", "Please select one or more members first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
 
+		Set<Member> selectedMembers = teamGrid.getSelectedItems();
+		Optional<Member> selectedMemberCurrentUser = selectedMembers.stream().filter(
+				member -> member.getUserId().equals(project.getUser().getUserId())
+		).findAny();
+		Set<Member> membersToRemove = selectedMembers;
 
+		// remove the current user if selected and display an informational message
+		if (selectedMemberCurrentUser.isPresent()) {
+			membersToRemove = selectedMembers.stream().filter(
+					member -> member != selectedMemberCurrentUser.get()
+			).collect(Collectors.toSet());
 
-    private void handleRemoveMembers() {
-    	if (teamGrid.getSelectedItems().isEmpty()) {
-    		Notification.show("Info", "Please select one or more members first!", Type.HUMANIZED_MESSAGE);
-    	}
-    	else {
-    		if (teamGrid.getSelectedItems()
-    				.stream()
-    				.map(User::getUserId)
-    				.filter(id -> id.equals(project.getUser().getUserId()))
-    				.findFirst()
-    				.isPresent()) {
-    			HTMLNotification.show(
-    				"Info", 
-    				"You cannot remove yourself from the Project. "
-    				+ "Please use the 'Leave Project' button on the Project card on the Dashboard instead!"
-					+ "<br><br> If your are the owner of the Project, "
-					+ "please contact the Administrator to request an transfer of ownership.",
-    				Type.ERROR_MESSAGE);
-    		}
-    		Set<Member> members = teamGrid.getSelectedItems()
-    				.stream()
-    				.filter(member -> !member.getUserId().equals(project.getUser().getUserId()))
-    				.collect(Collectors.toSet());
-    		
-    		members.remove(project.getUser());
-    		
-    		if (!members.isEmpty()) {
-	    		new RemoveMemberDialog(
-	            		project::unassignFromProject,
-	            		teamGrid.getSelectedItems(),
-	            		evt -> eventBus.post(new MembersChangedEvent())
-	            ).show();
-    		}
-    	}
+			HTMLNotification.show(
+					"Info",
+					"You cannot remove yourself from the project. "
+					+ "Please use the 'Leave Project' button on the project card on the dashboard instead!"
+					+ "<br/><br/>If your are the owner of the project, "
+					+ "please contact support to request a transfer of ownership.",
+					Type.ERROR_MESSAGE
+			);
+		}
+
+		if (!membersToRemove.isEmpty()) {
+			new RemoveMemberDialog(
+					project::unassignFromProject,
+					membersToRemove,
+					evt -> eventBus.post(new MembersChangedEvent())
+			).show();
+		}
 	}
 
 	private void handleEditMembers() {
-    	if (teamGrid.getSelectedItems().isEmpty()) {
-    		Notification.show("Info", "Select at least one Member first!", Type.HUMANIZED_MESSAGE);
-    	}
-    	else {
-    		new EditMemberDialog(
-            		project::assignOnProject,
-            		teamGrid.getSelectedItems(),
-            		(evt) -> eventBus.post(new MembersChangedEvent())
-            		).show();
-    	}
-    }
+		if (teamGrid.getSelectedItems().isEmpty()) {
+			Notification.show("Info", "Please select one or more members first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		new EditMemberDialog(
+				project::assignOnProject,
+				teamGrid.getSelectedItems(),
+				(evt) -> eventBus.post(new MembersChangedEvent())
+		).show();
+	}
 
 	/**
      * @param projectReference 
