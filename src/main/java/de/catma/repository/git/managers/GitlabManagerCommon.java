@@ -39,7 +39,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 					projectReference.getNamespace(), projectReference.getProjectId());
 			if(project == null) {
 				getLogger().log(Level.WARNING, 
-						String.format("CATMA-Project/git-Project unknown %1$s", projectReference));
+						String.format("Unknown project \"%s\"", projectReference));
 				return false;
 			}
 			return isMemberAuthorized(
@@ -48,7 +48,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		} catch (GitLabApiException e) {
 			getLogger().log(
 				Level.SEVERE, 
-				String.format("Error retrieving permissions for CATMA-Project/git-Project %1$s", projectReference),
+				String.format("Failed to retrieve permissions for project \"%s\"", projectReference),
 				e);
 			return false;
 		}
@@ -72,7 +72,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 					projectReference.getNamespace(), projectReference.getProjectId());
 			if(project == null) {
 				throw new IOException(
-						String.format("CATMA-Project/git-Project unknown %1$s", projectReference));
+						String.format("Unknown project \"%s\"", projectReference));
 			}
 			try {
 				Member projectMember = 
@@ -92,16 +92,18 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				}
 				
 			} catch (GitLabApiException e) {
+				// TODO: refactor this, don't just assume the error means we need to create a new project member
+				//       if getMember above does not find the member in the project it throws GitLabApiException: 404 Not found
 				Logger.getLogger(GitlabManagerCommon.class.getName()).log(
 						Level.WARNING, String.format(
-							"Could not update project member %1$s for project %2$s. "
-							+ "Will try to create a new project member", 
+							"Could not update project member \"%s\" for project \"%s\". "
+							+ "Will try to create a new project member.",
 							subject, projectReference), e);
 				return createProjectMember(subject, role, project.getId());
 			}
 		} catch (GitLabApiException e) {
 			throw new IOException(
-				String.format("Error accessing CATMA-Project/git-Group %1$s", projectReference));
+				String.format("Failed to access project \"%s\"", projectReference));
 		}	
 	};
 	
@@ -113,15 +115,15 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 					projectReference.getNamespace(), projectReference.getProjectId());
 			if(project == null) {
 				throw new IOException(
-						String.format("CATMA-Project/git-Project unknown %1$s", projectReference));
+						String.format("Unknown project \"%s\"", projectReference));
 			}
 			getGitLabApi().getProjectApi().removeMember(project.getId(), subject.getUserId());
 		} catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-						"Error accessing CATMA-Project/git-Group %1$s or user %2$s", 
-						projectReference, 
-						subject==null?"null":subject.toString()), e);
+							"Failed to remove member \"%s\" from project \"%s\"",
+							subject,
+							projectReference), e);
 		}	
 	}
 	
@@ -131,18 +133,17 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			return new GitMember(getGitLabApi().getProjectApi().addMember(
 					projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
-			throw new IOException("error creating project member in project #"+ projectId,e);
+			throw new IOException("Error creating project member in project #" + projectId, e);
 		}		
 	}
-	
-	
+
 	private de.catma.user.Member updateProjectMember(
 			RBACSubject subject, RBACRole role, long projectId) throws IOException {
 		try {
 			return new GitMember(getGitLabApi().getProjectApi().updateMember(
 					projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
-			throw new IOException("error updating project member in project #"+ projectId, e);
+			throw new IOException("Error updating project member in project #" + projectId, e);
 		}		
 	}
 
@@ -154,13 +155,15 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 					projectReference.getNamespace(), projectReference.getProjectId());
 			if(project == null) {
 				throw new IOException(
-						String.format("CATMA-Project/git-Project unknown %1$s", projectReference));
+						String.format("Unknown project \"%s\"", projectReference));
 			}
 			Member member = getGitLabApi().getProjectApi().getMember(
 					project.getId(), subject.getUserId());
 			
 			if(member == null ){
-				throw new IOException("member not found " + subject);
+				throw new IOException(
+						String.format("Member \"%s\" not found in project \"%s\"", subject, projectReference)
+				);
 			}
 			if (project.getOwner().getId().equals(subject.getUserId())) {
 				return RBACRole.OWNER;
@@ -169,9 +172,9 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			
 		} catch (GitLabApiException e) {
 			throw new IOException(
-				String.format("error getting role on project %1$s for member %2$s",
+				String.format("Failed to get role on project \"%s\" for member \"%s\"",
 						projectReference,
-						subject), 
+						subject),
 				e);
 		}	
 	}

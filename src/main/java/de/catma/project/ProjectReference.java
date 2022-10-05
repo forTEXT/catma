@@ -38,7 +38,7 @@ public class ProjectReference {
 	
 	@Override
 	public String toString() {
-		return "Project " + ((name==null || name.isEmpty())? (" #" + namespace + "/" + projectId): name);
+		return (name == null || name.isEmpty()) ? "#" + namespace + "/" + projectId : name;
 	}
 	
 	public String getNamespace() {
