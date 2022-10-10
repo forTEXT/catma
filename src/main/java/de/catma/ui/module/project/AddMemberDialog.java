@@ -50,7 +50,7 @@ public  class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
                     try {
                         	return users.get(query).size();
                     } catch (Exception e) {
-                        errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
+                        errorLogger.showAndLogError("Can't get users from remote git manager",e);
                         return 0;
                     }
                 }
