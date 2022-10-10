@@ -1,12 +1,13 @@
 package de.catma.ui.module.project;
 
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.ListSelect;
-import com.vaadin.ui.Notification;
 
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
@@ -30,7 +31,11 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 		super("Update Members","Change the role of the selected Members", saveCancelListener);
 		this.members = members;
 		this.assignment = assignment;
-		this.accesslevel = members.isEmpty() ?  RBACRole.ASSISTANT : members.iterator().next().getRole();
+
+		Optional<Member> memberWithLowestRole = members.stream().sorted(
+				Comparator.comparingInt(member -> member.getRole().getAccessLevel())
+		).findFirst();
+		this.accesslevel = memberWithLowestRole.isPresent() ? memberWithLowestRole.get().getRole() : RBACRole.ASSISTANT;
 	}
 	
 	@Override
