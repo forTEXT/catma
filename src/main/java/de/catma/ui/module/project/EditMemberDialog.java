@@ -3,10 +3,6 @@ package de.catma.ui.module.project;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.base.Joiner;
-import com.vaadin.data.Binder;
-import com.vaadin.data.BinderValidationStatus;
-import com.vaadin.data.ValidationResult;
 import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.ListSelect;
@@ -25,9 +21,6 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 	
 	private final RBACAssignmentFunction assignment;
 
-	private final Binder<RBACRole> roleBinder = new Binder<>();
-	
-	
 	private RBACRole accesslevel;
 	private ListSelect<Member> ls_members;
 	
@@ -53,24 +46,10 @@ public class EditMemberDialog extends AbstractMemberDialog<Set<RBACSubject>> {
 			((AbstractOrderedLayout) content).setExpandRatio(ls_members, 1f);
 		}
 		content.addComponent(cbRole);
-		
-		roleBinder
-			.forField(cbRole)
-			.withValidator((role,context) ->  role.equals(RBACRole.OWNER)?  ValidationResult.error("Changing the owner is not allowed") : ValidationResult.ok());
+
 		cbRole.setValue(accesslevel);
 	}
-	
-	@Override
-	protected void handleOkPressed() {
-		BinderValidationStatus<RBACRole> validationResult = roleBinder.validate();
-		
-		if(validationResult.isOk()){
-		super.handleOkPressed();
-		} else {
-			Notification.show("Role not allowed", Joiner.on(',').join(validationResult.getValidationErrors()) , Notification.Type.WARNING_MESSAGE);
-		}
-	};
-	
+
 	@Override
 	protected Set<RBACSubject> getResult() {
 		try {
