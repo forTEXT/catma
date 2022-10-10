@@ -903,8 +903,7 @@ public class GitProjectHandler {
 			// fetch latest commits 
 			// we are interested in updating the local origin/master here
 			localGitRepoManager.fetch(credentialsProvider);
-			
-			
+
 			// get commits that need to be merged to the local user branch 
 			// origin/master -> userBranch
 			List<CommitInfo> theirPublishedChanges = localGitRepoManager.getTheirPublishedChanges();
@@ -920,29 +919,24 @@ public class GitProjectHandler {
 							.collect(Collectors.joining(System.lineSeparator()))
 					)
 				);				
-				// did we already push the local user branch?
-				if (localGitRepoManager.hasRef(
-						Constants.DEFAULT_REMOTE_NAME + "/" + remoteGitServerManager.getUsername())) {
-					
-					// can we merge origin/master -> userBranch?
-					if (localGitRepoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {					
-						MergeResult mergeWithOriginMasterResult = 
-								localGitRepoManager.merge(
-										Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
-						
-						// push merge commit if successfull
-						if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
-							localGitRepoManager.push(credentialsProvider);
-						}
-						else { // or abort
-							localGitRepoManager.abortMerge(mergeWithOriginMasterResult);
-							return false;
-						}
+
+				// can we merge origin/master -> userBranch?
+				if (localGitRepoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {
+					MergeResult mergeWithOriginMasterResult =
+							localGitRepoManager.merge(
+									Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+
+					// push merge commit if successfull
+					if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
+						localGitRepoManager.push(credentialsProvider);
 					}
-					else {
+					else { // or abort
+						localGitRepoManager.abortMerge(mergeWithOriginMasterResult);
 						return false;
 					}
-					
+				}
+				else {
+					return false;
 				}
 			}
 
