@@ -133,7 +133,10 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			return new GitMember(getGitLabApi().getProjectApi().addMember(
 					projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
-			throw new IOException("Error creating project member in project #" + projectId, e);
+			throw new IOException(
+					String.format("Error creating project member \"%s\" in project #%s", subject, projectId),
+					e
+			);
 		}		
 	}
 
@@ -143,7 +146,10 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			return new GitMember(getGitLabApi().getProjectApi().updateMember(
 					projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel())));
 		} catch (GitLabApiException e) {
-			throw new IOException("Error updating project member in project #" + projectId, e);
+			throw new IOException(
+					String.format("Error updating project member \"%s\" in project #%s", subject, projectId),
+					e
+			);
 		}		
 	}
 
