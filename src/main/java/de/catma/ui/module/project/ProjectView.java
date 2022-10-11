@@ -1724,31 +1724,49 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
 	private void handleRemoveMembers() {
-		if (teamGrid.getSelectedItems().isEmpty()) {
+		Set<Member> membersToRemove = teamGrid.getSelectedItems();
+
+		if (membersToRemove.isEmpty()) {
 			Notification.show("Info", "Please select one or more members first!", Type.HUMANIZED_MESSAGE);
 			return;
 		}
 
-		Set<Member> selectedMembers = teamGrid.getSelectedItems();
-		Optional<Member> selectedMemberCurrentUser = selectedMembers.stream().filter(
+		// remove any owner members from the selection and display an informational message
+		// TODO: allow the original owner (whose namespace the project is in) to remove any other owner
+		if (membersToRemove.stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
+			membersToRemove = membersToRemove.stream().filter(
+					member -> member.getRole() != RBACRole.OWNER
+			).collect(Collectors.toSet());
+
+			Notification ownerMembersSelectedNotification = new Notification(
+					"Your selection includes members with the 'Owner' role, who you cannot remove.\n"
+							+ "Those members have been ignored. (click to dismiss)",
+					Notification.Type.WARNING_MESSAGE
+			);
+			ownerMembersSelectedNotification.setDelayMsec(-1);
+			ownerMembersSelectedNotification.show(Page.getCurrent());
+		}
+
+		// remove the current user from the selection and display an informational message
+		Optional<Member> selectedMemberCurrentUser = membersToRemove.stream().filter(
 				member -> member.getUserId().equals(project.getUser().getUserId())
 		).findAny();
-		Set<Member> membersToRemove = selectedMembers;
 
-		// remove the current user if selected and display an informational message
 		if (selectedMemberCurrentUser.isPresent()) {
-			membersToRemove = selectedMembers.stream().filter(
+			membersToRemove = membersToRemove.stream().filter(
 					member -> member != selectedMemberCurrentUser.get()
 			).collect(Collectors.toSet());
 
-			HTMLNotification.show(
-					"Info",
-					"You cannot remove yourself from the project. "
-					+ "Please use the 'Leave Project' button on the project card on the dashboard instead!"
-					+ "<br/><br/>If your are the owner of the project, "
-					+ "please contact support to request a transfer of ownership.",
-					Type.ERROR_MESSAGE
+			Notification selfSelectedNotification = new Notification(
+					"You cannot remove yourself from the project.\n"
+							+ "Please use the 'Leave Project' button on the project card on the dashboard instead.\n"
+							+ "\n"
+							+ "If you are the owner of the project, please contact support to request a transfer\n"
+							+ "of ownership. (click to dismiss)",
+					Type.WARNING_MESSAGE
 			);
+			selfSelectedNotification.setDelayMsec(-1);
+			selfSelectedNotification.show(Page.getCurrent());
 		}
 
 		if (!membersToRemove.isEmpty()) {
@@ -1761,16 +1779,37 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleEditMembers() {
-		if (teamGrid.getSelectedItems().isEmpty()) {
+		Set<Member> membersToEdit = teamGrid.getSelectedItems();
+
+		if (membersToEdit.isEmpty()) {
 			Notification.show("Info", "Please select one or more members first!", Type.HUMANIZED_MESSAGE);
 			return;
 		}
 
-		new EditMemberDialog(
-				project::assignOnProject,
-				teamGrid.getSelectedItems(),
-				(evt) -> eventBus.post(new MembersChangedEvent())
-		).show();
+		// remove any owner members from the selection and display an informational message
+		// TODO: allow the original owner (whose namespace the project is in) to edit any other owner's role, as well as
+		//       assign additional owners (also see GitlabManagerCommon.assignOnProject which does its own check)
+		if (membersToEdit.stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
+			membersToEdit = membersToEdit.stream().filter(
+					member -> member.getRole() != RBACRole.OWNER
+			).collect(Collectors.toSet());
+
+			Notification ownerMembersSelectedNotification = new Notification(
+					"Your selection includes members with the 'Owner' role, whose role you cannot change.\n"
+							+ "Those members have been ignored. (click to dismiss)",
+					Notification.Type.WARNING_MESSAGE
+			);
+			ownerMembersSelectedNotification.setDelayMsec(-1);
+			ownerMembersSelectedNotification.show(Page.getCurrent());
+		}
+
+		if (!membersToEdit.isEmpty()) {
+			new EditMemberDialog(
+					project::assignOnProject,
+					membersToEdit,
+					(evt) -> eventBus.post(new MembersChangedEvent())
+			).show();
+		}
 	}
 
 	/**
