@@ -345,7 +345,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		if (!miToggleResponsibiltityFilter.isChecked()) {
 			Notification.show(
 				"Warning", 
-				"Selecting Collections that are beyond your repsonsibility, "
+				"Selecting Collections that are beyond your responsibility, "
 				+ "might result in conflicts with operations of other Project members!", 
 				Type.WARNING_MESSAGE);
 		}

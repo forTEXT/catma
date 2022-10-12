@@ -345,7 +345,7 @@ public class AnnotationCollection {
 		if (this.responsibleUser != null) {
 			return this.responsibleUser.equals(userIdentifier);
 		}
-		return true; //shared repsonsibility
+		return true; //shared responsibility
 	}
 	
 	public Multimap<String, TagReference> getTagReferencesByInstanceId(TagDefinition tag) {
