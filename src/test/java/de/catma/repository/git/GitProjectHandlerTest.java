@@ -86,7 +86,7 @@ public class GitProjectHandlerTest {
 			);
 
 			for (ProjectReference projectRef : projectsToDeleteOnTearDown) {
-				gitProjectManager.delete(projectRef);
+				gitProjectManager.deleteProject(projectRef);
 			}
 			projectsToDeleteOnTearDown.clear();
 		}

@@ -1,25 +1,7 @@
 package de.catma.repository.git;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.logging.Logger;
-
-import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-
 import com.google.common.eventbus.EventBus;
 import com.google.gson.JsonObject;
-
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
@@ -34,38 +16,44 @@ import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 
 public class GitProjectsManager implements ProjectsManager {
-	private final Logger logger = Logger.getLogger(getClass().getName());
-	
-	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final String gitBasedRepositoryBasePath;
 	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final GraphProjectDeletionHandler graphProjectDeletionHandler;
+	private final BackgroundService backgroundService;
+	private final EventBus eventBus;
 
-	private final IDGenerator idGenerator;
-    private final BackgroundService backgroundService;
-    private String gitBasedRepositoryBasePath;
-	private User user;
-	private GraphProjectDeletionHandler graphProjectDeletionHandler;
+	private final User user;
+	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final CredentialsProvider credentialsProvider;
-	private EventBus eventBus;
+	private final IDGenerator idGenerator;
 
 	public GitProjectsManager(
-            String gitBasedRepositoryBasePath,
-            IRemoteGitManagerRestricted remoteGitServerManager,
-            GraphProjectDeletionHandler graphProjectDeletionHandler,
-            BackgroundService backgroundService,
-            EventBus eventBus)
-					throws IOException {
+			String gitBasedRepositoryBasePath,
+			IRemoteGitManagerRestricted remoteGitServerManager,
+			GraphProjectDeletionHandler graphProjectDeletionHandler,
+			BackgroundService backgroundService,
+			EventBus eventBus
+	) {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = remoteGitServerManager;
 		this.graphProjectDeletionHandler = graphProjectDeletionHandler;
 		this.backgroundService = backgroundService;
 		this.eventBus = eventBus;
+
 		this.user = remoteGitServerManager.getUser();
-		this.localGitRepositoryManager = 
-				new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
-		this.credentialsProvider = 
-			new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
+		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
+		this.credentialsProvider = new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
 		this.idGenerator = new IDGenerator();
 	}
 
@@ -74,11 +62,12 @@ public class GitProjectsManager implements ProjectsManager {
 	 *
 	 * @param name the name of the project to create
 	 * @param description the description of the project to create
-	 * @return the new project ID
+	 * @return a {@link ProjectReference} for the new project
 	 * @throws IOException if an error occurs when creating the project
 	 */
-	private String create(String name, String description) throws IOException {
-		String marshalledDescription = marshallProjectMetadata(name, description);
+	@Override
+	public ProjectReference createProject(String name, String description) throws IOException {
+		String serializedProjectMetadata = serializeProjectMetadata(name, description);
 
 		// note restrictions on project path: https://docs.gitlab.com/ee/api/projects.html#create-project
 		String cleanedName = name.trim()
@@ -88,206 +77,218 @@ public class GitProjectsManager implements ProjectsManager {
 				.replaceAll("^_|_$", ""); // strip any leading or trailing underscore
 		String projectId = String.format("%s_%s", idGenerator.generate(), cleanedName);
 
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// create the remote repository
-			CreateRepositoryResponse response = this.remoteGitServerManager.createRepository(
-				projectId, marshalledDescription
+			CreateRepositoryResponse response = remoteGitServerManager.createRepository(
+					projectId, serializedProjectMetadata
 			);
 
 			// clone the repository locally
 			localGitRepoManager.clone(
-				user.getIdentifier(),
-				projectId,
-				response.repositoryHttpUrl,
-				credentialsProvider
+					user.getIdentifier(),
+					projectId,
+					response.repositoryHttpUrl,
+					credentialsProvider
 			);
-			
-			String initialCommit = String.format("Created Project %1$s", name);
+
+			String initialCommit = String.format("Created project \"%s\"", name);
 			localGitRepoManager.commit(
-				initialCommit, 
-				remoteGitServerManager.getUsername(), 
-				remoteGitServerManager.getEmail(), true);
-			
+					initialCommit,
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail(), true);
+
 			localGitRepoManager.pushMaster(credentialsProvider);
-			
+
 			localGitRepoManager.checkout(user.getIdentifier(), true);
-			
-			// create remote user specific branch 
+
+			// create remote user specific branch
 			localGitRepoManager.push(credentialsProvider);
 		}
 
-		return projectId;
+		return new ProjectReference(projectId, user.getIdentifier(), name, description);
 	}
 
+	/**
+	 * Opens an existing project.
+	 *
+	 * @param projectReference a {@link ProjectReference} indicating which project should be opened
+	 * @param tagManager a {@link TagManager}
+	 * @param openProjectListener an {@link OpenProjectListener}
+	 */
+	@Override
+	public void openProject(
+			ProjectReference projectReference,
+			TagManager tagManager,
+			OpenProjectListener openProjectListener
+	) {
+		try {
+			cloneLocallyIfNotExists(projectReference, openProjectListener);
 
+			Project project = new GraphWorktreeProject(
+					user,
+					new GitProjectHandler(
+							user,
+							projectReference,
+							Paths.get(new File(gitBasedRepositoryBasePath).toURI())
+									.resolve(user.getIdentifier())
+									.resolve(projectReference.getNamespace())
+									.resolve(projectReference.getProjectId())
+									.toFile(),
+							localGitRepositoryManager,
+							remoteGitServerManager
+					),
+					projectReference,
+					tagManager,
+					backgroundService,
+					eventBus
+			);
+			project.open(openProjectListener);
+		}
+		catch (Exception e) {
+			openProjectListener.failure(e);
+		}
+	}
 
 	/**
-	 * Deletes an existing project.
-	 * <p>
-	 * This will also delete any associated repositories automatically (local & remote).
+	 * Updates the metadata (name & description) of a project.
 	 *
-	 * @param projectId the ID of the project to delete
+	 * @param projectReference a {@link ProjectReference} containing the new metadata
+	 * @throws IOException if an error occurs when updating the project metadata
+	 */
+	@Override
+	public void updateProjectMetadata(ProjectReference projectReference) throws IOException {
+		String serializedProjectMetadata = serializeProjectMetadata(
+				projectReference.getName(), projectReference.getDescription()
+		);
+		remoteGitServerManager.updateProject(
+				projectReference.getNamespace(),
+				projectReference.getProjectId(),
+				serializedProjectMetadata
+		);
+	}
+
+	/**
+	 * Leaves (removes the user from) a project.
+	 * <p>
+	 * Automatically deletes the local repository.
+	 *
+	 * @param projectReference a {@link ProjectReference} indicating the project to leave
+	 * @throws IOException if an error occurs when leaving the project
+	 */
+	@Override
+	public void leaveProject(ProjectReference projectReference) throws IOException {
+		// TODO: consider checking for uncommitted/unpushed changes first
+		FileUtils.deleteDirectory(new File(
+				localGitRepositoryManager.getRepositoryBasePath(),
+				projectReference.getProjectId()
+		));
+
+		remoteGitServerManager.leaveProject(
+				projectReference.getNamespace(), projectReference.getProjectId()
+		);
+
+		try {
+			graphProjectDeletionHandler.deleteProject(projectReference);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
+
+	/**
+	 * Deletes a project.
+	 * <p>
+	 * Automatically deletes the local & remote repositories.
+	 *
+	 * @param projectReference a {@link ProjectReference} indicating the project to delete
 	 * @throws IOException if an error occurs when deleting the project
 	 */
 	@Override
-	public void delete(ProjectReference projectReference) throws IOException {
+	public void deleteProject(ProjectReference projectReference) throws IOException {
 		Path projectDir = Paths.get(
-				this.localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(), 
+				localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(),
 				projectReference.getNamespace(),
-				projectReference.getProjectId());
-		// shouldn't be necessary but at lease on windows some git objects didn't have write permissions 
-		// during testing and prevented Projected deletion
-		Files.walkFileTree(projectDir, new SimpleFileVisitor<Path>() {
-			public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
-				filePath.toFile().setWritable(true, true);
-				return FileVisitResult.CONTINUE;
-			}
-		});
-		FileUtils.deleteDirectory(
-			Paths.get(
-				this.localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(), 
-				projectReference.getNamespace(),
-				projectReference.getProjectId()).toFile()
+				projectReference.getProjectId()
 		);
 
-		this.remoteGitServerManager.deleteRepository(projectReference);
+		// shouldn't be necessary, but at least on Windows some Git objects didn't have write permissions
+		// during testing and prevented project deletion
+		// TODO: this was added before the explicit repository close call was added in JGitRepoManager.close
+		//       and can potentially be removed now
+		Files.walkFileTree(
+				projectDir,
+				new SimpleFileVisitor<Path>() {
+					public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
+						filePath.toFile().setWritable(true, true);
+						return FileVisitResult.CONTINUE;
+					}
+				}
+		);
+
+		FileUtils.deleteDirectory(
+			Paths.get(
+				localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(),
+				projectReference.getNamespace(),
+				projectReference.getProjectId()
+			).toFile()
+		);
+
+		remoteGitServerManager.deleteRepository(projectReference);
+
 		try {
 			graphProjectDeletionHandler.deleteProject(projectReference);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new IOException(e);
-		};
+		}
 	}
-	
+
 	@Override
 	public User getUser() {
 		return user;
 	}
 
 	@Override
-	public List<ProjectReference> getProjectReferences() throws Exception {
+	public List<ProjectReference> getProjectReferences() throws IOException {
 		return remoteGitServerManager.getProjectReferences();
 	}
-	
+
 	@Override
-	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws Exception {
+	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException {
 		return remoteGitServerManager.getProjectReferences(withPermission);
 	}
 
 	@Override
-	public ProjectReference createProject(String name, String description) throws Exception {
-		String projectId = create(name, description);
-		
-		return new ProjectReference(projectId, user.getIdentifier(), name, description);
+	public boolean isAuthorizedOnProject(ProjectReference projectReference, RBACPermission permission) {
+		return remoteGitServerManager.isAuthorizedOnProject(user, permission, projectReference);
 	}
 
-	@Override
-	public void openProject(
-			TagManager tagManager,
-			ProjectReference projectReference,
-			OpenProjectListener openProjectListener) {
-		try {
-			
-			cloneLocallyIfNotExists(projectReference, openProjectListener);
-
-
-			Project project =
-				new GraphWorktreeProject(
-						this.user,
-						new GitProjectHandler(
-							this.user, 
-							projectReference, 
-							Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
-								.resolve(this.user.getIdentifier())
-								.resolve(projectReference.getNamespace())
-								.resolve(projectReference.getProjectId())
-								.toFile(),
-							this.localGitRepositoryManager, 
-							this.remoteGitServerManager),
-						projectReference,
-						tagManager,
-                        backgroundService,
-                        eventBus);
-			
-			
-
-			project.open(openProjectListener);
-
-			
-		} catch (Exception e) {
-			openProjectListener.failure(e);
-		}
-	}
-
-	@Override
-	public void leaveProject(ProjectReference projectReference) throws IOException {
-		FileUtils.deleteDirectory(
-			new File(
-				this.localGitRepositoryManager.getRepositoryBasePath(), 
-				projectReference.getProjectId())
-		);
-
-		this.remoteGitServerManager.leaveProject(
-				projectReference.getNamespace(), projectReference.getProjectId());
-		
-		try {
-			graphProjectDeletionHandler.deleteProject(projectReference);
-		} catch (Exception e) {
-			throw new IOException(e);
-		};
-
-	}
-	
-	public boolean existsLocally(ProjectReference projectReference) {
-		return Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
+	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws IOException {
+		if (!Paths.get(new File(gitBasedRepositoryBasePath).toURI())
 				.resolve(user.getIdentifier())
 				.resolve(projectReference.getNamespace())
 				.resolve(projectReference.getProjectId())
 				.toFile()
-				.exists();
-	}
+				.exists()
+		) {
+			try (ILocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
+				openProjectListener.progress("Cloning the Git repository");
 
-	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws Exception {
-		if (!Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
-			.resolve(user.getIdentifier())
-			.resolve(projectReference.getNamespace())
-			.resolve(projectReference.getProjectId())
-			.toFile()
-			.exists()) {
-			try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-				openProjectListener.progress("Cloning the git repository");
-				
 				// clone the repository locally
 				localRepoManager.clone(
 					projectReference.getNamespace(),
 					projectReference.getProjectId(),
 					remoteGitServerManager.getProjectRepositoryUrl(projectReference),
-					credentialsProvider);
-				
+					credentialsProvider
+				);
 			}
 		}
 	}
-	
-	private String marshallProjectMetadata(String name, String description) {
+
+	private String serializeProjectMetadata(String name, String description) {
 		JsonObject obj = new JsonObject();
 		obj.addProperty(GroupSerializationField.name.name(), name);
 		obj.addProperty(GroupSerializationField.description.name(), description);
 		return obj.toString();
-	}
-
-	public boolean isAuthorizedOnProject(RBACPermission permission, ProjectReference projectReference) {
-		return remoteGitServerManager.isAuthorizedOnProject(user, permission, projectReference);
-	}
-	
-	@Override
-	public void updateProject(ProjectReference projectReference) throws IOException {
-		String marshalledDescription = 
-				marshallProjectMetadata(
-						projectReference.getName(), projectReference.getDescription());
-		
-		String projectId = projectReference.getProjectId();
-		
-		remoteGitServerManager.updateProject(
-			projectReference.getNamespace(), projectId, marshalledDescription);
-		
 	}
 }

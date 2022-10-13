@@ -105,7 +105,6 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.tag.TagsetMetadata;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
-import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
@@ -1873,7 +1872,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	setProgressBarVisible(true);
     	
     	final UI ui = UI.getCurrent();
-        projectManager.openProject(tagManager, projectReference, new OpenProjectListener() {
+        projectManager.openProject(projectReference, tagManager, new OpenProjectListener() {
 
             @Override
             public void progress(String msg, Object... params) {
@@ -2006,7 +2005,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         boolean membersEditAllowed = 
         		projectManager.isAuthorizedOnProject(
-        				RBACPermission.PROJECT_MEMBERS_EDIT, projectReference);
+						projectReference, RBACPermission.PROJECT_MEMBERS_EDIT);
         miInvite.setVisible(membersEditAllowed);
         teamPanel.setVisible(membersEditAllowed);
         

@@ -1,6 +1,5 @@
 package de.catma.repository.git;
 
-import static de.catma.repository.git.GitProjectHandler.DOCUMENTS_DIRECTORY_NAME;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -135,7 +134,7 @@ public class GitSourceDocumentHandlerTest {
 			);
 
 			for (ProjectReference projectRef : projectsToDeleteOnTearDown) {
-				gitProjectManager.delete(projectRef);
+				gitProjectManager.deleteProject(projectRef);
 			}
 			projectsToDeleteOnTearDown.clear();
 		}

@@ -1,31 +1,21 @@
 package de.catma.project;
 
-import java.io.IOException;
-import java.util.List;
-
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
 
+import java.io.IOException;
+import java.util.List;
+
 public interface ProjectsManager {
-	void delete(ProjectReference projectReference) throws Exception;
-
-	public User getUser();
-
-	public List<ProjectReference> getProjectReferences() throws Exception;
-	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws Exception;
-
-
-	public ProjectReference createProject(String name, String description) throws Exception;
-
-	public void openProject(
-			TagManager tagManager,
-			ProjectReference projectReference,
-			OpenProjectListener openProjectListener);
-
+	ProjectReference createProject(String name, String description) throws IOException;
+	void openProject(ProjectReference projectReference, TagManager tagManager, OpenProjectListener openProjectListener);
+	void updateProjectMetadata(ProjectReference projectReference) throws IOException;
 	void leaveProject(ProjectReference projectReference) throws IOException;
-	boolean isAuthorizedOnProject(RBACPermission permission, ProjectReference projectReference);
+	void deleteProject(ProjectReference projectReference) throws IOException;
 
-	void updateProject(ProjectReference projectReference) throws IOException;
-
+	User getUser();
+	List<ProjectReference> getProjectReferences() throws IOException;
+	List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException;
+	boolean isAuthorizedOnProject(ProjectReference projectReference, RBACPermission permission);
 }

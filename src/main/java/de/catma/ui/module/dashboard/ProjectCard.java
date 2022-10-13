@@ -125,7 +125,7 @@ public class ProjectCard extends VerticalFlexLayout  {
                 , (evt) -> {
                     try {
                         if(evt.isConfirmed()){
-                        	projectManager.delete(projectReference);
+                        	projectManager.deleteProject(projectReference);
                         	eventBus.post(new ProjectChangedEvent(projectReference.getProjectId()));
                         }
                     } catch (Exception e) {
@@ -142,7 +142,7 @@ public class ProjectCard extends VerticalFlexLayout  {
         			projectManager,
         			result -> {
         				try {
-							projectManager.updateProject(result);
+							projectManager.updateProjectMetadata(result);
 							descriptionLabel.setValue(result.getDescription());
 							nameLabel.setValue(result.getName());
 						} catch (IOException e) {
