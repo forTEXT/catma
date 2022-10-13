@@ -18645,3 +18645,43 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .pre-api-dialog .jsclipboardbutton-label-invisible {
 	color: transparent;
 }
+
+.catma .error-dialog {
+	background-color: #D32F2F;
+	color: #F0DCDC;
+}
+
+.catma .error-dialog .v-window-header {
+	color: #FFF;
+}
+
+.catma .error-dialog .v-window-header .v-icon {
+	font-size: 32px;
+	vertical-align: middle;
+	margin-right: 10px;
+}
+
+.catma .error-dialog .v-window-contents > .v-scrollable::before {
+	border-color: #D84141;
+}
+
+.catma .error-dialog .v-window-maximizebox, .catma .error-dialog .v-window-restorebox, .catma .error-dialog .v-window-closebox {
+	color: #FFF;
+}
+
+.catma .error-dialog .v-button-clipboard {
+	background-color: #D84141 !important;
+}
+
+.catma .error-dialog .v-button-clipboard .v-button-wrap {
+	color: #F0DCDC;
+}
+
+.catma .error-dialog a, .catma .error-dialog a:visited, .catma .error-dialog a:hover, .catma .error-dialog a:active {
+	color: #F0DCDC;
+}
+
+.catma .error-dialog li > span.subtext {
+	font-size: 14px;
+	font-style: italic;
+}

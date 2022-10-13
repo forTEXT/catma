@@ -1184,4 +1184,45 @@ $contribution-color: blue;
     //display: none; // breaks the clipboard button
     color: transparent;
   }
+
+  /* Error Dialog */
+  .error-dialog {
+    background-color: #D32F2F;
+    color: #F0DCDC;
+
+    .v-window-header {
+      color: #FFF;
+
+      .v-icon {
+        font-size: 32px;
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+    }
+
+    .v-window-contents > .v-scrollable::before {
+      border-color: #D84141;
+    }
+
+    .v-window-maximizebox, .v-window-restorebox, .v-window-closebox {
+      color: #FFF;
+    }
+
+    .v-button-clipboard {
+      background-color: #D84141 !important; /* TODO: find a better way */
+
+      .v-button-wrap {
+        color: #F0DCDC;
+      }
+    }
+
+    a, a:visited, a:hover, a:active {
+      color: #F0DCDC;
+    }
+
+    li > span.subtext {
+      font-size: 14px;
+      font-style: italic;
+    }
+  }
 }

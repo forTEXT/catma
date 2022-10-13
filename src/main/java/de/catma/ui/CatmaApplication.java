@@ -22,7 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -75,8 +74,8 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.sqlite.SqliteService;
-import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.di.IRemoteGitManagerFactory;
+import de.catma.ui.dialog.ErrorDialog;
 import de.catma.ui.events.RefreshEvent;
 import de.catma.ui.events.TokenInvalidEvent;
 import de.catma.ui.events.TokenValidEvent;
@@ -282,24 +281,18 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		try {
 			api = loginservice.getAPI();
 		}
-		catch(Exception notOfInterest) {}
-		
-		logger.log(Level.SEVERE, "[" + (api==null?"not logged in":api.getUsername()) + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
+		catch (Exception ignored) {}
+		logger.log(
+				Level.SEVERE,
+				String.format("[%s] %s", api == null ? "not logged in" : api.getUsername(), message),
+				e
+		);
 
 		if (message == null) {
 			message = "Internal Error"; 
 		}
-		if (Page.getCurrent() != null) {
-			HTMLNotification.show("Error", 
-				MessageFormat.format(
-					"An error has occurred!<br />"
-					+ "The error has been logged "
-					+ "but you can help us by sending an email with a more detailed description.<br />"
-					+ "Or you open an issue at <a href=\"https://github.com/mpetris/catma\">GitHub</a>.<br />"
-					+ "<br />The underlying error message is:<br /> {0} <br /> {1}", 
-					message, e.getMessage()==null?"":e.getMessage()),
-				Type.ERROR_MESSAGE);
-		}
+
+		new ErrorDialog(message, e).show();
 	}
 
 	@Override
