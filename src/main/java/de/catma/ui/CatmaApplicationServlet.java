@@ -151,21 +151,19 @@ public class CatmaApplicationServlet extends VaadinServlet {
 			response.getDocument().body().prepend(scriptBuilder.toString());
 		}
 	}
-	
+
 	@Override
 	protected void servletInitialized() throws ServletException {
 		getService().addSessionInitListener(new SessionInitListener() {
-			
 			@Override
 			public void sessionInit(SessionInitEvent event) throws ServiceException {
 				event.getSession().addBootstrapListener(new CatmaBootstrapListener());
 			}
 		});
-		
+
 		getService().setSystemMessagesProvider(new SystemMessagesProvider() {
 			@Override
-			public SystemMessages getSystemMessages(
-					SystemMessagesInfo systemMessagesInfo) {
+			public SystemMessages getSystemMessages(SystemMessagesInfo systemMessagesInfo) {
 				CustomizedSystemMessages messages = new CustomizedSystemMessages();
 				try {
 					String problemRedirectURL = CATMAPropertyKey.BASE_URL.getValue();
@@ -174,15 +172,15 @@ public class CatmaApplicationServlet extends VaadinServlet {
 					messages.setSessionExpiredURL(problemRedirectURL);
 					messages.setCommunicationErrorURL(problemRedirectURL);
 					messages.setCookiesDisabledURL(problemRedirectURL);
-				} catch (Exception e) {
+				}
+				catch (Exception e) {
 					e.printStackTrace();
 				}
 				return messages;
 			}
 		});
-
 	}
-	
+
     protected DeploymentConfiguration createDeploymentConfiguration(Properties initParameters) {
         initParameters.setProperty("widgetset","de.catma.ui.CleaWidgetset" );
         initParameters.setProperty("productionMode", "true");

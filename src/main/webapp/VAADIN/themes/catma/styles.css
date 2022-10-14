@@ -17929,7 +17929,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin: 0 auto;
 }
 
-.catma .not-logged-in-main-view-fortext-bottom-panel {
+.catma .not-logged-in-main-view-fortext-layout {
 	margin-top: 60px;
 	padding-bottom: 10px;
 }
@@ -17952,21 +17952,21 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 10px;
 }
 
-.catma .not-logged-in-main-view-noticepanel {
+.catma .not-logged-in-main-view-notice-layout {
 	margin-top: 60px;
 	padding: 0 80px;
 	max-width: 1366px;
 }
 
-.catma .not-logged-in-main-view-noticepanel .vlayout {
+.catma .not-logged-in-main-view-notice-layout .vlayout {
 	text-align: center;
 }
 
-.catma .not-logged-in-main-view-noticepanel .vlayout .v-widget {
+.catma .not-logged-in-main-view-notice-layout .vlayout .v-widget {
 	text-align: inherit;
 }
 
-.catma .not-logged-in-main-view-noticepanel .title {
+.catma .not-logged-in-main-view-notice-layout .title {
 	font-size: larger;
 }
 

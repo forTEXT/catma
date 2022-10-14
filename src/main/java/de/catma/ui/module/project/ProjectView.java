@@ -342,141 +342,127 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void initActions() {
-		documentGridComponent.setSearchFilterProvider(searchInput -> createSearchFilter(searchInput));
+		// documents & annotations actions
+		documentGridComponent.setSearchFilterProvider(searchInput -> createDocumentGridComponentSearchFilterProvider(searchInput));
+		documentGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
 
-    	documentGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
-    	
-        ContextMenu addContextMenu = 
-        	documentGridComponent.getActionGridBar().getBtnAddContextMenu();
-        miAddDocument = addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
-        miAddCollection = addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
-        
-        ContextMenu documentsGridMoreOptionsContextMenu = 
-        	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        
-        miEditDocumentOrCollection = documentsGridMoreOptionsContextMenu.addItem(
-            	"Edit Documents / Collections",(menuItem) -> handleEditResources());
+		ContextMenu documentGridComponentAddContextMenu = documentGridComponent.getActionGridBar().getBtnAddContextMenu();
+		miAddDocument = documentGridComponentAddContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
+		miAddCollection = documentGridComponentAddContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
 
-        miDeleteDocumentOrCollection = documentsGridMoreOptionsContextMenu.addItem(
-        	"Delete Documents / Collections",(menuItem) -> handleDeleteResources(menuItem, documentGrid));
-        
-        documentsGridMoreOptionsContextMenu.addItem(
-            	"Analyze Documents / Collections",(menuItem) -> handleAnalyzeResources(menuItem, documentGrid));
+		ContextMenu documentGridComponentMoreOptionsContextMenu = documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+		miEditDocumentOrCollection = documentGridComponentMoreOptionsContextMenu.addItem(
+				"Edit Documents / Collections", (menuItem) -> handleEditResources()
+		);
+		miDeleteDocumentOrCollection = documentGridComponentMoreOptionsContextMenu.addItem(
+				"Delete Documents / Collections", (menuItem) -> handleDeleteResources(menuItem, documentGrid)
+		);
+		documentGridComponentMoreOptionsContextMenu.addItem(
+				"Analyze Documents / Collections", (menuItem) -> handleAnalyzeResources(menuItem, documentGrid)
+		);
+		miImportCollection = documentGridComponentMoreOptionsContextMenu.addItem(
+				"Import a Collection", mi -> handleImportCollectionRequest()
+		);
 
-        miImportCollection = documentsGridMoreOptionsContextMenu.addItem(
-        		"Import a Collection", 
-        		mi -> handleImportCollectionRequest());
-        MenuItem miExportCollections = documentsGridMoreOptionsContextMenu.addItem(
-        		"Export Documents & Collections");
-        
-		StreamResource collectionXmlExportResource = new StreamResource(
+		MenuItem miExportDocumentsAndCollections = documentGridComponentMoreOptionsContextMenu.addItem(
+				"Export Documents & Collections"
+		);
+
+		StreamResource documentsAndCollectionsExportStreamResource = new StreamResource(
 				new CollectionXMLExportStreamSource(
 					()-> getSelectedDocuments(),
-					() -> documentGrid.getSelectedItems().stream()
-						.filter(resource -> resource.isCollection())
-						.map(resource -> ((CollectionResource)resource).getCollectionReference())
-						.collect(Collectors.toList()),
-					() -> project),
-				"CATMA-Corpus_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".tar.gz");
-		collectionXmlExportResource	.setCacheTime(0);
-		collectionXmlExportResource.setMIMEType("application/gzip");
-	
-		FileDownloader collectionXmlExportFileDownloader = 
-					new FileDownloader(collectionXmlExportResource);
-		
-		collectionXmlExportFileDownloader.extend(miExportCollections);
+					() -> documentGrid.getSelectedItems().stream().filter(resource -> resource.isCollection())
+							.map(resource -> ((CollectionResource) resource).getCollectionReference())
+							.collect(Collectors.toList()),
+					() -> project
+				),
+				"CATMA-Corpus-Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".tar.gz"
+		);
+		documentsAndCollectionsExportStreamResource.setCacheTime(0);
+		documentsAndCollectionsExportStreamResource.setMIMEType("application/gzip");
 
-		
-        documentsGridMoreOptionsContextMenu.addItem("Select filtered entries", mi-> handleSelectFilteredDocuments());
-        
-        miToggleResponsibiltityFilter = 
-        	documentsGridMoreOptionsContextMenu.addItem(
-        			"Hide other's responsibilities", mi -> toggleResponsibilityFilter());
-        
-        miToggleResponsibiltityFilter.setCheckable(true);
-        miToggleResponsibiltityFilter.setChecked(false);
-        
-        tagsetGridComponent.getActionGridBar().addBtnAddClickListener(click -> handleAddTagsetRequest());
+		FileDownloader documentsAndCollectionsExportFileDownloader = new FileDownloader(documentsAndCollectionsExportStreamResource);
+		documentsAndCollectionsExportFileDownloader.extend(miExportDocumentsAndCollections);
+
+		documentGridComponentMoreOptionsContextMenu.addItem(
+				"Select filtered entries", mi-> handleSelectFilteredDocuments()
+		);
+		miToggleResponsibiltityFilter = documentGridComponentMoreOptionsContextMenu.addItem(
+				"Hide other's responsibilities", mi -> toggleResponsibilityFilter()
+		);
+		miToggleResponsibiltityFilter.setCheckable(true);
+		miToggleResponsibiltityFilter.setChecked(false);
+
+		// tagsets actions
+		tagsetGridComponent.setSearchFilterProvider(searchInput -> createTagsetGridComponentSearchFilterProvider(searchInput));
+		tagsetGrid.addItemClickListener(clickEvent -> handleTagsetClick(clickEvent));
+
+		tagsetGridComponent.getActionGridBar().addBtnAddClickListener(click -> handleAddTagsetRequest());
    
-        ContextMenu moreOptionsMenu = 
-        	tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        miEditTagset = moreOptionsMenu.addItem("Edit Tagset", mi -> handleEditTagsetRequest());
+		ContextMenu tagsetGridComponentMoreOptionsContextMenu = tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+		miEditTagset = tagsetGridComponentMoreOptionsContextMenu.addItem(
+				"Edit Tagset", mi -> handleEditTagsetRequest()
+		);
+		miDeleteTaget = tagsetGridComponentMoreOptionsContextMenu.addItem(
+				"Delete Tagset", mi -> handleDeleteTagsetRequest()
+		);
+		miImportTagset = tagsetGridComponentMoreOptionsContextMenu.addItem(
+				"Import Tagsets", mi -> handleImportTagsetsRequest()
+		);
+		MenuItem miExportTagsets = tagsetGridComponentMoreOptionsContextMenu.addItem("Export Tagsets");
 
-        miDeleteTaget = moreOptionsMenu.addItem("Delete Tagset", mi -> handleDeleteTagsetRequest());
-        
-        miImportTagset = moreOptionsMenu.addItem("Import Tagsets", mi -> handleImportTagsetsRequest());
-        
-        MenuItem miExportTagsets = moreOptionsMenu.addItem("Export Tagsets");
-        MenuItem miExportTagsetsAsXML = miExportTagsets.addItem("as XML");
-        
-		StreamResource tagsetXmlExportResource = new StreamResource(
-			new TagsetXMLExportStreamSource(
-				() -> tagsetGrid.getSelectedItems(), 
-				() -> project),
-			"CATMA-Tag-Library_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".xml");
-		tagsetXmlExportResource	.setCacheTime(0);
-		tagsetXmlExportResource.setMIMEType("text/xml");
-	
-		FileDownloader tagsetXmlExportFileDownloader = 
-				new FileDownloader(tagsetXmlExportResource);
-	
-		tagsetXmlExportFileDownloader.extend(miExportTagsetsAsXML);
-		
-        MenuItem miExportTagsetsAsCSV = miExportTagsets.addItem("as CSV");
-        
-		StreamResource tagsetCsvExportResource = new StreamResource(
-			new TagsetCSVExportStreamSource(
-				() -> tagsetGrid.getSelectedItems(), 
-				() -> project),
-			"CATMA-Tag-Library_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
-		tagsetCsvExportResource	.setCacheTime(0);
-		tagsetCsvExportResource.setMIMEType("text/comma-separated-values");
-	
-		FileDownloader tagsetCsvExportFileDownloader = 
-				new FileDownloader(tagsetCsvExportResource);
-	
-		tagsetCsvExportFileDownloader.extend(miExportTagsetsAsCSV);
-		
-		
-        ContextMenu hugeCardMoreOptions = getMoreOptionsContextMenu();
+		MenuItem miExportTagsetsAsXml = miExportTagsets.addItem("as XML");
 
-        miCommit = hugeCardMoreOptions.addItem("Commit all changes", mi -> handleCommitRequest());
-        hugeCardMoreOptions.addSeparator();
-        miShareResources = 
-        		hugeCardMoreOptions.addItem("Share project resources (experimental API)", mi -> handleShareProjectResources());
-        miImportCorpus = hugeCardMoreOptions.addItem("Import CATMA 5 Corpus", mi -> handleCorpusImport());
+		StreamResource tagsetsXmlExportStreamResource = new StreamResource(
+				new TagsetXMLExportStreamSource(
+						() -> tagsetGrid.getSelectedItems(),
+						() -> project
+				),
+				"CATMA-Tagsets-Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".xml"
+		);
+		tagsetsXmlExportStreamResource.setCacheTime(0);
+		tagsetsXmlExportStreamResource.setMIMEType("text/xml");
 
-        miImportCorpus.setVisible(CATMAPropertyKey.EXPERT_MODE.getBooleanValue()
-        		|| Boolean.parseBoolean(((CatmaApplication)UI.getCurrent()).getParameter(Parameter.EXPERT, "false")));
-        
+		FileDownloader tagsetsXmlExportFileDownloader = new FileDownloader(tagsetsXmlExportStreamResource);
+		tagsetsXmlExportFileDownloader.extend(miExportTagsetsAsXml);
 
-        btSynchronize.addClickListener(event -> handleSynchronizeClick(event));
-        
-        tagsetGridComponent.setSearchFilterProvider(new SearchFilterProvider<TagsetDefinition>() {
-        	@Override
-        	public SerializablePredicate<TagsetDefinition> createSearchFilter(final String searchInput) {
-        		
-        		return new SerializablePredicate<TagsetDefinition>() {
-        			@Override
-        			public boolean test(TagsetDefinition t) {
-        				if (t != null) {
-	        				String name = t.getName();
-	        				if (name != null) {
-	        					return name.toLowerCase().contains(searchInput.toLowerCase());
-	        				}
-        				}
-        				return false;
-        			}
-				};
-        	}
-		});
-        
-        tagsetGrid.addItemClickListener(clickEvent -> handleTagsetClick(clickEvent));
-        
-        btSynchLatestContribToggle.addClickListener(event -> handleBtSynchLatestContribToggle(event));
-        
+		MenuItem miExportTagsetsAsCsv = miExportTagsets.addItem("as CSV");
+
+		StreamResource tagsetsCsvExportStreamResource = new StreamResource(
+				new TagsetCSVExportStreamSource(
+						() -> tagsetGrid.getSelectedItems(),
+						() -> project
+				),
+				"CATMA-Tagsets-Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv"
+		);
+		tagsetsCsvExportStreamResource.setCacheTime(0);
+		tagsetsCsvExportStreamResource.setMIMEType("text/comma-separated-values");
+
+		FileDownloader tagsetsCsvExportFileDownloader =	new FileDownloader(tagsetsCsvExportStreamResource);
+		tagsetsCsvExportFileDownloader.extend(miExportTagsetsAsCsv);
+
+		// global project actions
+		ContextMenu hugeCardMoreOptionsContextMenu = getMoreOptionsContextMenu();
+		miCommit = hugeCardMoreOptionsContextMenu.addItem(
+				"Commit all changes", mi -> handleCommitRequest()
+		);
+		hugeCardMoreOptionsContextMenu.addSeparator();
+		miShareResources = hugeCardMoreOptionsContextMenu.addItem(
+				"Share project resources (experimental API)", mi -> handleShareProjectResources()
+		);
+		miImportCorpus = hugeCardMoreOptionsContextMenu.addItem(
+				"Import CATMA 5 Corpus", mi -> handleCorpusImport()
+		);
+		miImportCorpus.setVisible(
+				CATMAPropertyKey.EXPERT_MODE.getBooleanValue() || Boolean.parseBoolean(
+						((CatmaApplication) UI.getCurrent()).getParameter(Parameter.EXPERT, "false")
+				)
+		);
+
+		btSynchronize.addClickListener(event -> handleSynchronizeClick(event));
+		btSynchLatestContribToggle.addClickListener(event -> handleBtSynchLatestContribToggle(event));
 	}
-	
+
 	private void handleBtSynchLatestContribToggle(ClickEvent event) {
 		boolean latestContribView = !(Boolean)btSynchLatestContribToggle.getData();
 
@@ -559,36 +545,39 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleSynchronizeClick(ClickEvent event) {
-		if (lastSynchronization != null && lastSynchronization.plus(
-				CATMAPropertyKey.MIN_TIME_BETWEEN_SYNCHRONIZATIONS_SECONDS.getIntValue(),
-				ChronoUnit.SECONDS).isAfter(LocalTime.now())) {
+		if (
+				lastSynchronization != null
+				&& lastSynchronization.plus(
+						CATMAPropertyKey.MIN_TIME_BETWEEN_SYNCHRONIZATIONS_SECONDS.getIntValue(),
+						ChronoUnit.SECONDS
+				).isAfter(LocalTime.now())
+		) {
 			Notification.show(
 					"Info", 
-					"You just synchronized a few seconds ago, be patient, "
-					+ "next synchronization will be possible in a few seconds!", 
-					Type.HUMANIZED_MESSAGE);
+					"You just synchronized a few seconds ago - please be patient, you can synchronize again in a few moments.",
+					Type.HUMANIZED_MESSAGE
+			);
+			return;
 		}
-		else {
-			try {
-				lastSynchronization = LocalTime.now();
-				synchronizeProject();
-			} catch (Exception e) {
-				logger.log(
+
+		try {
+			lastSynchronization = LocalTime.now();
+			synchronizeProject();
+		}
+		catch (Exception e) {
+			logger.log(
 					Level.WARNING,
-					String.format(
-							"Error synchronizing Project %1$s by user %2$s", 
-							this.projectReference, 
-							this.project.getUser()), 
-					e);
-				Notification.show(
-						"Info", 
-						"Your Project cannot be synchronized right now, "
-						+ "try again later or have a look at the CATMA Gitlab backend!", 
-						Type.HUMANIZED_MESSAGE);
-			}
+					String.format("Error synchronizing project \"%s\" for user \"%s\"", this.projectReference, this.project.getUser()),
+					e
+			);
+			Notification.show(
+					"Info",
+					"Your project cannot be synchronized right now, try again later or have a look at the CATMA GitLab backend!",
+					Type.HUMANIZED_MESSAGE
+			);
 		}
 	}
-	
+
 	private void handleCorpusImport() {
 		try {
 	    	if (project.hasUncommittedChanges()) {
@@ -846,55 +835,52 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void synchronizeProject() throws Exception {
-    	setProgressBarVisible(true);
-    	
-    	final UI ui = UI.getCurrent();
-    	
+		setProgressBarVisible(true);
+
+		final UI ui = UI.getCurrent();
+
 		project.synchronizeWithRemote(new OpenProjectListener() {
+			@Override
+			public void progress(String msg, Object... params) {
+				ui.access(() -> {
+					if (params != null) {
+						progressBar.setCaption(String.format(msg, params));
+					}
+					else {
+						progressBar.setCaption(msg);
+					}
+					ui.push();
+				});
+			}
 
-            @Override
-            public void progress(String msg, Object... params) {
-            	ui.access(() -> {
-	            	if (params != null) {
-	            		progressBar.setCaption(String.format(msg, params));
-	            	}
-	            	else {
-	            		progressBar.setCaption(msg);
-	            	}
-	            	ui.push();
-            	});
-            }
+			@Override
+			public void ready(Project project) {
+				setProgressBarVisible(false);
+				reloadAll();
+				setEnabled(true);
 
-            @Override
-            public void ready(Project project) {
-            	setProgressBarVisible(false);
-            	reloadAll();
-            	setEnabled(true);
-            	if (project != null) {
+				if (project != null) {
+					Notification.show("Info", "Your project has been synchronized!", Type.HUMANIZED_MESSAGE);
+				}
+				else {
 					Notification.show(
-	    					"Info", 
-	    					"Your Project has been synchronized!", 
-	    					Type.HUMANIZED_MESSAGE);
-            	}
-            	else {
-					Notification.show(
-	    					"Info", 
-	    					"Your Project cannot be synchronized right now, "
-	    					+ "try again later or have a look at the CATMA Gitlab backend!", 
-	    					Type.HUMANIZED_MESSAGE);
-            	}
-            }
-            
-            @Override
-            public void failure(Throwable t) {
-            	setProgressBarVisible(false);
-            	setEnabled(true);
-                errorHandler.showAndLogError("error opening project", t);
-            }
-        });
+							"Info",
+							"Your project cannot be synchronized right now, try again later or have a look at the CATMA GitLab backend!",
+							Type.HUMANIZED_MESSAGE
+					);
+				}
+			}
 
+			@Override
+			public void failure(Throwable t) {
+				setProgressBarVisible(false);
+				setEnabled(true);
+
+				errorHandler.showAndLogError("Failed to re-open project", t);
+			}
+		});
 	}
-	
+
 	private void setProgressBarVisible(boolean visible) {
     	progressBar.setIndeterminate(visible);
     	progressBar.setVisible(visible);
@@ -2193,31 +2179,40 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 	}
 	
-	private SerializablePredicate<Object> createSearchFilter(String searchInput) {
+	private SerializablePredicate<Object> createDocumentGridComponentSearchFilterProvider(String searchInput) {
 		@SuppressWarnings("unchecked")
-		TreeDataProvider<Resource> documentDataProvider = 
-			(TreeDataProvider<Resource>) documentGrid.getDataProvider();
+		TreeDataProvider<Resource> documentDataProvider = (TreeDataProvider<Resource>)documentGrid.getDataProvider();
 		TreeData<Resource> documentData = documentDataProvider.getTreeData();
-		
+
 		return new SerializablePredicate<Object>() {
 			@Override
-			public boolean test(Object r) {
-				if (r instanceof CollectionResource) {
-					return r.toString().toLowerCase().contains(searchInput.toLowerCase());
+			public boolean test(Object obj) {
+				if (obj instanceof CollectionResource) {
+					return obj.toString().toLowerCase().contains(searchInput.toLowerCase());
 				}
 				else {
-					if (r.toString().toLowerCase().contains(searchInput.toLowerCase())) {
+					if (obj.toString().toLowerCase().contains(searchInput.toLowerCase())) {
 						return true;
 					}
 					else {
-						return documentData.getChildren((Resource)r)
-								.stream()
-								.filter(child -> 
-									child.toString().toLowerCase().contains(searchInput.toLowerCase()))
-								.findAny()
-								.isPresent();
+						return documentData.getChildren((Resource)obj).stream().anyMatch(
+								child -> child.toString().toLowerCase().contains(searchInput.toLowerCase())
+						);
 					}
 				}
+			}
+		};
+	}
+
+	private SerializablePredicate<Object> createTagsetGridComponentSearchFilterProvider(String searchInput) {
+		return new SerializablePredicate<Object>() {
+			@Override
+			public boolean test(Object obj) {
+				if (obj instanceof TagsetDefinition) {
+					String name = ((TagsetDefinition) obj).getName();
+					return name != null && name.toLowerCase().contains(searchInput.toLowerCase());
+				}
+				return false;
 			}
 		};
 	}

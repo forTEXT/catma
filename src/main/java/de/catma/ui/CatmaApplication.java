@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -320,22 +321,18 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 	public Object getAttribute(String key){
 		return this._attributes.get(key);
 	}
-	
-	/**
-	 * Based on: https://developers.google.com/accounts/docs/OpenIDConnect
-	 * @param request
-	 */
-	public void handleOauth(VaadinRequest request){
+
+	// based on: https://developers.google.com/identity/protocols/oauth2/openid-connect#authenticatingtheuser
+	// this starts at step 3: "Confirm the anti-forgery state token"
+	// prior steps are handled by AuthenticationDialog and its descendants
+	public void handleOauth(VaadinRequest request) {
 		try {
 			// extract answer
-			String authorizationCode = request.getParameter("code"); //$NON-NLS-1$
-		
-			String state = request.getParameter("state"); //$NON-NLS-1$
-		
-			String error = request.getParameter("error"); //$NON-NLS-1$
-		
+			String authorizationCode = request.getParameter("code");
+			String state = request.getParameter("state");
+			String error = request.getParameter("error");
 			String token = (String)VaadinSession.getCurrent().getAttribute("OAUTHTOKEN");
-			
+
 			// do we have an authorization request error?
 			if (error == null) {
 				// no, so we validate the state token
@@ -344,67 +341,66 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 						new Clock(CATMAPropertyKey.OTP_DURATION.getIntValue())
 				);
 				if (!totp.verify(state)) {
-					error = "state token verification failed"; //$NON-NLS-1$
+					error = "state token verification failed";
 				}
 			}
-			
-			// state token get validation success?	
+
+			// state token get validation success?
 			if (error == null) {
 				CloseableHttpClient httpclient = HttpClients.createDefault();
+
 				HttpPost httpPost = new HttpPost(CATMAPropertyKey.GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL.getValue());
 				List <NameValuePair> data = new ArrayList<>();
-				data.add(new BasicNameValuePair("code", authorizationCode)); //$NON-NLS-1$
-				data.add(new BasicNameValuePair("grant_type", "authorization_code")); //$NON-NLS-1$ //$NON-NLS-2$
-				data.add(new BasicNameValuePair("client_id", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.getValue())); //$NON-NLS-1$
-				data.add(new BasicNameValuePair("client_secret", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_SECRET.getValue())); //$NON-NLS-1$
-				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BASE_URL.getValue())); //$NON-NLS-1$
+				data.add(new BasicNameValuePair("code", authorizationCode));
+				data.add(new BasicNameValuePair("grant_type", "authorization_code"));
+				data.add(new BasicNameValuePair("client_id", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.getValue()));
+				data.add(new BasicNameValuePair("client_secret", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_SECRET.getValue()));
+				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BASE_URL.getValue()));
 				httpPost.setEntity(new UrlEncodedFormEntity(data));
+
 				CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
+
 				HttpEntity entity = tokenRequestResponse.getEntity();
 				InputStream content = entity.getContent();
 				ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
 				IOUtils.copy(content, bodyBuffer);
-				
-				logger.info("access token request result: " + bodyBuffer.toString("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
-				
+
+				logger.info("Google OAuth access token request result: " + bodyBuffer.toString(StandardCharsets.UTF_8.name()));
+
 				ObjectMapper mapper = new ObjectMapper();
-		
-				ObjectNode accessTokenResponseJSon = 
-						mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
-		
-				String idToken = accessTokenResponseJSon.get("id_token").asText(); //$NON-NLS-1$
-				
-				String[] pieces = idToken.split("\\."); //$NON-NLS-1$
+
+				ObjectNode accessTokenResponseJson = mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
+				String idToken = accessTokenResponseJson.get("id_token").asText();
+				String[] pieces = idToken.split("\\.");
 				// we skip the header and go ahead with the payload
 				String payload = pieces[1];
-		
-				String decodedPayload = 
-						new String(Base64.decodeBase64(payload), "UTF-8"); //$NON-NLS-1$
+				String decodedPayload = new String(Base64.decodeBase64(payload), StandardCharsets.UTF_8);
+				logger.info("Google OAuth access token request result (decoded): " + decodedPayload);
+
 				ObjectNode payloadJson = mapper.readValue(decodedPayload, ObjectNode.class);
-				
-				logger.info("decodedPayload: " + decodedPayload); //$NON-NLS-1$
-				
-				String identifier = payloadJson.get("sub").asText(); //$NON-NLS-1$
-				String email = payloadJson.get("email").asText(); //$NON-NLS-1$
-				String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
+				String identifier = payloadJson.get("sub").asText();
 				String provider = "google_com";
+				String email = payloadJson.get("email").asText();
+				String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
+
 				loginservice.loggedInFromThirdParty(identifier, provider, email, name);
+
 				setAttribute("OAUTHTOKEN", null);
 			}
 			else {
-		        logger.info("authentication failure: " + error); //$NON-NLS-1$
+				logger.warning("Google OAuth authentication failure: " + error);
 				new Notification(
-		            "Authentication failure",
-		            "The authentication failed!",
-		            Type.ERROR_MESSAGE).show(getPage());
+					"Authentication failure",
+					"The authentication failed!",
+					Type.ERROR_MESSAGE
+				).show(getPage());
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			((ErrorHandler)this).showAndLogError(
-					"Error during login!", e);
+		}
+		catch (Exception e) {
+			showAndLogError("Error during login!", e);
 		}
 	}
-	
+
 	@Subscribe
 	public void handleTokenValid(TokenValidEvent tokenValidEvent){
 		getUI().access(() -> {

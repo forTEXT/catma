@@ -245,7 +245,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 			corpusMetadataProvider.refreshAll();
 		}
 	}
-	
+
 	private InputStream getAPIInputStream(String apiPath) throws IOException {
 		String authString = nameField.getValue() + ":" + passField.getValue();
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
@@ -254,10 +254,9 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		URL url = new URL(CATMAPropertyKey.CATMA_5_API_URL.getValue() + apiPath);
 		URLConnection urlConnection = url.openConnection();
 		urlConnection.setReadTimeout(7200000); // 2h, corpus generation in CATMA 5 can take a while
-		urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);	
+		urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
 		return urlConnection.getInputStream();
 	}
-	
 
 	@Override
 	protected Pair<File, List<CorpusImportDocumentMetadata>> getResult() {

@@ -387,7 +387,7 @@ public class ProjectScanner implements AutoCloseable {
 			Pair<User, String> authenticationResult = 
 					this.legacyProjectHandler.aquireUser(authenticationUsername);
 			
-			try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(),	authenticationResult.getSecond())) {
+			try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), authenticationResult.getSecond())) {
 				UsernamePasswordCredentialsProvider credentialsProvider = 
 					new UsernamePasswordCredentialsProvider(
 							"oauth2", restrictedGitLabApi.getAuthToken());
