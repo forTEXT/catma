@@ -108,7 +108,6 @@ import de.catma.ui.Parameter;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
-import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
@@ -567,7 +566,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		catch (Exception e) {
 			logger.log(
 					Level.WARNING,
-					String.format("Error synchronizing project \"%s\" for user \"%s\"", this.projectReference, this.project.getUser()),
+					String.format("Error synchronizing project \"%s\" for user \"%s\"", projectReference, project.getUser()),
 					e
 			);
 			Notification.show(
@@ -618,11 +617,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	setProgressBarVisible(true);
 		try {
 			final String tempDir = 
-					((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+					((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
 	    	final UI ui = UI.getCurrent();
 	    	
 			BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
-			BackgroundService backgroundService = backgroundServiceProvider.accuireBackgroundService();
+			BackgroundService backgroundService = backgroundServiceProvider.acquireBackgroundService();
 			backgroundService.submit(
 				new DefaultProgressCallable<Void>() {
 					@Override
@@ -1174,7 +1173,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	final UI ui = UI.getCurrent();
     	
 		BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
-		BackgroundService backgroundService = backgroundServiceProvider.accuireBackgroundService();
+		BackgroundService backgroundService = backgroundServiceProvider.acquireBackgroundService();
 		backgroundService.submit(
 			new DefaultProgressCallable<Void>() {
 				@SuppressWarnings("unchecked")

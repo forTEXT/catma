@@ -1,10 +1,5 @@
 package de.catma.ui.module.analyze.visualization.vega;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.text.MessageFormat;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -17,21 +12,10 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinSession;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
+import com.vaadin.ui.*;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TextArea;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.VerticalSplitPanel;
-
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
 import de.catma.properties.CATMAPropertyKey;
@@ -48,66 +32,59 @@ import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.MessageFormat;
+
 public class VegaPanel extends HorizontalSplitPanel implements Visualization {
-	
-	private static String CATMA_QUERY_URL = "CATMA_QUERY_URL";
-	
-	private JSONQueryResultRequestHandler queryResultRequestHandler;
+	private static final String CATMA_QUERY_URL = "CATMA_QUERY_URL";
+
+	private final String vegaViewId;
+	private final String queryResultUrl;
+	private final JSONQueryResultRequestHandler queryResultRequestHandler;
+	private final Project project;
+
+	private DisplaySettingHandler displaySettingsHandler;
+
 	private Vega vega;
 	private TextArea specEditor;
 	private Button btUpdate;
 	private VegaHelpWindow vegaHelpWindow = new VegaHelpWindow();
-
 	private Button btHelp;
-
-	private String vegaViewId;
-
-	private String queryResultUrl;
-
-	private Project project;
-
 	private KwicPanel kwicPanel;
-
-	private DisplaySettingHandler displaySettingsHandler;
-	private DisplaySettingHandler defaultDisplaySettingHandler; //TODO:
-
 	private IconButton btExpandCompressTopLeft;
-
 	private IconButton btShowCode;
-
 	private IconButton btHideCode;
-
 	private IconButton btExpandCompressRight;
-
 	private ExpansionListener expansionListener;
-	
 	private boolean expanded = false;
-
 	private VerticalSplitPanel leftSplitPanel;
-
 	private CheckBox cbPublicExposure;
 
-	public VegaPanel(EventBus eventBus, Project project, LoadingCache<String, KwicProvider> kwicProviderCache,
+	public VegaPanel(
+			EventBus eventBus,
+			Project project,
+			LoadingCache<String, KwicProvider> kwicProviderCache,
 			QueryOptionsProvider queryOptionsProvider, 
-			DisplaySettingHandler displaySettingsHandler) {
-		
+			DisplaySettingHandler displaySettingsHandler
+	) {
 		this.vegaViewId = new IDGenerator().generate().toLowerCase();
-		String queryResultPath = vegaViewId+"/queryresult/selection.json";
+
+		String queryResultPath = this.vegaViewId + "/queryresult/selection.json";
 		this.queryResultUrl = CATMAPropertyKey.BASE_URL.getValue() + queryResultPath;
 
-		this.queryResultRequestHandler = 
-				new JSONQueryResultRequestHandler(
-						queryOptionsProvider, queryResultPath, vegaViewId);
+		this.queryResultRequestHandler = new JSONQueryResultRequestHandler(
+				queryOptionsProvider, queryResultPath, this.vegaViewId
+		);
+		VaadinSession.getCurrent().addRequestHandler(this.queryResultRequestHandler);
 
-		VaadinSession.getCurrent().addRequestHandler(queryResultRequestHandler);
-		
 		this.project = project;
 		this.displaySettingsHandler = displaySettingsHandler;
-		this.defaultDisplaySettingHandler = displaySettingsHandler;
+
 		initComponents(eventBus, kwicProviderCache);
 		initActions();
 	}
-
 
 	private void initActions() {
 		vega.setValueChangeListener(changeEvent -> handleVegaValueChange(changeEvent.getValue()));
@@ -250,13 +227,13 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 	private void setQueryUrl(ObjectNode dataNode) throws UnsupportedEncodingException {
 		if (dataNode.has("url")) {
 			String catmaQuery = dataNode.get("url").asText();
-					
+
 			if (catmaQuery.startsWith(CATMA_QUERY_URL)) {
 				if (catmaQuery.equals(CATMA_QUERY_URL)) {
 					dataNode.set("url", new TextNode(queryResultUrl));
 				}
 				else {
-					catmaQuery = catmaQuery.substring(CATMA_QUERY_URL.length()+1, catmaQuery.length()-1);
+					catmaQuery = catmaQuery.substring(CATMA_QUERY_URL.length() + 1, catmaQuery.length() - 1);
 					catmaQuery = URLEncoder.encode(catmaQuery, "UTF-8");
 					String url = CATMAPropertyKey.BASE_URL.getValue() + vegaViewId + "/query/" + catmaQuery;
 					dataNode.set("url", new TextNode(url));

@@ -6,12 +6,7 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.Image;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Link;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.UI;
-
+import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.sqlite.SqliteService;
@@ -28,16 +23,15 @@ import de.catma.ui.module.main.auth.SignUpDialog;
 
 import java.util.ArrayList;
 
-/**
- * Main layout when not logged in
- */
 public class NotLoggedInMainView extends VerticalFlexLayout {
 	private final InitializationService initService;
 	private final LoginService loginService;
 	private final HazelCastService hazelCastService;
 	private final SqliteService sqliteService;
 	private final EventBus eventBus;
+
 	private final UIHelpWindow uiHelpWindow;
+
 	private Link statusLink;
 	private VerticalLayout noticeLayoutInnerLayout;
 

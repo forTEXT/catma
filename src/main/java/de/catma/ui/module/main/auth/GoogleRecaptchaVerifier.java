@@ -11,42 +11,34 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.util.logging.Logger;
 
-/**
- * verifies reCaptcha v2 / v3 by using restclient and wraps the result in a
- * result Bean {@link GoogleVerificationResult}
- * @author db
- *
- */
 public class GoogleRecaptchaVerifier {
+	private final Logger logger = Logger.getLogger(GoogleRecaptchaVerifier.class.getName());
 
-	private final Client client;
-	private final WebTarget webtarget;
-	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private final WebTarget webTarget;
 
-	
 	public GoogleRecaptchaVerifier(){
-		client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-		webtarget = client.target("https://www.google.com/recaptcha/api/siteverify");
+		Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
+		webTarget = client.target("https://www.google.com/recaptcha/api/siteverify");
 	}
-		
+
 	/**
-	 * Verifies a given token by using a restclient. It blocks during request.
+	 * Verifies a given reCAPTCHA v2/3 token by using a REST client. Blocks during the request.
 	 *
-	 * @param token
-	 * @return verification result
+	 * @param token the token to verify
+	 * @return a {@link GoogleVerificationResult}
 	 */
-	public GoogleVerificationResult verify(String token){
+	public GoogleVerificationResult verify(String token) {
 		Form form = new Form();
 		form.param("secret", CATMAPropertyKey.GOOGLE_RECAPTCHA_SECRET_KEY.getValue());
 		form.param("response", token);
 
 		logger.info("Verifying reCAPTCHA token: " + token);
 
-		return webtarget
+		return webTarget
 				.request(MediaType.APPLICATION_JSON)
 				.post(
 					Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE),
-					GoogleVerificationResult.class);
+					GoogleVerificationResult.class
+				);
 	}
-
 }

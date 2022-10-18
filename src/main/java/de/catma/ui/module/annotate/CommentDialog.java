@@ -74,7 +74,7 @@ public class CommentDialog extends AbstractOkCancelDialog<String> {
 		abortClose = false;
 		final UI ui = UI.getCurrent();
 		final BackgroundServiceProvider provider = (BackgroundServiceProvider)ui;
-		this.scheduledClosing = provider.accuireBackgroundService().schedule(() -> {
+		this.scheduledClosing = provider.acquireBackgroundService().schedule(() -> {
 			ui.accessSynchronously(() -> {
 				if (!abortClose) {
 					if (this.textInput.getValue() != null && !this.textInput.getValue().isEmpty()) {

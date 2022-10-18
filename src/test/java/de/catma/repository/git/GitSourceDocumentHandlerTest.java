@@ -82,8 +82,7 @@ public class GitSourceDocumentHandlerTest {
 		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
 
 		EventBus mockEventBus = mock(EventBus.class);
-		BackgroundService mockBackgroundService = mock(BackgroundService.class);
-		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, mockBackgroundService, impersonationToken);
+		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, impersonationToken);
 	}
 
 	@AfterEach
@@ -91,6 +90,8 @@ public class GitSourceDocumentHandlerTest {
 		if (directoriesToDeleteOnTearDown.size() > 0) {
 			for (File dir : directoriesToDeleteOnTearDown) {
 				// files have read-only attribute set on Windows, which we need to clear before the call to `deleteDirectory` will work
+				// TODO: this was added before the explicit repository close call was added in JGitRepoManager.close
+				//       and can potentially be removed now
 				for (Iterator<File> it = FileUtils.iterateFiles(dir, null, true); it.hasNext(); ) {
 					File file = it.next();
 					file.setWritable(true);
@@ -103,17 +104,20 @@ public class GitSourceDocumentHandlerTest {
 
 		if (sourceDocumentReposToDeleteOnTearDown.size() > 0) {
 			for (String sourceDocumentId : sourceDocumentReposToDeleteOnTearDown) {
-				List<Project> projects = gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(
-					sourceDocumentId
-				); // this getProjects overload does a search
+				// this getProjects overload does a search
+				List<Project> projects = gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(sourceDocumentId);
+
 				for (Project project : projects) {
 					gitlabManagerRestricted.deleteRepository(
 							new ProjectReference(
 									project.getName(), 
 									project.getNamespace().getName(), 
 									project.getName(), 
-									null));
+									null
+							)
+					);
 				}
+
 				await().until(
 					() -> gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects().isEmpty()
 				);
@@ -438,7 +442,6 @@ public class GitSourceDocumentHandlerTest {
 
 			jGitRepoManager.open(projectReference.getProjectId(), sourceDocumentUuid);
 			jGitRepoManager.push(new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword()));
-
 
 			SourceDocument sourceDocument = gitSourceDocumentHandler.open(sourceDocumentUuid);
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(

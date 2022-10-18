@@ -151,7 +151,7 @@ public class CreateUserDialog extends Window {
 	public void show() {
 		UI.getCurrent().addWindow(this);
 	}
-	
+
 	@Override
 	public void close() {
 		super.close();

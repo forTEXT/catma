@@ -93,106 +93,93 @@ import de.catma.ui.util.Version;
 @Theme("catma")
 @PreserveOnRefresh
 @Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET_XHR )
-public class CatmaApplication extends UI implements KeyValueStorage,
-	BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler {
+public class CatmaApplication extends UI implements KeyValueStorage, BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler {
+	private final Logger logger = Logger.getLogger(CatmaApplication.class.getName());
 
-	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private Map<String, String[]> parameters = new HashMap<String, String[]>();
-		
-    private final ConcurrentHashMap<String,Object> _attributes = new ConcurrentHashMap<String, Object>();
+	private final Map<String, String[]> parameters = new HashMap<>();
+	private final ConcurrentHashMap<String,Object> attributes = new ConcurrentHashMap<>();
+
 	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
-	 
-	
-	// Bind later when UI is ready.
-	private LoginService loginservice;
-	private InitializationService initService;
+
+	// bind later when the UI is ready
 	private EventBus eventBus;
+	private InitializationService initService;
+	private LoginService loginservice;
 	private HazelCastService hazelCastService;
 	private SqliteService sqliteService;
-	
+
 	@Override
 	protected void init(VaadinRequest request) {
 		eventBus = new EventBus();
 		initService = new Vaadin8InitializationService();
-		
+
 		loginservice = new GitlabLoginService(new IRemoteGitManagerFactory() {
-			
 			@Override
-			public IRemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password)
-					throws IOException {
-				
-				return new GitlabManagerRestricted(eventBus, initService.acquireBackgroundService(), username, password);
+			public IRemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException {
+				return new GitlabManagerRestricted(eventBus, username, password);
 			}
 			
 			@Override
 			public IRemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
-				return new GitlabManagerRestricted(eventBus, initService.acquireBackgroundService(), userImpersonationToken);
+				return new GitlabManagerRestricted(eventBus, userImpersonationToken);
 			}
-
 		});
-		
-		hazelCastService = new HazelCastService();
-		this.eventBus.register(this);
 
+		hazelCastService = new HazelCastService();
 
 		try {
 			sqliteService = new SqliteService();
 		}
 		catch (Exception e) {
-			showAndLogError("error initialising sqlite service", e);
+			showAndLogError(null, e);
 		}
 
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
 		Page.getCurrent().setTitle("CATMA " + Version.LATEST);
-		
-		try {
-			Component component = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
-			setContent(component);
-		} catch (IOException e) {
-			showAndLogError("error creating landing page", e);
-		}
+
+		Component entryPage = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
+		setContent(entryPage);
+
+		eventBus.register(this);
 		eventBus.post(new RouteToDashboardEvent());
 
-		// A fresh UI and session doesn't have a request handler registered yet.
-		// we need to verify tokens here too.
-		
+		// handle signup token and OAuth requests
 		handleRequestToken(request);
 		handleRequestOauth(request);
 	}
-	
+
+	private void storeParameters(Map<String, String[]> parameters) {
+		this.parameters.putAll(parameters);
+	}
+
 	@Override
 	protected void refresh(VaadinRequest request) {
 		super.refresh(request);
+
+		// handle signup token and OAuth requests
 		handleRequestToken(request);
 		handleRequestOauth(request);
 
 		eventBus.post(new RefreshEvent());
 	}
-	
-	private void storeParameters(Map<String, String[]> parameters) {
-		this.parameters.putAll(parameters);
-	}
-	
-	private void handleRequestToken(VaadinRequest request){
-		if(signupTokenManager.parseUri(request.getPathInfo())) {
-			SignupTokenManager tokenManager = new SignupTokenManager();
-			tokenManager.handleVerify(request.getParameter("token"), eventBus);
+
+	private void handleRequestToken(VaadinRequest request) {
+		if (signupTokenManager.parseUri(request.getPathInfo())) {
+			new SignupTokenManager().handleVerify(request.getParameter("token"), eventBus);
 		}
 	}
-	private void handleRequestOauth(VaadinRequest request){
-		if(request.getParameter("code") != null 
-				&& VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
+
+	private void handleRequestOauth(VaadinRequest request) {
+		if (request.getParameter("code") != null && VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
 			handleOauth(request);
-			try {
-				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
-				UI.getCurrent().setContent(mainView);
-				eventBus.post(new RouteToDashboardEvent());
-				getCurrent().getPage().pushState("/catma/");
-			} catch (IOException e) {
-				showAndLogError("can't login properly", e);
-			}
+
+			Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
+			setContent(mainView);
+
+			eventBus.post(new RouteToDashboardEvent());
+			getPage().pushState("/catma/");
 		}
 	}
 
@@ -214,7 +201,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		if ((values != null) && (values.length > 0)) {
 			return values[0];
 		}
-
 		return null;
 	}
 
@@ -226,17 +212,17 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		return parameters.get(key);
 	}
 
-	public String accquirePersonalTempFolder() throws IOException {
+	public String acquirePersonalTempFolder() throws IOException {
 		return initService.acquirePersonalTempFolder();
 	}
 
-	public BackgroundService accuireBackgroundService() {
+	public BackgroundService acquireBackgroundService() {
 		return initService.acquireBackgroundService();
 	}
 
 	public <T> void submit(String caption, final ProgressCallable<T> callable, final ExecutionListener<T> listener) {
 		logger.info("submitting job '" + caption + "' " + callable); //$NON-NLS-1$ //$NON-NLS-2$
-		accuireBackgroundService().submit(callable, new ExecutionListener<T>() {
+		acquireBackgroundService().submit(callable, new ExecutionListener<T>() {
 			public void done(T result) {
 				listener.done(result);
 			};
@@ -267,7 +253,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		
 		super.detach();
 	}
-	
+
 	@Override
 	public void close() {
 		logger.info("Closing UI");
@@ -309,17 +295,17 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 
 	public ScheduledFuture<?> schedule(Runnable command,
 			long delay, TimeUnit unit) {
-		return accuireBackgroundService().schedule(command, delay, unit);
+		return acquireBackgroundService().schedule(command, delay, unit);
 	}
 	
 	@Override
 	public Object setAttribute(String key, Object obj){
-		return this._attributes.computeIfAbsent(key, (noop) -> obj);
+		return this.attributes.computeIfAbsent(key, (noop) -> obj);
 	}
 
 	@Override
 	public Object getAttribute(String key){
-		return this._attributes.get(key);
+		return this.attributes.get(key);
 	}
 
 	// based on: https://developers.google.com/identity/protocols/oauth2/openid-connect#authenticatingtheuser

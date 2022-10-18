@@ -44,44 +44,37 @@ public class JsonLdWebAnnotationBody_Dataset {
 		this.properties.put(USER_PROPERTIES_KEY, new TreeMap<>());
 	}
 
-	public JsonLdWebAnnotationBody_Dataset(
-		Collection<TagReference> tagReferences, TagLibrary tagLibrary)
-			throws IOException {
+	public JsonLdWebAnnotationBody_Dataset(Collection<TagReference> tagReferences, TagLibrary tagLibrary) throws IOException {
 		this();
+
 		String contextDefinitionURL = CATMAPropertyKey.CONTEXT_DEFINITION_URL.getValue();
-		
 		if (!contextDefinitionURL.endsWith("/")) {
 			contextDefinitionURL += "/";
 		}
 		this.context.put("tagset", contextDefinitionURL + "tagset");
 		this.context.put("tag", contextDefinitionURL + "tag");
 
-		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
-		// properties
-		Set<TagInstance> uniqueTagInstances = new HashSet<>(tagReferences.stream().map(TagReference::getTagInstance)
-				.collect(Collectors.toSet()));
+		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and properties
+		Set<TagInstance> uniqueTagInstances = new HashSet<>(
+				tagReferences.stream().map(TagReference::getTagInstance).collect(Collectors.toSet())
+		);
 		if (uniqueTagInstances.size() > 1) {
-			throw new IllegalArgumentException(
-				"Supplied TagReference objects are not all for the same TagInstance"
-			);
+			throw new IllegalArgumentException("Supplied TagReference objects are not all for the same TagInstance");
 		}
 
 		String tagDefinitionId = tagReferences.iterator().next().getTagDefinitionId();
 		TagDefinition tagDefinition = tagLibrary.getTagDefinition(tagDefinitionId);
-		
+
 		TagInstance tagInstance = tagReferences.iterator().next().getTagInstance();
 
-		this.tagset = 
-				this.buildTagsetUri(tagInstance.getTagsetId()).toString();
-
+		this.tagset = this.buildTagsetUri(tagInstance.getTagsetId()).toString();
 		this.tag = this.buildTagDefinitionUri(tagDefinition).toString();
 
 		this.addProperties(tagInstance.getUserDefinedProperties(), false);
 		this.addProperties(tagInstance.getSystemProperties(), true);
 	}
 
-	private URI buildTagsetUri(String tagsetUuid)
-			throws IOException {
+	private URI buildTagsetUri(String tagsetUuid) throws IOException {
 		try {
 			return new URI(
 				String.format(
@@ -90,41 +83,40 @@ public class JsonLdWebAnnotationBody_Dataset {
 						tagsetUuid
 				)
 			);
-		} catch (URISyntaxException e) {
+		}
+		catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
 	}
 
-	private URI buildTagDefinitionUri(TagDefinition tagDefinition)
-			throws IOException{
+	private URI buildTagDefinitionUri(TagDefinition tagDefinition) throws IOException{
 		try {
 			return new URI(
 				String.format("%s/%s", this.tagset, tagDefinition.getUuid())
 			);
-		} catch (URISyntaxException e) {
+		}
+		catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
 	}
 
-	private URI buildPropertyDefinitionUri(String propertyDefinitionUuid)
-			throws IOException {
+	private URI buildPropertyDefinitionUri(String propertyDefinitionUuid) throws IOException {
 		try {
 			return new URI(
 				String.format("%s/%s", this.tag, propertyDefinitionUuid)
 			);
-		} catch (URISyntaxException e) {
+		}
+		catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
 	}
 
-	private void addProperties(Collection<Property> properties, boolean system)
-			throws IOException {
+	private void addProperties(Collection<Property> properties, boolean system) throws IOException {
 		for (Property property : properties) {
 			// add entries to the context that allow us to have PropertyDefinition URLs aliased by name
 			this.context.put(
 				property.getPropertyDefinitionId(),
-				this.buildPropertyDefinitionUri(
-						property.getPropertyDefinitionId()).toString()
+				this.buildPropertyDefinitionUri(property.getPropertyDefinitionId()).toString()
 			);
 
 			// add property values
@@ -152,5 +144,4 @@ public class JsonLdWebAnnotationBody_Dataset {
 	public TreeMap<String, TreeMap<String, TreeSet<String>>> getProperties() {
 		return this.properties;
 	}
-
 }

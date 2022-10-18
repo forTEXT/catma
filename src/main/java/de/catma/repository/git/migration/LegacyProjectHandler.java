@@ -50,7 +50,7 @@ import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitTagsetHandler;
 import de.catma.repository.git.GitUser;
-import de.catma.repository.git.GitlabUtils;
+import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
@@ -128,7 +128,7 @@ public class LegacyProjectHandler {
 	}
 
 	
-	public Pair<User, String> aquireUser(String username) throws Exception {
+	public Pair<User, String> acquireUser(String username) throws Exception {
 		String tokenName = "migration_admin_token";
 		UserApi userApi = this.privilegedGitLabApi.getUserApi();
 		
@@ -181,7 +181,7 @@ public class LegacyProjectHandler {
 			projectId, 
 			projectRootRepoName);
 		
-		return GitlabUtils.rewriteGitLabServerUrl(rootProject.getHttpUrlToRepo());
+		return GitLabUtils.rewriteGitLabServerUrl(rootProject.getHttpUrlToRepo());
 	}
 	
 	public TagLibrary getTagLibrary(JGitRepoManager repoManager, File projectPath, User user) throws Exception {

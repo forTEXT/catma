@@ -57,8 +57,7 @@ public class GitLabServerManagerTest {
 		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
 
 		EventBus mockEventBus = mock(EventBus.class);
-		BackgroundService mockBackgroundService = mock(BackgroundService.class);
-		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, mockBackgroundService, impersonationToken);
+		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, impersonationToken);
 	}
 
 	@AfterEach

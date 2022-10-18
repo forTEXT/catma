@@ -66,7 +66,7 @@ public class GitProjectHandlerTest {
 	@BeforeEach
 	public void setUp() throws Exception {
 		Pair<GitlabManagerRestricted, GitlabManagerPrivileged> result = 
-				GitlabTestHelper.createGitlabManagers();
+				GitLabTestHelper.createGitLabManagers();
 		this.gitlabManagerRestricted = result.getFirst();
 		this.gitlabManagerPrivileged = result.getSecond();
 	}
@@ -94,6 +94,8 @@ public class GitProjectHandlerTest {
 		if (directoriesToDeleteOnTearDown.size() > 0) {
 			for (File dir : directoriesToDeleteOnTearDown) {
 				// files have read-only attribute set on Windows, which we need to clear before the call to `deleteDirectory` will work
+				// TODO: this was added before the explicit repository close call was added in JGitRepoManager.close
+				//       and can potentially be removed now
 				for (Iterator<File> it = FileUtils.iterateFiles(dir, null, true); it.hasNext(); ) {
 					File file = it.next();
 					file.setWritable(true);
@@ -140,13 +142,13 @@ public class GitProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
-			
 
 			File expectedRepositoryPath = 
 					Paths.get(
-						jGitRepoManager.getRepositoryBasePath().getPath(),
-						projectReference.getNamespace(),
-						projectReference.getProjectId()).toFile();
+							jGitRepoManager.getRepositoryBasePath().getPath(),
+							projectReference.getNamespace(),
+							projectReference.getProjectId()
+					).toFile();
 
 			assert expectedRepositoryPath.exists();
 			assert expectedRepositoryPath.isDirectory();
@@ -357,13 +359,16 @@ public class GitProjectHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			File projectPath = Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
-			.resolve(gitlabManagerRestricted.getUsername())
-			.resolve(projectReference.getNamespace())
-			.resolve(projectReference.getProjectId())
-			.toFile();
+					.resolve(gitlabManagerRestricted.getUsername())
+					.resolve(projectReference.getNamespace())
+					.resolve(projectReference.getProjectId())
+					.toFile();
+
 			GitProjectHandler gitProjectHandler = new GitProjectHandler(
-					gitlabManagerRestricted.getUser(), projectReference, projectPath, 
-					jGitRepoManager, gitlabManagerRestricted);
+					gitlabManagerRestricted.getUser(),
+					projectReference, projectPath,
+					jGitRepoManager, gitlabManagerRestricted
+			);
 
 			String revisionHash = gitProjectHandler.createSourceDocument(
 					sourceDocumentUuid,

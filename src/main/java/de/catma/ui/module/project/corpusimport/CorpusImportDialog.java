@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -61,10 +60,9 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		super("CATMA 5 Corpus Import", listener);
 		this.corpusMetadataList = new ArrayList<CorpusImportMetadata>();
 		this.corpusMetadataProvider = new ListDataProvider<CorpusImportMetadata>(this.corpusMetadataList);
-		tempDir = ((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
-
+		tempDir = ((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
 	}
-	
+
 	@Override
 	protected void handleOkPressed() {
 
@@ -248,13 +246,13 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 
 	private InputStream getAPIInputStream(String apiPath) throws IOException {
 		String authString = nameField.getValue() + ":" + passField.getValue();
-		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
-		String authStringEnc = new String(authEncBytes);
+		byte[] authStringBase64EncodedBytes = Base64.encodeBase64(authString.getBytes());
+		String authStringBase64Encoded = new String(authStringBase64EncodedBytes);
 
 		URL url = new URL(CATMAPropertyKey.CATMA_5_API_URL.getValue() + apiPath);
 		URLConnection urlConnection = url.openConnection();
 		urlConnection.setReadTimeout(7200000); // 2h, corpus generation in CATMA 5 can take a while
-		urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
+		urlConnection.setRequestProperty("Authorization", "Basic " + authStringBase64Encoded);
 		return urlConnection.getInputStream();
 	}
 
@@ -262,5 +260,4 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 	protected Pair<File, List<CorpusImportDocumentMetadata>> getResult() {
 		return result;
 	}
-
 }

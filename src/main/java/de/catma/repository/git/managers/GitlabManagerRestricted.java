@@ -28,9 +28,7 @@ import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Author;
 import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.GroupFilter;
 import org.gitlab4j.api.models.ImportStatus.Status;
-import org.gitlab4j.api.models.Project.MergeMethod;
 import org.gitlab4j.api.models.Issue;
 import org.gitlab4j.api.models.IssueFilter;
 import org.gitlab4j.api.models.Member;
@@ -52,7 +50,6 @@ import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.ForkStatus;
@@ -64,7 +61,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitUser;
-import de.catma.repository.git.GitlabUtils;
+import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.interfaces.IGitUserInformation;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -73,49 +70,44 @@ import de.catma.user.User;
 import de.catma.util.IDGenerator;
 
 public class GitlabManagerRestricted extends GitlabManagerCommon implements IRemoteGitManagerRestricted, IGitUserInformation {
-	
 	private static final String CATMA_COMMENT_LABEL = "CATMA Comment";
 
+	private final Logger logger = Logger.getLogger(GitlabManagerRestricted.class.getName());
+
 	private final GitLabApi restrictedGitLabApi;
-	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private final Cache<String, List<ProjectReference>> projectsCache;
+
 	private GitUser user;
-	// Cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
-	private final Cache<String, List<ProjectReference>> projectsCache = CacheBuilder.newBuilder()
-		       .expireAfterWrite(5, TimeUnit.SECONDS)
-		       .build();
-	
-	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, String userImpersonationToken) throws IOException {
-		this(eventBus, backgroundService, new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
-	}
-	
-	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, String username, String password) throws IOException {
-		this(eventBus, backgroundService, oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
+
+	public GitlabManagerRestricted(EventBus eventBus, String userImpersonationToken) throws IOException {
+		this(eventBus, new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
 	}
 
-	private GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, GitLabApi api) throws IOException {
-		org.gitlab4j.api.models.User currentUser;
+	public GitlabManagerRestricted(EventBus eventBus, String username, String password) throws IOException {
+		this(eventBus, oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
+	}
+
+	private GitlabManagerRestricted(EventBus eventBus, GitLabApi api) throws IOException {
+		this.restrictedGitLabApi = api;
+
+		// cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
+		this.projectsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
+
 		try {
-			currentUser = api.getUserApi().getCurrentUser();
-			this.user = new GitUser(currentUser);
-			this.restrictedGitLabApi = api;
-			eventBus.register(this);
-		} catch (GitLabApiException e) {
+			this.user = new GitUser(this.restrictedGitLabApi.getUserApi().getCurrentUser());
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(e);
 		}
+
+		eventBus.register(this);
 	}
-	
-	/**
-	 * A wrapper to hide imports from outside world 
-	 * @param url
-	 * @param username
-	 * @param password
-	 * @return
-	 * @throws IOException
-	 */
+
 	private static GitLabApi oauth2Login(String url, String username, String password) throws IOException {
 		try {
-			return GitLabApi.oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password);
-		} catch (GitLabApiException e) {
+			return GitLabApi.oauth2Login(url, username, password);
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(e);
 		}
 	}
@@ -144,7 +136,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			project = projectApi.createProject(project);
 			return new CreateRepositoryResponse(
 				groupPath, project.getId(),
-				GitlabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
+				GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
 			);
 		}
 		catch (GitLabApiException e) {
@@ -167,7 +159,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			project = projectApi.createProject(project);
 			return new CreateRepositoryResponse(
 				null, project.getId(),
-				GitlabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
+				GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
 			);
 		}
 		catch (GitLabApiException e) {
@@ -311,7 +303,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 					projectReference.getNamespace(),
 					projectReference.getProjectId());
 			
-			return GitlabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo());
+			return GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(

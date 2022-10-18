@@ -30,30 +30,29 @@ import org.gitlab4j.api.models.User;
 
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitUser;
-import de.catma.repository.git.GitlabUtils;
+import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.util.Pair;
 
 public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRemoteGitManagerPrivileged {
-	
-
 	private enum CustomAttributeName {
 		last_login,
 		terms_of_use_consent_given,
 	}
-	
+
 	public static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
-	private final GitLabApi privilegedGitLabApi = new GitLabApi(
-			 CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), CATMAPropertyKey.GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN.getValue()
-	);
-	
-	private final Logger logger = Logger.getLogger(this.getClass().getName());
-	
+	private final Logger logger = Logger.getLogger(GitlabManagerPrivileged.class.getName());
+
+	private final GitLabApi privilegedGitLabApi;
+
 	public GitlabManagerPrivileged() {
+		this.privilegedGitLabApi = new GitLabApi(
+				CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), CATMAPropertyKey.GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN.getValue()
+		);
 		this.privilegedGitLabApi.getUserApi().enableCustomAttributes();
 	}
-	
+
 	@Override
 	public Pair<GitUser, String> acquireImpersonationToken(String identifier, String provider, String email, String name)
 			throws IOException {
@@ -118,26 +117,28 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 			throw new IOException("Failed to create personal access token", e);
 		}
 	}
-	
+
 	@Override
-	public long createUser(String email, String username, String password,
-			   String publicname)
-					   throws IOException {
+	public long createUser(String email, String username, String password, String publicname) throws IOException {
 		User user = this.createUser(email, username, password, publicname, null);
-		String token = this.createImpersonationToken(user.getId(),GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
+		String token = this.createImpersonationToken(user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
+
 		try (GitLabApi gitlabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), token)) {
-			NotificationSettingsApi userNotificationSettingsApi = 
-				gitlabApi.getNotificationSettingsApi();
-			NotificationSettings settings = userNotificationSettingsApi.getGlobalNotificationSettings();
-			settings.setLevel(NotificationSettings.Level.DISABLED);
-			userNotificationSettingsApi.updateGlobalNotificationSettings(settings);
+			NotificationSettingsApi userNotificationSettingsApi = gitlabApi.getNotificationSettingsApi();
+			NotificationSettings globalNotificationSettings = userNotificationSettingsApi.getGlobalNotificationSettings();
+			globalNotificationSettings.setLevel(NotificationSettings.Level.DISABLED);
+			userNotificationSettingsApi.updateGlobalNotificationSettings(globalNotificationSettings);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException("Failed to update notification settings for " + user, e);
+			throw new IOException(
+					String.format("Failed to update notification settings for user \"%s\"", user.getUsername()),
+					e
+			);
 		}
+
 		return user.getId();
 	}
-	
+
 	/**
 	 * Acquires (gets or creates) a GitLab user for the supplied <code>catmaUser</code>.
 	 * <p>
@@ -234,8 +235,8 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 		if (password == null) {
 			// generate a random password
 			password = RandomStringUtils.random(
-				12, 0, GitlabUtils.PWD_CHARS.length-1,
-				false, false, GitlabUtils.PWD_CHARS, new SecureRandom()
+				12, 0, GitLabUtils.PWD_CHARS.length-1,
+				false, false, GitLabUtils.PWD_CHARS, new SecureRandom()
 			);
 		}
 

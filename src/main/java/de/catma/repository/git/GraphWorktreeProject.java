@@ -89,52 +89,50 @@ import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class GraphWorktreeProject implements IndexedProject {
-	
 	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
 	private static final String ORIG_INFIX = "_orig";
 	private static final String TOKENIZED_FILE_EXTENSION = "json";
 
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private final Logger logger = Logger.getLogger(GraphWorktreeProject.class.getName());
 
+	private final User user;
+	private final GitProjectHandler gitProjectHandler;
+	private final ProjectReference projectReference;
+	private final TagManager tagManager;
+	private final BackgroundService backgroundService;
+
+	private final GraphProjectHandler graphProjectHandler;
+	private final Indexer indexer;
+
+	private final String tempDir;
+	private final IDGenerator idGenerator;
+
+	private EventBus eventBus;
 	private PropertyChangeSupport propertyChangeSupport;
 
-	private User user;
-	private final GitProjectHandler gitProjectHandler;
-	private ProjectReference projectReference;
-	private String rootRevisionHash;
-	private GraphProjectHandler graphProjectHandler;
-	private final String tempDir;
-	private BackgroundService backgroundService;
-
 	private boolean tagManagerListenersEnabled = true;
+	private String rootRevisionHash;
 
-	private IDGenerator idGenerator = new IDGenerator();
-	private final TagManager tagManager;
-	private PropertyChangeListener tagsetDefinitionChangedListener;
-	private PropertyChangeListener tagDefinitionChangedListener;
-	private PropertyChangeListener userDefinedPropertyChangedListener;
-	private Indexer indexer;
-	private EventBus eventBus;
-	
-	public GraphWorktreeProject(User user,
-								GitProjectHandler gitProjectHandler,
-								ProjectReference projectReference,
-								TagManager tagManager,
-								BackgroundService backgroundService,
-								EventBus eventBus) {
+
+	public GraphWorktreeProject(
+			User user,
+			GitProjectHandler gitProjectHandler,
+			ProjectReference projectReference,
+			TagManager tagManager,
+			BackgroundService backgroundService,
+			EventBus eventBus
+	) {
 		this.user = user;
 		this.gitProjectHandler = gitProjectHandler;
 		this.projectReference = projectReference;
 		this.tagManager = tagManager;
 		this.backgroundService = backgroundService;
 		this.eventBus = eventBus;
-		this.propertyChangeSupport = new PropertyChangeSupport(this);
-		this.graphProjectHandler = 
-			new LazyGraphProjectHandler(
-				this.projectReference, 
+
+		this.graphProjectHandler = new LazyGraphProjectHandler(
+				this.projectReference,
 				this.user,
 				new DocumentFileURIProvider() {
-					
 					@Override
 					public URI getSourceDocumentFileURI(String documentId) throws Exception {
 						return getSourceDocumentURI(documentId);
@@ -147,14 +145,12 @@ public class GraphWorktreeProject implements IndexedProject {
 					}
 				},
 				new DocumentSupplier() {
-					
 					@Override
 					public SourceDocument get(String documentId) throws IOException {
 						return gitProjectHandler.getDocument(documentId);
 					}
 				},
 				new DocumentIndexSupplier() {
-					
 					@Override
 					public Map get(String documentId) throws IOException {
 						Path tokensPath = GraphWorktreeProject.this.getTokenizedSourceDocumentPath(documentId);
@@ -166,16 +162,21 @@ public class GraphWorktreeProject implements IndexedProject {
 					public AnnotationCollection get(String collectionId, TagLibrary tagLibrary) throws IOException {
 						return gitProjectHandler.getCollection(collectionId, tagLibrary);
 					}
-				});
-		this.tempDir = CATMAPropertyKey.TEMP_DIR.getValue();
+				}
+		);
+
 		this.indexer = this.graphProjectHandler.createIndexer();
+
+		this.tempDir = CATMAPropertyKey.TEMP_DIR.getValue();
+		this.idGenerator = new IDGenerator();
+
+		this.propertyChangeSupport = new PropertyChangeSupport(this);
 	}
 
 	private Path getTokenizedSourceDocumentPath(String documentId) {
-		return Paths
-			.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
-			.resolve(gitProjectHandler.getSourceDocumentPath(documentId))
-			.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
+		return Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
+				.resolve(gitProjectHandler.getSourceDocumentPath(documentId))
+				.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
 
 	@Override
@@ -268,142 +269,105 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void initTagManagerListeners() {
-		tagsetDefinitionChangedListener = new PropertyChangeListener() {
-			
+		PropertyChangeListener tagsetDefinitionChangedListener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
-				
 				if (!tagManagerListenersEnabled) {
 					return;
 				}
+
 				try {
-					if (evt.getOldValue() == null) { //insert
-						final TagsetDefinition tagsetDefinition = 
-								(TagsetDefinition)evt.getNewValue();
-						
+					if (evt.getOldValue() == null) { // TagsetDefinition was added
+						final TagsetDefinition tagsetDefinition = (TagsetDefinition) evt.getNewValue();
 						addTagsetDefinition(tagsetDefinition);
 					}
-					else if (evt.getNewValue() == null) { //delete
-						final TagsetDefinition tagsetDefinition = 
-							(TagsetDefinition)evt.getOldValue();
-						
+					else if (evt.getNewValue() == null) { // TagsetDefinition was deleted
+						final TagsetDefinition tagsetDefinition = (TagsetDefinition) evt.getOldValue();
 						removeTagsetDefinition(tagsetDefinition);
 					}
-					else { //update
-						final TagsetDefinition tagsetDefinition = 
-								(TagsetDefinition)evt.getNewValue();
-						
+					else { // TagsetDefinition was updated
+						final TagsetDefinition tagsetDefinition = (TagsetDefinition) evt.getNewValue();
 						updateTagsetDefinition(tagsetDefinition);
-
 					}
 				}
 				catch (Exception e) {
 					propertyChangeSupport.firePropertyChange(
 							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							e);	
+							null,
+							e
+					);
 				}
 			}
 		};
-		
-		tagManager.addPropertyChangeListener(
-				TagManagerEvent.tagsetDefinitionChanged,
-				tagsetDefinitionChangedListener);
-		
-		tagDefinitionChangedListener = new PropertyChangeListener() {
-			
+		tagManager.addPropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetDefinitionChangedListener);
+
+		PropertyChangeListener tagDefinitionChangedListener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
-				
 				if (!tagManagerListenersEnabled) {
 					return;
 				}
+
 				try {
-					if (evt.getOldValue() == null) {
+					if (evt.getOldValue() == null) { // TagDefinition was added
 						@SuppressWarnings("unchecked")
-						final Pair<TagsetDefinition, TagDefinition> args = 
-								(Pair<TagsetDefinition, TagDefinition>)evt.getNewValue();
-						TagsetDefinition tagsetDefinition = args.getFirst();
-						TagDefinition tagDefinition = args.getSecond();
-						addTagDefinition(tagDefinition, tagsetDefinition);
+						final Pair<TagsetDefinition, TagDefinition> args = (Pair<TagsetDefinition, TagDefinition>) evt.getNewValue();
+						addTagDefinition(args.getSecond(), args.getFirst());
 					}
-					else if (evt.getNewValue() == null) {
+					else if (evt.getNewValue() == null) { // TagDefinition was deleted
 						@SuppressWarnings("unchecked")
-						final Pair<TagsetDefinition, TagDefinition> args = 
-							(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
-						TagsetDefinition tagsetDefinition = args.getFirst();
-						TagDefinition tagDefinition = args.getSecond();
-						removeTagDefinition(tagDefinition, tagsetDefinition);
+						final Pair<TagsetDefinition, TagDefinition> args = (Pair<TagsetDefinition, TagDefinition>) evt.getOldValue();
+						removeTagDefinition(args.getSecond(), args.getFirst());
 					}
-					else {
-						TagDefinition tag = (TagDefinition) evt.getNewValue();
-						TagsetDefinition tagset = (TagsetDefinition) evt.getOldValue();
-						
+					else { // TagDefinition was updated
+						final TagDefinition tag = (TagDefinition) evt.getNewValue();
+						final TagsetDefinition tagset = (TagsetDefinition) evt.getOldValue();
 						updateTagDefinition(tag, tagset);
 					}
 				}
 				catch (Exception e) {
 					propertyChangeSupport.firePropertyChange(
 							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							e);				
+							null,
+							e
+					);
 				}
 			}
-
 		};
-		
-		tagManager.addPropertyChangeListener(
-				TagManagerEvent.tagDefinitionChanged,
-				tagDefinitionChangedListener);	
-		
-		
-		userDefinedPropertyChangedListener = new PropertyChangeListener() {
-			
+		tagManager.addPropertyChangeListener(TagManagerEvent.tagDefinitionChanged, tagDefinitionChangedListener);
+
+		PropertyChangeListener userDefinedPropertyChangedListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
-				
 				if (!tagManagerListenersEnabled) {
 					return;
 				}
-				Object oldValue = evt.getOldValue();
-				Object newValue = evt.getNewValue();
+
 				try {
-					if (oldValue == null) { // insert
-						
+					if (evt.getOldValue() == null) { // PropertyDefinition was added
 						@SuppressWarnings("unchecked")
-						Pair<PropertyDefinition, TagDefinition> newPair = 
-								(Pair<PropertyDefinition, TagDefinition>)newValue;
-						
-						PropertyDefinition propertyDefinition = newPair.getFirst();
-						TagDefinition tagDefinition = newPair.getSecond();
-						
-						addPropertyDefinition(propertyDefinition, tagDefinition);
+						Pair<PropertyDefinition, TagDefinition> args = (Pair<PropertyDefinition, TagDefinition>) evt.getNewValue();
+						addPropertyDefinition(args.getFirst(), args.getSecond());
 					}
-					else if (newValue == null) { // delete
+					else if (evt.getNewValue() == null) { // PropertyDefinition was deleted
 						@SuppressWarnings("unchecked")
-						Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>> oldPair = 
-								(Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>>)oldValue;
-						PropertyDefinition propertyDefinition = oldPair.getFirst();
-						TagDefinition tagDefinition = oldPair.getSecond().getFirst();
-						TagsetDefinition tagsetDefinition = oldPair.getSecond().getSecond();
-						
-						removePropertyDefinition(propertyDefinition, tagDefinition, tagsetDefinition);
+						Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>> args =
+								(Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>>) evt.getOldValue();
+						removePropertyDefinition(args.getFirst(), args.getSecond().getFirst(), args.getSecond().getSecond());
 					}
-					else { // update
-						PropertyDefinition propertyDefinition = (PropertyDefinition)evt.getNewValue();
-						TagDefinition tagDefinition = (TagDefinition)evt.getOldValue();
+					else { // PropertyDefinition was updated
+						PropertyDefinition propertyDefinition = (PropertyDefinition) evt.getNewValue();
+						TagDefinition tagDefinition = (TagDefinition) evt.getOldValue();
 						updatePropertyDefinition(propertyDefinition, tagDefinition);
 					}
 				}
 				catch (Exception e) {
 					propertyChangeSupport.firePropertyChange(
 							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							e);				
-				}				
+							null,
+							e
+					);
+				}
 			}
 		};
-		
-		tagManager.addPropertyChangeListener(
-				TagManagerEvent.userPropertyDefinitionChanged,
-				userDefinedPropertyChangedListener);
+		tagManager.addPropertyChangeListener(TagManagerEvent.userPropertyDefinitionChanged, userDefinedPropertyChangedListener);
 	}
 
 	private void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -746,13 +710,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	public String getProjectId() {
 		return projectReference.getProjectId();
 	}
-	
+
 	private URI getSourceDocumentURI(String sourceDocumentId) {
-		return Paths
-		.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
-		.resolve(gitProjectHandler.getSourceDocumentPath(sourceDocumentId))
-		.resolve(sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION)
-		.toUri();
+		return Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
+				.resolve(gitProjectHandler.getSourceDocumentPath(sourceDocumentId))
+				.resolve(sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION)
+				.toUri();
 	}
 
 	@Override

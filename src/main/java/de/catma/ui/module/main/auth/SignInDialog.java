@@ -104,7 +104,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		}
 	}
 
-	private void initMainView() throws IOException {
+	private void initMainView() {
 		Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
 		UI.getCurrent().setContent(mainView);
 		eventBus.post(new RouteToDashboardEvent());

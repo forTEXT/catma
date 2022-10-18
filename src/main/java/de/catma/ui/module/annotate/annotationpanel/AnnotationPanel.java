@@ -54,7 +54,6 @@ import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
-import de.catma.project.event.ProjectReadyEvent;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -592,7 +591,7 @@ public class AnnotationPanel extends VerticalLayout {
 	public void highlightCurrentEditableCollectionBox() {
 		currentEditableCollectionBox.addStyleName("annotationpanel-current-editable-collection-box-highlight");
 		final UI currentUI = UI.getCurrent(); 
-		((BackgroundServiceProvider)currentUI).accuireBackgroundService().schedule(
+		((BackgroundServiceProvider)currentUI).acquireBackgroundService().schedule(
 				() -> {
 					currentUI.access(() -> {
 						currentEditableCollectionBox.removeStyleName(

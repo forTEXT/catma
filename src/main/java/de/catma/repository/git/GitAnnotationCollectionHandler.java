@@ -37,23 +37,23 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.util.Pair;
 
 public class GitAnnotationCollectionHandler {
-	
 	private static final String HEADER_FILE_NAME = "header.json";
 	private static final String ANNNOTATIONS_DIR = "annotations";
 
 	private final Logger logger = Logger.getLogger(GitAnnotationCollectionHandler.class.getName());
-	
+
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final String username;
-	private final String email;
 	private final File projectDirectory;
 	private final String projectId;
-	private int maxPageSizeBytes;
+	private final String username;
+	private final String email;
+	private final int maxPageSizeBytes;
 
 	public GitAnnotationCollectionHandler(
 			ILocalGitRepositoryManager localGitRepositoryManager, File projectDirectory,
 			String projectId,
-			String username, String email) {
+			String username, String email
+	) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.projectDirectory = projectDirectory;
 		this.projectId = projectId;

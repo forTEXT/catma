@@ -153,7 +153,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 				String urlConnContentEncoding = conn.getContentEncoding();
 				final String fileId = idGenerator.generateDocumentId();
 				String tempDir = 
-						((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+						((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
 				final File tempFile = new File(new File(tempDir), fileId);
 				if (tempFile.exists()) {
 					tempFile.delete();
@@ -323,7 +323,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 			public void handleFile(InputStream stream, String fileName, String mimeType, long length, int filesLeftInQueue) {
 				try {
 					String tempDir = 
-							((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+							((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
 					
 					final String fileId = idGenerator.generateDocumentId();
 					File tempFile = new File(new File(tempDir), fileId);
@@ -412,7 +412,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 		ZipFile zipFile = new ZipFile(uri.getPath());
 		Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
 		
-		String tempDir = ((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+		String tempDir = ((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
 		IDGenerator idGenerator = new IDGenerator();
 		
 		while (entries.hasMoreElements()) {

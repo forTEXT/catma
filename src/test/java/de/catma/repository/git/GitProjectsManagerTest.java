@@ -37,14 +37,14 @@ class GitProjectsManagerTest {
 	@BeforeEach
 	public void setUp() throws Exception {
 		Pair<GitlabManagerRestricted, GitlabManagerPrivileged> result = 
-				GitlabTestHelper.createGitlabManagers();
+				GitLabTestHelper.createGitLabManagers();
 		this.gitlabManagerRestricted = result.getFirst();
 		this.gitlabManagerPrivileged = result.getSecond();
 	}
 	
 	@AfterEach
 	public void tearDown() throws Exception {
-		GitlabTestHelper.deleteUserAndTraces(gitlabManagerRestricted, gitlabManagerPrivileged);
+		GitLabTestHelper.deleteUserAndLocalFiles(gitlabManagerRestricted, gitlabManagerPrivileged);
 	}
 
 	@Test
@@ -66,28 +66,21 @@ class GitProjectsManagerTest {
 		);
 
 		String projectId = projectReference.getProjectId();
-		
 		assertNotNull(projectId);
 		assert projectId.startsWith("CATMA_");
 
-
-		File expectedProjectPath = 
-			Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
+		File expectedProjectPath = Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 				.resolve(gitProjectsManager.getUser().getIdentifier())
 				.resolve(projectReference.getNamespace())
 				.resolve(projectId)
 				.toFile();
-
 		assert expectedProjectPath.exists();
 		assert expectedProjectPath.isDirectory();
-		
-		
-		List<ProjectReference> projectReferences = 
-				gitProjectsManager.getProjectReferences();
 
+		List<ProjectReference> projectReferences = gitProjectsManager.getProjectReferences();
 		assert projectReferences.contains(projectReference);
 	}
-	
+
 //	@Test
 //	void getProjectList() throws Exception {
 //		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(

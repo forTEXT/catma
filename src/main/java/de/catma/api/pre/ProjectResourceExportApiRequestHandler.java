@@ -102,8 +102,8 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
             Export export = new Export();
 
             for (SourceDocumentReference sourceDocumentRef : project.getSourceDocumentReferences()) {
-            	SourceDocument sourceDocument = project.getSourceDocument(sourceDocumentRef.getUuid());
-            	
+                SourceDocument sourceDocument = project.getSourceDocument(sourceDocumentRef.getUuid());
+
                 ArrayList<AnnotationCollection> annotationCollections = new ArrayList<>();
                 for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentRef.getUserMarkupCollectionRefs()) {
                     annotationCollections.add(project.getUserMarkupCollection(annotationCollectionReference));

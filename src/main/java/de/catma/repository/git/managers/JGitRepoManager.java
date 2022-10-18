@@ -644,77 +644,114 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 	}
 
+	/**
+	 * Pushes commits made locally on the user branch to the associated remote ('origin') repository and branch.
+	 *
+	 * @param credentialsProvider a {@link CredentialsProvider} to use for authentication
+	 * @return a {@link List<PushResult>} containing the results of the push operation
+	 * @throws IOException if an error occurs when pushing
+	 */
 	@Override
 	public List<PushResult> push(CredentialsProvider credentialsProvider) throws IOException {
 		return push(credentialsProvider, null, 0, false);
 	}
-	
+
+	/**
+	 * Pushes commits made locally on the master branch to the associated remote ('origin') repository and branch.
+	 *
+	 * @param credentialsProvider a {@link CredentialsProvider} to use for authentication
+	 * @return a {@link List<PushResult>} containing the results of the push operation
+	 * @throws IOException if an error occurs when pushing
+	 */
 	@Override
 	public List<PushResult> pushMaster(CredentialsProvider credentialsProvider) throws IOException {
 		return push(credentialsProvider, Constants.MASTER, 0, false);
 	}
-	
-	public List<PushResult> push(CredentialsProvider credentialsProvider, boolean force) throws IOException {
-		return push(credentialsProvider, null, 0, force);
+
+	/**
+	 * Pushes commits made locally on the currently checked out branch to the associated remote ('origin') repository and branch.
+	 * <p>
+	 * Skips branch checks - only to be used for project migration from CATMA 6 -> 7.
+	 *
+	 * @param credentialsProvider a {@link CredentialsProvider} to use for authentication
+	 * @return a {@link List<PushResult>} containing the results of the push operation
+	 * @throws IOException if an error occurs when pushing
+	 */
+	public List<PushResult> pushWithoutBranchChecks(CredentialsProvider credentialsProvider) throws IOException {
+		return push(credentialsProvider, null, 0, true);
 	}
 
 	/**
-	 * Pushes commits made locally to the associated remote repository ('origin' remote).
+	 * Pushes commits made locally on the specified branch to the associated remote ('origin') repository and branch.
 	 *
-	 * @param username the username to authenticate with
-	 * @param password the password to authenticate with
-	 * @param tryCount the number of attempts this push has been tried already 
-	 * @throws IOException if the push operation failed
+	 * @param credentialsProvider a {@link CredentialsProvider} to use for authentication
+	 * @param branch the branch to push, defaults to the user branch if null
+	 * @param tryCount how often this push has been attempted already (start with 0, used internally to limit recursive retries)
+	 * @param skipBranchChecks whether to skip branch checks, normally false
+	 * @throws IOException if an error occurs when pushing
 	 */
-	private List<PushResult> push(CredentialsProvider credentialsProvider, String branch, int tryCount, boolean force) throws IOException {
+	private List<PushResult> push(CredentialsProvider credentialsProvider, String branch, int tryCount, boolean skipBranchChecks) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
+
 		List<PushResult> result = new ArrayList<>();
+
+		if (CATMAPropertyKey.DEV_PREVENT_PUSH.getBooleanValue()) {
+			logger.warning(String.format("FAKE PUSH - %s", this.getRemoteUrl(null)));
+			return result;
+		}
+
 		try {
-			if (!CATMAPropertyKey.DEV_PREVENT_PUSH.getBooleanValue()) {
-				
-				String currentBranch = this.gitApi.getRepository().getBranch();
-				if (!force && 
-					((branch != null && branch.equals(Constants.MASTER) && !currentBranch.equals(Constants.MASTER))
-							|| (branch == null && !currentBranch.equals(this.username)))) {
+			String currentBranch = gitApi.getRepository().getBranch();
+
+			if (!skipBranchChecks) {
+				if (branch != null && !currentBranch.equals(branch)) {
+					throw new IOException(
+							String.format("Aborting push - branch to push was \"%s\" but currently checked out branch is \"%s\"", branch, currentBranch)
+					);
+				}
+				if (branch == null && !currentBranch.equals(username)) {
 					throw new IOException(
 							String.format(
-								"Can only push branch %1$s, got %2$s!", 
-								this.username, currentBranch));
-				}
-				
-				PushCommand pushCommand = this.gitApi.push();
-				pushCommand.setCredentialsProvider(credentialsProvider);
-				pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
-				Iterable<PushResult> pushResults = pushCommand.call();
-				for (PushResult pushResult : pushResults) {
-					for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
-						logger.info("PushResult " + remoteRefUpdate);
-					}
-					result.add(pushResult);
+									"Aborting push - branch to push was null (= user branch \"%s\") but currently checked out branch is \"%s\"",
+									username,
+									currentBranch
+							)
+					);
 				}
 			}
-			else {
-				System.out.println(String.format("FAKE PUSH - %1$s", this.getRemoteUrl(null)));
+
+			PushCommand pushCommand = this.gitApi.push();
+			pushCommand.setCredentialsProvider(credentialsProvider);
+			pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
+			Iterable<PushResult> pushResults = pushCommand.call();
+
+			for (PushResult pushResult : pushResults) {
+				for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
+					logger.info(String.format("PushResult: %s", remoteRefUpdate));
+				}
+
+				result.add(pushResult);
 			}
 		}
 		catch (GitAPIException e) {
-			// sometimes Gitlab refuses to accept the push and gives this error messages
-			// subsequent push attempts however pass through
-			// so we retry the push up to 3 times before giving up
-			if (e.getMessage().contains("authentication not supported") && tryCount<3) {
+			// sometimes GitLab refuses to accept the push and returns this error message
+			// subsequent push attempts succeed however, so we retry the push up to 3 times before giving up
+			if (e.getMessage().contains("authentication not supported") && tryCount < 3) {
 				try {
 					Thread.sleep(3);
-				} catch (InterruptedException notOfInterest) {
 				}
-				push(credentialsProvider, branch, tryCount+1, force);
+				catch (InterruptedException ignored) {}
+
+				push(credentialsProvider, branch, tryCount + 1, skipBranchChecks);
 			}
 			else {
 				// give up, push not possible or unexpected error
-				throw new IOException(String.format("Failed to push, tried %1$d times!", tryCount+1), e);
+				throw new IOException(String.format("Failed to push, tried %d times", tryCount + 1), e);
 			}
 		}
+
 		return result;
 	}
 
@@ -1497,7 +1534,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
 			Iterable<RevCommit> commits = null;
 			
-			if (!refs.isEmpty()) { // otherwise project has never been never synchronized
+			if (!refs.isEmpty()) { // otherwise project has never been synchronized
 
 				ObjectId remote =
 					this.gitApi.getRepository().resolve("refs/remotes/origin/" + migrationBranch); 
