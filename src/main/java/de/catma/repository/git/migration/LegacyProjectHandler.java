@@ -216,31 +216,31 @@ public class LegacyProjectHandler {
 		
 		return tagManager.getTagLibrary();
 	}
-	
+
 	public List<Pair<JsonLdWebAnnotation, TagInstance>> loadLegacyTagInstances(
-			String projectId, String markupCollectionId, File annotationDirectory, TagLibrary tagLibrary) throws Exception {
-		
-		ArrayList<TagReference> tagReferenceList = loadLegacyTagReferences(projectId, markupCollectionId, annotationDirectory);
-		Multimap<TagInstance, TagReference> tagInstances = 
-				Multimaps.index(tagReferenceList, TagReference::getTagInstance);
-		
-		List<Pair<JsonLdWebAnnotation, TagInstance>> annotationToTagInstanceMapping =
-				Lists.newArrayList();
-		
-		for (TagInstance tagInstance : tagInstances.keySet()) {
-			
-			 Collection<TagReference> references = tagInstances.get(tagInstance);
-			 
+			String projectId,
+			String markupCollectionId,
+			File annotationDirectory,
+			TagLibrary tagLibrary
+	) throws Exception {
+		ArrayList<TagReference> legacyTagReferences = loadLegacyTagReferences(projectId, markupCollectionId, annotationDirectory);
+		Multimap<TagInstance, TagReference> legacyTagInstanceTagReferenceMultimap = Multimaps.index(legacyTagReferences, TagReference::getTagInstance);
+
+		List<Pair<JsonLdWebAnnotation, TagInstance>> annotationTagInstanceMap =	Lists.newArrayList();
+
+		for (TagInstance tagInstance : legacyTagInstanceTagReferenceMultimap.keySet()) {
+			Collection<TagReference> tagReferences = legacyTagInstanceTagReferenceMultimap.get(tagInstance);
 			JsonLdWebAnnotation annotation = new JsonLdWebAnnotation(
-					references,
+					tagReferences,
 					tagLibrary,
-					tagInstance.getPageFilename());
-			annotationToTagInstanceMapping.add(new Pair<>(annotation, tagInstance));
+					tagInstance.getPageFilename()
+			);
+			annotationTagInstanceMap.add(new Pair<>(annotation, tagInstance));
 		}
-		
-		return annotationToTagInstanceMapping;
+
+		return annotationTagInstanceMap;
 	}
-	
+
 	private ArrayList<TagReference> loadLegacyTagReferences(
 			String projectId, String markupCollectionId, File parentDirectory)
 				throws Exception {

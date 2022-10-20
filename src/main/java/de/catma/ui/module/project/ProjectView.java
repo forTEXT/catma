@@ -890,98 +890,107 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleEditResources() {
 		final Set<Resource> selectedResources = documentGrid.getSelectedItems();
-		if (selectedResources.isEmpty()) {
-			Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE); 
-		}
-		else {
-			final Resource resource = selectedResources.iterator().next();
-			if (selectedResources.size() > 1) {
-				documentGridComponent.setSelectionMode(SelectionMode.SINGLE);
-			}
 
-			if (resource.isCollection()) {
-				
-				final AnnotationCollectionReference collectionRef = 
-						((CollectionResource)selectedResources.iterator().next()).getCollectionReference();
-				boolean beyondUsersResponsibility = 
-						!collectionRef.isResponsible(project.getUser().getIdentifier());
-				try {
-					BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-						beyondUsersResponsibility, 
+		if (selectedResources.isEmpty()) {
+			Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		// TODO: this silently ignores all but the first selected resource - disallow multi-select?
+		// only one resource can be edited at a time
+		if (selectedResources.size() > 1) {
+			documentGridComponent.setSelectionMode(SelectionMode.SINGLE);
+		}
+		// take the first selected resource
+		final Resource resourceToEdit = selectedResources.iterator().next();
+
+		if (resourceToEdit.isCollection()) {
+			final AnnotationCollectionReference collectionRef = ((CollectionResource) resourceToEdit).getCollectionReference();
+			boolean isBeyondCurrentUsersResponsibility = !collectionRef.isResponsible(project.getUser().getIdentifier());
+
+			try {
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+						isBeyondCurrentUsersResponsibility,
 						project.hasPermission(project.getRoleOnProject(), RBACPermission.COLLECTION_DELETE_OR_EDIT),
 						new Action() {
 							@Override
 							public void execute() {
-	
-								EditResourceDialog editCollectionDlg = 
-									new EditResourceDialog(
-										collectionRef.getResponsibleUser(), 
+								EditResourceDialog editCollectionDialog = new EditResourceDialog(
+										"Edit Collection Metadata",
 										collectionRef.getContentInfoSet(),
-										ProjectView.this.membersByIdentfier.values(),
-										new SaveCancelListener<Pair<String,ContentInfoSet>>() {
+										collectionRef.getResponsibleUser(),
+										membersByIdentfier.values(),
+										new SaveCancelListener<Pair<String, ContentInfoSet>>() {
 											@Override
 											public void savePressed(Pair<String, ContentInfoSet> result) {
 												collectionRef.setResponsibleUser(result.getFirst());
 												try {
 													project.update(collectionRef, result.getSecond());
-												} catch (Exception e) {
-													errorHandler.showAndLogError("Error updating collection", e);
-													reloadAll();
+												}
+												catch (Exception e) {
+													errorHandler.showAndLogError(
+															String.format("Failed to update collection \"%s\"", collectionRef.getName()),
+															e
+													);
+													reloadAll(); // TODO: why are we doing this here (at all, and not for documents below)?
 												}
 											}
-										});
-								editCollectionDlg.show();
+										}
+								);
+								editCollectionDialog.show();
 							}
-						});
-				}
-				catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error editing Collection!", e);					
-				}
+						}
+				);
 			}
-			else {
-				
-				final SourceDocumentReference document = 
-						((DocumentResource)selectedResources.iterator().next()).getDocument();
-				
-				boolean beyondUsersResponsibility = 
-						!document.isResponsible(project.getUser().getIdentifier());
-				try {
-					BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-							beyondUsersResponsibility, 
-							project.hasPermission(project.getRoleOnProject(), RBACPermission.COLLECTION_DELETE_OR_EDIT),
-							new Action() {
-								@Override
-								public void execute() {
-		
-	
-									EditResourceDialog editDocumentDlg = new EditResourceDialog(
-										document.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser(),
-										document.getSourceDocumentInfo().getContentInfoSet(),
-										ProjectView.this.membersByIdentfier.values(),
-										new SaveCancelListener<Pair<String,ContentInfoSet>>() {
+			catch (IOException e) {
+				errorHandler.showAndLogError("Error editing collection", e);
+			}
+		}
+		else { // document
+			final SourceDocumentReference documentRef = ((DocumentResource) resourceToEdit).getDocument();
+			boolean isBeyondCurrentUsersResponsibility = !documentRef.isResponsible(project.getUser().getIdentifier());
+
+			try {
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+						isBeyondCurrentUsersResponsibility,
+						project.hasPermission(project.getRoleOnProject(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
+						new Action() {
+							@Override
+							public void execute() {
+								EditResourceDialog editDocumentDialog = new EditResourceDialog(
+										"Edit Document Metadata",
+										documentRef.getSourceDocumentInfo().getContentInfoSet(),
+										documentRef.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser(),
+										membersByIdentfier.values(),
+										new SaveCancelListener<Pair<String, ContentInfoSet>>() {
 											@Override
 											public void savePressed(Pair<String, ContentInfoSet> result) {
 												try {
 													project.update(
-														document, 
-														document.getSourceDocumentInfo().getContentInfoSet(),
-														result.getFirst());
+														documentRef,
+														documentRef.getSourceDocumentInfo().getContentInfoSet(),
+														result.getFirst()
+													);
 												}
 												catch (Exception e) {
-													errorHandler.showAndLogError("Error updating document", e);
+													errorHandler.showAndLogError(
+															String.format(
+																	"Failed to update document \"%s\"",
+																	documentRef.getSourceDocumentInfo().getContentInfoSet().getTitle()
+															),
+															e
+													);
 												}
 											}
-										});
-									editDocumentDlg.show();
-								}
-							});
-				}
-				catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error editing Document!", e);					
-				}
-						
+										}
+								);
+								editDocumentDialog.show();
+							}
+						}
+				);
+			}
+			catch (IOException e) {
+				errorHandler.showAndLogError("Error editing document!", e);
 			}
 		}
 	}

@@ -143,11 +143,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			throw new IOException("Failed to create remote Git repository", e);
 		}
 	}
-	
+
 	@Override
-	public CreateRepositoryResponse createRepository(
-			String name, String description)
-			throws IOException {
+	public CreateRepositoryResponse createRepository(String name, String description) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
 		try {
@@ -158,15 +156,15 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 
 			project = projectApi.createProject(project);
 			return new CreateRepositoryResponse(
-				null, project.getId(),
-				GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
+					null,
+					project.getId(),
+					GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
 			);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to create remote Git repository", e);
 		}
 	}
-
 
 	@Override
 	public void deleteRepository(ProjectReference projectReference) throws IOException {

@@ -111,13 +111,11 @@ public class SourceDocumentReference {
 	}
 
 	public boolean isResponsible(String identifier) {
-		String responsible = 
-				 this.sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser();
-		return responsible == null || responsible.equals(identifier);
+		String responsibleUser = sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser();
+		return responsibleUser == null || responsibleUser.equals(identifier);
 	}
 
 	public String getResponsibleUser() {
-		return getSourceDocumentInfo().getTechInfoSet().getResponsibleUser();
+		return sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser();
 	}
-
 }

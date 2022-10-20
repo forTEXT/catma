@@ -2,10 +2,7 @@ package de.catma.repository.git.graph.lazy;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -254,42 +251,42 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public Multimap<String, String> getAnnotationIdsByCollectionId(TagDefinition tag) throws Exception {
+	public Multimap<String, String> getAnnotationIdsByCollectionId(TagDefinition tagDefinition) throws Exception {
 		Multimap<String, String> result = HashMultimap.create();
-		
-		for (AnnotationCollectionReference ref : 
-			this.docRefsById.values()
+		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
 				.stream()
-				.map(docRef -> docRef.getUserMarkupCollectionRefs())
+				.map(SourceDocumentReference::getUserMarkupCollectionRefs)
 				.flatMap(Collection::stream)
-				.collect(Collectors.toSet())) {
-			AnnotationCollection collection = collectionCache.get(ref.getId());
-			collection.getTagReferences(tag)
-				.stream()
-				.map(TagReference::getTagInstanceId)
-				.collect(Collectors.toSet())
-				.forEach(instanceId -> result.put(ref.getId(), instanceId));
+				.collect(Collectors.toSet());
+
+		for (AnnotationCollectionReference collectionReference : collectionReferences) {
+			AnnotationCollection collection = collectionCache.get(collectionReference.getId());
+			collection.getTagReferences(tagDefinition)
+					.stream()
+					.map(TagReference::getTagInstanceId)
+					.collect(Collectors.toSet())
+					.forEach(tagInstanceId -> result.put(collectionReference.getId(), tagInstanceId));
 		}
-		
+
 		return result;
 	}
 
 	@Override
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception {
 		Multimap<String, TagReference> result = ArrayListMultimap.create();
-
-		for (AnnotationCollectionReference ref : 
-			this.docRefsById.values()
+		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
 				.stream()
-				.map(docRef -> docRef.getUserMarkupCollectionRefs())
+				.map(SourceDocumentReference::getUserMarkupCollectionRefs)
 				.flatMap(Collection::stream)
-				.collect(Collectors.toSet())) {
-			AnnotationCollection collection = collectionCache.get(ref.getId());
+				.collect(Collectors.toSet());
+
+		for (AnnotationCollectionReference collectionReference : collectionReferences) {
+			AnnotationCollection collection = collectionCache.get(collectionReference.getId());
 			collection.getTagReferences(tag)
-				.stream()
-				.forEach(tagReference -> result.put(ref.getId(), tagReference));
+					.stream()
+					.forEach(tagReference -> result.put(collectionReference.getId(), tagReference));
 		}
-		
+
 		return result;
 	}
 
@@ -360,38 +357,38 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public Multimap<String, String> getAnnotationIdsByCollectionId(TagsetDefinition tagsetDefinition) throws Exception {
 		Multimap<String, String> result = HashMultimap.create();
-		
-		for (AnnotationCollectionReference ref : 
-			this.docRefsById.values()
+		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
 				.stream()
-				.map(docRef -> docRef.getUserMarkupCollectionRefs())
+				.map(SourceDocumentReference::getUserMarkupCollectionRefs)
 				.flatMap(Collection::stream)
-				.collect(Collectors.toSet())) {
-			AnnotationCollection collection = collectionCache.get(ref.getId());
+				.collect(Collectors.toSet());
+
+		for (AnnotationCollectionReference collectionReference : collectionReferences) {
+			AnnotationCollection collection = collectionCache.get(collectionReference.getId());
 			collection.getTagReferences(tagsetDefinition)
-				.stream()
-				.map(TagReference::getTagInstanceId)
-				.collect(Collectors.toSet())
-				.forEach(instanceId -> result.put(ref.getId(), instanceId));
+					.stream()
+					.map(TagReference::getTagInstanceId)
+					.collect(Collectors.toSet())
+					.forEach(tagInstanceId -> result.put(collectionReference.getId(), tagInstanceId));
 		}
-		
+
 		return result;
 	}
 
 	@Override
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(TagsetDefinition tagsetDefinition) throws Exception {
 		Multimap<String, TagReference> result = ArrayListMultimap.create();
+		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
+				.stream()
+				.map(SourceDocumentReference::getUserMarkupCollectionRefs)
+				.flatMap(Collection::stream)
+				.collect(Collectors.toSet());
 
-		for (AnnotationCollectionReference ref :
-				this.docRefsById.values()
-						.stream()
-						.map(docRef -> docRef.getUserMarkupCollectionRefs())
-						.flatMap(Collection::stream)
-						.collect(Collectors.toSet())) {
-			AnnotationCollection collection = collectionCache.get(ref.getId());
+		for (AnnotationCollectionReference collectionReference : collectionReferences) {
+			AnnotationCollection collection = collectionCache.get(collectionReference.getId());
 			collection.getTagReferences(tagsetDefinition)
 					.stream()
-					.forEach(tagReference -> result.put(ref.getId(), tagReference));
+					.forEach(tagReference -> result.put(collectionReference.getId(), tagReference));
 		}
 
 		return result;

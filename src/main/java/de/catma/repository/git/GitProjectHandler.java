@@ -168,36 +168,29 @@ public class GitProjectHandler {
 			return projectRevision;
 		}
 	}
-	
-	public String removeTagAndAnnotations(
-			TagDefinition tagDefinition, Multimap<String, TagInstance> tagInstancesByCollectionId) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			localGitRepoManager.open(
-					projectReference.getNamespace(), projectReference.getProjectId());
+
+	public String removeTagAndAnnotations(TagDefinition tagDefinition, Multimap<String, TagInstance> tagInstancesByCollectionId) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
 			for (String collectionId : tagInstancesByCollectionId.keySet()) {
-				removeTagInstances(
-					collectionId, tagInstancesByCollectionId.get(collectionId));
-
+				removeTagInstances(collectionId, tagInstancesByCollectionId.get(collectionId));
 				addCollectionToStaged(collectionId);
 			}
-			
-			GitTagsetHandler gitTagsetHandler = 
-				new GitTagsetHandler(
-					localGitRepoManager, 
-					this.projectPath,
-					this.remoteGitServerManager.getUsername(),
-					this.remoteGitServerManager.getEmail());
 
-			String projectRevision = 
-				gitTagsetHandler.removeTagDefinition(tagDefinition);
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
+					localGitRepoManager,
+					projectPath,
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail()
+			);
+			String projectRevision = gitTagsetHandler.removeTagDefinition(tagDefinition);
 
 			localGitRepoManager.push(credentialsProvider);
-	
+
 			return projectRevision;
 		}
 	}
-	
 
 	public String removePropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition,
@@ -248,36 +241,27 @@ public class GitProjectHandler {
 			return projectRevision;
 		}
 	}
-	
-	public String removeTagset(
-			TagsetDefinition tagset, 
-			Multimap<String, TagInstance> affectedTagInstancesByCollectionId) throws Exception {
-		
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			localGitRepoManager.open(
-					projectReference.getNamespace(), projectReference.getProjectId());
+
+	public String removeTagset(TagsetDefinition tagsetDefinition, Multimap<String, TagInstance> affectedTagInstancesByCollectionId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
 			for (String collectionId : affectedTagInstancesByCollectionId.keySet()) {
-				removeTagInstances(
-						collectionId, affectedTagInstancesByCollectionId.get(collectionId));
-				
+				removeTagInstances(collectionId, affectedTagInstancesByCollectionId.get(collectionId));
 				addCollectionToStaged(collectionId);
 			}
 
-			GitTagsetHandler gitTagsetHandler = 
-				new GitTagsetHandler(
-					localGitRepoManager, 
-					this.projectPath,
-					this.remoteGitServerManager.getUsername(),
-					this.remoteGitServerManager.getEmail());
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
+					localGitRepoManager,
+					projectPath,
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail()
+			);
+			String projectRevision = gitTagsetHandler.removeTagsetDefinition(tagsetDefinition);
 
-
-			String projectRevision = 
-					gitTagsetHandler.removeTagsetDefinition(tagset);
-			
 			localGitRepoManager.push(credentialsProvider);
 
-			return projectRevision;		
+			return projectRevision;
 		}
 	}
 
@@ -437,44 +421,33 @@ public class GitProjectHandler {
 		}	
 		
 	}
-	
-	
-	public void addOrUpdate(
-			String collectionId, Collection<TagReference> tagReferenceList, 
-			TagLibrary tagLibrary) throws IOException {
-		
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
+
+	public void addOrUpdate(String collectionId, Collection<TagReference> tagReferenceList, TagLibrary tagLibrary) throws IOException {
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
 		);
 
-		
-		Multimap<TagInstance, TagReference> tagInstances = 
-				Multimaps.index(tagReferenceList, TagReference::getTagInstance);
-		
-		List<Pair<JsonLdWebAnnotation, TagInstance>> annotationToTagInstanceMapping =
-				Lists.newArrayList();
-		
-		for (TagInstance tagInstance : tagInstances.keySet()) {
-			
-			 Collection<TagReference> references = tagInstances.get(tagInstance);
-			 
+		Multimap<TagInstance, TagReference> tagInstanceTagReferenceMultimap = Multimaps.index(tagReferenceList, TagReference::getTagInstance);
+
+		List<Pair<JsonLdWebAnnotation, TagInstance>> annotationTagInstanceMap = Lists.newArrayList();
+
+		for (TagInstance tagInstance : tagInstanceTagReferenceMultimap.keySet()) {
+			Collection<TagReference> tagReferences = tagInstanceTagReferenceMultimap.get(tagInstance);
 			JsonLdWebAnnotation annotation = new JsonLdWebAnnotation(
-					references,
+					tagReferences,
 					tagLibrary,
-					tagInstance.getPageFilename());
-			annotationToTagInstanceMapping.add(new Pair<>(annotation, tagInstance));
+					tagInstance.getPageFilename()
+			);
+			annotationTagInstanceMap.add(new Pair<>(annotation, tagInstance));
 		}
 
-		
-		gitMarkupCollectionHandler.createTagInstances(collectionId, annotationToTagInstanceMapping);
-
+		gitAnnotationCollectionHandler.createTagInstances(collectionId, annotationTagInstanceMap);
 	}
-	
+
 	public void addOrUpdate(
 			String collectionId, TagInstance tagInstance, Collection<TagReference> tagReferenceList, 
 			TagLibrary tagLibrary) throws IOException {
@@ -505,27 +478,27 @@ public class GitProjectHandler {
 	}
 
 	public void removeTagInstances(String collectionId, Collection<TagInstance> deletedTagInstances) throws IOException {
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
-				this.localGitRepositoryManager,
-				this.projectPath,
-				this.projectId,
-				this.remoteGitServerManager.getUsername(),
-				this.remoteGitServerManager.getEmail()
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
 		);
 
-		gitMarkupCollectionHandler.removeTagInstances(collectionId, deletedTagInstances);
+		gitAnnotationCollectionHandler.removeTagInstances(collectionId, deletedTagInstances);
 	}
 
 	public void removeTagInstance(String collectionId, TagInstance deletedTagInstance) throws IOException {
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = new GitAnnotationCollectionHandler(
-				this.localGitRepositoryManager,
-				this.projectPath,
-				this.projectId,
-				this.remoteGitServerManager.getUsername(),
-				this.remoteGitServerManager.getEmail()
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
 		);
 
-		gitMarkupCollectionHandler.removeTagInstances(collectionId, Collections.singleton(deletedTagInstance));
+		gitAnnotationCollectionHandler.removeTagInstances(collectionId, Collections.singleton(deletedTagInstance));
 	}
 
 	public String removeCollection(AnnotationCollectionReference userMarkupCollectionReference) throws IOException {
@@ -578,18 +551,18 @@ public class GitProjectHandler {
 	// Document operations
 
 	/**
-	 * Creates a new Document within the Project.
+	 * Creates a new document within the project.
 	 *
-	 * @param documentId the ID of the Document to create.
-	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original, unmodified document
-	 * @param originalSourceDocumentFileName the file name of the original, unmodified document
-	 * @param convertedSourceDocumentStream a {@link InputStream} object representing the converted, UTF-8 encoded Document
-	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded Document
-	 * @param terms the collection of terms extracted from the converted Document
+	 * @param documentId ID of the document to create
+	 * @param originalSourceDocumentStream an {@link InputStream} for the original, unmodified document
+	 * @param originalSourceDocumentFileName file name of the original, unmodified document
+	 * @param convertedSourceDocumentStream an {@link InputStream} for the converted, UTF-8 encoded document
+	 * @param convertedSourceDocumentFileName file name of the converted, UTF-8 encoded document
+	 * @param terms the collection of terms extracted from the converted document
 	 * @param tokenizedSourceDocumentFileName name of the file within which the terms/tokens should be stored in serialized form
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
-	 * @return the revisionHash
-	 * @throws IOException if an error occurs while creating the Document
+	 * @return the revision hash
+	 * @throws IOException if an error occurs when creating the document
 	 */
 	public String createSourceDocument(
 			String documentId,
@@ -598,28 +571,25 @@ public class GitProjectHandler {
 			Map<String, List<TermInfo>> terms, String tokenizedSourceDocumentFileName,
 			SourceDocumentInfo sourceDocumentInfo
 	) throws IOException {
-		
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			
-			localGitRepoManager.open(
-					projectReference.getNamespace(), projectReference.getProjectId());
-
+		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
 			GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
 					localGitRepoManager, 
-					this.projectPath,
-					this.remoteGitServerManager.getUsername(),
-					this.remoteGitServerManager.getEmail());
+					projectPath,
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail()
+			);
 
 			File documentFolder = Paths.get(
-					this.projectPath.getAbsolutePath(),
+					projectPath.getAbsolutePath(),
 					DOCUMENTS_DIRECTORY_NAME,
 					documentId
 			).toFile();
-			
+
 			sourceDocumentInfo.getTechInfoSet().setResponsibleUser(user.getIdentifier());
-			
-			// create the Document within the project
+
+			// create the document within the project
 			String revisionHash = gitSourceDocumentHandler.create(
 					documentFolder, documentId,
 					originalSourceDocumentStream, originalSourceDocumentFileName,
@@ -630,17 +600,10 @@ public class GitProjectHandler {
 
 			localGitRepoManager.push(credentialsProvider);
 
+			// TODO: should this be done sooner so that the updated URI is written to disk?
 			sourceDocumentInfo.getTechInfoSet().setURI(
-					Paths.get(
-							documentFolder.getAbsolutePath(), 
-							convertedSourceDocumentFileName).toUri()
+					Paths.get(documentFolder.getAbsolutePath(), convertedSourceDocumentFileName).toUri()
 			);
-
-
-			String name = sourceDocumentInfo.getContentInfoSet().getTitle();
-			if ((name == null) || name.isEmpty()) {
-				name = "N/A";
-			}
 
 			return revisionHash;
 		}

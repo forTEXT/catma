@@ -1,45 +1,45 @@
 package de.catma.ui.module.project;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
-
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.TextField;
-
 import de.catma.document.source.ContentInfoSet;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.user.Member;
 import de.catma.util.Pair;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 public class EditResourceDialog extends AbstractOkCancelDialog<Pair<String, ContentInfoSet>> {
+	private final ContentInfoSet contentInfoSet;
+	private final String responsibleUser;
+	private final Collection<Member> projectMembers;
 
 	private TextField titleField;
 	private TextField authorField;
 	private TextField descriptionField;
 	private TextField publisherField;
 	private ComboBox<Member> responsibleBox;
-	private ContentInfoSet contentInfoSet;
 
 	public EditResourceDialog(
-			String responsibleUser, ContentInfoSet contentInfoSet,
+			String title,
+			ContentInfoSet contentInfoSet,
+			String responsibleUser,
 			Collection<Member> projectMembers,
-			SaveCancelListener<Pair<String, ContentInfoSet>> saveCancelListener) {
-		super("Edit Collection metadata", saveCancelListener);
-		this.contentInfoSet = contentInfoSet;
-		initComponents(responsibleUser, contentInfoSet, projectMembers);
-	}
-	
-	public EditResourceDialog(ContentInfoSet contentInfoSet,
-			SaveCancelListener<Pair<String, ContentInfoSet>> saveCancelListener) {
-		super("Edit Document metadata", saveCancelListener);
-		this.contentInfoSet = contentInfoSet;
-		initComponents(null, contentInfoSet, null);
-	}
-	
+			SaveCancelListener<Pair<String, ContentInfoSet>> saveCancelListener
+	) {
+		super(title, saveCancelListener);
 
-	private void initComponents(String responsibleUser, ContentInfoSet contentInfoSet, Collection<Member> projectMembers) {
+		this.contentInfoSet = contentInfoSet;
+		this.responsibleUser = responsibleUser;
+		this.projectMembers = projectMembers;
+
+		initComponents();
+	}
+
+	private void initComponents() {
 		titleField = new TextField("Title");
 		if (contentInfoSet.getTitle() != null) {
 			titleField.setValue(contentInfoSet.getTitle());

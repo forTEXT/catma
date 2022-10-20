@@ -386,15 +386,18 @@ public class GraphWorktreeProject implements IndexedProject {
 	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot remove %2$s", 
-						this.projectReference, tagsetDefinition));
+				String.format(
+						"Project \"%s\" is in read-only mode! Cannot remove tagset \"%s\".",
+						projectReference,
+						tagsetDefinition
+				)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 
-		// collect Annotations
-		Multimap<String, TagReference> tagReferencesByCollectionId =
-				graphProjectHandler.getTagReferencesByCollectionId(tagsetDefinition);
+		// collect annotations
+		Multimap<String, TagReference> tagReferencesByCollectionId = graphProjectHandler.getTagReferencesByCollectionId(tagsetDefinition);
 		Multimap<String, TagInstance> tagInstancesByCollectionId = Multimaps.transformValues(
 				tagReferencesByCollectionId, TagReference::getTagInstance
 		);
@@ -402,19 +405,15 @@ public class GraphWorktreeProject implements IndexedProject {
 				tagReferencesByCollectionId, TagReference::getTagInstanceId
 		);
 
-		// remove Tagset and affected Annotations from repo and commit
-		this.rootRevisionHash = 
-				gitProjectHandler.removeTagset(
-						tagsetDefinition, tagInstancesByCollectionId);
-		
+		// remove tagset and affected annotations from repo and commit
+		rootRevisionHash = gitProjectHandler.removeTagset(tagsetDefinition, tagInstancesByCollectionId);
+
+		// save updates to index
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
-			graphProjectHandler.removeTagInstances(
-				this.rootRevisionHash, collectionId,
-				annotationIdsByCollectionId.get(collectionId));
+			graphProjectHandler.removeTagInstances(rootRevisionHash, collectionId, annotationIdsByCollectionId.get(collectionId));
 		}
-		
-		graphProjectHandler.removeTagset(
-				this.rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
+
+		graphProjectHandler.removeTagset(rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void addPropertyDefinition(
@@ -450,66 +449,79 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	private void removePropertyDefinition(
-			PropertyDefinition propertyDefinition, 
-			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+			PropertyDefinition propertyDefinition,
+			TagDefinition tagDefinition,
+			TagsetDefinition tagsetDefinition
+	) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot update %2$s", 
-						this.projectReference, tagDefinition));
+				String.format(
+						"Project \"%s\" is in read-only mode! Cannot update tag \"%s\".",
+						projectReference,
+						tagDefinition
+				)
+			);
 		}
 
-		// collect Annotations
-		Multimap<String, TagReference> tagReferencesByCollectionId =
-			graphProjectHandler.getTagReferencesByCollectionId(tagDefinition);
-		
+		// collect annotations
+		Multimap<String, TagReference> tagReferencesByCollectionId = graphProjectHandler.getTagReferencesByCollectionId(tagDefinition);
+
 		gitProjectHandler.addCollectionsToStagedAndCommit(
 				tagReferencesByCollectionId.keySet(),
 				String.format(
-						"Auto-committing changes before performing an update of Annotations "
-						+ "as part of the deletion of the Property Definition %1$s with ID %2$s",
+						"Auto-committing changes before performing an update of annotations "
+								+ "as part of the deletion of the property \"%s\" with ID: %s",
 						propertyDefinition.getName(),
-						propertyDefinition.getUuid()),
+						propertyDefinition.getUuid()
+				),
 				false, // don't force
-				false); // don't push now, we push everything when the removal happens below
-		
-		// delete Annotations Properties in affected Annotations
+				false // don't push now, we push everything when the removal happens below
+		);
+
+		// delete properties from affected annotations
 		for (String collectionId : tagReferencesByCollectionId.keySet()) {
-			Collection<TagReference> tagReferences = 
-					tagReferencesByCollectionId.get(collectionId);
-			Set<TagInstance> tagInstances = 
-			tagReferences
-			.stream()
-			.map(tagReference -> tagReference.getTagInstance())
-			.collect(Collectors.toSet());
-			
+			Collection<TagReference> tagReferences = tagReferencesByCollectionId.get(collectionId);
+			Set<TagInstance> tagInstances = tagReferences.stream()
+					.map(TagReference::getTagInstance)
+					.collect(Collectors.toSet());
+
 			tagInstances.forEach(
-				tagInstance -> tagInstance.removeUserDefinedProperty(propertyDefinition.getUuid()));
-			
-			// save updates to git project
+				tagInstance -> tagInstance.removeUserDefinedProperty(propertyDefinition.getUuid())
+			);
+
+			// save updates to repo
 			for (TagInstance tagInstance : tagInstances) {
 				gitProjectHandler.addOrUpdate(
-					collectionId, 
-					tagReferences.stream()
-						.filter(tagRef -> tagRef.getTagInstanceId().equals(tagInstance.getUuid()))
-						.collect(Collectors.toList()), 
-					tagManager.getTagLibrary());
+						collectionId,
+						tagReferences.stream()
+								.filter(tagRef -> tagRef.getTagInstanceId().equals(tagInstance.getUuid()))
+								.collect(Collectors.toList()),
+						tagManager.getTagLibrary()
+				);
 			}
-			
+
 			// save updates to index
-			graphProjectHandler.removeProperties(
-				this.rootRevisionHash, collectionId, propertyDefinition.getUuid());
+			graphProjectHandler.removeProperties(rootRevisionHash, collectionId, propertyDefinition.getUuid());
 		}
-		
-		String oldRootRevisionHash = this.rootRevisionHash;
-		// remove Property Definition from git project
-		this.rootRevisionHash = gitProjectHandler.removePropertyDefinition(
-				propertyDefinition, tagDefinition, tagsetDefinition, 
-				tagReferencesByCollectionId.keySet());
-		
-		// remove PropertyDefinition from index
+
+		String oldRootRevisionHash = rootRevisionHash;
+
+		// remove property from repo and commit
+		rootRevisionHash = gitProjectHandler.removePropertyDefinition(
+				propertyDefinition,
+				tagDefinition,
+				tagsetDefinition,
+				tagReferencesByCollectionId.keySet()
+		);
+
+		// save updates to index
 		graphProjectHandler.removePropertyDefinition(
-			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, 
-			oldRootRevisionHash);
+				rootRevisionHash,
+				propertyDefinition,
+				tagDefinition,
+				tagsetDefinition,
+				oldRootRevisionHash
+		);
 	}
 
 	private void updatePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
@@ -585,18 +597,21 @@ public class GraphWorktreeProject implements IndexedProject {
 		graphProjectHandler.updateTagDefinition(
 				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
-	
-	private void removeTagDefinition(
-			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+
+	private void removeTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot update %2$s", 
-						this.projectReference, tagsetDefinition));
+				String.format(
+						"Project \"%s\" is in read-only mode! Cannot update tagset \"%s\".",
+						projectReference,
+						tagsetDefinition
+				)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 
-		// collect Annotations
+		// collect annotations
 		Multimap<String, TagReference> tagReferencesByCollectionId =
 				graphProjectHandler.getTagReferencesByCollectionId(tagDefinition);
 		Multimap<String, TagInstance> tagInstancesByCollectionId = Multimaps.transformValues(
@@ -605,30 +620,25 @@ public class GraphWorktreeProject implements IndexedProject {
 		Multimap<String, String> annotationIdsByCollectionId = Multimaps.transformValues(
 				tagReferencesByCollectionId, TagReference::getTagInstanceId
 		);
-		
-		// remove Tag and Annotations from repo and commit
-		this.rootRevisionHash = 
-				gitProjectHandler.removeTagAndAnnotations(
-						tagDefinition, tagInstancesByCollectionId);
-				
-		// remove Annotations from index
+
+		// remove tag and annotations from repo and commit
+		rootRevisionHash = gitProjectHandler.removeTagAndAnnotations(tagDefinition, tagInstancesByCollectionId);
+
+		// save updates to index
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
-			graphProjectHandler.removeTagInstances(
-				this.rootRevisionHash, collectionId,
-				annotationIdsByCollectionId.get(collectionId));
+			graphProjectHandler.removeTagInstances(rootRevisionHash, collectionId, annotationIdsByCollectionId.get(collectionId));
 		}
-		
-		// remove Tag from index
-		graphProjectHandler.removeTagDefinition(
-				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
-			
-		// fire annotation change events for each Collection
+
+		graphProjectHandler.removeTagDefinition(rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+
+		// fire annotation change events for each collection
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.tagReferencesChanged.name(), 
-					new Pair<>(collectionId, annotationIdsByCollectionId.get(collectionId)), null);
+					new Pair<>(collectionId, annotationIdsByCollectionId.get(collectionId)),
+					null
+			);
 		}
-
 	}
 
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -820,21 +830,22 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void update(
-			SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet,
-			String responsibleUser) throws Exception {
+	public void update(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot update %2$s", 
-						this.projectReference, sourceDocumentRef));
+				String.format(
+						"Project \"%s\" is in read-only mode! Cannot update document \"%s\".",
+						projectReference,
+						sourceDocumentRef
+				)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 		sourceDocumentRef.getSourceDocumentInfo().getTechInfoSet().setResponsibleUser(responsibleUser);
-		this.rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocumentRef);
-		
-		graphProjectHandler.updateSourceDocument(
-				this.rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
+		rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocumentRef);
+
+		graphProjectHandler.updateSourceDocument(rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
 
 		eventBus.post(new DocumentChangeEvent(sourceDocumentRef, ChangeType.UPDATED));
 	}
@@ -942,49 +953,50 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void update(AnnotationCollection userMarkupCollection, List<TagReference> tagReferences) {
+	public void update(AnnotationCollection annotationCollection, List<TagReference> tagReferences) {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot update %2$s", 
-						this.projectReference, userMarkupCollection));
+				String.format(
+						"Project \"%s\" is in read-only mode! Cannot update collection \"%s\".",
+						projectReference,
+						annotationCollection
+				)
+			);
 		}
 
 		try {
-			if (!tagReferences.isEmpty()) {				
-				URI annotationTarget = tagReferences.iterator().next().getTarget();
-				URI collectionTarget = 
-					new URI(userMarkupCollection.getSourceDocumentId()); 
-				if (!annotationTarget.equals(collectionTarget)) {
-					throw new IllegalStateException(
-						String.format(
-							"Annotations don't reference the same "
-							+ "Document as the Collection: %1$s != %2$s",
-							annotationTarget.toString(), 
-							collectionTarget.toString()));
-				}
+			URI collectionTarget = new URI(annotationCollection.getSourceDocumentId());
+			Set<URI> annotationTargets = tagReferences.stream().map(TagReference::getTarget).collect(Collectors.toSet());
+
+			if (!annotationTargets.stream().allMatch(at -> at == collectionTarget)) {
+				throw new IllegalStateException("One or more annotations don't reference the same document as the collection");
 			}
 
-			if (userMarkupCollection.getTagReferences().containsAll(
-					tagReferences)) {
-				gitProjectHandler.addOrUpdate(
-						userMarkupCollection.getUuid(), tagReferences, tagManager.getTagLibrary());
-				graphProjectHandler.addTagReferences(
-						GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
+			// TODO: consider splitting this function up into two separate add and remove functions to avoid the potentially
+			//       significant performance impact of this containsAll call
+			if (annotationCollection.getTagReferences().containsAll(tagReferences)) {
+				// add annotations to repo and commit
+				gitProjectHandler.addOrUpdate(annotationCollection.getUuid(), tagReferences, tagManager.getTagLibrary());
+				// save updates to index
+				graphProjectHandler.addTagReferences(rootRevisionHash, annotationCollection, tagReferences);
+				// fire annotation change event for the collection
 				propertyChangeSupport.firePropertyChange(
-						RepositoryChangeEvent.tagReferencesChanged.name(), 
-						null, new Pair<>(userMarkupCollection, tagReferences));
+						RepositoryChangeEvent.tagReferencesChanged.name(),
+						null,
+						new Pair<>(annotationCollection, tagReferences)
+				);
 			}
 			else {
-				graphProjectHandler.removeTagReferences(
-					GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
-
+				// remove annotations from repo and commit
 				Collection<TagInstance> tagInstances = tagReferences.stream().map(TagReference::getTagInstance).collect(Collectors.toSet());
-				gitProjectHandler.removeTagInstances(userMarkupCollection.getUuid(), tagInstances);
-
-				Collection<String> tagInstanceIds = tagReferences.stream().map(TagReference::getTagInstanceId).collect(Collectors.toSet());
+				gitProjectHandler.removeTagInstances(annotationCollection.getUuid(), tagInstances);
+				// save updates to index
+				graphProjectHandler.removeTagReferences(rootRevisionHash, annotationCollection, tagReferences);
+				// fire annotation change event for the collection
+				Collection<String> tagInstanceIds = tagInstances.stream().map(TagInstance::getUuid).collect(Collectors.toList());
 				propertyChangeSupport.firePropertyChange(
 						RepositoryChangeEvent.tagReferencesChanged.name(), 
-						new Pair<>(userMarkupCollection.getUuid(), tagInstanceIds),
+						new Pair<>(annotationCollection.getUuid(), tagInstanceIds),
 						null
 				);
 			}
@@ -993,7 +1005,8 @@ public class GraphWorktreeProject implements IndexedProject {
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.exceptionOccurred.name(),
 					null, 
-					e);				
+					e
+			);
 		}
 	}
 

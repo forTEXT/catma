@@ -1,25 +1,9 @@
 package de.catma.repository.git;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.gson.reflect.TypeToken;
-
-import org.apache.commons.io.FileUtils;
-
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -35,6 +19,20 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.Pair;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class GitAnnotationCollectionHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
@@ -47,18 +45,22 @@ public class GitAnnotationCollectionHandler {
 	private final String projectId;
 	private final String username;
 	private final String email;
+
 	private final int maxPageSizeBytes;
 
 	public GitAnnotationCollectionHandler(
-			ILocalGitRepositoryManager localGitRepositoryManager, File projectDirectory,
+			ILocalGitRepositoryManager localGitRepositoryManager,
+			File projectDirectory,
 			String projectId,
-			String username, String email
+			String username,
+			String email
 	) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.projectDirectory = projectDirectory;
 		this.projectId = projectId;
 		this.username = username;
 		this.email = email;
+
 		this.maxPageSizeBytes = CATMAPropertyKey.MAX_PAGE_FILE_SIZE_BYTES.getIntValue();
 	}
 
@@ -256,21 +258,19 @@ public class GitAnnotationCollectionHandler {
 	}
 
 	private Integer getPageNumber(File page) {
-		
 		try {
-			String pageNumber = 
-					page.getName().substring(
-							page.getName().lastIndexOf("_")+1,
-							page.getName().lastIndexOf('.'));			
-					
+			String pageNumber = page.getName().substring(
+					page.getName().lastIndexOf("_") + 1,
+					page.getName().lastIndexOf('.')
+			);
 			return Integer.valueOf(pageNumber);
 		}
 		catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 			logger.warning(
-					String.format("%s doesn't seem to be a page name! Full path was: %s", page.getName(), page.getAbsolutePath())
+					String.format("\"%s\" doesn't seem to be a page name! Full path was: %s", page.getName(), page.getAbsolutePath())
 			);
 		}
-		
+
 		return -1;
 	}
 
@@ -383,97 +383,102 @@ public class GitAnnotationCollectionHandler {
 	public ContentInfoSet getContentInfoSet(String collectionId) throws Exception {
 		return getCollectionReference(collectionId).getContentInfoSet();
 	}
-	
+
 	public AnnotationCollection getCollection(
-			String collectionId, TagLibrary tagLibrary, ProgressListener progressListener,
-			boolean handleOrphans)
-			throws IOException {
-		AnnotationCollectionReference collectionReference = 
-				getCollectionReference(collectionId);
+			String collectionId,
+			TagLibrary tagLibrary,
+			ProgressListener progressListener,
+			boolean handleOrphans
+	) throws IOException {
+		AnnotationCollectionReference collectionReference = getCollectionReference(collectionId);
 		ContentInfoSet contentInfoSet = collectionReference.getContentInfoSet();
-		
-		progressListener.setProgress("Loaded Collection %1$s", contentInfoSet.getTitle());
-		
-		String collectionSubdir = String.format(
+
+		progressListener.setProgress("Loaded collection \"%s\"", contentInfoSet.getTitle());
+
+		String relativeCollectionPath = String.format(
 				"%s/%s", 
 				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME, 
 				collectionId
 		);
-		
-		AtomicInteger counter = new AtomicInteger();
-		
-		ArrayList<TagReference>tagReferences = this.openTagReferences(
-				collectionId, contentInfoSet.getTitle(),  
-				Paths.get(
-						this.projectDirectory.getAbsolutePath(),
-						collectionSubdir,
-						ANNNOTATIONS_DIR).toFile(), 
-				progressListener, counter
+
+		ArrayList<TagReference> tagReferences = openTagReferences(
+				collectionId,
+				contentInfoSet.getTitle(),
+				Paths.get(projectDirectory.getAbsolutePath(), relativeCollectionPath, ANNNOTATIONS_DIR).toFile(),
+				progressListener,
+				new AtomicInteger()
 		);
-		
+
+		// handle orphaned annotations
 		if (handleOrphans) {
 			logger.info(
-					String.format("Checking for orphans for Collection %1$s with ID %2$s", collectionId, contentInfoSet.getTitle())
+					String.format("Checking for orphans in collection \"%s\" with ID: %s", contentInfoSet.getTitle(), collectionId)
 			);
-			
-			// handle orphan Annotations
-			ArrayListMultimap<TagInstance, TagReference> tagInstances = ArrayListMultimap.create();
-			
+
 			Set<TagInstance> orphanedTagInstances = new HashSet<>();
+			// this is used later when checking for orphaned properties
+			ArrayListMultimap<TagInstance, TagReference> tagInstanceTagReferenceMultimap = ArrayListMultimap.create();
+
 			Iterator<TagReference> tagReferenceIterator = tagReferences.iterator();
 			while (tagReferenceIterator.hasNext()) {
 				TagReference tagReference = tagReferenceIterator.next();
+				TagInstance tagInstance = tagReference.getTagInstance();
 
-				if (!orphanedTagInstances.contains(tagReference.getTagInstance())) {
-					String tagsetId = tagReference.getTagInstance().getTagsetId();
-					TagsetDefinition tagset = tagLibrary.getTagsetDefinition(tagsetId);
-					String tagId = tagReference.getTagDefinitionId();
+				if (orphanedTagInstances.contains(tagInstance)) {
+					// remove the stale annotation (TagReference) from memory (as tagReferences is later returned)
+					tagReferenceIterator.remove();
+					continue;
+				}
 
-					if (tagset == null || tagset.isDeleted(tagId)) {
-						// Tag/Tagset has been deleted, we remove the stale Annotation as well
-						orphanedTagInstances.add(tagReference.getTagInstance());
-						tagReferenceIterator.remove();
-					}
-					else {
-						// other orphan Annotations get ignored upon indexing
-						// until the corresponding Tag or its "deletion" info come along
-						
-						tagInstances.put(tagReference.getTagInstance(), tagReference);
-					}
+				TagsetDefinition tagsetDefinition = tagLibrary.getTagsetDefinition(tagInstance.getTagsetId());
+				String tagDefinitionId = tagReference.getTagDefinitionId();
+
+				if (tagsetDefinition == null || tagsetDefinition.isDeleted(tagDefinitionId)) {
+					// tagset/tag has been deleted, add the tag instance to the collection of those that will be removed from persistent storage
+					orphanedTagInstances.add(tagInstance);
+					// remove the stale annotation (TagReference) from memory as well (as tagReferences is later returned)
+					// other annotations are removed in the if statement above
+					tagReferenceIterator.remove();
+				}
+				else {
+					// keep for later when checking for orphaned properties
+					tagInstanceTagReferenceMultimap.put(tagInstance, tagReference);
 				}
 			}
-			
+
 			if (!orphanedTagInstances.isEmpty()) {
 				removeTagInstances(collectionId, orphanedTagInstances);
 			}
-			
-			// handle orphan Properties
-			for (TagInstance tagInstance : tagInstances.keySet()) {
-				TagsetDefinition tagset = tagLibrary.getTagsetDefinition(
-						tagInstance.getTagsetId());
-				if (tagset != null) {
-					Collection<Property> properties = tagInstance.getUserDefinedProperties();
-					for (Property property : new HashSet<>(properties)) {
-						// deleted property?
-						if (tagset.isDeleted(property.getPropertyDefinitionId())) {
-							// yes, we remove the stale property
-							tagInstance.removeUserDefinedProperty(property.getPropertyDefinitionId());
-							// and save the change
-							JsonLdWebAnnotation annotation = 
-									new JsonLdWebAnnotation(
-										tagInstances.get(tagInstance),
-										tagLibrary,
-										tagInstance.getPageFilename());
-							createTagInstances( // TODO: should be updateTagInstance?
-								collectionId, 
-								Collections.singletonList(new Pair<>(annotation, tagInstance)));
-						}
+
+			// handle orphaned properties
+			for (TagInstance tagInstance : tagInstanceTagReferenceMultimap.keySet()) {
+				TagsetDefinition tagsetDefinition = tagLibrary.getTagsetDefinition(tagInstance.getTagsetId());
+				Collection<Property> userDefinedProperties = tagInstance.getUserDefinedProperties();
+
+				for (Property property : new HashSet<>(userDefinedProperties)) { // TODO: do we need the HashSet?
+					if (tagsetDefinition.isDeleted(property.getPropertyDefinitionId())) {
+						// property has been deleted, remove the stale property from memory
+						tagInstance.removeUserDefinedProperty(property.getPropertyDefinitionId());
+						// persist the change
+						JsonLdWebAnnotation annotation = new JsonLdWebAnnotation(
+								tagInstanceTagReferenceMultimap.get(tagInstance),
+								tagLibrary,
+								tagInstance.getPageFilename()
+						);
+						createTagInstances( // TODO: should be updateTagInstance now!
+								collectionId,
+								Collections.singletonList(new Pair<>(annotation, tagInstance))
+						);
 					}
 				}
 			}
 		}
+
 		return new AnnotationCollection(
-				collectionId, contentInfoSet, tagLibrary, tagReferences,
+				collectionId,
+				contentInfoSet,
+				tagLibrary,
+				tagReferences,
 				collectionReference.getSourceDocumentId(),
 				collectionReference.getForkedFromCommitURL(),
 				collectionReference.getResponsibleUser()
@@ -491,7 +496,7 @@ public class GitAnnotationCollectionHandler {
 
 		for (String pageFilename : deletedTagInstancesByPageFilename.keySet()) {
 			File pageFile =	Paths.get(
-					this.projectDirectory.getAbsolutePath(),
+					projectDirectory.getAbsolutePath(),
 					collectionSubdir,
 					ANNNOTATIONS_DIR,
 					pageFilename
@@ -528,7 +533,7 @@ public class GitAnnotationCollectionHandler {
 		// TODO: consider performing some kind of page file "compression"
 		//       (fill gaps by shifting annotations and utilise max. page file size as far as possible)
 	}
-	
+
 	public String removeCollection(AnnotationCollectionReference collection) throws IOException {
 		String collectionSubDir = String.format(
 				"%s/%s", 

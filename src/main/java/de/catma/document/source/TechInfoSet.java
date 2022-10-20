@@ -22,13 +22,9 @@ import java.net.URI;
 import java.nio.charset.Charset;
 
 /**
- * Technical metadata about the physical source.
- * 
- * @author marco.petris@web.de
- *
+ * Technical metadata for a source document.
  */
 public class TechInfoSet {
-
 	private String fileName;
 	private FileType fileType;
 	private Charset charset;
@@ -37,7 +33,7 @@ public class TechInfoSet {
 	private String mimeType;
 	private String responsibleUser;
 	private transient URI uri;
-	
+
 	public TechInfoSet() {
 		
 	}
@@ -123,13 +119,12 @@ public class TechInfoSet {
 	public void setURI(URI uri) {
 		this.uri = uri;
 	}
-	
+
 	public void setResponsibleUser(String responsibleUser) {
 		this.responsibleUser = responsibleUser;
 	}
-	
+
 	public String getResponsibleUser() {
 		return responsibleUser;
 	}
-
 }
