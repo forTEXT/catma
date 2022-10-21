@@ -69,6 +69,9 @@ import de.catma.repository.git.graph.GraphProjectHandler.DocumentIndexSupplier;
 import de.catma.repository.git.graph.GraphProjectHandler.DocumentSupplier;
 import de.catma.repository.git.graph.lazy.LazyGraphProjectHandler;
 import de.catma.repository.git.managers.StatusPrinter;
+import de.catma.repository.git.resource.provider.LatestContribution;
+import de.catma.repository.git.resource.provider.LatestContributionsResourceProvider;
+import de.catma.repository.git.resource.provider.SynchronizedResourceProvider;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.serialization.tei.TeiSerializationHandlerFactory;
@@ -1607,7 +1610,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					.collect(Collectors.toList());
 			
 			if (enabled) {
-				Set<LatestContribution> latestContributions = 
+				Set<LatestContribution> latestContributions =
 						gitProjectHandler.getLatestContributions(possibleBranches);
 	
 				gitProjectHandler.setResourceProvider(

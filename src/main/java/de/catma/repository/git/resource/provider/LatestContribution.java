@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.resource.provider;
 
 import java.util.Collections;
 import java.util.HashSet;

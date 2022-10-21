@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.resource.provider;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,8 +15,13 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.GitAnnotationCollectionHandler;
+import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.GitSourceDocumentHandler;
+import de.catma.repository.git.GitTagsetHandler;
 import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.resource.provider.interfaces.IGitProjectResourceProvider;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
@@ -60,7 +65,7 @@ public class SynchronizedResourceProvider implements IGitProjectResourceProvider
 		
 		File[] tagsetDirs = tagsetsDir.listFiles(file -> file.isDirectory());			
 		
-		GitTagsetHandler gitTagsetHandler = 
+		GitTagsetHandler gitTagsetHandler =
 				new GitTagsetHandler(
 					this.localGitRepositoryManager, 
 					this.projectPath,
@@ -105,7 +110,7 @@ public class SynchronizedResourceProvider implements IGitProjectResourceProvider
 		File[] collectionDirs = 
 				collectionsDir.listFiles(file -> file.isDirectory());
 		
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
+		GitAnnotationCollectionHandler gitMarkupCollectionHandler =
 				new GitAnnotationCollectionHandler(
 						this.localGitRepositoryManager, 
 						this.projectPath,
