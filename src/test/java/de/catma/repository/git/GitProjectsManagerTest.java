@@ -21,6 +21,7 @@ import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.repository.git.managers.GitProjectsManager;
 import de.catma.util.Pair;
 
 class GitProjectsManagerTest {
@@ -52,7 +53,7 @@ class GitProjectsManagerTest {
 		BackgroundService mockBackgroundService = mock(BackgroundService.class);
 		EventBus mockEventBus = mock(EventBus.class);
 
-		GitProjectsManager gitProjectsManager = 
+		GitProjectsManager gitProjectsManager =
 			new GitProjectsManager(
 					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,

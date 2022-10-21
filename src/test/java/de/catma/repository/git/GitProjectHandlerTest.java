@@ -43,6 +43,7 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.repository.git.managers.GitProjectsManager;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;

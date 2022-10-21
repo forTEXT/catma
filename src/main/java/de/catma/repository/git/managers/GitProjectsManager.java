@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.managers;
 
 import com.google.common.eventbus.EventBus;
 import com.google.gson.JsonObject;
@@ -8,6 +8,9 @@ import de.catma.project.Project;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
 import de.catma.rbac.RBACPermission;
+import de.catma.repository.git.CreateRepositoryResponse;
+import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.GraphWorktreeProject;
 import de.catma.repository.git.graph.GraphProjectDeletionHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
