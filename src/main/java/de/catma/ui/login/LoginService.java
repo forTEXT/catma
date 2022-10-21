@@ -2,7 +2,7 @@ package de.catma.ui.login;
 
 import java.io.IOException;
 
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 
 public interface LoginService {
 	

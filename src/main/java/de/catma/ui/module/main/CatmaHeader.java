@@ -14,7 +14,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
 
-import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;

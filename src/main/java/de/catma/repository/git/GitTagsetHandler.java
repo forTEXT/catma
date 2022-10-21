@@ -13,7 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import de.catma.document.source.ContentInfoSet;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.GitTagsetHeader;

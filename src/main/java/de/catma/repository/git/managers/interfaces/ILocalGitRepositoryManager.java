@@ -1,4 +1,4 @@
-package de.catma.repository.git.interfaces;
+package de.catma.repository.git.managers.interfaces;
 
 import java.io.File;
 import java.io.IOException;

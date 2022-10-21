@@ -74,7 +74,7 @@ import org.eclipse.jgit.util.FS;
 import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.CommitMissingException;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
 import de.catma.user.User;
 import de.catma.util.Pair;

@@ -15,8 +15,8 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 

@@ -23,7 +23,7 @@ import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermInfo;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
 

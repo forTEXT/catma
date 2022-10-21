@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,15 +14,14 @@ import java.util.logging.Logger;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
 import com.beust.jcommander.internal.Maps;
-import com.google.common.collect.ArrayListMultimap;
 
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 

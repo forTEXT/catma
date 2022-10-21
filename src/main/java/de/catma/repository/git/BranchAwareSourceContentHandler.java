@@ -6,7 +6,7 @@ import java.io.InputStream;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
 
 public class BranchAwareSourceContentHandler implements SourceContentHandler {
 

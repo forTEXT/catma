@@ -15,7 +15,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.layout.HorizontalFlexLayout;

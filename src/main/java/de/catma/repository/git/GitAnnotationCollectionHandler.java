@@ -10,7 +10,7 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;

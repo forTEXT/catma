@@ -5,9 +5,9 @@ import java.io.IOException;
 import com.vaadin.server.VaadinSession;
 
 import de.catma.repository.git.GitUser;
-import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 import de.catma.ui.di.IRemoteGitManagerFactory;
 import de.catma.util.Pair;
 

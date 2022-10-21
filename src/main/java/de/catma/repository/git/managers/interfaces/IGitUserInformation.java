@@ -1,4 +1,4 @@
-package de.catma.repository.git.interfaces;
+package de.catma.repository.git.managers.interfaces;
 
 public interface IGitUserInformation {
 

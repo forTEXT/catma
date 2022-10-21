@@ -2,7 +2,7 @@ package de.catma.ui.di;
 
 import java.io.IOException;
 
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 
 /**
  * Factory that builds an IRemoteGitManagerRestricted base on login method.

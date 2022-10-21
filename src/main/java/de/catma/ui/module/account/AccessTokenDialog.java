@@ -10,7 +10,7 @@ import com.vaadin.jsclipboard.JSClipboardButton;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
-import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.i18n.Messages;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;

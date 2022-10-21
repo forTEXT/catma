@@ -4,8 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectsManager;
-import de.catma.rbac.IRBACManager;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 
 /**
  *

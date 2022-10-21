@@ -8,7 +8,7 @@ import com.vaadin.data.Validator;
 import com.vaadin.data.ValueContext;
 import com.vaadin.ui.UI;
 
-import de.catma.repository.git.interfaces.ICommonRemoteGitManager;
+import de.catma.repository.git.managers.interfaces.ICommonRemoteGitManager;
 import de.catma.ui.module.main.ErrorHandler;
 
 public class UsernameValidator implements Validator<String>{

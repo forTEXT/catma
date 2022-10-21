@@ -29,9 +29,9 @@ import org.gitlab4j.api.models.PersonalAccessToken.Scope;
 import org.gitlab4j.api.models.User;
 
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.GitUser;
 import de.catma.repository.git.GitLabUtils;
-import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.GitUser;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.util.Pair;
 
 public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRemoteGitManagerPrivileged {

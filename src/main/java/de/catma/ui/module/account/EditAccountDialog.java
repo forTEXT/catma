@@ -21,7 +21,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
