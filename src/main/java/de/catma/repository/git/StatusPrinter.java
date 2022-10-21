@@ -1,4 +1,4 @@
-package de.catma.repository.git.managers;
+package de.catma.repository.git;
 
 import java.util.Map.Entry;
 

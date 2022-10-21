@@ -44,7 +44,6 @@ import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
-import de.catma.repository.git.managers.StatusPrinter;
 import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.LatestContribution;
