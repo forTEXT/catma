@@ -338,12 +338,12 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	public String getResponsibleUser() {
 		return responsibleUser;
 	}
-	
+
 	public boolean isResponsible(String userIdentifier) {
-		if (this.responsibleUser != null) {
-			return this.responsibleUser.equals(userIdentifier);
+		if (responsibleUser != null) {
+			return responsibleUser.equals(userIdentifier);
 		}
-		return true; //shared responsibility
+		return true; // shared responsibility
 	}
 
 	public void mergeAdditive(TagsetDefinition tagset) {

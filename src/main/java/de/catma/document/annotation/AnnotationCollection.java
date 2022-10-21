@@ -339,15 +339,14 @@ public class AnnotationCollection {
 	public String getSourceDocumentId() {
 		return sourceDocumentId;
 	}
-	
-	
+
 	public boolean isResponsible(String userIdentifier) {
-		if (this.responsibleUser != null) {
-			return this.responsibleUser.equals(userIdentifier);
+		if (responsibleUser != null) {
+			return responsibleUser.equals(userIdentifier);
 		}
-		return true; //shared responsibility
+		return true; // shared responsibility
 	}
-	
+
 	public Multimap<String, TagReference> getTagReferencesByInstanceId(TagDefinition tag) {
 		Multimap<String, TagReference> tagReferencesByInstanceId = ArrayListMultimap.create();
 		

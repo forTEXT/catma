@@ -35,12 +35,12 @@ public class ProjectReference {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
+
 	@Override
 	public String toString() {
 		return (name == null || name.isEmpty()) ? "#" + namespace + "/" + projectId : name;
 	}
-	
+
 	public String getNamespace() {
 		return namespace;
 	}

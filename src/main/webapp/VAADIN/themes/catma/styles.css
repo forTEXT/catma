@@ -18685,3 +18685,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 14px;
 	font-style: italic;
 }
+
+.catma .add-member-dialog-member-combobox-description {
+	font-size: 12px;
+}

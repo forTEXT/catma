@@ -698,7 +698,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		List<PushResult> result = new ArrayList<>();
 
 		if (CATMAPropertyKey.DEV_PREVENT_PUSH.getBooleanValue()) {
-			logger.warning(String.format("FAKE PUSH - %s", this.getRemoteUrl(null)));
+			logger.warning(String.format("FAKE PUSH - %s", getRemoteUrl(null)));
 			return result;
 		}
 
@@ -722,7 +722,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				}
 			}
 
-			PushCommand pushCommand = this.gitApi.push();
+			PushCommand pushCommand = gitApi.push();
 			pushCommand.setCredentialsProvider(credentialsProvider);
 			pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
 			Iterable<PushResult> pushResults = pushCommand.call();
@@ -740,7 +740,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			// subsequent push attempts succeed however, so we retry the push up to 3 times before giving up
 			if (e.getMessage().contains("authentication not supported") && tryCount < 3) {
 				try {
-					Thread.sleep(3);
+					Thread.sleep(100);
 				}
 				catch (InterruptedException ignored) {}
 

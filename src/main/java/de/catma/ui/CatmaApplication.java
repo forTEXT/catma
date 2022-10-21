@@ -269,6 +269,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 			api = loginservice.getAPI();
 		}
 		catch (Exception ignored) {}
+
 		logger.log(
 				Level.SEVERE,
 				String.format("[%s] %s", api == null ? "not logged in" : api.getUsername(), message),

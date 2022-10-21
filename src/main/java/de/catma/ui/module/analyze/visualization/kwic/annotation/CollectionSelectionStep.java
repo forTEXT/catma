@@ -47,11 +47,9 @@ import de.catma.ui.module.project.Resource;
 import de.catma.user.Member;
 
 public class CollectionSelectionStep extends VerticalLayout implements WizardStep {
-	
 	private enum DocumentGridColumn {
 		NAME,
-		RESPONABLE,
-		;
+		RESPONSIBLE,
 	}
 
 	private ProgressStep progressStep;
@@ -319,7 +317,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
         documentGrid
 		  	.addColumn(res -> buildResponsibleFunction.apply(res), new HtmlRenderer())
 		  	.setCaption("Responsible")
-		  	.setId(DocumentGridColumn.RESPONABLE.name())
+		  	.setId(DocumentGridColumn.RESPONSIBLE.name())
 		  	.setExpandRatio(1)
 		  	.setHidden(true);
 
@@ -344,18 +342,24 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	private void toggleResponsibilityFilter() {
 		if (!miToggleResponsibiltityFilter.isChecked()) {
 			Notification.show(
-				"Warning", 
-				"Selecting Collections that are beyond your responsibility, "
-				+ "might result in conflicts with operations of other Project members!", 
-				Type.WARNING_MESSAGE);
+					"Warning",
+					"Selecting collections that are beyond your responsibility "
+					+ "might result in conflicts with operations of other project members!",
+					Type.WARNING_MESSAGE
+			);
 		}
-		documentGrid.getColumn(DocumentGridColumn.RESPONABLE.name()).setHidden(
-				miToggleResponsibiltityFilter.isChecked());
+
+		documentGrid.getColumn(DocumentGridColumn.RESPONSIBLE.name()).setHidden(
+				miToggleResponsibiltityFilter.isChecked()
+		);
+
 		try {
 			initData();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError(
-					"Error loading available Collections.", e);
+					"Error loading available collections", e
+			);
 		}
 	}
 

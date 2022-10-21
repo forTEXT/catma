@@ -778,60 +778,52 @@ public class GitProjectHandler {
 	}
 
 	public boolean synchronizeWithRemote() throws IOException {
-		
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			localGitRepoManager.open(
-					projectReference.getNamespace(), projectReference.getProjectId());
-			
+		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
 			boolean pushedAlready = false;
-			
-			// everything commmitted?
+
+			// if there are uncommitted changes we perform an auto commit and push
 			if (localGitRepoManager.hasUncommitedChanges()) {
-				// we perfom an auto commit and push everything
-				commitProject("Auto-committing changes");
+				commitProject("Auto-committing changes before synchronization");
 				localGitRepoManager.push(credentialsProvider);
 				pushedAlready = true;
 			}
-			
+
 			// do we have commits in the user branch that are not present in the master branch? 
-			// user branch -> origin/master
-			List<CommitInfo> ourUnpublishedChanges = 
-					localGitRepoManager.getOurUnpublishedChanges();
+			// userBranch -> origin/master
+			List<CommitInfo> ourUnpublishedChanges = localGitRepoManager.getOurUnpublishedChanges();
 
 			if (!ourUnpublishedChanges.isEmpty()) {
 				logger.info(
-					String.format(
-						"Commits that need to be merged %1$s -> origin/master: %2$s",
-						this.user.getIdentifier(),
-						ourUnpublishedChanges
-							.stream()
-							.map(CommitInfo::toString)
-							.collect(Collectors.joining(System.lineSeparator()))
-					)
+						String.format(
+								"Commits that need to be merged from \"%s\" -> origin/master:\n%s",
+								user.getIdentifier(),
+								ourUnpublishedChanges
+										.stream()
+										.map(CommitInfo::toString)
+										.collect(Collectors.joining("\n"))
+						)
 				);
-				
-				// make sure everyting is pushed
+
+				// make sure everything is pushed
 				if (!pushedAlready) {
 					localGitRepoManager.push(credentialsProvider);
 					pushedAlready = true;
 				}
-				
+
 				// check for existing merge requests origin/userBranch -> origin/master
-				List<MergeRequestInfo> openMergeRequests =  
-						this.remoteGitServerManager.getOpenMergeRequests(projectReference);
-				
+				List<MergeRequestInfo> openMergeRequests = remoteGitServerManager.getOpenMergeRequests(projectReference);
+
 				if (openMergeRequests.isEmpty()) {
 					// create and merge a merge request origin/userBranch -> origin/master
-					MergeRequestInfo mi = 
-						this.remoteGitServerManager.createMergeRequest(projectReference);
-					mi = refreshMergeRequestInfo(mi);
-					logger.info(
-							String.format("Created Merge Request %1$s", mi));
-					MergeRequestInfo result = 
-							this.remoteGitServerManager.mergeMergeRequest(mi);
-					logger.info(
-							String.format("Merged Merge Request %1$s", result));
-					
+					MergeRequestInfo mergeRequestInfo = remoteGitServerManager.createMergeRequest(projectReference);
+					mergeRequestInfo = refreshMergeRequestInfo(mergeRequestInfo);
+					logger.info(String.format("Created %s", mergeRequestInfo));
+
+					MergeRequestInfo result = remoteGitServerManager.mergeMergeRequest(mergeRequestInfo);
+					logger.info(String.format("Attempted merge of %s", result));
+
 					if (!result.isMerged()) {
 						return false;
 					}
@@ -839,22 +831,23 @@ public class GitProjectHandler {
 				else {
 					logger.info(
 						String.format(
-							"Merge requests origin/%1$s -> origin/master: %2$s",
-							this.user.getIdentifier(),
+							"Existing merge requests for origin/%s -> origin/master:\n%s",
+							user.getIdentifier(),
 							openMergeRequests
-								.stream()
-								.map(MergeRequestInfo::toString)
-								.collect(Collectors.joining(System.lineSeparator()))
+									.stream()
+									.map(MergeRequestInfo::toString)
+									.collect(Collectors.joining("\n"))
 						)
 					);
+
 					// merge all open merge requests origin/userBranch -> origin/master
-					for (MergeRequestInfo mi : openMergeRequests) {
-						mi = refreshMergeRequestInfo(mi);
-						if (mi.isOpen() && mi.canBeMerged()) {
-							MergeRequestInfo result = 
-									this.remoteGitServerManager.mergeMergeRequest(mi);
-							logger.info(
-									String.format("Merged Merge Request %1$s", result));
+					for (MergeRequestInfo mergeRequestInfo : openMergeRequests) {
+						mergeRequestInfo = refreshMergeRequestInfo(mergeRequestInfo);
+
+						if (mergeRequestInfo.isOpen() && mergeRequestInfo.canBeMerged()) {
+							MergeRequestInfo result = remoteGitServerManager.mergeMergeRequest(mergeRequestInfo);
+							logger.info(String.format("Attempted merge of %s", result));
+
 							if (!result.isMerged()) {
 								return false;
 							}
@@ -862,38 +855,38 @@ public class GitProjectHandler {
 					}
 				}
 			}
-			
+
 			// fetch latest commits 
 			// we are interested in updating the local origin/master here
 			localGitRepoManager.fetch(credentialsProvider);
 
-			// get commits that need to be merged to the local user branch 
+			// get commits that need to be merged into the local user branch
 			// origin/master -> userBranch
 			List<CommitInfo> theirPublishedChanges = localGitRepoManager.getTheirPublishedChanges();
 
 			if (!theirPublishedChanges.isEmpty()) {
 				logger.info(
-					String.format(
-						"Commits that need to be merged origin/master -> %1$s: %2$s",
-						this.user.getIdentifier(),
-						theirPublishedChanges
-							.stream()
-							.map(CommitInfo::toString)
-							.collect(Collectors.joining(System.lineSeparator()))
-					)
-				);				
+						String.format(
+								"Commits that need to be merged from origin/master -> \"%s\":\n%s",
+								user.getIdentifier(),
+								theirPublishedChanges
+										.stream()
+										.map(CommitInfo::toString)
+										.collect(Collectors.joining("\n"))
+						)
+				);
 
 				// can we merge origin/master -> userBranch?
 				if (localGitRepoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {
-					MergeResult mergeWithOriginMasterResult =
-							localGitRepoManager.merge(
-									Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+					MergeResult mergeWithOriginMasterResult = localGitRepoManager.merge(
+							Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER
+					);
 
-					// push merge commit if successfull
+					// push if merge was successful, otherwise abort the merge
 					if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
 						localGitRepoManager.push(credentialsProvider);
 					}
-					else { // or abort
+					else {
 						localGitRepoManager.abortMerge(mergeWithOriginMasterResult);
 						return false;
 					}
@@ -904,7 +897,7 @@ public class GitProjectHandler {
 			}
 
 			return true;
-		}	
+		}
 	}
 
 	public void ensureUserBranch() throws IOException {

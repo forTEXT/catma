@@ -121,14 +121,14 @@ public class AnnotationCollectionReference {
 	public void setForkedFromCommitURL(String forkedFromCommitURL) {
 		this.forkedFromCommitURL = forkedFromCommitURL;
 	}
-	
+
 	public boolean isResponsible(String userIdentifier) {
-		if (this.responsibleUser != null) {
-			return this.responsibleUser.equals(userIdentifier);
+		if (responsibleUser != null) {
+			return responsibleUser.equals(userIdentifier);
 		}
 		return true; //shared responsibility
 	}
-	
+
 	public String getResponsibleUser() {
 		return responsibleUser;
 	}

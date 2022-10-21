@@ -253,7 +253,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 			Project project = projectApi.getProject(projectReference.getNamespace(), projectReference.getProjectId());
 			return projectApi.getMembers(project.getId())
 					.stream()
-					.map(member -> new GitMember(member))
+					.map(GitMember::new)
 					.collect(Collectors.toSet());
 		}
 		catch (GitLabApiException e) {
@@ -265,34 +265,35 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	public List<ProjectReference> getProjectReferences() throws IOException {
 		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()));
 	}
-	
+
 	@Override
 	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException {
 		return getProjectReferences(AccessLevel.forValue(withPermission.getRoleRequired().getAccessLevel()));
 	}
-	
+
 	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
 		ProjectApi projectApi = new ProjectApi(restrictedGitLabApi);
-		
+
 		try {
-			return projectsCache.get("projects", () -> 
-			projectApi.getProjects(
-					new ProjectFilter()
-						.withMinAccessLevel(minAccessLevel)
-						.withMembership(true))
-			 	.stream()
-			 	.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy Projects
-			 	.map(project -> 
-			 		unmarshallProjectReference(
-			 			project.getNamespace().getPath(), project.getPath(), project.getDescription()))
-				.collect(Collectors.toList()));
+			return projectsCache.get("projects", () ->
+					projectApi.getProjects(
+							new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true)
+					)
+					.stream()
+					.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
+					.map(project -> unmarshallProjectReference(
+							project.getNamespace().getPath(),
+							project.getPath(),
+							project.getDescription()
+					))
+					.collect(Collectors.toList())
+			);
 		}
 		catch (Exception e) {
 			throw new IOException("Failed to load projects", e);
 		}
 	}
-	
-	
+
 	@Override
 	public String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {
@@ -569,37 +570,41 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 		}
 	}
 
-	
 	@Override
 	public void addComment(ProjectReference projectReference, Comment comment) throws IOException {
-		
-		String resourceId = comment.getDocumentId();
+		String documentId = comment.getDocumentId();
 
 		try {
-			
-			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
-			
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
+
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-			
-			
-			String title = comment.getBody().substring(0, Math.min(100, comment.getBody().length()));
+
+			String title = comment.getBody().substring(0, Math.min(97, comment.getBody().length()));
 			if (title.length() < comment.getBody().length()) {
 				title += "...";
 			}
 			String description = new SerializationHelper<Comment>().serialize(comment);
-			
+
 			Issue issue = issuesApi.createIssue(
-					projectPath, title, description, 
+					projectPath,
+					title, description,
 					null, null, null, 
-					CATMA_COMMENT_LABEL + "," + resourceId, 
-					null, null, null, null);
-			
+					CATMA_COMMENT_LABEL + "," + documentId,
+					null, null, null, null
+			);
+
 			comment.setId(issue.getId());
 			comment.setIid(issue.getIid());
 		}
-		catch (Exception e) {
-			throw new IOException(String.format(
-				"Failed to add a new Comment for resource %1$s in project %2$s!", resourceId, projectReference), e);
+		catch (GitLabApiException | IllegalArgumentException e) { // missing issue title throws IllegalArgumentException
+			throw new IOException(
+					String.format(
+							"Failed to add new comment in project \"%s\" for document ID: %s",
+							projectReference,
+							documentId
+					),
+					e
+			);
 		}
 	}
 

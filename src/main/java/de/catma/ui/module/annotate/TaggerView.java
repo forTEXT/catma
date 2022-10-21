@@ -1128,7 +1128,7 @@ public class TaggerView extends HorizontalLayout
 	public String getCaption() {
 		return this.sourceDocument==null?"no selection yet":sourceDocument.toString();
 	}
-	
+
 	@Override
 	public void addComment(List<Range> absoluteRanges, int x, int y) {
 		User user = project.getUser();
@@ -1140,173 +1140,176 @@ public class TaggerView extends HorizontalLayout
 							project.addComment(
 									new Comment(
 											idGenerator.generate(),
-											user.getName(), user.getUserId(),
-											commentBody, absoluteRanges, this.sourceDocument.getUuid()
+											user.getName(),
+											user.getUserId(),
+											commentBody,
+											absoluteRanges,
+											sourceDocument.getUuid()
 									)
 							);
 						}
 						catch (IOException e) {
-							errorHandler.showAndLogError("Error adding Comment!", e);
+							errorHandler.showAndLogError("Failed to add comment", e);
 						}
 					}
 				}
 		);
 		commentDialog.show(x, y);
 	}
-	
+
 	@Override
 	public void editComment(Optional<Comment> optionalComment, int x, int y) {
-		if (optionalComment.isPresent()) {
-			CommentDialog commentDialog = new CommentDialog(
-					optionalComment.get().getBody(),
-					false,
-					commentBody -> {
-						if (!StringUtils.isBlank(commentBody)) {
-							final String oldBody = optionalComment.get().getBody();
-							optionalComment.get().setBody(commentBody);
-							try {
-								project.updateComment(optionalComment.get());
-							}
-							catch (IOException e) {
-								errorHandler.showAndLogError("Error updating Comment!", e);
-								optionalComment.get().setBody(oldBody);
-							}
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment to edit", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		CommentDialog commentDialog = new CommentDialog(
+				optionalComment.get().getBody(),
+				false,
+				commentBody -> {
+					if (!StringUtils.isBlank(commentBody)) {
+						final String oldBody = optionalComment.get().getBody();
+						optionalComment.get().setBody(commentBody);
+						try {
+							project.updateComment(optionalComment.get());
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to update comment", e);
+							optionalComment.get().setBody(oldBody);
 						}
 					}
-			);
-			commentDialog.show(x, y);
-		}
-		else {
-			Notification.show("Info", "Couldn't find the Comment to edit!", Type.HUMANIZED_MESSAGE);
-		}
+				}
+		);
+		commentDialog.show(x, y);
 	}
-	
+
 	@Override
 	public void removeComment(Optional<Comment> optionalComment) {
-		if (optionalComment.isPresent()) {
-			ConfirmDialog.show(
-					UI.getCurrent(),
-					"Remove Comment",
-					"Are you sure you want to remove the Comment?",
-					"Yes",
-					"Cancel",
-					dlg -> {
-						if (dlg.isConfirmed()) {
-							try {
-								project.removeComment(optionalComment.get());
-							}
-							catch (IOException e) {
-								errorHandler.showAndLogError("Error removing Comment!", e);
-							}
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment to delete", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		ConfirmDialog.show(
+				UI.getCurrent(),
+				"Delete Comment",
+				"Are you sure you want to delete this comment?",
+				"Yes",
+				"Cancel",
+				dlg -> {
+					if (dlg.isConfirmed()) {
+						try {
+							project.removeComment(optionalComment.get());
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to delete comment", e);
 						}
 					}
-			);
-		}
-		else {
-			Notification.show("Info", "Couldn't find the Comment to remove!", Type.HUMANIZED_MESSAGE);
-		}	
+				}
+		);
 	}
-	
+
 	@Override
 	public void replyToComment(Optional<Comment> optionalComment, int x, int y) {
-		if (optionalComment.isPresent()) {
-			User user = project.getUser();
-			IDGenerator idGenerator = new IDGenerator();
-			CommentDialog commentDialog = new CommentDialog(
-					true,
-					replyBody -> {
-						if (!StringUtils.isBlank(replyBody)) {
-							try {
-								project.addReply(
-										optionalComment.get(),
-										new Reply(
-												idGenerator.generate(),
-												replyBody,
-												user.getName(), user.getUserId(),
-												optionalComment.get().getUuid()
-										)
-								);
-							}
-							catch (IOException e) {
-								errorHandler.showAndLogError("Error adding Reply!", e);
-							}
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment to reply to", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		User user = project.getUser();
+		IDGenerator idGenerator = new IDGenerator();
+		CommentDialog commentDialog = new CommentDialog(
+				true,
+				replyBody -> {
+					if (!StringUtils.isBlank(replyBody)) {
+						try {
+							project.addReply(
+									optionalComment.get(),
+									new Reply(
+											idGenerator.generate(),
+											replyBody,
+											user.getName(),
+											user.getUserId(),
+											optionalComment.get().getUuid()
+									)
+							);
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to add reply", e);
 						}
 					}
-			);
-			commentDialog.show(x, y);
-		}
-		else {
-			Notification.show("Info", "Couldn't find the Comment to reply to!", Type.HUMANIZED_MESSAGE);
-		}
+				}
+		);
+		commentDialog.show(x, y);
 	}
-	
+
 	public void updateReplyToComment(Optional<Comment> optionalComment, String replyUuid, int x, int y) {
-		if (optionalComment.isPresent()) {
-			Comment comment = optionalComment.get();
-			Reply reply = comment.getReply(replyUuid);
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment that the reply relates to", Type.HUMANIZED_MESSAGE);
+			return;
+		}
 
-			if (reply != null) {
-				CommentDialog commentDialog = new CommentDialog(
-						reply.getBody(),
-						true,
-						replyBody -> {
-							if (!StringUtils.isBlank(replyBody)) {
-								final String oldBody = reply.getBody();
-								reply.setBody(replyBody);
-								try {
-									project.updateReply(optionalComment.get(), reply);
-								}
-								catch (IOException e) {
-									errorHandler.showAndLogError("Error updating Reply!", e);
-									reply.setBody(oldBody);
-								}
-							}
+		Comment comment = optionalComment.get();
+		Reply reply = comment.getReply(replyUuid);
+
+		if (reply == null) {
+			Notification.show("Info", "Couldn't find the reply to edit", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		CommentDialog commentDialog = new CommentDialog(
+				reply.getBody(),
+				true,
+				replyBody -> {
+					if (!StringUtils.isBlank(replyBody)) {
+						final String oldBody = reply.getBody();
+						reply.setBody(replyBody);
+						try {
+							project.updateReply(optionalComment.get(), reply);
 						}
-				);
-				commentDialog.show(x, y);
-			}
-			else {
-				Notification.show("Info", "Couldn't find the Reply to edit!", Type.HUMANIZED_MESSAGE);
-			}
-		}
-		else {
-			Notification.show("Info", "Couldn't find the Comment of the Reply!", Type.HUMANIZED_MESSAGE);
-		}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to update reply", e);
+							reply.setBody(oldBody);
+						}
+					}
+				}
+		);
+		commentDialog.show(x, y);
 	}
-	
+
 	public void removeReplyToComment(Optional<Comment> optionalComment, String replyUuid) {
-		if (optionalComment.isPresent()) {
-			Comment comment = optionalComment.get();
-			Reply reply = comment.getReply(replyUuid);
-
-			if (reply != null) {
-				ConfirmDialog.show(
-						UI.getCurrent(),
-						"Remove Reply",
-						"Are you sure you want to remove the Reply?",
-						"Yes",
-						"Cancel",
-						dlg -> {
-							if (dlg.isConfirmed()) {
-								try {
-									project.removeReply(optionalComment.get(), reply);
-								}
-								catch (IOException e) {
-									errorHandler.showAndLogError("Error removing Comment!", e);
-								}
-							}
-						}
-				);
-			}
-			else {
-				Notification.show("Info", "Couldn't find the Reply to remove!", Type.HUMANIZED_MESSAGE);
-			}	
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment that the reply relates to", Type.HUMANIZED_MESSAGE);
+			return;
 		}
-		else {
-			Notification.show("Info", "Couldn't find the Comment of the Reply!", Type.HUMANIZED_MESSAGE);
-		}	
-	}
 
+		Comment comment = optionalComment.get();
+		Reply reply = comment.getReply(replyUuid);
+
+		if (reply == null) {
+			Notification.show("Info", "Couldn't find the reply to delete", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		ConfirmDialog.show(
+				UI.getCurrent(),
+				"Delete Reply",
+				"Are you sure you want to delete this reply?",
+				"Yes",
+				"Cancel",
+				dlg -> {
+					if (dlg.isConfirmed()) {
+						try {
+							project.removeReply(optionalComment.get(), reply);
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to delete reply", e);
+						}
+					}
+				}
+		);
+	}
 
 	@Subscribe
 	public void handleCommentChange(CommentChangeEvent commentChangeEvent) {
