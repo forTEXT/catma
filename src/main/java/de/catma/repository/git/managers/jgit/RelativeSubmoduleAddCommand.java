@@ -1,4 +1,4 @@
-package de.catma.repository.git.managers.jgitcommand;
+package de.catma.repository.git.managers.jgit;
 
 import java.io.File;
 import java.io.IOException;

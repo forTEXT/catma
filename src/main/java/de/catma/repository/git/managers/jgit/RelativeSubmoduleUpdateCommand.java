@@ -1,4 +1,4 @@
-package de.catma.repository.git.managers.jgitcommand;
+package de.catma.repository.git.managers.jgit;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;

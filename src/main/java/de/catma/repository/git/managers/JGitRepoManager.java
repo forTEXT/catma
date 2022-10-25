@@ -75,7 +75,8 @@ import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.CommitMissingException;
 import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.jgitcommand.RelativeJGitFactory;
+import de.catma.repository.git.managers.jgit.IJGitCommandFactory;
+import de.catma.repository.git.managers.jgit.RelativeJGitCommandFactory;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
@@ -104,7 +105,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	private String username;
 
 	private Git gitApi;
-	private JGitFactory jGitFactory;
+	private IJGitCommandFactory jGitCommandFactory;
 	private Logger logger = Logger.getLogger(JGitRepoManager.class.getName());
 	
 
@@ -121,7 +122,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	public JGitRepoManager(String repositoryBasePath, User catmaUser) {
 		this.repositoryBasePath = repositoryBasePath;
 		this.username = catmaUser.getIdentifier();
-		this.jGitFactory = new RelativeJGitFactory();
+		this.jGitCommandFactory = new RelativeJGitCommandFactory();
 	}
 	
 	public String getUsername() {
@@ -262,7 +263,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		try {
 			CloneCommand cloneCommand = 
-					jGitFactory.newCloneCommand()
+					jGitCommandFactory.newCloneCommand()
 					.setURI(uri).setDirectory(path);
 
 			cloneCommand.setCredentialsProvider(credentialsProvider);
@@ -296,7 +297,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		try {
 			CloneCommand cloneCommand = 
-					jGitFactory.newCloneCommand()
+					jGitCommandFactory.newCloneCommand()
 					.setURI(uri).setDirectory(path);
 
 			cloneCommand.setCredentialsProvider(credentialsProvider);
@@ -306,7 +307,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			this.gitApi.submoduleInit().call();
 
 			SubmoduleUpdateCommand submoduleUpdateCommand = 
-					jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+					jGitCommandFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
 			submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
 			submoduleUpdateCommand.call();
 		}
@@ -1165,7 +1166,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		
 		if (!submodules.isEmpty()) {
 			SubmoduleUpdateCommand submoduleUpdateCommand = 
-				jGitFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+				jGitCommandFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
 			submodules.forEach(submodule -> submoduleUpdateCommand.addPath(submodule));
 			submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
 			submoduleUpdateCommand.call();
@@ -1985,7 +1986,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		    	String unixStyleRelativeSubmodulePath = FilenameUtils.separatorsToUnix(relativeFilePath.toString());
 		    	
 		    	SubmoduleAddCommand submoduleAddCommand = 
-		    			jGitFactory.newSubmoduleAddCommand(gitApi.getRepository())
+		    			jGitCommandFactory.newSubmoduleAddCommand(gitApi.getRepository())
 		    			.setURI(uri)
 		    			.setPath(unixStyleRelativeSubmodulePath);
 		    	//needs permissions because the submodule is cloned from remote first and then added locally
