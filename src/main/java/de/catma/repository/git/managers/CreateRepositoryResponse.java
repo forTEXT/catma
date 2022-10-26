@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.managers;
 
 import javax.annotation.Nullable;
 

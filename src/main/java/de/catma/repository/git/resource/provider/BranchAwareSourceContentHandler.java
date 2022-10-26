@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.resource.provider;
 
 import java.io.IOException;
 import java.io.InputStream;

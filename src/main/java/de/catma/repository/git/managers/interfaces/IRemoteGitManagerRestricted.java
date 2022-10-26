@@ -12,7 +12,7 @@ import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
-import de.catma.repository.git.CreateRepositoryResponse;
+import de.catma.repository.git.managers.CreateRepositoryResponse;
 import de.catma.user.Member;
 import de.catma.user.User;
 

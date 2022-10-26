@@ -58,7 +58,6 @@ import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
-import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitUser;

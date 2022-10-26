@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.managers;
 
 public class CommitMissingException extends Exception {
 

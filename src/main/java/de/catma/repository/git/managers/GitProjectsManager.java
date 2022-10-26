@@ -8,7 +8,6 @@ import de.catma.project.Project;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
 import de.catma.rbac.RBACPermission;
-import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GraphWorktreeProject;
 import de.catma.repository.git.graph.interfaces.GraphProjectDeletionHandler;
