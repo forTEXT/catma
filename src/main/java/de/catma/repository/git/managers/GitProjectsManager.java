@@ -11,7 +11,7 @@ import de.catma.rbac.RBACPermission;
 import de.catma.repository.git.CreateRepositoryResponse;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GraphWorktreeProject;
-import de.catma.repository.git.graph.GraphProjectDeletionHandler;
+import de.catma.repository.git.graph.interfaces.GraphProjectDeletionHandler;
 import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted.GroupSerializationField;

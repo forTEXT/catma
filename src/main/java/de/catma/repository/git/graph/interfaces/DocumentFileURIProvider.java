@@ -1,4 +1,4 @@
-package de.catma.repository.git.graph;
+package de.catma.repository.git.graph.interfaces;
 
 import java.net.URI;
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package de.catma.repository.git.graph;
+package de.catma.repository.git.graph.interfaces;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -27,23 +27,6 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 
 public interface GraphProjectHandler {
-
-	interface CollectionsSupplier {
-		List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException;
-	}
-
-	interface CollectionSupplier {
-		AnnotationCollection get(String collectionId, TagLibrary tagLibrary) throws IOException;
-	}
-
-	interface DocumentSupplier {
-		SourceDocument get(String documentId) throws IOException;
-	}
-	
-	interface DocumentIndexSupplier {
-		Map get(String documentId) throws IOException;
-	}
-	
 	void ensureProjectRevisionIsLoaded(
 			ExecutionListener<TagManager> openProjectListener,
 			ProgressListener progressListener,
