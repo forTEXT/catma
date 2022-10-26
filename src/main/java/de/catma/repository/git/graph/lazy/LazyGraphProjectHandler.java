@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -101,15 +100,15 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public void ensureProjectRevisionIsLoaded(ExecutionListener<TagManager> openProjectListener,
 			final ProgressListener progressListener, String revisionHash, TagManager tagManager,
-			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
+			TagsetsProvider tagsetsProvider, DocumentsProvider documentsProvider,
 			CollectionsProvider collectionsProvider, boolean forceGraphReload, BackgroundService backgroundService)
 			throws Exception {
 		if (this.revisionHash != revisionHash || forceGraphReload) {
 			LoadJob loadJob = 
 				new LoadJob(
 					projectReference, revisionHash, 
-					tagManager, 
-					tagsetsSupplier, documentsSupplier, collectionsProvider,
+					tagManager,
+					tagsetsProvider, documentsProvider, collectionsProvider,
 					fileInfoProvider);
 			backgroundService.submit(
 					loadJob,
@@ -400,24 +399,37 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public Indexer createIndexer() {
 		return new LazyGraphProjectIndexer(
-				commentProvider, 
-				(documentId) -> {
-					try {
-						return documentCache.get(documentId);
-					}
-					catch (ExecutionException ee) {
-						return null;
+				commentProvider,
+				new DocumentProvider() {
+					@Override
+					public SourceDocument get(String documentId) throws IOException {
+						try {
+							return documentCache.get(documentId);
+						}
+						catch (ExecutionException e) {
+							return null;
+						}
 					}
 				},
 				documentIndexProvider,
-				(collectionId) -> {
-					try {
-						return collectionCache.get(collectionId);
-					} catch (ExecutionException e) {
-						return null;
+				new CollectionProvider() {
+					@Override
+					public AnnotationCollection get(String collectionId) {
+						try {
+							return collectionCache.get(collectionId);
+						}
+						catch (ExecutionException e) {
+							return null;
+						}
 					}
 				},
-				() -> tagManager.getTagLibrary());
+				new TagLibraryProvider() {
+					@Override
+					public TagLibrary getTagLibrary() {
+						return tagManager.getTagLibrary();
+					}
+				}
+		);
 	}
 
 	@Override

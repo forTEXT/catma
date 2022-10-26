@@ -1,8 +1,6 @@
 package de.catma.repository.git.graph.lazy;
 
-import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import com.google.common.collect.Maps;
@@ -15,8 +13,9 @@ import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.interfaces.CollectionsProvider;
 import de.catma.repository.git.graph.interfaces.DocumentFileURIProvider;
+import de.catma.repository.git.graph.interfaces.DocumentsProvider;
+import de.catma.repository.git.graph.interfaces.TagsetsProvider;
 import de.catma.tag.TagManager;
-import de.catma.tag.TagsetDefinition;
 import de.catma.util.Pair;
 
 class LoadJob extends DefaultProgressCallable<Pair<TagManager,  Map<String, SourceDocumentReference>>> {
@@ -24,20 +23,20 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager,  Map<String, Sour
 	private final ProjectReference projectReference;
 	private String revisionHash;
 	private final TagManager tagManager;
-	private final Supplier<List<TagsetDefinition>> tagsetsSupplier;
-	private final Supplier<List<SourceDocument>> documentsSupplier;
+	private final TagsetsProvider tagsetsProvider;
+	private final DocumentsProvider documentsProvider;
 	private final CollectionsProvider collectionsProvider;
 	private DocumentFileURIProvider fileInfoProvider;
 	
 	public LoadJob(ProjectReference projectReference, String revisionHash, TagManager tagManager,
-			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
+			TagsetsProvider tagsetsProvider, DocumentsProvider documentsProvider,
 			CollectionsProvider collectionsProvider, DocumentFileURIProvider fileInfoProvider) {
 		super();
 		this.projectReference = projectReference;
 		this.revisionHash = revisionHash;
 		this.tagManager = tagManager;
-		this.tagsetsSupplier = tagsetsSupplier;
-		this.documentsSupplier = documentsSupplier;
+		this.tagsetsProvider = tagsetsProvider;
+		this.documentsProvider = documentsProvider;
 		this.collectionsProvider = collectionsProvider;
 		this.fileInfoProvider = fileInfoProvider;
 	}
@@ -49,10 +48,10 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager,  Map<String, Sour
 		Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
 		
 		getProgressListener().setProgress("Loading Tagsets for Project %1$s", projectReference);
-		this.tagManager.load(tagsetsSupplier.get());
+		this.tagManager.load(tagsetsProvider.getTagsets());
 
 		getProgressListener().setProgress(String.format("Loading Documents for Project %1$s", projectReference));
-		for (SourceDocument document : documentsSupplier.get()) {
+		for (SourceDocument document : documentsProvider.getDocuments()) {
 			document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
 					fileInfoProvider.getSourceDocumentFileURI(document.getUuid()));
 			docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));

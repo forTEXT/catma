@@ -216,23 +216,23 @@ public class GraphWorktreeProject implements IndexedProject {
 					};
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
 						new ExecutionListener<TagManager>() {
-							
+
 							@Override
 							public void error(Throwable t) {
 								openProjectListener.failure(t);
 							}
-							
+
 							@Override
 							public void done(TagManager result) {
 								logger.info(
-									String.format("Loading Tag library for Project %1$s", 
-											projectReference.getProjectId()));								
+										String.format("Loading Tag library for Project %1$s",
+												projectReference.getProjectId()));
 								tagManager.load(result.getTagLibrary());
-								
+
 								initTagManagerListeners();
-								
+
 								logger.info(
-										String.format("Project %1$s is loaded.", 
+										String.format("Project %1$s is loaded.",
 												projectReference.getProjectId()));
 								openProjectListener.ready(GraphWorktreeProject.this);
 							}
@@ -240,9 +240,24 @@ public class GraphWorktreeProject implements IndexedProject {
 						progressListener,
 						rootRevisionHash,
 						tagManager,
-						() -> gitProjectHandler.getTagsets(),
-						() -> gitProjectHandler.getDocuments(),
-						(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener, true),
+						new TagsetsProvider() {
+							@Override
+							public List<TagsetDefinition> getTagsets() {
+								return gitProjectHandler.getTagsets();
+							}
+						},
+						new DocumentsProvider() {
+							@Override
+							public List<SourceDocument> getDocuments() {
+								return gitProjectHandler.getDocuments();
+							}
+						},
+						new CollectionsProvider() {
+							@Override
+							public List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException {
+								return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
+							}
+						},
 						false, //forceGraphReload
 						backgroundService);
 			}
@@ -1456,7 +1471,7 @@ public class GraphWorktreeProject implements IndexedProject {
 										public void error(Throwable t) {
 											openProjectListener.failure(t);
 										}
-	
+
 										@Override
 										public void done(TagManager result) {
 											tagManager.load(result.getTagLibrary());
@@ -1466,9 +1481,24 @@ public class GraphWorktreeProject implements IndexedProject {
 									progressListener,
 									rootRevisionHash,
 									tagManager,
-									() -> gitProjectHandler.getTagsets(),
-									() -> gitProjectHandler.getDocuments(),
-									(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener, true),
+									new TagsetsProvider() {
+										@Override
+										public List<TagsetDefinition> getTagsets() {
+											return gitProjectHandler.getTagsets();
+										}
+									},
+									new DocumentsProvider() {
+										@Override
+										public List<SourceDocument> getDocuments() {
+											return gitProjectHandler.getDocuments();
+										}
+									},
+									new CollectionsProvider() {
+										@Override
+										public List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException {
+											return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
+										}
+									},
 									false,
 									backgroundService
 							);
@@ -1653,9 +1683,24 @@ public class GraphWorktreeProject implements IndexedProject {
 					progressListener,
 					rootRevisionHash,
 					tagManager,
-					() -> gitProjectHandler.getTagsets(),
-					() -> gitProjectHandler.getDocuments(),
-					(tagLibrary) -> gitProjectHandler.getCollections(tagLibrary, progressListener, true),
+					new TagsetsProvider() {
+						@Override
+						public List<TagsetDefinition> getTagsets() {
+							return gitProjectHandler.getTagsets();
+						}
+					},
+					new DocumentsProvider() {
+						@Override
+						public List<SourceDocument> getDocuments() {
+							return gitProjectHandler.getDocuments();
+						}
+					},
+					new CollectionsProvider() {
+						@Override
+						public List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException {
+							return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
+						}
+					},
 					true,
 					backgroundService
 			);

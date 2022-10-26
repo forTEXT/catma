@@ -12,8 +12,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,9 +44,7 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.repository.git.graph.interfaces.CommentProvider;
-import de.catma.repository.git.graph.interfaces.DocumentIndexProvider;
-import de.catma.repository.git.graph.interfaces.DocumentProvider;
+import de.catma.repository.git.graph.interfaces.*;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.tag.TagDefinition;
@@ -61,22 +57,22 @@ import de.catma.util.Pair;
 public class LazyGraphProjectIndexer implements Indexer {
 	private final Logger logger = Logger.getLogger(LazyGraphProjectIndexer.class.getName());
 	private final CommentProvider commentProvider;
-	private Function<String, AnnotationCollection> collectionSupplier;
+	private CollectionProvider collectionProvider;
 	private LoadingCache<String, Set<Term>> documentIndexCache;
-	private Supplier<TagLibrary> tagLibrarySupplier;
+	private TagLibraryProvider tagLibraryProvider;
 	private IDGenerator idGenerator = new IDGenerator();
 	private DocumentIndexProvider documentIndexProvider;
 
 	public LazyGraphProjectIndexer(CommentProvider commentProvider,
 			final DocumentProvider documentProvider,
 			final DocumentIndexProvider documentIndexProvider,
-			final Function<String, AnnotationCollection> collectionSupplier, 
-			final Supplier<TagLibrary> tagLibrarySupplier) {
+			final CollectionProvider collectionProvider,
+			final TagLibraryProvider tagLibraryProvider) {
 		super();
 		this.documentIndexProvider = documentIndexProvider;
 		this.commentProvider = commentProvider;
-		this.collectionSupplier = collectionSupplier;
-		this.tagLibrarySupplier = tagLibrarySupplier;
+		this.collectionProvider = collectionProvider;
+		this.tagLibraryProvider = tagLibraryProvider;
 		
     	this.documentIndexCache = 
 			CacheBuilder.newBuilder()
@@ -237,7 +233,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 		Set<TagDefinition> validTagDefinitions = Sets.newHashSet();
 		boolean allTags = tagPath.trim().replaceAll("/?%+", "").equals("");
 		
-		for (TagsetDefinition tagset : tagLibrarySupplier.get()) {
+		for (TagsetDefinition tagset : tagLibraryProvider.getTagLibrary()) {
 			for (TagDefinition tag : tagset) {
 				String path = tagset.getTagPath(tag);
 				if (allTags || Pattern.matches(tagPathRegex, path)) {
@@ -247,7 +243,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 			}
 		}
 		for (String collectionId : collectionIdList) {
-			AnnotationCollection collection = collectionSupplier.apply(collectionId);
+			AnnotationCollection collection = collectionProvider.get(collectionId);
 			
 			for (TagDefinition tag : validTagDefinitions) {
 				Multimap<String, TagReference> tagReferencesByInstanceId = 
@@ -298,7 +294,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 		Set<TagDefinition> validTagDefinitions = Sets.newHashSet();
 		boolean allTags = tagPathRegex==null || tagPathRegex.trim().replaceAll("/?%+", "").equals("");
 		
-		for (TagsetDefinition tagset : tagLibrarySupplier.get()) {
+		for (TagsetDefinition tagset : tagLibraryProvider.getTagLibrary()) {
 			for (TagDefinition tag : tagset) {
 				String path = tagset.getTagPath(tag);
 				if (allTags || Pattern.matches(tagPathRegex, path)) {
@@ -308,7 +304,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 			}
 		}
 		for (String collectionId : collectionIdList) {
-			AnnotationCollection collection = collectionSupplier.apply(collectionId);
+			AnnotationCollection collection = collectionProvider.get(collectionId);
 			
 			for (TagDefinition tag : validTagDefinitions) {
 				Multimap<String, TagReference> tagReferencesByInstanceId = 

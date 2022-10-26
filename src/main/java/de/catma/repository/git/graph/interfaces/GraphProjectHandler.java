@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
 
 import com.google.common.collect.Multimap;
 
@@ -31,8 +30,8 @@ public interface GraphProjectHandler {
 			ProgressListener progressListener,
 			String revisionHash, 
 			TagManager tagManager,
-			Supplier<List<TagsetDefinition>> tagsetsSupplier,
-			Supplier<List<SourceDocument>> documentsSupplier,
+			TagsetsProvider tagsetsProvider,
+			DocumentsProvider documentsProvider,
 			CollectionsProvider collectionsProvider,
 			boolean forceGraphReload, BackgroundService backgroundService
 	) throws Exception;
