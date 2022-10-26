@@ -13,7 +13,7 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.graph.interfaces.CollectionsSupplier;
+import de.catma.repository.git.graph.interfaces.CollectionsProvider;
 import de.catma.repository.git.graph.interfaces.DocumentFileURIProvider;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
@@ -26,19 +26,19 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager,  Map<String, Sour
 	private final TagManager tagManager;
 	private final Supplier<List<TagsetDefinition>> tagsetsSupplier;
 	private final Supplier<List<SourceDocument>> documentsSupplier;
-	private final CollectionsSupplier collectionsSupplier;
+	private final CollectionsProvider collectionsProvider;
 	private DocumentFileURIProvider fileInfoProvider;
 	
 	public LoadJob(ProjectReference projectReference, String revisionHash, TagManager tagManager,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
-			CollectionsSupplier collectionsSupplier, DocumentFileURIProvider fileInfoProvider) {
+			CollectionsProvider collectionsProvider, DocumentFileURIProvider fileInfoProvider) {
 		super();
 		this.projectReference = projectReference;
 		this.revisionHash = revisionHash;
 		this.tagManager = tagManager;
 		this.tagsetsSupplier = tagsetsSupplier;
 		this.documentsSupplier = documentsSupplier;
-		this.collectionsSupplier = collectionsSupplier;
+		this.collectionsProvider = collectionsProvider;
 		this.fileInfoProvider = fileInfoProvider;
 	}
 
@@ -59,7 +59,7 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager,  Map<String, Sour
 		}
 		
 		getProgressListener().setProgress(String.format("Loading Collections for Project %1$s", projectReference));
-		for (AnnotationCollection collection : collectionsSupplier.get(this.tagManager.getTagLibrary())) {
+		for (AnnotationCollection collection : collectionsProvider.get(this.tagManager.getTagLibrary())) {
 			docRefsById.get(collection.getSourceDocumentId()).addUserMarkupCollectionReference(new AnnotationCollectionReference(collection));
 			
 		}

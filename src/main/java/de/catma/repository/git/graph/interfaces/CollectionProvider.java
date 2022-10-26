@@ -4,8 +4,7 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.tag.TagLibrary;
 
 import java.io.IOException;
-import java.util.List;
 
-public interface CollectionsSupplier {
-    List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException;
+public interface CollectionProvider {
+    AnnotationCollection get(String collectionId, TagLibrary tagLibrary) throws IOException;
 }

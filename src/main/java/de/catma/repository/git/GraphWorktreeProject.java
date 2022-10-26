@@ -141,20 +141,20 @@ public class GraphWorktreeProject implements IndexedProject {
 						return GraphWorktreeProject.this.gitProjectHandler.getCommentsWithReplies(documentIdList);
 					}
 				},
-				new DocumentSupplier() {
+				new DocumentProvider() {
 					@Override
 					public SourceDocument get(String documentId) throws IOException {
 						return gitProjectHandler.getDocument(documentId);
 					}
 				},
-				new DocumentIndexSupplier() {
+				new DocumentIndexProvider() {
 					@Override
 					public Map get(String documentId) throws IOException {
 						Path tokensPath = GraphWorktreeProject.this.getTokenizedSourceDocumentPath(documentId);
 						return gitProjectHandler.getDocumentIndex(documentId, tokensPath);
 					}
 				},
-				new CollectionSupplier() {
+				new CollectionProvider() {
 					@Override
 					public AnnotationCollection get(String collectionId, TagLibrary tagLibrary) throws IOException {
 						return gitProjectHandler.getCollection(collectionId, tagLibrary);

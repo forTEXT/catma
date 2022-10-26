@@ -53,7 +53,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	private Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
 	private LoadingCache<String, SourceDocument> documentCache;
 	private LoadingCache<String, AnnotationCollection> collectionCache;
-	private DocumentIndexSupplier documentIndexSupplier;
+	private DocumentIndexProvider documentIndexProvider;
 
 	
 	public LazyGraphProjectHandler(
@@ -61,9 +61,9 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 			User user, 
 			final DocumentFileURIProvider fileInfoProvider, 
 			final CommentProvider commentProvider,
-			final DocumentSupplier documentSupplier, 
-			final DocumentIndexSupplier documentIndexSupplier,
-			final CollectionSupplier collectionSupplier) {
+			final DocumentProvider documentProvider,
+			final DocumentIndexProvider documentIndexProvider,
+			final CollectionProvider collectionProvider) {
 		this.projectReference = projectReference;
 		this.user = user;
 		this.fileInfoProvider = fileInfoProvider;
@@ -85,7 +85,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 					return new SourceDocument(key, contentHandler);
 				}
 			});
-    	this.documentIndexSupplier = documentIndexSupplier;
+    	this.documentIndexProvider = documentIndexProvider;
 
     	this.collectionCache = 
     		CacheBuilder.newBuilder()
@@ -93,7 +93,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
     		.build(new CacheLoader<String, AnnotationCollection>() {
     			@Override
     			public AnnotationCollection load(String key) throws Exception {
-    				return collectionSupplier.get(key, tagManager.getTagLibrary());
+    				return collectionProvider.get(key, tagManager.getTagLibrary());
     			}
     		});
 	}
@@ -102,14 +102,14 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	public void ensureProjectRevisionIsLoaded(ExecutionListener<TagManager> openProjectListener,
 			final ProgressListener progressListener, String revisionHash, TagManager tagManager,
 			Supplier<List<TagsetDefinition>> tagsetsSupplier, Supplier<List<SourceDocument>> documentsSupplier,
-			CollectionsSupplier collectionsSupplier, boolean forceGraphReload, BackgroundService backgroundService)
+			CollectionsProvider collectionsProvider, boolean forceGraphReload, BackgroundService backgroundService)
 			throws Exception {
 		if (this.revisionHash != revisionHash || forceGraphReload) {
 			LoadJob loadJob = 
 				new LoadJob(
 					projectReference, revisionHash, 
 					tagManager, 
-					tagsetsSupplier, documentsSupplier, collectionsSupplier, 
+					tagsetsSupplier, documentsSupplier, collectionsProvider,
 					fileInfoProvider);
 			backgroundService.submit(
 					loadJob,
@@ -409,7 +409,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 						return null;
 					}
 				},
-				documentIndexSupplier,
+				documentIndexProvider,
 				(collectionId) -> {
 					try {
 						return collectionCache.get(collectionId);

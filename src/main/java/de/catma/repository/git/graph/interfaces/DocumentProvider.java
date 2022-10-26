@@ -4,6 +4,6 @@ import de.catma.document.source.SourceDocument;
 
 import java.io.IOException;
 
-public interface DocumentSupplier {
+public interface DocumentProvider {
     SourceDocument get(String documentId) throws IOException;
 }

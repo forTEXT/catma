@@ -47,8 +47,8 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.repository.git.graph.interfaces.CommentProvider;
-import de.catma.repository.git.graph.interfaces.DocumentIndexSupplier;
-import de.catma.repository.git.graph.interfaces.DocumentSupplier;
+import de.catma.repository.git.graph.interfaces.DocumentIndexProvider;
+import de.catma.repository.git.graph.interfaces.DocumentProvider;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.tag.TagDefinition;
@@ -65,15 +65,15 @@ public class LazyGraphProjectIndexer implements Indexer {
 	private LoadingCache<String, Set<Term>> documentIndexCache;
 	private Supplier<TagLibrary> tagLibrarySupplier;
 	private IDGenerator idGenerator = new IDGenerator();
-	private DocumentIndexSupplier documentIndexSupplier;	
+	private DocumentIndexProvider documentIndexProvider;
 
 	public LazyGraphProjectIndexer(CommentProvider commentProvider,
-			final DocumentSupplier documentSupplier,
-			final DocumentIndexSupplier documentIndexSupplier,
+			final DocumentProvider documentProvider,
+			final DocumentIndexProvider documentIndexProvider,
 			final Function<String, AnnotationCollection> collectionSupplier, 
 			final Supplier<TagLibrary> tagLibrarySupplier) {
 		super();
-		this.documentIndexSupplier = documentIndexSupplier;
+		this.documentIndexProvider = documentIndexProvider;
 		this.commentProvider = commentProvider;
 		this.collectionSupplier = collectionSupplier;
 		this.tagLibrarySupplier = tagLibrarySupplier;
@@ -93,7 +93,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 	@SuppressWarnings({ "rawtypes" })
 	private Set<Term> loadDocumentIndex(String documentId) throws Exception {
 		Set<Term> terms = new HashSet<>();
-		Map documentIndexContent = this.documentIndexSupplier.get(documentId);
+		Map documentIndexContent = this.documentIndexProvider.get(documentId);
 		
 		Map<Integer, Position> adjacencyMap = new HashMap<>();
 		for (Object entry : documentIndexContent.entrySet()) {
