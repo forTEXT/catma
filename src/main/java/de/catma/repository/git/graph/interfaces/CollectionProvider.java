@@ -6,11 +6,11 @@ import de.catma.tag.TagLibrary;
 import java.io.IOException;
 
 public interface CollectionProvider {
-    default AnnotationCollection get(String collectionId, TagLibrary tagLibrary) throws IOException {
+    default AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary) throws IOException {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    default AnnotationCollection get(String collectionId) {
+    default AnnotationCollection getCollection(String collectionId) {
         throw new UnsupportedOperationException("Not implemented");
     }
 }

@@ -56,21 +56,21 @@ import de.catma.util.Pair;
 
 public class LazyGraphProjectIndexer implements Indexer {
 	private final Logger logger = Logger.getLogger(LazyGraphProjectIndexer.class.getName());
-	private final CommentProvider commentProvider;
+	private final CommentsProvider commentsProvider;
 	private CollectionProvider collectionProvider;
 	private LoadingCache<String, Set<Term>> documentIndexCache;
 	private TagLibraryProvider tagLibraryProvider;
 	private IDGenerator idGenerator = new IDGenerator();
 	private DocumentIndexProvider documentIndexProvider;
 
-	public LazyGraphProjectIndexer(CommentProvider commentProvider,
+	public LazyGraphProjectIndexer(CommentsProvider commentsProvider,
 			final DocumentProvider documentProvider,
 			final DocumentIndexProvider documentIndexProvider,
 			final CollectionProvider collectionProvider,
 			final TagLibraryProvider tagLibraryProvider) {
 		super();
 		this.documentIndexProvider = documentIndexProvider;
-		this.commentProvider = commentProvider;
+		this.commentsProvider = commentsProvider;
 		this.collectionProvider = collectionProvider;
 		this.tagLibraryProvider = tagLibraryProvider;
 		
@@ -89,7 +89,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 	@SuppressWarnings({ "rawtypes" })
 	private Set<Term> loadDocumentIndex(String documentId) throws Exception {
 		Set<Term> terms = new HashSet<>();
-		Map documentIndexContent = this.documentIndexProvider.get(documentId);
+		Map documentIndexContent = this.documentIndexProvider.getDocumentIndex(documentId);
 		
 		Map<Integer, Position> adjacencyMap = new HashMap<>();
 		for (Object entry : documentIndexContent.entrySet()) {
@@ -243,7 +243,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 			}
 		}
 		for (String collectionId : collectionIdList) {
-			AnnotationCollection collection = collectionProvider.get(collectionId);
+			AnnotationCollection collection = collectionProvider.getCollection(collectionId);
 			
 			for (TagDefinition tag : validTagDefinitions) {
 				Multimap<String, TagReference> tagReferencesByInstanceId = 
@@ -304,7 +304,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 			}
 		}
 		for (String collectionId : collectionIdList) {
-			AnnotationCollection collection = collectionProvider.get(collectionId);
+			AnnotationCollection collection = collectionProvider.getCollection(collectionId);
 			
 			for (TagDefinition tag : validTagDefinitions) {
 				Multimap<String, TagReference> tagReferencesByInstanceId = 
@@ -599,7 +599,7 @@ public class LazyGraphProjectIndexer implements Indexer {
 			int limit, List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale) throws Exception {
 		
-		List<Comment> comments = commentProvider.getComments(documentIdList);
+		List<Comment> comments = commentsProvider.getComments(documentIdList);
 		
 		QueryResultRowArray result = new QueryResultRowArray();
 		

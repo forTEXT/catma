@@ -131,32 +131,32 @@ public class GraphWorktreeProject implements IndexedProject {
 				this.user,
 				new DocumentFileURIProvider() {
 					@Override
-					public URI getSourceDocumentFileURI(String documentId) throws Exception {
+					public URI getDocumentFileURI(String documentId) throws Exception {
 						return getSourceDocumentURI(documentId);
 					}
 				},
-				new CommentProvider() {
+				new CommentsProvider() {
 					@Override
-					public List<Comment> getComments(List<String> documentIdList) throws Exception {
-						return GraphWorktreeProject.this.gitProjectHandler.getCommentsWithReplies(documentIdList);
+					public List<Comment> getComments(List<String> documentIds) throws Exception {
+						return GraphWorktreeProject.this.gitProjectHandler.getCommentsWithReplies(documentIds);
 					}
 				},
 				new DocumentProvider() {
 					@Override
-					public SourceDocument get(String documentId) throws IOException {
+					public SourceDocument getDocument(String documentId) throws IOException {
 						return gitProjectHandler.getDocument(documentId);
 					}
 				},
 				new DocumentIndexProvider() {
 					@Override
-					public Map get(String documentId) throws IOException {
+					public Map getDocumentIndex(String documentId) throws IOException {
 						Path tokensPath = GraphWorktreeProject.this.getTokenizedSourceDocumentPath(documentId);
 						return gitProjectHandler.getDocumentIndex(documentId, tokensPath);
 					}
 				},
 				new CollectionProvider() {
 					@Override
-					public AnnotationCollection get(String collectionId, TagLibrary tagLibrary) throws IOException {
+					public AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary) throws IOException {
 						return gitProjectHandler.getCollection(collectionId, tagLibrary);
 					}
 				}
@@ -254,7 +254,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						},
 						new CollectionsProvider() {
 							@Override
-							public List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException {
+							public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
 								return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
 							}
 						},
@@ -1495,7 +1495,7 @@ public class GraphWorktreeProject implements IndexedProject {
 									},
 									new CollectionsProvider() {
 										@Override
-										public List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException {
+										public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
 											return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
 										}
 									},
@@ -1697,7 +1697,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					},
 					new CollectionsProvider() {
 						@Override
-						public List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException {
+						public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
 							return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
 						}
 					},

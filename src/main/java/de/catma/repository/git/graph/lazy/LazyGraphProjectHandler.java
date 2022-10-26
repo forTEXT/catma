@@ -46,7 +46,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	private ProjectReference projectReference;
 	private User user;
 	private DocumentFileURIProvider fileInfoProvider;
-	private final CommentProvider commentProvider;
+	private final CommentsProvider commentsProvider;
 	private TagManager tagManager;
 	private String revisionHash = "";
 	private Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
@@ -59,14 +59,14 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 			ProjectReference projectReference, 
 			User user, 
 			final DocumentFileURIProvider fileInfoProvider, 
-			final CommentProvider commentProvider,
+			final CommentsProvider commentsProvider,
 			final DocumentProvider documentProvider,
 			final DocumentIndexProvider documentIndexProvider,
 			final CollectionProvider collectionProvider) {
 		this.projectReference = projectReference;
 		this.user = user;
 		this.fileInfoProvider = fileInfoProvider;
-		this.commentProvider = commentProvider;
+		this.commentsProvider = commentsProvider;
     	this.documentCache = 
 			CacheBuilder.newBuilder()
 			.maximumSize(10)
@@ -92,7 +92,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
     		.build(new CacheLoader<String, AnnotationCollection>() {
     			@Override
     			public AnnotationCollection load(String key) throws Exception {
-    				return collectionProvider.get(key, tagManager.getTagLibrary());
+    				return collectionProvider.getCollection(key, tagManager.getTagLibrary());
     			}
     		});
 	}
@@ -138,7 +138,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	public void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document,
 			Path tokenizedSourceDocumentPath) throws Exception {
 		document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
-				fileInfoProvider.getSourceDocumentFileURI(document.getUuid()));
+				fileInfoProvider.getDocumentFileURI(document.getUuid()));
 		docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
 		this.documentCache.put(document.getUuid(), document);
 		this.revisionHash = rootRevisionHash;
@@ -399,10 +399,10 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public Indexer createIndexer() {
 		return new LazyGraphProjectIndexer(
-				commentProvider,
+				commentsProvider,
 				new DocumentProvider() {
 					@Override
-					public SourceDocument get(String documentId) throws IOException {
+					public SourceDocument getDocument(String documentId) throws IOException {
 						try {
 							return documentCache.get(documentId);
 						}
@@ -414,7 +414,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 				documentIndexProvider,
 				new CollectionProvider() {
 					@Override
-					public AnnotationCollection get(String collectionId) {
+					public AnnotationCollection getCollection(String collectionId) {
 						try {
 							return collectionCache.get(collectionId);
 						}

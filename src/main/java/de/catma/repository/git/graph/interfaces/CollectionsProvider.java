@@ -7,5 +7,5 @@ import java.io.IOException;
 import java.util.List;
 
 public interface CollectionsProvider {
-    List<AnnotationCollection> get(TagLibrary tagLibrary) throws IOException;
+    List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException;
 }

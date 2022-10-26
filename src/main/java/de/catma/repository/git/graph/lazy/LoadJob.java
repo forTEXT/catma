@@ -53,12 +53,12 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager,  Map<String, Sour
 		getProgressListener().setProgress(String.format("Loading Documents for Project %1$s", projectReference));
 		for (SourceDocument document : documentsProvider.getDocuments()) {
 			document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
-					fileInfoProvider.getSourceDocumentFileURI(document.getUuid()));
+					fileInfoProvider.getDocumentFileURI(document.getUuid()));
 			docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
 		}
 		
 		getProgressListener().setProgress(String.format("Loading Collections for Project %1$s", projectReference));
-		for (AnnotationCollection collection : collectionsProvider.get(this.tagManager.getTagLibrary())) {
+		for (AnnotationCollection collection : collectionsProvider.getCollections(this.tagManager.getTagLibrary())) {
 			docRefsById.get(collection.getSourceDocumentId()).addUserMarkupCollectionReference(new AnnotationCollectionReference(collection));
 			
 		}
