@@ -73,13 +73,13 @@ import org.eclipse.jgit.util.FS;
 
 import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.jgit.IJGitCommandFactory;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.jgit.JGitCommandFactory;
 import de.catma.repository.git.managers.jgit.RelativeJGitCommandFactory;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
-public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
+public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable {
 	
 	public static class ClosableRecursiveMerger extends RecursiveMerger implements AutoCloseable {
 	
@@ -104,7 +104,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	private String username;
 
 	private Git gitApi;
-	private IJGitCommandFactory jGitCommandFactory;
+	private JGitCommandFactory jGitCommandFactory;
 	private Logger logger = Logger.getLogger(JGitRepoManager.class.getName());
 	
 
@@ -1807,7 +1807,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 					
 					submoduleGitApi
 						.checkout()
-						.setName(ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH)
+						.setName(LocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH)
 						.setCreateBranch(false)
 						.call();
 					

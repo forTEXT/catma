@@ -14,7 +14,7 @@ import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.module.main.ErrorHandler;
 import io.netty.handler.codec.http.QueryStringEncoder;
 import org.apache.commons.codec.digest.HmacUtils;
@@ -38,7 +38,7 @@ public class SignUpDialog extends AuthenticationDialog {
 	private final UserData userData = new UserData();
 
 	private final Binder<UserData> userDataBinder = new Binder<>();
-	private final IRemoteGitManagerPrivileged gitManagerPrivileged = new GitlabManagerPrivileged();
+	private final RemoteGitManagerPrivileged gitManagerPrivileged = new GitlabManagerPrivileged();
 
 	private final String recaptchaVerificationStyleName = "g-recaptcha-response";
 	private final String recaptchaVerificationAction = "CatmaSignUpForm";

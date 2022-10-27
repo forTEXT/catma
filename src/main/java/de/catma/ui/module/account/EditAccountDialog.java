@@ -21,7 +21,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
@@ -34,7 +34,7 @@ public class EditAccountDialog extends Window {
 	private UserData userData = new UserData();
 	
 	private final Binder<UserData> userBinder = new Binder<>();
-	private final IRemoteGitManagerPrivileged gitManagerPrivileged ;
+	private final RemoteGitManagerPrivileged gitManagerPrivileged;
 	private final EventBus eventBus;
 
 	private final String username;
@@ -49,7 +49,7 @@ public class EditAccountDialog extends Window {
 
 	private PasswordField tfVerifyPassword;
 	
-	public EditAccountDialog(IRemoteGitManagerPrivileged gitManagerPrivileged, 
+	public EditAccountDialog(RemoteGitManagerPrivileged gitManagerPrivileged,
 			LoginService loginService, EventBus eventBus) {
 		this.gitManagerPrivileged = gitManagerPrivileged;
 		this.eventBus = eventBus;

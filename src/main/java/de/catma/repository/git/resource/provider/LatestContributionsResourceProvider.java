@@ -21,29 +21,29 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.*;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
-import de.catma.repository.git.resource.provider.interfaces.IGitProjectResourceProvider;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
+import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
-public class LatestContributionsResourceProvider implements IGitProjectResourceProvider {
+public class LatestContributionsResourceProvider implements GitProjectResourceProvider {
 	private final Logger logger = Logger.getLogger(LatestContributionsResourceProvider.class.getName());
 			
 	private final String projectId;
 	private final ProjectReference projectReference;
 	private final File projectPath;
 
-	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final LocalGitRepositoryManager localGitRepositoryManager;
 	
 	private final Set<LatestContribution> latestContributions;
-	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final RemoteGitManagerRestricted remoteGitServerManager;
 	
 	
 	
 	public LatestContributionsResourceProvider(String projectId, ProjectReference projectReference,
-			File projectPath, ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider,
+			File projectPath, LocalGitRepositoryManager localGitRepositoryManager,
+			RemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider,
 			Set<LatestContribution> latestContributions) {
 		
 		super();
@@ -97,7 +97,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 		 
 		}
 		
-		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
 			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
 			for (LatestContribution latestContribution : latestContributions) {
 				if (!latestContribution.getTagsetIds().isEmpty()) {
@@ -194,7 +194,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 			}
 		}
 		
-		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
 			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
 			for (LatestContribution latestContribution : latestContributions) {
 				if (!latestContribution.getCollectionIds().isEmpty()) {
@@ -296,7 +296,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 			}
 		}
 
-		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
 			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
 			for (LatestContribution latestContribution : latestContributions) {
 				if (!latestContribution.getCollectionIds().isEmpty()) {
@@ -383,7 +383,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 					false);
 		}
 		
-		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
 			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
 			for (LatestContribution latestContribution : latestContributions) {
 				if (latestContribution.getCollectionIds().contains(collectionId)) {
@@ -486,7 +486,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 		}
 		
 		
-		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
 			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
 			for (LatestContribution latestContribution : latestContributions) {
 				if (!latestContribution.getDocumentIds().isEmpty()) {
@@ -551,7 +551,7 @@ public class LatestContributionsResourceProvider implements IGitProjectResourceP
 				this.remoteGitServerManager.getUsername(),
 				this.remoteGitServerManager.getEmail());
 
-		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
 			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
 			for (LatestContribution latestContribution : latestContributions) {
 				if (latestContribution.getDocumentIds().contains(documentId)) {

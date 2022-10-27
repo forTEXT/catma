@@ -61,14 +61,13 @@ import de.catma.rbac.RBACRole;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitUser;
-import de.catma.repository.git.managers.interfaces.IGitUserInformation;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 
-public class GitlabManagerRestricted extends GitlabManagerCommon implements IRemoteGitManagerRestricted, IGitUserInformation {
+public class GitlabManagerRestricted extends GitlabManagerCommon implements RemoteGitManagerRestricted {
 	private static final String CATMA_COMMENT_LABEL = "CATMA Comment";
 
 	private final Logger logger = Logger.getLogger(GitlabManagerRestricted.class.getName());

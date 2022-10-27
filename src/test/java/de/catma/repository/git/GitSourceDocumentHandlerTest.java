@@ -50,7 +50,7 @@ import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.GitProjectsManager;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 //import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 
@@ -197,7 +197,7 @@ public class GitSourceDocumentHandlerTest {
 		See GraphWorktreeProject.insert
 		 */
 
-		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
+		try (LocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
 				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
@@ -300,7 +300,7 @@ public class GitSourceDocumentHandlerTest {
 //
 //	@Test
 //	public void delete() throws Exception {
-//		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+//		try (LocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 //			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 //				jGitRepoManager, this.gitLabServerManager
 //			);
@@ -392,7 +392,7 @@ public class GitSourceDocumentHandlerTest {
 		See GraphWorktreeProject.insert
 		 */
 
-		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
+		try (LocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
 				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 

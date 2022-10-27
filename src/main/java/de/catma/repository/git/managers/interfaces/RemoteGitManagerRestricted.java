@@ -22,7 +22,7 @@ import de.catma.user.User;
  * @author db
  *
  */
-public interface IRemoteGitManagerRestricted extends IGitUserInformation, ICommonRemoteGitManager {
+public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitUserInformationProvider {
 	
 	public static enum GroupSerializationField {
 		name,

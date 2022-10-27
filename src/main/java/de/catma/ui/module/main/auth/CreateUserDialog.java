@@ -23,7 +23,7 @@ import com.vaadin.ui.Window;
 
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.module.main.ErrorHandler;
 
 /**
@@ -38,7 +38,7 @@ public class CreateUserDialog extends Window {
 
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final Binder<UserData> userBinder = new Binder<>();
-	private final IRemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
+	private final RemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
 	private final SignupToken signupToken;
 	
 	public CreateUserDialog(String caption, SignupToken signupToken) {

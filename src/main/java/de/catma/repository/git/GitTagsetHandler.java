@@ -13,7 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import de.catma.document.source.ContentInfoSet;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.GitTagsetHeader;
@@ -24,13 +24,13 @@ import de.catma.tag.TagsetDefinition;
 public class GitTagsetHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
 	
-	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final LocalGitRepositoryManager localGitRepositoryManager;
 	private final String username;
 	private final String email;
 	private final File projectDirectory;
 
 	public GitTagsetHandler(
-			ILocalGitRepositoryManager localGitRepositoryManager,
+			LocalGitRepositoryManager localGitRepositoryManager,
 			File projectDirectory,
 			String username, String email) {
 		this.localGitRepositoryManager = localGitRepositoryManager;

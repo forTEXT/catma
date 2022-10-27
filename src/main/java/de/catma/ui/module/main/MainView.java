@@ -7,7 +7,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import de.catma.project.ProjectsManager;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
@@ -29,7 +29,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	private final ProjectsManager projectsManager;
 	private final CatmaHeader header;
 	private final EventBus eventBus;
-	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
+	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	// mainSection is the combined section (navigation and viewSection / content)
 	private final HorizontalLayout mainSection = new HorizontalLayout();
@@ -48,7 +48,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			ProjectsManager projectsManager,
 			CatmaHeader catmaHeader,
 			EventBus eventBus,
-			IRemoteGitManagerRestricted remoteGitManagerRestricted,
+			RemoteGitManagerRestricted remoteGitManagerRestricted,
 			LoginService loginLogoutService,
 			boolean termsOfUseConsentGiven,
 			Consumer<Boolean> termsOfUseUpdater

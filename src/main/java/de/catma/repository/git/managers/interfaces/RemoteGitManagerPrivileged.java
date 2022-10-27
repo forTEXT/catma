@@ -12,7 +12,7 @@ import de.catma.util.Pair;
  * @author db
  *
  */
-public interface IRemoteGitManagerPrivileged extends ICommonRemoteGitManager {
+public interface RemoteGitManagerPrivileged extends RemoteGitManagerCommon {
 
 	
 	/**

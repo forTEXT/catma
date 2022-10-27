@@ -4,7 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectsManager;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 
 /**
  *
@@ -16,13 +16,13 @@ public class DashboardView extends VerticalLayout {
 
     public DashboardView(
     		ProjectsManager projectManager,
-    		IRemoteGitManagerRestricted remoteGitManagerRestricted,
+    		RemoteGitManagerRestricted remoteGitManagerRestricted,
     		EventBus eventBus) { 
     	
         initComponents(projectManager, eventBus, remoteGitManagerRestricted);
     }
 
-    private void initComponents(ProjectsManager projectManager, EventBus eventBus, IRemoteGitManagerRestricted remoteGitManagerRestricted) {
+    private void initComponents(ProjectsManager projectManager, EventBus eventBus, RemoteGitManagerRestricted remoteGitManagerRestricted) {
     	setSizeFull();
     	setMargin(false);
     	addStyleName("dashboard-view");

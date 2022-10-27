@@ -2,7 +2,7 @@ package de.catma.ui.login;
 
 import java.io.IOException;
 
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 
 public interface LoginService {
 	
@@ -14,7 +14,7 @@ public interface LoginService {
 	 * @return API
 	 * @throws IOException
 	 */
-	IRemoteGitManagerRestricted login(String username, String password) throws IOException;
+	RemoteGitManagerRestricted login(String username, String password) throws IOException;
 	
 	/**
 	 * Obtain an API with an already authenticated user from third party e.g. google
@@ -26,7 +26,7 @@ public interface LoginService {
 	 * @return API
 	 * @throws IOException
 	 */
-	IRemoteGitManagerRestricted loggedInFromThirdParty(
+	RemoteGitManagerRestricted loggedInFromThirdParty(
 			String identifier, String provider, String email, String name) throws IOException;
 	
 	/**
@@ -34,14 +34,14 @@ public interface LoginService {
 	 * 
 	 * @return current API
 	 */
-	IRemoteGitManagerRestricted getAPI();
+	RemoteGitManagerRestricted getAPI();
 	
 	/**
 	 * logout the current user
 	 */
 	void logout();
 
-	IRemoteGitManagerRestricted login(String personalAccessToken) throws IOException;
+	RemoteGitManagerRestricted login(String personalAccessToken) throws IOException;
 
 	void close();
 	

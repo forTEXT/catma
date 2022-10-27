@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.user.User;
 
 class JGitRepoManagerTest {
@@ -31,7 +31,7 @@ class JGitRepoManagerTest {
 
 	@Test
 	void test() {
-		try(ILocalGitRepositoryManager repoManager = new JGitRepoManager(
+		try(LocalGitRepositoryManager repoManager = new JGitRepoManager(
 			"c:/data/catmadata/localgit/",
 			new User() {
 				@Override

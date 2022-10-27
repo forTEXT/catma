@@ -13,7 +13,7 @@ import org.eclipse.jgit.transport.PushResult;
 
 import de.catma.project.CommitInfo;
 
-public interface ILocalGitRepositoryManager extends AutoCloseable {
+public interface LocalGitRepositoryManager extends AutoCloseable {
 	static String DEFAULT_LOCAL_DEV_BRANCH = "dev";
 	static String NO_COMMITS_YET = "no_commits_yet";
 	

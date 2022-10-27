@@ -11,9 +11,9 @@ import de.catma.rbac.RBACPermission;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GraphWorktreeProject;
 import de.catma.repository.git.graph.interfaces.GraphProjectDeletionHandler;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted.GroupSerializationField;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted.GroupSerializationField;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
@@ -29,19 +29,19 @@ import java.util.List;
 
 public class GitProjectsManager implements ProjectsManager {
 	private final String gitBasedRepositoryBasePath;
-	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final RemoteGitManagerRestricted remoteGitServerManager;
 	private final GraphProjectDeletionHandler graphProjectDeletionHandler;
 	private final BackgroundService backgroundService;
 	private final EventBus eventBus;
 
 	private final User user;
-	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final LocalGitRepositoryManager localGitRepositoryManager;
 	private final CredentialsProvider credentialsProvider;
 	private final IDGenerator idGenerator;
 
 	public GitProjectsManager(
 			String gitBasedRepositoryBasePath,
-			IRemoteGitManagerRestricted remoteGitServerManager,
+			RemoteGitManagerRestricted remoteGitServerManager,
 			GraphProjectDeletionHandler graphProjectDeletionHandler,
 			BackgroundService backgroundService,
 			EventBus eventBus
@@ -78,7 +78,7 @@ public class GitProjectsManager implements ProjectsManager {
 				.replaceAll("^_|_$", ""); // strip any leading or trailing underscore
 		String projectId = String.format("%s_%s", idGenerator.generate(), cleanedName);
 
-		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// create the remote repository
 			CreateRepositoryResponse response = remoteGitServerManager.createRepository(
 					projectId, serializedProjectMetadata
@@ -272,7 +272,7 @@ public class GitProjectsManager implements ProjectsManager {
 				.toFile()
 				.exists()
 		) {
-			try (ILocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
+			try (LocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
 				openProjectListener.progress("Cloning the Git repository");
 
 				// clone the repository locally

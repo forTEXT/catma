@@ -23,7 +23,7 @@ import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.GitProjectsManager;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -81,7 +81,7 @@ class GitTagsetHandlerTest {
 				.resolve(projectReference.getProjectId())
 				.toFile();
 
-		try (ILocalGitRepositoryManager localGitRepositoryManager = 
+		try (LocalGitRepositoryManager localGitRepositoryManager =
 				new JGitRepoManager(gitRepositoryBasePath, gitlabManagerRestricted.getUser())
 		) {
 

@@ -19,24 +19,24 @@ import de.catma.repository.git.GitAnnotationCollectionHandler;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitSourceDocumentHandler;
 import de.catma.repository.git.GitTagsetHandler;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
-import de.catma.repository.git.resource.provider.interfaces.IGitProjectResourceProvider;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
+import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
-public class SynchronizedResourceProvider implements IGitProjectResourceProvider {
+public class SynchronizedResourceProvider implements GitProjectResourceProvider {
 	private final Logger logger = Logger.getLogger(SynchronizedResourceProvider.class.getName());
 			
 	private final String projectId;
 	private final ProjectReference projectReference;
 	private final File projectPath;
 
-	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final LocalGitRepositoryManager localGitRepositoryManager;
 	
 	public SynchronizedResourceProvider(String projectId, ProjectReference projectReference,
-			File projectPath, ILocalGitRepositoryManager localGitRepositoryManager,
-			IRemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider) {
+			File projectPath, LocalGitRepositoryManager localGitRepositoryManager,
+			RemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider) {
 		super();
 		this.projectId = projectId;
 		this.projectReference = projectReference;
@@ -46,7 +46,7 @@ public class SynchronizedResourceProvider implements IGitProjectResourceProvider
 		this.credentialsProvider = credentialsProvider;
 	}
 
-	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final RemoteGitManagerRestricted remoteGitServerManager;
 	private final CredentialsProvider credentialsProvider;
 
 	
@@ -188,7 +188,7 @@ public class SynchronizedResourceProvider implements IGitProjectResourceProvider
 		}
 		
 		if (withOrphansHandling) {
-			try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			try (LocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 				localRepoManager.open(this.projectReference.getNamespace(), this.projectId);
 				if (localRepoManager.hasUncommitedChanges() || localRepoManager.hasUntrackedChanges()) {
 					localRepoManager.addAllAndCommit(

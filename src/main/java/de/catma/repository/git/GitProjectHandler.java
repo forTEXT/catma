@@ -44,12 +44,12 @@ import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.LatestContribution;
 import de.catma.repository.git.resource.provider.SynchronizedResourceProvider;
-import de.catma.repository.git.resource.provider.interfaces.IGitProjectResourceProvider;
-import de.catma.repository.git.resource.provider.interfaces.IGitProjectResourceProviderFactory;
+import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
+import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProviderFactory;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -69,8 +69,8 @@ public class GitProjectHandler {
 	public static final String ANNOTATION_COLLECTIONS_DIRECTORY_NAME = "collections";
 	public static final String DOCUMENTS_DIRECTORY_NAME = "documents";
 
-	private final ILocalGitRepositoryManager localGitRepositoryManager;
-	private final IRemoteGitManagerRestricted remoteGitServerManager;
+	private final LocalGitRepositoryManager localGitRepositoryManager;
+	private final RemoteGitManagerRestricted remoteGitServerManager;
 	private final User user;
 	private final String projectId;
 
@@ -80,13 +80,13 @@ public class GitProjectHandler {
 	private final ProjectReference projectReference;
 	private final File projectPath;
 	
-	private IGitProjectResourceProvider resourceProvider;
+	private GitProjectResourceProvider resourceProvider;
 	
 	public GitProjectHandler(
 			final User user, final ProjectReference projectReference, 
 			final File projectPath,
-			final ILocalGitRepositoryManager localGitRepositoryManager,
-			final IRemoteGitManagerRestricted remoteGitServerManager) {
+			final LocalGitRepositoryManager localGitRepositoryManager,
+			final RemoteGitManagerRestricted remoteGitServerManager) {
 		super();
 		this.user = user;
 		this.projectReference = projectReference;
@@ -107,7 +107,7 @@ public class GitProjectHandler {
 							   String description,
 							   String forkedFromCommitURL) throws IOException {
 
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
@@ -140,7 +140,7 @@ public class GitProjectHandler {
 	
 	public String createOrUpdateTag(
 			String tagsetId, TagDefinition tagDefinition, String commitMsg) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
@@ -173,7 +173,7 @@ public class GitProjectHandler {
 	}
 
 	public String removeTagAndAnnotations(TagDefinition tagDefinition, Multimap<String, TagInstance> tagInstancesByCollectionId) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
 			for (String collectionId : tagInstancesByCollectionId.keySet()) {
@@ -198,7 +198,7 @@ public class GitProjectHandler {
 	public String removePropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition,
 			TagsetDefinition tagsetDefinition, Set<String> affectedCollectionIds) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
@@ -224,7 +224,7 @@ public class GitProjectHandler {
 	}
 
 	public String updateTagset(TagsetDefinition tagsetDefinition) throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
@@ -246,7 +246,7 @@ public class GitProjectHandler {
 	}
 
 	public String removeTagset(TagsetDefinition tagsetDefinition, Multimap<String, TagInstance> affectedTagInstancesByCollectionId) throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
 			for (String collectionId : affectedTagInstancesByCollectionId.keySet()) {
@@ -276,7 +276,7 @@ public class GitProjectHandler {
 	public Set<LatestContribution> getLatestContributions(List<String> branches) throws IOException {
 		Set<LatestContribution> latestContributions = new HashSet<LatestContribution>();
 		
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 			localGitRepoManager.fetch(credentialsProvider);
@@ -336,7 +336,7 @@ public class GitProjectHandler {
 										 boolean withPush
 	) throws IOException {
 
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
@@ -403,7 +403,7 @@ public class GitProjectHandler {
 			String commitMsg, 
 			boolean force, boolean withPush) throws IOException {
 		
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			localRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 			
@@ -505,7 +505,7 @@ public class GitProjectHandler {
 	}
 
 	public String removeCollection(AnnotationCollectionReference userMarkupCollectionReference) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
@@ -528,7 +528,7 @@ public class GitProjectHandler {
 	}
 
 	public String updateCollection(AnnotationCollectionReference userMarkupCollectionReference) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 			
@@ -574,7 +574,7 @@ public class GitProjectHandler {
 			Map<String, List<TermInfo>> terms, String tokenizedSourceDocumentFileName,
 			SourceDocumentInfo sourceDocumentInfo
 	) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
 			GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
@@ -613,7 +613,7 @@ public class GitProjectHandler {
 	}
 
 	public String updateSourceDocument(SourceDocumentReference sourceDocument) throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());	
 		
@@ -630,7 +630,7 @@ public class GitProjectHandler {
 	}
 
 	public String getRootRevisionHash() throws Exception {
-		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			localRepoManager.open(
 				projectReference.getNamespace(),
 				projectReference.getProjectId());
@@ -657,7 +657,7 @@ public class GitProjectHandler {
 
 	
 	public String commitProject(String msg) throws IOException{
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			// open the project root repo
 			localGitRepoManager.open(
@@ -682,7 +682,7 @@ public class GitProjectHandler {
 
 
 	public String removeDocument(SourceDocumentReference sourceDocument) throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());	
 
@@ -720,7 +720,7 @@ public class GitProjectHandler {
 
 
 	public boolean hasUncommittedChanges() throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project repo
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
@@ -730,7 +730,7 @@ public class GitProjectHandler {
 	}
 
 	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project repo
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
@@ -739,7 +739,7 @@ public class GitProjectHandler {
 	}
 
 	public Status getStatus() throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project repo
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
@@ -748,7 +748,7 @@ public class GitProjectHandler {
 	}
 	
 	public boolean hasConflicts() throws Exception {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 
@@ -781,7 +781,7 @@ public class GitProjectHandler {
 	}
 
 	public boolean synchronizeWithRemote() throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
 			boolean pushedAlready = false;
@@ -904,7 +904,7 @@ public class GitProjectHandler {
 	}
 
 	public void ensureUserBranch() throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
 			localGitRepoManager.checkout(remoteGitServerManager.getUsername(), true);
@@ -954,7 +954,7 @@ public class GitProjectHandler {
 			}
 		}
 		if (!staleCollectionCandidates.isEmpty()) {
-			try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 				localGitRepoManager.open(
 						 projectReference.getNamespace(),
 						 projectReference.getProjectId());
@@ -1049,7 +1049,7 @@ public class GitProjectHandler {
 
 
 	public boolean hasUntrackedChanges() throws IOException {
-		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project repo
 			localGitRepoManager.open(
 					projectReference.getNamespace(), projectReference.getProjectId());
@@ -1062,7 +1062,7 @@ public class GitProjectHandler {
 		return new Gson().fromJson(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"), Map.class);
 	}
 
-	public void setResourceProvider(IGitProjectResourceProviderFactory resourceProviderFactory) {
+	public void setResourceProvider(GitProjectResourceProviderFactory resourceProviderFactory) {
 		this.resourceProvider = resourceProviderFactory.createResourceProvider(
 				projectId, projectReference, projectPath, 
 				localGitRepositoryManager, remoteGitServerManager, credentialsProvider);

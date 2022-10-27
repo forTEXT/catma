@@ -6,18 +6,18 @@ import java.io.InputStream;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 
 public class BranchAwareSourceContentHandler implements SourceContentHandler {
 
-	private ILocalGitRepositoryManager localGitRepositoryManager;
+	private LocalGitRepositoryManager localGitRepositoryManager;
 	private String username;
 	private ProjectReference projectReference;
 	private String branch;
 	private SourceContentHandler delegate;
 
 	public BranchAwareSourceContentHandler(
-			ILocalGitRepositoryManager localGitRepositoryManager,
+			LocalGitRepositoryManager localGitRepositoryManager,
 			String username,
 			ProjectReference projectReference, 
 			String branch, 
@@ -42,7 +42,7 @@ public class BranchAwareSourceContentHandler implements SourceContentHandler {
 	}
 
 	public void load() throws IOException {
-		try (ILocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
+		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
 			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
 			localGitRepManager.checkout(branch, false);
 

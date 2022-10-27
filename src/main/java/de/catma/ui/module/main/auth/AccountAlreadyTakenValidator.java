@@ -7,7 +7,7 @@ import com.vaadin.data.Validator;
 import com.vaadin.data.ValueContext;
 import com.vaadin.ui.UI;
 
-import de.catma.repository.git.managers.interfaces.ICommonRemoteGitManager;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerCommon;
 import de.catma.ui.module.main.ErrorHandler;
 
 /**
@@ -16,9 +16,9 @@ import de.catma.ui.module.main.ErrorHandler;
  *
  */
 public class AccountAlreadyTakenValidator implements Validator<String> {
-	private final ICommonRemoteGitManager commonGitManagerApi;
+	private final RemoteGitManagerCommon commonGitManagerApi;
 
-	public AccountAlreadyTakenValidator(ICommonRemoteGitManager commonGitManagerApi) {
+	public AccountAlreadyTakenValidator(RemoteGitManagerCommon commonGitManagerApi) {
 		this.commonGitManagerApi = commonGitManagerApi;
 	}
 	

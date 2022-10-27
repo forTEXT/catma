@@ -31,10 +31,10 @@ import org.gitlab4j.api.models.User;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitUser;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.util.Pair;
 
-public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRemoteGitManagerPrivileged {
+public class GitlabManagerPrivileged extends GitlabManagerCommon implements RemoteGitManagerPrivileged {
 	private enum CustomAttributeName {
 		last_login,
 		terms_of_use_consent_given,

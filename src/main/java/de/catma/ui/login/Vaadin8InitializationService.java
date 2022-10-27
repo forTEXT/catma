@@ -9,7 +9,7 @@ import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitProjectsManager;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.sqlite.SqliteService;
 import de.catma.ui.UIBackgroundService;
 import de.catma.ui.module.main.CatmaHeader;
@@ -68,7 +68,7 @@ public class Vaadin8InitializationService implements InitializationService {
 
 	@Override
 	public Component newEntryPage(EventBus eventBus, LoginService loginService, HazelCastService hazelcastService, SqliteService sqliteService) {
-		IRemoteGitManagerRestricted api = loginService.getAPI();
+		RemoteGitManagerRestricted api = loginService.getAPI();
 
 		if (api == null ) {
 			return new NotLoggedInMainView(this, loginService, hazelcastService, sqliteService, eventBus);

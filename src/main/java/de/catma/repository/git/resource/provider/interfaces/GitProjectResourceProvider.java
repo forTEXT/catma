@@ -10,7 +10,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
-public interface IGitProjectResourceProvider {
+public interface GitProjectResourceProvider {
 	public List<TagsetDefinition> getTagsets();
 	public List<AnnotationCollectionReference> getCollectionReferences();
 	public List<AnnotationCollection> getCollections(

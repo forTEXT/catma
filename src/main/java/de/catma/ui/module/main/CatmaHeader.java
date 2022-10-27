@@ -14,7 +14,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
 
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -36,7 +36,7 @@ public class CatmaHeader extends HorizontalLayout {
 	private final Label contextInformation = new Label("", ContentMode.HTML);
 	private Button btHome;
 
-	public CatmaHeader(EventBus eventBus, LoginService loginService, IRemoteGitManagerPrivileged gitManagerPrivileged){
+	public CatmaHeader(EventBus eventBus, LoginService loginService, RemoteGitManagerPrivileged gitManagerPrivileged){
         super();
         this.eventBus = eventBus;
         this.loginService = loginService;
@@ -45,7 +45,7 @@ public class CatmaHeader extends HorizontalLayout {
     }
 
 
-    private void initComponents(IRemoteGitManagerPrivileged gitManagerPrivileged) {
+    private void initComponents(RemoteGitManagerPrivileged gitManagerPrivileged) {
     	addStyleName("header");
     	setWidth("100%");
     	

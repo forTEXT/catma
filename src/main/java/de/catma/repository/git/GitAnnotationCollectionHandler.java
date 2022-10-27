@@ -10,7 +10,7 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
@@ -40,7 +40,7 @@ public class GitAnnotationCollectionHandler {
 
 	private final Logger logger = Logger.getLogger(GitAnnotationCollectionHandler.class.getName());
 
-	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final LocalGitRepositoryManager localGitRepositoryManager;
 	private final File projectDirectory;
 	private final String projectId;
 	private final String username;
@@ -49,7 +49,7 @@ public class GitAnnotationCollectionHandler {
 	private final int maxPageSizeBytes;
 
 	public GitAnnotationCollectionHandler(
-			ILocalGitRepositoryManager localGitRepositoryManager,
+			LocalGitRepositoryManager localGitRepositoryManager,
 			File projectDirectory,
 			String projectId,
 			String username,

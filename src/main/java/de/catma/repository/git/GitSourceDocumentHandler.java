@@ -23,20 +23,20 @@ import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermInfo;
-import de.catma.repository.git.managers.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
 
 public class GitSourceDocumentHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
 
-	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final LocalGitRepositoryManager localGitRepositoryManager;
 	private final String username;
 	private final String email;
 	private final File projectDirectory;
 
 	public GitSourceDocumentHandler(
-			ILocalGitRepositoryManager localGitRepositoryManager, File projectDirectory,
+			LocalGitRepositoryManager localGitRepositoryManager, File projectDirectory,
 			String username, String email) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.projectDirectory = projectDirectory;

@@ -8,9 +8,9 @@ import com.vaadin.server.VaadinSession;
 
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
-import de.catma.ui.di.IRemoteGitManagerFactory;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
+import de.catma.ui.di.RemoteGitManagerFactory;
 import de.catma.util.Pair;
 
 /**
@@ -25,17 +25,17 @@ public class GitlabLoginService implements LoginService {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
-	private IRemoteGitManagerRestricted api;
+	private RemoteGitManagerRestricted api;
 	
-	private final IRemoteGitManagerFactory iRemoteGitManagerFactory;
+	private final RemoteGitManagerFactory remoteGitManagerFactory;
 		
-	public GitlabLoginService(IRemoteGitManagerFactory iRemoteGitManagerFactory) {
-		this.iRemoteGitManagerFactory=iRemoteGitManagerFactory;
+	public GitlabLoginService(RemoteGitManagerFactory remoteGitManagerFactory) {
+		this.remoteGitManagerFactory = remoteGitManagerFactory;
 	}
 	
 	@Override
-	public IRemoteGitManagerRestricted login(String username, String password) throws IOException {
-		api = iRemoteGitManagerFactory.createFromUsernameAndPassword(username, password);
+	public RemoteGitManagerRestricted login(String username, String password) throws IOException {
+		api = remoteGitManagerFactory.createFromUsernameAndPassword(username, password);
 		logLoginEvent("username/pwd");
 
 		return api;
@@ -65,26 +65,26 @@ public class GitlabLoginService implements LoginService {
 	}
 	
 	@Override
-	public IRemoteGitManagerRestricted login(String personalAccessToken) throws IOException {
-		api = iRemoteGitManagerFactory.createFromImpersonationToken(personalAccessToken);
+	public RemoteGitManagerRestricted login(String personalAccessToken) throws IOException {
+		api = remoteGitManagerFactory.createFromImpersonationToken(personalAccessToken);
 		logLoginEvent("token");
 		return api;
 	}
 
 	@Override
-	public IRemoteGitManagerRestricted loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException {
-		IRemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();		
+	public RemoteGitManagerRestricted loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException {
+		RemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
         Pair<GitUser, String> userAndToken = 
         		gitlabManagerPrivileged.acquireImpersonationToken(identifier, provider, email, name);
 
-		api = iRemoteGitManagerFactory.createFromImpersonationToken(userAndToken.getSecond());
+		api = remoteGitManagerFactory.createFromImpersonationToken(userAndToken.getSecond());
 		logLoginEvent("third party");
 		
 		return api;
 	}
 
 	@Override
-	public IRemoteGitManagerRestricted getAPI() {
+	public RemoteGitManagerRestricted getAPI() {
 		return api;
 	}
 

@@ -1,6 +1,6 @@
 package de.catma.repository.git.managers.interfaces;
 
-public interface IGitUserInformation {
+public interface GitUserInformationProvider {
 
 	String getUsername();
 

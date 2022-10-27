@@ -5,7 +5,7 @@ import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.lib.Repository;
 
-public class RelativeJGitCommandFactory implements IJGitCommandFactory {
+public class RelativeJGitCommandFactory implements JGitCommandFactory {
 	@Override
 	public CloneCommand newCloneCommand() {
 		return new RelativeCloneCommand();

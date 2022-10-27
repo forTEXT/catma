@@ -73,9 +73,9 @@ import de.catma.backgroundservice.ProgressCallable;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.sqlite.SqliteService;
-import de.catma.ui.di.IRemoteGitManagerFactory;
+import de.catma.ui.di.RemoteGitManagerFactory;
 import de.catma.ui.dialog.ErrorDialog;
 import de.catma.ui.events.RefreshEvent;
 import de.catma.ui.events.TokenInvalidEvent;
@@ -113,14 +113,14 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		eventBus = new EventBus();
 		initService = new Vaadin8InitializationService();
 
-		loginservice = new GitlabLoginService(new IRemoteGitManagerFactory() {
+		loginservice = new GitlabLoginService(new RemoteGitManagerFactory() {
 			@Override
-			public IRemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException {
+			public RemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException {
 				return new GitlabManagerRestricted(eventBus, username, password);
 			}
 			
 			@Override
-			public IRemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
+			public RemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
 				return new GitlabManagerRestricted(eventBus, userImpersonationToken);
 			}
 		});
@@ -264,7 +264,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 
 	@Override
 	public void showAndLogError(String message, Throwable e) {
-		IRemoteGitManagerRestricted api = null;
+		RemoteGitManagerRestricted api = null;
 		try {
 			api = loginservice.getAPI();
 		}

@@ -15,7 +15,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.layout.HorizontalFlexLayout;
@@ -33,7 +33,7 @@ public class ProjectListView extends VerticalLayout {
 			(ref1,ref2) -> String.CASE_INSENSITIVE_ORDER.compare(ref1.getName(), ref2.getName());
 	private final Comparator<ProjectReference> sortByNameDesc = 
 			(ref1,ref2) -> String.CASE_INSENSITIVE_ORDER.compare(ref1.getName(), ref2.getName())*-1;
-	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
+	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 	private final Set<String> deletedProjectIds;
 	private HorizontalFlexLayout projectsLayout = new HorizontalFlexLayout();
@@ -43,7 +43,7 @@ public class ProjectListView extends VerticalLayout {
 
     public ProjectListView(ProjectsManager projectManager, 
     		EventBus eventBus, 
-    		IRemoteGitManagerRestricted remoteGitManagerRestricted){ 
+    		RemoteGitManagerRestricted remoteGitManagerRestricted){
         this.projectManager = projectManager;
         this.eventBus = eventBus;
         this.remoteGitManagerRestricted = remoteGitManagerRestricted;

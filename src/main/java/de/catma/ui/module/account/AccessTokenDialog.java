@@ -10,7 +10,7 @@ import com.vaadin.jsclipboard.JSClipboardButton;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
-import de.catma.repository.git.managers.interfaces.IRemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.i18n.Messages;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
@@ -25,7 +25,7 @@ public class AccessTokenDialog extends Window {
 	private final AccessTokenData accessTokenData = new AccessTokenData();
 
 	private final Binder<AccessTokenData> binder = new Binder<>();
-	private final IRemoteGitManagerPrivileged gitManagerPrivileged;
+	private final RemoteGitManagerPrivileged gitManagerPrivileged;
 
 	private final long userId;
 
@@ -34,7 +34,7 @@ public class AccessTokenDialog extends Window {
 	private VerticalLayout tokenRequestPanel;
 	private HorizontalLayout tokenDisplayPanel;
 
-	public AccessTokenDialog(IRemoteGitManagerPrivileged gitManagerPrivileged,
+	public AccessTokenDialog(RemoteGitManagerPrivileged gitManagerPrivileged,
                              LoginService loginService) {
 		this.gitManagerPrivileged = gitManagerPrivileged;
 

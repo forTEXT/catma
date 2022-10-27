@@ -8,15 +8,15 @@ import com.vaadin.data.Validator;
 import com.vaadin.data.ValueContext;
 import com.vaadin.ui.UI;
 
-import de.catma.repository.git.managers.interfaces.ICommonRemoteGitManager;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerCommon;
 import de.catma.ui.module.main.ErrorHandler;
 
 public class UsernameValidator implements Validator<String>{
 
-	private final ICommonRemoteGitManager commonGitManagerApi;
+	private final RemoteGitManagerCommon commonGitManagerApi;
 	private final Pattern usernamePattern = Pattern.compile("[a-zA-Z0-9_-]+");
 
-	public UsernameValidator(ICommonRemoteGitManager commonGitManagerApi) {
+	public UsernameValidator(RemoteGitManagerCommon commonGitManagerApi) {
 		this.commonGitManagerApi = commonGitManagerApi;
 	}
 	
