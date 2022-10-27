@@ -33,8 +33,9 @@ public interface GraphProjectHandler {
 			TagsetsProvider tagsetsProvider,
 			DocumentsProvider documentsProvider,
 			CollectionsProvider collectionsProvider,
-			boolean forceGraphReload, BackgroundService backgroundService
-	) throws Exception;
+			boolean forceGraphReload,
+			BackgroundService backgroundService
+	);
 
 	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document, Path tokenizedSourceDocumentPath) throws Exception;
 

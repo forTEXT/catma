@@ -1,22 +1,10 @@
 package de.catma.repository.git.graph.lazy;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import com.google.common.cache.*;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.ProgressListener;
@@ -30,118 +18,147 @@ import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.Indexer;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.interfaces.*;
-import de.catma.tag.Property;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagManager;
-import de.catma.tag.TagsetDefinition;
+import de.catma.tag.*;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 public class LazyGraphProjectHandler implements GraphProjectHandler {
-	
-	private Logger logger = Logger.getLogger(LazyGraphProjectHandler.class.getName());
-	private ProjectReference projectReference;
-	private User user;
-	private DocumentFileURIProvider fileInfoProvider;
+	private final Logger logger = Logger.getLogger(LazyGraphProjectHandler.class.getName());
+
+	private final ProjectReference projectReference;
+	private final User user;
+	private final DocumentFileURIProvider documentFileURIProvider;
 	private final CommentsProvider commentsProvider;
+	private final DocumentIndexProvider documentIndexProvider;
+	private final CollectionProvider collectionProvider;
+
+	private final LoadingCache<String, SourceDocument> documentCache;
+	private final LoadingCache<String, AnnotationCollection> collectionCache;
+
+	private final Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
 	private TagManager tagManager;
 	private String revisionHash = "";
-	private Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
-	private LoadingCache<String, SourceDocument> documentCache;
-	private LoadingCache<String, AnnotationCollection> collectionCache;
-	private DocumentIndexProvider documentIndexProvider;
 
-	
 	public LazyGraphProjectHandler(
 			ProjectReference projectReference, 
 			User user, 
-			final DocumentFileURIProvider fileInfoProvider, 
-			final CommentsProvider commentsProvider,
-			final DocumentProvider documentProvider,
-			final DocumentIndexProvider documentIndexProvider,
-			final CollectionProvider collectionProvider) {
+			DocumentFileURIProvider documentFileURIProvider,
+			CommentsProvider commentsProvider,
+			DocumentProvider documentProvider,
+			DocumentIndexProvider documentIndexProvider,
+			CollectionProvider collectionProvider
+	) {
 		this.projectReference = projectReference;
 		this.user = user;
-		this.fileInfoProvider = fileInfoProvider;
+		this.documentFileURIProvider = documentFileURIProvider;
 		this.commentsProvider = commentsProvider;
-    	this.documentCache = 
-			CacheBuilder.newBuilder()
-			.maximumSize(10)
-			.removalListener(new RemovalListener<String, SourceDocument>() {
-				@Override
-				public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
-					notification.getValue().unload();
-				}
-			})
-			.build(new CacheLoader<String, SourceDocument>() {
-				@Override
-				public SourceDocument load(String key) throws Exception {
-					StandardContentHandler contentHandler = new StandardContentHandler();
-					contentHandler.setSourceDocumentInfo(docRefsById.get(key).getSourceDocumentInfo());
-					return new SourceDocument(key, contentHandler);
-				}
-			});
-    	this.documentIndexProvider = documentIndexProvider;
+		this.documentIndexProvider = documentIndexProvider;
+		this.collectionProvider = collectionProvider;
 
-    	this.collectionCache = 
-    		CacheBuilder.newBuilder()
-    		.maximumSize(20)
-    		.build(new CacheLoader<String, AnnotationCollection>() {
-    			@Override
-    			public AnnotationCollection load(String key) throws Exception {
-    				return collectionProvider.getCollection(key, tagManager.getTagLibrary());
-    			}
-    		});
+		this.documentCache = CacheBuilder.newBuilder()
+				.maximumSize(10)
+				.removalListener(
+						new RemovalListener<String, SourceDocument>() {
+							@Override
+							public void onRemoval(RemovalNotification<String, SourceDocument> notification) {
+								notification.getValue().unload();
+							}
+						}
+				)
+				.build(
+						new CacheLoader<String, SourceDocument>() {
+							@Override
+							public SourceDocument load(String key) throws Exception {
+								StandardContentHandler standardContentHandler = new StandardContentHandler();
+								standardContentHandler.setSourceDocumentInfo(
+										LazyGraphProjectHandler.this.docRefsById.get(key).getSourceDocumentInfo()
+								);
+								return new SourceDocument(key, standardContentHandler);
+							}
+						}
+				);
+
+		this.collectionCache = CacheBuilder.newBuilder()
+				.maximumSize(20)
+				.build(
+						new CacheLoader<String, AnnotationCollection>() {
+							@Override
+							public AnnotationCollection load(String key) throws Exception {
+								return LazyGraphProjectHandler.this.collectionProvider.getCollection(
+										key, LazyGraphProjectHandler.this.tagManager.getTagLibrary()
+								);
+							}
+						}
+				);
 	}
 
 	@Override
-	public void ensureProjectRevisionIsLoaded(ExecutionListener<TagManager> openProjectListener,
-			final ProgressListener progressListener, String revisionHash, TagManager tagManager,
-			TagsetsProvider tagsetsProvider, DocumentsProvider documentsProvider,
-			CollectionsProvider collectionsProvider, boolean forceGraphReload, BackgroundService backgroundService)
-			throws Exception {
-		if (this.revisionHash != revisionHash || forceGraphReload) {
-			LoadJob loadJob = 
-				new LoadJob(
-					projectReference, revisionHash, 
-					tagManager,
-					tagsetsProvider, documentsProvider, collectionsProvider,
-					fileInfoProvider);
-			backgroundService.submit(
-					loadJob,
-					new ExecutionListener<Pair<TagManager, Map<String, SourceDocumentReference>>>() {
-						@Override
-						public void done(Pair<TagManager, Map<String, SourceDocumentReference>> result) {
-							logger.info(String.format("LoadJob has finished for Project %1$s", projectReference));
-							LazyGraphProjectHandler.this.docRefsById.putAll(result.getSecond());
-							LazyGraphProjectHandler.this.tagManager = result.getFirst();
-							LazyGraphProjectHandler.this.revisionHash = revisionHash;
-							openProjectListener.done(result.getFirst());
-						}
-						@Override
-						public void error(Throwable t) {
-							openProjectListener.error(t);
-						}
-					}, progressListener);
-		}
-		else {
+	public void ensureProjectRevisionIsLoaded(
+			ExecutionListener<TagManager> openProjectListener,
+			ProgressListener progressListener,
+			String revisionHash,
+			TagManager tagManager,
+			TagsetsProvider tagsetsProvider,
+			DocumentsProvider documentsProvider,
+			CollectionsProvider collectionsProvider,
+			boolean forceGraphReload,
+			BackgroundService backgroundService
+	) {
+		if (this.revisionHash.equals(revisionHash) && !forceGraphReload) {
 			openProjectListener.done(this.tagManager);
+			return;
 		}
-		
 
+		LoadJob loadJob = new LoadJob(
+				projectReference,
+				revisionHash,
+				tagManager,
+				tagsetsProvider,
+				documentsProvider,
+				collectionsProvider,
+				documentFileURIProvider
+		);
+
+		backgroundService.submit(
+				loadJob,
+				new ExecutionListener<Pair<TagManager, Map<String, SourceDocumentReference>>>() {
+					@Override
+					public void done(Pair<TagManager, Map<String, SourceDocumentReference>> result) {
+						logger.info(String.format("LoadJob has finished for project \"%s\"", projectReference));
+						LazyGraphProjectHandler.this.docRefsById.putAll(result.getSecond());
+						LazyGraphProjectHandler.this.tagManager = result.getFirst();
+						LazyGraphProjectHandler.this.revisionHash = revisionHash;
+						openProjectListener.done(result.getFirst());
+					}
+					@Override
+					public void error(Throwable t) {
+						openProjectListener.error(t);
+					}
+				},
+				progressListener
+		);
 	}
 
 	@Override
-	public void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document,
-			Path tokenizedSourceDocumentPath) throws Exception {
+	public void addSourceDocument(
+			String oldRootRevisionHash,
+			String rootRevisionHash,
+			SourceDocument document,
+			Path tokenizedSourceDocumentPath
+	) throws Exception {
 		document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
-				fileInfoProvider.getDocumentFileURI(document.getUuid()));
+				documentFileURIProvider.getDocumentFileURI(document.getUuid())
+		);
 		docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
-		this.documentCache.put(document.getUuid(), document);
-		this.revisionHash = rootRevisionHash;
+		documentCache.put(document.getUuid(), document);
+		revisionHash = rootRevisionHash;
 	}
 
 	@Override

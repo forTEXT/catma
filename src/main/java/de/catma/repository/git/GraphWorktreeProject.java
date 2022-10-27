@@ -31,6 +31,7 @@ import com.vaadin.ui.UI;
 
 import org.apache.tika.mime.MediaType;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.transport.CredentialsProvider;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
@@ -63,9 +64,13 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.graph.interfaces.*;
 import de.catma.repository.git.graph.lazy.LazyGraphProjectHandler;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.LatestContribution;
 import de.catma.repository.git.resource.provider.LatestContributionsResourceProvider;
 import de.catma.repository.git.resource.provider.SynchronizedResourceProvider;
+import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
+import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProviderFactory;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.serialization.tei.TeiSerializationHandlerFactory;
@@ -110,7 +115,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	private boolean tagManagerListenersEnabled = true;
 	private String rootRevisionHash;
 
-
 	public GraphWorktreeProject(
 			User user,
 			GitProjectHandler gitProjectHandler,
@@ -144,20 +148,20 @@ public class GraphWorktreeProject implements IndexedProject {
 				new DocumentProvider() {
 					@Override
 					public SourceDocument getDocument(String documentId) throws IOException {
-						return gitProjectHandler.getDocument(documentId);
+						return GraphWorktreeProject.this.gitProjectHandler.getDocument(documentId);
 					}
 				},
 				new DocumentIndexProvider() {
 					@Override
 					public Map getDocumentIndex(String documentId) throws IOException {
-						Path tokensPath = GraphWorktreeProject.this.getTokenizedSourceDocumentPath(documentId);
-						return gitProjectHandler.getDocumentIndex(documentId, tokensPath);
+						Path tokensPath = getTokenizedSourceDocumentPath(documentId);
+						return GraphWorktreeProject.this.gitProjectHandler.getDocumentIndex(documentId, tokensPath);
 					}
 				},
 				new CollectionProvider() {
 					@Override
 					public AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary) throws IOException {
-						return gitProjectHandler.getCollection(collectionId, tagLibrary);
+						return GraphWorktreeProject.this.gitProjectHandler.getCollection(collectionId, tagLibrary);
 					}
 				}
 		);
@@ -180,43 +184,47 @@ public class GraphWorktreeProject implements IndexedProject {
 	public Indexer getIndexer() {
 		return indexer;
 	}
-	
+
 	@Override
 	public void open(OpenProjectListener openProjectListener) {
 		try {
-			logger.info(String.format(
-				"Opening Project %1$s with ID %2$s", projectReference.getName(), projectReference.getProjectId()));
-			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			logger.info(
-				String.format("Revision Hash for Project %1$s is %2$s", projectReference.getProjectId(), this.rootRevisionHash));
-						
+					String.format("Opening project \"%s\" with ID: %s", projectReference.getName(), projectReference.getProjectId())
+			);
+
+			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			logger.info(
-				String.format("Checking for conflicts in Project %1$s", projectReference.getProjectId()));
+				String.format("Revision hash for project with ID %s is: %s", projectReference.getProjectId(), rootRevisionHash)
+			);
+
+			logger.info(
+				String.format("Checking for conflicts in project with ID: %s", projectReference.getProjectId())
+			);
 			if (gitProjectHandler.hasConflicts()) {
-				openProjectListener.failure(new IllegalStateException(
-						String.format(
-							"There are conflicts in Project %1$s with ID %2$s,"
-							+ "please contact our support.",
-							projectReference.getName(),
-							projectReference.getProjectId())));						
+				openProjectListener.failure(
+						new IllegalStateException(
+								String.format(
+										"There are conflicts in project \"%s\" with ID: %s. Please contact support.",
+										projectReference.getName(),
+										projectReference.getProjectId()
+								)
+						)
+				);
 			}
 			else {
 				gitProjectHandler.ensureUserBranch();
-				
 				gitProjectHandler.verifyCollections();
-				
-				ProgressListener progressListener = 
-					new ProgressListener() {
-						
-						@Override
-						public void setProgress(String value, Object... args) {
-							logger.info(String.format(value, args));
-							openProjectListener.progress(value, args);
-						}
-					};
+
+				ProgressListener progressListener = new ProgressListener() {
+					@Override
+					public void setProgress(String value, Object... args) {
+						logger.info(String.format(value, args));
+						openProjectListener.progress(value, args);
+					}
+				};
+
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
 						new ExecutionListener<TagManager>() {
-
 							@Override
 							public void error(Throwable t) {
 								openProjectListener.failure(t);
@@ -225,15 +233,12 @@ public class GraphWorktreeProject implements IndexedProject {
 							@Override
 							public void done(TagManager result) {
 								logger.info(
-										String.format("Loading Tag library for Project %1$s",
-												projectReference.getProjectId()));
+										String.format("Loading tag library for project with ID: %s", projectReference.getProjectId())
+								);
 								tagManager.load(result.getTagLibrary());
-
 								initTagManagerListeners();
 
-								logger.info(
-										String.format("Project %1$s is loaded.",
-												projectReference.getProjectId()));
+								logger.info(String.format("Project with ID %s is loaded", projectReference.getProjectId()));
 								openProjectListener.ready(GraphWorktreeProject.this);
 							}
 						},
@@ -258,15 +263,16 @@ public class GraphWorktreeProject implements IndexedProject {
 								return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
 							}
 						},
-						false, //forceGraphReload
-						backgroundService);
+						false, // forceGraphReload
+						backgroundService
+				);
 			}
 		}
-		catch(Exception e) {
+		catch (Exception e) {
 			openProjectListener.failure(e);
 		}
 	}
-	
+
 	@Override
 	public void printStatus() {
 		try {
@@ -1412,19 +1418,19 @@ public class GraphWorktreeProject implements IndexedProject {
 //		printStatus();
 		}
 	}
-	
+
 	@Override
 	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot synchronize with remote!", 
-						this.projectReference));
+				String.format("Project \"%s\" is in read-only mode! Cannot synchronize with remote.", projectReference)
+			);
 		}
 
 		if (hasUncommittedChanges()) {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
-		
+
 		final ProgressListener progressListener = new ProgressListener() {
 			@Override
 			public void setProgress(String value, Object... args) {
@@ -1432,39 +1438,45 @@ public class GraphWorktreeProject implements IndexedProject {
 			}
 		};
 
-		backgroundService.submit(new DefaultProgressCallable<Boolean>() {
-			
-			@Override
-			public Boolean call() throws Exception {
-				try {
-					progressListener.setProgress("Synchronizing...");
-					boolean success = gitProjectHandler.synchronizeWithRemote();
-					progressListener.setProgress("Finished synchronization!");
-					return success;
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-					return false;
-				}
-			}
-		}, new ExecutionListener<Boolean>() {
-			@Override
-			public void done(Boolean result) {
-				if (result) {
-					try {
-						if (gitProjectHandler.hasConflicts()) {
-							openProjectListener.failure(new IllegalStateException(
-									String.format(
-										"There are conflicts in Project %1$s with ID %2$s,"
-										+ "please contact our support.",
-										projectReference.getName(),
-										projectReference.getProjectId())));						
+		backgroundService.submit(
+				new DefaultProgressCallable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						try {
+							progressListener.setProgress("Synchronizing...");
+							boolean success = gitProjectHandler.synchronizeWithRemote();
+							progressListener.setProgress("Synchronization completed!");
+							return success;
 						}
-						else {
+						catch (Exception e) {
+							e.printStackTrace();
+							return false;
+						}
+					}
+				},
+				new ExecutionListener<Boolean>() {
+					@Override
+					public void done(Boolean result) {
+						if (!result) {
+							openProjectListener.ready(null);
+							return;
+						}
+
+						try {
+							if (gitProjectHandler.hasConflicts()) {
+								openProjectListener.failure(new IllegalStateException(
+										String.format(
+												"There are conflicts in project \"%s\" with ID: %s. Please contact support.",
+												projectReference.getName(),
+												projectReference.getProjectId()
+										)
+								));
+								return;
+							}
+
 							gitProjectHandler.ensureUserBranch();
-							
 							rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-	
+
 							graphProjectHandler.ensureProjectRevisionIsLoaded(
 									new ExecutionListener<TagManager>() {
 										@Override
@@ -1503,20 +1515,18 @@ public class GraphWorktreeProject implements IndexedProject {
 									backgroundService
 							);
 						}
+						catch (Exception e) {
+							openProjectListener.failure(e);
+						}
 					}
-					catch (Exception e) {
-						openProjectListener.failure(e);
+
+					@Override
+					public void error(Throwable t) {
+						openProjectListener.failure(t);
 					}
-				}
-				else {
-					openProjectListener.ready(null);
-				}
-			}
-			@Override
-			public void error(Throwable t) {
-				openProjectListener.failure(t);				
-			}
-		}, progressListener);
+				},
+				progressListener
+		);
 	}
 
 	@Override
@@ -1608,7 +1618,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	public String toString() {
 		return this.projectReference.toString();
 	}
-	
+
 	@Override
 	public void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception {
 		if (hasUncommittedChanges()) {
@@ -1618,95 +1628,115 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (gitProjectHandler.hasConflicts()) {
 			openProjectListener.failure(new IllegalStateException(
 					String.format(
-						"There are conflicts in Project %1$s with ID %2$s,"
-						+ "please contact our support.",
-						projectReference.getName(),
-						projectReference.getProjectId())));						
+							"There are conflicts in project \"%s\" with ID: %s. Please contact support.",
+							projectReference.getName(),
+							projectReference.getProjectId()
+					)
+			));
+			return;
+		}
+
+		gitProjectHandler.ensureUserBranch();
+
+		Set<Member> members = gitProjectHandler.getProjectMembers();
+		List<String> possibleBranches = members.stream()
+				.filter(member -> !member.getIdentifier().equals(getUser().getIdentifier()))
+				.map(member -> "refs/remotes/origin/" + member.getIdentifier())
+				.collect(Collectors.toList());
+
+		if (enabled) {
+			Set<LatestContribution> latestContributions = gitProjectHandler.getLatestContributions(possibleBranches);
+			gitProjectHandler.setResourceProvider(new GitProjectResourceProviderFactory() {
+				@Override
+				public GitProjectResourceProvider createResourceProvider(
+						String projectId,
+						ProjectReference projectReference,
+						File projectPath,
+						LocalGitRepositoryManager localGitRepositoryManager,
+						RemoteGitManagerRestricted remoteGitServerManager,
+						CredentialsProvider credentialsProvider
+				) {
+					return new LatestContributionsResourceProvider(
+							projectId,
+							projectReference,
+							projectPath,
+							localGitRepositoryManager,
+							remoteGitServerManager,
+							credentialsProvider,
+							latestContributions
+					);
+				}
+			});
 		}
 		else {
-			gitProjectHandler.ensureUserBranch();
-
-			Set<Member> members = gitProjectHandler.getProjectMembers();
-			List<String> possibleBranches =
-					members.stream()
-					.filter(member -> !member.getIdentifier().equals(getUser().getIdentifier()))
-					.map(member -> "refs/remotes/origin/" + member.getIdentifier())
-					.collect(Collectors.toList());
-			
-			if (enabled) {
-				Set<LatestContribution> latestContributions =
-						gitProjectHandler.getLatestContributions(possibleBranches);
-	
-				gitProjectHandler.setResourceProvider(
-						(projectId, projectReference, projectPath, 
-								localGitRepositoryManager, remoteGitServerManager, 
-								credentialsProvider) -> new LatestContributionsResourceProvider(
-						projectId, projectReference, 
-						projectPath, 
-						localGitRepositoryManager, 
-						remoteGitServerManager, 
-						credentialsProvider, 
-						latestContributions));
-			}
-			else {
-				gitProjectHandler.setResourceProvider(
-						(projectId, projectReference,projectPath, 
-								localGitRepositoryManager, remoteGitServerManager, 
-								credentialsProvider) -> new SynchronizedResourceProvider(
-							projectId, projectReference, 
-							projectPath, 
-							localGitRepositoryManager, 
-							remoteGitServerManager, 
-							credentialsProvider));
-	
-			}
-			ProgressListener progressListener = new ProgressListener() {
+			gitProjectHandler.setResourceProvider(new GitProjectResourceProviderFactory() {
 				@Override
-				public void setProgress(String value, Object... args) {
-					openProjectListener.progress(value, args);
+				public GitProjectResourceProvider createResourceProvider(
+						String projectId,
+						ProjectReference projectReference,
+						File projectPath,
+						LocalGitRepositoryManager localGitRepositoryManager,
+						RemoteGitManagerRestricted remoteGitServerManager,
+						CredentialsProvider credentialsProvider
+				) {
+					return new SynchronizedResourceProvider(
+							projectId,
+							projectReference,
+							projectPath,
+							localGitRepositoryManager,
+							remoteGitServerManager,
+							credentialsProvider
+					);
 				}
-			};
+			});
+		}
 
-			graphProjectHandler.ensureProjectRevisionIsLoaded(
-					new ExecutionListener<TagManager>() {
-						@Override
-						public void error(Throwable t) {
-							openProjectListener.failure(t);
-						}
+		ProgressListener progressListener = new ProgressListener() {
+			@Override
+			public void setProgress(String value, Object... args) {
+				openProjectListener.progress(value, args);
+			}
+		};
 
-						@Override
-						public void done(TagManager result) {
-							tagManager.load(result.getTagLibrary());
-							openProjectListener.ready(GraphWorktreeProject.this);
-						}
-					},
-					progressListener,
-					rootRevisionHash,
-					tagManager,
-					new TagsetsProvider() {
-						@Override
-						public List<TagsetDefinition> getTagsets() {
-							return gitProjectHandler.getTagsets();
-						}
-					},
-					new DocumentsProvider() {
-						@Override
-						public List<SourceDocument> getDocuments() {
-							return gitProjectHandler.getDocuments();
-						}
-					},
-					new CollectionsProvider() {
-						@Override
-						public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
-							return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
-						}
-					},
-					true,
-					backgroundService
-			);
-		}		
+		graphProjectHandler.ensureProjectRevisionIsLoaded(
+				new ExecutionListener<TagManager>() {
+					@Override
+					public void error(Throwable t) {
+						openProjectListener.failure(t);
+					}
+
+					@Override
+					public void done(TagManager result) {
+						tagManager.load(result.getTagLibrary());
+						openProjectListener.ready(GraphWorktreeProject.this);
+					}
+				},
+				progressListener,
+				rootRevisionHash,
+				tagManager,
+				new TagsetsProvider() {
+					@Override
+					public List<TagsetDefinition> getTagsets() {
+						return gitProjectHandler.getTagsets();
+					}
+				},
+				new DocumentsProvider() {
+					@Override
+					public List<SourceDocument> getDocuments() {
+						return gitProjectHandler.getDocuments();
+					}
+				},
+				new CollectionsProvider() {
+					@Override
+					public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
+						return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
+					}
+				},
+				true,
+				backgroundService
+		);
 	}
-	
+
 	@Override
 	public boolean isReadOnly() {
 		return this.gitProjectHandler.isReadOnly();

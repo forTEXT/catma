@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 /**
  * SignUpDialog allows users to sign up either by entering an email address (the password is set later), or via Google (OpenID Connect).
  * The email address option is protected against bots using Google reCAPTCHA.
- *
  */
 public class SignUpDialog extends AuthenticationDialog {
 	private final Logger logger = Logger.getLogger(this.getClass().getName());

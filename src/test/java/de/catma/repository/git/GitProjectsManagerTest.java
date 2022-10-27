@@ -53,14 +53,13 @@ class GitProjectsManagerTest {
 		BackgroundService mockBackgroundService = mock(BackgroundService.class);
 		EventBus mockEventBus = mock(EventBus.class);
 
-		GitProjectsManager gitProjectsManager =
-			new GitProjectsManager(
-					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
-					gitlabManagerRestricted,
-					(projectId) -> {}, // noop deletion handler
-					mockBackgroundService,
-					mockEventBus
-			);
+		GitProjectsManager gitProjectsManager = new GitProjectsManager(
+				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
+				gitlabManagerRestricted,
+				(projectId) -> {}, // noop deletion handler
+				mockBackgroundService,
+				mockEventBus
+		);
 
 		ProjectReference projectReference = gitProjectsManager.createProject(
 			"Test CATMA Project", "This is a test CATMA project"

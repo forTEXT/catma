@@ -1,29 +1,10 @@
 package de.catma.repository.git.graph.lazy;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.concurrent.ExecutionException;
-import java.util.function.BiPredicate;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.glassfish.jersey.internal.guava.Sets;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollection;
@@ -31,100 +12,98 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.document.source.SourceDocument;
-import de.catma.indexer.Indexer;
-import de.catma.indexer.SpanContext;
-import de.catma.indexer.SpanDirection;
-import de.catma.indexer.TermExtractor;
-import de.catma.indexer.TermInfo;
+import de.catma.indexer.*;
 import de.catma.indexer.wildcard2regex.SQLWildcard2RegexConverter;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.QueryId;
-import de.catma.queryengine.result.CommentQueryResultRow;
-import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.QueryResultRow;
-import de.catma.queryengine.result.QueryResultRowArray;
-import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.queryengine.result.*;
 import de.catma.repository.git.graph.interfaces.*;
-import de.catma.tag.Property;
+import de.catma.tag.*;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
+import org.glassfish.jersey.internal.guava.Sets;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.function.BiPredicate;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class LazyGraphProjectIndexer implements Indexer {
 	private final Logger logger = Logger.getLogger(LazyGraphProjectIndexer.class.getName());
-	private final CommentsProvider commentsProvider;
-	private CollectionProvider collectionProvider;
-	private LoadingCache<String, Set<Term>> documentIndexCache;
-	private TagLibraryProvider tagLibraryProvider;
-	private IDGenerator idGenerator = new IDGenerator();
-	private DocumentIndexProvider documentIndexProvider;
 
-	public LazyGraphProjectIndexer(CommentsProvider commentsProvider,
-			final DocumentProvider documentProvider,
-			final DocumentIndexProvider documentIndexProvider,
-			final CollectionProvider collectionProvider,
-			final TagLibraryProvider tagLibraryProvider) {
-		super();
+	private final CommentsProvider commentsProvider;
+	private final DocumentIndexProvider documentIndexProvider;
+	private final CollectionProvider collectionProvider;
+	private final TagLibraryProvider tagLibraryProvider;
+
+	private final LoadingCache<String, Set<Term>> documentIndexCache;
+
+	private final IDGenerator idGenerator = new IDGenerator();
+
+	public LazyGraphProjectIndexer(
+			CommentsProvider commentsProvider,
+			DocumentProvider documentProvider,
+			DocumentIndexProvider documentIndexProvider,
+			CollectionProvider collectionProvider,
+			TagLibraryProvider tagLibraryProvider
+	) {
 		this.documentIndexProvider = documentIndexProvider;
 		this.commentsProvider = commentsProvider;
 		this.collectionProvider = collectionProvider;
 		this.tagLibraryProvider = tagLibraryProvider;
-		
-    	this.documentIndexCache = 
-			CacheBuilder.newBuilder()
-			.maximumSize(10)
-			.build(new CacheLoader<String, Set<Term>>() {
-				@Override
-				public Set<Term> load(String key) throws Exception {
-					return loadDocumentIndex(key);
-				}
-			});
 
+		this.documentIndexCache = CacheBuilder.newBuilder().maximumSize(10).build(
+				new CacheLoader<String, Set<Term>>() {
+					@Override
+					public Set<Term> load(String key) throws Exception {
+						return loadDocumentIndex(key);
+					}
+				}
+		);
 	}
-	
+
 	@SuppressWarnings({ "rawtypes" })
 	private Set<Term> loadDocumentIndex(String documentId) throws Exception {
+		Map documentIndexContent = documentIndexProvider.getDocumentIndex(documentId);
+
 		Set<Term> terms = new HashSet<>();
-		Map documentIndexContent = this.documentIndexProvider.getDocumentIndex(documentId);
-		
 		Map<Integer, Position> adjacencyMap = new HashMap<>();
+
 		for (Object entry : documentIndexContent.entrySet()) {
-			
-			String literal = (String)((Map.Entry)entry).getKey();
-			List positionList = (List)((Map.Entry)entry).getValue();
-			Term term = new Term(literal, positionList.size());
-
+			String literal = (String)((Map.Entry) entry).getKey();
+			List positions = (List)((Map.Entry) entry).getValue();
+			Term term = new Term(literal, positions.size());
 			terms.add(term);
-			for (Object posEntry : positionList) {
-				int startOffset = ((Double)((Map)posEntry).get("startOffset")).intValue();
-				int endOffset = ((Double)((Map)posEntry).get("endOffset")).intValue();
-				int tokenOffset = ((Double)((Map)posEntry).get("tokenOffset")).intValue();
-				Position pos = new Position(startOffset, endOffset, tokenOffset, term);
 
-				// hasPosition
-				term.addPosition(pos);
-				adjacencyMap.put(tokenOffset, pos);
+			for (Object positionEntry : positions) {
+				int startOffset = ((Double) ((Map) positionEntry).get("startOffset")).intValue();
+				int endOffset = ((Double) ((Map) positionEntry).get("endOffset")).intValue();
+				int tokenOffset = ((Double) ((Map) positionEntry).get("tokenOffset")).intValue();
+
+				Position position = new Position(startOffset, endOffset, tokenOffset, term);
+				term.addPosition(position);
+				adjacencyMap.put(tokenOffset, position);
 			}
 		}
-		for (int i=0; i<adjacencyMap.size(); i++) {
-			// isAdjacentTo
-			Position pos = adjacencyMap.get(i);
-			if (i < adjacencyMap.size()-1) {
-				pos.setForwardAdjacentPostion(adjacencyMap.get(i+1));
+
+		for (int i = 0; i < adjacencyMap.size(); i++) {
+			Position position = adjacencyMap.get(i);
+
+			if (i < adjacencyMap.size() - 1) {
+				position.setForwardAdjacentPostion(adjacencyMap.get(i + 1));
 			}
+
 			if (i > 0) {
-				pos.setBackwardAdjacentPosition(adjacencyMap.get(i-1));
+				position.setBackwardAdjacentPosition(adjacencyMap.get(i - 1));
 			}
 		}
-		
-		
-		
-		logger.info("Finished adding Document to the graph");	
-	
+
+		logger.info(String.format("Finished adding document with ID %s to the graph", documentId));
+
 		return terms;
 	}
 
@@ -221,164 +200,136 @@ public class LazyGraphProjectIndexer implements Indexer {
 	}
 
 	@Override
-	public QueryResult searchTagDefinitionPath(QueryId queryId, List<String> collectionIdList, String tagPath)
-			throws Exception {
+	public QueryResult searchTagDefinitionPath(QueryId queryId, List<String> collectionIds, String tagPathPattern) {
 		QueryResultRowArray result = new QueryResultRowArray();
-		
-		if (!tagPath.startsWith("/")) {
-			tagPath = "%"+tagPath;
+
+		// add default wildcard if no explicit root is defined
+		if (!tagPathPattern.startsWith("/")) {
+			tagPathPattern = "%" + tagPathPattern;
 		}
-		final String tagPathRegex = SQLWildcard2RegexConverter.convert(tagPath);
+
+		final boolean isWildcardQuery = tagPathPattern.trim().matches("^/?%+$");
+		final String tagPathRegex = SQLWildcard2RegexConverter.convert(tagPathPattern);
 		Map<String, String> validTagIdToTagPathMapping = new HashMap<>();
 		Set<TagDefinition> validTagDefinitions = Sets.newHashSet();
-		boolean allTags = tagPath.trim().replaceAll("/?%+", "").equals("");
-		
-		for (TagsetDefinition tagset : tagLibraryProvider.getTagLibrary()) {
-			for (TagDefinition tag : tagset) {
-				String path = tagset.getTagPath(tag);
-				if (allTags || Pattern.matches(tagPathRegex, path)) {
-					validTagIdToTagPathMapping.put(tag.getUuid(), path);
-					validTagDefinitions.add(tag);
-				}	
-			}
-		}
-		for (String collectionId : collectionIdList) {
-			AnnotationCollection collection = collectionProvider.getCollection(collectionId);
-			
-			for (TagDefinition tag : validTagDefinitions) {
-				Multimap<String, TagReference> tagReferencesByInstanceId = 
-						collection.getTagReferencesByInstanceId(tag);
-				
-				for (String tagInstanceId : tagReferencesByInstanceId.keySet()) {
-					result.add(
-						new TagQueryResultRow(
-								queryId,
-								collection.getSourceDocumentId(), 
-								tagReferencesByInstanceId.get(tagInstanceId)
-									.stream()
-									.map(tr -> tr.getRange())
-									.collect(Collectors.toList()), 
-								collectionId, 
-								tag.getUuid(),
-								validTagIdToTagPathMapping.get(tag.getUuid()),
-								"", //TODO: version
-								tagInstanceId));
+
+		for (TagsetDefinition tagsetDefinition : tagLibraryProvider.getTagLibrary()) {
+			for (TagDefinition tagDefinition : tagsetDefinition) {
+				String path = tagsetDefinition.getTagPath(tagDefinition);
+				if (isWildcardQuery || Pattern.matches(tagPathRegex, path)) {
+					validTagIdToTagPathMapping.put(tagDefinition.getUuid(), path);
+					validTagDefinitions.add(tagDefinition);
 				}
-				
 			}
 		}
-		
+
+		for (String collectionId : collectionIds) {
+			AnnotationCollection collection = collectionProvider.getCollection(collectionId);
+
+			for (TagDefinition tagDefinition : validTagDefinitions) {
+				Multimap<String, TagReference> tagReferencesByTagInstanceId = collection.getTagReferencesByInstanceId(tagDefinition);
+
+				for (String tagInstanceId : tagReferencesByTagInstanceId.keySet()) {
+					result.add(
+							new TagQueryResultRow(
+									queryId,
+									collection.getSourceDocumentId(),
+									tagReferencesByTagInstanceId.get(tagInstanceId)
+										.stream()
+										.map(tr -> tr.getRange())
+										.collect(Collectors.toList()),
+									collectionId,
+									tagDefinition.getUuid(),
+									validTagIdToTagPathMapping.get(tagDefinition.getUuid()),
+									"", // TODO: tagDefinitionVersion
+									tagInstanceId
+							)
+					);
+				}
+			}
+		}
+
 		return result;
 	}
 
 	@Override
-	public QueryResult searchProperty(QueryId queryId, List<String> collectionIdList, String propertyNamePattern,
-			String propertyValuePattern, String tagPathPattern) throws Exception {
-		
+	public QueryResult searchProperty(
+			QueryId queryId,
+			List<String> collectionIds,
+			String propertyNamePattern,
+			String propertyValuePattern,
+			String tagPathPattern
+	) {
 		QueryResultRowArray result = new QueryResultRowArray();
 
 		PropertyNameFilter propertyNameFilter = new PropertyNameFilter(propertyNamePattern);
 		PropertyValueFilter propertyValueFilter = new PropertyValueFilter(propertyValuePattern);
-		
-		// add default wildcard if no explicit root is defined
-		if (tagPathPattern != null) {
-			if (!tagPathPattern.startsWith("/")) {
-				tagPathPattern = "%"+tagPathPattern;
 
-			}
+		// add default wildcard if no explicit root is defined
+		if (tagPathPattern != null && !tagPathPattern.startsWith("/")) {
+			tagPathPattern = "%" + tagPathPattern;
 		}
-		final String tagPathRegex = 
-				tagPathPattern==null?null:SQLWildcard2RegexConverter.convert(tagPathPattern);
-		
+
+		final boolean isWildcardQuery = tagPathPattern == null || tagPathPattern.trim().matches("^/?%+$");
+		final String tagPathRegex = tagPathPattern == null ? null : SQLWildcard2RegexConverter.convert(tagPathPattern);
 		Map<String, String> validTagIdToTagPathMapping = new HashMap<>();
 		Set<TagDefinition> validTagDefinitions = Sets.newHashSet();
-		boolean allTags = tagPathRegex==null || tagPathRegex.trim().replaceAll("/?%+", "").equals("");
-		
-		for (TagsetDefinition tagset : tagLibraryProvider.getTagLibrary()) {
-			for (TagDefinition tag : tagset) {
-				String path = tagset.getTagPath(tag);
-				if (allTags || Pattern.matches(tagPathRegex, path)) {
-					validTagIdToTagPathMapping.put(tag.getUuid(), path);
-					validTagDefinitions.add(tag);
-				}	
+
+		for (TagsetDefinition tagsetDefinition : tagLibraryProvider.getTagLibrary()) {
+			for (TagDefinition tagDefinition : tagsetDefinition) {
+				String path = tagsetDefinition.getTagPath(tagDefinition);
+				if (isWildcardQuery || Pattern.matches(tagPathRegex, path)) {
+					validTagIdToTagPathMapping.put(tagDefinition.getUuid(), path);
+					validTagDefinitions.add(tagDefinition);
+				}
 			}
 		}
-		for (String collectionId : collectionIdList) {
+
+		for (String collectionId : collectionIds) {
 			AnnotationCollection collection = collectionProvider.getCollection(collectionId);
-			
-			for (TagDefinition tag : validTagDefinitions) {
-				Multimap<String, TagReference> tagReferencesByInstanceId = 
-						collection.getTagReferencesByInstanceId(tag);
-				
-				for (String tagInstanceId : tagReferencesByInstanceId.keySet()) {
-					
-					TagInstance ti = 
-						tagReferencesByInstanceId.get(tagInstanceId).iterator().next().getTagInstance();
-					
-					List<Range> ranges = tagReferencesByInstanceId.get(tagInstanceId)
-							.stream()
-							.map(tr -> tr.getRange())
+
+			for (TagDefinition tagDefinition : validTagDefinitions) {
+				Multimap<String, TagReference> tagReferencesByTagInstanceId = collection.getTagReferencesByInstanceId(tagDefinition);
+
+				for (String tagInstanceId : tagReferencesByTagInstanceId.keySet()) {
+					TagInstance tagInstance = tagReferencesByTagInstanceId.get(tagInstanceId).iterator().next().getTagInstance();
+					List<Range> ranges = tagReferencesByTagInstanceId.get(tagInstanceId).stream()
+							.map(TagReference::getRange)
 							.collect(Collectors.toList());
 
+					addTagQueryResultRowsForSystemProperties(
+							queryId,
+							result,
+							tagDefinition,
+							tagInstance,
+							propertyNameFilter,
+							propertyValueFilter,
+							collection,
+							validTagIdToTagPathMapping.get(tagDefinition.getUuid()),
+							ranges
+					);
 
-					addTagQueryResultRowForSystemProperty(
-							queryId,
-							result,
-							SystemPropertyName.catma_markupauthor,
-							ti.getAuthor(),
-							propertyNameFilter,
-							propertyValueFilter,
-							collection.getSourceDocumentId(),
-							collection.getUuid(),
-							tag.getUuid(),
-							validTagIdToTagPathMapping.get(tag.getUuid()),
-							tagInstanceId,
-							ranges);
-					addTagQueryResultRowForSystemProperty(
-							queryId,
-							result,
-							SystemPropertyName.catma_markuptimestamp,
-							ti.getTimestamp(),
-							propertyNameFilter,
-							propertyValueFilter,
-							collection.getSourceDocumentId(),
-							collection.getUuid(),
-							tag.getUuid(),
-							validTagIdToTagPathMapping.get(tag.getUuid()),
-							tagInstanceId,
-							ranges);
-					addTagQueryResultRowForSystemProperty(
-							queryId,
-							result,
-							SystemPropertyName.catma_displaycolor,
-							tag.getColor(),
-							propertyNameFilter,
-							propertyValueFilter,
-							collection.getSourceDocumentId(),
-							collection.getUuid(),
-							tag.getUuid(),
-							validTagIdToTagPathMapping.get(tag.getUuid()),
-							tagInstanceId,
-							ranges);
-
-					for (Property prop : ti.getUserDefinedProperties()) {
-						if (propertyNameFilter.test(new Pair<>(prop, tag))) {
-							for (String value : prop.getPropertyValueList()) {
+					for (Property property : tagInstance.getUserDefinedProperties()) {
+						if (propertyNameFilter.test(new Pair<>(property, tagDefinition))) {
+							for (String value : property.getPropertyValueList()) {
 								if (propertyValueFilter.testValue(value)) {
 									result.add(
-										new TagQueryResultRow(
-											queryId,
-											collection.getSourceDocumentId(), 
-											ranges, 
-											collectionId, 
-											tag.getUuid(),
-											validTagIdToTagPathMapping.get(tag.getUuid()),
-											"", //TODO: Version
-											tagInstanceId,
-											prop.getPropertyDefinitionId(),
-											tag.getPropertyDefinitionByUuid(
-													prop.getPropertyDefinitionId()).getName(),
-											value));	
+											new TagQueryResultRow(
+													queryId,
+													collection.getSourceDocumentId(),
+													ranges,
+													collectionId,
+													tagDefinition.getUuid(),
+													validTagIdToTagPathMapping.get(tagDefinition.getUuid()),
+													"", // TODO: tagDefinitionVersion
+													tagInstanceId,
+													property.getPropertyDefinitionId(),
+													tagDefinition.getPropertyDefinitionByUuid(
+															property.getPropertyDefinitionId()
+													).getName(),
+													value
+											)
+									);
 								}
 							}
 						}
@@ -386,36 +337,98 @@ public class LazyGraphProjectIndexer implements Indexer {
 				}
 			}
 		}
+
 		return result;
 	}
-	
+
+	private void addTagQueryResultRowsForSystemProperties(
+			QueryId queryId,
+			QueryResultRowArray result,
+			TagDefinition tagDefinition,
+			TagInstance tagInstance,
+			PropertyNameFilter propertyNameFilter,
+			PropertyValueFilter propertyValueFilter,
+			AnnotationCollection collection,
+			String tagPath,
+			List<Range> ranges
+	) {
+		addTagQueryResultRowForSystemProperty(
+				queryId,
+				result,
+				SystemPropertyName.catma_markupauthor,
+				tagInstance.getAuthor(),
+				propertyNameFilter,
+				propertyValueFilter,
+				collection.getSourceDocumentId(),
+				collection.getUuid(),
+				tagDefinition.getUuid(),
+				tagPath,
+				tagInstance.getUuid(),
+				ranges
+		);
+		addTagQueryResultRowForSystemProperty(
+				queryId,
+				result,
+				SystemPropertyName.catma_markuptimestamp,
+				tagInstance.getTimestamp(),
+				propertyNameFilter,
+				propertyValueFilter,
+				collection.getSourceDocumentId(),
+				collection.getUuid(),
+				tagDefinition.getUuid(),
+				tagPath,
+				tagInstance.getUuid(),
+				ranges
+		);
+		addTagQueryResultRowForSystemProperty(
+				queryId,
+				result,
+				SystemPropertyName.catma_displaycolor,
+				tagDefinition.getColor(),
+				propertyNameFilter,
+				propertyValueFilter,
+				collection.getSourceDocumentId(),
+				collection.getUuid(),
+				tagDefinition.getUuid(),
+				tagPath,
+				tagInstance.getUuid(),
+				ranges
+		);
+	}
+
 	private void addTagQueryResultRowForSystemProperty(
 			QueryId queryId, 
 			QueryResultRowArray result, 
-			SystemPropertyName systemPropertyName, String value, 
-			PropertyNameFilter propertyNameFilter, PropertyValueFilter propertyValueFilter,
-			String documentId, String collectionId, 
-			String tagId, String tagPath, 
-			String tagInstanceId, List<Range> rangeList) {
-		
-		if (propertyNameFilter.testPropertyName(systemPropertyName.name())
-				&& propertyValueFilter.testValue(value)) {
+			SystemPropertyName systemPropertyName,
+			String value,
+			PropertyNameFilter propertyNameFilter,
+			PropertyValueFilter propertyValueFilter,
+			String documentId,
+			String collectionId,
+			String tagId,
+			String tagPath,
+			String tagInstanceId,
+			List<Range> ranges
+	) {
+		if (propertyNameFilter.testPropertyName(systemPropertyName.name()) && propertyValueFilter.testValue(value)) {
 			result.add(
-				new TagQueryResultRow(
-					queryId,
-					documentId, 
-					rangeList, 
-					collectionId, 
-					tagId,
-					tagPath,
-					"", //TODO: Version
-					tagInstanceId,
-					idGenerator.generate(systemPropertyName.name()),
-					systemPropertyName.name(),
-					value));
-		}			
+					new TagQueryResultRow(
+							queryId,
+							documentId,
+							ranges,
+							collectionId,
+							tagId,
+							tagPath,
+							"", // TODO: tagDefinitionVersion
+							tagInstanceId,
+							idGenerator.generate(systemPropertyName.name()),
+							systemPropertyName.name(),
+							value
+					)
+			);
+		}
 	}
-	
+
 	@Override
 	public QueryResult searchFrequency(
 			QueryId queryId, List<String> documentIdList, 
@@ -593,54 +606,58 @@ public class LazyGraphProjectIndexer implements Indexer {
 		// TODO Auto-generated method stub
 		return new QueryResultRowArray();
 	}
-	
+
 	@Override
-	public QueryResult searchCommentPhrase(QueryId queryId, List<String> documentIdList, List<String> termList,
-			int limit, List<String> unseparableCharacterSequences,
-			List<Character> userDefinedSeparatingCharacters, Locale locale) throws Exception {
-		
-		List<Comment> comments = commentsProvider.getComments(documentIdList);
-		
+	public QueryResult searchCommentPhrase(
+			QueryId queryId,
+			List<String> documentIds,
+			List<String> terms,
+			int limit,
+			List<String> unseparableCharacterSequences,
+			List<Character> userDefinedSeparatingCharacters,
+			Locale locale
+	) throws Exception {
+		List<Comment> comments = commentsProvider.getComments(documentIds);
+
 		QueryResultRowArray result = new QueryResultRowArray();
-		
 		for (Comment comment : comments) {
-			
-			if (termList.size() == 1 && termList.get(0).equals("%")) {
+			if (terms.size() == 1 && terms.get(0).equals("%")) {
 				result.add(new CommentQueryResultRow(queryId, comment));
 			}
 			else {
-				TermExtractor termExtractor = 
-					new TermExtractor(
-						comment.getBody(), unseparableCharacterSequences, userDefinedSeparatingCharacters, locale);
-				
+				TermExtractor termExtractor = new TermExtractor(
+						comment.getBody(),
+						unseparableCharacterSequences,
+						userDefinedSeparatingCharacters,
+						locale
+				);
 				List<String> commentTerms = termExtractor.getTermsInOrder();
-				
-				if (matches(commentTerms, termList)) {
+
+				if (matches(commentTerms, terms)) {
 					result.add(new CommentQueryResultRow(queryId, comment));
 				}
 				else {
 					for (Reply reply : comment.getReplies()) {
-						TermExtractor replyTermExtractor = 
-								new TermExtractor(
-									reply.getBody(), 
-									unseparableCharacterSequences, 
-									userDefinedSeparatingCharacters, 
-									locale);
+						TermExtractor replyTermExtractor = new TermExtractor(
+								reply.getBody(),
+								unseparableCharacterSequences,
+								userDefinedSeparatingCharacters,
+								locale
+						);
 						List<String> replyTerms = replyTermExtractor.getTermsInOrder();
-						if (matches(replyTerms, termList)) {
+
+						if (matches(replyTerms, terms)) {
 							result.add(new CommentQueryResultRow(queryId, comment));
 							break;
 						}
 					}
 				}
-			}				
+			}
 		}
-		
-		
-		
+
 		return result;
 	}
-	
+
 	private boolean matches(List<String> commentTerms, List<String> termList) {
 		int startIdx = -1;
 		

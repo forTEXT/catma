@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -58,7 +57,6 @@ import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
-import org.eclipse.jgit.merge.RecursiveMerger;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
@@ -74,56 +72,37 @@ import org.eclipse.jgit.util.FS;
 import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.jgit.ClosableRecursiveMerger;
 import de.catma.repository.git.managers.jgit.JGitCommandFactory;
 import de.catma.repository.git.managers.jgit.RelativeJGitCommandFactory;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
 public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable {
-	
-	public static class ClosableRecursiveMerger extends RecursiveMerger implements AutoCloseable {
-	
-		public ClosableRecursiveMerger(Repository local, boolean inCore) {
-			super(local, inCore);
-		}
+	private final Logger logger = Logger.getLogger(JGitRepoManager.class.getName());
 
-		public void close() {
-			getRepository().getObjectDatabase().close();
-			if (System.getProperty("os.name").toLowerCase().contains("win")) {
-				try {
-					Thread.sleep(2500);
-				} catch (InterruptedException e) {
-					Logger.getLogger(getClass().getName()).log(
-							Level.INFO, "closing sleep got interrupted", e);
-				}
-			}
-		}
-	}
-	
 	private final String repositoryBasePath;
-	private String username;
+	private final String username;
+	private final JGitCommandFactory jGitCommandFactory;
 
 	private Git gitApi;
-	private JGitCommandFactory jGitCommandFactory;
-	private Logger logger = Logger.getLogger(JGitRepoManager.class.getName());
-	
 
 	/**
 	 * Creates a new instance of this class for the given {@link User}.
 	 * <p>
-	 * Note that the <code>catmaUser</code> argument is NOT used for authentication to remote Git servers. It is only
-	 * used to organise repositories on the local file system, based on the User's identifier. Methods of this class
-	 * that support authentication have their own username and password parameters for this purpose.
+	 * Note that the <code>user</code> argument is NOT used for authentication to remote Git servers. It is only
+	 * used to organise repositories on the local file system, based on the user's identifier. Methods of this class
+	 * that require authentication expect a {@link CredentialsProvider}.
 	 *
-	 * @param repositoryBasePath the repo base path
-	 * @param catmaUser a {@link User} object
+	 * @param repositoryBasePath the base path for local repository storage
+	 * @param user a {@link User}
 	 */
-	public JGitRepoManager(String repositoryBasePath, User catmaUser) {
+	public JGitRepoManager(String repositoryBasePath, User user) {
 		this.repositoryBasePath = repositoryBasePath;
-		this.username = catmaUser.getIdentifier();
+		this.username = user.getIdentifier();
 		this.jGitCommandFactory = new RelativeJGitCommandFactory();
 	}
-	
+
 	public String getUsername() {
 		return username;
 	}
@@ -793,25 +772,26 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}		
 		return this.gitApi.getRepository().resolve("refs/remotes/"+branch) != null;
 	}
-	
+
 	public boolean canMerge(String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `canMerge` on a detached instance");
 		}
-//		ThreeWayMerger merger = 
-//				MergeStrategy.RECURSIVE.newMerger(this.gitApi.getRepository(), true);
 
-		try (ClosableRecursiveMerger merger = new ClosableRecursiveMerger(this.gitApi.getRepository(), true)) { 
-			Ref ref = this.gitApi.getRepository().findRef(branch);
-			if (ref != null) {
-				ObjectId headCommit = this.gitApi.getRepository().resolve(Constants.HEAD);
-				return merger.merge(
-						true, headCommit, ref.getObjectId());
+		Repository repository = gitApi.getRepository();
+
+		try (ClosableRecursiveMerger merger = new ClosableRecursiveMerger(repository, true)) {
+			Ref ref = repository.findRef(branch);
+
+			if (ref == null) {
+				return false;
 			}
-			return false;
+
+			ObjectId headCommit = repository.resolve(Constants.HEAD);
+			return merger.merge(true, headCommit, ref.getObjectId());
 		}
 	}
-	
+
 	@Override
 	public MergeResult merge(String branch) throws IOException {
 		if (!isAttached()) {

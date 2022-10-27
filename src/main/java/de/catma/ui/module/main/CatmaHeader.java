@@ -23,7 +23,6 @@ import de.catma.ui.module.account.AccessTokenDialog;
 import de.catma.ui.module.account.EditAccountDialog;
 import de.catma.ui.util.Version;
 
-
 /**
  * Displays the header and context information
  *
