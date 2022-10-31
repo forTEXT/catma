@@ -1,5 +1,19 @@
 package de.catma.repository.git.managers;
 
+import de.catma.properties.CATMAPropertyKey;
+import de.catma.repository.git.GitLabUtils;
+import de.catma.repository.git.GitUser;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
+import de.catma.util.Pair;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.gitlab4j.api.Constants.ImpersonationState;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.NotificationSettingsApi;
+import org.gitlab4j.api.UserApi;
+import org.gitlab4j.api.models.*;
+import org.gitlab4j.api.models.PersonalAccessToken.Scope;
+
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDate;
@@ -14,25 +28,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.gitlab4j.api.Constants.ImpersonationState;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.NotificationSettingsApi;
-import org.gitlab4j.api.UserApi;
-import org.gitlab4j.api.models.CustomAttribute;
-import org.gitlab4j.api.models.Identity;
-import org.gitlab4j.api.models.NotificationSettings;
-import org.gitlab4j.api.models.PersonalAccessToken;
-import org.gitlab4j.api.models.PersonalAccessToken.Scope;
-import org.gitlab4j.api.models.User;
-
-import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.GitLabUtils;
-import de.catma.repository.git.GitUser;
-import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
-import de.catma.util.Pair;
 
 public class GitlabManagerPrivileged extends GitlabManagerCommon implements RemoteGitManagerPrivileged {
 	private enum CustomAttributeName {

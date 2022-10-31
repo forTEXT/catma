@@ -1,52 +1,39 @@
 package de.catma.ui.module.main.auth;
 
-import java.io.IOException;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
 import com.google.common.base.Joiner;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.server.Page;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
+import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
-
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.module.main.ErrorHandler;
 
+import java.io.IOException;
+import java.util.stream.Collectors;
+
 /**
- * Dialog for User creation. Email has already been verified and must not be changed.
- * 
- * @author db
- *
+ * Dialog for user creation. The email address has already been verified and must not be changed.
  */
 public class CreateUserDialog extends Window {
-
-	private UserData user = new UserData();
-
-	private final Logger logger = Logger.getLogger(this.getClass().getName());
-	private final Binder<UserData> userBinder = new Binder<>();
-	private final RemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
 	private final SignupToken signupToken;
-	
+	private final RemoteGitManagerPrivileged gitlabManagerPrivileged;
+
+	private final Binder<UserData> userBinder = new Binder<>();
+	private final UserData userData = new UserData();
+
 	public CreateUserDialog(String caption, SignupToken signupToken) {
 		super(caption);
+
 		this.signupToken = signupToken;
+		this.gitlabManagerPrivileged = new GitlabManagerPrivileged();
+
 		setWidth("50%");
 		setHeight("80%");
-		
+
 		initComponents();
 	}
 
@@ -119,7 +106,7 @@ public class CreateUserDialog extends Window {
 
 			// validate the bean!
 			try {
-				userBinder.writeBean(user);
+				userBinder.writeBean(userData);
 			} catch (ValidationException e) {
 				Notification.show(
 						Joiner
@@ -132,9 +119,9 @@ public class CreateUserDialog extends Window {
 			}
 			try {
 				gitlabManagerPrivileged.createUser(
-						user.getEmail(), 
-						user.getUsername(), user.getPassword(), 
-						user.getUsername());
+						userData.getEmail(),
+						userData.getUsername(), userData.getPassword(),
+						userData.getUsername());
 				
 				Notification.show(
 						"Your user account has been created. Please sign in!", 

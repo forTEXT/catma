@@ -155,7 +155,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					@Override
 					public Map getDocumentIndex(String documentId) throws IOException {
 						Path tokensPath = getTokenizedSourceDocumentPath(documentId);
-						return GraphWorktreeProject.this.gitProjectHandler.getDocumentIndex(documentId, tokensPath);
+						return GraphWorktreeProject.this.gitProjectHandler.getDocumentIndex(tokensPath);
 					}
 				},
 				new CollectionProvider() {

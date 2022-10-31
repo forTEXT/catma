@@ -1,15 +1,5 @@
 package de.catma.repository.git.resource.provider;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.eclipse.jgit.transport.CredentialsProvider;
-
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -24,20 +14,34 @@ import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
+import org.eclipse.jgit.transport.CredentialsProvider;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SynchronizedResourceProvider implements GitProjectResourceProvider {
 	private final Logger logger = Logger.getLogger(SynchronizedResourceProvider.class.getName());
-			
+
 	private final String projectId;
 	private final ProjectReference projectReference;
 	private final File projectPath;
-
 	private final LocalGitRepositoryManager localGitRepositoryManager;
-	
-	public SynchronizedResourceProvider(String projectId, ProjectReference projectReference,
-			File projectPath, LocalGitRepositoryManager localGitRepositoryManager,
-			RemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider) {
-		super();
+	private final RemoteGitManagerRestricted remoteGitServerManager;
+	private final CredentialsProvider credentialsProvider;
+
+	public SynchronizedResourceProvider(
+			String projectId,
+			ProjectReference projectReference,
+			File projectPath,
+			LocalGitRepositoryManager localGitRepositoryManager,
+			RemoteGitManagerRestricted remoteGitServerManager,
+			CredentialsProvider credentialsProvider
+	) {
 		this.projectId = projectId;
 		this.projectReference = projectReference;
 		this.projectPath = projectPath;
@@ -46,248 +50,225 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 		this.credentialsProvider = credentialsProvider;
 	}
 
-	private final RemoteGitManagerRestricted remoteGitServerManager;
-	private final CredentialsProvider credentialsProvider;
-
-	
+	@Override
+	public boolean isReadOnly() {
+		return false;
+	}
 
 	@Override
 	public List<TagsetDefinition> getTagsets() {
-		ArrayList<TagsetDefinition> result = new ArrayList<>();
-		File tagsetsDir = Paths.get(
-				this.projectPath.getAbsolutePath(),
-				GitProjectHandler.TAGSETS_DIRECTORY_NAME)
-			.toFile();
-		
-		if (!tagsetsDir.exists()) {
-			return result;
+		File tagsetsDirectory = Paths.get(
+				projectPath.getAbsolutePath(),
+				GitProjectHandler.TAGSETS_DIRECTORY_NAME
+		).toFile();
+
+		if (!tagsetsDirectory.exists()) {
+			return new ArrayList<>();
 		}
-		
-		File[] tagsetDirs = tagsetsDir.listFiles(file -> file.isDirectory());			
-		
-		GitTagsetHandler gitTagsetHandler =
-				new GitTagsetHandler(
-					this.localGitRepositoryManager, 
-					this.projectPath,
-					this.remoteGitServerManager.getUsername(),
-					this.remoteGitServerManager.getEmail());
+
+		GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
+				localGitRepositoryManager,
+				projectPath,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
+
+		File[] tagsetDirs = tagsetsDirectory.listFiles(File::isDirectory);
+		ArrayList<TagsetDefinition> tagsets = new ArrayList<>();
 
 		for (File tagsetDir : tagsetDirs) {
 			try {
 				String tagsetId = tagsetDir.getName();
-				TagsetDefinition tagset = gitTagsetHandler.getTagset(tagsetId);						 
-				result.add(tagset);
+				TagsetDefinition tagset = gitTagsetHandler.getTagset(tagsetId);
+				tagsets.add(tagset);
 			}
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format(
-								"error loading Tagset %1$s for project %2$s",
-								tagsetDir,
-								projectId), 
-						e);
+						String.format("Failed to load tagset \"%s\" for project \"%s\"", tagsetDir, projectId),
+						e
+				);
 			}
-		 
 		}
-		
-		return result;
-	}
 
+		return tagsets;
+	}
 
 	@Override
 	public List<AnnotationCollectionReference> getCollectionReferences() {
-		ArrayList<AnnotationCollectionReference> collectionReferences = new ArrayList<>();
-		
-		File collectionsDir = Paths.get(
-				this.projectPath.getAbsolutePath(),
-				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME)
-			.toFile();
-		
-		if (!collectionsDir.exists()) {
-			return collectionReferences;
+		File collectionsDirectory = Paths.get(
+				projectPath.getAbsolutePath(),
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME
+		).toFile();
+
+		if (!collectionsDirectory.exists()) {
+			return new ArrayList<>();
 		}
-		
-		File[] collectionDirs = 
-				collectionsDir.listFiles(file -> file.isDirectory());
-		
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler =
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
+
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
 		);
 
+		File[] collectionDirs = collectionsDirectory.listFiles(File::isDirectory);
+		ArrayList<AnnotationCollectionReference> collectionReferences = new ArrayList<>();
+
 		for (File collectionDir : collectionDirs) {
-			String collectionId = collectionDir.getName();
 			try {
-				collectionReferences.add(
-					gitMarkupCollectionHandler.getCollectionReference(collectionId));
-			} catch (Exception e) {
+				String collectionId = collectionDir.getName();
+				AnnotationCollectionReference collectionReference = gitAnnotationCollectionHandler.getCollectionReference(collectionId);
+				collectionReferences.add(collectionReference);
+			}
+			catch (Exception e) {
 				logger.log(
-				Level.SEVERE, 
-					String.format(
-						"error loading Collection reference %1$s for project %2$s",
-						collectionDir,
-						projectId), 
-					e);
-				 
+						Level.SEVERE,
+						String.format("Failed to load collection reference \"%s\" for project \"%s\"", collectionDir, projectId),
+						e
+				);
 			}
 		}
-		
+
 		return collectionReferences;
 	}
 
 	@Override
 	public List<AnnotationCollection> getCollections(
-			TagLibrary tagLibrary, ProgressListener progressListener, 
-			boolean withOrphansHandling) throws IOException {
-		
-		ArrayList<AnnotationCollection> collections = new ArrayList<>();
-		File collectionsDir = Paths.get(
-				this.projectPath.getAbsolutePath(),
-				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME)
-			.toFile();
-		
-		if (!collectionsDir.exists()) {
-			return collections;
-		}
-		
-		File[] collectionDirs = 
-				collectionsDir.listFiles(file -> file.isDirectory());			
+			TagLibrary tagLibrary,
+			ProgressListener progressListener,
+			boolean withOrphansHandling
+	) throws IOException {
+		File collectionsDirectory = Paths.get(
+				projectPath.getAbsolutePath(),
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME
+		).toFile();
 
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
+		if (!collectionsDirectory.exists()) {
+			return new ArrayList<>();
+		}
+
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
 		);
+
+		File[] collectionDirs = collectionsDirectory.listFiles(File::isDirectory);
+		ArrayList<AnnotationCollection> collections = new ArrayList<>();
 
 		for (File collectionDir : collectionDirs) {
-			String collectionId = collectionDir.getName();
 			try {
-				collections.add(
-					gitMarkupCollectionHandler.getCollection(
-							collectionId, 
-							tagLibrary, 
-							progressListener,
-							withOrphansHandling));
-			} catch (Exception e) {
+				String collectionId = collectionDir.getName();
+				AnnotationCollection collection = gitAnnotationCollectionHandler.getCollection(
+						collectionId, tagLibrary, progressListener, withOrphansHandling
+				);
+				collections.add(collection);
+			}
+			catch (Exception e) {
 				logger.log(
-				Level.SEVERE, 
-					String.format(
-						"error loading Collection reference %1$s for project %2$s",
-						collectionDir,
-						projectId), 
-					e);
-				 
+						Level.SEVERE,
+						String.format("Failed to load collection \"%s\" for project \"%s\"", collectionDir, projectId),
+						e
+				);
 			}
 		}
-		
+
 		if (withOrphansHandling) {
-			try (LocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
-				localRepoManager.open(this.projectReference.getNamespace(), this.projectId);
-				if (localRepoManager.hasUncommitedChanges() || localRepoManager.hasUntrackedChanges()) {
-					localRepoManager.addAllAndCommit(
-							String.format(
-								"Auto committing removal of orphan Annotations "
-								+ "and orphan Properties for Project %1$s", this.projectId),
-							this.remoteGitServerManager.getUsername(), 
-							this.remoteGitServerManager.getEmail(), 
-							false);
-					localRepoManager.push(credentialsProvider);
+			try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+				localGitRepoManager.open(projectReference.getNamespace(), projectId);
+
+				if (!localGitRepoManager.hasUncommitedChanges() && !localGitRepoManager.hasUntrackedChanges()) {
+					return collections;
 				}
+
+				localGitRepoManager.addAllAndCommit(
+						String.format("Auto-committing removal of orphaned annotations and properties for project \"%s\"", projectId),
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail(),
+						false
+				);
+				localGitRepoManager.push(credentialsProvider);
 			}
-		}		
-		
+		}
+
 		return collections;
-	}	
-	
+	}
+
 	@Override
-	public AnnotationCollection getCollection(
-			String collectionId, 
-			TagLibrary tagLibrary) throws IOException {
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
+	public AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary) throws IOException {
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
 		);
 
-		return gitMarkupCollectionHandler.getCollection(
+		return gitAnnotationCollectionHandler.getCollection(
 				collectionId, 
 				tagLibrary, 
 				new ProgressListener() {
-					
 					@Override
 					public void setProgress(String value, Object... args) {
-						logger.info(
-							String.format(
-									"Loading AnnotationCollection with %1$s: %2$s", 
-									collectionId, 
-									String.format(value, args)));
+						logger.info(String.format(value, args));
 					}
 				},
-				false);
+				false
+		);
 	}
+
 	@Override
 	public List<SourceDocument> getDocuments() {
-		ArrayList<SourceDocument> documents = new ArrayList<>();
-		
-		File documentsDir = Paths.get(
-				this.projectPath.getAbsolutePath(),
-				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME)
-			.toFile();
-		
-		if (!documentsDir.exists()) {
-			return documents;
+		File documentsDirectory = Paths.get(
+				projectPath.getAbsolutePath(),
+				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME
+		).toFile();
+
+		if (!documentsDirectory.exists()) {
+			return new ArrayList<>();
 		}
 
-		File[] documentDirs = 
-				documentsDir.listFiles(file -> file.isDirectory());			
+		GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+				localGitRepositoryManager,
+				projectPath,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
 
-		GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
-				this.localGitRepositoryManager, 
-				this.projectPath,
-				this.remoteGitServerManager.getUsername(),
-				this.remoteGitServerManager.getEmail());
+		File[] documentDirs = documentsDirectory.listFiles(File::isDirectory);
+		ArrayList<SourceDocument> documents = new ArrayList<>();
 
 		for (File documentDir : documentDirs) {
-			String sourceDocumentId = documentDir.getName().toString();
 			try {
-				documents.add(gitSourceDocumentHandler.open(sourceDocumentId));
-			} catch (Exception e) {
+				String sourceDocumentId = documentDir.getName();
+				SourceDocument document = gitSourceDocumentHandler.open(sourceDocumentId);
+				documents.add(document);
+			}
+			catch (Exception e) {
 				logger.log(
-					Level.SEVERE,
-					String.format(
-						"error loading Document %1$s for Project %2$s",
-						documentDir,
-						projectId), 
-					e);					
+						Level.SEVERE,
+						String.format("Failed to load document \"%s\" for project \"%s\"", documentDir, projectId),
+						e
+				);
 			}
 		}
-		
+
 		return documents;
 	}
-	
+
 	@Override
 	public SourceDocument getDocument(String documentId) throws IOException {
-		GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
-				this.localGitRepositoryManager, 
-				this.projectPath,
-				this.remoteGitServerManager.getUsername(),
-				this.remoteGitServerManager.getEmail());
+		GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+				localGitRepositoryManager,
+				projectPath,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
 
 		return gitSourceDocumentHandler.open(documentId);
-	}
-	
-	@Override
-	public boolean isReadOnly() {
-		return false;
 	}
 }

@@ -1,46 +1,5 @@
 package de.catma.repository.git.managers;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.lib.Constants;
-import org.gitlab4j.api.Constants.IssueState;
-import org.gitlab4j.api.Constants.MergeRequestState;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GroupApi;
-import org.gitlab4j.api.IssuesApi;
-import org.gitlab4j.api.MergeRequestApi;
-import org.gitlab4j.api.NotesApi;
-import org.gitlab4j.api.Pager;
-import org.gitlab4j.api.ProjectApi;
-import org.gitlab4j.api.models.AccessLevel;
-import org.gitlab4j.api.models.Author;
-import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.ImportStatus.Status;
-import org.gitlab4j.api.models.Issue;
-import org.gitlab4j.api.models.IssueFilter;
-import org.gitlab4j.api.models.Member;
-import org.gitlab4j.api.models.MergeRequest;
-import org.gitlab4j.api.models.MergeRequestFilter;
-import org.gitlab4j.api.models.Namespace;
-import org.gitlab4j.api.models.Note;
-import org.gitlab4j.api.models.Permissions;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectFilter;
-import org.gitlab4j.api.models.Visibility;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
@@ -49,7 +8,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.ForkStatus;
@@ -66,6 +24,20 @@ import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.lib.Constants;
+import org.gitlab4j.api.Constants.IssueState;
+import org.gitlab4j.api.Constants.MergeRequestState;
+import org.gitlab4j.api.*;
+import org.gitlab4j.api.models.*;
+import org.gitlab4j.api.models.ImportStatus.Status;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class GitlabManagerRestricted extends GitlabManagerCommon implements RemoteGitManagerRestricted {
 	private static final String CATMA_COMMENT_LABEL = "CATMA Comment";

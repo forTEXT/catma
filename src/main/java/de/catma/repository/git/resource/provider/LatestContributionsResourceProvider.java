@@ -1,52 +1,47 @@
 package de.catma.repository.git.resource.provider;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.eclipse.jgit.transport.CredentialsProvider;
-
-import com.beust.jcommander.internal.Maps;
-
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.*;
+import de.catma.repository.git.GitAnnotationCollectionHandler;
+import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.GitSourceDocumentHandler;
+import de.catma.repository.git.GitTagsetHandler;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
+import org.eclipse.jgit.transport.CredentialsProvider;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LatestContributionsResourceProvider implements GitProjectResourceProvider {
 	private final Logger logger = Logger.getLogger(LatestContributionsResourceProvider.class.getName());
-			
+
 	private final String projectId;
 	private final ProjectReference projectReference;
 	private final File projectPath;
-
 	private final LocalGitRepositoryManager localGitRepositoryManager;
-	
-	private final Set<LatestContribution> latestContributions;
 	private final RemoteGitManagerRestricted remoteGitServerManager;
-	
-	
-	
-	public LatestContributionsResourceProvider(String projectId, ProjectReference projectReference,
-			File projectPath, LocalGitRepositoryManager localGitRepositoryManager,
-			RemoteGitManagerRestricted remoteGitServerManager, CredentialsProvider credentialsProvider,
-			Set<LatestContribution> latestContributions) {
-		
-		super();
+	private final Set<LatestContribution> latestContributions;
+
+	public LatestContributionsResourceProvider(
+			String projectId,
+			ProjectReference projectReference,
+			File projectPath,
+			LocalGitRepositoryManager localGitRepositoryManager,
+			RemoteGitManagerRestricted remoteGitServerManager,
+			CredentialsProvider credentialsProvider,
+			Set<LatestContribution> latestContributions
+	) {
 		this.projectId = projectId;
 		this.projectReference = projectReference;
 		this.projectPath = projectPath;
@@ -55,531 +50,495 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 		this.latestContributions = latestContributions;
 	}
 
-	
+	@Override
+	public boolean isReadOnly() {
+		return true;
+	}
 
 	@Override
 	public List<TagsetDefinition> getTagsets() {
-		Map<String, TagsetDefinition> tagsetsById = new HashMap<>();
-		File tagsetsDir = Paths.get(
-				this.projectPath.getAbsolutePath(),
-				GitProjectHandler.TAGSETS_DIRECTORY_NAME)
-			.toFile();
-		
-		if (!tagsetsDir.exists()) {
-			return new ArrayList<>(tagsetsById.values());
+		File tagsetsDirectory = Paths.get(
+				projectPath.getAbsolutePath(),
+				GitProjectHandler.TAGSETS_DIRECTORY_NAME
+		).toFile();
+
+		if (!tagsetsDirectory.exists()) {
+			return new ArrayList<>();
 		}
-		
-		File[] tagsetDirs = tagsetsDir.listFiles(file -> file.isDirectory());			
-		
-		GitTagsetHandler gitTagsetHandler =
-				new GitTagsetHandler(
-					this.localGitRepositoryManager, 
-					this.projectPath,
-					this.remoteGitServerManager.getUsername(),
-					this.remoteGitServerManager.getEmail());
-		
-		
+
+		GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
+				localGitRepositoryManager,
+				projectPath,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
+
+		File[] tagsetDirs = tagsetsDirectory.listFiles(File::isDirectory);
+		Map<String, TagsetDefinition> tagsetsById = new HashMap<>();
+
 		for (File tagsetDir : tagsetDirs) {
 			try {
 				String tagsetId = tagsetDir.getName();
-				TagsetDefinition tagset = gitTagsetHandler.getTagset(tagsetId);						 
-				tagsetsById.put(tagset.getUuid(), tagset);
+				TagsetDefinition tagsetDefinition = gitTagsetHandler.getTagset(tagsetId);
+				tagsetsById.put(tagsetDefinition.getUuid(), tagsetDefinition);
 			}
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format(
-								"error loading Tagset %1$s for project %2$s",
-								tagsetDir,
-								projectId), 
-						e);
+						String.format("Failed to load tagset \"%s\" for project \"%s\"", tagsetDir, projectId),
+						e
+				);
 			}
-		 
 		}
-		
-		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
-			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
+
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
 			for (LatestContribution latestContribution : latestContributions) {
-				if (!latestContribution.getTagsetIds().isEmpty()) {
-					localGitRepManager.checkout(latestContribution.getBranch(), false);
-					for (String tagsetId : latestContribution.getTagsetIds()) {
-						try {
-							TagsetDefinition tagset = 
-									gitTagsetHandler.getTagset(tagsetId);
-							
-							if (tagsetsById.containsKey(tagset.getUuid())) {
-								tagsetsById.get(tagset.getUuid()).mergeAdditive(tagset);
-							}
-							else {
-								tagset.setContribution(true);
-								tagsetsById.put(tagset.getUuid(), tagset);
-							}
-						}
-						catch (IOException e) {
-							logger.log(
-									Level.SEVERE,
-									String.format(
-										"error loading latest contributions for"
-										+ "Tagset %1$s for project %2$s branch %3$s",
-										tagsetId,
-										projectId,
-										latestContribution.getBranch()), 
-									e);
-							
-						}
-					}
+				if (latestContribution.getTagsetIds().isEmpty()) {
+					continue;
 				}
-			}
-			localGitRepManager.checkout(
-					remoteGitServerManager.getUsername(), false);
 
-		}
-		catch (IOException e) {
-			logger.log(
-					Level.SEVERE,
-					String.format(
-						"error loading latest contributions for"
-						+ "project %1$s",
-						projectId), 
-					e);
-			
-		}
-		
-		return new ArrayList<>(tagsetsById.values());
-	}
+				localGitRepoManager.checkout(latestContribution.getBranch(), false);
 
-
-	@Override
-	public List<AnnotationCollectionReference> getCollectionReferences() {
-		
-		File collectionsDir = Paths.get(
-				this.projectPath.getAbsolutePath(),
-				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME)
-			.toFile();
-		
-		if (!collectionsDir.exists()) {
-			return new ArrayList<>();
-		}
-		
-		Map<String, AnnotationCollectionReference> collectionReferences = 
-				Maps.newHashMap();
-		
-		File[] collectionDirs = 
-				collectionsDir.listFiles(file -> file.isDirectory());
-		
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler =
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
-		);
-		
-		for (File collectionDir : collectionDirs) {
-			String collectionId = collectionDir.getName();
-			try {
-				collectionReferences.put(
-					collectionId,
-					gitMarkupCollectionHandler.getCollectionReference(collectionId));
-			} catch (Exception e) {
-				logger.log(
-				Level.SEVERE, 
-					String.format(
-						"error loading Collection reference %1$s for project %2$s",
-						collectionDir,
-						projectId), 
-					e);
-				 
-			}
-		}
-		
-		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
-			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
-			for (LatestContribution latestContribution : latestContributions) {
-				if (!latestContribution.getCollectionIds().isEmpty()) {
-					localGitRepManager.checkout(latestContribution.getBranch(), false);
-					for (String collectionId : latestContribution.getCollectionIds()) {
-						try {
-							if (!collectionReferences.containsKey(collectionId)) {
-								AnnotationCollectionReference colRef =
-										gitMarkupCollectionHandler.getCollectionReference(collectionId);
-								colRef.setContribution(true);
-								collectionReferences.put(collectionId, colRef);
-							}
-							else {
-								collectionReferences.get(collectionId).setContribution(true);
-							}
-						}
-						catch (IOException e) {
-							logger.log(
-									Level.SEVERE,
-									String.format(
-										"error loading latest contributions for"
-										+ "Annotation Collection %1$s for project %2$s branch %3$s",
-										collectionId,
-										projectId,
-										latestContribution.getBranch()), 
-									e);
-							
-						}
-					}
-				}
-			}
-			localGitRepManager.checkout(
-					remoteGitServerManager.getUsername(), false);
-
-		}
-		catch (IOException e) {
-			logger.log(
-					Level.SEVERE,
-					String.format(
-						"error loading latest contributions for"
-						+ "project %1$s",
-						projectId), 
-					e);
-			
-		}
-
-		
-		return new ArrayList<>(collectionReferences.values());
-	}
-
-	@Override
-	public List<AnnotationCollection> getCollections(
-			TagLibrary tagLibrary, ProgressListener progressListener, 
-			boolean withOrphansHandling) throws IOException {
-		
-		Map<String, AnnotationCollection> collectionsById = Maps.newHashMap();
-		File collectionsDir = Paths.get(
-				this.projectPath.getAbsolutePath(),
-				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME)
-			.toFile();
-		
-		if (!collectionsDir.exists()) {
-			return new ArrayList<>(collectionsById.values());
-		}
-		
-		File[] collectionDirs = 
-				collectionsDir.listFiles(file -> file.isDirectory());			
-
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
-		);
-
-		for (File collectionDir : collectionDirs) {
-			String collectionId = collectionDir.getName();
-			try {
-				AnnotationCollection collection = 
-						gitMarkupCollectionHandler.getCollection(
-								collectionId, 
-								tagLibrary, 
-								progressListener,
-								false);
-
-				collectionsById.put(collectionId, collection);
-				
-			} catch (Exception e) {
-				logger.log(
-				Level.SEVERE, 
-					String.format(
-						"error loading Collection reference %1$s for project %2$s",
-						collectionDir,
-						projectId), 
-					e);
-				 
-			}
-		}
-
-		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
-			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
-			for (LatestContribution latestContribution : latestContributions) {
-				if (!latestContribution.getCollectionIds().isEmpty()) {
-					localGitRepManager.checkout(latestContribution.getBranch(), false);
-					for (String collectionId : latestContribution.getCollectionIds()) {
-						try {
-							AnnotationCollection collection = gitMarkupCollectionHandler.getCollection(
-									collectionId, 
-									tagLibrary, 
-									progressListener,
-									false);
-							collection.setContribution(true);
-							
-							if (collectionsById.containsKey(collectionId)) {
-								collectionsById.get(collectionId).mergeAdditive(collection);
-							}
-							else {
-								collectionsById.put(collectionId, collection);
-							}
-						}
-						catch (IOException e) {
-							logger.log(
-									Level.SEVERE,
-									String.format(
-										"error loading latest contributions for"
-										+ "Annotation Collection %1$s for project %2$s branch %3$s",
-										collectionId,
-										projectId,
-										latestContribution.getBranch()), 
-									e);
-							
-						}
-					}
-				}
-			}
-			localGitRepManager.checkout(
-					remoteGitServerManager.getUsername(), false);
-
-		}
-		catch (IOException e) {
-			logger.log(
-					Level.SEVERE,
-					String.format(
-						"error loading latest contributions for"
-						+ "project %1$s",
-						projectId), 
-					e);
-			
-		}
-		
-		return new ArrayList<>(collectionsById.values());
-	}	
-	
-	@Override
-	public AnnotationCollection getCollection(
-			String collectionId, 
-			TagLibrary tagLibrary) throws IOException {
-		GitAnnotationCollectionHandler gitMarkupCollectionHandler = 
-				new GitAnnotationCollectionHandler(
-						this.localGitRepositoryManager, 
-						this.projectPath,
-						this.projectId,
-						this.remoteGitServerManager.getUsername(),
-						this.remoteGitServerManager.getEmail()
-		);
-
-
-		AnnotationCollection collection = null;
-		if (gitMarkupCollectionHandler.collectionExists(collectionId)) {
-			collection = gitMarkupCollectionHandler.getCollection(
-					collectionId, 
-					tagLibrary, 
-					new ProgressListener() {
-						
-						@Override
-						public void setProgress(String value, Object... args) {
-							logger.info(
-								String.format(
-										"Loading AnnotationCollection with %1$s: %2$s", 
-										collectionId, 
-										String.format(value, args)));
-						}
-					},
-					false);
-		}
-		
-		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
-			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
-			for (LatestContribution latestContribution : latestContributions) {
-				if (latestContribution.getCollectionIds().contains(collectionId)) {
-					localGitRepManager.checkout(latestContribution.getBranch(), false);
+				for (String tagsetId : latestContribution.getTagsetIds()) {
 					try {
-						AnnotationCollection contribution = gitMarkupCollectionHandler.getCollection(
-								collectionId, 
-								tagLibrary, 
-								new ProgressListener() {
-									
-									@Override
-									public void setProgress(String value, Object... args) {
-										logger.info(
-											String.format(
-													"Loading contributions from %1$s for AnnotationCollection with %2$s: %3$s",
-													latestContribution.getBranch(),
-													collectionId, 
-													String.format(value, args)));
-									}
-								},
-								false);
-						contribution.setContribution(true);
-						
-						if (collection != null) {							
-							collection.mergeAdditive(contribution);
+						TagsetDefinition tagsetDefinition = gitTagsetHandler.getTagset(tagsetId);
+
+						if (tagsetsById.containsKey(tagsetDefinition.getUuid())) {
+							tagsetsById.get(tagsetDefinition.getUuid()).mergeAdditive(tagsetDefinition);
 						}
 						else {
-							collection = contribution;
+							tagsetDefinition.setContribution(true);
+							tagsetsById.put(tagsetDefinition.getUuid(), tagsetDefinition);
 						}
 					}
 					catch (IOException e) {
 						logger.log(
 								Level.SEVERE,
 								String.format(
-									"error loading latest contributions for"
-									+ "Annotation Collection %1$s for project %2$s branch %3$s",
+										"Failed to load latest contributions for tagset \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
+										tagsetId,
+										projectId,
+										latestContribution.getBranch()
+								),
+								e
+						);
+					}
+				}
+			}
+
+			localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
+		}
+		catch (IOException e) {
+			logger.log(
+					Level.SEVERE,
+					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					e
+			);
+		}
+
+		return new ArrayList<>(tagsetsById.values());
+	}
+
+	@Override
+	public List<AnnotationCollectionReference> getCollectionReferences() {
+		File collectionsDirectory = Paths.get(
+				projectPath.getAbsolutePath(),
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME
+		).toFile();
+
+		if (!collectionsDirectory.exists()) {
+			return new ArrayList<>();
+		}
+
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
+
+		File[] collectionDirs = collectionsDirectory.listFiles(File::isDirectory);
+		Map<String, AnnotationCollectionReference> collectionReferencesByCollectionId = new HashMap<>();
+
+		for (File collectionDir : collectionDirs) {
+			try {
+				String collectionId = collectionDir.getName();
+				AnnotationCollectionReference collectionReference = gitAnnotationCollectionHandler.getCollectionReference(collectionId);
+				collectionReferencesByCollectionId.put(collectionId, collectionReference);
+			}
+			catch (Exception e) {
+				logger.log(
+						Level.SEVERE,
+						String.format("Failed to load collection reference \"%s\" for project \"%s\"", collectionDir, projectId),
+						e
+				);
+			}
+		}
+
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
+			for (LatestContribution latestContribution : latestContributions) {
+				if (latestContribution.getCollectionIds().isEmpty()) {
+					continue;
+				}
+
+				localGitRepoManager.checkout(latestContribution.getBranch(), false);
+
+				for (String collectionId : latestContribution.getCollectionIds()) {
+					try {
+						if (collectionReferencesByCollectionId.containsKey(collectionId)) {
+							collectionReferencesByCollectionId.get(collectionId).setContribution(true);
+						}
+						else {
+							AnnotationCollectionReference collectionReference = gitAnnotationCollectionHandler.getCollectionReference(collectionId);
+							collectionReference.setContribution(true);
+							collectionReferencesByCollectionId.put(collectionId, collectionReference);
+						}
+					}
+					catch (IOException e) {
+						logger.log(
+								Level.SEVERE,
+								String.format(
+										"Failed to load latest contributions for collection \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
+										collectionId,
+										projectId,
+										latestContribution.getBranch()
+								),
+								e
+						);
+					}
+				}
+			}
+
+			localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
+		}
+		catch (IOException e) {
+			logger.log(
+					Level.SEVERE,
+					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					e
+			);
+		}
+
+		return new ArrayList<>(collectionReferencesByCollectionId.values());
+	}
+
+	@Override
+	public List<AnnotationCollection> getCollections(
+			TagLibrary tagLibrary,
+			ProgressListener progressListener,
+			boolean withOrphansHandling
+	) {
+		File collectionsDirectory = Paths.get(
+				projectPath.getAbsolutePath(),
+				GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME
+		).toFile();
+
+		if (!collectionsDirectory.exists()) {
+			return new ArrayList<>();
+		}
+
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
+
+		File[] collectionDirs = collectionsDirectory.listFiles(File::isDirectory);
+		Map<String, AnnotationCollection> collectionsById = new HashMap<>();
+
+		for (File collectionDir : collectionDirs) {
+			try {
+				String collectionId = collectionDir.getName();
+				AnnotationCollection collection = gitAnnotationCollectionHandler.getCollection(
+						collectionId, tagLibrary, progressListener, false
+				);
+				collectionsById.put(collectionId, collection);
+			}
+			catch (Exception e) {
+				logger.log(
+						Level.SEVERE,
+						String.format("Failed to load collection \"%s\" for project \"%s\"", collectionDir, projectId),
+						e
+				);
+			}
+		}
+
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
+			for (LatestContribution latestContribution : latestContributions) {
+				if (latestContribution.getCollectionIds().isEmpty()) {
+					continue;
+				}
+
+				localGitRepoManager.checkout(latestContribution.getBranch(), false);
+
+				for (String collectionId : latestContribution.getCollectionIds()) {
+					try {
+						AnnotationCollection collection = gitAnnotationCollectionHandler.getCollection(
+								collectionId, tagLibrary, progressListener, false
+						);
+						collection.setContribution(true);
+
+						if (collectionsById.containsKey(collectionId)) {
+							collectionsById.get(collectionId).mergeAdditive(collection);
+						}
+						else {
+							collectionsById.put(collectionId, collection);
+						}
+					}
+					catch (IOException e) {
+						logger.log(
+								Level.SEVERE,
+								String.format(
+										"Failed to load latest contributions for collection \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
+										collectionId,
+										projectId,
+										latestContribution.getBranch()
+								),
+								e
+						);
+					}
+				}
+			}
+
+			localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
+		}
+		catch (IOException e) {
+			logger.log(
+					Level.SEVERE,
+					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					e
+			);
+		}
+
+		return new ArrayList<>(collectionsById.values());
+	}
+
+	@Override
+	public AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary) throws IOException {
+		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+				localGitRepositoryManager,
+				projectPath,
+				projectId,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
+
+		AnnotationCollection collectionToReturn = null;
+
+		if (gitAnnotationCollectionHandler.collectionExists(collectionId)) {
+			collectionToReturn = gitAnnotationCollectionHandler.getCollection(
+					collectionId, 
+					tagLibrary, 
+					new ProgressListener() {
+						@Override
+						public void setProgress(String value, Object... args) {
+							logger.info(String.format(value, args));
+						}
+					},
+					false
+			);
+		}
+
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
+			for (LatestContribution latestContribution : latestContributions) {
+				if (!latestContribution.getCollectionIds().contains(collectionId)) {
+					continue;
+				}
+
+				localGitRepoManager.checkout(latestContribution.getBranch(), false);
+
+				logger.info(
+						String.format(
+								"Loading latest contributions for collection \"%s\" from branch \"%s\"",
+								collectionId,
+								latestContribution.getBranch()
+						)
+				);
+
+				try {
+					AnnotationCollection collection = gitAnnotationCollectionHandler.getCollection(
+							collectionId,
+							tagLibrary,
+							new ProgressListener() {
+								@Override
+								public void setProgress(String value, Object... args) {
+									logger.info(String.format(value, args));
+								}
+							},
+							false
+					);
+					collection.setContribution(true);
+
+					if (collectionToReturn != null) {
+						collectionToReturn.mergeAdditive(collection);
+					}
+					else {
+						collectionToReturn = collection;
+					}
+				}
+				catch (IOException e) {
+					logger.log(
+							Level.SEVERE,
+							String.format(
+									"Failed to load latest contributions for collection \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
 									collectionId,
 									projectId,
-									latestContribution.getBranch()), 
-								e);
-						
-					}
+									latestContribution.getBranch()
+							),
+							e
+					);
 				}
 			}
-			localGitRepManager.checkout(
-					remoteGitServerManager.getUsername(), false);
 
+			localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
 		}
 		catch (IOException e) {
 			logger.log(
 					Level.SEVERE,
-					String.format(
-						"error loading latest contributions for"
-						+ "project %1$s",
-						projectId), 
-					e);
-			
+					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					e
+			);
 		}
 
-		
-		return collection;
+		return collectionToReturn;
 	}
-	
+
 	@Override
 	public List<SourceDocument> getDocuments() {
-		Map<String, SourceDocument> documentsById = Maps.newHashMap();
-		
-		File documentsDir = Paths.get(
-				this.projectPath.getAbsolutePath(),
-				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME)
-			.toFile();
-		
-		if (!documentsDir.exists()) {
-			return new ArrayList<>(0);
+		File documentsDirectory = Paths.get(
+				projectPath.getAbsolutePath(),
+				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME
+		).toFile();
+
+		if (!documentsDirectory.exists()) {
+			return new ArrayList<>();
 		}
 
-		File[] documentDirs = 
-				documentsDir.listFiles(file -> file.isDirectory());			
+		GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+				localGitRepositoryManager,
+				projectPath,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
 
-		GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
-				this.localGitRepositoryManager, 
-				this.projectPath,
-				this.remoteGitServerManager.getUsername(),
-				this.remoteGitServerManager.getEmail());
+		File[] documentDirs = documentsDirectory.listFiles(File::isDirectory);
+		Map<String, SourceDocument> documentsById = new HashMap<>();
 
 		for (File documentDir : documentDirs) {
-			String sourceDocumentId = documentDir.getName().toString();
 			try {
-				documentsById.put(
-						sourceDocumentId, gitSourceDocumentHandler.open(sourceDocumentId));
-			} catch (Exception e) {
+				String sourceDocumentId = documentDir.getName();
+				SourceDocument sourceDocument = gitSourceDocumentHandler.open(sourceDocumentId);
+				documentsById.put(sourceDocumentId, sourceDocument);
+			}
+			catch (Exception e) {
 				logger.log(
-					Level.SEVERE,
-					String.format(
-						"error loading Document %1$s for Project %2$s",
-						documentDir,
-						projectId), 
-					e);					
+						Level.SEVERE,
+						String.format("Failed to load document \"%s\" for project \"%s\"", documentDir, projectId),
+						e
+				);
 			}
 		}
-		
-		
-		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
-			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
+
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
 			for (LatestContribution latestContribution : latestContributions) {
-				if (!latestContribution.getDocumentIds().isEmpty()) {
-					localGitRepManager.checkout(latestContribution.getBranch(), false);
-					for (String documentId : latestContribution.getDocumentIds()) {
-						try {
-							SourceDocument document = 
-									gitSourceDocumentHandler.open(documentId);
-							
-							if (documentsById.containsKey(document.getUuid())) {
-								documentsById.put(document.getUuid(), document);
-							}
-							
-							
-							document.setSourceContentHandler(
-								new BranchAwareSourceContentHandler(
-										this.localGitRepositoryManager, 
-										this.remoteGitServerManager.getUsername(),
-										this.projectReference,
-										latestContribution.getBranch(),
-										document.getSourceContentHandler()));
-							
+				if (latestContribution.getDocumentIds().isEmpty()) {
+					continue;
+				}
+
+				localGitRepoManager.checkout(latestContribution.getBranch(), false);
+
+				for (String documentId : latestContribution.getDocumentIds()) {
+					try {
+						SourceDocument document = gitSourceDocumentHandler.open(documentId);
+
+						if (documentsById.containsKey(document.getUuid())) {
+							documentsById.put(document.getUuid(), document);
 						}
-						catch (IOException e) {
-							logger.log(
-									Level.SEVERE,
-									String.format(
-										"error loading latest contributions for"
-										+ "Document %1$s for project %2$s branch %3$s",
+
+						document.setSourceContentHandler(new BranchAwareSourceContentHandler(
+								localGitRepositoryManager,
+								remoteGitServerManager.getUsername(),
+								projectReference,
+								latestContribution.getBranch(),
+								document.getSourceContentHandler()
+						));
+					}
+					catch (IOException e) {
+						logger.log(
+								Level.SEVERE,
+								String.format(
+										"Failed to load latest contributions for document \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
 										documentId,
 										projectId,
-										latestContribution.getBranch()), 
-									e);
-							
-						}
+										latestContribution.getBranch()
+								),
+								e
+						);
 					}
 				}
 			}
-			localGitRepManager.checkout(
-					remoteGitServerManager.getUsername(), false);
 
+			localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
 		}
 		catch (IOException e) {
 			logger.log(
 					Level.SEVERE,
-					String.format(
-						"error loading latest contributions for"
-						+ "project %1$s",
-						projectId), 
-					e);
-			
+					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					e
+			);
 		}
-		
-		return new ArrayList<SourceDocument>(documentsById.values());
+
+		return new ArrayList<>(documentsById.values());
 	}
-	
+
 	@Override
 	public SourceDocument getDocument(String documentId) throws IOException {
-		GitSourceDocumentHandler gitSourceDocumentHandler =	new GitSourceDocumentHandler(
-				this.localGitRepositoryManager, 
-				this.projectPath,
-				this.remoteGitServerManager.getUsername(),
-				this.remoteGitServerManager.getEmail());
+		GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+				localGitRepositoryManager,
+				projectPath,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
 
-		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
-			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
 			for (LatestContribution latestContribution : latestContributions) {
-				if (latestContribution.getDocumentIds().contains(documentId)) {
-					localGitRepManager.checkout(latestContribution.getBranch(), false);
-					SourceDocument document = 
-							gitSourceDocumentHandler.open(documentId);
-					
-					document.setSourceContentHandler(
-						new BranchAwareSourceContentHandler(
-								this.localGitRepositoryManager, 
-								this.remoteGitServerManager.getUsername(),
-								this.projectReference,
-								latestContribution.getBranch(),
-								document.getSourceContentHandler()));
-
-					localGitRepManager.checkout(
-							remoteGitServerManager.getUsername(), false);
-					
-					return document;
+				if (!latestContribution.getDocumentIds().contains(documentId)) {
+					continue;
 				}
+
+				localGitRepoManager.checkout(latestContribution.getBranch(), false);
+
+				SourceDocument document = gitSourceDocumentHandler.open(documentId);
+
+				document.setSourceContentHandler(new BranchAwareSourceContentHandler(
+						localGitRepositoryManager,
+						remoteGitServerManager.getUsername(),
+						projectReference,
+						latestContribution.getBranch(),
+						document.getSourceContentHandler()
+				));
+
+				localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
+
+				return document;
 			}
 		}
+
 		return gitSourceDocumentHandler.open(documentId);
 	}
-	
-	@Override
-	public boolean isReadOnly() {
-		return true;
-	}
-
 }

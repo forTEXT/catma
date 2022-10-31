@@ -1,74 +1,69 @@
 package de.catma.repository.git.resource.provider;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 
-public class BranchAwareSourceContentHandler implements SourceContentHandler {
+import java.io.IOException;
+import java.io.InputStream;
 
-	private LocalGitRepositoryManager localGitRepositoryManager;
-	private String username;
-	private ProjectReference projectReference;
-	private String branch;
-	private SourceContentHandler delegate;
+public class BranchAwareSourceContentHandler implements SourceContentHandler {
+	private final LocalGitRepositoryManager localGitRepositoryManager;
+	private final String username;
+	private final ProjectReference projectReference;
+	private final String branch;
+	private final SourceContentHandler delegateSourceContentHandler;
 
 	public BranchAwareSourceContentHandler(
 			LocalGitRepositoryManager localGitRepositoryManager,
 			String username,
 			ProjectReference projectReference, 
 			String branch, 
-			SourceContentHandler sourceContentHandler) {
+			SourceContentHandler sourceContentHandler
+	) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.username = username;
 		this.projectReference = projectReference;
 		this.branch = branch;
-		this.delegate = sourceContentHandler;
-	}
-
-	public void setSourceDocumentInfo(SourceDocumentInfo sourceDocumentInfo) {
-		delegate.setSourceDocumentInfo(sourceDocumentInfo);
-	}
-
-	public SourceDocumentInfo getSourceDocumentInfo() {
-		return delegate.getSourceDocumentInfo();
-	}
-
-	public void load(InputStream is) throws IOException {
-		delegate.load(is);
-	}
-
-	public void load() throws IOException {
-		try (LocalGitRepositoryManager localGitRepManager = this.localGitRepositoryManager) {
-			localGitRepManager.open(this.projectReference.getNamespace(), this.projectReference.getProjectId());
-			localGitRepManager.checkout(branch, false);
-
-			delegate.load();
-			
-			localGitRepManager.checkout(username, false);
-
-		}
-	}
-
-	public String getContent() throws IOException {
-		return delegate.getContent();
-	}
-
-	public void unload() {
-		delegate.unload();
+		this.delegateSourceContentHandler = sourceContentHandler;
 	}
 
 	public boolean isLoaded() {
-		return delegate.isLoaded();
+		return delegateSourceContentHandler.isLoaded();
+	}
+
+	public void load(InputStream is) throws IOException {
+		delegateSourceContentHandler.load(is);
+	}
+
+	public void load() throws IOException {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+			localGitRepoManager.checkout(branch, false);
+
+			delegateSourceContentHandler.load();
+
+			localGitRepoManager.checkout(username, false);
+		}
+	}
+
+	public void unload() {
+		delegateSourceContentHandler.unload();
 	}
 
 	public boolean hasIntrinsicMarkupCollection() {
-		return delegate.hasIntrinsicMarkupCollection();
+		return delegateSourceContentHandler.hasIntrinsicMarkupCollection();
 	}
-	
-	
 
+	public SourceDocumentInfo getSourceDocumentInfo() {
+		return delegateSourceContentHandler.getSourceDocumentInfo();
+	}
+	public void setSourceDocumentInfo(SourceDocumentInfo sourceDocumentInfo) {
+		delegateSourceContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
+	}
+
+	public String getContent() throws IOException {
+		return delegateSourceContentHandler.getContent();
+	}
 }

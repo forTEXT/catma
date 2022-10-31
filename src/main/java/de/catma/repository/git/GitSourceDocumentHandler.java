@@ -1,5 +1,16 @@
 package de.catma.repository.git;
 
+import com.google.common.collect.Maps;
+import de.catma.document.source.*;
+import de.catma.document.source.contenthandler.SourceContentHandler;
+import de.catma.document.source.contenthandler.StandardContentHandler;
+import de.catma.indexer.TermInfo;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,35 +20,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-
-import com.google.common.collect.Maps;
-
-import de.catma.document.source.FileOSType;
-import de.catma.document.source.FileType;
-import de.catma.document.source.SourceDocument;
-import de.catma.document.source.SourceDocumentHandler;
-import de.catma.document.source.SourceDocumentInfo;
-import de.catma.document.source.SourceDocumentReference;
-import de.catma.document.source.contenthandler.SourceContentHandler;
-import de.catma.document.source.contenthandler.StandardContentHandler;
-import de.catma.indexer.TermInfo;
-import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
-import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
-
 public class GitSourceDocumentHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
 
 	private final LocalGitRepositoryManager localGitRepositoryManager;
+	private final File projectDirectory;
 	private final String username;
 	private final String email;
-	private final File projectDirectory;
 
 	public GitSourceDocumentHandler(
-			LocalGitRepositoryManager localGitRepositoryManager, File projectDirectory,
-			String username, String email) {
+			LocalGitRepositoryManager localGitRepositoryManager,
+			File projectDirectory,
+			String username,
+			String email
+	) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.projectDirectory = projectDirectory;
 		this.username = username;

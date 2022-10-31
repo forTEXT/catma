@@ -35,8 +35,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class GitAnnotationCollectionHandler {
+	public static final String ANNNOTATIONS_DIR = "annotations";
 	private static final String HEADER_FILE_NAME = "header.json";
-	private static final String ANNNOTATIONS_DIR = "annotations";
 
 	private final Logger logger = Logger.getLogger(GitAnnotationCollectionHandler.class.getName());
 

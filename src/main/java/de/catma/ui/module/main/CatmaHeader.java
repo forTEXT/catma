@@ -1,8 +1,5 @@
 package de.catma.ui.module.main;
 
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
-
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
@@ -13,7 +10,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
-
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.HeaderContextChangeEvent;
@@ -22,29 +18,33 @@ import de.catma.ui.login.LoginService;
 import de.catma.ui.module.account.AccessTokenDialog;
 import de.catma.ui.module.account.EditAccountDialog;
 import de.catma.ui.util.Version;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 
 /**
  * Displays the header and context information
- *
- * @author db
  */
 public class CatmaHeader extends HorizontalLayout {
-
 	private final EventBus eventBus;
 	private final LoginService loginService;
-	private final Label contextInformation = new Label("", ContentMode.HTML);
+	private final RemoteGitManagerPrivileged gitManagerPrivileged;
+
 	private Button btHome;
+	private Label contextInformation;
 
 	public CatmaHeader(EventBus eventBus, LoginService loginService, RemoteGitManagerPrivileged gitManagerPrivileged){
-        super();
-        this.eventBus = eventBus;
-        this.loginService = loginService;
-        eventBus.register(this);
-        initComponents(gitManagerPrivileged);
-    }
+		super();
 
+		this.eventBus = eventBus;
+		this.loginService = loginService;
+		this.gitManagerPrivileged = gitManagerPrivileged;
 
-    private void initComponents(RemoteGitManagerPrivileged gitManagerPrivileged) {
+		initComponents();
+
+		this.eventBus.register(this);
+	}
+
+    private void initComponents() {
     	addStyleName("header");
     	setWidth("100%");
     	
@@ -55,7 +55,8 @@ public class CatmaHeader extends HorizontalLayout {
 		
         addComponent(btHome);
         setComponentAlignment(btHome, Alignment.MIDDLE_LEFT);
-        
+
+        contextInformation = new Label("", ContentMode.HTML);
         contextInformation.addStyleName("header__context");
         addComponent(contextInformation);
         setComponentAlignment(contextInformation, Alignment.MIDDLE_CENTER);

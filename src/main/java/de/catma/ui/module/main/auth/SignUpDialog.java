@@ -32,18 +32,18 @@ import java.util.stream.Collectors;
  * The email address option is protected against bots using Google reCAPTCHA.
  */
 public class SignUpDialog extends AuthenticationDialog {
-	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private final Logger logger = Logger.getLogger(SignUpDialog.class.getName());
 
-	private final UserData userData = new UserData();
+	private final RemoteGitManagerPrivileged gitManagerPrivileged;
 
 	private final Binder<UserData> userDataBinder = new Binder<>();
-	private final RemoteGitManagerPrivileged gitManagerPrivileged = new GitlabManagerPrivileged();
+	private final UserData userData = new UserData();
 
 	private final String recaptchaVerificationStyleName = "g-recaptcha-response";
 	private final String recaptchaVerificationAction = "CatmaSignUpForm";
 	private final String recaptchaSiteKey = CATMAPropertyKey.GOOGLE_RECAPTCHA_SITE_KEY.getValue();
 
-	private GoogleVerificationResult recaptchaResult = new GoogleVerificationResult();
+	private GoogleVerificationResult recaptchaResult;
 
 	private TextField tfEmail;
 	private Button btnSignup;
@@ -53,6 +53,10 @@ public class SignUpDialog extends AuthenticationDialog {
 
 	public SignUpDialog(String caption) {
 		super(caption);
+
+		this.gitManagerPrivileged = new GitlabManagerPrivileged();
+		this.recaptchaResult = new GoogleVerificationResult();
+
 		initComponents();
 		initActions();
 	}

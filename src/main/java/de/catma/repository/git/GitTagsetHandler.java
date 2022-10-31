@@ -1,5 +1,16 @@
 package de.catma.repository.git;
 
+import de.catma.document.source.ContentInfoSet;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
+import de.catma.repository.git.serialization.models.GitTagsetHeader;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -9,36 +20,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import de.catma.document.source.ContentInfoSet;
-import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
-import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
-import de.catma.repository.git.serialization.models.GitTagsetHeader;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagsetDefinition;
-
 public class GitTagsetHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
-	
+
 	private final LocalGitRepositoryManager localGitRepositoryManager;
+	private final File projectDirectory;
 	private final String username;
 	private final String email;
-	private final File projectDirectory;
 
 	public GitTagsetHandler(
 			LocalGitRepositoryManager localGitRepositoryManager,
 			File projectDirectory,
-			String username, String email) {
+			String username,
+			String email
+	) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.projectDirectory = projectDirectory;
 		this.username = username;
 		this.email = email;
 	}
-
 
 	/**
 	 * Creates a Tagset with the given parameters. 

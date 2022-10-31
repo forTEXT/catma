@@ -18,51 +18,47 @@ import de.catma.user.User;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AccessTokenDialog extends Window {
-	private final AccessTokenData accessTokenData = new AccessTokenData();
-
-	private final Binder<AccessTokenData> binder = new Binder<>();
 	private final RemoteGitManagerPrivileged gitManagerPrivileged;
 
 	private final long userId;
 
+	private final Binder<AccessTokenData> binder = new Binder<>();
+	private final AccessTokenData accessTokenData = new AccessTokenData();
+
 	private Button btnClose;
 	private Button btnCreatePersonalAccessToken;
-	private VerticalLayout tokenRequestPanel;
-	private HorizontalLayout tokenDisplayPanel;
+	private VerticalLayout tokenRequestLayout;
+	private HorizontalLayout tokenDisplayLayout;
 
-	public AccessTokenDialog(RemoteGitManagerPrivileged gitManagerPrivileged,
-                             LoginService loginService) {
+	public AccessTokenDialog(RemoteGitManagerPrivileged gitManagerPrivileged, LoginService loginService) {
 		this.gitManagerPrivileged = gitManagerPrivileged;
 
-		User user = Objects.requireNonNull(loginService.getAPI()).getUser();
+		User user = loginService.getAPI().getUser();
 		this.userId = user.getUserId();
-	
-		this.setCaption(Messages.getString("AccessTokenDialog.caption"));
+
+		setCaption(Messages.getString("AccessTokenDialog.caption"));
 		initComponents();
 		initActions();
 	}
 
 	private void initActions() {
 		btnClose.addClickListener(evt -> close());
-		
-		btnCreatePersonalAccessToken.addClickListener(click -> {
 
+		btnCreatePersonalAccessToken.addClickListener(click -> {
 			try {
 				binder.writeBean(accessTokenData);
-			} catch (ValidationException e) {
+			}
+			catch (ValidationException e) {
 				Notification.show(
-						Joiner
-						.on("\n")
-						.join(e.getValidationErrors()
-								.stream()
-								.map(ValidationResult::getErrorMessage)
-								.collect(Collectors.toList())
-						)
-						, Type.ERROR_MESSAGE
+						Joiner.on("\n").join(
+								e.getValidationErrors().stream()
+										.map(ValidationResult::getErrorMessage)
+										.collect(Collectors.toList())
+						),
+						Type.ERROR_MESSAGE
 				);
 				return;
 			}
@@ -70,16 +66,16 @@ public class AccessTokenDialog extends Window {
 			try {
 				accessTokenData.setToken(
 						gitManagerPrivileged.createPersonalAccessToken(
-							userId,
-							accessTokenData.getName(),
-							accessTokenData.getExpiresAt()
+								userId,
+								accessTokenData.getName(),
+								accessTokenData.getExpiresAt()
 						)
 				);
 				binder.readBean(accessTokenData);
-				tokenRequestPanel.setVisible(false);
-				tokenDisplayPanel.setVisible(true);
-
-			} catch (IOException e) {
+				tokenRequestLayout.setVisible(false);
+				tokenDisplayLayout.setVisible(true);
+			}
+			catch (IOException e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError(Messages.getString("AccessTokenDialog.tokenCreationErrorMessage"), e);
 			}
 		});
@@ -88,16 +84,16 @@ public class AccessTokenDialog extends Window {
 	private void initComponents(){
 		setWidth("60%");
 		setModal(true);
-		
+
 		VerticalLayout content = new VerticalLayout();
 		content.setWidthFull();
-		
+
 		Label lDescription = new Label(Messages.getString("AccessTokenDialog.overallDescription"), ContentMode.HTML);
 		lDescription.addStyleName("label-with-word-wrap");
 
-		tokenRequestPanel = new VerticalLayout();
-		tokenRequestPanel.setWidthFull();
-		
+		tokenRequestLayout = new VerticalLayout();
+		tokenRequestLayout.setWidthFull();
+
 		TextField tfName = new TextField(Messages.getString("AccessTokenDialog.tokenName"));
 		tfName.setWidth("100%");
 
@@ -114,20 +110,20 @@ public class AccessTokenDialog extends Window {
 				.withValidator(date -> date.compareTo(LocalDate.now().plusMonths(3)) <= 0, Messages.getString("AccessTokenDialog.maxExpiryDate"))
 				.bind(AccessTokenData::getExpiresAt, AccessTokenData::setExpiresAt);
 
-		HorizontalLayout createButtonPanel = new HorizontalLayout();
-		createButtonPanel.setWidth("100%");
+		HorizontalLayout createButtonLayout = new HorizontalLayout();
+		createButtonLayout.setWidth("100%");
 
 		btnCreatePersonalAccessToken = new Button(Messages.getString("AccessTokenDialog.createPersonalAccessToken"));
-		createButtonPanel.addComponent(btnCreatePersonalAccessToken);
-		createButtonPanel.setComponentAlignment(btnCreatePersonalAccessToken, Alignment.MIDDLE_CENTER);
+		createButtonLayout.addComponent(btnCreatePersonalAccessToken);
+		createButtonLayout.setComponentAlignment(btnCreatePersonalAccessToken, Alignment.MIDDLE_CENTER);
 
-		tokenRequestPanel.addComponent(tfName);
-		tokenRequestPanel.addComponent(dfDate);
-		tokenRequestPanel.addComponent(createButtonPanel);
+		tokenRequestLayout.addComponent(tfName);
+		tokenRequestLayout.addComponent(dfDate);
+		tokenRequestLayout.addComponent(createButtonLayout);
 
-		tokenDisplayPanel = new HorizontalLayout();
-		tokenDisplayPanel.setWidth("100%");
-		tokenDisplayPanel.setVisible(false); // made visible when create button is clicked
+		tokenDisplayLayout = new HorizontalLayout();
+		tokenDisplayLayout.setWidth("100%");
+		tokenDisplayLayout.setVisible(false); // made visible when create button is clicked
 
 		TextField tfToken = new TextField("Personal Access Token");
 		tfToken.setWidth("100%");
@@ -141,32 +137,31 @@ public class AccessTokenDialog extends Window {
 				Notification.show(Messages.getString("Dialog.copyToClipboardSuccessful"))
 		);
 
-		tokenDisplayPanel.addComponent(tfToken);
-		tokenDisplayPanel.addComponent(jsClipboardButton);
-		tokenDisplayPanel.setComponentAlignment(tfToken, Alignment.BOTTOM_RIGHT);
-		tokenDisplayPanel.setComponentAlignment(jsClipboardButton, Alignment.BOTTOM_RIGHT);
-		tokenDisplayPanel.setExpandRatio(tfToken, 1f);
+		tokenDisplayLayout.addComponent(tfToken);
+		tokenDisplayLayout.addComponent(jsClipboardButton);
+		tokenDisplayLayout.setComponentAlignment(tfToken, Alignment.BOTTOM_RIGHT);
+		tokenDisplayLayout.setComponentAlignment(jsClipboardButton, Alignment.BOTTOM_RIGHT);
+		tokenDisplayLayout.setExpandRatio(tfToken, 1f);
 
-		HorizontalLayout dialogButtonPanel = new HorizontalLayout();
-		dialogButtonPanel.setWidth("100%");
+		HorizontalLayout dialogButtonLayout = new HorizontalLayout();
+		dialogButtonLayout.setWidth("100%");
 
 		btnClose = new Button(Messages.getString("Dialog.close"));
-		dialogButtonPanel.addComponent(btnClose);
-		dialogButtonPanel.setComponentAlignment(btnClose, Alignment.BOTTOM_RIGHT);
+		dialogButtonLayout.addComponent(btnClose);
+		dialogButtonLayout.setComponentAlignment(btnClose, Alignment.BOTTOM_RIGHT);
 
 		content.addComponent(lDescription);
 		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
-		content.addComponent(tokenRequestPanel);
+		content.addComponent(tokenRequestLayout);
 		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
-		content.addComponent(tokenDisplayPanel);
+		content.addComponent(tokenDisplayLayout);
 		content.addComponent(new Label("&nbsp;", ContentMode.HTML));
 
-		content.addComponent(dialogButtonPanel);
+		content.addComponent(dialogButtonLayout);
 
 		setContent(content);
-
 	}
-	
+
 	public void show() {
 		UI.getCurrent().addWindow(this);
 	}

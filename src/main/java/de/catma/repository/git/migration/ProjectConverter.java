@@ -232,7 +232,7 @@ public class ProjectConverter implements AutoCloseable {
 									projectRootPath.toFile(),
 									collectionId,
 									projectRootPath.resolve(GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME).resolve(collectionId)
-											.resolve("annotations"),
+											.resolve(GitAnnotationCollectionHandler.ANNNOTATIONS_DIR),
 									tagLibrary,
 									repoManager,
 									ownerUser
