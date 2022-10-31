@@ -986,7 +986,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			URI collectionTarget = new URI(annotationCollection.getSourceDocumentId());
 			Set<URI> annotationTargets = tagReferences.stream().map(TagReference::getTarget).collect(Collectors.toSet());
 
-			if (!annotationTargets.stream().allMatch(at -> at == collectionTarget)) {
+			if (!annotationTargets.stream().allMatch(annotationTarget -> annotationTarget.equals(collectionTarget))) {
 				throw new IllegalStateException("One or more annotations don't reference the same document as the collection");
 			}
 
