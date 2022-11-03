@@ -350,8 +350,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	// TODO: check, method appears to only handle creation but callers suggest updates (also see overload)
-	public void addOrUpdate(String collectionId, Collection<TagReference> tagReferences, TagLibrary tagLibrary) throws IOException {
+	public void addTagReferencesToCollection(String collectionId, Collection<TagReference> tagReferences, TagLibrary tagLibrary) throws IOException {
 		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
 				localGitRepositoryManager,
 				projectPath,
@@ -377,7 +376,7 @@ public class GitProjectHandler {
 		gitAnnotationCollectionHandler.createTagInstances(collectionId, annotationTagInstanceMap);
 	}
 
-	public void addOrUpdate(String collectionId, TagInstance tagInstance, Collection<TagReference> tagReferences, TagLibrary tagLibrary) throws IOException {
+	public void updateTagInstance(String collectionId, TagInstance tagInstance, Collection<TagReference> tagReferences, TagLibrary tagLibrary) throws IOException {
 		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
 				localGitRepositoryManager,
 				projectPath,
@@ -392,10 +391,7 @@ public class GitProjectHandler {
 				tagInstance.getPageFilename()
 		);
 
-		if (tagInstance.getPageFilename() == null) {
-			gitAnnotationCollectionHandler.createTagInstances(collectionId, Collections.singletonList(new Pair<>(annotation, tagInstance)));
-		}
-		else {
+		if (tagInstance.getPageFilename() != null) {
 			gitAnnotationCollectionHandler.updateTagInstance(collectionId, annotation);
 		}
 	}

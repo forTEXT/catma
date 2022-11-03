@@ -139,7 +139,7 @@ public interface Project {
 	 * @param responsibleUser 
 	 * @throws Exception
 	 */
-	public void update(SourceDocumentReference sourceDocument, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
+	public void updateDocumentMetadata(SourceDocumentReference sourceDocument, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
 
 	/**
 	 * @return the available Source Documents
@@ -181,15 +181,10 @@ public interface Project {
 	public AnnotationCollection getUserMarkupCollection(
 			AnnotationCollectionReference userMarkupCollectionReference) throws IOException;
 
-	/**
-	 * Add the Tag References to the given User Markup Collection or remove the 
-	 * given Tag References from the User Markup Collection.
-	 * @param userMarkupCollection
-	 * @param tagReferences
-	 */
-	public void update(
-			AnnotationCollection userMarkupCollection, 
-			List<TagReference> tagReferences);
+	void addTagReferencesToCollection(AnnotationCollection annotationCollection, List<TagReference> tagReferences);
+
+	void removeTagReferencesFromCollection(AnnotationCollection annotationCollection, List<TagReference> tagReferences);
+
 	/**
 	 * Updates the given Properties in the Tag Instance.
 	 * @param userMarkupCollection 
@@ -197,7 +192,7 @@ public interface Project {
 	 * @param property 
 	 * @throws IOException
 	 */
-	public void update(
+	public void updateTagInstanceProperties(
 			AnnotationCollection userMarkupCollection, TagInstance tagInstance, Collection<Property> properties) throws IOException;
 
 	/**
@@ -205,7 +200,7 @@ public interface Project {
 	 * @param userMarkupCollectionReference
 	 * @param contentInfoSet metadata
 	 */
-	public void update(
+	public void updateAnnotationCollectionMetadata(
 			AnnotationCollectionReference userMarkupCollectionReference, 
 			ContentInfoSet contentInfoSet) throws Exception;
 	public void delete(

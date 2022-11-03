@@ -509,8 +509,9 @@ public class GraphWorktreeProject implements IndexedProject {
 
 			// save updates to repo
 			for (TagInstance tagInstance : tagInstances) {
-				gitProjectHandler.addOrUpdate(
+				gitProjectHandler.updateTagInstance(
 						collectionId,
+						tagInstance,
 						tagReferences.stream()
 								.filter(tagRef -> tagRef.getTagInstanceId().equals(tagInstance.getUuid()))
 								.collect(Collectors.toList()),
@@ -848,7 +849,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void update(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception {
+	public void updateDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format(
@@ -971,14 +972,14 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void update(AnnotationCollection annotationCollection, List<TagReference> tagReferences) {
+	public void addTagReferencesToCollection(AnnotationCollection annotationCollection, List<TagReference> tagReferences) {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format(
-						"Project \"%s\" is in read-only mode! Cannot update collection \"%s\".",
-						projectReference,
-						annotationCollection
-				)
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot add tag references to collection \"%s\".",
+							projectReference,
+							annotationCollection
+					)
 			);
 		}
 
@@ -990,39 +991,67 @@ public class GraphWorktreeProject implements IndexedProject {
 				throw new IllegalStateException("One or more annotations don't reference the same document as the collection");
 			}
 
-			// TODO: consider splitting this function up into two separate add and remove functions to avoid the potentially
-			//       significant performance impact of this containsAll call
-			if (annotationCollection.getTagReferences().containsAll(tagReferences)) {
-				// add annotations to repo and commit
-				gitProjectHandler.addOrUpdate(annotationCollection.getUuid(), tagReferences, tagManager.getTagLibrary());
-				// save updates to index
-				graphProjectHandler.addTagReferences(rootRevisionHash, annotationCollection, tagReferences);
-				// fire annotation change event for the collection
-				propertyChangeSupport.firePropertyChange(
-						RepositoryChangeEvent.tagReferencesChanged.name(),
-						null,
-						new Pair<>(annotationCollection, tagReferences)
-				);
-			}
-			else {
-				// remove annotations from repo and commit
-				Collection<TagInstance> tagInstances = tagReferences.stream().map(TagReference::getTagInstance).collect(Collectors.toSet());
-				gitProjectHandler.removeTagInstances(annotationCollection.getUuid(), tagInstances);
-				// save updates to index
-				graphProjectHandler.removeTagReferences(rootRevisionHash, annotationCollection, tagReferences);
-				// fire annotation change event for the collection
-				Collection<String> tagInstanceIds = tagInstances.stream().map(TagInstance::getUuid).collect(Collectors.toList());
-				propertyChangeSupport.firePropertyChange(
-						RepositoryChangeEvent.tagReferencesChanged.name(), 
-						new Pair<>(annotationCollection.getUuid(), tagInstanceIds),
-						null
-				);
-			}
+			// add annotations to repo and commit
+			gitProjectHandler.addTagReferencesToCollection(annotationCollection.getUuid(), tagReferences, tagManager.getTagLibrary());
+
+			// save updates to index
+			graphProjectHandler.addTagReferences(rootRevisionHash, annotationCollection, tagReferences);
+
+			// fire annotation change event for the collection
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.tagReferencesChanged.name(),
+					null,
+					new Pair<>(annotationCollection, tagReferences)
+			);
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.exceptionOccurred.name(),
-					null, 
+					null,
+					e
+			);
+		}
+	}
+
+	@Override
+	public void removeTagReferencesFromCollection(AnnotationCollection annotationCollection, List<TagReference> tagReferences) {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot remove tag references from collection \"%s\".",
+							projectReference,
+							annotationCollection
+					)
+			);
+		}
+
+		try {
+			URI collectionTarget = new URI(annotationCollection.getSourceDocumentId());
+			Set<URI> annotationTargets = tagReferences.stream().map(TagReference::getTarget).collect(Collectors.toSet());
+
+			if (!annotationTargets.stream().allMatch(annotationTarget -> annotationTarget.equals(collectionTarget))) {
+				throw new IllegalStateException("One or more annotations don't reference the same document as the collection");
+			}
+
+			// remove annotations from repo and commit
+			Collection<TagInstance> tagInstances = tagReferences.stream().map(TagReference::getTagInstance).collect(Collectors.toSet());
+			gitProjectHandler.removeTagInstances(annotationCollection.getUuid(), tagInstances);
+
+			// save updates to index
+			graphProjectHandler.removeTagReferences(rootRevisionHash, annotationCollection, tagReferences);
+
+			// fire annotation change event for the collection
+			Collection<String> tagInstanceIds = tagInstances.stream().map(TagInstance::getUuid).collect(Collectors.toList());
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.tagReferencesChanged.name(),
+					new Pair<>(annotationCollection.getUuid(), tagInstanceIds),
+					null
+			);
+		}
+		catch (Exception e) {
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null,
 					e
 			);
 		}
@@ -1051,7 +1080,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void update(
+	public void updateTagInstanceProperties(
 			AnnotationCollection collection, 
 			TagInstance tagInstance, Collection<Property> properties) throws IOException {
 		if (isReadOnly()) {
@@ -1064,7 +1093,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			for (Property property : properties) {
 				tagInstance.addUserDefinedProperty(property);
 			}
-			gitProjectHandler.addOrUpdate(
+			gitProjectHandler.updateTagInstance(
 					collection.getUuid(), 
 					tagInstance,
 					collection.getTagReferences(tagInstance), 
@@ -1086,7 +1115,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void update(
+	public void updateAnnotationCollectionMetadata(
 			AnnotationCollectionReference collectionReference, 
 			ContentInfoSet contentInfoSet) throws Exception {
 		if (isReadOnly()) {
@@ -1220,9 +1249,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			AnnotationCollection createdAnnotationCollection = getUserMarkupCollection(annotationCollectionReference);
 			createdAnnotationCollection.addTagReferences(importAnnotationCollection.getTagReferences());
 
-			update(
-					createdAnnotationCollection, 
-					importAnnotationCollection.getTagReferences());
+			addTagReferencesToCollection(createdAnnotationCollection, importAnnotationCollection.getTagReferences());
 			
 			commitAndPushChanges(
 				String.format(

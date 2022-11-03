@@ -84,18 +84,13 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 	
 	/**
 	 * Updates the UserMarkupCollection. Persistence part is handled by {@link 
-	 * Project#update(AnnotationCollection, List)}
+	 * Project#addTagReferencesToCollection(AnnotationCollection, List)}
 	 * @param tagReferences
 	 * @param userMarkupCollection
 	 */
-	public void addTagReferences(
-			List<TagReference> tagReferences,
-			AnnotationCollection userMarkupCollection) {
-	
+	public void addTagReferences(List<TagReference> tagReferences, AnnotationCollection userMarkupCollection) {
 		userMarkupCollection.addTagReferences(tagReferences);
-		
-		project.update(userMarkupCollection, tagReferences);
-
+		project.addTagReferencesToCollection(userMarkupCollection, tagReferences);
 	}
 
 
@@ -137,7 +132,7 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 		if (removeFromRepo) {
 			for (Map.Entry<AnnotationCollection, List<TagReference>> entry : toBeDeletedByUmc.entrySet()) {
 				if (!entry.getValue().isEmpty()) {
-					project.update(entry.getKey(), entry.getValue());
+					project.removeTagReferencesFromCollection(entry.getKey(), entry.getValue());
 				}
 			}
 		}
@@ -294,7 +289,7 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 	 * @throws IOException
 	 */
 	public void updateProperty(AnnotationCollection userMarkupCollection, TagInstance tagInstance, Collection<Property> properties) throws IOException {
-		project.update(userMarkupCollection, tagInstance, properties);
+		project.updateTagInstanceProperties(userMarkupCollection, tagInstance, properties);
 	}
 
 	public void remove(String collectionId) {

@@ -925,7 +925,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 											public void savePressed(Pair<String, ContentInfoSet> result) {
 												collectionRef.setResponsibleUser(result.getFirst());
 												try {
-													project.update(collectionRef, result.getSecond());
+													project.updateAnnotationCollectionMetadata(collectionRef, result.getSecond());
 												}
 												catch (Exception e) {
 													errorHandler.showAndLogError(
@@ -966,7 +966,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 											@Override
 											public void savePressed(Pair<String, ContentInfoSet> result) {
 												try {
-													project.update(
+													project.updateDocumentMetadata(
 														documentRef,
 														documentRef.getSourceDocumentInfo().getContentInfoSet(),
 														result.getFirst()
