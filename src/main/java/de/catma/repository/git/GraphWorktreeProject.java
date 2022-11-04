@@ -988,7 +988,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			Set<URI> annotationTargets = tagReferences.stream().map(TagReference::getTarget).collect(Collectors.toSet());
 
 			if (!annotationTargets.stream().allMatch(annotationTarget -> annotationTarget.equals(collectionTarget))) {
-				throw new IllegalStateException("One or more annotations don't reference the same document as the collection");
+				throw new IllegalStateException("One or more annotations don't reference the same document as the collection!");
 			}
 
 			// add annotations to repo and commit
@@ -1030,7 +1030,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			Set<URI> annotationTargets = tagReferences.stream().map(TagReference::getTarget).collect(Collectors.toSet());
 
 			if (!annotationTargets.stream().allMatch(annotationTarget -> annotationTarget.equals(collectionTarget))) {
-				throw new IllegalStateException("One or more annotations don't reference the same document as the collection");
+				throw new IllegalStateException("One or more annotations don't reference the same document as the collection!");
 			}
 
 			// remove annotations from repo and commit
@@ -1080,62 +1080,71 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void updateTagInstanceProperties(
-			AnnotationCollection collection, 
-			TagInstance tagInstance, Collection<Property> properties) throws IOException {
+	public void updateTagInstanceProperties(AnnotationCollection annotationCollection, TagInstance tagInstance, Collection<Property> properties) {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot update %2$s", 
-						this.projectReference, collection));
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot update tag instance properties in collection \"%s\".",
+							projectReference,
+							annotationCollection
+					)
+			);
 		}
 
 		try {
 			for (Property property : properties) {
 				tagInstance.addUserDefinedProperty(property);
 			}
+
 			gitProjectHandler.updateTagInstance(
-					collection.getUuid(), 
+					annotationCollection.getUuid(),
 					tagInstance,
-					collection.getTagReferences(tagInstance), 
-					tagManager.getTagLibrary());
+					annotationCollection.getTagReferences(tagInstance),
+					tagManager.getTagLibrary()
+			);
+
 			graphProjectHandler.updateProperties(
-					GraphWorktreeProject.this.rootRevisionHash, 
-					collection, tagInstance, properties);
+					rootRevisionHash,
+					annotationCollection,
+					tagInstance,
+					properties
+			);
+
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.propertyValueChanged.name(),
-					tagInstance, properties);
+					tagInstance,
+					properties
+			);
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.exceptionOccurred.name(),
 					null, 
-					e);				
+					e
+			);
 		}
-
 	}
 
 	@Override
-	public void updateAnnotationCollectionMetadata(
-			AnnotationCollectionReference collectionReference, 
-			ContentInfoSet contentInfoSet) throws Exception {
+	public void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef, ContentInfoSet contentInfoSet) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot update %2$s", 
-						this.projectReference, collectionReference));
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot update metadata for collection \"%s\".",
+							projectReference,
+							annotationCollectionRef
+					)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 
-		this.rootRevisionHash = 
-			gitProjectHandler.updateCollection(collectionReference);
-		
-		graphProjectHandler.updateCollection(
-			this.rootRevisionHash, collectionReference, oldRootRevisionHash);		
-		
-		SourceDocumentReference documentRef = getSourceDocumentReference(collectionReference.getSourceDocumentId());
-		eventBus.post(
-			new CollectionChangeEvent(
-				collectionReference, documentRef, ChangeType.UPDATED));
+		rootRevisionHash = gitProjectHandler.updateCollection(annotationCollectionRef);
+
+		graphProjectHandler.updateCollection(rootRevisionHash, annotationCollectionRef, oldRootRevisionHash);
+
+		SourceDocumentReference documentReference = getSourceDocumentReference(annotationCollectionRef.getSourceDocumentId());
+		eventBus.post(new CollectionChangeEvent(annotationCollectionRef, documentReference, ChangeType.UPDATED));
 	}
 
 	@Override
@@ -1192,80 +1201,88 @@ public class GraphWorktreeProject implements IndexedProject {
 		
 		return new Pair<>(annotationCollection, tagsetDefinitionImportStatusList);
 	}
-	
+
 	public void importCollection(
-		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList, 
-		AnnotationCollection importAnnotationCollection) throws IOException {
+			List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses,
+			AnnotationCollection annotationCollection
+	) throws IOException {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-				String.format("%1$s is in readonly mode! Cannot import %2$s", 
-						this.projectReference, importAnnotationCollection));
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot import collection \"%s\".",
+							projectReference,
+							annotationCollection
+					)
+			);
 		}
 
-		// if updates to existing Tagsets are needed, update only the Tags
-		// that are actually referenced in the Collection
-		Set<String> tagDefinitionIds = 
-			importAnnotationCollection.getTagReferences().stream().map(
-					tagRef -> tagRef.getTagDefinitionId()).collect(Collectors.toSet());
-		
-	
-		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatusList) {
+		// if updates to existing tagsets are needed, only update the tags that are actually referenced in the collection
+		Set<String> tagDefinitionIds = annotationCollection.getTagReferences().stream()
+				.map(TagReference::getTagDefinitionId)
+				.collect(Collectors.toSet());
+
+		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatuses) {
 			tagsetDefinitionImportStatus.setUpdateFilter(tagDefinitionIds);
 		}
-		
-		importTagsets(tagsetDefinitionImportStatusList);
-		
-		importAnnotationCollection.setTagLibrary(tagManager.getTagLibrary());
-		
-		try {
-			SourceDocumentReference sourceDocumentRef = 
-					getSourceDocumentReference(importAnnotationCollection.getSourceDocumentId());
-			
-			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.createAnnotationCollection(
-					importAnnotationCollection.getId(), 
-					importAnnotationCollection.getName(), 
-					importAnnotationCollection.getContentInfoSet().getDescription(), //description
-					importAnnotationCollection.getSourceDocumentId(), 
-					null, // not originated from a fork
-					false); // no push, because we push as part of the commit down the line after adding the Annotations
-			
-			graphProjectHandler.addCollection(
-				rootRevisionHash, 
-				importAnnotationCollection.getId(), 
-				importAnnotationCollection.getName(),
-				sourceDocumentRef,
-				tagManager.getTagLibrary(),
-				oldRootRevisionHash);
-		
-			AnnotationCollectionReference annotationCollectionReference =
-					sourceDocumentRef.getUserMarkupCollectionReference(importAnnotationCollection.getId());
-			eventBus.post(
-				new CollectionChangeEvent(
-					annotationCollectionReference, 
-					sourceDocumentRef, 
-					ChangeType.CREATED));		
-			
-			AnnotationCollection createdAnnotationCollection = getUserMarkupCollection(annotationCollectionReference);
-			createdAnnotationCollection.addTagReferences(importAnnotationCollection.getTagReferences());
 
-			addTagReferencesToCollection(createdAnnotationCollection, importAnnotationCollection.getTagReferences());
-			
+		importTagsets(tagsetDefinitionImportStatuses);
+
+		annotationCollection.setTagLibrary(tagManager.getTagLibrary());
+
+		try {
+			SourceDocumentReference sourceDocumentRef = getSourceDocumentReference(annotationCollection.getSourceDocumentId());
+
+			String oldRootRevisionHash = rootRevisionHash;
+
+			rootRevisionHash = gitProjectHandler.createAnnotationCollection(
+					annotationCollection.getId(),
+					annotationCollection.getName(),
+					annotationCollection.getContentInfoSet().getDescription(),
+					annotationCollection.getSourceDocumentId(),
+					null, // not originated from a fork
+					false // no push, because we push as part of the commit down the line after adding the annotations
+			);
+
+			graphProjectHandler.addCollection(
+					rootRevisionHash,
+					annotationCollection.getId(),
+					annotationCollection.getName(),
+					sourceDocumentRef,
+					tagManager.getTagLibrary(),
+					oldRootRevisionHash
+			);
+
+			AnnotationCollectionReference annotationCollectionRef = sourceDocumentRef.getUserMarkupCollectionReference(annotationCollection.getId());
+
+			eventBus.post(new CollectionChangeEvent(
+					annotationCollectionRef,
+					sourceDocumentRef, 
+					ChangeType.CREATED
+			));
+
+			AnnotationCollection createdAnnotationCollection = getUserMarkupCollection(annotationCollectionRef);
+			createdAnnotationCollection.addTagReferences(annotationCollection.getTagReferences());
+			addTagReferencesToCollection(createdAnnotationCollection, annotationCollection.getTagReferences());
+
 			commitAndPushChanges(
-				String.format(
-					"Imported Annotations from Collection %1$s with ID %2$s", 
-					createdAnnotationCollection.getName(), 
-					createdAnnotationCollection.getId()));
+					String.format(
+							"Imported annotations from collection \"%s\" with ID: %s",
+							createdAnnotationCollection.getName(),
+							createdAnnotationCollection.getId()
+					)
+			);
 		}
 		catch (Exception e) {
 			throw new IOException(
-				String.format(
-					"Import of Collection %1$s failed! The import has been aborted.",
-					importAnnotationCollection.getName()), 
-				e);		
+					String.format(
+							"Failed to import collection \"%s\"! The import has been aborted.",
+							annotationCollection.getName()
+					),
+					e
+			);
 		}
 	}
-	
+
 	@Override
 	public List<TagsetDefinitionImportStatus> loadTagLibrary(InputStream inputStream) throws IOException {
 		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory(this.rootRevisionHash);

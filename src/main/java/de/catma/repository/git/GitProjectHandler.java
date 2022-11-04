@@ -376,7 +376,12 @@ public class GitProjectHandler {
 		gitAnnotationCollectionHandler.createTagInstances(collectionId, annotationTagInstanceMap);
 	}
 
-	public void updateTagInstance(String collectionId, TagInstance tagInstance, Collection<TagReference> tagReferences, TagLibrary tagLibrary) throws IOException {
+	public void updateTagInstance(
+			String collectionId,
+			TagInstance tagInstance,
+			Collection<TagReference> tagReferences,
+			TagLibrary tagLibrary
+	) throws IOException {
 		GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
 				localGitRepositoryManager,
 				projectPath,
@@ -391,9 +396,17 @@ public class GitProjectHandler {
 				tagInstance.getPageFilename()
 		);
 
-		if (tagInstance.getPageFilename() != null) {
-			gitAnnotationCollectionHandler.updateTagInstance(collectionId, annotation);
+		if (tagInstance.getPageFilename() == null) {
+			throw new IOException(
+					String.format(
+							"Tag instance with ID %s for collection with ID %s has a null page filename!",
+							tagInstance.getUuid(),
+							collectionId
+					)
+			);
 		}
+
+		gitAnnotationCollectionHandler.updateTagInstance(collectionId, annotation);
 	}
 
 	public void removeTagInstances(String collectionId, Collection<TagInstance> deletedTagInstances) throws IOException {

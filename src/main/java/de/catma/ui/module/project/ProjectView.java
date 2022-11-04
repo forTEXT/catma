@@ -943,7 +943,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				);
 			}
 			catch (IOException e) {
-				errorHandler.showAndLogError("Error editing collection", e);
+				errorHandler.showAndLogError("Error editing collection!", e);
 			}
 		}
 		else { // document

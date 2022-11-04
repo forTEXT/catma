@@ -134,12 +134,14 @@ public interface Project {
 	public void insert(SourceDocument sourceDocument) throws IOException;
 
 	/**
-	 * @param sourceDocument document to be updated
-	 * @param contentInfoSet new meta data
-	 * @param responsibleUser 
-	 * @throws Exception
+	 * Updates the metadata for a document.
+	 *
+	 * @param sourceDocumentRef a {@link SourceDocumentReference} specifying the document whose metadata should be updated
+	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
+	 * @param responsibleUser the username of the user responsible for the document
+	 * @throws Exception if an error occurs when updating the document metadata
 	 */
-	public void updateDocumentMetadata(SourceDocumentReference sourceDocument, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
+	void updateDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
 
 	/**
 	 * @return the available Source Documents
@@ -181,28 +183,39 @@ public interface Project {
 	public AnnotationCollection getUserMarkupCollection(
 			AnnotationCollectionReference userMarkupCollectionReference) throws IOException;
 
+	/**
+	 * Adds tag references to an annotation collection.
+	 *
+	 * @param annotationCollection the {@link AnnotationCollection} to add the tag references to
+	 * @param tagReferences the {@link TagReference}s to add
+	 */
 	void addTagReferencesToCollection(AnnotationCollection annotationCollection, List<TagReference> tagReferences);
 
+	/**
+	 * Removes tag references from an annotation collection.
+	 *
+	 * @param annotationCollection the {@link AnnotationCollection} to remove the tag references from
+	 * @param tagReferences the {@link TagReference}s to remove
+	 */
 	void removeTagReferencesFromCollection(AnnotationCollection annotationCollection, List<TagReference> tagReferences);
 
 	/**
-	 * Updates the given Properties in the Tag Instance.
-	 * @param userMarkupCollection 
-	 * @param tagInstance
-	 * @param property 
-	 * @throws IOException
+	 * Updates the properties for a tag instance.
+	 *
+	 * @param annotationCollection the {@link AnnotationCollection} corresponding to the tag instance
+	 * @param tagInstance the {@link TagInstance} to update
+	 * @param properties the {@link Property}s to update
 	 */
-	public void updateTagInstanceProperties(
-			AnnotationCollection userMarkupCollection, TagInstance tagInstance, Collection<Property> properties) throws IOException;
+	void updateTagInstanceProperties(AnnotationCollection annotationCollection, TagInstance tagInstance, Collection<Property> properties);
 
 	/**
-	 * Updates the User Markup Collection's metadata.
-	 * @param userMarkupCollectionReference
-	 * @param contentInfoSet metadata
+	 * Updates the metadata for an annotation collection.
+	 *
+	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} specifying the collection whose metadata should be updated
+	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
 	 */
-	public void updateAnnotationCollectionMetadata(
-			AnnotationCollectionReference userMarkupCollectionReference, 
-			ContentInfoSet contentInfoSet) throws Exception;
+	void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef, ContentInfoSet contentInfoSet) throws Exception;
+
 	public void delete(
 			AnnotationCollectionReference userMarkupCollectionReference) throws Exception;
 
@@ -256,8 +269,7 @@ public interface Project {
 	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadAnnotationCollection(
 			InputStream inputStream, SourceDocumentReference documentRef) throws IOException;
 
-	public void importCollection(
-		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList, AnnotationCollection annotationCollection) throws IOException;
+	void importCollection(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses, AnnotationCollection annotationCollection) throws IOException;
 
 	void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
 

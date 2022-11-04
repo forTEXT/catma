@@ -127,9 +127,18 @@ public class GitAnnotationCollectionHandler {
 		JsonLdWebAnnotation currentAnnotation = currentAnnotations.stream()
 				.filter(anno -> anno.getId().equals(updatedAnnotation.getId())).findFirst().orElse(null);
 
-		if (currentAnnotation != null) {
-			currentAnnotation.setBody(updatedAnnotation.getBody());
+		if (currentAnnotation == null) {
+			throw new IOException(
+					String.format(
+							"Couldn't find annotation with ID %s in page file \"%s\" of collection with ID %s!",
+							updatedAnnotation.getId(),
+							updatedAnnotation.getPageFilename(),
+							collectionId
+					)
+			);
 		}
+
+		currentAnnotation.setBody(updatedAnnotation.getBody());
 
 		serializedPageContent = new SerializationHelper<JsonLdWebAnnotation>().serialize(currentAnnotations);
 
@@ -393,7 +402,7 @@ public class GitAnnotationCollectionHandler {
 
 			Set<TagInstance> orphanedTagInstances = new HashSet<>();
 			// this is used later when checking for orphaned properties
-			ArrayListMultimap<TagInstance, TagReference> tagInstanceTagReferenceMultimap = ArrayListMultimap.create();
+			ArrayListMultimap<TagInstance, TagReference> tagReferencesByTagInstance = ArrayListMultimap.create();
 
 			Iterator<TagReference> tagReferenceIterator = tagReferences.iterator();
 			while (tagReferenceIterator.hasNext()) {
@@ -418,7 +427,7 @@ public class GitAnnotationCollectionHandler {
 				}
 				else {
 					// keep for later when checking for orphaned properties
-					tagInstanceTagReferenceMultimap.put(tagInstance, tagReference);
+					tagReferencesByTagInstance.put(tagInstance, tagReference);
 				}
 			}
 
@@ -427,7 +436,7 @@ public class GitAnnotationCollectionHandler {
 			}
 
 			// handle orphaned properties
-			for (TagInstance tagInstance : tagInstanceTagReferenceMultimap.keySet()) {
+			for (TagInstance tagInstance : tagReferencesByTagInstance.keySet()) {
 				TagsetDefinition tagsetDefinition = tagLibrary.getTagsetDefinition(tagInstance.getTagsetId());
 				Collection<Property> userDefinedProperties = tagInstance.getUserDefinedProperties();
 
@@ -439,7 +448,7 @@ public class GitAnnotationCollectionHandler {
 						tagInstance.removeUserDefinedProperty(property.getPropertyDefinitionId());
 						// persist the change
 						JsonLdWebAnnotation annotation = new JsonLdWebAnnotation(
-								tagInstanceTagReferenceMultimap.get(tagInstance),
+								tagReferencesByTagInstance.get(tagInstance),
 								tagLibrary,
 								tagInstance.getPageFilename()
 						);
@@ -460,6 +469,8 @@ public class GitAnnotationCollectionHandler {
 		);
 	}
 
+	// TODO: consider performing some kind of page file "compression"
+	//       (fill gaps by shifting annotations and utilise max. page file size as far as possible)
 	public void removeTagInstances(String collectionId, Collection<TagInstance> deletedTagInstances) throws IOException {
 		String collectionSubdir = String.format(
 				"%s/%s",
@@ -501,8 +512,6 @@ public class GitAnnotationCollectionHandler {
 				));
 			}
 		}
-		// TODO: consider performing some kind of page file "compression"
-		//       (fill gaps by shifting annotations and utilise max. page file size as far as possible)
 	}
 
 	public String removeCollection(AnnotationCollectionReference collection) throws IOException {

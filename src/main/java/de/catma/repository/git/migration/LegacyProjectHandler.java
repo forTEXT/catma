@@ -224,12 +224,12 @@ public class LegacyProjectHandler {
 			TagLibrary tagLibrary
 	) throws Exception {
 		ArrayList<TagReference> legacyTagReferences = loadLegacyTagReferences(projectId, markupCollectionId, annotationDirectory);
-		Multimap<TagInstance, TagReference> legacyTagInstanceTagReferenceMultimap = Multimaps.index(legacyTagReferences, TagReference::getTagInstance);
+		Multimap<TagInstance, TagReference> legacyTagReferencesByTagInstance = Multimaps.index(legacyTagReferences, TagReference::getTagInstance);
 
 		List<Pair<JsonLdWebAnnotation, TagInstance>> annotationTagInstanceMap =	Lists.newArrayList();
 
-		for (TagInstance tagInstance : legacyTagInstanceTagReferenceMultimap.keySet()) {
-			Collection<TagReference> tagReferences = legacyTagInstanceTagReferenceMultimap.get(tagInstance);
+		for (TagInstance tagInstance : legacyTagReferencesByTagInstance.keySet()) {
+			Collection<TagReference> tagReferences = legacyTagReferencesByTagInstance.get(tagInstance);
 			JsonLdWebAnnotation annotation = new JsonLdWebAnnotation(
 					tagReferences,
 					tagLibrary,

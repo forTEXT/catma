@@ -76,23 +76,14 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 		return collectionById.values().iterator();
 	}
 
-	public void addTagReferences(
-			List<TagReference> tagReferences,
-			String collectionId) {
+	public void addTagReferences(List<TagReference> tagReferences, String collectionId) {
 		addTagReferences(tagReferences, collectionById.get(collectionId));
 	}
-	
-	/**
-	 * Updates the UserMarkupCollection. Persistence part is handled by {@link 
-	 * Project#addTagReferencesToCollection(AnnotationCollection, List)}
-	 * @param tagReferences
-	 * @param userMarkupCollection
-	 */
-	public void addTagReferences(List<TagReference> tagReferences, AnnotationCollection userMarkupCollection) {
-		userMarkupCollection.addTagReferences(tagReferences);
-		project.addTagReferencesToCollection(userMarkupCollection, tagReferences);
-	}
 
+	public void addTagReferences(List<TagReference> tagReferences, AnnotationCollection annotationCollection) {
+		annotationCollection.addTagReferences(tagReferences);
+		project.addTagReferencesToCollection(annotationCollection, tagReferences);
+	}
 
 	/**
 	 * @return non modifiable list of the contained UserMarkupCollections
@@ -102,50 +93,53 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 	}
 
 	/**
-	 * Removes the given {@link TagInstance}s from the {@link AnnotationCollection}s
-	 * that contains them. If there is no such collection in this manager, this is 
-	 * noop.
-	 * @param instanceID the TagInstance to be removed
+	 * Removes the given {@link TagInstance}s from the {@link AnnotationCollection} that contains them.
+	 * <p>
+	 * This is a no-op if this manager does not contain the collection.
+	 *
+	 * @param tagInstanceIds IDs of the tag instances to be removed
+	 * @param removeFromRepo whether the tag instances should be removed from persistent storage as well
 	 */
-	public void removeTagInstance(Collection<String> instanceIDs, boolean removeFromRepo) {
-		Map<AnnotationCollection, List<TagReference>> toBeDeletedByUmc = 
-				new HashMap<AnnotationCollection, List<TagReference>>();
-		
-		for (String instanceID : instanceIDs) {
-			AnnotationCollection userMarkupCollection = 
-					getUserMarkupCollectionForTagInstance(instanceID); 
-			// the instance may be deleted alred but can still be in a stale Analyzer-Window
-			// so we silently assume that the instance has been deleted already if the
-			// umc can not be found
-			if (userMarkupCollection != null) {
-				List<TagReference> toBeDeletedRefs = toBeDeletedByUmc.get(userMarkupCollection);
-				if (toBeDeletedRefs == null) {
-					toBeDeletedRefs = new ArrayList<TagReference>();
-					toBeDeletedByUmc.put(userMarkupCollection, toBeDeletedRefs);
-				}
-				List<TagReference> tagReferences = 
-						userMarkupCollection.getTagReferences(instanceID);
-				userMarkupCollection.removeTagReferences(tagReferences);
-				toBeDeletedRefs.addAll(tagReferences);
+	public void removeTagInstance(Collection<String> tagInstanceIds, boolean removeFromRepo) {
+		Map<AnnotationCollection, List<TagReference>> tagReferencesToBeDeletedByAnnotationCollection = new HashMap<>();
+
+		for (String tagInstanceId : tagInstanceIds) {
+			AnnotationCollection annotationCollection = getUserMarkupCollectionForTagInstance(tagInstanceId);
+
+			// the tag instance may be deleted already but can still be present in a stale 'Analyze' window/tab
+			// we silently assume that it has been deleted already if the corresponding collection cannot be found
+			if (annotationCollection == null) {
+				continue;
 			}
+
+			List<TagReference> tagReferencesForTagInstance = annotationCollection.getTagReferences(tagInstanceId);
+
+			if (!tagReferencesToBeDeletedByAnnotationCollection.containsKey(annotationCollection)) {
+				tagReferencesToBeDeletedByAnnotationCollection.put(annotationCollection, tagReferencesForTagInstance);
+			}
+			else {
+				tagReferencesToBeDeletedByAnnotationCollection.get(annotationCollection).addAll(tagReferencesForTagInstance);
+			}
+
+			annotationCollection.removeTagReferences(tagReferencesForTagInstance);
 		}
+
 		if (removeFromRepo) {
-			for (Map.Entry<AnnotationCollection, List<TagReference>> entry : toBeDeletedByUmc.entrySet()) {
-				if (!entry.getValue().isEmpty()) {
-					project.removeTagReferencesFromCollection(entry.getKey(), entry.getValue());
-				}
+			for (Map.Entry<AnnotationCollection, List<TagReference>> entry : tagReferencesToBeDeletedByAnnotationCollection.entrySet()) {
+				project.removeTagReferencesFromCollection(entry.getKey(), entry.getValue());
 			}
 		}
 	}
-	
+
 	/**
-	 * Removes the given {@link TagInstance} from the {@link AnnotationCollection}
-	 * that contains it. If there is no such collection in this manager, this is 
-	 * noop.
-	 * @param instanceID the TagInstance to be removed
+	 * Removes the given {@link TagInstance} from the {@link AnnotationCollection} that contains it.
+	 * <p>
+	 * This is a no-op if this manager does not contain the collection.
+	 *
+	 * @param tagInstanceId the ID of the tag instance to be removed
 	 */
-	public void removeTagInstance(String instanceID) {
-		removeTagInstance(Collections.singletonList(instanceID), true);
+	public void removeTagInstance(String tagInstanceId) {
+		removeTagInstance(Collections.singletonList(tagInstanceId), true);
 	}
 
 	/**
@@ -280,16 +274,8 @@ public class AnnotationCollectionManager implements Iterable<AnnotationCollectio
 		return collectionById.get(userMarkupCollectionId);
 	}
 
-	/**
-	 * The persistent part of this operation is handled by {@link
-	 * Project#update(TagInstance, Collection)}
-	 * @param userMarkupCollection 
-	 * @param tagInstance
-	 * @param properties
-	 * @throws IOException
-	 */
-	public void updateProperty(AnnotationCollection userMarkupCollection, TagInstance tagInstance, Collection<Property> properties) throws IOException {
-		project.updateTagInstanceProperties(userMarkupCollection, tagInstance, properties);
+	public void updateProperty(AnnotationCollection annotationCollection, TagInstance tagInstance, Collection<Property> properties) throws IOException {
+		project.updateTagInstanceProperties(annotationCollection, tagInstance, properties);
 	}
 
 	public void remove(String collectionId) {
