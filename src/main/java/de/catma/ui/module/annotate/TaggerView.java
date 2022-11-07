@@ -289,7 +289,7 @@ public class TaggerView extends HorizontalLayout
 							annotationPanel.setData(
 									sdRef,
 									tagsets, 
-									new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
+									new ArrayList<>(userMarkupCollectionManager.getAnnotationCollections()));
 							if (taggerContextMenu != null) {
 								taggerContextMenu.setTagsets(tagsets);
 							}
@@ -340,7 +340,7 @@ public class TaggerView extends HorizontalLayout
 					for (TagReference tr : tagReferences) {
 						if (isRelevantTagReference(
 								tr, 
-								userMarkupCollectionManager.getUserMarkupCollections())) {
+								userMarkupCollectionManager.getAnnotationCollections())) {
 							relevantTagReferences.add(tr);
 						}
 					}
@@ -365,7 +365,7 @@ public class TaggerView extends HorizontalLayout
 					Collection<String> annotationIds = changeValue.getSecond(); 
 
 					if (userMarkupCollectionManager.contains(collectionId)) {
-						userMarkupCollectionManager.removeTagInstance(annotationIds, false);
+						userMarkupCollectionManager.removeTagInstances(annotationIds, false);
 					}
 					
 					tagger.removeTagInstances(annotationIds);
@@ -404,7 +404,7 @@ public class TaggerView extends HorizontalLayout
 						(Pair<TagsetDefinition, TagDefinition>) oldValue;
 					
 					for (AnnotationCollectionReference ref : 
-						userMarkupCollectionManager.getCollections(deleted.getSecond())) {
+						userMarkupCollectionManager.getCollectionReferencesForTagDefinition(deleted.getSecond())) {
 					
 						setAnnotationCollectionSelected(ref, false);
 						setAnnotationCollectionSelected(ref, true);
@@ -415,7 +415,7 @@ public class TaggerView extends HorizontalLayout
 					TagDefinition tag = (TagDefinition) newValue;
 					
 					for (AnnotationCollection collection : 
-						userMarkupCollectionManager.getUserMarkupCollections()) {
+						userMarkupCollectionManager.getAnnotationCollections()) {
 						List<TagReference> relevantTagReferences = 
 								collection.getTagReferences(tag);
 						tagger.setVisible(relevantTagReferences, false);
@@ -451,7 +451,7 @@ public class TaggerView extends HorizontalLayout
 			SourceDocumentReference docRef = getSourceDocumentReference();
 			corpus.addSourceDocument(docRef);
 			
-			for (AnnotationCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
+			for (AnnotationCollection umc : userMarkupCollectionManager.getAnnotationCollections()) {
 				AnnotationCollectionReference userMarkupCollRef =
 					docRef.getUserMarkupCollectionReference(umc.getId());
 				if (userMarkupCollRef != null) {
@@ -558,7 +558,7 @@ public class TaggerView extends HorizontalLayout
 						resourcePanel.getSelectedAnnotationCollectionReferences();
 				
 				for (AnnotationCollection collection : 
-						userMarkupCollectionManager.getUserMarkupCollections()) {
+						userMarkupCollectionManager.getAnnotationCollections()) {
 					userMarkupCollectionManager.remove(collection.getId());
 					annotationPanel.removeCollection(collection.getId());
 					tagger.setVisible(collection.getTagReferences(), false);						
@@ -581,7 +581,7 @@ public class TaggerView extends HorizontalLayout
 				if ((selectedEditableCollection != null) 
 						&& (userMarkupCollectionManager.contains(selectedEditableCollection.getId()))) {
 					annotationPanel.setSelectedEditableCollection(
-						userMarkupCollectionManager.getUserMarkupCollection(
+						userMarkupCollectionManager.getAnnotationCollection(
 								selectedEditableCollection.getId()));
 				}
 				
@@ -607,7 +607,7 @@ public class TaggerView extends HorizontalLayout
 					if (taggerContextMenu != null) {
 						taggerContextMenu.setTagsets(tagsets);
 					}
-					for (AnnotationCollection collection : userMarkupCollectionManager.getUserMarkupCollections()) {
+					for (AnnotationCollection collection : userMarkupCollectionManager.getAnnotationCollections()) {
 						tagger.setVisible(collection.getTagReferences(), false);
 						List<TagReference> visibleRefs = 
 								annotationPanel.getVisibleTagReferences(collection.getTagReferences());
@@ -1055,7 +1055,7 @@ public class TaggerView extends HorizontalLayout
 		if (pager.hasPages()) {
 			try {
 				annotationPanel.showAnnotationDetails(
-						userMarkupCollectionManager.getAnnotations(
+						userMarkupCollectionManager.getAnnotationsForTagInstances(
 								pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID)));
 			} catch (IOException e) {
 				((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
@@ -1067,7 +1067,7 @@ public class TaggerView extends HorizontalLayout
 	public void tagInstanceSelected(Set<String> tagInstanceIDs) {
 		try {
 			annotationPanel.showAnnotationDetails(
-				userMarkupCollectionManager.getAnnotations(tagInstanceIDs));
+				userMarkupCollectionManager.getAnnotationsForTagInstances(tagInstanceIDs));
 		} catch (IOException e) {
 			((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
 		}
@@ -1116,7 +1116,7 @@ public class TaggerView extends HorizontalLayout
 
 	@Override
 	public Annotation getTagInstanceInfo(String tagInstanceId) {
-		return userMarkupCollectionManager.getAnnotation(tagInstanceId);
+		return userMarkupCollectionManager.getAnnotationForTagInstance(tagInstanceId);
 	}
 	
 	@Override

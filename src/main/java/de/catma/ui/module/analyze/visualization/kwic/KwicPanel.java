@@ -272,7 +272,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 				collectionManager.add(project.getUserMarkupCollection(ref));
 			}
 			
-			collectionManager.removeTagInstance(tagInstanceIdsToBeRemoved, true);
+			collectionManager.removeTagInstances(tagInstanceIdsToBeRemoved, true);
 			kwicDataProvider.getItems().removeAll(rowsToBeRemoved);
 			kwicDataProvider.refreshAll();
 		}

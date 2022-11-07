@@ -388,12 +388,12 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 							@Override
 							public void savePressed(List<Property> result) {
 								try {
-									collectionManager.updateProperty(
+									collectionManager.updateTagInstanceProperties(
 										annotation.getUserMarkupCollection(), 
 										annotation.getTagInstance(), result);
 									
 									
-								} catch (IOException e) {
+								} catch (Exception e) {
 									((ErrorHandler)UI.getCurrent()).showAndLogError("Error updating Annotation Properties", e);
 								}
 							}
