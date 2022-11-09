@@ -110,7 +110,7 @@ public class CorpusImporter {
 							
 							SourceDocumentReference documentRef = project.getSourceDocumentReference(documentId);
 							Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
-									project.importAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), documentRef);
+									project.prepareAnnotationCollectionForImport(new ByteArrayInputStream(buffer.toByteArray()), documentRef);
 							
 							List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
 							final AnnotationCollection annotationCollection = loadResult.getFirst();

@@ -1155,7 +1155,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				annotationCollectionRef, documentRef, ChangeType.DELETED));
 	}
 	
-	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> importAnnotationCollection(
+	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> prepareAnnotationCollectionForImport(
 			InputStream inputStream, SourceDocumentReference sourceDocumentRef) throws IOException {
 		TagManager tagManager = new TagManager(new TagLibrary());
 		
@@ -1271,7 +1271,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public List<TagsetDefinitionImportStatus> importTagLibrary(InputStream inputStream) throws IOException {
+	public List<TagsetDefinitionImportStatus> prepareTagLibraryForImport(InputStream inputStream) throws IOException {
 		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory(this.rootRevisionHash);
 		factory.setTagManager(new TagManager(new TagLibrary()));
 		TagLibrarySerializationHandler tagLibrarySerializationHandler = 

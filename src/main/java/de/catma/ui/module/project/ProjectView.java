@@ -729,7 +729,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						}
 						
 						Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
-								project.importAnnotationCollection(is, document);
+								project.prepareAnnotationCollectionForImport(is, document);
 						
 						List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
 						final AnnotationCollection annotationCollection = loadResult.getFirst();
@@ -801,7 +801,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					}
 					
 					List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = 
-							project.importTagLibrary(is);
+							project.prepareTagLibraryForImport(is);
 					
 					TagsetImportDialog tagsetImportDialog = 
 						new TagsetImportDialog(
