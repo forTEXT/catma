@@ -91,14 +91,7 @@ public interface Project {
 		 * {@link AnnotationCollection} and a {@link Collection} of the old tag instance UUID strings</li>
 		 * </ul>
 		 */
-		tagReferencesChanged,
-		/**
-		 * <p> a notification to the repo holder.
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = the message of type String</li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = always <code>null</code></li>
-		 * </p>
-		 */
-		notification,
+		tagReferencesChanged
 	}
 
 	void open(OpenProjectListener openProjectListener);
@@ -261,19 +254,11 @@ public interface Project {
 
 	boolean hasUncommittedChanges() throws Exception;
 
-	boolean hasUntrackedChanges() throws IOException;
-
-	boolean hasChangesToCommitOrPush() throws Exception;
-
 	void commitAndPushChanges(String commitMessage) throws Exception;
 
 	void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;
 
-	void printStatus();
-
 	boolean hasPermission(RBACRole role, RBACPermission permission);
-
-	boolean isAuthorizedOnProject(RBACPermission permission);
 
 	void removeSubject(RBACSubject subject) throws IOException;
 
@@ -298,8 +283,6 @@ public interface Project {
 	) throws IOException;
 
 	void addSourceDocument(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
-
-	List<CommitInfo> getUnsynchronizedCommits() throws Exception;
 
 	void addComment(Comment comment) throws IOException;
 

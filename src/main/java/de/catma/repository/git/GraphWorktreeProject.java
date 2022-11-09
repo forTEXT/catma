@@ -273,19 +273,6 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 	}
 
-	@Override
-	public void printStatus() {
-		try {
-			Status status = gitProjectHandler.getStatus();
-			StringBuilder builder = new StringBuilder();
-			StatusPrinter.print(projectReference.toString(), status, builder);
-			logger.info(builder.toString());
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	private void initTagManagerListeners() {
 		PropertyChangeListener tagsetDefinitionChangedListener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
@@ -1418,22 +1405,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	public boolean hasUncommittedChanges() throws Exception {
 		return gitProjectHandler.hasUncommittedChanges();
 	}
-	
-	@Override
-	public List<CommitInfo> getUnsynchronizedCommits() throws Exception {
-		return gitProjectHandler.getUnsynchronizedChanges();
-	}
-	
-	@Override
-	public boolean hasUntrackedChanges() throws IOException {
-		return gitProjectHandler.hasUntrackedChanges();
-	}
-	
-	public boolean hasChangesToCommitOrPush() throws Exception {
-		return hasUncommittedChanges() 
-				|| hasUntrackedChanges() || 
-				!getUnsynchronizedCommits().isEmpty();
-	}
 
 	@Override
 	public void commitAndPushChanges(String commitMessage) throws Exception {
@@ -1459,7 +1430,6 @@ public class GraphWorktreeProject implements IndexedProject {
 								this.rootRevisionHash));
 			}
 			this.graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
-//		printStatus();
 		}
 	}
 
@@ -1576,11 +1546,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public boolean hasPermission(RBACRole role, RBACPermission permission) {
 		return gitProjectHandler.hasPermission(role, permission);
-	}
-
-	@Override
-	public boolean isAuthorizedOnProject(RBACPermission permission) {
-		return gitProjectHandler.isAuthorizedOnProject(permission);
 	}
 
 	@Override
