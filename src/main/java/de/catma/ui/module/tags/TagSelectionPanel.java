@@ -169,7 +169,7 @@ public class TagSelectionPanel extends VerticalLayout {
     							IDGenerator idGenerator = new IDGenerator();
     							TagsetDefinition tagset = new TagsetDefinition(
     									idGenerator.generateTagsetId(), result);
-    							tagset.setResponsibleUser(project.getUser().getIdentifier());
+    							tagset.setResponsibleUser(project.getCurrentUser().getIdentifier());
     							project.getTagManager().addTagsetDefinition(
     								tagset);
     						}
@@ -201,7 +201,7 @@ public class TagSelectionPanel extends VerticalLayout {
 
 		boolean beyondUsersResponsibility =
 				editableTagsets.stream()
-				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 				.findAny()
 				.isPresent();
 		
@@ -241,7 +241,7 @@ public class TagSelectionPanel extends VerticalLayout {
 					parentTags.stream()
 					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
 					.distinct()
-					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 					.findAny()
 					.isPresent();
 				

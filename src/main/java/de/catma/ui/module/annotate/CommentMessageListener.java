@@ -62,7 +62,7 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 			final SourceDocumentReference document = documentSupplier.get();
 			if ((document != null) 
 					&& document.getUuid().equals(documentId)) {
-				User user = project.getUser();
+				User user = project.getCurrentUser();
 				Long receiverId = user.getUserId();
 				
 				if (!receiverId.equals(senderId)) {

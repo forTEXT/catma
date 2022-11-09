@@ -98,8 +98,8 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 						sourceDocResource, 
 						new CollectionResource(
 								userMarkupCollectionReference, 
-								project.getProjectId(), 
-								project.getUser())));
+								project.getId(),
+								project.getCurrentUser())));
 		documentDataProvider.refreshAll();
 	}
 
@@ -119,7 +119,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
             DocumentResource docResource = 
             		new DocumentResource(
             			srcDoc, 
-            			project.getProjectId(),
+            			project.getId(),
             			srcDoc.getResponsibleUser()!= null?membersByIdentfier.get(srcDoc.getResponsibleUser()):null);
             
             documentData.addItem(null,docResource);
@@ -131,11 +131,11 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
     		.stream()
     		.filter(collectionRef -> 
     			!miToggleResponsibiltityFilter.isChecked() 
-    			|| collectionRef.isResponsible(project.getUser().getIdentifier()))
+    			|| collectionRef.isResponsible(project.getCurrentUser().getIdentifier()))
     		.map(collectionRef -> 
     			(Resource)new CollectionResource(
     				collectionRef, 
-    				project.getProjectId(),
+    				project.getId(),
     				collectionRef.getResponsibleUser()!= null?membersByIdentfier.get(collectionRef.getResponsibleUser()):null)
     		)
     		.collect(Collectors.toList());
@@ -246,7 +246,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 								@Override
 								public void savePressed(String result) {
 									for (SourceDocumentReference documentRef : selectedDocuments) {
-										project.createUserMarkupCollection(result, documentRef);
+										project.createAnnotationCollection(result, documentRef);
 									}
 								}
 							});

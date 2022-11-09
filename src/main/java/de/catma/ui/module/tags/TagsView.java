@@ -38,7 +38,7 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.Project.ProjectEvent;
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -261,8 +261,8 @@ public class TagsView extends HugeCard {
 				initData();
 			}
 		};
-		project.addPropertyChangeListener(
-				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
+		project.addEventListener(
+				ProjectEvent.exceptionOccurred, projectExceptionListener);
 			
 	}
 
@@ -407,8 +407,8 @@ public class TagsView extends HugeCard {
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);	
-		project.removePropertyChangeListener(
-			RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
+		project.removeEventListener(
+			ProjectEvent.exceptionOccurred, projectExceptionListener);
 
 	}
 
@@ -510,13 +510,13 @@ public class TagsView extends HugeCard {
 	void deleteTagsets(Collection<TagsetDefinition> selectedTagsets) {
 		boolean beyondUsersResponsibility = 
 				selectedTagsets.stream()
-				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 				.findAny()
 				.isPresent();
 		try {
 			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 				beyondUsersResponsibility, 
-				project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+				project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 				new Action() {
 					@Override
 					public void execute() {
@@ -559,11 +559,11 @@ public class TagsView extends HugeCard {
 		if (!selectedTagsets.isEmpty()) {
 			final TagsetDefinition tagset = selectedTagsets.iterator().next();
 			
-			boolean beyondUsersResponsibility = !tagset.isResponsible(project.getUser().getIdentifier());
+			boolean beyondUsersResponsibility = !tagset.isResponsible(project.getCurrentUser().getIdentifier());
 			try {
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 					beyondUsersResponsibility, 
-					project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+					project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 					new Action() {
 						@Override
 						public void execute() {
@@ -631,20 +631,20 @@ public class TagsView extends HugeCard {
 				targetTags.stream()
 				.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
 				.distinct()
-				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 				.findAny()
 				.isPresent();
 		
 		boolean isAuthor = 
 				!targetTags.stream()
-				.filter(tag -> !tag.getAuthor().equals(project.getUser().getIdentifier()))
+				.filter(tag -> !tag.getAuthor().equals(project.getCurrentUser().getIdentifier()))
 				.findAny()
 				.isPresent();
 		
 		try {
 			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 				beyondUsersResponsibility,
-				isAuthor || project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+				isAuthor || project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 				new Action() {
 					@Override
 					public void execute() {
@@ -694,14 +694,14 @@ public class TagsView extends HugeCard {
 			boolean beyondUsersResponsibility =
 					!project.getTagManager().getTagLibrary()
 						.getTagsetDefinition(targetTag)
-						.isResponsible(project.getUser().getIdentifier());
+						.isResponsible(project.getCurrentUser().getIdentifier());
 			
 			boolean isAuthor = 
-					targetTag.getAuthor().equals(project.getUser().getIdentifier());
+					targetTag.getAuthor().equals(project.getCurrentUser().getIdentifier());
 			try {
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 						beyondUsersResponsibility, 
-						isAuthor || project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+						isAuthor || project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 					new Action() {
 						@Override
 						public void execute() {
@@ -777,19 +777,19 @@ public class TagsView extends HugeCard {
 					targetTags.stream()
 					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
 					.distinct()
-					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 					.findAny()
 					.isPresent();
 			
 			boolean isAuthor = 
 					!targetTags.stream()
-					.filter(tag -> !tag.getAuthor().equals(project.getUser().getIdentifier()))
+					.filter(tag -> !tag.getAuthor().equals(project.getCurrentUser().getIdentifier()))
 					.findAny()
 					.isPresent();
 			try {
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 					beyondUsersResponsibility, 
-					isAuthor || project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+					isAuthor || project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 					new Action() {
 						@Override
 						public void execute() {
@@ -981,7 +981,7 @@ public class TagsView extends HugeCard {
 				parentTags.stream()
 				.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
 				.distinct()
-				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 				.findAny()
 				.isPresent();
 			
@@ -1040,7 +1040,7 @@ public class TagsView extends HugeCard {
 		
 		boolean beyondUsersResponsibility =
 				editableTagsets.stream()
-				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 				.findAny()
 				.isPresent();
 		
@@ -1125,7 +1125,7 @@ public class TagsView extends HugeCard {
     							IDGenerator idGenerator = new IDGenerator();
     							TagsetDefinition tagset = new TagsetDefinition(
     									idGenerator.generateTagsetId(), result);
-    							tagset.setResponsibleUser(project.getUser().getIdentifier());
+    							tagset.setResponsibleUser(project.getCurrentUser().getIdentifier());
     							project.getTagManager().addTagsetDefinition(
     								tagset);
     						}

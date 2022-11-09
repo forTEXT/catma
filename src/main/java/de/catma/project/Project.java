@@ -18,14 +18,6 @@
  */
 package de.catma.project;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -38,57 +30,66 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.serialization.TagsetDefinitionImportStatus;
-import de.catma.tag.Property;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagManager;
-import de.catma.tag.TagsetDefinition;
+import de.catma.tag.*;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
 /**
- * A repository to store {@link SourceDocument}s, {@link AnnotationCollection}s and
- * {@link TagLibrary TagLibraries}.
- * 
- * @author marco.petris@web.de
- *
+ * Conceptually, and in the persistence layer, a project is a container for {@link SourceDocument}s, {@link AnnotationCollection}s
+ * and a {@link TagLibrary} (a collection of {@link TagsetDefinition}s a.k.a. tagsets).
  */
 public interface Project {
-	
 	/**
-	 * The Repository emits these change events to listeners that have
-	 * been registered with {@link Repository#addPropertyChangeListener(RepositoryChangeEvent, PropertyChangeListener)}.
-	 *
+	 * The project emits these events to listeners that have been registered with
+	 * {@link Project#addEventListener(ProjectEvent, PropertyChangeListener)}.
+	 * <p>
+	 * Note that {@link PropertyChangeListener} and {@link PropertyChangeEvent} are
+	 * standard Java constructs whose names have no direct relation to CATMA tag properties.
 	 */
-	/**
-	 * @author marco.petris@web.de
-	 *
-	 */
-	public static enum RepositoryChangeEvent {
+	enum ProjectEvent {
 		/**
 		 * Signals an exception:
+		 * <ul>
 		 * <li>{@link PropertyChangeEvent#getNewValue()} = the {@link Exception}</li>
+		 * </ul>
 		 */
-		exceptionOccurred, 
+		exceptionOccurred,
+
 		/**
-		 * <p>{@link Property} changed:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} =  {@link List} of {@link Property Properties}</li>
+		 * Signals a change in one or more properties of a tag instance:
+		 * <ul>
+		 * <li>{@link PropertyChangeEvent#getNewValue()} = a {@link Collection} of {@link Property}</li>
 		 * <li>{@link PropertyChangeEvent#getOldValue()} = corresponding {@link TagInstance}</li>
-		 * </p>
+		 * </ul>
 		 */
 		propertyValueChanged,
+
 		/**
-		 * <p>{@link TagReference}s added:
-		 * <li>{@link PropertyChangeEvent#getNewValue()} = a {@link Pair} of 
-		 * a {@link UserMarkupCollection} and a {@link List} of {@link TagReference}s</li>
+		 * Signals tag references having been added or removed.
+		 * <br/><br/>
+		 * <p>
+		 * When added:
+		 * <ul>
+		 * <li>{@link PropertyChangeEvent#getNewValue()} = a {@link Pair} with the affected {@link AnnotationCollection}
+		 * and a {@link List} of the new {@link TagReference}s</li>
 		 * <li>{@link PropertyChangeEvent#getOldValue()} = <code>null</code></li>
-		 * </p><br />
-		 * <p>{@link TagReference}s removed:
+		 * </ul>
+		 * <p>
+		 * When removed:
+		 * <ul>
 		 * <li>{@link PropertyChangeEvent#getNewValue()} = <code>null</code></li>
-		 * <li>{@link PropertyChangeEvent#getOldValue()} = a {@link Pair} of an 
-		 * UUID String of a {@link UserMarkupCollection} and a {@link Collection} of Annotation ID Strings</li>
-		 * </p><br />
+		 * <li>{@link PropertyChangeEvent#getOldValue()} = a {@link Pair} with the UUID string of the affected
+		 * {@link AnnotationCollection} and a {@link Collection} of the old tag instance UUID strings</li>
+		 * </ul>
 		 */
 		tagReferencesChanged,
 		/**
@@ -98,40 +99,39 @@ public interface Project {
 		 * </p>
 		 */
 		notification,
-		;
 	}
-	
-	/**
-	 */
-	public void open(OpenProjectListener openProjectListener);
-	
-	public void close();
-	
-	/**
-	 * @param propertyChangeEvent event to listen for
-	 * @param propertyChangeListener
-	 */
-	public void addPropertyChangeListener(
-			RepositoryChangeEvent propertyChangeEvent, 
-			PropertyChangeListener propertyChangeListener);
-	
-	public void removePropertyChangeListener(
-			RepositoryChangeEvent propertyChangeEvent, 
-			PropertyChangeListener propertyChangeListener);
-	
-	/**
-	 * @return name of the repository
-	 */
-	public String getName();
-	
-	
-	public String getProjectId();
+
+	void open(OpenProjectListener openProjectListener);
+
+	void close();
 
 	/**
-	 * Inserts the given SourceDocument into the repository.
-	 * @param sourceDocument
+	 * Subscribes a listener to an event.
+	 *
+	 * @param projectEvent the {@link ProjectEvent} to listen for
+	 * @param propertyChangeListener the {@link PropertyChangeListener}
 	 */
-	public void insert(SourceDocument sourceDocument) throws IOException;
+	void addEventListener(ProjectEvent projectEvent, PropertyChangeListener propertyChangeListener);
+
+	/**
+	 * Unsubscribes a listener from an event.
+	 *
+	 * @param projectEvent the {@link ProjectEvent} that the listener is subscribed to
+	 * @param propertyChangeListener the {@link PropertyChangeListener}
+	 */
+	void removeEventListener(ProjectEvent projectEvent, PropertyChangeListener propertyChangeListener);
+
+	String getName();
+
+	String getId();
+
+	/**
+	 * Adds a document to the project.
+	 *
+	 * @param sourceDocument the {@link SourceDocument} to add
+	 * @throws IOException if an error occurs when adding the document
+	 */
+	void addSourceDocument(SourceDocument sourceDocument) throws IOException;
 
 	/**
 	 * Updates the metadata for a document.
@@ -141,47 +141,66 @@ public interface Project {
 	 * @param responsibleUser the username of the user responsible for the document
 	 * @throws Exception if an error occurs when updating the document metadata
 	 */
-	void updateDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
+	void updateSourceDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
 
 	/**
-	 * @return the available Source Documents
-	 * @throws Exception 
-	 */
-	public Collection<SourceDocumentReference> getSourceDocumentReferences() throws Exception;
-
-	/**
+	 * Gets the document references for the documents in the project.
 	 *
-	 * @return the available Tagsets
-	 * @throws Exception
+	 * @return a {@link Collection} of {@link SourceDocumentReference}
+	 * @throws Exception if an error occurs when getting the document references
+	 */
+	Collection<SourceDocumentReference> getSourceDocumentReferences() throws Exception;
+
+	/**
+	 * Gets the tagsets in the project.
+	 *
+	 * @return a {@link Collection} of {@link TagsetDefinition}
+	 * @throws Exception if an error occurs when getting the tagsets
 	 */
 	Collection<TagsetDefinition> getTagsets() throws Exception;
 
+	/**
+	 * Gets a single document by its ID.
+	 *
+	 * @param sourceDocumentId the ID of the document to get
+	 * @return a {@link SourceDocument}
+	 * @throws Exception if an error occurs when getting the document
+	 */
+	SourceDocument getSourceDocument(String sourceDocumentId) throws Exception;
 
 	/**
-	 * @param id ID of the SourceDocument
-	 * @return the SourceDocument with the given ID
-	 * @throws Exception 
+	 * Deletes a document from the project.
+	 *
+	 * @param sourceDocument a {@link SourceDocumentReference} indicating the document to delete
+	 * @throws Exception if an error occurs when deleting the document
 	 */
-	public SourceDocument getSourceDocument(String id) throws Exception;
-	public void delete(SourceDocumentReference sourceDocument) throws Exception;
-
-	public boolean hasDocument(String documentId) throws Exception;
+	void deleteSourceDocument(SourceDocumentReference sourceDocument) throws Exception;
 
 	/**
-	 * Creates a User Markup Collection with that name for the given Source Document.
-	 * @param name
-	 * @param sourceDocument
-	 * @throws IOException
+	 * Indicates whether the project contains a certain document.
+	 *
+	 * @param sourceDocumentId the ID of the document to check for
+	 * @return true if the project contains the document, otherwise false
+	 * @throws Exception if an error occurs when checking for the document
 	 */
-	public void createUserMarkupCollection(String name, SourceDocumentReference sourceDocument);
+	boolean hasSourceDocument(String sourceDocumentId) throws Exception;
 
 	/**
-	 * @param userMarkupCollectionReference
-	 * @return the User Markup Collection for the given reference.
-	 * @throws IOException
+	 * Creates a new annotation collection within the project.
+	 *
+	 * @param name the name of the annotation collection to create
+	 * @param sourceDocumentRef a {@link SourceDocumentReference} indicating the document to which the new collection relates
 	 */
-	public AnnotationCollection getUserMarkupCollection(
-			AnnotationCollectionReference userMarkupCollectionReference) throws IOException;
+	void createAnnotationCollection(String name, SourceDocumentReference sourceDocumentRef);
+
+	/**
+	 * Gets a single annotation collection by its reference.
+	 *
+	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} indicating the collection to get
+	 * @return the {@link AnnotationCollection}
+	 * @throws IOException if an error occurs when getting the collection
+	 */
+	AnnotationCollection getAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws IOException;
 
 	/**
 	 * Adds tag references to an annotation collection.
@@ -204,7 +223,7 @@ public interface Project {
 	 *
 	 * @param annotationCollection the {@link AnnotationCollection} corresponding to the tag instance
 	 * @param tagInstance the {@link TagInstance} to update
-	 * @param properties the {@link Property}s to update
+	 * @param properties the {@link Collection} of {@link Property} to update
 	 */
 	void updateTagInstanceProperties(AnnotationCollection annotationCollection, TagInstance tagInstance, Collection<Property> properties);
 
@@ -213,40 +232,42 @@ public interface Project {
 	 *
 	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} specifying the collection whose metadata should be updated
 	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
+	 * @throws Exception if an error occurs when updating the collection metadata
 	 */
 	void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef, ContentInfoSet contentInfoSet) throws Exception;
 
-	public void delete(
-			AnnotationCollectionReference userMarkupCollectionReference) throws Exception;
+	/**
+	 * Deletes an annotation collection from the project.
+	 *
+	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} indicating the collection to delete
+	 * @throws Exception if an error occurs when deleting the collection
+	 */
+	void deleteAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws Exception;
 
 	/**
-	 * @param inputStream the tag library
-	 * @return 
-	 * @throws IOException
+	 * Imports a tag library into the project.
+	 *
+	 * @param inputStream an {@link InputStream} for the tag library to import
+	 * @return a {@link List} of {@link TagsetDefinitionImportStatus}
+	 * @throws IOException if an error occurs when importing the tag library
 	 */
-	public List<TagsetDefinitionImportStatus> loadTagLibrary(InputStream inputStream) throws IOException;
+	List<TagsetDefinitionImportStatus> importTagLibrary(InputStream inputStream) throws IOException;
 
-	/**
-	 * @return current user of this repository instance
-	 */
-	public User getUser();
-	
-	/**
-	 * @return the Tag Manager for this repository
-	 */
-	public TagManager getTagManager();
-		
-	public Set<Member> getProjectMembers() throws IOException;
+	User getCurrentUser();
 
-	public boolean hasUncommittedChanges() throws Exception;
+	TagManager getTagManager();
 
-	public boolean hasUntrackedChanges() throws IOException;
+	Set<Member> getProjectMembers() throws IOException;
 
-	public boolean hasChangesToCommitOrPush() throws Exception;
+	boolean hasUncommittedChanges() throws Exception;
 
-	public void commitAndPushChanges(String commitMsg) throws Exception;
+	boolean hasUntrackedChanges() throws IOException;
 
-	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;
+	boolean hasChangesToCommitOrPush() throws Exception;
+
+	void commitAndPushChanges(String commitMessage) throws Exception;
+
+	void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;
 
 	void printStatus();
 
@@ -254,52 +275,55 @@ public interface Project {
 
 	boolean isAuthorizedOnProject(RBACPermission permission);
 
-	void unassignFromProject(RBACSubject subject) throws IOException;
+	void removeSubject(RBACSubject subject) throws IOException;
 
-	RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException;
+	RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role) throws IOException;
 
 	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
 
 	String getDescription();
 
-	RBACRole getRoleOnProject() throws IOException;
+	RBACRole getCurrentUserProjectRole() throws IOException;
 
-	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException;
+	void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses) throws IOException;
 
-	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadAnnotationCollection(
-			InputStream inputStream, SourceDocumentReference documentRef) throws IOException;
+	Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> importAnnotationCollection(
+			InputStream inputStream,
+			SourceDocumentReference sourceDocumentRef
+	) throws IOException;
 
-	void importCollection(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses, AnnotationCollection annotationCollection) throws IOException;
+	void importAnnotationCollection(
+			List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses,
+			AnnotationCollection annotationCollection
+	) throws IOException;
 
-	void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
+	void addSourceDocument(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
 
-	public List<CommitInfo> getUnsynchronizedCommits() throws Exception;
+	List<CommitInfo> getUnsynchronizedCommits() throws Exception;
 
-	public void addComment(Comment comment) throws IOException;
+	void addComment(Comment comment) throws IOException;
 
-	public void updateComment(Comment comment) throws IOException;
+	void updateComment(Comment comment) throws IOException;
 
-	public void removeComment(Comment comment) throws IOException;
+	void removeComment(Comment comment) throws IOException;
 
-	List<Comment> getComments(String documentId) throws IOException;
+	List<Comment> getComments(String sourceDocumentId) throws IOException;
 
-	public void addReply(Comment comment, Reply reply) throws IOException;
+	void addCommentReply(Comment comment, Reply reply) throws IOException;
 
-	public List<Reply> getCommentReplies(Comment comment) throws IOException;
-	
-	void removeReply(Comment comment, Reply reply) throws IOException;
+	List<Reply> getCommentReplies(Comment comment) throws IOException;
 
-	void updateReply(Comment comment, Reply reply) throws IOException;
+	void deleteCommentReply(Comment comment, Reply reply) throws IOException;
+
+	void updateCommentReply(Comment comment, Reply reply) throws IOException;
 
 	String getVersion();
 
-	public void addAndCommitCollections(
-			Collection<AnnotationCollectionReference> collectionReferences, String msg) throws IOException;
+	void addAndCommitCollections(Collection<AnnotationCollectionReference> annotationCollectionRefs, String commitMessage) throws IOException;
 
-	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentID) throws Exception;
+	SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) throws Exception;
 
-	public void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception;
+	void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception;
 
 	boolean isReadOnly();
-
 }

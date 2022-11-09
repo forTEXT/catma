@@ -110,7 +110,7 @@ public class CorpusImporter {
 							
 							SourceDocumentReference documentRef = project.getSourceDocumentReference(documentId);
 							Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
-									project.loadAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), documentRef);
+									project.importAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), documentRef);
 							
 							List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
 							final AnnotationCollection annotationCollection = loadResult.getFirst();
@@ -141,7 +141,7 @@ public class CorpusImporter {
 							.forEach(status -> status.setDoImport(false));
 							
 							if (!annotationCollection.isEmpty()) {
-								project.importCollection(
+								project.importAnnotationCollection(
 										tagsetDefinitionImportStatusList, annotationCollection);
 							}
 							
@@ -229,7 +229,7 @@ public class CorpusImporter {
 						
 						SourceDocument document = new SourceDocument(documentId, handler);
 						try {
-							project.insert(document, false);
+							project.addSourceDocument(document, false);
 							
 							
 							if (loadIntrinsicMarkup) {
@@ -238,7 +238,7 @@ public class CorpusImporter {
 								XmlMarkupCollectionSerializationHandler markupHandler =
 										new XmlMarkupCollectionSerializationHandler(
 												tagmanager, (XML2ContentHandler)handler, 
-												project.getUser().getIdentifier());
+												project.getCurrentUser().getIdentifier());
 								
 								try (FileInputStream fis = new FileInputStream(tempFile)) {
 									AnnotationCollection intrinsicMarkupCollection = 
@@ -396,7 +396,7 @@ public class CorpusImporter {
 										}
 									});
 									
-									project.importCollection(Collections.emptyList(), intrinsicMarkupCollection);
+									project.importAnnotationCollection(Collections.emptyList(), intrinsicMarkupCollection);
 								}
 								
 								if (tempFile.exists()) {

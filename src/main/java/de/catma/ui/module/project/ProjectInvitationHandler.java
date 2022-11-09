@@ -51,7 +51,7 @@ public class ProjectInvitationHandler extends UIMessageListener<InvitationReques
 					
 					assignedUsers.add(userId);
 					
-					project.assignOnProject(
+					project.assignRoleToSubject(
 							() -> userId, 
 							RBACRole.forValue(projectInvitation.getDefaultRole()));
 

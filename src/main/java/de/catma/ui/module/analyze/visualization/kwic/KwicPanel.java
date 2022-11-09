@@ -201,7 +201,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			for (QueryResultRow row : selectedRows) {
 				if (row instanceof TagQueryResultRow) {
 					annotationRows++;
-					if (project.hasDocument(row.getSourceDocumentId())) {
+					if (project.hasSourceDocument(row.getSourceDocumentId())) {
 						SourceDocumentReference document = 
 								project.getSourceDocumentReference(row.getSourceDocumentId());
 						AnnotationCollectionReference collRef = 
@@ -209,7 +209,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 									((TagQueryResultRow) row).getMarkupCollectionId());
 						
 						if (collRef != null) {
-							if (collRef.isResponsible(project.getUser().getIdentifier())) {
+							if (collRef.isResponsible(project.getCurrentUser().getIdentifier())) {
 								annotationCollectionReferences.add(collRef);
 								tagInstanceIdsToBeRemoved.add(((TagQueryResultRow) row).getTagInstanceId());
 								rowsToBeRemoved.add(row);
@@ -269,7 +269,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			
 			AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
 			for (AnnotationCollectionReference ref : annotationCollectionReferences) {
-				collectionManager.add(project.getUserMarkupCollection(ref));
+				collectionManager.add(project.getAnnotationCollection(ref));
 			}
 			
 			collectionManager.removeTagInstances(tagInstanceIdsToBeRemoved, true);
@@ -297,7 +297,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 					.filter(row -> row.getSourceDocumentId().equals(documentId))
 					.collect(Collectors.toList());
 			try {
-				if (project.hasDocument(documentId)) {
+				if (project.hasSourceDocument(documentId)) {
 					eventBus.post(new QueryResultRowInAnnotateEvent(
 						documentId, selectedRow, documentRows, project));
 				}
@@ -361,7 +361,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		
 		AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
 		for (AnnotationCollectionReference ref : collectionRefsByDocId.values()) {
-			collectionManager.add(project.getUserMarkupCollection(ref));
+			collectionManager.add(project.getAnnotationCollection(ref));
 		}
 	
 		ArrayListMultimap<String, TagReference> referencesByCollectionId = ArrayListMultimap.create();
@@ -373,7 +373,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 					new TagInstance(
 						idGenerator.generate(), 
 						tag.getUuid(),
-						project.getUser().getIdentifier(),
+						project.getCurrentUser().getIdentifier(),
 			        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 			        	tag.getUserDefinedPropertyDefinitions(),
 			        	tag.getTagsetDefinitionUuid());

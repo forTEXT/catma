@@ -51,9 +51,9 @@ public class TagsetXMLExportStreamSource implements StreamSource {
 				
 				final ContentInfoSet contentInfoSet = 
 						new ContentInfoSet(
-								project.getUser().toString(),
+								project.getCurrentUser().toString(),
 								project.getDescription(),
-								project.getUser().toString(), 
+								project.getCurrentUser().toString(),
 								project.getName());
 				
 				teiDocument.getTeiHeader().setValues(contentInfoSet);

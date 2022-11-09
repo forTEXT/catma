@@ -78,7 +78,7 @@ import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.indexer.IndexedProject;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.Project.ProjectEvent;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CommentChangeEvent;
 import de.catma.project.event.ReplyChangeEvent;
@@ -279,7 +279,7 @@ public class TaggerView extends HorizontalLayout
 							userMarkupCollectionManager.clear();
 							
 							for (AnnotationCollectionReference collectionRef : collectionReferences) {
-								AnnotationCollection collection = project.getUserMarkupCollection(collectionRef);
+								AnnotationCollection collection = project.getAnnotationCollection(collectionRef);
 								userMarkupCollectionManager.add(collection);
 							}
 							
@@ -374,8 +374,8 @@ public class TaggerView extends HorizontalLayout
 			}
 		};
 		
-		project.addPropertyChangeListener(
-			RepositoryChangeEvent.tagReferencesChanged, 
+		project.addEventListener(
+			ProjectEvent.tagReferencesChanged,
 			tagReferencesChangedListener);
 		
 		annotationPropertiesChangedListener = new PropertyChangeListener() {
@@ -386,8 +386,8 @@ public class TaggerView extends HorizontalLayout
 				tagger.updateAnnotation(tagInstance.getUuid());
 			}
 		};
-		project.addPropertyChangeListener(
-				RepositoryChangeEvent.propertyValueChanged,
+		project.addEventListener(
+				ProjectEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
 		
 		tagChangedListener = new PropertyChangeListener() {
@@ -568,7 +568,7 @@ public class TaggerView extends HorizontalLayout
 				
 				for (AnnotationCollectionReference collectionReference : selectedAnnotationCollectionRefs) {
 					try {
-						AnnotationCollection collection = project.getUserMarkupCollection(collectionReference);
+						AnnotationCollection collection = project.getAnnotationCollection(collectionReference);
 						setAnnotationCollectionSelected(
 							new AnnotationCollectionReference(collection), 
 							true);
@@ -657,7 +657,7 @@ public class TaggerView extends HorizontalLayout
 	private void setAnnotationCollectionSelected(AnnotationCollectionReference collectionReference,
 			boolean selected) {
 		try {
-			AnnotationCollection collection = project.getUserMarkupCollection(collectionReference);
+			AnnotationCollection collection = project.getAnnotationCollection(collectionReference);
 			if (selected) {
 				userMarkupCollectionManager.add(collection);
 				annotationPanel.addCollection(collection);
@@ -897,7 +897,7 @@ public class TaggerView extends HorizontalLayout
 	
 	public AnnotationCollection openUserMarkupCollection(
 			AnnotationCollectionReference userMarkupCollectionRef) throws IOException {
-		AnnotationCollection umc = project.getUserMarkupCollection(userMarkupCollectionRef);
+		AnnotationCollection umc = project.getAnnotationCollection(userMarkupCollectionRef);
 		openUserMarkupCollection(umc);
 		return umc;
 	}
@@ -916,11 +916,11 @@ public class TaggerView extends HorizontalLayout
 		if (taggerContextMenu != null) {
 			taggerContextMenu.close();
 		}
-		project.removePropertyChangeListener(
-				RepositoryChangeEvent.tagReferencesChanged, 
+		project.removeEventListener(
+				ProjectEvent.tagReferencesChanged,
 				tagReferencesChangedListener);
-		project.removePropertyChangeListener(
-				RepositoryChangeEvent.propertyValueChanged,
+		project.removeEventListener(
+				ProjectEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
@@ -959,7 +959,7 @@ public class TaggerView extends HorizontalLayout
 				new TagInstance(
 					clientTagInstance.getInstanceID(), 
 					tagDef.getUuid(),
-					project.getUser().getIdentifier(),
+					project.getCurrentUser().getIdentifier(),
 		        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 		        	tagDef.getUserDefinedPropertyDefinitions(),
 		        	tagDef.getTagsetDefinitionUuid());
@@ -1131,7 +1131,7 @@ public class TaggerView extends HorizontalLayout
 
 	@Override
 	public void addComment(List<Range> absoluteRanges, int x, int y) {
-		User user = project.getUser();
+		User user = project.getCurrentUser();
 		IDGenerator idGenerator = new IDGenerator();
 		CommentDialog commentDialog = new CommentDialog(
 				commentBody -> {
@@ -1217,14 +1217,14 @@ public class TaggerView extends HorizontalLayout
 			return;
 		}
 
-		User user = project.getUser();
+		User user = project.getCurrentUser();
 		IDGenerator idGenerator = new IDGenerator();
 		CommentDialog commentDialog = new CommentDialog(
 				true,
 				replyBody -> {
 					if (!StringUtils.isBlank(replyBody)) {
 						try {
-							project.addReply(
+							project.addCommentReply(
 									optionalComment.get(),
 									new Reply(
 											idGenerator.generate(),
@@ -1266,7 +1266,7 @@ public class TaggerView extends HorizontalLayout
 						final String oldBody = reply.getBody();
 						reply.setBody(replyBody);
 						try {
-							project.updateReply(optionalComment.get(), reply);
+							project.updateCommentReply(optionalComment.get(), reply);
 						}
 						catch (IOException e) {
 							errorHandler.showAndLogError("Failed to update reply", e);
@@ -1301,7 +1301,7 @@ public class TaggerView extends HorizontalLayout
 				dlg -> {
 					if (dlg.isConfirmed()) {
 						try {
-							project.removeReply(optionalComment.get(), reply);
+							project.deleteCommentReply(optionalComment.get(), reply);
 						}
 						catch (IOException e) {
 							errorHandler.showAndLogError("Failed to delete reply", e);
@@ -1352,7 +1352,7 @@ public class TaggerView extends HorizontalLayout
 					new CommentMessage(
 						comment.getId(),
 						comment.getIid(),
-						project.getUser().getUserId(),
+						project.getCurrentUser().getUserId(),
 						clientComment,
 						comment.getDocumentId(),
 						commentChangeEvent.getChangeType() == ChangeType.DELETED
@@ -1421,7 +1421,7 @@ public class TaggerView extends HorizontalLayout
 					new CommentMessage(
 						comment.getId(),
 						comment.getIid(),
-						project.getUser().getUserId(),
+						project.getCurrentUser().getUserId(),
 						clientComment,
 						comment.getDocumentId(),
 						replyChangeEvent.getChangeType() == ChangeType.DELETED,

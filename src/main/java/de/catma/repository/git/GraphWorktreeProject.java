@@ -309,7 +309,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				}
 				catch (Exception e) {
 					propertyChangeSupport.firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
+							ProjectEvent.exceptionOccurred.name(),
 							null,
 							e
 					);
@@ -343,7 +343,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				}
 				catch (Exception e) {
 					propertyChangeSupport.firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
+							ProjectEvent.exceptionOccurred.name(),
 							null,
 							e
 					);
@@ -378,7 +378,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				}
 				catch (Exception e) {
 					propertyChangeSupport.firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
+							ProjectEvent.exceptionOccurred.name(),
 							null,
 							e
 					);
@@ -653,7 +653,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		// fire annotation change events for each collection
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.tagReferencesChanged.name(), 
+					ProjectEvent.tagReferencesChanged.name(),
 					new Pair<>(collectionId, annotationIdsByCollectionId.get(collectionId)),
 					null
 			);
@@ -708,20 +708,20 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void addPropertyChangeListener(
-			RepositoryChangeEvent propertyChangeEvent,
+	public void addEventListener(
+			ProjectEvent projectEvent,
 			PropertyChangeListener propertyChangeListener) {
 		this.propertyChangeSupport.addPropertyChangeListener(
-				propertyChangeEvent.name(), propertyChangeListener);
+				projectEvent.name(), propertyChangeListener);
 	}
 	
 	@Override
-	public void removePropertyChangeListener(
-			RepositoryChangeEvent propertyChangeEvent,
+	public void removeEventListener(
+			ProjectEvent projectEvent,
 			PropertyChangeListener propertyChangeListener) {
 		if (this.propertyChangeSupport != null) {
 			this.propertyChangeSupport.removePropertyChangeListener(
-					propertyChangeEvent.name(), propertyChangeListener);
+					projectEvent.name(), propertyChangeListener);
 		}
 	}
 
@@ -736,7 +736,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public String getProjectId() {
+	public String getId() {
 		return projectReference.getProjectId();
 	}
 
@@ -748,12 +748,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void insert(SourceDocument sourceDocument) throws IOException {
-		insert(sourceDocument, true);
+	public void addSourceDocument(SourceDocument sourceDocument) throws IOException {
+		addSourceDocument(sourceDocument, true);
 	}
 	
 	@Override
-	public void insert(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException {
+	public void addSourceDocument(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format("%1$s is in readonly mode! Cannot add %2$s", 
@@ -843,13 +843,13 @@ public class GraphWorktreeProject implements IndexedProject {
 		catch (Exception e) {
 			e.printStackTrace();
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
+					ProjectEvent.exceptionOccurred.name(),
 					null, e);
 		}
 	}
 
 	@Override
-	public void updateDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception {
+	public void updateSourceDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format(
@@ -880,8 +880,8 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 	
 	@Override
-	public boolean hasDocument(String documentId) throws Exception {
-		return graphProjectHandler.hasDocument(this.rootRevisionHash, documentId);
+	public boolean hasSourceDocument(String sourceDocumentId) throws Exception {
+		return graphProjectHandler.hasDocument(this.rootRevisionHash, sourceDocumentId);
 	}
 
 	@Override
@@ -890,12 +890,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 	
 	@Override
-	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentID) throws Exception {
-		return graphProjectHandler.getSourceDocumentReference(sourceDocumentID);
+	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) throws Exception {
+		return graphProjectHandler.getSourceDocumentReference(sourceDocumentId);
 	}
 	
 	@Override
-	public void delete(SourceDocumentReference sourceDocumentRef) throws Exception {
+	public void deleteSourceDocument(SourceDocumentReference sourceDocumentRef) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format("%1$s is in readonly mode! Cannot delete %2$s", 
@@ -920,8 +920,8 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void createUserMarkupCollection(
-			String name, SourceDocumentReference sourceDocumentReference) {
+	public void createAnnotationCollection(
+			String name, SourceDocumentReference sourceDocumentRef) {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format("%1$s is in readonly mode! Cannot add Collection %2$s", 
@@ -936,36 +936,36 @@ public class GraphWorktreeProject implements IndexedProject {
 						collectionId, 
 						name, 
 						null, // description
-						sourceDocumentReference.getUuid(), 
+						sourceDocumentRef.getUuid(),
 						null, // not originated from a fork
 						true); // with push
 			
 			graphProjectHandler.addCollection(
 				rootRevisionHash, 
-				collectionId, name,  
-				sourceDocumentReference,
+				collectionId, name,
+				sourceDocumentRef,
 				tagManager.getTagLibrary(),
 				oldRootRevisionHash);
 			
 			eventBus.post(
 				new CollectionChangeEvent(
-					sourceDocumentReference.getUserMarkupCollectionReference(collectionId), 
-					sourceDocumentReference, 
+					sourceDocumentRef.getUserMarkupCollectionReference(collectionId),
+					sourceDocumentRef,
 					ChangeType.CREATED));
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
+					ProjectEvent.exceptionOccurred.name(),
 					null, e);
 		}
 		
 	}
 
 	@Override
-	public AnnotationCollection getUserMarkupCollection(AnnotationCollectionReference userMarkupCollectionReference)
+	public AnnotationCollection getAnnotationCollection(AnnotationCollectionReference annotationCollectionRef)
 			throws IOException {
 		try {
-			return graphProjectHandler.getCollection(rootRevisionHash, userMarkupCollectionReference);
+			return graphProjectHandler.getCollection(rootRevisionHash, annotationCollectionRef);
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
@@ -999,14 +999,14 @@ public class GraphWorktreeProject implements IndexedProject {
 
 			// fire annotation change event for the collection
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.tagReferencesChanged.name(),
+					ProjectEvent.tagReferencesChanged.name(),
 					null,
 					new Pair<>(annotationCollection, tagReferences)
 			);
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
+					ProjectEvent.exceptionOccurred.name(),
 					null,
 					e
 			);
@@ -1043,14 +1043,14 @@ public class GraphWorktreeProject implements IndexedProject {
 			// fire annotation change event for the collection
 			Collection<String> tagInstanceIds = tagInstances.stream().map(TagInstance::getUuid).collect(Collectors.toList());
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.tagReferencesChanged.name(),
+					ProjectEvent.tagReferencesChanged.name(),
 					new Pair<>(annotationCollection.getUuid(), tagInstanceIds),
 					null
 			);
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
+					ProjectEvent.exceptionOccurred.name(),
 					null,
 					e
 			);
@@ -1058,7 +1058,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	public void addAndCommitCollections(
-			Collection<AnnotationCollectionReference> collectionReferences, String msg) throws IOException {
+			Collection<AnnotationCollectionReference> annotationCollectionRefs, String commitMessage) throws IOException {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format("%1$s is in readonly mode! Cannot add Collections", 
@@ -1069,10 +1069,10 @@ public class GraphWorktreeProject implements IndexedProject {
 		
 		this.rootRevisionHash = 
 			gitProjectHandler.addCollectionsToStagedAndCommit(
-				collectionReferences.stream()
+				annotationCollectionRefs.stream()
 					.map(ref -> ref.getId())
-					.collect(Collectors.toSet()), 
-				msg, 
+					.collect(Collectors.toSet()),
+				commitMessage,
 				false, // don't force
 				true); // withCommit
 		
@@ -1111,15 +1111,15 @@ public class GraphWorktreeProject implements IndexedProject {
 			);
 
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.propertyValueChanged.name(),
+					ProjectEvent.propertyValueChanged.name(),
 					tagInstance,
 					properties
 			);
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
-					null, 
+					ProjectEvent.exceptionOccurred.name(),
+					null,
 					e
 			);
 		}
@@ -1148,28 +1148,28 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void delete(AnnotationCollectionReference collectionReference) throws Exception {
+	public void deleteAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format("%1$s is in readonly mode! Cannot delete %2$s", 
-						this.projectReference, collectionReference));
+						this.projectReference, annotationCollectionRef));
 		}
 
 		String oldRootRevisionHash = this.rootRevisionHash;
-		SourceDocumentReference documentRef = getSourceDocumentReference(collectionReference.getSourceDocumentId());
+		SourceDocumentReference documentRef = getSourceDocumentReference(annotationCollectionRef.getSourceDocumentId());
 		
-		this.rootRevisionHash = gitProjectHandler.removeCollection(collectionReference);
+		this.rootRevisionHash = gitProjectHandler.removeCollection(annotationCollectionRef);
 		
-		graphProjectHandler.removeCollection(this.rootRevisionHash, collectionReference, oldRootRevisionHash);	
-		documentRef.removeUserMarkupCollectionReference(collectionReference);
+		graphProjectHandler.removeCollection(this.rootRevisionHash, annotationCollectionRef, oldRootRevisionHash);
+		documentRef.removeUserMarkupCollectionReference(annotationCollectionRef);
 		
 		eventBus.post(
 			new CollectionChangeEvent(
-				collectionReference, documentRef, ChangeType.DELETED));
+				annotationCollectionRef, documentRef, ChangeType.DELETED));
 	}
 	
-	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadAnnotationCollection(
-			InputStream inputStream, SourceDocumentReference documentRef) throws IOException {
+	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> importAnnotationCollection(
+			InputStream inputStream, SourceDocumentReference sourceDocumentRef) throws IOException {
 		TagManager tagManager = new TagManager(new TagLibrary());
 		
 		TeiTagLibrarySerializationHandler tagLibrarySerializationHandler = 
@@ -1195,14 +1195,14 @@ public class GraphWorktreeProject implements IndexedProject {
 		AnnotationCollection annotationCollection = new AnnotationCollection(
 				collectionId, tagLibrarySerializationHandler.getTeiDocument().getContentInfoSet(),
 				tagManager.getTagLibrary(), deserializer.getTagReferences(),
-				documentRef.getUuid(),
+				sourceDocumentRef.getUuid(),
 				null,
 				this.user.getIdentifier());
 		
 		return new Pair<>(annotationCollection, tagsetDefinitionImportStatusList);
 	}
 
-	public void importCollection(
+	public void importAnnotationCollection(
 			List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses,
 			AnnotationCollection annotationCollection
 	) throws IOException {
@@ -1260,7 +1260,7 @@ public class GraphWorktreeProject implements IndexedProject {
 					ChangeType.CREATED
 			));
 
-			AnnotationCollection createdAnnotationCollection = getUserMarkupCollection(annotationCollectionRef);
+			AnnotationCollection createdAnnotationCollection = getAnnotationCollection(annotationCollectionRef);
 			createdAnnotationCollection.addTagReferences(annotationCollection.getTagReferences());
 			addTagReferencesToCollection(createdAnnotationCollection, annotationCollection.getTagReferences());
 
@@ -1284,7 +1284,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public List<TagsetDefinitionImportStatus> loadTagLibrary(InputStream inputStream) throws IOException {
+	public List<TagsetDefinitionImportStatus> importTagLibrary(InputStream inputStream) throws IOException {
 		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory(this.rootRevisionHash);
 		factory.setTagManager(new TagManager(new TagLibrary()));
 		TagLibrarySerializationHandler tagLibrarySerializationHandler = 
@@ -1302,14 +1302,14 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 	
 	@Override
-	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList) throws IOException {
+	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses) throws IOException {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 				String.format("%1$s is in readonly mode! Cannot import Tagsets", 
 						this.projectReference));
 		}
 
-		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatusList) {
+		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatuses) {
 			
 			if (tagsetDefinitionImportStatus.isDoImport()) {
 				TagsetDefinition tagset = tagsetDefinitionImportStatus.getTagset();
@@ -1400,7 +1400,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public User getUser() {
+	public User getCurrentUser() {
 		return user;
 	}
 
@@ -1436,7 +1436,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void commitAndPushChanges(String commitMsg) throws Exception {
+	public void commitAndPushChanges(String commitMessage) throws Exception {
 		if (!isReadOnly()) {
 			
 			logger.info(
@@ -1444,7 +1444,7 @@ public class GraphWorktreeProject implements IndexedProject {
 							"Commiting and pushing possible changes in Project %1$s.", 
 							projectReference.toString()));
 			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.commitProject(commitMsg);
+			this.rootRevisionHash = gitProjectHandler.commitProject(commitMessage);
 			if (oldRootRevisionHash.equals(this.rootRevisionHash)) {
 				logger.info(
 						String.format(
@@ -1584,12 +1584,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {
+	public RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role) throws IOException {
 		return gitProjectHandler.assignOnProject(subject, role);
 	}
 
 	@Override
-	public void unassignFromProject(RBACSubject subject) throws IOException {
+	public void removeSubject(RBACSubject subject) throws IOException {
 		gitProjectHandler.unassignFromProject(subject);
 	}
 
@@ -1599,7 +1599,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public RBACRole getRoleOnProject() throws IOException {
+	public RBACRole getCurrentUserProjectRole() throws IOException {
 		return gitProjectHandler.getRoleOnProject(user);
 	}
 	
@@ -1622,12 +1622,12 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 	
 	@Override
-	public List<Comment> getComments(String documentId) throws IOException {
-		return gitProjectHandler.getComments(documentId);
+	public List<Comment> getComments(String sourceDocumentId) throws IOException {
+		return gitProjectHandler.getComments(sourceDocumentId);
 	}
 	
 	@Override
-	public void addReply(Comment comment, Reply reply) throws IOException {
+	public void addCommentReply(Comment comment, Reply reply) throws IOException {
 		gitProjectHandler.addReply(comment, reply);
 		
 		eventBus.post(new ReplyChangeEvent(ChangeType.CREATED, comment, reply));
@@ -1639,14 +1639,14 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void updateReply(Comment comment, Reply reply) throws IOException {
+	public void updateCommentReply(Comment comment, Reply reply) throws IOException {
 		gitProjectHandler.updateReply(comment, reply);
 		
 		eventBus.post(new ReplyChangeEvent(ChangeType.UPDATED, comment, reply));
 	}
 
 	@Override
-	public void removeReply(Comment comment, Reply reply) throws IOException {
+	public void deleteCommentReply(Comment comment, Reply reply) throws IOException {
 		gitProjectHandler.removeReply(comment, reply);
 		
 		eventBus.post(new ReplyChangeEvent(ChangeType.DELETED, comment, reply));
@@ -1684,7 +1684,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		Set<Member> members = gitProjectHandler.getProjectMembers();
 		List<String> possibleBranches = members.stream()
-				.filter(member -> !member.getIdentifier().equals(getUser().getIdentifier()))
+				.filter(member -> !member.getIdentifier().equals(getCurrentUser().getIdentifier()))
 				.map(member -> "refs/remotes/origin/" + member.getIdentifier())
 				.collect(Collectors.toList());
 

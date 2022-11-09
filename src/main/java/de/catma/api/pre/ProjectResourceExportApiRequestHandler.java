@@ -106,7 +106,7 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
 
                 ArrayList<AnnotationCollection> annotationCollections = new ArrayList<>();
                 for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentRef.getUserMarkupCollectionRefs()) {
-                    annotationCollections.add(project.getUserMarkupCollection(annotationCollectionReference));
+                    annotationCollections.add(project.getAnnotationCollection(annotationCollectionReference));
                 }
 
                 ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();

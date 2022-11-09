@@ -325,7 +325,7 @@ public class AnnotationPanel extends VerticalLayout {
 	    				collectionChangeEvent.getCollectionReference();
 	    		if (document.getUuid().equals(collectionReference.getSourceDocumentId())) {
 					try {
-						addCollection(project.getUserMarkupCollection(collectionReference));
+						addCollection(project.getAnnotationCollection(collectionReference));
 					} catch (IOException e) {
 						((ErrorHandler)UI.getCurrent()).showAndLogError("error add new Collection", e);
 					}
@@ -367,7 +367,7 @@ public class AnnotationPanel extends VerticalLayout {
         editableCollections.addAll(
         		collections.stream()
         		.filter(collection -> !(Boolean)btFilterCollection.getData() 
-        			|| collection.isResponsible(project.getUser().getIdentifier()))
+        			|| collection.isResponsible(project.getCurrentUser().getIdentifier()))
         		.sorted((c1, c2) -> c1.getName().compareTo(c2.getName()))
         		.collect(Collectors.toList()));
         	
@@ -394,7 +394,7 @@ public class AnnotationPanel extends VerticalLayout {
 		else if (editableCollectionProvider.getItems().size() == 1) {
 			AnnotationCollection collection = 
 					editableCollectionProvider.getItems().iterator().next();
-			if (collection.isResponsible(project.getUser().getIdentifier())) {
+			if (collection.isResponsible(project.getCurrentUser().getIdentifier())) {
 				handleCollectionChangeRequest(collection.getUuid());
 			}
 		}
@@ -613,7 +613,7 @@ public class AnnotationPanel extends VerticalLayout {
 	    						
 	    						@Override
 	    						public void savePressed(String result) {
-	   								project.createUserMarkupCollection(result, document);
+	   								project.createAnnotationCollection(result, document);
 	    						}
 	    					});
 	        	
@@ -647,7 +647,7 @@ public class AnnotationPanel extends VerticalLayout {
 			boolean beyondUsersResponsibility =
 					!project.getTagManager().getTagLibrary()
 						.getTagsetDefinition(targetTag)
-						.isResponsible(project.getUser().getIdentifier());
+						.isResponsible(project.getCurrentUser().getIdentifier());
 			
 			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 					beyondUsersResponsibility, 
@@ -721,7 +721,7 @@ public class AnnotationPanel extends VerticalLayout {
 					targetTags.stream()
 					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
 					.distinct()
-					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 					.findAny()
 					.isPresent();
 			
@@ -866,7 +866,7 @@ public class AnnotationPanel extends VerticalLayout {
 					parentTags.stream()
 					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
 					.distinct()
-					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 					.findAny()
 					.isPresent();
 				
@@ -927,7 +927,7 @@ public class AnnotationPanel extends VerticalLayout {
 
 		boolean beyondUsersResponsibility =
 				editableTagsets.stream()
-				.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+				.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 				.findAny()
 				.isPresent();
 		
@@ -1119,7 +1119,7 @@ public class AnnotationPanel extends VerticalLayout {
 		.filter(collection -> collection.getUuid().equals(collectionId))
 		.findFirst()
 		.ifPresent(collection -> {
-			if (!collection.isResponsible(project.getUser().getIdentifier()) 
+			if (!collection.isResponsible(project.getCurrentUser().getIdentifier())
 					&& (Boolean)btFilterCollection.getData()) {
 				handleFilterCollectionChangeRequest();
 			}
@@ -1170,7 +1170,7 @@ public class AnnotationPanel extends VerticalLayout {
 
 	public void setSelectedEditableCollection(AnnotationCollection collection) {
 		if (!(Boolean)btFilterCollection.getData() 
-				|| collection.isResponsible(project.getUser().getIdentifier())) {
+				|| collection.isResponsible(project.getCurrentUser().getIdentifier())) {
 			if (!this.editableCollections.contains(collection)) {
 				this.editableCollections.add(collection);
 				currentEditableCollectionBox.getDataProvider().refreshAll();

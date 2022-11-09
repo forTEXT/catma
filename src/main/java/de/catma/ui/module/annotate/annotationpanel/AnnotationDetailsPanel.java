@@ -43,7 +43,7 @@ import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.Project.ProjectEvent;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -137,8 +137,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 				
 			}
 		};
-		project.addPropertyChangeListener(
-				RepositoryChangeEvent.propertyValueChanged,
+		project.addEventListener(
+				ProjectEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
 		
 		propertyDefinitionChangedListener = new PropertyChangeListener() {
@@ -319,7 +319,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		final AnnotationCollection collection = annotation.getUserMarkupCollection();
 		
 		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-			!collection.isResponsible(project.getUser().getIdentifier()),
+			!collection.isResponsible(project.getCurrentUser().getIdentifier()),
 			true,
 			new Action() {
 				
@@ -373,7 +373,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			final AnnotationCollection collection = annotation.getUserMarkupCollection();
 			
 			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-				!collection.isResponsible(project.getUser().getIdentifier()),
+				!collection.isResponsible(project.getCurrentUser().getIdentifier()),
 				true,
 				new Action() {
 					
@@ -430,7 +430,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 						project.getTagManager().getTagLibrary().getTagsetDefinition(
 							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider,
-						annotation.getUserMarkupCollection().isResponsible(project.getUser().getIdentifier()),
+						annotation.getUserMarkupCollection().isResponsible(project.getCurrentUser().getIdentifier()),
 						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
 			
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());
@@ -479,8 +479,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		annotationSelectionListener = null;
 		if (project != null) {
 			if (annotationPropertiesChangedListener != null) {
-				project.removePropertyChangeListener(
-					RepositoryChangeEvent.propertyValueChanged, annotationPropertiesChangedListener);
+				project.removeEventListener(
+					ProjectEvent.propertyValueChanged, annotationPropertiesChangedListener);
 				annotationPropertiesChangedListener = null;
 			}
 			

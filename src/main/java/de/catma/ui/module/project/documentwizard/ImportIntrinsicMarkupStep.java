@@ -32,7 +32,6 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
-import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.project.Project;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
@@ -269,7 +268,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 					
 					XmlMarkupCollectionSerializationHandler handler =
 							new XmlMarkupCollectionSerializationHandler(
-									tagmanager, contentHandler, project.getUser().getIdentifier());
+									tagmanager, contentHandler, project.getCurrentUser().getIdentifier());
 					try (FileInputStream fis = new FileInputStream(new File(uploadFile.getTempFilename()))) {
 						AnnotationCollection collection = 
 							handler.deserialize(doc, idGenerator.generateCollectionId(), fis);

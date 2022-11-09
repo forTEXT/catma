@@ -80,7 +80,7 @@ public class DocumentResource implements Resource {
     
 	@Override
 	public void deleteFrom(Project project) throws Exception {
-		project.delete(sourceDocument);
+		project.deleteSourceDocument(sourceDocument);
 	}
 
 	@Override

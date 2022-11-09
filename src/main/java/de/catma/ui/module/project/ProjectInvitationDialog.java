@@ -174,7 +174,7 @@ public class ProjectInvitationDialog extends Window {
 		progressIndicator.setCaption("Invitation running, keep this dialog window open...");
 		
 		projectInvitation = new ProjectInvitation(
-				project.getProjectId(), 
+				project.getId(),
 				roleBox.getValue().getAccessLevel(), 
 				project.getName(), 
 				project.getDescription(),

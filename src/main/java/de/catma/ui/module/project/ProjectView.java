@@ -82,7 +82,7 @@ import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.indexer.IndexedProject;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.Project.ProjectEvent;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
 import de.catma.project.event.ChangeType;
@@ -294,13 +294,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			CollectionResource collectionResource = 
 				new CollectionResource(
 					collectionReference, 
-					project.getProjectId(), 
-					project.getUser());
+					project.getId(),
+					project.getCurrentUser());
 			
 			DocumentResource documentResource = 
 				new DocumentResource(
 					document, 
-					project.getProjectId(),
+					project.getId(),
 					document.getResponsibleUser()!= null?
     						membersByIdentfier.get(document.getResponsibleUser())
     						:null);
@@ -566,7 +566,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		catch (Exception e) {
 			logger.log(
 					Level.WARNING,
-					String.format("Error synchronizing project \"%s\" for user \"%s\"", projectReference, project.getUser()),
+					String.format("Error synchronizing project \"%s\" for user \"%s\"", projectReference, project.getCurrentUser()),
 					e
 			);
 			Notification.show(
@@ -729,7 +729,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						}
 						
 						Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
-								project.loadAnnotationCollection(is, document);
+								project.importAnnotationCollection(is, document);
 						
 						List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
 						final AnnotationCollection annotationCollection = loadResult.getFirst();
@@ -741,7 +741,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								@Override
 								public void savePressed(List<TagsetDefinitionImportStatus> result) {
 									try {
-										project.importCollection(result, annotationCollection);
+										project.importAnnotationCollection(result, annotationCollection);
 									} catch (IOException e) {
 										((CatmaApplication)UI.getCurrent()).showAndLogError(
 											"Error importing Tagsets", e);
@@ -801,7 +801,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					}
 					
 					List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = 
-							project.loadTagLibrary(is);
+							project.importTagLibrary(is);
 					
 					TagsetImportDialog tagsetImportDialog = 
 						new TagsetImportDialog(
@@ -906,12 +906,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		if (resourceToEdit.isCollection()) {
 			final AnnotationCollectionReference collectionRef = ((CollectionResource) resourceToEdit).getCollectionReference();
-			boolean isBeyondCurrentUsersResponsibility = !collectionRef.isResponsible(project.getUser().getIdentifier());
+			boolean isBeyondCurrentUsersResponsibility = !collectionRef.isResponsible(project.getCurrentUser().getIdentifier());
 
 			try {
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 						isBeyondCurrentUsersResponsibility,
-						project.hasPermission(project.getRoleOnProject(), RBACPermission.COLLECTION_DELETE_OR_EDIT),
+						project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.COLLECTION_DELETE_OR_EDIT),
 						new Action() {
 							@Override
 							public void execute() {
@@ -948,12 +948,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 		else { // document
 			final SourceDocumentReference documentRef = ((DocumentResource) resourceToEdit).getDocument();
-			boolean isBeyondCurrentUsersResponsibility = !documentRef.isResponsible(project.getUser().getIdentifier());
+			boolean isBeyondCurrentUsersResponsibility = !documentRef.isResponsible(project.getCurrentUser().getIdentifier());
 
 			try {
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 						isBeyondCurrentUsersResponsibility,
-						project.hasPermission(project.getRoleOnProject(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
+						project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
 						new Action() {
 							@Override
 							public void execute() {
@@ -966,7 +966,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 											@Override
 											public void savePressed(Pair<String, ContentInfoSet> result) {
 												try {
-													project.updateDocumentMetadata(
+													project.updateSourceDocumentMetadata(
 														documentRef,
 														documentRef.getSourceDocumentInfo().getContentInfoSet(),
 														result.getFirst()
@@ -1000,13 +1000,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		if (!tagsets.isEmpty()) {
 			boolean beyondUsersResponsibility = 
 					tagsets.stream()
-					.filter(tagset -> !tagset.isResponsible(project.getUser().getIdentifier()))
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
 					.findAny()
 					.isPresent();
 			try {
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 					beyondUsersResponsibility, 
-					project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+					project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 					new Action() {
 						@Override
 						public void execute() {
@@ -1052,11 +1052,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
 		if (!tagsets.isEmpty()) {
 			final TagsetDefinition tagset = tagsets.iterator().next();
-			boolean beyondUsersResponsibility = !tagset.isResponsible(project.getUser().getIdentifier());
+			boolean beyondUsersResponsibility = !tagset.isResponsible(project.getCurrentUser().getIdentifier());
 			try {
 				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 					beyondUsersResponsibility,
-					project.hasPermission(project.getRoleOnProject(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+					project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 					new Action() {
 						@Override
 						public void execute() {
@@ -1102,7 +1102,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							IDGenerator idGenerator = new IDGenerator();
 							TagsetDefinition tagset = new TagsetDefinition(
 									idGenerator.generateTagsetId(), result);
-							tagset.setResponsibleUser(project.getUser().getIdentifier());
+							tagset.setResponsibleUser(project.getCurrentUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
 								tagset);
 						}
@@ -1148,7 +1148,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							@Override
 							public void savePressed(String result) {
 								for (SourceDocumentReference document : selectedDocuments) {
-									project.createUserMarkupCollection(result, document);
+									project.createAnnotationCollection(result, document);
 								}
 							}
 						});
@@ -1414,17 +1414,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			
 			sourceDocumentInfo.getTechInfoSet().setChecksum(checksum.getValue());
 
-			project.insert(document);
+			project.addSourceDocument(document);
 			
 			AnnotationCollection intrinsicMarkupCollection = 
 					uploadFile.getIntrinsicMarkupCollection();
 			if (intrinsicMarkupCollection != null) {
-				project.importCollection(Collections.emptyList(), intrinsicMarkupCollection);
+				project.importAnnotationCollection(Collections.emptyList(), intrinsicMarkupCollection);
 			}
 			
 			if (collectionNamePattern != null && !collectionNamePattern.isEmpty()) {
 				String collectionName = collectionNamePattern.replace("{{Title}}", uploadFile.getTitle());
-				project.createUserMarkupCollection(collectionName, project.getSourceDocumentReference(document.getUuid()));
+				project.createAnnotationCollection(collectionName, project.getSourceDocumentReference(document.getUuid()));
 			}
 			
 		} catch (Exception e) {
@@ -1699,7 +1699,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         addContextMenu.addItem("Add Member", (click) -> 
         	new AddMemberDialog(
-        		project::assignOnProject,
+        		project::assignRoleToSubject,
         		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()), //$NON-NLS-1$
         		(evt) -> eventBus.post(new MembersChangedEvent())
         		).show());
@@ -1742,7 +1742,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		// remove the current user from the selection and display an informational message
 		Optional<Member> selectedMemberCurrentUser = membersToRemove.stream().filter(
-				member -> member.getUserId().equals(project.getUser().getUserId())
+				member -> member.getUserId().equals(project.getCurrentUser().getUserId())
 		).findAny();
 
 		if (selectedMemberCurrentUser.isPresent()) {
@@ -1764,7 +1764,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		if (!membersToRemove.isEmpty()) {
 			new RemoveMemberDialog(
-					project::unassignFromProject,
+					project::removeSubject,
 					membersToRemove,
 					evt -> eventBus.post(new MembersChangedEvent())
 			).show();
@@ -1798,7 +1798,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		if (!membersToEdit.isEmpty()) {
 			new EditMemberDialog(
-					project::assignOnProject,
+					project::assignRoleToSubject,
 					membersToEdit,
 					(evt) -> eventBus.post(new MembersChangedEvent())
 			).show();
@@ -1836,8 +1836,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	            public void ready(Project project) {
 	            	setProgressBarVisible(false);
 	                ProjectView.this.project = project;
-	                ProjectView.this.project.addPropertyChangeListener(
-	                		RepositoryChangeEvent.exceptionOccurred, 
+	                ProjectView.this.project.addEventListener(
+	                		ProjectEvent.exceptionOccurred,
 	                		projectExceptionListener);
 	                
 	                ProjectView.this.project.getTagManager().addPropertyChangeListener(
@@ -1885,8 +1885,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             public void ready(Project project) {
             	setProgressBarVisible(false);
                 ProjectView.this.project = project;
-                ProjectView.this.project.addPropertyChangeListener(
-                		RepositoryChangeEvent.exceptionOccurred, 
+                ProjectView.this.project.addEventListener(
+                		ProjectEvent.exceptionOccurred,
                 		projectExceptionListener);
                 
                 ProjectView.this.project.getTagManager().addPropertyChangeListener(
@@ -1942,7 +1942,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 DocumentResource docResource = 
                 		new DocumentResource(
                 			srcDoc, 
-                			project.getProjectId(),
+                			project.getId(),
                 			srcDoc.getResponsibleUser()!= null?
             						membersByIdentfier.get(srcDoc.getResponsibleUser())
             						:null);
@@ -1956,11 +1956,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         		.stream()
         		.filter(collectionRef -> 
         			!miToggleResponsibiltityFilter.isChecked() 
-        			|| collectionRef.isResponsible(project.getUser().getIdentifier()))
+        			|| collectionRef.isResponsible(project.getCurrentUser().getIdentifier()))
         		.map(collectionRef -> 
         			new CollectionResource(
         				collectionRef, 
-        				project.getProjectId(),
+        				project.getId(),
         				collectionRef.getResponsibleUser()!= null?
         						membersByIdentfier.get(collectionRef.getResponsibleUser())
         						:null)
@@ -2007,7 +2007,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		toggleProjectReadOnly();
 		eventBus.post(new ProjectReadyEvent(project));
     	try {
-			rbacEnforcer.enforceConstraints(project.getRoleOnProject());
+			rbacEnforcer.enforceConstraints(project.getCurrentUserProjectRole());
 		} catch (IOException e) {
 			errorHandler.showAndLogError("Error trying to fetch role", e);
 		}        
@@ -2059,13 +2059,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		
     		boolean beyondUsersResponsibility = 
     			resourceGrid.getSelectedItems().stream()
-    			.filter(res -> !res.isResponsible(project.getUser().getIdentifier()))
+    			.filter(res -> !res.isResponsible(project.getCurrentUser().getIdentifier()))
     			.findAny()
     			.isPresent();
     		try {
 	    		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
 	    				beyondUsersResponsibility, 
-						project.hasPermission(project.getRoleOnProject(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
+						project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
 	    				new Action() {
 	    					@Override
 	    					public void execute() {
@@ -2165,8 +2165,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			}
 			if (project != null) {
 				if (projectExceptionListener != null) {
-					project.removePropertyChangeListener(
-						RepositoryChangeEvent.exceptionOccurred, 
+					project.removeEventListener(
+						ProjectEvent.exceptionOccurred,
 						projectExceptionListener);
 				}
 				

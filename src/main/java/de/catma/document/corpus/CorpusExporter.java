@@ -1,7 +1,6 @@
 package de.catma.document.corpus;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
@@ -15,7 +14,6 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
-import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.project.Project;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 
@@ -66,7 +64,7 @@ public class CorpusExporter {
 						: corpus.getUserMarkupCollectionRefs(sdRef)) {
 					
 					AnnotationCollection umc = 
-							project.getUserMarkupCollection(umcRef);
+							project.getAnnotationCollection(umcRef);
 
 					TeiUserMarkupCollectionSerializationHandler handler =
 							new TeiUserMarkupCollectionSerializationHandler(
@@ -75,7 +73,7 @@ public class CorpusExporter {
 									false);
 					ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
 					handler.serialize(
-						project.getUserMarkupCollection(umcRef), sd, teiDocOut);
+						project.getAnnotationCollection(umcRef), sd, teiDocOut);
 
 					byte[] umcContent = teiDocOut.toByteArray();
 					

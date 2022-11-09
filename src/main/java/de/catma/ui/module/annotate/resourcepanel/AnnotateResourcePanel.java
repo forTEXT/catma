@@ -35,7 +35,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.Project.ProjectEvent;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
@@ -117,8 +117,8 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				
 			}
 		};
-		project.addPropertyChangeListener(
-				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
+		project.addEventListener(
+				ProjectEvent.exceptionOccurred, projectExceptionListener);
 		
 		this.tagsetChangeListener = new PropertyChangeListener() {
 			
@@ -166,7 +166,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			CollectionDataItem collectionDataItem = 
 				new CollectionDataItem(
 					collectionReference, 
-					collectionReference.isResponsible(project.getUser().getIdentifier()));
+					collectionReference.isResponsible(project.getCurrentUser().getIdentifier()));
 			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
@@ -244,7 +244,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 							IDGenerator idGenerator = new IDGenerator();
 							TagsetDefinition tagset = new TagsetDefinition(
 									idGenerator.generateTagsetId(), result);
-							tagset.setResponsibleUser(project.getUser().getIdentifier());
+							tagset.setResponsibleUser(project.getCurrentUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
 								tagset);
 						}
@@ -293,7 +293,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 							@Override
 							public void savePressed(String result) {
 								for (SourceDocumentReference document : selectedDocuments) {
-									project.createUserMarkupCollection(result, document);
+									project.createAnnotationCollection(result, document);
 								}
 							}
 						});
@@ -534,8 +534,8 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	
 	public void close() {
 		if (project != null) {
-			project.removePropertyChangeListener(
-				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
+			project.removeEventListener(
+				ProjectEvent.exceptionOccurred, projectExceptionListener);
 
 	        project.getTagManager().removePropertyChangeListener(
         		TagManagerEvent.tagsetDefinitionChanged,

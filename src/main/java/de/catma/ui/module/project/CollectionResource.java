@@ -51,7 +51,7 @@ public class CollectionResource implements Resource {
     
     @Override
     public void deleteFrom(Project project) throws Exception {
-    	project.delete(collectionReference);
+    	project.deleteAnnotationCollection(collectionReference);
     }
     
     @Override
