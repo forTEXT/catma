@@ -21,5 +21,5 @@ package de.catma.indexer;
 import de.catma.project.Project;
 
 public interface IndexedProject extends Project {
-	public Indexer getIndexer();
+	Indexer getIndexer();
 }

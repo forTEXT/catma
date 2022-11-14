@@ -95,15 +95,6 @@ public interface Project {
 	}
 
 	/**
-	 * Opens this project, reporting progress and completion or failure to the provided listener.
-	 *
-	 * @param openProjectListener an {@link OpenProjectListener}
-	 */
-	void open(OpenProjectListener openProjectListener);
-
-	void close();
-
-	/**
 	 * Subscribes a listener to an event.
 	 *
 	 * @param projectEvent the {@link ProjectEvent} to listen for
@@ -119,36 +110,51 @@ public interface Project {
 	 */
 	void removeEventListener(ProjectEvent projectEvent, PropertyChangeListener propertyChangeListener);
 
-	String getName();
 
 	String getId();
 
-	/**
-	 * Adds a document to this project.
-	 *
-	 * @param sourceDocument the {@link SourceDocument} to add
-	 * @throws IOException if an error occurs when adding the document
-	 */
-	void addSourceDocument(SourceDocument sourceDocument) throws IOException;
+	String getName();
+
+	String getDescription();
+
+	String getVersion();
+
+	User getCurrentUser();
+
+	TagManager getTagManager();
+
 
 	/**
-	 * Updates the metadata for a document.
+	 * Whether this project is read-only or not. This is determined by the current view mode
+	 * (see {@link Project#setLatestContributionView(boolean, OpenProjectListener)})
 	 *
-	 * @param sourceDocumentRef a {@link SourceDocumentReference} specifying the document whose metadata should be updated
-	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
-	 * @param responsibleUser the username of the user responsible for the document
-	 * @throws Exception if an error occurs when updating the document metadata
+	 * @return true if this project is read-only, otherwise false
 	 */
-	void updateSourceDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
+	boolean isReadOnly();
 
 	/**
-	 * Gets the document references for the documents in this project.
+	 * Changes the view mode for this project, reporting progress and completion or failure to the provided listener.
+	 * <p>
+	 * The view mode is either 'synchronized' (the default) or 'latest contributions'.
 	 *
-	 * @return a {@link Collection} of {@link SourceDocumentReference}
-	 * @throws Exception if an error occurs when getting the document references
+	 * @param enabled whether to change to the 'latest contributions' view mode (will change to the 'synchronized' view mode if false)
+	 * @param openProjectListener an {@link OpenProjectListener}
+	 * @throws Exception if an error occurs when changing view modes
 	 */
-	Collection<SourceDocumentReference> getSourceDocumentReferences() throws Exception;
+	void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception;
 
+
+	/**
+	 * Opens this project, reporting progress and completion or failure to the provided listener.
+	 *
+	 * @param openProjectListener an {@link OpenProjectListener}
+	 */
+	void open(OpenProjectListener openProjectListener);
+
+	void close();
+
+
+	// tagset & tag operations
 	/**
 	 * Gets the tagsets in this project.
 	 *
@@ -158,30 +164,32 @@ public interface Project {
 	Collection<TagsetDefinition> getTagsets() throws Exception;
 
 	/**
-	 * Gets a single document from this project.
+	 * Prepares a tag library for importation into this project.
 	 *
-	 * @param sourceDocumentId the ID of the document to get
-	 * @return a {@link SourceDocument}
-	 * @throws Exception if an error occurs when getting the document
+	 * @param inputStream an {@link InputStream} for the TEI-XML tag library to import
+	 * @return a {@link List} of {@link TagsetDefinitionImportStatus}es providing information about the tagsets
+	 * and tags that may or may not already exist in this project
+	 * @throws IOException if an error occurs when preparing the tag library
 	 */
-	SourceDocument getSourceDocument(String sourceDocumentId) throws Exception;
+	List<TagsetDefinitionImportStatus> prepareTagLibraryForImport(InputStream inputStream) throws IOException;
 
 	/**
-	 * Deletes a document from this project.
+	 * Imports tagsets into this project.
 	 *
-	 * @param sourceDocument a {@link SourceDocumentReference} indicating the document to delete
-	 * @throws Exception if an error occurs when deleting the document
+	 * @param tagsetDefinitionImportStatuses a {@link List} of {@link TagsetDefinitionImportStatus}es providing the tagsets to import
+	 * @throws IOException if an error occurs when importing the tagsets
 	 */
-	void deleteSourceDocument(SourceDocumentReference sourceDocument) throws Exception;
+	void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses) throws IOException;
 
+	// collection operations
 	/**
-	 * Whether this project contains a certain document.
+	 * Gets a single annotation collection from this project.
 	 *
-	 * @param sourceDocumentId the ID of the document to check for
-	 * @return true if this project contains the document, otherwise false
-	 * @throws Exception if an error occurs when checking for the document
+	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} indicating the collection to get
+	 * @return the {@link AnnotationCollection}
+	 * @throws IOException if an error occurs when getting the collection
 	 */
-	boolean hasSourceDocument(String sourceDocumentId) throws Exception;
+	AnnotationCollection getAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws IOException;
 
 	/**
 	 * Creates a new annotation collection within this project.
@@ -192,13 +200,21 @@ public interface Project {
 	void createAnnotationCollection(String name, SourceDocumentReference sourceDocumentRef);
 
 	/**
-	 * Gets a single annotation collection from this project.
+	 * Updates the metadata for an annotation collection.
 	 *
-	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} indicating the collection to get
-	 * @return the {@link AnnotationCollection}
-	 * @throws IOException if an error occurs when getting the collection
+	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} specifying the collection whose metadata should be updated
+	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
+	 * @throws Exception if an error occurs when updating the collection metadata
 	 */
-	AnnotationCollection getAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws IOException;
+	void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef, ContentInfoSet contentInfoSet) throws Exception;
+
+	/**
+	 * Deletes an annotation collection from this project.
+	 *
+	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} indicating the collection to delete
+	 * @throws Exception if an error occurs when deleting the collection
+	 */
+	void deleteAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws Exception;
 
 	/**
 	 * Adds tag references to an annotation collection.
@@ -224,125 +240,6 @@ public interface Project {
 	 * @param properties the {@link Collection} of {@link Property} to update
 	 */
 	void updateTagInstanceProperties(AnnotationCollection annotationCollection, TagInstance tagInstance, Collection<Property> properties);
-
-	/**
-	 * Updates the metadata for an annotation collection.
-	 *
-	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} specifying the collection whose metadata should be updated
-	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
-	 * @throws Exception if an error occurs when updating the collection metadata
-	 */
-	void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef, ContentInfoSet contentInfoSet) throws Exception;
-
-	/**
-	 * Deletes an annotation collection from this project.
-	 *
-	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} indicating the collection to delete
-	 * @throws Exception if an error occurs when deleting the collection
-	 */
-	void deleteAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws Exception;
-
-	/**
-	 * Prepares a tag library for importation into this project.
-	 *
-	 * @param inputStream an {@link InputStream} for the TEI-XML tag library to import
-	 * @return a {@link List} of {@link TagsetDefinitionImportStatus}es providing information about the tagsets
-	 * and tags that may or may not already exist in this project
-	 * @throws IOException if an error occurs when preparing the tag library
-	 */
-	List<TagsetDefinitionImportStatus> prepareTagLibraryForImport(InputStream inputStream) throws IOException;
-
-	User getCurrentUser();
-
-	TagManager getTagManager();
-
-	/**
-	 * Gets the members of this project.
-	 *
-	 * @return a {@link Set} of {@link Member}
-	 * @throws IOException if an error occurs when getting the project members
-	 */
-	Set<Member> getProjectMembers() throws IOException;
-
-	/**
-	 * Whether this project has any uncommitted changes.
-	 *
-	 * @return true if this project has uncommitted changes, otherwise false
-	 * @throws Exception if an error occurs when determining whether there are uncommitted changes
-	 */
-	boolean hasUncommittedChanges() throws Exception;
-
-	/**
-	 * Commits and pushes the uncommitted changes in this project.
-	 *
-	 * @param commitMessage the commit message
-	 * @throws Exception if an error occurs when committing or pushing changes
-	 */
-	void commitAndPushChanges(String commitMessage) throws Exception;
-
-	/**
-	 * Synchronizes this project with the remote server, reporting progress and completion or failure to the provided listener.
-	 *
-	 * @param openProjectListener an {@link OpenProjectListener}
-	 * @throws Exception if an error occurs when synchronizing
-	 */
-	void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;
-
-	/**
-	 * Whether the given role has the given permission.
-	 *
-	 * @param role an {@link RBACRole}
-	 * @param permission an {@link RBACPermission}
-	 * @return true if the role has the permission, otherwise false
-	 */
-	boolean hasPermission(RBACRole role, RBACPermission permission);
-
-	/**
-	 * Removes a member from this project.
-	 *
-	 * @param subject the {@link RBACSubject} to remove
-	 * @throws IOException if an error occurs when removing the member
-	 */
-	void removeSubject(RBACSubject subject) throws IOException;
-
-	/**
-	 * Adds a new member to this project.
-	 *
-	 * @param subject the {@link RBACSubject} to add
-	 * @param role the {@link RBACRole} to assign
-	 * @return the {@link RBACSubject} that was added
-	 * @throws IOException if an error occurs when adding the member
-	 */
-	RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role) throws IOException;
-
-	/**
-	 * Searches for users amongst all available users.
-	 *
-	 * @param usernameOrEmail the partial or complete username or email address to search for
-	 * @param offset the query offset (see {@link com.vaadin.data.provider.Query}
-	 * @param limit the query limit (see {@link com.vaadin.data.provider.Query}
-	 * @return a {@link List} of {@link User}s
-	 * @throws IOException if an error occurs when searching
-	 */
-	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
-
-	String getDescription();
-
-	/**
-	 * Gets the role that the current user has on this project.
-	 *
-	 * @return an {@link RBACRole}
-	 * @throws IOException if an error occurs when getting the role
-	 */
-	RBACRole getCurrentUserProjectRole() throws IOException;
-
-	/**
-	 * Imports tagsets into this project.
-	 *
-	 * @param tagsetDefinitionImportStatuses a {@link List} of {@link TagsetDefinitionImportStatus}es providing the tagsets to import
-	 * @throws IOException if an error occurs when importing the tagsets
-	 */
-	void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses) throws IOException;
 
 	/**
 	 * Prepares a new annotation collection for importation into this project.
@@ -371,6 +268,50 @@ public interface Project {
 			AnnotationCollection annotationCollection
 	) throws IOException;
 
+	// document operations
+	/**
+	 * Whether this project contains a certain document.
+	 *
+	 * @param sourceDocumentId the ID of the document to check for
+	 * @return true if this project contains the document, otherwise false
+	 * @throws Exception if an error occurs when checking for the document
+	 */
+	boolean hasSourceDocument(String sourceDocumentId) throws Exception;
+
+	/**
+	 * Gets the document references for the documents in this project.
+	 *
+	 * @return a {@link Collection} of {@link SourceDocumentReference}
+	 * @throws Exception if an error occurs when getting the document references
+	 */
+	Collection<SourceDocumentReference> getSourceDocumentReferences() throws Exception;
+
+	/**
+	 * Gets the document reference for a particular document in this project.
+	 *
+	 * @param sourceDocumentId the ID of the document for which to get the reference
+	 * @return a {@link SourceDocumentReference}
+	 * @throws Exception if an error occurs when getting the document reference
+	 */
+	SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) throws Exception;
+
+	/**
+	 * Gets a single document from this project.
+	 *
+	 * @param sourceDocumentId the ID of the document to get
+	 * @return a {@link SourceDocument}
+	 * @throws Exception if an error occurs when getting the document
+	 */
+	SourceDocument getSourceDocument(String sourceDocumentId) throws Exception;
+
+	/**
+	 * Adds a document to this project.
+	 *
+	 * @param sourceDocument the {@link SourceDocument} to add
+	 * @throws IOException if an error occurs when adding the document
+	 */
+	void addSourceDocument(SourceDocument sourceDocument) throws IOException;
+
 	/**
 	 * Adds a document to this project.
 	 *
@@ -379,6 +320,34 @@ public interface Project {
 	 * @throws IOException if an error occurs when adding the document
 	 */
 	void addSourceDocument(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
+
+	/**
+	 * Updates the metadata for a document.
+	 *
+	 * @param sourceDocumentRef a {@link SourceDocumentReference} specifying the document whose metadata should be updated
+	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
+	 * @param responsibleUser the username of the user responsible for the document
+	 * @throws Exception if an error occurs when updating the document metadata
+	 */
+	void updateSourceDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
+
+	/**
+	 * Deletes a document from this project.
+	 *
+	 * @param sourceDocument a {@link SourceDocumentReference} indicating the document to delete
+	 * @throws Exception if an error occurs when deleting the document
+	 */
+	void deleteSourceDocument(SourceDocumentReference sourceDocument) throws Exception;
+
+	// comment operations
+	/**
+	 * Gets the document comments for a particular document.
+	 *
+	 * @param sourceDocumentId the ID of the document for which comments should be fetched
+	 * @return a {@link List} of {@link Comment}s
+	 * @throws IOException if an error occurs when getting comments
+	 */
+	List<Comment> getComments(String sourceDocumentId) throws IOException;
 
 	/**
 	 * Adds a document comment to this project.
@@ -411,13 +380,13 @@ public interface Project {
 	void removeComment(Comment comment) throws IOException;
 
 	/**
-	 * Gets the document comments for a particular document.
+	 * Gets the replies for a comment.
 	 *
-	 * @param sourceDocumentId the ID of the document for which comments should be fetched
-	 * @return a {@link List} of {@link Comment}s
-	 * @throws IOException if an error occurs when getting comments
+	 * @param comment the {@link Comment} for which to get the replies
+	 * @return a {@link List} of {@link Reply}
+	 * @throws IOException if an error occurs when getting the replies
 	 */
-	List<Comment> getComments(String sourceDocumentId) throws IOException;
+	List<Reply> getCommentReplies(Comment comment) throws IOException;
 
 	/**
 	 * Adds a reply to a document comment.
@@ -431,13 +400,15 @@ public interface Project {
 	void addCommentReply(Comment comment, Reply reply) throws IOException;
 
 	/**
-	 * Gets the replies for a comment.
+	 * Updates a reply to a document comment.
+	 * <p>
+	 * Note: the document is specified in the comment itself.
 	 *
-	 * @param comment the {@link Comment} for which to get the replies
-	 * @return a {@link List} of {@link Reply}
-	 * @throws IOException if an error occurs when getting the replies
+	 * @param comment the {@link Comment} whose reply should be updated
+	 * @param reply the {@link Reply} to update
+	 * @throws IOException if an error occurs when updating the reply
 	 */
-	List<Reply> getCommentReplies(Comment comment) throws IOException;
+	void updateCommentReply(Comment comment, Reply reply) throws IOException;
 
 	/**
 	 * Deletes a reply from a document comment.
@@ -450,18 +421,87 @@ public interface Project {
 	 */
 	void deleteCommentReply(Comment comment, Reply reply) throws IOException;
 
+	// member, role and permissions related things
+	// TODO: strictly speaking findUser & hasPermission don't belong in this interface as they don't relate to a particular project
 	/**
-	 * Updates a reply to a document comment.
-	 * <p>
-	 * Note: the document is specified in the comment itself.
+	 * Searches for users amongst all available users.
 	 *
-	 * @param comment the {@link Comment} whose reply should be updated
-	 * @param reply the {@link Reply} to update
-	 * @throws IOException if an error occurs when updating the reply
+	 * @param usernameOrEmail the partial or complete username or email address to search for
+	 * @param offset the query offset (see {@link com.vaadin.data.provider.Query}
+	 * @param limit the query limit (see {@link com.vaadin.data.provider.Query}
+	 * @return a {@link List} of {@link User}s
+	 * @throws IOException if an error occurs when searching
 	 */
-	void updateCommentReply(Comment comment, Reply reply) throws IOException;
+	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
 
-	String getVersion();
+	/**
+	 * Whether the given role has the given permission.
+	 *
+	 * @param role an {@link RBACRole}
+	 * @param permission an {@link RBACPermission}
+	 * @return true if the role has the permission, otherwise false
+	 */
+	boolean hasPermission(RBACRole role, RBACPermission permission);
+
+	/**
+	 * Gets the role that the current user has on this project.
+	 *
+	 * @return an {@link RBACRole}
+	 * @throws IOException if an error occurs when getting the role
+	 */
+	RBACRole getCurrentUserProjectRole() throws IOException;
+
+	/**
+	 * Gets the members of this project.
+	 *
+	 * @return a {@link Set} of {@link Member}
+	 * @throws IOException if an error occurs when getting the project members
+	 */
+	Set<Member> getProjectMembers() throws IOException;
+
+	/**
+	 * Adds a new member to this project.
+	 *
+	 * @param subject the {@link RBACSubject} to add
+	 * @param role the {@link RBACRole} to assign
+	 * @return the {@link RBACSubject} that was added
+	 * @throws IOException if an error occurs when adding the member
+	 */
+	RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role) throws IOException;
+
+	/**
+	 * Removes a member from this project.
+	 *
+	 * @param subject the {@link RBACSubject} to remove
+	 * @throws IOException if an error occurs when removing the member
+	 */
+	void removeSubject(RBACSubject subject) throws IOException;
+
+	// synchronization related things
+	// TODO: strictly speaking none of these belong in this interface as they are implementation-specific
+	/**
+	 * Whether this project has any uncommitted changes.
+	 *
+	 * @return true if this project has uncommitted changes, otherwise false
+	 * @throws Exception if an error occurs when determining whether there are uncommitted changes
+	 */
+	boolean hasUncommittedChanges() throws Exception;
+
+	/**
+	 * Commits and pushes the uncommitted changes in this project.
+	 *
+	 * @param commitMessage the commit message
+	 * @throws Exception if an error occurs when committing or pushing changes
+	 */
+	void commitAndPushChanges(String commitMessage) throws Exception;
+
+	/**
+	 * Synchronizes this project with the remote server, reporting progress and completion or failure to the provided listener.
+	 *
+	 * @param openProjectListener an {@link OpenProjectListener}
+	 * @throws Exception if an error occurs when synchronizing
+	 */
+	void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception;
 
 	/**
 	 * Adds (i.e. git add) and commits the specified annotation collections.
@@ -471,32 +511,4 @@ public interface Project {
 	 * @throws IOException if an error occurs when adding and committing the collections
 	 */
 	void addAndCommitCollections(Collection<AnnotationCollectionReference> annotationCollectionRefs, String commitMessage) throws IOException;
-
-	/**
-	 * Gets the document reference for a particular document in this project.
-	 *
-	 * @param sourceDocumentId the ID of the document for which to get the reference
-	 * @return a {@link SourceDocumentReference}
-	 * @throws Exception if an error occurs when getting the document reference
-	 */
-	SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) throws Exception;
-
-	/**
-	 * Changes the view mode for this project, reporting progress and completion or failure to the provided listener.
-	 * <p>
-	 * The view mode is either 'synchronized' (the default) or 'latest contributions'.
-	 *
-	 * @param enabled whether to change to the 'latest contributions' view mode (will change to the 'synchronized' view mode if false)
-	 * @param openProjectListener an {@link OpenProjectListener}
-	 * @throws Exception if an error occurs when changing view modes
-	 */
-	void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception;
-
-	/**
-	 * Whether this project is read-only or not. This is determined by the current view mode
-	 * (see {@link Project#setLatestContributionView(boolean, OpenProjectListener)})
-	 *
-	 * @return true if this project is read-only, otherwise false
-	 */
-	boolean isReadOnly();
 }
