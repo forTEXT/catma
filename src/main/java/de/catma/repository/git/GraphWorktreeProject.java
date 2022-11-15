@@ -49,6 +49,7 @@ import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.mime.MediaType;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
@@ -57,7 +58,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.*;
 import java.net.URI;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -217,7 +218,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (gitProjectHandler.hasConflicts()) {
 			openProjectListener.failure(new IllegalStateException(
 					String.format(
-							"There are conflicts in project \"%s\" with ID: %s. Please contact support.",
+							"There are conflicts in project \"%s\" with ID %s. Please contact support.",
 							projectReference.getName(),
 							projectReference.getProjectId()
 					)
@@ -433,7 +434,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void open(OpenProjectListener openProjectListener) {
 		try {
 			logger.info(
-					String.format("Opening project \"%s\" with ID: %s", projectReference.getName(), projectReference.getProjectId())
+					String.format("Opening project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId())
 			);
 
 			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
@@ -442,13 +443,13 @@ public class GraphWorktreeProject implements IndexedProject {
 			);
 
 			logger.info(
-					String.format("Checking for conflicts in project with ID: %s", projectReference.getProjectId())
+					String.format("Checking for conflicts in project with ID %s", projectReference.getProjectId())
 			);
 			if (gitProjectHandler.hasConflicts()) {
 				openProjectListener.failure(
 						new IllegalStateException(
 								String.format(
-										"There are conflicts in project \"%s\" with ID: %s. Please contact support.",
+										"There are conflicts in project \"%s\" with ID %s. Please contact support.",
 										projectReference.getName(),
 										projectReference.getProjectId()
 								)
@@ -477,7 +478,7 @@ public class GraphWorktreeProject implements IndexedProject {
 							@Override
 							public void done(TagManager result) {
 								logger.info(
-										String.format("Loading tag library for project with ID: %s", projectReference.getProjectId())
+										String.format("Loading tag library for project with ID %s", projectReference.getProjectId())
 								);
 								tagManager.load(result.getTagLibrary());
 								initTagManagerListeners();
@@ -520,68 +521,84 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void close() {
 		try {
-			if (!gitProjectHandler.hasConflicts()) {
-				commitAndPushChanges(
+			if (gitProjectHandler.hasConflicts()) {
+				logger.warning(
 						String.format(
-								"Auto-committing Project %1$s with ID %2$s on close",
+								"Project \"%s\" with ID %s has conflicts on closing, skipping auto-commit and -push",
 								projectReference.getName(),
-								projectReference.getProjectId()));
+								projectReference.getProjectId()
+						)
+				);
 			}
-		} catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error closing Project", e);
+			else {
+				commitAndPushChanges("Auto-committing and -pushing project on close");
+			}
 		}
+		catch (IOException e) {
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error closing project", e);
+		}
+
 		try {
-			for (PropertyChangeListener listener : this.propertyChangeSupport.getPropertyChangeListeners()) {
-				this.propertyChangeSupport.removePropertyChangeListener(listener);
+			for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
+				propertyChangeSupport.removePropertyChangeListener(listener);
 			}
-			this.propertyChangeSupport = null;
-			this.eventBus = null;
+			propertyChangeSupport = null;
+			eventBus = null;
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "Error closing Project", e);
+			logger.log(Level.SEVERE, "Error closing project", e);
 		}
 	}
 
 
 	// tagset & tag operations
 	@Override
-	public Collection<TagsetDefinition> getTagsets() throws Exception {
+	public Collection<TagsetDefinition> getTagsets() {
 		return tagManager.getTagLibrary().getTagsetDefinitions();
 	}
 
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot add %2$s",
-							this.projectReference, tagsetDefinition));
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot add tagset \"%s\".",
+							projectReference.getName(),
+							tagsetDefinition.getName()
+					)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.createTagset(
+		String oldRootRevisionHash = rootRevisionHash;
+
+		rootRevisionHash = gitProjectHandler.createTagset(
 				tagsetDefinition.getUuid(),
 				tagsetDefinition.getName(),
 				tagsetDefinition.getDescription(),
 				tagsetDefinition.getForkedFromCommitURL()
 		);
 
-		tagsetDefinition.setResponsibleUser(this.user.getIdentifier());
+		tagsetDefinition.setResponsibleUser(user.getIdentifier());
 
-		graphProjectHandler.addTagset(
-				rootRevisionHash, tagsetDefinition, oldRootRevisionHash
-		);
+		graphProjectHandler.addTagset(rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot update %2$s",
-							this.projectReference, tagsetDefinition));
+					String.format(
+							"Project \"%1$s\" is in read-only mode! Cannot update tagset \"%2$s\" with ID %3$s.",
+							projectReference.getName(),
+							tagsetDefinition.getName(),
+							tagsetDefinition.getUuid()
+					)
+			);
 		}
-		String oldRootRevisionHash = this.rootRevisionHash;
 
-		this.rootRevisionHash = gitProjectHandler.updateTagset(tagsetDefinition);
+		String oldRootRevisionHash = rootRevisionHash;
 
-		graphProjectHandler.updateTagset(this.rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
+		rootRevisionHash = gitProjectHandler.updateTagset(tagsetDefinition);
+
+		graphProjectHandler.updateTagset(rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -589,8 +606,8 @@ public class GraphWorktreeProject implements IndexedProject {
 			throw new IllegalStateException(
 					String.format(
 							"Project \"%s\" is in read-only mode! Cannot remove tagset \"%s\".",
-							projectReference,
-							tagsetDefinition
+							projectReference.getName(),
+							tagsetDefinition.getName()
 					)
 			);
 		}
@@ -620,56 +637,70 @@ public class GraphWorktreeProject implements IndexedProject {
 	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot update %2$s",
-							this.projectReference, tagsetDefinition));
+					String.format(
+							"Project \"%1$s\" is in read-only mode! Cannot add tag \"%2$s\" to tagset \"%3$s\".",
+							projectReference.getName(),
+							tagDefinition.getName(),
+							tagsetDefinition.getName()
+					)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 
-		this.rootRevisionHash =
-				gitProjectHandler.createOrUpdateTag(
-						tagsetDefinition.getUuid(), tagDefinition,
-						String.format(
-								"Added Tag %1$s with ID %2$s to Tagset %3$s with ID %4$s",
-								tagDefinition.getName(),
-								tagDefinition.getUuid(),
-								tagsetDefinition.getName(),
-								tagsetDefinition.getUuid()));
+		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
+				tagsetDefinition.getUuid(),
+				tagDefinition,
+				String.format(
+						"Added tag \"%1$s\" with ID %2$s to tagset \"%3$s\" with ID %4$s",
+						tagDefinition.getName(),
+						tagDefinition.getUuid(),
+						tagsetDefinition.getName(),
+						tagsetDefinition.getUuid()
+				)
+		);
 
-		graphProjectHandler.addTagDefinition(
-				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+		graphProjectHandler.addTagDefinition(rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void updateTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot update %2$s",
-							this.projectReference, tagsetDefinition));
+					String.format(
+							"Project \"%1$s\" is in read-only mode! Cannot update tag \"%2$s\" with ID %3$s in tagset \"%4$s\".",
+							projectReference.getName(),
+							tagDefinition.getName(),
+							tagDefinition.getUuid(),
+							tagsetDefinition.getName()
+					)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 
-		this.rootRevisionHash = gitProjectHandler.createOrUpdateTag(
+		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
 				tagsetDefinition.getUuid(),
 				tagDefinition,
 				String.format(
-						"Updated Tag %1$s with ID %2$s in Tagset %3$s with ID %4$s",
+						"Updated tag \"%1$s\" with ID %2$s in tagset \"%3$s\" with ID %4$s",
 						tagDefinition.getName(),
 						tagDefinition.getUuid(),
 						tagsetDefinition.getName(),
-						tagsetDefinition.getUuid()));
+						tagsetDefinition.getUuid()
+				)
+		);
 
-		graphProjectHandler.updateTagDefinition(
-				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+		graphProjectHandler.updateTagDefinition(rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void removeTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot update tagset \"%s\".",
-							projectReference,
-							tagsetDefinition
+							"Project \"%1$s\" is in read-only mode! Cannot remove tag \"%2$s\" from tagset \"%3$s\".",
+							projectReference.getName(),
+							tagDefinition.getName(),
+							tagsetDefinition.getName()
 					)
 			);
 		}
@@ -706,64 +737,85 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 	}
 
-	private void addPropertyDefinition(
-			PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
+	private void addPropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot update %2$s",
-							this.projectReference, tagDefinition));
+					String.format(
+							"Project \"%1$s\" is in read-only mode! Cannot add property \"%2$s\" to tag \"%3$s\" in tagset with ID %4$s.",
+							projectReference.getName(),
+							propertyDefinition.getName(),
+							tagDefinition.getName(),
+							tagDefinition.getTagsetDefinitionUuid()
+					)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 
-		TagsetDefinition tagsetDefinition =
-				tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
+		TagsetDefinition tagsetDefinition = tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
 
-		this.rootRevisionHash = gitProjectHandler.createOrUpdateTag(
+		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
 				tagsetDefinition.getUuid(),
 				tagDefinition,
 				String.format(
-						"Added Property Definition %1$s with ID %2$s "
-								+ "to Tag %3$s with ID %4$s "
-								+ "in Tagset %5$s with ID %6$s",
+						"Added property \"%1$s\" with ID %2$s to tag \"%3$s\" with ID %4$s in tagset \"%5$s\" with ID %6$s",
 						propertyDefinition.getName(),
 						propertyDefinition.getUuid(),
 						tagDefinition.getName(),
 						tagDefinition.getUuid(),
 						tagsetDefinition.getName(),
-						tagsetDefinition.getUuid()));
+						tagsetDefinition.getUuid()
+				)
+		);
 
 		graphProjectHandler.addPropertyDefinition(
-				rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition,
-				oldRootRevisionHash);
+				rootRevisionHash,
+				propertyDefinition,
+				tagDefinition,
+				tagsetDefinition,
+				oldRootRevisionHash
+		);
 	}
 
 	private void updatePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot update %2$s",
-							this.projectReference, tagDefinition));
+					String.format(
+							"Project \"%1$s\" is in read-only mode! Cannot update property \"%2$s\" with ID %3$s for tag \"%4$s\" in tagset with ID %5$s.",
+							projectReference.getName(),
+							propertyDefinition.getName(),
+							propertyDefinition.getUuid(),
+							tagDefinition.getName(),
+							tagDefinition.getTagsetDefinitionUuid()
+					)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 
-		TagsetDefinition tagsetDefinition =
-				tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
+		TagsetDefinition tagsetDefinition = tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
 
-		this.rootRevisionHash = gitProjectHandler.createOrUpdateTag(
-				tagsetDefinition.getUuid(), tagDefinition,
+		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
+				tagsetDefinition.getUuid(),
+				tagDefinition,
 				String.format(
-						"Updated Property Definition %1$s with ID %2$s "
-								+ "in Tag %3$s with ID %4$s in Tagset %5$s with ID %6$s",
+						"Updated property \"%1$s\" with ID %2$s for tag \"%3$s\" with ID %4$s in tagset \"%5$s\" with ID %6$s",
 						propertyDefinition.getName(),
 						propertyDefinition.getUuid(),
 						tagDefinition.getName(),
 						tagDefinition.getUuid(),
 						tagsetDefinition.getName(),
-						tagsetDefinition.getUuid()));
+						tagsetDefinition.getUuid()
+				)
+		);
 
 		graphProjectHandler.createOrUpdatePropertyDefinition(
-				rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+				rootRevisionHash,
+				propertyDefinition,
+				tagDefinition,
+				tagsetDefinition,
+				oldRootRevisionHash
+		);
 	}
 
 	private void removePropertyDefinition(
@@ -774,9 +826,11 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot update tag \"%s\".",
-							projectReference,
-							tagDefinition
+							"Project \"%1$s\" is in read-only mode! Cannot remove property \"%2$s\" from tag \"%3$s\" in tagset \"%4$s\".",
+							projectReference.getName(),
+							propertyDefinition.getName(),
+							tagDefinition.getName(),
+							tagsetDefinition.getName()
 					)
 			);
 		}
@@ -788,7 +842,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				tagReferencesByCollectionId.keySet(),
 				String.format(
 						"Auto-committing changes before performing an update of annotations "
-								+ "as part of the deletion of the property \"%s\" with ID: %s",
+								+ "as part of the deletion of the property \"%s\" with ID %s",
 						propertyDefinition.getName(),
 						propertyDefinition.getUuid()
 				),
@@ -845,20 +899,20 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public List<TagsetDefinitionImportStatus> prepareTagLibraryForImport(InputStream inputStream) throws IOException {
-		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory(this.rootRevisionHash);
+		TeiSerializationHandlerFactory factory = new TeiSerializationHandlerFactory(rootRevisionHash);
 		factory.setTagManager(new TagManager(new TagLibrary()));
-		TagLibrarySerializationHandler tagLibrarySerializationHandler =
-				factory.getTagLibrarySerializationHandler();
-		TagLibrary importedLibrary =
-				tagLibrarySerializationHandler.deserialize(null, inputStream);
 
-		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = new ArrayList<>();
-		for (TagsetDefinition tagset : importedLibrary) {
-			boolean current = (getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid()) != null);
-			tagsetDefinitionImportStatusList.add(
-					new TagsetDefinitionImportStatus(tagset, current));
+		TagLibrarySerializationHandler tagLibrarySerializationHandler = factory.getTagLibrarySerializationHandler();
+		TagLibrary tagLibraryToImport = tagLibrarySerializationHandler.deserialize(null, inputStream);
+
+		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses = new ArrayList<>();
+
+		for (TagsetDefinition tagsetDefinition : tagLibraryToImport) {
+			boolean tagsetAlreadyInProject = tagManager.getTagLibrary().getTagsetDefinition(tagsetDefinition.getUuid()) != null;
+			tagsetDefinitionImportStatuses.add(new TagsetDefinitionImportStatus(tagsetDefinition, tagsetAlreadyInProject));
 		}
-		return tagsetDefinitionImportStatusList;
+
+		return tagsetDefinitionImportStatuses;
 	}
 
 	private void importTagHierarchy(TagDefinition tag, TagsetDefinition tagset, TagsetDefinition targetTagset) {
@@ -872,143 +926,153 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void importTagsets(List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses) throws IOException {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot import Tagsets",
-							this.projectReference));
+					String.format("Project \"%s\" is in read-only mode! Cannot import tagsets.", projectReference.getName())
+			);
 		}
 
 		for (TagsetDefinitionImportStatus tagsetDefinitionImportStatus : tagsetDefinitionImportStatuses) {
+			if (!tagsetDefinitionImportStatus.isDoImport()) {
+				continue;
+			}
 
-			if (tagsetDefinitionImportStatus.isDoImport()) {
-				TagsetDefinition tagset = tagsetDefinitionImportStatus.getTagset();
+			TagsetDefinition tagset = tagsetDefinitionImportStatus.getTagset();
 
-				// new Tagset
-				if (!tagsetDefinitionImportStatus.isCurrent()) {
-					try {
-						tagManagerListenersEnabled = false;
-						try {
-							addTagsetDefinition(tagset);
-							tagManager.addTagsetDefinition(tagset);
-						} catch (Exception e) {
-							throw new IOException(
-									String.format(
-											"Import of Tagset %1$s failed! The import has been aborted.",
-											tagset.getName()),
-									e);
-						}
-					}
-					finally {
-						tagManagerListenersEnabled = true;
-					}
-					for (TagDefinition tag : tagset.getRootTagDefinitions()) {
-						tagManager.addTagDefinition(tagset, tag);
+			if (!tagsetDefinitionImportStatus.isCurrent()) { // new tagset
+				try {
+					// disable listeners that would otherwise interfere with the import process
+					tagManagerListenersEnabled = false;
 
-						importTagHierarchy(tag, tagset, tagset);
-					}
+					addTagsetDefinition(tagset);
+					tagManager.addTagsetDefinition(tagset);
 				}
-				// exists already in project
-				else {
-					try {
-						TagsetDefinition existingTagset =
-								getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid());
+				catch (Exception e) {
+					throw new IOException(
+							String.format("Failed to import tagset \"%s\"! The import has been aborted.", tagset.getName()),
+							e
+					);
+				}
+				finally {
+					tagManagerListenersEnabled = true;
+				}
 
-						for (TagDefinition incomingTag : tagset) {
-							if (existingTagset.hasTagDefinition(incomingTag.getUuid())) {
-								if (tagsetDefinitionImportStatus.passesUpdateFilter(incomingTag.getUuid())) {
-									TagDefinition existingTag = existingTagset.getTagDefinition(incomingTag.getUuid());
-									for (PropertyDefinition incomingPropertyDef : incomingTag.getUserDefinedPropertyDefinitions()) {
-										PropertyDefinition existingPropertyDef =
-												existingTag.getPropertyDefinitionByUuid(incomingPropertyDef.getUuid());
-										if (existingPropertyDef != null) {
-											for (String value : incomingPropertyDef.getPossibleValueList()) {
-												if (!existingPropertyDef.getPossibleValueList().contains(value)) {
-													existingPropertyDef.addValue(value);
-												}
-											}
-											existingPropertyDef.setName(incomingPropertyDef.getName());
+				for (TagDefinition tag : tagset.getRootTagDefinitions()) {
+					// TODO: not clear what these are doing (other than raising events) as source and destination tagsets are the same, test
+					tagManager.addTagDefinition(tagset, tag);
+					importTagHierarchy(tag, tagset, tagset);
+				}
+			}
+			else { // tagset already exists in project
+				try {
+					TagsetDefinition existingTagset = tagManager.getTagLibrary().getTagsetDefinition(tagset.getUuid());
 
-											updatePropertyDefinition(existingPropertyDef, existingTag);
+					for (TagDefinition incomingTag : tagset) {
+						if (!existingTagset.hasTagDefinition(incomingTag.getUuid())) { // new tag
+							tagManager.addTagDefinition(existingTagset, incomingTag);
+						}
+						else { // tag already exists in tagset
+							if (!tagsetDefinitionImportStatus.passesUpdateFilter(incomingTag.getUuid())) {
+								continue;
+							}
+
+							TagDefinition existingTag = existingTagset.getTagDefinition(incomingTag.getUuid());
+
+							for (PropertyDefinition incomingPropertyDef : incomingTag.getUserDefinedPropertyDefinitions()) {
+								PropertyDefinition existingPropertyDef = existingTag.getPropertyDefinitionByUuid(incomingPropertyDef.getUuid());
+
+								if (existingPropertyDef == null) { // new property
+									existingTag.addUserDefinedPropertyDefinition(incomingPropertyDef);
+								}
+								else { // property already exists in tag
+									for (String value : incomingPropertyDef.getPossibleValueList()) {
+										if (!existingPropertyDef.getPossibleValueList().contains(value)) {
+											existingPropertyDef.addValue(value);
 										}
-										else {
-											existingTag.addUserDefinedPropertyDefinition(incomingPropertyDef);
-										}
-
-										existingTag.setName(incomingTag.getName());
-										existingTag.setColor(incomingTag.getColor());
-										updateTagDefinition(existingTag, existingTagset);
 									}
 
+									existingPropertyDef.setName(incomingPropertyDef.getName());
+									updatePropertyDefinition(existingPropertyDef, existingTag);
 								}
-							}
-							else {
-								getTagManager().addTagDefinition(existingTagset, incomingTag);
+
+								existingTag.setName(incomingTag.getName());
+								existingTag.setColor(incomingTag.getColor());
+								updateTagDefinition(existingTag, existingTagset);
 							}
 						}
+					}
 
-						existingTagset.setName(tagset.getName());
-						updateTagsetDefinition(existingTagset);
-					}
-					catch (Exception e) {
-						throw new IOException(
-								String.format(
-										"Import of Tagset %1$s failed! The import has been aborted.",
-										tagset.getName()),
-								e);
-					}
+					existingTagset.setName(tagset.getName());
+					updateTagsetDefinition(existingTagset);
+				}
+				catch (Exception e) {
+					throw new IOException(
+							String.format("Failed to import tagset \"%s\"! The import has been aborted.", tagset.getName()),
+							e
+					);
 				}
 			}
 		}
 	}
 
+	// collection operations
 	@Override
-	public AnnotationCollection getAnnotationCollection(AnnotationCollectionReference annotationCollectionRef)
-			throws IOException {
+	public AnnotationCollection getAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws IOException {
 		try {
 			return graphProjectHandler.getCollection(rootRevisionHash, annotationCollectionRef);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new IOException(e);
 		}
 	}
 
 	@Override
-	public void createAnnotationCollection(
-			String name, SourceDocumentReference sourceDocumentRef) {
+	public void createAnnotationCollection(String name, SourceDocumentReference sourceDocumentRef) {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot add Collection %2$s",
-							this.projectReference, name));
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot create collection \"%s\".",
+							projectReference.getName(),
+							name
+					)
+			);
 		}
 
 		try {
 			String collectionId = idGenerator.generateCollectionId();
+			String oldRootRevisionHash = rootRevisionHash;
 
-			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.createAnnotationCollection(
+			rootRevisionHash = gitProjectHandler.createAnnotationCollection(
 					collectionId,
 					name,
 					null, // description
 					sourceDocumentRef.getUuid(),
 					null, // not originated from a fork
-					true); // with push
+					true // with push
+			);
 
 			graphProjectHandler.addCollection(
 					rootRevisionHash,
-					collectionId, name,
+					collectionId,
+					name,
 					sourceDocumentRef,
 					tagManager.getTagLibrary(),
-					oldRootRevisionHash);
+					oldRootRevisionHash
+			);
 
 			eventBus.post(
 					new CollectionChangeEvent(
 							sourceDocumentRef.getUserMarkupCollectionReference(collectionId),
 							sourceDocumentRef,
-							ChangeType.CREATED));
+							ChangeType.CREATED
+					)
+			);
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(
 					ProjectEvent.exceptionOccurred.name(),
-					null, e);
+					null,
+					e
+			);
 		}
-
 	}
 
 	@Override
@@ -1017,8 +1081,8 @@ public class GraphWorktreeProject implements IndexedProject {
 			throw new IllegalStateException(
 					String.format(
 							"Project \"%s\" is in read-only mode! Cannot update metadata for collection \"%s\".",
-							projectReference,
-							annotationCollectionRef
+							projectReference.getName(),
+							annotationCollectionRef.getName()
 					)
 			);
 		}
@@ -1029,29 +1093,44 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		graphProjectHandler.updateCollection(rootRevisionHash, annotationCollectionRef, oldRootRevisionHash);
 
-		SourceDocumentReference documentReference = getSourceDocumentReference(annotationCollectionRef.getSourceDocumentId());
-		eventBus.post(new CollectionChangeEvent(annotationCollectionRef, documentReference, ChangeType.UPDATED));
+		SourceDocumentReference sourceDocumentRef = getSourceDocumentReference(annotationCollectionRef.getSourceDocumentId());
+		eventBus.post(
+				new CollectionChangeEvent(
+						annotationCollectionRef,
+						sourceDocumentRef,
+						ChangeType.UPDATED
+				)
+		);
 	}
 
 	@Override
 	public void deleteAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot delete %2$s",
-							this.projectReference, annotationCollectionRef));
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot delete collection \"%s\".",
+							projectReference.getName(),
+							annotationCollectionRef.getName()
+					)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
-		SourceDocumentReference documentRef = getSourceDocumentReference(annotationCollectionRef.getSourceDocumentId());
+		String oldRootRevisionHash = rootRevisionHash;
 
-		this.rootRevisionHash = gitProjectHandler.removeCollection(annotationCollectionRef);
+		rootRevisionHash = gitProjectHandler.removeCollection(annotationCollectionRef);
 
-		graphProjectHandler.removeCollection(this.rootRevisionHash, annotationCollectionRef, oldRootRevisionHash);
-		documentRef.removeUserMarkupCollectionReference(annotationCollectionRef);
+		graphProjectHandler.removeCollection(rootRevisionHash, annotationCollectionRef, oldRootRevisionHash);
+
+		SourceDocumentReference sourceDocumentRef = getSourceDocumentReference(annotationCollectionRef.getSourceDocumentId());
+		sourceDocumentRef.removeUserMarkupCollectionReference(annotationCollectionRef);
 
 		eventBus.post(
 				new CollectionChangeEvent(
-						annotationCollectionRef, documentRef, ChangeType.DELETED));
+						annotationCollectionRef,
+						sourceDocumentRef,
+						ChangeType.DELETED
+				)
+		);
 	}
 
 	@Override
@@ -1060,8 +1139,8 @@ public class GraphWorktreeProject implements IndexedProject {
 			throw new IllegalStateException(
 					String.format(
 							"Project \"%s\" is in read-only mode! Cannot add tag references to collection \"%s\".",
-							projectReference,
-							annotationCollection
+							projectReference.getName(),
+							annotationCollection.getName()
 					)
 			);
 		}
@@ -1102,8 +1181,8 @@ public class GraphWorktreeProject implements IndexedProject {
 			throw new IllegalStateException(
 					String.format(
 							"Project \"%s\" is in read-only mode! Cannot remove tag references from collection \"%s\".",
-							projectReference,
-							annotationCollection
+							projectReference.getName(),
+							annotationCollection.getName()
 					)
 			);
 		}
@@ -1145,9 +1224,10 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot update tag instance properties in collection \"%s\".",
-							projectReference,
-							annotationCollection
+							"Project \"%1$s\" is in read-only mode! Cannot update tag instance properties for tag %2$s in collection \"%3$s\".",
+							projectReference.getName(),
+							tagInstance.getUuid(),
+							annotationCollection.getName()
 					)
 			);
 		}
@@ -1188,37 +1268,42 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> prepareAnnotationCollectionForImport(
-			InputStream inputStream, SourceDocumentReference sourceDocumentRef) throws IOException {
+			InputStream inputStream,
+			SourceDocumentReference sourceDocumentRef
+	) throws IOException {
 		TagManager tagManager = new TagManager(new TagLibrary());
 
-		TeiTagLibrarySerializationHandler tagLibrarySerializationHandler =
-				new TeiTagLibrarySerializationHandler(tagManager, this.rootRevisionHash);
+		TeiTagLibrarySerializationHandler teiTagLibrarySerializationHandler = new TeiTagLibrarySerializationHandler(
+				tagManager, rootRevisionHash
+		);
+		TagLibrary tagLibraryToImport = teiTagLibrarySerializationHandler.deserialize(null, inputStream);
 
-		TagLibrary importedLibrary =
-				tagLibrarySerializationHandler.deserialize(null, inputStream);
+		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses = new ArrayList<>();
 
-		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = new ArrayList<>();
-		for (TagsetDefinition tagset : importedLibrary) {
-			boolean current = (getTagManager().getTagLibrary().getTagsetDefinition(tagset.getUuid()) != null);
-			tagsetDefinitionImportStatusList.add(
-					new TagsetDefinitionImportStatus(tagset, current));
+		for (TagsetDefinition tagsetDefinition : tagLibraryToImport) {
+			boolean tagsetAlreadyInProject = (tagManager.getTagLibrary().getTagsetDefinition(tagsetDefinition.getUuid()) != null);
+			tagsetDefinitionImportStatuses.add(new TagsetDefinitionImportStatus(tagsetDefinition, tagsetAlreadyInProject));
 		}
 
 		String collectionId = idGenerator.generate();
 
-		TeiUserMarkupCollectionDeserializer deserializer =
-				new TeiUserMarkupCollectionDeserializer(
-						tagLibrarySerializationHandler.getTeiDocument(), tagManager.getTagLibrary(),
-						collectionId);
+		TeiUserMarkupCollectionDeserializer deserializer = new TeiUserMarkupCollectionDeserializer(
+				teiTagLibrarySerializationHandler.getTeiDocument(),
+				tagManager.getTagLibrary(),
+				collectionId
+		);
 
 		AnnotationCollection annotationCollection = new AnnotationCollection(
-				collectionId, tagLibrarySerializationHandler.getTeiDocument().getContentInfoSet(),
-				tagManager.getTagLibrary(), deserializer.getTagReferences(),
+				collectionId,
+				teiTagLibrarySerializationHandler.getTeiDocument().getContentInfoSet(),
+				tagManager.getTagLibrary(),
+				deserializer.getTagReferences(),
 				sourceDocumentRef.getUuid(),
 				null,
-				this.user.getIdentifier());
+				user.getIdentifier()
+		);
 
-		return new Pair<>(annotationCollection, tagsetDefinitionImportStatusList);
+		return new Pair<>(annotationCollection, tagsetDefinitionImportStatuses);
 	}
 
 	@Override
@@ -1230,8 +1315,8 @@ public class GraphWorktreeProject implements IndexedProject {
 			throw new IllegalStateException(
 					String.format(
 							"Project \"%s\" is in read-only mode! Cannot import collection \"%s\".",
-							projectReference,
-							annotationCollection
+							projectReference.getName(),
+							annotationCollection.getName()
 					)
 			);
 		}
@@ -1274,11 +1359,13 @@ public class GraphWorktreeProject implements IndexedProject {
 
 			AnnotationCollectionReference annotationCollectionRef = sourceDocumentRef.getUserMarkupCollectionReference(annotationCollection.getId());
 
-			eventBus.post(new CollectionChangeEvent(
-					annotationCollectionRef,
-					sourceDocumentRef,
-					ChangeType.CREATED
-			));
+			eventBus.post(
+					new CollectionChangeEvent(
+							annotationCollectionRef,
+							sourceDocumentRef,
+							ChangeType.CREATED
+					)
+			);
 
 			AnnotationCollection createdAnnotationCollection = getAnnotationCollection(annotationCollectionRef);
 			createdAnnotationCollection.addTagReferences(annotationCollection.getTagReferences());
@@ -1286,7 +1373,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 			commitAndPushChanges(
 					String.format(
-							"Imported annotations from collection \"%s\" with ID: %s",
+							"Imported annotations from collection \"%s\" with ID %s",
 							createdAnnotationCollection.getName(),
 							createdAnnotationCollection.getId()
 					)
@@ -1305,23 +1392,23 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	// document operations
 	@Override
-	public boolean hasSourceDocument(String sourceDocumentId) throws Exception {
-		return graphProjectHandler.hasDocument(this.rootRevisionHash, sourceDocumentId);
+	public boolean hasSourceDocument(String sourceDocumentId) {
+		return graphProjectHandler.hasDocument(rootRevisionHash, sourceDocumentId);
 	}
 
 	@Override
 	public Collection<SourceDocumentReference> getSourceDocumentReferences() throws Exception {
-		return graphProjectHandler.getDocuments(this.rootRevisionHash);
+		return graphProjectHandler.getDocuments(rootRevisionHash);
 	}
 
 	@Override
-	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) throws Exception {
+	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) {
 		return graphProjectHandler.getSourceDocumentReference(sourceDocumentId);
 	}
 
 	@Override
 	public SourceDocument getSourceDocument(String sourceDocumentId) throws Exception {
-		return graphProjectHandler.getSourceDocument(this.rootRevisionHash, sourceDocumentId);
+		return graphProjectHandler.getSourceDocument(rootRevisionHash, sourceDocumentId);
 	}
 
 	private URI getSourceDocumentURI(String sourceDocumentId) {
@@ -1331,126 +1418,138 @@ public class GraphWorktreeProject implements IndexedProject {
 				.toUri();
 	}
 
-	private Path getTokenizedSourceDocumentPath(String documentId) {
+	private Path getTokenizedSourceDocumentPath(String sourceDocumentId) {
 		return Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
-				.resolve(gitProjectHandler.getSourceDocumentPath(documentId))
-				.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
+				.resolve(gitProjectHandler.getSourceDocumentPath(sourceDocumentId))
+				.resolve(sourceDocumentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
 
 	@Override
-	public void addSourceDocument(SourceDocument sourceDocument) throws IOException {
+	public void addSourceDocument(SourceDocument sourceDocument) throws Exception {
 		addSourceDocument(sourceDocument, true);
 	}
 
 	@Override
-	public void addSourceDocument(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException {
+	public void addSourceDocument(SourceDocument sourceDocument, boolean deleteTempFile) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot add %2$s",
-							this.projectReference, sourceDocument));
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot add document \"%s\".",
+							projectReference.getName(),
+							sourceDocument
+					)
+			);
 		}
 
 		try {
-			File sourceTempFile =
-					Paths.get(new File(this.tempDir).toURI())
-							.resolve(sourceDocument.getUuid())
-							.toFile();
+			logger.info(String.format(
+					"Starting tokenization of document \"%s\" with ID %s",
+					sourceDocument,
+					sourceDocument.getUuid()
+			));
 
-			String convertedFilename =
-					sourceDocument.getUuid() + "." + UTF8_CONVERSION_FILE_EXTENSION;
+			List<String> unseparableCharacterSequences = sourceDocument.getSourceContentHandler()
+					.getSourceDocumentInfo().getIndexInfoSet().getUnseparableCharacterSequences();
+			List<Character> userDefinedSeparatingCharacters = sourceDocument.getSourceContentHandler()
+					.getSourceDocumentInfo().getIndexInfoSet().getUserDefinedSeparatingCharacters();
+			Locale locale = sourceDocument.getSourceContentHandler()
+					.getSourceDocumentInfo().getIndexInfoSet().getLocale();
 
-			logger.info(
-					String.format("Start tokenizing Document %1$s with ID %2$s",
-							sourceDocument.toString(), sourceDocument.getUuid()));
-
-			List<String> unseparableCharacterSequences =
-					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-							.getIndexInfoSet().getUnseparableCharacterSequences();
-			List<Character> userDefinedSeparatingCharacters =
-					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-							.getIndexInfoSet().getUserDefinedSeparatingCharacters();
-			Locale locale =
-					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-							.getIndexInfoSet().getLocale();
-
-			TermExtractor termExtractor =
-					new TermExtractor(
-							sourceDocument.getContent(),
-							unseparableCharacterSequences,
-							userDefinedSeparatingCharacters,
-							locale);
+			TermExtractor termExtractor = new TermExtractor(
+					sourceDocument.getContent(),
+					unseparableCharacterSequences,
+					userDefinedSeparatingCharacters,
+					locale
+			);
 
 			final Map<String, List<TermInfo>> terms = termExtractor.getTerms();
 
-			logger.info(
-					String.format("Tokenizing finished: Document %1$s with ID %2$s",
-							sourceDocument.toString(), sourceDocument.getUuid()));
+			logger.info(String.format(
+					"Finished tokenization of document \"%s\" with ID %s",
+					sourceDocument,
+					sourceDocument.getUuid()
+			));
 
-			String oldRootRevisionHash = this.rootRevisionHash;
+			String oldRootRevisionHash = rootRevisionHash;
 
-			try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
-				MediaType mediaType =
-						MediaType.parse(sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getMimeType());
+			File documentTempFile = Paths.get(new File(tempDir).toURI())
+					.resolve(sourceDocument.getUuid())
+					.toFile();
+
+			String convertedFilename = sourceDocument.getUuid() + "." + UTF8_CONVERSION_FILE_EXTENSION;
+
+			try (FileInputStream documentFileInputStream = new FileInputStream(documentTempFile)) {
+				MediaType mediaType = MediaType.parse(
+						sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getMimeType()
+				);
 				String extension = mediaType.getBaseType().getType();
-				if (extension == null || extension.isEmpty()) {
+
+				if (StringUtils.isBlank(extension)) {
 					extension = "unknown";
 				}
-				this.rootRevisionHash = gitProjectHandler.createSourceDocument(
+
+				rootRevisionHash = gitProjectHandler.createSourceDocument(
 						sourceDocument.getUuid(),
-						originalFileInputStream,
-						sourceDocument.getUuid()
-								+ ORIG_INFIX
-								+ "."
-								+ extension,
-						new ByteArrayInputStream(
-								sourceDocument.getContent().getBytes(Charset.forName("UTF-8"))),
+						documentFileInputStream,
+						sourceDocument.getUuid() + ORIG_INFIX + "." + extension,
+						new ByteArrayInputStream(sourceDocument.getContent().getBytes(StandardCharsets.UTF_8)),
 						convertedFilename,
 						terms,
 						sourceDocument.getUuid() + "." + TOKENIZED_FILE_EXTENSION,
-						sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
+						sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+				);
 
 				sourceDocument.unload();
-				StandardContentHandler contentHandler = new StandardContentHandler();
-				contentHandler.setSourceDocumentInfo(
-						sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
-				sourceDocument.setSourceContentHandler(contentHandler);
+				StandardContentHandler standardContentHandler = new StandardContentHandler();
+				standardContentHandler.setSourceDocumentInfo(sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
+				sourceDocument.setSourceContentHandler(standardContentHandler);
 
 				graphProjectHandler.addSourceDocument(
-						oldRootRevisionHash, this.rootRevisionHash,
+						oldRootRevisionHash,
+						rootRevisionHash,
 						sourceDocument,
-						getTokenizedSourceDocumentPath(sourceDocument.getUuid()));
+						getTokenizedSourceDocumentPath(sourceDocument.getUuid())
+				);
 			}
 
 			if (deleteTempFile) {
-				sourceTempFile.delete();
+				documentTempFile.delete();
 			}
 
-			eventBus.post(new DocumentChangeEvent(
-					new SourceDocumentReference(
-							sourceDocument.getUuid(), sourceDocument.getSourceContentHandler()),
-					ChangeType.CREATED));
+			eventBus.post(
+					new DocumentChangeEvent(
+							new SourceDocumentReference(sourceDocument.getUuid(), sourceDocument.getSourceContentHandler()),
+							ChangeType.CREATED
+					)
+			);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
 			propertyChangeSupport.firePropertyChange(
 					ProjectEvent.exceptionOccurred.name(),
-					null, e);
+					null,
+					e
+			);
 		}
 	}
 
 	@Override
-	public void updateSourceDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception {
+	public void updateSourceDocumentMetadata(
+			SourceDocumentReference sourceDocumentRef,
+			ContentInfoSet contentInfoSet,
+			String responsibleUser
+	) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
 							"Project \"%s\" is in read-only mode! Cannot update document \"%s\".",
-							projectReference,
+							projectReference.getName(),
 							sourceDocumentRef
 					)
 			);
 		}
 
 		String oldRootRevisionHash = rootRevisionHash;
+
 		sourceDocumentRef.getSourceDocumentInfo().getTechInfoSet().setResponsibleUser(responsibleUser);
 		rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocumentRef);
 
@@ -1463,23 +1562,26 @@ public class GraphWorktreeProject implements IndexedProject {
 	public void deleteSourceDocument(SourceDocumentReference sourceDocumentRef) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot delete %2$s",
-							this.projectReference, sourceDocumentRef));
+					String.format(
+							"Project \"%s\" is in read-only mode! Cannot delete document \"%s\".",
+							projectReference.getName(),
+							sourceDocumentRef
+					)
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.removeDocument(sourceDocumentRef);
-		// TODO: remove/close all participating comments
-		for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocumentRef.getUserMarkupCollectionRefs())) {
-			graphProjectHandler.removeCollection(this.rootRevisionHash, collectionRef, oldRootRevisionHash);
+		String oldRootRevisionHash = rootRevisionHash;
 
-			eventBus.post(
-					new CollectionChangeEvent(
-							collectionRef, sourceDocumentRef, ChangeType.DELETED));
+		rootRevisionHash = gitProjectHandler.removeDocument(sourceDocumentRef);
+		// TODO: delete/close all corresponding comments?
+
+		for (AnnotationCollectionReference annotationCollectionRef : sourceDocumentRef.getUserMarkupCollectionRefs()) {
+			graphProjectHandler.removeCollection(rootRevisionHash, annotationCollectionRef, oldRootRevisionHash);
+
+			eventBus.post(new CollectionChangeEvent(annotationCollectionRef, sourceDocumentRef, ChangeType.DELETED));
 		}
 
-
-		graphProjectHandler.removeDocument(this.rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
+		graphProjectHandler.removeDocument(rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
 
 		eventBus.post(new DocumentChangeEvent(sourceDocumentRef, ChangeType.DELETED));
 	}
@@ -1516,23 +1618,19 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public void addCommentReply(Comment comment, Reply reply) throws IOException {
 		gitProjectHandler.addReply(comment, reply);
-
 		eventBus.post(new ReplyChangeEvent(ChangeType.CREATED, comment, reply));
 	}
 
 	@Override
 	public void updateCommentReply(Comment comment, Reply reply) throws IOException {
 		gitProjectHandler.updateReply(comment, reply);
-
 		eventBus.post(new ReplyChangeEvent(ChangeType.UPDATED, comment, reply));
 	}
 
 	@Override
 	public void deleteCommentReply(Comment comment, Reply reply) throws IOException {
 		gitProjectHandler.removeReply(comment, reply);
-
 		eventBus.post(new ReplyChangeEvent(ChangeType.DELETED, comment, reply));
-
 	}
 
 	// member, role and permissions related things
@@ -1573,37 +1671,38 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void commitAndPushChanges(String commitMessage) throws Exception {
-		if (!isReadOnly()) {
-
-			logger.info(
-					String.format(
-							"Commiting and pushing possible changes in Project %1$s.",
-							projectReference.toString()));
-			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.commitProject(commitMessage);
-			if (oldRootRevisionHash.equals(this.rootRevisionHash)) {
-				logger.info(
-						String.format(
-								"No changes in %1$s.",
-								projectReference.toString()));
-			}
-			else {
-				logger.info(
-						String.format(
-								"New revision of %1$s is %2$s.",
-								projectReference.toString(),
-								this.rootRevisionHash));
-			}
-			this.graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
+	public void commitAndPushChanges(String commitMessage) throws IOException {
+		if (isReadOnly()) {
+			return;
 		}
+
+		logger.info(
+				String.format("Committing and pushing changes in project \"%s\"", projectReference.getName())
+		);
+
+		String oldRootRevisionHash = rootRevisionHash;
+
+		rootRevisionHash = gitProjectHandler.commitProject(commitMessage);
+
+		if (oldRootRevisionHash.equals(rootRevisionHash)) {
+			logger.info(
+					String.format("No changes in project \"%s\"", projectReference.getName())
+			);
+		}
+		else {
+			logger.info(
+					String.format("New revision of project \"%s\" is %s", projectReference.getName(), rootRevisionHash)
+			);
+		}
+
+		graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	@Override
 	public void synchronizeWithRemote(OpenProjectListener openProjectListener) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("Project \"%s\" is in read-only mode! Cannot synchronize with remote.", projectReference)
+					String.format("Project \"%s\" is in read-only mode! Cannot synchronize with remote.", projectReference.getName())
 			);
 		}
 
@@ -1646,7 +1745,7 @@ public class GraphWorktreeProject implements IndexedProject {
 							if (gitProjectHandler.hasConflicts()) {
 								openProjectListener.failure(new IllegalStateException(
 										String.format(
-												"There are conflicts in project \"%s\" with ID: %s. Please contact support.",
+												"There are conflicts in project \"%s\" with ID %s. Please contact support.",
 												projectReference.getName(),
 												projectReference.getProjectId()
 										)
@@ -1710,25 +1809,22 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void addAndCommitCollections(
-			Collection<AnnotationCollectionReference> annotationCollectionRefs, String commitMessage) throws IOException {
+	public void addAndCommitCollections(Collection<AnnotationCollectionReference> annotationCollectionRefs, String commitMessage) throws IOException {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
-					String.format("%1$s is in readonly mode! Cannot add Collections",
-							this.projectReference));
+					String.format("Project \"%s\" is in read-only mode! Cannot add and commit collections.", projectReference.getName())
+			);
 		}
 
-		String oldRootRevisionHash = this.rootRevisionHash;
+		String oldRootRevisionHash = rootRevisionHash;
 
-		this.rootRevisionHash =
-				gitProjectHandler.addCollectionsToStagedAndCommit(
-						annotationCollectionRefs.stream()
-								.map(ref -> ref.getId())
-								.collect(Collectors.toSet()),
-						commitMessage,
-						false, // don't force
-						true); // withCommit
+		rootRevisionHash = gitProjectHandler.addCollectionsToStagedAndCommit(
+				annotationCollectionRefs.stream().map(AnnotationCollectionReference::getId).collect(Collectors.toSet()),
+				commitMessage,
+				false, // don't force
+				true // withPush
+		);
 
-		this.graphProjectHandler.updateProject(oldRootRevisionHash, this.rootRevisionHash);
+		graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
 	}
 }

@@ -159,9 +159,8 @@ public interface Project {
 	 * Gets the tagsets in this project.
 	 *
 	 * @return a {@link Collection} of {@link TagsetDefinition}
-	 * @throws Exception if an error occurs when getting the tagsets
 	 */
-	Collection<TagsetDefinition> getTagsets() throws Exception;
+	Collection<TagsetDefinition> getTagsets();
 
 	/**
 	 * Prepares a tag library for importation into this project.
@@ -274,9 +273,8 @@ public interface Project {
 	 *
 	 * @param sourceDocumentId the ID of the document to check for
 	 * @return true if this project contains the document, otherwise false
-	 * @throws Exception if an error occurs when checking for the document
 	 */
-	boolean hasSourceDocument(String sourceDocumentId) throws Exception;
+	boolean hasSourceDocument(String sourceDocumentId);
 
 	/**
 	 * Gets the document references for the documents in this project.
@@ -291,9 +289,8 @@ public interface Project {
 	 *
 	 * @param sourceDocumentId the ID of the document for which to get the reference
 	 * @return a {@link SourceDocumentReference}
-	 * @throws Exception if an error occurs when getting the document reference
 	 */
-	SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) throws Exception;
+	SourceDocumentReference getSourceDocumentReference(String sourceDocumentId);
 
 	/**
 	 * Gets a single document from this project.
@@ -310,7 +307,7 @@ public interface Project {
 	 * @param sourceDocument the {@link SourceDocument} to add
 	 * @throws IOException if an error occurs when adding the document
 	 */
-	void addSourceDocument(SourceDocument sourceDocument) throws IOException;
+	void addSourceDocument(SourceDocument sourceDocument) throws Exception;
 
 	/**
 	 * Adds a document to this project.
@@ -319,7 +316,7 @@ public interface Project {
 	 * @param deleteTempFile whether to delete the associated temp file from the disk
 	 * @throws IOException if an error occurs when adding the document
 	 */
-	void addSourceDocument(SourceDocument sourceDocument, boolean deleteTempFile) throws IOException;
+	void addSourceDocument(SourceDocument sourceDocument, boolean deleteTempFile) throws Exception;
 
 	/**
 	 * Updates the metadata for a document.
@@ -491,9 +488,9 @@ public interface Project {
 	 * Commits and pushes the uncommitted changes in this project.
 	 *
 	 * @param commitMessage the commit message
-	 * @throws Exception if an error occurs when committing or pushing changes
+	 * @throws IOException if an error occurs when committing or pushing changes
 	 */
-	void commitAndPushChanges(String commitMessage) throws Exception;
+	void commitAndPushChanges(String commitMessage) throws IOException;
 
 	/**
 	 * Synchronizes this project with the remote server, reporting progress and completion or failure to the provided listener.

@@ -148,7 +148,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public String removeTagset(TagsetDefinition tagsetDefinition, Multimap<String, TagInstance> affectedTagInstancesByCollectionId) throws Exception {
+	public String removeTagset(TagsetDefinition tagsetDefinition, Multimap<String, TagInstance> affectedTagInstancesByCollectionId) throws IOException {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
@@ -619,7 +619,7 @@ public class GitProjectHandler {
 					remoteGitServerManager.getEmail()
 			);
 
-			for (AnnotationCollectionReference collectionRef : new HashSet<>(sourceDocumentReference.getUserMarkupCollectionRefs())) {
+			for (AnnotationCollectionReference collectionRef : sourceDocumentReference.getUserMarkupCollectionRefs()) {
 				gitAnnotationCollectionHandler.removeCollectionWithoutCommit(collectionRef);
 			}
 
@@ -780,7 +780,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public boolean hasConflicts() throws Exception {
+	public boolean hasConflicts() throws IOException {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
