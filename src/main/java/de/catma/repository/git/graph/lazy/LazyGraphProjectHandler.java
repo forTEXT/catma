@@ -131,7 +131,13 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 				new ExecutionListener<Pair<TagManager, Map<String, SourceDocumentReference>>>() {
 					@Override
 					public void done(Pair<TagManager, Map<String, SourceDocumentReference>> result) {
-						logger.info(String.format("LoadJob has finished for project \"%s\"", projectReference));
+						logger.info(
+								String.format(
+										"LoadJob has finished for project \"%s\" with ID %s",
+										projectReference.getName(),
+										projectReference.getProjectId()
+								)
+						);
 						LazyGraphProjectHandler.this.docRefsById.putAll(result.getSecond());
 						LazyGraphProjectHandler.this.tagManager = result.getFirst();
 						LazyGraphProjectHandler.this.revisionHash = revisionHash;

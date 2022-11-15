@@ -478,12 +478,22 @@ public class GraphWorktreeProject implements IndexedProject {
 							@Override
 							public void done(TagManager result) {
 								logger.info(
-										String.format("Loading tag library for project with ID %s", projectReference.getProjectId())
+										String.format(
+												"Loading tag library for project \"%s\" with ID %s",
+												projectReference.getName(),
+												projectReference.getProjectId()
+										)
 								);
 								tagManager.load(result.getTagLibrary());
 								initTagManagerListeners();
 
-								logger.info(String.format("Project with ID %s is loaded", projectReference.getProjectId()));
+								logger.info(
+										String.format(
+												"Project \"%s\" with ID %s has been loaded",
+												projectReference.getName(),
+												projectReference.getProjectId()
+										)
+								);
 								openProjectListener.ready(GraphWorktreeProject.this);
 							}
 						},
@@ -1677,7 +1687,11 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 
 		logger.info(
-				String.format("Committing and pushing changes in project \"%s\"", projectReference.getName())
+				String.format(
+						"Committing and pushing changes in project \"%s\" with ID %s",
+						projectReference.getName(),
+						projectReference.getProjectId()
+				)
 		);
 
 		String oldRootRevisionHash = rootRevisionHash;
