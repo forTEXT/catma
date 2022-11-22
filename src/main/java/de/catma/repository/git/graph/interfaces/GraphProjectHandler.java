@@ -14,13 +14,14 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.Indexer;
-import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 
 public interface GraphProjectHandler {
+	Indexer createIndexer();
+
 	void ensureProjectRevisionIsLoaded(
 			ExecutionListener<TagManager> openProjectListener,
 			ProgressListener progressListener,
@@ -33,11 +34,13 @@ public interface GraphProjectHandler {
 			BackgroundService backgroundService
 	);
 
-	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document, Path tokenizedSourceDocumentPath) throws Exception;
+	void updateProjectRevision(String oldRevisionHash, String newRevisionHash);
 
-	Collection<SourceDocumentReference> getDocuments(String rootRevisionHash) throws Exception;
+	// tagset & tag operations
+	Collection<TagsetDefinition> getTagsets(String rootRevisionHash);
 
-	SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception;
+	// collection operations
+	AnnotationCollection getCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference) throws Exception;
 
 	void addCollection(
 			String rootRevisionHash,
@@ -46,29 +49,24 @@ public interface GraphProjectHandler {
 			SourceDocumentReference document,
 			TagLibrary tagLibrary,
 			String oldRootRevisionHash
-	) throws Exception;
+	);
 
-	Collection<TagsetDefinition> getTagsets(String rootRevisionHash) throws Exception;
-
-	AnnotationCollection getCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference) throws Exception;
-
-	Multimap<String, String> getAnnotationIdsByCollectionId(TagDefinition tag) throws Exception;
-
-	Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception;
-
-	void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference, String oldRootRevisionHash) throws Exception;
-
-	void removeDocument(String rootRevisionHash, SourceDocumentReference document, String oldRootRevisionHash) throws Exception;
-
-	boolean hasDocument(String rootRevisionHash, String documentId);
-
-	Multimap<String, String> getAnnotationIdsByCollectionId(TagsetDefinition tagsetDefinition) throws Exception;
+	void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference, String oldRootRevisionHash);
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(TagsetDefinition tagsetDefinition) throws Exception;
 
-	void updateProjectRevision(String oldRevisionHash, String newRevisionHash);
+	Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception;
 
-	Indexer createIndexer();
+	// document operations
+	boolean hasDocument(String rootRevisionHash, String documentId);
 
 	SourceDocumentReference getSourceDocumentReference(String sourceDocumentID);
+
+	Collection<SourceDocumentReference> getDocuments(String rootRevisionHash);
+
+	SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception;
+
+	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document, Path tokenizedSourceDocumentPath) throws Exception;
+
+	void removeDocument(String rootRevisionHash, SourceDocumentReference document, String oldRootRevisionHash);
 }
