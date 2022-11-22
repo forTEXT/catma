@@ -1,9 +1,7 @@
 package de.catma.repository.git.graph.interfaces;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 import com.google.common.collect.Multimap;
 
@@ -16,10 +14,8 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.Indexer;
-import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
@@ -39,8 +35,6 @@ public interface GraphProjectHandler {
 
 	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document, Path tokenizedSourceDocumentPath) throws Exception;
 
-	void updateSourceDocument(String rootRevisionHash, SourceDocumentReference sourceDocument, String oldRootRevisionHash) throws Exception;
-
 	Collection<SourceDocumentReference> getDocuments(String rootRevisionHash) throws Exception;
 
 	SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception;
@@ -54,39 +48,13 @@ public interface GraphProjectHandler {
 			String oldRootRevisionHash
 	) throws Exception;
 
-	void addTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception;
-
-	void addTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception;
-
-	void updateTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception;
-
 	Collection<TagsetDefinition> getTagsets(String rootRevisionHash) throws Exception;
-
-	void addPropertyDefinition(
-			String rootRevisionHash, PropertyDefinition propertyDefinition, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash
-	) throws Exception;
-
-	void createOrUpdatePropertyDefinition(
-			String rootRevisionHash, PropertyDefinition propertyDefinition, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash
-	) throws Exception;
 
 	AnnotationCollection getCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference) throws Exception;
 
 	Multimap<String, String> getAnnotationIdsByCollectionId(TagDefinition tag) throws Exception;
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception;
-
-	void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception;
-
-	void removePropertyDefinition(
-			String rootRevisionHash, PropertyDefinition propertyDefinition, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash
-	) throws Exception;
-
-	void removeTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception;
-
-	void updateTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception;
-
-	void updateCollection(String rootRevisionHash, AnnotationCollectionReference collectionRef, String oldRootRevisionHash) throws Exception;
 
 	void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference, String oldRootRevisionHash) throws Exception;
 
@@ -98,7 +66,7 @@ public interface GraphProjectHandler {
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(TagsetDefinition tagsetDefinition) throws Exception;
 
-	void updateProject(String oldRootRevisionHash, String rootRevisionHash) throws IOException;
+	void updateProjectRevision(String oldRevisionHash, String newRevisionHash);
 
 	Indexer createIndexer();
 

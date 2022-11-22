@@ -578,8 +578,11 @@ public class GraphWorktreeProject implements IndexedProject {
 			);
 		}
 
+		tagsetDefinition.setResponsibleUser(user.getIdentifier());
+
 		String oldRootRevisionHash = rootRevisionHash;
 
+		// create tagset in repo and commit
 		rootRevisionHash = gitProjectHandler.createTagset(
 				tagsetDefinition.getUuid(),
 				tagsetDefinition.getName(),
@@ -587,9 +590,8 @@ public class GraphWorktreeProject implements IndexedProject {
 				tagsetDefinition.getForkedFromCommitURL()
 		);
 
-		tagsetDefinition.setResponsibleUser(user.getIdentifier());
-
-		graphProjectHandler.addTagset(rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	private void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -606,9 +608,11 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		String oldRootRevisionHash = rootRevisionHash;
 
+		// update tagset in repo and commit
 		rootRevisionHash = gitProjectHandler.updateTagset(tagsetDefinition);
 
-		graphProjectHandler.updateTagset(rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -634,7 +638,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		rootRevisionHash = gitProjectHandler.removeTagset(tagsetDefinition, tagInstancesByCollectionId);
 
 		// update revision hash on GraphProjectHandler
-		graphProjectHandler.removeTagset(rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
@@ -651,6 +655,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		String oldRootRevisionHash = rootRevisionHash;
 
+		// create tag in repo and commit
 		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
 				tagsetDefinition.getUuid(),
 				tagDefinition,
@@ -663,7 +668,8 @@ public class GraphWorktreeProject implements IndexedProject {
 				)
 		);
 
-		graphProjectHandler.addTagDefinition(rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	private void updateTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
@@ -681,6 +687,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		String oldRootRevisionHash = rootRevisionHash;
 
+		// update tag in repo and commit
 		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
 				tagsetDefinition.getUuid(),
 				tagDefinition,
@@ -693,7 +700,8 @@ public class GraphWorktreeProject implements IndexedProject {
 				)
 		);
 
-		graphProjectHandler.updateTagDefinition(rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	private void removeTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
@@ -720,7 +728,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		rootRevisionHash = gitProjectHandler.removeTagAndAnnotations(tagDefinition, tagInstancesByCollectionId);
 
 		// update revision hash on GraphProjectHandler
-		graphProjectHandler.removeTagDefinition(rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 
 		// fire annotation change events for each collection
 		for (String collectionId : tagInstancesByCollectionId.keySet()) {
@@ -750,6 +758,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		String oldRootRevisionHash = rootRevisionHash;
 
+		// update tag in repo and commit
 		TagsetDefinition tagsetDefinition = tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
 
 		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
@@ -766,13 +775,8 @@ public class GraphWorktreeProject implements IndexedProject {
 				)
 		);
 
-		graphProjectHandler.addPropertyDefinition(
-				rootRevisionHash,
-				propertyDefinition,
-				tagDefinition,
-				tagsetDefinition,
-				oldRootRevisionHash
-		);
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	private void updatePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
@@ -791,6 +795,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		String oldRootRevisionHash = rootRevisionHash;
 
+		// update tag in repo and commit
 		TagsetDefinition tagsetDefinition = tagManager.getTagLibrary().getTagsetDefinition(tagDefinition);
 
 		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
@@ -807,13 +812,8 @@ public class GraphWorktreeProject implements IndexedProject {
 				)
 		);
 
-		graphProjectHandler.createOrUpdatePropertyDefinition(
-				rootRevisionHash,
-				propertyDefinition,
-				tagDefinition,
-				tagsetDefinition,
-				oldRootRevisionHash
-		);
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	private void removePropertyDefinition(
@@ -883,13 +883,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		);
 
 		// update revision hash on GraphProjectHandler
-		graphProjectHandler.removePropertyDefinition(
-				rootRevisionHash,
-				propertyDefinition,
-				tagDefinition,
-				tagsetDefinition,
-				oldRootRevisionHash
-		);
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	@Override
@@ -1085,10 +1079,13 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		String oldRootRevisionHash = rootRevisionHash;
 
+		// update collection in repo and commit
 		rootRevisionHash = gitProjectHandler.updateCollection(annotationCollectionRef);
 
-		graphProjectHandler.updateCollection(rootRevisionHash, annotationCollectionRef, oldRootRevisionHash);
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 
+		// fire collection change event
 		SourceDocumentReference sourceDocumentRef = getSourceDocumentReference(annotationCollectionRef.getSourceDocumentId());
 		eventBus.post(
 				new CollectionChangeEvent(
@@ -1534,13 +1531,17 @@ public class GraphWorktreeProject implements IndexedProject {
 			);
 		}
 
+		sourceDocumentRef.getSourceDocumentInfo().getTechInfoSet().setResponsibleUser(responsibleUser);
+
 		String oldRootRevisionHash = rootRevisionHash;
 
-		sourceDocumentRef.getSourceDocumentInfo().getTechInfoSet().setResponsibleUser(responsibleUser);
+		// update document metadata in repo and commit
 		rootRevisionHash = gitProjectHandler.updateSourceDocument(sourceDocumentRef);
 
-		graphProjectHandler.updateSourceDocument(rootRevisionHash, sourceDocumentRef, oldRootRevisionHash);
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 
+		// fire document change event
 		eventBus.post(new DocumentChangeEvent(sourceDocumentRef, ChangeType.UPDATED));
 	}
 
@@ -1674,18 +1675,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		rootRevisionHash = gitProjectHandler.commitProject(commitMessage);
 
-		if (oldRootRevisionHash.equals(rootRevisionHash)) {
-			logger.info(
-					String.format("No changes in project \"%s\"", projectReference.getName())
-			);
-		}
-		else {
-			logger.info(
-					String.format("New revision of project \"%s\" is: %s", projectReference.getName(), rootRevisionHash)
-			);
-		}
-
-		graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	@Override
@@ -1815,6 +1805,6 @@ public class GraphWorktreeProject implements IndexedProject {
 				true // withPush
 		);
 
-		graphProjectHandler.updateProject(oldRootRevisionHash, rootRevisionHash);
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 }

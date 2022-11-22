@@ -159,18 +159,15 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 			SourceDocument document,
 			Path tokenizedSourceDocumentPath
 	) throws Exception {
+		// TODO: see TODO in GitProjectHandler.createSourceDocument
 		document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
 				documentFileURIProvider.getDocumentFileURI(document.getUuid())
 		);
+
 		docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
 		documentCache.put(document.getUuid(), document);
-		revisionHash = rootRevisionHash;
-	}
 
-	@Override
-	public void updateSourceDocument(String rootRevisionHash, SourceDocumentReference sourceDocument, String oldRootRevisionHash)
-			throws Exception {
-		this.revisionHash = rootRevisionHash;
+		updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	@Override
@@ -200,42 +197,13 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 						collection.getSourceDocumentId(), 
 						collection.getForkedFromCommitURL(),
 						collection.getResponsibleUser()));
-		this.revisionHash = rootRevisionHash;
-	}
 
-	@Override
-	public void addTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
-			throws Exception {
-		this.revisionHash = rootRevisionHash;
-	}
-
-	@Override
-	public void addTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
-			String oldRootRevisionHash) throws Exception {
-		this.revisionHash = rootRevisionHash;
-	}
-
-	@Override
-	public void updateTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
-			String oldRootRevisionHash) throws Exception {
-		this.revisionHash = rootRevisionHash;
+		updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	@Override
 	public Collection<TagsetDefinition> getTagsets(String rootRevisionHash) throws Exception {
 		return this.tagManager.getTagLibrary().getTagsetDefinitions();
-	}
-
-	@Override
-	public void addPropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition, TagDefinition tag,
-			TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
-		this.revisionHash = rootRevisionHash;
-	}
-
-	@Override
-	public void createOrUpdatePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
-			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
-		this.revisionHash = rootRevisionHash;
 	}
 
 	@Override
@@ -285,41 +253,11 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset,
-			String oldRootRevisionHash) throws Exception {
-		this.revisionHash = rootRevisionHash;
-	}
-
-	@Override
-	public void removePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
-			TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception {
-		this.revisionHash = rootRevisionHash;
-	}
-
-	@Override
-	public void removeTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
-			throws Exception {
-		this.revisionHash = rootRevisionHash;
-
-	}
-
-	@Override
-	public void updateTagset(String rootRevisionHash, TagsetDefinition tagset, String oldRootRevisionHash)
-			throws Exception {
-		this.revisionHash = rootRevisionHash;
-	}
-
-	@Override
-	public void updateCollection(String rootRevisionHash, AnnotationCollectionReference collectionRef,
-			String oldRootRevisionHash) throws Exception {
-		this.revisionHash = rootRevisionHash;
-	}
-
-	@Override
 	public void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference,
 			String oldRootRevisionHash) throws Exception {
 		this.collectionCache.invalidate(collectionReference.getId());
-		this.revisionHash = rootRevisionHash;
+
+		updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	@Override
@@ -333,7 +271,8 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 				.collect(Collectors.toSet()));
 		this.documentCache.invalidate(document.getUuid());
 		this.docRefsById.remove(document.getUuid());
-		this.revisionHash = rootRevisionHash;
+
+		updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
 	@Override
@@ -383,8 +322,25 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void updateProject(String oldRootRevisionHash, String rootRevisionHash) throws IOException {
-		this.revisionHash = rootRevisionHash;
+	public void updateProjectRevision(String oldRevisionHash, String newRevisionHash) {
+		revisionHash = newRevisionHash;
+
+		if (newRevisionHash.equals(oldRevisionHash)) {
+			logger.info(
+					String.format("No changes in project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId())
+			);
+		}
+		else {
+			logger.info(
+					String.format(
+							"Updated revision of project \"%1$s\" with ID %2$s. Old: %3$s, New: %4$s",
+							projectReference.getName(),
+							projectReference.getProjectId(),
+							oldRevisionHash,
+							newRevisionHash
+					)
+			);
+		}
 	}
 
 	@Override
