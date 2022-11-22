@@ -64,7 +64,7 @@ public class LeafFinder {
 				}
 			}
 		}
-		logger.info("next right leaf is " + DebugUtil.getNodeInfo(this.nextRightLeaf));
+		logger.info("Next right leaf is " + DebugUtil.getNodeInfo(this.nextRightLeaf));
 	}
 
 	private void findNextLeftLeaf() {
@@ -149,7 +149,7 @@ public class LeafFinder {
 			getNextRightLeaf();
 		}
 		while ((this.nextRightLeaf != null) && (Element.is(this.nextRightLeaf)));
-		logger.info("next right text leaf is " + DebugUtil.getNodeInfo(this.nextRightLeaf));
+		logger.info("Next right text leaf is " + DebugUtil.getNodeInfo(this.nextRightLeaf));
 		return this.nextRightLeaf;
 	}
 
@@ -163,16 +163,16 @@ public class LeafFinder {
 	}
 	
 	public static Node getFirstTextLeaf(Node root) {
-		logger.info("looking for first text leaf for root: " + DebugUtil.getNodeInfo(root));
+		logger.info("Looking for first text leaf for root: " + DebugUtil.getNodeInfo(root));
 		if (root.hasChildNodes()) {
 			Node candidate = root.getFirstChild();
 			while(candidate.hasChildNodes()) {
 				candidate = candidate.getFirstChild();
 			}
-			logger.info("outer left child node: " + DebugUtil.getNodeInfo(candidate));
+			logger.info("Outer left child node: " + DebugUtil.getNodeInfo(candidate));
 			
 			if (Element.is(candidate) || (candidate.getNodeValue().isEmpty())) {
-				logger.info("outer left node is not a text leaf, we start searching to the right now");
+				logger.info("Outer left node is not a text leaf, we start searching to the right now");
 				LeafFinder leafFinder = new LeafFinder(candidate);
 //				return leafFinder.getNextRightTextLeaf();
 				return leafFinder.getNextNonEmptyRightTextLeaf();

@@ -17,12 +17,12 @@ public class NoopRBACManager implements IRBACManager {
 
 	@Override
 	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference) throws IOException {
-		throw new UnsupportedOperationException("operation not supported");
+		throw new UnsupportedOperationException("Operation not supported");
 	}
 
 	@Override
 	public void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
-		throw new UnsupportedOperationException("operation not supported");
+		throw new UnsupportedOperationException("Operation not supported");
 	}
 
 	@Override

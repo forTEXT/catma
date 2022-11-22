@@ -34,8 +34,11 @@ public class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage> 
 	public void uiOnMessage(Message<JoinedProjectMessage> message) {
 		if(message.getMessageObject().getInvitation().getKey() == this.invitation.getKey()) {	
 			this.eventBus.post(new ProjectChangedEvent());
-			Notification.show("Joined successfully", "Sucessfully joined Project " + 
-					this.invitation.getName() , Type.HUMANIZED_MESSAGE);
+			Notification.show(
+					"Joined successfully",
+					String.format("Successfully joined project \"%s\"", invitation.getName()),
+					Type.HUMANIZED_MESSAGE
+			);
 			this.getUi().push();
 			closeHandler.close();
 		}	

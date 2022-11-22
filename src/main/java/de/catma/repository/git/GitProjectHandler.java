@@ -495,7 +495,7 @@ public class GitProjectHandler {
 			for (AnnotationCollectionReference collectionRef : collectionsToDelete) {
 				logger.info(
 						String.format(
-								"Removing stale collection \"%1$s\" with ID %2$s due to removal of corresp. document with ID: %3$s",
+								"Deleting stale collection \"%1$s\" with ID %2$s due to deletion of corresponding document with ID %3$s",
 								collectionRef.getName(),
 								collectionRef.getId(),
 								collectionRef.getSourceDocumentId()

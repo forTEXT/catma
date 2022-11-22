@@ -76,7 +76,7 @@ public class AccessTokenDialog extends Window {
 				tokenDisplayLayout.setVisible(true);
 			}
 			catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError(Messages.getString("AccessTokenDialog.tokenCreationErrorMessage"), e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError(Messages.getString("AccessTokenDialog.tokenCreationErrorMessage"), e);
 			}
 		});
 	}

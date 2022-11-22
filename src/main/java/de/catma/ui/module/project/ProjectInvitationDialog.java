@@ -74,7 +74,7 @@ public class ProjectInvitationDialog extends Window {
 			EventBus eventBus,
 			HazelCastService hazelcastService) {
 		
-		super("Invite others to the Project");
+		super("Invite Others to the Project");
 		
 		this.project = project;
 		this.documentsForCollectionCreation = documentsForCollectionCreation;
@@ -111,7 +111,7 @@ public class ProjectInvitationDialog extends Window {
 		
 		content.addComponent(lInvitationCode);
 
-		cbOwnCollection = new CheckBox("Create one collection per Document and joined User", false);
+		cbOwnCollection = new CheckBox("Create one collection per document and joined user", false);
 		cbOwnCollection.setValue(false);
 		cbOwnCollection.setVisible(false); //TODO: value of this CB as no effect on the joining side so far 
 		
@@ -163,7 +163,7 @@ public class ProjectInvitationDialog extends Window {
 		if (roleBox.getValue() == null) {
 			Notification.show(
 				"Info", 
-				"Please select a Project role for the joining users!", 
+				"Please select a project role for the joining users!",
 				Type.HUMANIZED_MESSAGE);
 			return;
 		}

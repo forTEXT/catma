@@ -33,7 +33,7 @@ public class LogProgressListener implements ProgressListener {
 	}
 
 	public void setException(Throwable t) {
-		logger.log(Level.SEVERE, "error during job execution", t);
+		logger.log(Level.SEVERE, "Error during job execution", t);
 	}
 
 }

@@ -57,10 +57,10 @@ public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 					value.add(new StringPropertyValueFactory(vColl, i).getValue());
 				}
 				else {
-					throw new UnknownElementException(curChild.getLocalName() + " is not supported!");
+					throw new UnknownElementException(curChild.getLocalName() + " is not supported");
 				}
 			} catch (UnknownElementException e) {
-				logger.log(Level.SEVERE, "error extracting value", e);
+				logger.log(Level.SEVERE, "Error extracting value", e);
 			}
 		}
 		

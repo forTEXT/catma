@@ -117,7 +117,7 @@ public class TeiTagLibraryDeserializer {
 				tagDef.addSystemPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
-				logger.log(Level.SEVERE, "error adding system property " + systemPropertyNodes.get(i), uee);
+				logger.log(Level.SEVERE, "Error adding system property " + systemPropertyNodes.get(i), uee);
 			}
 				
 		}
@@ -129,7 +129,7 @@ public class TeiTagLibraryDeserializer {
 				tagDef.addUserDefinedPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
-				logger.log(Level.SEVERE, "error adding user property " + userPropertyNodes.get(i), uee);
+				logger.log(Level.SEVERE, "Error adding user property " + userPropertyNodes.get(i), uee);
 			}
 				
 		}
@@ -146,7 +146,7 @@ public class TeiTagLibraryDeserializer {
 			pvf = new ValueRangePropertyValueFactory(propElement);
 		}
 		else {
-			throw new UnknownElementException(valueElement.getLocalName() + " is not supported!");
+			throw new UnknownElementException(valueElement.getLocalName() + " is not supported");
 		}
 		
 		return new PropertyDefinition(

@@ -499,7 +499,7 @@ public class TagsView extends HugeCard {
 		if (selectedTagsets.isEmpty()) {
 			Notification.show(
 				"Info", 
-				"Please select one or more Tagsets first!",
+				"Please select one or more tagsets first!",
 				Type.HUMANIZED_MESSAGE);
 		}
 		else {
@@ -530,8 +530,9 @@ public class TagsView extends HugeCard {
 							UI.getCurrent(), 
 							"Warning", 
 							String.format(
-								"Are you sure you want to delete Tagset(s) %1$s and all related data?", 
-								String.join(",", tagsetNames)),
+								"Are you sure you want to delete tagset(s) \"%s\" and all related data?",
+								String.join("\", \"", tagsetNames)
+							),
 							"Delete",
 							"Cancel",
 							dlg -> {
@@ -545,7 +546,7 @@ public class TagsView extends HugeCard {
 				});
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error deleting Tagsets", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error deleting tagsets", e);
 		}
 	}
 
@@ -572,8 +573,8 @@ public class TagsView extends HugeCard {
 								projectMembers = TagsView.this.project.getProjectMembers();
 							}
 							catch (IOException e) {
-								((ErrorHandler)UI.getCurrent()).showAndLogError(
-										"Error loading project members!", e);
+								((ErrorHandler) UI.getCurrent()).showAndLogError(
+										"Error loading project members", e);
 							}
 							if (projectMembers != null) {
 								EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
@@ -595,14 +596,14 @@ public class TagsView extends HugeCard {
 					});
 			}
 			catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error editing Tagsets", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error editing tagsets", e);
 			}
 
 			
 		}
 		else {
 			Notification.show(
-				"Info", "Please select a Tagset first!", 
+				"Info", "Please select a tagset first!",
 				Type.HUMANIZED_MESSAGE);
 		}
 	}
@@ -622,7 +623,7 @@ public class TagsView extends HugeCard {
 			deleteTags(targetTags);
 		}
 		else {
-			Notification.show("Info", "Please select one or more Tags first!", Type.TRAY_NOTIFICATION);
+			Notification.show("Info", "Please select one or more tags first!", Type.TRAY_NOTIFICATION);
 		}
 	}
 
@@ -649,11 +650,11 @@ public class TagsView extends HugeCard {
 					@Override
 					public void execute() {
 						String msg = String.format(
-								"Are you sure you want to delete the following Tags: %1$s?", 
+								"Are you sure you want to delete the following tags: \"%s\"?",
 								targetTags
 								.stream()
 								.map(TagDefinition::getName)
-								.collect(Collectors.joining(",")));
+								.collect(Collectors.joining("\", \"")));
 						
 						ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
 							if (dlg.isConfirmed()) {
@@ -668,7 +669,7 @@ public class TagsView extends HugeCard {
 			});
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error deleting Tags", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error deleting tags", e);
 		}
 
 
@@ -682,7 +683,7 @@ public class TagsView extends HugeCard {
 		.collect(Collectors.toList());
 		
 		if (targetTags.isEmpty()) {
-			Notification.show("Info", "Please select a Tag first!", Type.TRAY_NOTIFICATION);
+			Notification.show("Info", "Please select a tag first!", Type.TRAY_NOTIFICATION);
 		}
 		else if (targetTags.size() > 1) {
 			handleAddPropertyRequest();
@@ -717,7 +718,7 @@ public class TagsView extends HugeCard {
 				});
 			}
 			catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error editing Tags", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error editing tags", e);
 			}
 		}
 		
@@ -747,7 +748,7 @@ public class TagsView extends HugeCard {
 		}
 		
 		if (targetTags.isEmpty()) {
-			Notification.show("Info", "Please select one ore more Tags first!", Type.TRAY_NOTIFICATION);
+			Notification.show("Info", "Please select one ore more tags first!", Type.TRAY_NOTIFICATION);
 		}
 		else {
 			
@@ -815,7 +816,7 @@ public class TagsView extends HugeCard {
 				});
 			}
 			catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error editing Tags", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error editing tags", e);
 			}
 		}
 	}
@@ -833,7 +834,7 @@ public class TagsView extends HugeCard {
 		TagsetDataItem tagsetDataItem = (TagsetDataItem) tagsetDataItemCandidate;
 		if (tagsetDataItem != null) {
 			String msg = String.format(
-					"Are you sure you want to delete the following Property: %1$s?", 
+					"Are you sure you want to delete the property \"%s\"?",
 					propertyDataItem.getPropertyDefinition().getName());
 				
 			ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
@@ -849,7 +850,7 @@ public class TagsView extends HugeCard {
 		PropertyDataItem propertyDataItem = (PropertyDataItem) tagsetData.getParent(possibleValueDataItem);
 		TagDataItem tagDataItem = (TagDataItem) tagsetData.getParent(propertyDataItem);
 		String msg = String.format(
-				"Are you sure you want to delete the following Value: %1$s?", 
+				"Are you sure you want to delete the value \"%s\"?",
 				possibleValueDataItem.getPropertyValue());
 			
 		ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
@@ -1014,7 +1015,7 @@ public class TagsView extends HugeCard {
 				});
 		}
 		else {
-			Notification.show("Info", "Please select at least one parent Tag!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select at least one parent tag!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 	
@@ -1029,7 +1030,7 @@ public class TagsView extends HugeCard {
 		if (tagsets.isEmpty()) {
 			Notification.show(
 				"Info", 
-				"You do not have any Tagsets to add Tags to yet, please create a Tagset first!", 
+				"You do not have any tagsets to add tags to yet, please create a tagset first!",
 				Type.HUMANIZED_MESSAGE);
 			return;
 		}
@@ -1104,7 +1105,7 @@ public class TagsView extends HugeCard {
             tagsetGridComponent.getActionGridBar().setMoreOptionsBtnEnabled(!project.isReadOnly());
             
         } catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading data", e);
         }
 	}
 	
@@ -1117,7 +1118,7 @@ public class TagsView extends HugeCard {
     
 	private void handleAddTagsetRequest() {
     	SingleTextInputDialog tagsetNameDlg = 
-        		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+        		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
         				new SaveCancelListener<String>() {
     						
     						@Override

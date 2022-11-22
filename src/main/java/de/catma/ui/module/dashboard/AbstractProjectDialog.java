@@ -21,7 +21,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.module.main.ErrorHandler;
 
 /**
- * Dialog that creates a Project
+ * Dialog that creates/edits a project
  * 
  * @author db
  *

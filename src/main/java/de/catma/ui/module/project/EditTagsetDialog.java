@@ -25,7 +25,7 @@ public class EditTagsetDialog extends AbstractOkCancelDialog<TagsetMetadata> {
 			TagsetMetadata tagsetMetadata,
 			Collection<Member> projectMembers,
 			SaveCancelListener<TagsetMetadata> saveCancelListener) {
-		super("Edit Tagset metadata", saveCancelListener);
+		super("Edit Tagset Metadata", saveCancelListener);
 		this.tagsetMetadata = tagsetMetadata;
 		initComponents(tagsetMetadata, projectMembers);
 	}

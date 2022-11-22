@@ -34,7 +34,7 @@ public class AccountAlreadyTakenValidator implements Validator<String> {
 			}
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Failed to check username or email address", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to check username or email address", e);
 			return ValidationResult.error("Failed to check username or email address");
 		}
 	}

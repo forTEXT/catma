@@ -131,7 +131,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 					try {
 						addAnnotation(annotation);
 					} catch (Exception e) {
-						((ErrorHandler)UI.getCurrent()).showAndLogError("error adding Annotation", e);
+						((ErrorHandler) UI.getCurrent()).showAndLogError("Error adding annotation", e);
 					}
 				});
 				
@@ -180,7 +180,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		try {
 			addAnnotations(annotations);
 		} catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error refreshing Annotations", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error refreshing annotations", e);
 		}
 	}
 
@@ -215,7 +215,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		addComponent(headerPanel);
 		
 		btClearSelected = new IconButton(VaadinIcons.ERASER);
-		btClearSelected.setDescription("Clear the list of selected Annotations");
+		btClearSelected.setDescription("Clear the list of selected annotations");
 		headerPanel.addComponent(btClearSelected);
 		headerPanel.setComponentAlignment(btClearSelected, Alignment.TOP_RIGHT);
 		headerPanel.setExpandRatio(btClearSelected, 1.0f);
@@ -308,7 +308,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		if (project.isReadOnly()) {
 			Notification.show(
 					"Info", 
-					"This Project is currently in read only mode!", 
+					"This project is currently in read-only mode!",
 					Type.HUMANIZED_MESSAGE);
 			return;
 		}
@@ -333,7 +333,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 						ConfirmDialog.show(
 								UI.getCurrent(), 
 								"Info", 
-								"Are you sure you want to delete this Annotation?", 
+								"Are you sure you want to delete this annotation?",
 								"Delete", 
 								"Cancel", dlg -> {
 									if (dlg.isConfirmed()) {
@@ -352,7 +352,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		if (project.isReadOnly()) {
 			Notification.show(
 					"Info", 
-					"This Project is currently in read only mode!", 
+					"This project is currently in read-only mode!",
 					Type.HUMANIZED_MESSAGE);
 			return;
 		}
@@ -366,7 +366,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
 			Notification.show(
 					"Info", 
-					"There are no Properties defined for the Tag of this Annotation!", 
+					"There are no properties defined for the tag of this annotation!",
 					Type.HUMANIZED_MESSAGE);
 		}
 		else {
@@ -394,7 +394,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 									
 									
 								} catch (Exception e) {
-									((ErrorHandler)UI.getCurrent()).showAndLogError("Error updating Annotation Properties", e);
+									((ErrorHandler) UI.getCurrent()).showAndLogError("Error updating annotation properties", e);
 								}
 							}
 						});

@@ -89,7 +89,7 @@ class TagsetDataItem implements TagsetTreeItem {
 	
 	@Override
 	public String getPropertySummary() {
-		return null; // no properties for Tagsets
+		return null; // no properties for tagsets
 	}
 	
 	@Override

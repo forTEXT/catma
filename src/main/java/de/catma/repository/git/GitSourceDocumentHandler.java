@@ -98,7 +98,7 @@ public class GitSourceDocumentHandler {
 
 		// commit newly added files
 		String commitMessage = String.format(
-				"Adding Document %s with ID %s", 
+				"Created document \"%s\" with ID %s",
 				sourceDocumentInfo.getContentInfoSet().getTitle(), 
 				sourceDocumentId
 		);
@@ -194,8 +194,8 @@ public class GitSourceDocumentHandler {
 				documentFolderAbsolutePath, 
 				false, // do not delete the parent folder
 				String.format(
-					"Removing Document %1$s with ID %2$s", 
-					document.toString(), 
+					"Deleted document \"%s\" with ID %s",
+					document.getSourceDocumentInfo().getContentInfoSet().getTitle(),
 					document.getUuid()),
 				this.username,
 				this.email);

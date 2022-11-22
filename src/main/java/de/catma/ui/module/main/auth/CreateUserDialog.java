@@ -100,7 +100,7 @@ public class CreateUserDialog extends Window {
 			// sanity check the password
 			if(tfPassword.getValue() == null || tfVerifyPassword.getValue() == null || 
 					(! tfPassword.getValue().equals(tfVerifyPassword.getValue()))) {
-				Notification.show("Passwords don't match",Type.ERROR_MESSAGE);
+				Notification.show("The passwords don't match!",Type.ERROR_MESSAGE);
 				return;
 			}
 
@@ -124,11 +124,11 @@ public class CreateUserDialog extends Window {
 						userData.getUsername());
 				
 				Notification.show(
-						"Your user account has been created. Please sign in!", 
+						"Your user account has been created - please sign in.",
 						Type.HUMANIZED_MESSAGE);
 				
 			} catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't create token in backend", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't create token in backend", e);
 			}
 			this.close();
 		});

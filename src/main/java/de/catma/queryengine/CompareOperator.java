@@ -110,7 +110,7 @@ public enum CompareOperator {
             }
         }
         throw new IllegalArgumentException(
-                "value " + value + " is not a known operator");
+                "Value " + value + " is not a known operator");
     }
 
     /**

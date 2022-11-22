@@ -58,7 +58,7 @@ public class Vaadin8InitializationService implements InitializationService {
 		}
 
 		if (!tempDir.exists() && !tempDir.mkdirs()) {
-			throw new IOException(String.format("Failed to create temp directory \"%s\"", tempDir.getAbsolutePath()));
+			throw new IOException(String.format("Failed to create temp directory at path %s", tempDir.getAbsolutePath()));
 		}
 
 		VaadinSession.getCurrent().setAttribute("TempDir", tempDir.getAbsolutePath());

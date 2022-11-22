@@ -73,7 +73,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		try {
 			initData();
 		} catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading available Collections.", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading available collections", e);
 		}
 	}
 	
@@ -151,7 +151,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
             else {
             	Notification.show(
             		"Info", 
-            		String.format("There is no Collection yet for Document %1$s", srcDoc.toString()), 
+            		String.format("There is no collection yet for document \"%s\"", srcDoc),
             		Type.HUMANIZED_MESSAGE);
             }
         }
@@ -167,9 +167,9 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
             	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
         documentsGridMoreOptionsContextMenu.addItem(
-        	"Select filtered Documents", mi-> handleSelectFilteredDocuments());
+        	"Select Filtered Documents", mi-> handleSelectFilteredDocuments());
         documentsGridMoreOptionsContextMenu.addItem(
-        	"Select filtered Collections", mi-> handleSelectFilteredCollections());
+        	"Select Filtered Collections", mi-> handleSelectFilteredCollections());
         
         documentGrid.addSelectionListener(event -> {
         	if (stepChangeListener != null) {
@@ -240,7 +240,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	    	
 	    	if (!selectedDocuments.isEmpty()) {
 		    	SingleTextInputDialog collectionNameDlg = 
-		    		new SingleTextInputDialog("Add Annotation Collection(s)", "Please enter the Collection name:",
+		    		new SingleTextInputDialog("Create Annotation Collection(s)", "Please enter the collection name:",
 		    				new SaveCancelListener<String>() {
 								
 								@Override
@@ -254,11 +254,11 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		    	collectionNameDlg.show();
 	    	}
 	    	else {
-	    		Notification.show("Info", "Please select one or more Documents first!", Type.HUMANIZED_MESSAGE);
+	    		Notification.show("Info", "Please select one or more documents first!", Type.HUMANIZED_MESSAGE);
 	    	}
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error adding a Collection", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error creating annotation collection", e);
 		}
 	}
 
@@ -321,7 +321,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		  	.setExpandRatio(1)
 		  	.setHidden(true);
 
-        Label documentsAnnotations = new Label("Select one Collection per Document");
+        Label documentsAnnotations = new Label("Select one collection per document");
 
         documentGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
@@ -330,7 +330,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
         documentGridComponent.setSizeFull();
         miToggleResponsibiltityFilter = 
         	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(
-        			"Hide other's responsibilities", mi -> toggleResponsibilityFilter());
+        			"Hide others' responsibilities", mi -> toggleResponsibilityFilter());
         
         miToggleResponsibiltityFilter.setCheckable(true);
         miToggleResponsibiltityFilter.setChecked(true);
@@ -357,7 +357,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 			initData();
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError(
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
 					"Error loading available collections", e
 			);
 		}

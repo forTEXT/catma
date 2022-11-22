@@ -113,7 +113,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				Exception e = (Exception) evt.getNewValue();
-				errorHandler.showAndLogError("Error handling Project!", e);
+				errorHandler.showAndLogError("Error handling project", e);
 				
 			}
 		};
@@ -179,7 +179,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			if (isAttached()) {
 				Notification.show(
 					"Info", 
-					String.format("Collection %1$s has been created!", collectionReference.toString()),  
+					String.format("Collection \"%s\" has been created", collectionReference),
 					Type.TRAY_NOTIFICATION);
 			}
 			
@@ -236,7 +236,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private void handleAddTagsetRequest() {
     	
     	SingleTextInputDialog tagsetNameDlg = 
-    		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+    		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
     				new SaveCancelListener<String>() {
 						
 						@Override
@@ -283,11 +283,11 @@ public class AnnotateResourcePanel extends VerticalLayout {
     		}
     	}
     	if (selectedDocuments.isEmpty()) {
-    		Notification.show("Info", "Please select at least one Document first!", Type.HUMANIZED_MESSAGE);
+    		Notification.show("Info", "Please select at least one document first!", Type.HUMANIZED_MESSAGE);
     	}
     	else {
 	    	SingleTextInputDialog collectionNameDlg = 
-	    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+	    		new SingleTextInputDialog("Create Annotation Collection", "Please enter the collection name:",
 	    				new SaveCancelListener<String>() {
 							
 							@Override
@@ -352,7 +352,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				.ifPresent(documentItem -> documentTree.expand(documentItem));
 			
 		} catch (Exception e) {
-			errorHandler.showAndLogError("Error loading data!", e);
+			errorHandler.showAndLogError("Error loading data", e);
 		}
 	}
 	

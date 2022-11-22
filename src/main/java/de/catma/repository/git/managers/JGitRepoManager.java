@@ -174,8 +174,8 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		if (repositoryPath.exists() && repositoryPath.isDirectory()) {
 			throw new IOException(
 				String.format(
-					"A Git repository with the name '%s' already exists at base path '%s'. " +
-					"Did you mean to call `open`?",
+					"A Git repository with the name \"%s\" already exists at base path %s. " +
+					"Did you mean to call 'open'?",
 						name,
 					this.getRepositoryBasePath()
 				)
@@ -286,8 +286,8 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		if (!repositoryPath.exists() || !repositoryPath.isDirectory()) {
 			throw new IOException(
 				String.format(
-					"Couldn't find a Git repository with the name '%s' at base path '%s'. " +
-					"Did you mean to call `init`?",
+					"Couldn't find a Git repository with the name \"%s\" at base path %s. " +
+					"Did you mean to call 'init'?",
 						name,
 					this.getRepositoryBasePath()
 				)
@@ -449,9 +449,9 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				FileUtils.deleteDirectory(targetFile);
 			}
 			else if (targetFile.exists() && !targetFile.delete()) {
-				throw new IOException(String.format(
-						"could not remove %s", 
-						targetFile.toString()));
+				throw new IOException(
+						String.format("Couldn't remove %s", targetFile)
+				);
 			}
 		}
 		catch (GitAPIException e) {
@@ -735,7 +735,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	
 	public boolean hasRemoteRef(String branch) throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `hasRef` on a detached instance");
+			throw new IllegalStateException("Can't call `hasRemoteRef` on a detached instance");
 		}		
 		return this.gitApi.getRepository().resolve("refs/remotes/"+branch) != null;
 	}
@@ -838,8 +838,8 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 					}
 					try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
 						ObjectId commitId = this.gitApi.getRepository().resolve("refs/heads/"+Constants.MASTER);
-						// can be null, if a Project is still empty, 
-						// branch creation will fail nevertheless, because JGit cannot create a branch wihtout a startpoint
+						// can be null, if a project is still empty,
+						// branch creation will fail nevertheless, because JGit cannot create a branch without a startpoint
 						if (commitId != null) { 
 							RevCommit commit = revWalk.parseCommit(commitId);
 							checkoutCommand.setStartPoint(commit);
@@ -868,7 +868,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	
 	public void checkoutNewFromBranch(String name, String baseBranch) throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `checkout` on a detached instance");
+			throw new IllegalStateException("Can't call `checkoutNewFromBranch` on a detached instance");
 		}
 
 		try {
@@ -884,8 +884,8 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				}
 				try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
 					ObjectId commitId = this.gitApi.getRepository().resolve("refs/heads/"+baseBranch);
-					// can be null, if a Project is still empty, 
-					// branch creation will fail nevertheless, because JGit cannot create a branch wihtout a startpoint
+					// can be null, if a project is still empty,
+					// branch creation will fail nevertheless, because JGit cannot create a branch without a startpoint
 					if (commitId != null) { 
 						RevCommit commit = revWalk.parseCommit(commitId);
 						checkoutCommand.setStartPoint(commit);
@@ -973,7 +973,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 			if (!results.containsKey(submoduleName)) {
 				throw new IOException(
-						String.format("Failed to get HEAD revision hash for submodule `%s`. " +
+						String.format("Failed to get HEAD revision hash for submodule \"%s\". " +
 								"A submodule with that name does not appear to exist.", submoduleName)
 				);
 			}
@@ -981,27 +981,27 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			return results.get(submoduleName).getHeadId().getName();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Failed to get submodule status", e);
+			throw new IOException("Failed to get submodule HEAD revision hash", e);
 		}
 	}
 	
 	@Override
 	public boolean hasUncommitedChanges() throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `status` on a detached instance");
+			throw new IllegalStateException("Can't call `hasUncommitedChanges` on a detached instance");
 		}
 		
 		try {
 			return gitApi.status().call().hasUncommittedChanges();
 		} catch (GitAPIException e) {
-			throw new IOException("Failed to check for uncommited changes", e);
+			throw new IOException("Failed to check for uncommitted changes", e);
 		}
 	}
 
 	@Deprecated
 	public boolean hasUncommitedChangesWithSubmodules(Set<String> submodules) throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `status` on a detached instance");
+			throw new IllegalStateException("Can't call `hasUncommitedChangesWithSubmodules` on a detached instance");
 		}
 		
 		try {
@@ -1014,14 +1014,14 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			
 			return statusCommand.call().hasUncommittedChanges();
 		} catch (GitAPIException e) {
-			throw new IOException("Failed to check for uncommited changes", e);
+			throw new IOException("Failed to check for uncommitted changes", e);
 		}
 	}
 	
 	@Override
 	public boolean hasUntrackedChanges() throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `status` on a detached instance");
+			throw new IllegalStateException("Can't call `hasUntrackedChanges` on a detached instance");
 		}
 		
 		try {
@@ -1096,7 +1096,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			return gitApi.status().call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Failed to retrieve the status", e);
+			throw new IOException("Failed to get status", e);
 		}
 	}
 
@@ -1133,12 +1133,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
 		List<CommitInfo> result = new ArrayList<>();
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `hasUnsynchronizedChanges` on a detached instance");
+			throw new IllegalStateException("Can't call `getUnsynchronizedChanges` on a detached instance");
 		}		
 	
 		try {
 			if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-				return result; // no HEAD -> new empty Project, no commits yet
+				return result; // no HEAD -> new empty project, no commits yet
 			}
 			
 			
@@ -1169,7 +1169,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			}
 			
 		} catch (GitAPIException e) {
-			throw new IOException("Cannot check for unsynchronized changes!", e);
+			throw new IOException("Failed to get unsynchronized changes", e);
 		}
 		
 		return result;
@@ -1189,7 +1189,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				while(remoteCommitIterator.hasNext()) {
 					RevCommit revCommit = remoteCommitIterator.next();
 					String fullMsg = revCommit.getFullMessage();
-					if (fullMsg.startsWith("Removing Document")) {
+					if (fullMsg.toLowerCase().startsWith("deleted document")) {
 						for (String resourceId : resourceIds) {
 							if (!result.contains(resourceId) && fullMsg.endsWith(resourceId)) {
 								result.add(resourceId);
@@ -1201,7 +1201,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			return result;
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Cannot verify deleted resources!", e);
+			throw new IOException("Failed to verify deleted resources", e);
 		}
 	}
 	
@@ -1219,7 +1219,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			Git.wrap(this.gitApi.getRepository()).reset().setMode(ResetType.HARD).call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Could not abort conflicted merge!", e);
+			throw new IOException("Failed to abort conflicted merge", e);
 		}
 	}
 	
@@ -1233,14 +1233,14 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 					this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
 			return branches.stream().map(ref -> ref.getName()).collect(Collectors.toList());
 		} catch (GitAPIException e) {
-			throw new IOException("Could not retrieve remote branches", e);
+			throw new IOException("Failed to get remote branches", e);
 		}
 	}
 	
 	@Override
 	public Set<String> getAdditiveBranchDifferences(String otherBranchName) throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `getBranchDifferences` on a detached instance");
+			throw new IllegalStateException("Can't call `getAdditiveBranchDifferences` on a detached instance");
 		}		
 		
 		checkout(username, true);  // the user branch has to be present at this point
@@ -1276,7 +1276,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 					}
 				}
 			} catch (GitAPIException e) {
-				throw new IOException("Could not get git diff info!", e);
+				throw new IOException("Failed to get Git diff info", e);
 			}
 		}
 		return paths;
@@ -1291,7 +1291,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		List<CommitInfo> result = new ArrayList<>();
 		
 		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-			return result; // no HEAD -> new empty Project, no commits yet
+			return result; // no HEAD -> new empty project, no commits yet
 		}
 		
 		
@@ -1321,7 +1321,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			
 			
 		} catch (GitAPIException e) {
-			throw new IOException("Could not get git log info!", e);
+			throw new IOException("Failed to get Git log info", e);
 		}
 		
 		return result;
@@ -1337,7 +1337,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		List<CommitInfo> result = new ArrayList<>();
 		
 		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-			return result; // no HEAD -> new empty Project, no commits yet
+			return result; // no HEAD -> new empty project, no commits yet
 		}
 		
 		
@@ -1367,7 +1367,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			
 			
 		} catch (GitAPIException e) {
-			throw new IOException("Could not get git log info!", e);
+			throw new IOException("Failed to get Git log info", e);
 		}
 		
 		return result;
@@ -1382,7 +1382,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	
 		try {
 			if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-				return result; // no HEAD -> new empty Project, no commits yet
+				return result; // no HEAD -> new empty project, no commits yet
 			}
 			
 			
@@ -1411,7 +1411,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			}
 			
 		} catch (GitAPIException e) {
-			throw new IOException("Cannot check for unsynchronized changes!", e);
+			throw new IOException("Failed to check for unsynchronized changes", e);
 		}
 		
 		return result;
@@ -1420,13 +1420,13 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	@Deprecated
 	public List<CommitInfo> getCommitsNeedToBeMergedFromMasterToOriginMaster() throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `getCommitsNeedsToBeMergedFromMasterIntoOriginMaster` on a detached instance");
+			throw new IllegalStateException("Can't call `getCommitsNeedToBeMergedFromMasterToOriginMaster` on a detached instance");
 		}		
 		
 		List<CommitInfo> result = new ArrayList<>();
 		
 		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-			return result; // no HEAD -> new empty Project, no commits yet
+			return result; // no HEAD -> new empty project, no commits yet
 		}
 		
 		
@@ -1458,7 +1458,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			
 			
 		} catch (GitAPIException e) {
-			throw new IOException("Could not get git log info!", e);
+			throw new IOException("Failed to get Git log info", e);
 		}
 		
 		return result;
@@ -1473,7 +1473,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		List<CommitInfo> result = new ArrayList<>();
 		
 		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-			return result; // no HEAD -> new empty Project, no commits yet
+			return result; // no HEAD -> new empty project, no commits yet
 		}
 		
 		
@@ -1505,7 +1505,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			
 			
 		} catch (GitAPIException e) {
-			throw new IOException("Could not get git log info!", e);
+			throw new IOException("Failed to get Git log info", e);
 		}
 		
 		return result;
@@ -1523,7 +1523,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			remoteAddCommand.call();
 		}
 		catch (GitAPIException | URISyntaxException e) {
-			throw new IOException("Could not add remote!", e);
+			throw new IOException("Failed to add remote", e);
 		}
 	}
 	
@@ -1538,7 +1538,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			remoteRemoveCommand.call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Could not remove remote!", e);
+			throw new IOException("Failed to remove remote", e);
 		}
 	}
 	
@@ -1597,7 +1597,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 						else {
 							Logger.getLogger(this.getClass().getName()).severe(
 									String.format(
-										"Cannot resolve root conflict for submodule %1$s expected a 'theirs'-stage-3 commit entry but found none!",
+										"Cannot resolve root conflict for submodule %s! Expected a 'theirs'-stage-3 commit entry but found none.",
 									conflictingSubmodule));
 							unresolved.add(conflictingSubmodule);
 						}
@@ -1676,7 +1676,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 						Logger.getLogger(this.getClass().getName()).severe(
 								String.format(
-									"Cannot resolve root conflict for submodule %1$s %2$s not supported yet!",
+									"Cannot resolve root conflict for submodule %s! %s not supported yet.",
 								conflictingSubmodule, conflictState.name()));
 					}
 					}
@@ -1749,7 +1749,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 					if (!pullResult.isSuccessful()) {
 						throw new IllegalStateException(
 							String.format(
-							"Trying to get the latest commits for %1$s failed!", conflictingSubmodule));
+							"Failed to get the latest commits for %s", conflictingSubmodule));
 					}
 					
 					submoduleGitApi
@@ -1765,11 +1765,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			
 			if (!foundTheirs) {
 				Logger.getLogger(this.getClass().getName()).severe(
-						String.format("Cannot resolve root conflict for submodule %1$s commit %2$s is missing!",
+						String.format("Cannot resolve root conflict for submodule %s! Commit %s is missing.",
 						conflictingSubmodule, theirEntry.getObjectId().toString()));
 				throw new CommitMissingException(
-					"Failed to synchronize the Project because of a missing commit, "
-					+ "try again later or contact the system administrator!");
+					"Failed to synchronize the project because of a missing commit, "
+					+ "try again later or contact the system administrator.");
 			}
 		}
 	}
@@ -1870,14 +1870,14 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			catch (Exception e2) {
 				e2.printStackTrace();
 			}
-			throw new IOException("Failed to resolve root conflicts", e);
+			throw new IOException("Failed to resolve .gitmodules conflicts", e);
 		}		
 		
 	}
 
 	public CommitInfo getHeadCommit() throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `resolveGitSubmoduleFileConflicts` on a detached instance");
+			throw new IllegalStateException("Can't call `getHeadCommit` on a detached instance");
 		}		
 		try {
 			ObjectId headCommit = gitApi.getRepository().resolve(Constants.HEAD);
@@ -1891,7 +1891,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			return null;
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Faild to retrieve HEAD commit!", e);
+			throw new IOException("Failed to get HEAD commit", e);
 		}
 	}
 

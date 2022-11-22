@@ -24,7 +24,7 @@ public interface IRBACManager {
 			RBACSubject subject, RBACPermission permission, ProjectReference projectReference);
 
 	/**
-	 * assigns given role to subject in a given context here a CATMA Project}
+	 * assigns given role to subject in a given context here a CATMA project}
 	 * 
 	 * @param subject
 	 * @param role

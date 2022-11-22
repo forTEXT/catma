@@ -144,7 +144,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 				// TODO: under which circumstances does this occur (and is it relevant for btnPatSignIn's click listener too)?
 				String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
 				if (message != null && !message.equals("invalid_grant")) {
-					logger.log(Level.SEVERE, "login services", e);
+					logger.log(Level.SEVERE, "Login services", e);
 				}
 			}
 		});
@@ -155,7 +155,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 				close();
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error during authentication!", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error during authentication", e);
 			}
 		});
 

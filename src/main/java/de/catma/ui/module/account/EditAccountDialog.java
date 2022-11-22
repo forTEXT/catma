@@ -80,7 +80,7 @@ public class EditAccountDialog extends Window {
 				Notification.show("Profile modification successful", Type.TRAY_NOTIFICATION);
 				
 			} catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't change profile", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't update profile", e);
 			}
 			this.close();
 		});

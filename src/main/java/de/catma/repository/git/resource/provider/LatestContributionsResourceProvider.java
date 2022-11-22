@@ -85,7 +85,12 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format("Failed to load tagset \"%s\" for project \"%s\"", tagsetDir, projectId),
+						String.format(
+								"Failed to load tagset at path %1$s for project \"%2$s\" with ID %3$s",
+								tagsetDir,
+								projectReference.getName(),
+								projectId
+						),
 						e
 				);
 			}
@@ -117,8 +122,9 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 						logger.log(
 								Level.SEVERE,
 								String.format(
-										"Failed to load latest contributions for tagset \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
+										"Failed to load latest contributions for tagset with ID %1$s in project \"%2$s\" with ID %3$s on branch \"%4$s\"",
 										tagsetId,
+										projectReference.getName(),
 										projectId,
 										latestContribution.getBranch()
 								),
@@ -133,7 +139,7 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 		catch (IOException e) {
 			logger.log(
 					Level.SEVERE,
-					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					String.format("Failed to load latest contributions for project \"%s\" with ID %s", projectReference.getName(), projectId),
 					e
 			);
 		}
@@ -172,7 +178,12 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format("Failed to load collection reference \"%s\" for project \"%s\"", collectionDir, projectId),
+						String.format(
+								"Failed to load collection reference for collection at path %1$s in project \"%2$s\" with ID %3$s",
+								collectionDir,
+								projectReference.getName(),
+								projectId
+						),
 						e
 				);
 			}
@@ -203,8 +214,9 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 						logger.log(
 								Level.SEVERE,
 								String.format(
-										"Failed to load latest contributions for collection \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
+										"Failed to load latest contributions for collection with ID %1$s in project \"%2$s\" with ID %3$s on branch \"%4$s\"",
 										collectionId,
+										projectReference.getName(),
 										projectId,
 										latestContribution.getBranch()
 								),
@@ -219,7 +231,7 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 		catch (IOException e) {
 			logger.log(
 					Level.SEVERE,
-					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					String.format("Failed to load latest contributions for project \"%s\" with ID %s", projectReference.getName(), projectId),
 					e
 			);
 		}
@@ -264,7 +276,12 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format("Failed to load collection \"%s\" for project \"%s\"", collectionDir, projectId),
+						String.format(
+								"Failed to load collection at path %1$s for project \"%2$s\" with ID %3$s",
+								collectionDir,
+								projectReference.getName(),
+								projectId
+						),
 						e
 				);
 			}
@@ -298,8 +315,9 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 						logger.log(
 								Level.SEVERE,
 								String.format(
-										"Failed to load latest contributions for collection \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
+										"Failed to load latest contributions for collection with ID %1$s in project \"%2$s\" with ID %3$s on branch \"%4$s\"",
 										collectionId,
+										projectReference.getName(),
 										projectId,
 										latestContribution.getBranch()
 								),
@@ -314,7 +332,7 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 		catch (IOException e) {
 			logger.log(
 					Level.SEVERE,
-					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					String.format("Failed to load latest contributions for project \"%s\" with ID %s", projectReference.getName(), projectId),
 					e
 			);
 		}
@@ -360,7 +378,7 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 
 				logger.info(
 						String.format(
-								"Loading latest contributions for collection \"%s\" from branch \"%s\"",
+								"Loading latest contributions for collection with ID %s from branch \"%s\"",
 								collectionId,
 								latestContribution.getBranch()
 						)
@@ -391,8 +409,9 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 					logger.log(
 							Level.SEVERE,
 							String.format(
-									"Failed to load latest contributions for collection \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
+									"Failed to load latest contributions for collection with ID %1$s in project \"%2$s\" with ID %3$s on branch \"%4$s\"",
 									collectionId,
+									projectReference.getName(),
 									projectId,
 									latestContribution.getBranch()
 							),
@@ -406,7 +425,7 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 		catch (IOException e) {
 			logger.log(
 					Level.SEVERE,
-					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					String.format("Failed to load latest contributions for project \"%s\" with ID %s", projectReference.getName(), projectId),
 					e
 			);
 		}
@@ -444,7 +463,12 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format("Failed to load document \"%s\" for project \"%s\"", documentDir, projectId),
+						String.format(
+								"Failed to load document at path %1$s for project \"%2$s\" with ID %3$s",
+								documentDir,
+								projectReference.getName(),
+								projectId
+						),
 						e
 				);
 			}
@@ -480,8 +504,9 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 						logger.log(
 								Level.SEVERE,
 								String.format(
-										"Failed to load latest contributions for document \"%1$s\" in project \"%2$s\" on branch \"%3$s\"",
+										"Failed to load latest contributions for document with ID %1$s in project \"%2$s\" with ID %3$s on branch \"%4$s\"",
 										documentId,
+										projectReference.getName(),
 										projectId,
 										latestContribution.getBranch()
 								),
@@ -496,7 +521,7 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 		catch (IOException e) {
 			logger.log(
 					Level.SEVERE,
-					String.format("Failed to load latest contributions for project \"%s\"", projectId),
+					String.format("Failed to load latest contributions for project \"%s\" with ID %s", projectReference.getName(), projectId),
 					e
 			);
 		}

@@ -812,10 +812,10 @@ public class QueryResultPanel extends VerticalLayout {
 		miGroupByPhrase = optionsMenu.addItem("Group by Phrase", mi-> initPhraseBasedData());
 		miGroupByPhrase.setEnabled(false);
 		miGroupByTagPath = optionsMenu.addItem("Group by Tag Path", mi -> initTagBasedData());
-		miFlatTable = optionsMenu.addItem("Display Annotations as flat table", mi -> initFlatTagBasedData());
-		miPropertiesAsColumns = optionsMenu.addItem("Display Properties as columns", mi -> initPropertiesAsColumnsTagBasedData());
+		miFlatTable = optionsMenu.addItem("Display Annotations as Flat Table", mi -> initFlatTagBasedData());
+		miPropertiesAsColumns = optionsMenu.addItem("Display Properties as Columns", mi -> initPropertiesAsColumnsTagBasedData());
 		MenuItem miExport = optionsMenu.addItem("Export");
-		MenuItem miCSVFlatExport = miExport.addItem("Export flat as CSV");
+		MenuItem miCSVFlatExport = miExport.addItem("Export Flat as CSV");
 		
 		StreamResource csvFlatExportResource = new StreamResource(
 					new CSVExportFlatStreamSource(
@@ -832,7 +832,7 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		csvFlatExportFileDownloader.extend(miCSVFlatExport);
 		
-		MenuItem miCSVGroupedByPhraseExport = miExport.addItem("Export grouped as CSV");
+		MenuItem miCSVGroupedByPhraseExport = miExport.addItem("Export Grouped as CSV");
 		
 		StreamResource csvGroupedByPhraseExportResource = new StreamResource(
 					new CSVExportGroupedStreamSource(
@@ -852,7 +852,7 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		
 		MenuItem miFilterPunctuation = optionsMenu.addItem(
-				"Filter punctuation", 
+				"Filter Punctuation",
 				mi -> queryResultGrid.getDataProvider().refreshAll());
 		miFilterPunctuation.setCheckable(true);
 		miFilterPunctuation.setChecked(true);
@@ -1048,7 +1048,7 @@ public class QueryResultPanel extends VerticalLayout {
 			tokenCount = flatTagBasedTreeData.getRootItems().size();
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error adding query result", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error adding query results", e);
         }
 	}
 
@@ -1111,7 +1111,7 @@ public class QueryResultPanel extends VerticalLayout {
 			tokenCount = propertiesAsColumnsTagBasedTreeData.getRootItems().size();
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error adding query result", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error adding query results", e);
 		}			
 	}
 

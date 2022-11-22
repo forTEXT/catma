@@ -13,7 +13,7 @@ public class TagsetDefinitionImportStatus {
 	
 	/**
 	 * @param tagset
-	 * @param current <code>true</code> if currently present in the Project
+	 * @param current <code>true</code> if currently present in the project
 	 */
 	public TagsetDefinitionImportStatus(TagsetDefinition tagset, boolean current) {
 		super();
@@ -26,7 +26,7 @@ public class TagsetDefinitionImportStatus {
 	}
 
 	/**
-	 * @return <code>true</code> if currently present in the Project, else <code>false</code>
+	 * @return <code>true</code> if currently present in the project, else <code>false</code>
 	 */
 	public boolean isCurrent() {
 		return current;

@@ -198,7 +198,7 @@ public class VTagger extends Composite {
 
 	public void setPage(String page, int lineCount, List<ClientComment> comments) {
 
-		logger.info("setting page content");
+		logger.info("Setting page content");
 		Timer timer = new Timer() {
 			@Override
 			public void run() {
@@ -221,7 +221,7 @@ public class VTagger extends Composite {
 				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
 		
 		for (ClientTagInstance tagInstance : tagInstances) {
-			logger.info("got TagInstance from server (hide): " + tagInstance);
+			logger.info("Got TagInstance from server (hide): " + tagInstance);
 			taggerEditor.removeTagInstance(
 					tagInstance.getInstanceID(), 
 					false); //don't report to server
@@ -234,7 +234,7 @@ public class VTagger extends Composite {
 //				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
 //		
 //		for (ClientTagInstance tagInstance : tagInstances) {
-//			logger.info("got tag instance from server (show): " + tagInstance);
+//			logger.info("Got tag instance from server (show): " + tagInstance);
 //			taggerEditor.addTagInstance(tagInstance);
 //		}
 	}

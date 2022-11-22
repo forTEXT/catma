@@ -327,7 +327,7 @@ public class AnnotationPanel extends VerticalLayout {
 					try {
 						addCollection(project.getAnnotationCollection(collectionReference));
 					} catch (IOException e) {
-						((ErrorHandler)UI.getCurrent()).showAndLogError("error add new Collection", e);
+						((ErrorHandler) UI.getCurrent()).showAndLogError("Error adding new collection", e);
 					}
 	    		}
 			}
@@ -358,7 +358,7 @@ public class AnnotationPanel extends VerticalLayout {
             
             initEditableCollectionData(null);
         } catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading data", e);
         }
     }
 
@@ -379,11 +379,11 @@ public class AnnotationPanel extends VerticalLayout {
         
 		if (editableCollectionProvider.getItems().isEmpty()) {
 			currentEditableCollectionBox.setPlaceholder(
-					"Please create a Collection...");
+					"Please create a collection...");
 		}
 		else {
 			currentEditableCollectionBox.setPlaceholder(
-					"Please select a Collection...");    			
+					"Please select a collection...");
 		}
 		
 		if (preselectedCollection != null 
@@ -563,7 +563,7 @@ public class AnnotationPanel extends VerticalLayout {
 						boolean newFilteredState  = !(Boolean)btFilterCollection.getData();
 						btFilterCollection.setData(newFilteredState);
 						btFilterCollection.setIcon(newFilteredState?VaadinIcons.LOCK:VaadinIcons.UNLOCK);
-						btFilterCollection.setDescription(newFilteredState?"Hiding Collections beyond my responsibility":"Showing all available Collections");
+						btFilterCollection.setDescription(newFilteredState?"Hiding collections beyond my responsibility":"Showing all available collections");
 						AnnotationCollection currentSelection = 
 								currentEditableCollectionBox.getValue();
 						initEditableCollectionData(currentSelection);
@@ -608,7 +608,7 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		if (document != null) {
 	    	SingleTextInputDialog collectionNameDlg = 
-	        		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+	        		new SingleTextInputDialog("Create Annotation Collection", "Please enter the collection name:",
 	        				new SaveCancelListener<String>() {
 	    						
 	    						@Override
@@ -620,7 +620,7 @@ public class AnnotationPanel extends VerticalLayout {
         	collectionNameDlg.show();
 		}
 		else {
-			Notification.show("Info", "Please select a Document first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select a document first!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 
@@ -636,7 +636,7 @@ public class AnnotationPanel extends VerticalLayout {
 		.collect(Collectors.toList());
 		
 		if (targetTags.isEmpty()) {
-			Notification.show("Info", "Please select a Tag first!", Type.TRAY_NOTIFICATION);
+			Notification.show("Info", "Please select a tag first!", Type.TRAY_NOTIFICATION);
 		}
 		else if (targetTags.size() > 1) {
 			handleAddPropertyRequest();
@@ -693,7 +693,7 @@ public class AnnotationPanel extends VerticalLayout {
 		}
 		
 		if (targetTags.isEmpty()) {
-			Notification.show("Info", "Please select one ore more Tags first!", Type.TRAY_NOTIFICATION);
+			Notification.show("Info", "Please select one ore more tags first!", Type.TRAY_NOTIFICATION);
 		}
 		else {
 			Multimap<String, PropertyDefinition> propertiesByName = 
@@ -900,7 +900,7 @@ public class AnnotationPanel extends VerticalLayout {
 					});
 		}
 		else {
-			Notification.show("Info", "Please select at least one parent Tag!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select at least one parent tag!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 
@@ -915,7 +915,7 @@ public class AnnotationPanel extends VerticalLayout {
 		if (tagsets.isEmpty()) {
 			Notification.show(
 				"Info", 
-				"You do not have any Tagsets to add Tags to yet, please create a Tagset first!", 
+				"You do not have any tagsets to add tags to yet, please create a tagset first!",
 				Type.HUMANIZED_MESSAGE);
 
 			return;
@@ -1059,12 +1059,12 @@ public class AnnotationPanel extends VerticalLayout {
 		currentEditableCollectionBox = new ComboBox<>("Collection currently being edited");
 		currentEditableCollectionBox.setWidth("100%");
 		currentEditableCollectionBox.setPlaceholder(
-				"Please select a Document first!");
+				"Please select a document first!");
 		
 		btAddCollection = new IconButton(VaadinIcons.PLUS);
 		btFilterCollection = new IconButton(VaadinIcons.LOCK);
 		btFilterCollection.setData(Boolean.TRUE); //editable colletions are filtered
-		btFilterCollection.setDescription("Hiding Collections beyond my responsibility");
+		btFilterCollection.setDescription("Hiding collections beyond my responsibility");
 		HorizontalLayout editableCollectionPanel = 
 				new HorizontalLayout(currentEditableCollectionBox, btAddCollection, btFilterCollection);
 		editableCollectionPanel.addStyleName("annotate-right-padding");
@@ -1130,7 +1130,7 @@ public class AnnotationPanel extends VerticalLayout {
 				currentEditableCollectionBox.setValue(collection);
 				Notification.show("Info", 
 					String.format(
-						"The Collection currently being edited has been changed to '%1$s'!",  
+						"The collection currently being edited has been changed to \"%s\"",
 						collection.getName()),
 					Type.HUMANIZED_MESSAGE);
 			}
@@ -1160,12 +1160,12 @@ public class AnnotationPanel extends VerticalLayout {
 			this.collections.add(collection);
 		}
 		
-		// if it is an imported XML Collection it is not likely that the collection is going to be edited
+		// if it is an imported XML collection it is not likely that the collection is going to be edited
 		// and we do not automatically select it for editing
 		if (!Objects.equals(collection.getName(), XmlMarkupCollectionSerializationHandler.DEFAULT_COLLECTION_TITLE)) {
 			setSelectedEditableCollection(collection);
 		}
-		//TODO: show Annotations from this collection and selected Tagsets
+		//TODO: show annotations from this collection and selected tagsets
 	}
 
 	public void setSelectedEditableCollection(AnnotationCollection collection) {
@@ -1181,7 +1181,7 @@ public class AnnotationPanel extends VerticalLayout {
 				currentEditableCollectionBox.setValue(collection);
 				Notification.show("Info", 
 						String.format(
-							"The Collection currently being edited has been changed to '%1$s'!",  
+							"The collection currently being edited has been changed to \"%s\"",
 							collection.getName()),
 						Type.HUMANIZED_MESSAGE);				
 			}

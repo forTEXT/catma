@@ -40,7 +40,7 @@ public class UsernameValidator implements Validator<String>{
 			}
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Failed to check username", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to check username", e);
 			return ValidationResult.error("Failed to check username");
 		}
 	}

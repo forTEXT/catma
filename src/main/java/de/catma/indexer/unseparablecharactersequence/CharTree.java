@@ -72,13 +72,12 @@ public class CharTree extends HashMap<Integer, CharTree> {
      * Starting from this tree we try to match the input with one of the unseparable
      * character sequences contained in this tree.
      * @param input the input to test
-     * @return <code>null</code> if there has been no match <b>or</b>
-     * {@link #END_ENTRY} if the input matches completely an unseparable character sequence of this tree <b>or</b>
+     * @return <code>null</code> if there was no match <strong>or</strong>
+     * {@link #END_ENTRY} if the input matches completely an unseparable character sequence of this tree <strong>or</strong>
      * the pointer to the remaining parts of unseparable character sequences that matches the input
-     * so far, i. e. all the characters of the input sequence match so far but the matching character sequences
-     * contain more characters, more input is needed to decide if there will be a complete successfull
+     * so far, i.e. all the characters of the input sequence match so far but the matching character sequences
+     * contain more characters, more input is needed to decide if there will be a complete successful
      * match and to do this more input can be checked against the tree returned.  
-     *
      */
     public CharTree matches(String input) {
 

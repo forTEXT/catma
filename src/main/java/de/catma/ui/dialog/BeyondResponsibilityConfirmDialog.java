@@ -20,8 +20,8 @@ public final class BeyondResponsibilityConfirmDialog {
 			else {
 				ConfirmDialog.show(UI.getCurrent(), 
 					"Warning",
-					"One or more selected Resources are beyond your responsibility! "
-					+ "Altering these Resources might result in conflicts with operations of other Project members!\n\n"
+					"One or more selected resources are beyond your responsibility! "
+					+ "Altering these resources might result in conflicts with operations of other project members!\n\n"
 					+ "Do you want to proceed?",
 					"Yes",
 					"Cancel",

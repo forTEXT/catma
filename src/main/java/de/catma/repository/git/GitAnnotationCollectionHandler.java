@@ -89,7 +89,7 @@ public class GitAnnotationCollectionHandler {
 		String revisionHash = this.localGitRepositoryManager.addAndCommit(
 				targetHeaderFile,
 				serializedHeader.getBytes(StandardCharsets.UTF_8),
-				String.format("Added Collection %1$s with ID %2$s", name, collectionId),
+				String.format("Created annotation collection \"%s\" with ID %s", name, collectionId),
 				this.username,
 				this.email
 		);
@@ -130,7 +130,7 @@ public class GitAnnotationCollectionHandler {
 		if (currentAnnotation == null) {
 			throw new IOException(
 					String.format(
-							"Couldn't find annotation with ID %s in page file \"%s\" of collection with ID %s!",
+							"Couldn't find annotation with ID %1$s in page file \"%2$s\" of collection with ID %3$s",
 							updatedAnnotation.getId(),
 							updatedAnnotation.getPageFilename(),
 							collectionId
@@ -252,7 +252,7 @@ public class GitAnnotationCollectionHandler {
 		}
 		catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 			logger.warning(
-					String.format("\"%s\" doesn't seem to be a page name! Full path was: %s", page.getName(), page.getAbsolutePath())
+					String.format("\"%s\" doesn't seem to be a page file! The full path was %s", page.getName(), page.getAbsolutePath())
 			);
 		}
 
@@ -306,7 +306,7 @@ public class GitAnnotationCollectionHandler {
 				for (JsonLdWebAnnotation webAnnotation : list) {
 					counter.incrementAndGet();
 					if (counter.intValue() % 1000 == 0) {
-						progressListener.setProgress("Loading Annotations %1$s %2$d", collectionName, counter.intValue());
+						progressListener.setProgress("Loading annotations from collection \"%s\" (%d)", collectionName, counter.intValue());
 					}
 
 					webAnnotation.setPageFilename(pageFile.getName());
@@ -378,7 +378,7 @@ public class GitAnnotationCollectionHandler {
 		AnnotationCollectionReference collectionReference = getCollectionReference(collectionId);
 		ContentInfoSet contentInfoSet = collectionReference.getContentInfoSet();
 
-		progressListener.setProgress("Loaded collection \"%s\"", contentInfoSet.getTitle());
+		progressListener.setProgress("Loaded annotation collection \"%s\"", contentInfoSet.getTitle());
 
 		String relativeCollectionPath = String.format(
 				"%s/%s", 
@@ -397,7 +397,7 @@ public class GitAnnotationCollectionHandler {
 		// handle orphaned annotations
 		if (handleOrphans) {
 			logger.info(
-					String.format("Checking for orphans in collection \"%s\" with ID: %s", contentInfoSet.getTitle(), collectionId)
+					String.format("Checking for orphans in collection \"%s\" with ID %s", contentInfoSet.getTitle(), collectionId)
 			);
 
 			Set<TagInstance> orphanedTagInstances = new HashSet<>();
@@ -530,7 +530,7 @@ public class GitAnnotationCollectionHandler {
 				targetCollectionFolderAbsolutePath, 
 				false, // do not delete the parent folder
 				String.format(
-					"Removing Collection %1$s with ID %2$s", 
+					"Deleted annotation collection \"%s\" with ID %s",
 					collection.getName(), 
 					collection.getId()),
 				this.username,
@@ -590,7 +590,7 @@ public class GitAnnotationCollectionHandler {
 		String collectionRevision = this.localGitRepositoryManager.addAndCommit(
 				targetHeaderFile, 
 				serializedHeader.getBytes(StandardCharsets.UTF_8), 
-				String.format("Updated metadata of Collection %1$s with ID %2$s", 
+				String.format("Updated metadata of annotation collection \"%s\" with ID %s",
 					collectionRef.getName(), collectionRef.getId()),
 				this.username,
 				this.email);

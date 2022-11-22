@@ -108,7 +108,7 @@ public class Totp {
 	        }
     	}
     	catch (NumberFormatException nfe) {
-    		Logger.getLogger(getClass().getName()).log(Level.WARNING, "invalid otp", nfe);
+    		Logger.getLogger(getClass().getName()).log(Level.WARNING, "Invalid OTP", nfe);
     	}
         return false;
     }

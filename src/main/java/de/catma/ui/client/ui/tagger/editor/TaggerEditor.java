@@ -240,10 +240,10 @@ public class TaggerEditor extends FocusWidget
 				if (nodeRange.isPoint()) {
 					//TODO: consider tagging points (needs different visualization)
 					logger.info(
-							"won't tag range " + nodeRange + " because it is a point");
+							"Won't tag range " + nodeRange + " because it is a point");
 				}
 				else {
-					logger.info("adding range " + nodeRange );
+					logger.info("Adding range " + nodeRange );
 					nodeRanges.add(nodeRange);
 				}
 			}
@@ -261,7 +261,7 @@ public class TaggerEditor extends FocusWidget
 					startNode = LeafFinder.getFirstTextLeaf(getRootNode().getChild(range.getStartOffset()));
 					startOffset = 0;
 					logger.info(
-						"Setting new startNode with Offset 0: " + startNode );
+						"Setting new startNode with offset 0: " + startNode );
 				}
 				
 				if (range.getEndNode().equals(getRootNode())) {
@@ -269,7 +269,7 @@ public class TaggerEditor extends FocusWidget
 					endNode =  LeafFinder.getFirstTextLeaf(getRootNode().getChild(range.getEndOffset()-1));
 					endOffset = endNode.getNodeValue().length();
 					logger.info(
-						"Setting new endNode with Offset " 
+						"Setting new endNode with offset "
 								+ endOffset + ": " + endNode );
 				}
 				
@@ -277,12 +277,12 @@ public class TaggerEditor extends FocusWidget
 						endNode, endOffset);
 
 				if (!nodeRange.isPoint()) {
-					logger.info("converted and adding range " + nodeRange);
+					logger.info("Converted and adding range " + nodeRange);
 					nodeRanges.add(nodeRange);
 				}
 				else {
 					logger.info(
-						"won't tag range " + nodeRange + " because it is a point");
+						"Won't tag range " + nodeRange + " because it is a point");
 				}
 			}
 		}
@@ -294,8 +294,8 @@ public class TaggerEditor extends FocusWidget
 	private TextRange validateTextRange(TextRange textRange) {
 		if (textRange.getStartPos() > textRange.getEndPos()) {
 			taggerEditorListener.logEvent(
-				"got twisted range: " + textRange 
-				+ " recovering by exchanging positions!");
+				"Got twisted range: " + textRange
+				+ "; recovering by swapping positions");
 			return new TextRange(textRange.getEndPos(), textRange.getStartPos());
 		}
 		return textRange;
@@ -314,18 +314,18 @@ public class TaggerEditor extends FocusWidget
 	}
 	
 	public boolean hasSelection() {
-		logger.info("checking for selection");
+		logger.info("Checking for selection");
 		if ((lastTextRanges != null) && !lastTextRanges.isEmpty()) {
-			logger.info("found lastTextRanges: " + lastTextRanges.size());
+			logger.info("Found lastTextRanges: " + lastTextRanges.size());
 			return true;
 		}
 		
 		if ((lastRangeList != null) && !lastRangeList.isEmpty()) {
-			logger.info("found lastRangeList: " + lastRangeList.size());
+			logger.info("Found lastRangeList: " + lastRangeList.size());
 			for (Range r : lastRangeList) {
 				if ((r.getEndNode()!=r.getStartNode()) 
 						|| (r.getEndOffset() != r.getStartOffset())) {
-					logger.info("found at least one range: " + r);
+					logger.info("Found at least one range: " + r);
 					return true;
 				}
 			}
@@ -560,7 +560,7 @@ public class TaggerEditor extends FocusWidget
 			}
 			lastClientX = event.getClientX();
 			lastClientY = event.getClientY();
-			logger.info("mouse down at: " + lastClientX + "," + lastClientY);
+			logger.info("Mouse down at: " + lastClientX + "," + lastClientY);
 		}
 	}
 	
@@ -583,7 +583,7 @@ public class TaggerEditor extends FocusWidget
 				if ((lastTagInstancePartID == null) 
 						|| ( ! lastTagInstancePartID.equals(tagInstancePartId))) {
 					this.lastTagInstancePartID = tagInstancePartId;
-					logger.info("fireAnnpotationSelected: notifying listeners");
+					logger.info("fireAnnotationSelected: notifying listeners");
 					taggerEditorListener.annotationSelected(tagInstancePartId, lineID);
 				}
 			}

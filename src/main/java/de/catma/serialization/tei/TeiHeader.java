@@ -275,7 +275,7 @@ public class TeiHeader {
 	
 	/**
 	 * Sets the standard fields of the header with the values from the given
-	 * Source Document Info and the fields of the header's {@link TechnicalDescription}.
+	 * SourceDocumentInfo and the fields of the header's {@link TechnicalDescription}.
 	 */
 	public void setValues( ContentInfoSet contentInfoSet, TechInfoSet techInfoSet, IndexInfoSet indexInfoSet ) {
 		setStandardFieldValues( contentInfoSet );

@@ -91,13 +91,14 @@ public class ProjectListView extends VerticalLayout {
         try {
 	        projectsManager.getProjectReferences()
 	        .stream()
-	        .filter(projectRef -> !deletedProjectIds.contains(projectRef.getProjectId())) // gitlab group removal is a background operation, we usually still get the removed Project immediately after removal
+			// GitLab project deletion is a background operation, we usually still get the deleted project for some time after deletion
+	        .filter(projectRef -> !deletedProjectIds.contains(projectRef.getProjectId()))
 	        .sorted(selectedSortOrder)
 	        .map(prj -> new ProjectCard(prj, projectsManager, eventBus, remoteGitManagerRestricted))
 	        .forEach(projectsLayout::addComponent);
         }
         catch (Exception e) {
-        	((ErrorHandler)UI.getCurrent()).showAndLogError("Error accessing Projects", e);
+        	((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing projects", e);
         }
     }
 

@@ -87,7 +87,7 @@ public class TeiUserMarkupCollectionDeserializer {
 						tagReferences.add(tagReference);
 					}
 					catch(URISyntaxException ue) {
-						logger.log(Level.SEVERE, "error during deserialization", ue);
+						logger.log(Level.SEVERE, "Error during deserialization", ue);
 					}
 				}
 			}
@@ -200,12 +200,12 @@ public class TeiUserMarkupCollectionDeserializer {
 					}
 					else {
 						throw new UnknownElementException(
-								valueElement.getLocalName() + " is not supported!");
+								valueElement.getLocalName() + " is not supported");
 					}
 				}
 			}
 			catch(UnknownElementException ue) {
-				logger.log(Level.SEVERE, "error adding properties", ue);
+				logger.log(Level.SEVERE, "Error adding properties", ue);
 			}
 		}
 		

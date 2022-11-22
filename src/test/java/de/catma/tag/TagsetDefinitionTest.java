@@ -12,7 +12,7 @@ import de.catma.util.IDGenerator;
 class TagsetDefinitionTest {
 
 	/**
-	 * During traversal each Tag is traversed after its parent Tag.
+	 * During traversal each tag is traversed after its parent tag.
 	 */
 	@Test
 	void testTagIteration() {

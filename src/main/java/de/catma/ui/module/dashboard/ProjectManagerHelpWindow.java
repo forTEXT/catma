@@ -22,7 +22,7 @@ public class ProjectManagerHelpWindow extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		
-		Label helpText = new Label("<h4>Working with Projects</h4><p>To start with your first CATMA Project just hit the 'Create Project' card and enter a Project name. Then click on the newly created Project card.</p>", ContentMode.HTML);
+		Label helpText = new Label("<h4>Working with Projects</h4><p>To start with your first CATMA project just hit the 'Create Project' card and enter a project name. Then click on the newly created project card.</p>", ContentMode.HTML);
 		helpText.addStyleName("help-text");
 		content.addComponent( helpText);
 		setContent(content);

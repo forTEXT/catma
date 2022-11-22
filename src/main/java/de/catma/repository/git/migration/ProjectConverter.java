@@ -55,7 +55,7 @@ public class ProjectConverter implements AutoCloseable {
 		this.backupPath = Paths.get(CATMAPropertyKey.V6_REPO_MIGRATION_BACKUP_PATH.getValue());
 		if (!this.backupPath.toFile().exists()) {
 			if (!this.backupPath.toFile().mkdirs()) {
-				throw new IllegalStateException(String.format("Could not create backup path \"%s\"", this.backupPath));
+				throw new IllegalStateException(String.format("Failed to create backup path %s", this.backupPath));
 			}
 		}
 
@@ -76,27 +76,27 @@ public class ProjectConverter implements AutoCloseable {
 	public void convertProject(String projectId) {
 		// TODO: migrate comments!
 
-		logger.info(String.format("Converting project \"%s\"", projectId));
+		logger.info(String.format("Converting project with ID %s", projectId));
 
 		try {
-			logger.info(String.format("Retrieving members of project \"%s\"", projectId));
+			logger.info(String.format("Retrieving members of project with ID %s", projectId));
 			Set<Member> members = legacyProjectHandler.getLegacyProjectMembers(projectId);
 			Member owner = members.stream().filter(member -> member.getRole().equals(RBACRole.OWNER)).findAny().orElse(null);
 			if (owner == null) {
-				throw new IllegalStateException(String.format("Could not find an owner for project \"%s\"", projectId));
+				throw new IllegalStateException(String.format("Failed to find an owner for project with ID %s", projectId));
 			}
 
 			Pair<User, String> userAndImpersonationToken = legacyProjectHandler.acquireUser(owner.getIdentifier());
 
 			try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userAndImpersonationToken.getSecond())) {
-				logger.info(String.format("Retrieving legacy project (group) \"%s\"", projectId));
+				logger.info(String.format("Retrieving legacy project (group) with ID %s", projectId));
 				Group legacyProject = restrictedGitLabApi.getGroupApi().getGroup(projectId);
 				User ownerUser = userAndImpersonationToken.getFirst();
 				UsernamePasswordCredentialsProvider credentialsProvider = new UsernamePasswordCredentialsProvider(
 						"oauth2", restrictedGitLabApi.getAuthToken()
 				);
 
-				logger.info(String.format("Creating temp directory for project \"%s\" and owner \"%s\"", projectId, ownerUser));
+				logger.info(String.format("Creating temp directory for project with ID %s and owner \"%s\"", projectId, ownerUser.getIdentifier()));
 				String migrationTempPath = new File(CATMAPropertyKey.TEMP_DIR.getValue(), "project_migration").getAbsolutePath();
 				Path userTempPath = Paths.get(migrationTempPath, ownerUser.getIdentifier()); // this is the same path that JGitRepoManager constructs internally
 
@@ -105,13 +105,13 @@ public class ProjectConverter implements AutoCloseable {
 				}
 
 				if (!userTempPath.toFile().mkdirs()) {
-					throw new IllegalStateException(String.format("Failed to create temp directory \"%s\"", userTempPath));
+					throw new IllegalStateException(String.format("Failed to create temp directory at path %s", userTempPath));
 				}
 
 				String rootRepoName = projectId + "_root";
 
 				try (JGitRepoManager repoManager = new JGitRepoManager(migrationTempPath, userAndImpersonationToken.getFirst())) {
-					logger.info(String.format("Cloning project \"%s\"", projectId));
+					logger.info(String.format("Cloning project with ID %s", projectId));
 					repoManager.cloneWithSubmodules(
 							projectId,
 							legacyProjectHandler.getProjectRootRepositoryUrl(restrictedGitLabApi, projectId, rootRepoName),
@@ -124,14 +124,14 @@ public class ProjectConverter implements AutoCloseable {
 
 				if (projectBackupPath.toFile().exists() && projectBackupPath.toFile().list().length > 0) {
 					if (!CATMAPropertyKey.V6_REPO_MIGRATION_OVERWRITE_V6_PROJECT_BACKUP.getBooleanValue()) {
-						throw new IllegalStateException(String.format("Project already has a non-empty backup at \"%s\"", projectBackupPath));
+						throw new IllegalStateException(String.format("Project already has a non-empty backup at path %s", projectBackupPath));
 					}
 
 					legacyProjectHandler.setUserWritablePermissions(projectBackupPath);
 					FileUtils.deleteDirectory(projectBackupPath.toFile());
 				}
 
-				logger.info(String.format("Creating backup for project \"%s\"", projectId));
+				logger.info(String.format("Creating backup for project with ID %s", projectId));
 				FileUtils.copyDirectory(projectPath.toFile(), projectBackupPath.toFile());
 
 				legacyProjectHandler.setUserWritablePermissions(projectPath);
@@ -144,7 +144,7 @@ public class ProjectConverter implements AutoCloseable {
 
 					if (!repoManager.hasRemoteRef(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranch)) {
 						logger.warning(
-								String.format("Project \"%s\" has no migration branch \"%s\" and cannot be converted",	projectId, migrationBranch)
+								String.format("Project with ID %s has no migration branch \"%s\" and cannot be converted",	projectId, migrationBranch)
 						);
 						return;
 					}
@@ -154,7 +154,7 @@ public class ProjectConverter implements AutoCloseable {
 
 					List<String> relativeSubmodulePaths = repoManager.getSubmodulePaths();
 
-					logger.info(String.format("Integrating submodule resources into the project \"%s\"", projectId));
+					logger.info(String.format("Integrating submodule resources into project with ID %s", projectId));
 					for (String relativeSubmodulePath : relativeSubmodulePaths) {
 						// create a copy of the submodule
 						File absoluteSubmodulePath = projectRootPath.resolve(relativeSubmodulePath).toFile();
@@ -178,7 +178,7 @@ public class ProjectConverter implements AutoCloseable {
 						if (!dotGitFile.delete()) {
 							throw new IllegalStateException(
 								String.format(
-										"Tried to delete .git at \"%s\" for project \"%s\" but there was none! "
+										"Tried to delete .git at path %s for project with ID %s but there was none! "
 												+ "You need to check before proceeding with the conversion!",
 										dotGitFile,
 										projectId
@@ -190,18 +190,18 @@ public class ProjectConverter implements AutoCloseable {
 						repoManager.add(Paths.get(relativeSubmodulePath));
 					}
 
-					logger.info(String.format("Removing .gitmodules from project \"%s\"", projectId));
+					logger.info(String.format("Deleting .gitmodules from project with ID %s", projectId));
 					repoManager.remove(projectRootPath.resolve(".gitmodules").toFile());
 
 					logger.info("Committing integration of submodules");
 					repoManager.commit("Direct integration of submodules", ownerUser.getIdentifier(), ownerUser.getEmail(), false);
 
 					if (!hasAnyResources(projectRootPath)) {
-						logger.warning(String.format("Project \"%s\" does not seem to have any resources, skipping conversion", projectId));
+						logger.warning(String.format("Project with ID %s does not seem to have any resources, skipping conversion", projectId));
 						return;
 					}
 
-					logger.info(String.format("Creating new target project \"%s\" in the owner's namespace \"%s\"", projectId, ownerUser));
+					logger.info(String.format("Creating new target project with ID %s in the owner's namespace \"%s\"", projectId, ownerUser.getIdentifier()));
 					Project project = restrictedGitLabApi.getProjectApi().createProject(
 							projectId,
 							null,
@@ -217,7 +217,13 @@ public class ProjectConverter implements AutoCloseable {
 					project.setRemoveSourceBranchAfterMerge(false);
 					restrictedGitLabApi.getProjectApi().updateProject(project);
 
-					logger.info(String.format("Updating remote 'origin' to new target project \"%s\" in the owner's namespace \"%s\"", projectId, ownerUser));
+					logger.info(
+							String.format(
+									"Updating remote 'origin' to new target project with ID %s in the owner's namespace \"%s\"",
+									projectId,
+									ownerUser.getIdentifier()
+							)
+					);
 					repoManager.remoteRemove(Constants.DEFAULT_REMOTE_NAME);
 					repoManager.remoteAdd(Constants.DEFAULT_REMOTE_NAME, GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo()));
 
@@ -240,7 +246,7 @@ public class ProjectConverter implements AutoCloseable {
 						}
 					}
 
-					repoManager.addAllAndCommit("Converted collections", ownerUser.getIdentifier(), ownerUser.getEmail(), false);
+					repoManager.addAllAndCommit("Converted annotation collections", ownerUser.getIdentifier(), ownerUser.getEmail(), false);
 
 					MergeResult mergeResult = null;
 
@@ -279,10 +285,10 @@ public class ProjectConverter implements AutoCloseable {
 					}
 
 					if (CATMAPropertyKey.V6_REPO_MIGRATION_CLEANUP_CONVERTED_V6_PROJECT.getBooleanValue()) {
-						logger.info(String.format("Deleting legacy project (group) \"%s\"", projectId));
+						logger.info(String.format("Deleting legacy project (group) with ID %s", projectId));
 						restrictedGitLabApi.getGroupApi().deleteGroup(projectId);
 
-						logger.info(String.format("Removing local Git repositories for project \"%s\"", projectId));
+						logger.info(String.format("Deleting local Git repositories for project with ID %s", projectId));
 						File gitRepositoryBaseDir = new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue());
 
 						for (File userDir : gitRepositoryBaseDir.listFiles()) {
@@ -294,7 +300,7 @@ public class ProjectConverter implements AutoCloseable {
 										FileUtils.deleteDirectory(projectDir);
 									}
 									catch (FileSystemException fse) {
-										logger.log(Level.WARNING, String.format("Couldn't clean up project directory \"%s\"!", projectDir), fse);
+										logger.log(Level.WARNING, String.format("Couldn't clean up project directory at path %s", projectDir), fse);
 									}
 								}
 							}
@@ -303,19 +309,19 @@ public class ProjectConverter implements AutoCloseable {
 				}
 
 				if (CATMAPropertyKey.V6_REPO_MIGRATION_REMOVE_USER_TEMP_DIRECTORY.getBooleanValue()) {
-					logger.info(String.format("Removing temp directory \"%s\"", userTempPath.toFile()));
+					logger.info(String.format("Deleting temp directory at path %s", userTempPath.toFile()));
 
 					try {
 						legacyProjectHandler.deleteUserTempPath(userTempPath);
 					}
 					catch (Exception e) {
-						logger.log(Level.WARNING, String.format("Couldn't clean up user temp directory \"%s\"!", userTempPath), e);
+						logger.log(Level.WARNING, String.format("Couldn't clean up user temp directory at path %s", userTempPath), e);
 					}
 				}
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, String.format("Error converting project \"%s\"", projectId), e);
+			logger.log(Level.SEVERE, String.format("Error converting project with ID %s", projectId), e);
 		}
 	}
 
@@ -346,7 +352,7 @@ public class ProjectConverter implements AutoCloseable {
 			String collectionId, Path annotationsPath,
 			TagLibrary tagLibrary, JGitRepoManager repoManager, User user
 	) throws Exception {
-		logger.info(String.format("Converting collection \"%s\"", collectionId));
+		logger.info(String.format("Converting collection with ID %s", collectionId));
 
 		if (annotationsPath.toFile().exists() && annotationsPath.toFile().list().length > 0) {
 			List<Pair<JsonLdWebAnnotation, TagInstance>> annotations = legacyProjectHandler.loadLegacyTagInstances(
@@ -362,7 +368,7 @@ public class ProjectConverter implements AutoCloseable {
 			for (String annotationId : annotationIds) {
 				File legacyAnnotationFile = annotationsPath.resolve(annotationId + ".json").toFile();
 				if (!legacyAnnotationFile.delete()) {
-					throw new IllegalStateException(String.format("Could not delete legacy annotation file \"%s\"", legacyAnnotationFile));
+					throw new IllegalStateException(String.format("Failed to delete legacy annotation file at path %s", legacyAnnotationFile));
 				}
 				repoManager.remove(legacyAnnotationFile);
 			}

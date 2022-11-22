@@ -118,7 +118,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 
 	private void initActions(EventBus eventBus) {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		miAnnotateRows = moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
+		miAnnotateRows = moreOptionsMenu.addItem("Annotate Selected Rows", mi -> handleAnnotateSelectedRequest(eventBus));
 		miAnnotateRows.setEnabled(!this.project.isReadOnly());
 		
 		ActionGridBar actionBar = kwicGridComponent.getActionGridBar();
@@ -134,7 +134,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			
 		miRemoveAnnotations = 
 			moreOptionsMenu.addItem(
-				"Remove selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
+				"Delete Selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
 		miRemoveAnnotations.setEnabled(false);
 		
 		MenuItem miExport = moreOptionsMenu.addItem("Export");
@@ -183,7 +183,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		if (selectedRows.isEmpty()) {
 			Notification.show(
 				"Info", 
-				"Please select one or more Annotation rows!", 
+				"Please select one or more annotation rows!",
 				Type.HUMANIZED_MESSAGE);
 			return;
 		}
@@ -231,14 +231,14 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (permissionsMissing) {
 				Notification.show(
 					"Info", 
-					"You do not have the write permission for one or more Collections referenced by your selection. Those Collections will be ignored!", 
+					"You do not have the write permission for one or more collections referenced by your selection. Those collections will be ignored!",
 					Type.HUMANIZED_MESSAGE);
 			}
 			
 			if (annotationRows == 0) {
 				Notification.show(
 					"Info", 
-					"Your selection does not contain any Annotations! Please select Annotations only!", 
+					"Your selection does not contain any annotations! Please select annotations only!",
 					Type.HUMANIZED_MESSAGE);
 				return;
 			}
@@ -246,7 +246,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (annotationCollectionReferences.isEmpty()) {
 				Notification.show(
 					"Info", 
-					"The Documents and/or Collections referenced by your selection are no longer part of the Project!", 
+					"The documents and/or collections referenced by your selection are no longer part of the project!",
 					Type.HUMANIZED_MESSAGE);
 					return;			
 			}
@@ -254,8 +254,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (resourcesMissing) {
 				Notification.show(
 					"Info", 
-					"Some of the Documents and/or Collections referenced by your selection "
-					+ "are no longer part of the Project and will be ignored, "
+					"Some of the documents and/or collections referenced by your selection "
+					+ "are no longer part of the project and will be ignored, "
 					+ "see columns 'Document' and 'Collection' for details!", 
 					Type.HUMANIZED_MESSAGE);
 			}
@@ -263,7 +263,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (annotationRows != selectedRows.size()) {
 				Notification.show(
 					"Info", 
-					"Some rows of your selection do not represent Annotations and will be ignored, see column 'Tag' for details!", 
+					"Some rows of your selection do not represent annotations and will be ignored, see column 'Tag' for details!",
 					Type.HUMANIZED_MESSAGE);
 			}
 			
@@ -277,7 +277,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			kwicDataProvider.refreshAll();
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error deleting Annotations!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error deleting annotations", e);
 		}
 	}
 	
@@ -304,12 +304,12 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 				else {
 					Notification.show(
 							"Info", 
-							"The corresponding Document is no longer part of the Project!", 
+							"The corresponding document is no longer part of the project!",
 							Type.WARNING_MESSAGE);
 				}
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("error accessing project data", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing project data", e);
 			}
 		}
 	}
@@ -342,8 +342,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 						try {
 							annotateSelection(selectedRows, result);
 						} catch (Exception e) {
-							((ErrorHandler)UI.getCurrent()).showAndLogError(
-									"error annotating selected rows", e);
+							((ErrorHandler) UI.getCurrent()).showAndLogError(
+									"Error annotating selected rows", e);
 						}						
 					}
 					
@@ -402,7 +402,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		}
 		
 		project.addAndCommitCollections(collectionRefsByDocId.values(), 
-				"Auto-Committing KWIC Annotations");
+				"Auto-committing KWIC annotations");
 	}
 
 	private void handleMaxMinRequest() {
@@ -499,7 +499,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		kwicGrid.getDefaultHeaderRow().getCell(keywordColumn).setStyleName("kwic-panel-keyword-header");
 		kwicGrid.getDefaultHeaderRow().getCell(backwardCtxColumn).setStyleName("kwic-panel-backwardctx-header");
 		
-		kwicGridComponent = new ActionGridComponent<>(new Label("Keyword in context"), kwicGrid);
+		kwicGridComponent = new ActionGridComponent<>(new Label("KeyWord In Context"), kwicGrid);
 		kwicGridComponent.getActionGridBar().setAddBtnVisible(false);
 		kwicGridComponent.getActionGridBar().addButtonRight(btExpandCompress);
 		kwicGridComponent.setMargin(new MarginInfo(false, false, false, true));

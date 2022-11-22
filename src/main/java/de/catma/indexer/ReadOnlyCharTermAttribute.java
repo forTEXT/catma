@@ -56,35 +56,35 @@ public class ReadOnlyCharTermAttribute implements CharTermAttribute {
 	}
 
 	public CharTermAttribute setLength(int length) {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	public CharTermAttribute setEmpty() {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	public CharTermAttribute append(CharSequence csq) {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	public CharTermAttribute append(CharSequence csq, int start, int end) {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	public CharTermAttribute append(char c) {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	public CharTermAttribute append(String s) {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	public CharTermAttribute append(StringBuilder sb) {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	public CharTermAttribute append(CharTermAttribute termAtt) {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	@Override

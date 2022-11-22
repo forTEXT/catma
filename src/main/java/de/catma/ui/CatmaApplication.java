@@ -221,7 +221,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 	}
 
 	public <T> void submit(String caption, final ProgressCallable<T> callable, final ExecutionListener<T> listener) {
-		logger.info("submitting job '" + caption + "' " + callable); //$NON-NLS-1$ //$NON-NLS-2$
+		logger.info("Submitting job '" + caption + "' " + callable); //$NON-NLS-1$ //$NON-NLS-2$
 		acquireBackgroundService().submit(callable, new ExecutionListener<T>() {
 			public void done(T result) {
 				listener.done(result);
@@ -242,7 +242,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 			try {
 				((Closeable) content).close();
 			} catch (IOException e) {
-				logger.log(Level.WARNING, "couldn't cleanup UI content", e);
+				logger.log(Level.WARNING, "Couldn't clean up UI content", e);
 			}
 		}
 		
@@ -384,7 +384,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 			}
 		}
 		catch (Exception e) {
-			showAndLogError("Error during login!", e);
+			showAndLogError("Error during login", e);
 		}
 	}
 

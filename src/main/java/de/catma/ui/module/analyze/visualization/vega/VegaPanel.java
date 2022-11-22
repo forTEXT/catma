@@ -140,8 +140,8 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 			
 			Notification.show(
 				"Info", 
-				"Please keep in mind that your selection is now public accessible for everyone who knows the URL "
-				+ "until you uncheck this box or until you close this Analyze session!", 
+				"Please keep in mind that your selection is now publicly accessible for everyone who knows the URL "
+				+ "until you uncheck this box or until you close this analyze session!",
 				Type.ERROR_MESSAGE);
 		}
 		else {
@@ -191,7 +191,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 		
 		String spec = specEditor.getValue();
 		if ((spec == null) || spec.trim().isEmpty()) {
-			Notification.show("Info", "Vega Specification must not be empty!", Type.TRAY_NOTIFICATION);
+			Notification.show("Info", "Vega specification must not be empty!", Type.TRAY_NOTIFICATION);
 		}
 		else {
 			ObjectMapper mapper = new ObjectMapper();
@@ -213,7 +213,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 				vega.setVegaSpec(specNode.toString());
 			}
 			catch (Exception e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError("error updating vega viz", e);
+				((CatmaApplication) UI.getCurrent()).showAndLogError("Error updating Vega visualization", e);
 			}
 		}
 	}
@@ -370,7 +370,7 @@ public class VegaPanel extends HorizontalSplitPanel implements Visualization {
 		try {
 			displaySettingsHandler.handleDisplaySetting(displaySetting, this);
 		} catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error changing display setting", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error changing display setting", e);
 		}
 	}
 

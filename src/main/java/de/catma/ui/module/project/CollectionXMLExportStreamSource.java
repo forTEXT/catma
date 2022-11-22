@@ -67,7 +67,7 @@ public class CollectionXMLExportStreamSource implements StreamSource {
 	
 	        return new FileInputStream(tempFile);
 		} catch (Exception e) {
-			((ErrorHandler)ui).showAndLogError("Error exporting Documents and Collections!", e);
+			((ErrorHandler) ui).showAndLogError("Error exporting documents and collections", e);
 		}		
 
 		return null;

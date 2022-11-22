@@ -61,7 +61,7 @@ public class TagResourcePanel extends VerticalLayout {
 			tagsetDataProvider.getItems().forEach(tagsetGrid::select);
     	}
     	catch (Exception e) {
-			errorHandler.showAndLogError("Error loading data!", e);
+			errorHandler.showAndLogError("Error loading data", e);
     	}
 	}
 
@@ -93,7 +93,7 @@ public class TagResourcePanel extends VerticalLayout {
 	private void handleAddTagsetRequest() {
     	
     	SingleTextInputDialog tagsetNameDlg = 
-    		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+    		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
     				new SaveCancelListener<String>() {
 						
 						@Override
@@ -120,7 +120,7 @@ public class TagResourcePanel extends VerticalLayout {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				Exception e = (Exception) evt.getNewValue();
-				errorHandler.showAndLogError("Error handling Project!", e);
+				errorHandler.showAndLogError("Error handling project", e);
 				
 			}
 		};

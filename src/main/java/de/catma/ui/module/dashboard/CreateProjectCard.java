@@ -13,7 +13,7 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 
 /**
- * Renders a new Project link styled as a card.
+ * Renders a new project link styled as a card.
  * 
  * @author db
  *

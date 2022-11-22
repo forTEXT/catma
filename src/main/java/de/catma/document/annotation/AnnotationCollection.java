@@ -96,9 +96,9 @@ public class AnnotationCollection {
 	}
 
 	/**
-	 * @param tagDefinition return all references with this tagdefinition (<b>excluding</b>
-	 * all references that have a tag definition that is a child of the given definition, i. e.
-	 * this is not a deep list of references)
+	 * @param tagDefinition return all references with this {@link TagDefinition}
+	 *                      (<strong>excluding</strong> references that have a tag definition that is a child of the given definition,
+	 *                      i.e. this is not a deep list of references)
 	 * 
 	 * @return the matching references
 	 */

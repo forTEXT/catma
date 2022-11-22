@@ -47,7 +47,7 @@ public class AddEditPropertyDialog extends AbstractOkCancelDialog<List<PropertyD
 
 	public AddEditPropertyDialog(boolean bulkEdit, List<PropertyDefinition> commonPropertyDefs, 
 			SaveCancelListener<List<PropertyDefinition>> saveCancelListener) {
-		super("Edit " + (bulkEdit?"common ":"") +"Properties", saveCancelListener);
+		super("Edit " + (bulkEdit?"Common ":"") +"Properties", saveCancelListener);
 		initComponents(bulkEdit, commonPropertyDefs);
 		initActions();
 	}
@@ -123,15 +123,15 @@ public class AddEditPropertyDialog extends AbstractOkCancelDialog<List<PropertyD
 	
 	private void initComponents(boolean bulkEdit, List<PropertyDefinition> commonPropertyDefs) {
 		inputLabel = new Label(
-				bulkEdit?"Edit the common Properties of the selected Tags":
-					"Edit the Properties of the selected Tag");
+				bulkEdit?"Edit the common properties of the selected tags":
+					"Edit the properties of the selected tag");
 		
 		propertyDefNamePanel = new HorizontalLayout();
 		propertyDefNamePanel.setSpacing(true);
 		propertyDefNamePanel.setMargin(new MarginInfo(true, true, false, true));
 		
 		tfPropertyDefName = new TextField("Add Properties");
-		tfPropertyDefName.setPlaceholder("Enter a Property name");
+		tfPropertyDefName.setPlaceholder("Enter a property name");
 		tfPropertyDefName.setWidth("250px");
 		propertyDefNamePanel.addComponent(tfPropertyDefName);
 		

@@ -50,7 +50,7 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 	// the conversion algorithm of the standard tagset can in certain cases generate distinct IDs, 
 	// supporting move in CATMA 4 would certainly break this assumption as well!!!
 	
-	// there is only one TagLibrary per Project, so within a project, this should work fine in CATMA 6 now
+	// there is only one TagLibrary per project, so within a project, this should work fine in CATMA 6 now
 	/**
 	 * @param tagDefinitionID CATMA uuid of the {@link TagDefinition}, see {@link de.catma.util.IDGenerator}.
 	 * @return the corresponding TagDefinition or <code>null</code>

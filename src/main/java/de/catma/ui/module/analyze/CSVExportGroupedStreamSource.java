@@ -143,7 +143,7 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 			}
 			@Override
 			public void error(Throwable t) {
-				((ErrorHandler)ui).showAndLogError("Error export data to CSV!", t);
+				((ErrorHandler) ui).showAndLogError("Error exporting data to CSV", t);
 			}
 		});
 
@@ -156,7 +156,7 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 				tries--;
 			}
 		} catch (IOException | InterruptedException e) {
-			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export!", e);
+			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export", e);
 		}
         
         return in;

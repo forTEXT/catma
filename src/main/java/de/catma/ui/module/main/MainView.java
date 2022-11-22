@@ -211,7 +211,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 				);
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error opening document in annotate module!", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error opening document in annotate module", e);
 			}
 
 			currentRoute = queryResultRowInAnnotateEvent.getClass();

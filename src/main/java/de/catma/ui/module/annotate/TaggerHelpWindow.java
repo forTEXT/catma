@@ -22,7 +22,7 @@ public class TaggerHelpWindow extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		
-		Label helpText = new Label("<h4>Annotate this Source Document</h4><ol><li>First you have to tell CATMA which Tagset you want to use. Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section.</li><li>Now you can select the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the selected sequence.</li></ol>When you click on an annotated text, i. e. a text that is underlined with colored bars, you should see the available Annotation in the section on the lower right of this view.", ContentMode.HTML); 
+		Label helpText = new Label("<h4>Annotate this source document</h4><ol><li>First you have to tell CATMA which tagset you want to use. Open a tag library from the Repository Manager and drag a tagset to the \"Active Tagsets\" section.</li><li>Now you can select the text sequence you want to tag.</li><li>Click the colored button of the desired tag to apply it to the selected sequence.</li></ol>When you click on an annotated text, i.e. a text that is underlined with colored bars, you should see the available annotation in the section on the lower right of this view.", ContentMode.HTML);
 		content.addComponent( helpText);
 		setContent(content);
 		

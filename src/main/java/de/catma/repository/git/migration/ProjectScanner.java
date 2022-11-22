@@ -86,7 +86,7 @@ public class ProjectScanner implements AutoCloseable {
 			User user
 	) {
 		try (JGitRepoManager repoManager = userRepoManager) {
-			logger.info(String.format("Scanning project \"%s\"", projectId));
+			logger.info(String.format("Scanning project with ID %s", projectId));
 
 			// get the list of submodules/resources
 			String rootRepoName = projectId + "_root";
@@ -101,7 +101,7 @@ public class ProjectScanner implements AutoCloseable {
 
 				if (role.equals(RBACRole.GUEST)) {
 					logger.info(String.format(
-							"User \"%1$s\" only has the 'Guest' role on resource \"%2$s/%3$s\", skipping", repoManager.getUsername(), projectId, resource
+							"User \"%1$s\" only has the 'Guest' role on resource at path %2$s/%3$s, skipping", repoManager.getUsername(), projectId, resource
 					));
 					continue;
 				}
@@ -124,7 +124,7 @@ public class ProjectScanner implements AutoCloseable {
 
 				// if the Git status is clean, check what still needs to, and can be, merged and add these details to the project report
 				if (status.isClean()) {
-					logger.info(String.format("Fetching resource \"%s/%s\"", projectId, resource));
+					logger.info(String.format("Fetching resource at path %s/%s", projectId, resource));
 					repoManager.fetch(credentialsProvider);
 
 					List<CommitInfo> commitsDevIntoMaster = repoManager.getCommitsNeedToBeMergedFromDevToMaster();
@@ -165,7 +165,7 @@ public class ProjectScanner implements AutoCloseable {
 
 			// if the Git status is clean, check what still needs to, and can be, merged and add these details to the project report
 			if (rootStatus.isClean()) {
-				logger.info(String.format("Fetching root \"%s\"", projectId));
+				logger.info(String.format("Performing fetch on root repo for project with ID %s", projectId));
 				repoManager.fetch(credentialsProvider);
 
 				List<CommitInfo> commitsMasterIntoOriginMaster = repoManager.getCommitsNeedToBeMergedFromMasterToOriginMaster();
@@ -203,7 +203,7 @@ public class ProjectScanner implements AutoCloseable {
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, String.format("Error scanning project \"%s\"", projectId), e);
+			logger.log(Level.SEVERE, String.format("Error scanning project with ID %s", projectId), e);
 			getProjectReport(projectId).addError(e);
 		}
 	}
@@ -221,7 +221,7 @@ public class ProjectScanner implements AutoCloseable {
 		// if the merge wasn't successful, attempt to resolve conflicts
 		if (!mergeResult.getMergeStatus().isSuccessful()) {
 			if (mergeResult.getConflicts().containsKey(Constants.DOT_GIT_MODULES)) {
-				logger.info(String.format("Found conflicts in %s of project \"%s\", trying auto resolution", Constants.DOT_GIT_MODULES, projectId));
+				logger.info(String.format("Found conflicts in .gitmodules of project with ID %s, trying auto resolution", projectId));
 				repoManager.resolveGitSubmoduleFileConflicts();
 			}
 
@@ -270,7 +270,11 @@ public class ProjectScanner implements AutoCloseable {
 	) throws Exception {
 		if (!repoManager.hasRef(Constants.MASTER)) {
 			logger.warning(
-					String.format("The root repo of project \"%s\" for user \"%s\" doesn't have a master branch (no commits)", projectId, user.getIdentifier())
+					String.format(
+							"The root repo of the project with ID %s for user \"%s\" doesn't have a master branch (no commits)",
+							projectId,
+							user.getIdentifier()
+					)
 			);
 			return;
 		}
@@ -383,7 +387,7 @@ public class ProjectScanner implements AutoCloseable {
 	}
 
 	private void scanUserProjects(String username, String projectId, String authenticationUsername) {
-		logger.info(String.format("Scanning user \"%s\" projects: \"%s\"", username, projectId == null ? "all" : projectId));
+		logger.info(String.format("Scanning user \"%s\" project(s): %s", username, projectId == null ? "all" : projectId));
 
 		Path userTempPath = null;
 
@@ -419,7 +423,7 @@ public class ProjectScanner implements AutoCloseable {
 				}
 
 				if (!userTempPath.toFile().mkdirs()) {
-					throw new IllegalStateException(String.format("Could not create temp directory \"%s\"", userTempPath));
+					throw new IllegalStateException(String.format("Failed to create temp directory at path %s", userTempPath));
 				}
 
 				Path copySrc = userBasePath;
@@ -430,11 +434,11 @@ public class ProjectScanner implements AutoCloseable {
 				}
 
 				if (!copySrc.toFile().exists()) {
-					logger.info(String.format("Project \"%s\" has not been cloned by user \"%s\", skipping", projectId, username));
+					logger.info(String.format("Project with ID %s hasn't been cloned by user \"%s\", skipping", projectId, username));
 					return;
 				}
 
-				logger.info(String.format("Creating temp directory \"%s\"", copyDest));
+				logger.info(String.format("Creating temp directory at path %s", copyDest));
 				FileUtils.copyDirectory(copySrc.toFile(), copyDest.toFile());
 
 				try (JGitRepoManager repoManager = new JGitRepoManager(migrationTempPath, user)) {
@@ -443,7 +447,7 @@ public class ProjectScanner implements AutoCloseable {
 
 					for (File projectDir : projectDirs) {
 						if (!isValidLegacyProject(projectDir, projects)) {
-							logger.info(String.format("Found stale project for user \"%s\": \"%s\"", username, projectDir.getName()));
+							logger.info(String.format("Found stale project for user \"%s\": %s", username, projectDir.getName()));
 							getProjectReport(projectId).addStaleProject(projectDir);
 							continue;
 						}
@@ -458,12 +462,12 @@ public class ProjectScanner implements AutoCloseable {
 		}
 		finally {
 			if (userTempPath != null && CATMAPropertyKey.V6_REPO_MIGRATION_REMOVE_USER_TEMP_DIRECTORY.getBooleanValue(true)) {
-				logger.info(String.format("Removing temp directory \"%s\"", userTempPath));
+				logger.info(String.format("Deleting temp directory at path %s", userTempPath));
 				try {
 					legacyProjectHandler.deleteUserTempPath(userTempPath);
 				}
 				catch (Exception e) {
-					logger.log(Level.SEVERE, String.format("Failed to remove temp directory \"%s\"", userTempPath), e);
+					logger.log(Level.SEVERE, String.format("Failed to delete temp directory at path %s", userTempPath), e);
 				}
 			}
 		}
@@ -471,13 +475,13 @@ public class ProjectScanner implements AutoCloseable {
 	}
 
 	public void scanProject(String projectId) throws IOException {
-		logger.info(String.format("Scanning project \"%s\"", projectId));
+		logger.info(String.format("Scanning project with ID %s", projectId));
 
 		Set<Member> members = legacyProjectHandler.getLegacyProjectMembers(projectId);
 		Member owner = members.stream().filter(member -> member.getRole().equals(RBACRole.OWNER)).findAny().orElse(null);
 
 		if (owner == null) {
-			logger.log(Level.SEVERE, String.format("Project \"%s\" has no owner, skipping", projectId));
+			logger.severe(String.format("Project with ID %s has no owner, skipping", projectId));
 			return;
 		}
 
@@ -569,7 +573,7 @@ public class ProjectScanner implements AutoCloseable {
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "Error exporting scan result!", e);
+			logger.log(Level.SEVERE, "Error exporting scan result", e);
 		}
 	}
 

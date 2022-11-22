@@ -123,7 +123,7 @@ public class LegacyProjectHandler {
 					.map(member -> new GitMember(member))
 					.collect(Collectors.toSet());
 		} catch (GitLabApiException e) {
-			throw new IOException("group unknown",e);
+			throw new IOException("Unknown group",e);
 		}
 	}
 
@@ -315,7 +315,7 @@ public class LegacyProjectHandler {
 			}
 		} catch (GitLabApiException e) {
 			Logger.getLogger(getClass().getName()).log(
-				Level.WARNING, String.format("Could delete %1$s branches!", branchName), e);
+				Level.WARNING, String.format("Couldn't delete branch \"%s\"", branchName), e);
 		}
 	}
 }

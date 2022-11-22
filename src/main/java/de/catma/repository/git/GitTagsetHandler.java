@@ -41,16 +41,16 @@ public class GitTagsetHandler {
 	}
 
 	/**
-	 * Creates a Tagset with the given parameters. 
-	 * The localGitRepositoryManager needs to be attached to a Project git
+	 * Creates a tagset with the given parameters.
+	 * The localGitRepositoryManager needs to be attached to a project Git
 	 * repository!
 	 * 
-	 * @param tagsetFolder The folder of the new Tagset.
-	 * @param tagsetId The ID of the new Tagset.
-	 * @param name The name of the new Tagset.
-	 * @param description The description of the new Tagset.
-	 * @param forkedFromCommitURL An optional source URL when the Tagset is based on a fork.
-	 * @return the new revision hash of the Project
+	 * @param tagsetFolder The folder of the new tagset.
+	 * @param tagsetId The ID of the new tagset.
+	 * @param name The name of the new tagset.
+	 * @param description The description of the new tagset.
+	 * @param forkedFromCommitURL An optional source URL when the tagset is based on a fork.
+	 * @return the new revision hash of the project
 	 * @throws IOException in case of errors
 	 */
 	public String create(File tagsetFolder,
@@ -76,7 +76,7 @@ public class GitTagsetHandler {
 		String revisionHash = this.localGitRepositoryManager.addAndCommit(
 				targetHeaderFile,
 				serializedHeader.getBytes(StandardCharsets.UTF_8),
-				String.format("Added Tagset %1$s with ID %2$s", name, tagsetId),
+				String.format("Created tagset \"%s\" with ID %s", name, tagsetId),
 				this.username,
 				this.email
 		);
@@ -263,9 +263,7 @@ public class GitTagsetHandler {
 				targetTagDefinitionsFolderAbsolutePath, 
 				!StringUtils.isEmpty(tagDefinition.getParentUuid()), // delete empty parent tag directory
 				String.format(
-					"Removing Tag %1$s with ID %2$s "
-					+ "from Tagset %3$s with ID %4$s "
-					+ "and corresponding Annotations", 
+					"Deleted tag \"%1$s\" with ID %2$s from tagset \"%3$s\" with ID %4$s, including corresponding annotations",
 					tagDefinition.getName(), 
 					tagDefinition.getUuid(),
 					gitTagsetHeader.getName(),
@@ -326,9 +324,7 @@ public class GitTagsetHandler {
 			targetPropertyDefinitionsFileAbsolutePath, 
 			serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8), 
 			String.format(
-				"Removed Property Definition %1$s with ID %2$s "
-				+ "from Tag %3$s with ID %4$s "
-				+ "in Tagset %5$s with ID %6$s ",
+				"Deleted property \"%1$s\" with ID %2$s from tag \"%3$s\" with ID %4$s in tagset \"%5$s\" with ID %6$s ",
 				propertyDefinition.getName(), propertyDefinition.getUuid(),
 				tagDefinition.getName(), tagDefinition.getUuid(),
 				tagsetDefinition.getName(), tagsetDefinition.getUuid()),
@@ -366,7 +362,7 @@ public class GitTagsetHandler {
 		String projectRevision = this.localGitRepositoryManager.addAndCommit(
 				tagsetHeaderFile, 
 				serializedHeader.getBytes(StandardCharsets.UTF_8), 
-				String.format("Updated metadata of Tagset %1$s with ID %2$s", 
+				String.format("Updated metadata of tagset \"%s\" with ID %s",
 					tagsetDefinition.getName(), tagsetDefinition.getUuid()),
 				this.username,
 				this.email);
@@ -391,8 +387,7 @@ public class GitTagsetHandler {
 				targetTagsetDefinitionsFolderAbsolutePath, 
 				false, // do not delete the parent folder
 				String.format(
-					"Removing Tagset %1$s with ID %2$s "
-					+ "and corresponding Annotations", 
+					"Deleted tagset \"%s\" with ID %s, including corresponding annotations",
 					tagset.getName(), 
 					tagset.getUuid()),
 				this.username,

@@ -99,7 +99,7 @@ public class BOMFilterInputStream extends FilterInputStream {
      */
     public static boolean hasBOM(byte[] buf)  {
     	if ((buf == null) || (buf.length<3)) {
-    		throw new IllegalArgumentException("buf needs to be at least 3 byte large");
+    		throw new IllegalArgumentException("buf needs to be at least 3 bytes");
     	}
     	if ((buf[0]==UTF_8_BOM[0]) && (buf[1]==UTF_8_BOM[1]) && (buf[2]==UTF_8_BOM[2])) {
 			return true;

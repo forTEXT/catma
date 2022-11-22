@@ -618,7 +618,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		showProgress(true);
 		
-		((BackgroundServiceProvider) UI.getCurrent()).submit("Searching...",
+		((BackgroundServiceProvider) UI.getCurrent()).submit("search",
 				job, new ExecutionListener<QueryResult>() {
 					public void done(QueryResult result) {
 						try {
@@ -645,20 +645,31 @@ public class AnalyzeView extends HorizontalLayout
 							if ((idx >= 0) && (input.length() > idx)) {
 								char character = input.charAt(idx);
 								String message = MessageFormat.format(
-										"<html><p>There is something wrong with your query <b>{0}</b> approximately at positon {1} character <b>{2}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
-										input, idx + 1, character);
+										"<html>" +
+										"<p>There is something wrong with your query <strong>{0}</strong> " +
+										"approximately at position {1} character <strong>{2}</strong>.</p>" +
+										"<p>If you are unsure about how to construct a query, try the Query Builder!</p>" +
+										"</html>",
+										input,
+										idx + 1,
+										character
+								);
 								HTMLNotification.show("Info", message, 
 										Type.TRAY_NOTIFICATION);
 							} else {
 								String message = MessageFormat.format(
-										"<html><p>There is something wrong with your query <b>{0}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
-										input);
+										"<html>" +
+										"<p>There is something wrong with your query <strong>{0}</strong>.</p>" +
+										"<p>If you are unsure about how to construct a query, try the Query Builder!</p>" +
+										"</html>",
+										input
+								);
 								HTMLNotification.show("Info", message, 
 										Type.TRAY_NOTIFICATION);
 							}
 						} else {
 							((ErrorHandler) UI.getCurrent())
-									.showAndLogError("Error during search!", t);
+									.showAndLogError("Error during search", t);
 						}
 					}
 				});

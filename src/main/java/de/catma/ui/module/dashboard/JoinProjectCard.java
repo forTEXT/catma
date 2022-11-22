@@ -10,7 +10,7 @@ import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.user.User;
 
 /**
- * Renders a new Project link styled as a card.
+ * Renders a join project link styled as a card.
  * 
  * @author db
  *

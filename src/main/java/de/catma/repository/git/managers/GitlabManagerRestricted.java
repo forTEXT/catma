@@ -180,7 +180,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
-				"Failed to update name/description for group", e
+				"Failed to update project description", e
 			);
 		}
 	}
@@ -276,8 +276,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
-				"Failed to load Project's Root Repository URL: " 
-					+ projectReference, e);
+					String.format("Failed to get repository URL for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()),
+					e
+			);
 		}
 	}
 	
@@ -292,7 +293,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			.count() > 0;
 			
 		} catch(GitLabApiException e){
-			throw new IOException("failed to check for username",e);
+			throw new IOException("Failed to check whether user exists",e);
 		}
 	}
 	
@@ -313,7 +314,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			.collect(Collectors.toList());
 			
 		} catch(GitLabApiException e){
-			throw new IOException("failed to check for username",e);
+			throw new IOException("Failed to search for users",e);
 		}
 	}
 	
@@ -374,10 +375,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 				return mergedList.values().stream().collect(Collectors.toSet());
 				
 			} else {
-				throw new IOException("resource unknown");
+				throw new IOException("Unknown resource");
 			}	
 		} catch (GitLabApiException e){
-			throw new IOException("resource unknown");
+			throw new IOException("Unknown resource");
 		}
 	}
 	
@@ -448,7 +449,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			logger.log(
 				Level.WARNING, 
 				String.format(
-					"Error retrieving Project name or description for %1$s from %2$s", 
+					"Error retrieving project name or description for %1$s from %2$s",
 					path, 
 					eventuallyMarshalledMetadata), 
 				e);
@@ -481,7 +482,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		try {
 			this.user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
 		} catch (GitLabApiException e) {
-			logger.log(Level.WARNING, "can't fetch user from backend", e);
+			logger.log(Level.WARNING, "Can't fetch user from backend", e);
 		}
 	}	
 	
@@ -569,8 +570,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		catch (GitLabApiException | IllegalArgumentException e) { // missing issue title throws IllegalArgumentException
 			throw new IOException(
 					String.format(
-							"Failed to add new comment in project \"%s\" for document ID: %s",
-							projectReference,
+							"Failed to create comment in project \"%s\" for document with ID %s",
+							projectReference.getName(),
 							documentId
 					),
 					e
@@ -609,15 +610,29 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					result.add(comment);
 				}
 				catch (Exception e) {
-					logger.log(Level.SEVERE, String.format("Error deserializing Comment #%1$d %2$s", issue.getId(), description), e);
+					logger.log(
+							Level.SEVERE,
+							String.format(
+									"Failed to deserialize comment from issue with IID %d and description %s",
+									issue.getIid(),
+									description
+							),
+							e
+					);
 				}
 			}
 			
 			return result;
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to retrieve Comments resource %1$s in project %2$s!", resourceId, projectReference), e);
+			throw new IOException(
+					String.format(
+							"Failed to retrieve comments for resource with ID %s in project \"%s\"",
+							resourceId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 
 	}
@@ -653,15 +668,25 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					result.add(comment);
 				}
 				catch (Exception e) {
-					logger.log(Level.SEVERE, String.format("Error deserializing Comment #%1$d %2$s", issue.getId(), description), e);
+					logger.log(
+							Level.SEVERE,
+							String.format(
+									"Failed to deserialize comment from issue with IID %d and description %s",
+									issue.getIid(),
+									description
+							),
+							e
+					);
 				}
 			}
 			
 			return result;
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to retrieve Comments in project %1$s!", projectReference), e);
+			throw new IOException(
+					String.format("Failed to retrieve comments for project \"%s\"", projectReference.getName()),
+					e
+			);
 		}
 
 	}
@@ -679,10 +704,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			issuesApi.closeIssue(projectPath, comment.getIid());
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to remove Comment %1$s %2$d for resource %3$s in project %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectReference),
-				e);
+			throw new IOException(
+					String.format(
+							"Failed to delete comment with ID %1$s (issue IID %2$d) for resource with ID %3$s in project \"%4$s\"",
+							comment.getUuid(),
+							comment.getIid(),
+							resourceId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 	}
 	
@@ -712,10 +743,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					null, null, null);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to update Comment %1$s %2$d for resource %3$s in project %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectReference), 
-				e);
+			throw new IOException(
+					String.format(
+							"Failed to update comment with ID %1$s (issue IID %2$d) for resource with ID %3$s in project \"%4$s\"",
+							comment.getUuid(),
+							comment.getIid(),
+							resourceId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 	}
 	
@@ -734,10 +771,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			comment.addReply(reply);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in project %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectReference), 
-				e);
+			throw new IOException(
+					String.format(
+							"Failed to create reply to comment with ID %1$s (issue IID %2$d) for resource with ID %3$s in project \"%4$s\"",
+							comment.getUuid(),
+							comment.getIid(),
+							resourceId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 		
 	}
@@ -756,10 +799,19 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			notesApi.updateIssueNote(projectPath, comment.getIid(), reply.getId(), noteBody);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in project %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectReference), 
-				e);
+			throw new IOException(
+					String.format(
+							"Failed to update reply with ID %1$s (note ID %2$d) on comment with ID %3$s (issue IID %4$d) " +
+									"for resource with ID %5$s in project \"%6$s\"",
+							reply.getUuid(),
+							reply.getId(),
+							comment.getUuid(),
+							comment.getIid(),
+							resourceId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 	}
 	
@@ -777,10 +829,19 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			comment.removeReply(reply);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in project %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectReference), 
-				e);
+			throw new IOException(
+					String.format(
+							"Failed to delete reply with ID %1$s (note ID %2$d) from comment with ID %3$s (issue IID %4$d) " +
+									"for resource with ID %5$s in project \"%6$s\"",
+							reply.getUuid(),
+							reply.getId(),
+							comment.getUuid(),
+							comment.getIid(),
+							resourceId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 		
 	}
@@ -808,7 +869,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					reply.setUsername(note.getAuthor().getName());
 				}
 				catch (Exception e) {
-					logger.log(Level.SEVERE, String.format("Error deserializing Reply #%1$d %2$s", note.getId(), noteBody), e);
+					logger.log(
+							Level.SEVERE,
+							String.format("Failed to deserialize reply from note with ID %d and body %s", note.getId(), noteBody),
+							e
+					);
 					IDGenerator idGenerator = new IDGenerator();
 					
 					reply = new Reply(
@@ -825,10 +890,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			
 			return result;
 		} catch (GitLabApiException e) {
-			throw new IOException(String.format(
-					"Failed to retrieve Replies for Comment %1$s %2$d for resource %3$s in project %4$s!", 
-						comment.getUuid(), comment.getIid(), resourceId, projectReference), 
-					e);
+			throw new IOException(
+					String.format(
+							"Failed to retrieve replies to comment with ID %1$s (issue IID %2$d) for resource with ID %3$s in project \"%4$s\"",
+							comment.getUuid(),
+							comment.getIid(),
+							resourceId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 	}
 	
@@ -851,10 +922,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		} catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-						"Failed to retrieve merge request for Project %1$s and MR IID %2$d", 
-						projectReference,
-						mergeRequestIid),
-					e);
+							"Failed to retrieve merge request with IID %d for project \"%s\"",
+							mergeRequestIid,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 
 	}
@@ -889,10 +962,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		} catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-						"Failed to retrieve open merge requests for Project %1$s and User %2$s", 
-						projectReference,
-						user.getIdentifier()),
-					e);
+							"Failed to retrieve open merge requests for project \"%s\" and user \"%s\"",
+							projectReference.getName(),
+							user.getIdentifier()
+					),
+					e
+			);
 		}
 	}
 	
@@ -909,12 +984,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					glProjectId, 
 					user.getIdentifier(),
 					Constants.MASTER, 
-					String.format(
-							"Integration of latest changes by %1$s (%2$s)",  
-							user.getName(), user.getIdentifier()), 
-					String.format(
-							"Integration of latest changes by %1$s (%2$s)",  
-							user.getName(), user.getIdentifier()), 
+					String.format("Integration of latest changes by %s (%s)", user.getName(), user.getIdentifier()),
+					String.format("Integration of latest changes by %s (%s)", user.getName(), user.getIdentifier()),
 					null,
 					null,
 					null,
@@ -932,10 +1003,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		} catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-						"Failed to create Merge Request for Project %1$s and User %2$s", 
-						projectReference,
-						user.getIdentifier()),
-						e);
+							"Failed to create merge request for project \"%s\" and user \"%s\"",
+							projectReference.getName(),
+							user.getIdentifier()
+					),
+					e
+			);
 		}
 	
 	}
@@ -957,11 +1030,13 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		} catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-						"Failed to merge MergeRequest ID %1$s for GL-ProjectID %2$s and User %3$s",
-						mergeRequestInfo.getIid(),
-						mergeRequestInfo.getGlProjectId(),
-						user.getIdentifier()),
-					e);
+							"Failed to merge merge request with IID %1$d for GitLab project ID %2$d and user \"%3$s\"",
+							mergeRequestInfo.getIid(),
+							mergeRequestInfo.getGlProjectId(),
+							user.getIdentifier()
+					),
+					e
+			);
 		}
 	
 	}

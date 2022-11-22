@@ -6,7 +6,7 @@ import de.catma.rbac.IRBACManager;
 
 public interface RemoteGitManagerCommon extends IRBACManager {
 	/**
-	 * checks if a given User or Email exists
+	 * checks if a given user or email exists
 	 * @param usernameOrEmail
 	 * @return
 	 * @throws IOException

@@ -249,7 +249,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				Exception e = (Exception) evt.getNewValue();
-				errorHandler.showAndLogError("Error handling Project!", e);
+				errorHandler.showAndLogError("Error in project", e);
 				
 			}
 		};
@@ -314,7 +314,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				
 				Notification.show(
 						"Info", 
-						String.format("Collection %1$s has been created!", collectionReference.toString()),  
+						String.format("Collection \"%s\" has been created", collectionReference.toString()),
 						Type.TRAY_NOTIFICATION);			
 			}
 		}
@@ -384,10 +384,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		documentsAndCollectionsExportFileDownloader.extend(miExportDocumentsAndCollections);
 
 		documentGridComponentMoreOptionsContextMenu.addItem(
-				"Select filtered entries", mi-> handleSelectFilteredDocuments()
+				"Select Filtered Entries", mi-> handleSelectFilteredDocuments()
 		);
 		miToggleResponsibiltityFilter = documentGridComponentMoreOptionsContextMenu.addItem(
-				"Hide other's responsibilities", mi -> toggleResponsibilityFilter()
+				"Hide Others' Responsibilities", mi -> toggleResponsibilityFilter()
 		);
 		miToggleResponsibiltityFilter.setCheckable(true);
 		miToggleResponsibiltityFilter.setChecked(false);
@@ -443,11 +443,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		// global project actions
 		ContextMenu hugeCardMoreOptionsContextMenu = getMoreOptionsContextMenu();
 		miCommit = hugeCardMoreOptionsContextMenu.addItem(
-				"Commit all changes", mi -> handleCommitRequest()
+				"Commit All Changes", mi -> handleCommitRequest()
 		);
 		hugeCardMoreOptionsContextMenu.addSeparator();
 		miShareResources = hugeCardMoreOptionsContextMenu.addItem(
-				"Share project resources (experimental API)", mi -> handleShareProjectResources()
+				"Share Project Resources (Experimental API)", mi -> handleShareProjectResources()
 		);
 		miImportCorpus = hugeCardMoreOptionsContextMenu.addItem(
 				"Import CATMA 5 Corpus", mi -> handleCorpusImport()
@@ -470,7 +470,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		
 	    	if (latestContribView && project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit all changes", 
+	    			"Commit All Changes",
 	    			"You have uncommitted changes, please enter a short description for this commit:", 
 	    			commitMsg -> {
 	    				try {
@@ -479,7 +479,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    				}
 	    				catch (Exception e) {
 	    					setEnabled(true);
-	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
+	    					errorHandler.showAndLogError("Error committing changes", e);
 	    				}
 	    			});
 	    		dlg.show();
@@ -489,7 +489,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	}
     	}
     	catch (Exception e) {
-            errorHandler.showAndLogError("error accessing project", e);
+            errorHandler.showAndLogError("Error accessing project", e);
     	}	
 	}
 
@@ -528,7 +528,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             public void failure(Throwable t) {
             	setProgressBarVisible(false);
             	setEnabled(true);
-                errorHandler.showAndLogError("error opening project", t);
+                errorHandler.showAndLogError("Error opening project", t);
             }
         });
 	}
@@ -566,12 +566,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		catch (Exception e) {
 			logger.log(
 					Level.WARNING,
-					String.format("Error synchronizing project \"%s\" for user \"%s\"", projectReference, project.getCurrentUser()),
+					String.format("Error synchronizing project \"%s\" for user \"%s\"", projectReference.getName(), project.getCurrentUser().getIdentifier()),
 					e
 			);
 			Notification.show(
 					"Info",
-					"Your project cannot be synchronized right now, try again later or have a look at the CATMA GitLab backend!",
+					"Your project cannot be synchronized right now, try again later or have a look at the CATMA GitLab backend.",
 					Type.HUMANIZED_MESSAGE
 			);
 		}
@@ -581,8 +581,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		try {
 	    	if (project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit all changes", 
-	    			"You have changes, that need to be committed first, please enter a short description for this commit:", 
+	    			"Commit All Changes",
+	    			"You have changes that need to be committed first, please enter a short description for this commit:",
 	    			commitMsg -> {
 	    				try {
 		    				project.commitAndPushChanges(commitMsg);
@@ -590,7 +590,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    				}
 	    				catch (Exception e) {
 	    					setEnabled(true);
-	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
+	    					errorHandler.showAndLogError("Error committing changes", e);
 	    				}
 	    			});
 	    		dlg.show();
@@ -608,7 +608,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	}
     	}
     	catch (Exception e) {
-            errorHandler.showAndLogError("Error accessing Project!", e);
+            errorHandler.showAndLogError("Error accessing project", e);
     	}		
 	}
 	
@@ -639,9 +639,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					public void error(Throwable t) {
 		            	setProgressBarVisible(false);
 		            	setEnabled(true);
-		    			Logger.getLogger(ProjectView.class.getName()).log(
+		    			logger.log(
 		    					Level.SEVERE, 
-		    					"Error importing the CATMA 5 Corpus!", 
+		    					"Error importing CATMA 5 corpus",
 		    					t);
 		    			String errorMsg = t.getMessage();
 		    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
@@ -651,8 +651,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    			Notification.show(
 		    				"Error", 
 		    				String.format(
-		    						"Error importing the CATMA 5 Corpus! "
-		    						+ "This import will be aborted!\n The underlying error message was:\n%1$s", 
+		    						"Error importing the CATMA 5 corpus! "
+		    						+ "This import will be aborted.\nThe underlying error message was:\n%s",
 		    						errorMsg), 
 		    				Type.ERROR_MESSAGE);					
 					}
@@ -662,9 +662,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		catch (Exception e) {
         	setProgressBarVisible(false);
         	setEnabled(true);
-			Logger.getLogger(ProjectView.class.getName()).log(
+			logger.log(
 					Level.SEVERE, 
-					"Error importing the CATMA 5 Corpus!", 
+					"Error importing CATMA 5 corpus",
 					e);
 			String errorMsg = e.getMessage();
 			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
@@ -674,8 +674,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			Notification.show(
 				"Error", 
 				String.format(
-						"Error importing the CATMA 5 Corpus! "
-						+ "This import will be aborted!\n The underlying error message was:\n%1$s", 
+						"Error importing the CATMA 5 corpus! "
+						+ "This import will be aborted.\nThe underlying error message was:\n%s",
 						errorMsg), 
 				Type.ERROR_MESSAGE);	
 		}
@@ -685,8 +685,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		try {
 	    	if (project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit all changes", 
-	    			"You have changes, that need to be committed first, please enter a short description for this commit:", 
+	    			"Commit All Changes",
+	    			"You have changes that need to be committed first, please enter a short description for this commit:",
 	    			commitMsg -> {
 	    				try {
 		    				project.commitAndPushChanges(commitMsg);
@@ -694,7 +694,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    				}
 	    				catch (Exception e) {
 	    					setEnabled(true);
-	    					((ErrorHandler)UI.getCurrent()).showAndLogError("error committing changes", e);
+	    					errorHandler.showAndLogError("Error committing changes", e);
 	    				}
 	    			});
 	    		dlg.show();
@@ -704,20 +704,20 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	}
     	}
     	catch (Exception e) {
-            errorHandler.showAndLogError("Error accessing Project!", e);
+            errorHandler.showAndLogError("Error accessing project", e);
     	}		
 	}
 	private void importCollection() {
 		Set<SourceDocumentReference> selectedDocuments = getSelectedDocuments();
 		
 		if (selectedDocuments.size() != 1) {
-			Notification.show("Info", "Please select the corresponding Document first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select the corresponding document first!", Type.HUMANIZED_MESSAGE);
 		}
 		else {
 			final SourceDocumentReference document = selectedDocuments.iterator().next();
 			
 			GenericUploadDialog uploadDialog =
-					new GenericUploadDialog(String.format("Upload a Collection for %1$s:", document.toString()),
+					new GenericUploadDialog(String.format("Upload a collection for \"%s\":", document.toString()),
 							new SaveCancelListener<byte[]>() {
 				
 				public void savePressed(byte[] result) {
@@ -743,8 +743,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									try {
 										project.importAnnotationCollection(result, annotationCollection);
 									} catch (IOException e) {
-										((CatmaApplication)UI.getCurrent()).showAndLogError(
-											"Error importing Tagsets", e);
+										errorHandler.showAndLogError(
+											"Error importing tagsets", e);
 									}
 								}
 						});
@@ -752,8 +752,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						tagsetImportDialog.show();
 						
 					} catch (IOException e) {
-						((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error loading external Tagsets", e);
+						errorHandler.showAndLogError(
+							"Error loading external tagsets", e);
 					}
 					finally {
 						CloseSafe.close(is);
@@ -789,7 +789,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleImportTagsetsRequest() {
 		GenericUploadDialog uploadDialog =
-				new GenericUploadDialog("Upload a Tag Library with one or more Tagsets:",
+				new GenericUploadDialog("Upload a tag library with one or more tagsets:",
 						new SaveCancelListener<byte[]>() {
 			
 			public void savePressed(byte[] result) {
@@ -812,8 +812,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								try {
 									project.importTagsets(result);
 								} catch (IOException e) {
-									((CatmaApplication)UI.getCurrent()).showAndLogError(
-										"Error importing Tagsets", e);
+									errorHandler.showAndLogError(
+										"Error importing tagsets", e);
 								}
 							}
 						});
@@ -821,8 +821,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					tagsetImportDialog.show();
 					
 				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error loading external Tagsets", e);
+					errorHandler.showAndLogError(
+						"Error loading external tagsets", e);
 				}
 				finally {
 					CloseSafe.close(is);
@@ -859,12 +859,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				setEnabled(true);
 
 				if (project != null) {
-					Notification.show("Info", "Your project has been synchronized!", Type.HUMANIZED_MESSAGE);
+					Notification.show("Info", "Your project has been synchronized", Type.HUMANIZED_MESSAGE);
 				}
 				else {
 					Notification.show(
 							"Info",
-							"Your project cannot be synchronized right now, try again later or have a look at the CATMA GitLab backend!",
+							"Your project cannot be synchronized right now, try again later or have a look at the CATMA GitLab backend.",
 							Type.HUMANIZED_MESSAGE
 					);
 				}
@@ -943,7 +943,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				);
 			}
 			catch (IOException e) {
-				errorHandler.showAndLogError("Error editing collection!", e);
+				errorHandler.showAndLogError("Error editing collection", e);
 			}
 		}
 		else { // document
@@ -990,7 +990,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				);
 			}
 			catch (IOException e) {
-				errorHandler.showAndLogError("Error editing document!", e);
+				errorHandler.showAndLogError("Error editing document", e);
 			}
 		}
 	}
@@ -1020,8 +1020,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							ConfirmDialog.show(
 									UI.getCurrent(), 
 									"Warning", 
-									String.format("Are you sure you want to delete Tagset(s) %1$s and all related data?", 
-										String.join(",", tagsetNames)),
+									String.format(
+											"Are you sure you want to delete tagset(s) \"%s\" and all related data?",
+											String.join("\", \"", tagsetNames)
+									),
 									"Delete",
 									"Cancel", 
 									dlg -> {
@@ -1036,13 +1038,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					});
 			}
 			catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error deleting Tagset!", e);					
+				errorHandler.showAndLogError(
+						"Error deleting tagset", e);
 			}
 		}
 		else {
 			Notification.show(
-				"Info", "Please select one or more Tagsets first!",  
+				"Info", "Please select one or more tagsets first!",
 				Type.HUMANIZED_MESSAGE);
 		}
 		
@@ -1079,22 +1081,22 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					});
 			}
 			catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error deleting Tagset!", e);					
+				errorHandler.showAndLogError(
+						"Error deleting tagset", e);
 			}
 
 		}
 		else {
 			Notification.show(
-				"Info", "Please select a Tagset first!",  
+				"Info", "Please select a tagset first!",
 				Type.HUMANIZED_MESSAGE);
 		}		
 	}
 
 	private void handleAddTagsetRequest() {
     	
-    	SingleTextInputDialog collectionNameDlg = 
-    		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:", 
+    	SingleTextInputDialog tagsetNameDlg =
+    		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
     				new SaveCancelListener<String>() {
 						
 						@Override
@@ -1108,7 +1110,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						}
 					});
         	
-        collectionNameDlg.show();
+        tagsetNameDlg.show();
     	
 	}
 	
@@ -1142,7 +1144,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	
     	if (!selectedDocuments.isEmpty()) {
 	    	SingleTextInputDialog collectionNameDlg = 
-	    		new SingleTextInputDialog("Add Annotation Collection(s)", "Please enter the Collection name:", 
+	    		new SingleTextInputDialog("Create Annotation Collection(s)", "Please enter the collection name:",
 	    				new SaveCancelListener<String>() {
 							
 							@Override
@@ -1156,7 +1158,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	collectionNameDlg.show();
     	}
     	else {
-    		Notification.show("Info", "Please select one or more Documents first!", Type.HUMANIZED_MESSAGE); 
+    		Notification.show("Info", "Please select one or more documents first!", Type.HUMANIZED_MESSAGE);
     	}
     }
 	
@@ -1203,7 +1205,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						tagsetImports = Collections.emptyList();
 					}
 					
-					// Ignoring Tagsets
+					// Ignoring tagsets
 					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED)).forEach(tagsetImport -> {
 						for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
 							for (UploadFile uploadFile : uploadFiles) {
@@ -1216,11 +1218,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						}
 					});
 					
-					getProgressListener().setProgress("Creating imported Tagsets");
-					// Creating Tagsets
+					getProgressListener().setProgress("Creating imported tagsets");
+					// Creating tagsets
 					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED)).forEach(tagsetImport -> {
 						getProgressListener().setProgress(
-								"Creating Tagset %1$s", tagsetImport.getTargetTagset().getName());
+								"Creating tagset \"%s\"", tagsetImport.getTargetTagset().getName());
 						ui.accessSynchronously(() -> {
 							if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
 								// already imported, so it will be a merge
@@ -1237,9 +1239,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 													project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
 								}
 								catch (Exception e) {
-									Logger.getLogger(ProjectView.class.getName()).log(
+									logger.log(
 											Level.SEVERE, 
-											String.format("Error importing tagset %1$s with ID %2$s", 
+											String.format("Error importing tagset \"%s\" with ID %s",
 													extractedTagset.getName(), 
 													extractedTagset.getUuid()), 
 											e);
@@ -1251,8 +1253,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									Notification.show(
 										"Error", 
 										String.format(
-												"Error importing tagset %1$s! "
-												+ "This tagset will be skipped!\n The underlying error message was:\n%2$s", 
+												"Error importing tagset \"%s\"! "
+												+ "This tagset will be skipped.\nThe underlying error message was:\n%s",
 												extractedTagset.getName(), errorMsg), 
 										Type.ERROR_MESSAGE);					
 								}
@@ -1261,10 +1263,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						});
 					});
 					
-					// Merging Tagsets
+					// Merging tagsets
 					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED)).forEach(tagsetImport -> {
 						getProgressListener().setProgress(
-								"Merging Tagset %1$s", tagsetImport.getTargetTagset().getName());
+								"Merging tagset \"%s\"", tagsetImport.getTargetTagset().getName());
 						ui.accessSynchronously(() -> {
 							TagsetDefinition targetTagset = 
 								project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid());
@@ -1357,7 +1359,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					// Importing docs and collections
 					for (UploadFile uploadFile : uploadFiles) {
 						getProgressListener().setProgress(
-								"Importing Document %1$s", uploadFile.getTitle());
+								"Importing document \"%s\"", uploadFile.getTitle());
 						ui.accessSynchronously(() -> {
 							addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern);
 							ui.push();
@@ -1377,7 +1379,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				public void error(Throwable t) {
 	            	setProgressBarVisible(false);
 	            	setEnabled(true);
-	                errorHandler.showAndLogError("Error adding Documents", t);
+	                errorHandler.showAndLogError("Error adding documents", t);
 				}
 			},
 			progressListener);
@@ -1428,7 +1430,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			}
 			
 		} catch (Exception e) {
-			Logger.getLogger(ProjectView.class.getName()).log(
+			logger.log(
 					Level.SEVERE, 
 					String.format("Error loading content of %1$s", uploadFile.getTempFilename().toString()), 
 					e);
@@ -1440,8 +1442,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			Notification.show(
 				"Error", 
 				String.format(
-						"Error loading content of %1$s! "
-						+ "This document will be skipped!\n The underlying error message was:\n%2$s", 
+						"Error loading content of \"%s\"! "
+						+ "This document will be skipped.\nThe underlying error message was:\n%s",
 						uploadFile.getTitle(), errorMsg), 
 				Type.ERROR_MESSAGE);
 		}
@@ -1510,7 +1512,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamPanel.addComponent(initTeamContent());
         
         btSynchronize = new IconButton(VaadinIcons.SHARE);
-        btSynchronize.setDescription("Synchronize with the team");
+        btSynchronize.setDescription("Synchronize with the Team");
         
         getHugeCardBar().addComponentBeforeMoreOptions(btSynchronize);
         
@@ -1518,7 +1520,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         btSynchLatestContribToggle.setData(false);
         getHugeCardBar().addComponentBeforeMoreOptions(btSynchLatestContribToggle);
         btSynchLatestContribToggle.setDescription(
-        		"Switch between 'Latest contributions view' and 'Synchronized view'");
+        		"Switch between 'Latest Contributions' view and 'Synchronized' view");
 
         //TODO: set visibility according to project role
     }
@@ -1546,28 +1548,28 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	try {
 	    	if (project.hasUncommittedChanges()) {
 	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit all changes", 
+	    			"Commit All Changes",
 	    			"Please enter a short description for this commit:", 
 	    			commitMsg -> {
 	    				try {
 		    				project.commitAndPushChanges(commitMsg);
 		    				Notification.show(
 		    					"Info", 
-		    					"Your changes have been committed!", 
+		    					"Your changes have been committed",
 		    					Type.HUMANIZED_MESSAGE);
 	    				}
 	    				catch (Exception e) {
-	    					errorHandler.showAndLogError("Error committing all changes!", e);
+	    					errorHandler.showAndLogError("Error committing changes", e);
 	    				}
 	    			});
 	    		dlg.show();
 	    	}
 	    	else {
-	    		Notification.show("Info", "There are no uncommitted changes!", Type.HUMANIZED_MESSAGE); 
+	    		Notification.show("Info", "There are no uncommitted changes", Type.HUMANIZED_MESSAGE);
 	    	}
     	}
     	catch (Exception e) {
-            errorHandler.showAndLogError("Error accessing Project!", e);
+            errorHandler.showAndLogError("Error accessing project", e);
     	}
 	}
 
@@ -1710,7 +1712,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         moreOptionsContextMenu.addItem("Remove Members", (click) -> handleRemoveMembers());
         
         miInvite = moreOptionsContextMenu.addItem(
-        	"Invite someone to the Project", click -> handleProjectInvitationRequest());
+        	"Invite Someone to the Project", click -> handleProjectInvitationRequest());
         
         teamContent.addComponent(membersGridComponent);
         return teamContent;
@@ -1852,7 +1854,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	            public void failure(Throwable t) {
 	            	setProgressBarVisible(false);
 	            	setEnabled(true);
-	                errorHandler.showAndLogError("Error opening Project", t);
+	                errorHandler.showAndLogError("Error opening project", t);
 	            }
 	        });
     	}
@@ -1900,7 +1902,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             public void failure(Throwable t) {
             	setProgressBarVisible(false);
             	setEnabled(true);
-                errorHandler.showAndLogError("Error opening Project.", t);
+                errorHandler.showAndLogError("Error opening project", t);
             }
         });
     }
@@ -1926,7 +1928,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	teamGrid.setDataProvider(memberData);
         	tagsetGrid.sort(TagsetGridColumn.NAME.name());
 		} catch (Exception e) {
-			errorHandler.showAndLogError("Error initializing data.", e);
+			errorHandler.showAndLogError("Error initializing data", e);
 		}
 	}
 
@@ -2023,7 +2025,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
     /**
-     * called when {@link ProjectChangedEvent} is fired when the Project's name changes and if members join
+     * called when {@link ProjectChangedEvent} is fired when the project's name changes and if members join
      * @param resourcesChangedEvent
      */
     @Subscribe
@@ -2043,7 +2045,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	teamGrid.setDataProvider(memberData);
     	}
     	catch (Exception e) {
-    		((ErrorHandler)UI.getCurrent()).showAndLogError("error loading Members", e);
+    		errorHandler.showAndLogError("Error loading members", e);
     	}
     }
     
@@ -2072,12 +2074,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						    	ConfirmDialog.show( 
 						    		UI.getCurrent(), 
 						    		"Info", 
-						    		"Are you sure you want to delete the selected resources: "
+						    		"Are you sure you want to delete the selected resources: \""
 						    		+ resourceGrid.getSelectedItems()
 						    			.stream()
 						    			.map(resource -> resource.getName())
-						    			.collect(Collectors.joining(",")) //$NON-NLS-1$
-						    		+ "?", 
+						    			.collect(Collectors.joining("\", \"")) //$NON-NLS-1$
+						    		+ "\"?",
 						    		"Delete", 
 						    		"Cancel", dlg -> {
 						    			if (dlg.isConfirmed()) {
@@ -2117,8 +2119,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    				});
     		}
     		catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error deleting Resources!", e);					
+				errorHandler.showAndLogError(
+						"Error deleting resources", e);
     		}
     	}
     	else {

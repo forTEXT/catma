@@ -117,7 +117,7 @@ public class PatternBuilder {
     public String getPositionPattern(int position) {
         if (position < 0) {
             throw new IllegalArgumentException(
-                "position must not be a negative value, current value: " +
+                "Position must not be a negative value, current value: " +
                         position);
         }
         if (position == 0) {

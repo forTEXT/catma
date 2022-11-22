@@ -54,9 +54,9 @@ public class ChangeImportActionDialog extends AbstractOkCancelDialog<TagsetDefin
 			return t1.getName().compareTo(t2.getName());
 		});
 		
-		this.choice1 = "to create a new Tagset";
-		this.choice2 = "to select a different Tagset";
-		this.choice3 = "or to ignore the Tags";
+		this.choice1 = "to create a new tagset";
+		this.choice2 = "to select a different tagset";
+		this.choice3 = "or to ignore the tags";
 
 	}
 	
@@ -71,7 +71,7 @@ public class ChangeImportActionDialog extends AbstractOkCancelDialog<TagsetDefin
 		tagsetGrid.addColumn(tagset -> tagset.getName())
 		.setCaption("Name");
 		
-		this.tagsetNameInput = new TextField("Enter the name of the new Tagset");
+		this.tagsetNameInput = new TextField("Enter the name of the new tagset");
 	
 		this.choices = new RadioButtonGroup<String>("Your choices are");
 		
@@ -108,7 +108,7 @@ public class ChangeImportActionDialog extends AbstractOkCancelDialog<TagsetDefin
 			}
 		}
 		else if (choices.getValue().equals(choice2) && tagsetGrid.getSelectedItems().isEmpty()){
-			Notification.show("Info", "Please select one Tagset!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select one tagset!", Type.HUMANIZED_MESSAGE);
 			return;
 		}	
 		

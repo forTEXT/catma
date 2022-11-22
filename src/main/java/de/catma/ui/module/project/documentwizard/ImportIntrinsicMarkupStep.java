@@ -85,7 +85,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 
 	private void initActions() {
 		tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(
-				"Change action", miChangeAction -> handleChangeActionRequest());
+				"Change Action", miChangeAction -> handleChangeActionRequest());
 	}
 
 	private void handleChangeActionRequest() {
@@ -94,7 +94,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 		
 		if (tagsetImports.isEmpty()) {
 			Notification.show(
-				"Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
+				"Info", "Please select one or more tagsets first!", Type.HUMANIZED_MESSAGE);
 		}
 		else {
 			try {
@@ -130,7 +130,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 				changeImportActionDialog.show();
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading Tagsets!", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading tagsets", e);
 			}
 		}
 	}
@@ -138,13 +138,13 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 	private void initComponents() {
 		setSizeFull();
 		progressBar = new ProgressBar();
-		progressBar.setCaption("Inspecting Annotations...");
+		progressBar.setCaption("Inspecting annotations...");
 		progressBar.setVisible(false);
 		progressBar.setIndeterminate(false);
 		addComponent(progressBar);
 		
         Label infoLabel = new Label(
-        		"We found the following Tagsets in your intrinsic markup, you can change the action per Tagset using the options menu:");
+        		"We found the following tagsets in your intrinsic markup, you can change the action per tagset using the options menu:");
         infoLabel.setContentMode(ContentMode.HTML);
 		addComponent(infoLabel);
 		
@@ -341,8 +341,8 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 				Notification.show(
 					"Error", 
 					String.format(
-							"Error inspecting the contents! "
-							+ "\n The underlying error message was:\n%1$s", 
+							"Error inspecting the contents!\n"
+							+ "The underlying error message was:\n%s",
 							errorMsg), 
 					Type.ERROR_MESSAGE);						
 			}

@@ -162,7 +162,7 @@ public class SignUpDialog extends AuthenticationDialog {
 				completeSignupNotification.show(Page.getCurrent());
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't send verification email", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't send verification email", e);
 			}
 
 			this.close();
@@ -174,7 +174,7 @@ public class SignUpDialog extends AuthenticationDialog {
 				close();
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error during authentication!", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error during authentication", e);
 			}
 		});
 	}

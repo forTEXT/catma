@@ -72,7 +72,7 @@ public class UIBackgroundService implements BackgroundService {
                         try {
                         	Logger.getLogger(
                         			getClass().getName()).log(
-                        					Level.SEVERE, "error", t); //$NON-NLS-1$
+                        					Level.SEVERE, "Error", t); //$NON-NLS-1$
                         	if (ui != null && ui.isAttached()) {
 	                            ui.access(new Runnable() {
 	                            	public void run() {
@@ -102,7 +102,7 @@ public class UIBackgroundService implements BackgroundService {
             } catch (Throwable t) {
             	listener.error(t);
             	Logger.getLogger(getClass().getName()).log(
-            		Level.SEVERE, "error", t);   //$NON-NLS-1$
+            		Level.SEVERE, "Error", t);   //$NON-NLS-1$
             }
         }
 	}

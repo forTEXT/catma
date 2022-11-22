@@ -51,7 +51,7 @@ public class KwicItemHandler {
 				name = kwicProvider.getSourceDocumentName();
 			}
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "error retrieving Document name for " + row, e);
+			logger.log(Level.SEVERE, "Error retrieving document name for " + row, e);
 		}
 		return name;
 	}
@@ -61,7 +61,7 @@ public class KwicItemHandler {
 		try {
 			backwardContext = spanContextCache.get(row).getBackwardContext();
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "error retrieving backward context for " + row, e);
+			logger.log(Level.SEVERE, "Error retrieving backward context for " + row, e);
 		}
 		return backwardContext;		
 	}
@@ -71,7 +71,7 @@ public class KwicItemHandler {
 		try {
 			forwardContext = spanContextCache.get(row).getForwardContext();
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "error retrieving forward context for " + row, e);
+			logger.log(Level.SEVERE, "Error retrieving forward context for " + row, e);
 		}
 		return forwardContext;		
 	}	
@@ -87,7 +87,7 @@ public class KwicItemHandler {
 						kwicProviderCache.get(tRow.getSourceDocumentId()), 
 						tagDefinition);
 			} catch (ExecutionException e) {
-				logger.log(Level.SEVERE, "error retrieving keyword for " + row, e);
+				logger.log(Level.SEVERE, "Error retrieving keyword for " + row, e);
 			}
 		}
 		
@@ -108,7 +108,7 @@ public class KwicItemHandler {
 						tagDefinition, 
 						tRow.getTagDefinitionPath());
 			} catch (ExecutionException e) {
-				logger.log(Level.SEVERE, "error retrieving keyword description for " + row, e);
+				logger.log(Level.SEVERE, "Error retrieving keyword description for " + row, e);
 			}
 		}
 		
@@ -142,7 +142,7 @@ public class KwicItemHandler {
 				return collectionName;
 			}
 			catch (Exception e) {
-				logger.log(Level.SEVERE, "error retrieving Collection name for " + row, e);
+				logger.log(Level.SEVERE, "Error retrieving collection name for " + row, e);
 				return "N/A";
 			}
 		}
@@ -223,7 +223,7 @@ public class KwicItemHandler {
 				return "kwic-panel-keyword-rtl";
 			}
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "error retrieving keyword style for " + row, e);
+			logger.log(Level.SEVERE, "Error retrieving keyword style for " + row, e);
 		}
 		
 		return "kwic-panel-keyword";
@@ -235,7 +235,7 @@ public class KwicItemHandler {
 				return "kwic-panel-backwardctx-rtl";
 			}
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "error retrieving backward context style for " + row, e);
+			logger.log(Level.SEVERE, "Error retrieving backward context style for " + row, e);
 		}
 		
 		return "kwic-panel-backwardctx";
@@ -247,7 +247,7 @@ public class KwicItemHandler {
 				return "kwic-panel-forwardctx-rtl";
 			}
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "error retrieving forward context style for " + row, e);
+			logger.log(Level.SEVERE, "Error retrieving forward context style for " + row, e);
 		}
 		
 		return "kwic-panel-forwardctx";

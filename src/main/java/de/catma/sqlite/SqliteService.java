@@ -43,7 +43,7 @@ public class SqliteService {
     }
 
     public SqliteService() throws IllegalStateException {
-        logger.log(Level.INFO, "SQLite initializing");
+        logger.info("SQLite initializing...");
 
         try {
             Class.forName("org.sqlite.JDBC");
@@ -54,7 +54,7 @@ public class SqliteService {
             }
         }
         catch (ClassNotFoundException e) {
-            throw new IllegalStateException("Failed to initialise SqliteService", e);
+            throw new IllegalStateException("Failed to initialize SqliteService", e);
         }
 
         try (
@@ -72,7 +72,7 @@ public class SqliteService {
             );
         }
         catch (IOException | SQLException e) {
-            throw new IllegalStateException("Failed to initialise Database", e);
+            throw new IllegalStateException("Failed to initialize database", e);
         }
     }
 
@@ -106,7 +106,7 @@ public class SqliteService {
             return notices;
         }
         catch (IOException | SQLException e) {
-            logger.log(Level.SEVERE, "Couldn't fetch notices: " + e.getMessage());
+            logger.log(Level.SEVERE, "Failed to fetch notices", e);
             return notices;
         }
     }

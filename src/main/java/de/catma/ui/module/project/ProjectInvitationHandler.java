@@ -65,9 +65,9 @@ public class ProjectInvitationHandler extends UIMessageListener<InvitationReques
 				}					
 			} catch (IOException e) {
 				((ErrorHandler) getUi()).showAndLogError(
-						"Can't assign User " 
+						"Can't assign user "
 								+ message.getMessageObject().getName() 
-								+ " to this Project", e);
+								+ " to this project", e);
 			}
 		}
 	}

@@ -144,7 +144,7 @@ public class TechnicalDescription {
 			}
 		}
 		catch( IllegalArgumentException iae ) {
-			logger.log(Level.SEVERE, "error retrieving file type", iae);
+			logger.log(Level.SEVERE, "Error retrieving file type", iae);
 		}
 		
 		return null;
@@ -170,7 +170,7 @@ public class TechnicalDescription {
 			}
 		}
 		catch( IllegalCharsetNameException | UnsupportedCharsetException exc ) {
-			logger.log(Level.SEVERE, "error retrieving charset", exc);
+			logger.log(Level.SEVERE, "Error retrieving charset", exc);
 		}
 		
 		return Charset.defaultCharset();
@@ -187,7 +187,7 @@ public class TechnicalDescription {
 			}
 		}
 		catch( IllegalArgumentException iae ) {
-			logger.log(Level.SEVERE, "error retrieving file OS type", iae);
+			logger.log(Level.SEVERE, "Error retrieving file OS type", iae);
 		}
 		
 		return null;
@@ -208,7 +208,7 @@ public class TechnicalDescription {
         }
         catch(NumberFormatException nfe) {
             throw new IllegalStateException(
-                "Version value " + value + " is not a valid version!", nfe);
+                "Version value " + value + " is not a valid version", nfe);
         }
     }
 
@@ -421,7 +421,7 @@ public class TechnicalDescription {
 				return Long.valueOf( value );
 			}
 			catch( Exception exc ) {
-				logger.log(Level.SEVERE, "error retrieving checksum", exc);
+				logger.log(Level.SEVERE, "Error retrieving checksum", exc);
 				return null;
 			}
 		}

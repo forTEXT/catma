@@ -42,7 +42,7 @@ public class CloseSafe {
 			}
 		}
 		catch (Exception exc) {
-			Logger.getLogger(CloseSafe.class.getName()).log(Level.WARNING, "error closing closeable", exc);
+			Logger.getLogger(CloseSafe.class.getName()).log(Level.WARNING, "Error closing closeable", exc);
 		}
 	}
 }

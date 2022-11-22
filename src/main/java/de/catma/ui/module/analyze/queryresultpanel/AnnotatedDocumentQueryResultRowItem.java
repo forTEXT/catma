@@ -69,7 +69,7 @@ public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowI
 			}
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error displaying annotated query results", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error displaying annotated query results", e);
 		}
 	}
 	

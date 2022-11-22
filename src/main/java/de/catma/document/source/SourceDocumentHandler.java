@@ -159,10 +159,12 @@ public class SourceDocumentHandler {
 	}
 	
 	/**
-	 * Registers the {@link SourceContentHandler} with the givent {@link FileType}.
-	 * @param type the type we want to register a handler for
-	 * @param contentHandlerClass The class of the content handler. 
-	 * <b> SourceContentHandler need to have a default no arg constructor!</b>
+	 * Registers the {@link SourceContentHandler} with the given {@link FileType}.
+	 * <p>
+	 * <strong>SourceContentHandler implementations need to have a default no-arg constructor!</strong>
+	 *
+	 * @param type the file type we want to register a handler for
+	 * @param contentHandlerClass the class of the content handler
 	 */
 	public void registerSourceContentHandler( 
 		FileType type, Class<? extends SourceContentHandler> contentHandlerClass ) {
@@ -170,7 +172,7 @@ public class SourceDocumentHandler {
 	}
 	
 	/**
-	 * Constructs a Source Document.
+	 * Constructs a source document.
 	 * @param id the identifier of the source document
 	 * @param sourceDocumentInfo the meta data of the source document
 	 * @return the source document instance

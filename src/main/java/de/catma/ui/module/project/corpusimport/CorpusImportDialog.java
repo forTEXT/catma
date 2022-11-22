@@ -67,14 +67,14 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 	protected void handleOkPressed() {
 
 		if (corporaGrid.getSelectedItems().isEmpty()) {
-			Notification.show("Info", "Please select a Corpus from the list first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select a corpus from the list first!", Type.HUMANIZED_MESSAGE);
 		}
 		else {
 			final CorpusImportMetadata corpusMetadata = corporaGrid.getSelectedItems().iterator().next();
 			BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
 			progressBar.setVisible(true);
 			progressBar.setIndeterminate(true);
-			progressBar.setCaption("Loading Corpus " + corpusMetadata);
+			progressBar.setCaption(String.format("Loading corpus \"%s\"", corpusMetadata));
 			
 			backgroundServiceProvider.submit("load-corpus", new DefaultProgressCallable<Pair<File, List<CorpusImportDocumentMetadata>>>() {
 				@Override
@@ -101,8 +101,8 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 						Notification.show(
 							"Error", 
 							String.format(
-									"Error retrieving Document metadata! "
-									+ "\n The underlying error message was:\n%2$s", 
+									"Error retrieving document metadata!\n"
+									+ "The underlying error message was:\n%s",
 									e.getMessage()), 
 							Type.ERROR_MESSAGE);	
 						handleCancelPressed();
@@ -113,7 +113,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 				public void error(Throwable t) {
 					Logger.getLogger(ProjectView.class.getName()).log(
 							Level.SEVERE, 
-							String.format("Error loading CATMA 5 Corpus %1$s!", corpusMetadata.toString()),
+							String.format("Error loading CATMA 5 corpus \"%s\"", corpusMetadata.toString()),
 							t);
 					String errorMsg = t.getMessage();
 					if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
@@ -124,9 +124,9 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 					Notification.show(
 						"Error", 
 						String.format(
-								"Error listing CATMA 5 Corpus %1$s! "
-								+ "\n The underlying error message was:\n%2$s", 
-								corpusMetadata.toString(),
+								"Error listing CATMA 5 corpus \"%s\"!\n"
+								+ "The underlying error message was:\n%s",
+								corpusMetadata,
 								errorMsg), 
 						Type.ERROR_MESSAGE);	
 					handleCancelPressed();
@@ -224,7 +224,7 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 		catch (Exception e) {
 			Logger.getLogger(ProjectView.class.getName()).log(
 					Level.SEVERE, 
-					"Error listing CATMA 5 Corpora!", 
+					"Error listing CATMA 5 corpora",
 					e);
 			String errorMsg = e.getMessage();
 			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
@@ -234,8 +234,8 @@ public class CorpusImportDialog extends AbstractOkCancelDialog<Pair<File, List<C
 			Notification.show(
 				"Error", 
 				String.format(
-						"Error listing CATMA 5 Corpora! "
-						+ "\n The underlying error message was:\n%1$s", 
+						"Error listing CATMA 5 corpora!\n"
+						+ "The underlying error message was:\n%s",
 						errorMsg), 
 				Type.ERROR_MESSAGE);					
 		}

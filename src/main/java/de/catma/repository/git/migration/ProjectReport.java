@@ -14,10 +14,13 @@ import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 
 import de.catma.project.CommitInfo;
+import de.catma.properties.CATMAPropertyKey;
 
 public class ProjectReport {
 	private final Logger logger = Logger.getLogger(ProjectReport.class.getName());
-	
+
+	private static final String migrationBranchName = CATMAPropertyKey.V6_REPO_MIGRATION_BRANCH.getValue();
+
 	private String projectId;
 	private String ownerEmail;
 	
@@ -635,7 +638,7 @@ public class ProjectReport {
 
 
 	public void addStaleUser(String username) {
-		logger.info(String.format("Found stale user %1$s", username));
+		logger.info(String.format("Found stale user \"%s\"", username));
 		this.staleUsers++;
 	}
 
@@ -738,7 +741,7 @@ public class ProjectReport {
 	
 	public void addMergeResultDevToC6Migration(String resource, MergeResult mergeResult) {
 		if (mergeResult.getMergeStatus().isSuccessful()) {
-			logger.info(String.format("Successfully merged %1$s dev->c6migration", resource));
+			logger.info(String.format("Successfully merged %s dev->%s", resource, migrationBranchName));
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeSuccessfulDevToC6Migration++;
 			}
@@ -749,11 +752,11 @@ public class ProjectReport {
 				this.documentsMergeSuccessfulDevToC6Migration++;
 			}
 			else {
-				logger.warning(String.format("Unexpected resource type successfully merged %1$s dev->c6migration", resource));
+				logger.warning(String.format("Unexpected resource type successfully merged %s dev->%s", resource, migrationBranchName));
 			}			
 		}
 		else {
-			logger.info(String.format("Conflicting merge %1$s dev->c6migration", resource));
+			logger.info(String.format("Conflicting merge %s dev->%s", resource, migrationBranchName));
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeConflictingDevToC6Migration++;
 			}
@@ -764,35 +767,35 @@ public class ProjectReport {
 				this.documentsMergeConflictingDevToC6Migration++;
 			}
 			else {
-				logger.warning(String.format("Unexpected resource type conflicting merge %1$s dev->c6migration", resource));
+				logger.warning(String.format("Unexpected resource type conflicting merge %s dev->%s", resource, migrationBranchName));
 			}			
 		}
 	}
 	
 	public void addMergeResulMasterToC6Migration(String resource, MergeResult mergeResult) {
 		if (mergeResult.getMergeStatus().isSuccessful()) {
-			logger.info(String.format("Successfully merged %1$s master->c6migration", resource));
+			logger.info(String.format("Successfully merged %s master->%s", resource, migrationBranchName));
 			if (resource.startsWith("CATMA") && !resource.contains("/")) {
 				this.rootsMergeSuccessfulMasterToC6Migration++;
 			}
 			else {
-				logger.warning(String.format("Unexpected resource type successfully merged %1$s master->c6migration", resource));
+				logger.warning(String.format("Unexpected resource type successfully merged %s master->%s", resource, migrationBranchName));
 			}			
 		}
 		else {
-			logger.info(String.format("Conflicting merge %1$s master->c6migration", resource));
+			logger.info(String.format("Conflicting merge %s master->%s", resource, migrationBranchName));
 			if (resource.startsWith("CATMA") && !resource.contains("/")) {
 				this.rootsMergeConflictingMasterToC6Migration++;
 			}
 			else {
-				logger.warning(String.format("Unexpected resource type conflicting merge %1$s master->c6migration", resource));
+				logger.warning(String.format("Unexpected resource type conflicting merge %s master->%s", resource, migrationBranchName));
 			}			
 		}
 	}
 
 	public void addMergeResultOriginMasterToC6Migration(String resource, MergeResult mergeResult) {
 		if (mergeResult.getMergeStatus().isSuccessful()) {
-			logger.info(String.format("Successfully merged %1$s origin/master->c6migration", resource));
+			logger.info(String.format("Successfully merged %s origin/master->%s", resource, migrationBranchName));
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeSuccessfulOriginMasterToC6Migration++;
 			}
@@ -806,11 +809,11 @@ public class ProjectReport {
 				this.rootsMergeSuccessfulOriginMasterToC6Migration++;
 			}
 			else {
-				logger.warning(String.format("Unexpected resource type successfully merged %1$s origin/master->c6migration", resource));
+				logger.warning(String.format("Unexpected resource type successfully merged %s origin/master->%s", resource, migrationBranchName));
 			}			
 		}
 		else {
-			logger.info(String.format("Conflicting merge %1$s origin/master->c6migration", resource));
+			logger.info(String.format("Conflicting merge %s origin/master->%s", resource, migrationBranchName));
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeConflictingOriginMasterToC6Migration++;
 			}
@@ -824,14 +827,14 @@ public class ProjectReport {
 				this.rootsMergeConflictingOriginMasterToC6Migration++;
 			}
 			else {
-				logger.warning(String.format("Unexpected resource type conflicting merge %1$s origin/master->c6migration", resource));
+				logger.warning(String.format("Unexpected resource type conflicting merge %s origin/master->%s", resource, migrationBranchName));
 			}			
 		}
 	}
 
 	public void addMergeResultOriginC6MigrationToC6Migration(String resource, MergeResult mergeResult) {
 		if (mergeResult.getMergeStatus().isSuccessful()) {
-			logger.info(String.format("Successfully merged %1$s origin/c6migration->c6migration", resource));
+			logger.info(String.format("Successfully merged %1$s origin/%2$s->%2$s", resource, migrationBranchName));
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeSuccessfulOriginC6MigrationToC6Migration++;
 			}
@@ -845,11 +848,11 @@ public class ProjectReport {
 				this.rootsMergeSuccessfulOriginC6MigrationToC6Migration++;
 			}
 			else {
-				logger.warning(String.format("Unexpected resource type successfully merged %1$s origin/c6migration->c6migration", resource));
+				logger.warning(String.format("Unexpected resource type successfully merged %1$s origin/%2$s->%2$s", resource, migrationBranchName));
 			}			
 		}
 		else {
-			logger.info(String.format("Conflicting merge %1$s origin/c6migration->c6migration", resource));
+			logger.info(String.format("Conflicting merge %1$s origin/%2$s->%2$s", resource, migrationBranchName));
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeConflictingOriginC6MigrationToC6Migration++;
 			}
@@ -863,13 +866,13 @@ public class ProjectReport {
 				this.rootsMergeConflictingOriginC6MigrationToC6Migration++;
 			}
 			else {
-				logger.warning(String.format("Unexpected resource type conflicting merge %1$s origin/c6migration->c6migration", resource));
+				logger.warning(String.format("Unexpected resource type conflicting merge %1$s origin/%2$s->%2$s", resource, migrationBranchName));
 			}			
 		}
 	}
 
 	public void addPushC6MigrationToOriginC6MigrationSuccessful(String resource) {
-		logger.info(String.format("Successfully pushed %1$s c6migration->origin/c6migration", resource));
+		logger.info(String.format("Successfully pushed %1$s %2$s->origin/%2$s", resource, migrationBranchName));
 		if (resource.startsWith("collections")) {
 			this.collectionsPushSuccessfulC6MigrationToOriginC6Migration++;
 		}
@@ -883,12 +886,12 @@ public class ProjectReport {
 			this.rootsPushSuccessfulC6MigrationToOriginC6Migration++;
 		}
 		else {
-			logger.warning(String.format("Unexpected resource type successfully pushed %1$s c6migration->origin/c6migration", resource));
+			logger.warning(String.format("Unexpected resource type successfully pushed %1$s %2$s->origin/%2$s", resource, migrationBranchName));
 		}			
 	}
 	
 	public void addPushC6MigrationToOriginC6MigrationFailed(String resource) {
-		logger.info(String.format("Failed to push %1$s c6migration->origin/c6migration", resource));
+		logger.info(String.format("Failed to push %1$s %2$s->origin/%2$s", resource, migrationBranchName));
 		if (resource.startsWith("collections")) {
 			this.collectionsPushFailedfulC6MigrationToOriginC6Migration++;
 		}
@@ -902,7 +905,7 @@ public class ProjectReport {
 			this.rootsPushFailedfulC6MigrationToOriginC6Migration++;
 		}
 		else {
-			logger.warning(String.format("Unexpected resource type failed to pushed %1$s c6migration->origin/c6migration", resource));
+			logger.warning(String.format("Unexpected resource type failed to pushed %1$s %2$s->origin/%2$s", resource, migrationBranchName));
 		}			
 	}
 

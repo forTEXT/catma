@@ -78,7 +78,7 @@ public class TagSelectionPanel extends VerticalLayout {
             }
             
         } catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading data", e);
         }
 	}
 	
@@ -161,7 +161,7 @@ public class TagSelectionPanel extends VerticalLayout {
 	
 	private void handleAddTagsetRequest() {
     	SingleTextInputDialog tagsetNameDlg = 
-        		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+        		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
         				new SaveCancelListener<String>() {
     						
     						@Override
@@ -189,7 +189,7 @@ public class TagSelectionPanel extends VerticalLayout {
 		if (tagsetData.getRootItems().isEmpty()) {
 			Notification.show(
 				"Info", 
-				"You do not have any Tagsets to add Tags to yet, please create a Tagset first!", 
+				"You do not have any tagsets to add tags to yet, please create a tagset first!",
 				Type.HUMANIZED_MESSAGE);
 			return;
 		}
@@ -275,7 +275,7 @@ public class TagSelectionPanel extends VerticalLayout {
 					});
 		}
 		else {
-			Notification.show("Info", "Please select at least one parent Tag!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select at least one parent tag!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 

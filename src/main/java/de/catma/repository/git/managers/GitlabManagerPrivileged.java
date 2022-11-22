@@ -97,7 +97,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 					Date.from(expiresAt.atStartOfDay(ZoneId.systemDefault()).toInstant()),
 					new Scope[] {Scope.READ_API}
 			);
-			logger.info(String.format("Created personal access token for user with ID %1$s.", userId));
+			logger.info(String.format("Created personal access token for user with ID %s", userId));
 			return personalAccessToken.getToken();
 		}
 		catch (GitLabApiException e) {
@@ -202,7 +202,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 
 			this.privilegedGitLabApi.getUserApi().updateUser(user, password);
 		} catch(GitLabApiException e){
-			throw new IOException("failed to check for username",e);
+			throw new IOException("Failed to modify user attributes",e);
 		}
 	}
 	
@@ -214,7 +214,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 			.filter(u -> usernameOrEmail.equals(u.getUsername()) || usernameOrEmail.equals(u.getEmail()))
 			.count() > 0;
 		} catch(GitLabApiException e){
-			throw new IOException("Failed to validate username and email!",e);
+			throw new IOException("Failed to check whether user exists",e);
 		}
 	}
 	
@@ -281,7 +281,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 			}
 		
 			if (!optionalLastLoginAtt.isPresent()) {
-				logger.info(String.format("First Login of %1$s", user.getUsername()));
+				logger.info(String.format("First login of user \"%s\"", user.getUsername()));
 				
 					userApi.createCustomAttribute(
 						user.getId(), 
@@ -290,7 +290,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 			}
 			else {
 				CustomAttribute lastLogin = optionalLastLoginAtt.get();
-				logger.info(String.format("Last Login of %1$s was %2$s.", user.getUsername(), lastLogin.getValue()));
+				logger.info(String.format("Last login of user \"%s\" was on %s", user.getUsername(), lastLogin.getValue()));
 				lastLogin.setValue(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 				userApi.changeCustomAttribute(user.getId(), optionalLastLoginAtt.get());
 			}
@@ -306,7 +306,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 			}
 			
 		} catch (GitLabApiException e) {
-			logger.log(Level.SEVERE, "Could access custom attributes", e);
+			logger.log(Level.SEVERE, "Couldn't access custom attributes", e);
 			return false;
 		}
 	}
@@ -333,7 +333,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 			attr.setValue(Boolean.valueOf(value).toString());
 			userApi.changeCustomAttribute(user.getId(), attr);
 		} catch (GitLabApiException e) {
-			logger.log(Level.SEVERE, "Could access custom attributes", e);
+			logger.log(Level.SEVERE, "Couldn't access custom attributes", e);
 		}
 	}
 	

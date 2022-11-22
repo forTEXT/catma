@@ -409,7 +409,7 @@ public class GitProjectHandlerTest {
 			//       from the source document repo itself rather than from the root repo
 			assertEquals(gitlabManagerRestricted.getUser().getIdentifier(), commitsList.get(0).getCommitterIdent().getName());
 			assertEquals(gitlabManagerRestricted.getUser().getEmail(), commitsList.get(0).getCommitterIdent().getEmailAddress());
-			assert commitsList.get(0).getFullMessage().contains(String.format("Added document \"%s\" with ID", contentInfoSet.getTitle()));
+			assert commitsList.get(0).getFullMessage().contains(String.format("Created document \"%s\" with ID", contentInfoSet.getTitle()));
 			// TODO: add assertions for actual paths changed (see commented above - would need to be modified for already committed changes)
 		}
 	}

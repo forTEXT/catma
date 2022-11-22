@@ -48,10 +48,10 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager, Map<String, Sourc
 	public Pair<TagManager, Map<String, SourceDocumentReference>> call() throws Exception {
 		Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
 
-		getProgressListener().setProgress("Loading tagsets for project \"%s\"", projectReference);
+		getProgressListener().setProgress("Loading tagsets for project \"%s\"", projectReference.getName());
 		tagManager.load(tagsetsProvider.getTagsets());
 
-		getProgressListener().setProgress(String.format("Loading documents for project \"%s\"", projectReference));
+		getProgressListener().setProgress(String.format("Loading documents for project \"%s\"", projectReference.getName()));
 		for (SourceDocument document : documentsProvider.getDocuments()) {
 			document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
 					documentFileURIProvider.getDocumentFileURI(document.getUuid())
@@ -59,13 +59,13 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager, Map<String, Sourc
 			docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
 		}
 
-		getProgressListener().setProgress(String.format("Loading collections for project \"%s\"", projectReference));
+		getProgressListener().setProgress(String.format("Loading collections for project \"%s\"", projectReference.getName()));
 		for (AnnotationCollection collection : collectionsProvider.getCollections(tagManager.getTagLibrary())) {
 			docRefsById.get(collection.getSourceDocumentId()).addUserMarkupCollectionReference(new AnnotationCollectionReference(collection));
 		}
 
 		Logger.getLogger(getClass().getName()).info(
-				String.format("Finished loading project \"%s\"", projectReference)
+				String.format("Finished loading project \"%s\"", projectReference.getName())
 		);
 
 		return new Pair<>(tagManager, docRefsById);

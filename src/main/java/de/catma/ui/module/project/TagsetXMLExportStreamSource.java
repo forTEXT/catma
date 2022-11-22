@@ -69,7 +69,7 @@ public class TagsetXMLExportStreamSource implements StreamSource {
 		        return new FileInputStream(tempFile);
 		        		
 			} catch (Exception e) {
-				((ErrorHandler)ui).showAndLogError("Error exporting Tagsets to XML!", e);
+				((ErrorHandler) ui).showAndLogError("Error exporting tagsets to XML", e);
 			}
 		}
 		

@@ -38,7 +38,7 @@ public class SelectProjectDialog extends AbstractOkCancelDialog<ProjectReference
 			ProjectsManager projectManager, 
 			EventBus eventBus,
 			List<ProjectReference> projectRefs, SaveCancelListener<ProjectReference> saveCancelListener) {
-		super("Select a Project", saveCancelListener);
+		super("Select Project", saveCancelListener);
 		this.projectRefs = projectRefs;
 		this.projectManager = projectManager;
 		this.eventBus = eventBus;
@@ -59,7 +59,7 @@ public class SelectProjectDialog extends AbstractOkCancelDialog<ProjectReference
     	projectsLayout.addStyleNames("select-project-dialog-list");
     	
     	HorizontalLayout descriptionBar = new HorizontalLayout();
-        Label description = new Label("Please select the target Project:");
+        Label description = new Label("Please select the target project:");
 
         Label title = new Label("Title");
 

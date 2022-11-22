@@ -121,7 +121,7 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error processing an incoming Comment", e);
+			logger.log(Level.WARNING, "Error processing an incoming comment", e);
 		}
 	}
 

@@ -65,8 +65,8 @@ public class AnnotatedTextProvider {
 			builder.append(Cleaner.clean(kwic.getForwardContext()));
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError(
-					"Error loading keyword in context!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
+					"Error loading keyword in context", e);
 		}		
 		
 		return builder.toString();
@@ -138,13 +138,13 @@ public class AnnotatedTextProvider {
 			}
 			
 			builder.append("<br /><hr />");
-			builder.append("Tag Path: <b>");
+			builder.append("Tag Path: <strong>");
 			builder.append(tagPath);
-			builder.append("</b>");
+			builder.append("</strong>");
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError(
-					"Error loading keyword in context!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
+					"Error loading keyword in context", e);
 		}		
 		
 		return builder.toString();
@@ -189,8 +189,8 @@ public class AnnotatedTextProvider {
 			builder.append(joinedAnnotatedText);
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError(
-					"Error loading annotated text!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
+					"Error loading annotated text", e);
 			builder.append("&nbsp;");
 		}		
 		builder.append("</div>");		

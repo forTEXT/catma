@@ -107,7 +107,7 @@ public class JsonLdWebAnnotation {
 
 	public void setId(String id) {
 		if (serializedListItem != null) {
-			throw new IllegalStateException("This Annotation instance has already been serializd and cannot be modified anymore!");
+			throw new IllegalStateException("This annotation instance has already been serialized and cannot be modified anymore!");
 		}
 
 		this.id = id;
@@ -123,7 +123,7 @@ public class JsonLdWebAnnotation {
 
 	public void setBody(JsonLdWebAnnotationBody_Dataset body) {
 		if (serializedListItem != null) {
-			throw new IllegalStateException("This Annotation instance has already been serializd and cannot be modified anymore!");
+			throw new IllegalStateException("This annotation instance has already been serialized and cannot be modified anymore!");
 		}
 		this.body = body;
 	}
@@ -134,7 +134,7 @@ public class JsonLdWebAnnotation {
 
 	public void setTarget(JsonLdWebAnnotationTarget_List target) {
 		if (serializedListItem != null) {
-			throw new IllegalStateException("This Annotation instance has already been serializd and cannot be modified anymore!");
+			throw new IllegalStateException("This annotation instance has already been serialized and cannot be modified anymore!");
 		}
 
 		this.target = target;
@@ -154,7 +154,7 @@ public class JsonLdWebAnnotation {
 		}
 		catch (URISyntaxException e) {
 			throw new IOException(
-				String.format("error loading Collection %1$s of project %2$s ",
+				String.format("Error loading collection with ID %s of project with ID %s",
 						markupCollectionId,
 						projectId), 
 				e);

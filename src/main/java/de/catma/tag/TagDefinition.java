@@ -266,7 +266,7 @@ public class TagDefinition {
 			
 			// we do not alter the list of possible values for already exising PropertyDefinitions
 			// because when working with latest contributions we expect to be in readonly mode anyway 
-			// and possible values are only relevant for adding new Annotations 
+			// and possible values are only relevant for adding new annotations
 		}
 		
 		return contribution;

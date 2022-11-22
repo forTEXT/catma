@@ -179,7 +179,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			errorHandler.showAndLogError("Error showing the Document!", e);
+			errorHandler.showAndLogError("Error showing the document", e);
 		}
 		this.eventBus = eventBus;
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
@@ -218,7 +218,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error registering for comment messages", e);
+			logger.log(Level.WARNING, "Error registering listener for comment messages", e);
 		}	
 	}
 	
@@ -231,7 +231,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error removing comment listener", e);
+			logger.log(Level.WARNING, "Error removing listener for comment messages", e);
 		}
 	}
 
@@ -250,10 +250,10 @@ public class TaggerView extends HorizontalLayout
 	private void initData(final SourceDocumentReference sdRef, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 		if (sourceDocument != null) {
 			
-			// loading of the Document is done in an extra step, 
+			// loading of the document is done in an extra step,
 			// because of a client side rendering racing condition which prevents the first page to be displayed
 			final UI ui = UI.getCurrent();
-			((CatmaApplication)ui).submit("Load Document",
+			((CatmaApplication)ui).submit("load-document",
 			new DefaultProgressCallable<Void>() {
 				@Override
 				public Void call() throws Exception {
@@ -300,7 +300,7 @@ public class TaggerView extends HorizontalLayout
 							
 							ui.push();
 						} catch (Exception e) {
-							errorHandler.showAndLogError("Error showing the Document!", e);
+							errorHandler.showAndLogError("Error showing the document", e);
 						}
 					});
 					return null;
@@ -311,7 +311,7 @@ public class TaggerView extends HorizontalLayout
 				
 				@Override
 				public void error(Throwable t) {
-					errorHandler.showAndLogError("Error showing the Document!", t);
+					errorHandler.showAndLogError("Error showing the document", t);
 				}
 			});
 		}			
@@ -464,7 +464,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			errorHandler.showAndLogError("Error analyzing the Document!", e);
+			errorHandler.showAndLogError("Error analyzing the document", e);
 		}
 	}
 
@@ -500,7 +500,7 @@ public class TaggerView extends HorizontalLayout
 					TaggerView.this.comments.addAll(TaggerView.this.project.getComments(sourceDocument.getUuid()));
 					tagger.updateComments(comments);
 				} catch (IOException e) {
-					logger.log(Level.SEVERE, "unable to reload comments", e);
+					logger.log(Level.SEVERE, "Failed to reload comments", e);
 				}
 			}
 			else {
@@ -541,7 +541,7 @@ public class TaggerView extends HorizontalLayout
 	
 						pagerComponent.setPage(previousPageNumber);
 					} catch (IOException e) {
-						errorHandler.showAndLogError("Error showing the Document!", e);
+						errorHandler.showAndLogError("Error showing the document", e);
 					}
 				}
 			}
@@ -574,7 +574,7 @@ public class TaggerView extends HorizontalLayout
 							true);
 					}
 					catch (IOException e) {
-						((ErrorHandler)UI.getCurrent()).showAndLogError("error refreshing Annotation Collection!", e);
+						errorHandler.showAndLogError("Error refreshing annotation collection", e);
 					}
 				}
 				
@@ -617,7 +617,7 @@ public class TaggerView extends HorizontalLayout
 					}
 				}
 				catch (Exception e) {
-					errorHandler.showAndLogError("Error handling Tagset!", e);
+					errorHandler.showAndLogError("Error handling tagset", e);
 				}
 			}
 
@@ -675,7 +675,7 @@ public class TaggerView extends HorizontalLayout
 			
 		}
 		catch (Exception e) {
-			errorHandler.showAndLogError("Error handling Annotation Collection!", e);
+			errorHandler.showAndLogError("Error handling annotation collection", e);
 		}
 
 	}
@@ -738,7 +738,7 @@ public class TaggerView extends HorizontalLayout
 		actionPanel.addComponent(btClearSearchHighlights);
 		
 		cbAutoShowComments = new IconButton(VaadinIcons.COMMENT);
-		cbAutoShowComments.setDescription("Toggle live Comments");
+		cbAutoShowComments.setDescription("Toggle live comments");
 		cbAutoShowComments.setData(true); //state
 		actionPanel.addComponent(cbAutoShowComments);
 		
@@ -812,7 +812,7 @@ public class TaggerView extends HorizontalLayout
 	
 						pagerComponent.setPage(previousPageNumber);
 					} catch (IOException e) {
-						errorHandler.showAndLogError("Error showing the Document!", e); //$NON-NLS-1$
+						errorHandler.showAndLogError("Error showing the document", e); //$NON-NLS-1$
 					}
 				}
 			}
@@ -828,7 +828,7 @@ public class TaggerView extends HorizontalLayout
 				preselection = project.getSourceDocumentReference(this.sourceDocument.getUuid());
 			}
 		} catch (Exception e) {
-			errorHandler.showAndLogError("Error loading Document!", e);
+			errorHandler.showAndLogError("Error loading document", e);
 		} 
 		resourcePanel = new AnnotateResourcePanel(
 				project, 
@@ -865,11 +865,11 @@ public class TaggerView extends HorizontalLayout
 	
 		if (collectionChangeEvent.getOldValue() != null && !project.isReadOnly()) {
 			try {
-				project.commitAndPushChanges("Auto-committing Annotations");
+				project.commitAndPushChanges("Auto-committing annotations");
 			} catch (Exception e) {
 				logger.log(
 					Level.WARNING, 
-					"error auto-committing Annotations due to a switch to a "
+					"Error auto-committing annotations due to a switch to a "
 					+ "different editable target collection", e);
 			}
 		}
@@ -890,7 +890,7 @@ public class TaggerView extends HorizontalLayout
 		try {
 			return project.getSourceDocumentReference(this.sourceDocument.getUuid());
 		} catch (Exception e) {
-			errorHandler.showAndLogError("Error loading Document!", e);
+			errorHandler.showAndLogError("Error loading document", e);
 			return null;
 		}
 	}
@@ -927,11 +927,11 @@ public class TaggerView extends HorizontalLayout
 				tagChangedListener);
 		
 		try {
-			project.commitAndPushChanges("Auto-committing Annotations");
+			project.commitAndPushChanges("Auto-committing annotations");
 		} catch (Exception e) {
 			logger.log(
 				Level.WARNING, 
-				"error auto-committing Annotations due to closing the TaggerView", e);
+				"Error auto-committing annotations due to closing the TaggerView", e);
 		}	
 		
 		project = null;
@@ -943,9 +943,9 @@ public class TaggerView extends HorizontalLayout
 		AnnotationCollection collection = annotationPanel.getSelectedEditableCollection();
 		if (collection == null) { //shouldn't happen, but just in case
 			Notification.show("Info", 
-					"Please make sure you have an editable Collection available "
-					+ "and select this Collection as 'currently being edited'! "
-					+ "Your Annotation hasn't been saved!",
+					"Please make sure you have an editable collection available "
+					+ "and select this collection as 'currently being edited'! "
+					+ "Your annotation hasn't been saved!",
 					Type.ERROR_MESSAGE);
 		}
 		else {
@@ -997,7 +997,7 @@ public class TaggerView extends HorizontalLayout
 				}
 				
 			} catch (URISyntaxException e) {
-				errorHandler.showAndLogError("Error adding Annotations!", e);
+				errorHandler.showAndLogError("Error adding annotations", e);
 			}
 		}
 	}
@@ -1029,7 +1029,7 @@ public class TaggerView extends HorizontalLayout
 					try {
 						pager.setText(sourceDocument.getContent(), comments);
 					} catch (IOException e) {
-						logger.log(Level.SEVERE, "error adjusting  page zoom", e); //$NON-NLS-1$
+						logger.log(Level.SEVERE, "Error adjusting page zoom", e); //$NON-NLS-1$
 					}
 	
 					startPage = pager.getPageNumberFor(range.getStartPoint());
@@ -1047,7 +1047,7 @@ public class TaggerView extends HorizontalLayout
 			
 			tagger.highlight(range);
 		} catch (ValueOutOfBoundsException e) {
-			logger.log(Level.SEVERE, "error during highlighting", e); //$NON-NLS-1$
+			logger.log(Level.SEVERE, "Error during highlighting", e); //$NON-NLS-1$
 		}
 	}
 	
@@ -1058,7 +1058,7 @@ public class TaggerView extends HorizontalLayout
 						userMarkupCollectionManager.getAnnotationsForTagInstances(
 								pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID)));
 			} catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
+				errorHandler.showAndLogError("Error showing annotation details", e);
 			}
 		}
 	}
@@ -1069,7 +1069,7 @@ public class TaggerView extends HorizontalLayout
 			annotationPanel.showAnnotationDetails(
 				userMarkupCollectionManager.getAnnotationsForTagInstances(tagInstanceIDs));
 		} catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
+			errorHandler.showAndLogError("Error showing annotation details", e);
 		}
 	}
 	
@@ -1099,17 +1099,17 @@ public class TaggerView extends HorizontalLayout
 			
 			addCommentMessageListener();
 		} catch (Exception e) {
-			errorHandler.showAndLogError("Error opening Document!", e);
+			errorHandler.showAndLogError("Error opening document", e);
 		}
 		
 		if (tryAutoCommit) {
 			try {
-				project.commitAndPushChanges("Auto-committing Annotations");
+				project.commitAndPushChanges("Auto-committing annotations");
 			} catch (Exception e) {
 				logger.log(
 					Level.WARNING, 
-					"error auto-committing Annotations due to a switch to a "
-					+ "different Document", e);
+					"Error auto-committing annotations due to a switch to a "
+					+ "different document", e);
 			}			
 		}
 	}
@@ -1149,7 +1149,7 @@ public class TaggerView extends HorizontalLayout
 							);
 						}
 						catch (IOException e) {
-							errorHandler.showAndLogError("Failed to add comment", e);
+							errorHandler.showAndLogError("Failed to create comment", e);
 						}
 					}
 				}
@@ -1236,7 +1236,7 @@ public class TaggerView extends HorizontalLayout
 							);
 						}
 						catch (IOException e) {
-							errorHandler.showAndLogError("Failed to add reply", e);
+							errorHandler.showAndLogError("Failed to create reply", e);
 						}
 					}
 				}
@@ -1319,7 +1319,7 @@ public class TaggerView extends HorizontalLayout
 				comments.add(commentChangeEvent.getComment());
 				tagger.addComment(commentChangeEvent.getComment());
 			} catch (IOException e) {
-				errorHandler.showAndLogError("Error adding Comment!", e);
+				errorHandler.showAndLogError("Error adding comment", e);
 			}
 			break;
 		}
@@ -1360,7 +1360,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error publishing a comment message", e);
+			logger.log(Level.WARNING, "Error publishing a comment message", e);
 		}
 	}
 	
@@ -1371,7 +1371,7 @@ public class TaggerView extends HorizontalLayout
 			try {
 				tagger.addReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
 			} catch (IOException e) {
-				errorHandler.showAndLogError("Error adding Reply!", e);
+				errorHandler.showAndLogError("Error adding reply", e);
 			}
 			break;
 		}
@@ -1379,7 +1379,7 @@ public class TaggerView extends HorizontalLayout
 			try {
 				tagger.updateReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
 			} catch (IOException e) {
-				errorHandler.showAndLogError("Error updating Reply!", e);
+				errorHandler.showAndLogError("Error updating reply", e);
 			}
 			break;
 		}
@@ -1387,7 +1387,7 @@ public class TaggerView extends HorizontalLayout
 			try {
 				tagger.removeReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
 			} catch (IOException e) {
-				errorHandler.showAndLogError("Error removing Reply!", e);
+				errorHandler.showAndLogError("Error removing reply", e);
 			}
 			break;
 		}
@@ -1430,7 +1430,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error publishing a comment message", e);
+			logger.log(Level.WARNING, "Error publishing a comment message", e);
 		}
 	}
 	
@@ -1450,7 +1450,7 @@ public class TaggerView extends HorizontalLayout
 								ui.push();
 							}
 							catch(IOException e) {
-								logger.log(Level.WARNING, "error loading replies", e);
+								logger.log(Level.WARNING, "Error loading replies", e);
 							}
 						});
 						
@@ -1464,7 +1464,7 @@ public class TaggerView extends HorizontalLayout
 					}
 					@Override
 					public void error(Throwable t) {
-						errorHandler.showAndLogError("Error loading Replies!", t);
+						errorHandler.showAndLogError("Error loading replies", t);
 					}
 				});
 		}

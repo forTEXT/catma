@@ -103,7 +103,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 			documentTree.expand(documentData.getRootItems());
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error loading Project data", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading project data", e);
 		}
 	}
 	
@@ -198,7 +198,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 				documentTree.expand(documentData.getParent(collectionDataItem));
 				Notification.show(
 					"Info", 
-					String.format("Collection %1$s has been created!", collectionReference.toString()),  
+					String.format("Collection \"%s\" has been created", collectionReference.toString()),
 					Type.TRAY_NOTIFICATION);
 			}
     		

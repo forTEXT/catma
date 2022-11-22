@@ -32,7 +32,7 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 	public PropertySelectionStep(EventBus eventBus, Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		this.context = context;
 		this.context.put(AnnotationWizardContextKey.PROPERTIES, Collections.emptyList());
-		this.progressStep = progressStepFactory.create(2, "Set Property values");
+		this.progressStep = progressStepFactory.create(2, "Set Property Values");
 		this.nextStep = new CollectionSelectionStep(eventBus, project, context, progressStepFactory);
 		initComponents();
 	}
@@ -89,7 +89,7 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 			valueCount += tab.getPropertyValues().size();
 		}
 		
-		String propertyCaption = propCount > 1?"Properties":"Property";
+		String propertyCaption = propCount > 1?"properties":"property";
 		String valueCaption = valueCount > 1?"values":"value";
 		
 		progressStep.setCompleted(

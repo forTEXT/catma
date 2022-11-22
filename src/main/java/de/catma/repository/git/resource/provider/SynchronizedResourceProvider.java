@@ -85,7 +85,12 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format("Failed to load tagset \"%s\" for project \"%s\"", tagsetDir, projectId),
+						String.format(
+								"Failed to load tagset at path %1$s for project \"%2$s\" with ID %3$s",
+								tagsetDir,
+								projectReference.getName(),
+								projectId
+						),
 						e
 				);
 			}
@@ -125,7 +130,12 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format("Failed to load collection reference \"%s\" for project \"%s\"", collectionDir, projectId),
+						String.format(
+								"Failed to load collection reference for collection at path %1$s for project \"%2$s\" with ID %3$s",
+								collectionDir,
+								projectReference.getName(),
+								projectId
+						),
 						e
 				);
 			}
@@ -171,7 +181,12 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format("Failed to load collection \"%s\" for project \"%s\"", collectionDir, projectId),
+						String.format(
+								"Failed to load collection at path %1$s for project \"%2$s\" with ID %3$s",
+								collectionDir,
+								projectReference.getName(),
+								projectId
+						),
 						e
 				);
 			}
@@ -186,7 +201,7 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 				}
 
 				localGitRepoManager.addAllAndCommit(
-						String.format("Auto-committing removal of orphaned annotations and properties for project \"%s\"", projectId),
+						"Auto-committing deletion of orphaned annotations and properties",
 						remoteGitServerManager.getUsername(),
 						remoteGitServerManager.getEmail(),
 						false
@@ -251,7 +266,12 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 			catch (Exception e) {
 				logger.log(
 						Level.SEVERE,
-						String.format("Failed to load document \"%s\" for project \"%s\"", documentDir, projectId),
+						String.format(
+								"Failed to load document at path %1$s for project \"%2$s\" with ID %3$s",
+								documentDir,
+								projectReference.getName(),
+								projectId
+						),
 						e
 				);
 			}

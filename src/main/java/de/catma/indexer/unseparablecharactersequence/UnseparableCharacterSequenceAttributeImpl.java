@@ -75,7 +75,7 @@ public class UnseparableCharacterSequenceAttributeImpl
         }
         else {
             throw new IllegalArgumentException(
-                    "must implement inteface " +
+                    "Must implement interface " +
                             UnseparableCharacterSequenceAttribute.class.getName()); 
         }
     }

@@ -571,7 +571,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot add tagset \"%s\".",
+							"Project \"%s\" is in read-only mode! Cannot create tagset \"%s\".",
 							projectReference.getName(),
 							tagsetDefinition.getName()
 					)
@@ -615,7 +615,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot remove tagset \"%s\".",
+							"Project \"%s\" is in read-only mode! Cannot delete tagset \"%s\".",
 							projectReference.getName(),
 							tagsetDefinition.getName()
 					)
@@ -707,7 +707,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%1$s\" is in read-only mode! Cannot remove tag \"%2$s\" from tagset \"%3$s\".",
+							"Project \"%1$s\" is in read-only mode! Cannot delete tag \"%2$s\" from tagset \"%3$s\".",
 							projectReference.getName(),
 							tagDefinition.getName(),
 							tagsetDefinition.getName()
@@ -836,7 +836,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%1$s\" is in read-only mode! Cannot remove property \"%2$s\" from tag \"%3$s\" in tagset \"%4$s\".",
+							"Project \"%1$s\" is in read-only mode! Cannot delete property \"%2$s\" from tag \"%3$s\" in tagset \"%4$s\".",
 							projectReference.getName(),
 							propertyDefinition.getName(),
 							tagDefinition.getName(),
@@ -1090,9 +1090,10 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot update metadata for collection \"%s\".",
+							"Project \"%1$s\" is in read-only mode! Cannot update metadata for collection \"%2$s\" with ID %3$s.",
 							projectReference.getName(),
-							annotationCollectionRef.getName()
+							annotationCollectionRef.getName(),
+							annotationCollectionRef.getId()
 					)
 			);
 		}
@@ -1190,7 +1191,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot remove tag references from collection \"%s\".",
+							"Project \"%s\" is in read-only mode! Cannot delete tag references from collection \"%s\".",
 							projectReference.getName(),
 							annotationCollection.getName()
 					)
@@ -1234,7 +1235,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%1$s\" is in read-only mode! Cannot update tag instance properties for tag %2$s in collection \"%3$s\".",
+							"Project \"%1$s\" is in read-only mode! Cannot update tag instance properties for tag with ID %2$s in collection \"%3$s\".",
 							projectReference.getName(),
 							tagInstance.getUuid(),
 							annotationCollection.getName()
@@ -1444,7 +1445,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot add document \"%s\".",
+							"Project \"%s\" is in read-only mode! Cannot create document \"%s\".",
 							projectReference.getName(),
 							sourceDocument
 					)
@@ -1551,9 +1552,10 @@ public class GraphWorktreeProject implements IndexedProject {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
-							"Project \"%s\" is in read-only mode! Cannot update document \"%s\".",
+							"Project \"%1$s\" is in read-only mode! Cannot update document \"%2$s\" with ID %3$s.",
 							projectReference.getName(),
-							sourceDocumentRef
+							sourceDocumentRef,
+							sourceDocumentRef.getUuid()
 					)
 			);
 		}
@@ -1705,7 +1707,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 		else {
 			logger.info(
-					String.format("New revision of project \"%s\" is %s", projectReference.getName(), rootRevisionHash)
+					String.format("New revision of project \"%s\" is: %s", projectReference.getName(), rootRevisionHash)
 			);
 		}
 

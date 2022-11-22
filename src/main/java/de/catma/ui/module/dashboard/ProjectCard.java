@@ -86,7 +86,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 			RBACRole projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference);
 			rbacEnforcer.enforceConstraints(projectRole); // normally done in reload();
 		} catch (IOException e) {
-            errorLogger.showAndLogError("can't fetch permissions" + projectReference.getName(), e);
+            errorLogger.showAndLogError(String.format("Can't fetch permissions for project \"%s\"", projectReference.getName()), e);
 		}
 	}
 
@@ -119,7 +119,7 @@ public class ProjectCard extends VerticalFlexLayout  {
         btnRemove.addClickListener(
             (event -> {
                 ConfirmDialog.show(UI.getCurrent(),"Delete Project",
-                        "Do you want to delete the whole Project '" + projectReference.getName() + "'?",
+                        "Do you want to delete the whole project \"" + projectReference.getName() + "\"?",
                         "OK",
                         "Cancel"
                 , (evt) -> {
@@ -129,7 +129,7 @@ public class ProjectCard extends VerticalFlexLayout  {
                         	eventBus.post(new ProjectChangedEvent(projectReference.getProjectId()));
                         }
                     } catch (Exception e) {
-                        errorLogger.showAndLogError("can't delete Project " + projectReference.getName(), e);
+                        errorLogger.showAndLogError(String.format("Can't delete project \"%s\"", projectReference.getName()), e);
                     }
                 });
             })
@@ -146,7 +146,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 							descriptionLabel.setValue(result.getDescription());
 							nameLabel.setValue(result.getName());
 						} catch (IOException e) {
-							errorLogger.showAndLogError("Failed to update Project", e);
+							errorLogger.showAndLogError("Failed to update project", e);
 							eventBus.post(new ProjectChangedEvent());
 						}
         			}).show();
@@ -157,7 +157,7 @@ public class ProjectCard extends VerticalFlexLayout  {
         btnLeave.addClickListener(
 		   (event -> {
                ConfirmDialog.show(UI.getCurrent(),"Leave Project",
-                       "Do you want to leave '" + projectReference.getName() + "'?",
+                       "Do you want to leave the project \"" + projectReference.getName() + "\"?",
                        "OK",
                        "Cancel"
                , (evt) -> {
@@ -166,7 +166,7 @@ public class ProjectCard extends VerticalFlexLayout  {
                     	   projectManager.leaveProject(projectReference);
                        }
                    } catch (Exception e) {
-                       errorLogger.showAndLogError("can't leave project " + projectReference.getName(), e);
+                       errorLogger.showAndLogError(String.format("Can't leave project \"%s\"", projectReference.getName()), e);
                    }
                    eventBus.post(new ProjectChangedEvent());
                });

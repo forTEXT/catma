@@ -62,8 +62,8 @@ public class XmlMarkupCollectionSerializationHandler implements
 			SourceDocument sourceDocument, OutputStream outputStream)
 			throws IOException {
 		throw new UnsupportedOperationException(
-			"serialization of xml intrinsic markup collections to their "
-			+ "original format is not supported yet!");
+			"Serialization of XML intrinsic annotation collections to their "
+			+ "original format is not supported yet");
 	}
 
 	@Override
