@@ -248,19 +248,19 @@ public class GitTagsetHandler {
 				tagsetHeaderFile,
 				serializedTagsetHeader.getBytes(StandardCharsets.UTF_8));
 		
-		String targetTagDefinitionsFolderRelativePath = 
+		String targetTagDefinitionFolderRelativePath =
 			(StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : (tagDefinition.getParentUuid()+"/"))
 			+ tagDefinition.getUuid();
 
 		
-		File targetTagDefinitionsFolderAbsolutePath = Paths.get(
+		File targetTagDefinitionFolderAbsolutePath = Paths.get(
 				this.projectDirectory.getAbsolutePath(),
 				tagsetSubdir,
-				targetTagDefinitionsFolderRelativePath
+				targetTagDefinitionFolderRelativePath
 		).toFile();
 		
 		String projectRevision = this.localGitRepositoryManager.removeAndCommit(
-				targetTagDefinitionsFolderAbsolutePath, 
+				targetTagDefinitionFolderAbsolutePath,
 				!StringUtils.isEmpty(tagDefinition.getParentUuid()), // delete empty parent tag directory
 				String.format(
 					"Deleted tag \"%1$s\" with ID %2$s from tagset \"%3$s\" with ID %4$s, including corresponding annotations",
@@ -378,13 +378,13 @@ public class GitTagsetHandler {
 				tagset.getUuid()
 		);
 
-		File targetTagsetDefinitionsFolderAbsolutePath = Paths.get(
+		File targetTagsetDefinitionFolderAbsolutePath = Paths.get(
 				this.projectDirectory.getAbsolutePath(),
 				tagsetSubdir
 		).toFile();
 		
 		String projectRevision = this.localGitRepositoryManager.removeAndCommit(
-				targetTagsetDefinitionsFolderAbsolutePath, 
+				targetTagsetDefinitionFolderAbsolutePath,
 				false, // do not delete the parent folder
 				String.format(
 					"Deleted tagset \"%s\" with ID %s, including corresponding annotations",

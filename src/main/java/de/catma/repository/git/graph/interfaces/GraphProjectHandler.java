@@ -72,19 +72,9 @@ public interface GraphProjectHandler {
 
 	AnnotationCollection getCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference) throws Exception;
 
-	void addTagReferences(String rootRevisionHash, AnnotationCollection collection, List<TagReference> tagReferences) throws Exception;
-
-	void removeTagReferences(String rootRevisionHash, AnnotationCollection collection, List<TagReference> tagReferences) throws Exception;
-
-	void removeProperties(String rootRevisionHash, String collectionId, String propertyDefId) throws Exception;
-
-	void updateProperties(String rootRevisionHash, AnnotationCollection collection, TagInstance tagInstance, Collection<Property> properties) throws Exception;
-
 	Multimap<String, String> getAnnotationIdsByCollectionId(TagDefinition tag) throws Exception;
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception;
-
-	void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds) throws Exception;
 
 	void removeTagDefinition(String rootRevisionHash, TagDefinition tag, TagsetDefinition tagset, String oldRootRevisionHash) throws Exception;
 

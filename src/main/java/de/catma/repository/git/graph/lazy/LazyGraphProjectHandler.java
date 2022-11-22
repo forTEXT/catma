@@ -245,32 +245,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	}
 
 	@Override
-	public void addTagReferences(String rootRevisionHash, AnnotationCollection collection,
-			List<TagReference> tagReferences) throws Exception {
-		// noop
-	}
-
-	@Override
-	public void removeTagReferences(String rootRevisionHash, AnnotationCollection collection,
-			List<TagReference> tagReferences) throws Exception {
-		// noop
-
-	}
-
-	@Override
-	public void removeProperties(String rootRevisionHash, String collectionId, String propertyDefId) throws Exception {
-		// noop
-
-	}
-
-	@Override
-	public void updateProperties(String rootRevisionHash, AnnotationCollection collection, TagInstance tagInstance,
-			Collection<Property> properties) throws Exception {
-		// noop
-
-	}
-
-	@Override
 	public Multimap<String, String> getAnnotationIdsByCollectionId(TagDefinition tagDefinition) throws Exception {
 		Multimap<String, String> result = HashMultimap.create();
 		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
@@ -308,12 +282,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 		}
 
 		return result;
-	}
-
-	@Override
-	public void removeTagInstances(String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds)
-			throws Exception {
-		// noop
 	}
 
 	@Override
