@@ -22,7 +22,6 @@ import de.catma.user.User;
 import de.catma.util.Pair;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
@@ -209,51 +208,54 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 		}
 	}
 
-	// tagset & tag operations
-	@Override
-	public Collection<TagsetDefinition> getTagsets(String rootRevisionHash) {
-		return this.tagManager.getTagLibrary().getTagsetDefinitions();
-	}
-
 	// collection operations
 	@Override
-	public AnnotationCollection getCollection(String rootRevisionHash,
-											  AnnotationCollectionReference collectionReference) throws Exception {
-		return collectionCache.get(collectionReference.getId());
+	public AnnotationCollection getAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws Exception {
+		return collectionCache.get(annotationCollectionRef.getId());
 	}
 
 	@Override
-	public void addCollection(String rootRevisionHash, String collectionId, String name, SourceDocumentReference document,
-							  TagLibrary tagLibrary, String oldRootRevisionHash) {
+	public void addAnnotationCollection(
+			String annotationCollectionId,
+			String name,
+			SourceDocumentReference sourceDocumentRef,
+			TagLibrary tagLibrary,
+			String oldRevisionHash,
+			String newRevisionHash
+	) {
+		AnnotationCollection collection = new AnnotationCollection(
+				annotationCollectionId,
+				new ContentInfoSet(name),
+				tagLibrary,
+				sourceDocumentRef.getUuid(),
+				null,
+				user.getIdentifier()
+		);
+		collectionCache.put(annotationCollectionId, collection);
 
-		AnnotationCollection collection =
-				new AnnotationCollection(
-						collectionId, new ContentInfoSet(name), tagLibrary,
-						document.getUuid(), null, user.getIdentifier());
-		this.collectionCache.put(collectionId, collection);
-
-		document.addUserMarkupCollectionReference(
+		sourceDocumentRef.addUserMarkupCollectionReference(
 				new AnnotationCollectionReference(
 						collection.getUuid(),
 						collection.getContentInfoSet(),
 						collection.getSourceDocumentId(),
 						collection.getForkedFromCommitURL(),
-						collection.getResponsibleUser()));
+						collection.getResponsibleUser()
+				)
+		);
 
-		updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
+		updateProjectRevision(oldRevisionHash, newRevisionHash);
 	}
 
 	@Override
-	public void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference,
-								 String oldRootRevisionHash) {
-		this.collectionCache.invalidate(collectionReference.getId());
-
-		updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
+	public void removeAnnotationCollection(AnnotationCollectionReference annotationCollectionRef, String oldRevisionHash, String newRevisionHash) {
+		collectionCache.invalidate(annotationCollectionRef.getId());
+		updateProjectRevision(oldRevisionHash, newRevisionHash);
 	}
 
 	@Override
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(TagsetDefinition tagsetDefinition) throws Exception {
 		Multimap<String, TagReference> result = ArrayListMultimap.create();
+
 		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
 				.stream()
 				.map(SourceDocumentReference::getUserMarkupCollectionRefs)
@@ -273,6 +275,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	@Override
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception {
 		Multimap<String, TagReference> result = ArrayListMultimap.create();
+
 		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
 				.stream()
 				.map(SourceDocumentReference::getUserMarkupCollectionRefs)
@@ -291,55 +294,49 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 	// document operations
 	@Override
-	public boolean hasDocument(String rootRevisionHash, String documentId) {
-
-		return this.docRefsById.containsKey(documentId);
+	public boolean hasSourceDocument(String sourceDocumentId) {
+		return docRefsById.containsKey(sourceDocumentId);
 	}
 
 	@Override
-	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentID) {
-		return docRefsById.get(sourceDocumentID);
+	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) {
+		return docRefsById.get(sourceDocumentId);
 	}
 
 	@Override
-	public Collection<SourceDocumentReference> getDocuments(String rootRevisionHash) {
+	public Collection<SourceDocumentReference> getSourceDocumentReferences() {
 		return Collections.unmodifiableCollection(docRefsById.values());
 	}
 
 	@Override
-	public SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception {
+	public SourceDocument getSourceDocument(String sourceDocumentId) throws Exception {
 		return documentCache.get(sourceDocumentId);
 	}
 
 	@Override
-	public void addSourceDocument(
-			String oldRootRevisionHash,
-			String rootRevisionHash,
-			SourceDocument document,
-			Path tokenizedSourceDocumentPath
-	) throws Exception {
+	public void addSourceDocument(SourceDocument sourceDocument, String oldRevisionHash, String newRevisionHash) throws Exception {
 		// TODO: see TODO in GitProjectHandler.createSourceDocument
-		document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
-				documentFileURIProvider.getDocumentFileURI(document.getUuid())
+		sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
+				documentFileURIProvider.getDocumentFileURI(sourceDocument.getUuid())
 		);
 
-		docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
-		documentCache.put(document.getUuid(), document);
+		docRefsById.put(sourceDocument.getUuid(), new SourceDocumentReference(sourceDocument.getUuid(), sourceDocument.getSourceContentHandler()));
+		documentCache.put(sourceDocument.getUuid(), sourceDocument);
 
-		updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
+		updateProjectRevision(oldRevisionHash, newRevisionHash);
 	}
 
 	@Override
-	public void removeDocument(String rootRevisionHash, SourceDocumentReference document, String oldRootRevisionHash) {
-		
-		this.collectionCache.invalidateAll(
-				document.getUserMarkupCollectionRefs()
-				.stream()
-				.map(AnnotationCollectionReference::getId)
-				.collect(Collectors.toSet()));
-		this.documentCache.invalidate(document.getUuid());
-		this.docRefsById.remove(document.getUuid());
+	public void removeSourceDocument(SourceDocumentReference sourceDocumentRef, String oldRevisionHash, String newRevisionHash) {
+		collectionCache.invalidateAll(
+				sourceDocumentRef.getUserMarkupCollectionRefs()
+						.stream()
+						.map(AnnotationCollectionReference::getId)
+						.collect(Collectors.toSet())
+		);
+		documentCache.invalidate(sourceDocumentRef.getUuid());
+		docRefsById.remove(sourceDocumentRef.getUuid());
 
-		updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
+		updateProjectRevision(oldRevisionHash, newRevisionHash);
 	}
 }

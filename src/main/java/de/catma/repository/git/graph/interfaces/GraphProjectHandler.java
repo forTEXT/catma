@@ -1,10 +1,6 @@
 package de.catma.repository.git.graph.interfaces;
 
-import java.nio.file.Path;
-import java.util.Collection;
-
 import com.google.common.collect.Multimap;
-
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.ProgressListener;
@@ -18,6 +14,8 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+
+import java.util.Collection;
 
 public interface GraphProjectHandler {
 	Indexer createIndexer();
@@ -36,37 +34,34 @@ public interface GraphProjectHandler {
 
 	void updateProjectRevision(String oldRevisionHash, String newRevisionHash);
 
-	// tagset & tag operations
-	Collection<TagsetDefinition> getTagsets(String rootRevisionHash);
-
 	// collection operations
-	AnnotationCollection getCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference) throws Exception;
+	AnnotationCollection getAnnotationCollection(AnnotationCollectionReference annotationCollectionRef) throws Exception;
 
-	void addCollection(
-			String rootRevisionHash,
-			String collectionId,
+	void addAnnotationCollection(
+			String annotationCollectionId,
 			String name,
-			SourceDocumentReference document,
+			SourceDocumentReference sourceDocumentRef,
 			TagLibrary tagLibrary,
-			String oldRootRevisionHash
+			String oldRevisionHash,
+			String newRevisionHash
 	);
 
-	void removeCollection(String rootRevisionHash, AnnotationCollectionReference collectionReference, String oldRootRevisionHash);
+	void removeAnnotationCollection(AnnotationCollectionReference annotationCollectionRef, String oldRevisionHash, String newRevisionHash);
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(TagsetDefinition tagsetDefinition) throws Exception;
 
 	Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception;
 
 	// document operations
-	boolean hasDocument(String rootRevisionHash, String documentId);
+	boolean hasSourceDocument(String sourceDocumentId);
 
-	SourceDocumentReference getSourceDocumentReference(String sourceDocumentID);
+	SourceDocumentReference getSourceDocumentReference(String sourceDocumentId);
 
-	Collection<SourceDocumentReference> getDocuments(String rootRevisionHash);
+	Collection<SourceDocumentReference> getSourceDocumentReferences();
 
-	SourceDocument getSourceDocument(String rootRevisionHash, String sourceDocumentId) throws Exception;
+	SourceDocument getSourceDocument(String sourceDocumentId) throws Exception;
 
-	void addSourceDocument(String oldRootRevisionHash, String rootRevisionHash, SourceDocument document, Path tokenizedSourceDocumentPath) throws Exception;
+	void addSourceDocument(SourceDocument sourceDocument, String oldRevisionHash, String newRevisionHash) throws Exception;
 
-	void removeDocument(String rootRevisionHash, SourceDocumentReference document, String oldRootRevisionHash);
+	void removeSourceDocument(SourceDocumentReference sourceDocumentRef, String oldRevisionHash, String newRevisionHash);
 }
