@@ -1,5 +1,6 @@
 package de.catma.repository.git.migration;
 
+import de.catma.document.comment.Comment;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACRole;
@@ -7,6 +8,7 @@ import de.catma.repository.git.GitAnnotationCollectionHandler;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -18,26 +20,23 @@ import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.IssuesApi;
 import org.gitlab4j.api.Pager;
-import org.gitlab4j.api.models.AccessLevel;
-import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.Visibility;
+import org.gitlab4j.api.models.*;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
+
+import static de.catma.repository.git.managers.GitlabManagerRestricted.CATMA_COMMENT_LABEL;
 
 public class ProjectConverter implements AutoCloseable { 
 	private final Logger logger = Logger.getLogger(ProjectConverter.class.getName());
@@ -74,8 +73,6 @@ public class ProjectConverter implements AutoCloseable {
 	}
 
 	public void convertProject(String projectId) {
-		// TODO: migrate comments!
-
 		logger.info(String.format("Converting project with ID %s", projectId));
 
 		try {
@@ -281,6 +278,45 @@ public class ProjectConverter implements AutoCloseable {
 								project.getId(),
 								member.getUserId(),
 								AccessLevel.forValue(role.getAccessLevel())
+						);
+					}
+
+					// migrate comments
+					logger.info(String.format("Migrating comments for project with ID %s", projectId));
+
+					IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
+
+					// get a pager for all issues of the group
+					Pager<Issue> issues = issuesApi.getGroupIssues(
+							projectId,
+							new IssueFilter()
+									.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
+									.withOrderBy(org.gitlab4j.api.Constants.IssueOrderBy.CREATED_AT)
+									.withSort(org.gitlab4j.api.Constants.SortOrder.ASC),
+							100
+					);
+
+					// move issues to the new project and add the document ID label
+					for (Issue issue : issues.all()) {
+						Comment comment = new SerializationHelper<Comment>().deserialize(issue.getDescription(), Comment.class);
+
+						Issue movedIssue = issuesApi.moveIssue(issue.getProjectId(), issue.getIid(), project.getId());
+
+						List<String> labels = movedIssue.getLabels();
+						labels.add(comment.getDocumentId());
+
+						issuesApi.updateIssue(
+								movedIssue.getProjectId(),
+								movedIssue.getIid(),
+								movedIssue.getTitle(),
+								movedIssue.getDescription(),
+								null,
+								null,
+								null,
+								String.join(",", labels),
+								null,
+								null,
+								null
 						);
 					}
 

@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class GitlabManagerRestricted extends GitlabManagerCommon implements RemoteGitManagerRestricted {
-	private static final String CATMA_COMMENT_LABEL = "CATMA Comment";
+	public static final String CATMA_COMMENT_LABEL = "CATMA Comment";
 
 	private final Logger logger = Logger.getLogger(GitlabManagerRestricted.class.getName());
 
