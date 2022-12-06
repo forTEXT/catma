@@ -636,61 +636,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 
 	}
-	
 
-	@Override
-	public List<Comment> getComments(ProjectReference projectReference) throws IOException {
-		try {
-			List<Comment> result = new ArrayList<Comment>();
-			
-			IssuesApi issuesApi = new IssuesApi(restrictedGitLabApi);
-			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
-			List<Issue> issues =
-				issuesApi.getGroupIssues(projectPath, 
-						new IssueFilter()
-							.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
-							.withState(IssueState.OPENED));
-			
-			
-			for (Issue issue : issues) {
-				String description = issue.getDescription();
-				int noteCount = issue.getUserNotesCount();
-				try {
-					Author author = issue.getAuthor();
-					
-					Comment comment = new SerializationHelper<Comment>().deserialize(description, Comment.class);
-					comment.setId(issue.getId());
-					comment.setIid(issue.getIid());
-					comment.setUserId(author.getId());
-					comment.setUsername(author.getName());
-					comment.setReplyCount(noteCount);
-					
-					result.add(comment);
-				}
-				catch (Exception e) {
-					logger.log(
-							Level.SEVERE,
-							String.format(
-									"Failed to deserialize comment from issue with IID %d and description %s",
-									issue.getIid(),
-									description
-							),
-							e
-					);
-				}
-			}
-			
-			return result;
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-					String.format("Failed to retrieve comments for project \"%s\"", projectReference.getName()),
-					e
-			);
-		}
-
-	}
-	
 	@Override
 	public void removeComment(ProjectReference projectReference, Comment comment) throws IOException {
 		String resourceId = comment.getDocumentId();

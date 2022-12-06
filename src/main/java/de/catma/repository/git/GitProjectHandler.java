@@ -650,21 +650,8 @@ public class GitProjectHandler {
 	public List<Comment> getCommentsWithReplies(List<String> documentIds) throws IOException {
 		List<Comment> comments = new ArrayList<>();
 
-		if (documentIds.isEmpty()) {
-			return comments;
-		}
-
-		if (documentIds.size() > 10) {
-			comments.addAll(
-					remoteGitServerManager.getComments(projectReference).stream()
-							.filter(comment -> documentIds.contains(comment.getDocumentId()))
-							.collect(Collectors.toList())
-			);
-		}
-		else {
-			for (String documentId : documentIds) {
-				comments.addAll(remoteGitServerManager.getComments(projectReference, documentId));
-			}
+		for (String documentId : documentIds) {
+			comments.addAll(remoteGitServerManager.getComments(projectReference, documentId));
 		}
 
 		for (Comment comment : comments) {

@@ -142,8 +142,6 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 
 	void updateReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
 
-	List<Comment> getComments(ProjectReference projectReference) throws IOException;
-	
 	List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException;
 	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
 	MergeRequestInfo createMergeRequest(ProjectReference projectReference) throws IOException;
