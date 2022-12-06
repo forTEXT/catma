@@ -296,13 +296,23 @@ public class ProjectConverter implements AutoCloseable {
 							100
 					);
 
+					List<Long> processedIssueIids = new ArrayList<>();
+
 					// move issues to the new project and add the document ID label
 					for (Issue issue : issues.all()) {
+						// guard against multiple processing (happened during testing, not sure how)
+						if (processedIssueIids.contains(issue.getIid())) {
+							continue;
+						}
+
 						Comment comment = new SerializationHelper<Comment>().deserialize(issue.getDescription(), Comment.class);
 
+						// move issue
 						Issue movedIssue = issuesApi.moveIssue(issue.getProjectId(), issue.getIid(), project.getId());
 
-						List<String> labels = movedIssue.getLabels();
+						// update labels
+						List<String> labels = new ArrayList<>();
+						labels.add(CATMA_COMMENT_LABEL); // existing labels 'belong' to the source project and are not moved
 						labels.add(comment.getDocumentId());
 
 						issuesApi.updateIssue(
@@ -318,6 +328,8 @@ public class ProjectConverter implements AutoCloseable {
 								null,
 								null
 						);
+
+						processedIssueIids.add(issue.getIid());
 					}
 
 					if (CATMAPropertyKey.V6_REPO_MIGRATION_CLEANUP_CONVERTED_V6_PROJECT.getBooleanValue()) {
