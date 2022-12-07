@@ -685,7 +685,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					comment.getIid(),
 					title, description, 
 					null, null, null, 
-					CATMA_COMMENT_LABEL, 
+					CATMA_COMMENT_LABEL + "," + resourceId,
 					null, null, null);
 		}
 		catch (GitLabApiException e) {
