@@ -9,7 +9,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
-import de.catma.project.ForkStatus;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
@@ -22,14 +21,11 @@ import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.ui.events.ChangeUserAttributeEvent;
 import de.catma.user.User;
-import de.catma.util.IDGenerator;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.gitlab4j.api.Constants.IssueState;
 import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.*;
-import org.gitlab4j.api.models.ImportStatus.Status;
 
 import java.io.IOException;
 import java.util.*;
@@ -82,38 +78,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@Override
-	public CreateRepositoryResponse createRepository(
-			String name, String path, String groupPath)
-			throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
-		try {
-			Group group = groupApi.getGroup(groupPath);
-
-			Namespace namespace = new Namespace();
-			namespace.setId(group.getId());
-
-			Project project = new Project();
-			project.setName(name);
-			project.setNamespace(namespace);
-
-			if (StringUtils.isNotEmpty(path)) {
-				project.setPath(path);
-			}
-
-			project = projectApi.createProject(project);
-			return new CreateRepositoryResponse(
-				groupPath, project.getId(),
-				GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
-			);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to create remote Git repository", e);
-		}
-	}
-
-	@Override
 	public CreateRepositoryResponse createRepository(String name, String description) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
@@ -148,26 +112,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			throw new IOException("Failed to delete remote Git repository", e);
 		}
 	}
-
-	@Override
-	public String createGroup(String name, String path, String description)
-			throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-
-		try {
-			// none of the addGroup overloads accept a Group object parameter
-			groupApi.addGroup(
-				name, path, description,
-				Visibility.PRIVATE,
-				null, null, null
-			);
-
-			return path;
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to create remote group", e);
-		}
-	}
 	
 	@Override
 	public void updateProject(String namespace, String projectId, String description) throws IOException {
@@ -198,20 +142,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			throw new IOException(
 				"Failed to get repository names for group", e
 			);
-		}
-	}
-	
-	@Override
-	@Deprecated
-	public void deleteGroup(String path) throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-
-		try {
-			Group group = groupApi.getGroup(path); // TODO: remove, deleteGroup can work with the path
-			groupApi.deleteGroup(group);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to delete remote group", e);
 		}
 	}
 
@@ -317,25 +247,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 	}
 	
-	@Override 
-	@Deprecated
-	public void leaveGroup(String path) throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-		
-		try {
-			Group group = groupApi.getGroup(path);
-			Member member = groupApi.getMember(group.getId(), user.getUserId());
-			if(member != null && 
-					member.getAccessLevel().value >= AccessLevel.GUEST.value && 
-					member.getAccessLevel().value < AccessLevel.OWNER.value 
-					){
-				groupApi.removeMember(group.getId(), user.getUserId());
-			}
-		} catch (GitLabApiException ge){
-			throw new IOException("Couldn't leave group",ge);
-		}
-	}
-	
 	@Override
 	public void leaveProject(String namespace, String projectId) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
@@ -352,52 +263,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 	}
 	
-	@Override
-	public Set<de.catma.user.Member> getResourceMembers(String projectId, String resourceId) throws IOException {
-		try {
-			Project project = restrictedGitLabApi.getProjectApi().getProject(projectId, resourceId);
-			if(project != null ){
-				List<GitMember> allMembers = new ProjectApi(restrictedGitLabApi)
-						.getAllMembers(project.getId())
-						.stream()
-						.map(member -> new GitMember(member))
-						.collect(Collectors.toList());
-				
-				Map<Long,de.catma.user.Member> mergedList = new HashMap<>();
-				
-				for(de.catma.user.Member m : allMembers){
-					if(! mergedList.containsKey(m.getUserId()) 
-							|| mergedList.get(m.getUserId()).getRole().getAccessLevel() < m.getRole().getAccessLevel()){
-						mergedList.put(m.getUserId(), m);
-					}
-				}
-				return mergedList.values().stream().collect(Collectors.toSet());
-				
-			} else {
-				throw new IOException("Unknown resource");
-			}	
-		} catch (GitLabApiException e){
-			throw new IOException("Unknown resource");
-		}
-	}
-	
-	@Deprecated
-	public Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException {
-		try {
-			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
-			Map<String, AccessLevel> permMap = getResourcePermissions(group.getId());
-			
-			return permMap.entrySet()
-					.stream()
-					.collect(Collectors.toMap(
-							Map.Entry::getKey,
-							e -> RBACRole.forValue(e.getValue().value)));
-
-		} catch (GitLabApiException e) {
-			throw new IOException("Permission retrieval failed!",e);
-		}
-	}
-
 	private Map<String, AccessLevel> getResourcePermissions(Long groupId) throws GitLabApiException {
 
         Map<String, AccessLevel> resultMap = Maps.newHashMap();
@@ -493,51 +358,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	@Override
 	public GitLabApi getGitLabApi() {
 		return restrictedGitLabApi;
-	}
-	
-	@Override
-	public ForkStatus forkResource(String resourceId, String sourceProjectId, String targetProjectId) throws IOException {
-		try {
-			Project sourceResourceProject = restrictedGitLabApi.getProjectApi().getProject(sourceProjectId, resourceId);
-			Optional<Project> optionalTargetResource = restrictedGitLabApi.getProjectApi().getOptionalProject(targetProjectId, resourceId);
-			if (optionalTargetResource.isPresent()) {
-				return ForkStatus.resourceAlreadyExists();
-			}
-			
-			restrictedGitLabApi.getProjectApi().forkProject(sourceResourceProject, targetProjectId);
-
-			Project targetProject = restrictedGitLabApi.getProjectApi().getProject(targetProjectId, resourceId);
-			Status importStatus = targetProject.getImportStatus();
-			
-			int tries = 10;
-			while (importStatus != Status.FINISHED && tries > 0) {
-				tries--;
-				
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					break;
-				}
-				logger.info(
-					String.format(
-						"Trying to retrieve forked resource status for %1$s from group %2$s (try %3$d)",
-						resourceId,
-						targetProjectId,
-						10-tries));
-				importStatus = targetProject.getImportStatus();
-			}
-			
-			if (importStatus != Status.FINISHED) {
-				logger.warning(String.format("Status is still '%1$s' and not 'finished'! Trying to continue anyway!", importStatus));
-			}
-			
-			
-			return ForkStatus.success();
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-				String.format("Failed to fork resource %1$s from group %2$s into group %3$s", resourceId, sourceProjectId, targetProjectId), e);
-		}
 	}
 
 	@Override

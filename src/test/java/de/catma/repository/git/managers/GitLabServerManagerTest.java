@@ -13,7 +13,6 @@ import java.util.Properties;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.PersonalAccessToken;
@@ -24,7 +23,6 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.eventbus.EventBus;
 
-import de.catma.backgroundservice.BackgroundService;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAProperties;
 
@@ -32,7 +30,6 @@ public class GitLabServerManagerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
-	private ArrayList<String> groupsToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<ProjectReference> repositoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<Long> usersToDeleteOnTearDown = new ArrayList<>();
 
@@ -63,16 +60,8 @@ public class GitLabServerManagerTest {
 	@AfterEach
 	public void tearDown() throws Exception {
 		GitLabApi adminGitLabApi = gitlabManagerPrivileged.getGitLabApi();
-		GroupApi groupApi = adminGitLabApi.getGroupApi();
 		ProjectApi projectApi = adminGitLabApi.getProjectApi();
 		UserApi userApi = adminGitLabApi.getUserApi();
-
-		if (groupsToDeleteOnTearDown.size() > 0) {
-			for (String groupPath : groupsToDeleteOnTearDown) {
-				gitlabManagerRestricted.deleteGroup(groupPath);
-				await().until(() -> groupApi.getGroups().isEmpty());
-			}
-		}
 
 		if (repositoriesToDeleteOnTearDown.size() > 0) {
 			for (ProjectReference projectRef : repositoriesToDeleteOnTearDown) {
@@ -88,8 +77,8 @@ public class GitLabServerManagerTest {
 			}
 		}
 
-		// delete the GitLab user that we created in setUp, including associated groups/repos
-		// TODO: explicit deletion of associated groups/repos (above) is now superfluous since we are doing a hard delete
+		// delete the GitLab user that we created in setUp, including associated repos
+		// TODO: explicit deletion of associated repos (above) is now superfluous since we are doing a hard delete
 		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
 //		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}

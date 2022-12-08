@@ -41,7 +41,6 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if something went wrong while creating the remote
 	 *         repository
 	 */
-	CreateRepositoryResponse createRepository(String name, String path, String groupPath) throws IOException;
 	CreateRepositoryResponse createRepository(String name, String description) throws IOException;
 
 	/**
@@ -53,30 +52,6 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 */
 	void deleteRepository(ProjectReference projectReference) throws IOException;
 
-	/**
-	 * Creates a new remote group with the <code>name</code>, <code>path</code> and
-	 * <code>description</code> supplied.
-	 *
-	 * @param name the name of the group to create
-	 * @param path the path of the group to create
-	 * @param description the description of the group to create
-	 * @return the new group path
-	 * @throws IOException if something went wrong while creating the remote
-	 *         group
-	 */
-	String createGroup(String name, String path, String description) throws IOException;
-
-	/**
-	 * Deletes an existing remote group identified by <code>path</code>.
-	 * <p>
-	 * NB: Also deletes any child repositories!
-	 *
-	 * @param path the path of the group to delete
-	 * @throws IOException if something went wrong while deleting the remote
-	 *         group
-	 */
-	void deleteGroup(String path) throws IOException;
-	
 	/**
 	 * fetches a list of all project members
 	 * @param projectId
@@ -116,15 +91,9 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 */
 	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
 
-	void leaveGroup(String path) throws IOException;
 	void leaveProject(String namespace, String projectId) throws IOException;
-	Set<Member> getResourceMembers(String projectId, String resourceId) throws IOException;
-	
-	Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException ;
 
 	void updateProject(String namespace, String projectId, String description) throws IOException;
-
-	ForkStatus forkResource(String resourceId, String sourceProjectId, String targetProjectId) throws IOException;
 
 	void addComment(ProjectReference projectReference, Comment comment) throws IOException;
 
