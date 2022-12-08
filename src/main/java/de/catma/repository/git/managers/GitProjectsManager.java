@@ -254,11 +254,6 @@ public class GitProjectsManager implements ProjectsManager {
 	}
 
 	@Override
-	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException {
-		return remoteGitServerManager.getProjectReferences(withPermission);
-	}
-
-	@Override
 	public boolean isAuthorizedOnProject(ProjectReference projectReference, RBACPermission permission) {
 		return remoteGitServerManager.isAuthorizedOnProject(user, permission, projectReference);
 	}

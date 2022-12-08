@@ -59,7 +59,6 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException
 	 */
 	List<ProjectReference> getProjectReferences() throws IOException;
-	List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException;
 
 	/**
 	 * Get the project's repo URL

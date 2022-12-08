@@ -166,11 +166,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()));
 	}
 
-	@Override
-	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException {
-		return getProjectReferences(AccessLevel.forValue(withPermission.getRoleRequired().getAccessLevel()));
-	}
-
 	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
 		ProjectApi projectApi = new ProjectApi(restrictedGitLabApi);
 

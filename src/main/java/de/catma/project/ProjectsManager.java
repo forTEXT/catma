@@ -21,6 +21,5 @@ public interface ProjectsManager {
 
 	User getUser();
 	List<ProjectReference> getProjectReferences() throws IOException;
-	List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException;
 	boolean isAuthorizedOnProject(ProjectReference projectReference, RBACPermission permission);
 }
