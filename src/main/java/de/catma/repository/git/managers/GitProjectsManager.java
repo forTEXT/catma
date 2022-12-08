@@ -13,7 +13,6 @@ import de.catma.repository.git.GraphWorktreeProject;
 import de.catma.repository.git.graph.interfaces.GraphProjectDeletionHandler;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
-import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted.GroupSerializationField;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
@@ -288,8 +287,8 @@ public class GitProjectsManager implements ProjectsManager {
 
 	private String serializeProjectMetadata(String name, String description) {
 		JsonObject obj = new JsonObject();
-		obj.addProperty(GroupSerializationField.name.name(), name);
-		obj.addProperty(GroupSerializationField.description.name(), description);
+		obj.addProperty(ProjectMetadataSerializationField.name.name(), name);
+		obj.addProperty(ProjectMetadataSerializationField.description.name(), description);
 		return obj.toString();
 	}
 }

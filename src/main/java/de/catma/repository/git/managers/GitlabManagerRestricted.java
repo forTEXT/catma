@@ -11,6 +11,7 @@ import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
+import de.catma.project.ProjectsManager.ProjectMetadataSerializationField;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
@@ -306,8 +307,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		try {
 			JsonObject metaDataJson = JsonParser.parseString(eventuallyMarshalledMetadata).getAsJsonObject();
 			
-			name = metaDataJson.get(GroupSerializationField.name.name()).getAsString();
-			description = metaDataJson.get(GroupSerializationField.description.name()).getAsString();
+			name = metaDataJson.get(ProjectMetadataSerializationField.name.name()).getAsString();
+			description = metaDataJson.get(ProjectMetadataSerializationField.description.name()).getAsString();
 		}
 		catch (Exception e) {
 			logger.log(

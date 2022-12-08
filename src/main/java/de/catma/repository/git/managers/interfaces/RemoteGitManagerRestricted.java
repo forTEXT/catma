@@ -23,13 +23,6 @@ import de.catma.user.User;
  *
  */
 public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitUserInformationProvider {
-	
-	public static enum GroupSerializationField {
-		name,
-		description,
-		;
-	}
-
 	/**
 	 * Creates a new remote repository with the <code>name</code> and <code>path</code> supplied
 	 * within the group specified by the <code>groupId</code>.
@@ -115,6 +108,4 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
 	MergeRequestInfo createMergeRequest(ProjectReference projectReference) throws IOException;
 	MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException;
-
-
 }

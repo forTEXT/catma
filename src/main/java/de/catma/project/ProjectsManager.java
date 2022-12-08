@@ -8,6 +8,11 @@ import java.io.IOException;
 import java.util.List;
 
 public interface ProjectsManager {
+	enum ProjectMetadataSerializationField {
+		name,
+		description,
+	}
+
 	ProjectReference createProject(String name, String description) throws IOException;
 	void openProject(ProjectReference projectReference, TagManager tagManager, OpenProjectListener openProjectListener);
 	void updateProjectMetadata(ProjectReference projectReference) throws IOException;
