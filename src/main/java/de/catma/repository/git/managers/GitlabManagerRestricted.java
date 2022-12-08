@@ -2,7 +2,6 @@ package de.catma.repository.git.managers;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -546,10 +545,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		String documentId = comment.getDocumentId();
 
 		try {
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
-
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			String title = comment.getBody().substring(0, Math.min(97, comment.getBody().length()));
 			if (title.length() < comment.getBody().length()) {
 				title += "...";
@@ -558,10 +556,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 			Issue issue = issuesApi.createIssue(
 					projectPath,
-					title, description,
-					null, null, null, 
+					title,
+					description,
+					null,
+					null,
+					null,
 					CATMA_COMMENT_LABEL + "," + documentId,
-					null, null, null, null
+					null,
+					null,
+					null,
+					null
 			);
 
 			comment.setId(issue.getId());
@@ -580,167 +584,169 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@Override
-	public List<Comment> getComments(ProjectReference projectReference, String resourceId) throws IOException {
+	public List<Comment> getComments(ProjectReference projectReference, String documentId) throws IOException {
 		try {
-			List<Comment> result = new ArrayList<Comment>();
-			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
-			Pager<Issue> issuePager = 
-				issuesApi.getIssues(
-						projectPath, 
-						new IssueFilter()
-							.withLabels(Lists.asList(CATMA_COMMENT_LABEL, new String[] {resourceId}))
-							.withState(IssueState.OPENED), 100);
-			
-			
+
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
+			Pager<Issue> issuePager = issuesApi.getIssues(
+					projectPath,
+					new IssueFilter()
+							.withLabels(Arrays.asList(CATMA_COMMENT_LABEL, documentId))
+							.withState(IssueState.OPENED),
+					100
+			);
+
+			List<Comment> comments = new ArrayList<>();
+
 			for (Issue issue : issuePager.all()) {
-				String description = issue.getDescription();
-				int noteCount = issue.getUserNotesCount();
+				Comment comment;
+				String issueDescription = issue.getDescription();
+
 				try {
-					Author author = issue.getAuthor();
-					
-					Comment comment = new SerializationHelper<Comment>().deserialize(description, Comment.class);
-					comment.setId(issue.getId());
-					comment.setIid(issue.getIid());
-					comment.setUserId(author.getId());
-					comment.setUsername(author.getName());
-					comment.setReplyCount(noteCount);
-					comment.setReplies(new ArrayList<Reply>());
-					result.add(comment);
+					comment = new SerializationHelper<Comment>().deserialize(issueDescription, Comment.class);
 				}
 				catch (Exception e) {
 					logger.log(
 							Level.SEVERE,
 							String.format(
-									"Failed to deserialize comment from issue with IID %d and description %s",
+									"Failed to deserialize comment from issue with IID %1$d for document with ID %2$s in project \"%3$s\". " +
+											"The issue description was: %4$s",
 									issue.getIid(),
-									description
+									documentId,
+									projectReference.getName(),
+									issueDescription
 							),
 							e
 					);
+					continue;
 				}
+
+				comment.setId(issue.getId());
+				comment.setIid(issue.getIid());
+				comment.setUserId(issue.getAuthor().getId());
+				comment.setUsername(issue.getAuthor().getName()); // TODO: if we're using the public name it shouldn't be called 'username' on the Comment class
+				comment.setReplyCount(issue.getUserNotesCount());
+
+				comments.add(comment);
 			}
-			
-			return result;
+
+			return comments;
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-							"Failed to retrieve comments for resource with ID %s in project \"%s\"",
-							resourceId,
+							"Failed to retrieve comments for document with ID %s in project \"%s\"",
+							documentId,
 							projectReference.getName()
 					),
 					e
 			);
 		}
-
 	}
 
 	@Override
 	public void removeComment(ProjectReference projectReference, Comment comment) throws IOException {
-		String resourceId = comment.getDocumentId();
+		String documentId = comment.getDocumentId();
 
 		try {
-			
-			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
-			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-		
+
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			issuesApi.closeIssue(projectPath, comment.getIid());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-							"Failed to delete comment with ID %1$s (issue IID %2$d) for resource with ID %3$s in project \"%4$s\"",
+							"Failed to delete comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
 							comment.getUuid(),
 							comment.getIid(),
-							resourceId,
+							documentId,
 							projectReference.getName()
 					),
 					e
 			);
 		}
 	}
-	
+
 	@Override
 	public void updateComment(ProjectReference projectReference, Comment comment) throws IOException {
-		String resourceId = comment.getDocumentId();
+		String documentId = comment.getDocumentId();
 
 		try {
-			
-			String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
-			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-			
-			
-			String title = comment.getBody().substring(0, Math.min(100, comment.getBody().length()));
+
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
+			String title = comment.getBody().substring(0, Math.min(97, comment.getBody().length()));
 			if (title.length() < comment.getBody().length()) {
 				title += "...";
 			}
 			String description = new SerializationHelper<Comment>().serialize(comment);
-			
+
 			issuesApi.updateIssue(
 					projectPath, 
 					comment.getIid(),
-					title, description, 
-					null, null, null, 
-					CATMA_COMMENT_LABEL + "," + resourceId,
-					null, null, null);
+					title,
+					description,
+					null,
+					null,
+					null,
+					CATMA_COMMENT_LABEL + "," + documentId,
+					null,
+					null,
+					null
+			);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-							"Failed to update comment with ID %1$s (issue IID %2$d) for resource with ID %3$s in project \"%4$s\"",
+							"Failed to update comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
 							comment.getUuid(),
 							comment.getIid(),
-							resourceId,
+							documentId,
 							projectReference.getName()
 					),
 					e
 			);
 		}
 	}
-	
+
 	@Override
 	public void addReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
-		String resourceId = comment.getDocumentId();
-		
-		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
+		String documentId = comment.getDocumentId();
 
-		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-	
 		try {
+			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
 			Note note = notesApi.createIssueNote(projectPath, comment.getIid(), noteBody);
+
 			reply.setId(note.getId());
 			comment.addReply(reply);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-							"Failed to create reply to comment with ID %1$s (issue IID %2$d) for resource with ID %3$s in project \"%4$s\"",
+							"Failed to create reply to comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
 							comment.getUuid(),
 							comment.getIid(),
-							resourceId,
+							documentId,
 							projectReference.getName()
 					),
 					e
 			);
 		}
-		
 	}
-	
+
 	@Override
 	public void updateReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
-		String resourceId = comment.getDocumentId();
-		
-		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
+		String documentId = comment.getDocumentId();
 
-		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-		
-		
 		try {
+			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
 			notesApi.updateIssueNote(projectPath, comment.getIid(), reply.getId(), noteBody);
 		}
@@ -748,107 +754,110 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			throw new IOException(
 					String.format(
 							"Failed to update reply with ID %1$s (note ID %2$d) on comment with ID %3$s (issue IID %4$d) " +
-									"for resource with ID %5$s in project \"%6$s\"",
+									"for document with ID %5$s in project \"%6$s\"",
 							reply.getUuid(),
 							reply.getId(),
 							comment.getUuid(),
 							comment.getIid(),
-							resourceId,
+							documentId,
 							projectReference.getName()
 					),
 					e
 			);
 		}
 	}
-	
+
 	@Override
 	public void removeReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
-		String resourceId = comment.getDocumentId();
-		
-		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
+		String documentId = comment.getDocumentId();
 
-		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-		
-		
 		try {
+			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			notesApi.deleteIssueNote(projectPath, comment.getIid(), reply.getId());
+
 			comment.removeReply(reply);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
 							"Failed to delete reply with ID %1$s (note ID %2$d) from comment with ID %3$s (issue IID %4$d) " +
-									"for resource with ID %5$s in project \"%6$s\"",
+									"for document with ID %5$s in project \"%6$s\"",
 							reply.getUuid(),
 							reply.getId(),
 							comment.getUuid(),
 							comment.getIid(),
-							resourceId,
+							documentId,
 							projectReference.getName()
 					),
 					e
 			);
 		}
-		
 	}
-	
+
 	@Override
 	public List<Reply> getCommentReplies(ProjectReference projectReference, Comment comment) throws IOException {
-		String resourceId = comment.getDocumentId();
-		
-		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
+		String documentId = comment.getDocumentId();
 
-		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-		List<Reply> result = new ArrayList<Reply>();
 		try {
-			
+			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+
+			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			List<Note> notes = notesApi.getIssueNotes(projectPath, comment.getIid());
-			
+
+			List<Reply> replies = new ArrayList<>();
+
 			for (Note note : notes.stream().filter(n -> !n.getSystem()).collect(Collectors.toList())) { // filter system notes
+				Reply reply;
 				String noteBody = note.getBody();
-				Reply reply = null;
+
 				try {
 					reply = new SerializationHelper<Reply>().deserialize(noteBody, Reply.class);
-					reply.setCommentUuid(comment.getUuid());
-					reply.setId(note.getId());
-					reply.setUserId(note.getAuthor().getId());
-					reply.setUsername(note.getAuthor().getName());
 				}
 				catch (Exception e) {
 					logger.log(
 							Level.SEVERE,
-							String.format("Failed to deserialize reply from note with ID %d and body %s", note.getId(), noteBody),
+							String.format(
+									"Failed to deserialize reply from note with ID %1$d on comment with ID %2$s (issue IID %3$d) in project \"%4$s\". " +
+											"The note body was: %5$s",
+									note.getId(),
+									comment.getUuid(),
+									comment.getIid(),
+									projectReference.getName(),
+									noteBody
+							),
 							e
 					);
-					IDGenerator idGenerator = new IDGenerator();
-					
-					reply = new Reply(
-						idGenerator.generate(), 
-						noteBody, note.getAuthor().getUsername(), 
-						note.getAuthor().getId(), 
-						comment.getUuid(), 
-						note.getId());
+					continue;
 				}
-				
-				result.add(reply);
+
+				reply.setCommentUuid(comment.getUuid());
+				reply.setId(note.getId());
+				reply.setUserId(note.getAuthor().getId());
+				reply.setUsername(note.getAuthor().getName()); // TODO: if we're using the public name it shouldn't be called 'username' on the Reply class
+
+				replies.add(reply);
 			}
-			comment.setReplies(result);
-			
-			return result;
-		} catch (GitLabApiException e) {
+
+			comment.setReplies(replies);
+
+			return replies;
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-							"Failed to retrieve replies to comment with ID %1$s (issue IID %2$d) for resource with ID %3$s in project \"%4$s\"",
+							"Failed to retrieve replies to comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
 							comment.getUuid(),
 							comment.getIid(),
-							resourceId,
+							documentId,
 							projectReference.getName()
 					),
 					e
 			);
 		}
 	}
-	
+
 	@Override
 	public MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException {
 		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();

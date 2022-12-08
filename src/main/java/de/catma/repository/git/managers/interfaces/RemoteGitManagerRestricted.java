@@ -128,7 +128,7 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 
 	void addComment(ProjectReference projectReference, Comment comment) throws IOException;
 
-	List<Comment> getComments(ProjectReference projectReference, String resourceId) throws IOException;
+	List<Comment> getComments(ProjectReference projectReference, String documentId) throws IOException;
 
 	void removeComment(ProjectReference projectReference, Comment comment) throws IOException;
 	
