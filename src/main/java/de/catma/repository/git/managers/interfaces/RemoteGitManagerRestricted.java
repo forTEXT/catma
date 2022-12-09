@@ -16,31 +16,21 @@ import java.util.Set;
  */
 public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitUserInformationProvider {
 	/**
-	 * Creates a new remote repository in the current user's namespace.
+	 * Gets the user for the current session.
 	 *
-	 * @param name the name of the repository
-	 * @param description the description of the repository
-	 * @return the repository URL
-	 * @throws IOException if an error occurs when creating the remote repository
+	 * @return a {@link User}
 	 */
-	String createRepository(String name, String description) throws IOException;
+	User getUser();
 
 	/**
-	 * Deletes an existing remote repository.
+	 * Searches for users based on username or email address.
 	 *
-	 * @param projectReference a {@link ProjectReference} indicating the repository to delete
-	 * @throws IOException if an error occurs when deleting the remote repository
+	 * @param usernameOrEmail complete or partial username or email address to search for
+	 * @return a {@link List} of matching {@link User}s
+	 * @throws IOException if an error occurs when searching for users
 	 */
-	void deleteRepository(ProjectReference projectReference) throws IOException;
+	List<User> findUser(String usernameOrEmail) throws IOException;
 
-	/**
-	 * Gets a set of all project members.
-	 *
-	 * @param projectReference a {@link ProjectReference} indicating the project whose members should be fetched
-	 * @return a {@link Set} of {@link Member}s
-	 * @throws IOException if an error occurs when getting the project members
-	 */
-	Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException;
 
 	/**
 	 * Gets all projects the current user has access to.
@@ -60,29 +50,24 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException;
 
 	/**
-	 * Gets the user for the current session.
+	 * Gets a set of all project members.
 	 *
-	 * @return a {@link User}
+	 * @param projectReference a {@link ProjectReference} indicating the project whose members should be fetched
+	 * @return a {@link Set} of {@link Member}s
+	 * @throws IOException if an error occurs when getting the project members
 	 */
-	User getUser();
+	Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException;
+
 
 	/**
-	 * Searches for users based on username or email address.
+	 * Creates a new remote repository in the current user's namespace.
 	 *
-	 * @param usernameOrEmail complete or partial username or email address to search for
-	 * @return a {@link List} of matching {@link User}s
-	 * @throws IOException if an error occurs when searching for users
+	 * @param name the name of the repository
+	 * @param description the description of the repository
+	 * @return the repository URL
+	 * @throws IOException if an error occurs when creating the remote repository
 	 */
-	List<User> findUser(String usernameOrEmail) throws IOException;
-
-	/**
-	 * Removes the current user from a project.
-	 *
-	 * @param namespace the namespace of the project repository
-	 * @param projectId the ID of the project repository
-	 * @throws IOException if an error occurs when removing the user from the project
-	 */
-	void leaveProject(String namespace, String projectId) throws IOException;
+	String createRepository(String name, String description) throws IOException;
 
 	/**
 	 * Updates the description of a project.
@@ -95,13 +80,22 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	void updateProject(String namespace, String projectId, String description) throws IOException;
 
 	/**
-	 * Adds a comment to a project.
+	 * Removes the current user from a project.
 	 *
-	 * @param projectReference a {@link ProjectReference} indicating the project to add the comment to
-	 * @param comment the {@link Comment} to add
-	 * @throws IOException if an error occurs when adding the comment
+	 * @param namespace the namespace of the project repository
+	 * @param projectId the ID of the project repository
+	 * @throws IOException if an error occurs when removing the user from the project
 	 */
-	void addComment(ProjectReference projectReference, Comment comment) throws IOException;
+	void leaveProject(String namespace, String projectId) throws IOException;
+
+	/**
+	 * Deletes an existing remote repository.
+	 *
+	 * @param projectReference a {@link ProjectReference} indicating the repository to delete
+	 * @throws IOException if an error occurs when deleting the remote repository
+	 */
+	void deleteRepository(ProjectReference projectReference) throws IOException;
+
 
 	/**
 	 * Gets the comments for a particular document in a project.
@@ -114,13 +108,13 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	List<Comment> getComments(ProjectReference projectReference, String documentId) throws IOException;
 
 	/**
-	 * Removes a comment from a project.
+	 * Adds a comment to a project.
 	 *
-	 * @param projectReference a {@link ProjectReference} indicating the project to remove the comment from
-	 * @param comment the {@link Comment} to remove
-	 * @throws IOException if an error occurs when removing the comment
+	 * @param projectReference a {@link ProjectReference} indicating the project to add the comment to
+	 * @param comment the {@link Comment} to add
+	 * @throws IOException if an error occurs when adding the comment
 	 */
-	void removeComment(ProjectReference projectReference, Comment comment) throws IOException;
+	void addComment(ProjectReference projectReference, Comment comment) throws IOException;
 
 	/**
 	 * Updates an existing comment in a project.
@@ -132,14 +126,13 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	void updateComment(ProjectReference projectReference, Comment comment) throws IOException;
 
 	/**
-	 * Adds a new reply to an existing comment.
+	 * Removes a comment from a project.
 	 *
-	 * @param projectReference a {@link ProjectReference} indicating the project to add the comment reply to
-	 * @param comment the {@link Comment} being replied to
-	 * @param reply the {@link Reply} to add
-	 * @throws IOException if an error occurs when adding the reply
+	 * @param projectReference a {@link ProjectReference} indicating the project to remove the comment from
+	 * @param comment the {@link Comment} to remove
+	 * @throws IOException if an error occurs when removing the comment
 	 */
-	void addReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
+	void removeComment(ProjectReference projectReference, Comment comment) throws IOException;
 
 	/**
 	 * Gets the replies for an existing comment.
@@ -152,14 +145,14 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	List<Reply> getCommentReplies(ProjectReference projectReference, Comment comment) throws IOException;
 
 	/**
-	 * Removes a reply from a comment.
+	 * Adds a new reply to an existing comment.
 	 *
-	 * @param projectReference a {@link ProjectReference} indicating the project to remove the comment reply from
-	 * @param comment the {@link Comment} to remove the reply from
-	 * @param reply the {@link Reply} to remove
-	 * @throws IOException if an error occurs when removing the reply
+	 * @param projectReference a {@link ProjectReference} indicating the project to add the comment reply to
+	 * @param comment the {@link Comment} being replied to
+	 * @param reply the {@link Reply} to add
+	 * @throws IOException if an error occurs when adding the reply
 	 */
-	void removeReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
+	void addReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
 
 	/**
 	 * Updates an existing comment reply.
@@ -172,6 +165,17 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	void updateReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
 
 	/**
+	 * Removes a reply from a comment.
+	 *
+	 * @param projectReference a {@link ProjectReference} indicating the project to remove the comment reply from
+	 * @param comment the {@link Comment} to remove the reply from
+	 * @param reply the {@link Reply} to remove
+	 * @throws IOException if an error occurs when removing the reply
+	 */
+	void removeReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException;
+
+
+	/**
 	 * Gets the open merge requests for a project.
 	 *
 	 * @param projectReference a {@link ProjectReference} indicating the project whose merge requests should be fetched
@@ -181,13 +185,14 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException;
 
 	/**
-	 * Merges an existing merge request for a project.
+	 * Gets a particular merge request for a project.
 	 *
-	 * @param mergeRequestInfo a {@link MergeRequestInfo} indicating the merge request to be merged
-	 * @return a new {@link MergeRequestInfo} containing the result
-	 * @throws IOException if an error occurs when merging the merge request
+	 * @param projectReference a {@link ProjectReference} indicating the project to fetch the merge request from
+	 * @param mergeRequestIid the project-internal ID of the merge request to fetch
+	 * @return a {@link MergeRequestInfo}
+	 * @throws IOException if an error occurs when fetching the merge request
 	 */
-	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
+	MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException;
 
 	/**
 	 * Creates a new merge request for a project.
@@ -201,12 +206,11 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	MergeRequestInfo createMergeRequest(ProjectReference projectReference) throws IOException;
 
 	/**
-	 * Gets a particular merge request for a project.
+	 * Merges an existing merge request for a project.
 	 *
-	 * @param projectReference a {@link ProjectReference} indicating the project to fetch the merge request from
-	 * @param mergeRequestIid the project-internal ID of the merge request to fetch
-	 * @return a {@link MergeRequestInfo}
-	 * @throws IOException if an error occurs when fetching the merge request
+	 * @param mergeRequestInfo a {@link MergeRequestInfo} indicating the merge request to be merged
+	 * @return a new {@link MergeRequestInfo} containing the result
+	 * @throws IOException if an error occurs when merging the merge request
 	 */
-	MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException;
+	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
 }
