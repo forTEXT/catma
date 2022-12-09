@@ -18,7 +18,8 @@ import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.ui.events.ChangeUserAttributeEvent;
+import de.catma.ui.events.ChangeUserAttributesEvent;
+import de.catma.user.Member;
 import de.catma.user.User;
 import org.eclipse.jgit.lib.Constants;
 import org.gitlab4j.api.Constants.IssueState;
@@ -76,6 +77,20 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 	}
 
+
+	// event handlers
+	@Subscribe
+	public void handleChangeUserAttributes(ChangeUserAttributesEvent event){
+		try {
+			user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
+		}
+		catch (GitLabApiException e) {
+			logger.log(Level.WARNING, "Failed to fetch user from backend", e);
+		}
+	}
+
+
+	// GitlabManagerCommon implementations
 	@Override
 	public Logger getLogger() {
 		return logger;
@@ -86,30 +101,25 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		return restrictedGitLabApi;
 	}
 
-	@Subscribe
-	public void handleChangeUserAttributes(ChangeUserAttributeEvent event){
-		try {
-			this.user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
-		} catch (GitLabApiException e) {
-			logger.log(Level.WARNING, "Can't fetch user from backend", e);
-		}
-	}
 
+	// RemoteGitManagerCommon implementations
 	@Override
 	public boolean existsUserOrEmail(String usernameOrEmail) throws IOException {
 		try {
-			List<org.gitlab4j.api.models.User> userPager = this.restrictedGitLabApi.getUserApi().findUsers(usernameOrEmail);
+			List<org.gitlab4j.api.models.User> users = restrictedGitLabApi.getUserApi().findUsers(usernameOrEmail);
 
-			return userPager.stream()
-					.filter(u -> usernameOrEmail.equals(u.getUsername()) || usernameOrEmail.equals(u.getEmail()))
-					.filter(u -> user.getUserId() != u.getId())
-					.count() > 0;
-
-		} catch(GitLabApiException e){
-			throw new IOException("Failed to check whether user exists",e);
+			return users.stream()
+					// exclude current user, exact matches only
+					.filter(gitlabUser -> !gitlabUser.getId().equals(user.getUserId()))
+					.anyMatch(gitlabUser -> gitlabUser.getUsername().equals(usernameOrEmail) || gitlabUser.getEmail().equals(usernameOrEmail));
+		}
+		catch (GitLabApiException e){
+			throw new IOException("Failed to check whether user exists", e);
 		}
 	}
 
+
+	// GitUserInformationProvider implementations
 	@Override
 	public String getUsername() {
 		return user.getIdentifier();
@@ -125,6 +135,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		return user.getEmail();
 	}
 
+
+	// RemoteGitManagerRestricted implementations
 	@Override
 	public User getUser() {
 		return user;
@@ -132,63 +144,75 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public List<User> findUser(String usernameOrEmail) throws IOException {
+		// only search with 3 or more characters
+		if (usernameOrEmail == null || usernameOrEmail.length() < 3) {
+			return Collections.emptyList();
+		}
+
 		try {
-			List<org.gitlab4j.api.models.User> userPager;
-
-			if(usernameOrEmail.isEmpty() || usernameOrEmail.length() < 3) {
-				return Collections.emptyList();
-			} else {
-				userPager = this.restrictedGitLabApi.getUserApi()
-						.findUsers(usernameOrEmail);
-			}
-			return userPager.stream()
-					.filter(u -> ! user.getUserId().equals(u.getId()))
-					.map(u -> new GitUser(u))
+			List<org.gitlab4j.api.models.User> users = restrictedGitLabApi.getUserApi().findUsers(usernameOrEmail);
+			return users.stream()
+					.filter(gitlabUser -> !gitlabUser.getId().equals(user.getUserId())) // exclude current user
+					.map(GitUser::new)
 					.collect(Collectors.toList());
-
-		} catch(GitLabApiException e){
-			throw new IOException("Failed to search for users",e);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to search for users", e);
 		}
 	}
 
 
-	private ProjectReference unmarshallProjectReference(
-			String namespace, String path, String eventuallyMarshalledMetadata) {
-		String name = "unknown";
-		String description = "unknown";
+	private ProjectReference getProjectReference(String namespace, String path, String description) throws IOException {
 		try {
-			JsonObject metaDataJson = JsonParser.parseString(eventuallyMarshalledMetadata).getAsJsonObject();
-
-			name = metaDataJson.get(ProjectMetadataSerializationField.name.name()).getAsString();
-			description = metaDataJson.get(ProjectMetadataSerializationField.description.name()).getAsString();
+			JsonObject metaDataJson = JsonParser.parseString(description).getAsJsonObject();
+			String catmaProjectName = metaDataJson.get(ProjectMetadataSerializationField.name.name()).getAsString();
+			String catmaProjectDescription = metaDataJson.get(ProjectMetadataSerializationField.description.name()).getAsString();
+			return new ProjectReference(path, namespace, catmaProjectName, catmaProjectDescription);
 		}
 		catch (Exception e) {
-			logger.log(
-					Level.WARNING,
+			// while we could still return a ProjectReference with placeholder name and description, we probably want to investigate what
+			// happened to this project before allowing the user to open it again (as it was likely modified externally)
+			throw new IOException(
 					String.format(
-							"Error retrieving project name or description for %1$s from %2$s",
-							path,
-							eventuallyMarshalledMetadata),
-					e);
+							"Failed to deserialize project metadata for GitLab project %s. The GitLab project description was: %s",
+							namespace + "/" + path,
+							description
+					),
+					e
+			);
 		}
-		return new ProjectReference(path, namespace, name, description);
 	}
 
 	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
-		ProjectApi projectApi = new ProjectApi(restrictedGitLabApi);
-
 		try {
-			return projectsCache.get("projects", () ->
-					projectApi.getProjects(
-									new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true)
-							)
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+
+			return projectsCache.get(
+					"projects",
+					() -> projectApi.getProjects(new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true))
 							.stream()
 							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
-							.map(project -> unmarshallProjectReference(
-									project.getNamespace().getPath(),
-									project.getPath(),
-									project.getDescription()
-							))
+							.map(project -> {
+								try {
+									return getProjectReference(
+											project.getNamespace().getPath(),
+											project.getPath(),
+											project.getDescription()
+									);
+								}
+								catch (IOException e) {
+									logger.log(
+											Level.WARNING,
+											String.format(
+													"Failed to get ProjectReference for GitLab project %s. The user won't be able to open this project.",
+													project.getNamespace().getPath() + "/" + project.getPath()
+											),
+											e
+									);
+									return null;
+								}
+							})
+							.filter(Objects::nonNull)
 							.collect(Collectors.toList())
 			);
 		}
@@ -208,24 +232,28 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 			Project project = projectApi.getProject(
 					projectReference.getNamespace(),
-					projectReference.getProjectId());
+					projectReference.getProjectId()
+			);
 
 			return GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
-					String.format("Failed to get repository URL for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()),
+					String.format(
+							"Failed to get repository URL for project \"%s\" with ID %s",
+							projectReference.getName(),
+							projectReference.getProjectId()
+					),
 					e
 			);
 		}
 	}
 
 	@Override
-	public Set<de.catma.user.Member> getProjectMembers(ProjectReference projectReference) throws IOException {
+	public Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project project = projectApi.getProject(projectReference.getNamespace(), projectReference.getProjectId());
-			return projectApi.getMembers(project.getId())
+			return projectApi.getMembers(projectReference.getFullPath())
 					.stream()
 					.map(GitMember::new)
 					.collect(Collectors.toSet());
@@ -238,9 +266,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public String createProject(String name, String description) throws IOException {
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
 		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+
 			Project project = new Project();
 			project.setName(name);
 			project.setDescription(description);
@@ -258,41 +286,39 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	public void updateProjectDescription(String namespace, String projectId, String description) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project project= projectApi.getProject(namespace, projectId);
+			Project project = projectApi.getProject(namespace, projectId);
 			project.setDescription(description);
 			projectApi.updateProject(project);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(
-					"Failed to update project description", e
-			);
+			throw new IOException("Failed to update project description", e);
 		}
 	}
 
 	@Override
 	public void leaveProject(String namespace, String projectId) throws IOException {
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 			Project project = projectApi.getProject(namespace, projectId);
-			Member member = projectApi.getMember(project.getId(), user.getUserId());
+			org.gitlab4j.api.models.Member member = projectApi.getMember(project.getId(), user.getUserId());
+
 			if (member != null
 					&& member.getAccessLevel().value >= AccessLevel.GUEST.value
-					&& member.getAccessLevel().value < AccessLevel.OWNER.value) {
+					&& member.getAccessLevel().value < AccessLevel.OWNER.value
+			) {
 				projectApi.removeMember(project.getId(), user.getUserId());
 			}
-		} catch  (GitLabApiException ge){
-			throw new IOException("Couldn't leave project",ge);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to leave project", e);
 		}
 	}
 
 	@Override
 	public void deleteProject(ProjectReference projectReference) throws IOException {
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
 		try {
-			Project project= projectApi.getProject(projectReference.getNamespace(), projectReference.getProjectId());
-
-			projectApi.deleteProject(project);
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			projectApi.deleteProject(projectReference.getFullPath());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to delete remote Git repository", e);
@@ -305,9 +331,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		try {
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			Pager<Issue> issuePager = issuesApi.getIssues(
-					projectPath,
+					projectReference.getFullPath(),
 					new IssueFilter()
 							.withLabels(Arrays.asList(CATMA_COMMENT_LABEL, documentId))
 							.withState(IssueState.OPENED),
@@ -353,7 +378,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-							"Failed to retrieve comments for document with ID %s in project \"%s\"",
+							"Failed to fetch comments for document with ID %s in project \"%s\"",
 							documentId,
 							projectReference.getName()
 					),
@@ -369,7 +394,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		try {
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			String title = comment.getBody().substring(0, Math.min(97, comment.getBody().length()));
 			if (title.length() < comment.getBody().length()) {
 				title += "...";
@@ -377,7 +401,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			String description = new SerializationHelper<Comment>().serialize(comment);
 
 			Issue issue = issuesApi.createIssue(
-					projectPath,
+					projectReference.getFullPath(),
 					title,
 					description,
 					null,
@@ -412,7 +436,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		try {
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			String title = comment.getBody().substring(0, Math.min(97, comment.getBody().length()));
 			if (title.length() < comment.getBody().length()) {
 				title += "...";
@@ -420,7 +443,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			String description = new SerializationHelper<Comment>().serialize(comment);
 
 			issuesApi.updateIssue(
-					projectPath,
+					projectReference.getFullPath(),
 					comment.getIid(),
 					title,
 					description,
@@ -449,13 +472,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public void removeComment(ProjectReference projectReference, Comment comment) throws IOException {
-		String documentId = comment.getDocumentId();
-
 		try {
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
-			issuesApi.closeIssue(projectPath, comment.getIid());
+			issuesApi.closeIssue(projectReference.getFullPath(), comment.getIid());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -463,7 +482,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 							"Failed to delete comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
 							comment.getUuid(),
 							comment.getIid(),
-							documentId,
+							comment.getDocumentId(),
 							projectReference.getName()
 					),
 					e
@@ -473,13 +492,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public List<Reply> getCommentReplies(ProjectReference projectReference, Comment comment) throws IOException {
-		String documentId = comment.getDocumentId();
-
 		try {
 			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
-			List<Note> notes = notesApi.getIssueNotes(projectPath, comment.getIid());
+			List<Note> notes = notesApi.getIssueNotes(projectReference.getFullPath(), comment.getIid());
 
 			List<Reply> replies = new ArrayList<>();
 
@@ -522,10 +537,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
-							"Failed to retrieve replies to comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
+							"Failed to fetch replies to comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
 							comment.getUuid(),
 							comment.getIid(),
-							documentId,
+							comment.getDocumentId(),
 							projectReference.getName()
 					),
 					e
@@ -535,14 +550,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public void addReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
-		String documentId = comment.getDocumentId();
-
 		try {
 			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
 
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
-			Note note = notesApi.createIssueNote(projectPath, comment.getIid(), noteBody);
+			Note note = notesApi.createIssueNote(projectReference.getFullPath(), comment.getIid(), noteBody);
 
 			reply.setId(note.getId());
 			comment.addReply(reply);
@@ -553,7 +565,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 							"Failed to create reply to comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
 							comment.getUuid(),
 							comment.getIid(),
-							documentId,
+							comment.getDocumentId(),
 							projectReference.getName()
 					),
 					e
@@ -563,14 +575,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public void updateReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
-		String documentId = comment.getDocumentId();
-
 		try {
 			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
 
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
-			notesApi.updateIssueNote(projectPath, comment.getIid(), reply.getId(), noteBody);
+			notesApi.updateIssueNote(projectReference.getFullPath(), comment.getIid(), reply.getId(), noteBody);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -581,7 +590,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 							reply.getId(),
 							comment.getUuid(),
 							comment.getIid(),
-							documentId,
+							comment.getDocumentId(),
 							projectReference.getName()
 					),
 					e
@@ -591,13 +600,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public void removeReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
-		String documentId = comment.getDocumentId();
-
 		try {
 			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-
-			String projectPath = String.format("%s/%s", projectReference.getNamespace(), projectReference.getProjectId());
-			notesApi.deleteIssueNote(projectPath, comment.getIid(), reply.getId());
+			notesApi.deleteIssueNote(projectReference.getFullPath(), comment.getIid(), reply.getId());
 
 			comment.removeReply(reply);
 		}
@@ -610,7 +615,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 							reply.getId(),
 							comment.getUuid(),
 							comment.getIid(),
-							documentId,
+							comment.getDocumentId(),
 							projectReference.getName()
 					),
 					e
@@ -621,32 +626,35 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException {
-		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
 		try {
-			MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
+
 			MergeRequestFilter filter = new MergeRequestFilter();
+			filter.setProjectId(gitlabProjectId);
 			filter.setSourceBranch(user.getIdentifier());
 			filter.setTargetBranch(Constants.MASTER);
 			filter.setState(MergeRequestState.OPENED);
 
-			Long glProjectId = projectApi.getProject(projectPath).getId();
-			filter.setProjectId(glProjectId);
-			List<MergeRequest> mergeRequests = api.getMergeRequests(filter);
+			MergeRequestApi mergeRequestApi = restrictedGitLabApi.getMergeRequestApi();
+			List<MergeRequest> mergeRequests = mergeRequestApi.getMergeRequests(filter);
 
-			return mergeRequests.stream().map(
+			return mergeRequests.stream()
+					.map(
 							mr -> new MergeRequestInfo(
-									mr.getIid(), mr.getTitle(),
+									mr.getIid(),
+									mr.getTitle(),
 									mr.getDescription(),
 									mr.getCreatedAt(),
 									mr.getState(),
 									mr.getMergeStatus(),
-									glProjectId))
-					.sorted((mr1, mr2) -> mr1.getCreatedAt().compareTo(mr2.getCreatedAt()))
+									gitlabProjectId
+							)
+					)
+					.sorted(Comparator.comparing(MergeRequestInfo::getCreatedAt))
 					.collect(Collectors.toList());
-
-		} catch (GitLabApiException e) {
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
 							"Failed to retrieve open merge requests for project \"%s\" and user \"%s\"",
@@ -660,21 +668,24 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException {
-		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
 		try {
-			MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
-			Long glProjectId = projectApi.getProject(projectPath).getId();
-			MergeRequest mr = api.getMergeRequest(glProjectId, mergeRequestIid);
-			return new MergeRequestInfo(
-					mr.getIid(),
-					mr.getTitle(), mr.getDescription(),
-					mr.getCreatedAt(),
-					mr.getState(), mr.getMergeStatus(),
-					glProjectId);
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
 
-		} catch (GitLabApiException e) {
+			MergeRequestApi mergeRequestApi = restrictedGitLabApi.getMergeRequestApi();
+			MergeRequest mergeRequest = mergeRequestApi.getMergeRequest(gitlabProjectId, mergeRequestIid);
+
+			return new MergeRequestInfo(
+					mergeRequest.getIid(),
+					mergeRequest.getTitle(),
+					mergeRequest.getDescription(),
+					mergeRequest.getCreatedAt(),
+					mergeRequest.getState(),
+					mergeRequest.getMergeStatus(),
+					gitlabProjectId
+			);
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
 							"Failed to retrieve merge request with IID %d for project \"%s\"",
@@ -684,20 +695,17 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					e
 			);
 		}
-
 	}
 
 	@Override
 	public MergeRequestInfo createMergeRequest(ProjectReference projectReference) throws IOException {
-		String projectPath = projectReference.getNamespace() + "/" + projectReference.getProjectId();
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
 		try {
-			MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
-			Long glProjectId = projectApi.getProject(projectPath).getId();
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
 
-			MergeRequest mr = api.createMergeRequest(
-					glProjectId,
+			MergeRequestApi mergeRequestApi = restrictedGitLabApi.getMergeRequestApi();
+			MergeRequest mergeRequest = mergeRequestApi.createMergeRequest(
+					gitlabProjectId,
 					user.getIdentifier(),
 					Constants.MASTER,
 					String.format("Integration of latest changes by %s (%s)", user.getName(), user.getIdentifier()),
@@ -706,17 +714,20 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					null,
 					null,
 					null,
-					false); // do not remove source branch
+					false // do not remove source branch
+			);
 
 			return new MergeRequestInfo(
-					mr.getIid(), mr.getTitle(),
-					mr.getDescription(),
-					mr.getCreatedAt(),
-					mr.getState(),
-					mr.getMergeStatus(),
-					glProjectId);
-
-		} catch (GitLabApiException e) {
+					mergeRequest.getIid(),
+					mergeRequest.getTitle(),
+					mergeRequest.getDescription(),
+					mergeRequest.getCreatedAt(),
+					mergeRequest.getState(),
+					mergeRequest.getMergeStatus(),
+					gitlabProjectId
+			);
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
 							"Failed to create merge request for project \"%s\" and user \"%s\"",
@@ -726,24 +737,28 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					e
 			);
 		}
-
 	}
 
 	@Override
 	public MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException {
-		MergeRequestApi api = restrictedGitLabApi.getMergeRequestApi();
 		try {
-			MergeRequest result = api.acceptMergeRequest(
-					mergeRequestInfo.getGlProjectId(), mergeRequestInfo.getIid());
+			MergeRequestApi mergeRequestApi = restrictedGitLabApi.getMergeRequestApi();
+			MergeRequest result = mergeRequestApi.acceptMergeRequest(
+					mergeRequestInfo.getGlProjectId(),
+					mergeRequestInfo.getIid()
+			);
+
 			return new MergeRequestInfo(
-					result.getIid(), result.getTitle(),
+					result.getIid(),
+					result.getTitle(),
 					result.getDescription(),
 					result.getCreatedAt(),
 					result.getState(),
 					result.getMergeStatus(),
-					mergeRequestInfo.getGlProjectId());
-
-		} catch (GitLabApiException e) {
+					mergeRequestInfo.getGlProjectId()
+			);
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format(
 							"Failed to merge merge request with IID %1$d for GitLab project ID %2$d and user \"%3$s\"",
@@ -754,6 +769,5 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					e
 			);
 		}
-
 	}
 }

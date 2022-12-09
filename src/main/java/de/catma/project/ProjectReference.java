@@ -45,6 +45,10 @@ public class ProjectReference {
 		return namespace;
 	}
 
+	public String getFullPath() {
+		return String.format("%s/%s", namespace, projectId);
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

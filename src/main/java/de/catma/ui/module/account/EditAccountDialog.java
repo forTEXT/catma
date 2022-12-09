@@ -8,7 +8,7 @@ import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
-import de.catma.ui.events.ChangeUserAttributeEvent;
+import de.catma.ui.events.ChangeUserAttributesEvent;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.auth.ChangePasswordValidator;
@@ -76,7 +76,7 @@ public class EditAccountDialog extends Window {
 				gitManagerPrivileged.modifyUserAttributes(userId,
 						userData.getName(), userData.getPassword().isEmpty()? null : userData.getPassword());
 				
-				eventBus.post(new ChangeUserAttributeEvent());
+				eventBus.post(new ChangeUserAttributesEvent());
 				Notification.show("Profile modification successful", Type.TRAY_NOTIFICATION);
 				
 			} catch (IOException e) {
