@@ -424,12 +424,10 @@ public interface Project {
 	 * Searches for users amongst all available users.
 	 *
 	 * @param usernameOrEmail the partial or complete username or email address to search for
-	 * @param offset the query offset (see {@link com.vaadin.data.provider.Query}
-	 * @param limit the query limit (see {@link com.vaadin.data.provider.Query}
 	 * @return a {@link List} of {@link User}s
 	 * @throws IOException if an error occurs when searching
 	 */
-	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
+	List<User> findUser(String usernameOrEmail) throws IOException;
 
 	/**
 	 * Whether the given role has the given permission.

@@ -24,6 +24,7 @@ public class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
 	private final RBACAssignmentFunction rbacAssignmentFunction;
 	private final QueryFunction<User> userQueryFunction;
 
+	// TODO: the way the user search is implemented here causes the userQueryFunction to be called way more often than needed, fix
 	private final LoadingCache<Query<User,String>, List<User>> users = CacheBuilder.newBuilder()
 			.maximumSize(1000)
 			.expireAfterWrite(10, TimeUnit.MINUTES)

@@ -219,7 +219,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 	
 	@Override
-	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
+	public List<User> findUser(String usernameOrEmail) throws IOException {
 		try {
 			List<org.gitlab4j.api.models.User> userPager;
 			
@@ -227,7 +227,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 				return Collections.emptyList();
 			} else {
 				userPager = this.restrictedGitLabApi.getUserApi()
-						.findUsers(usernameOrEmail,offset, limit);
+						.findUsers(usernameOrEmail);
 			}
 			return userPager.stream()
 			.filter(u -> ! user.getUserId().equals(u.getId()))

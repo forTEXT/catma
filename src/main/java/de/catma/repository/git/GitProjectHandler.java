@@ -692,8 +692,8 @@ public class GitProjectHandler {
 		return remoteGitServerManager.getProjectMembers(projectReference);
 	}
 
-	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
-		return remoteGitServerManager.findUser(usernameOrEmail, offset, limit);
+	public List<User> findUser(String usernameOrEmail) throws IOException {
+		return remoteGitServerManager.findUser(usernameOrEmail);
 	}
 
 	public boolean hasPermission(RBACRole role, RBACPermission permission) {

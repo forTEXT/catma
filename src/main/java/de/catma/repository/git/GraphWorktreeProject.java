@@ -1640,8 +1640,8 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	// member, role and permissions related things
 	@Override
-	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
-		return gitProjectHandler.findUser(usernameOrEmail, offset, limit);
+	public List<User> findUser(String usernameOrEmail) throws IOException {
+		return gitProjectHandler.findUser(usernameOrEmail);
 	}
 
 	@Override

@@ -73,7 +73,7 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @return a {@link List} of matching {@link User}s
 	 * @throws IOException if an error occurs when searching for users
 	 */
-	List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException;
+	List<User> findUser(String usernameOrEmail) throws IOException;
 
 	/**
 	 * Removes the current user from a project.

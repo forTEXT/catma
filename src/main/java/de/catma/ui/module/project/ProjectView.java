@@ -1702,7 +1702,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         addContextMenu.addItem("Add Member", (click) -> 
         	new AddMemberDialog(
         		project::assignRoleToSubject,
-        		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : "", query.getOffset(), query.getLimit()), //$NON-NLS-1$
+        		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : ""), //$NON-NLS-1$
         		(evt) -> eventBus.post(new MembersChangedEvent())
         		).show());
         
