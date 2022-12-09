@@ -79,7 +79,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@Override
-	public CreateRepositoryResponse createRepository(String name, String description) throws IOException {
+	public String createRepository(String name, String description) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
 		try {
@@ -87,13 +87,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			project.setName(name);
 			project.setDescription(description);
 			project.setRemoveSourceBranchAfterMerge(false);
-
 			project = projectApi.createProject(project);
-			return new CreateRepositoryResponse(
-					null,
-					project.getId(),
-					GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
-			);
+
+			return GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to create remote Git repository", e);

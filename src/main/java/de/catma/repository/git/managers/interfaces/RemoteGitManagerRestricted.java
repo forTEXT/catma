@@ -12,7 +12,6 @@ import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
-import de.catma.repository.git.managers.CreateRepositoryResponse;
 import de.catma.user.Member;
 import de.catma.user.User;
 
@@ -34,7 +33,7 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if something went wrong while creating the remote
 	 *         repository
 	 */
-	CreateRepositoryResponse createRepository(String name, String description) throws IOException;
+	String createRepository(String name, String description) throws IOException;
 
 	/**
 	 * Deletes an existing remote repository identified by <code>repositoryId</code>.

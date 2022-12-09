@@ -79,7 +79,7 @@ public class GitProjectsManager implements ProjectsManager {
 
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// create the remote repository
-			CreateRepositoryResponse response = remoteGitServerManager.createRepository(
+			String repositoryUrl = remoteGitServerManager.createRepository(
 					projectId, serializedProjectMetadata
 			);
 
@@ -87,7 +87,7 @@ public class GitProjectsManager implements ProjectsManager {
 			localGitRepoManager.clone(
 					user.getIdentifier(),
 					projectId,
-					response.repositoryHttpUrl,
+					repositoryUrl,
 					credentialsProvider
 			);
 
