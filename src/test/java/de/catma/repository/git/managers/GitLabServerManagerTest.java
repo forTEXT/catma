@@ -65,7 +65,7 @@ public class GitLabServerManagerTest {
 
 		if (repositoriesToDeleteOnTearDown.size() > 0) {
 			for (ProjectReference projectRef : repositoriesToDeleteOnTearDown) {
-				gitlabManagerRestricted.deleteRepository(projectRef);
+				gitlabManagerRestricted.deleteProject(projectRef);
 				await().until(() -> projectApi.getProjects().isEmpty());
 			}
 		}

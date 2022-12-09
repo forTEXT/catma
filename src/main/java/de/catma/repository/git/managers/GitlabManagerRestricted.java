@@ -237,7 +237,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 
 	@Override
-	public String createRepository(String name, String description) throws IOException {
+	public String createProject(String name, String description) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
 		try {
@@ -255,7 +255,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@Override
-	public void updateProject(String namespace, String projectId, String description) throws IOException {
+	public void updateProjectDescription(String namespace, String projectId, String description) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 			Project project= projectApi.getProject(namespace, projectId);
@@ -286,7 +286,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@Override
-	public void deleteRepository(ProjectReference projectReference) throws IOException {
+	public void deleteProject(ProjectReference projectReference) throws IOException {
 		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
 		try {

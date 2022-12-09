@@ -109,7 +109,7 @@ public class GitSourceDocumentHandlerTest {
 				List<Project> projects = gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(sourceDocumentId);
 
 				for (Project project : projects) {
-					gitlabManagerRestricted.deleteRepository(
+					gitlabManagerRestricted.deleteProject(
 							new ProjectReference(
 									project.getName(), 
 									project.getNamespace().getName(), 

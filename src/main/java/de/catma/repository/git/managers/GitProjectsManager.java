@@ -79,7 +79,7 @@ public class GitProjectsManager implements ProjectsManager {
 
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// create the remote repository
-			String repositoryUrl = remoteGitServerManager.createRepository(
+			String repositoryUrl = remoteGitServerManager.createProject(
 					projectId, serializedProjectMetadata
 			);
 
@@ -160,7 +160,7 @@ public class GitProjectsManager implements ProjectsManager {
 		String serializedProjectMetadata = serializeProjectMetadata(
 				projectReference.getName(), projectReference.getDescription()
 		);
-		remoteGitServerManager.updateProject(
+		remoteGitServerManager.updateProjectDescription(
 				projectReference.getNamespace(),
 				projectReference.getProjectId(),
 				serializedProjectMetadata
@@ -233,7 +233,7 @@ public class GitProjectsManager implements ProjectsManager {
 			).toFile()
 		);
 
-		remoteGitServerManager.deleteRepository(projectReference);
+		remoteGitServerManager.deleteProject(projectReference);
 
 		try {
 			graphProjectDeletionHandler.deleteProject(projectReference);

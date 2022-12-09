@@ -60,41 +60,41 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 
 
 	/**
-	 * Creates a new remote repository in the current user's namespace.
+	 * Creates a new project in the current user's namespace.
 	 *
-	 * @param name the name of the repository
-	 * @param description the description of the repository
-	 * @return the repository URL
-	 * @throws IOException if an error occurs when creating the remote repository
+	 * @param name the name of the project
+	 * @param description the description of the project
+	 * @return the project's repository URL
+	 * @throws IOException if an error occurs when creating the project
 	 */
-	String createRepository(String name, String description) throws IOException;
+	String createProject(String name, String description) throws IOException;
 
 	/**
 	 * Updates the description of a project.
 	 *
-	 * @param namespace the namespace of the project repository
-	 * @param projectId the ID of the project repository
+	 * @param namespace the namespace of the project
+	 * @param projectId the ID of the project
 	 * @param description the new description
 	 * @throws IOException if an error occurs when updating the project description
 	 */
-	void updateProject(String namespace, String projectId, String description) throws IOException;
+	void updateProjectDescription(String namespace, String projectId, String description) throws IOException;
 
 	/**
 	 * Removes the current user from a project.
 	 *
-	 * @param namespace the namespace of the project repository
-	 * @param projectId the ID of the project repository
+	 * @param namespace the namespace of the project
+	 * @param projectId the ID of the project
 	 * @throws IOException if an error occurs when removing the user from the project
 	 */
 	void leaveProject(String namespace, String projectId) throws IOException;
 
 	/**
-	 * Deletes an existing remote repository.
+	 * Deletes an existing project.
 	 *
-	 * @param projectReference a {@link ProjectReference} indicating the repository to delete
-	 * @throws IOException if an error occurs when deleting the remote repository
+	 * @param projectReference a {@link ProjectReference} indicating the project to delete
+	 * @throws IOException if an error occurs when deleting the project
 	 */
-	void deleteRepository(ProjectReference projectReference) throws IOException;
+	void deleteProject(ProjectReference projectReference) throws IOException;
 
 
 	/**
