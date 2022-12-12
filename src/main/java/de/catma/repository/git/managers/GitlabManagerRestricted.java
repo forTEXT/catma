@@ -230,10 +230,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	public String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project project = projectApi.getProject(
-					projectReference.getNamespace(),
-					projectReference.getProjectId()
-			);
+			Project project = projectApi.getProject(projectReference.getFullPath());
 
 			return GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo());
 		}
@@ -283,10 +280,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@Override
-	public void updateProjectDescription(String namespace, String projectId, String description) throws IOException {
+	public void updateProjectDescription(ProjectReference projectReference, String description) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project project = projectApi.getProject(namespace, projectId);
+			Project project = projectApi.getProject(projectReference.getFullPath());
 			project.setDescription(description);
 			projectApi.updateProject(project);
 		}
@@ -296,17 +293,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@Override
-	public void leaveProject(String namespace, String projectId) throws IOException {
+	public void leaveProject(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project project = projectApi.getProject(namespace, projectId);
-			org.gitlab4j.api.models.Member member = projectApi.getMember(project.getId(), user.getUserId());
+			org.gitlab4j.api.models.Member member = projectApi.getMember(projectReference.getFullPath(), user.getUserId());
 
 			if (member != null
 					&& member.getAccessLevel().value >= AccessLevel.GUEST.value
 					&& member.getAccessLevel().value < AccessLevel.OWNER.value
 			) {
-				projectApi.removeMember(project.getId(), user.getUserId());
+				projectApi.removeMember(projectReference.getFullPath(), user.getUserId());
 			}
 		}
 		catch (GitLabApiException e) {

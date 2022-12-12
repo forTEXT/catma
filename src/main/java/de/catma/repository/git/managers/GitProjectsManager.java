@@ -161,8 +161,7 @@ public class GitProjectsManager implements ProjectsManager {
 				projectReference.getName(), projectReference.getDescription()
 		);
 		remoteGitServerManager.updateProjectDescription(
-				projectReference.getNamespace(),
-				projectReference.getProjectId(),
+				projectReference,
 				serializedProjectMetadata
 		);
 	}
@@ -183,9 +182,7 @@ public class GitProjectsManager implements ProjectsManager {
 				projectReference.getProjectId()
 		));
 
-		remoteGitServerManager.leaveProject(
-				projectReference.getNamespace(), projectReference.getProjectId()
-		);
+		remoteGitServerManager.leaveProject(projectReference);
 
 		try {
 			graphProjectDeletionHandler.deleteProject(projectReference);

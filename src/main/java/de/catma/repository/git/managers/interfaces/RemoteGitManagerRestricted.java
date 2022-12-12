@@ -72,21 +72,19 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	/**
 	 * Updates the description of a project.
 	 *
-	 * @param namespace the namespace of the project
-	 * @param projectId the ID of the project
+	 * @param projectReference a {@link ProjectReference} indicating the project whose description should be updated
 	 * @param description the new description
 	 * @throws IOException if an error occurs when updating the project description
 	 */
-	void updateProjectDescription(String namespace, String projectId, String description) throws IOException;
+	void updateProjectDescription(ProjectReference projectReference, String description) throws IOException;
 
 	/**
 	 * Removes the current user from a project.
 	 *
-	 * @param namespace the namespace of the project
-	 * @param projectId the ID of the project
+	 * @param projectReference a {@link ProjectReference} indicating the project to remove the user from
 	 * @throws IOException if an error occurs when removing the user from the project
 	 */
-	void leaveProject(String namespace, String projectId) throws IOException;
+	void leaveProject(ProjectReference projectReference) throws IOException;
 
 	/**
 	 * Deletes an existing project.
