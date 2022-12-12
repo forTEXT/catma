@@ -58,6 +58,84 @@ public class GitProjectsManager implements ProjectsManager {
 	}
 
 	@Override
+	public User getUser() {
+		return user;
+	}
+
+	@Override
+	public boolean isAuthorizedOnProject(ProjectReference projectReference, RBACPermission permission) {
+		return remoteGitServerManager.isAuthorizedOnProject(user, permission, projectReference);
+	}
+
+	@Override
+	public List<ProjectReference> getProjectReferences() throws IOException {
+		return remoteGitServerManager.getProjectReferences();
+	}
+
+	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws IOException {
+		if (!Paths.get(new File(gitBasedRepositoryBasePath).toURI())
+				.resolve(user.getIdentifier())
+				.resolve(projectReference.getNamespace())
+				.resolve(projectReference.getProjectId())
+				.toFile()
+				.exists()
+		) {
+			try (LocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
+				openProjectListener.progress("Cloning the Git repository");
+
+				// clone the repository locally
+				localRepoManager.clone(
+						projectReference.getNamespace(),
+						projectReference.getProjectId(),
+						remoteGitServerManager.getProjectRepositoryUrl(projectReference),
+						credentialsProvider
+				);
+			}
+		}
+	}
+
+	@Override
+	public void openProject(
+			ProjectReference projectReference,
+			TagManager tagManager,
+			OpenProjectListener openProjectListener
+	) {
+		try {
+			cloneLocallyIfNotExists(projectReference, openProjectListener);
+
+			Project project = new GraphWorktreeProject(
+					user,
+					new GitProjectHandler(
+							user,
+							projectReference,
+							Paths.get(new File(gitBasedRepositoryBasePath).toURI())
+									.resolve(user.getIdentifier())
+									.resolve(projectReference.getNamespace())
+									.resolve(projectReference.getProjectId())
+									.toFile(),
+							localGitRepositoryManager,
+							remoteGitServerManager
+					),
+					projectReference,
+					tagManager,
+					backgroundService,
+					eventBus
+			);
+			project.open(openProjectListener);
+		}
+		catch (Exception e) {
+			openProjectListener.failure(e);
+		}
+	}
+
+	private String serializeProjectMetadata(String name, String description) {
+		JsonObject obj = new JsonObject();
+		obj.addProperty(ProjectMetadataSerializationField.name.name(), name);
+		obj.addProperty(ProjectMetadataSerializationField.description.name(), description);
+		return obj.toString();
+	}
+
+	@Override
 	public ProjectReference createProject(String name, String description) throws IOException {
 		String serializedProjectMetadata = serializeProjectMetadata(name, description);
 
@@ -98,40 +176,6 @@ public class GitProjectsManager implements ProjectsManager {
 		}
 
 		return new ProjectReference(projectId, user.getIdentifier(), name, description);
-	}
-
-	@Override
-	public void openProject(
-			ProjectReference projectReference,
-			TagManager tagManager,
-			OpenProjectListener openProjectListener
-	) {
-		try {
-			cloneLocallyIfNotExists(projectReference, openProjectListener);
-
-			Project project = new GraphWorktreeProject(
-					user,
-					new GitProjectHandler(
-							user,
-							projectReference,
-							Paths.get(new File(gitBasedRepositoryBasePath).toURI())
-									.resolve(user.getIdentifier())
-									.resolve(projectReference.getNamespace())
-									.resolve(projectReference.getProjectId())
-									.toFile(),
-							localGitRepositoryManager,
-							remoteGitServerManager
-					),
-					projectReference,
-					tagManager,
-					backgroundService,
-					eventBus
-			);
-			project.open(openProjectListener);
-		}
-		catch (Exception e) {
-			openProjectListener.failure(e);
-		}
 	}
 
 	@Override
@@ -201,49 +245,5 @@ public class GitProjectsManager implements ProjectsManager {
 		catch (Exception e) {
 			throw new IOException(e);
 		}
-	}
-
-	@Override
-	public User getUser() {
-		return user;
-	}
-
-	@Override
-	public List<ProjectReference> getProjectReferences() throws IOException {
-		return remoteGitServerManager.getProjectReferences();
-	}
-
-	@Override
-	public boolean isAuthorizedOnProject(ProjectReference projectReference, RBACPermission permission) {
-		return remoteGitServerManager.isAuthorizedOnProject(user, permission, projectReference);
-	}
-
-	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws IOException {
-		if (!Paths.get(new File(gitBasedRepositoryBasePath).toURI())
-				.resolve(user.getIdentifier())
-				.resolve(projectReference.getNamespace())
-				.resolve(projectReference.getProjectId())
-				.toFile()
-				.exists()
-		) {
-			try (LocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
-				openProjectListener.progress("Cloning the Git repository");
-
-				// clone the repository locally
-				localRepoManager.clone(
-					projectReference.getNamespace(),
-					projectReference.getProjectId(),
-					remoteGitServerManager.getProjectRepositoryUrl(projectReference),
-					credentialsProvider
-				);
-			}
-		}
-	}
-
-	private String serializeProjectMetadata(String name, String description) {
-		JsonObject obj = new JsonObject();
-		obj.addProperty(ProjectMetadataSerializationField.name.name(), name);
-		obj.addProperty(ProjectMetadataSerializationField.description.name(), description);
-		return obj.toString();
 	}
 }
