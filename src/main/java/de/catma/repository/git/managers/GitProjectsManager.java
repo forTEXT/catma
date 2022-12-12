@@ -57,14 +57,6 @@ public class GitProjectsManager implements ProjectsManager {
 		this.idGenerator = new IDGenerator();
 	}
 
-	/**
-	 * Creates a new project.
-	 *
-	 * @param name the name of the project to create
-	 * @param description the description of the project to create
-	 * @return a {@link ProjectReference} for the new project
-	 * @throws IOException if an error occurs when creating the project
-	 */
 	@Override
 	public ProjectReference createProject(String name, String description) throws IOException {
 		String serializedProjectMetadata = serializeProjectMetadata(name, description);
@@ -108,13 +100,6 @@ public class GitProjectsManager implements ProjectsManager {
 		return new ProjectReference(projectId, user.getIdentifier(), name, description);
 	}
 
-	/**
-	 * Opens an existing project.
-	 *
-	 * @param projectReference a {@link ProjectReference} indicating which project should be opened
-	 * @param tagManager a {@link TagManager}
-	 * @param openProjectListener an {@link OpenProjectListener}
-	 */
 	@Override
 	public void openProject(
 			ProjectReference projectReference,
@@ -149,12 +134,6 @@ public class GitProjectsManager implements ProjectsManager {
 		}
 	}
 
-	/**
-	 * Updates the metadata (name & description) of a project.
-	 *
-	 * @param projectReference a {@link ProjectReference} containing the new metadata
-	 * @throws IOException if an error occurs when updating the project metadata
-	 */
 	@Override
 	public void updateProjectMetadata(ProjectReference projectReference) throws IOException {
 		String serializedProjectMetadata = serializeProjectMetadata(
@@ -166,14 +145,6 @@ public class GitProjectsManager implements ProjectsManager {
 		);
 	}
 
-	/**
-	 * Leaves (removes the user from) a project.
-	 * <p>
-	 * Automatically deletes the local repository.
-	 *
-	 * @param projectReference a {@link ProjectReference} indicating the project to leave
-	 * @throws IOException if an error occurs when leaving the project
-	 */
 	@Override
 	public void leaveProject(ProjectReference projectReference) throws IOException {
 		// TODO: consider checking for uncommitted/unpushed changes first
@@ -192,14 +163,6 @@ public class GitProjectsManager implements ProjectsManager {
 		}
 	}
 
-	/**
-	 * Deletes a project.
-	 * <p>
-	 * Automatically deletes the local & remote repositories.
-	 *
-	 * @param projectReference a {@link ProjectReference} indicating the project to delete
-	 * @throws IOException if an error occurs when deleting the project
-	 */
 	@Override
 	public void deleteProject(ProjectReference projectReference) throws IOException {
 		Path projectDir = Paths.get(
