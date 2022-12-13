@@ -124,10 +124,10 @@ public class ProjectReport {
 	
 	private int rootsMergeConflictingMasterToC6Migration;
 
-	private int documentsPushFailedfulC6MigrationToOriginC6Migration;
-	private int collectionsPushFailedfulC6MigrationToOriginC6Migration;
-	private int tagsetsPushFailedfulC6MigrationToOriginC6Migration;
-	private int rootsPushFailedfulC6MigrationToOriginC6Migration;
+	private int documentsPushFailedC6MigrationToOriginC6Migration;
+	private int collectionsPushFailedC6MigrationToOriginC6Migration;
+	private int tagsetsPushFailedC6MigrationToOriginC6Migration;
+	private int rootsPushFailedC6MigrationToOriginC6Migration;
 	
 	private String lastError;
 	private LocalDateTime lastUnsynchronizedCommitTime;
@@ -237,10 +237,10 @@ public class ProjectReport {
 			
 			rootsMergeConflictingMasterToC6Migration+=report.rootsMergeConflictingMasterToC6Migration;
 
-			documentsPushFailedfulC6MigrationToOriginC6Migration+=report.documentsPushFailedfulC6MigrationToOriginC6Migration;
-			collectionsPushFailedfulC6MigrationToOriginC6Migration+=report.collectionsPushFailedfulC6MigrationToOriginC6Migration;
-			tagsetsPushFailedfulC6MigrationToOriginC6Migration+=report.tagsetsPushFailedfulC6MigrationToOriginC6Migration;
-			rootsPushFailedfulC6MigrationToOriginC6Migration+=report.rootsPushFailedfulC6MigrationToOriginC6Migration;
+			documentsPushFailedC6MigrationToOriginC6Migration+=report.documentsPushFailedC6MigrationToOriginC6Migration;
+			collectionsPushFailedC6MigrationToOriginC6Migration+=report.collectionsPushFailedC6MigrationToOriginC6Migration;
+			tagsetsPushFailedC6MigrationToOriginC6Migration+=report.tagsetsPushFailedC6MigrationToOriginC6Migration;
+			rootsPushFailedC6MigrationToOriginC6Migration+=report.rootsPushFailedC6MigrationToOriginC6Migration;
 
 		}
 	}
@@ -335,239 +335,329 @@ public class ProjectReport {
 		staleProjects++;
 	}
 	
-	private static String formatColumnName(String name) {
-		return "\n"+name.replaceAll("([A-Z])", " $1");
-	}
-	
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		if (projectId != null) {
-			builder.append("\n\nPROJECT REPORT ");
+			builder.append("\n\nProject Scan Report: ");
 			builder.append(projectId);
+			builder.append("\n\n");
 			if (ownerEmail != null) {
-				builder.append("\n\nOwner: ");
+				builder.append("Owner: ");
 				builder.append(ownerEmail);
+				builder.append("\n");
 			}
 			if (lastUnsynchronizedCommitTime != null) {
-				builder.append("\nLast unsynchronized commit time: ");
+				builder.append("Last Unsynchronized Commit Time: ");
 				builder.append(lastUnsynchronizedCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+				builder.append("\n");
 			}
 			if (lastHeadCommitTime != null) {
-				builder.append("\nLast HEAD commit time: ");
+				builder.append("Last HEAD Commit Time: ");
 				builder.append(lastHeadCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+				builder.append("\n");
 			}
 			if (lastError != null) {
-				builder.append("\nError");
+				builder.append("Last Error: ");
 				builder.append(lastError);
+				builder.append("\n");
 			}
-			builder.append("\n\n");
+			builder.append("\n");
 		}
-		builder.append(formatColumnName("totalUsers: "));
+		builder.append("Total Users: ");
 		builder.append(totalUsers);
-		builder.append(formatColumnName("totalRoots: "));
-		builder.append(totalRoots);	
-		builder.append(formatColumnName("readyToMigrateRoots: "));
+		builder.append("\n\n");
+
+		builder.append("Total Roots: ");
+		builder.append(totalRoots);
+		builder.append("\n");
+		builder.append("Ready to Migrate Roots: ");
 		builder.append(readyToMigrateRoots);
-		builder.append(formatColumnName("totalResources: "));
+		builder.append("\n\n");
+
+		builder.append("Total Resources: ");
 		builder.append(totalDocuments+totalCollections+totalTagsets);
-		builder.append(formatColumnName("totalDocuments: "));
+		builder.append("\n");
+		builder.append("Total Documents: ");
 		builder.append(totalDocuments);
-		builder.append(formatColumnName("totalCollections: "));
+		builder.append("\n");
+		builder.append("Total Collections: ");
 		builder.append(totalCollections);
-		builder.append(formatColumnName("totalTagsets: "));
+		builder.append("\n");
+		builder.append("Total Tagsets: ");
 		builder.append(totalTagsets);
+		builder.append("\n\n");
 
-		builder.append(formatColumnName("cleanRoots: "));
+		builder.append("Clean Roots: ");
 		builder.append(cleanRoots);
-		builder.append(formatColumnName("cleanResources: "));
+		builder.append("\n");
+		builder.append("Clean Resources: ");
 		builder.append(cleanDocuments+cleanCollections+cleanTagsets);
-		builder.append(formatColumnName("cleanDocuments: "));
+		builder.append("\n");
+		builder.append("Clean Documents: ");
 		builder.append(cleanDocuments);
-		builder.append(formatColumnName("cleanCollections: "));
+		builder.append("\n");
+		builder.append("Clean Collections: ");
 		builder.append(cleanCollections);
-		builder.append(formatColumnName("cleanTagsets: "));
+		builder.append("\n");
+		builder.append("Clean Tagsets: ");
 		builder.append(cleanTagsets);
+		builder.append("\n\n");
 
-		builder.append(formatColumnName("dirtyRoots: "));
+		builder.append("Dirty Roots: ");
 		builder.append(dirtyRoots);
-		builder.append(formatColumnName("dirtyResources: "));
+		builder.append("\n");
+		builder.append("Dirty Resources: ");
 		builder.append(dirtyDocuments+dirtyCollections+dirtyTagsets);
-		builder.append(formatColumnName("dirtyDocuments: "));
+		builder.append("\n");
+		builder.append("Dirty Documents: ");
 		builder.append(dirtyDocuments);
-		builder.append(formatColumnName("dirtyCollections: "));
+		builder.append("\n");
+		builder.append("Dirty Collections: ");
 		builder.append(dirtyCollections);
-		builder.append(formatColumnName("dirtyTagsets: "));
+		builder.append("\n");
+		builder.append("Dirty Tagsets: ");
 		builder.append(dirtyTagsets);
+		builder.append("\n\n");
 
-		builder.append(formatColumnName("uncommittedRoots: "));
+		builder.append("Uncommitted Roots: ");
 		builder.append(uncommittedRoots);
-		builder.append(formatColumnName("uncommittedResources: "));
+		builder.append("\n");
+		builder.append("Uncommitted Resources: ");
 		builder.append(uncommittedCollections+uncommittedDocuments+tagsetsNeedMergeMasterToOriginMaster);
-		builder.append(formatColumnName("uncommittedDocuments: "));
+		builder.append("\n");
+		builder.append("Uncommitted Documents: ");
 		builder.append(uncommittedDocuments);
-		builder.append(formatColumnName("uncommittedCollections: "));
+		builder.append("\n");
+		builder.append("Uncommitted Collections: ");
 		builder.append(uncommittedCollections);
-		builder.append(formatColumnName("uncommittedTagsets: "));
+		builder.append("\n");
+		builder.append("Uncommitted Tagsets: ");
 		builder.append(uncommittedTagsets);
+		builder.append("\n\n");
 
-		builder.append(formatColumnName("conflictingRoots: "));
+		builder.append("Conflicting Roots: ");
 		builder.append(conflictingRoots);
-		builder.append(formatColumnName("conflictingResources: "));
+		builder.append("\n");
+		builder.append("Conflicting Resources: ");
 		builder.append(conflictingCollections+conflictingDocuments+conflictingTagsets);
-		builder.append(formatColumnName("conflictingDocuments: "));
+		builder.append("\n");
+		builder.append("Conflicting Documents: ");
 		builder.append(conflictingDocuments);
-		builder.append(formatColumnName("conflictingCollections: "));
+		builder.append("\n");
+		builder.append("Conflicting Collections: ");
 		builder.append(conflictingCollections);
-		builder.append(formatColumnName("conflictingTagsets: "));
+		builder.append("\n");
+		builder.append("Conflicting Tagsets: ");
 		builder.append(conflictingTagsets);
-		
-		builder.append(formatColumnName("resourcesNeedMergeDevToMaster: "));
-		builder.append(collectionsNeedMergeDevToMaster+documentsNeedMergeDevToMaster+tagsetsNeedMergeDevToMaster);
-		builder.append(formatColumnName("documentsNeedMergeDevToMaster: "));
-		builder.append(documentsNeedMergeDevToMaster);
-		builder.append(formatColumnName("collectionsNeedMergeDevToMaster: "));
-		builder.append(collectionsNeedMergeDevToMaster);
-		builder.append(formatColumnName("tagsetsNeedMergeDevToMaster: "));
-		builder.append(tagsetsNeedMergeDevToMaster);
-		
-		builder.append(formatColumnName("rootsNeedMergeMasterToOriginMaster: "));
-		builder.append(rootsNeedMergeMasterToOriginMaster);
-		builder.append(formatColumnName("resourcesNeedMergeMasterToOriginMaster: "));
-		builder.append(collectionsNeedMergeMasterToOriginMaster+documentsNeedMergeMasterToOriginMaster+tagsetsNeedMergeMasterToOriginMaster);
-		builder.append(formatColumnName("documentsNeedMergeMasterToOriginMaster: "));
-		builder.append(documentsNeedMergeMasterToOriginMaster);
-		builder.append(formatColumnName("collectionsNeedMergeMasterToOriginMaster: "));
-		builder.append(collectionsNeedMergeMasterToOriginMaster);
-		builder.append(formatColumnName("tagsetsNeedMergeMasterToOriginMaster: "));
-		builder.append(tagsetsNeedMergeMasterToOriginMaster);
-		
-		builder.append(formatColumnName("rootsCanMergeMasterToOriginMaster: "));
-		builder.append(rootsCanMergeMasterToOriginMaster);
-		
-		builder.append(formatColumnName("rootsConflictingMergeMasterToOriginMaster: "));
-		builder.append(rootsConflictingMergeMasterToOriginMaster);
+		builder.append("\n\n");
 
-		builder.append(formatColumnName("resourcesCanMergeDevToMaster: "));
-		builder.append(collectionsCanMergeDevToMaster+documentsCanMergeDevToMaster+tagsetsCanMergeDevToMaster);
-		builder.append(formatColumnName("documentsCanMergeDevToMaster: "));
-		builder.append(documentsCanMergeDevToMaster);
-		builder.append(formatColumnName("collectionsCanMergeDevToMaster: "));
-		builder.append(collectionsCanMergeDevToMaster);
-		builder.append(formatColumnName("tagsetsCanMergeDevToMaster: "));
-		builder.append(tagsetsCanMergeDevToMaster);
-
-
-		builder.append(formatColumnName("resourcesConflictingMergeDevToMaster: "));
-		builder.append(collectionsConflictingMergeDevToMaster+documentsConflictingMergeDevToMaster+tagsetsConflictingMergeDevToMaster);
-		builder.append(formatColumnName("documentsConflictingMergeDevToMaster: "));
-		builder.append(documentsConflictingMergeDevToMaster);
-		builder.append(formatColumnName("collectionsConflictingMergeDevToMaster: "));
-		builder.append(collectionsConflictingMergeDevToMaster);
-		builder.append(formatColumnName("tagsetsConflictingMergeDevToMaster: "));
-		builder.append(tagsetsConflictingMergeDevToMaster);
-
-		builder.append(formatColumnName("resourcesCanMergeDevToOriginMaster: "));
-		builder.append(collectionsCanMergeDevToOriginMaster+documentsCanMergeDevToOriginMaster+tagsetsCanMergeDevToOriginMaster);
-		builder.append(formatColumnName("documentsCanMergeDevToOriginMaster: "));
-		builder.append(documentsCanMergeDevToOriginMaster);
-		builder.append(formatColumnName("collectionsCanMergeDevToOriginMaster: "));
-		builder.append(collectionsCanMergeDevToOriginMaster);
-		builder.append(formatColumnName("tagsetsCanMergeDevToOriginMaster: "));
-		builder.append(tagsetsCanMergeDevToOriginMaster);
-		
-		builder.append(formatColumnName("resourcesConflictingMergeDevToOriginMaster: "));
-		builder.append(collectionsConflictingMergeDevToOriginMaster+documentsConflictingMergeDevToOriginMaster+tagsetsConflictingMergeDevToOriginMaster);
-		builder.append(formatColumnName("documentsConflictingMergeDevToOriginMaster: "));
-		builder.append(documentsConflictingMergeDevToOriginMaster);
-		builder.append(formatColumnName("collectionsConflictingMergeDevToOriginMaster: "));
-		builder.append(collectionsConflictingMergeDevToOriginMaster);
-		builder.append(formatColumnName("tagsetsConflictingMergeDevToOriginMaster: "));
-		builder.append(tagsetsConflictingMergeDevToOriginMaster);
-		
-		builder.append(formatColumnName("staleProjects: "));
+		builder.append("Stale Projects: ");
 		builder.append(staleProjects);
-
-		builder.append(formatColumnName("staleUsers: "));
+		builder.append("\n");
+		builder.append("Stale Users: ");
 		builder.append(staleUsers);
+		builder.append("\n\n");
 
-		builder.append(formatColumnName("errorProjects: "));
+		builder.append("Projects with Errors: ");
 		builder.append(errorProjects);
-		
-		builder.append(formatColumnName("documentsMergeSuccessfulOriginC6MigrationToC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append("Resources Needing Merge, dev->master: ");
+		builder.append(collectionsNeedMergeDevToMaster+documentsNeedMergeDevToMaster+tagsetsNeedMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Documents Needing Merge, dev->master: ");
+		builder.append(documentsNeedMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Collections Needing Merge, dev->master: ");
+		builder.append(collectionsNeedMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Tagsets Needing Merge, dev->master: ");
+		builder.append(tagsetsNeedMergeDevToMaster);
+		builder.append("\n\n");
+
+		builder.append("Roots Needing Merge, master->origin/master: ");
+		builder.append(rootsNeedMergeMasterToOriginMaster);
+		builder.append("\n");
+		builder.append("Resources Needing Merge, master->origin/master: ");
+		builder.append(collectionsNeedMergeMasterToOriginMaster+documentsNeedMergeMasterToOriginMaster+tagsetsNeedMergeMasterToOriginMaster);
+		builder.append("\n");
+		builder.append("Documents Needing Merge, master->origin/master: ");
+		builder.append(documentsNeedMergeMasterToOriginMaster);
+		builder.append("\n");
+		builder.append("Collections Needing Merge, master->origin/master: ");
+		builder.append(collectionsNeedMergeMasterToOriginMaster);
+		builder.append("\n");
+		builder.append("Tagsets Needing Merge, master->origin/master: ");
+		builder.append(tagsetsNeedMergeMasterToOriginMaster);
+		builder.append("\n\n");
+
+		builder.append("Roots Able to be Merged, master->origin/master: ");
+		builder.append(rootsCanMergeMasterToOriginMaster);
+		builder.append("\n\n");
+
+		builder.append("Roots with Conflicted Merge, master->origin/master: ");
+		builder.append(rootsConflictingMergeMasterToOriginMaster);
+		builder.append("\n\n");
+
+		builder.append("Resources Able to be Merged, dev->master: ");
+		builder.append(collectionsCanMergeDevToMaster+documentsCanMergeDevToMaster+tagsetsCanMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Documents Able to be Merged, dev->master: ");
+		builder.append(documentsCanMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Collections Able to be Merged, dev->master: ");
+		builder.append(collectionsCanMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Tagsets Able to be Merged, dev->master: ");
+		builder.append(tagsetsCanMergeDevToMaster);
+		builder.append("\n\n");
+
+		builder.append("Resources with Conflicted Merge, dev->master: ");
+		builder.append(collectionsConflictingMergeDevToMaster+documentsConflictingMergeDevToMaster+tagsetsConflictingMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Documents with Conflicted Merge, dev->master: ");
+		builder.append(documentsConflictingMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Collections with Conflicted Merge, dev->master: ");
+		builder.append(collectionsConflictingMergeDevToMaster);
+		builder.append("\n");
+		builder.append("Tagsets with Conflicted Merge, dev->master: ");
+		builder.append(tagsetsConflictingMergeDevToMaster);
+		builder.append("\n\n");
+
+		builder.append("Resources Able to be Merged, dev->origin/master: ");
+		builder.append(collectionsCanMergeDevToOriginMaster+documentsCanMergeDevToOriginMaster+tagsetsCanMergeDevToOriginMaster);
+		builder.append("\n");
+		builder.append("Documents Able to be Merged, dev->origin/master: ");
+		builder.append(documentsCanMergeDevToOriginMaster);
+		builder.append("\n");
+		builder.append("Collections Able to be Merged, dev->origin/master: ");
+		builder.append(collectionsCanMergeDevToOriginMaster);
+		builder.append("\n");
+		builder.append("Tagsets Able to be Merged, dev->origin/master: ");
+		builder.append(tagsetsCanMergeDevToOriginMaster);
+		builder.append("\n\n");
+
+		builder.append("Resources with Conflicted Merge, dev->origin/master: ");
+		builder.append(collectionsConflictingMergeDevToOriginMaster+documentsConflictingMergeDevToOriginMaster+tagsetsConflictingMergeDevToOriginMaster);
+		builder.append("\n");
+		builder.append("Documents with Conflicted Merge, dev->origin/master: ");
+		builder.append(documentsConflictingMergeDevToOriginMaster);
+		builder.append("\n");
+		builder.append("Collections with Conflicted Merge, dev->origin/master: ");
+		builder.append(collectionsConflictingMergeDevToOriginMaster);
+		builder.append("\n");
+		builder.append("Tagsets with Conflicted Merge, dev->origin/master: ");
+		builder.append(tagsetsConflictingMergeDevToOriginMaster);
+		builder.append("\n\n");
+
+		builder.append(String.format("Documents Merged Successfully, origin/%1$s->%1$s: ", migrationBranchName));
 		builder.append(documentsMergeSuccessfulOriginC6MigrationToC6Migration);
-		builder.append(formatColumnName("collectionsMergeSuccessfulOriginC6MigrationToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Collections Merged Successfully, origin/%1$s->%1$s: ", migrationBranchName));
 		builder.append(collectionsMergeSuccessfulOriginC6MigrationToC6Migration);
-		builder.append(formatColumnName("tagsetsMergeSuccessfulOriginC6MigrationToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Tagsets Merged Successfully, origin/%1$s->%1$s: ", migrationBranchName));
 		builder.append(tagsetsMergeSuccessfulOriginC6MigrationToC6Migration);
-		builder.append(formatColumnName("rootsMergeSuccessfulOriginC6MigrationToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Roots Merged Successfully, origin/%1$s->%1$s: ", migrationBranchName));
 		builder.append(rootsMergeSuccessfulOriginC6MigrationToC6Migration);
-        
-		builder.append(formatColumnName("documentsMergeSuccessfulOriginMasterToC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append(String.format("Documents Merged Successfully, origin/master->%s: ", migrationBranchName));
 		builder.append(documentsMergeSuccessfulOriginMasterToC6Migration);
-		builder.append(formatColumnName("collectionsMergeSuccessfulOriginMasterToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Collections Merged Successfully, origin/master->%s: ", migrationBranchName));
 		builder.append(collectionsMergeSuccessfulOriginMasterToC6Migration);
-		builder.append(formatColumnName("tagsetsMergeSuccessfulOriginMasterToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Tagsets Merged Successfully, origin/master->%s: ", migrationBranchName));
 		builder.append(tagsetsMergeSuccessfulOriginMasterToC6Migration);
-		builder.append(formatColumnName("rootsMergeSuccessfulOriginMasterToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Roots Merged Successfully, origin/master->%s: ", migrationBranchName));
 		builder.append(rootsMergeSuccessfulOriginMasterToC6Migration);
-		
-		builder.append(formatColumnName("documentsMergeSuccessfulDevToC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append(String.format("Documents Merged Successfully, dev->%s: ", migrationBranchName));
 		builder.append(documentsMergeSuccessfulDevToC6Migration);
-		builder.append(formatColumnName("collectionsMergeSuccessfulDevToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Collections Merged Successfully, dev->%s: ", migrationBranchName));
 		builder.append(collectionsMergeSuccessfulDevToC6Migration);
-		builder.append(formatColumnName("tagsetsMergeSuccessfulDevToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Tagsets Merged Successfully, dev->%s: ", migrationBranchName));
 		builder.append(tagsetsMergeSuccessfulDevToC6Migration);
-		
-		builder.append(formatColumnName("rootsMergeSuccessfulMasterToC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append(String.format("Roots Merged Successfully, master->%s: ", migrationBranchName));
 		builder.append(rootsMergeSuccessfulMasterToC6Migration);
-        
-		builder.append(formatColumnName("documentsPushSuccessfulC6MigrationToOriginC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append(String.format("Documents Pushed Successfully, %1$s->origin/%1$s: ", migrationBranchName));
 		builder.append(documentsPushSuccessfulC6MigrationToOriginC6Migration);
-		builder.append(formatColumnName("collectionsPushSuccessfulC6MigrationToOriginC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Collections Pushed Successfully, %1$s->origin/%1$s: ", migrationBranchName));
 		builder.append(collectionsPushSuccessfulC6MigrationToOriginC6Migration);
-		builder.append(formatColumnName("tagsetsPushSuccessfulC6MigrationToOriginC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Tagsets Pushed Successfully, %1$s->origin/%1$s: ", migrationBranchName));
 		builder.append(tagsetsPushSuccessfulC6MigrationToOriginC6Migration);
-		builder.append(formatColumnName("rootsPushSuccessfulC6MigrationToOriginC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Roots Pushed Successfully, %1$s->origin/%1$s: ", migrationBranchName));
 		builder.append(rootsPushSuccessfulC6MigrationToOriginC6Migration);
-        
-		builder.append(formatColumnName("documentsMergeConflictingOriginC6MigrationToC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append(String.format("Documents with Conflicted Merge, origin/%1$s->%1$s: ", migrationBranchName));
 		builder.append(documentsMergeConflictingOriginC6MigrationToC6Migration);
-		builder.append(formatColumnName("collectionsMergeConflictingOriginC6MigrationToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Collections with Conflicted Merge, origin/%1$s->%1$s: ", migrationBranchName));
 		builder.append(collectionsMergeConflictingOriginC6MigrationToC6Migration);
-		builder.append(formatColumnName("tagsetsMergeConflictingOriginC6MigrationToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Tagsets with Conflicted Merge, origin/%1$s->%1$s: ", migrationBranchName));
 		builder.append(tagsetsMergeConflictingOriginC6MigrationToC6Migration);
-		builder.append(formatColumnName("rootsMergeConflictingOriginC6MigrationToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Roots with Conflicted Merge, origin/%1$s->%1$s: ", migrationBranchName));
 		builder.append(rootsMergeConflictingOriginC6MigrationToC6Migration);
-        
-		builder.append(formatColumnName("documentsMergeConflictingOriginMasterToC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append(String.format("Documents with Conflicted Merge, origin/master->%s: ", migrationBranchName));
 		builder.append(documentsMergeConflictingOriginMasterToC6Migration);
-		builder.append(formatColumnName("collectionsMergeConflictingOriginMasterToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Collections with Conflicted Merge, origin/master->%s: ", migrationBranchName));
 		builder.append(collectionsMergeConflictingOriginMasterToC6Migration);
-		builder.append(formatColumnName("tagsetsMergeConflictingOriginMasterToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Tagsets with Conflicted Merge, origin/master->%s: ", migrationBranchName));
 		builder.append(tagsetsMergeConflictingOriginMasterToC6Migration);
-		builder.append(formatColumnName("rootsMergeConflictingOriginMasterToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Roots with Conflicted Merge, origin/master->%s: ", migrationBranchName));
 		builder.append(rootsMergeConflictingOriginMasterToC6Migration);
-		
-		builder.append(formatColumnName("documentsMergeConflictingDevToC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append(String.format("Documents with Conflicted Merge, dev->%s: ", migrationBranchName));
 		builder.append(documentsMergeConflictingDevToC6Migration);
-		builder.append(formatColumnName("collectionsMergeConflictingDevToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Collections with Conflicted Merge, dev->%s: ", migrationBranchName));
 		builder.append(collectionsMergeConflictingDevToC6Migration);
-		builder.append(formatColumnName("tagsetsMergeConflictingDevToC6Migration: "));
+		builder.append("\n");
+		builder.append(String.format("Tagsets with Conflicted Merge, dev->%s: ", migrationBranchName));
 		builder.append(tagsetsMergeConflictingDevToC6Migration);
-		
-		builder.append(formatColumnName("rootsMergeConflictingMasterToC6Migration: "));
+		builder.append("\n\n");
+
+		builder.append(String.format("Roots with Conflicted Merge, master->%s: ", migrationBranchName));
 		builder.append(rootsMergeConflictingMasterToC6Migration);
-        
-		builder.append(formatColumnName("documentsPushFailedfulC6MigrationToOriginC6Migration: "));
-		builder.append(documentsPushFailedfulC6MigrationToOriginC6Migration);
-		builder.append(formatColumnName("collectionsPushFailedfulC6MigrationToOriginC6Migration: "));
-		builder.append(collectionsPushFailedfulC6MigrationToOriginC6Migration);
-		builder.append(formatColumnName("tagsetsPushFailedfulC6MigrationToOriginC6Migration: "));
-		builder.append(tagsetsPushFailedfulC6MigrationToOriginC6Migration);
-		builder.append(formatColumnName("rootsPushFailedfulC6MigrationToOriginC6Migration: "));
-		builder.append(rootsPushFailedfulC6MigrationToOriginC6Migration);
-		
+		builder.append("\n\n");
+
+		builder.append(String.format("Documents that Failed to Push, %1$s->origin/%1$s: ", migrationBranchName));
+		builder.append(documentsPushFailedC6MigrationToOriginC6Migration);
+		builder.append("\n");
+		builder.append(String.format("Collections that Failed to Push, %1$s->origin/%1$s: ", migrationBranchName));
+		builder.append(collectionsPushFailedC6MigrationToOriginC6Migration);
+		builder.append("\n");
+		builder.append(String.format("Tagsets that Failed to Push, %1$s->origin/%1$s: ", migrationBranchName));
+		builder.append(tagsetsPushFailedC6MigrationToOriginC6Migration);
+		builder.append("\n");
+		builder.append(String.format("Roots that Failed to Push, %1$s->origin/%1$s: ", migrationBranchName));
+		builder.append(rootsPushFailedC6MigrationToOriginC6Migration);
+		builder.append("\n");
+
 		return builder.toString();
 	}
 
@@ -893,19 +983,19 @@ public class ProjectReport {
 	public void addPushC6MigrationToOriginC6MigrationFailed(String resource) {
 		logger.info(String.format("Failed to push %1$s %2$s->origin/%2$s", resource, migrationBranchName));
 		if (resource.startsWith("collections")) {
-			this.collectionsPushFailedfulC6MigrationToOriginC6Migration++;
+			this.collectionsPushFailedC6MigrationToOriginC6Migration++;
 		}
 		else if (resource.startsWith("tagsets")) {
-			this.tagsetsPushFailedfulC6MigrationToOriginC6Migration++;
+			this.tagsetsPushFailedC6MigrationToOriginC6Migration++;
 		}
 		else if (resource.startsWith("documents")) {
-			this.documentsPushFailedfulC6MigrationToOriginC6Migration++;
+			this.documentsPushFailedC6MigrationToOriginC6Migration++;
 		}
 		else if (resource.startsWith("CATMA") && !resource.contains("/")) {
-			this.rootsPushFailedfulC6MigrationToOriginC6Migration++;
+			this.rootsPushFailedC6MigrationToOriginC6Migration++;
 		}
 		else {
-			logger.warning(String.format("Unexpected resource type failed to pushed %1$s %2$s->origin/%2$s", resource, migrationBranchName));
+			logger.warning(String.format("Unexpected resource type failed to push %1$s %2$s->origin/%2$s", resource, migrationBranchName));
 		}			
 	}
 
@@ -928,46 +1018,57 @@ public class ProjectReport {
 			totalUsers,
 			totalRoots,	
 			readyToMigrateRoots,
+			totalDocuments+totalCollections+totalTagsets,
 			totalDocuments,
 			totalCollections,
 			totalTagsets,
 			cleanRoots,
+			cleanDocuments+cleanCollections+cleanTagsets,
 			cleanDocuments,
 			cleanCollections,
 			cleanTagsets,
 			dirtyRoots,
+			dirtyDocuments+dirtyCollections+dirtyTagsets,
 			dirtyDocuments,
 			dirtyCollections,
 			dirtyTagsets,
 			uncommittedRoots,
+			uncommittedCollections+uncommittedDocuments+tagsetsNeedMergeMasterToOriginMaster,
 			uncommittedDocuments,
 			uncommittedCollections,
 			uncommittedTagsets,
 			conflictingRoots,
+			conflictingCollections+conflictingDocuments+conflictingTagsets,
 			conflictingDocuments,
 			conflictingCollections,
 			conflictingTagsets,
 			staleProjects,
 			staleUsers,
 			errorProjects,
+			collectionsNeedMergeDevToMaster+documentsNeedMergeDevToMaster+tagsetsNeedMergeDevToMaster,
 			documentsNeedMergeDevToMaster,
 			collectionsNeedMergeDevToMaster,
 			tagsetsNeedMergeDevToMaster,
 			rootsNeedMergeMasterToOriginMaster,
+			collectionsNeedMergeMasterToOriginMaster+documentsNeedMergeMasterToOriginMaster+tagsetsNeedMergeMasterToOriginMaster,
 			documentsNeedMergeMasterToOriginMaster,
 			collectionsNeedMergeMasterToOriginMaster,
 			tagsetsNeedMergeMasterToOriginMaster,
 			rootsCanMergeMasterToOriginMaster,
 			rootsConflictingMergeMasterToOriginMaster,
+			collectionsCanMergeDevToMaster+documentsCanMergeDevToMaster+tagsetsCanMergeDevToMaster,
 			documentsCanMergeDevToMaster,
 			collectionsCanMergeDevToMaster,
 			tagsetsCanMergeDevToMaster,
+			collectionsConflictingMergeDevToMaster+documentsConflictingMergeDevToMaster+tagsetsConflictingMergeDevToMaster,
 			documentsConflictingMergeDevToMaster,
 			collectionsConflictingMergeDevToMaster,
 			tagsetsConflictingMergeDevToMaster,
+			collectionsCanMergeDevToOriginMaster+documentsCanMergeDevToOriginMaster+tagsetsCanMergeDevToOriginMaster,
 			documentsCanMergeDevToOriginMaster,
 			collectionsCanMergeDevToOriginMaster,
 			tagsetsCanMergeDevToOriginMaster,
+			collectionsConflictingMergeDevToOriginMaster+documentsConflictingMergeDevToOriginMaster+tagsetsConflictingMergeDevToOriginMaster,
 			documentsConflictingMergeDevToOriginMaster,
 			collectionsConflictingMergeDevToOriginMaster,
 			tagsetsConflictingMergeDevToOriginMaster,
@@ -1008,99 +1109,110 @@ public class ProjectReport {
 			
 			rootsMergeConflictingMasterToC6Migration,
 
-			documentsPushFailedfulC6MigrationToOriginC6Migration,
-			collectionsPushFailedfulC6MigrationToOriginC6Migration,
-			tagsetsPushFailedfulC6MigrationToOriginC6Migration,
-			rootsPushFailedfulC6MigrationToOriginC6Migration
+			documentsPushFailedC6MigrationToOriginC6Migration,
+			collectionsPushFailedC6MigrationToOriginC6Migration,
+			tagsetsPushFailedC6MigrationToOriginC6Migration,
+			rootsPushFailedC6MigrationToOriginC6Migration
 			
 		);
 	}
 
 	public static void exportHeaderToCsv(CSVPrinter csvPrinter) throws IOException {
 		csvPrinter.printRecord(
-				formatColumnName("projectId"),
-				formatColumnName("ownerEmail"),
-				formatColumnName("lastUnsynchronizedCommitTime"),
-				formatColumnName("lastHeadCommitTime"),
-				formatColumnName("lastError"),
-				formatColumnName("totalUsers"),
-				formatColumnName("totalRoots"),	
-				formatColumnName("readyToMigrateRoots"),
-				formatColumnName("totalDocuments"),
-				formatColumnName("totalCollections"),
-				formatColumnName("totalTagsets"),
-				formatColumnName("cleanRoots"),
-				formatColumnName("cleanDocuments"),
-				formatColumnName("cleanCollections"),
-				formatColumnName("cleanTagsets"),
-				formatColumnName("dirtyRoots"),
-				formatColumnName("dirtyDocuments"),
-				formatColumnName("dirtyCollections"),
-				formatColumnName("dirtyTagsets"),
-				formatColumnName("uncommittedRoots"),
-				formatColumnName("uncommittedDocuments"),
-				formatColumnName("uncommittedCollections"),
-				formatColumnName("uncommittedTagsets"),
-				formatColumnName("conflictingRoots"),
-				formatColumnName("conflictingDocuments"),
-				formatColumnName("conflictingCollections"),
-				formatColumnName("conflictingTagsets"),
-				formatColumnName("staleProjects"),
-				formatColumnName("staleUsers"),
-				formatColumnName("errorProjects"),
-				formatColumnName("documentsNeedMergeDevToMaster"),
-				formatColumnName("collectionsNeedMergeDevToMaster"),
-				formatColumnName("tagsetsNeedMergeDevToMaster"),
-				formatColumnName("rootsNeedMergeMasterToOriginMaster"),
-				formatColumnName("documentsNeedMergeMasterToOriginMaster"),
-				formatColumnName("collectionsNeedMergeMasterToOriginMaster"),
-				formatColumnName("tagsetsNeedMergeMasterToOriginMaster"),
-				formatColumnName("rootsCanMergeMastertoOriginMaster"),
-				formatColumnName("rootsConflictingMergeMastertoOriginMaster"),
-				formatColumnName("documentsCanMergeDevToMaster"),
-				formatColumnName("collectionsCanMergeDevToMaster"),
-				formatColumnName("tagsetsCanMergeDevToMaster"),
-				formatColumnName("documentsConflictingMergeDevToMaster"),
-				formatColumnName("collectionsConflictingMergeDevToMaster"),
-				formatColumnName("tagsetsConflictingMergeDevToMaster"),
-				formatColumnName("documentsCanMergeDevToOriginMaster"),
-				formatColumnName("collectionsCanMergeDevToOriginMaster"),
-				formatColumnName("tagsetsCanMergeDevToOriginMaster"),
-				formatColumnName("documentsConflictingMergeDevToOriginMaster"),
-				formatColumnName("collectionsConflictingMergeDevToOriginMaster"),
-				formatColumnName("tagsetsConflictingMergeDevToOriginMaster"),
-				formatColumnName("documentsMergeSuccessfulOriginC6MigrationToC6Migration"),
-				formatColumnName("collectionsMergeSuccessfulOriginC6MigrationToC6Migration"),
-				formatColumnName("tagsetsMergeSuccessfulOriginC6MigrationToC6Migration"),
-				formatColumnName("rootsMergeSuccessfulOriginC6MigrationToC6Migration"),
-				formatColumnName("documentsMergeSuccessfulOriginMasterToC6Migration"),
-				formatColumnName("collectionsMergeSuccessfulOriginMasterToC6Migration"),
-				formatColumnName("tagsetsMergeSuccessfulOriginMasterToC6Migration"),
-				formatColumnName("rootsMergeSuccessfulOriginMasterToC6Migration"),
-				formatColumnName("documentsMergeSuccessfulDevToC6Migration"),
-				formatColumnName("collectionsMergeSuccessfulDevToC6Migration"),
-				formatColumnName("tagsetsMergeSuccessfulDevToC6Migration"),
-				formatColumnName("rootsMergeSuccessfulMasterToC6Migration"),
-				formatColumnName("documentsPushSuccessfulC6MigrationToOriginC6Migration"),
-				formatColumnName("collectionsPushSuccessfulC6MigrationToOriginC6Migration"),
-				formatColumnName("tagsetsPushSuccessfulC6MigrationToOriginC6Migration"),
-				formatColumnName("rootsPushSuccessfulC6MigrationToOriginC6Migration"),
-				formatColumnName("documentsMergeConflictingOriginC6MigrationToC6Migration"),
-				formatColumnName("collectionsMergeConflictingOriginC6MigrationToC6Migration"),
-				formatColumnName("tagsetsMergeConflictingOriginC6MigrationToC6Migration"),
-				formatColumnName("rootsMergeConflictingOriginC6MigrationToC6Migration"),
-				formatColumnName("documentsMergeConflictingOriginMasterToC6Migration"),
-				formatColumnName("collectionsMergeConflictingOriginMasterToC6Migration"),
-				formatColumnName("tagsetsMergeConflictingOriginMasterToC6Migration"),
-				formatColumnName("rootsMergeConflictingOriginMasterToC6Migration"),
-				formatColumnName("documentsMergeConflictingDevToC6Migration"),
-				formatColumnName("collectionsMergeConflictingDevToC6Migration"),
-				formatColumnName("tagsetsMergeConflictingDevToC6Migration"),
-				formatColumnName("rootsMergeConflictingMasterToC6Migration"),
-				formatColumnName("documentsPushFailedC6MigrationToOriginC6Migration"),
-				formatColumnName("collectionsPushFailed6MigrationToOriginC6Migration"),
-				formatColumnName("tagsetsPushFailedC6MigrationToOriginC6Migration"),
-				formatColumnName("rootsPushFailedC6MigrationToOriginC6Migration")
+				"Project ID",
+				"Owner",
+				"Last Unsynchronized Commit Time",
+				"Last HEAD Commit Time",
+				"Last Error",
+				"Total Users",
+				"Total Roots",
+				"Ready to Migrate Roots",
+				"Total Resources",
+				"Total Documents",
+				"Total Collections",
+				"Total Tagsets",
+				"Clean Roots",
+				"Clean Resources",
+				"Clean Documents",
+				"Clean Collections",
+				"Clean Tagsets",
+				"Dirty Roots",
+				"Dirty Resources",
+				"Dirty Documents",
+				"Dirty Collections",
+				"Dirty Tagsets",
+				"Uncommitted Roots",
+				"Uncommitted Resources",
+				"Uncommitted Documents",
+				"Uncommitted Collections",
+				"Uncommitted Tagsets",
+				"Conflicting Roots",
+				"Conflicting Resources",
+				"Conflicting Documents",
+				"Conflicting Collections",
+				"Conflicting Tagsets",
+				"Stale Projects",
+				"Stale Users",
+				"Projects with Errors",
+				"Resources Needing Merge, dev->master",
+				"Documents Needing Merge, dev->master",
+				"Collections Needing Merge, dev->master",
+				"Tagsets Needing Merge, dev->master",
+				"Roots Needing Merge, master->origin/master",
+				"Resources Needing Merge, master->origin/master",
+				"Documents Needing Merge, master->origin/master",
+				"Collections Needing Merge, master->origin/master",
+				"Tagsets Needing Merge, master->origin/master",
+				"Roots Able to be Merged, master->origin/master",
+				"Roots with Conflicted Merge, master->origin/master",
+				"Resources Able to be Merged, dev->master",
+				"Documents Able to be Merged, dev->master",
+				"Collections Able to be Merged, dev->master",
+				"Tagsets Able to be Merged, dev->master",
+				"Resources with Conflicted Merge, dev->master",
+				"Documents with Conflicted Merge, dev->master",
+				"Collections with Conflicted Merge, dev->master",
+				"Tagsets with Conflicted Merge, dev->master",
+				"Resources Able to be Merged, dev->origin/master",
+				"Documents Able to be Merged, dev->origin/master",
+				"Collections Able to be Merged, dev->origin/master",
+				"Tagsets Able to be Merged, dev->origin/master",
+				"Resources with Conflicted Merge, dev->origin/master",
+				"Documents with Conflicted Merge, dev->origin/master",
+				"Collections with Conflicted Merge, dev->origin/master",
+				"Tagsets with Conflicted Merge, dev->origin/master",
+				String.format("Documents Merged Successfully, origin/%1$s->%1$s", migrationBranchName),
+				String.format("Collections Merged Successfully, origin/%1$s->%1$s", migrationBranchName),
+				String.format("Tagsets Merged Successfully, origin/%1$s->%1$s", migrationBranchName),
+				String.format("Roots Merged Successfully, origin/%1$s->%1$s", migrationBranchName),
+				String.format("Documents Merged Successfully, origin/master->%s", migrationBranchName),
+				String.format("Collections Merged Successfully, origin/master->%s", migrationBranchName),
+				String.format("Tagsets Merged Successfully, origin/master->%s", migrationBranchName),
+				String.format("Roots Merged Successfully, origin/master->%s", migrationBranchName),
+				String.format("Documents Merged Successfully, dev->%s", migrationBranchName),
+				String.format("Collections Merged Successfully, dev->%s", migrationBranchName),
+				String.format("Tagsets Merged Successfully, dev->%s", migrationBranchName),
+				String.format("Roots Merged Successfully, master->%s", migrationBranchName),
+				String.format("Documents Pushed Successfully, %1$s->origin/%1$s", migrationBranchName),
+				String.format("Collections Pushed Successfully, %1$s->origin/%1$s", migrationBranchName),
+				String.format("Tagsets Pushed Successfully, %1$s->origin/%1$s", migrationBranchName),
+				String.format("Roots Pushed Successfully, %1$s->origin/%1$s", migrationBranchName),
+				String.format("Documents with Conflicted Merge, origin/%1$s->%1$s", migrationBranchName),
+				String.format("Collections with Conflicted Merge, origin/%1$s->%1$s", migrationBranchName),
+				String.format("Tagsets with Conflicted Merge, origin/%1$s->%1$s", migrationBranchName),
+				String.format("Roots with Conflicted Merge, origin/%1$s->%1$s", migrationBranchName),
+				String.format("Documents with Conflicted Merge, origin/master->%s", migrationBranchName),
+				String.format("Collections with Conflicted Merge, origin/master->%s", migrationBranchName),
+				String.format("Tagsets with Conflicted Merge, origin/master->%s", migrationBranchName),
+				String.format("Roots with Conflicted Merge, origin/master->%s", migrationBranchName),
+				String.format("Documents with Conflicted Merge, dev->%s", migrationBranchName),
+				String.format("Collections with Conflicted Merge, dev->%s", migrationBranchName),
+				String.format("Tagsets with Conflicted Merge, dev->%s", migrationBranchName),
+				String.format("Roots with Conflicted Merge, master->%s", migrationBranchName),
+				String.format("Documents that Failed to Push, %1$s->origin/%1$s", migrationBranchName),
+				String.format("Collections that Failed to Push, %1$s->origin/%1$s", migrationBranchName),
+				String.format("Tagsets that Failed to Push, %1$s->origin/%1$s", migrationBranchName),
+				String.format("Roots that Failed to Push, %1$s->origin/%1$s", migrationBranchName)
 			);
 		
 	}

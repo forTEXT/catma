@@ -551,7 +551,7 @@ public class ProjectScanner implements AutoCloseable {
 	}
 
 	public void logSummaryProjectReport() {
-		logger.info("\n\n\nFinal Project Scan Report:\n" + new ProjectReport(projectReportsById.values()));
+		logger.info("\n\n\nSummary Project Scan Report:\n\n" + new ProjectReport(projectReportsById.values()));
 	}
 
 	private void exportProjectReport(ProjectReport projectReport) {
