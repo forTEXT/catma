@@ -45,6 +45,9 @@ public class ProjectConverter implements AutoCloseable {
 	private final GitLabApi privilegedGitLabApi;
 	private final LegacyProjectHandler legacyProjectHandler;
 
+	private static final String SYSTEM_COMMITTER_NAME = "CATMA System";
+	private static final String SYSTEM_COMMITTER_EMAIL = "support@catma.de";
+
 	public ProjectConverter() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ? System.getProperties().getProperty("prop") : "catma.properties";
 		Properties catmaProperties = new Properties();
@@ -191,7 +194,7 @@ public class ProjectConverter implements AutoCloseable {
 					repoManager.remove(projectRootPath.resolve(".gitmodules").toFile());
 
 					logger.info("Committing integration of submodules");
-					repoManager.commit("Direct integration of submodules", ownerUser.getIdentifier(), ownerUser.getEmail(), false);
+					repoManager.commit("Direct integration of submodules", SYSTEM_COMMITTER_NAME, SYSTEM_COMMITTER_EMAIL, false);
 
 					if (!hasAnyResources(projectRootPath)) {
 						logger.warning(String.format("Project with ID %s does not seem to have any resources, skipping conversion", projectId));
@@ -243,7 +246,7 @@ public class ProjectConverter implements AutoCloseable {
 						}
 					}
 
-					repoManager.addAllAndCommit("Converted annotation collections", ownerUser.getIdentifier(), ownerUser.getEmail(), false);
+					repoManager.addAllAndCommit("Converted annotation collections", SYSTEM_COMMITTER_NAME, SYSTEM_COMMITTER_EMAIL, false);
 
 					MergeResult mergeResult = null;
 
@@ -398,21 +401,47 @@ public class ProjectConverter implements AutoCloseable {
 	private void convertCollection(
 			String projectId, File projectDirectory,
 			String collectionId, Path annotationsPath,
-			TagLibrary tagLibrary, JGitRepoManager repoManager, User user
+			TagLibrary tagLibrary, JGitRepoManager repoManager, User ownerUser
 	) throws Exception {
 		logger.info(String.format("Converting collection with ID %s", collectionId));
 
 		if (annotationsPath.toFile().exists() && annotationsPath.toFile().list().length > 0) {
+			// load legacy annotation files
 			List<Pair<JsonLdWebAnnotation, TagInstance>> annotations = legacyProjectHandler.loadLegacyTagInstances(
 					projectId, collectionId, annotationsPath.toFile(), tagLibrary
 			);
 			Set<String> annotationIds = annotations.stream().map(entry -> entry.getSecond().getUuid()).collect(Collectors.toSet());
 
-			GitAnnotationCollectionHandler gitAnnotationCollectionHandler =	new GitAnnotationCollectionHandler(
-					repoManager, projectDirectory, projectId, user.getIdentifier(), user.getEmail()
-			);
-			gitAnnotationCollectionHandler.createTagInstances(collectionId, annotations);
+			// group and sort annotations
+			Map<String, List<Pair<JsonLdWebAnnotation, TagInstance>>> annotationsGroupedByAuthorSortedByTimestamp = new HashMap<>();
+			annotations.forEach(entry -> {
+				String author = entry.getSecond().getAuthor();
+				if (!annotationsGroupedByAuthorSortedByTimestamp.containsKey(author)) {
+					annotationsGroupedByAuthorSortedByTimestamp.put(author, new ArrayList<>());
+				}
+				annotationsGroupedByAuthorSortedByTimestamp.get(author).add(entry);
+			});
+			annotationsGroupedByAuthorSortedByTimestamp.values().forEach(list -> list.sort(Comparator.comparing(pair -> pair.getSecond().getTimestamp())));
 
+			// write annotations to user-specific page files
+			for (String author : annotationsGroupedByAuthorSortedByTimestamp.keySet()) {
+				User authorUser;
+
+				if (author.equals(ownerUser.getIdentifier())) {
+					authorUser = ownerUser;
+				}
+				else {
+					Pair<User, String> userAndImpersonationToken = legacyProjectHandler.acquireUser(author);
+					authorUser = userAndImpersonationToken.getFirst();
+				}
+
+				GitAnnotationCollectionHandler gitAnnotationCollectionHandler =	new GitAnnotationCollectionHandler(
+						repoManager, projectDirectory, projectId, authorUser.getIdentifier(), authorUser.getEmail()
+				);
+				gitAnnotationCollectionHandler.createTagInstances(collectionId, annotationsGroupedByAuthorSortedByTimestamp.get(author));
+			}
+
+			// delete legacy annotation files
 			for (String annotationId : annotationIds) {
 				File legacyAnnotationFile = annotationsPath.resolve(annotationId + ".json").toFile();
 				if (!legacyAnnotationFile.delete()) {
