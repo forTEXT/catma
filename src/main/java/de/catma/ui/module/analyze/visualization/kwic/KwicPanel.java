@@ -402,7 +402,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		}
 		
 		project.addAndCommitCollections(collectionRefsByDocId.values(), 
-				"Auto-committing KWIC annotations");
+				"Auto-committing semi-automatic annotations from KWIC");
 	}
 
 	private void handleMaxMinRequest() {
@@ -462,8 +462,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			.setCaption("Right Context")
 			.setStyleGenerator(row -> kwicItemHandler.getForwardContextStyle(row))
 			.setWidth(200);
-		
-		kwicGrid.addColumn(row -> row.getRange().getStartPoint())
+
+		Column<QueryResultRow, ?> startPointColumn = kwicGrid.addColumn(row -> row.getRange().getStartPoint())
 			.setCaption("Start Point")
 			.setWidth(100)
 			.setId(ColumnId.START_POS.name())
@@ -494,7 +494,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			.setId(ColumnId.PROPERTY_VALUE.name())
 			.setWidth(200);
 
-		kwicGrid.sort(keywordColumn);
+		kwicGrid.sort(startPointColumn);
 		
 		kwicGrid.getDefaultHeaderRow().getCell(keywordColumn).setStyleName("kwic-panel-keyword-header");
 		kwicGrid.getDefaultHeaderRow().getCell(backwardCtxColumn).setStyleName("kwic-panel-backwardctx-header");
