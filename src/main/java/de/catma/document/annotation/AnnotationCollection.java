@@ -258,13 +258,10 @@ public class AnnotationCollection {
 	 * @param tagReferences references to be removed
 	 */
 	public void removeTagReferences(List<TagReference> tagReferences) {
-		tagReferences.stream()
-		.map(tr -> tr.getTagInstance())
-		.collect(Collectors.toSet())
-		.forEach(tagInstance -> {
-			this.tagReferencesByInstanceId.removeAll(tagInstance.getUuid());
-			this.tagReferencesByTagId.removeAll(tagInstance.getTagDefinitionId());
-		});
+		for (TagReference tagReference : tagReferences) {
+			tagReferencesByInstanceId.remove(tagReference.getTagInstanceId(), tagReference);
+			tagReferencesByTagId.remove(tagReference.getTagDefinitionId(), tagReference);
+		}
 	}
 
 
