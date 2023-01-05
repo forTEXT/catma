@@ -38,7 +38,6 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.Project;
-import de.catma.project.Project.ProjectEvent;
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -73,7 +72,6 @@ public class TagsView extends HugeCard {
 	private SliderPanel drawer;
 	private PropertyChangeListener tagChangedListener;
 	private PropertyChangeListener propertyDefinitionChangedListener;
-	private PropertyChangeListener projectExceptionListener;
 
 	public TagsView(EventBus eventBus, Project project) {
 		super("Manage Tags");
@@ -253,17 +251,6 @@ public class TagsView extends HugeCard {
 		project.getTagManager().addPropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged, 
 				propertyDefinitionChangedListener);	
-		
-        this.projectExceptionListener = new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				initData();
-			}
-		};
-		project.addEventListener(
-				ProjectEvent.exceptionOccurred, projectExceptionListener);
-			
 	}
 
 	private void initActions() {
@@ -407,9 +394,6 @@ public class TagsView extends HugeCard {
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);	
-		project.removeEventListener(
-			ProjectEvent.exceptionOccurred, projectExceptionListener);
-
 	}
 
 	private void handlePropertySummaryClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
