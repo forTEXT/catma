@@ -35,7 +35,6 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
-import de.catma.project.Project.ProjectEvent;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
@@ -58,7 +57,6 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private Grid<TagsetDefinition> tagsetGrid;
 	private ResourceSelectionListener resourceSelectionListener;
 	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
-	private PropertyChangeListener projectExceptionListener;
 	private ErrorHandler errorHandler;
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
@@ -108,18 +106,6 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	}
 
     private void initProjectListeners() {
-        this.projectExceptionListener = new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				Exception e = (Exception) evt.getNewValue();
-				errorHandler.showAndLogError("Error handling project", e);
-				
-			}
-		};
-		project.addEventListener(
-				ProjectEvent.exceptionOccurred, projectExceptionListener);
-		
 		this.tagsetChangeListener = new PropertyChangeListener() {
 			
 			@Override
@@ -534,9 +520,6 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	
 	public void close() {
 		if (project != null) {
-			project.removeEventListener(
-				ProjectEvent.exceptionOccurred, projectExceptionListener);
-
 	        project.getTagManager().removePropertyChangeListener(
         		TagManagerEvent.tagsetDefinitionChanged,
         		tagsetChangeListener);

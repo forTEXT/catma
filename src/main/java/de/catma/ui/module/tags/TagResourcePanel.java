@@ -19,7 +19,6 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.Project;
-import de.catma.project.Project.ProjectEvent;
 import de.catma.project.event.ProjectReadyEvent;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
@@ -37,7 +36,6 @@ public class TagResourcePanel extends VerticalLayout {
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetDataProvider;
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent;
-	private PropertyChangeListener projectExceptionListener;
 	private ErrorHandler errorHandler;
 	private TagsetSelectionListener tagsetSelectionListener;
 	private EventBus eventBus;
@@ -115,18 +113,6 @@ public class TagResourcePanel extends VerticalLayout {
 	}
 	
 	private void initProjectListeners() {
-        this.projectExceptionListener = new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				Exception e = (Exception) evt.getNewValue();
-				errorHandler.showAndLogError("Error handling project", e);
-				
-			}
-		};
-		project.addEventListener(
-				ProjectEvent.exceptionOccurred, projectExceptionListener);
-		
 		this.tagsetChangeListener = new PropertyChangeListener() {
 			
 			@Override
@@ -214,9 +200,6 @@ public class TagResourcePanel extends VerticalLayout {
 	
 	public void close() {
 		if (project != null) {
-			project.removeEventListener(
-				ProjectEvent.exceptionOccurred, projectExceptionListener);
-
 	        project.getTagManager().removePropertyChangeListener(
         		TagManagerEvent.tagsetDefinitionChanged,
         		tagsetChangeListener);
