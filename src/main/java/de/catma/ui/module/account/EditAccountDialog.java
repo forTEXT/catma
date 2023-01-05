@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
+import com.vaadin.data.ValidationResult;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
@@ -50,38 +51,42 @@ public class EditAccountDialog extends Window {
 
 	private void initActions() {
 		btnCancel.addClickListener(evt -> close());
-		
-		btnSave.addClickListener(click -> {
 
+		btnSave.addClickListener(evt -> {
 			// sanity check the password
-			if(! pfPassword.getValue().equals(pfVerifyPassword.getValue())) {
-				Notification.show("Passwords don't match",Type.ERROR_MESSAGE);
+			if(!pfPassword.getValue().equals(pfVerifyPassword.getValue())) {
+				Notification.show("The passwords don't match!", Type.ERROR_MESSAGE);
 				return;
 			}
 
 			// validate the bean!
 			try {
 				userBinder.writeBean(userData);
-			} catch (ValidationException e) {
+			}
+			catch (ValidationException e) {
 				Notification.show(
-						Joiner
-						.on("\n")
-						.join(
-								e.getValidationErrors().stream()
-								.map(msg -> msg.getErrorMessage())
-								.collect(Collectors.toList())),Type.ERROR_MESSAGE);
+						Joiner.on("\n").join(
+								e.getValidationErrors().stream().map(ValidationResult::getErrorMessage).collect(Collectors.toList())
+						),
+						Type.ERROR_MESSAGE
+				);
 				return;
 			}
+
 			try {
-				gitManagerPrivileged.modifyUserAttributes(userId,
-						userData.getName(), userData.getPassword().isEmpty()? null : userData.getPassword());
-				
+				gitManagerPrivileged.modifyUserAttributes(
+						userId,
+						userData.getName(),
+						userData.getPassword().isEmpty() ? null : userData.getPassword()
+				);
+
 				eventBus.post(new ChangeUserAttributesEvent());
-				Notification.show("Profile modification successful", Type.TRAY_NOTIFICATION);
-				
-			} catch (IOException e) {
-				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't update profile", e);
+				Notification.show("Account details updated", Type.TRAY_NOTIFICATION);
 			}
+			catch (IOException e) {
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to update account details", e);
+			}
+
 			this.close();
 		});
 	}

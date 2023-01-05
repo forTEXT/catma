@@ -253,7 +253,7 @@ public class AnnotationCollection {
 	public boolean hasTagInstance(String instanceID) {
 		return tagReferencesByInstanceId.containsKey(instanceID);
 	}
-	
+
 	/**
 	 * @param tagReferences references to be removed
 	 */
@@ -263,7 +263,6 @@ public class AnnotationCollection {
 			tagReferencesByTagId.remove(tagReference.getTagDefinitionId(), tagReference);
 		}
 	}
-
 
 	/**
 	 * @param tagsetDefinition

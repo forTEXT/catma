@@ -358,51 +358,43 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		Map<String, AnnotationCollectionReference> collectionRefsByDocId = 
 				(Map<String, AnnotationCollectionReference>) result.get(AnnotationWizardContextKey.COLLECTIONREFS_BY_DOCID);
 		TagDefinition tag = (TagDefinition) result.get(AnnotationWizardContextKey.TAG);
-		
+
 		AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
-		for (AnnotationCollectionReference ref : collectionRefsByDocId.values()) {
-			collectionManager.add(project.getAnnotationCollection(ref));
+		for (AnnotationCollectionReference collectionRef : collectionRefsByDocId.values()) {
+			collectionManager.add(project.getAnnotationCollection(collectionRef));
 		}
-	
-		ArrayListMultimap<String, TagReference> referencesByCollectionId = ArrayListMultimap.create();
-		
+
+		ArrayListMultimap<String, TagReference> tagRefsByCollectionId = ArrayListMultimap.create();
+
 		for (QueryResultRow row : selectedRows) {
 			AnnotationCollectionReference collectionRef = collectionRefsByDocId.get(row.getSourceDocumentId());
-			
-			TagInstance tagInstance = 
-					new TagInstance(
-						idGenerator.generate(), 
-						tag.getUuid(),
-						project.getCurrentUser().getIdentifier(),
-			        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
-			        	tag.getUserDefinedPropertyDefinitions(),
-			        	tag.getTagsetDefinitionUuid());
-			
-			
-			
-			for (Property protoProp : properties) {
-				tagInstance.getUserDefinedPropetyByUuid(
-					protoProp.getPropertyDefinitionId()).setPropertyValueList(
-							protoProp.getPropertyValueList());
-			}
 
+			TagInstance tagInstance = new TagInstance(
+					idGenerator.generate(),
+					tag.getUuid(),
+					project.getCurrentUser().getIdentifier(),
+					ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+					tag.getUserDefinedPropertyDefinitions(),
+					tag.getTagsetDefinitionUuid()
+			);
+
+			for (Property property : properties) {
+				tagInstance.getUserDefinedPropetyByUuid(property.getPropertyDefinitionId())
+						.setPropertyValueList(property.getPropertyValueList());
+			}
 
 			Set<Range> ranges = row.getRanges();
-			
 			for (Range range : ranges) {
-				TagReference tagReference = 
-						new TagReference(tagInstance, row.getSourceDocumentId(), range, collectionRef.getId());
-				referencesByCollectionId.put(collectionRef.getId(), tagReference);
+				TagReference tagReference = new TagReference(tagInstance, row.getSourceDocumentId(), range, collectionRef.getId());
+				tagRefsByCollectionId.put(collectionRef.getId(), tagReference);
 			}
 		}
-		for (String collectionId : referencesByCollectionId.keySet()) {			
-			collectionManager.addTagReferences(
-					referencesByCollectionId.get(collectionId),
-					collectionId);
+
+		for (String collectionId : tagRefsByCollectionId.keySet()) {
+			collectionManager.addTagReferences(tagRefsByCollectionId.get(collectionId), collectionId);
 		}
-		
-		project.addAndCommitCollections(collectionRefsByDocId.values(), 
-				"Auto-committing semi-automatic annotations from KWIC");
+
+		project.addAndCommitCollections(collectionRefsByDocId.values(), "Auto-committing semi-automatic annotations from KWIC");
 	}
 
 	private void handleMaxMinRequest() {
@@ -426,91 +418,93 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		setSizeFull();
 		setMargin(false);
 		setSpacing(false);
-		
+
 		btExpandCompress = new IconButton(expandResource);
 		btExpandCompress.setVisible(false);
 
 		kwicDataProvider = new ListDataProvider<>(new HashSet<>());
-		kwicGrid = new Grid<QueryResultRow>(kwicDataProvider);
+		kwicGrid = new Grid<>(kwicDataProvider);
 
 		kwicGrid.setSizeFull();
 
-		kwicGrid.addColumn(row -> kwicItemHandler.getDocumentName(row)).setCaption("Document")
-			.setWidth(200)
-			.setHidable(true);
+		kwicGrid.addColumn(row -> kwicItemHandler.getDocumentName(row))
+				.setCaption("Document")
+				.setWidth(200)
+				.setHidable(true);
+
 		kwicGrid.addColumn(row -> kwicItemHandler.getCollectionName(row))
-			.setCaption("Collection")
-			.setWidth(200)
-			.setId(ColumnId.COLLECION_NAME.name())
-			.setHidable(true)
-			.setHidden(true);
-		
-		Column<QueryResultRow, ?> backwardCtxColumn = 
-			kwicGrid.addColumn(row -> kwicItemHandler.getBackwardContext(row))
-			.setCaption("Left Context")
-			.setStyleGenerator(row -> kwicItemHandler.getBackwardContextStyle(row))
-			.setWidth(200);
+				.setCaption("Collection")
+				.setWidth(200)
+				.setId(ColumnId.COLLECION_NAME.name())
+				.setHidable(true)
+				.setHidden(true);
+
+		Column<QueryResultRow, ?> backwardCtxColumn = kwicGrid.addColumn(row -> kwicItemHandler.getBackwardContext(row))
+				.setCaption("Left Context")
+				.setStyleGenerator(row -> kwicItemHandler.getBackwardContextStyle(row))
+				.setWidth(200);
 
 		Column<QueryResultRow, ?> keywordColumn = kwicGrid.addColumn(row -> kwicItemHandler.getKeyword(row))
-			.setCaption("Keyword")
-			.setWidth(200)
-			.setRenderer(new HtmlRenderer())
-			.setStyleGenerator(row -> kwicItemHandler.getKeywordStyle(row))
-			.setDescriptionGenerator(row -> kwicItemHandler.getKeywordDescription(row), ContentMode.HTML);
+				.setCaption("Keyword")
+				.setWidth(200)
+				.setRenderer(new HtmlRenderer())
+				.setStyleGenerator(row -> kwicItemHandler.getKeywordStyle(row))
+				.setDescriptionGenerator(row -> kwicItemHandler.getKeywordDescription(row), ContentMode.HTML);
 
 		kwicGrid.addColumn(row -> kwicItemHandler.getForwardContext(row))
-			.setCaption("Right Context")
-			.setStyleGenerator(row -> kwicItemHandler.getForwardContextStyle(row))
-			.setWidth(200);
+				.setCaption("Right Context")
+				.setStyleGenerator(row -> kwicItemHandler.getForwardContextStyle(row))
+				.setWidth(200);
 
 		Column<QueryResultRow, ?> startPointColumn = kwicGrid.addColumn(row -> row.getRange().getStartPoint())
-			.setCaption("Start Point")
-			.setWidth(100)
-			.setId(ColumnId.START_POS.name())
-			.setHidable(true);
+				.setCaption("Start Point")
+				.setWidth(100)
+				.setId(ColumnId.START_POS.name())
+				.setHidable(true);
+
 		kwicGrid.addColumn(row -> row.getRange().getEndPoint())
-			.setCaption("End Point")
-			.setWidth(100)
-			.setHidable(true);
+				.setCaption("End Point")
+				.setWidth(100)
+				.setHidable(true);
 
 		kwicGrid.addColumn(row -> kwicItemHandler.getTagPath(row))
-			.setCaption("Tag")
-			.setHidable(true)
-			.setHidden(true)
-			.setId(ColumnId.TAG.name())
-			.setWidth(200);
-		
+				.setCaption("Tag")
+				.setHidable(true)
+				.setHidden(true)
+				.setId(ColumnId.TAG.name())
+				.setWidth(200);
+
 		kwicGrid.addColumn(row -> kwicItemHandler.getPropertyName(row))
-			.setCaption("Property")
-			.setHidable(true)
-			.setHidden(true)
-			.setId(ColumnId.PROPERTY_NAME.name())
-			.setWidth(200);
-		
+				.setCaption("Property")
+				.setHidable(true)
+				.setHidden(true)
+				.setId(ColumnId.PROPERTY_NAME.name())
+				.setWidth(200);
+
 		kwicGrid.addColumn(row -> kwicItemHandler.getPropertyValue(row))
-			.setCaption("Value")
-			.setHidable(true)
-			.setHidden(true)
-			.setId(ColumnId.PROPERTY_VALUE.name())
-			.setWidth(200);
+				.setCaption("Value")
+				.setHidable(true)
+				.setHidden(true)
+				.setId(ColumnId.PROPERTY_VALUE.name())
+				.setWidth(200);
 
 		kwicGrid.sort(startPointColumn);
-		
+
 		kwicGrid.getDefaultHeaderRow().getCell(keywordColumn).setStyleName("kwic-panel-keyword-header");
 		kwicGrid.getDefaultHeaderRow().getCell(backwardCtxColumn).setStyleName("kwic-panel-backwardctx-header");
-		
+
 		kwicGridComponent = new ActionGridComponent<>(new Label("KeyWord In Context"), kwicGrid);
 		kwicGridComponent.getActionGridBar().setAddBtnVisible(false);
 		kwicGridComponent.getActionGridBar().addButtonRight(btExpandCompress);
 		kwicGridComponent.setMargin(new MarginInfo(false, false, false, true));
 		addComponent(kwicGridComponent);
 		setExpandRatio(kwicGridComponent, 1f);
-		
+
 		btnClearSelectedRows = new IconButton(VaadinIcons.ERASER);
 		btnClearSelectedRows.setVisible(false);
 		btnClearSelectedRows.setDescription("Remove the selected rows from this list");
 	}
-	
+
 	public void setBtnClearSelectedRowsVisible(boolean visible) {
 		btnClearSelectedRows.setVisible(visible);
 	}

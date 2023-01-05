@@ -1681,42 +1681,41 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private Component initTeamContent() {
 		HorizontalFlexLayout teamContent = new HorizontalFlexLayout();
-        teamGrid = new Grid<>();
-        teamGrid.setHeaderVisible(false);
-        teamGrid.setWidth("402px"); //$NON-NLS-1$
-        teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-        teamGrid.addColumn(User::getName)
-        	.setWidth(200)
-        	.setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
-        	.setDescriptionGenerator(User::preciseName);
-        teamGrid.addColumn(Member::getRole).setExpandRatio(1);
-        
-        Label membersAnnotations = new Label("Members");
-        ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
-                membersAnnotations,
-                teamGrid
-        );
-        membersGridComponent.addStyleName("project-view-action-grid"); //$NON-NLS-1$
-        ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
 
-        addContextMenu.addItem("Add Member", (click) -> 
-        	new AddMemberDialog(
-        		project::assignRoleToSubject,
-        		(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : ""), //$NON-NLS-1$
-        		(evt) -> eventBus.post(new MembersChangedEvent())
-        		).show());
-        
-        ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+		teamGrid = new Grid<>();
+		teamGrid.setHeaderVisible(false);
+		teamGrid.setWidth("402px");
+		teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
+		teamGrid.addColumn(User::getName)
+				.setWidth(200)
+				.setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
+				.setDescriptionGenerator(User::preciseName);
+		teamGrid.addColumn(Member::getRole).setExpandRatio(1);
 
-        moreOptionsContextMenu.addItem("Edit Members", (click) -> handleEditMembers());
-        moreOptionsContextMenu.addItem("Remove Members", (click) -> handleRemoveMembers());
-        
-        miInvite = moreOptionsContextMenu.addItem(
-        	"Invite Someone to the Project", click -> handleProjectInvitationRequest());
-        
-        teamContent.addComponent(membersGridComponent);
-        return teamContent;
-    }
+		ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
+				new Label("Members"),
+				teamGrid
+		);
+		membersGridComponent.addStyleName("project-view-action-grid");
+
+		ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
+		addContextMenu.addItem(
+				"Add Member",
+				(selectedItem) -> new AddMemberDialog(
+						project::assignRoleToSubject,
+						(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : ""),
+						(evt) -> eventBus.post(new MembersChangedEvent())
+				).show()
+		);
+
+		ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+		moreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
+		moreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
+		miInvite = moreOptionsContextMenu.addItem("Invite Someone to the Project", (selectedItem) -> handleProjectInvitationRequest());
+
+		teamContent.addComponent(membersGridComponent);
+		return teamContent;
+	}
 
 	private void handleRemoveMembers() {
 		Set<Member> membersToRemove = teamGrid.getSelectedItems();
