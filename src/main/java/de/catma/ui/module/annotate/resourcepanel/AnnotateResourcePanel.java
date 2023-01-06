@@ -105,20 +105,17 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		this.resourceSelectionListener.resourcesChanged();
 	}
 
-    private void initProjectListeners() {
-		this.tagsetChangeListener = new PropertyChangeListener() {
-			
+	private void initProjectListeners() {
+		tagsetChangeListener = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				handleTagsetChange(evt);
 			}
-		};		
-		
-        project.getTagManager().addPropertyChangeListener(
-        		TagManagerEvent.tagsetDefinitionChanged,
-        		tagsetChangeListener);
-    }
-    
+		};
+
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
+	}
+
 	private void handleTagsetChange(PropertyChangeEvent evt) {
 		Object oldValue = evt.getOldValue();
 		Object newValue = evt.getNewValue();
@@ -517,14 +514,12 @@ public class AnnotateResourcePanel extends VerticalLayout {
     		}
     	}
     }
-	
+
 	public void close() {
 		if (project != null) {
-	        project.getTagManager().removePropertyChangeListener(
-        		TagManagerEvent.tagsetDefinitionChanged,
-        		tagsetChangeListener);
+			project.getTagManager().removePropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
 		}
-		
+
 		eventBus.unregister(this);
 	}
 }

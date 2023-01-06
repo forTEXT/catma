@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.vaadin.dialogs.ConfirmDialog;
@@ -59,7 +60,8 @@ import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class TagsView extends HugeCard {
-	
+	private static final Logger logger = Logger.getLogger(TagsView.class.getName());
+
 	private EventBus eventBus;
 	private Project project;
 	private TreeGrid<TagsetTreeItem> tagsetGrid;
@@ -70,7 +72,7 @@ public class TagsView extends HugeCard {
 	private Collection<TagsetDefinition> tagsets;
 	private TagResourcePanel resourcePanel;
 	private SliderPanel drawer;
-	private PropertyChangeListener tagChangedListener;
+	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener propertyDefinitionChangedListener;
 
 	public TagsView(EventBus eventBus, Project project) {
@@ -84,173 +86,186 @@ public class TagsView extends HugeCard {
 		initListeners();
 		initData();
 	}
-	
+
 	private void initListeners() {
-		tagChangedListener = new PropertyChangeListener() {
-			
+		tagDefinitionChangedListener = new PropertyChangeListener() {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-				
 				Object newValue = evt.getNewValue();
 				Object oldValue = evt.getOldValue();
-				
-				if (oldValue == null) { //created
-					Pair<TagsetDefinition, TagDefinition> value = 
-							(Pair<TagsetDefinition, TagDefinition>)newValue;
-					
-					TagsetDefinition tagset = value.getFirst();
-					TagDefinition tag = value.getSecond();
-		            if (tag.getParentUuid().isEmpty()) {
-		            	tagsetData.getRootItems()
-		            		.stream()
-		            		.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
-		            		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
-		            		.findFirst()
-		            		.ifPresent(tagsetDataItem -> {
-		            			TagDataItem tagDataItem = 
-		            					new TagDataItem(tag, tagsetDataItem.isEditable());
-		            			if (!tagsetData.contains(tagDataItem)) {
-			            			tagsetData.addItem(
-			            					tagsetDataItem, tagDataItem);
-			            			tagsetDataProvider.refreshAll();
-			            			
-			            			tagsetGrid.expand(tagsetDataItem);
-		            			}
-		            		});
-		            }
-		            else {
-		            	tagsetData.getRootItems()
-	            		.stream()
-	            		.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
-	            		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
-	            		.findFirst()
-	            		.ifPresent(tagsetDataItem -> {		            
-	            			TagDataItem tagDataItem = new TagDataItem(tag, tagsetDataItem.isEditable());
-	            			if (!tagsetData.contains(tagDataItem)) {
-		            			TagDefinition parentTag = 
-			            		project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid());
-			            	
-				            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag, tagsetDataItem.isEditable());
-				            	tagsetData.addItem(parentTagItem, tagDataItem);
-		
-				            	tagsetDataProvider.refreshAll();
-		
-				            	tagsetGrid.expand(parentTagItem);
-	            			}
-	            		});
-		            }
-		            
+
+				if (oldValue == null) { // tag created
+					Pair<TagsetDefinition, TagDefinition> createdPair = (Pair<TagsetDefinition, TagDefinition>) newValue;
+					TagsetDefinition tagsetDefinition = createdPair.getFirst();
+					TagDefinition createdTagDefinition = createdPair.getSecond();
+
+					// is this view aware of the tagset corresponding to the newly created tag?
+					Optional<TagsetDataItem> optionalTagsetDataItem = tagsetData.getRootItems()
+							.stream()
+							.map(tagsetTreeItem -> (TagsetDataItem) tagsetTreeItem)
+							.filter(tdi -> tdi.getTagset().getUuid().equals(tagsetDefinition.getUuid()))
+							.findFirst();
+
+					// no, log a warning
+					if (!optionalTagsetDataItem.isPresent()) {
+						logger.warning(
+								String.format(
+										"Failed to find tagset with ID %1$s in the TagsView TreeGrid for project \"%2$s\" with ID %3$s",
+										tagsetDefinition.getUuid(),
+										project.getName(),
+										project.getId()
+								)
+						);
+						return;
+					}
+
+					// yes, add the newly created tag to the corresponding tagset
+					TagsetDataItem tagsetDataItem = optionalTagsetDataItem.get();
+					TagDataItem tagDataItem = new TagDataItem(createdTagDefinition, tagsetDataItem.isEditable());
+
+					if (!tagsetData.contains(tagDataItem)) {
+						String parentTagId = createdTagDefinition.getParentUuid();
+
+						if (parentTagId.isEmpty()) { // the new tag is a top-level tag
+							tagsetData.addItem(tagsetDataItem, tagDataItem);
+							tagsetDataProvider.refreshAll();
+							tagsetGrid.expand(tagsetDataItem);
+						}
+						else { // the new tag is a subtag
+							TagDefinition parentTagDefinition = project.getTagManager().getTagLibrary().getTagDefinition(parentTagId);
+							TagsetTreeItem parentTagsetTreeItem = new TagDataItem(parentTagDefinition, tagsetDataItem.isEditable());
+							tagsetData.addItem(parentTagsetTreeItem, tagDataItem);
+							tagsetDataProvider.refreshAll();
+							tagsetGrid.expand(parentTagsetTreeItem);
+						}
+					}
 				}
-				else if (newValue == null) { //removed
-					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
-					
-					TagDefinition deletedTag = deleted.getSecond();
-					
-					tagsetData.removeItem(new TagDataItem(deletedTag, true));
+				else if (newValue == null) { // tag deleted
+					Pair<TagsetDefinition, TagDefinition> deletedPair = (Pair<TagsetDefinition, TagDefinition>) oldValue;
+					TagDefinition deletedTagDefinition = deletedPair.getSecond();
+
+					tagsetData.removeItem(new TagDataItem(deletedTagDefinition, true));
 					tagsetDataProvider.refreshAll();
-					tagsetGrid.deselectAll();
-					
 				}
-				else { //update
-					TagDefinition tag = (TagDefinition) newValue;
-					TagsetDefinition tagset = (TagsetDefinition)oldValue;
-	            	tagsetData.getRootItems()
-            		.stream()
-            		.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
-            		.filter(tagsetDataItem -> tagsetDataItem.getTagset().getUuid().equals(tagset.getUuid()))
-            		.findFirst()
-            		.ifPresent(tagsetDataItem -> {
-            			TagDataItem oldItem = new TagDataItem(tag, tagsetDataItem.isEditable());
-            			String parentTagId = tag.getParentUuid();
-            			TagsetTreeItem parent = tagsetDataItem;
-            			
-            			if (!parentTagId.isEmpty()) {
-            				parent = new TagDataItem(
-            					tagset.getTagDefinition(parentTagId), tagsetDataItem.isEditable());
-            			}
+				else { // tag updated
+					TagDefinition updatedTagDefinition = (TagDefinition) newValue;
+					TagsetDefinition tagsetDefinition = (TagsetDefinition) oldValue;
 
-            			tagsetData.removeItem(oldItem);
+					// is this view aware of the tagset corresponding to the updated tag?
+					Optional<TagsetDataItem> optionalTagsetDataItem = tagsetData.getRootItems()
+							.stream()
+							.map(tagsetTreeItem -> (TagsetDataItem) tagsetTreeItem)
+							.filter(tdi -> tdi.getTagset().getUuid().equals(tagsetDefinition.getUuid()))
+							.findFirst();
 
-            			TagDataItem tagDataItem = new TagDataItem(tag, tagsetDataItem.isEditable());
-            			tagDataItem.setPropertiesExpanded(true);
-            			tagsetData.addItem(parent, tagDataItem);
-            			
-            			addTagSubTree(tagset, tag, tagDataItem);
-            			
-            			//TODO: sort
+					// no, log a warning
+					if (!optionalTagsetDataItem.isPresent()) {
+						logger.warning(
+								String.format(
+										"Failed to find tagset with ID %1$s in the TagsView TreeGrid for project \"%2$s\" with ID %3$s",
+										tagsetDefinition.getUuid(),
+										project.getName(),
+										project.getId()
+								)
+						);
+						return;
+					}
 
-            			tagsetDataProvider.refreshAll();
-            			
-            			showExpandedProperties(tagDataItem);
-            		});
+					// yes, add the updated tag to the corresponding tagset
+					TagsetDataItem tagsetDataItem = optionalTagsetDataItem.get();
+					TagDataItem tagDataItem = new TagDataItem(updatedTagDefinition, tagsetDataItem.isEditable());
+
+					// the old tag can be removed using the newly constructed TagDataItem because TagDefinitions are compared by UUID
+					tagsetData.removeItem(tagDataItem);
+
+					TagsetTreeItem parentTagsetTreeItem = tagsetDataItem;
+					String parentTagId = updatedTagDefinition.getParentUuid();
+					if (!parentTagId.isEmpty()) {
+						parentTagsetTreeItem = new TagDataItem(tagsetDefinition.getTagDefinition(parentTagId), tagsetDataItem.isEditable());
+					}
+
+					tagDataItem.setPropertiesExpanded(true);
+					tagsetData.addItem(parentTagsetTreeItem, tagDataItem);
+
+					addTagSubTree(tagsetDefinition, updatedTagDefinition, tagDataItem);
+
+					tagsetDataProvider.refreshAll();
+
+					showExpandedProperties(tagDataItem);
 				}
-				
 			}
 		};
-		project.getTagManager().addPropertyChangeListener(
-				TagManagerEvent.tagDefinitionChanged, 
-				tagChangedListener);
-		
+
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagDefinitionChanged, tagDefinitionChangedListener);
+
 		propertyDefinitionChangedListener = new PropertyChangeListener() {
-			
 			@SuppressWarnings("unchecked")
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				Object newValue = evt.getNewValue();
 				Object oldValue = evt.getOldValue();
-				
-				TagDefinition tag = null;
-				
-				if (oldValue == null) { //created
-					Pair<PropertyDefinition, TagDefinition> newData =
-							(Pair<PropertyDefinition, TagDefinition>) newValue;
-					
-					tag = newData.getSecond();
-					
+
+				TagDefinition tagDefinition;
+
+				if (oldValue == null) { // property created
+					Pair<PropertyDefinition, TagDefinition> createdPair = (Pair<PropertyDefinition, TagDefinition>) newValue;
+					tagDefinition = createdPair.getSecond();
 				}
-				else if (newValue == null) { // removed
-					Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>> oldData =
+				else if (newValue == null) { // property deleted
+					Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>> deletedPair =
 							(Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>>) oldValue;
-					
-					tag = oldData.getSecond().getFirst();
+					tagDefinition = deletedPair.getSecond().getFirst();
 				}
-				else { //update
-					tag = (TagDefinition) oldValue;
+				else { // property updated
+					tagDefinition = (TagDefinition) oldValue;
 				}
-				
-				TagsetTreeItem parentItem = null;
-				if (tag.getParentUuid().isEmpty()) {
-					parentItem = new TagsetDataItem(
-						project.getTagManager().getTagLibrary()
-							.getTagsetDefinition(tag.getTagsetDefinitionUuid()));
+
+				TagsetTreeItem parentTagsetTreeItem;
+
+				if (tagDefinition.getParentUuid().isEmpty()) {
+					parentTagsetTreeItem = new TagsetDataItem(
+						project.getTagManager().getTagLibrary().getTagsetDefinition(tagDefinition.getTagsetDefinitionUuid())
+					);
 				}
 				else {
-					parentItem = new TagDataItem(
-						project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid()));
+					parentTagsetTreeItem = new TagDataItem(
+						project.getTagManager().getTagLibrary().getTagDefinition(tagDefinition.getParentUuid())
+					);
 				}
-				
-				final String tagId = tag.getUuid();
-				tagsetData.getChildren(parentItem)
-				.stream()
-				.map(tagsetTreeItem -> (TagDataItem)tagsetTreeItem)
-				.filter(tagDataItem -> tagDataItem.getTag().getUuid().equals(tagId))
-				.findFirst()
-				.ifPresent(tagDataItem -> {
-					tagDataItem.setPropertiesExpanded(false);
-					hideExpandedProperties(tagDataItem);
-					tagDataItem.setPropertiesExpanded(true);
-					showExpandedProperties(tagDataItem);
-				});
-				
+
+				// is this view aware of the tag corresponding to the property?
+				Optional<TagDataItem> optionalTagDataItem = tagsetData.getChildren(parentTagsetTreeItem)
+						.stream()
+						.map(tagsetTreeItem -> (TagDataItem) tagsetTreeItem)
+						.filter(tagDataItem -> tagDataItem.getTag().getUuid().equals(tagDefinition.getUuid()))
+						.findFirst();
+
+				// no, log a warning
+				if (!optionalTagDataItem.isPresent()) {
+					logger.warning(
+							String.format(
+									"Failed to find tag with ID %1$s in the TagsView TreeGrid for project \"%2$s\" with ID %3$s",
+									tagDefinition.getUuid(),
+									project.getName(),
+									project.getId()
+							)
+					);
+					return;
+				}
+
+				// yes, refresh the properties being displayed
+				TagDataItem tagDataItem = optionalTagDataItem.get();
+				tagDataItem.setPropertiesExpanded(false);
+				hideExpandedProperties(tagDataItem);
+				tagDataItem.setPropertiesExpanded(true);
+				showExpandedProperties(tagDataItem);
+
 				tagsetDataProvider.refreshAll();
-				tagsetGrid.deselectAll();
 			}
 		};
-		
-		project.getTagManager().addPropertyChangeListener(
-				TagManagerEvent.userPropertyDefinitionChanged, 
-				propertyDefinitionChangedListener);	
+
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.userPropertyDefinitionChanged, propertyDefinitionChangedListener);
 	}
 
 	private void initActions() {
@@ -384,16 +399,14 @@ public class TagsView extends HugeCard {
 		content.addComponent(tagsetGridComponent);
 		content.setExpandRatio(tagsetGridComponent, 1f);
 	}
-	
+
 	public void close() {
 		resourcePanel.close();
+
+		project.getTagManager().removePropertyChangeListener(TagManagerEvent.tagDefinitionChanged, tagDefinitionChangedListener);
+		project.getTagManager().removePropertyChangeListener(TagManagerEvent.userPropertyDefinitionChanged, propertyDefinitionChangedListener);
+
 		eventBus.unregister(this);
-		project.getTagManager().removePropertyChangeListener(
-				TagManagerEvent.userPropertyDefinitionChanged, 
-				propertyDefinitionChangedListener);	
-		project.getTagManager().removePropertyChangeListener(
-				TagManagerEvent.tagDefinitionChanged, 
-				tagChangedListener);	
 	}
 
 	private void handlePropertySummaryClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {

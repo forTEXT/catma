@@ -111,21 +111,18 @@ public class TagResourcePanel extends VerticalLayout {
 	public void setTagsetChangeListener(PropertyChangeListener tagsetChangeListener) {
 		this.tagsetChangeListener = tagsetChangeListener;
 	}
-	
+
 	private void initProjectListeners() {
-		this.tagsetChangeListener = new PropertyChangeListener() {
-			
+		tagsetChangeListener = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				handleTagsetChange(evt);
 			}
-		};		
-		
-        project.getTagManager().addPropertyChangeListener(
-        		TagManagerEvent.tagsetDefinitionChanged,
-        		tagsetChangeListener);
-    }	
-    
+		};
+
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
+	}
+
 	private void handleTagsetChange(PropertyChangeEvent evt) {
 		Object oldValue = evt.getOldValue();
 		Object newValue = evt.getNewValue();
@@ -197,16 +194,14 @@ public class TagResourcePanel extends VerticalLayout {
 		addComponent(tagsetActionGridComponent);
 	}
 
-	
 	public void close() {
 		if (project != null) {
-	        project.getTagManager().removePropertyChangeListener(
-        		TagManagerEvent.tagsetDefinitionChanged,
-        		tagsetChangeListener);
+			project.getTagManager().removePropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
 		}
+
 		eventBus.unregister(this);
 	}
-	
+
 	@Subscribe
 	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
 		TagsetSelectionListener tagsetSelectionListener = this.tagsetSelectionListener;
