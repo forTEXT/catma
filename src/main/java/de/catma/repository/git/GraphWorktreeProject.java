@@ -30,6 +30,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.graph.interfaces.*;
 import de.catma.repository.git.graph.lazy.LazyGraphProjectHandler;
+import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.LatestContribution;
@@ -51,7 +52,6 @@ import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.mime.MediaType;
-import org.eclipse.jgit.transport.CredentialsProvider;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -245,7 +245,7 @@ public class GraphWorktreeProject implements IndexedProject {
 							File projectPath,
 							LocalGitRepositoryManager localGitRepositoryManager,
 							RemoteGitManagerRestricted remoteGitServerManager,
-							CredentialsProvider credentialsProvider
+							JGitCredentialsManager jGitCredentialsManager
 					) {
 						return new LatestContributionsResourceProvider(
 								projectId,
@@ -253,7 +253,6 @@ public class GraphWorktreeProject implements IndexedProject {
 								projectPath,
 								localGitRepositoryManager,
 								remoteGitServerManager,
-								credentialsProvider,
 								latestContributions
 						);
 					}
@@ -267,7 +266,7 @@ public class GraphWorktreeProject implements IndexedProject {
 							File projectPath,
 							LocalGitRepositoryManager localGitRepositoryManager,
 							RemoteGitManagerRestricted remoteGitServerManager,
-							CredentialsProvider credentialsProvider
+							JGitCredentialsManager jGitCredentialsManager
 					) {
 						return new SynchronizedResourceProvider(
 								projectId,
@@ -275,7 +274,7 @@ public class GraphWorktreeProject implements IndexedProject {
 								projectPath,
 								localGitRepositoryManager,
 								remoteGitServerManager,
-								credentialsProvider
+								jGitCredentialsManager
 						);
 					}
 				});

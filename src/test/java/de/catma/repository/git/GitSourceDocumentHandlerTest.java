@@ -21,7 +21,6 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Project;
 import org.junit.jupiter.api.AfterEach;
@@ -46,10 +45,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.GitlabManagerRestricted;
-import de.catma.repository.git.managers.GitProjectsManager;
-import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.repository.git.managers.*;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 //import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
@@ -442,7 +438,7 @@ public class GitSourceDocumentHandlerTest {
 			// TODO: factor out a function that does all of the above
 
 			jGitRepoManager.open(projectReference.getProjectId(), sourceDocumentUuid);
-			jGitRepoManager.push(new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword()));
+			jGitRepoManager.push(new JGitCredentialsManager(gitlabManagerRestricted));
 
 			SourceDocument sourceDocument = gitSourceDocumentHandler.open(sourceDocumentUuid);
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(

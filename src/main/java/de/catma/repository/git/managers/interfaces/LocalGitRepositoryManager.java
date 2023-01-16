@@ -8,10 +8,10 @@ import java.util.Set;
 
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
 
 import de.catma.project.CommitInfo;
+import de.catma.repository.git.managers.JGitCredentialsManager;
 
 public interface LocalGitRepositoryManager extends AutoCloseable {
 	static String DEFAULT_LOCAL_DEV_BRANCH = "dev";
@@ -29,7 +29,7 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 
 	String clone(
 			String namespace, String projectId, 
-			String uri, CredentialsProvider credentialsProvider) throws IOException;
+			String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 	void open(String namespace, String name) throws IOException;
 
@@ -42,10 +42,10 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 
 	String commit(String message, String committerName, String committerEmail, boolean force) throws IOException;
 
-	List<PushResult> push(CredentialsProvider credentialsProvider) throws IOException;
-	List<PushResult> pushMaster(CredentialsProvider credentialsProvider) throws IOException;
+	List<PushResult> push(JGitCredentialsManager jGitCredentialsManager) throws IOException;
+	List<PushResult> pushMaster(JGitCredentialsManager jGitCredentialsManager) throws IOException;
 	
-	void fetch(CredentialsProvider credentialsProvider) throws IOException;
+	void fetch(JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 	void checkout(String name) throws IOException;
 	void checkout(String name, boolean createBranch) throws IOException;

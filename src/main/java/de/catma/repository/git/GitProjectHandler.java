@@ -19,6 +19,7 @@ import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
+import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.LatestContribution;
@@ -36,8 +37,6 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +62,7 @@ public class GitProjectHandler {
 	private final RemoteGitManagerRestricted remoteGitServerManager;
 
 	private final IDGenerator idGenerator;
-	private final CredentialsProvider credentialsProvider;
+	private final JGitCredentialsManager jGitCredentialsManager;
 	private GitProjectResourceProvider resourceProvider;
 
 	public GitProjectHandler(
@@ -81,14 +80,14 @@ public class GitProjectHandler {
 		this.remoteGitServerManager = remoteGitServerManager;
 
 		this.idGenerator = new IDGenerator();
-		this.credentialsProvider = new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
+		this.jGitCredentialsManager = new JGitCredentialsManager(this.remoteGitServerManager);
 		this.resourceProvider = new SynchronizedResourceProvider(
 				this.projectId,
 				this.projectReference,
 				this.projectPath,
 				this.localGitRepositoryManager,
 				this.remoteGitServerManager,
-				this.credentialsProvider
+				this.jGitCredentialsManager
 		);
 	}
 
@@ -123,7 +122,7 @@ public class GitProjectHandler {
 					forkedFromCommitURL
 			);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevisionHash;
 		}
@@ -142,7 +141,7 @@ public class GitProjectHandler {
 
 			String projectRevision = gitTagsetHandler.updateTagsetDefinition(tagsetDefinition);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -165,7 +164,7 @@ public class GitProjectHandler {
 			);
 			String projectRevision = gitTagsetHandler.removeTagsetDefinition(tagsetDefinition);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -193,7 +192,7 @@ public class GitProjectHandler {
 
 			String projectRevision = gitTagsetHandler.createOrUpdateTagDefinition(tagsetId, tagDefinition, commitMsg);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -216,7 +215,7 @@ public class GitProjectHandler {
 			);
 			String projectRevision = gitTagsetHandler.removeTagDefinition(tagDefinition);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -244,7 +243,7 @@ public class GitProjectHandler {
 
 			String projectRevision = gitTagsetHandler.removePropertyDefinition(tagsetDefinition, tagDefinition, propertyDefinition);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -303,7 +302,7 @@ public class GitProjectHandler {
 			);
 
 			if (withPush) {
-				localGitRepoManager.push(credentialsProvider);
+				localGitRepoManager.push(jGitCredentialsManager);
 			}
 
 			return projectRevisionHash;
@@ -324,7 +323,7 @@ public class GitProjectHandler {
 
 			String projectRevision = gitAnnotationCollectionHandler.updateCollection(annotationCollectionReference);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -344,7 +343,7 @@ public class GitProjectHandler {
 
 			String projectRevision = gitAnnotationCollectionHandler.removeCollection(annotationCollectionReference);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -447,7 +446,7 @@ public class GitProjectHandler {
 			);
 
 			if (withPush) {
-				localGitRepoManager.push(credentialsProvider);
+				localGitRepoManager.push(jGitCredentialsManager);
 			}
 
 			return projectRevision;
@@ -577,7 +576,7 @@ public class GitProjectHandler {
 					sourceDocumentInfo
 			);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			// TODO: should this be done sooner so that the updated URI is written to disk?
 			sourceDocumentInfo.getTechInfoSet().setURI(
@@ -601,7 +600,7 @@ public class GitProjectHandler {
 
 			String projectRevision = gitSourceDocumentHandler.update(sourceDocumentReference);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -632,7 +631,7 @@ public class GitProjectHandler {
 
 			String projectRevision = gitSourceDocumentHandler.removeDocument(sourceDocumentReference);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -728,7 +727,7 @@ public class GitProjectHandler {
 				projectPath,
 				localGitRepositoryManager,
 				remoteGitServerManager,
-				credentialsProvider
+				jGitCredentialsManager
 		);
 	}
 
@@ -799,7 +798,7 @@ public class GitProjectHandler {
 					false
 			);
 
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 
 			return projectRevision;
 		}
@@ -821,7 +820,7 @@ public class GitProjectHandler {
 			// if there are uncommitted changes we perform an auto commit and push
 			if (localGitRepoManager.hasUncommitedChanges()) {
 				commitProject("Auto-committing changes before synchronization");
-				localGitRepoManager.push(credentialsProvider);
+				localGitRepoManager.push(jGitCredentialsManager);
 				pushedAlready = true;
 			}
 
@@ -843,7 +842,7 @@ public class GitProjectHandler {
 
 				// make sure everything is pushed
 				if (!pushedAlready) {
-					localGitRepoManager.push(credentialsProvider);
+					localGitRepoManager.push(jGitCredentialsManager);
 					pushedAlready = true;
 				}
 
@@ -893,7 +892,7 @@ public class GitProjectHandler {
 
 			// fetch latest commits 
 			// we are interested in updating the local origin/master here
-			localGitRepoManager.fetch(credentialsProvider);
+			localGitRepoManager.fetch(jGitCredentialsManager);
 
 			// get commits that need to be merged into the local user branch
 			// origin/master -> userBranch
@@ -919,7 +918,7 @@ public class GitProjectHandler {
 
 					// push if merge was successful, otherwise abort the merge
 					if (mergeWithOriginMasterResult.getMergeStatus().isSuccessful()) {
-						localGitRepoManager.push(credentialsProvider);
+						localGitRepoManager.push(jGitCredentialsManager);
 					}
 					else {
 						localGitRepoManager.abortMerge(mergeWithOriginMasterResult);
@@ -956,7 +955,7 @@ public class GitProjectHandler {
 
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
-			localGitRepoManager.fetch(credentialsProvider);
+			localGitRepoManager.fetch(jGitCredentialsManager);
 
 			List<String> availableBranches = localGitRepoManager.getRemoteBranches();
 			List<String> filteredBranches = branches.stream().filter(availableBranches::contains).collect(Collectors.toList());

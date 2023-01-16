@@ -9,12 +9,12 @@ import de.catma.repository.git.GitAnnotationCollectionHandler;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitSourceDocumentHandler;
 import de.catma.repository.git.GitTagsetHandler;
+import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
-import org.eclipse.jgit.transport.CredentialsProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +32,7 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 	private final File projectPath;
 	private final LocalGitRepositoryManager localGitRepositoryManager;
 	private final RemoteGitManagerRestricted remoteGitServerManager;
-	private final CredentialsProvider credentialsProvider;
+	private final JGitCredentialsManager jGitCredentialsManager;
 
 	public SynchronizedResourceProvider(
 			String projectId,
@@ -40,14 +40,14 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 			File projectPath,
 			LocalGitRepositoryManager localGitRepositoryManager,
 			RemoteGitManagerRestricted remoteGitServerManager,
-			CredentialsProvider credentialsProvider
+			JGitCredentialsManager jGitCredentialsManager
 	) {
 		this.projectId = projectId;
 		this.projectReference = projectReference;
 		this.projectPath = projectPath;
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
-		this.credentialsProvider = credentialsProvider;
+		this.jGitCredentialsManager = jGitCredentialsManager;
 	}
 
 	@Override
@@ -206,7 +206,7 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 						remoteGitServerManager.getEmail(),
 						false
 				);
-				localGitRepoManager.push(credentialsProvider);
+				localGitRepoManager.push(jGitCredentialsManager);
 			}
 		}
 

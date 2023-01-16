@@ -17,8 +17,6 @@ import de.catma.tag.TagManager;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +33,7 @@ public class GitProjectsManager implements ProjectsManager {
 
 	private final User user;
 	private final LocalGitRepositoryManager localGitRepositoryManager;
-	private final CredentialsProvider credentialsProvider;
+	private final JGitCredentialsManager jGitCredentialsManager;
 	private final IDGenerator idGenerator;
 
 	public GitProjectsManager(
@@ -53,7 +51,7 @@ public class GitProjectsManager implements ProjectsManager {
 
 		this.user = remoteGitServerManager.getUser();
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
-		this.credentialsProvider = new UsernamePasswordCredentialsProvider("oauth2", remoteGitServerManager.getPassword());
+		this.jGitCredentialsManager = new JGitCredentialsManager(this.remoteGitServerManager);
 		this.idGenerator = new IDGenerator();
 	}
 
@@ -88,7 +86,7 @@ public class GitProjectsManager implements ProjectsManager {
 						projectReference.getNamespace(),
 						projectReference.getProjectId(),
 						remoteGitServerManager.getProjectRepositoryUrl(projectReference),
-						credentialsProvider
+						jGitCredentialsManager
 				);
 			}
 		}
@@ -158,7 +156,7 @@ public class GitProjectsManager implements ProjectsManager {
 					user.getIdentifier(),
 					projectId,
 					repositoryUrl,
-					credentialsProvider
+					jGitCredentialsManager
 			);
 
 			String initialCommit = String.format("Created project \"%s\"", name);
@@ -167,12 +165,12 @@ public class GitProjectsManager implements ProjectsManager {
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail(), true);
 
-			localGitRepoManager.pushMaster(credentialsProvider);
+			localGitRepoManager.pushMaster(jGitCredentialsManager);
 
 			localGitRepoManager.checkout(user.getIdentifier(), true);
 
 			// create remote user specific branch
-			localGitRepoManager.push(credentialsProvider);
+			localGitRepoManager.push(jGitCredentialsManager);
 		}
 
 		return new ProjectReference(projectId, user.getIdentifier(), name, description);

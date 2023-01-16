@@ -194,8 +194,8 @@
 		<dependency>
 			<groupId>org.gitlab4j</groupId>
 			<artifactId>gitlab4j-api</artifactId>
-			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA -->
-			<version>5.0.1-CATMA</version>
+			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA-v2 -->
+			<version>5.0.1-CATMA-v2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>

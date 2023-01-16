@@ -1,9 +1,9 @@
 package de.catma.repository.git.resource.provider.interfaces;
 
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
-import org.eclipse.jgit.transport.CredentialsProvider;
 
 import java.io.File;
 
@@ -14,6 +14,6 @@ public interface GitProjectResourceProviderFactory {
 			File projectPath,
 			LocalGitRepositoryManager localGitRepositoryManager,
 			RemoteGitManagerRestricted remoteGitServerManager,
-			CredentialsProvider credentialsProvider
+			JGitCredentialsManager jGitCredentialsManager
 	);
 }

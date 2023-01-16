@@ -104,7 +104,7 @@
     <orderEntry type="library" name="Maven: com.jcraft:jzlib:1.1.1" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.javaewah:JavaEWAH:1.1.6" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.2" level="project" />
-    <orderEntry type="library" name="Maven: org.gitlab4j:gitlab4j-api:5.0.1-CATMA" level="project" />
+    <orderEntry type="library" name="Maven: org.gitlab4j:gitlab4j-api:5.0.1-CATMA-v2" level="project" />
     <orderEntry type="library" name="Maven: jakarta.activation:jakarta.activation-api:1.2.2" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.jersey.inject:jersey-hk2:2.35" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.jersey.core:jersey-common:2.35" level="project" />

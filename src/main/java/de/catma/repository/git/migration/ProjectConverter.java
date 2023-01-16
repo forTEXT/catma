@@ -7,6 +7,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.repository.git.GitAnnotationCollectionHandler;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
@@ -18,7 +19,6 @@ import de.catma.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.IssuesApi;
 import org.gitlab4j.api.Pager;
@@ -91,10 +91,10 @@ public class ProjectConverter implements AutoCloseable {
 			try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userAndImpersonationToken.getSecond())) {
 				logger.info(String.format("Retrieving legacy project (group) with ID %s", projectId));
 				Group legacyProject = restrictedGitLabApi.getGroupApi().getGroup(projectId);
+
 				User ownerUser = userAndImpersonationToken.getFirst();
-				UsernamePasswordCredentialsProvider credentialsProvider = new UsernamePasswordCredentialsProvider(
-						"oauth2", restrictedGitLabApi.getAuthToken()
-				);
+
+				JGitCredentialsManager jGitCredentialsManager = new JGitCredentialsManager(new GitUserInformationProviderMigrationImpl(restrictedGitLabApi));
 
 				logger.info(String.format("Creating temp directory for project with ID %s and owner \"%s\"", projectId, ownerUser.getIdentifier()));
 				String migrationTempPath = new File(CATMAPropertyKey.TEMP_DIR.getValue(), "project_migration").getAbsolutePath();
@@ -115,7 +115,7 @@ public class ProjectConverter implements AutoCloseable {
 					repoManager.cloneWithSubmodules(
 							projectId,
 							legacyProjectHandler.getProjectRootRepositoryUrl(restrictedGitLabApi, projectId, rootRepoName),
-							credentialsProvider
+							jGitCredentialsManager
 					);
 				}
 
@@ -150,7 +150,7 @@ public class ProjectConverter implements AutoCloseable {
 					}
 
 					repoManager.checkoutFromOrigin(migrationBranch);
-					repoManager.initAndUpdateSubmodules(credentialsProvider, new HashSet<>(repoManager.getSubmodulePaths()));
+					repoManager.initAndUpdateSubmodules(jGitCredentialsManager, new HashSet<>(repoManager.getSubmodulePaths()));
 
 					List<String> relativeSubmodulePaths = repoManager.getSubmodulePaths();
 
@@ -264,7 +264,7 @@ public class ProjectConverter implements AutoCloseable {
 					}
 
 					logger.info("Pushing converted project (master branch)");
-					repoManager.pushMaster(credentialsProvider);
+					repoManager.pushMaster(jGitCredentialsManager);
 
 					logger.info("Adding original team members to the new project");
 					for (Member member : members) {

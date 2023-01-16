@@ -14,7 +14,6 @@ import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
-import org.eclipse.jgit.transport.CredentialsProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +38,6 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 			File projectPath,
 			LocalGitRepositoryManager localGitRepositoryManager,
 			RemoteGitManagerRestricted remoteGitServerManager,
-			CredentialsProvider credentialsProvider,
 			Set<LatestContribution> latestContributions
 	) {
 		this.projectId = projectId;

@@ -27,7 +27,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
-import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.URIish;
@@ -59,7 +58,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 * <p>
 	 * Note that the <code>user</code> argument is NOT used for authentication to remote Git servers. It is only
 	 * used to organise repositories on the local file system, based on the user's identifier. Methods of this class
-	 * that require authentication expect a {@link CredentialsProvider}.
+	 * that require authentication expect a {@link JGitCredentialsManager}.
 	 *
 	 * @param repositoryBasePath the base path for local repository storage
 	 * @param user a {@link User}
@@ -193,8 +192,8 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	
 	@Override
 	public String clone(
-			String namespace, String projectId, String uri, 
-			CredentialsProvider credentialsProvider)
+			String namespace, String projectId, String uri,
+			JGitCredentialsManager jGitCredentialsManager)
 			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
@@ -211,7 +210,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 					jGitCommandFactory.newCloneCommand()
 					.setURI(uri).setDirectory(path);
 
-			cloneCommand.setCredentialsProvider(credentialsProvider);
+			cloneCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			
 			this.gitApi = cloneCommand.call();			
 		}
@@ -225,7 +224,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 
 	@Deprecated
-	public String cloneWithSubmodules(String group, String uri, CredentialsProvider credentialsProvider)
+	public String cloneWithSubmodules(String group, String uri, JGitCredentialsManager jGitCredentialsManager)
 			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `cloneWithSubmodules` on an attached instance");
@@ -245,7 +244,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 					jGitCommandFactory.newCloneCommand()
 					.setURI(uri).setDirectory(path);
 
-			cloneCommand.setCredentialsProvider(credentialsProvider);
+			cloneCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			
 			this.gitApi = cloneCommand.call();
 			
@@ -253,7 +252,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 			SubmoduleUpdateCommand submoduleUpdateCommand = 
 					jGitCommandFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
-			submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
+			submoduleUpdateCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			submoduleUpdateCommand.call();
 		}
 		catch (GitAPIException e) {
@@ -593,25 +592,25 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	/**
 	 * Pushes commits made locally on the user branch to the associated remote ('origin') repository and branch.
 	 *
-	 * @param credentialsProvider a {@link CredentialsProvider} to use for authentication
+	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
 	 * @return a {@link List<PushResult>} containing the results of the push operation
 	 * @throws IOException if an error occurs when pushing
 	 */
 	@Override
-	public List<PushResult> push(CredentialsProvider credentialsProvider) throws IOException {
-		return push(credentialsProvider, null, 0, false);
+	public List<PushResult> push(JGitCredentialsManager jGitCredentialsManager) throws IOException {
+		return push(jGitCredentialsManager, null, 0, false);
 	}
 
 	/**
 	 * Pushes commits made locally on the master branch to the associated remote ('origin') repository and branch.
 	 *
-	 * @param credentialsProvider a {@link CredentialsProvider} to use for authentication
+	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
 	 * @return a {@link List<PushResult>} containing the results of the push operation
 	 * @throws IOException if an error occurs when pushing
 	 */
 	@Override
-	public List<PushResult> pushMaster(CredentialsProvider credentialsProvider) throws IOException {
-		return push(credentialsProvider, Constants.MASTER, 0, false);
+	public List<PushResult> pushMaster(JGitCredentialsManager jGitCredentialsManager) throws IOException {
+		return push(jGitCredentialsManager, Constants.MASTER, 0, false);
 	}
 
 	/**
@@ -619,24 +618,24 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 * <p>
 	 * Skips branch checks - only to be used for project migration from CATMA 6 -> 7.
 	 *
-	 * @param credentialsProvider a {@link CredentialsProvider} to use for authentication
+	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
 	 * @return a {@link List<PushResult>} containing the results of the push operation
 	 * @throws IOException if an error occurs when pushing
 	 */
-	public List<PushResult> pushWithoutBranchChecks(CredentialsProvider credentialsProvider) throws IOException {
-		return push(credentialsProvider, null, 0, true);
+	public List<PushResult> pushWithoutBranchChecks(JGitCredentialsManager jGitCredentialsManager) throws IOException {
+		return push(jGitCredentialsManager, null, 0, true);
 	}
 
 	/**
 	 * Pushes commits made locally on the specified branch to the associated remote ('origin') repository and branch.
 	 *
-	 * @param credentialsProvider a {@link CredentialsProvider} to use for authentication
+	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
 	 * @param branch the branch to push, defaults to the user branch if null
 	 * @param tryCount how often this push has been attempted already (start with 0, used internally to limit recursive retries)
 	 * @param skipBranchChecks whether to skip branch checks, normally false
 	 * @throws IOException if an error occurs when pushing
 	 */
-	private List<PushResult> push(CredentialsProvider credentialsProvider, String branch, int tryCount, boolean skipBranchChecks) throws IOException {
+	private List<PushResult> push(JGitCredentialsManager jGitCredentialsManager, String branch, int tryCount, boolean skipBranchChecks) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
@@ -669,7 +668,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			}
 
 			PushCommand pushCommand = gitApi.push();
-			pushCommand.setCredentialsProvider(credentialsProvider);
+			pushCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME);
 			Iterable<PushResult> pushResults = pushCommand.call();
 
@@ -690,7 +689,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				}
 				catch (InterruptedException ignored) {}
 
-				push(credentialsProvider, branch, tryCount + 1, skipBranchChecks);
+				push(jGitCredentialsManager, branch, tryCount + 1, skipBranchChecks);
 			}
 			else {
 				// give up, push not possible or unexpected error
@@ -704,19 +703,18 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	/**
 	 * Fetches refs from the associated remote repository ('origin' remote).
 	 *
-	 * @param username the username to authenticate with
-	 * @param password the password to authenticate with
-	 * @throws IOException if the fetch operation failed
+	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
+	 * @throws IOException if an error occurs when fetching
 	 */
 	@Override
-	public void fetch(CredentialsProvider credentialsProvider) throws IOException {
+	public void fetch(JGitCredentialsManager jGitCredentialsManager) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `fetch` on a detached instance");
 		}
 
 		try {
 			FetchCommand fetchCommand = this.gitApi.fetch();
-			fetchCommand.setCredentialsProvider(credentialsProvider);
+			fetchCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			fetchCommand.call();
 		}
 		catch (GitAPIException e) {
@@ -1101,7 +1099,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 
 	@Deprecated
-	public void initAndUpdateSubmodules(CredentialsProvider credentialsProvider, Set<String> submodules) throws Exception {
+	public void initAndUpdateSubmodules(JGitCredentialsManager jGitCredentialsManager, Set<String> submodules) throws Exception {
 		
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `initAndUpdateSubmodules` on a detached instance");
@@ -1114,7 +1112,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			SubmoduleUpdateCommand submoduleUpdateCommand = 
 				jGitCommandFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
 			submodules.forEach(submodule -> submoduleUpdateCommand.addPath(submodule));
-			submoduleUpdateCommand.setCredentialsProvider(credentialsProvider);
+			submoduleUpdateCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			submoduleUpdateCommand.call();
 		}		
 	}
@@ -1543,7 +1541,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 	
 	@Deprecated
-	public boolean resolveRootConflicts(String projectId, CredentialsProvider credentialsProvider) throws IOException {
+	public boolean resolveRootConflicts(String projectId, JGitCredentialsManager jGitCredentialsManager) throws IOException {
 		Set<String> unresolved = new HashSet<String>();
 		
 		if (!isAttached()) {
@@ -1582,7 +1580,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 							// we try to make sure that their version is included (merged) in the latest version
 							// of this submodule
 							ensureLatestSubmoduleRevision(
-									baseEntry, theirEntry, conflictingSubmodule, credentialsProvider);
+									baseEntry, theirEntry, conflictingSubmodule, jGitCredentialsManager);
 							try (Repository subModuleRepo = 
 									SubmoduleWalk.getSubmoduleRepository(
 											this.gitApi.getRepository(), conflictingSubmodule)) {
@@ -1706,7 +1704,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	@Deprecated
 	private void ensureLatestSubmoduleRevision(DirCacheEntry baseEntry, 
 			DirCacheEntry theirEntry, String conflictingSubmodule,
-			CredentialsProvider credentialsProvider) throws Exception {
+			JGitCredentialsManager jGitCredentialsManager) throws Exception {
 		
 		try (Repository submoduleRepo = 
 			SubmoduleWalk.getSubmoduleRepository(this.gitApi.getRepository(), conflictingSubmodule)) {
@@ -1745,7 +1743,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 					.call();
 					
 					PullResult pullResult = 
-						submoduleGitApi.pull().setCredentialsProvider(credentialsProvider).call();
+						submoduleGitApi.pull().setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider()).call();
 					if (!pullResult.isSuccessful()) {
 						throw new IllegalStateException(
 							String.format(
@@ -1895,7 +1893,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
-	public void reAddSubmodule(File submodulePath, String uri, CredentialsProvider credentialsProvider)
+	public void reAddSubmodule(File submodulePath, String uri, JGitCredentialsManager jGitCredentialsManager)
 			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `reAddSubmodule` on a detached instance");
@@ -1936,7 +1934,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		    			.setURI(uri)
 		    			.setPath(unixStyleRelativeSubmodulePath);
 		    	//needs permissions because the submodule is cloned from remote first and then added locally
-		    	submoduleAddCommand.setCredentialsProvider(credentialsProvider);
+		    	submoduleAddCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 		    	
 		    	Repository repository = submoduleAddCommand.call();
 		    	repository.close();

@@ -5,6 +5,7 @@ import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACRole;
+import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.user.Member;
 import de.catma.user.User;
@@ -15,8 +16,6 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Group;
@@ -80,8 +79,8 @@ public class ProjectScanner implements AutoCloseable {
 
 	private void scanProject(
 			String projectId, 
-			JGitRepoManager userRepoManager, 
-			CredentialsProvider credentialsProvider,
+			JGitRepoManager userRepoManager,
+			JGitCredentialsManager jGitCredentialsManager,
 			GitLabApi restrictedGitLabApi,
 			User user
 	) {
@@ -125,7 +124,7 @@ public class ProjectScanner implements AutoCloseable {
 				// if the Git status is clean, check what still needs to, and can be, merged and add these details to the project report
 				if (status.isClean()) {
 					logger.info(String.format("Fetching resource at path %s/%s", projectId, resource));
-					repoManager.fetch(credentialsProvider);
+					repoManager.fetch(jGitCredentialsManager);
 
 					List<CommitInfo> commitsDevIntoMaster = repoManager.getCommitsNeedToBeMergedFromDevToMaster();
 					getProjectReport(projectId).addNeedMergeDevToMaster(resource, commitsDevIntoMaster);
@@ -166,7 +165,7 @@ public class ProjectScanner implements AutoCloseable {
 			// if the Git status is clean, check what still needs to, and can be, merged and add these details to the project report
 			if (rootStatus.isClean()) {
 				logger.info(String.format("Performing fetch on root repo for project with ID %s", projectId));
-				repoManager.fetch(credentialsProvider);
+				repoManager.fetch(jGitCredentialsManager);
 
 				List<CommitInfo> commitsMasterIntoOriginMaster = repoManager.getCommitsNeedToBeMergedFromMasterToOriginMaster();
 				getProjectReport(projectId).addNeedMergeMasterToOriginMaster(projectId, commitsMasterIntoOriginMaster);
@@ -188,7 +187,7 @@ public class ProjectScanner implements AutoCloseable {
 
 					Status status = repoManager.getStatus();
 					if (status.isClean()) {
-						mergeAndPushResource(repoManager, credentialsProvider, projectId, resource);
+						mergeAndPushResource(repoManager, jGitCredentialsManager, projectId, resource);
 					}
 
 					repoManager.detach();
@@ -197,7 +196,7 @@ public class ProjectScanner implements AutoCloseable {
 				 // if we had a clean rootStatus before merging resources we merge and push the root repo
 				if (rootStatus.isClean()) { 
 					repoManager.open(projectId, rootRepoName);
-					mergeAndPushRoot(repoManager, user, credentialsProvider, projectId, rootRepoName);
+					mergeAndPushRoot(repoManager, user, jGitCredentialsManager, projectId, rootRepoName);
 					repoManager.detach();
 				}
 			}
@@ -211,7 +210,7 @@ public class ProjectScanner implements AutoCloseable {
 	private boolean resolveRootConflicts(
 			JGitRepoManager repoManager, 
 			User user,
-			CredentialsProvider credentialsProvider,
+			JGitCredentialsManager jGitCredentialsManager,
 			MergeResult mergeResult,
 			String projectId,
 			String rootRepoName
@@ -225,7 +224,7 @@ public class ProjectScanner implements AutoCloseable {
 				repoManager.resolveGitSubmoduleFileConflicts();
 			}
 
-			clean = repoManager.resolveRootConflicts(projectId, credentialsProvider);
+			clean = repoManager.resolveRootConflicts(projectId, jGitCredentialsManager);
 
 			// if conflicts could be resolved, re-add all submodules
 			if (clean) {
@@ -236,8 +235,8 @@ public class ProjectScanner implements AutoCloseable {
 					String remoteUrl = String.format(
 							"%s/%s/%s.git", CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), projectId, submodulePath.getFileName().toString()
 					);
-					repoManager.reAddSubmodule(submodulePath.toFile(), remoteUrl, credentialsProvider);
-					repoManager.initAndUpdateSubmodules(credentialsProvider, Collections.singleton(relativeSubmodulePath));
+					repoManager.reAddSubmodule(submodulePath.toFile(), remoteUrl, jGitCredentialsManager);
+					repoManager.initAndUpdateSubmodules(jGitCredentialsManager, Collections.singleton(relativeSubmodulePath));
 					repoManager.detach();
 
 					// check out the remote migration branch for the submodule
@@ -264,7 +263,7 @@ public class ProjectScanner implements AutoCloseable {
 	private void mergeAndPushRoot(
 			JGitRepoManager repoManager,
 			User user,
-			CredentialsProvider credentialsProvider,
+			JGitCredentialsManager jGitCredentialsManager,
 			String projectId,
 			String rootRepoName
 	) throws Exception {
@@ -291,7 +290,7 @@ public class ProjectScanner implements AutoCloseable {
 			);
 		}
 
-		repoManager.fetch(credentialsProvider);
+		repoManager.fetch(jGitCredentialsManager);
 
 		boolean hasRemoteMigrationBranch = repoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
 		boolean clean = true;
@@ -300,7 +299,7 @@ public class ProjectScanner implements AutoCloseable {
 		if (hasRemoteMigrationBranch) {
 			MergeResult mrOriginC6MigrationIntoC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
 			getProjectReport(projectId).addMergeResultOriginC6MigrationToC6Migration(projectId, mrOriginC6MigrationIntoC6Migration);
-			clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrOriginC6MigrationIntoC6Migration, projectId, rootRepoName);
+			clean = resolveRootConflicts(repoManager, user, jGitCredentialsManager, mrOriginC6MigrationIntoC6Migration, projectId, rootRepoName);
 		}
 
 		// if the previous merge succeeded or all conflicts could be resolved
@@ -309,7 +308,7 @@ public class ProjectScanner implements AutoCloseable {
 			if (repoManager.hasRemoteRef(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)) {
 				MergeResult mrOriginMasterIntoC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
 				getProjectReport(projectId).addMergeResultOriginMasterToC6Migration(projectId, mrOriginMasterIntoC6Migration);
-				clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrOriginMasterIntoC6Migration, projectId, rootRepoName);
+				clean = resolveRootConflicts(repoManager, user, jGitCredentialsManager, mrOriginMasterIntoC6Migration, projectId, rootRepoName);
 			}
 
 			// if the previous merge succeeded or all conflicts could be resolved
@@ -317,12 +316,12 @@ public class ProjectScanner implements AutoCloseable {
 				// merge the local master branch into the local migration branch
 				MergeResult mrMasterIntoC6Migration = repoManager.merge(Constants.MASTER);
 				getProjectReport(projectId).addMergeResulMasterToC6Migration(projectId, mrMasterIntoC6Migration);
-				clean = resolveRootConflicts(repoManager, user, credentialsProvider, mrMasterIntoC6Migration, projectId, rootRepoName);
+				clean = resolveRootConflicts(repoManager, user, jGitCredentialsManager, mrMasterIntoC6Migration, projectId, rootRepoName);
 
 				// if the previous merge succeeded or all conflicts could be resolved
 				if (clean) {
 					// push the migration branch
-					repoManager.pushWithoutBranchChecks(credentialsProvider);
+					repoManager.pushWithoutBranchChecks(jGitCredentialsManager);
 
 					// check if we have any local commits that didn't make it into the remote migration branch and update the project report accordingly
 					List<CommitInfo> commits = repoManager.getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration(migrationBranchName);
@@ -340,12 +339,12 @@ public class ProjectScanner implements AutoCloseable {
 
 	private void mergeAndPushResource(
 			JGitRepoManager repoManager,
-			CredentialsProvider credentialsProvider,
+			JGitCredentialsManager jGitCredentialsManager,
 			String projectId,
 			String resource
 	) throws Exception {
 		repoManager.checkout(migrationBranchName, true);
-		repoManager.fetch(credentialsProvider);
+		repoManager.fetch(jGitCredentialsManager);
 
 		boolean hasRemoteMigrationBranch = repoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
 
@@ -371,7 +370,7 @@ public class ProjectScanner implements AutoCloseable {
 				// if the previous merge succeeded
 				if (mrDevIntoC6Migration.getMergeStatus().isSuccessful()) {
 					// push the migration branch
-					repoManager.pushWithoutBranchChecks(credentialsProvider);
+					repoManager.pushWithoutBranchChecks(jGitCredentialsManager);
 
 					// check if we have any local commits that didn't make it into the remote migration branch and update the project report accordingly
 					List<CommitInfo> commits = repoManager.getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration(migrationBranchName);
@@ -408,9 +407,7 @@ public class ProjectScanner implements AutoCloseable {
 			String authenticatingUserImpersonationToken = authenticatingUserAndImpersonationToken.getSecond();
 
 			try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), authenticatingUserImpersonationToken)) {
-				UsernamePasswordCredentialsProvider credentialsProvider = new UsernamePasswordCredentialsProvider(
-						"oauth2", restrictedGitLabApi.getAuthToken()
-				);
+				JGitCredentialsManager jGitCredentialsManager = new JGitCredentialsManager(new GitUserInformationProviderMigrationImpl(restrictedGitLabApi));
 
 				String repositoryBasePath = CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue();
 				Path userBasePath = Paths.get(new File(repositoryBasePath).getAbsolutePath(), username);
@@ -452,7 +449,7 @@ public class ProjectScanner implements AutoCloseable {
 							continue;
 						}
 
-						scanProject(projectDir.getName(), repoManager, credentialsProvider, restrictedGitLabApi, user);
+						scanProject(projectDir.getName(), repoManager, jGitCredentialsManager, restrictedGitLabApi, user);
 					}
 				}
 			}

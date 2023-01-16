@@ -1,5 +1,7 @@
 package de.catma.repository.git.managers.interfaces;
 
+import java.io.IOException;
+
 public interface GitUserInformationProvider {
 
 	String getUsername();
@@ -7,5 +9,7 @@ public interface GitUserInformationProvider {
 	String getPassword();
 
 	String getEmail();
+
+	void refreshUserCredentials() throws IOException;
 
 }

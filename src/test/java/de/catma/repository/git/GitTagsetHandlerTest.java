@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,10 +18,7 @@ import de.catma.PropertiesHelper;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.GitlabManagerRestricted;
-import de.catma.repository.git.managers.GitProjectsManager;
-import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.repository.git.managers.*;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -109,9 +105,7 @@ class GitTagsetHandlerTest {
 			);
 			assert !newProjectRevision.equals(oldProjectRevision);
 
-			localGitRepositoryManager.push(
-					new UsernamePasswordCredentialsProvider("oauth2", gitlabManagerRestricted.getPassword())
-			);
+			localGitRepositoryManager.push(new JGitCredentialsManager(gitlabManagerRestricted));
 		}
 	}
 }

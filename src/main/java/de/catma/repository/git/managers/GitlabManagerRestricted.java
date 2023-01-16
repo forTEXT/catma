@@ -135,6 +135,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		return user.getEmail();
 	}
 
+	@Override
+	public void refreshUserCredentials() throws IOException {
+		try {
+			restrictedGitLabApi.oauth2RefreshAccessToken();
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to refresh user credentials", e);
+		}
+	}
+
 
 	// RemoteGitManagerRestricted implementations
 	@Override
