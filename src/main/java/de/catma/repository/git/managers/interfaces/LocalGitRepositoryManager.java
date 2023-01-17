@@ -62,8 +62,6 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 
 	String removeAndCommit(File targetFile, boolean removeEmptyParent, String commitMsg, String committerName, String committerEmail) throws IOException;
 
-	String getRevisionHash(String submodule) throws IOException;
-
 	String commit(String message, String committerName, String committerEmail, boolean all, boolean force) throws IOException;
 
 	boolean hasUncommitedChanges() throws IOException;
@@ -74,15 +72,13 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	
 	boolean canMerge(String branch) throws IOException;
 
-	void rebase(String branch) throws IOException;
-
 	boolean hasUntrackedChanges() throws IOException;
 
 	Status getStatus() throws IOException;
 
 	boolean hasRef(String branch) throws IOException;
 
-	List<CommitInfo> getUnsynchronizedChanges() throws Exception;
+	List<CommitInfo> getUnsynchronizedChanges() throws IOException;
 
 	Set<String> getDeletedResourcesFromLog(Set<String> resourceIds, String resourceDir) throws IOException;
 

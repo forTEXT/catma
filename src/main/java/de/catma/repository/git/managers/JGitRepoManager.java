@@ -367,26 +367,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IOException(e);
 		}			
 	}
-	@Override
-	public String getRevisionHash(String submodule) throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't determine root revision hash on a detached instance");
-		}
-		
-		try (Repository subModuleRepo = SubmoduleWalk
-				.getSubmoduleRepository(this.gitApi.getRepository(), submodule)) {
-			
-			ObjectId headRevision = subModuleRepo.resolve(Constants.HEAD);
-			
-			if (headRevision == null) {
-				return "no_commits_yet";
-			}
-			else {
-				return headRevision.getName();
-			}
-		}
-		
-	}
 
 	/**
 	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>
@@ -422,6 +402,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 	
+	@Override
 	public void add(Path relativePath) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `add` on a detached instance");
@@ -775,6 +756,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		return this.gitApi.getRepository().resolve("refs/remotes/"+branch) != null;
 	}
 
+	@Override
 	public boolean canMerge(String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `canMerge` on a detached instance");
@@ -813,24 +795,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to merge", e);
-		}		
-	}
-	
-	@Override
-	public void rebase(String branch) throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `rebase` on a detached instance");
-		}
-
-		try {
-			RebaseCommand rebaseCommand = this.gitApi.rebase();
-
-			rebaseCommand.setUpstream(branch);
-
-			rebaseCommand.call();
-		}
-		catch (GitAPIException e) {
-			throw new IOException("Failed to rebase", e);
 		}		
 	}
 
@@ -1165,13 +1129,14 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 		
 	@Override
-	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
-		List<CommitInfo> result = new ArrayList<>();
+	public List<CommitInfo> getUnsynchronizedChanges() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getUnsynchronizedChanges` on a detached instance");
 		}		
 	
 		try {
+			List<CommitInfo> result = new ArrayList<>();
+
 			if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
 				return result; // no HEAD -> new empty project, no commits yet
 			}
@@ -1202,12 +1167,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			for (RevCommit c : commits) {
 				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
 			}
-			
-		} catch (GitAPIException e) {
+
+			return result;
+		}
+		catch (Exception e) {
 			throw new IOException("Failed to get unsynchronized changes", e);
 		}
-		
-		return result;
 	}
 	
 
@@ -1240,6 +1205,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 	
+	@Override
 	public void abortMerge(MergeResult mergeResult) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `abortMerge` on a detached instance");
