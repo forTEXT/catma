@@ -224,7 +224,7 @@ public class ProjectScanner implements AutoCloseable {
 				repoManager.resolveGitSubmoduleFileConflicts();
 			}
 
-			clean = repoManager.resolveRootConflicts(projectId, jGitCredentialsManager);
+			clean = repoManager.resolveRootConflicts(jGitCredentialsManager);
 
 			// if conflicts could be resolved, re-add all submodules
 			if (clean) {

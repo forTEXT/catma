@@ -1,22 +1,21 @@
 package de.catma.repository.git.managers.interfaces;
 
+import de.catma.project.CommitInfo;
+import de.catma.repository.git.managers.JGitCredentialsManager;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.transport.PushResult;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.transport.PushResult;
-
-import de.catma.project.CommitInfo;
-import de.catma.repository.git.managers.JGitCredentialsManager;
-
 public interface LocalGitRepositoryManager extends AutoCloseable {
-	static String DEFAULT_LOCAL_DEV_BRANCH = "dev";
-	static String NO_COMMITS_YET = "no_commits_yet";
-	
+	String DEFAULT_LOCAL_DEV_BRANCH = "dev";
+	String NO_COMMITS_YET = "no_commits_yet";
+
 	boolean isAttached();
 
 	void detach();
@@ -27,24 +26,21 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 
 	void init(String group, String name, String description) throws IOException;
 
-	String clone(
-			String namespace, String projectId, 
-			String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException;
+	String clone(String namespace, String projectId, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 	void open(String namespace, String name) throws IOException;
 
 	void add(File targetFile, byte[] bytes) throws IOException;
-	
+
 	void add(Path relativePath) throws IOException;
 
-	String addAndCommit(File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail)
-			throws IOException;
+	String addAndCommit(File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail) throws IOException;
 
 	String commit(String message, String committerName, String committerEmail, boolean force) throws IOException;
 
 	List<PushResult> push(JGitCredentialsManager jGitCredentialsManager) throws IOException;
 	List<PushResult> pushMaster(JGitCredentialsManager jGitCredentialsManager) throws IOException;
-	
+
 	void fetch(JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 	void checkout(String name) throws IOException;
@@ -69,7 +65,7 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	String addAllAndCommit(String commitMsg, String committerName, String committerEmail, boolean force) throws IOException;
 
 	MergeResult merge(String branch) throws IOException;
-	
+
 	boolean canMerge(String branch) throws IOException;
 
 	boolean hasUntrackedChanges() throws IOException;
@@ -91,6 +87,4 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	List<CommitInfo> getTheirPublishedChanges() throws IOException;
 
 	List<CommitInfo> getOurUnpublishedChanges() throws IOException;
-
-
 }
