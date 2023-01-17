@@ -17,8 +17,7 @@ public class JGitCredentialsManager {
         return new UsernamePasswordCredentialsProvider("oauth2", gitUserInformationProvider.getPassword());
     }
 
-    public CredentialsProvider refreshTransientCredentialsAndGetNewProvider() throws IOException {
+    public void refreshTransientCredentials() throws IOException {
         gitUserInformationProvider.refreshUserCredentials();
-        return new UsernamePasswordCredentialsProvider("oauth2", gitUserInformationProvider.getPassword());
     }
 }

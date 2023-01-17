@@ -15,6 +15,7 @@ import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.MergeCommand.FastForwardMode;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.dircache.DirCache;
@@ -189,11 +190,15 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IOException("Failed to init Git repository", e);
 		}
 	}
-	
+
 	@Override
-	public String clone(
+	public String clone(String namespace, String projectId, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException {
+		return clone(namespace, projectId, uri, jGitCredentialsManager, 0);
+	}
+	
+	private String clone(
 			String namespace, String projectId, String uri,
-			JGitCredentialsManager jGitCredentialsManager)
+			JGitCredentialsManager jGitCredentialsManager, int refreshCredentialsTryCount)
 			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
@@ -215,9 +220,15 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			this.gitApi = cloneCommand.call();			
 		}
 		catch (GitAPIException e) {
-			throw new IOException(
-				"Failed to clone remote Git repository", e
-			);
+			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
+				// it's likely that the user is logged in using the username/password authentication method and that their
+				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+				jGitCredentialsManager.refreshTransientCredentials();
+				return clone(namespace, projectId, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1);
+			}
+
+			// give up, refreshing credentials didn't work or unexpected error
+			throw new IOException("Failed to clone remote Git repository", e);
 		}
 
 		return path.getName();
@@ -598,7 +609,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 */
 	@Override
 	public List<PushResult> push(JGitCredentialsManager jGitCredentialsManager) throws IOException {
-		return push(jGitCredentialsManager, null, 0, false);
+		return push(jGitCredentialsManager, null, false, 0, 0);
 	}
 
 	/**
@@ -610,7 +621,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 */
 	@Override
 	public List<PushResult> pushMaster(JGitCredentialsManager jGitCredentialsManager) throws IOException {
-		return push(jGitCredentialsManager, Constants.MASTER, 0, false);
+		return push(jGitCredentialsManager, Constants.MASTER, false, 0, 0);
 	}
 
 	/**
@@ -623,7 +634,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 * @throws IOException if an error occurs when pushing
 	 */
 	public List<PushResult> pushWithoutBranchChecks(JGitCredentialsManager jGitCredentialsManager) throws IOException {
-		return push(jGitCredentialsManager, null, 0, true);
+		return push(jGitCredentialsManager, null, true, 0, 0);
 	}
 
 	/**
@@ -631,11 +642,18 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 *
 	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
 	 * @param branch the branch to push, defaults to the user branch if null
-	 * @param tryCount how often this push has been attempted already (start with 0, used internally to limit recursive retries)
 	 * @param skipBranchChecks whether to skip branch checks, normally false
+	 * @param tryCount how often this push has been attempted already (start with 0, used internally to limit recursive retries)
+	 * @param refreshCredentialsTryCount how often this push has been attempted already (start with 0, used internally to limit recursive retries)
 	 * @throws IOException if an error occurs when pushing
 	 */
-	private List<PushResult> push(JGitCredentialsManager jGitCredentialsManager, String branch, int tryCount, boolean skipBranchChecks) throws IOException {
+	private List<PushResult> push(
+			JGitCredentialsManager jGitCredentialsManager,
+			String branch,
+			boolean skipBranchChecks,
+			int refreshCredentialsTryCount,
+			int tryCount
+	) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
@@ -681,20 +699,26 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			}
 		}
 		catch (GitAPIException e) {
-			// sometimes GitLab refuses to accept the push and returns this error message
-			// subsequent push attempts succeed however, so we retry the push up to 3 times before giving up
+			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
+				// it's likely that the user is logged in using the username/password authentication method and that their
+				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+				jGitCredentialsManager.refreshTransientCredentials();
+				return push(jGitCredentialsManager, branch, skipBranchChecks, refreshCredentialsTryCount + 1, tryCount);
+			}
+
 			if (e.getMessage().contains("authentication not supported") && tryCount < 3) {
+				// sometimes GitLab refuses to accept the push and returns this error message
+				// subsequent push attempts succeed however, so we retry the push up to 3 times before giving up
 				try {
-					Thread.sleep(100);
+					Thread.sleep(100L * (tryCount + 1));
 				}
 				catch (InterruptedException ignored) {}
 
-				push(jGitCredentialsManager, branch, tryCount + 1, skipBranchChecks);
+				return push(jGitCredentialsManager, branch, skipBranchChecks, refreshCredentialsTryCount, tryCount + 1);
 			}
-			else {
-				// give up, push not possible or unexpected error
-				throw new IOException(String.format("Failed to push, tried %d times", tryCount + 1), e);
-			}
+
+			// give up, refreshing credentials didn't work, retries exhausted, or unexpected error
+			throw new IOException(String.format("Failed to push, tried %d times", tryCount + 1), e);
 		}
 
 		return result;
@@ -708,6 +732,10 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 */
 	@Override
 	public void fetch(JGitCredentialsManager jGitCredentialsManager) throws IOException {
+		fetch(jGitCredentialsManager, 0);
+	}
+
+	private void fetch(JGitCredentialsManager jGitCredentialsManager, int refreshCredentialsTryCount) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `fetch` on a detached instance");
 		}
@@ -718,6 +746,15 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			fetchCommand.call();
 		}
 		catch (GitAPIException e) {
+			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
+				// it's likely that the user is logged in using the username/password authentication method and that their
+				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+				jGitCredentialsManager.refreshTransientCredentials();
+				fetch(jGitCredentialsManager, refreshCredentialsTryCount + 1);
+				return;
+			}
+
+			// give up, refreshing credentials didn't work or unexpected error
 			throw new IOException("Failed to fetch", e);
 		}
 	}

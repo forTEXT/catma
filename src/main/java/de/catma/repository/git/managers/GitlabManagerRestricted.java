@@ -138,6 +138,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	@Override
 	public void refreshUserCredentials() throws IOException {
 		try {
+			logger.info("Attempting to refresh user credentials...");
 			restrictedGitLabApi.oauth2RefreshAccessToken();
 		}
 		catch (GitLabApiException e) {
