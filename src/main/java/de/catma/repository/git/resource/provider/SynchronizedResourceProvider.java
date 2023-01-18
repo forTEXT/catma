@@ -196,7 +196,7 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 			try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 				localGitRepoManager.open(projectReference.getNamespace(), projectId);
 
-				if (!localGitRepoManager.hasUncommitedChanges() && !localGitRepoManager.hasUntrackedChanges()) {
+				if (!localGitRepoManager.hasUncommittedChanges() && !localGitRepoManager.hasUntrackedChanges()) {
 					return collections;
 				}
 

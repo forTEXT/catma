@@ -975,7 +975,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 	
 	@Override
-	public boolean hasUncommitedChanges() throws IOException {
+	public boolean hasUncommittedChanges() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `hasUncommitedChanges` on a detached instance");
 		}
@@ -988,7 +988,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 
 	@Deprecated
-	public boolean hasUncommitedChangesWithSubmodules(Set<String> submodules) throws IOException {
+	public boolean hasUncommittedChangesWithSubmodules(Set<String> submodules) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `hasUncommitedChangesWithSubmodules` on a detached instance");
 		}
@@ -1114,58 +1114,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
         config.fromText(content);
         return config;
 	}
-		
-	@Override
-	public List<CommitInfo> getUnsynchronizedChanges() throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `getUnsynchronizedChanges` on a detached instance");
-		}		
-	
-		try {
-			List<CommitInfo> result = new ArrayList<>();
-
-			if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-				return result; // no HEAD -> new empty project, no commits yet
-			}
-			
-			
-			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
-			Iterable<RevCommit> commits = null;
-			
-			if (refs.isEmpty()) {
-				// project never synchronized
-				
-				commits = this.gitApi.log().call();
-			}
-			else {
-				ObjectId remote =
-					this.gitApi.getRepository().resolve("refs/remotes/origin/" + username); 
-				if (remote != null) {
-					commits = this.gitApi.log().addRange(
-							remote, 
-							this.gitApi.getRepository().resolve("refs/heads/" + username)).call();
-				}
-				else {
-					commits = Collections.<RevCommit>emptyList();
-				}
-			}
-			
-			
-			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
-			}
-
-			return result;
-		}
-		catch (Exception e) {
-			throw new IOException("Failed to get unsynchronized changes", e);
-		}
-	}
 	
 
 	@Override
 	public Set<String> getDeletedResourcesFromLog(
 			Set<String> resourceIds, String resourceDir) throws IOException {
+		// TODO: check if attached, throw if not
 		try {
 			Set<String> result = new HashSet<String>();
 			ObjectId objectId = gitApi.getRepository().resolve("refs/heads/"+username);

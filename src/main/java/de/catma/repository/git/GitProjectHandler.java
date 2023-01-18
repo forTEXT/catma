@@ -699,10 +699,6 @@ public class GitProjectHandler {
 		return remoteGitServerManager.hasPermission(role, permission);
 	}
 
-	public boolean isAuthorizedOnProject(RBACPermission permission) {
-		return remoteGitServerManager.isAuthorizedOnProject(remoteGitServerManager.getUser(), permission, projectReference);
-	}
-
 	public RBACRole getRoleOnProject(RBACSubject subject) throws IOException {
 		return remoteGitServerManager.getRoleOnProject(subject, projectReference);
 	}
@@ -755,14 +751,7 @@ public class GitProjectHandler {
 	public boolean hasUncommittedChanges() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
-			return localGitRepoManager.hasUncommitedChanges();
-		}
-	}
-
-	public boolean hasUntrackedChanges() throws IOException {
-		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
-			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
-			return localGitRepoManager.hasUntrackedChanges();
+			return localGitRepoManager.hasUncommittedChanges();
 		}
 	}
 
@@ -787,7 +776,7 @@ public class GitProjectHandler {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
-			if (!localGitRepoManager.hasUncommitedChanges() && !localGitRepoManager.hasUntrackedChanges()) {
+			if (!localGitRepoManager.hasUncommittedChanges() && !localGitRepoManager.hasUntrackedChanges()) {
 				return localGitRepoManager.getRevisionHash();
 			}
 
@@ -804,13 +793,6 @@ public class GitProjectHandler {
 		}
 	}
 
-	public List<CommitInfo> getUnsynchronizedChanges() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
-			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
-			return localGitRepoManager.getUnsynchronizedChanges();
-		}
-	}
-
 	public boolean synchronizeWithRemote() throws IOException {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
@@ -818,7 +800,7 @@ public class GitProjectHandler {
 			boolean pushedAlready = false;
 
 			// if there are uncommitted changes we perform an auto commit and push
-			if (localGitRepoManager.hasUncommitedChanges()) {
+			if (localGitRepoManager.hasUncommittedChanges()) {
 				commitProject("Auto-committing changes before synchronization");
 				localGitRepoManager.push(jGitCredentialsManager);
 				pushedAlready = true;

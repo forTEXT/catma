@@ -95,7 +95,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				String.format("Failed to fetch project \"%s\"", projectReference.getName())
 			);
 		}
-	};
+	}
 
 	@Override
 	public final void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
