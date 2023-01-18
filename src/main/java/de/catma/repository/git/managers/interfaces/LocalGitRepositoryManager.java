@@ -28,8 +28,6 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 
 
 	// methods that require the instance to be in a detached state
-	void init(String group, String name, String description) throws IOException;
-
 	String clone(String namespace, String projectId, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 	void open(String namespace, String name) throws IOException;
