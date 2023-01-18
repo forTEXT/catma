@@ -83,15 +83,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 
 	@Override
-	public File getRepositoryWorkTree() {
-		if (!this.isAttached()) {
-			return null;
-		}
-
-		return this.gitApi.getRepository().getWorkTree();
-	}
-
-	@Override
 	public boolean isAttached() {
 		return this.gitApi != null;
 	}
@@ -277,15 +268,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		catch (GitAPIException e) {
 			throw new IOException("Failed to verify deleted resources", e);
 		}
-	}
-
-	@Override
-	public boolean hasRef(String branch) throws IOException {
-		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `hasRef` on a detached instance");
-		}
-
-		return this.gitApi.getRepository().findRef(branch) != null;
 	}
 
 	@Override
@@ -872,6 +854,16 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 
 	// deprecated methods that are only used by migration code and will be removed
+	@Deprecated
+	public File getRepositoryWorkTree() {
+		if (!this.isAttached()) {
+			return null;
+		}
+
+		return this.gitApi.getRepository().getWorkTree();
+	}
+
+	@Deprecated
 	public CommitInfo getHeadCommit() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getHeadCommit` on a detached instance");
@@ -962,6 +954,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
+	@Deprecated
 	public void reAddSubmodule(File submodulePath, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `reAddSubmodule` on a detached instance");
@@ -1055,6 +1048,16 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
+	@Deprecated
+	public boolean hasRef(String branch) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `hasRef` on a detached instance");
+		}
+
+		return this.gitApi.getRepository().findRef(branch) != null;
+	}
+
+	@Deprecated
 	public void checkoutNewFromBranch(String name, String baseBranch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `checkoutNewFromBranch` on a detached instance");
@@ -1098,6 +1101,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
+	@Deprecated
 	public void checkoutFromOrigin(String name) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `checkoutFromOrigin` on a detached instance");
@@ -1150,10 +1154,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 * @return a {@link List<PushResult>} containing the results of the push operation
 	 * @throws IOException if an error occurs when pushing
 	 */
+	@Deprecated
 	public List<PushResult> pushWithoutBranchChecks(JGitCredentialsManager jGitCredentialsManager) throws IOException {
 		return push(jGitCredentialsManager, null, true, 0, 0);
 	}
 
+	@Deprecated
 	public boolean hasRemoteRef(String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `hasRemoteRef` on a detached instance");
@@ -1161,6 +1167,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		return this.gitApi.getRepository().resolve("refs/remotes/"+branch) != null;
 	}
 
+	@Deprecated
 	public void remoteAdd(String name, String uri) throws IOException {
 
 		if (!isAttached()) {
@@ -1177,6 +1184,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
+	@Deprecated
 	public void remoteRemove(String name) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `remoteRemove` on a detached instance");
@@ -1529,6 +1537,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 	}
 
+	@Deprecated
 	private Config getDotGitModulesConfig(ObjectId objectId) throws Exception {
 		ObjectLoader loader = gitApi.getRepository().open(objectId);
 		String content = new String(loader.getBytes(), "UTF-8");

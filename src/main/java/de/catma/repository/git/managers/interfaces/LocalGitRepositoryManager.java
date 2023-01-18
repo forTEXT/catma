@@ -27,13 +27,6 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	File getRepositoryBasePath();
 
 	/**
-	 * Gets the current Git working tree for the repository the instance is attached to, if any.
-	 *
-	 * @return a {@link File}
-	 */
-	File getRepositoryWorkTree();
-
-	/**
 	 * Whether the instance is attached to a Git repository.
 	 *
 	 * @return true if attached, otherwise false
@@ -90,8 +83,6 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	void fetch(JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 	Set<String> getDeletedResourcesFromLog(Set<String> resourceIds, String resourceDir) throws IOException;
-
-	boolean hasRef(String branch) throws IOException;
 
 	/**
 	 * Checks out a branch or commit.
