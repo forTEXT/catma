@@ -77,21 +77,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		return this.gitApi;
 	}
 
-	/**
-	 * Gets the repository base path for this instance, which is specific to the {@link User} supplied at instantiation.
-	 *
-	 * @return a {@link File} object
-	 */
 	@Override
 	public File getRepositoryBasePath() {
 		return Paths.get(new File(repositoryBasePath).toURI()).resolve(this.username).toFile();
 	}
 
-	/**
-	 * Gets the current Git working tree for the repository this instance is attached to, if any.
-	 *
-	 * @return a {@link File} object
-	 */
 	@Override
 	public File getRepositoryWorkTree() {
 		if (!this.isAttached()) {
@@ -101,28 +91,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		return this.gitApi.getRepository().getWorkTree();
 	}
 
-	/**
-	 * Whether this instance is attached to a Git repository.
-	 *
-	 * @return true if attached, otherwise false
-	 */
 	@Override
 	public boolean isAttached() {
 		return this.gitApi != null;
 	}
 
-	/**
-	 * Detach this instance from the currently attached Git repository, if any. If this instance is currently attached,
-	 * this will allow you to re-use it to make calls to methods that require it to be detached, for example
-	 * <code>init</code>, <code>clone</code> or <code>open</code>.
-	 * <p>
-	 * Whenever possible, you should use a try-with-resources statement instead, which will do this for you
-	 * automatically.
-	 * <p>
-	 * Calling this method or using a try-with-resources statement will cause {@link #close()} to be called.
-	 *
-	 * @see <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">The try-with-resources Statement</a>
-	 */
 	@Override
 	public void detach() {
 		this.close();
@@ -171,14 +144,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		return targetPath.getName();
 	}
 
-	/**
-	 * Opens an existing Git repository with the directory name <code>name</code>.
-	 *
-	 * @param namespace the Gitlab namespace of the Git repository to open
-	 * @param name the directory name of the Git repository to open
-	 * @throws IOException if the Git repository couldn't be found or
-	 *         couldn't be opened for some other reason
-	 */
 	@Override
 	public void open(String namespace, String name) throws IOException {
 		if (isAttached()) {
@@ -212,13 +177,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 
 	// methods that require the instance to be in an attached state
-	/**
-	 * Gets the URL for the remote with the name <code>remoteName</code>.
-	 *
-	 * @param remoteName the name of the remote for which the URL should be fetched. Defaults to 'origin' if not
-	 *                   supplied.
-	 * @return the remote URL
-	 */
 	@Override
 	public String getRemoteUrl(String remoteName) {
 		if (!isAttached()) {
@@ -262,12 +220,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
-	/**
-	 * Fetches refs from the associated remote repository ('origin' remote).
-	 *
-	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
-	 * @throws IOException if an error occurs when fetching
-	 */
 	@Override
 	public void fetch(JGitCredentialsManager jGitCredentialsManager) throws IOException {
 		fetch(jGitCredentialsManager, 0);
@@ -336,24 +288,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		return this.gitApi.getRepository().findRef(branch) != null;
 	}
 
-	/**
-	 * Checks out a branch or commit identified by <code>name</code>.
-	 *
-	 * @param name the name of the branch or commit to check out
-	 * @throws IOException if the checkout operation failed
-	 */
 	@Override
 	public void checkout(String name) throws IOException {
 		this.checkout(name, false);
 	}
 
-	/**
-	 * Checks out a branch or commit identified by <code>name</code>.
-	 *
-	 * @param name the name of the branch or commit to check out
-	 * @param createBranch equals to -b CLI option
-	 * @throws IOException if the checkout operation failed
-	 */
 	@Override
 	public void checkout(String name, boolean createBranch) throws IOException {
 		if (!isAttached()) {
@@ -461,17 +400,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
-	/**
-	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>
-	 * and adds it to the attached Git repository.
-	 * <p>
-	 * It's the caller's responsibility to call {@link #commit(String, String, String)}.
-	 *
-	 * @param targetFile a {@link File} object representing the target path
-	 * @param bytes the file contents
-	 * @throws IOException if the file contents couldn't be written to disk
-	 *         or the file couldn't be added for some other reason
-	 */
 	@Override
 	public void add(File targetFile, byte[] bytes) throws IOException {
 		if (!isAttached()) {
@@ -495,18 +423,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
-	/**
-	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>,
-	 * adds it to the attached Git repository and commits.
-	 * <p>
-	 * Calls {@link #add(File, byte[])} and {@link #commit(String, String, String)} internally.
-	 *
-	 * @param targetFile a {@link File} object representing the target path
-	 * @param bytes the file contents
-	 * @return the revisionHash of the commit
-	 * @throws IOException if the file contents couldn't be written to disk
-	 *         or the commit operation failed
-	 */
 	@Override
 	public String addAndCommit(
 			File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail)
@@ -608,13 +524,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		return this.commit(commitMsg, committerName, committerEmail, false);
 	}
 
-	/**
-	 * Commits pending changes to the attached Git repository.
-	 *
-	 * @param message the commit message
-	 * @return revision hash
-	 * @throws IOException if the commit operation failed
-	 */
 	@Override
 	public String commit(String message, String committerName, String committerEmail, boolean force)
 			throws IOException {
@@ -707,25 +616,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 	}
 
-	/**
-	 * Pushes commits made locally on the user branch to the associated remote ('origin') repository and branch.
-	 *
-	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
-	 * @return a {@link List<PushResult>} containing the results of the push operation
-	 * @throws IOException if an error occurs when pushing
-	 */
 	@Override
 	public List<PushResult> push(JGitCredentialsManager jGitCredentialsManager) throws IOException {
 		return push(jGitCredentialsManager, null, false, 0, 0);
 	}
 
-	/**
-	 * Pushes commits made locally on the master branch to the associated remote ('origin') repository and branch.
-	 *
-	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
-	 * @return a {@link List<PushResult>} containing the results of the push operation
-	 * @throws IOException if an error occurs when pushing
-	 */
 	@Override
 	public List<PushResult> pushMaster(JGitCredentialsManager jGitCredentialsManager) throws IOException {
 		return push(jGitCredentialsManager, Constants.MASTER, false, 0, 0);
