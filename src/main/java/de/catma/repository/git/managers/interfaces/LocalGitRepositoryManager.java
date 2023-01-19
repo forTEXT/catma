@@ -34,7 +34,7 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	boolean isAttached();
 
 	/**
-	 * Detach the instance from the currently attached Git repository, if any. If the instance is currently attached,
+	 * Detaches the instance from the currently attached Git repository, if any. If the instance is currently attached,
 	 * this will allow you to re-use it to make calls to methods that require it to be detached (<code>clone</code> & <code>open</code>).
 	 * <p>
 	 * Whenever possible, you should use a try-with-resources statement instead, which will do this for you automatically.
@@ -47,13 +47,23 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 
 
 	// methods that require the instance to be in a detached state
+	/**
+	 * Clones a remote Git repository locally.
+	 *
+	 * @param namespace the namespace of the Git repository to clone (parent directory name)
+	 * @param projectId the name of the Git repository to clone (directory name)
+	 * @param uri the URI of the Git repository to clone
+	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
+	 * @return the resultant directory name (last path part)
+	 * @throws IOException if an error occurs when cloning
+	 */
 	String clone(String namespace, String projectId, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 	/**
 	 * Opens an existing Git repository.
 	 *
-	 * @param namespace the GitLab namespace of the Git repository to open (parent directory name)
-	 * @param name the directory name of the Git repository to open
+	 * @param namespace the namespace of the Git repository to open (parent directory name)
+	 * @param name the name of the Git repository to open (directory name)
 	 * @throws IOException if the Git repository couldn't be found or couldn't be opened for some other reason
 	 */
 	void open(String namespace, String name) throws IOException;
@@ -69,9 +79,21 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 */
 	String getRemoteUrl(String remoteName);
 
+	/**
+	 * Gets all available remote branches.
+	 *
+	 * @return a list of remote branch names
+	 * @throws IOException if an error occurs when getting the remote branches
+	 */
 	List<String> getRemoteBranches() throws IOException;
 
 
+	/**
+	 * Gets the HEAD revision hash.
+	 *
+	 * @return the hash
+	 * @throws IOException if an error occurs when getting the HEAD revision hash
+	 */
 	String getRevisionHash() throws IOException;
 
 	/**
@@ -82,6 +104,15 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 */
 	void fetch(JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
+	/**
+	 * Searches the Git log of the user branch for commits that affect <code>resourceDir</code> and
+	 * whose message indicates that one of the resources in <code>resourceIds</code> was deleted.
+	 *
+	 * @param resourceIds a {@link Set} of string resource IDs
+	 * @param resourceDir the name of the directory corresponding to the type of resource
+	 * @return a {@link Set} of those resource IDs that were verifiably deleted according to the log
+	 * @throws IOException if an error occurs when verifying deleted resources
+	 */
 	Set<String> getDeletedResourcesFromLog(Set<String> resourceIds, String resourceDir) throws IOException;
 
 	/**
@@ -101,17 +132,41 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 */
 	void checkout(String name, boolean createBranch) throws IOException;
 
+	/**
+	 * Gets the Git status.
+	 *
+	 * @return the {@link Status}
+	 * @throws IOException if an error occurs when getting the status
+	 */
 	Status getStatus() throws IOException;
 
+	/**
+	 * Whether there are any untracked changes.
+	 *
+	 * @return true if there are untracked changes, otherwise false
+	 * @throws IOException if an error occurs when checking for untracked changes
+	 */
 	boolean hasUntrackedChanges() throws IOException;
 
+	/**
+	 * Whether there are any uncommitted changes.
+	 *
+	 * @return true if there are uncommitted changes, otherwise false
+	 * @throws IOException if an error occurs when checking for uncommitted changes
+	 */
 	boolean hasUncommittedChanges() throws IOException;
 
+	/**
+	 * Adds the given file or directory.
+	 *
+	 * @param relativePath the {@link Path} of the file/directory to add
+	 * @throws IOException if an error occurs when adding
+	 */
 	void add(Path relativePath) throws IOException;
 
 	/**
 	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>
-	 * and adds it to the attached Git repository.
+	 * and adds it.
 	 * <p>
 	 * It's the caller's responsibility to call {@link #commit(String, String, String, boolean)}.
 	 * Alternatively, use {@link #addAndCommit(File, byte[], String, String, String)}.
@@ -124,7 +179,7 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 
 	/**
 	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>,
-	 * adds it to the attached Git repository and commits.
+	 * adds it and commits.
 	 * <p>
 	 * Calls {@link #add(File, byte[])} and {@link #commit(String, String, String, boolean)} internally.
 	 *
@@ -138,14 +193,41 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 */
 	String addAndCommit(File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail) throws IOException;
 
+	/**
+	 * Automatically stages all new, modified and deleted files and then commits.
+	 *
+	 * @param commitMsg the commit message
+	 * @param committerName the name of the committer
+	 * @param committerEmail the email address of the committer
+	 * @param force whether to create a commit even when there are no uncommitted changes
+	 * @return the revision hash of the new commit
+	 * @throws IOException if an error occurs when adding or committing
+	 */
 	String addAllAndCommit(String commitMsg, String committerName, String committerEmail, boolean force) throws IOException;
 
+	/**
+	 * Removes the given file or directory.
+	 *
+	 * @param targetFile a {@link File} representing the file/directory to remove
+	 * @throws IOException if an error occurs when removing
+	 */
 	void remove(File targetFile) throws IOException;
 
+	/**
+	 * Removes a file or directory and commits.
+	 *
+	 * @param targetFile a {@link File} representing the file/directory to remove
+	 * @param removeEmptyParent whether to delete the parent directory, if it is empty after the remove operation
+	 * @param commitMsg the commit message
+	 * @param committerName the name of the committer
+	 * @param committerEmail the email address of the committer
+	 * @return the revision hash of the new commit
+	 * @throws IOException if an error occurs when removing or committing
+	 */
 	String removeAndCommit(File targetFile, boolean removeEmptyParent, String commitMsg, String committerName, String committerEmail) throws IOException;
 
 	/**
-	 * Commits pending changes to the attached Git repository.
+	 * Commits pending changes.
 	 *
 	 * @param message the commit message
 	 * @param committerName the name of the committer
@@ -156,12 +238,45 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 */
 	String commit(String message, String committerName, String committerEmail, boolean force) throws IOException;
 
+	/**
+	 * Commits pending changes.
+	 *
+	 * @param message the commit message
+	 * @param committerName the name of the committer
+	 * @param committerEmail the email address of the committer
+	 * @param all if true, modified and deleted files are automatically staged
+	 * @param force whether to create a commit even when there are no uncommitted changes
+	 * @return the revision hash of the new commit
+	 * @throws IOException if an error occurs when committing
+	 */
 	String commit(String message, String committerName, String committerEmail, boolean all, boolean force) throws IOException;
 
+	/**
+	 * Checks whether the given branch can be merged into the user branch.
+	 *
+	 * @param branch the name of the branch to merge
+	 * @return true if the merge can be completed without conflicts, otherwise false
+	 * @throws IOException if an error occurs when checking whether the merge is possible
+	 */
 	boolean canMerge(String branch) throws IOException;
 
+	/**
+	 * Merges the given branch into the user branch.
+	 *
+	 * @param branch the name of the branch to merge
+	 * @return the {@link MergeResult}
+	 * @throws IOException if an error occurs when merging
+	 */
 	MergeResult merge(String branch) throws IOException;
 
+	/**
+	 * Aborts an in-progress merge.
+	 * <p>
+	 * NB: This performs a hard reset! Commit pending changes before attempting a merge.
+	 *
+	 * @param mergeResult the {@link MergeResult} of the merge that is to be aborted
+	 * @throws IOException if an error occurs when aborting the merge
+	 */
 	void abortMerge(MergeResult mergeResult) throws IOException;
 
 	/**
@@ -183,11 +298,34 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	List<PushResult> pushMaster(JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 
+	/**
+	 * Compares the user branch to the given branch and returns all paths with differences, ignoring deletes.
+	 *
+	 * @param otherBranchName the name of the branch to compare to the user branch
+	 * @return a {@link Set} of all paths that differ between the two branches
+	 * @throws IOException if an error occurs when comparing the branches
+	 */
 	Set<String> getAdditiveBranchDifferences(String otherBranchName) throws IOException;
 
 
+	/**
+	 * Gets a list of all commits from the user branch that have not been merged into master.
+	 * <p>
+	 * Inverse of {@link #getTheirPublishedChanges()}.
+	 *
+	 * @return a {@link List<CommitInfo>}
+	 * @throws IOException if an error occurs when getting the unpublished commits
+	 */
 	List<CommitInfo> getOurUnpublishedChanges() throws IOException;
 
+	/**
+	 * Gets a list of all commits from master that have not been merged into the user branch.
+	 * <p>
+	 * Inverse of {@link #getOurUnpublishedChanges()}.
+	 *
+	 * @return a {@link List<CommitInfo>}
+	 * @throws IOException if an error occurs when getting the published commits
+	 */
 	List<CommitInfo> getTheirPublishedChanges() throws IOException;
 
 
