@@ -104,8 +104,6 @@ class GitTagsetHandlerTest {
 					null
 			);
 			assert !newProjectRevision.equals(oldProjectRevision);
-
-			localGitRepositoryManager.push(new JGitCredentialsManager(gitlabManagerRestricted));
 		}
 	}
 }

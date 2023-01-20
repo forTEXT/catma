@@ -404,9 +404,8 @@ public class GitProjectHandlerTest {
 			@SuppressWarnings("unchecked")
 			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
 
-			assertEquals(1, commitsList.size());
-			// TODO: it would be good to check that the revision hash of the commit matches, however GitProjectHandler currently returns the revision hash
-			//       from the source document repo itself rather than from the root repo
+			assertEquals(2, commitsList.size()); // in desc. order, 0: document creation, 1: project creation
+			assertEquals(revisionHash, commitsList.get(0).getName());
 			assertEquals(gitlabManagerRestricted.getUser().getIdentifier(), commitsList.get(0).getCommitterIdent().getName());
 			assertEquals(gitlabManagerRestricted.getUser().getEmail(), commitsList.get(0).getCommitterIdent().getEmailAddress());
 			assert commitsList.get(0).getFullMessage().contains(String.format("Created document \"%s\" with ID", contentInfoSet.getTitle()));

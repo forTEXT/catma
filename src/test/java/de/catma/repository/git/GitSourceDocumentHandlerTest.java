@@ -218,17 +218,29 @@ public class GitSourceDocumentHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
+			jGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 					jGitRepoManager,
-					jGitRepoManager.getUserRepositoryBasePath(),
-					gitlabManagerRestricted.getUsername(), 
+					Paths.get(
+							jGitRepoManager.getUserRepositoryBasePath().toString(),
+							projectReference.getNamespace(),
+							projectReference.getProjectId()
+					).toFile(),
+					gitlabManagerRestricted.getUsername(),
 					gitlabManagerRestricted.getEmail()
 			);
 
+			File documentFolder = Paths.get(
+					jGitRepoManager.getUserRepositoryBasePath().getPath(),
+					projectReference.getNamespace(),
+					projectReference.getProjectId(),
+					GitProjectHandler.DOCUMENTS_DIRECTORY_NAME,
+					sourceDocumentUuid
+			).toFile();
+
 			String revisionHash = gitSourceDocumentHandler.create(
-					Paths.get(jGitRepoManager.getUserRepositoryBasePath().toURI())
-						.resolve(GitProjectHandler.DOCUMENTS_DIRECTORY_NAME)
-						.resolve(sourceDocumentUuid).toFile(), 
+					documentFolder,
 					sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
@@ -237,27 +249,18 @@ public class GitSourceDocumentHandlerTest {
 			);
 			assertNotNull(revisionHash);
 
-			// the JGitRepoManager instance should always be in a detached state after GitSourceDocumentHandler calls return
-			assertFalse(jGitRepoManager.isAttached());
-
-			File expectedRepoPath = Paths.get(
-					jGitRepoManager.getUserRepositoryBasePath().getPath(),
-					projectReference.getProjectId(),
-					sourceDocumentUuid
-			).toFile();
-
-			assert expectedRepoPath.exists();
-			assert expectedRepoPath.isDirectory();
-			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
-			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
+			assert documentFolder.exists();
+			assert documentFolder.isDirectory();
+			assert Arrays.asList(documentFolder.list()).contains("rose_for_emily.pdf");
+			assert Arrays.asList(documentFolder.list()).contains("rose_for_emily.txt");
 			assert FileUtils.contentEquals(
-				originalSourceDocument, new File(expectedRepoPath, "rose_for_emily.pdf")
+				originalSourceDocument, new File(documentFolder, "rose_for_emily.pdf")
 			);
 			assert FileUtils.contentEquals(
-				convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
+				convertedSourceDocument, new File(documentFolder, "rose_for_emily.txt")
 			);
 
-			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
+			assert Arrays.asList(documentFolder.list()).contains("header.json");
 
 			String expectedSerializedSourceDocumentInfo = "" +
 					"{\n" +
@@ -279,13 +282,13 @@ public class GitSourceDocumentHandlerTest {
 					"    \"fileOSType\": \"DOS\",\n" +
 					"    \"fileType\": \"TEXT\",\n" +
 					"    \"mimeType\": \"text/plain\",\n" +
-					"    \"uri\": null\n" +
+					"    \"responsibleUser\": null\n" +
 					"  }\n" +
 					"}";
 
 			assertEquals(
 				expectedSerializedSourceDocumentInfo,
-				FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
+				FileUtils.readFileToString(new File(documentFolder, "header.json"), StandardCharsets.UTF_8)
 			);
 		}
 	}
@@ -413,17 +416,29 @@ public class GitSourceDocumentHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
+			jGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 					jGitRepoManager,
-					jGitRepoManager.getUserRepositoryBasePath(),
+					Paths.get(
+							jGitRepoManager.getUserRepositoryBasePath().toString(),
+							projectReference.getNamespace(),
+							projectReference.getProjectId()
+					).toFile(),
 					gitlabManagerRestricted.getUsername(),
 					gitlabManagerRestricted.getEmail()
 			);
 
+			File documentFolder = Paths.get(
+					jGitRepoManager.getUserRepositoryBasePath().getPath(),
+					projectReference.getNamespace(),
+					projectReference.getProjectId(),
+					GitProjectHandler.DOCUMENTS_DIRECTORY_NAME,
+					sourceDocumentUuid
+			).toFile();
+
 			String revisionHash = gitSourceDocumentHandler.create(
-					Paths.get(jGitRepoManager.getUserRepositoryBasePath().toURI())
-						.resolve(GitProjectHandler.DOCUMENTS_DIRECTORY_NAME)
-						.resolve(sourceDocumentUuid).toFile(), 
+					documentFolder,
 					sourceDocumentUuid,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
@@ -432,13 +447,7 @@ public class GitSourceDocumentHandlerTest {
 			);
 			assertNotNull(revisionHash);
 
-			// the JGitRepoManager instance should always be in a detached state after GitSourceDocumentHandler calls return
-			assertFalse(jGitRepoManager.isAttached());
-
 			// TODO: factor out a function that does all of the above
-
-			jGitRepoManager.open(projectReference.getProjectId(), sourceDocumentUuid);
-			jGitRepoManager.push(new JGitCredentialsManager(gitlabManagerRestricted));
 
 			SourceDocument sourceDocument = gitSourceDocumentHandler.open(sourceDocumentUuid);
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
@@ -474,13 +483,16 @@ public class GitSourceDocumentHandlerTest {
 					"    \"fileOSType\": \"DOS\",\n" +
 					"    \"fileType\": \"TEXT\",\n" +
 					"    \"mimeType\": \"text/plain\",\n" +
-					"    \"uri\": null\n" +
+					"    \"responsibleUser\": null\n" +
 					"  }\n" +
 					"}";
 
 			assertEquals(
 					expectedSerializedSourceDocumentInfo,
-					FileUtils.readFileToString(new File("documents/"+sourceDocumentUuid, "header.json"), StandardCharsets.UTF_8)
+					FileUtils.readFileToString(
+							new File(documentFolder, "header.json"),
+							StandardCharsets.UTF_8
+					)
 			);
 		}
 	}

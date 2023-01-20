@@ -2,11 +2,7 @@ package de.catma.repository.git.managers;
 
 import java.util.Set;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.user.User;
@@ -30,6 +26,7 @@ class JGitRepoManagerTest {
 	}
 
 	@Test
+	@Disabled("Depends on project data that isn't in the repo")
 	void test() {
 		try(LocalGitRepositoryManager repoManager = new JGitRepoManager(
 			"c:/data/catmadata/localgit/",
