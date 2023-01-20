@@ -422,7 +422,7 @@ public class GitProjectHandler {
 
 	private void addCollectionToStaged(String collectionId) throws IOException {
 		Path relativePath = Paths.get(ANNOTATION_COLLECTIONS_DIRECTORY_NAME, collectionId);
-		localGitRepositoryManager.add(relativePath);
+		localGitRepositoryManager.add(relativePath.toFile());
 	}
 
 	public String addCollectionsToStagedAndCommit(
@@ -477,11 +477,12 @@ public class GitProjectHandler {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
-			Set<String> verifiedDeletedDocuments = localGitRepoManager.getDeletedResourcesFromLog(
+			Set<String> verifiedDeletedDocuments = localGitRepoManager.verifyDeletedResourcesViaLog(
+					DOCUMENTS_DIRECTORY_NAME,
+					"document",
 					staleCollectionCandidates.stream()
 							.map(AnnotationCollectionReference::getSourceDocumentId)
-							.collect(Collectors.toSet()),
-					DOCUMENTS_DIRECTORY_NAME
+							.collect(Collectors.toSet())
 			);
 
 			// removeCollection below calls open, so we need to detach
@@ -903,7 +904,7 @@ public class GitProjectHandler {
 						localGitRepoManager.push(jGitCredentialsManager);
 					}
 					else {
-						localGitRepoManager.abortMerge(mergeWithOriginMasterResult);
+						localGitRepoManager.abortMerge();
 						return false;
 					}
 				}

@@ -1,5 +1,6 @@
 package de.catma.repository.git.managers;
 
+import com.google.common.collect.Lists;
 import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
@@ -74,34 +75,34 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 
 	public Git getGitApi() {
-		return this.gitApi;
+		return gitApi;
 	}
 
 	@Override
-	public File getRepositoryBasePath() {
-		return Paths.get(new File(repositoryBasePath).toURI()).resolve(this.username).toFile();
+	public File getUserRepositoryBasePath() {
+		return Paths.get(new File(repositoryBasePath).toURI()).resolve(username).toFile();
 	}
 
 	@Override
 	public boolean isAttached() {
-		return this.gitApi != null;
+		return gitApi != null;
 	}
 
 	@Override
 	public void detach() {
-		this.close();
+		close();
 	}
 
 
 	// methods that require the instance to be in a detached state
 	@Override
-	public String clone(String namespace, String projectId, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException {
-		return clone(namespace, projectId, uri, jGitCredentialsManager, 0);
+	public String clone(String namespace, String name, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException {
+		return clone(namespace, name, uri, jGitCredentialsManager, 0);
 	}
 
 	private String clone(
 			String namespace,
-			String projectId,
+			String name,
 			String uri,
 			JGitCredentialsManager jGitCredentialsManager,
 			int refreshCredentialsTryCount
@@ -110,9 +111,9 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
 		}
 
-		File targetPath = Paths.get(getRepositoryBasePath().toURI())
+		File targetPath = Paths.get(getUserRepositoryBasePath().toURI())
 				.resolve(namespace)
-				.resolve(projectId)
+				.resolve(name)
 				.toFile();
 
 		try {
@@ -125,7 +126,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				// it's likely that the user is logged in using the username/password authentication method and that their
 				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
 				jGitCredentialsManager.refreshTransientCredentials();
-				return clone(namespace, projectId, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1);
+				return clone(namespace, name, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1);
 			}
 
 			// give up, refreshing credentials didn't work or unexpected error
@@ -141,29 +142,29 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `open` on an attached instance");
 		}
 
-		File repositoryPath =
-				Paths.get(getRepositoryBasePath().toURI()).resolve(namespace).resolve(name).toFile();
+		File repositoryPath = Paths.get(getUserRepositoryBasePath().toURI())
+				.resolve(namespace)
+				.resolve(name)
+				.toFile();
 
-		// could also check for the absence of a child .git directory
-		if (!repositoryPath.exists() || !repositoryPath.isDirectory()) {
+		File dotGitDirOrFile = new File(repositoryPath, ".git");
+
+		if (!repositoryPath.exists() || !repositoryPath.isDirectory() || !dotGitDirOrFile.exists()) {
 			throw new IOException(
-					String.format(
-							"Couldn't find a Git repository with the name \"%s\" at base path %s. " +
-									"Did you mean to call 'init'?",
-							name,
-							this.getRepositoryBasePath()
-					)
+					String.format("Couldn't find a Git repository at path %s.", repositoryPath)
 			);
 		}
 
-		File gitDir = new File(repositoryPath, ".git");
-		if (gitDir.isFile()) {
-			gitDir = Paths.get(repositoryPath.toURI()).resolve(
-					FileUtils.readFileToString(gitDir, StandardCharsets.UTF_8)
+		// handle opening of submodule repos
+		if (dotGitDirOrFile.isFile()) {
+			dotGitDirOrFile = Paths.get(repositoryPath.toURI()).resolve(
+					FileUtils.readFileToString(dotGitDirOrFile, StandardCharsets.UTF_8)
 							.replace("gitdir:", "")
-							.trim()).normalize().toFile();
+							.trim()
+			).normalize().toFile();
 		}
-		this.gitApi = Git.open(gitDir);
+
+		gitApi = Git.open(dotGitDirOrFile);
 	}
 
 
@@ -178,7 +179,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			remoteName = "origin";
 		}
 
-		StoredConfig config = this.gitApi.getRepository().getConfig();
+		StoredConfig config = gitApi.getRepository().getConfig();
 		return config.getString("remote", remoteName, "url");
 	}
 
@@ -187,11 +188,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getRemoteBranches` on a detached instance");
 		}
+
 		try {
-			List<Ref> branches =
-					this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
-			return branches.stream().map(ref -> ref.getName()).collect(Collectors.toList());
-		} catch (GitAPIException e) {
+			List<Ref> branches = gitApi.branchList().setListMode(ListMode.REMOTE).call();
+			return branches.stream().map(Ref::getName).collect(Collectors.toList());
+		}
+		catch (GitAPIException e) {
 			throw new IOException("Failed to get remote branches", e);
 		}
 	}
@@ -200,15 +202,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	@Override
 	public String getRevisionHash() throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't determine root revision hash on a detached instance");
+			throw new IllegalStateException("Can't call `getRevisionHash` on a detached instance");
 		}
-		ObjectId headRevision = this.gitApi.getRepository().resolve(Constants.HEAD);
-		if (headRevision == null) {
-			return NO_COMMITS_YET;
-		}
-		else {
-			return headRevision.getName();
-		}
+
+		ObjectId headRevision = gitApi.getRepository().resolve(Constants.HEAD);
+
+		return headRevision == null ? NO_COMMITS_YET : headRevision.getName();
 	}
 
 	@Override
@@ -241,28 +240,35 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 
 	@Override
-	public Set<String> getDeletedResourcesFromLog(
-			Set<String> resourceIds, String resourceDir) throws IOException {
-		// TODO: check if attached, throw if not
-		try {
-			Set<String> result = new HashSet<String>();
-			ObjectId objectId = gitApi.getRepository().resolve("refs/heads/"+username);
-			if (objectId != null) {
-				Iterator<RevCommit> remoteCommitIterator =
-						gitApi.log().add(objectId).addPath(resourceDir).call().iterator();
+	public Set<String> verifyDeletedResourcesViaLog(String resourceDir, String resourceTypeKeywords, Set<String> resourceIds) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `verifyDeletedResourcesViaLog` on a detached instance");
+		}
 
-				while(remoteCommitIterator.hasNext()) {
-					RevCommit revCommit = remoteCommitIterator.next();
-					String fullMsg = revCommit.getFullMessage();
-					if (fullMsg.toLowerCase().startsWith("deleted document")) {
-						for (String resourceId : resourceIds) {
-							if (!result.contains(resourceId) && fullMsg.endsWith(resourceId)) {
-								result.add(resourceId);
-							}
+		try {
+			Set<String> result = new HashSet<>();
+			ObjectId userBranch = gitApi.getRepository().resolve("refs/heads/" + username);
+
+			if (userBranch == null) {
+				return result;
+			}
+
+			for (RevCommit revCommit : gitApi.log().add(userBranch).addPath(resourceDir).call()) {
+				String fullCommitMessageLowerCase = revCommit.getFullMessage().toLowerCase();
+
+				// NB: comparison with commit messages generated by:
+				// - GitSourceDocumentHandler.removeDocument
+				// - GitAnnotationCollectionHandler.removeCollection
+				// - GitTagsetHandler.removeTagsetDefinition
+				if (fullCommitMessageLowerCase.startsWith(String.format("deleted %s", resourceTypeKeywords.toLowerCase()))) {
+					for (String resourceId : resourceIds) {
+						if (fullCommitMessageLowerCase.contains(resourceId.toLowerCase())) {
+							result.add(resourceId);
 						}
 					}
 				}
 			}
+
 			return result;
 		}
 		catch (GitAPIException e) {
@@ -272,7 +278,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 	@Override
 	public void checkout(String name) throws IOException {
-		this.checkout(name, false);
+		checkout(name, false);
 	}
 
 	@Override
@@ -282,41 +288,56 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 
 		try {
-			if (!this.gitApi.getRepository().getBranch().equals(name)) {
-				CheckoutCommand checkoutCommand = this.gitApi.checkout();
-				if (createBranch) {
-					List<Ref> refs = this.gitApi.branchList().call();
-					if (refs
-							.stream()
-							.map(rev -> rev.getName())
-							.filter(revName -> revName.equals("refs/heads/"+name))
-							.findFirst()
-							.isPresent()) {
-						createBranch = false;
-					}
-					try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
-						ObjectId commitId = this.gitApi.getRepository().resolve("refs/heads/"+Constants.MASTER);
-						// can be null, if a project is still empty,
-						// branch creation will fail nevertheless, because JGit cannot create a branch without a startpoint
-						if (commitId != null) {
-							RevCommit commit = revWalk.parseCommit(commitId);
-							checkoutCommand.setStartPoint(commit);
+			if (gitApi.getRepository().getBranch().equals(name)) {
+				// already the active branch
+				return;
+			}
+
+			CheckoutCommand checkoutCommand = gitApi.checkout();
+
+			if (createBranch) {
+				// check if the branch already exists
+				List<Ref> refs = gitApi.branchList().call();
+				boolean branchAlreadyExists = refs.stream()
+						.map(Ref::getName)
+						.anyMatch(refName -> refName.equals("refs/heads/" + name));
+
+				if (branchAlreadyExists) {
+					createBranch = false;
+				}
+				else {
+					// set the start point for the checkout to master, if we can
+					try (RevWalk revWalk = new RevWalk(gitApi.getRepository())) {
+						ObjectId masterBranch = gitApi.getRepository().resolve("refs/heads/" + Constants.MASTER);
+						// can be null if a project is still empty - in that case branch creation will fail,
+						// because JGit cannot create a branch without a start point
+						if (masterBranch != null) {
+							RevCommit masterHeadCommit = revWalk.parseCommit(masterBranch);
+							checkoutCommand.setStartPoint(masterHeadCommit);
 						}
 					}
 				}
-				checkoutCommand.setCreateBranch(createBranch);
-				checkoutCommand.setName(name).call();
+			}
 
-				if (createBranch) {
-					StoredConfig config = this.gitApi.getRepository().getConfig();
-					config.setString(
-							ConfigConstants.CONFIG_BRANCH_SECTION, name,
-							ConfigConstants.CONFIG_KEY_REMOTE, "origin");
-					config.setString(
-							ConfigConstants.CONFIG_BRANCH_SECTION, name,
-							ConfigConstants.CONFIG_KEY_MERGE, "refs/heads/" + name);
-					config.save();
-				}
+			checkoutCommand.setCreateBranch(createBranch);
+			checkoutCommand.setName(name).call();
+
+			if (createBranch) {
+				// update config to set 'remote' and 'merge' (upstream branch) for this branch
+				StoredConfig config = gitApi.getRepository().getConfig();
+				config.setString(
+						ConfigConstants.CONFIG_BRANCH_SECTION,
+						name,
+						ConfigConstants.CONFIG_KEY_REMOTE,
+						"origin"
+				);
+				config.setString(
+						ConfigConstants.CONFIG_BRANCH_SECTION,
+						name,
+						ConfigConstants.CONFIG_KEY_MERGE,
+						"refs/heads/" + name
+				);
+				config.save();
 			}
 		}
 		catch (GitAPIException e) {
@@ -326,11 +347,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 	@Override
 	public Status getStatus() throws IOException {
-		try {
-			if (!isAttached()) {
-				throw new IllegalStateException("Can't call `getStatus` on a detached instance");
-			}
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getStatus` on a detached instance");
+		}
 
+		try {
 			return gitApi.status().call();
 		}
 		catch (GitAPIException e) {
@@ -346,9 +367,9 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 		try {
 			Status status = gitApi.status().call();
-
 			return !status.getUntracked().isEmpty() || !status.getUntrackedFolders().isEmpty();
-		} catch (GitAPIException e) {
+		}
+		catch (GitAPIException e) {
 			throw new IOException("Failed to check for untracked changes", e);
 		}
 	}
@@ -356,29 +377,34 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	@Override
 	public boolean hasUncommittedChanges() throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `hasUncommitedChanges` on a detached instance");
+			throw new IllegalStateException("Can't call `hasUncommittedChanges` on a detached instance");
 		}
 
 		try {
 			return gitApi.status().call().hasUncommittedChanges();
-		} catch (GitAPIException e) {
+		}
+		catch (GitAPIException e) {
 			throw new IOException("Failed to check for uncommitted changes", e);
 		}
 	}
 
 	@Override
-	public void add(Path relativePath) throws IOException {
+	public void add(File targetFile) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `add` on a detached instance");
 		}
+
 		try {
-			this.gitApi
-					.add()
-					.addFilepattern(FilenameUtils.separatorsToUnix(relativePath.toString()))
+			Path basePath = gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
+			Path relativeFilePath = basePath.relativize(absoluteFilePath);
+
+			gitApi.add()
+					.addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString()))
 					.call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException(e);
+			throw new IOException("Failed to add", e);
 		}
 	}
 
@@ -391,35 +417,38 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(targetFile)) {
 			fileOutputStream.write(bytes);
 
-			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path basePath = gitApi.getRepository().getWorkTree().toPath();
 			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
 			Path relativeFilePath = basePath.relativize(absoluteFilePath);
 
-			this.gitApi
-					.add()
+			gitApi.add()
 					.addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString()))
 					.call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException(e);
+			throw new IOException("Failed to add", e);
 		}
 	}
 
 	@Override
-	public String addAndCommit(
-			File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail)
-			throws IOException {
+	public String addAndCommit(File targetFile, byte[] bytes, String commitMsg, String committerName, String committerEmail) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addAndCommit` on a detached instance");
 		}
 
-		this.add(targetFile, bytes);
-		return this.commit(commitMsg, committerName, committerEmail, false);
+		try {
+			add(targetFile, bytes);
+			return commit(commitMsg, committerName, committerEmail, false);
+		}
+		catch (IOException e) {
+			throw new IOException("Failed to add and commit", e);
+		}
 	}
 
+	// stages all new, modified and deleted files
+	// this is different to commit with all=true, which only stages modified and deleted files
 	@Override
-	public String addAllAndCommit(
-			String message, String committerName, String committerEmail, boolean force) throws IOException {
+	public String addAllAndCommit(String message, String committerName, String committerEmail, boolean force) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addAllAndCommit` on a detached instance");
 		}
@@ -429,14 +458,13 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 			List<DiffEntry> diffEntries = gitApi.diff().call();
 			if (!diffEntries.isEmpty()) {
-				RmCommand rmCmd = gitApi.rm();
+				RmCommand rmCommand = gitApi.rm();
 				for (DiffEntry entry : diffEntries) {
 					if (entry.getChangeType().equals(ChangeType.DELETE)) {
-						rmCmd.addFilepattern(entry.getOldPath());
+						rmCommand.addFilepattern(entry.getOldPath());
 					}
 				}
-
-				rmCmd.call();
+				rmCommand.call();
 			}
 
 			if (force || gitApi.status().call().hasUncommittedChanges()) {
@@ -445,9 +473,9 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			else {
 				return getRevisionHash();
 			}
-
-		} catch (GitAPIException e) {
-			throw new IOException("Failed to add and commit changes", e);
+		}
+		catch (GitAPIException | IOException e) {
+			throw new IOException("Failed to add all and commit", e);
 		}
 	}
 
@@ -458,58 +486,63 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 
 		try {
-
-			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path basePath = gitApi.getRepository().getWorkTree().toPath();
 			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
 			Path relativeFilePath = basePath.relativize(absoluteFilePath);
 
-			this.gitApi
-					.rm()
+			gitApi.rm()
 					.setCached(true)
 					.addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString()))
 					.call();
 
+			// TODO: why don't we trust JGit to delete? (setCached(false) above, the default)
 			if (targetFile.isDirectory()) {
 				FileUtils.deleteDirectory(targetFile);
 			}
 			else if (targetFile.exists() && !targetFile.delete()) {
 				throw new IOException(
-						String.format("Couldn't remove %s", targetFile)
+						String.format("Unable to delete file %s.", targetFile) // like message from FileUtils.deleteDirectory above
 				);
 			}
 		}
 		catch (GitAPIException e) {
-			throw new IOException(e);
+			throw new IOException("Failed to remove", e);
 		}
 	}
 
 	@Override
 	public String removeAndCommit(
-			File targetFile, boolean removeEmptyParent,
-			String commitMsg, String committerName, String committerEmail)
-			throws IOException {
+			File targetFile,
+			boolean removeEmptyParent,
+			String commitMsg,
+			String committerName,
+			String committerEmail
+	) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `removeAndCommit` on a detached instance");
 		}
 
-		File parentDir = targetFile.getParentFile();
+		try {
+			remove(targetFile);
 
-		this.remove(targetFile);
-
-		if ((parentDir != null) && parentDir.isDirectory() && removeEmptyParent) {
-			String[] content = parentDir.list();
-			if ((content != null) && content.length == 0) {
-				parentDir.delete();
+			File parentDir = targetFile.getParentFile();
+			if (removeEmptyParent && parentDir != null && parentDir.isDirectory()) {
+				String[] content = parentDir.list();
+				if (content != null && content.length == 0) {
+					parentDir.delete();
+				}
 			}
-		}
 
-		return this.commit(commitMsg, committerName, committerEmail, false);
+			return commit(commitMsg, committerName, committerEmail, false);
+		}
+		catch (IOException e) {
+			throw new IOException("Failed to remove and commit", e);
+		}
 	}
 
 	@Override
-	public String commit(String message, String committerName, String committerEmail, boolean force)
-			throws IOException {
-		return this.commit(message, committerName, committerEmail, false, force);
+	public String commit(String message, String committerName, String committerEmail, boolean force) throws IOException {
+		return commit(message, committerName, committerEmail, false, force);
 	}
 
 	@Override
@@ -519,18 +552,16 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 
 		try {
-			if (force || gitApi.status().call().hasUncommittedChanges()) {
-				return this.gitApi
-						.commit()
-						.setMessage(message)
-						.setCommitter(committerName, committerEmail)
-						.setAll(all)
-						.call()
-						.getName();
-			}
-			else {
+			if (!gitApi.status().call().hasUncommittedChanges() && !force) {
 				return getRevisionHash();
 			}
+
+			return gitApi.commit()
+					.setMessage(message)
+					.setCommitter(committerName, committerEmail)
+					.setAll(all)
+					.call()
+					.getName();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to commit", e);
@@ -543,17 +574,25 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `canMerge` on a detached instance");
 		}
 
-		Repository repository = gitApi.getRepository();
+		try {
+			Repository repository = gitApi.getRepository();
 
-		try (ClosableRecursiveMerger merger = new ClosableRecursiveMerger(repository, true)) {
-			Ref ref = repository.findRef(branch);
+			try (ClosableRecursiveMerger merger = new ClosableRecursiveMerger(repository, true)) {
+				Ref ref = repository.findRef(branch);
 
-			if (ref == null) {
-				return false;
+				if (ref == null) {
+					return false;
+				}
+
+				ObjectId head = repository.resolve(Constants.HEAD);
+				return merger.merge(true, head, ref.getObjectId());
 			}
-
-			ObjectId headCommit = repository.resolve(Constants.HEAD);
-			return merger.merge(true, headCommit, ref.getObjectId());
+		}
+		catch (IOException e) {
+			throw new IOException(
+					String.format("Failed to check if branch %s can be merged", branch),
+					e
+			);
 		}
 	}
 
@@ -564,10 +603,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 
 		try {
-			MergeCommand mergeCommand = this.gitApi.merge();
+			MergeCommand mergeCommand = gitApi.merge();
 			mergeCommand.setFastForward(FastForwardMode.FF);
 
-			Ref ref = this.gitApi.getRepository().findRef(branch);
+			Ref ref = gitApi.getRepository().findRef(branch);
+
 			if (ref != null) {
 				mergeCommand.include(ref);
 			}
@@ -575,26 +615,31 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			return mergeCommand.call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Failed to merge", e);
+			throw new IOException(
+					String.format("Failed to merge branch %s", branch),
+					e
+			);
 		}
 	}
 
 	@Override
-	public void abortMerge(MergeResult mergeResult) throws IOException {
+	public void abortMerge() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `abortMerge` on a detached instance");
 		}
 
-		// clear the merge state
-		this.gitApi.getRepository().writeMergeCommitMsg(null);
-		this.gitApi.getRepository().writeMergeHeads(null);
-
-		// reset the index and work directory to HEAD
 		try {
-			Git.wrap(this.gitApi.getRepository()).reset().setMode(ResetType.HARD).call();
+			Repository repository = gitApi.getRepository();
+
+			// clear the merge state
+			repository.writeMergeCommitMsg(null);
+			repository.writeMergeHeads(null);
+
+			// hard reset the index and working directory to HEAD
+			gitApi.reset().setMode(ResetType.HARD).call();
 		}
-		catch (GitAPIException e) {
-			throw new IOException("Failed to abort conflicted merge", e);
+		catch (GitAPIException | IOException e) {
+			throw new IOException("Failed to abort merge", e);
 		}
 	}
 
@@ -614,8 +659,9 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
 	 * @param branch the branch to push, defaults to the user branch if null
 	 * @param skipBranchChecks whether to skip branch checks, normally false
-	 * @param tryCount how often this push has been attempted already (start with 0, used internally to limit recursive retries)
 	 * @param refreshCredentialsTryCount how often this push has been attempted already (start with 0, used internally to limit recursive retries)
+	 * @param tryCount how often this push has been attempted already (start with 0, used internally to limit recursive retries)
+	 * @return a {@link List<PushResult>} containing the results of the push operation
 	 * @throws IOException if an error occurs when pushing
 	 */
 	private List<PushResult> push(
@@ -629,11 +675,9 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
 
-		List<PushResult> result = new ArrayList<>();
-
 		if (CATMAPropertyKey.DEV_PREVENT_PUSH.getBooleanValue()) {
 			logger.warning(String.format("FAKE PUSH - %s", getRemoteUrl(null)));
-			return result;
+			return new ArrayList<>();
 		}
 
 		try {
@@ -642,9 +686,14 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			if (!skipBranchChecks) {
 				if (branch != null && !currentBranch.equals(branch)) {
 					throw new IOException(
-							String.format("Aborting push - branch to push was \"%s\" but currently checked out branch is \"%s\"", branch, currentBranch)
+							String.format(
+									"Aborting push - branch to push was \"%s\" but currently checked out branch is \"%s\"",
+									branch,
+									currentBranch
+							)
 					);
 				}
+
 				if (branch == null && !currentBranch.equals(username)) {
 					throw new IOException(
 							String.format(
@@ -665,9 +714,9 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				for (RemoteRefUpdate remoteRefUpdate : pushResult.getRemoteUpdates()) {
 					logger.info(String.format("PushResult: %s", remoteRefUpdate));
 				}
-
-				result.add(pushResult);
 			}
+
+			return Lists.newArrayList(pushResults);
 		}
 		catch (GitAPIException e) {
 			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
@@ -689,10 +738,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			}
 
 			// give up, refreshing credentials didn't work, retries exhausted, or unexpected error
-			throw new IOException(String.format("Failed to push, tried %d times", tryCount + 1), e);
+			throw new IOException(
+					String.format("Failed to push, tried %d times", tryCount + 1),
+					e
+			);
 		}
-
-		return result;
 	}
 
 
@@ -702,43 +752,42 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `getAdditiveBranchDifferences` on a detached instance");
 		}
 
-		checkout(username, true);  // the user branch has to be present at this point
+		try {
+			checkout(username, true); // the user branch has to be present at this point
 
-		DiffCommand diffCommand = this.gitApi.diff();
+			DiffCommand diffCommand = gitApi.diff();
 
-		ObjectId thisUserBranchHeadRevisionTree =
-				this.gitApi.getRepository().resolve("refs/heads/" + username + "^{tree}");
-		ObjectId otherBranchRevisionTree =
-				this.gitApi.getRepository().resolve(otherBranchName + "^{tree}");
+			ObjectId thisUserBranchHeadRevisionTree = gitApi.getRepository().resolve("refs/heads/" + username + "^{tree}");
+			ObjectId otherBranchRevisionTree = gitApi.getRepository().resolve(otherBranchName + "^{tree}");
 
-		Set<String> paths = new HashSet<String>();
+			Set<String> changedPaths = new HashSet<>();
 
-		if (thisUserBranchHeadRevisionTree != null && otherBranchRevisionTree != null) {
+			if (thisUserBranchHeadRevisionTree != null && otherBranchRevisionTree != null) {
+				ObjectReader reader = gitApi.getRepository().newObjectReader();
 
-			ObjectReader reader = this.gitApi.getRepository().newObjectReader();
+				CanonicalTreeParser thisUserBranchHeadRevisionTreeParser = new CanonicalTreeParser();
+				thisUserBranchHeadRevisionTreeParser.reset(reader, thisUserBranchHeadRevisionTree);
 
-			CanonicalTreeParser thisUserBranchHeadRevisionTreeParser =
-					new CanonicalTreeParser();
-			thisUserBranchHeadRevisionTreeParser.reset(reader, thisUserBranchHeadRevisionTree);
+				CanonicalTreeParser otherBranchRevisionTreeParser = new CanonicalTreeParser();
+				otherBranchRevisionTreeParser.reset(reader, otherBranchRevisionTree);
 
-			CanonicalTreeParser otherBranchRevisionTreeParser = new CanonicalTreeParser();
-			otherBranchRevisionTreeParser.reset(reader, otherBranchRevisionTree);
+				diffCommand.setOldTree(thisUserBranchHeadRevisionTreeParser);
+				diffCommand.setNewTree(otherBranchRevisionTreeParser);
 
-			diffCommand.setOldTree(thisUserBranchHeadRevisionTreeParser);
-			diffCommand.setNewTree(otherBranchRevisionTreeParser);
+				List<DiffEntry> diffResult = diffCommand.call();
 
-			try {
-				List<DiffEntry> result = diffCommand.call();
-				for (DiffEntry diffEntry : result) {
+				for (DiffEntry diffEntry : diffResult) {
 					if (!diffEntry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
-						paths.add(diffEntry.getNewPath());
+						changedPaths.add(diffEntry.getNewPath());
 					}
 				}
-			} catch (GitAPIException e) {
-				throw new IOException("Failed to get Git diff info", e);
 			}
+
+			return changedPaths;
 		}
-		return paths;
+		catch (GitAPIException | IOException e) {
+			throw new IOException("Failed to get additive branch differences", e);
+		}
 	}
 
 
@@ -748,43 +797,38 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `getOurUnpublishedChanges` on a detached instance");
 		}
 
-		List<CommitInfo> result = new ArrayList<>();
-
-		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-			return result; // no HEAD -> new empty project, no commits yet
-		}
-
-
 		try {
-			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
-			Iterable<RevCommit> commits = null;
+			List<CommitInfo> result = new ArrayList<>();
 
-			if (!refs.isEmpty()) { // otherwise project has never been never synchronized
-
-				ObjectId remote =
-						this.gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER);
-
-				if (remote != null) {
-					commits = this.gitApi.log().addRange(
-							remote,
-							this.gitApi.getRepository().resolve("refs/heads/" + username)).call();
-				}
-				else {
-					commits = Collections.<RevCommit>emptyList();
-				}
+			if (gitApi.getRepository().resolve(Constants.HEAD) == null) {
+				return result; // no HEAD -> new empty project, no commits yet
 			}
 
-
-			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
+			List<String> remoteBranches = getRemoteBranches();
+			if (remoteBranches.isEmpty()) {
+				return result; // project has never been synchronized
 			}
 
+			ObjectId originMaster = gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER);
+			if (originMaster == null) {
+				return result; // can't find origin/master
+			}
 
-		} catch (GitAPIException e) {
-			throw new IOException("Failed to get Git log info", e);
+			Iterable<RevCommit> commits = gitApi.log()
+					.addRange(originMaster, gitApi.getRepository().resolve("refs/heads/" + username))
+					.call();
+
+			for (RevCommit commit : commits) {
+				result.add(
+						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+				);
+			}
+
+			return result;
 		}
-
-		return result;
+		catch (GitAPIException | IOException e) {
+			throw new IOException("Failed to get our unpublished changes", e);
+		}
 	}
 
 	@Override
@@ -793,63 +837,58 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `getTheirPublishedChanges` on a detached instance");
 		}
 
-		List<CommitInfo> result = new ArrayList<>();
-
-		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-			return result; // no HEAD -> new empty project, no commits yet
-		}
-
-
 		try {
-			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
-			Iterable<RevCommit> commits = null;
+			List<CommitInfo> result = new ArrayList<>();
 
-			if (!refs.isEmpty()) { // otherwise project has never been never synchronized
-
-				ObjectId remote =
-						this.gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER);
-
-				if (remote != null) {
-					commits = this.gitApi.log().addRange(
-							this.gitApi.getRepository().resolve("refs/heads/" + username),
-							remote).call();
-				}
-				else {
-					commits = Collections.<RevCommit>emptyList();
-				}
+			if (gitApi.getRepository().resolve(Constants.HEAD) == null) {
+				return result; // no HEAD -> new empty project, no commits yet
 			}
 
-
-			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
+			List<String> remoteBranches = getRemoteBranches();
+			if (remoteBranches.isEmpty()) {
+				return result; // project has never been synchronized
 			}
 
+			ObjectId originMaster = gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER);
+			if (originMaster == null) {
+				return result; // can't find origin/master
+			}
 
-		} catch (GitAPIException e) {
-			throw new IOException("Failed to get Git log info", e);
+			Iterable<RevCommit> commits = gitApi.log()
+					.addRange(gitApi.getRepository().resolve("refs/heads/" + username), originMaster)
+					.call();
+
+			for (RevCommit commit : commits) {
+				result.add(
+						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+				);
+			}
+
+			return result;
 		}
-
-		return result;
+		catch (GitAPIException | IOException e) {
+			throw new IOException("Failed to get their published changes", e);
+		}
 	}
 
 
 	@Override // AutoCloseable
 	public void close() {
-		if (this.gitApi != null) {
-			try {
-				// apparently JGit doesn't close Git's internal Repository instance
-				// on its close. We need to call the close method of the Repository explicitly
-				// to avoid open handles to pack files
-				// see https://stackoverflow.com/questions/31764311/how-do-i-release-file-system-locks-after-cloning-repo-via-jgit
-				// see maybe related https://bugs.eclipse.org/bugs/show_bug.cgi?id=439305
-				this.gitApi.getRepository().close();
-			}
-			catch(Exception e) {
-				e.printStackTrace();
-			}
-			this.gitApi.close();
-			this.gitApi = null;
+		if (gitApi == null) {
+			return;
 		}
+
+		// TODO: review this - whether the underlying Repository instance is closed apparently depends on how the Git instance (this.gitApi)
+		//       was created (see the docstring for Git.close, but note that most of it was copied from AutoCloseable;
+		//       also see related TODOs, search for "JGitRepoManager.close")
+		// apparently JGit doesn't close Git's internal Repository instance on its close
+		// we need to call the close method of the Repository explicitly to avoid open handles to pack files
+		// see https://stackoverflow.com/questions/31764311/how-do-i-release-file-system-locks-after-cloning-repo-via-jgit
+		// see maybe related https://bugs.eclipse.org/bugs/show_bug.cgi?id=439305
+		gitApi.getRepository().close();
+
+		gitApi.close();
+		gitApi = null;
 	}
 
 
@@ -860,7 +899,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			return null;
 		}
 
-		return this.gitApi.getRepository().getWorkTree();
+		return gitApi.getRepository().getWorkTree();
 	}
 
 	@Deprecated
@@ -868,15 +907,19 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getHeadCommit` on a detached instance");
 		}
+
 		try {
 			ObjectId headCommit = gitApi.getRepository().resolve(Constants.HEAD);
+
 			if (headCommit != null) {
 				Iterator<RevCommit> iterator = gitApi.log().add(headCommit).call().iterator();
+
 				if (iterator.hasNext()) {
-					RevCommit c = iterator.next();
-					return new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen());
+					RevCommit revCommit = iterator.next();
+					return new CommitInfo(revCommit.getId().getName(), revCommit.getFullMessage(), revCommit.getAuthorIdent().getWhen());
 				}
 			}
+
 			return null;
 		}
 		catch (GitAPIException e) {
@@ -887,11 +930,13 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	@Deprecated
 	public List<String> getSubmodulePaths() throws IOException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't determine submodules from a detached instance");
+			throw new IllegalStateException("Can't call `getSubmodulePaths` on a detached instance");
 		}
+
 		try {
 			List<String> paths = new ArrayList<>();
-			try (SubmoduleWalk submoduleWalk = SubmoduleWalk.forIndex(this.gitApi.getRepository())) {
+
+			try (SubmoduleWalk submoduleWalk = SubmoduleWalk.forIndex(gitApi.getRepository())) {
 				while (submoduleWalk.next()) {
 					paths.add(submoduleWalk.getModulesPath());
 				}
@@ -900,7 +945,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			}
 		}
 		catch (Exception e) {
-			throw new IOException(e);
+			throw new IOException("Failed to get submodule paths", e);
 		}
 	}
 
@@ -915,7 +960,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
 		}
 
-		File targetPath = Paths.get(getRepositoryBasePath().toURI())
+		File targetPath = Paths.get(getUserRepositoryBasePath().toURI())
 				.resolve(group)
 				.resolve(repositoryName)
 				.toFile();
@@ -931,26 +976,31 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			submoduleUpdateCommand.call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Failed to clone remote Git repository", e);
+			throw new IOException("Failed to clone with submodules", e);
 		}
 
 		return targetPath.getName();
 	}
 
 	@Deprecated
-	public void initAndUpdateSubmodules(JGitCredentialsManager jGitCredentialsManager, Set<String> submodules) throws Exception {
+	public void initAndUpdateSubmodules(JGitCredentialsManager jGitCredentialsManager, Set<String> submodules) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `initAndUpdateSubmodules` on a detached instance");
 		}
 
-		SubmoduleInitCommand submoduleInitCommand = gitApi.submoduleInit();
-		submoduleInitCommand.call();
+		try {
+			SubmoduleInitCommand submoduleInitCommand = gitApi.submoduleInit();
+			submoduleInitCommand.call();
 
-		if (!submodules.isEmpty()) {
-			SubmoduleUpdateCommand submoduleUpdateCommand = jGitCommandFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
-			submodules.forEach(submoduleUpdateCommand::addPath);
-			submoduleUpdateCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
-			submoduleUpdateCommand.call();
+			if (!submodules.isEmpty()) {
+				SubmoduleUpdateCommand submoduleUpdateCommand = jGitCommandFactory.newSubmoduleUpdateCommand(gitApi.getRepository());
+				submodules.forEach(submoduleUpdateCommand::addPath);
+				submoduleUpdateCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
+				submoduleUpdateCommand.call();
+			}
+		}
+		catch (GitAPIException e) {
+			throw new IOException("Failed to init and update submodules", e);
 		}
 	}
 
@@ -986,7 +1036,10 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			repositoryConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, unixStyleRelativeSubmodulePath);
 			repositoryConfig.save();
 
-			gitApi.rm().setCached(true).addFilepattern(unixStyleRelativeSubmodulePath).call();
+			gitApi.rm()
+					.setCached(true)
+					.addFilepattern(unixStyleRelativeSubmodulePath)
+					.call();
 
 			FileUtils.deleteDirectory(absoluteSubmodulePath.toFile());
 
@@ -998,7 +1051,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			repository.close();
 		}
 		catch (GitAPIException | ConfigInvalidException e) {
-			throw new IOException(e);
+			throw new IOException("Failed to re-add submodule", e);
 		}
 	}
 
@@ -1007,44 +1060,42 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `removeSubmodule` on a detached instance");
 		}
-		try {
-			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
-			Path absoluteFilePath = Paths.get(submodulePath.getAbsolutePath());
-			Path relativeFilePath = basePath.relativize(absoluteFilePath);
-			String relativeUnixStyleFilePath = FilenameUtils.separatorsToUnix(relativeFilePath.toString());
-			
-		    File gitSubmodulesFile = 
-		    	new File(
-		    			this.gitApi.getRepository().getWorkTree(), 
-		    			Constants.DOT_GIT_MODULES );
-		    FileBasedConfig gitSubmodulesConfig = 
-		    		new FileBasedConfig(null, gitSubmodulesFile, FS.DETECTED);		
-		    gitSubmodulesConfig.load();
-		    gitSubmodulesConfig.unsetSection(
-		    		ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
-		    gitSubmodulesConfig.save();
-		    StoredConfig repositoryConfig = this.getGitApi().getRepository().getConfig();
-		    repositoryConfig.unsetSection(
-		    	ConfigConstants.CONFIG_SUBMODULE_SECTION, relativeUnixStyleFilePath);
-		    repositoryConfig.save();
-		    
-		    gitApi.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
-		    gitApi.rm().setCached(true).addFilepattern(relativeUnixStyleFilePath).call();
 
-			File submoduleGitDir = 
-				basePath
-				.resolve(Constants.DOT_GIT)
-				.resolve(Constants.MODULES)
-				.resolve(relativeFilePath).toFile();
-			
+		try {
+			Path basePath = gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteSubmodulePath = Paths.get(submodulePath.getAbsolutePath());
+			Path relativeSubmodulePath = basePath.relativize(absoluteSubmodulePath);
+			String unixStyleRelativeSubmodulePath = FilenameUtils.separatorsToUnix(relativeSubmodulePath.toString());
+
+			File gitSubmodulesFile = new File(gitApi.getRepository().getWorkTree(), Constants.DOT_GIT_MODULES );
+			FileBasedConfig gitSubmodulesConfig = new FileBasedConfig(null, gitSubmodulesFile, FS.DETECTED);
+			gitSubmodulesConfig.load();
+			gitSubmodulesConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, unixStyleRelativeSubmodulePath);
+			gitSubmodulesConfig.save();
+
+			StoredConfig repositoryConfig = gitApi.getRepository().getConfig();
+			repositoryConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, unixStyleRelativeSubmodulePath);
+			repositoryConfig.save();
+
+			gitApi.add()
+					.addFilepattern(Constants.DOT_GIT_MODULES)
+					.call();
+
+			gitApi.rm().setCached(true).addFilepattern(unixStyleRelativeSubmodulePath).call();
+
 			detach();
-			
+
+			File submoduleGitDir = basePath
+					.resolve(Constants.DOT_GIT)
+					.resolve(Constants.MODULES)
+					.resolve(relativeSubmodulePath).toFile();
+
 			FileUtils.deleteDirectory(submoduleGitDir);
-			
-			FileUtils.deleteDirectory(absoluteFilePath.toFile());
+
+			FileUtils.deleteDirectory(absoluteSubmodulePath.toFile());
 		}
 		catch (GitAPIException | ConfigInvalidException e) {
-			throw new IOException(e);
+			throw new IOException("Failed to remove submodule", e);
 		}
 	}
 
@@ -1054,47 +1105,52 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `hasRef` on a detached instance");
 		}
 
-		return this.gitApi.getRepository().findRef(branch) != null;
+		return gitApi.getRepository().findRef(branch) != null;
 	}
 
 	@Deprecated
-	public void checkoutNewFromBranch(String name, String baseBranch) throws IOException {
+	public void checkoutNewFromBranch(String name, String baseBranchName) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `checkoutNewFromBranch` on a detached instance");
 		}
 
 		try {
-			if (!this.gitApi.getRepository().getBranch().equals(name)) {
-				CheckoutCommand checkoutCommand = this.gitApi.checkout();
-				List<Ref> refs = this.gitApi.branchList().call();
-				if (refs
-						.stream()
-						.map(rev -> rev.getName())
-						.filter(revName -> revName.equals("refs/heads/"+name))
-						.findFirst()
-						.isPresent()) {
-				}
-				try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
-					ObjectId commitId = this.gitApi.getRepository().resolve("refs/heads/"+baseBranch);
-					// can be null, if a project is still empty,
-					// branch creation will fail nevertheless, because JGit cannot create a branch without a startpoint
-					if (commitId != null) {
-						RevCommit commit = revWalk.parseCommit(commitId);
-						checkoutCommand.setStartPoint(commit);
-					}
-				}
-				checkoutCommand.setCreateBranch(true);
-				checkoutCommand.setName(name).call();
-
-				StoredConfig config = this.gitApi.getRepository().getConfig();
-				config.setString(
-						ConfigConstants.CONFIG_BRANCH_SECTION, name,
-						ConfigConstants.CONFIG_KEY_REMOTE, "origin");
-				config.setString(
-						ConfigConstants.CONFIG_BRANCH_SECTION, name,
-						ConfigConstants.CONFIG_KEY_MERGE, "refs/heads/" + name);
-				config.save();
+			if (gitApi.getRepository().getBranch().equals(name)) {
+				// already the active branch
+				return;
 			}
+
+			CheckoutCommand checkoutCommand = gitApi.checkout();
+
+			// set the start point for the checkout to baseBranch, if we can
+			try (RevWalk revWalk = new RevWalk(gitApi.getRepository())) {
+				ObjectId baseBranch = gitApi.getRepository().resolve("refs/heads/" + baseBranchName);
+				// can be null if a project is still empty - in that case branch creation will fail,
+				// because JGit cannot create a branch without a start point
+				if (baseBranch != null) {
+					RevCommit baseBranchHeadCommit = revWalk.parseCommit(baseBranch);
+					checkoutCommand.setStartPoint(baseBranchHeadCommit);
+				}
+			}
+
+			checkoutCommand.setCreateBranch(true);
+			checkoutCommand.setName(name).call();
+
+			// update config to set 'remote' and 'merge' (upstream branch) for this branch
+			StoredConfig config = gitApi.getRepository().getConfig();
+			config.setString(
+					ConfigConstants.CONFIG_BRANCH_SECTION,
+					name,
+					ConfigConstants.CONFIG_KEY_REMOTE,
+					"origin"
+			);
+			config.setString(
+					ConfigConstants.CONFIG_BRANCH_SECTION,
+					name,
+					ConfigConstants.CONFIG_KEY_MERGE,
+					"refs/heads/" + name
+			);
+			config.save();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to checkout", e);
@@ -1108,36 +1164,52 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 
 		try {
-			boolean createBranch = true;
-			if (!this.gitApi.getRepository().getBranch().equals(name)) {
-				CheckoutCommand checkoutCommand = this.gitApi.checkout();
-				List<Ref> refs = this.gitApi.branchList().call();
-				if (refs
-						.stream()
-						.map(rev -> rev.getName())
-						.filter(revName -> revName.equals("refs/heads/"+name))
-						.findFirst()
-						.isPresent()) {
-					createBranch = false;
-				}
-				try (RevWalk revWalk = new RevWalk(this.gitApi.getRepository())) {
-					ObjectId commitId = this.gitApi.getRepository().resolve("refs/remotes/origin/"+name);
-					RevCommit commit = revWalk.parseCommit(commitId);
-					checkoutCommand.setStartPoint(commit);
-				}
-				checkoutCommand.setCreateBranch(createBranch);
-				checkoutCommand.setName(name).call();
+			if (gitApi.getRepository().getBranch().equals(name)) {
+				// already the active branch
+				return;
+			}
 
-				if (createBranch) {
-					StoredConfig config = this.gitApi.getRepository().getConfig();
-					config.setString(
-							ConfigConstants.CONFIG_BRANCH_SECTION, name,
-							ConfigConstants.CONFIG_KEY_REMOTE, "origin");
-					config.setString(
-							ConfigConstants.CONFIG_BRANCH_SECTION, name,
-							ConfigConstants.CONFIG_KEY_MERGE, "refs/heads/" + name);
-					config.save();
+			CheckoutCommand checkoutCommand = gitApi.checkout();
+
+			boolean createBranch = true;
+
+			// check if the branch already exists
+			List<Ref> refs = gitApi.branchList().call();
+			boolean branchAlreadyExists = refs.stream()
+					.map(Ref::getName)
+					.anyMatch(refName -> refName.equals("refs/heads/" + name));
+
+			if (branchAlreadyExists) {
+				createBranch = false;
+			}
+			else {
+				// set the start point for the checkout to origin/<name>
+				try (RevWalk revWalk = new RevWalk(gitApi.getRepository())) {
+					ObjectId branch = gitApi.getRepository().resolve("refs/remotes/origin/" + name);
+					RevCommit branchHeadCommit = revWalk.parseCommit(branch);
+					checkoutCommand.setStartPoint(branchHeadCommit);
 				}
+			}
+
+			checkoutCommand.setCreateBranch(createBranch);
+			checkoutCommand.setName(name).call();
+
+			if (createBranch) {
+				// update config to set 'remote' and 'merge' (upstream branch) for this branch
+				StoredConfig config = gitApi.getRepository().getConfig();
+				config.setString(
+						ConfigConstants.CONFIG_BRANCH_SECTION,
+						name,
+						ConfigConstants.CONFIG_KEY_REMOTE,
+						"origin"
+				);
+				config.setString(
+						ConfigConstants.CONFIG_BRANCH_SECTION,
+						name,
+						ConfigConstants.CONFIG_KEY_MERGE,
+						"refs/heads/" + name
+				);
+				config.save();
 			}
 		}
 		catch (GitAPIException e) {
@@ -1163,18 +1235,19 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	public boolean hasRemoteRef(String branch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `hasRemoteRef` on a detached instance");
-		}		
-		return this.gitApi.getRepository().resolve("refs/remotes/"+branch) != null;
+		}
+
+		return gitApi.getRepository().resolve("refs/remotes/" + branch) != null;
 	}
 
 	@Deprecated
 	public void remoteAdd(String name, String uri) throws IOException {
-
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `remoteAdd` on a detached instance");
 		}
+
 		try {
-			RemoteAddCommand remoteAddCommand = this.gitApi.remoteAdd();
+			RemoteAddCommand remoteAddCommand = gitApi.remoteAdd();
 			remoteAddCommand.setName(name);
 			remoteAddCommand.setUri(new URIish(uri));
 			remoteAddCommand.call();
@@ -1191,7 +1264,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 
 		try {
-			RemoteRemoveCommand remoteRemoveCommand = this.gitApi.remoteRemove();
+			RemoteRemoveCommand remoteRemoveCommand = gitApi.remoteRemove();
 			remoteRemoveCommand.setName(name);
 			remoteRemoveCommand.call();
 		}
@@ -1442,46 +1515,44 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			throw new IllegalStateException("Can't call `resolveGitSubmoduleFileConflicts` on a detached instance");
 		}
 
-		DirCache dirCache = gitApi.getRepository().lockDirCache();
+		DirCache dirCache = null;
+
 		try {
-			int baseIdx = dirCache.findEntry(Constants.DOT_GIT_MODULES);
+			dirCache = gitApi.getRepository().lockDirCache();
 
 			// get base version
+			int baseIdx = dirCache.findEntry(Constants.DOT_GIT_MODULES);
 			DirCacheEntry baseEntry = dirCache.getEntry(baseIdx);
+
+			Config ourConfig = null;
+			Config theirConfig = null;
 
 			Set<String> baseModules = null;
 			Set<String> ourModules = null;
 			Set<String> theirModules = null;
 
-			Config ourConfig = null;
-			Config theirConfig = null;
-
 			if (baseEntry.getStage() == DirCacheEntry.STAGE_1) {
 				// get our version
-				DirCacheEntry ourEntry = dirCache.getEntry(baseIdx+1);
-				// get their version, the being-merged in version
-				DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+2);
-
+				DirCacheEntry ourEntry = dirCache.getEntry(baseIdx + 1);
+				// get their version, the being-merged-in version
+				DirCacheEntry theirEntry = dirCache.getEntry(baseIdx + 2);
 
 				Config baseConfig = getDotGitModulesConfig(baseEntry.getObjectId());
-
 				ourConfig = getDotGitModulesConfig(ourEntry.getObjectId());
-
 				theirConfig = getDotGitModulesConfig(theirEntry.getObjectId());
 
 				baseModules = baseConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
 				ourModules = ourConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
 				theirModules = theirConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
-
 			}
 			else if (baseEntry.getStage() == DirCacheEntry.STAGE_2) { // no common ancestor
 				DirCacheEntry ourEntry = baseEntry;
-				DirCacheEntry theirEntry = dirCache.getEntry(baseIdx+1);
+				DirCacheEntry theirEntry = dirCache.getEntry(baseIdx + 1);
 
 				ourConfig = getDotGitModulesConfig(ourEntry.getObjectId());
 				theirConfig = getDotGitModulesConfig(theirEntry.getObjectId());
 
-				baseModules = new HashSet<String>();
+				baseModules = new HashSet<>();
 				ourModules = ourConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
 				theirModules = theirConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
 			}
@@ -1489,19 +1560,22 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			for (String name : theirModules) {
 				if (!ourModules.contains(name)) {
 					if (baseModules.contains(name)) {
-						//deleted by us
+						// deleted by us
 					}
 					else {
-						//added by them
-
+						// added by them
 						ourConfig.setString(
-								ConfigConstants.CONFIG_SUBMODULE_SECTION, name,
+								ConfigConstants.CONFIG_SUBMODULE_SECTION,
+								name,
 								"path",
-								theirConfig.getString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name, "path"));
+								theirConfig.getString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name, "path")
+						);
 						ourConfig.setString(
-								ConfigConstants.CONFIG_SUBMODULE_SECTION, name,
+								ConfigConstants.CONFIG_SUBMODULE_SECTION,
+								name,
 								"url",
-								theirConfig.getString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name, "url"));
+								theirConfig.getString(ConfigConstants.CONFIG_SUBMODULE_SECTION, name, "url")
+						);
 					}
 				}
 			}
@@ -1509,11 +1583,11 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			for (String name : ourModules) {
 				if (!theirModules.contains(name)) {
 					if (baseModules.contains(name)) {
-						//deleted by them
+						// deleted by them
 						ourConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, name);
 					}
 					else {
-						//added by us
+						// added by us
 					}
 				}
 			}
@@ -1521,26 +1595,24 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			dirCache.unlock();
 
 			add(
-					new File(this.gitApi.getRepository().getWorkTree(), Constants.DOT_GIT_MODULES),
-					ourConfig.toText().getBytes("UTF-8"));
-
+					new File(gitApi.getRepository().getWorkTree(), Constants.DOT_GIT_MODULES),
+					ourConfig.toText().getBytes(StandardCharsets.UTF_8)
+			);
 		}
 		catch (Exception e) {
-			try  {
-				dirCache.unlock();
-			}
-			catch (Exception e2) {
-				e2.printStackTrace();
-			}
 			throw new IOException("Failed to resolve .gitmodules conflicts", e);
 		}
-
+		finally {
+			if (dirCache != null) {
+				dirCache.unlock();
+			}
+		}
 	}
 
 	@Deprecated
 	private Config getDotGitModulesConfig(ObjectId objectId) throws Exception {
 		ObjectLoader loader = gitApi.getRepository().open(objectId);
-		String content = new String(loader.getBytes(), "UTF-8");
+		String content = new String(loader.getBytes(), StandardCharsets.UTF_8);
 
 		Config config = new Config();
 		config.fromText(content);
@@ -1548,25 +1620,23 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 
 	@Deprecated
-	public List<CommitInfo> getCommitsNeedToBeMergedFromDevToMaster() throws Exception {
-		List<CommitInfo> result = new ArrayList<>();
+	public List<CommitInfo> getCommitsNeedToBeMergedFromDevToMaster() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getCommitsNeedsToBeMergedFromDevToMaster` on a detached instance");
-		}		
-	
+		}
+
 		try {
-			if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
+			List<CommitInfo> result = new ArrayList<>();
+
+			if (gitApi.getRepository().resolve(Constants.HEAD) == null) {
 				return result; // no HEAD -> new empty project, no commits yet
 			}
-			
-			
-			Iterable<RevCommit> commits = null;
 
-			ObjectId master =
-				this.gitApi.getRepository().resolve("refs/heads/master"); 
-			ObjectId dev = 
-				this.gitApi.getRepository().resolve("refs/heads/dev");
-			
+			Iterable<RevCommit> commits = Collections.emptyList();
+
+			ObjectId master = gitApi.getRepository().resolve("refs/heads/master");
+			ObjectId dev = gitApi.getRepository().resolve("refs/heads/dev");
+
 			if (dev != null) {
 				if (master != null) {
 					commits = this.gitApi.log().addRange(master, dev).call();
@@ -1575,113 +1645,102 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 					commits = this.gitApi.log().call();
 				}
 			}
-			else {
-				commits = Collections.<RevCommit>emptyList();
+
+			for (RevCommit commit : commits) {
+				result.add(
+						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+				);
 			}
-			
-			
-			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
-			}
-			
-		} catch (GitAPIException e) {
-			throw new IOException("Failed to check for unsynchronized changes", e);
+
+			return result;
 		}
-		
-		return result;
+		catch (GitAPIException | IOException e) {
+			throw new IOException("Failed to get commits needing to be merged from dev to master", e);
+		}
 	}
 
 	@Deprecated
 	public List<CommitInfo> getCommitsNeedToBeMergedFromMasterToOriginMaster() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getCommitsNeedToBeMergedFromMasterToOriginMaster` on a detached instance");
-		}		
-		
-		List<CommitInfo> result = new ArrayList<>();
-		
-		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-			return result; // no HEAD -> new empty project, no commits yet
 		}
-		
-		
-		try {
-			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
-			Iterable<RevCommit> commits = null;
-			
-			if (!refs.isEmpty()) { // otherwise project has never been never synchronized
 
-				ObjectId remote =
-					this.gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER); 
-				
-				if (remote != null) {
-					commits = this.gitApi.log().addRange(
-							remote,
-							this.gitApi.getRepository().resolve("refs/heads/" + Constants.MASTER)).call();
-				}
-				else {
-					commits = this.gitApi.log().call();
-				}
+		try {
+			List<CommitInfo> result = new ArrayList<>();
+
+			if (gitApi.getRepository().resolve(Constants.HEAD) == null) {
+				return result; // no HEAD -> new empty project, no commits yet
+			}
+
+			List<String> remoteBranches = getRemoteBranches();
+			ObjectId originMaster = gitApi.getRepository().resolve("refs/remotes/origin/" + Constants.MASTER);
+
+			Iterable<RevCommit> commits;
+
+			if (remoteBranches.isEmpty() || originMaster == null) {
+				// project has never been synchronized or can't find origin/master
+				commits = gitApi.log().call();
 			}
 			else {
-				commits = this.gitApi.log().call();
+				commits = gitApi.log()
+						.addRange(originMaster, gitApi.getRepository().resolve("refs/heads/" + Constants.MASTER))
+						.call();
 			}
-			
-			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
+
+			for (RevCommit commit : commits) {
+				result.add(
+						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+				);
 			}
-			
-			
-		} catch (GitAPIException e) {
-			throw new IOException("Failed to get Git log info", e);
+
+			return result;
 		}
-		
-		return result;
+		catch (GitAPIException | IOException e) {
+			throw new IOException("Failed to get commits needing to be merged from master to origin/master", e);
+		}
 	}
 
 	@Deprecated
-	public List<CommitInfo> getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration(String migrationBranch) throws IOException {
+	public List<CommitInfo> getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration(String migrationBranchName) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getCommitsNeedToBeMergedFromC6MigrationToOriginC6Migration` on a detached instance");
-		}		
-		
-		List<CommitInfo> result = new ArrayList<>();
-		
-		if (this.gitApi.getRepository().resolve(Constants.HEAD) == null) {
-			return result; // no HEAD -> new empty project, no commits yet
 		}
-		
-		
-		try {
-			List<Ref> refs = this.gitApi.branchList().setListMode(ListMode.REMOTE).call();
-			Iterable<RevCommit> commits = null;
-			
-			if (!refs.isEmpty()) { // otherwise project has never been synchronized
 
-				ObjectId remote =
-					this.gitApi.getRepository().resolve("refs/remotes/origin/" + migrationBranch); 
-				
-				if (remote != null) {
-					commits = this.gitApi.log().addRange(
-							remote,
-							this.gitApi.getRepository().resolve("refs/heads/" + migrationBranch)).call();
-				}
-				else {
-					commits = this.gitApi.log().call();
-				}
+		try {
+			List<CommitInfo> result = new ArrayList<>();
+
+			if (gitApi.getRepository().resolve(Constants.HEAD) == null) {
+				return result; // no HEAD -> new empty project, no commits yet
+			}
+
+			List<String> remoteBranches = getRemoteBranches();
+			ObjectId originMigrationBranch = gitApi.getRepository().resolve("refs/remotes/origin/" + migrationBranchName);
+
+			Iterable<RevCommit> commits;
+
+			if (remoteBranches.isEmpty() || originMigrationBranch == null) {
+				// project has never been synchronized or can't find origin/<migrationBranchName>
+				commits = gitApi.log().call();
 			}
 			else {
-				commits = this.gitApi.log().call();
+				commits = gitApi.log()
+						.addRange(originMigrationBranch, gitApi.getRepository().resolve("refs/heads/" + migrationBranchName))
+						.call();
 			}
-			
-			for (RevCommit c : commits) {
-				result.add(new CommitInfo(c.getId().getName(), c.getFullMessage(), c.getAuthorIdent().getWhen()));
+
+			for (RevCommit commit : commits) {
+				result.add(
+						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+				);
 			}
-			
-			
-		} catch (GitAPIException e) {
-			throw new IOException("Failed to get Git log info", e);
+
+			return result;
 		}
-		
-		return result;
+		catch (GitAPIException | IOException e) {
+			throw new IOException(
+					String.format("Failed to get commits needing to be merged from %1$s to origin/%1$s", migrationBranchName),
+					e
+			);
+		}
 	}
 } 

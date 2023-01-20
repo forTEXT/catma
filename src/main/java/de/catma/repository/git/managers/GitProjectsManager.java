@@ -191,7 +191,7 @@ public class GitProjectsManager implements ProjectsManager {
 	public void leaveProject(ProjectReference projectReference) throws IOException {
 		// TODO: consider checking for uncommitted/unpushed changes first
 		FileUtils.deleteDirectory(new File(
-				localGitRepositoryManager.getRepositoryBasePath(),
+				localGitRepositoryManager.getUserRepositoryBasePath(),
 				projectReference.getProjectId()
 		));
 
@@ -208,7 +208,7 @@ public class GitProjectsManager implements ProjectsManager {
 	@Override
 	public void deleteProject(ProjectReference projectReference) throws IOException {
 		Path projectDir = Paths.get(
-				localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(),
+				localGitRepositoryManager.getUserRepositoryBasePath().getAbsolutePath(),
 				projectReference.getNamespace(),
 				projectReference.getProjectId()
 		);
@@ -229,7 +229,7 @@ public class GitProjectsManager implements ProjectsManager {
 
 		FileUtils.deleteDirectory(
 			Paths.get(
-				localGitRepositoryManager.getRepositoryBasePath().getAbsolutePath(),
+				localGitRepositoryManager.getUserRepositoryBasePath().getAbsolutePath(),
 				projectReference.getNamespace(),
 				projectReference.getProjectId()
 			).toFile()

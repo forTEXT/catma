@@ -187,7 +187,7 @@ public class ProjectConverter implements AutoCloseable {
 						}
 
 						// add the files for what was once the submodule
-						repoManager.add(Paths.get(relativeSubmodulePath));
+						repoManager.add(new File(relativeSubmodulePath));
 					}
 
 					logger.info(String.format("Deleting .gitmodules from project with ID %s", projectId));

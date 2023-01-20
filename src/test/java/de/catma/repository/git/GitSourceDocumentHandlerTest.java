@@ -197,7 +197,7 @@ public class GitSourceDocumentHandlerTest {
 				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
-			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getUserRepositoryBasePath());
 
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
@@ -220,13 +220,13 @@ public class GitSourceDocumentHandlerTest {
 
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 					jGitRepoManager,
-					jGitRepoManager.getRepositoryBasePath(),
+					jGitRepoManager.getUserRepositoryBasePath(),
 					gitlabManagerRestricted.getUsername(), 
 					gitlabManagerRestricted.getEmail()
 			);
 
 			String revisionHash = gitSourceDocumentHandler.create(
-					Paths.get(jGitRepoManager.getRepositoryBasePath().toURI())
+					Paths.get(jGitRepoManager.getUserRepositoryBasePath().toURI())
 						.resolve(GitProjectHandler.DOCUMENTS_DIRECTORY_NAME)
 						.resolve(sourceDocumentUuid).toFile(), 
 					sourceDocumentUuid,
@@ -241,7 +241,7 @@ public class GitSourceDocumentHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			File expectedRepoPath = Paths.get(
-					jGitRepoManager.getRepositoryBasePath().getPath(),
+					jGitRepoManager.getUserRepositoryBasePath().getPath(),
 					projectReference.getProjectId(),
 					sourceDocumentUuid
 			).toFile();
@@ -392,7 +392,7 @@ public class GitSourceDocumentHandlerTest {
 				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
-			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getUserRepositoryBasePath());
 
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
@@ -415,13 +415,13 @@ public class GitSourceDocumentHandlerTest {
 
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 					jGitRepoManager,
-					jGitRepoManager.getRepositoryBasePath(),
+					jGitRepoManager.getUserRepositoryBasePath(),
 					gitlabManagerRestricted.getUsername(),
 					gitlabManagerRestricted.getEmail()
 			);
 
 			String revisionHash = gitSourceDocumentHandler.create(
-					Paths.get(jGitRepoManager.getRepositoryBasePath().toURI())
+					Paths.get(jGitRepoManager.getUserRepositoryBasePath().toURI())
 						.resolve(GitProjectHandler.DOCUMENTS_DIRECTORY_NAME)
 						.resolve(sourceDocumentUuid).toFile(), 
 					sourceDocumentUuid,

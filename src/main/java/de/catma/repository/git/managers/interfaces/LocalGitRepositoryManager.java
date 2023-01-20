@@ -9,7 +9,6 @@ import org.eclipse.jgit.transport.PushResult;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -24,7 +23,7 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 *
 	 * @return a {@link File}
 	 */
-	File getRepositoryBasePath();
+	File getUserRepositoryBasePath();
 
 	/**
 	 * Whether the instance is attached to a Git repository.
@@ -51,13 +50,13 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 * Clones a remote Git repository locally.
 	 *
 	 * @param namespace the namespace of the Git repository to clone (parent directory name)
-	 * @param projectId the name of the Git repository to clone (directory name)
+	 * @param name the name of the Git repository to clone (directory name)
 	 * @param uri the URI of the Git repository to clone
 	 * @param jGitCredentialsManager a {@link JGitCredentialsManager} to use for authentication
 	 * @return the resultant directory name (last path part)
 	 * @throws IOException if an error occurs when cloning
 	 */
-	String clone(String namespace, String projectId, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException;
+	String clone(String namespace, String name, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException;
 
 	/**
 	 * Opens an existing Git repository.
@@ -108,12 +107,14 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 * Searches the Git log of the user branch for commits that affect <code>resourceDir</code> and
 	 * whose message indicates that one of the resources in <code>resourceIds</code> was deleted.
 	 *
-	 * @param resourceIds a {@link Set} of string resource IDs
 	 * @param resourceDir the name of the directory corresponding to the type of resource
+	 * @param resourceTypeKeywords a keyword, or keywords, that must appear after "deleted " at the beginning
+	 *                             of the commit message (case-insensitive)
+	 * @param resourceIds a {@link Set} of string resource IDs
 	 * @return a {@link Set} of those resource IDs that were verifiably deleted according to the log
 	 * @throws IOException if an error occurs when verifying deleted resources
 	 */
-	Set<String> getDeletedResourcesFromLog(Set<String> resourceIds, String resourceDir) throws IOException;
+	Set<String> verifyDeletedResourcesViaLog(String resourceDir, String resourceTypeKeywords, Set<String> resourceIds) throws IOException;
 
 	/**
 	 * Checks out a branch or commit.
@@ -159,10 +160,10 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	/**
 	 * Adds the given file or directory.
 	 *
-	 * @param relativePath the {@link Path} of the file/directory to add
+	 * @param targetFile a {@link File} representing the file/directory to add
 	 * @throws IOException if an error occurs when adding
 	 */
-	void add(Path relativePath) throws IOException;
+	void add(File targetFile) throws IOException;
 
 	/**
 	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>
@@ -274,10 +275,9 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	 * <p>
 	 * NB: This performs a hard reset! Commit pending changes before attempting a merge.
 	 *
-	 * @param mergeResult the {@link MergeResult} of the merge that is to be aborted
 	 * @throws IOException if an error occurs when aborting the merge
 	 */
-	void abortMerge(MergeResult mergeResult) throws IOException;
+	void abortMerge() throws IOException;
 
 	/**
 	 * Pushes commits made locally on the user branch to the associated remote ('origin') repository and branch.
@@ -309,7 +309,7 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 
 
 	/**
-	 * Gets a list of all commits from the user branch that have not been merged into master.
+	 * Gets a list of all commits from the user branch that have not been merged into origin/master.
 	 * <p>
 	 * Inverse of {@link #getTheirPublishedChanges()}.
 	 *
@@ -319,7 +319,7 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	List<CommitInfo> getOurUnpublishedChanges() throws IOException;
 
 	/**
-	 * Gets a list of all commits from master that have not been merged into the user branch.
+	 * Gets a list of all commits from origin/master that have not been merged into the user branch.
 	 * <p>
 	 * Inverse of {@link #getOurUnpublishedChanges()}.
 	 *

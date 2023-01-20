@@ -120,7 +120,7 @@ public class GitProjectHandlerTest {
 				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
-			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getUserRepositoryBasePath());
 
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
@@ -146,7 +146,7 @@ public class GitProjectHandlerTest {
 
 			File expectedRepositoryPath = 
 					Paths.get(
-							jGitRepoManager.getRepositoryBasePath().getPath(),
+							jGitRepoManager.getUserRepositoryBasePath().getPath(),
 							projectReference.getNamespace(),
 							projectReference.getProjectId()
 					).toFile();
@@ -338,7 +338,7 @@ public class GitProjectHandlerTest {
 				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
-			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getUserRepositoryBasePath());
 
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
