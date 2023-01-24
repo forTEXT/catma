@@ -126,7 +126,8 @@ public class AnnotationCollectionReference {
 		if (responsibleUser != null) {
 			return responsibleUser.equals(userIdentifier);
 		}
-		return true; //shared responsibility
+
+		return true; // shared responsibility
 	}
 
 	public String getResponsibleUser() {

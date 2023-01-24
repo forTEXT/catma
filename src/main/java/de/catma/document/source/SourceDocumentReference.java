@@ -110,12 +110,21 @@ public class SourceDocumentReference {
 		return sourceContentHandler.getSourceDocumentInfo();
 	}
 
-	public boolean isResponsible(String identifier) {
+	public boolean isResponsible(String userIdentifier) {
 		String responsibleUser = sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser();
-		return responsibleUser == null || responsibleUser.equals(identifier);
+
+		if (responsibleUser != null) {
+			return responsibleUser.equals(userIdentifier);
+		}
+
+		return true; // shared responsibility
 	}
 
 	public String getResponsibleUser() {
 		return sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser();
+	}
+
+	public void setResponsibleUser(String responsibleUser) {
+		sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().setResponsibleUser(responsibleUser);
 	}
 }

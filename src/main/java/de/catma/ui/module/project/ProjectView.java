@@ -923,11 +923,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 										new SaveCancelListener<Pair<String, ContentInfoSet>>() {
 											@Override
 											public void savePressed(Pair<String, ContentInfoSet> result) {
-												collectionRef.setResponsibleUser(result.getFirst());
 												try {
-													project.updateAnnotationCollectionMetadata(collectionRef, result.getSecond());
+													String updatedResponsibleUser = result.getFirst();
+													collectionRef.setResponsibleUser(updatedResponsibleUser);
+													// the ContentInfoSet is updated directly by EditResourceDialog
+
+													project.updateAnnotationCollectionMetadata(collectionRef);
 												}
-												catch (Exception e) {
+												catch (IOException e) {
 													errorHandler.showAndLogError(
 															String.format("Failed to update collection \"%s\"", collectionRef.getName()),
 															e
@@ -966,13 +969,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 											@Override
 											public void savePressed(Pair<String, ContentInfoSet> result) {
 												try {
-													project.updateSourceDocumentMetadata(
-														documentRef,
-														documentRef.getSourceDocumentInfo().getContentInfoSet(),
-														result.getFirst()
-													);
+													String updatedResponsibleUser = result.getFirst();
+													documentRef.setResponsibleUser(updatedResponsibleUser);
+													// the ContentInfoSet is updated directly by EditResourceDialog
+
+													project.updateSourceDocumentMetadata(documentRef);
 												}
-												catch (Exception e) {
+												catch (IOException e) {
 													errorHandler.showAndLogError(
 															String.format(
 																	"Failed to update document \"%s\"",

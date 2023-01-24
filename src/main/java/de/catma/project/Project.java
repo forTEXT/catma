@@ -201,11 +201,10 @@ public interface Project {
 	/**
 	 * Updates the metadata for an annotation collection.
 	 *
-	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} specifying the collection whose metadata should be updated
-	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
-	 * @throws Exception if an error occurs when updating the collection metadata
+	 * @param annotationCollectionRef an {@link AnnotationCollectionReference} which specifies the collection and contains the updated metadata
+	 * @throws IOException if an error occurs when updating the collection metadata
 	 */
-	void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef, ContentInfoSet contentInfoSet) throws Exception;
+	void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef) throws IOException;
 
 	/**
 	 * Deletes an annotation collection from this project.
@@ -321,12 +320,10 @@ public interface Project {
 	/**
 	 * Updates the metadata for a document.
 	 *
-	 * @param sourceDocumentRef a {@link SourceDocumentReference} specifying the document whose metadata should be updated
-	 * @param contentInfoSet a {@link ContentInfoSet} containing the new metadata
-	 * @param responsibleUser the username of the user responsible for the document
-	 * @throws Exception if an error occurs when updating the document metadata
+	 * @param sourceDocumentRef a {@link SourceDocumentReference} which specifies the document and contains the updated metadata
+	 * @throws IOException if an error occurs when updating the document metadata
 	 */
-	void updateSourceDocumentMetadata(SourceDocumentReference sourceDocumentRef, ContentInfoSet contentInfoSet, String responsibleUser) throws Exception;
+	void updateSourceDocumentMetadata(SourceDocumentReference sourceDocumentRef) throws IOException;
 
 	/**
 	 * Deletes a document from this project.

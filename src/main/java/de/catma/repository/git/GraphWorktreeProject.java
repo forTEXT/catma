@@ -1083,7 +1083,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef, ContentInfoSet contentInfoSet) throws Exception {
+	public void updateAnnotationCollectionMetadata(AnnotationCollectionReference annotationCollectionRef) throws IOException {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
@@ -1532,11 +1532,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void updateSourceDocumentMetadata(
-			SourceDocumentReference sourceDocumentRef,
-			ContentInfoSet contentInfoSet,
-			String responsibleUser
-	) throws Exception {
+	public void updateSourceDocumentMetadata(SourceDocumentReference sourceDocumentRef) throws IOException {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
 					String.format(
@@ -1547,8 +1543,6 @@ public class GraphWorktreeProject implements IndexedProject {
 					)
 			);
 		}
-
-		sourceDocumentRef.getSourceDocumentInfo().getTechInfoSet().setResponsibleUser(responsibleUser);
 
 		String oldRootRevisionHash = rootRevisionHash;
 
