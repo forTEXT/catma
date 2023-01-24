@@ -53,6 +53,7 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager, Map<String, Sourc
 
 		getProgressListener().setProgress(String.format("Loading documents for project \"%s\"", projectReference.getName()));
 		for (SourceDocument document : documentsProvider.getDocuments()) {
+			// TODO: see TODOs in GitProjectHandler.createSourceDocument
 			document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
 					documentFileURIProvider.getDocumentFileURI(document.getUuid())
 			);

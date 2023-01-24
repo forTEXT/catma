@@ -157,8 +157,10 @@ public class GitSourceDocumentHandler {
 		SourceDocumentInfo newSourceDocumentInfo = 
 				sourceDocument.getSourceDocumentInfo();
 		
-		// the source document file URI is updated when a document is loaded into the graph (see GraphWorktreeProject.getSourceDocumentURI)
-		// however, we don't actually want to write that to disk, as it's different for every user
+		// the source document file URI is updated when a document is loaded into the graph (see GraphWorktreeProject.getSourceDocumentURI & usages)
+		// however, we don't actually want to persist that, as it's different for every user
+		// also see how this is handled on document creation (you might have to work your way up the call tree a bit)
+		// TODO: see TODOs in GitProjectHandler.createSourceDocument
 		newSourceDocumentInfo.getTechInfoSet().setURI(
 				currentSourceDocumentInfo.getTechInfoSet().getURI());
 

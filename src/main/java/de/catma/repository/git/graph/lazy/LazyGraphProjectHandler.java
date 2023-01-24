@@ -315,7 +315,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void addSourceDocument(SourceDocument sourceDocument, String oldRevisionHash, String newRevisionHash) throws Exception {
-		// TODO: see TODO in GitProjectHandler.createSourceDocument
+		// TODO: see TODOs in GitProjectHandler.createSourceDocument
 		sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
 				documentFileURIProvider.getDocumentFileURI(sourceDocument.getUuid())
 		);
