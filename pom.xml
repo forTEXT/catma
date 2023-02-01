@@ -200,12 +200,12 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>3.11.1</version>
+			<version>3.12.13</version>
 		</dependency>
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast-client</artifactId>
-			<version>3.11.1</version>
+			<version>3.12.13</version>
 		</dependency>		
 		<dependency>
 			<groupId>javax.cache</groupId>
