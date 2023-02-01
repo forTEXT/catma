@@ -36,7 +36,6 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -364,7 +363,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public String updateSourceDocument(@Nonnull SourceDocument sourceDocument) throws IOException {
+	public String updateSourceDocument(SourceDocument sourceDocument) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 					localGitRepoManager, this.remoteGitServerManager, this.credentialsProvider
@@ -373,7 +372,7 @@ public class GitProjectHandler {
 		}
 	}
 
-	public String addSourceDocumentSubmoduleToStagedAndCommit(@Nonnull String sourceDocumentId, String commitMessage, boolean force) throws IOException {
+	public String addSourceDocumentSubmoduleToStagedAndCommit(String sourceDocumentId, String commitMessage, boolean force) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			Path relativePath = Paths.get(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocumentId);
 			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));

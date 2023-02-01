@@ -18,7 +18,6 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff.StageState;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -128,7 +127,7 @@ public class GitSourceDocumentHandler {
 		}
 	}
 
-	public SourceDocument open(@Nonnull String projectId, @Nonnull String sourceDocumentId) throws IOException {
+	public SourceDocument open(String projectId, String sourceDocumentId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -168,7 +167,7 @@ public class GitSourceDocumentHandler {
 		}
 	}
 
-	public String update(@Nonnull String projectId, @Nonnull SourceDocument sourceDocument) throws IOException {
+	public String update(String projectId, SourceDocument sourceDocument) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			String sourceDocumentGitRepositoryName = String.format(
