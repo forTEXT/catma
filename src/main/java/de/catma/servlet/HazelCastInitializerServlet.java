@@ -25,10 +25,17 @@ public class HazelCastInitializerServlet extends HttpServlet{
 	@Override
     public void init() throws ServletException {
 		super.init();
-		
+
+		// start the embedded Hazelcast cluster member
 		log("Hazelcast initializing");
-        // Start the Embedded Hazelcast Cluster Member.
+
+		// we need this to avoid an exception being thrown, the cause being the fact that we have Xalan on the classpath (via xom, TODO: replace)
+		// see https://github.com/hazelcast/hazelcast/issues/17839
+		// we don't use Hazelcast to pass any XML messages, and certainly not anything that comes from outside, so there shouldn't be any security impact
+		System.setProperty("hazelcast.ignoreXxeProtectionFailures", "true");
+
 		hazalcastNode = Hazelcast.newHazelcastInstance();
+
 	    CacheManager manager = Caching.getCachingProvider().getCacheManager();
 		
 	    manager.createCache(
