@@ -1697,10 +1697,6 @@ public class GraphWorktreeProject implements IndexedProject {
 			);
 		}
 
-		if (hasUncommittedChanges()) {
-			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
-		}
-
 		final ProgressListener progressListener = new ProgressListener() {
 			@Override
 			public void setProgress(String value, Object... args) {
@@ -1716,11 +1712,20 @@ public class GraphWorktreeProject implements IndexedProject {
 						try {
 							progressListener.setProgress("Synchronizing...");
 							boolean success = gitProjectHandler.synchronizeWithRemote();
-							progressListener.setProgress("Synchronization completed!");
+							progressListener.setProgress("Synchronization " + (success ? "completed" : "failed"));
 							return success;
 						}
-						catch (Exception e) {
-							e.printStackTrace();
+						catch (IOException e) {
+							logger.log(
+									Level.SEVERE,
+									String.format(
+											"Failed to synchronize project \"%1$s\" with ID %2$s for user \"%3$s\"",
+											projectReference.getName(),
+											projectReference.getProjectId(),
+											user.getIdentifier()
+									),
+									e
+							);
 							return false;
 						}
 					}
@@ -1737,9 +1742,10 @@ public class GraphWorktreeProject implements IndexedProject {
 							if (gitProjectHandler.hasConflicts()) {
 								openProjectListener.failure(new IllegalStateException(
 										String.format(
-												"There are conflicts in project \"%s\" with ID %s. Please contact support.",
+												"There are conflicts in project \"%1$s\" with ID %2$s for user \"%3$s\"",
 												projectReference.getName(),
-												projectReference.getProjectId()
+												projectReference.getProjectId(),
+												user.getIdentifier()
 										)
 								));
 								return;

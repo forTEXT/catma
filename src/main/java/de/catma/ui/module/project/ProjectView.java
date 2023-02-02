@@ -54,7 +54,6 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
@@ -315,7 +314,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				Notification.show(
 						"Info", 
 						String.format("Collection \"%s\" has been created", collectionReference.toString()),
-						Type.TRAY_NOTIFICATION);			
+						Notification.Type.TRAY_NOTIFICATION);
 			}
 		}
 		else {
@@ -554,27 +553,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			Notification.show(
 					"Info", 
 					"You just synchronized a few seconds ago - please be patient, you can synchronize again in a few moments.",
-					Type.HUMANIZED_MESSAGE
+					Notification.Type.HUMANIZED_MESSAGE
 			);
 			return;
 		}
 
-		try {
-			lastSynchronization = LocalTime.now();
-			synchronizeProject();
-		}
-		catch (Exception e) {
-			logger.log(
-					Level.WARNING,
-					String.format("Error synchronizing project \"%s\" for user \"%s\"", projectReference.getName(), project.getCurrentUser().getIdentifier()),
-					e
-			);
-			Notification.show(
-					"Info",
-					"Your project cannot be synchronized right now, try again later or have a look at the CATMA GitLab backend.",
-					Type.HUMANIZED_MESSAGE
-			);
-		}
+		lastSynchronization = LocalTime.now();
+		synchronizeProject();
 	}
 
 	private void handleCorpusImport() {
@@ -653,8 +638,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    				String.format(
 		    						"Error importing the CATMA 5 corpus! "
 		    						+ "This import will be aborted.\nThe underlying error message was:\n%s",
-		    						errorMsg), 
-		    				Type.ERROR_MESSAGE);					
+		    						errorMsg),
+								Notification.Type.ERROR_MESSAGE);
 					}
 				},
 				progressListener);
@@ -676,8 +661,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				String.format(
 						"Error importing the CATMA 5 corpus! "
 						+ "This import will be aborted.\nThe underlying error message was:\n%s",
-						errorMsg), 
-				Type.ERROR_MESSAGE);	
+						errorMsg),
+					Notification.Type.ERROR_MESSAGE);
 		}
 	}
 
@@ -711,7 +696,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		Set<SourceDocumentReference> selectedDocuments = getSelectedDocuments();
 		
 		if (selectedDocuments.size() != 1) {
-			Notification.show("Info", "Please select the corresponding document first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select the corresponding document first!", Notification.Type.HUMANIZED_MESSAGE);
 		}
 		else {
 			final SourceDocumentReference document = selectedDocuments.iterator().next();
@@ -833,51 +818,63 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		uploadDialog.show();	
 	}
 
-	private void synchronizeProject() throws Exception {
+	private void synchronizeProject() {
 		setProgressBarVisible(true);
+		setEnabled(false);
 
 		final UI ui = UI.getCurrent();
 
-		project.synchronizeWithRemote(new OpenProjectListener() {
-			@Override
-			public void progress(String msg, Object... params) {
-				ui.access(() -> {
-					if (params != null) {
-						progressBar.setCaption(String.format(msg, params));
-					}
-					else {
-						progressBar.setCaption(msg);
-					}
-					ui.push();
-				});
-			}
-
-			@Override
-			public void ready(Project project) {
-				setProgressBarVisible(false);
-				reloadAll();
-				setEnabled(true);
-
-				if (project != null) {
-					Notification.show("Info", "Your project has been synchronized", Type.HUMANIZED_MESSAGE);
+		try {
+			project.synchronizeWithRemote(new OpenProjectListener() {
+				@Override
+				public void progress(String msg, Object... params) {
+					ui.access(() -> {
+						if (params != null) {
+							progressBar.setCaption(String.format(msg, params));
+						}
+						else {
+							progressBar.setCaption(msg);
+						}
+						ui.push();
+					});
 				}
-				else {
-					Notification.show(
-							"Info",
-							"Your project cannot be synchronized right now, try again later or have a look at the CATMA GitLab backend.",
-							Type.HUMANIZED_MESSAGE
-					);
+
+				@Override
+				public void ready(Project project) {
+					setProgressBarVisible(false);
+					reloadAll();
+					setEnabled(true);
+
+					if (project == null) {
+						Notification syncFailedNotification = new Notification(
+								"Your project cannot be synchronized right now.\n" +
+										"Try again later or check the CATMA GitLab backend for open merge requests\n" +
+										"that may require manual conflict resolution. (click to dismiss)",
+								Notification.Type.WARNING_MESSAGE
+						);
+						syncFailedNotification.setDelayMsec(-1);
+						syncFailedNotification.show(Page.getCurrent());
+						return;
+					}
+
+					Notification.show("Info", "Your project has been synchronized", Notification.Type.HUMANIZED_MESSAGE);
 				}
-			}
 
-			@Override
-			public void failure(Throwable t) {
-				setProgressBarVisible(false);
-				setEnabled(true);
+				@Override
+				public void failure(Throwable t) {
+					setProgressBarVisible(false);
+					setEnabled(true);
 
-				errorHandler.showAndLogError("Failed to re-open project", t);
-			}
-		});
+					errorHandler.showAndLogError("Failed to synchronize or re-open project. Please contact support.", t);
+				}
+			});
+		}
+		catch (Exception e) {
+			setProgressBarVisible(false);
+			setEnabled(true);
+
+			errorHandler.showAndLogError("Failed to synchronize project. Please contact support.", e);
+		}
 	}
 
 	private void setProgressBarVisible(boolean visible) {
@@ -892,7 +889,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		final Set<Resource> selectedResources = documentGrid.getSelectedItems();
 
 		if (selectedResources.isEmpty()) {
-			Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select a resource first!", Notification.Type.HUMANIZED_MESSAGE);
 			return;
 		}
 
@@ -1048,7 +1045,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		else {
 			Notification.show(
 				"Info", "Please select one or more tagsets first!",
-				Type.HUMANIZED_MESSAGE);
+					Notification.Type.HUMANIZED_MESSAGE);
 		}
 		
 	}
@@ -1092,7 +1089,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		else {
 			Notification.show(
 				"Info", "Please select a tagset first!",
-				Type.HUMANIZED_MESSAGE);
+					Notification.Type.HUMANIZED_MESSAGE);
 		}		
 	}
 
@@ -1161,7 +1158,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    	collectionNameDlg.show();
     	}
     	else {
-    		Notification.show("Info", "Please select one or more documents first!", Type.HUMANIZED_MESSAGE);
+    		Notification.show("Info", "Please select one or more documents first!", Notification.Type.HUMANIZED_MESSAGE);
     	}
     }
 	
@@ -1258,8 +1255,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 										String.format(
 												"Error importing tagset \"%s\"! "
 												+ "This tagset will be skipped.\nThe underlying error message was:\n%s",
-												extractedTagset.getName(), errorMsg), 
-										Type.ERROR_MESSAGE);					
+												extractedTagset.getName(), errorMsg),
+											Notification.Type.ERROR_MESSAGE);
 								}
 							}
 							ui.push();
@@ -1447,8 +1444,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				String.format(
 						"Error loading content of \"%s\"! "
 						+ "This document will be skipped.\nThe underlying error message was:\n%s",
-						uploadFile.getTitle(), errorMsg), 
-				Type.ERROR_MESSAGE);
+						uploadFile.getTitle(), errorMsg),
+					Notification.Type.ERROR_MESSAGE);
 		}
 	}
 	
@@ -1559,7 +1556,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		    				Notification.show(
 		    					"Info", 
 		    					"Your changes have been committed",
-		    					Type.HUMANIZED_MESSAGE);
+									Notification.Type.HUMANIZED_MESSAGE);
 	    				}
 	    				catch (Exception e) {
 	    					errorHandler.showAndLogError("Error committing changes", e);
@@ -1568,7 +1565,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	    		dlg.show();
 	    	}
 	    	else {
-	    		Notification.show("Info", "There are no uncommitted changes", Type.HUMANIZED_MESSAGE);
+	    		Notification.show("Info", "There are no uncommitted changes", Notification.Type.HUMANIZED_MESSAGE);
 	    	}
     	}
     	catch (Exception e) {
@@ -1724,7 +1721,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		Set<Member> membersToRemove = teamGrid.getSelectedItems();
 
 		if (membersToRemove.isEmpty()) {
-			Notification.show("Info", "Please select one or more members first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
 			return;
 		}
 
@@ -1760,7 +1757,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							+ "\n"
 							+ "If you are the owner of the project, please contact support to request a transfer\n"
 							+ "of ownership. (click to dismiss)",
-					Type.WARNING_MESSAGE
+					Notification.Type.WARNING_MESSAGE
 			);
 			selfSelectedNotification.setDelayMsec(-1);
 			selfSelectedNotification.show(Page.getCurrent());
@@ -1779,7 +1776,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		Set<Member> membersToEdit = teamGrid.getSelectedItems();
 
 		if (membersToEdit.isEmpty()) {
-			Notification.show("Info", "Please select one or more members first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
 			return;
 		}
 
@@ -2126,13 +2123,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		}
     	}
     	else {
-    		Notification.show("Info", "Please select a resource first!", Type.HUMANIZED_MESSAGE);
+    		Notification.show("Info", "Please select a resource first!", Notification.Type.HUMANIZED_MESSAGE);
     	}
     }
     
     private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
     	if (resourceGrid.getSelectedItems().isEmpty()) {
-    		Notification.show("Info", "Please select something first!", Type.HUMANIZED_MESSAGE); 
+    		Notification.show("Info", "Please select something first!", Notification.Type.HUMANIZED_MESSAGE);
     	}
     	else {
 			Corpus corpus = new Corpus();
