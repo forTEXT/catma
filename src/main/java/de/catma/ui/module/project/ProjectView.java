@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.Collator;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -27,9 +28,9 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
+import org.apache.commons.lang3.StringUtils;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -45,13 +46,11 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.*;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.ProgressBar;
@@ -278,51 +277,50 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			tagsetData.refreshItem(tagset);
 		}
 	}
-	
+
 	@Subscribe
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
-		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
-    		SourceDocumentReference document = collectionChangeEvent.getDocument();
-    		AnnotationCollectionReference collectionReference = 
-    				collectionChangeEvent.getCollectionReference();
-    		
-			@SuppressWarnings("unchecked")
-			TreeDataProvider<Resource> resourceDataProvider = 
-    				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
-
-			CollectionResource collectionResource = 
-				new CollectionResource(
-					collectionReference, 
-					project.getId(),
-					project.getCurrentUser());
-			
-			DocumentResource documentResource = 
-				new DocumentResource(
-					document, 
-					project.getId(),
-					document.getResponsibleUser()!= null?
-    						membersByIdentfier.get(document.getResponsibleUser())
-    						:null);
-			
-			resourceDataProvider.getTreeData().addItem(
-    				documentResource, collectionResource);
-			resourceDataProvider.refreshAll();
-
-			if (isAttached()) {
-				documentGrid.expand(documentResource);
-				
-				Notification.show(
-						"Info", 
-						String.format("Collection \"%s\" has been created", collectionReference.toString()),
-						Notification.Type.TRAY_NOTIFICATION);
-			}
-		}
-		else {
+		if (!collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
+			// ChangeType.UPDATED or DELETED
+			// TODO: do we really need to re-init on updates or deletes?
+			//       also see handleDocumentChanged & handleTagsetChange
 			initData();
+			return;
 		}
-		
+
+		// ChangeType.CREATED
+		SourceDocumentReference sourceDocumentRef = collectionChangeEvent.getDocument();
+		AnnotationCollectionReference annotationCollectionRef = collectionChangeEvent.getCollectionReference();
+
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<Resource> resourceDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+
+		DocumentResource documentResource = new DocumentResource(
+				sourceDocumentRef,
+				project.getId(),
+				sourceDocumentRef.getResponsibleUser() == null ? null : membersByIdentfier.get(sourceDocumentRef.getResponsibleUser())
+		);
+
+		CollectionResource collectionResource = new CollectionResource(
+				annotationCollectionRef,
+				project.getId(),
+				project.getCurrentUser()
+		);
+
+		resourceDataProvider.getTreeData().addItem(documentResource, collectionResource);
+		resourceDataProvider.refreshAll();
+
+		if (isAttached()) {
+			documentGrid.expand(documentResource);
+
+			Notification.show(
+					"Info",
+					String.format("Collection \"%s\" has been created", annotationCollectionRef.toString()),
+					Notification.Type.TRAY_NOTIFICATION
+			);
+		}
 	}
-	
+
 	private void toggleProjectReadOnly() {
 		miAddDocument.setEnabled(!project.isReadOnly());
 		miAddCollection.setEnabled(!project.isReadOnly());
@@ -345,21 +343,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		documentGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
 
 		ContextMenu documentGridComponentAddContextMenu = documentGridComponent.getActionGridBar().getBtnAddContextMenu();
-		miAddDocument = documentGridComponentAddContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
-		miAddCollection = documentGridComponentAddContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
+		miAddDocument = documentGridComponentAddContextMenu.addItem("Add Document", menuItem -> handleAddDocumentRequest());
+		miAddCollection = documentGridComponentAddContextMenu.addItem("Add Annotation Collection", menuItem -> handleAddCollectionRequest());
 
 		ContextMenu documentGridComponentMoreOptionsContextMenu = documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		miEditDocumentOrCollection = documentGridComponentMoreOptionsContextMenu.addItem(
-				"Edit Documents / Collections", (menuItem) -> handleEditResources()
+				"Edit Documents / Collections", menuItem -> handleEditResources()
 		);
 		miDeleteDocumentOrCollection = documentGridComponentMoreOptionsContextMenu.addItem(
-				"Delete Documents / Collections", (menuItem) -> handleDeleteResources(menuItem, documentGrid)
+				"Delete Documents / Collections", menuItem -> handleDeleteResources(documentGrid)
 		);
 		documentGridComponentMoreOptionsContextMenu.addItem(
-				"Analyze Documents / Collections", (menuItem) -> handleAnalyzeResources(menuItem, documentGrid)
+				"Analyze Documents / Collections", menuItem -> handleAnalyzeResources(documentGrid)
 		);
 		miImportCollection = documentGridComponentMoreOptionsContextMenu.addItem(
-				"Import a Collection", mi -> handleImportCollectionRequest()
+				"Import a Collection", menuItem -> handleImportCollectionRequest()
 		);
 
 		MenuItem miExportDocumentsAndCollections = documentGridComponentMoreOptionsContextMenu.addItem(
@@ -383,29 +381,29 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		documentsAndCollectionsExportFileDownloader.extend(miExportDocumentsAndCollections);
 
 		documentGridComponentMoreOptionsContextMenu.addItem(
-				"Select Filtered Entries", mi-> handleSelectFilteredDocuments()
+				"Select Filtered Entries", menuItem -> handleSelectFilteredDocuments()
 		);
 		miToggleResponsibiltityFilter = documentGridComponentMoreOptionsContextMenu.addItem(
-				"Hide Others' Responsibilities", mi -> toggleResponsibilityFilter()
+				"Hide Others' Responsibilities", menuItem -> toggleResponsibilityFilter()
 		);
 		miToggleResponsibiltityFilter.setCheckable(true);
 		miToggleResponsibiltityFilter.setChecked(false);
 
 		// tagsets actions
 		tagsetGridComponent.setSearchFilterProvider(searchInput -> createTagsetGridComponentSearchFilterProvider(searchInput));
-		tagsetGrid.addItemClickListener(clickEvent -> handleTagsetClick(clickEvent));
+		tagsetGrid.addItemClickListener(itemClickEvent -> handleTagsetClick(itemClickEvent));
 
-		tagsetGridComponent.getActionGridBar().addBtnAddClickListener(click -> handleAddTagsetRequest());
+		tagsetGridComponent.getActionGridBar().addBtnAddClickListener(clickEvent -> handleAddTagsetRequest());
    
 		ContextMenu tagsetGridComponentMoreOptionsContextMenu = tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		miEditTagset = tagsetGridComponentMoreOptionsContextMenu.addItem(
-				"Edit Tagset", mi -> handleEditTagsetRequest()
+				"Edit Tagset", menuItem -> handleEditTagsetRequest()
 		);
 		miDeleteTaget = tagsetGridComponentMoreOptionsContextMenu.addItem(
-				"Delete Tagset", mi -> handleDeleteTagsetRequest()
+				"Delete Tagset", menuItem -> handleDeleteTagsetRequest()
 		);
 		miImportTagset = tagsetGridComponentMoreOptionsContextMenu.addItem(
-				"Import Tagsets", mi -> handleImportTagsetsRequest()
+				"Import Tagsets", menuItem -> handleImportTagsetsRequest()
 		);
 		MenuItem miExportTagsets = tagsetGridComponentMoreOptionsContextMenu.addItem("Export Tagsets");
 
@@ -442,14 +440,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		// global project actions
 		ContextMenu hugeCardMoreOptionsContextMenu = getMoreOptionsContextMenu();
 		miCommit = hugeCardMoreOptionsContextMenu.addItem(
-				"Commit All Changes", mi -> handleCommitRequest()
+				"Commit All Changes", menuItem -> handleCommitRequest()
 		);
 		hugeCardMoreOptionsContextMenu.addSeparator();
 		miShareResources = hugeCardMoreOptionsContextMenu.addItem(
-				"Share Project Resources (Experimental API)", mi -> handleShareProjectResources()
+				"Share Project Resources (Experimental API)", menuItem -> handleShareProjectResources()
 		);
 		miImportCorpus = hugeCardMoreOptionsContextMenu.addItem(
-				"Import CATMA 5 Corpus", mi -> handleCorpusImport()
+				"Import CATMA 5 Corpus", menuItem -> handleCorpusImport()
 		);
 		miImportCorpus.setVisible(
 				CATMAPropertyKey.EXPERT_MODE.getBooleanValue() || Boolean.parseBoolean(
@@ -457,11 +455,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				)
 		);
 
-		btSynchronize.addClickListener(event -> handleSynchronizeClick(event));
-		btSynchLatestContribToggle.addClickListener(event -> handleBtSynchLatestContribToggle(event));
+		btSynchronize.addClickListener(clickEvent -> handleSynchronizeClick());
+		btSynchLatestContribToggle.addClickListener(clickEvent -> handleBtSynchLatestContribToggle());
 	}
 
-	private void handleBtSynchLatestContribToggle(ClickEvent event) {
+	private void handleBtSynchLatestContribToggle() {
 		boolean latestContribView = !(Boolean)btSynchLatestContribToggle.getData();
 
     	try {
@@ -542,7 +540,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		initData();
 	}
 
-	private void handleSynchronizeClick(ClickEvent event) {
+	private void handleSynchronizeClick() {
 		if (
 				lastSynchronization != null
 				&& lastSynchronization.plus(
@@ -596,73 +594,59 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             errorHandler.showAndLogError("Error accessing project", e);
     	}		
 	}
-	
+
+	private void handleImportCorpusError(Throwable t) {
+		setProgressBarVisible(false);
+		setEnabled(true);
+
+		errorHandler.showAndLogError(
+				"Failed to import CATMA 5 corpus. The import operation has been aborted.",
+				t
+		);
+	}
+
 	private void importCorpus(final File corpusFile, final List<CorpusImportDocumentMetadata> documentMetadataList) {
-    	setEnabled(false);
-    	setProgressBarVisible(true);
+		setEnabled(false);
+		setProgressBarVisible(true);
+
 		try {
-			final String tempDir = 
-					((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
-	    	final UI ui = UI.getCurrent();
-	    	
-			BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
+			final UI ui = UI.getCurrent();
+			final String tempDir = ((CatmaApplication) ui).acquirePersonalTempFolder();
+
+			BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider) ui;
 			BackgroundService backgroundService = backgroundServiceProvider.acquireBackgroundService();
+
 			backgroundService.submit(
 				new DefaultProgressCallable<Void>() {
 					@Override
 					public Void call() throws Exception {
-						return new CorpusImporter().importCorpus(getProgressListener(), corpusFile, documentMetadataList, tempDir, ui, project);
+						return new CorpusImporter().importCorpus(
+								getProgressListener(),
+								corpusFile,
+								documentMetadataList,
+								tempDir,
+								ui,
+								project
+						);
 					}
 				},
 				new ExecutionListener<Void>() {
 					@Override
 					public void done(Void result) {
-		            	setProgressBarVisible(false);
-		            	setEnabled(true);
+						setProgressBarVisible(false);
+						setEnabled(true);
 					}
+
 					@Override
 					public void error(Throwable t) {
-		            	setProgressBarVisible(false);
-		            	setEnabled(true);
-		    			logger.log(
-		    					Level.SEVERE, 
-		    					"Error importing CATMA 5 corpus",
-		    					t);
-		    			String errorMsg = t.getMessage();
-		    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-		    				errorMsg = "";
-		    			}
-	
-		    			Notification.show(
-		    				"Error", 
-		    				String.format(
-		    						"Error importing the CATMA 5 corpus! "
-		    						+ "This import will be aborted.\nThe underlying error message was:\n%s",
-		    						errorMsg),
-								Notification.Type.ERROR_MESSAGE);
+						handleImportCorpusError(t);
 					}
 				},
-				progressListener);
+				progressListener
+			);
 		}
-		catch (Exception e) {
-        	setProgressBarVisible(false);
-        	setEnabled(true);
-			logger.log(
-					Level.SEVERE, 
-					"Error importing CATMA 5 corpus",
-					e);
-			String errorMsg = e.getMessage();
-			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-				errorMsg = "";
-			}
-
-			Notification.show(
-				"Error", 
-				String.format(
-						"Error importing the CATMA 5 corpus! "
-						+ "This import will be aborted.\nThe underlying error message was:\n%s",
-						errorMsg),
-					Notification.Type.ERROR_MESSAGE);
+		catch (IOException e) {
+			handleImportCorpusError(e);
 		}
 	}
 
@@ -692,64 +676,63 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             errorHandler.showAndLogError("Error accessing project", e);
     	}		
 	}
+
 	private void importCollection() {
-		Set<SourceDocumentReference> selectedDocuments = getSelectedDocuments();
-		
-		if (selectedDocuments.size() != 1) {
+		Set<SourceDocumentReference> selectedSourceDocumentRefs = getSelectedDocuments();
+
+		if (selectedSourceDocumentRefs.size() != 1) {
 			Notification.show("Info", "Please select the corresponding document first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
 		}
-		else {
-			final SourceDocumentReference document = selectedDocuments.iterator().next();
-			
-			GenericUploadDialog uploadDialog =
-					new GenericUploadDialog(String.format("Upload a collection for \"%s\":", document.toString()),
-							new SaveCancelListener<byte[]>() {
-				
-				public void savePressed(byte[] result) {
-					InputStream is = new ByteArrayInputStream(result);
-					try {
-						if (BOMFilterInputStream.hasBOM(result)) {
-							is = new BOMFilterInputStream(
-									is, Charset.forName("UTF-8")); //$NON-NLS-1$
-						}
-						
-						Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
-								project.prepareAnnotationCollectionForImport(is, document);
-						
-						List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
-						final AnnotationCollection annotationCollection = loadResult.getFirst();
-						
-						CollectionImportDialog tagsetImportDialog = 
-							new CollectionImportDialog(
-									tagsetDefinitionImportStatusList, 
+
+		final SourceDocumentReference selectedSourceDocumentRef = selectedSourceDocumentRefs.iterator().next();
+
+		GenericUploadDialog uploadDialog = new GenericUploadDialog(
+				String.format("Upload a collection for \"%s\":", selectedSourceDocumentRef.toString()),
+				new SaveCancelListener<byte[]>() {
+					public void savePressed(byte[] result) {
+						InputStream inputStream = new ByteArrayInputStream(result);
+
+						try {
+							if (BOMFilterInputStream.hasBOM(result)) {
+								inputStream = new BOMFilterInputStream(inputStream, StandardCharsets.UTF_8);
+							}
+
+							Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
+									project.prepareAnnotationCollectionForImport(inputStream, selectedSourceDocumentRef);
+
+							final AnnotationCollection annotationCollection = loadResult.getFirst();
+							List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses = loadResult.getSecond();
+
+							CollectionImportDialog importDialog = new CollectionImportDialog(
+									tagsetDefinitionImportStatuses,
 									new SaveCancelListener<List<TagsetDefinitionImportStatus>>() {
-								@Override
-								public void savePressed(List<TagsetDefinitionImportStatus> result) {
-									try {
-										project.importAnnotationCollection(result, annotationCollection);
-									} catch (IOException e) {
-										errorHandler.showAndLogError(
-											"Error importing tagsets", e);
+										@Override
+										public void savePressed(List<TagsetDefinitionImportStatus> result) {
+											try {
+												project.importAnnotationCollection(result, annotationCollection);
+											}
+											catch (IOException e) {
+												errorHandler.showAndLogError("Failed to import collection", e);
+											}
+										}
 									}
-								}
-						});
-						
-						tagsetImportDialog.show();
-						
-					} catch (IOException e) {
-						errorHandler.showAndLogError(
-							"Error loading external tagsets", e);
-					}
-					finally {
-						CloseSafe.close(is);
+							);
+
+							importDialog.show();
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to import collection", e);
+						}
+						finally {
+							CloseSafe.close(inputStream);
+						}
 					}
 				}
-				
-			});
-			uploadDialog.show();
-		}
-	}
+		);
 
+		uploadDialog.show();
+	}
 
 	private void handleTagsetClick(ItemClick<TagsetDefinition> itemClickEvent) {
     	if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
@@ -885,6 +868,110 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 	}
 
+	private void handleEditCollection(Resource collectionToEdit) {
+		final AnnotationCollectionReference collectionRef = ((CollectionResource) collectionToEdit).getCollectionReference();
+		boolean isBeyondCurrentUsersResponsibility = !collectionRef.isResponsible(project.getCurrentUser().getIdentifier());
+
+		try {
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					isBeyondCurrentUsersResponsibility,
+					project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.COLLECTION_DELETE_OR_EDIT),
+					new Action() {
+						@Override
+						public void execute() {
+							EditResourceDialog editCollectionDialog = new EditResourceDialog(
+									"Edit Collection Metadata",
+									collectionRef.getContentInfoSet(),
+									collectionRef.getResponsibleUser(),
+									membersByIdentfier.values(),
+									new SaveCancelListener<Pair<String, ContentInfoSet>>() {
+										@Override
+										public void savePressed(Pair<String, ContentInfoSet> result) {
+											try {
+												String updatedResponsibleUser = result.getFirst();
+												collectionRef.setResponsibleUser(updatedResponsibleUser);
+												// the ContentInfoSet is updated directly by EditResourceDialog
+
+												project.updateAnnotationCollectionMetadata(collectionRef);
+											}
+											catch (IOException e) {
+												errorHandler.showAndLogError(
+														String.format("Failed to update collection \"%s\"", collectionRef.getName()),
+														e
+												);
+												// TODO: why are we doing this here?
+												//       (at all, and not for documents in handleEditDocument or tagsets in handleEditTagsetRequest)
+												reloadAll();
+											}
+										}
+									}
+							);
+
+							editCollectionDialog.show();
+						}
+					}
+			);
+		}
+		catch (IOException e) {
+			errorHandler.showAndLogError(
+					String.format("Failed to update collection \"%s\"", collectionRef.getName()),
+					e
+			);
+		}
+	}
+
+	private void handleEditDocument(Resource documentToEdit) {
+		final SourceDocumentReference documentRef = ((DocumentResource) documentToEdit).getDocument();
+		boolean isBeyondCurrentUsersResponsibility = !documentRef.isResponsible(project.getCurrentUser().getIdentifier());
+
+		try {
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					isBeyondCurrentUsersResponsibility,
+					project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
+					new Action() {
+						@Override
+						public void execute() {
+							EditResourceDialog editDocumentDialog = new EditResourceDialog(
+									"Edit Document Metadata",
+									documentRef.getSourceDocumentInfo().getContentInfoSet(),
+									documentRef.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser(),
+									membersByIdentfier.values(),
+									new SaveCancelListener<Pair<String, ContentInfoSet>>() {
+										@Override
+										public void savePressed(Pair<String, ContentInfoSet> result) {
+											try {
+												String updatedResponsibleUser = result.getFirst();
+												documentRef.setResponsibleUser(updatedResponsibleUser);
+												// the ContentInfoSet is updated directly by EditResourceDialog
+
+												project.updateSourceDocumentMetadata(documentRef);
+											}
+											catch (IOException e) {
+												errorHandler.showAndLogError(
+														String.format(
+																"Failed to update document \"%s\"",
+																documentRef.getSourceDocumentInfo().getContentInfoSet().getTitle()
+														),
+														e
+												);
+											}
+										}
+									}
+							);
+
+							editDocumentDialog.show();
+						}
+					}
+			);
+		}
+		catch (IOException e) {
+			errorHandler.showAndLogError(
+					String.format("Failed to update document \"%s\"", documentRef.getSourceDocumentInfo().getContentInfoSet().getTitle()),
+					e
+			);
+		}
+	}
+
 	private void handleEditResources() {
 		final Set<Resource> selectedResources = documentGrid.getSelectedItems();
 
@@ -902,195 +989,130 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		final Resource resourceToEdit = selectedResources.iterator().next();
 
 		if (resourceToEdit.isCollection()) {
-			final AnnotationCollectionReference collectionRef = ((CollectionResource) resourceToEdit).getCollectionReference();
-			boolean isBeyondCurrentUsersResponsibility = !collectionRef.isResponsible(project.getCurrentUser().getIdentifier());
-
-			try {
-				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-						isBeyondCurrentUsersResponsibility,
-						project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.COLLECTION_DELETE_OR_EDIT),
-						new Action() {
-							@Override
-							public void execute() {
-								EditResourceDialog editCollectionDialog = new EditResourceDialog(
-										"Edit Collection Metadata",
-										collectionRef.getContentInfoSet(),
-										collectionRef.getResponsibleUser(),
-										membersByIdentfier.values(),
-										new SaveCancelListener<Pair<String, ContentInfoSet>>() {
-											@Override
-											public void savePressed(Pair<String, ContentInfoSet> result) {
-												try {
-													String updatedResponsibleUser = result.getFirst();
-													collectionRef.setResponsibleUser(updatedResponsibleUser);
-													// the ContentInfoSet is updated directly by EditResourceDialog
-
-													project.updateAnnotationCollectionMetadata(collectionRef);
-												}
-												catch (IOException e) {
-													errorHandler.showAndLogError(
-															String.format("Failed to update collection \"%s\"", collectionRef.getName()),
-															e
-													);
-													reloadAll(); // TODO: why are we doing this here (at all, and not for documents below)?
-												}
-											}
-										}
-								);
-								editCollectionDialog.show();
-							}
-						}
-				);
-			}
-			catch (IOException e) {
-				errorHandler.showAndLogError("Error editing collection", e);
-			}
+			handleEditCollection(resourceToEdit);
 		}
 		else { // document
-			final SourceDocumentReference documentRef = ((DocumentResource) resourceToEdit).getDocument();
-			boolean isBeyondCurrentUsersResponsibility = !documentRef.isResponsible(project.getCurrentUser().getIdentifier());
-
-			try {
-				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-						isBeyondCurrentUsersResponsibility,
-						project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
-						new Action() {
-							@Override
-							public void execute() {
-								EditResourceDialog editDocumentDialog = new EditResourceDialog(
-										"Edit Document Metadata",
-										documentRef.getSourceDocumentInfo().getContentInfoSet(),
-										documentRef.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser(),
-										membersByIdentfier.values(),
-										new SaveCancelListener<Pair<String, ContentInfoSet>>() {
-											@Override
-											public void savePressed(Pair<String, ContentInfoSet> result) {
-												try {
-													String updatedResponsibleUser = result.getFirst();
-													documentRef.setResponsibleUser(updatedResponsibleUser);
-													// the ContentInfoSet is updated directly by EditResourceDialog
-
-													project.updateSourceDocumentMetadata(documentRef);
-												}
-												catch (IOException e) {
-													errorHandler.showAndLogError(
-															String.format(
-																	"Failed to update document \"%s\"",
-																	documentRef.getSourceDocumentInfo().getContentInfoSet().getTitle()
-															),
-															e
-													);
-												}
-											}
-										}
-								);
-								editDocumentDialog.show();
-							}
-						}
-				);
-			}
-			catch (IOException e) {
-				errorHandler.showAndLogError("Error editing document", e);
-			}
+			handleEditDocument(resourceToEdit);
 		}
 	}
 
 	private void handleDeleteTagsetRequest() {
-		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
-		if (!tagsets.isEmpty()) {
-			boolean beyondUsersResponsibility = 
-					tagsets.stream()
-					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
-					.findAny()
-					.isPresent();
-			try {
-				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-					beyondUsersResponsibility, 
+		final Set<TagsetDefinition> selectedTagsets = tagsetGrid.getSelectedItems();
+
+		if (selectedTagsets.isEmpty()) {
+			Notification.show("Info", "Please select one or more tagsets first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		boolean isBeyondCurrentUsersResponsibility = selectedTagsets.stream().anyMatch(
+				tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier())
+		);
+
+		List<String> selectedTagsetNames = selectedTagsets.stream()
+				.map(TagsetDefinition::getName)
+				.sorted()
+				.collect(Collectors.toList());
+		String quotedCommaSeparatedTagsetNames = String.format("\"%s\"", String.join("\", \"", selectedTagsetNames));
+
+		try {
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					isBeyondCurrentUsersResponsibility,
 					project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 					new Action() {
 						@Override
 						public void execute() {
-	
-							List<String> tagsetNames = 
-									tagsets.stream()
-									.map(TagsetDefinition::getName)
-									.sorted()
-									.collect(Collectors.toList());
-				
 							ConfirmDialog.show(
-									UI.getCurrent(), 
-									"Warning", 
+									UI.getCurrent(),
+									"Warning",
 									String.format(
-											"Are you sure you want to delete tagset(s) \"%s\" and all related data?",
-											String.join("\", \"", tagsetNames)
+											"Are you sure you want to delete tagset(s) %s and all related data?",
+											quotedCommaSeparatedTagsetNames
 									),
 									"Delete",
-									"Cancel", 
+									"Cancel",
 									dlg -> {
 										if (dlg.isConfirmed()) {
-											for (TagsetDefinition tagset : tagsets) {
-												project.getTagManager().removeTagsetDefinition(tagset);
+											try {
+												for (TagsetDefinition tagset : selectedTagsets) {
+													project.getTagManager().removeTagsetDefinition(tagset);
+												}
+											}
+											catch (Exception e) {
+												errorHandler.showAndLogError(
+														String.format("Failed to delete tagset(s) %s", quotedCommaSeparatedTagsetNames),
+														e
+												);
 											}
 										}
 									}
 							);
 						}
-					});
-			}
-			catch (IOException e) {
-				errorHandler.showAndLogError(
-						"Error deleting tagset", e);
-			}
+					}
+			);
 		}
-		else {
-			Notification.show(
-				"Info", "Please select one or more tagsets first!",
-					Notification.Type.HUMANIZED_MESSAGE);
+		catch (IOException e) {
+			errorHandler.showAndLogError(
+					String.format("Failed to delete tagset(s) %s", quotedCommaSeparatedTagsetNames),
+					e
+			);
 		}
-		
 	}
 
 	private void handleEditTagsetRequest() {
-		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
-		if (!tagsets.isEmpty()) {
-			final TagsetDefinition tagset = tagsets.iterator().next();
-			boolean beyondUsersResponsibility = !tagset.isResponsible(project.getCurrentUser().getIdentifier());
-			try {
-				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-					beyondUsersResponsibility,
+		final Set<TagsetDefinition> selectedTagsets = tagsetGrid.getSelectedItems();
+
+		if (selectedTagsets.isEmpty()) {
+			Notification.show("Info", "Please select a tagset first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		// TODO: this silently ignores all but the first selected tagset - disallow multi-select?
+		// only one tagset can be edited at a time
+		if (selectedTagsets.size() > 1) {
+			tagsetGrid.setSelectionMode(SelectionMode.SINGLE);
+		}
+		// take the first selected tagset
+		final TagsetDefinition tagsetToEdit = selectedTagsets.iterator().next();
+
+		boolean isBeyondCurrentUsersResponsibility = !tagsetToEdit.isResponsible(project.getCurrentUser().getIdentifier());
+
+		try {
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					isBeyondCurrentUsersResponsibility,
 					project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
 					new Action() {
 						@Override
 						public void execute() {
-				
-							EditTagsetDialog editTagsetDlg = new EditTagsetDialog(
-								new TagsetMetadata(
-										tagset.getName(), 
-										tagset.getDescription(), 
-										tagset.getResponsibleUser()),
-								ProjectView.this.membersByIdentfier.values(),
+							EditTagsetDialog editTagsetDialog = new EditTagsetDialog(
+								new TagsetMetadata(tagsetToEdit.getName(), tagsetToEdit.getDescription(), tagsetToEdit.getResponsibleUser()),
+								membersByIdentfier.values(),
 								new SaveCancelListener<TagsetMetadata>() {
 									@Override
 									public void savePressed(TagsetMetadata result) {
-										project.getTagManager().setTagsetMetadata(
-												tagset, result);
+										try {
+											project.getTagManager().setTagsetMetadata(tagsetToEdit, result);
+										}
+										catch (Exception e) {
+											errorHandler.showAndLogError(
+													String.format("Failed to update tagset \"%s\"", tagsetToEdit.getName()),
+													e
+											);
+										}
 									}
-								});
-							editTagsetDlg.show();
-						}
-					});
-			}
-			catch (IOException e) {
-				errorHandler.showAndLogError(
-						"Error deleting tagset", e);
-			}
+								}
+							);
 
+							editTagsetDialog.show();
+						}
+					}
+			);
 		}
-		else {
-			Notification.show(
-				"Info", "Please select a tagset first!",
-					Notification.Type.HUMANIZED_MESSAGE);
-		}		
+		catch (IOException e) {
+			errorHandler.showAndLogError(
+					String.format("Failed to update tagset \"%s\"", tagsetToEdit.getName()),
+					e
+			);
+		}
 	}
 
 	private void handleAddTagsetRequest() {
@@ -1139,29 +1161,42 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleAddCollectionRequest() {
+		Set<SourceDocumentReference> selectedSourceDocumentRefs = getSelectedDocuments();
 
-    	Set<SourceDocumentReference> selectedDocuments = getSelectedDocuments();
-    	
-    	if (!selectedDocuments.isEmpty()) {
-	    	SingleTextInputDialog collectionNameDlg = 
-	    		new SingleTextInputDialog("Create Annotation Collection(s)", "Please enter the collection name:",
-	    				new SaveCancelListener<String>() {
-							
-							@Override
-							public void savePressed(String result) {
-								for (SourceDocumentReference document : selectedDocuments) {
-									project.createAnnotationCollection(result, document);
+		if (selectedSourceDocumentRefs.isEmpty()) {
+			Notification.show("Info", "Please select one or more documents first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		try {
+			SingleTextInputDialog collectionNameDialog = new SingleTextInputDialog(
+					"Create Annotation Collection(s)",
+					"Please enter the collection name:",
+					new SaveCancelListener<String>() {
+						@Override
+						public void savePressed(String result) {
+							try {
+								for (SourceDocumentReference sourceDocumentRef : selectedSourceDocumentRefs) {
+									project.createAnnotationCollection(result, sourceDocumentRef);
 								}
 							}
-						});
-	    	
-	    	collectionNameDlg.show();
-    	}
-    	else {
-    		Notification.show("Info", "Please select one or more documents first!", Notification.Type.HUMANIZED_MESSAGE);
-    	}
-    }
-	
+							catch (Exception e) {
+								errorHandler.showAndLogError(
+										String.format("Failed to create collection \"%s\"", result),
+										e
+								);
+							}
+						}
+					}
+			);
+
+			collectionNameDialog.show();
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Failed to create collection", e);
+		}
+	}
+
 	private void handleAddDocumentRequest() {
 		WizardContext wizardContext = new WizardContext();
 		wizardContext.put(DocumentWizard.WizardContextKey.PROJECT, project);
@@ -1178,188 +1213,211 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleSaveDocumentWizardContext(final WizardContext result) {
-    	setEnabled(false);
-    	setProgressBarVisible(true);
-    	
-    	final UI ui = UI.getCurrent();
-    	
-		BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
+		setEnabled(false);
+		setProgressBarVisible(true);
+
+		final UI ui = UI.getCurrent();
+
+		BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider) ui;
 		BackgroundService backgroundService = backgroundServiceProvider.acquireBackgroundService();
+
 		backgroundService.submit(
 			new DefaultProgressCallable<Void>() {
 				@SuppressWarnings("unchecked")
 				@Override
 				public Void call() throws Exception {
-					
-					IDGenerator idGenerator = new IDGenerator();
-					boolean useApostropheAsSeparator = 
-							(Boolean)result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
-					String collectionNamePattern = (String)result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
-							
-					Collection<TagsetImport> tagsetImports = 
-							(Collection<TagsetImport>)result.get(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST);
-					Collection<UploadFile> uploadFiles = 
-							(Collection<UploadFile>)result.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
-					
+					Collection<TagsetImport> tagsetImports = (Collection<TagsetImport>) result.get(DocumentWizard.WizardContextKey.TAGSET_IMPORT_LIST);
+					Collection<UploadFile> uploadFiles = (Collection<UploadFile>) result.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
+
 					if (tagsetImports == null) {
 						tagsetImports = Collections.emptyList();
 					}
-					
-					// Ignoring tagsets
-					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED)).forEach(tagsetImport -> {
-						for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
-							for (UploadFile uploadFile : uploadFiles) {
-								if (uploadFile.getIntrinsicMarkupCollection() != null) {
-									AnnotationCollection intrinsicMarkupCollection =
-											uploadFile.getIntrinsicMarkupCollection();
-									intrinsicMarkupCollection.removeTagReferences(intrinsicMarkupCollection.getTagReferences(tag));
-								}
-							}
-						}
-					});
-					
-					getProgressListener().setProgress("Creating imported tagsets");
-					// Creating tagsets
-					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED)).forEach(tagsetImport -> {
-						getProgressListener().setProgress(
-								"Creating tagset \"%s\"", tagsetImport.getTargetTagset().getName());
-						ui.accessSynchronously(() -> {
-							if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
-								// already imported, so it will be a merge
-								tagsetImport.setImportState(TagsetImportState.WILL_BE_MERGED);
-							}
-							else {
-								TagsetDefinition extractedTagset = 
-										tagsetImport.getExtractedTagset();
-								try {
-									project.importTagsets(
-										Collections.singletonList(
-											new TagsetDefinitionImportStatus(
-													extractedTagset, 
-													project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
-								}
-								catch (Exception e) {
-									logger.log(
-											Level.SEVERE, 
-											String.format("Error importing tagset \"%s\" with ID %s",
-													extractedTagset.getName(), 
-													extractedTagset.getUuid()), 
-											e);
-									String errorMsg = e.getMessage();
-									if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-										errorMsg = "";
+
+					// ignoring tagsets
+					// uploaded files may contain tagsets and annotations (TEI-XML)
+					// filter out those annotations that use tags that belong to tagsets which were not selected for import
+					tagsetImports.stream()
+							.filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_IGNORED))
+							.map(TagsetImport::getExtractedTagset)
+							.forEach(ignoredTagsetDefinition -> uploadFiles.stream()
+									.filter(uploadFile -> uploadFile.getIntrinsicMarkupCollection() != null)
+									.forEach(uploadFile -> {
+										AnnotationCollection intrinsicAnnotationCollection = uploadFile.getIntrinsicMarkupCollection();
+										intrinsicAnnotationCollection.removeTagReferences(
+												intrinsicAnnotationCollection.getTagReferences(ignoredTagsetDefinition)
+										);
+									})
+							);
+
+					getProgressListener().setProgress("Importing tagsets");
+
+					// creating tagsets
+					tagsetImports.stream()
+							.filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED))
+							.forEach(tagsetImport -> {
+								getProgressListener().setProgress("Importing tagset \"%s\"", tagsetImport.getTargetTagset().getName());
+
+								ui.accessSynchronously(() -> {
+									if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
+										// tagset already exists in project, so it will be a merge (handled below)
+										tagsetImport.setImportState(TagsetImportState.WILL_BE_MERGED);
 									}
-			
-									Notification.show(
-										"Error", 
-										String.format(
-												"Error importing tagset \"%s\"! "
-												+ "This tagset will be skipped.\nThe underlying error message was:\n%s",
-												extractedTagset.getName(), errorMsg),
-											Notification.Type.ERROR_MESSAGE);
-								}
-							}
-							ui.push();
-						});
-					});
-					
-					// Merging tagsets
-					tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED)).forEach(tagsetImport -> {
-						getProgressListener().setProgress(
-								"Merging tagset \"%s\"", tagsetImport.getTargetTagset().getName());
-						ui.accessSynchronously(() -> {
-							TagsetDefinition targetTagset = 
-								project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid());
-							
-							for (TagDefinition tag : tagsetImport.getExtractedTagset()) {
-								
-								Optional<TagDefinition> optionalTag =
-									targetTagset.getTagDefinitionsByName(tag.getName()).findFirst();
-								
-								if (optionalTag.isPresent()) {
-									TagDefinition existingTag = optionalTag.get();
-									
-									tag.getUserDefinedPropertyDefinitions().forEach(pd -> {
-										if (existingTag.getPropertyDefinition(pd.getName()) == null) {
-											project.getTagManager().addUserDefinedPropertyDefinition(
-													existingTag, new PropertyDefinition(pd));
+									else {
+										TagsetDefinition extractedTagset = tagsetImport.getExtractedTagset();
+
+										try {
+											project.importTagsets(Collections.singletonList(
+													new TagsetDefinitionImportStatus(
+															extractedTagset,
+															project.getTagManager().getTagLibrary().getTagsetDefinition(
+																	extractedTagset.getUuid()
+															) != null
+													)
+											));
 										}
-									});
-									
-									for (UploadFile uploadFile : uploadFiles) {
-										if (uploadFile.getIntrinsicMarkupCollection() != null) {
-											AnnotationCollection intrinsicMarkupCollection =
-													uploadFile.getIntrinsicMarkupCollection();
-											
-											List<TagReference> tagReferences = 
-												intrinsicMarkupCollection.getTagReferences(tag);
-	
-											intrinsicMarkupCollection.removeTagReferences(tagReferences);
-											
-											Multimap<TagInstance, TagReference> referencesByInstance = 
-													ArrayListMultimap.create();
-											tagReferences.forEach(tr -> referencesByInstance.put(tr.getTagInstance(), tr));
-											
-											for (TagInstance incomingTagInstance : referencesByInstance.keySet()) {
-												TagInstance newTagInstance = 
-														new TagInstance(
-																idGenerator.generate(),
-																existingTag.getUuid(),
+										catch (Exception e) {
+											logger.log(
+													Level.SEVERE,
+													String.format(
+															"Failed to import tagset \"%s\" with ID %s",
+															extractedTagset.getName(),
+															extractedTagset.getUuid()
+													),
+													e
+											);
+
+											Notification.show(
+													"Error",
+													String.format(
+															"Failed to import tagset \"%s\"! This tagset will be skipped.\n" +
+																	"The underlying error message was:\n%s",
+															extractedTagset.getName(),
+															e.getMessage()
+													),
+													Notification.Type.ERROR_MESSAGE
+											);
+										}
+									}
+
+									ui.push();
+								});
+							});
+
+					// merging tagsets
+					tagsetImports.stream()
+							.filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED))
+							.forEach(tagsetImport -> {
+								getProgressListener().setProgress("Merging tagset \"%s\"", tagsetImport.getTargetTagset().getName());
+
+								ui.accessSynchronously(() -> {
+									TagsetDefinition targetTagset = project.getTagManager().getTagLibrary().getTagsetDefinition(
+											tagsetImport.getTargetTagset().getUuid()
+									);
+
+									IDGenerator idGenerator = new IDGenerator();
+
+									for (TagDefinition incomingTagDefinition : tagsetImport.getExtractedTagset()) {
+										Optional<TagDefinition> optionalExistingTagDefinition = targetTagset.getTagDefinitionsByName(
+												incomingTagDefinition.getName()
+										).findFirst();
+
+										if (!optionalExistingTagDefinition.isPresent()) {
+											// tag doesn't exist in target tagset, add it
+											incomingTagDefinition.setTagsetDefinitionUuid(targetTagset.getUuid());
+											project.getTagManager().addTagDefinition(targetTagset, incomingTagDefinition);
+											continue;
+										}
+
+										// otherwise, tag *does* exist in target tagset...
+										TagDefinition existingTagDefinition = optionalExistingTagDefinition.get();
+
+										// add any missing properties to the existing tag...
+										incomingTagDefinition.getUserDefinedPropertyDefinitions().forEach(incomingPropertyDefinition -> {
+											if (existingTagDefinition.getPropertyDefinition(incomingPropertyDefinition.getName()) == null) {
+												project.getTagManager().addUserDefinedPropertyDefinition(
+														existingTagDefinition, new PropertyDefinition(incomingPropertyDefinition)
+												);
+											}
+										});
+
+										// then, import tag instances (** but assign new IDs)
+										uploadFiles.stream()
+												.filter(uploadFile -> uploadFile.getIntrinsicMarkupCollection() != null)
+												.forEach(uploadFile -> {
+													AnnotationCollection intrinsicAnnotationCollection = uploadFile.getIntrinsicMarkupCollection();
+													List<TagReference> incomingTagReferences = intrinsicAnnotationCollection.getTagReferences(
+															incomingTagDefinition
+													);
+													intrinsicAnnotationCollection.removeTagReferences(incomingTagReferences);
+
+													Multimap<TagInstance, TagReference> incomingTagReferencesByTagInstance = ArrayListMultimap.create();
+													incomingTagReferences.forEach(incomingTagReference ->
+															incomingTagReferencesByTagInstance.put(incomingTagReference.getTagInstance(), incomingTagReference)
+													);
+
+													for (TagInstance incomingTagInstance : incomingTagReferencesByTagInstance.keySet()) {
+														TagInstance newTagInstance = new TagInstance(
+																idGenerator.generate(), // ** generate new ID
+																existingTagDefinition.getUuid(),
 																incomingTagInstance.getAuthor(),
 																incomingTagInstance.getTimestamp(),
-																existingTag.getUserDefinedPropertyDefinitions(),
-																targetTagset.getUuid());
-												
-												for (Property oldProp : incomingTagInstance.getUserDefinedProperties()) {
-													String oldPropDefId = oldProp.getPropertyDefinitionId();
-													PropertyDefinition oldPropDef = 
-															tag.getPropertyDefinitionByUuid(oldPropDefId);
-	
-													PropertyDefinition existingPropDef = 
-														existingTag.getPropertyDefinition(oldPropDef.getName());
-													
-													
-													newTagInstance.addUserDefinedProperty(
-														new Property(
-															existingPropDef.getUuid(), 
-															oldProp.getPropertyValueList()));
-												}
-												
-												ArrayList<TagReference> newReferences = new ArrayList<>();
-												referencesByInstance.get(incomingTagInstance).forEach(tr -> {
-													try {
-														newReferences.add(
-															new TagReference(
-																newTagInstance, 
-																tr.getTarget().toString(), 
-																tr.getRange(), 
-																tr.getUserMarkupCollectionUuid()));
-													} catch (URISyntaxException e) {
-														e.printStackTrace();
+																existingTagDefinition.getUserDefinedPropertyDefinitions(),
+																targetTagset.getUuid()
+														);
+
+														// for existing properties, we keep the existing property definition
+														// but take the incoming property values
+														for (Property incomingProperty : incomingTagInstance.getUserDefinedProperties()) {
+															PropertyDefinition incomingPropertyDefinition =
+																	incomingTagDefinition.getPropertyDefinitionByUuid(
+																			incomingProperty.getPropertyDefinitionId()
+																	);
+
+															PropertyDefinition existingPropertyDefinition =
+																	existingTagDefinition.getPropertyDefinition(incomingPropertyDefinition.getName());
+
+															newTagInstance.addUserDefinedProperty(
+																	new Property(
+																			existingPropertyDefinition.getUuid(),
+																			incomingProperty.getPropertyValueList()
+																	)
+															);
+														}
+
+														// re-write tag references
+														ArrayList<TagReference> newTagReferences = new ArrayList<>();
+
+														incomingTagReferencesByTagInstance.get(incomingTagInstance).forEach(incomingTagReference -> {
+															try {
+																newTagReferences.add(new TagReference(
+																		newTagInstance,
+																		incomingTagReference.getTarget().toString(),
+																		incomingTagReference.getRange(),
+																		incomingTagReference.getUserMarkupCollectionUuid()
+																));
+															}
+															catch (URISyntaxException e) {
+																// shouldn't ever happen as we get the URI string from an existing URI object
+																e.printStackTrace();
+															}
+														});
+
+														intrinsicAnnotationCollection.addTagReferences(newTagReferences);
 													}
 												});
-												
-												intrinsicMarkupCollection.addTagReferences(newReferences);
-											}
-											
-										}
-									}								
-								}
-								else {
-									tag.setTagsetDefinitionUuid(targetTagset.getUuid());
-									
-									project.getTagManager().addTagDefinition(targetTagset, tag);
-								}
-							}
-							ui.push();
-						});
-					});
-					
-					
-					// Importing docs and collections
+									}
+
+									ui.push();
+								});
+							});
+
+					// creating documents and collections
+					boolean useApostropheAsSeparator = (Boolean) result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
+					String collectionNamePattern = (String) result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
+
 					for (UploadFile uploadFile : uploadFiles) {
-						getProgressListener().setProgress(
-								"Importing document \"%s\"", uploadFile.getTitle());
+						getProgressListener().setProgress("Importing document \"%s\"", uploadFile.getTitle());
+
 						ui.accessSynchronously(() -> {
 							addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern);
 							ui.push();
@@ -1372,83 +1430,75 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			new ExecutionListener<Void>() {
 				@Override
 				public void done(Void result) {
-	            	setProgressBarVisible(false);
-	            	setEnabled(true);
+					setProgressBarVisible(false);
+					setEnabled(true);
 				}
+
 				@Override
 				public void error(Throwable t) {
-	            	setProgressBarVisible(false);
-	            	setEnabled(true);
-	                errorHandler.showAndLogError("Error adding documents", t);
+					setProgressBarVisible(false);
+					setEnabled(true);
+					errorHandler.showAndLogError("Failed to add documents", t);
 				}
 			},
-			progressListener);
-
+			progressListener
+		);
 	}
-	
-	
-	private void addUploadFile(UploadFile uploadFile, boolean useApostropheAsSeparator, String collectionNamePattern) {
-		
-		SourceDocumentInfo sourceDocumentInfo = 
-				new SourceDocumentInfo(
-						uploadFile.getIndexInfoSet(useApostropheAsSeparator), 
-						uploadFile.getContentInfoSet(), 
-						uploadFile.getTechInfoSet());
-		
-		SourceContentHandler contentHandler =
-				sourceDocumentInfo.getTechInfoSet().getMimeType().equals(FileType.XML2.getMimeType())?
-						new XML2ContentHandler()
-						:new TikaContentHandler();
-						
 
-		contentHandler.setSourceDocumentInfo(sourceDocumentInfo);		
-		
-		SourceDocument document = new SourceDocument(uploadFile.getUuid(), contentHandler);
-		
+	private void addUploadFile(UploadFile uploadFile, boolean useApostropheAsSeparator, String collectionNamePattern) {
+		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
+				uploadFile.getIndexInfoSet(useApostropheAsSeparator),
+				uploadFile.getContentInfoSet(),
+				uploadFile.getTechInfoSet()
+		);
+
+		SourceContentHandler sourceContentHandler =
+				sourceDocumentInfo.getTechInfoSet().getMimeType().equals(FileType.XML2.getMimeType()) ? new XML2ContentHandler() : new TikaContentHandler();
+		sourceContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
+
+		SourceDocument sourceDocument = new SourceDocument(uploadFile.getUuid(), sourceContentHandler);
+
 		try {
-			String content = document.getContent();
-			
-			FileOSType fileOSType = FileOSType.getFileOSType(content);
-			
-			sourceDocumentInfo.getTechInfoSet().setFileOSType(fileOSType);
+			String documentContent = sourceDocument.getContent();
+
+			sourceDocumentInfo.getTechInfoSet().setFileOSType(FileOSType.getFileOSType(documentContent));
+
 			CRC32 checksum = new CRC32();
-			checksum.update(content.getBytes());
-			
+			checksum.update(documentContent.getBytes());
 			sourceDocumentInfo.getTechInfoSet().setChecksum(checksum.getValue());
 
-			project.addSourceDocument(document);
-			
-			AnnotationCollection intrinsicMarkupCollection = 
-					uploadFile.getIntrinsicMarkupCollection();
-			if (intrinsicMarkupCollection != null) {
-				project.importAnnotationCollection(Collections.emptyList(), intrinsicMarkupCollection);
-			}
-			
-			if (collectionNamePattern != null && !collectionNamePattern.isEmpty()) {
-				String collectionName = collectionNamePattern.replace("{{Title}}", uploadFile.getTitle());
-				project.createAnnotationCollection(collectionName, project.getSourceDocumentReference(document.getUuid()));
-			}
-			
-		} catch (Exception e) {
-			logger.log(
-					Level.SEVERE, 
-					String.format("Error loading content of %1$s", uploadFile.getTempFilename().toString()), 
-					e);
-			String errorMsg = e.getMessage();
-			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-				errorMsg = "";
+			project.addSourceDocument(sourceDocument);
+
+			AnnotationCollection intrinsicAnnotationCollection = uploadFile.getIntrinsicMarkupCollection();
+			if (intrinsicAnnotationCollection != null) {
+				project.importAnnotationCollection(Collections.emptyList(), intrinsicAnnotationCollection);
 			}
 
+			if (!StringUtils.isBlank(collectionNamePattern)) {
+				String collectionName = collectionNamePattern.replace("{{Title}}", uploadFile.getTitle());
+				project.createAnnotationCollection(collectionName, project.getSourceDocumentReference(sourceDocument.getUuid()));
+			}
+		}
+		catch (Exception e) {
+			logger.log(
+					Level.SEVERE, 
+					String.format("Failed to load document content from file %s", uploadFile.getTempFilename().toString()),
+					e
+			);
+
 			Notification.show(
-				"Error", 
-				String.format(
-						"Error loading content of \"%s\"! "
-						+ "This document will be skipped.\nThe underlying error message was:\n%s",
-						uploadFile.getTitle(), errorMsg),
-					Notification.Type.ERROR_MESSAGE);
+					"Error",
+					String.format(
+						"Failed to load document content from file \"%s\"! This document will be skipped.\n" +
+								"The underlying error message was:\n%s",
+						uploadFile.getTitle(),
+						e.getMessage()
+					),
+					Notification.Type.ERROR_MESSAGE
+			);
 		}
 	}
-	
+
 	private void handleResourceItemClick(ItemClick<Resource> itemClickEvent) {
     	if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
     		Resource resource = itemClickEvent.getItem();
@@ -1545,32 +1595,30 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleCommitRequest() {
-    	try {
-	    	if (project.hasUncommittedChanges()) {
-	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit All Changes",
-	    			"Please enter a short description for this commit:", 
-	    			commitMsg -> {
-	    				try {
-		    				project.commitAndPushChanges(commitMsg);
-		    				Notification.show(
-		    					"Info", 
-		    					"Your changes have been committed",
-									Notification.Type.HUMANIZED_MESSAGE);
-	    				}
-	    				catch (Exception e) {
-	    					errorHandler.showAndLogError("Error committing changes", e);
-	    				}
-	    			});
-	    		dlg.show();
-	    	}
-	    	else {
-	    		Notification.show("Info", "There are no uncommitted changes", Notification.Type.HUMANIZED_MESSAGE);
-	    	}
-    	}
-    	catch (Exception e) {
-            errorHandler.showAndLogError("Error accessing project", e);
-    	}
+		try {
+			if (!project.hasUncommittedChanges()) {
+				Notification.show("Info", "There are no uncommitted changes", Notification.Type.HUMANIZED_MESSAGE);
+				return;
+			}
+
+			SingleTextInputDialog dlg = new SingleTextInputDialog(
+					"Commit All Changes",
+					"Please enter a short description for this commit:",
+					commitMsg -> {
+						try {
+							project.commitAndPushChanges(commitMsg);
+							Notification.show("Info", "Your changes have been committed", Notification.Type.HUMANIZED_MESSAGE);
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to commit changes", e);
+						}
+					}
+			);
+			dlg.show();
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Failed to check for uncommitted changes", e);
+		}
 	}
 
 	/**
@@ -2032,10 +2080,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	reloadAll();
     }
     
-    @Subscribe
-    public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
-    	initData();
-    }
+	@Subscribe
+	public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
+		// TODO: do we really need to re-init everything?
+		initData();
+	}
 
     @Subscribe
     public void handleMembersChanged(MembersChangedEvent membersChangedEvent) {
@@ -2047,116 +2096,120 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     		errorHandler.showAndLogError("Error loading members", e);
     	}
     }
-    
-    /**
-     * deletes selected resources
-     *
-     * @param clickEvent
-     * @param resourceGrid
-     */
-    private void handleDeleteResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-    	
-    	if (!resourceGrid.getSelectedItems().isEmpty()) {
-    		
-    		boolean beyondUsersResponsibility = 
-    			resourceGrid.getSelectedItems().stream()
-    			.filter(res -> !res.isResponsible(project.getCurrentUser().getIdentifier()))
-    			.findAny()
-    			.isPresent();
-    		try {
-	    		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
-	    				beyondUsersResponsibility, 
-						project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
-	    				new Action() {
-	    					@Override
-	    					public void execute() {
-						    	ConfirmDialog.show( 
-						    		UI.getCurrent(), 
-						    		"Info", 
-						    		"Are you sure you want to delete the selected resources: \""
-						    		+ resourceGrid.getSelectedItems()
-						    			.stream()
-						    			.map(resource -> resource.getName())
-						    			.collect(Collectors.joining("\", \"")) //$NON-NLS-1$
-						    		+ "\"?",
-						    		"Delete", 
-						    		"Cancel", dlg -> {
-						    			if (dlg.isConfirmed()) {
-								           Stream<Resource> sortedResources =  resourceGrid.getSelectedItems()
-								            .stream()
-								            .sorted(new Comparator<Resource>() {
-					
-												@Override
-												public int compare(Resource o1, Resource o2) {
-													if (o1.isCollection() && o2.isCollection()) {
-														return o1.getResourceId().compareTo(o2.getResourceId());
-													}
-													else if (o1.isCollection()) {
-														return -1;
-													}
-													else if (o2.isCollection()){
-														return 1;
-													}
-													else {
-														return o1.getResourceId().compareTo(o2.getResourceId());
-													}
-												}
-								            	
-											});
-								            
-								            	
-								            for (Resource resource: sortedResources.collect(Collectors.toList())) {
-								            	try {
-								            		resource.deleteFrom(project);
-								                } catch (Exception e) {
-								                    errorHandler.showAndLogError("Error deleting resource "+resource, e);
-								                }
-								            }
-						    			}
-						    		});
-	    					}
-	    				});
-    		}
-    		catch (IOException e) {
-				errorHandler.showAndLogError(
-						"Error deleting resources", e);
-    		}
-    	}
-    	else {
-    		Notification.show("Info", "Please select a resource first!", Notification.Type.HUMANIZED_MESSAGE);
-    	}
-    }
-    
-    private void handleAnalyzeResources(MenuBar.MenuItem menuItem, TreeGrid<Resource> resourceGrid) {
-    	if (resourceGrid.getSelectedItems().isEmpty()) {
-    		Notification.show("Info", "Please select something first!", Notification.Type.HUMANIZED_MESSAGE);
-    	}
-    	else {
-			Corpus corpus = new Corpus();
-			
-	         for (Resource resource: resourceGrid.getSelectedItems()) {
-            	try {
-            		if(resource.getClass().equals(DocumentResource.class)) {
-            		DocumentResource docResource = (DocumentResource) resource;
-            		corpus.addSourceDocument(docResource.getDocument());
-            		}else {
-            			CollectionResource collResource = (CollectionResource) resource;
-	            		corpus.addUserMarkupCollectionReference(collResource.getCollectionReference());
-	            		DocumentResource docParent =(DocumentResource) resourceGrid.getTreeData().getParent(collResource);
-	            		if(!corpus.getSourceDocuments().contains(docParent.getDocument())) {
-	            			corpus.addSourceDocument(docParent.getDocument());
-	            		}
-            			
-            		}
-                } catch (Exception e) {
-                    errorHandler.showAndLogError("Error adding resource to analyzer module "+resource, e);
-                }
-            }
-    
-           eventBus.post( new RouteToAnalyzeEvent((IndexedProject)project, corpus));
-    	}
 
-    }
+	private void handleDeleteResources(TreeGrid<Resource> resourceGrid) {
+		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
+
+		if (selectedResources.isEmpty()) {
+			Notification.show("Info", "Please select one or more resources first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		boolean isBeyondCurrentUsersResponsibility = selectedResources.stream().anyMatch(
+				resource -> !resource.isResponsible(project.getCurrentUser().getIdentifier())
+		);
+
+		List<String> selectedResourceNames = selectedResources.stream()
+				.map(Resource::getName)
+				.sorted()
+				.collect(Collectors.toList());
+		String quotedCommaSeparatedResourceNames = String.format("\"%s\"", String.join("\", \"", selectedResourceNames));
+
+		try {
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					isBeyondCurrentUsersResponsibility,
+					project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.DOCUMENT_DELETE_OR_EDIT),
+					new Action() {
+						@Override
+						public void execute() {
+							ConfirmDialog.show(
+									UI.getCurrent(),
+									"Warning",
+									String.format(
+											"Are you sure you want to delete resource(s) %s?",
+											quotedCommaSeparatedResourceNames
+									),
+									"Delete",
+									"Cancel",
+									dlg -> {
+										if (dlg.isConfirmed()) {
+											try {
+												// this sort ensures that we delete collections before we delete documents
+												List<Resource> sortedSelectedResources = selectedResources.stream()
+														.sorted(new Comparator<Resource>() {
+															@Override
+															public int compare(Resource r1, Resource r2) {
+																if (r1.isCollection() && !r2.isCollection()) {
+																	return -1;
+																}
+																else if (!r1.isCollection() && r2.isCollection()) {
+																	return 1;
+																}
+																else {
+																	return r1.getResourceId().compareTo(r2.getResourceId());
+																}
+															}
+														})
+														.collect(Collectors.toList());
+
+												for (Resource resource : sortedSelectedResources) {
+													resource.deleteFrom(project);
+												}
+											}
+											catch (Exception e) {
+												errorHandler.showAndLogError(
+														String.format("Failed to delete resource(s) %s", quotedCommaSeparatedResourceNames),
+														e
+												);
+											}
+										}
+									}
+							);
+						}
+					}
+			);
+		}
+		catch (IOException e) {
+			errorHandler.showAndLogError(
+					String.format("Failed to delete resource(s) %s", quotedCommaSeparatedResourceNames),
+					e
+			);
+		}
+	}
+
+	private void handleAnalyzeResources(TreeGrid<Resource> resourceGrid) {
+		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
+
+		if (selectedResources.isEmpty()) {
+			Notification.show("Info", "Please select one or more resources first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		try {
+			Corpus corpusToBeAnalyzed = new Corpus();
+
+			for (Resource resource : selectedResources) {
+				if (resource.isCollection()) {
+					CollectionResource collectionResource = (CollectionResource) resource;
+					corpusToBeAnalyzed.addUserMarkupCollectionReference(collectionResource.getCollectionReference());
+
+					DocumentResource parentDocumentResource = (DocumentResource) resourceGrid.getTreeData().getParent(collectionResource);
+					if (!corpusToBeAnalyzed.getSourceDocuments().contains(parentDocumentResource.getDocument())) {
+						corpusToBeAnalyzed.addSourceDocument(parentDocumentResource.getDocument());
+					}
+				}
+				else { // it's a document
+					DocumentResource documentResource = (DocumentResource) resource;
+					corpusToBeAnalyzed.addSourceDocument(documentResource.getDocument());
+				}
+			}
+
+			eventBus.post(new RouteToAnalyzeEvent((IndexedProject) project, corpusToBeAnalyzed));
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Failed to create corpus for analysis", e);
+		}
+	}
 
 	public void close() {
 		try {
