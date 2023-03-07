@@ -1,38 +1,5 @@
 package de.catma.ui.module.project;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.text.Collator;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.zip.CRC32;
-
-import org.apache.commons.lang3.StringUtils;
-import org.vaadin.dialogs.ConfirmDialog;
-
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
@@ -43,36 +10,21 @@ import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.*;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Grid;
+import com.vaadin.server.FileDownloader;
+import com.vaadin.server.Page;
+import com.vaadin.server.SerializablePredicate;
+import com.vaadin.server.StreamResource;
+import com.vaadin.ui.*;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.ProgressBar;
-import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.renderers.HtmlRenderer;
-
-import de.catma.backgroundservice.BackgroundService;
-import de.catma.backgroundservice.BackgroundServiceProvider;
-import de.catma.backgroundservice.DefaultProgressCallable;
-import de.catma.backgroundservice.ExecutionListener;
-import de.catma.backgroundservice.ProgressListener;
+import de.catma.backgroundservice.*;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.corpus.Corpus;
-import de.catma.document.source.ContentInfoSet;
-import de.catma.document.source.FileOSType;
-import de.catma.document.source.FileType;
-import de.catma.document.source.SourceDocument;
-import de.catma.document.source.SourceDocumentInfo;
-import de.catma.document.source.SourceDocumentReference;
+import de.catma.document.source.*;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.TikaContentHandler;
@@ -88,19 +40,11 @@ import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.serialization.TagsetDefinitionImportStatus;
-import de.catma.tag.Property;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagManager;
+import de.catma.tag.*;
 import de.catma.tag.TagManager.TagManagerEvent;
-import de.catma.tag.TagsetDefinition;
-import de.catma.tag.TagsetMetadata;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
 import de.catma.ui.component.IconButton;
@@ -136,145 +80,153 @@ import de.catma.user.User;
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
+import org.apache.commons.lang3.StringUtils;
+import org.vaadin.dialogs.ConfirmDialog;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.text.Collator;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.zip.CRC32;
 
 /**
- *
- * Renders one project with all resources
- *
- * @author db
+ * Renders a single project with all of its resources and members
  */
 public class ProjectView extends HugeCard implements CanReloadAll {
-	
+	private final Logger logger = Logger.getLogger(ProjectView.class.getName());
+
+	private final ProjectsManager projectsManager;
+	private final EventBus eventBus;
+
+	private final ErrorHandler errorHandler;
+	private final TagManager tagManager;
+	private final ProgressListener progressListener;
+
+	private PropertyChangeListener projectExceptionListener;
+	private PropertyChangeListener tagsetChangeListener;
+
+	private ProjectReference projectReference;
+	private Project project;
+	private Map<String, Member> membersByIdentifier;
+
+	private ProgressBar progressBar;
+
+	// documents & annotations components
 	private enum DocumentGridColumn {
 		NAME,
 		RESPONSIBLE,
-		;
 	}
-	
-	private enum TagsetGridColumn {
-		NAME, 
-		RESPONSIBLE,
-		;
-	}
-
-	private Logger logger = Logger.getLogger(ProjectView.class.getName());
-	private final TagManager tagManager;
-
-	private ProjectsManager projectManager;
-    private ProjectReference projectReference;
-    private Project project;
-
-    private final ErrorHandler errorHandler;
-	private final EventBus eventBus;
-	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
-	
-    private TreeGrid<Resource> documentGrid;
-    private ActionGridComponent<TreeGrid<Resource>> documentGridComponent;
-
-    private Grid<TagsetDefinition> tagsetGrid;
-    private ActionGridComponent<Grid<TagsetDefinition>> tagsetGridComponent;
-
-    private Grid<Member> teamGrid;
-    private VerticalFlexLayout teamPanel;
-    private ListDataProvider<TagsetDefinition> tagsetData;
-    
-    private PropertyChangeListener tagsetChangeListener;
-    private PropertyChangeListener projectExceptionListener;
-
-    private MenuItem miInvite;
-	private ProgressBar progressBar;
-
-	private Button btSynchronize;
-	private final ProgressListener progressListener;
-	private MenuItem miToggleResponsibiltityFilter;
-	private Map<String, Member> membersByIdentfier;
-	private IconButton btSynchLatestContribToggle;
+	private TreeGrid<Resource> documentGrid;
+	private ActionGridComponent<TreeGrid<Resource>> documentGridComponent;
 	private MenuItem miAddDocument;
 	private MenuItem miAddCollection;
 	private MenuItem miEditDocumentOrCollection;
 	private MenuItem miDeleteDocumentOrCollection;
 	private MenuItem miImportCollection;
+	private MenuItem miToggleResponsibilityFilter;
+
+	// tagsets components
+	private enum TagsetGridColumn {
+		NAME,
+		RESPONSIBLE,
+	}
+	private Grid<TagsetDefinition> tagsetGrid;
+	private ListDataProvider<TagsetDefinition> tagsetData;
+	private ActionGridComponent<Grid<TagsetDefinition>> tagsetGridComponent;
 	private MenuItem miEditTagset;
 	private MenuItem miDeleteTaget;
 	private MenuItem miImportTagset;
-	private MenuItem miCommit;
-	private MenuItem miImportCorpus;
+
+	// team components
+	private VerticalFlexLayout teamLayout;
+	private Grid<Member> teamGrid;
+
+	// project components
 	private LocalTime lastSynchronization;
-
-	private ProjectResourceExportApiDialog projectResourceExportApiDialog;
+	private Button btnSynchronize;
+	private IconButton btnToggleViewSynchronizedOrLatestContributions;
+	private MenuItem miCommit;
 	private MenuItem miShareResources;
+	private MenuItem miImportCorpus;
+	private ProjectResourceExportApiDialog projectResourceExportApiDialog;
 
-    public ProjectView(
-    		ProjectsManager projectManager, 
-    		EventBus eventBus) {
-    	super("Project");
-    	this.projectManager = projectManager;
-        this.eventBus = eventBus;
-    	this.errorHandler = (ErrorHandler)UI.getCurrent();
-		TagLibrary tagLibrary = new TagLibrary();
-		this.tagManager = new TagManager(tagLibrary);
+	public ProjectView(ProjectsManager projectsManager, EventBus eventBus) {
+		super("Project");
 
-		
+		this.projectsManager = projectsManager;
+		this.eventBus = eventBus;
+
+		this.errorHandler = (ErrorHandler) UI.getCurrent();
+		this.tagManager = new TagManager(new TagLibrary());
+
 		final UI ui = UI.getCurrent();
 		this.progressListener = new ProgressListener() {
-			
 			@Override
 			public void setProgress(String value, Object... args) {
 				ui.accessSynchronously(() -> {
-	            	if (args != null) {
-	            		progressBar.setCaption(String.format(value, args));
-	            	}
-	            	else {
-	            		progressBar.setCaption(value);
-	            	}
-	            	ui.push();
+					if (args != null) {
+						progressBar.setCaption(String.format(value, args));
+					}
+					else {
+						progressBar.setCaption(value);
+					}
+					ui.push();
 				});
 			}
 		};
-		
 
-        initProjectListeners();
+		initProjectListeners();
+		initComponents();
+		initActions();
 
-        initComponents();
-        initActions();
-        
-        eventBus.register(this);
-    }
+		eventBus.register(this);
+	}
 
-    private void initProjectListeners() {
-        this.projectExceptionListener = new PropertyChangeListener() {
-			
+	private void initProjectListeners() {
+		projectExceptionListener = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				Exception e = (Exception) evt.getNewValue();
 				errorHandler.showAndLogError("Error in project", e);
-				
 			}
 		};
-		this.tagsetChangeListener = new PropertyChangeListener() {
-			
+
+		tagsetChangeListener = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				handleTagsetChange(evt);
 			}
 		};
-		
 	}
 
 	private void handleTagsetChange(PropertyChangeEvent evt) {
 		Object oldValue = evt.getOldValue();
 		Object newValue = evt.getNewValue();
-		
+
 		if (oldValue == null) { // creation
 			tagsetData.refreshAll();
 		}
 		else if (newValue == null) { // removal
+			tagsetGrid.deselect((TagsetDefinition) oldValue); // TODO: why bother if the data provider is about to be refreshed anyway?
 			tagsetData.refreshAll();
-			tagsetGrid.deselect((TagsetDefinition) oldValue);
 		}
 		else { // metadata update
-			TagsetDefinition tagset = (TagsetDefinition)newValue;
-			tagsetData.refreshItem(tagset);
+			TagsetDefinition tagsetDefinition = (TagsetDefinition) newValue;
+			tagsetData.refreshItem(tagsetDefinition);
 		}
 	}
 
@@ -298,7 +250,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		DocumentResource documentResource = new DocumentResource(
 				sourceDocumentRef,
 				project.getId(),
-				sourceDocumentRef.getResponsibleUser() == null ? null : membersByIdentfier.get(sourceDocumentRef.getResponsibleUser())
+				sourceDocumentRef.getResponsibleUser() == null ? null : membersByIdentifier.get(sourceDocumentRef.getResponsibleUser())
 		);
 
 		CollectionResource collectionResource = new CollectionResource(
@@ -321,20 +273,22 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 	}
 
-	private void toggleProjectReadOnly() {
-		miAddDocument.setEnabled(!project.isReadOnly());
-		miAddCollection.setEnabled(!project.isReadOnly());
-		miEditDocumentOrCollection.setEnabled(!project.isReadOnly());
-		miDeleteDocumentOrCollection.setEnabled(!project.isReadOnly());
-		miImportCollection.setEnabled(!project.isReadOnly());
-		miEditTagset.setEnabled(!project.isReadOnly());
-		miImportTagset.setEnabled(!project.isReadOnly());
-		miDeleteTaget.setEnabled(!project.isReadOnly());
-		miCommit.setEnabled(!project.isReadOnly());
-		miImportCorpus.setEnabled(!project.isReadOnly());
-		miShareResources.setEnabled(!project.isReadOnly());
-		tagsetGridComponent.getActionGridBar().setAddBtnEnabled(!project.isReadOnly());
-		btSynchronize.setEnabled(!project.isReadOnly());
+	private void setControlsStateBasedOnProjectReadOnlyState() {
+		boolean controlsEnabled = !project.isReadOnly();
+
+		miAddDocument.setEnabled(controlsEnabled);
+		miAddCollection.setEnabled(controlsEnabled);
+		miEditDocumentOrCollection.setEnabled(controlsEnabled);
+		miDeleteDocumentOrCollection.setEnabled(controlsEnabled);
+		miImportCollection.setEnabled(controlsEnabled);
+		miEditTagset.setEnabled(controlsEnabled);
+		miDeleteTaget.setEnabled(controlsEnabled);
+		miImportTagset.setEnabled(controlsEnabled);
+		miCommit.setEnabled(controlsEnabled);
+		miShareResources.setEnabled(controlsEnabled);
+		miImportCorpus.setEnabled(controlsEnabled);
+		tagsetGridComponent.getActionGridBar().setAddBtnEnabled(controlsEnabled);
+		btnSynchronize.setEnabled(controlsEnabled);
 	}
 
 	private void initActions() {
@@ -383,11 +337,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		documentGridComponentMoreOptionsContextMenu.addItem(
 				"Select Filtered Entries", menuItem -> handleSelectFilteredDocuments()
 		);
-		miToggleResponsibiltityFilter = documentGridComponentMoreOptionsContextMenu.addItem(
+		miToggleResponsibilityFilter = documentGridComponentMoreOptionsContextMenu.addItem(
 				"Hide Others' Responsibilities", menuItem -> toggleResponsibilityFilter()
 		);
-		miToggleResponsibiltityFilter.setCheckable(true);
-		miToggleResponsibiltityFilter.setChecked(false);
+		miToggleResponsibilityFilter.setCheckable(true);
+		miToggleResponsibilityFilter.setChecked(false);
 
 		// tagsets actions
 		tagsetGridComponent.setSearchFilterProvider(searchInput -> createTagsetGridComponentSearchFilterProvider(searchInput));
@@ -438,6 +392,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		tagsetsCsvExportFileDownloader.extend(miExportTagsetsAsCsv);
 
 		// global project actions
+		btnSynchronize.addClickListener(clickEvent -> handleSynchronize());
+		btnToggleViewSynchronizedOrLatestContributions.addClickListener(clickEvent -> handleToggleViewSynchronizedOrLatestContributions());
+
 		ContextMenu hugeCardMoreOptionsContextMenu = getMoreOptionsContextMenu();
 		miCommit = hugeCardMoreOptionsContextMenu.addItem(
 				"Commit All Changes", menuItem -> handleCommitRequest()
@@ -454,93 +411,97 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						((CatmaApplication) UI.getCurrent()).getParameter(Parameter.EXPERT, "false")
 				)
 		);
-
-		btSynchronize.addClickListener(clickEvent -> handleSynchronizeClick());
-		btSynchLatestContribToggle.addClickListener(clickEvent -> handleBtSynchLatestContribToggle());
 	}
 
-	private void handleBtSynchLatestContribToggle() {
-		boolean latestContribView = !(Boolean)btSynchLatestContribToggle.getData();
+	private void handleToggleViewSynchronizedOrLatestContributions() {
+		// default is synchronized view, false = synchronized, true = latest contributions
+		boolean isLatestContributionsViewCurrentlyEnabled = (Boolean) btnToggleViewSynchronizedOrLatestContributions.getData();
 
-    	try {
-    		setEnabled(false);
-    		
-	    	if (latestContribView && project.hasUncommittedChanges()) {
-	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit All Changes",
-	    			"You have changes that need to be committed first, please enter a short description for this commit:",
-	    			commitMsg -> {
-	    				try {
-		    				project.commitAndPushChanges(commitMsg);
-		    				setLatestContributionView(latestContribView);
-	    				}
-	    				catch (Exception e) {
-	    					setEnabled(true);
-	    					errorHandler.showAndLogError("Error committing changes", e);
-	    				}
-	    			});
-	    		dlg.show();
-	    	}
-	    	else {
-				setLatestContributionView(latestContribView);
-	    	}
-    	}
-    	catch (Exception e) {
-            errorHandler.showAndLogError("Error accessing project", e);
-    	}	
+		// disable the entire layout
+		setEnabled(false);
+
+		try {
+			if (isLatestContributionsViewCurrentlyEnabled) {
+				setLatestContributionsView(false);
+				return;
+			}
+
+			// switching to latest contributions view, check for uncommitted changes first
+			if (!project.hasUncommittedChanges()) {
+				setLatestContributionsView(true);
+			}
+			else {
+				// there are uncommitted changes that need to be committed first
+				SingleTextInputDialog dlg = new SingleTextInputDialog(
+						"Commit All Changes",
+						"You have changes that need to be committed first, please enter a short description for this commit:",
+						commitMsg -> {
+							try {
+								project.commitAndPushChanges(commitMsg);
+								setLatestContributionsView(true);
+							}
+							catch (Exception e) {
+								errorHandler.showAndLogError("Failed to switch view", e);
+								setEnabled(true);
+							}
+						}
+				);
+				dlg.show();
+			}
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Failed to switch view", e);
+			setEnabled(true);
+		}
 	}
 
-	private void setLatestContributionView(final boolean latestContribView) throws Exception {
-		btSynchLatestContribToggle.setData(latestContribView);
-		btSynchLatestContribToggle.setIcon(latestContribView?VaadinIcons.RANDOM:VaadinIcons.ROAD_BRANCH);
+	private void setLatestContributionsView(final boolean enabled) throws Exception {
+		// default is synchronized view, false = synchronized, true = latest contributions
+		btnToggleViewSynchronizedOrLatestContributions.setData(enabled);
+		btnToggleViewSynchronizedOrLatestContributions.setIcon(enabled ? VaadinIcons.RANDOM : VaadinIcons.ROAD_BRANCH);
 
-    	setProgressBarVisible(true);
-    	
-    	final UI ui = UI.getCurrent();
-    	
-		project.setLatestContributionView(latestContribView, new OpenProjectListener() {
+		setProgressBarVisible(true);
 
-            @Override
-            public void progress(String msg, Object... params) {
-            	ui.access(() -> {
-	            	if (params != null) {
-	            		progressBar.setCaption(String.format(msg, params));
-	            	}
-	            	else {
-	            		progressBar.setCaption(msg);
-	            	}
-	            	ui.push();
-            	});
-            }
+		final UI ui = UI.getCurrent();
 
-            @Override
-            public void ready(Project project) {
-            	setProgressBarVisible(false);
-            	reloadAll();
-            	setEnabled(true);
-		        eventBus.post(new HeaderContextChangeEvent(projectReference.getName(), latestContribView));
-            }
-            
-            @Override
-            public void failure(Throwable t) {
-            	setProgressBarVisible(false);
-            	setEnabled(true);
-                errorHandler.showAndLogError("Error opening project", t);
-            }
-        });
+		project.setLatestContributionView(enabled, new OpenProjectListener() {
+			@Override
+			public void progress(String msg, Object... params) {
+				ui.access(() -> {
+					if (params != null) {
+						progressBar.setCaption(String.format(msg, params));
+					}
+					else {
+						progressBar.setCaption(msg);
+					}
+					ui.push();
+				});
+			}
+
+			@Override
+			public void ready(Project project) {
+				setProgressBarVisible(false);
+				reloadAll();
+				setEnabled(true);
+				eventBus.post(new HeaderContextChangeEvent(projectReference.getName(), enabled));
+			}
+
+			@Override
+			public void failure(Throwable t) {
+				setProgressBarVisible(false);
+				setEnabled(true);
+				errorHandler.showAndLogError("Failed to switch view", t);
+			}
+		});
 	}
 
 	private void toggleResponsibilityFilter() {
-
-		documentGrid.getColumn(DocumentGridColumn.RESPONSIBLE.name()).setHidden(
-				miToggleResponsibiltityFilter.isChecked());
-		documentGrid.getColumn(DocumentGridColumn.NAME.name()).setWidth(
-				miToggleResponsibiltityFilter.isChecked()?300:200);
-
+		documentGrid.getColumn(DocumentGridColumn.RESPONSIBLE.name()).setHidden(miToggleResponsibilityFilter.isChecked());
+		documentGrid.getColumn(DocumentGridColumn.NAME.name()).setWidth(miToggleResponsibilityFilter.isChecked() ? 300 : 200);
 		initData();
 	}
 
-	private void handleSynchronizeClick() {
+	private void handleSynchronize() {
 		if (
 				lastSynchronization != null
 				&& lastSynchronization.plus(
@@ -562,37 +523,38 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleCorpusImport() {
 		try {
-	    	if (project.hasUncommittedChanges()) {
-	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit All Changes",
-	    			"You have changes that need to be committed first, please enter a short description for this commit:",
-	    			commitMsg -> {
-	    				try {
-		    				project.commitAndPushChanges(commitMsg);
-		    				importCollection();
-	    				}
-	    				catch (Exception e) {
-	    					setEnabled(true);
-	    					errorHandler.showAndLogError("Error committing changes", e);
-	    				}
-	    			});
-	    		dlg.show();
-	    	}
-	    	else {
-	    		CorpusImportDialog corpusImportDialog = new CorpusImportDialog(
-	    			new SaveCancelListener<Pair<File,List<CorpusImportDocumentMetadata>>>() {
-	    				@Override
-	    				public void savePressed(Pair<File, List<CorpusImportDocumentMetadata>> result) {
-	    					importCorpus(result.getFirst(), result.getSecond());
-	    				}
-				});
-	    		
-	    		corpusImportDialog.show();
-	    	}
-    	}
-    	catch (Exception e) {
-            errorHandler.showAndLogError("Error accessing project", e);
-    	}		
+			CorpusImportDialog corpusImportDialog = new CorpusImportDialog(
+					new SaveCancelListener<Pair<File,List<CorpusImportDocumentMetadata>>>() {
+						@Override
+						public void savePressed(Pair<File, List<CorpusImportDocumentMetadata>> result) {
+							importCorpus(result.getFirst(), result.getSecond());
+						}
+					}
+			);
+
+			if (!project.hasUncommittedChanges()) {
+				corpusImportDialog.show();
+			}
+			else {
+				SingleTextInputDialog dlg = new SingleTextInputDialog(
+						"Commit All Changes",
+						"You have changes that need to be committed first, please enter a short description for this commit:",
+						commitMsg -> {
+							try {
+								project.commitAndPushChanges(commitMsg);
+								corpusImportDialog.show();
+							}
+							catch (IOException e) {
+								errorHandler.showAndLogError("Failed to import CATMA 5 corpus", e);
+							}
+						}
+				);
+				dlg.show();
+			}
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Failed to import CATMA 5 corpus", e);
+		}
 	}
 
 	private void handleImportCorpusError(Throwable t) {
@@ -652,29 +614,29 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleImportCollectionRequest() {
 		try {
-	    	if (project.hasUncommittedChanges()) {
-	    		SingleTextInputDialog dlg = new SingleTextInputDialog(
-	    			"Commit All Changes",
-	    			"You have changes that need to be committed first, please enter a short description for this commit:",
-	    			commitMsg -> {
-	    				try {
-		    				project.commitAndPushChanges(commitMsg);
-		    				importCollection();
-	    				}
-	    				catch (Exception e) {
-	    					setEnabled(true);
-	    					errorHandler.showAndLogError("Error committing changes", e);
-	    				}
-	    			});
-	    		dlg.show();
-	    	}
-	    	else {
-	    		importCollection();
-	    	}
-    	}
-    	catch (Exception e) {
-            errorHandler.showAndLogError("Error accessing project", e);
-    	}		
+			if (!project.hasUncommittedChanges()) {
+				importCollection();
+			}
+			else {
+				SingleTextInputDialog dlg = new SingleTextInputDialog(
+						"Commit All Changes",
+						"You have changes that need to be committed first, please enter a short description for this commit:",
+						commitMsg -> {
+							try {
+								project.commitAndPushChanges(commitMsg);
+								importCollection();
+							}
+							catch (IOException e) {
+								errorHandler.showAndLogError("Failed to import collection", e);
+							}
+						}
+				);
+				dlg.show();
+			}
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Failed to import collection", e);
+		}
 	}
 
 	private void importCollection() {
@@ -735,70 +697,67 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleTagsetClick(ItemClick<TagsetDefinition> itemClickEvent) {
-    	if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
-    		TagsetDefinition tagset = itemClickEvent.getItem();
-    		
-    		eventBus.post(new RouteToTagsEvent(project, tagset));
-    	}		
+		if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
+			TagsetDefinition tagsetDefinition = itemClickEvent.getItem();
+			eventBus.post(new RouteToTagsEvent(project, tagsetDefinition));
+		}
 	}
 
 	private void handleSelectFilteredDocuments() {
 		documentGridComponent.setSelectionMode(SelectionMode.MULTI);
+
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<Resource> dataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
-		dataProvider.fetch(
-				new HierarchicalQuery<>(dataProvider.getFilter(), null))
-		.forEach(resource -> {
-			documentGrid.select(resource);
-			dataProvider.fetch(new HierarchicalQuery<>(dataProvider.getFilter(), resource))
-			.forEach(child -> documentGrid.select(child));
-		});
+		dataProvider.fetch(new HierarchicalQuery<>(dataProvider.getFilter(), null))
+				.forEach(resource -> {
+					documentGrid.select(resource);
+					dataProvider.fetch(new HierarchicalQuery<>(dataProvider.getFilter(), resource))
+							.forEach(child -> documentGrid.select(child));
+				});
 	}
 
 	private void handleImportTagsetsRequest() {
-		GenericUploadDialog uploadDialog =
-				new GenericUploadDialog("Upload a tag library with one or more tagsets:",
-						new SaveCancelListener<byte[]>() {
-			
-			public void savePressed(byte[] result) {
-				InputStream is = new ByteArrayInputStream(result);
-				try {
-					if (BOMFilterInputStream.hasBOM(result)) {
-						is = new BOMFilterInputStream(
-								is, Charset.forName("UTF-8")); //$NON-NLS-1$
-					}
-					
-					List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = 
-							project.prepareTagLibraryForImport(is);
-					
-					TagsetImportDialog tagsetImportDialog = 
-						new TagsetImportDialog(
-								tagsetDefinitionImportStatusList, 
-								new SaveCancelListener<List<TagsetDefinitionImportStatus>>() {
-							@Override
-							public void savePressed(List<TagsetDefinitionImportStatus> result) {
-								try {
-									project.importTagsets(result);
-								} catch (IOException e) {
-									errorHandler.showAndLogError(
-										"Error importing tagsets", e);
-								}
+		GenericUploadDialog uploadDialog = new GenericUploadDialog(
+				"Upload a tag library with one or more tagsets:",
+				new SaveCancelListener<byte[]>() {
+					public void savePressed(byte[] result) {
+						InputStream is = new ByteArrayInputStream(result);
+
+						try {
+							if (BOMFilterInputStream.hasBOM(result)) {
+								is = new BOMFilterInputStream(is, StandardCharsets.UTF_8);
 							}
-						});
-					
-					tagsetImportDialog.show();
-					
-				} catch (IOException e) {
-					errorHandler.showAndLogError(
-						"Error loading external tagsets", e);
+
+							List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses = project.prepareTagLibraryForImport(is);
+
+							TagsetImportDialog tagsetImportDialog = new TagsetImportDialog(
+									tagsetDefinitionImportStatuses,
+									new SaveCancelListener<List<TagsetDefinitionImportStatus>>() {
+										@Override
+										public void savePressed(List<TagsetDefinitionImportStatus> result) {
+											try {
+												project.importTagsets(result);
+											}
+											catch (IOException e) {
+												errorHandler.showAndLogError("Failed to import tagset(s)", e);
+											}
+										}
+									}
+							);
+
+							tagsetImportDialog.show();
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to import tagset(s)", e);
+						}
+						finally {
+							CloseSafe.close(is);
+						}
+					}
 				}
-				finally {
-					CloseSafe.close(is);
-				}
-			}
-			
-		});
-		uploadDialog.show();	
+		);
+
+		uploadDialog.show();
 	}
 
 	private void synchronizeProject() {
@@ -861,8 +820,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void setProgressBarVisible(boolean visible) {
-    	progressBar.setIndeterminate(visible);
-    	progressBar.setVisible(visible);
+		progressBar.setIndeterminate(visible);
+		progressBar.setVisible(visible);
 		if (!visible) {
 			progressBar.setCaption("");
 		}
@@ -883,7 +842,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									"Edit Collection Metadata",
 									collectionRef.getContentInfoSet(),
 									collectionRef.getResponsibleUser(),
-									membersByIdentfier.values(),
+									membersByIdentifier.values(),
 									new SaveCancelListener<Pair<String, ContentInfoSet>>() {
 										@Override
 										public void savePressed(Pair<String, ContentInfoSet> result) {
@@ -935,7 +894,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									"Edit Document Metadata",
 									documentRef.getSourceDocumentInfo().getContentInfoSet(),
 									documentRef.getSourceDocumentInfo().getTechInfoSet().getResponsibleUser(),
-									membersByIdentfier.values(),
+									membersByIdentifier.values(),
 									new SaveCancelListener<Pair<String, ContentInfoSet>>() {
 										@Override
 										public void savePressed(Pair<String, ContentInfoSet> result) {
@@ -1084,9 +1043,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						@Override
 						public void execute() {
 							EditTagsetDialog editTagsetDialog = new EditTagsetDialog(
-								new TagsetMetadata(tagsetToEdit.getName(), tagsetToEdit.getDescription(), tagsetToEdit.getResponsibleUser()),
-								membersByIdentfier.values(),
-								new SaveCancelListener<TagsetMetadata>() {
+									new TagsetMetadata(tagsetToEdit.getName(), tagsetToEdit.getDescription(), tagsetToEdit.getResponsibleUser()),
+									membersByIdentifier.values(),
+									new SaveCancelListener<TagsetMetadata>() {
 									@Override
 									public void savePressed(TagsetMetadata result) {
 										try {
@@ -1116,48 +1075,43 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleAddTagsetRequest() {
-    	
-    	SingleTextInputDialog tagsetNameDlg =
-    		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
-    				new SaveCancelListener<String>() {
-						
-						@Override
-						public void savePressed(String result) {
+		SingleTextInputDialog tagsetNameDlg = new SingleTextInputDialog(
+				"Create Tagset",
+				"Please enter the tagset name:",
+				new SaveCancelListener<String>() {
+					@Override
+					public void savePressed(String result) {
 							IDGenerator idGenerator = new IDGenerator();
-							TagsetDefinition tagset = new TagsetDefinition(
-									idGenerator.generateTagsetId(), result);
-							tagset.setResponsibleUser(project.getCurrentUser().getIdentifier());
-							project.getTagManager().addTagsetDefinition(
-								tagset);
-						}
-					});
-        	
-        tagsetNameDlg.show();
-    	
-	}
-	
-	private Set<SourceDocumentReference> getSelectedDocuments() {
-		@SuppressWarnings("unchecked")
-		TreeDataProvider<Resource> resourceDataProvider = 
-				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
-		
-    	Set<Resource> selectedResources = documentGrid.getSelectedItems();
-    	
-    	Set<SourceDocumentReference> selectedDocuments = new HashSet<>();
-    	
-    	for (Resource resource : selectedResources) {
-    		Resource root = 
-        			resourceDataProvider.getTreeData().getParent(resource);
+							TagsetDefinition tagsetDefinition = new TagsetDefinition(idGenerator.generateTagsetId(), result);
+							tagsetDefinition.setResponsibleUser(project.getCurrentUser().getIdentifier());
+							project.getTagManager().addTagsetDefinition(tagsetDefinition);
+					}
+				}
+		);
 
-    		if (root == null) {
-    			root = resource;
-    		}
-    		
-    		DocumentResource documentResource = (DocumentResource)root;
-    		selectedDocuments.add(documentResource.getDocument());
-    	}
-    	
-    	return selectedDocuments;
+		tagsetNameDlg.show();
+	}
+
+	private Set<SourceDocumentReference> getSelectedDocuments() {
+		Set<Resource> selectedResources = documentGrid.getSelectedItems();
+
+		Set<SourceDocumentReference> selectedSourceDocumentRefs = new HashSet<>();
+
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<Resource> resourceDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+
+		for (Resource resource : selectedResources) {
+			Resource root = resourceDataProvider.getTreeData().getParent(resource);
+
+			if (root == null) {
+				root = resource;
+			}
+
+			DocumentResource documentResource = (DocumentResource) root;
+			selectedSourceDocumentRefs.add(documentResource.getDocument());
+		}
+
+		return selectedSourceDocumentRefs;
 	}
 
 	private void handleAddCollectionRequest() {
@@ -1200,15 +1154,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void handleAddDocumentRequest() {
 		WizardContext wizardContext = new WizardContext();
 		wizardContext.put(DocumentWizard.WizardContextKey.PROJECT, project);
-		DocumentWizard documentWizard = new DocumentWizard(wizardContext, new SaveCancelListener<WizardContext>() {
-			@Override
-			public void savePressed(WizardContext result) {
-				
-				handleSaveDocumentWizardContext(result);
-			}
 
-		});
-		
+		DocumentWizard documentWizard = new DocumentWizard(
+				wizardContext,
+				new SaveCancelListener<WizardContext>() {
+					@Override
+					public void savePressed(WizardContext result) {
+						handleSaveDocumentWizardContext(result);
+					}
+
+				}
+		);
+
 		documentWizard.show();
 	}
 
@@ -1500,36 +1457,32 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleResourceItemClick(ItemClick<Resource> itemClickEvent) {
-    	if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
-    		Resource resource = itemClickEvent.getItem();
-    		
-    		@SuppressWarnings("unchecked")
-			TreeDataProvider<Resource> resourceDataProvider = 
-    				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
-    		
-    		Resource root = 
-    			resourceDataProvider.getTreeData().getParent(resource);
-    		Resource child = null;
-    		
-    		if (root == null) {
-    			root = resource;
-    		}
-    		else {
-    			child = resource;
-    		}
-    		
-    		if (root != null) {
-	    		SourceDocumentReference document = ((DocumentResource)root).getDocument();
-	    		AnnotationCollectionReference collectionReference = 
-	    			(child==null?null:((CollectionResource)child).getCollectionReference());
-	    		
-	    		eventBus.post(new RouteToAnnotateEvent(project, document, collectionReference));
-    		}
-    	}
-    }
-	
+		if (!itemClickEvent.getMouseEventDetails().isDoubleClick()) {
+			return;
+		}
 
-	/* build the GUI */
+		Resource resource = itemClickEvent.getItem();
+
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<Resource> resourceDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+
+		Resource root = resourceDataProvider.getTreeData().getParent(resource);
+		Resource child = null;
+
+		if (root == null) {
+			root = resource;
+		}
+		else {
+			child = resource;
+		}
+
+		if (root != null) {
+			SourceDocumentReference sourceDocumentRef = ((DocumentResource) root).getDocument();
+			AnnotationCollectionReference annotationCollectionRef = child == null ? null : ((CollectionResource) child).getCollectionReference();
+
+			eventBus.post(new RouteToAnnotateEvent(project, sourceDocumentRef, annotationCollectionRef));
+		}
+	}
 
 	private void initComponents() {
 		progressBar = new ProgressBar();
@@ -1537,61 +1490,57 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		progressBar.setVisible(false);
 		addComponent(progressBar);
 		setComponentAlignment(progressBar, Alignment.TOP_CENTER);
-		HorizontalFlexLayout mainPanel = new HorizontalFlexLayout();
-    	mainPanel.setFlexWrap(FlexWrap.WRAP);
-    	mainPanel.addStyleName("project-view-main-panel");
-    	VerticalFlexLayout resourcePanel = new VerticalFlexLayout();
-    	
-        resourcePanel.setSizeUndefined(); // don't set width 100%
-        resourcePanel.addComponent(new Label("Resources"));
 
-        mainPanel.addComponent(resourcePanel);
+		HorizontalFlexLayout mainLayout = new HorizontalFlexLayout();
+		mainLayout.setFlexWrap(FlexWrap.WRAP);
+		mainLayout.addStyleName("project-view-main-panel");
 
+		VerticalFlexLayout resourcesLayout = new VerticalFlexLayout();
+		resourcesLayout.setSizeUndefined(); // don't set width 100%
+		resourcesLayout.addComponent(new Label("Resources"));
 
-        addComponent(mainPanel);
-        setExpandRatio(mainPanel, 1.f);
-        
-        resourcePanel.addComponent(initResourceContent());
-        
-        teamPanel = new VerticalFlexLayout();
-        teamPanel.setSizeUndefined(); // don't set width 100%
-        teamPanel.setVisible(false);
-        teamPanel.addComponent(new Label("Team"));
-        
-        mainPanel.addComponent(teamPanel);
-        teamPanel.addComponent(initTeamContent());
-        
-        btSynchronize = new IconButton(VaadinIcons.SHARE);
-        btSynchronize.setDescription("Synchronize with the Team");
-        
-        getHugeCardBar().addComponentBeforeMoreOptions(btSynchronize);
-        
-        btSynchLatestContribToggle = new IconButton(VaadinIcons.ROAD_BRANCH);
-        btSynchLatestContribToggle.setData(false);
-        getHugeCardBar().addComponentBeforeMoreOptions(btSynchLatestContribToggle);
-        btSynchLatestContribToggle.setDescription(
-        		"Switch between 'Latest Contributions' view and 'Synchronized' view");
+		resourcesLayout.addComponent(initResourcesContent());
 
-        //TODO: set visibility according to project role
-    }
+		mainLayout.addComponent(resourcesLayout);
 
-    private void handleProjectInvitationRequest() {
+		teamLayout = new VerticalFlexLayout();
+		teamLayout.setSizeUndefined(); // don't set width 100%
+		teamLayout.setVisible(false);
+		teamLayout.addComponent(new Label("Team"));
+
+		teamLayout.addComponent(initTeamContent());
+
+		mainLayout.addComponent(teamLayout);
+
+		addComponent(mainLayout);
+		setExpandRatio(mainLayout, 1.f);
+
+		btnSynchronize = new IconButton(VaadinIcons.SHARE);
+		btnSynchronize.setDescription("Synchronize with the Team");
+		getHugeCardBar().addComponentBeforeMoreOptions(btnSynchronize);
+
+		btnToggleViewSynchronizedOrLatestContributions = new IconButton(VaadinIcons.ROAD_BRANCH);
+		btnToggleViewSynchronizedOrLatestContributions.setData(false); // default is synchronized view, false = synchronized, true = latest contributions
+		btnToggleViewSynchronizedOrLatestContributions.setDescription("Switch between 'Synchronized' view and 'Latest Contributions' view");
+		getHugeCardBar().addComponentBeforeMoreOptions(btnToggleViewSynchronizedOrLatestContributions);
+	}
+
+	private void handleProjectInvitationRequest() {
 		@SuppressWarnings("unchecked")
-		TreeDataProvider<Resource> resourceDataProvider = 
-				(TreeDataProvider<Resource>) documentGrid.getDataProvider();
-		
-		List<DocumentResource> documentsWithWriteAccess = 
-			resourceDataProvider.getTreeData().getRootItems()
-			.stream()
-			.filter(resource -> resource instanceof DocumentResource)
-			.map(resource -> (DocumentResource)resource)
-			.collect(Collectors.toList());
-		
+		TreeDataProvider<Resource> resourceDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+
+		List<DocumentResource> documentResources = resourceDataProvider.getTreeData().getRootItems()
+				.stream()
+				.filter(resource -> resource instanceof DocumentResource)
+				.map(resource -> (DocumentResource) resource)
+			 	.collect(Collectors.toList());
+
 		new ProjectInvitationDialog(
-        			project, 
-        			documentsWithWriteAccess,
-        			eventBus, 
-        			((CatmaApplication)UI.getCurrent()).getHazelCastService()).show();
+				project,
+				documentResources,
+				eventBus,
+				((CatmaApplication) UI.getCurrent()).getHazelCastService()
+		).show();
 	}
 
 	private void handleCommitRequest() {
@@ -1600,132 +1549,116 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				Notification.show("Info", "There are no uncommitted changes", Notification.Type.HUMANIZED_MESSAGE);
 				return;
 			}
-
-			SingleTextInputDialog dlg = new SingleTextInputDialog(
-					"Commit All Changes",
-					"Please enter a short description for this commit:",
-					commitMsg -> {
-						try {
-							project.commitAndPushChanges(commitMsg);
-							Notification.show("Info", "Your changes have been committed", Notification.Type.HUMANIZED_MESSAGE);
-						}
-						catch (IOException e) {
-							errorHandler.showAndLogError("Failed to commit changes", e);
-						}
-					}
-			);
-			dlg.show();
 		}
 		catch (Exception e) {
 			errorHandler.showAndLogError("Failed to check for uncommitted changes", e);
+			return;
 		}
+
+		SingleTextInputDialog dlg = new SingleTextInputDialog(
+				"Commit All Changes",
+				"Please enter a short description for this commit:",
+				commitMsg -> {
+					try {
+						project.commitAndPushChanges(commitMsg);
+						Notification.show("Info", "Your changes have been committed", Notification.Type.HUMANIZED_MESSAGE);
+					}
+					catch (IOException e) {
+						errorHandler.showAndLogError("Failed to commit changes", e);
+					}
+				}
+		);
+		dlg.show();
 	}
 
-	/**
-     * initialize the resource part
-     * @return
-     */
-    private Component initResourceContent() {
-    	HorizontalFlexLayout resourceContent = new HorizontalFlexLayout();
-    	documentGrid = TreeGridFactory.createDefaultTreeGrid();
-        documentGrid.addStyleNames(
-				"flat-undecorated-icon-buttonrenderer"); //$NON-NLS-1$ 
+	private final Function<Resource, String> buildResourceNameHtml = (resource) -> {
+		StringBuilder sb = new StringBuilder()
+				.append("<div class='documentsgrid__doc'>")
+				.append("<div class='documentsgrid__doc__title")
+				.append(resource.isContribution() ? " documentsgrid__doc__contrib'>" : "'>")
+				.append(resource.getName())
+				.append("</div>");
 
-        documentGrid.setHeaderVisible(false);
-        documentGrid.setRowHeight(45);
+		if (resource.hasDetail()) {
+			sb.append("<span class='documentsgrid__doc__author'>")
+					.append(resource.getDetail())
+					.append("</span>");
+		}
 
-		documentGrid
-			.addColumn(resource -> resource.getIcon(), new HtmlRenderer())
-			.setWidth(100);
-        
-		Function<Resource,String> buildNameFunction = (resource) -> {
-			StringBuilder sb = new StringBuilder()
-			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
-		      .append("<div class='documentsgrid__doc__title") //$NON-NLS-1$
-		      .append(resource.isContribution()?" documentsgrid__doc_contrib'> ":"'> ")
-		      .append(resource.getName())
-		      .append("</div>"); //$NON-NLS-1$
-			if(resource.hasDetail()){
-		        sb
-		        .append("<span class='documentsgrid__doc__author'> ") //$NON-NLS-1$
-		        .append(resource.getDetail())
-		        .append("</span>"); //$NON-NLS-1$
-			}
-			sb.append("</div>"); //$NON-NLS-1$
-				        
-		    return sb.toString();
-		};
-		
-		Function<Resource,String> buildResponsibleFunction = (resource) -> {
-			
-			if (resource.getResponsibleUser() == null) {
-				return "";
-			}
-			
-			StringBuilder sb = new StringBuilder()
-			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
-		      .append(resource.getResponsibleUser())
-		      .append("</div>"); //$NON-NLS-1$
-			sb.append("</div>"); //$NON-NLS-1$
-				        
-		    return sb.toString();
-		};
-		
-        documentGrid
-        	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
-        	.setCaption("Name")
-        	.setId(DocumentGridColumn.NAME.name());
-        	
-        documentGrid
-		  	.addColumn(res -> buildResponsibleFunction.apply(res), new HtmlRenderer())
-		  	.setCaption("Responsible")
-		  	.setId(DocumentGridColumn.RESPONSIBLE.name())
-		  	.setExpandRatio(1)
-		  	.setHidden(false);
+		sb.append("</div>");
 
-        Label documentsAnnotations = new Label("Documents & Annotations");
+		return sb.toString();
+	};
 
-        documentGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
-                documentsAnnotations,
-                documentGrid
-        );
-        documentGridComponent.addStyleName("project-view-action-grid"); //$NON-NLS-1$
+	private final Function<Resource, String> buildResourceResponsibilityHtml = (resource) -> {
+		if (resource.getResponsibleUser() == null) {
+			return "";
+		}
 
-        resourceContent.addComponent(documentGridComponent);
+		return String.format("<div class='documentsgrid__doc'>%s</div>", resource.getResponsibleUser());
+	};
 
-        tagsetGrid = new Grid<>();
-        tagsetGrid.setHeaderVisible(false);
-        tagsetGrid.setWidth("400px"); //$NON-NLS-1$
+	private Component initResourcesContent() {
+		HorizontalFlexLayout resourcesContentLayout = new HorizontalFlexLayout();
 
-        tagsetGrid.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer()).setWidth(100);
-		tagsetGrid
-			.addColumn(tagset -> tagset.getName())
-			.setId(TagsetGridColumn.NAME.name())
-			.setStyleGenerator(tagset -> tagset.isContribution()?"project-view-tagset-with-contribution":null)
-			.setCaption("Name");
-	
-		tagsetGrid
-		  	.addColumn(tagset -> 
-		  		tagset.getResponsibleUser() == null?
-		  				"Not assigned"
-		  				:this.membersByIdentfier.get(tagset.getResponsibleUser()))
-		  	.setCaption("Responsible")
-		  	.setId(TagsetGridColumn.RESPONSIBLE.name())
-		  	.setExpandRatio(1)
-		  	.setHidden(true)
-		  	.setHidable(true);
+		documentGrid = TreeGridFactory.createDefaultTreeGrid();
+		documentGrid.addStyleNames("flat-undecorated-icon-buttonrenderer");
+		documentGrid.setHeaderVisible(false);
+		documentGrid.setRowHeight(45);
 
-        Label tagsetsAnnotations = new Label("Tagsets");
-        tagsetGridComponent = new ActionGridComponent<Grid<TagsetDefinition>> (
-                tagsetsAnnotations,
-                tagsetGrid
-        );
+		documentGrid.addColumn(Resource::getIcon, new HtmlRenderer())
+				.setWidth(100);
 
-        tagsetGridComponent.addStyleName("project-view-action-grid"); //$NON-NLS-1$
-        
-        resourceContent.addComponent(tagsetGridComponent);
-        return resourceContent;
-    }
+		documentGrid.addColumn(buildResourceNameHtml::apply, new HtmlRenderer())
+				.setId(DocumentGridColumn.NAME.name())
+				.setCaption("Name");
+
+		documentGrid.addColumn(buildResourceResponsibilityHtml::apply, new HtmlRenderer())
+				.setId(DocumentGridColumn.RESPONSIBLE.name())
+				.setCaption("Responsible")
+				.setExpandRatio(1)
+				.setHidden(false);
+
+		documentGridComponent = new ActionGridComponent<>(
+				new Label("Documents & Annotations"),
+				documentGrid
+		);
+		documentGridComponent.addStyleName("project-view-action-grid");
+
+		resourcesContentLayout.addComponent(documentGridComponent);
+
+		tagsetGrid = new Grid<>();
+		tagsetGrid.setHeaderVisible(false);
+		tagsetGrid.setWidth("400px");
+
+		tagsetGrid.addColumn(tagsetDefinition -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())
+				.setWidth(100);
+
+		tagsetGrid.addColumn(TagsetDefinition::getName)
+				.setId(TagsetGridColumn.NAME.name())
+				.setCaption("Name")
+				.setStyleGenerator(tagsetDefinition -> tagsetDefinition.isContribution() ? "project-view-tagset-with-contribution" : null);
+
+		tagsetGrid.addColumn(
+				tagsetDefinition -> tagsetDefinition.getResponsibleUser() == null ?
+						"Not assigned" : membersByIdentifier.get(tagsetDefinition.getResponsibleUser())
+				)
+				.setId(TagsetGridColumn.RESPONSIBLE.name())
+				.setCaption("Responsible")
+				.setExpandRatio(1)
+				.setHidden(true)
+				.setHidable(true);
+
+		tagsetGridComponent = new ActionGridComponent<>(
+				new Label("Tagsets"),
+				tagsetGrid
+		);
+		tagsetGridComponent.addStyleName("project-view-action-grid");
+
+		resourcesContentLayout.addComponent(tagsetGridComponent);
+
+		return resourcesContentLayout;
+	}
 
 	private Component initTeamContent() {
 		HorizontalFlexLayout teamContent = new HorizontalFlexLayout();
@@ -1759,7 +1692,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		moreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
 		moreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
-		miInvite = moreOptionsContextMenu.addItem("Invite Someone to the Project", (selectedItem) -> handleProjectInvitationRequest());
+		moreOptionsContextMenu.addItem("Invite Someone to the Project", (selectedItem) -> handleProjectInvitationRequest());
 
 		teamContent.addComponent(membersGridComponent);
 		return teamContent;
@@ -1854,248 +1787,231 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 	}
 
-	/**
-     * @param projectReference 
-     */
-    public void reloadProject(ProjectReference projectReference) {
-    	if (this.project == null) {
-    		setProjectReference(projectReference);
-    	}
-    	else {
-	    	setEnabled(false);
-	    	setProgressBarVisible(true);
-	    	
-	    	final UI ui = UI.getCurrent();
-	        this.project.open(new OpenProjectListener() {
-	
-	            @Override
-	            public void progress(String msg, Object... params) {
-	            	ui.access(() -> {
-		            	if (params != null) {
-		            		progressBar.setCaption(String.format(msg, params));
-		            	}
-		            	else {
-		            		progressBar.setCaption(msg);
-		            	}
-		            	ui.push();
-	            	});
-	            }
-	
-	            @Override
-	            public void ready(Project project) {
-	            	setProgressBarVisible(false);
-	                ProjectView.this.project = project;
-	                ProjectView.this.project.addEventListener(
-	                		ProjectEvent.exceptionOccurred,
-	                		projectExceptionListener);
-	                
-	                ProjectView.this.project.getTagManager().addPropertyChangeListener(
-	                		TagManagerEvent.tagsetDefinitionChanged,
-	                		tagsetChangeListener);
-	                
-	                setEnabled(true);
-	                reloadAll();
-	            }
-	            
-	            @Override
-	            public void failure(Throwable t) {
-	            	setProgressBarVisible(false);
-	            	setEnabled(true);
-	                errorHandler.showAndLogError("Error opening project", t);
-	            }
-	        });
-    	}
-    }
-    
-	/**
-     * @param projectReference
-     */
-    private void initProject(ProjectReference projectReference) {
-    	setEnabled(false);
-    	setProgressBarVisible(true);
-    	
-    	final UI ui = UI.getCurrent();
-        projectManager.openProject(projectReference, tagManager, new OpenProjectListener() {
+	public void reloadProject(ProjectReference projectReference) {
+		if (project == null) {
+			setProjectReference(projectReference);
+			return;
+		}
 
-            @Override
-            public void progress(String msg, Object... params) {
-            	ui.access(() -> {
-	            	if (params != null) {
-	            		progressBar.setCaption(String.format(msg, params));
-	            	}
-	            	else {
-	            		progressBar.setCaption(msg);
-	            	}
-	            	ui.push();
-            	});
-            }
+		setEnabled(false);
+		setProgressBarVisible(true);
 
-            @Override
-            public void ready(Project project) {
-            	setProgressBarVisible(false);
-                ProjectView.this.project = project;
-                ProjectView.this.project.addEventListener(
-                		ProjectEvent.exceptionOccurred,
-                		projectExceptionListener);
-                
-                ProjectView.this.project.getTagManager().addPropertyChangeListener(
-                		TagManagerEvent.tagsetDefinitionChanged,
-                		tagsetChangeListener);
-                setEnabled(true);
-                reloadAll();
-            }
+		final UI ui = UI.getCurrent();
 
-            @Override
-            public void failure(Throwable t) {
-            	setProgressBarVisible(false);
-            	setEnabled(true);
-                errorHandler.showAndLogError("Error opening project", t);
-            }
-        });
-    }
+		project.open(new OpenProjectListener() {
+			@Override
+			public void progress(String msg, Object... params) {
+				ui.access(() -> {
+					if (params != null) {
+						progressBar.setCaption(String.format(msg, params));
+					}
+					else {
+						progressBar.setCaption(msg);
+					}
+					ui.push();
+				});
+			}
 
-    private void initData() {
-        try {
-        	Set<Member> projectMembers = project.getProjectMembers();
-        	this.membersByIdentfier = 
-        		projectMembers.stream()
-        			.collect(Collectors.toMap(
-        					Member::getIdentifier, 
-        					Function.identity()));
+			@Override
+			public void ready(Project project) {
+				ProjectView.this.project = project;
 
-        	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
-        	documentGrid.setDataProvider(resourceDataProvider);
-        	documentGrid.sort(DocumentGridColumn.NAME.name());
-        	documentGrid.expand(resourceDataProvider.getTreeData().getRootItems());
-        	
-        	tagsetData = new ListDataProvider<>(project.getTagsets());
-        	tagsetGrid.setDataProvider(tagsetData);
-        	
-        	ListDataProvider<Member> memberData = new ListDataProvider<>(projectMembers);
-        	teamGrid.setDataProvider(memberData);
-        	tagsetGrid.sort(TagsetGridColumn.NAME.name());
-		} catch (Exception e) {
-			errorHandler.showAndLogError("Error initializing data", e);
+				ProjectView.this.project.addEventListener(
+						ProjectEvent.exceptionOccurred,
+						projectExceptionListener
+				);
+
+				ProjectView.this.project.getTagManager().addPropertyChangeListener(
+						TagManagerEvent.tagsetDefinitionChanged,
+						tagsetChangeListener
+				);
+
+				setProgressBarVisible(false);
+				reloadAll();
+				setEnabled(true);
+			}
+
+			@Override
+			public void failure(Throwable t) {
+				setProgressBarVisible(false);
+				setEnabled(true);
+				errorHandler.showAndLogError("Failed to reload project", t);
+			}
+		});
+	}
+
+	private void initProject(ProjectReference projectReference) {
+		setEnabled(false);
+		setProgressBarVisible(true);
+
+		final UI ui = UI.getCurrent();
+
+		projectsManager.openProject(projectReference, tagManager, new OpenProjectListener() {
+			@Override
+			public void progress(String msg, Object... params) {
+				ui.access(() -> {
+					if (params != null) {
+						progressBar.setCaption(String.format(msg, params));
+					}
+					else {
+						progressBar.setCaption(msg);
+					}
+					ui.push();
+				});
+			}
+
+			@Override
+			public void ready(Project project) {
+				ProjectView.this.project = project;
+
+				ProjectView.this.project.addEventListener(
+						ProjectEvent.exceptionOccurred,
+						projectExceptionListener
+				);
+
+				ProjectView.this.project.getTagManager().addPropertyChangeListener(
+						TagManagerEvent.tagsetDefinitionChanged,
+						tagsetChangeListener
+				);
+
+				setProgressBarVisible(false);
+				reloadAll();
+				setEnabled(true);
+			}
+
+			@Override
+			public void failure(Throwable t) {
+				setProgressBarVisible(false);
+				setEnabled(true);
+				errorHandler.showAndLogError("Failed to open project", t);
+			}
+		});
+	}
+
+	private void initData() {
+		try {
+			Set<Member> projectMembers = project.getProjectMembers();
+
+			membersByIdentifier = projectMembers.stream()
+					.collect(Collectors.toMap(Member::getIdentifier, Function.identity()));
+
+			TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider();
+			documentGrid.setDataProvider(resourceDataProvider);
+			documentGrid.sort(DocumentGridColumn.NAME.name());
+			documentGrid.expand(resourceDataProvider.getTreeData().getRootItems());
+
+			tagsetData = new ListDataProvider<>(project.getTagsets());
+			tagsetGrid.setDataProvider(tagsetData);
+			tagsetGrid.sort(TagsetGridColumn.NAME.name());
+
+			ListDataProvider<Member> memberData = new ListDataProvider<>(projectMembers);
+			teamGrid.setDataProvider(memberData);
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Failed to initialize data", e);
 		}
 	}
 
-    private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
-        if(project != null){
-            TreeData<Resource> treeData = new TreeData<>();
-            Collection<SourceDocumentReference> srcDocs = project.getSourceDocumentReferences();
-            Locale locale = Locale.getDefault();
-            for(SourceDocumentReference srcDoc : srcDocs) {
-            	locale = 
-            		srcDoc.getSourceDocumentInfo().getIndexInfoSet().getLocale();
-            	
-                DocumentResource docResource = 
-                		new DocumentResource(
-                			srcDoc, 
-                			project.getId(),
-                			srcDoc.getResponsibleUser()!= null?
-            						membersByIdentfier.get(srcDoc.getResponsibleUser())
-            						:null);
-                
-                treeData.addItem(null, docResource);
-                
-                List<AnnotationCollectionReference> collections = 
-                		srcDoc.getUserMarkupCollectionRefs();
-                
-            	List<Resource> collectionResources = collections
-        		.stream()
-        		.filter(collectionRef -> 
-        			!miToggleResponsibiltityFilter.isChecked() 
-        			|| collectionRef.isResponsible(project.getCurrentUser().getIdentifier()))
-        		.map(collectionRef -> 
-        			new CollectionResource(
-        				collectionRef, 
-        				project.getId(),
-        				collectionRef.getResponsibleUser()!= null?
-        						membersByIdentfier.get(collectionRef.getResponsibleUser())
-        						:null)
-        		)
-        		.collect(Collectors.toList());
-        		
-                
-                if(!collections.isEmpty()){
-                	
-                    treeData.addItems(
-                    	docResource,
-                    	collectionResources
-                    );
-                }
-            }
-            Collator collator = Collator.getInstance(locale);
-            collator.setStrength(Collator.PRIMARY);
-            documentGrid
-            	.getColumn(DocumentGridColumn.NAME.name())
-            	.setComparator((r1, r2) -> collator.compare(r1.getName(), r2.getName()));
-            tagsetGrid.getColumn(TagsetGridColumn.NAME.name())
-            .setComparator((t1, t2) -> collator.compare(t1.getName(), t2.getName()));
-            
-            return new TreeDataProvider<>(treeData);
-        }
-        return new TreeDataProvider<>(new TreeData<>());
-    }
+	private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
+		if (project == null) {
+			return new TreeDataProvider<>(new TreeData<>());
+		}
 
-    /* Event handler */
+		Collection<SourceDocumentReference> sourceDocumentRefs = project.getSourceDocumentReferences();
 
-    /**
-     * reloads all data in this view
-     */
-    @Override
-    public void reloadAll() {
+		TreeData<Resource> treeData = new TreeData<>();
 
-        boolean membersEditAllowed = 
-        		projectManager.isAuthorizedOnProject(
-						projectReference, RBACPermission.PROJECT_MEMBERS_EDIT);
-        miInvite.setVisible(membersEditAllowed);
-        teamPanel.setVisible(membersEditAllowed);
-        
+		for (SourceDocumentReference sourceDocumentRef : sourceDocumentRefs) {
+			DocumentResource documentResource = new DocumentResource(
+						sourceDocumentRef,
+						project.getId(),
+						sourceDocumentRef.getResponsibleUser() != null ?
+								membersByIdentifier.get(sourceDocumentRef.getResponsibleUser()) : null
+			);
+			treeData.addItem(null, documentResource);
+
+			List<AnnotationCollectionReference> annotationCollectionRefs = sourceDocumentRef.getUserMarkupCollectionRefs();
+
+			List<Resource> collectionResources = annotationCollectionRefs.stream()
+					.filter(annotationCollectionRef ->
+									!miToggleResponsibilityFilter.isChecked() ||
+											annotationCollectionRef.isResponsible(project.getCurrentUser().getIdentifier())
+					)
+					.map(annotationCollectionRef -> new CollectionResource(
+							annotationCollectionRef,
+							project.getId(),
+							annotationCollectionRef.getResponsibleUser() != null ?
+									membersByIdentifier.get(annotationCollectionRef.getResponsibleUser()) : null
+					))
+					.collect(Collectors.toList());
+
+			if (!collectionResources.isEmpty()) {
+				treeData.addItems(
+					documentResource,
+					collectionResources
+				);
+			}
+		}
+
+		// do a locale-specific sort, assuming that all documents share the same locale
+		Optional<SourceDocumentReference> optionalFirstDocument = sourceDocumentRefs.stream().findFirst();
+		Locale locale = optionalFirstDocument.isPresent() ?
+				optionalFirstDocument.get().getSourceDocumentInfo().getIndexInfoSet().getLocale() : Locale.getDefault();
+
+		Collator collator = Collator.getInstance(locale);
+		collator.setStrength(Collator.PRIMARY);
+
+		documentGrid.getColumn(DocumentGridColumn.NAME.name()).setComparator(
+				(r1, r2) -> collator.compare(r1.getName(), r2.getName())
+		);
+		tagsetGrid.getColumn(TagsetGridColumn.NAME.name()).setComparator(
+				(t1, t2) -> collator.compare(t1.getName(), t2.getName())
+		);
+
+		return new TreeDataProvider<>(treeData);
+	}
+
+	@Override
+	public void reloadAll() {
+		boolean isMembersEditAllowed = projectsManager.isAuthorizedOnProject(projectReference, RBACPermission.PROJECT_MEMBERS_EDIT);
+		teamLayout.setVisible(isMembersEditAllowed);
+
 		initData();
-		toggleProjectReadOnly();
+
+		setControlsStateBasedOnProjectReadOnlyState();
+
 		eventBus.post(new ProjectReadyEvent(project));
-    	try {
-			rbacEnforcer.enforceConstraints(project.getCurrentUserProjectRole());
-		} catch (IOException e) {
-			errorHandler.showAndLogError("Error trying to fetch role", e);
-		}        
-    }
+	}
 
-    /**
-     * handler for project selection
-     */
-    public void setProjectReference(ProjectReference projectReference) {
-        this.projectReference = projectReference;
-        eventBus.post(new HeaderContextChangeEvent(projectReference.getName()));
-        initProject(projectReference);
-    }
+	public void setProjectReference(ProjectReference projectReference) {
+		this.projectReference = projectReference;
+		eventBus.post(new HeaderContextChangeEvent(projectReference.getName()));
+		initProject(projectReference);
+	}
 
-    /**
-     * called when {@link ProjectChangedEvent} is fired when the project's name changes and if members join
-     * @param resourcesChangedEvent
-     */
-    @Subscribe
-    public void handleResourceChanged(ProjectChangedEvent resourcesChangedEvent){
-    	reloadAll();
-    }
-    
+	// called when a project is created, deleted, renamed, joined or left
+	// TODO: is this even relevant here (as ProjectView and dashboard components never exist simultaneously)?
+	@Subscribe
+	public void handleProjectChanged(ProjectChangedEvent projectChangedEvent){
+		reloadAll();
+	}
+
 	@Subscribe
 	public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
 		// TODO: do we really need to re-init everything?
 		initData();
 	}
 
-    @Subscribe
-    public void handleMembersChanged(MembersChangedEvent membersChangedEvent) {
-    	try {
-	    	ListDataProvider<Member> memberData = new ListDataProvider<>(project.getProjectMembers());
-	    	teamGrid.setDataProvider(memberData);
-    	}
-    	catch (Exception e) {
-    		errorHandler.showAndLogError("Error loading members", e);
-    	}
-    }
+	@Subscribe
+	public void handleMembersChanged(MembersChangedEvent membersChangedEvent) {
+		try {
+			ListDataProvider<Member> memberListDataProvider = new ListDataProvider<>(project.getProjectMembers());
+			teamGrid.setDataProvider(memberListDataProvider);
+		}
+		catch (IOException e) {
+			errorHandler.showAndLogError("Failed to load project members", e);
+		}
+	}
 
 	private void handleDeleteResources(TreeGrid<Resource> resourceGrid) {
 		final Set<Resource> selectedResources = resourceGrid.getSelectedItems();
@@ -2213,51 +2129,55 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	public void close() {
 		try {
-			this.eventBus.unregister(this);
+			eventBus.unregister(this);
+
 			if (projectResourceExportApiDialog != null) {
 				projectResourceExportApiDialog.removeRequestHandlerFromVaadinService();
 			}
+
 			if (project != null) {
 				if (projectExceptionListener != null) {
 					project.removeEventListener(
-						ProjectEvent.exceptionOccurred,
-						projectExceptionListener);
+							ProjectEvent.exceptionOccurred,
+							projectExceptionListener
+					);
 				}
-				
-				if (tagsetChangeListener != null) {
-	                ProjectView.this.project.getTagManager().removePropertyChangeListener(
-	                		TagManagerEvent.tagsetDefinitionChanged,
-	                		tagsetChangeListener);
-				}				
 
-			}		
-			if (project != null) {
+				if (tagsetChangeListener != null) {
+					project.getTagManager().removePropertyChangeListener(
+							TagManagerEvent.tagsetDefinitionChanged,
+							tagsetChangeListener
+					);
+				}
+
 				project.close();
 				project = null;
 			}
 		}
 		catch (Exception e) {
-			errorHandler.showAndLogError("Error closing ProjectView", e);
+			errorHandler.showAndLogError("Failed to close ProjectView", e);
 		}
 	}
-	
+
 	private SerializablePredicate<Object> createDocumentGridComponentSearchFilterProvider(String searchInput) {
 		@SuppressWarnings("unchecked")
-		TreeDataProvider<Resource> documentDataProvider = (TreeDataProvider<Resource>)documentGrid.getDataProvider();
-		TreeData<Resource> documentData = documentDataProvider.getTreeData();
+		TreeDataProvider<Resource> resourceDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+		TreeData<Resource> resourceData = resourceDataProvider.getTreeData();
 
 		return new SerializablePredicate<Object>() {
 			@Override
 			public boolean test(Object obj) {
+				boolean isMatch = obj.toString().toLowerCase().contains(searchInput.toLowerCase());
+
 				if (obj instanceof CollectionResource) {
-					return obj.toString().toLowerCase().contains(searchInput.toLowerCase());
+					return isMatch;
 				}
-				else {
-					if (obj.toString().toLowerCase().contains(searchInput.toLowerCase())) {
+				else { // it's a document
+					if (isMatch) {
 						return true;
 					}
-					else {
-						return documentData.getChildren((Resource)obj).stream().anyMatch(
+					else { // check child collections
+						return resourceData.getChildren((Resource) obj).stream().anyMatch(
 								child -> child.toString().toLowerCase().contains(searchInput.toLowerCase())
 						);
 					}
@@ -2281,7 +2201,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleShareProjectResources() {
 		if (projectResourceExportApiDialog == null) {
-			projectResourceExportApiDialog = new ProjectResourceExportApiDialog(this.project);
+			projectResourceExportApiDialog = new ProjectResourceExportApiDialog(project);
 		}
 		projectResourceExportApiDialog.show();
 	}

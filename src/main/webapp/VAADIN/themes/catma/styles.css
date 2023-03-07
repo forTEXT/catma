@@ -18221,7 +18221,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	justify-content: center;
 }
 
-.catma .documentsgrid__doc_contrib {
+.catma .documentsgrid__doc__contrib {
 	color: blue;
 }
 
