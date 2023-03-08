@@ -59,7 +59,6 @@ import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.MembersChangedEvent;
-import de.catma.ui.events.ProjectChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToTagsEvent;
@@ -1987,13 +1986,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		this.projectReference = projectReference;
 		eventBus.post(new HeaderContextChangeEvent(projectReference.getName()));
 		initProject(projectReference);
-	}
-
-	// called when a project is created, deleted, renamed, joined or left
-	// TODO: is this even relevant here (as ProjectView and dashboard components never exist simultaneously)?
-	@Subscribe
-	public void handleProjectChanged(ProjectChangedEvent projectChangedEvent){
-		reloadAll();
 	}
 
 	@Subscribe

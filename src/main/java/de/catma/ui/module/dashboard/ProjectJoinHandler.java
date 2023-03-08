@@ -8,7 +8,7 @@ import com.vaadin.ui.UI;
 
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.JoinedProjectMessage;
-import de.catma.ui.events.ProjectChangedEvent;
+import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.module.project.ProjectInvitation;
 
 public class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage> {
@@ -33,7 +33,7 @@ public class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage> 
 	@Override
 	public void uiOnMessage(Message<JoinedProjectMessage> message) {
 		if(message.getMessageObject().getInvitation().getKey() == this.invitation.getKey()) {	
-			this.eventBus.post(new ProjectChangedEvent());
+			this.eventBus.post(new ProjectsChangedEvent());
 			Notification.show(
 					"Joined successfully",
 					String.format("Successfully joined project \"%s\"", invitation.getName()),

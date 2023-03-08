@@ -19,7 +19,7 @@ import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.ui.component.IconButton;
-import de.catma.ui.events.ProjectChangedEvent;
+import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
@@ -126,7 +126,7 @@ public class ProjectCard extends VerticalFlexLayout  {
                     try {
                         if(evt.isConfirmed()){
                         	projectManager.deleteProject(projectReference);
-                        	eventBus.post(new ProjectChangedEvent(projectReference.getProjectId()));
+                        	eventBus.post(new ProjectsChangedEvent(projectReference.getProjectId()));
                         }
                     } catch (Exception e) {
                         errorLogger.showAndLogError(String.format("Can't delete project \"%s\"", projectReference.getName()), e);
@@ -143,11 +143,10 @@ public class ProjectCard extends VerticalFlexLayout  {
         			result -> {
         				try {
 							projectManager.updateProjectMetadata(result);
-							descriptionLabel.setValue(result.getDescription());
 							nameLabel.setValue(result.getName());
+							descriptionLabel.setValue(result.getDescription());
 						} catch (IOException e) {
 							errorLogger.showAndLogError("Failed to update project", e);
-							eventBus.post(new ProjectChangedEvent());
 						}
         			}).show();
         });
@@ -164,11 +163,11 @@ public class ProjectCard extends VerticalFlexLayout  {
                    try {
                        if(evt.isConfirmed()) {
                     	   projectManager.leaveProject(projectReference);
+						   eventBus.post(new ProjectsChangedEvent());
                        }
                    } catch (Exception e) {
                        errorLogger.showAndLogError(String.format("Can't leave project \"%s\"", projectReference.getName()), e);
                    }
-                   eventBus.post(new ProjectChangedEvent());
                });
            })
 		
