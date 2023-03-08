@@ -18315,7 +18315,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 }
 
-.catma .projectlist__card__descriptionbar {
+.catma .projectlist__card__title-and-actions {
 	padding: 10px;
 }
 
