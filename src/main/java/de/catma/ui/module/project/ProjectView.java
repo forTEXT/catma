@@ -213,6 +213,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleTagsetChange(PropertyChangeEvent evt) {
+		// TODO: stop calling refreshAll and work directly with the data source to add/remove items
+		//       also see handleDocumentChanged, handleCollectionChanged & toggleResponsibilityFilter
+
 		Object oldValue = evt.getOldValue();
 		Object newValue = evt.getNewValue();
 
@@ -220,7 +223,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			tagsetData.refreshAll();
 		}
 		else if (newValue == null) { // removal
-			tagsetGrid.deselect((TagsetDefinition) oldValue); // TODO: why bother if the data provider is about to be refreshed anyway?
 			tagsetData.refreshAll();
 		}
 		else { // metadata update
@@ -231,10 +233,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	@Subscribe
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
+		// TODO: stop calling initData and work directly with the data source to add/update/remove items (will require some changes to the Resource types)
+		//       also see handleDocumentChanged, handleTagsetChange & toggleResponsibilityFilter
+
 		if (!collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
 			// ChangeType.UPDATED or DELETED
-			// TODO: do we really need to re-init on updates or deletes?
-			//       also see handleDocumentChanged & handleTagsetChange
 			initData();
 			return;
 		}
@@ -496,7 +499,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void toggleResponsibilityFilter() {
 		documentGrid.getColumn(DocumentGridColumn.RESPONSIBLE.name()).setHidden(miToggleResponsibilityFilter.isChecked());
-		documentGrid.getColumn(DocumentGridColumn.NAME.name()).setWidth(miToggleResponsibilityFilter.isChecked() ? 300 : 200);
+
+		// TODO: stop calling initData and work directly with the data source to add/remove items (will require some changes to the Resource types)
+		//       also see handleDocumentChanged, handleCollectionChanged & handleTagsetChange
+		// will filter out collections that the user isn't responsible for if miToggleResponsibilityFilter.isChecked()
+		// (via buildResourceDataProvider)
 		initData();
 	}
 
@@ -857,9 +864,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 														String.format("Failed to update collection \"%s\"", collectionRef.getName()),
 														e
 												);
-												// TODO: why are we doing this here?
-												//       (at all, and not for documents in handleEditDocument or tagsets in handleEditTagsetRequest)
-												reloadAll();
+
+												// this is only called because the ContentInfoSet is updated directly by EditResourceDialog
+												// and we don't currently have a better way to restore the old values; TODO: improve
+												initData();
 											}
 										}
 									}
@@ -912,6 +920,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 														),
 														e
 												);
+
+												// this is only called because the ContentInfoSet is updated directly by EditResourceDialog
+												// and we don't currently have a better way to restore the old values; TODO: improve
+												initData();
 											}
 										}
 									}
@@ -1972,10 +1984,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	@Override
 	public void reloadAll() {
+		initData();
+
 		boolean isMembersEditAllowed = projectsManager.isAuthorizedOnProject(projectReference, RBACPermission.PROJECT_MEMBERS_EDIT);
 		teamLayout.setVisible(isMembersEditAllowed);
-
-		initData();
 
 		setControlsStateBasedOnProjectReadOnlyState();
 
@@ -1990,7 +2002,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	@Subscribe
 	public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
-		// TODO: do we really need to re-init everything?
+		// TODO: stop calling initData and work directly with the data source to add/update/remove items (will require some changes to the Resource types)
+		//       also see handleCollectionChanged, handleTagsetChange & toggleResponsibilityFilter
 		initData();
 	}
 

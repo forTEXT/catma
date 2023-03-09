@@ -167,7 +167,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			}
 			else {
 				setContent(projectView);
-				if (routeToProjectEvent.isReloadProject()) {
+				if (routeToProjectEvent.isReloadProject()) {  // TODO: remove, RouteToProjectEvent is never created with reloadProject=True
 					projectView.reloadProject(routeToProjectEvent.getProjectReference());
 				}
 			}
