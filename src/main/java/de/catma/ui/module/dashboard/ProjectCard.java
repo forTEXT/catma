@@ -52,13 +52,11 @@ public class ProjectCard extends VerticalFlexLayout  {
 	private Label nameLabel;
 
 	private final ClickAction clickAction;
-	
-	ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, 
-    		EventBus eventBus, IRBACManager rbacManager) {
-		this(projectReference, projectManager, eventBus, rbacManager, 
-				ref -> eventBus.post(new RouteToProjectEvent(ref, false)));
+
+	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, EventBus eventBus, IRBACManager rbacManager) {
+		this(projectReference, projectManager, eventBus, rbacManager, ref -> eventBus.post(new RouteToProjectEvent(ref)));
 	}
-	
+
 	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, 
     		EventBus eventBus, ClickAction clickAction) {
 		this(projectReference, projectManager, eventBus, new NoopRBACManager(), 

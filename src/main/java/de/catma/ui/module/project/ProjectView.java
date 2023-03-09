@@ -629,15 +629,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 
 	// open project / load data
-	public void setProjectReference(ProjectReference projectReference) {
-		this.projectReference = projectReference;
-		eventBus.post(new HeaderContextChangeEvent(projectReference.getName()));
-		initProject(projectReference);
-	}
-
-	private void initProject(ProjectReference projectReference) {
+	public void openProject(ProjectReference projectReference) {
 		setEnabled(false);
 		setProgressBarVisible(true);
+
+		this.projectReference = projectReference;
+		eventBus.post(new HeaderContextChangeEvent(projectReference.getName()));
 
 		final UI ui = UI.getCurrent();
 
@@ -679,59 +676,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				setProgressBarVisible(false);
 				setEnabled(true);
 				errorHandler.showAndLogError("Failed to open project", t);
-			}
-		});
-	}
-
-	public void reloadProject(ProjectReference projectReference) {
-		if (project == null) {
-			setProjectReference(projectReference);
-			return;
-		}
-
-		setEnabled(false);
-		setProgressBarVisible(true);
-
-		final UI ui = UI.getCurrent();
-
-		project.open(new OpenProjectListener() {
-			@Override
-			public void progress(String msg, Object... params) {
-				ui.access(() -> {
-					if (params != null) {
-						progressBar.setCaption(String.format(msg, params));
-					}
-					else {
-						progressBar.setCaption(msg);
-					}
-					ui.push();
-				});
-			}
-
-			@Override
-			public void ready(Project project) {
-				ProjectView.this.project = project;
-
-				ProjectView.this.project.addEventListener(
-						ProjectEvent.exceptionOccurred,
-						projectExceptionListener
-				);
-
-				ProjectView.this.project.getTagManager().addPropertyChangeListener(
-						TagManagerEvent.tagsetDefinitionChanged,
-						tagsetChangeListener
-				);
-
-				setProgressBarVisible(false);
-				reloadAll();
-				setEnabled(true);
-			}
-
-			@Override
-			public void failure(Throwable t) {
-				setProgressBarVisible(false);
-				setEnabled(true);
-				errorHandler.showAndLogError("Failed to reload project", t);
 			}
 		});
 	}
