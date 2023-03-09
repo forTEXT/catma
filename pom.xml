@@ -15,8 +15,8 @@
 	</prerequisites>
 	
     <properties>
-		<vaadin.version>8.16.0</vaadin.version>
-		<vaadin.plugin.version>8.16.0</vaadin.plugin.version>
+		<vaadin.version>8.14.3</vaadin.version>
+		<vaadin.plugin.version>8.14.3</vaadin.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -121,7 +121,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>30.0-jre</version>
+            <version>31.1-jre</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
@@ -137,7 +137,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava-gwt</artifactId>
-			<version>20.0</version>
+			<version>31.1-jre</version>
 		</dependency>
 
         <dependency>
@@ -206,12 +206,12 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>3.11.1</version>
+			<version>3.12.13</version>
 		</dependency>
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast-client</artifactId>
-			<version>3.11.1</version>
+			<version>3.12.13</version>
 		</dependency>		
 		<dependency>
 			<groupId>javax.cache</groupId>
@@ -252,7 +252,7 @@
 		<dependency>
 		    <groupId>io.netty</groupId>
 		    <artifactId>netty-codec-http</artifactId>
-		    <version>4.1.77.Final</version>
+		    <version>4.1.86.Final</version>
 		</dependency>
 
 		<dependency>

@@ -19,7 +19,7 @@
       <configuration>
         <setting name="compilerMaxHeapSize" value="1024" />
         <setting name="gwtScriptOutputStyle" value="DETAILED" />
-        <setting name="gwtSdkUrl" value="file://$MAVEN_REPOSITORY$/com/vaadin/vaadin-client/8.16.0" />
+        <setting name="gwtSdkUrl" value="file://$MAVEN_REPOSITORY$/com/vaadin/vaadin-client/8.14.3" />
         <setting name="gwtSdkType" value="Vaadin-Maven" />
         <setting name="webFacet" value="Web" />
       </configuration>
@@ -40,27 +40,22 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.servlet:javax.servlet-api:3.0.1" level="project" />
-    <orderEntry type="library" name="Maven: com.vaadin:vaadin-server:8.16.0" level="project" />
+    <orderEntry type="library" name="Maven: com.vaadin:vaadin-server:8.14.3" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin:vaadin-sass-compiler:0.9.13" level="project" />
     <orderEntry type="library" name="Maven: org.w3c.css:sac:1.3" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin.external.flute:flute:1.3.0.gg2" level="project" />
-    <orderEntry type="library" name="Maven: com.vaadin:vaadin-shared:8.16.0" level="project" />
+    <orderEntry type="library" name="Maven: com.vaadin:vaadin-shared:8.14.3" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin.external.gwt:gwt-elemental:2.8.2.vaadin2" level="project" />
-    <orderEntry type="library" name="Maven: com.vaadin:license-checker:1.2.2" level="project" />
-    <orderEntry type="library" name="Maven: com.github.oshi:oshi-core:6.1.4" level="project" />
-    <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:5.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.14.3" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin.external:gentyref:1.2.0.vaadin1" level="project" />
-    <orderEntry type="library" name="Maven: com.vaadin:vaadin-push:8.16.0" level="project" />
+    <orderEntry type="library" name="Maven: com.vaadin:vaadin-push:8.14.3" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin.external.atmosphere:atmosphere-runtime:2.4.30.vaadin4" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin.external.slf4j:vaadin-slf4j-jdk14:1.6.1" level="project" />
-    <orderEntry type="library" name="Maven: com.vaadin:vaadin-client-compiled:8.16.0" level="project" />
-    <orderEntry type="library" name="Maven: com.vaadin:vaadin-themes:8.16.0" level="project" />
-    <orderEntry type="library" name="Maven: com.vaadin:vaadin-client:8.16.0" level="project" />
+    <orderEntry type="library" name="Maven: com.vaadin:vaadin-client-compiled:8.14.3" level="project" />
+    <orderEntry type="library" name="Maven: com.vaadin:vaadin-themes:8.14.3" level="project" />
+    <orderEntry type="library" name="Maven: com.vaadin:vaadin-client:8.14.3" level="project" />
     <orderEntry type="library" name="Maven: com.google.gwt:gwt-elemental:2.8.2" level="project" />
     <orderEntry type="library" name="Maven: com.google.gwt:gwt-user:2.8.2" level="project" />
-    <orderEntry type="library" name="Maven: com.google.jsinterop:jsinterop-annotations:1.0.2" level="project" />
-    <orderEntry type="library" name="Maven: com.google.jsinterop:jsinterop-annotations:sources:1.0.2" level="project" />
     <orderEntry type="library" name="Maven: javax.validation:validation-api:1.0.0.GA" level="project" />
     <orderEntry type="library" name="Maven: javax.validation:validation-api:sources:1.0.0.GA" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin:vaadin-context-menu:3.1.0" level="project" />
@@ -75,15 +70,17 @@
     <orderEntry type="library" name="Maven: org.antlr:antlr-runtime:3.4" level="project" />
     <orderEntry type="library" name="Maven: org.antlr:stringtemplate:3.2.1" level="project" />
     <orderEntry type="library" name="Maven: antlr:antlr:2.7.7" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:guava:30.0-jre" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:31.1-jre" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:failureaccess:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava" level="project" />
-    <orderEntry type="library" name="Maven: org.checkerframework:checker-qual:3.5.0" level="project" />
-    <orderEntry type="library" name="Maven: com.google.errorprone:error_prone_annotations:2.3.4" level="project" />
+    <orderEntry type="library" name="Maven: org.checkerframework:checker-qual:3.12.0" level="project" />
+    <orderEntry type="library" name="Maven: com.google.errorprone:error_prone_annotations:2.11.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.j2objc:j2objc-annotations:1.3" level="project" />
     <orderEntry type="library" name="Maven: com.github.appreciated:material:1.1.8" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:guava-gwt:20.0" level="project" />
-    <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:1.3.9" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava-gwt:31.1-jre" level="project" />
+    <orderEntry type="library" name="Maven: com.google.elemental2:elemental2-promise:1.1.0" level="project" />
+    <orderEntry type="library" name="Maven: com.google.jsinterop:jsinterop-annotations:2.0.0" level="project" />
+    <orderEntry type="library" name="Maven: com.google.jsinterop:base:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-compress:1.21" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.7" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-email:1.5" level="project" />
@@ -128,8 +125,8 @@
     <orderEntry type="library" name="Maven: uk.org.webcompere:system-stubs-jupiter:1.2.0" level="project" />
     <orderEntry type="library" name="Maven: uk.org.webcompere:system-stubs-core:1.2.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.9" level="project" />
-    <orderEntry type="library" name="Maven: com.hazelcast:hazelcast:3.11.1" level="project" />
-    <orderEntry type="library" name="Maven: com.hazelcast:hazelcast-client:3.11.1" level="project" />
+    <orderEntry type="library" name="Maven: com.hazelcast:hazelcast:3.12.13" level="project" />
+    <orderEntry type="library" name="Maven: com.hazelcast:hazelcast-client:3.12.13" level="project" />
     <orderEntry type="library" name="Maven: javax.cache:cache-api:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.tika:tika-parsers:1.23" level="project" />
     <orderEntry type="library" name="Maven: org.apache.tika:tika-core:1.23" level="project" />
@@ -195,7 +192,7 @@
     <orderEntry type="library" name="Maven: org.jdom:jdom2:2.0.6" level="project" />
     <orderEntry type="library" name="Maven: edu.ucar:grib:4.5.5" level="project" />
     <orderEntry type="library" name="Maven: org.itadaki:bzip2:0.9.1" level="project" />
-    <orderEntry type="library" name="Maven: net.java.dev.jna:jna:5.10.0" level="project" />
+    <orderEntry type="library" name="Maven: net.java.dev.jna:jna:5.5.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:3.11.0" level="project" />
     <orderEntry type="library" name="Maven: edu.ucar:cdm:4.5.5" level="project" />
     <orderEntry type="library" name="Maven: edu.ucar:udunits:4.5.5" level="project" />
@@ -228,13 +225,14 @@
     <orderEntry type="library" name="Maven: com.intellij:annotations:12.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:8.2.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:8.2.0" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-codec-http:4.1.77.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-common:4.1.77.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.1.77.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-transport:4.1.77.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-resolver:4.1.77.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-codec:4.1.77.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-handler:4.1.77.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec-http:4.1.86.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-common:4.1.86.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.1.86.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport:4.1.86.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-resolver:4.1.86.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec:4.1.86.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-handler:4.1.86.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport-native-unix-common:4.1.86.Final" level="project" />
     <orderEntry type="library" name="Maven: org.xerial:sqlite-jdbc:3.34.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-api:5.7.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apiguardian:apiguardian-api:1.1.0" level="project" />
