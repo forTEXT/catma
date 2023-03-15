@@ -2014,7 +2014,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleCommitRequest() {
 		try {
-			if (!project.hasUncommittedChanges()) {
+			if (!project.hasUncommittedChanges() && !project.hasUntrackedChanges()) {
 				Notification.show("Info", "There are no uncommitted changes", Notification.Type.HUMANIZED_MESSAGE);
 				return;
 			}

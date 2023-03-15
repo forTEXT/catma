@@ -472,6 +472,14 @@ public interface Project {
 	// synchronization related things
 	// TODO: strictly speaking none of these belong in this interface as they are implementation-specific
 	/**
+	 * Whether this project has any untracked changes.
+	 *
+	 * @return true if this project has untracked changes, otherwise false
+	 * @throws IOException if an error occurs when determining whether there are untracked changes
+	 */
+	boolean hasUntrackedChanges() throws IOException;
+
+	/**
 	 * Whether this project has any uncommitted changes.
 	 *
 	 * @return true if this project has uncommitted changes, otherwise false

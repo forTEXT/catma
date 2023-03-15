@@ -1664,6 +1664,11 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	// synchronization related things
 	@Override
+	public boolean hasUntrackedChanges() throws IOException {
+		return gitProjectHandler.hasUntrackedChanges();
+	}
+
+	@Override
 	public boolean hasUncommittedChanges() throws Exception {
 		return gitProjectHandler.hasUncommittedChanges();
 	}

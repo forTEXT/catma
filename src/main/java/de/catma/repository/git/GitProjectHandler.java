@@ -754,6 +754,13 @@ public class GitProjectHandler {
 		}
 	}
 
+	public boolean hasUntrackedChanges() throws IOException {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+			return localGitRepoManager.hasUntrackedChanges();
+		}
+	}
+
 	public boolean hasUncommittedChanges() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
