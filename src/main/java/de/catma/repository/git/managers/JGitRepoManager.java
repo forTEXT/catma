@@ -389,18 +389,14 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	}
 
 	@Override
-	public void add(File targetFile) throws IOException {
+	public void add(File relativeTargetFile) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `add` on a detached instance");
 		}
 
 		try {
-			Path basePath = gitApi.getRepository().getWorkTree().toPath();
-			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
-			Path relativeFilePath = basePath.relativize(absoluteFilePath);
-
 			gitApi.add()
-					.addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString()))
+					.addFilepattern(FilenameUtils.separatorsToUnix(relativeTargetFile.toString()))
 					.call();
 		}
 		catch (GitAPIException e) {

@@ -160,10 +160,10 @@ public interface LocalGitRepositoryManager extends AutoCloseable {
 	/**
 	 * Adds the given file or directory.
 	 *
-	 * @param targetFile a {@link File} representing the file/directory to add
+	 * @param relativeTargetFile a {@link File} representing the relative file/directory path to add
 	 * @throws IOException if an error occurs when adding
 	 */
-	void add(File targetFile) throws IOException;
+	void add(File relativeTargetFile) throws IOException;
 
 	/**
 	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>
