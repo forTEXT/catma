@@ -889,6 +889,10 @@ public class GitProjectHandler {
 				}
 			}
 
+			// fetch latest commits
+			// we are interested in updating the local origin/master here
+			localGitRepoManager.fetch(jGitCredentialsManager);
+
 			// get commits that need to be merged into the local user branch
 			// origin/master -> userBranch
 			List<CommitInfo> theirPublishedChanges = localGitRepoManager.getTheirPublishedChanges();
