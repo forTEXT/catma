@@ -819,6 +819,10 @@ public class GitProjectHandler {
 				pushedAlready = true;
 			}
 
+			// fetch latest commits
+			// we are interested in updating the local origin/master here
+			localGitRepoManager.fetch(jGitCredentialsManager);
+
 			// do we have commits in the user branch that are not present in the master branch? 
 			// userBranch -> origin/master
 			List<CommitInfo> ourUnpublishedChanges = localGitRepoManager.getOurUnpublishedChanges();
@@ -884,10 +888,6 @@ public class GitProjectHandler {
 					}
 				}
 			}
-
-			// fetch latest commits 
-			// we are interested in updating the local origin/master here
-			localGitRepoManager.fetch(jGitCredentialsManager);
 
 			// get commits that need to be merged into the local user branch
 			// origin/master -> userBranch
