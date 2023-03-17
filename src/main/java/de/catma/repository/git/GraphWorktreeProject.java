@@ -109,6 +109,18 @@ public class GraphWorktreeProject implements IndexedProject {
 		this.graphProjectHandler = new LazyGraphProjectHandler(
 				this.projectReference,
 				this.user,
+				new TagsetsProvider() {
+					@Override
+					public List<TagsetDefinition> getTagsets() {
+						return GraphWorktreeProject.this.gitProjectHandler.getTagsets();
+					}
+				},
+				new DocumentsProvider() {
+					@Override
+					public List<SourceDocument> getDocuments() {
+						return GraphWorktreeProject.this.gitProjectHandler.getDocuments();
+					}
+				},
 				new DocumentFileURIProvider() {
 					@Override
 					public URI getDocumentFileURI(String documentId) throws Exception {
@@ -309,18 +321,6 @@ public class GraphWorktreeProject implements IndexedProject {
 					},
 					progressListener,
 					rootRevisionHash,
-					new TagsetsProvider() {
-						@Override
-						public List<TagsetDefinition> getTagsets() {
-							return gitProjectHandler.getTagsets();
-						}
-					},
-					new DocumentsProvider() {
-						@Override
-						public List<SourceDocument> getDocuments() {
-							return gitProjectHandler.getDocuments();
-						}
-					},
 					new CollectionsProvider() {
 						@Override
 						public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
@@ -505,18 +505,6 @@ public class GraphWorktreeProject implements IndexedProject {
 						},
 						progressListener,
 						rootRevisionHash,
-						new TagsetsProvider() {
-							@Override
-							public List<TagsetDefinition> getTagsets() {
-								return gitProjectHandler.getTagsets();
-							}
-						},
-						new DocumentsProvider() {
-							@Override
-							public List<SourceDocument> getDocuments() {
-								return gitProjectHandler.getDocuments();
-							}
-						},
 						new CollectionsProvider() {
 							@Override
 							public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
@@ -1767,18 +1755,6 @@ public class GraphWorktreeProject implements IndexedProject {
 									},
 									progressListener,
 									rootRevisionHash,
-									new TagsetsProvider() {
-										@Override
-										public List<TagsetDefinition> getTagsets() {
-											return gitProjectHandler.getTagsets();
-										}
-									},
-									new DocumentsProvider() {
-										@Override
-										public List<SourceDocument> getDocuments() {
-											return gitProjectHandler.getDocuments();
-										}
-									},
 									new CollectionsProvider() {
 										@Override
 										public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {

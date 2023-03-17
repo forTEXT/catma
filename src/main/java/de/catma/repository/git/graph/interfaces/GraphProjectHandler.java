@@ -23,9 +23,7 @@ public interface GraphProjectHandler {
 	void ensureProjectRevisionIsLoaded(
 			ExecutionListener<NullType> openProjectListener,
 			ProgressListener progressListener,
-			String revisionHash, 
-			TagsetsProvider tagsetsProvider,
-			DocumentsProvider documentsProvider,
+			String revisionHash,
 			CollectionsProvider collectionsProvider,
 			boolean forceGraphReload,
 			BackgroundService backgroundService

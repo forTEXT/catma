@@ -32,6 +32,9 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 	private final ProjectReference projectReference;
 	private final User user;
+
+	private final TagsetsProvider tagsetsProvider;
+	private final DocumentsProvider documentsProvider;
 	private final DocumentFileURIProvider documentFileURIProvider;
 	private final CommentsProvider commentsProvider;
 	private final DocumentProvider documentProvider;
@@ -46,8 +49,10 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	private String revisionHash = "";
 
 	public LazyGraphProjectHandler(
-			ProjectReference projectReference, 
-			User user, 
+			ProjectReference projectReference,
+			User user,
+			TagsetsProvider tagsetsProvider,
+			DocumentsProvider documentsProvider,
 			DocumentFileURIProvider documentFileURIProvider,
 			CommentsProvider commentsProvider,
 			DocumentProvider documentProvider,
@@ -57,6 +62,8 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	) {
 		this.projectReference = projectReference;
 		this.user = user;
+		this.tagsetsProvider = tagsetsProvider;
+		this.documentsProvider = documentsProvider;
 		this.documentFileURIProvider = documentFileURIProvider;
 		this.commentsProvider = commentsProvider;
 		this.documentProvider = documentProvider;
@@ -138,8 +145,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 			ExecutionListener<NullType> openProjectListener,
 			ProgressListener progressListener,
 			String revisionHash,
-			TagsetsProvider tagsetsProvider,
-			DocumentsProvider documentsProvider,
 			CollectionsProvider collectionsProvider,
 			boolean forceGraphReload,
 			BackgroundService backgroundService
