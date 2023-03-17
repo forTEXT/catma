@@ -34,6 +34,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	private final User user;
 	private final DocumentFileURIProvider documentFileURIProvider;
 	private final CommentsProvider commentsProvider;
+	private final DocumentProvider documentProvider;
 	private final DocumentIndexProvider documentIndexProvider;
 	private final CollectionProvider collectionProvider;
 	private final TagManager tagManager;
@@ -58,6 +59,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 		this.user = user;
 		this.documentFileURIProvider = documentFileURIProvider;
 		this.commentsProvider = commentsProvider;
+		this.documentProvider = documentProvider;
 		this.documentIndexProvider = documentIndexProvider;
 		this.collectionProvider = collectionProvider;
 		this.tagManager = tagManager;
@@ -76,11 +78,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 						new CacheLoader<String, SourceDocument>() {
 							@Override
 							public SourceDocument load(String key) throws Exception {
-								StandardContentHandler standardContentHandler = new StandardContentHandler();
-								standardContentHandler.setSourceDocumentInfo(
-										LazyGraphProjectHandler.this.docRefsById.get(key).getSourceDocumentInfo()
-								);
-								return new SourceDocument(key, standardContentHandler);
+								return LazyGraphProjectHandler.this.documentProvider.getDocument(key);
 							}
 						}
 				);
