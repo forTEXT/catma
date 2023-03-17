@@ -19,7 +19,6 @@ import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.interfaces.*;
 import de.catma.tag.*;
 import de.catma.user.User;
-import de.catma.util.Pair;
 
 import javax.lang.model.type.NullType;
 import java.io.IOException;
@@ -37,12 +36,12 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	private final CommentsProvider commentsProvider;
 	private final DocumentIndexProvider documentIndexProvider;
 	private final CollectionProvider collectionProvider;
+	private final TagManager tagManager;
 
 	private final LoadingCache<String, SourceDocument> documentCache;
 	private final LoadingCache<String, AnnotationCollection> collectionCache;
 
-	private final Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
-	private TagManager tagManager;
+	private Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
 	private String revisionHash = "";
 
 	public LazyGraphProjectHandler(
@@ -52,7 +51,8 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 			CommentsProvider commentsProvider,
 			DocumentProvider documentProvider,
 			DocumentIndexProvider documentIndexProvider,
-			CollectionProvider collectionProvider
+			CollectionProvider collectionProvider,
+			TagManager tagManager
 	) {
 		this.projectReference = projectReference;
 		this.user = user;
@@ -60,6 +60,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 		this.commentsProvider = commentsProvider;
 		this.documentIndexProvider = documentIndexProvider;
 		this.collectionProvider = collectionProvider;
+		this.tagManager = tagManager;
 
 		this.documentCache = CacheBuilder.newBuilder()
 				.maximumSize(10)
@@ -139,7 +140,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 			ExecutionListener<NullType> openProjectListener,
 			ProgressListener progressListener,
 			String revisionHash,
-			TagManager tagManager,
 			TagsetsProvider tagsetsProvider,
 			DocumentsProvider documentsProvider,
 			CollectionsProvider collectionsProvider,
@@ -163,9 +163,9 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 		backgroundService.submit(
 				loadJob,
-				new ExecutionListener<Pair<TagManager, Map<String, SourceDocumentReference>>>() {
+				new ExecutionListener<Map<String, SourceDocumentReference>>() {
 					@Override
-					public void done(Pair<TagManager, Map<String, SourceDocumentReference>> result) {
+					public void done(Map<String, SourceDocumentReference> sourceDocumentRefsById) {
 						logger.info(
 								String.format(
 										"LoadJob has finished for project \"%s\" with ID %s",
@@ -174,8 +174,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 								)
 						);
 
-						LazyGraphProjectHandler.this.docRefsById.putAll(result.getSecond());
-						LazyGraphProjectHandler.this.tagManager = result.getFirst();
+						LazyGraphProjectHandler.this.docRefsById = sourceDocumentRefsById;
 						LazyGraphProjectHandler.this.revisionHash = revisionHash;
 
 						documentCache.invalidateAll();

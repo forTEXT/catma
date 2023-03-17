@@ -13,7 +13,6 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
-import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.contenthandler.StandardContentHandler;
@@ -140,7 +139,8 @@ public class GraphWorktreeProject implements IndexedProject {
 					public AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary) throws IOException {
 						return GraphWorktreeProject.this.gitProjectHandler.getCollection(collectionId, tagLibrary);
 					}
-				}
+				},
+				this.tagManager
 		);
 
 		this.indexer = this.graphProjectHandler.createIndexer();
@@ -309,7 +309,6 @@ public class GraphWorktreeProject implements IndexedProject {
 					},
 					progressListener,
 					rootRevisionHash,
-					tagManager,
 					new TagsetsProvider() {
 						@Override
 						public List<TagsetDefinition> getTagsets() {
@@ -501,7 +500,6 @@ public class GraphWorktreeProject implements IndexedProject {
 						},
 						progressListener,
 						rootRevisionHash,
-						tagManager,
 						new TagsetsProvider() {
 							@Override
 							public List<TagsetDefinition> getTagsets() {
@@ -1764,7 +1762,6 @@ public class GraphWorktreeProject implements IndexedProject {
 									},
 									progressListener,
 									rootRevisionHash,
-									tagManager,
 									new TagsetsProvider() {
 										@Override
 										public List<TagsetDefinition> getTagsets() {

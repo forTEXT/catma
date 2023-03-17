@@ -12,12 +12,11 @@ import de.catma.repository.git.graph.interfaces.DocumentFileURIProvider;
 import de.catma.repository.git.graph.interfaces.DocumentsProvider;
 import de.catma.repository.git.graph.interfaces.TagsetsProvider;
 import de.catma.tag.TagManager;
-import de.catma.util.Pair;
 
 import java.util.Map;
 import java.util.logging.Logger;
 
-class LoadJob extends DefaultProgressCallable<Pair<TagManager, Map<String, SourceDocumentReference>>> {
+class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReference>> {
 	private final ProjectReference projectReference;
 	private final String revisionHash;
 	private final TagManager tagManager;
@@ -45,7 +44,7 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager, Map<String, Sourc
 	}
 
 	@Override
-	public Pair<TagManager, Map<String, SourceDocumentReference>> call() throws Exception {
+	public Map<String, SourceDocumentReference> call() throws Exception {
 		Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
 
 		getProgressListener().setProgress("Loading tagsets for project \"%s\"", projectReference.getName());
@@ -69,6 +68,6 @@ class LoadJob extends DefaultProgressCallable<Pair<TagManager, Map<String, Sourc
 				String.format("Finished loading project \"%s\"", projectReference.getName())
 		);
 
-		return new Pair<>(tagManager, docRefsById);
+		return docRefsById;
 	}
 }

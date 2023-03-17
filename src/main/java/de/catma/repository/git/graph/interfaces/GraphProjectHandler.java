@@ -12,7 +12,6 @@ import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.Indexer;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 
 import javax.lang.model.type.NullType;
@@ -25,7 +24,6 @@ public interface GraphProjectHandler {
 			ExecutionListener<NullType> openProjectListener,
 			ProgressListener progressListener,
 			String revisionHash, 
-			TagManager tagManager,
 			TagsetsProvider tagsetsProvider,
 			DocumentsProvider documentsProvider,
 			CollectionsProvider collectionsProvider,
