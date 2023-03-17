@@ -21,6 +21,7 @@ import de.catma.tag.*;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
+import javax.lang.model.type.NullType;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -135,7 +136,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void ensureProjectRevisionIsLoaded(
-			ExecutionListener<TagManager> openProjectListener,
+			ExecutionListener<NullType> openProjectListener,
 			ProgressListener progressListener,
 			String revisionHash,
 			TagManager tagManager,
@@ -146,7 +147,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 			BackgroundService backgroundService
 	) {
 		if (this.revisionHash.equals(revisionHash) && !forceGraphReload) {
-			openProjectListener.done(this.tagManager);
+			openProjectListener.done(null);
 			return;
 		}
 
@@ -180,7 +181,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 						documentCache.invalidateAll();
 						collectionCache.invalidateAll();
 
-						openProjectListener.done(result.getFirst());
+						openProjectListener.done(null);
 					}
 					@Override
 					public void error(Throwable t) {

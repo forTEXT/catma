@@ -15,13 +15,14 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 
+import javax.lang.model.type.NullType;
 import java.util.Collection;
 
 public interface GraphProjectHandler {
 	Indexer createIndexer();
 
 	void ensureProjectRevisionIsLoaded(
-			ExecutionListener<TagManager> openProjectListener,
+			ExecutionListener<NullType> openProjectListener,
 			ProgressListener progressListener,
 			String revisionHash, 
 			TagManager tagManager,

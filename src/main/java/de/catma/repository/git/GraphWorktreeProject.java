@@ -53,6 +53,7 @@ import de.catma.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.mime.MediaType;
 
+import javax.lang.model.type.NullType;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -288,23 +289,14 @@ public class GraphWorktreeProject implements IndexedProject {
 			};
 
 			graphProjectHandler.ensureProjectRevisionIsLoaded(
-					new ExecutionListener<TagManager>() {
+					new ExecutionListener<NullType>() {
 						@Override
 						public void error(Throwable t) {
 							openProjectListener.failure(t);
 						}
 
 						@Override
-						public void done(TagManager result) {
-							logger.info(
-									String.format(
-											"Loading tag library for project \"%s\" with ID %s after switching view mode",
-											projectReference.getName(),
-											projectReference.getProjectId()
-									)
-							);
-							tagManager.load(result.getTagLibrary());
-
+						public void done(NullType result) {
 							logger.info(
 									String.format(
 											"Project \"%s\" with ID %s has been loaded after switching view mode",
@@ -487,22 +479,14 @@ public class GraphWorktreeProject implements IndexedProject {
 				};
 
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
-						new ExecutionListener<TagManager>() {
+						new ExecutionListener<NullType>() {
 							@Override
 							public void error(Throwable t) {
 								openProjectListener.failure(t);
 							}
 
 							@Override
-							public void done(TagManager result) {
-								logger.info(
-										String.format(
-												"Loading tag library for project \"%s\" with ID %s",
-												projectReference.getName(),
-												projectReference.getProjectId()
-										)
-								);
-								tagManager.load(result.getTagLibrary());
+							public void done(NullType result) {
 								initTagManagerListeners();
 
 								logger.info(
@@ -1760,23 +1744,14 @@ public class GraphWorktreeProject implements IndexedProject {
 							rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 
 							graphProjectHandler.ensureProjectRevisionIsLoaded(
-									new ExecutionListener<TagManager>() {
+									new ExecutionListener<NullType>() {
 										@Override
 										public void error(Throwable t) {
 											openProjectListener.failure(t);
 										}
 
 										@Override
-										public void done(TagManager result) {
-											logger.info(
-													String.format(
-															"Loading tag library for project \"%s\" with ID %s after synchronizing",
-															projectReference.getName(),
-															projectReference.getProjectId()
-													)
-											);
-											tagManager.load(result.getTagLibrary());
-
+										public void done(NullType result) {
 											logger.info(
 													String.format(
 															"Project \"%s\" with ID %s has been loaded after synchronizing",
