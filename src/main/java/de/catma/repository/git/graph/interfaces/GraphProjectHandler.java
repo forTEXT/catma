@@ -21,12 +21,12 @@ public interface GraphProjectHandler {
 	Indexer createIndexer();
 
 	void ensureProjectRevisionIsLoaded(
-			ExecutionListener<NullType> openProjectListener,
-			ProgressListener progressListener,
 			String revisionHash,
-			CollectionsProvider collectionsProvider,
 			boolean forceGraphReload,
-			BackgroundService backgroundService
+			CollectionsProvider collectionsProvider,
+			BackgroundService backgroundService,
+			ExecutionListener<NullType> openProjectListener,
+			ProgressListener progressListener
 	);
 
 	void updateProjectRevision(String oldRevisionHash, String newRevisionHash);

@@ -13,7 +13,6 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
-import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.Indexer;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.interfaces.*;
@@ -33,14 +32,17 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	private final ProjectReference projectReference;
 	private final User user;
 
-	private final TagsetsProvider tagsetsProvider;
-	private final DocumentsProvider documentsProvider;
-	private final DocumentFileURIProvider documentFileURIProvider;
-	private final CommentsProvider commentsProvider;
-	private final DocumentProvider documentProvider;
-	private final DocumentIndexProvider documentIndexProvider;
-	private final CollectionProvider collectionProvider;
 	private final TagManager tagManager;
+	private final TagsetsProvider tagsetsProvider;
+
+	private final DocumentsProvider documentsProvider;
+	private final DocumentProvider documentProvider;
+	private final DocumentFileURIProvider documentFileURIProvider;
+	private final DocumentIndexProvider documentIndexProvider;
+
+	private final CommentsProvider commentsProvider;
+
+	private final CollectionProvider collectionProvider;
 
 	private final LoadingCache<String, SourceDocument> documentCache;
 	private final LoadingCache<String, AnnotationCollection> collectionCache;
@@ -51,25 +53,25 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	public LazyGraphProjectHandler(
 			ProjectReference projectReference,
 			User user,
+			TagManager tagManager,
 			TagsetsProvider tagsetsProvider,
 			DocumentsProvider documentsProvider,
-			DocumentFileURIProvider documentFileURIProvider,
-			CommentsProvider commentsProvider,
 			DocumentProvider documentProvider,
+			DocumentFileURIProvider documentFileURIProvider,
 			DocumentIndexProvider documentIndexProvider,
-			CollectionProvider collectionProvider,
-			TagManager tagManager
+			CommentsProvider commentsProvider,
+			CollectionProvider collectionProvider
 	) {
 		this.projectReference = projectReference;
 		this.user = user;
+		this.tagManager = tagManager;
 		this.tagsetsProvider = tagsetsProvider;
 		this.documentsProvider = documentsProvider;
-		this.documentFileURIProvider = documentFileURIProvider;
-		this.commentsProvider = commentsProvider;
 		this.documentProvider = documentProvider;
+		this.documentFileURIProvider = documentFileURIProvider;
 		this.documentIndexProvider = documentIndexProvider;
+		this.commentsProvider = commentsProvider;
 		this.collectionProvider = collectionProvider;
-		this.tagManager = tagManager;
 
 		this.documentCache = CacheBuilder.newBuilder()
 				.maximumSize(10)
@@ -142,12 +144,12 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void ensureProjectRevisionIsLoaded(
-			ExecutionListener<NullType> openProjectListener,
-			ProgressListener progressListener,
 			String revisionHash,
-			CollectionsProvider collectionsProvider,
 			boolean forceGraphReload,
-			BackgroundService backgroundService
+			CollectionsProvider collectionsProvider,
+			BackgroundService backgroundService,
+			ExecutionListener<NullType> openProjectListener,
+			ProgressListener progressListener
 	) {
 		if (this.revisionHash.equals(revisionHash) && !forceGraphReload) {
 			openProjectListener.done(null);
@@ -156,12 +158,11 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 		LoadJob loadJob = new LoadJob(
 				projectReference,
-				revisionHash,
 				tagManager,
 				tagsetsProvider,
 				documentsProvider,
-				collectionsProvider,
-				documentFileURIProvider
+				documentFileURIProvider,
+				collectionsProvider
 		);
 
 		backgroundService.submit(

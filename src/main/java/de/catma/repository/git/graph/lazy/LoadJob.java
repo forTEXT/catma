@@ -17,29 +17,26 @@ import java.util.Map;
 
 class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReference>> {
 	private final ProjectReference projectReference;
-	private final String revisionHash;
 	private final TagManager tagManager;
 	private final TagsetsProvider tagsetsProvider;
 	private final DocumentsProvider documentsProvider;
-	private final CollectionsProvider collectionsProvider;
 	private final DocumentFileURIProvider documentFileURIProvider;
+	private final CollectionsProvider collectionsProvider;
 
 	public LoadJob(
 			ProjectReference projectReference,
-			String revisionHash,
 			TagManager tagManager,
 			TagsetsProvider tagsetsProvider,
 			DocumentsProvider documentsProvider,
-			CollectionsProvider collectionsProvider,
-			DocumentFileURIProvider documentFileURIProvider
+			DocumentFileURIProvider documentFileURIProvider,
+			CollectionsProvider collectionsProvider
 	) {
 		this.projectReference = projectReference;
-		this.revisionHash = revisionHash;
 		this.tagManager = tagManager;
 		this.tagsetsProvider = tagsetsProvider;
 		this.documentsProvider = documentsProvider;
-		this.collectionsProvider = collectionsProvider;
 		this.documentFileURIProvider = documentFileURIProvider;
+		this.collectionsProvider = collectionsProvider;
 	}
 
 	@Override

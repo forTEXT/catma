@@ -109,6 +109,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		this.graphProjectHandler = new LazyGraphProjectHandler(
 				this.projectReference,
 				this.user,
+				this.tagManager,
 				new TagsetsProvider() {
 					@Override
 					public List<TagsetDefinition> getTagsets() {
@@ -121,22 +122,16 @@ public class GraphWorktreeProject implements IndexedProject {
 						return GraphWorktreeProject.this.gitProjectHandler.getDocuments();
 					}
 				},
-				new DocumentFileURIProvider() {
-					@Override
-					public URI getDocumentFileURI(String documentId) throws Exception {
-						return getSourceDocumentURI(documentId);
-					}
-				},
-				new CommentsProvider() {
-					@Override
-					public List<Comment> getComments(List<String> documentIds) throws Exception {
-						return GraphWorktreeProject.this.gitProjectHandler.getCommentsWithReplies(documentIds);
-					}
-				},
 				new DocumentProvider() {
 					@Override
 					public SourceDocument getDocument(String documentId) throws IOException {
 						return GraphWorktreeProject.this.gitProjectHandler.getDocument(documentId);
+					}
+				},
+				new DocumentFileURIProvider() {
+					@Override
+					public URI getDocumentFileURI(String documentId) throws Exception {
+						return getSourceDocumentURI(documentId);
 					}
 				},
 				new DocumentIndexProvider() {
@@ -146,13 +141,18 @@ public class GraphWorktreeProject implements IndexedProject {
 						return GraphWorktreeProject.this.gitProjectHandler.getDocumentIndex(tokensPath);
 					}
 				},
+				new CommentsProvider() {
+					@Override
+					public List<Comment> getComments(List<String> documentIds) throws Exception {
+						return GraphWorktreeProject.this.gitProjectHandler.getCommentsWithReplies(documentIds);
+					}
+				},
 				new CollectionProvider() {
 					@Override
 					public AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary) throws IOException {
 						return GraphWorktreeProject.this.gitProjectHandler.getCollection(collectionId, tagLibrary);
 					}
-				},
-				this.tagManager
+				}
 		);
 
 		this.indexer = this.graphProjectHandler.createIndexer();
@@ -223,7 +223,7 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception {
+	public void setLatestContributionsView(boolean enabled, OpenProjectListener openProjectListener) throws Exception {
 		if (hasUncommittedChanges()) {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
@@ -301,6 +301,16 @@ public class GraphWorktreeProject implements IndexedProject {
 			};
 
 			graphProjectHandler.ensureProjectRevisionIsLoaded(
+					rootRevisionHash,
+					true, // forceGraphReload
+					// TODO: unfortunately we can't pass the CollectionsProvider into the LazyGraphProjectHandler ctor (yet) because of the ProgressListener
+					new CollectionsProvider() {
+						@Override
+						public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
+							return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
+						}
+					},
+					backgroundService,
 					new ExecutionListener<NullType>() {
 						@Override
 						public void error(Throwable t) {
@@ -319,16 +329,7 @@ public class GraphWorktreeProject implements IndexedProject {
 							openProjectListener.ready(GraphWorktreeProject.this);
 						}
 					},
-					progressListener,
-					rootRevisionHash,
-					new CollectionsProvider() {
-						@Override
-						public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
-							return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
-						}
-					},
-					true, // forceGraphReload
-					backgroundService
+					progressListener
 			);
 		}
 		catch (Exception e) {
@@ -483,6 +484,16 @@ public class GraphWorktreeProject implements IndexedProject {
 				};
 
 				graphProjectHandler.ensureProjectRevisionIsLoaded(
+						rootRevisionHash,
+						false, // forceGraphReload
+						// TODO: unfortunately we can't pass the CollectionsProvider into the LazyGraphProjectHandler ctor (yet) because of the ProgressListener
+						new CollectionsProvider() {
+							@Override
+							public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
+								return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
+							}
+						},
+						backgroundService,
 						new ExecutionListener<NullType>() {
 							@Override
 							public void error(Throwable t) {
@@ -503,16 +514,7 @@ public class GraphWorktreeProject implements IndexedProject {
 								openProjectListener.ready(GraphWorktreeProject.this);
 							}
 						},
-						progressListener,
-						rootRevisionHash,
-						new CollectionsProvider() {
-							@Override
-							public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
-								return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
-							}
-						},
-						false, // forceGraphReload
-						backgroundService
+						progressListener
 				);
 			}
 		}
@@ -1735,6 +1737,17 @@ public class GraphWorktreeProject implements IndexedProject {
 							rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 
 							graphProjectHandler.ensureProjectRevisionIsLoaded(
+									rootRevisionHash,
+									false, // forceGraphReload
+									// TODO: unfortunately we can't pass the CollectionsProvider into the LazyGraphProjectHandler ctor (yet) because of the
+									//       ProgressListener
+									new CollectionsProvider() {
+										@Override
+										public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
+											return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
+										}
+									},
+									backgroundService,
 									new ExecutionListener<NullType>() {
 										@Override
 										public void error(Throwable t) {
@@ -1753,16 +1766,7 @@ public class GraphWorktreeProject implements IndexedProject {
 											openProjectListener.ready(GraphWorktreeProject.this);
 										}
 									},
-									progressListener,
-									rootRevisionHash,
-									new CollectionsProvider() {
-										@Override
-										public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
-											return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
-										}
-									},
-									false, // forceGraphReload
-									backgroundService
+									progressListener
 							);
 						}
 						catch (Exception e) {

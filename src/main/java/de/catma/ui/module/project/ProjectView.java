@@ -1981,7 +1981,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		final UI ui = UI.getCurrent();
 
-		project.setLatestContributionView(enabled, new OpenProjectListener() {
+		project.setLatestContributionsView(enabled, new OpenProjectListener() {
 			@Override
 			public void progress(String msg, Object... params) {
 				ui.access(() -> {

@@ -23,7 +23,6 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
-import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.rbac.RBACPermission;
@@ -126,7 +125,7 @@ public interface Project {
 
 	/**
 	 * Whether this project is read-only or not. This is determined by the current view mode
-	 * (see {@link Project#setLatestContributionView(boolean, OpenProjectListener)})
+	 * (see {@link Project#setLatestContributionsView(boolean, OpenProjectListener)})
 	 *
 	 * @return true if this project is read-only, otherwise false
 	 */
@@ -141,7 +140,7 @@ public interface Project {
 	 * @param openProjectListener an {@link OpenProjectListener}
 	 * @throws Exception if an error occurs when changing view modes
 	 */
-	void setLatestContributionView(boolean enabled, OpenProjectListener openProjectListener) throws Exception;
+	void setLatestContributionsView(boolean enabled, OpenProjectListener openProjectListener) throws Exception;
 
 
 	/**
