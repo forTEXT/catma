@@ -228,7 +228,19 @@ public class GraphWorktreeProject implements IndexedProject {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
 
+		logger.info(
+				String.format(
+						"Switching view mode for project \"%1$s\" with ID %2$s to '%3$s'",
+						projectReference.getName(),
+						projectReference.getProjectId(),
+						enabled ? "latest contributions" : "synchronized"
+				)
+		);
+
 		try {
+			logger.info(
+					String.format("Checking for conflicts in project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId())
+			);
 			if (gitProjectHandler.hasConflicts()) {
 				openProjectListener.failure(new IllegalStateException(
 						String.format(
@@ -270,7 +282,8 @@ public class GraphWorktreeProject implements IndexedProject {
 						);
 					}
 				});
-			} else {
+			}
+			else {
 				gitProjectHandler.setResourceProvider(new GitProjectResourceProviderFactory() {
 					@Override
 					public GitProjectResourceProvider createResourceProvider(
@@ -470,53 +483,53 @@ public class GraphWorktreeProject implements IndexedProject {
 								)
 						)
 				);
+				return;
 			}
-			else {
-				gitProjectHandler.ensureUserBranch();
-				gitProjectHandler.verifyCollections();
 
-				ProgressListener progressListener = new ProgressListener() {
-					@Override
-					public void setProgress(String value, Object... args) {
-						logger.info(String.format(value, args));
-						openProjectListener.progress(value, args);
-					}
-				};
+			gitProjectHandler.ensureUserBranch();
+			gitProjectHandler.verifyCollections();
 
-				graphProjectHandler.ensureProjectRevisionIsLoaded(
-						rootRevisionHash,
-						false, // forceGraphReload
-						// TODO: unfortunately we can't pass the CollectionsProvider into the LazyGraphProjectHandler ctor (yet) because of the ProgressListener
-						new CollectionsProvider() {
-							@Override
-							public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
-								return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
-							}
-						},
-						backgroundService,
-						new ExecutionListener<NullType>() {
-							@Override
-							public void error(Throwable t) {
-								openProjectListener.failure(t);
-							}
+			ProgressListener progressListener = new ProgressListener() {
+				@Override
+				public void setProgress(String value, Object... args) {
+					logger.info(String.format(value, args));
+					openProjectListener.progress(value, args);
+				}
+			};
 
-							@Override
-							public void done(NullType result) {
-								initTagManagerListeners();
+			graphProjectHandler.ensureProjectRevisionIsLoaded(
+					rootRevisionHash,
+					false, // forceGraphReload
+					// TODO: unfortunately we can't pass the CollectionsProvider into the LazyGraphProjectHandler ctor (yet) because of the ProgressListener
+					new CollectionsProvider() {
+						@Override
+						public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
+							return gitProjectHandler.getCollections(tagLibrary, progressListener, true);
+						}
+					},
+					backgroundService,
+					new ExecutionListener<NullType>() {
+						@Override
+						public void error(Throwable t) {
+							openProjectListener.failure(t);
+						}
 
-								logger.info(
-										String.format(
-												"Project \"%s\" with ID %s has been opened",
-												projectReference.getName(),
-												projectReference.getProjectId()
-										)
-								);
-								openProjectListener.ready(GraphWorktreeProject.this);
-							}
-						},
-						progressListener
-				);
-			}
+						@Override
+						public void done(NullType result) {
+							initTagManagerListeners();
+
+							logger.info(
+									String.format(
+											"Project \"%s\" with ID %s has been opened",
+											projectReference.getName(),
+											projectReference.getProjectId()
+									)
+							);
+							openProjectListener.ready(GraphWorktreeProject.this);
+						}
+					},
+					progressListener
+			);
 		}
 		catch (Exception e) {
 			openProjectListener.failure(e);
@@ -1679,6 +1692,10 @@ public class GraphWorktreeProject implements IndexedProject {
 			);
 		}
 
+		logger.info(
+				String.format("Synchronizing project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId())
+		);
+
 		final ProgressListener progressListener = new ProgressListener() {
 			@Override
 			public void setProgress(String value, Object... args) {
@@ -1721,6 +1738,13 @@ public class GraphWorktreeProject implements IndexedProject {
 						}
 
 						try {
+							logger.info(
+									String.format(
+											"Checking for conflicts in project \"%s\" with ID %s",
+											projectReference.getName(),
+											projectReference.getProjectId()
+									)
+							);
 							if (gitProjectHandler.hasConflicts()) {
 								openProjectListener.failure(new IllegalStateException(
 										String.format(

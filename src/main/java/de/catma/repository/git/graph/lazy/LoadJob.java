@@ -41,7 +41,7 @@ class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReferenc
 
 	@Override
 	public Map<String, SourceDocumentReference> call() throws Exception {
-		Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
+		Map<String, SourceDocumentReference> sourceDocumentRefsById = Maps.newHashMap();
 
 		getProgressListener().setProgress(
 				"Loading tagsets for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()
@@ -56,16 +56,16 @@ class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReferenc
 			document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
 					documentFileURIProvider.getDocumentFileURI(document.getUuid())
 			);
-			docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
+			sourceDocumentRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
 		}
 
 		getProgressListener().setProgress(
 				"Loading collections for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()
 		);
 		for (AnnotationCollection collection : collectionsProvider.getCollections(tagManager.getTagLibrary())) {
-			docRefsById.get(collection.getSourceDocumentId()).addUserMarkupCollectionReference(new AnnotationCollectionReference(collection));
+			sourceDocumentRefsById.get(collection.getSourceDocumentId()).addUserMarkupCollectionReference(new AnnotationCollectionReference(collection));
 		}
 
-		return docRefsById;
+		return sourceDocumentRefsById;
 	}
 }

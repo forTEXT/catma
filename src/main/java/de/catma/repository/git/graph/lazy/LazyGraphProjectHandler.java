@@ -47,7 +47,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	private final LoadingCache<String, SourceDocument> documentCache;
 	private final LoadingCache<String, AnnotationCollection> collectionCache;
 
-	private Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
+	private Map<String, SourceDocumentReference> sourceDocumentRefsById = Maps.newHashMap();
 	private String revisionHash = "";
 
 	public LazyGraphProjectHandler(
@@ -178,7 +178,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 								)
 						);
 
-						LazyGraphProjectHandler.this.docRefsById = sourceDocumentRefsById;
+						LazyGraphProjectHandler.this.sourceDocumentRefsById = sourceDocumentRefsById;
 						LazyGraphProjectHandler.this.revisionHash = revisionHash;
 
 						documentCache.invalidateAll();
@@ -265,7 +265,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(TagsetDefinition tagsetDefinition) throws Exception {
 		Multimap<String, TagReference> result = ArrayListMultimap.create();
 
-		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
+		Set<AnnotationCollectionReference> collectionReferences = sourceDocumentRefsById.values()
 				.stream()
 				.map(SourceDocumentReference::getUserMarkupCollectionRefs)
 				.flatMap(Collection::stream)
@@ -285,7 +285,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	public Multimap<String, TagReference> getTagReferencesByCollectionId(TagDefinition tag) throws Exception {
 		Multimap<String, TagReference> result = ArrayListMultimap.create();
 
-		Set<AnnotationCollectionReference> collectionReferences = docRefsById.values()
+		Set<AnnotationCollectionReference> collectionReferences = sourceDocumentRefsById.values()
 				.stream()
 				.map(SourceDocumentReference::getUserMarkupCollectionRefs)
 				.flatMap(Collection::stream)
@@ -304,17 +304,17 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 	// document operations
 	@Override
 	public boolean hasSourceDocument(String sourceDocumentId) {
-		return docRefsById.containsKey(sourceDocumentId);
+		return sourceDocumentRefsById.containsKey(sourceDocumentId);
 	}
 
 	@Override
 	public SourceDocumentReference getSourceDocumentReference(String sourceDocumentId) {
-		return docRefsById.get(sourceDocumentId);
+		return sourceDocumentRefsById.get(sourceDocumentId);
 	}
 
 	@Override
 	public Collection<SourceDocumentReference> getSourceDocumentReferences() {
-		return Collections.unmodifiableCollection(docRefsById.values());
+		return Collections.unmodifiableCollection(sourceDocumentRefsById.values());
 	}
 
 	@Override
@@ -329,7 +329,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 				documentFileURIProvider.getDocumentFileURI(sourceDocument.getUuid())
 		);
 
-		docRefsById.put(sourceDocument.getUuid(), new SourceDocumentReference(sourceDocument.getUuid(), sourceDocument.getSourceContentHandler()));
+		sourceDocumentRefsById.put(sourceDocument.getUuid(), new SourceDocumentReference(sourceDocument.getUuid(), sourceDocument.getSourceContentHandler()));
 		documentCache.put(sourceDocument.getUuid(), sourceDocument);
 
 		updateProjectRevision(oldRevisionHash, newRevisionHash);
@@ -344,7 +344,7 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 						.collect(Collectors.toSet())
 		);
 		documentCache.invalidate(sourceDocumentRef.getUuid());
-		docRefsById.remove(sourceDocumentRef.getUuid());
+		sourceDocumentRefsById.remove(sourceDocumentRef.getUuid());
 
 		updateProjectRevision(oldRevisionHash, newRevisionHash);
 	}
