@@ -172,9 +172,14 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 										projectReference.getProjectId()
 								)
 						);
+
 						LazyGraphProjectHandler.this.docRefsById.putAll(result.getSecond());
 						LazyGraphProjectHandler.this.tagManager = result.getFirst();
 						LazyGraphProjectHandler.this.revisionHash = revisionHash;
+
+						documentCache.invalidateAll();
+						collectionCache.invalidateAll();
+
 						openProjectListener.done(result.getFirst());
 					}
 					@Override
