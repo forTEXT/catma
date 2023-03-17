@@ -378,7 +378,7 @@ public class GitAnnotationCollectionHandler {
 		AnnotationCollectionReference collectionReference = getCollectionReference(collectionId);
 		ContentInfoSet contentInfoSet = collectionReference.getContentInfoSet();
 
-		progressListener.setProgress("Loaded annotation collection \"%s\"", contentInfoSet.getTitle());
+		progressListener.setProgress("Loading collection \"%s\" with ID %s", contentInfoSet.getTitle(), collectionId);
 
 		String relativeCollectionPath = String.format(
 				"%s/%s", 

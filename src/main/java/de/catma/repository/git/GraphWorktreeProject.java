@@ -299,7 +299,7 @@ public class GraphWorktreeProject implements IndexedProject {
 						public void done(NullType result) {
 							logger.info(
 									String.format(
-											"Project \"%s\" with ID %s has been loaded after switching view mode",
+											"Project \"%s\" with ID %s has been re-opened after switching view mode",
 											projectReference.getName(),
 											projectReference.getProjectId()
 									)
@@ -448,11 +448,16 @@ public class GraphWorktreeProject implements IndexedProject {
 
 			rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			logger.info(
-					String.format("Revision hash for project with ID %s is: %s", projectReference.getProjectId(), rootRevisionHash)
+					String.format(
+							"Revision hash for project \"%1$s\" with ID %2$s is: %3$s",
+							projectReference.getName(),
+							projectReference.getProjectId(),
+							rootRevisionHash
+					)
 			);
 
 			logger.info(
-					String.format("Checking for conflicts in project with ID %s", projectReference.getProjectId())
+					String.format("Checking for conflicts in project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId())
 			);
 			if (gitProjectHandler.hasConflicts()) {
 				openProjectListener.failure(
@@ -490,7 +495,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 								logger.info(
 										String.format(
-												"Project \"%s\" with ID %s has been loaded",
+												"Project \"%s\" with ID %s has been opened",
 												projectReference.getName(),
 												projectReference.getProjectId()
 										)
@@ -1752,7 +1757,7 @@ public class GraphWorktreeProject implements IndexedProject {
 										public void done(NullType result) {
 											logger.info(
 													String.format(
-															"Project \"%s\" with ID %s has been loaded after synchronizing",
+															"Project \"%s\" with ID %s has been re-opened after synchronizing",
 															projectReference.getName(),
 															projectReference.getProjectId()
 													)

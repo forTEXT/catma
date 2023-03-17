@@ -14,7 +14,6 @@ import de.catma.repository.git.graph.interfaces.TagsetsProvider;
 import de.catma.tag.TagManager;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReference>> {
 	private final ProjectReference projectReference;
@@ -47,10 +46,14 @@ class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReferenc
 	public Map<String, SourceDocumentReference> call() throws Exception {
 		Map<String, SourceDocumentReference> docRefsById = Maps.newHashMap();
 
-		getProgressListener().setProgress("Loading tagsets for project \"%s\"", projectReference.getName());
+		getProgressListener().setProgress(
+				"Loading tagsets for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()
+		);
 		tagManager.load(tagsetsProvider.getTagsets());
 
-		getProgressListener().setProgress(String.format("Loading documents for project \"%s\"", projectReference.getName()));
+		getProgressListener().setProgress(
+				"Loading documents for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()
+		);
 		for (SourceDocument document : documentsProvider.getDocuments()) {
 			// TODO: see TODOs in GitProjectHandler.createSourceDocument
 			document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
@@ -59,14 +62,12 @@ class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReferenc
 			docRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
 		}
 
-		getProgressListener().setProgress(String.format("Loading collections for project \"%s\"", projectReference.getName()));
+		getProgressListener().setProgress(
+				"Loading collections for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()
+		);
 		for (AnnotationCollection collection : collectionsProvider.getCollections(tagManager.getTagLibrary())) {
 			docRefsById.get(collection.getSourceDocumentId()).addUserMarkupCollectionReference(new AnnotationCollectionReference(collection));
 		}
-
-		Logger.getLogger(getClass().getName()).info(
-				String.format("Finished loading project \"%s\"", projectReference.getName())
-		);
 
 		return docRefsById;
 	}
