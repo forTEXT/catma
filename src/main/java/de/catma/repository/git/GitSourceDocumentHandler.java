@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 public class GitSourceDocumentHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
+	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
 
 	private final LocalGitRepositoryManager localGitRepositoryManager;
 	private final File projectDirectory;
@@ -89,6 +90,9 @@ public class GitSourceDocumentHandler {
 				FileOSType.getFileOSType(
 						new String(convertedSourceDocumentBytes, StandardCharsets.UTF_8)));
 		sourceDocumentInfo.getTechInfoSet().setMimeType("text/plain");
+		// the source document file URI in the supplied SourceDocumentInfo initially points to a temp file (same as originalSourceDocumentStream)
+		// we update it here to point to the converted file within the current user's local copy of the repo (not persisted)
+		sourceDocumentInfo.getTechInfoSet().setURI(targetConvertedSourceDocumentFile.toURI());
 		String serializedSourceDocumentInfo = 
 				new SerializationHelper<SourceDocumentInfo>().serialize(sourceDocumentInfo);
 
@@ -127,6 +131,14 @@ public class GitSourceDocumentHandler {
 				new SerializationHelper<SourceDocumentInfo>().deserialize(
 						serializedHeaderFile, SourceDocumentInfo.class);
 
+		// set URI as it's not persisted (also see create)
+		File convertedSourceDocumentFile = Paths.get(
+				projectDirectory.getAbsolutePath(),
+				documentSubDir,
+				documentId + "." + UTF8_CONVERSION_FILE_EXTENSION
+		).toFile();
+		sourceDocumentInfo.getTechInfoSet().setURI(convertedSourceDocumentFile.toURI());
+
 		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 		SourceContentHandler sourceContentHandler = new StandardContentHandler();
 		sourceContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
@@ -148,21 +160,9 @@ public class GitSourceDocumentHandler {
 				documentSubDir,
 				HEADER_FILE_NAME
 		).toFile();
-		
-		SourceDocumentInfo currentSourceDocumentInfo = 
-			new SerializationHelper<SourceDocumentInfo>().deserialize(
-				FileUtils.readFileToString(headerFile, StandardCharsets.UTF_8), 
-				SourceDocumentInfo.class);
 
 		SourceDocumentInfo newSourceDocumentInfo = 
 				sourceDocument.getSourceDocumentInfo();
-		
-		// the source document file URI is updated when a document is loaded into the graph (see GraphWorktreeProject.getSourceDocumentURI & usages)
-		// however, we don't actually want to persist that, as it's different for every user
-		// also see how this is handled on document creation (you might have to work your way up the call tree a bit)
-		// TODO: see TODOs in GitProjectHandler.createSourceDocument
-		newSourceDocumentInfo.getTechInfoSet().setURI(
-				currentSourceDocumentInfo.getTechInfoSet().getURI());
 
 		String serializedHeader = 
 				new SerializationHelper<SourceDocumentInfo>().serialize(newSourceDocumentInfo);

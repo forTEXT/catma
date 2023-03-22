@@ -128,12 +128,6 @@ public class GraphWorktreeProject implements IndexedProject {
 						return GraphWorktreeProject.this.gitProjectHandler.getDocument(documentId);
 					}
 				},
-				new DocumentFileURIProvider() {
-					@Override
-					public URI getDocumentFileURI(String documentId) throws Exception {
-						return getSourceDocumentURI(documentId);
-					}
-				},
 				new DocumentIndexProvider() {
 					@Override
 					public Map getDocumentIndex(String documentId) throws IOException {
@@ -1399,13 +1393,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public SourceDocument getSourceDocument(String sourceDocumentId) throws Exception {
 		return graphProjectHandler.getSourceDocument(sourceDocumentId);
-	}
-
-	private URI getSourceDocumentURI(String sourceDocumentId) {
-		return Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
-				.resolve(gitProjectHandler.getSourceDocumentPath(sourceDocumentId))
-				.resolve(sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION)
-				.toUri();
 	}
 
 	private Path getTokenizedSourceDocumentPath(String sourceDocumentId) {

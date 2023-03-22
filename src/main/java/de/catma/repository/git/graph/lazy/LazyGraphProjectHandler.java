@@ -37,7 +37,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 	private final DocumentsProvider documentsProvider;
 	private final DocumentProvider documentProvider;
-	private final DocumentFileURIProvider documentFileURIProvider;
 	private final DocumentIndexProvider documentIndexProvider;
 
 	private final CommentsProvider commentsProvider;
@@ -57,7 +56,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 			TagsetsProvider tagsetsProvider,
 			DocumentsProvider documentsProvider,
 			DocumentProvider documentProvider,
-			DocumentFileURIProvider documentFileURIProvider,
 			DocumentIndexProvider documentIndexProvider,
 			CommentsProvider commentsProvider,
 			CollectionProvider collectionProvider
@@ -68,7 +66,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 		this.tagsetsProvider = tagsetsProvider;
 		this.documentsProvider = documentsProvider;
 		this.documentProvider = documentProvider;
-		this.documentFileURIProvider = documentFileURIProvider;
 		this.documentIndexProvider = documentIndexProvider;
 		this.commentsProvider = commentsProvider;
 		this.collectionProvider = collectionProvider;
@@ -161,7 +158,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 				tagManager,
 				tagsetsProvider,
 				documentsProvider,
-				documentFileURIProvider,
 				collectionsProvider
 		);
 
@@ -324,11 +320,6 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void addSourceDocument(SourceDocument sourceDocument, String oldRevisionHash, String newRevisionHash) throws Exception {
-		// TODO: see TODOs in GitProjectHandler.createSourceDocument
-		sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
-				documentFileURIProvider.getDocumentFileURI(sourceDocument.getUuid())
-		);
-
 		sourceDocumentRefsById.put(sourceDocument.getUuid(), new SourceDocumentReference(sourceDocument.getUuid(), sourceDocument.getSourceContentHandler()));
 		documentCache.put(sourceDocument.getUuid(), sourceDocument);
 

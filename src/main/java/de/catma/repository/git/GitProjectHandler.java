@@ -579,16 +579,6 @@ public class GitProjectHandler {
 
 			localGitRepoManager.push(jGitCredentialsManager);
 
-			// the source document file URI in the supplied SourceDocumentInfo points to a temp file (same as convertedSourceDocumentStream)
-			// the actual file path within the project is user-specific (because each user has their own copy of the project)
-			// we don't want to persist any user-specific URI, so we update the URI here, AFTER persistence
-			// the URI is also updated when a document is loaded into the graph (see GraphWorktreeProject.getSourceDocumentURI & usages)
-			// TODO: potentially we don't need to do this here, as GraphProjectHandler.addSourceDocument does it too
-			// TODO: review how/where the URI is used, as it isn't persisted at all anymore (marked transient)
-			sourceDocumentInfo.getTechInfoSet().setURI(
-					Paths.get(documentDirectory.getAbsolutePath(), convertedSourceDocumentFileName).toUri()
-			);
-
 			return projectRevision;
 		}
 	}

@@ -8,7 +8,6 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.interfaces.CollectionsProvider;
-import de.catma.repository.git.graph.interfaces.DocumentFileURIProvider;
 import de.catma.repository.git.graph.interfaces.DocumentsProvider;
 import de.catma.repository.git.graph.interfaces.TagsetsProvider;
 import de.catma.tag.TagManager;
@@ -20,7 +19,6 @@ class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReferenc
 	private final TagManager tagManager;
 	private final TagsetsProvider tagsetsProvider;
 	private final DocumentsProvider documentsProvider;
-	private final DocumentFileURIProvider documentFileURIProvider;
 	private final CollectionsProvider collectionsProvider;
 
 	public LoadJob(
@@ -28,14 +26,12 @@ class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReferenc
 			TagManager tagManager,
 			TagsetsProvider tagsetsProvider,
 			DocumentsProvider documentsProvider,
-			DocumentFileURIProvider documentFileURIProvider,
 			CollectionsProvider collectionsProvider
 	) {
 		this.projectReference = projectReference;
 		this.tagManager = tagManager;
 		this.tagsetsProvider = tagsetsProvider;
 		this.documentsProvider = documentsProvider;
-		this.documentFileURIProvider = documentFileURIProvider;
 		this.collectionsProvider = collectionsProvider;
 	}
 
@@ -52,10 +48,6 @@ class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReferenc
 				"Loading documents for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()
 		);
 		for (SourceDocument document : documentsProvider.getDocuments()) {
-			// TODO: see TODOs in GitProjectHandler.createSourceDocument
-			document.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
-					documentFileURIProvider.getDocumentFileURI(document.getUuid())
-			);
 			sourceDocumentRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
 		}
 
