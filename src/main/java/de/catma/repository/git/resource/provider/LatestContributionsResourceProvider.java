@@ -486,17 +486,17 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 					try {
 						SourceDocument document = gitSourceDocumentHandler.open(documentId);
 
-						if (documentsById.containsKey(document.getUuid())) {
-							documentsById.put(document.getUuid(), document);
-						}
-
-						document.setSourceContentHandler(new BranchAwareSourceContentHandler(
+						BranchAwareSourceContentHandler branchAwareSourceContentHandler = new BranchAwareSourceContentHandler(
 								localGitRepositoryManager,
 								remoteGitServerManager.getUsername(),
 								projectReference,
-								latestContribution.getBranch(),
-								document.getSourceContentHandler()
-						));
+								latestContribution.getBranch()
+						);
+						branchAwareSourceContentHandler.setSourceDocumentInfo(document.getSourceContentHandler().getSourceDocumentInfo());
+
+						document.setSourceContentHandler(branchAwareSourceContentHandler);
+
+						documentsById.put(document.getUuid(), document);
 					}
 					catch (IOException e) {
 						logger.log(
@@ -548,13 +548,15 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 
 				SourceDocument document = gitSourceDocumentHandler.open(documentId);
 
-				document.setSourceContentHandler(new BranchAwareSourceContentHandler(
+				BranchAwareSourceContentHandler branchAwareSourceContentHandler = new BranchAwareSourceContentHandler(
 						localGitRepositoryManager,
 						remoteGitServerManager.getUsername(),
 						projectReference,
-						latestContribution.getBranch(),
-						document.getSourceContentHandler()
-				));
+						latestContribution.getBranch()
+				);
+				branchAwareSourceContentHandler.setSourceDocumentInfo(document.getSourceContentHandler().getSourceDocumentInfo());
+
+				document.setSourceContentHandler(branchAwareSourceContentHandler);
 
 				localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
 
