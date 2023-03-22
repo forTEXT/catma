@@ -34,7 +34,13 @@ public enum CATMAPropertyKey {
 
 	GIT_REPOSITORY_BASE_PATH,
 
-	MAX_PAGE_FILE_SIZE_BYTES("200000"),
+	// this setting is somewhat related to the "Maximum diff patch size" setting in GitLab (GitLab admin area > Settings > General > Diff limits)
+	// ideally all diffs should be viewable in GitLab (especially for conflict resolution in merge requests), however a diff can be significantly
+	// larger than the underlying file (a simple test showed almost double for a new annotation page file)
+	// therefore this should be set lower than the GitLab setting - recommendation: about half the value of the GitLab setting, or lower
+	// with the default value of 200 000 you should set the GitLab setting to the maximum permissible value (512 KB)
+	// NB: setting this too low will have performance implications
+	MAX_ANNOTATION_PAGE_FILE_SIZE_BYTES("200000"),
 
 	MIN_TIME_BETWEEN_SYNCHRONIZATIONS_SECONDS("30"),
 	DEV_PREVENT_PUSH("false"),
