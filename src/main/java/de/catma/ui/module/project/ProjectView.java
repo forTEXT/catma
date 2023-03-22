@@ -1934,9 +1934,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		// default is synchronized view, false = synchronized, true = latest contributions
 		boolean isLatestContributionsViewCurrentlyEnabled = (Boolean) btnToggleViewSynchronizedOrLatestContributions.getData();
 
-		// disable the entire layout
-		setEnabled(false);
-
 		try {
 			if (isLatestContributionsViewCurrentlyEnabled) {
 				setLatestContributionsView(false);
@@ -1959,7 +1956,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							}
 							catch (Exception e) {
 								errorHandler.showAndLogError("Failed to switch view", e);
-								setEnabled(true);
 							}
 						}
 				);
@@ -1968,15 +1964,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 		catch (Exception e) {
 			errorHandler.showAndLogError("Failed to switch view", e);
-			setEnabled(true);
 		}
 	}
 
 	private void setLatestContributionsView(final boolean enabled) throws Exception {
-		// default is synchronized view, false = synchronized, true = latest contributions
-		btnToggleViewSynchronizedOrLatestContributions.setData(enabled);
-		btnToggleViewSynchronizedOrLatestContributions.setIcon(enabled ? VaadinIcons.RANDOM : VaadinIcons.ROAD_BRANCH);
-
+		setEnabled(false); // disable the entire layout
 		setProgressBarVisible(true);
 
 		final UI ui = UI.getCurrent();
@@ -1997,10 +1989,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 			@Override
 			public void ready(Project project) {
+				// default is synchronized view, false = synchronized, true = latest contributions
+				btnToggleViewSynchronizedOrLatestContributions.setData(enabled);
+				btnToggleViewSynchronizedOrLatestContributions.setIcon(enabled ? VaadinIcons.RANDOM : VaadinIcons.ROAD_BRANCH);
+
+				eventBus.post(new HeaderContextChangeEvent(projectReference.getName(), enabled));
+
 				setProgressBarVisible(false);
 				reloadAll();
 				setEnabled(true);
-				eventBus.post(new HeaderContextChangeEvent(projectReference.getName(), enabled));
 			}
 
 			@Override
