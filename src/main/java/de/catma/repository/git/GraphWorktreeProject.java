@@ -481,6 +481,11 @@ public class GraphWorktreeProject implements IndexedProject {
 			}
 
 			gitProjectHandler.ensureUserBranch();
+
+			if (gitProjectHandler.hasUncommittedChanges() || gitProjectHandler.hasUntrackedChanges()) {
+				commitAndPushChanges("Auto-committing changes on project open");
+			}
+
 			gitProjectHandler.verifyCollections();
 
 			ProgressListener progressListener = new ProgressListener() {
@@ -543,7 +548,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				);
 			}
 			else {
-				commitAndPushChanges("Auto-committing and -pushing project on close");
+				commitAndPushChanges("Auto-committing changes on project close");
 			}
 		}
 		catch (IOException e) {
