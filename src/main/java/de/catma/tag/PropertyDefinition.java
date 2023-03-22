@@ -68,7 +68,7 @@ public class PropertyDefinition {
 	private String uuid;
 	private String name;
 	private List<String> possibleValueList;
-	private transient boolean contribution;
+	private transient boolean contribution = false;
 
 	public PropertyDefinition() {
 		this.possibleValueList = new ArrayList<String>();

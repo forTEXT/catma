@@ -812,7 +812,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			}
 
 			DocumentResource documentResource = (DocumentResource) root;
-			selectedSourceDocumentRefs.add(documentResource.getDocument());
+			selectedSourceDocumentRefs.add(documentResource.getSourceDocumentRef());
 		}
 
 		return selectedSourceDocumentRefs;
@@ -839,7 +839,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 
 		if (root != null) {
-			SourceDocumentReference sourceDocumentRef = ((DocumentResource) root).getDocument();
+			SourceDocumentReference sourceDocumentRef = ((DocumentResource) root).getSourceDocumentRef();
 			AnnotationCollectionReference annotationCollectionRef = child == null ? null : ((CollectionResource) child).getCollectionReference();
 
 			eventBus.post(new RouteToAnnotateEvent(project, sourceDocumentRef, annotationCollectionRef));
@@ -1213,7 +1213,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleEditDocument(Resource documentToEdit) {
-		final SourceDocumentReference documentRef = ((DocumentResource) documentToEdit).getDocument();
+		final SourceDocumentReference documentRef = ((DocumentResource) documentToEdit).getSourceDocumentRef();
 		boolean isBeyondCurrentUsersResponsibility = !documentRef.isResponsible(project.getCurrentUser().getIdentifier());
 
 		try {
@@ -1418,13 +1418,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					corpusToBeAnalyzed.addUserMarkupCollectionReference(collectionResource.getCollectionReference());
 
 					DocumentResource parentDocumentResource = (DocumentResource) resourceGrid.getTreeData().getParent(collectionResource);
-					if (!corpusToBeAnalyzed.getSourceDocuments().contains(parentDocumentResource.getDocument())) {
-						corpusToBeAnalyzed.addSourceDocument(parentDocumentResource.getDocument());
+					if (!corpusToBeAnalyzed.getSourceDocuments().contains(parentDocumentResource.getSourceDocumentRef())) {
+						corpusToBeAnalyzed.addSourceDocument(parentDocumentResource.getSourceDocumentRef());
 					}
 				}
 				else { // it's a document
 					DocumentResource documentResource = (DocumentResource) resource;
-					corpusToBeAnalyzed.addSourceDocument(documentResource.getDocument());
+					corpusToBeAnalyzed.addSourceDocument(documentResource.getSourceDocumentRef());
 				}
 			}
 

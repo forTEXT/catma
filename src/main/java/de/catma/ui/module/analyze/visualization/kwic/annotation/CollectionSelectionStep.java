@@ -90,7 +90,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		documentData.getRootItems()
 			.stream()
 			.filter(resource -> 
-				((DocumentResource)resource).getDocument().getUuid().equals(
+				((DocumentResource)resource).getSourceDocumentRef().getUuid().equals(
 						userMarkupCollectionReference.getSourceDocumentId()))
 			.findAny()
 			.ifPresent(sourceDocResource -> 
@@ -235,7 +235,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	    		}
 	    		
 	    		DocumentResource documentResource = (DocumentResource)root;
-	    		selectedDocuments.add(documentResource.getDocument());
+	    		selectedDocuments.add(documentResource.getSourceDocumentRef());
 	    	}
 	    	
 	    	if (!selectedDocuments.isEmpty()) {
