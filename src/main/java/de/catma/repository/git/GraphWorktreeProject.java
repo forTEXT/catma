@@ -218,7 +218,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	@Override
 	public void setLatestContributionsView(boolean enabled, OpenProjectListener openProjectListener) throws Exception {
-		if (hasUncommittedChanges()) {
+		if (hasUncommittedChanges() || hasUntrackedChanges()) {
 			throw new IllegalStateException("There are uncommitted changes that need to be committed first!");
 		}
 

@@ -803,7 +803,7 @@ public class GitProjectHandler {
 			boolean pushedAlready = false;
 
 			// if there are uncommitted changes we perform an auto commit and push
-			if (localGitRepoManager.hasUncommittedChanges()) {
+			if (localGitRepoManager.hasUncommittedChanges() || localGitRepoManager.hasUntrackedChanges()) {
 				commitProject("Auto-committing changes before synchronization");
 				localGitRepoManager.push(jGitCredentialsManager);
 				pushedAlready = true;

@@ -1437,7 +1437,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleImportCollectionRequest() {
 		try {
-			if (!project.hasUncommittedChanges()) {
+			if (!project.hasUncommittedChanges() && !project.hasUntrackedChanges()) {
 				importCollection();
 			}
 			else {
@@ -1941,7 +1941,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			}
 
 			// switching to latest contributions view, check for uncommitted changes first
-			if (!project.hasUncommittedChanges()) {
+			if (!project.hasUncommittedChanges() && !project.hasUntrackedChanges()) {
 				setLatestContributionsView(true);
 			}
 			else {
@@ -2055,7 +2055,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					}
 			);
 
-			if (!project.hasUncommittedChanges()) {
+			if (!project.hasUncommittedChanges() && !project.hasUntrackedChanges()) {
 				corpusImportDialog.show();
 			}
 			else {
