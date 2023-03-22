@@ -486,15 +486,15 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 					try {
 						SourceDocument document = gitSourceDocumentHandler.open(documentId);
 
-						BranchAwareSourceContentHandler branchAwareSourceContentHandler = new BranchAwareSourceContentHandler(
+						BranchAwareStandardContentHandler branchAwareStandardContentHandler = new BranchAwareStandardContentHandler(
 								localGitRepositoryManager,
-								remoteGitServerManager.getUsername(),
 								projectReference,
-								latestContribution.getBranch()
+								latestContribution.getBranch(),
+								remoteGitServerManager.getUsername()
 						);
-						branchAwareSourceContentHandler.setSourceDocumentInfo(document.getSourceContentHandler().getSourceDocumentInfo());
+						branchAwareStandardContentHandler.setSourceDocumentInfo(document.getSourceContentHandler().getSourceDocumentInfo());
 
-						document.setSourceContentHandler(branchAwareSourceContentHandler);
+						document.setSourceContentHandler(branchAwareStandardContentHandler);
 
 						documentsById.put(document.getUuid(), document);
 					}
@@ -548,15 +548,15 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 
 				SourceDocument document = gitSourceDocumentHandler.open(documentId);
 
-				BranchAwareSourceContentHandler branchAwareSourceContentHandler = new BranchAwareSourceContentHandler(
+				BranchAwareStandardContentHandler branchAwareStandardContentHandler = new BranchAwareStandardContentHandler(
 						localGitRepositoryManager,
-						remoteGitServerManager.getUsername(),
 						projectReference,
-						latestContribution.getBranch()
+						latestContribution.getBranch(),
+						remoteGitServerManager.getUsername()
 				);
-				branchAwareSourceContentHandler.setSourceDocumentInfo(document.getSourceContentHandler().getSourceDocumentInfo());
+				branchAwareStandardContentHandler.setSourceDocumentInfo(document.getSourceContentHandler().getSourceDocumentInfo());
 
-				document.setSourceContentHandler(branchAwareSourceContentHandler);
+				document.setSourceContentHandler(branchAwareStandardContentHandler);
 
 				localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
 

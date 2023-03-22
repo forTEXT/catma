@@ -6,32 +6,32 @@ import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 
 import java.io.IOException;
 
-public class BranchAwareSourceContentHandler extends StandardContentHandler {
+public class BranchAwareStandardContentHandler extends StandardContentHandler {
 	private final LocalGitRepositoryManager localGitRepositoryManager;
-	private final String username;
 	private final ProjectReference projectReference;
-	private final String branch;
+	private final String branchName;
+	private final String currentUserBranchName;
 
-	public BranchAwareSourceContentHandler(
+	public BranchAwareStandardContentHandler(
 			LocalGitRepositoryManager localGitRepositoryManager,
-			String username,
 			ProjectReference projectReference,
-			String branch
+			String branchName,
+			String currentUserBranchName
 	) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
-		this.username = username;
 		this.projectReference = projectReference;
-		this.branch = branch;
+		this.branchName = branchName;
+		this.currentUserBranchName = currentUserBranchName;
 	}
 
 	public void load() throws IOException {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
-			localGitRepoManager.checkout(branch, false);
+			localGitRepoManager.checkout(branchName, false);
 
 			super.load();
 
-			localGitRepoManager.checkout(username, false);
+			localGitRepoManager.checkout(currentUserBranchName, false);
 		}
 	}
 }

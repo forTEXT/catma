@@ -42,63 +42,52 @@ public class GitSourceDocumentHandler {
 	}
 
 	public String create(
-			File documentFolder, String sourceDocumentId,
-			InputStream originalSourceDocumentStream, String originalSourceDocumentFileName,
-			InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
+			File sourceDocumentDirectory,
+			String sourceDocumentId,
+			InputStream originalSourceDocumentStream,
+			String originalSourceDocumentFileName,
+			InputStream convertedSourceDocumentStream,
+			String convertedSourceDocumentFileName,
 			Map<String, List<TermInfo>> terms,
 			String tokenizedSourceDocumentFileName,
 			SourceDocumentInfo sourceDocumentInfo
 	) throws IOException {
+		sourceDocumentDirectory.mkdirs();
 
-		documentFolder.mkdirs();
-		
 		// write files into the local repo
-		File targetOriginalSourceDocumentFile = 
-				new File(documentFolder, originalSourceDocumentFileName);
-		File targetConvertedSourceDocumentFile = 
-				new File(documentFolder, convertedSourceDocumentFileName);
-		File targetTokenizedSourceDocumentFile = 
-				new File(documentFolder, tokenizedSourceDocumentFileName);
+		File targetOriginalSourceDocumentFile = new File(sourceDocumentDirectory, originalSourceDocumentFileName);
+		File targetConvertedSourceDocumentFile = new File(sourceDocumentDirectory, convertedSourceDocumentFileName);
+		File targetTokenizedSourceDocumentFile = new File(sourceDocumentDirectory, tokenizedSourceDocumentFileName);
 
-		// add files to git
-		this.localGitRepositoryManager.add(
-				targetOriginalSourceDocumentFile, 
-				IOUtils.toByteArray(originalSourceDocumentStream));
-		byte[] convertedSourceDocumentBytes = 
-				IOUtils.toByteArray(convertedSourceDocumentStream);
-		this.localGitRepositoryManager.add(
-				targetConvertedSourceDocumentFile, convertedSourceDocumentBytes);
+		localGitRepositoryManager.add(targetOriginalSourceDocumentFile, IOUtils.toByteArray(originalSourceDocumentStream));
+		byte[] convertedSourceDocumentBytes = IOUtils.toByteArray(convertedSourceDocumentStream);
+		localGitRepositoryManager.add(targetConvertedSourceDocumentFile, convertedSourceDocumentBytes);
 
 		Map<String, List<GitTermInfo>> gitTermInfos = Maps.newHashMap();
 		terms.forEach((term, termInfos) -> gitTermInfos.put(
-			term,
-			termInfos.stream().map(GitTermInfo::new).collect(Collectors.toList())
+				term,
+				termInfos.stream().map(GitTermInfo::new).collect(Collectors.toList())
 		));
-		this.localGitRepositoryManager.add(
-			targetTokenizedSourceDocumentFile, 
-			new SerializationHelper<Map<String, List<GitTermInfo>>>()
-				.serialize(gitTermInfos)
-				.getBytes(StandardCharsets.UTF_8)
+		localGitRepositoryManager.add(
+				targetTokenizedSourceDocumentFile,
+				new SerializationHelper<Map<String, List<GitTermInfo>>>().serialize(gitTermInfos).getBytes(StandardCharsets.UTF_8)
 		);
 
 		// write header.json into the local repo
-		File targetHeaderFile = new File(documentFolder, HEADER_FILE_NAME);
+		File targetHeaderFile = new File(sourceDocumentDirectory, HEADER_FILE_NAME);
 
 		sourceDocumentInfo.getTechInfoSet().setCharset(StandardCharsets.UTF_8);
 		sourceDocumentInfo.getTechInfoSet().setFileType(FileType.TEXT);
 		sourceDocumentInfo.getTechInfoSet().setFileOSType(
-				FileOSType.getFileOSType(
-						new String(convertedSourceDocumentBytes, StandardCharsets.UTF_8)));
+				FileOSType.getFileOSType(new String(convertedSourceDocumentBytes, StandardCharsets.UTF_8))
+		);
 		sourceDocumentInfo.getTechInfoSet().setMimeType("text/plain");
 		// the source document file URI in the supplied SourceDocumentInfo initially points to a temp file (same as originalSourceDocumentStream)
 		// we update it here to point to the converted file within the current user's local copy of the repo (not persisted)
 		sourceDocumentInfo.getTechInfoSet().setURI(targetConvertedSourceDocumentFile.toURI());
-		String serializedSourceDocumentInfo = 
-				new SerializationHelper<SourceDocumentInfo>().serialize(sourceDocumentInfo);
 
-		this.localGitRepositoryManager.add(
-				targetHeaderFile, 
-				serializedSourceDocumentInfo.getBytes(StandardCharsets.UTF_8));
+		String serializedSourceDocumentInfo = new SerializationHelper<SourceDocumentInfo>().serialize(sourceDocumentInfo);
+		localGitRepositoryManager.add(targetHeaderFile, serializedSourceDocumentInfo.getBytes(StandardCharsets.UTF_8));
 
 		// commit newly added files
 		String commitMessage = String.format(
@@ -106,102 +95,80 @@ public class GitSourceDocumentHandler {
 				sourceDocumentInfo.getContentInfoSet().getTitle(), 
 				sourceDocumentId
 		);
-		
-		String revisionHash = this.localGitRepositoryManager.commit(
-				commitMessage, this.username, this.email, false
-		);
 
+		String revisionHash = localGitRepositoryManager.commit(commitMessage, username, email, false);
 		return revisionHash;
 	}
 
-	public SourceDocument open(String documentId) throws IOException {
-		String documentSubDir = String.format(
-				"%s/%s", GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, documentId
-		);
+	public SourceDocument open(String sourceDocumentId) throws IOException {
+		String sourceDocumentDirectory = String.format("%s/%s", GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, sourceDocumentId);
 		File headerFile = Paths.get(
-				this.projectDirectory.getAbsolutePath(),
-				documentSubDir,
+				projectDirectory.getAbsolutePath(),
+				sourceDocumentDirectory,
 				HEADER_FILE_NAME
 		).toFile();
-		
 
-		String serializedHeaderFile = 
-				FileUtils.readFileToString(headerFile, StandardCharsets.UTF_8);
-		SourceDocumentInfo sourceDocumentInfo = 
-				new SerializationHelper<SourceDocumentInfo>().deserialize(
-						serializedHeaderFile, SourceDocumentInfo.class);
+		String serializedHeaderFile = FileUtils.readFileToString(headerFile, StandardCharsets.UTF_8);
+		SourceDocumentInfo sourceDocumentInfo = new SerializationHelper<SourceDocumentInfo>().deserialize(serializedHeaderFile, SourceDocumentInfo.class);
 
 		// set URI as it's not persisted (also see create)
 		File convertedSourceDocumentFile = Paths.get(
 				projectDirectory.getAbsolutePath(),
-				documentSubDir,
-				documentId + "." + UTF8_CONVERSION_FILE_EXTENSION
+				sourceDocumentDirectory,
+				sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION
 		).toFile();
 		sourceDocumentInfo.getTechInfoSet().setURI(convertedSourceDocumentFile.toURI());
 
-		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 		SourceContentHandler sourceContentHandler = new StandardContentHandler();
 		sourceContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
-		SourceDocument sourceDocument = 
-				sourceDocumentHandler.loadSourceDocument(
-						documentId, sourceContentHandler);
 
+		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
+		SourceDocument sourceDocument = sourceDocumentHandler.loadSourceDocument(sourceDocumentId, sourceContentHandler);
 		return sourceDocument;
 	}
 
-	public String update(SourceDocumentReference sourceDocument) throws IOException {
-		String documentSubDir = String.format(
-				"%s/%s", 
-				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, 
-				sourceDocument.getUuid()
-		);
+	public String update(SourceDocumentReference sourceDocumentRef) throws IOException {
+		String sourceDocumentDirectory = String.format("%s/%s", GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, sourceDocumentRef.getUuid());
 		File headerFile = Paths.get(
-				this.projectDirectory.getAbsolutePath(),
-				documentSubDir,
+				projectDirectory.getAbsolutePath(),
+				sourceDocumentDirectory,
 				HEADER_FILE_NAME
 		).toFile();
 
-		SourceDocumentInfo newSourceDocumentInfo = 
-				sourceDocument.getSourceDocumentInfo();
+		SourceDocumentInfo newSourceDocumentInfo = sourceDocumentRef.getSourceDocumentInfo();
+		String serializedHeader = new SerializationHelper<SourceDocumentInfo>().serialize(newSourceDocumentInfo);
 
-		String serializedHeader = 
-				new SerializationHelper<SourceDocumentInfo>().serialize(newSourceDocumentInfo);
-
-		return this.localGitRepositoryManager.addAndCommit(
+		return localGitRepositoryManager.addAndCommit(
 				headerFile,
 				serializedHeader.getBytes(StandardCharsets.UTF_8),
 				String.format(
 						"Updated metadata of document \"%s\" with ID %s", 
 						newSourceDocumentInfo.getContentInfoSet().getTitle(), 
-						sourceDocument.getUuid()
+						sourceDocumentRef.getUuid()
 				),
-				this.username,
-				this.email
+				username,
+				email
 		);
 	}
-	
-	public String removeDocument(SourceDocumentReference document) throws IOException {
-		String documentSubDir = String.format(
-				"%s/%s", 
-				GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, 
-				document.getUuid()
-		);
 
-		File documentFolderAbsolutePath = Paths.get(
-				this.projectDirectory.getAbsolutePath(),
-				documentSubDir
+	public String removeDocument(SourceDocumentReference sourceDocumentRef) throws IOException {
+		String sourceDocumentDirectory = String.format("%s/%s", GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, sourceDocumentRef.getUuid());
+		File sourceDocumentDirectoryAbsolutePath = Paths.get(
+				projectDirectory.getAbsolutePath(),
+				sourceDocumentDirectory
 		).toFile();
-		
-		String projectRevision = this.localGitRepositoryManager.removeAndCommit(
-				documentFolderAbsolutePath, 
-				false, // do not delete the parent folder
+
+		String revisionHash = localGitRepositoryManager.removeAndCommit(
+				sourceDocumentDirectoryAbsolutePath,
+				false, // do not delete the parent directory
 				String.format(
-					"Deleted document \"%s\" with ID %s",
-					document.getSourceDocumentInfo().getContentInfoSet().getTitle(),
-					document.getUuid()),
-				this.username,
-				this.email);
-			
-		return projectRevision;
+						"Deleted document \"%s\" with ID %s",
+						sourceDocumentRef.getSourceDocumentInfo().getContentInfoSet().getTitle(),
+						sourceDocumentRef.getUuid()
+				),
+				username,
+				email
+		);
+		return revisionHash;
 	}
 }
