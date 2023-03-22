@@ -86,20 +86,18 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		}
 	}	
 
-	private void addCollection(AnnotationCollectionReference userMarkupCollectionReference) {
-		documentData.getRootItems()
-			.stream()
-			.filter(resource -> 
-				((DocumentResource)resource).getSourceDocumentRef().getUuid().equals(
-						userMarkupCollectionReference.getSourceDocumentId()))
-			.findAny()
-			.ifPresent(sourceDocResource -> 
-				documentData.addItem(
-						sourceDocResource, 
+	private void addCollection(AnnotationCollectionReference annotationCollectionRef) {
+		documentData.getRootItems().stream()
+				.filter(resource -> ((DocumentResource) resource).getSourceDocumentRef().getUuid().equals(annotationCollectionRef.getSourceDocumentId()))
+				.findAny()
+				.ifPresent(documentResource -> documentData.addItem(
+						documentResource,
 						new CollectionResource(
-								userMarkupCollectionReference, 
+								annotationCollectionRef,
 								project.getId(),
-								project.getCurrentUser())));
+								project.getCurrentUser()
+						)
+				));
 		documentDataProvider.refreshAll();
 	}
 
@@ -215,50 +213,47 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 			.forEach(child -> documentGrid.select(child));
 		});
 	}
-	
+
 	private void handleAddCollectionRequest() {
 		try {
 			@SuppressWarnings("unchecked")
-			TreeDataProvider<Resource> resourceDataProvider = 
-					(TreeDataProvider<Resource>) documentGrid.getDataProvider();
-			
-	    	Set<Resource> selectedResources = documentGrid.getSelectedItems();
-	    	
-	    	Set<SourceDocumentReference> selectedDocuments = new HashSet<>();
-	    	
-	    	for (Resource resource : selectedResources) {
-	    		Resource root = 
-	        			resourceDataProvider.getTreeData().getParent(resource);
-	
-	    		if (root == null) {
-	    			root = resource;
-	    		}
-	    		
-	    		DocumentResource documentResource = (DocumentResource)root;
-	    		selectedDocuments.add(documentResource.getSourceDocumentRef());
-	    	}
-	    	
-	    	if (!selectedDocuments.isEmpty()) {
-		    	SingleTextInputDialog collectionNameDlg = 
-		    		new SingleTextInputDialog("Create Annotation Collection(s)", "Please enter the collection name:",
-		    				new SaveCancelListener<String>() {
-								
-								@Override
-								public void savePressed(String result) {
-									for (SourceDocumentReference documentRef : selectedDocuments) {
-										project.createAnnotationCollection(result, documentRef);
-									}
-								}
-							});
-		    	
-		    	collectionNameDlg.show();
-	    	}
-	    	else {
-	    		Notification.show("Info", "Please select one or more documents first!", Type.HUMANIZED_MESSAGE);
-	    	}
+			TreeDataProvider<Resource> resourceDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+
+			Set<Resource> selectedResources = documentGrid.getSelectedItems();
+
+			Set<SourceDocumentReference> selectedSourceDocumentRefs = new HashSet<>();
+
+			for (Resource resource : selectedResources) {
+				Resource root = resourceDataProvider.getTreeData().getParent(resource);
+				if (root == null) {
+					root = resource;
+				}
+
+				DocumentResource documentResource = (DocumentResource) root;
+				selectedSourceDocumentRefs.add(documentResource.getSourceDocumentRef());
+			}
+
+			if (selectedSourceDocumentRefs.isEmpty()) {
+				Notification.show("Info", "Please select one or more documents first!", Type.HUMANIZED_MESSAGE);
+				return;
+			}
+
+			SingleTextInputDialog collectionNameDlg = new SingleTextInputDialog(
+					"Create Annotation Collection(s)",
+					"Please enter the collection name:",
+					new SaveCancelListener<String>() {
+						@Override
+						public void savePressed(String collectionName) {
+							for (SourceDocumentReference sourceDocumentRef : selectedSourceDocumentRefs) {
+								project.createAnnotationCollection(collectionName, sourceDocumentRef);
+							}
+						}
+					}
+			);
+			collectionNameDlg.show();
 		}
 		catch (Exception e) {
-			((ErrorHandler) UI.getCurrent()).showAndLogError("Error creating annotation collection", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to create annotation collection", e);
 		}
 	}
 
