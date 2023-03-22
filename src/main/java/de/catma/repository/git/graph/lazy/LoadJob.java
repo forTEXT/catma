@@ -48,7 +48,7 @@ class LoadJob extends DefaultProgressCallable<Map<String, SourceDocumentReferenc
 				"Loading documents for project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId()
 		);
 		for (SourceDocument document : documentsProvider.getDocuments()) {
-			sourceDocumentRefsById.put(document.getUuid(), new SourceDocumentReference(document.getUuid(), document.getSourceContentHandler()));
+			sourceDocumentRefsById.put(document.getUuid(), new SourceDocumentReference(document));
 		}
 
 		getProgressListener().setProgress(

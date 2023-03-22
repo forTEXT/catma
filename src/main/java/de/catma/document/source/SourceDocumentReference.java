@@ -12,8 +12,13 @@ public class SourceDocumentReference {
 	private final String uuid;
 	private SourceContentHandler sourceContentHandler;
 	private List<AnnotationCollectionReference> userMarkupCollectionRefs;
-	
-	
+	private transient boolean contribution = false;
+
+	public SourceDocumentReference(SourceDocument sourceDocument) {
+		this(sourceDocument.getUuid(), sourceDocument.getSourceContentHandler());
+		this.contribution = sourceDocument.isContribution();
+	}
+
 	/**
 	 * @param uuid identifier for this document
 	 * @param handler the appropriate content handler
@@ -126,5 +131,13 @@ public class SourceDocumentReference {
 
 	public void setResponsibleUser(String responsibleUser) {
 		sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().setResponsibleUser(responsibleUser);
+	}
+
+	public boolean isContribution() {
+		return contribution;
+	}
+
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
 	}
 }

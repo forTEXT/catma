@@ -484,19 +484,22 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 
 				for (String documentId : latestContribution.getDocumentIds()) {
 					try {
-						SourceDocument document = gitSourceDocumentHandler.open(documentId);
+						if (!documentsById.containsKey(documentId)) {
+							SourceDocument document = gitSourceDocumentHandler.open(documentId);
+							document.setContribution(true);
 
-						BranchAwareStandardContentHandler branchAwareStandardContentHandler = new BranchAwareStandardContentHandler(
-								localGitRepositoryManager,
-								projectReference,
-								latestContribution.getBranch(),
-								remoteGitServerManager.getUsername()
-						);
-						branchAwareStandardContentHandler.setSourceDocumentInfo(document.getSourceContentHandler().getSourceDocumentInfo());
+							BranchAwareStandardContentHandler branchAwareStandardContentHandler = new BranchAwareStandardContentHandler(
+									localGitRepositoryManager,
+									projectReference,
+									latestContribution.getBranch(),
+									remoteGitServerManager.getUsername()
+							);
+							branchAwareStandardContentHandler.setSourceDocumentInfo(document.getSourceContentHandler().getSourceDocumentInfo());
 
-						document.setSourceContentHandler(branchAwareStandardContentHandler);
+							document.setSourceContentHandler(branchAwareStandardContentHandler);
 
-						documentsById.put(document.getUuid(), document);
+							documentsById.put(document.getUuid(), document);
+						}
 					}
 					catch (IOException e) {
 						logger.log(

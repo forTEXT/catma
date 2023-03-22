@@ -112,6 +112,6 @@ public class DocumentResource implements Resource {
 	
 	@Override
 	public boolean isContribution() {
-		return false; // TODO
+		return sourceDocument.isContribution();
 	}
 }
