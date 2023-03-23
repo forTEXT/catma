@@ -527,7 +527,7 @@ public class TagsView extends HugeCard {
 							UI.getCurrent(), 
 							"Warning", 
 							String.format(
-								"Are you sure you want to delete tagset(s) \"%s\" and all related data?",
+								"Are you sure you want to delete the tagset(s) \"%s\" and all associated tags and annotations?",
 								String.join("\", \"", tagsetNames)
 							),
 							"Delete",
@@ -647,10 +647,11 @@ public class TagsView extends HugeCard {
 					@Override
 					public void execute() {
 						String msg = String.format(
-								"Are you sure you want to delete the following tags: \"%s\"?",
+								"Are you sure you want to delete the tag(s) \"%s\" and all associated annotations?",
 								targetTags
 								.stream()
 								.map(TagDefinition::getName)
+								.sorted()
 								.collect(Collectors.joining("\", \"")));
 						
 						ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {

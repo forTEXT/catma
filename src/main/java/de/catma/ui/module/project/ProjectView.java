@@ -1350,7 +1350,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									UI.getCurrent(),
 									"Warning",
 									String.format(
-											"Are you sure you want to delete resource(s) %s?",
+											"Are you sure you want to delete the resource(s) %s and all associated annotations?",
 											quotedCommaSeparatedResourceNames
 									),
 									"Delete",
@@ -1655,7 +1655,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									UI.getCurrent(),
 									"Warning",
 									String.format(
-											"Are you sure you want to delete tagset(s) %s and all related data?",
+											"Are you sure you want to delete the tagset(s) %s and all associated tags and annotations?",
 											quotedCommaSeparatedTagsetNames
 									),
 									"Delete",
