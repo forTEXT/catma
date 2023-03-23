@@ -231,7 +231,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (permissionsMissing) {
 				Notification.show(
 					"Info", 
-					"You do not have the write permission for one or more collections referenced by your selection. Those collections will be ignored!",
+					"One or more collections referenced by your selection are beyond your responsibility. Those collections will be ignored!",
 					Type.HUMANIZED_MESSAGE);
 			}
 			
