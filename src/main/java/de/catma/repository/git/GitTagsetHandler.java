@@ -387,7 +387,9 @@ public class GitTagsetHandler {
 				targetTagsetDefinitionFolderAbsolutePath,
 				false, // do not delete the parent folder
 				String.format(
-					"Deleted tagset \"%s\" with ID %s, including corresponding annotations",
+					// TODO: append ", including corresponding annotations" once this is actually happening
+					//       see TODO in GraphWorktreeProject.removeTagsetDefinition
+					"Deleted tagset \"%s\" with ID %s",
 					tagset.getName(), 
 					tagset.getUuid()),
 				this.username,

@@ -636,6 +636,8 @@ public class GraphWorktreeProject implements IndexedProject {
 		String oldRootRevisionHash = rootRevisionHash;
 
 		// collect corresponding annotations
+		// TODO: this always produces empty multimaps, because the tagset has already been removed from the tag library at this stage
+		//       the annotations are however deleted the next time we check for orphans (eg: on project open, sync or view mode change)
 		Multimap<String, TagReference> tagReferencesByCollectionId = graphProjectHandler.getTagReferencesByCollectionId(tagsetDefinition);
 		Multimap<String, TagInstance> tagInstancesByCollectionId = Multimaps.transformValues(
 				tagReferencesByCollectionId, TagReference::getTagInstance
