@@ -427,9 +427,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		catch (GitLabApiException | IllegalArgumentException e) { // missing issue title throws IllegalArgumentException
 			throw new IOException(
 					String.format(
-							"Failed to create comment in project \"%s\" for document with ID %s",
-							projectReference.getName(),
-							documentId
+							"Failed to create comment for document with ID %s in project \"%s\"",
+							documentId,
+							projectReference.getName()
 					),
 					e
 			);
@@ -566,7 +566,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			reply.setId(note.getId());
 			comment.addReply(reply);
 		}
-		catch (GitLabApiException e) {
+		catch (GitLabApiException | IllegalArgumentException e) { // missing note body throws IllegalArgumentException
 			throw new IOException(
 					String.format(
 							"Failed to create reply to comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
@@ -588,7 +588,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
 			notesApi.updateIssueNote(projectReference.getFullPath(), comment.getIid(), reply.getId(), noteBody);
 		}
-		catch (GitLabApiException e) {
+		catch (GitLabApiException | IllegalArgumentException e) { // missing note body throws IllegalArgumentException
 			throw new IOException(
 					String.format(
 							"Failed to update reply with ID %1$s (note ID %2$d) on comment with ID %3$s (issue IID %4$d) " +
