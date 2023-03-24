@@ -16,7 +16,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.api.Status;
@@ -26,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 
 import de.catma.backgroundservice.BackgroundService;
@@ -401,8 +401,7 @@ public class GitProjectHandlerTest {
 			assertFalse(status.hasUncommittedChanges());
 
 			Iterable<RevCommit> commits = jGitRepoManager.getGitApi().log().all().call();
-			@SuppressWarnings("unchecked")
-			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+			List<RevCommit> commitsList = Lists.newArrayList(commits);
 
 			assertEquals(2, commitsList.size()); // in desc. order, 0: document creation, 1: project creation
 			assertEquals(revisionHash, commitsList.get(0).getName());
