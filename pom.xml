@@ -1,45 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <groupId>de.catma</groupId>
-    <artifactId>catma</artifactId>
-    <version>6.5-SNAPSHOT</version>
-    <name>catma</name>
-    <packaging>war</packaging>
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>de.catma</groupId>
+	<artifactId>catma</artifactId>
+	<version>6.5-SNAPSHOT</version>
+	<name>catma</name>
+	<packaging>war</packaging>
 
 	<prerequisites>
 		<maven>3</maven>
 	</prerequisites>
-	
-    <properties>
+
+	<properties>
 		<vaadin.version>8.14.3</vaadin.version>
 		<vaadin.plugin.version>8.14.3</vaadin.plugin.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
 		<!-- If there are no local customizations, this can also be "fetch" or "cdn" -->
 		<vaadin.widgetset.mode>local</vaadin.widgetset.mode>
-        <jetty.plugin.version>9.4.46.v20220331</jetty.plugin.version>
-    </properties>
+
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+
+		<jetty.plugin.version>9.4.46.v20220331</jetty.plugin.version>
+	</properties>
 
 	<repositories>
 		<repository>
 			<id>vaadin-addons</id>
 			<url>https://maven.vaadin.com/vaadin-addons</url>
 		</repository>
-        <repository>
-            <id>Spring Plugins</id>
-            <url>https://repo.spring.io/plugins-release/</url>
-        </repository>
-        <repository>
-        	<id>Cogcomp Repository</id>
-        	<url>https://cogcomp.org/m2repo/</url>
-        </repository>
 	</repositories>
-	
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -51,7 +47,7 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -60,6 +56,7 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- Vaadin & addons -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-server</artifactId>
@@ -70,15 +67,15 @@
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-client-compiled</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-themes</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>com.vaadin</groupId>
-		    <artifactId>vaadin-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
@@ -101,102 +98,66 @@
 		   <version>2.2.1</version>
 		</dependency>
 		<dependency>
+			<groupId>com.wcs.wcslib</groupId>
+			<artifactId>wcslib-vaadin-widget-multifileupload</artifactId>
+			<version>4.0</version>
+		</dependency>
+		<dependency>
 			<groupId>com.github.vaadin4qbanos</groupId>
 			<artifactId>jsclipboard</artifactId>
 			<version>1.0.12</version>
 		</dependency>
 
-		<dependency>
-   			<groupId>com.wcs.wcslib</groupId>
-   			<artifactId>wcslib-vaadin-widget-multifileupload</artifactId>
-   			<version>4.0</version>
-		</dependency>
-
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr-runtime</artifactId>
-            <version>3.5.3</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.code.findbugs</groupId>
-                    <artifactId>jsr305</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+		<!-- Material Design theme for Vaadin (https://github.com/appreciated/material) -->
 		<dependency>
 			<groupId>com.github.appreciated</groupId>
 			<artifactId>material</artifactId>
 			<version>1.1.8</version>
 		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava-gwt</artifactId>
-			<version>31.1-jre</version>
-		</dependency>
 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>1.21</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
-        </dependency>
+		<!-- Apache Commons -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.21</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.9.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-email</artifactId>
 			<version>1.5</version>
 		</dependency>
-		
 		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-csv</artifactId>
-		    <version>1.9.0</version>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.11.0</version>
 		</dependency>
 
-		<!-- external OAUTH login and document loading over HTTP start -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.4.13</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
-        </dependency>
-		<!-- external OAUTH login and document loading over HTTP end -->
-		
-        <dependency>
-            <groupId>com.io7m.xom</groupId>
-            <artifactId>xom</artifactId>
-            <version>1.2.10</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit</artifactId>
-            <version>4.11.8.201904181247-r</version>
-        </dependency>
+		<!-- Apache HTTP (used for OAuth login and document loading over HTTP) -->
 		<dependency>
-			<groupId>org.gitlab4j</groupId>
-			<artifactId>gitlab4j-api</artifactId>
-			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA-v2 -->
-			<version>5.0.1-CATMA-v2</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.4.13</version>
 		</dependency>
 		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.8.9</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.13</version>
 		</dependency>
 
+		<!-- Netty (used to encode signup token in query string) -->
+		<!-- TODO: use something else and get rid of this dependency -->
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-codec-http</artifactId>
+			<version>4.1.90.Final</version>
+		</dependency>
+
+		<!-- Hazelcast & caching (used for cross-session comms and caching of signup tokens and project invitation codes) -->
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
@@ -206,78 +167,126 @@
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast-client</artifactId>
 			<version>3.12.13</version>
-		</dependency>		
+		</dependency>
 		<dependency>
 			<groupId>javax.cache</groupId>
 			<artifactId>cache-api</artifactId>
 			<version>1.1.1</version>
 		</dependency>
 
+		<!-- Guava -->
 		<dependency>
-	    	<groupId>org.apache.tika</groupId>
-	    	<artifactId>tika-parsers</artifactId>
-	    	<version>1.28.5</version>
-	    	<exclusions>
-                <exclusion>
-                    <groupId>c3p0</groupId>
-                    <artifactId>c3p0</artifactId>
-                </exclusion>
-            </exclusions>
-	  	</dependency>
-
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>31.1-jre</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.code.findbugs</groupId>
+					<artifactId>jsr305</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 		<dependency>
-		    <groupId>org.apache.tika</groupId>
-		    <artifactId>tika-langdetect</artifactId>
-		    <version>1.28.5</version>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava-gwt</artifactId>
+			<version>31.1-jre</version>
 		</dependency>
 
+		<!-- JGit -->
+		<!-- TODO: update to 5.13.x (latest supported version for Java 8, 6.0.0 upwards requires Java 11) -->
+		<!--       needs review/removal of Relative... JGit classes that were required while we still used submodules but should be fine to remove now -->
 		<dependency>
-		    <groupId>org.apache.lucene</groupId>
-		    <artifactId>lucene-core</artifactId>
-		    <version>8.11.2</version>
-		</dependency>
-        
-		<dependency>
-		    <groupId>org.apache.lucene</groupId>
-		    <artifactId>lucene-analyzers-common</artifactId>
-		    <version>8.11.2</version>
-		</dependency>
-		
-		<dependency>
-		    <groupId>io.netty</groupId>
-		    <artifactId>netty-codec-http</artifactId>
-		    <version>4.1.90.Final</version>
+			<groupId>org.eclipse.jgit</groupId>
+			<artifactId>org.eclipse.jgit</artifactId>
+			<version>4.11.8.201904181247-r</version>
 		</dependency>
 
+		<!-- GitLab -->
+		<dependency>
+			<groupId>org.gitlab4j</groupId>
+			<artifactId>gitlab4j-api</artifactId>
+			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA-v2 -->
+			<version>5.0.1-CATMA-v2</version>
+		</dependency>
+
+		<!-- Apache Tika & Lucene (used for document parsing & indexing) -->
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-parsers</artifactId>
+			<version>1.28.5</version>
+			<exclusions>
+				<exclusion>
+					<groupId>c3p0</groupId>
+					<artifactId>c3p0</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-langdetect</artifactId>
+			<version>1.28.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>8.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>8.11.2</version>
+		</dependency>
+
+		<!-- ANTLR (used for the query language) -->
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr-runtime</artifactId>
+			<version>3.5.3</version>
+		</dependency>
+
+		<!-- XML handling -->
+		<!-- TODO: replace, see related TODO in HazelCastInitializerServlet -->
+		<dependency>
+			<groupId>com.io7m.xom</groupId>
+			<artifactId>xom</artifactId>
+			<version>1.2.10</version>
+		</dependency>
+
+		<!-- JSON handling -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.9</version>
+		</dependency>
+
+		<!-- SQLite -->
 		<dependency>
 			<groupId>org.xerial</groupId>
 			<artifactId>sqlite-jdbc</artifactId>
 			<version>3.41.2.0</version>
 		</dependency>
-		
-		<!-- test dependencies -->
-		<dependency>
-		    <groupId>org.junit.jupiter</groupId>
-		    <artifactId>junit-jupiter-api</artifactId>
-		    <version>5.9.2</version>
-		    <scope>test</scope>
-		</dependency>
 
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.9.2</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>4.11.0</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
 			<version>4.2.0</version>
 			<scope>test</scope>
 		</dependency>
+	</dependencies>
 
-    </dependencies>
 	<build>
 		<plugins>
 			<plugin>
@@ -285,13 +294,14 @@
 				<artifactId>maven-dependency-plugin</artifactId>
 				<version>3.5.0</version>
 			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>3.2.0</version>
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
-					<!-- Exclude an unnecessary file generated by the GWT compiler. -->
+					<!-- Exclude an unnecessary file generated by the GWT compiler -->
 					<packagingExcludes>WEB-INF/classes/VAADIN/widgetsets/WEB-INF/**</packagingExcludes>
 				</configuration>
 			</plugin>
@@ -315,7 +325,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clean-plugin</artifactId>
 				<version>3.0.0</version>
-				<!-- Clean up also any pre-compiled themes -->
+				<!-- Also clean up any pre-compiled themes -->
 				<configuration>
 					<filesets>
 						<fileset>
@@ -329,34 +339,34 @@
 				</configuration>
 			</plugin>
 
-			<!-- The Jetty plugin allows us to easily test the development build by
-				running jetty:run on the command line. -->
+			<!-- The Jetty plugin allows us to easily test the development build by running jetty:run on the command line -->
 			<plugin>
 				<groupId>org.eclipse.jetty</groupId>
 				<artifactId>jetty-maven-plugin</artifactId>
 				<version>${jetty.plugin.version}</version>
 				<configuration>
 					<scanIntervalSeconds>0</scanIntervalSeconds>
-				    <webApp>
-				    	<contextPath>/catma</contextPath>
-				    </webApp>
+					<webApp>
+						<contextPath>/catma</contextPath>
+					</webApp>
 				</configuration>
 				<dependencies>
-				    <dependency>
-				      <groupId>org.eclipse.jetty.websocket</groupId>
-				      <artifactId>websocket-api</artifactId>
-				      <version>${jetty.plugin.version}</version>
-				    </dependency>
-				    <!-- To run websockets in embedded server -->
-				    <dependency>
-				      <groupId>org.eclipse.jetty.websocket</groupId>
-				      <artifactId>websocket-server</artifactId>
-				      <version>${jetty.plugin.version}</version>
+					<dependency>
+						<groupId>org.eclipse.jetty.websocket</groupId>
+						<artifactId>websocket-api</artifactId>
+						<version>${jetty.plugin.version}</version>
+					</dependency>
+					<!-- To run websockets in embedded server -->
+					<dependency>
+						<groupId>org.eclipse.jetty.websocket</groupId>
+						<artifactId>websocket-server</artifactId>
+						<version>${jetty.plugin.version}</version>
 					</dependency>
 				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
+
 	<profiles>
 		<profile>
 			<!-- Vaadin pre-release repositories -->
@@ -368,7 +378,7 @@
 			<repositories>
 				<repository>
 					<id>vaadin-prereleases</id>
-					<url>http://maven.vaadin.com/vaadin-prereleases</url>
+					<url>https://maven.vaadin.com/vaadin-prereleases</url>
 				</repository>
 				<repository>
 					<id>vaadin-snapshots</id>
@@ -384,7 +394,7 @@
 			<pluginRepositories>
 				<pluginRepository>
 					<id>vaadin-prereleases</id>
-					<url>http://maven.vaadin.com/vaadin-prereleases</url>
+					<url>https://maven.vaadin.com/vaadin-prereleases</url>
 				</pluginRepository>
 				<pluginRepository>
 					<id>vaadin-snapshots</id>
