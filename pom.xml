@@ -251,6 +251,12 @@
 			<artifactId>xom</artifactId>
 			<version>1.2.10</version>
 		</dependency>
+		<!-- Force a higher version of xml-apis than the one xom wants to avoid a ClassNotFoundException for org.w3c.dom.ElementTraversal -->
+		<dependency>
+			<groupId>xml-apis</groupId>
+			<artifactId>xml-apis</artifactId>
+			<version>1.4.01</version>
+		</dependency>
 
 		<!-- JSON handling -->
 		<dependency>
