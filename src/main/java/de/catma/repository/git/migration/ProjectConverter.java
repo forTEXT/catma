@@ -299,12 +299,12 @@ public class ProjectConverter implements AutoCloseable {
 							100
 					);
 
-					List<Long> processedIssueIids = new ArrayList<>();
+					List<Long> processedIssueIds = new ArrayList<>();
 
 					// move issues to the new project and add the document ID label
 					for (Issue issue : issues.all()) {
 						// guard against multiple processing (happened during testing, not sure how)
-						if (processedIssueIids.contains(issue.getIid())) {
+						if (processedIssueIds.contains(issue.getId())) {
 							continue;
 						}
 
@@ -332,7 +332,7 @@ public class ProjectConverter implements AutoCloseable {
 								null
 						);
 
-						processedIssueIids.add(issue.getIid());
+						processedIssueIds.add(issue.getId());
 					}
 
 					if (CATMAPropertyKey.V6_REPO_MIGRATION_CLEANUP_CONVERTED_V6_PROJECT.getBooleanValue()) {
