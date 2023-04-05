@@ -82,7 +82,9 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 						String.format(
 								"Couldn't update project member \"%s\" for project \"%s\". "
 								+ "Will try to create a new project member.",
-								subject,
+								// this ternary handles the special case where subject is actually a lambda, so that we still know which user it is
+								// (see ProjectInvitationHandler)
+								subject.getClass().getName().contains("$Lambda$") ? String.format("<User ID: %s>", subject.getUserId()) : subject,
 								projectReference.getName()
 						),
 						e
