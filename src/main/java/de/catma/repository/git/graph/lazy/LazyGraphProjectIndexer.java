@@ -140,50 +140,53 @@ public class LazyGraphProjectIndexer implements Indexer {
 		return searchPhrase(queryId, documentIdList, phrase, termList, limit, (term1, term2) -> term1.equals(term2));
 	}
 
-	private QueryResult searchPhrase(QueryId queryId, List<String> documentIdList, String phrase, List<String> termList, int limit,
-			BiPredicate<String, String> termTestFunction) throws Exception {
-		
-		
+	private QueryResult searchPhrase(
+			QueryId queryId,
+			List<String> sourceDocumentIds,
+			String searchPhrase,
+			List<String> searchTerms,
+			int limit,
+			BiPredicate<String, String> termTestFunction
+	) throws Exception {
 		QueryResultRowArray result = new QueryResultRowArray();
-		
-		if (termList.isEmpty() || documentIdList.isEmpty()) {
+
+		if (sourceDocumentIds.isEmpty() || searchTerms.isEmpty()) {
 			return result;
 		}
-		
-		for (String documentId : documentIdList) {
-			Set<Term> allDocumentTerms = documentIndexCache.get(documentId);
+
+		for (String sourceDocumentId : sourceDocumentIds) {
+			Set<Term> allDocumentTerms = documentIndexCache.get(sourceDocumentId);
 
 			// in the case of a phrase query there can be multiple search terms which need to appear in order, but only one match per term
 			// in the case of a wildcard query there will be only one search term, but potentially many matched terms
 			// the loop below is therefore only relevant to wildcard queries (phrase queries start with the first search term and pass the rest to
 			// Term.getPositions)
 			Set<Term> matchedTerms = allDocumentTerms.parallelStream()
-					.filter(term -> termTestFunction.test(term.getLiteral(), termList.get(0)))
+					.filter(term -> termTestFunction.test(term.getLiteral(), searchTerms.get(0)))
 					.collect(Collectors.toSet());
 
-			for (Term term : matchedTerms) {
-				List<List<Position>> positionLists =
-						term.getPositions(
-								termList.size() > 1 ?
-										termList.subList(
-												1,
-												termList.size()) :
-										Collections.emptyList(),
-								termTestFunction);
+			for (Term matchedTerm : matchedTerms) {
+				List<List<Position>> positionLists = matchedTerm.getPositions(
+						searchTerms.size() > 1 ? searchTerms.subList(1, searchTerms.size()) : Collections.emptyList(),
+						termTestFunction
+				);
 
 				for (List<Position> positions : positionLists) {
 					result.add(
 							new QueryResultRow(
 									queryId,
-									documentId,
+									sourceDocumentId,
 									new Range(
 											positions.get(0).getStartOffset(),
-											positions.get(positions.size() - 1).getEndOffset()),
-									phrase));
+											positions.get(positions.size() - 1).getEndOffset()
+									),
+									searchPhrase
+							)
+					);
 				}
 			}
 		}
-		
+
 		return result;
 	}
 
