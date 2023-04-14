@@ -367,7 +367,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 		try {
 			Status status = gitApi.status().call();
-			return !status.getUntracked().isEmpty() || !status.getUntrackedFolders().isEmpty();
+			return !status.getUntracked().isEmpty();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to check for untracked changes", e);

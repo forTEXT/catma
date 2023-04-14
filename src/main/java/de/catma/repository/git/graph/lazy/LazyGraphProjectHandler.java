@@ -193,24 +193,24 @@ public class LazyGraphProjectHandler implements GraphProjectHandler {
 
 	@Override
 	public void updateProjectRevision(String oldRevisionHash, String newRevisionHash) {
-		revisionHash = newRevisionHash;
-
 		if (newRevisionHash.equals(oldRevisionHash)) {
 			logger.info(
 					String.format("No changes in project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId())
 			);
+			return;
 		}
-		else {
-			logger.info(
-					String.format(
-							"Updated revision of project \"%1$s\" with ID %2$s. Old: %3$s, New: %4$s",
-							projectReference.getName(),
-							projectReference.getProjectId(),
-							oldRevisionHash,
-							newRevisionHash
-					)
-			);
-		}
+
+		revisionHash = newRevisionHash;
+
+		logger.info(
+				String.format(
+						"Updated revision of project \"%1$s\" with ID %2$s. Old: %3$s, New: %4$s",
+						projectReference.getName(),
+						projectReference.getProjectId(),
+						oldRevisionHash,
+						newRevisionHash
+				)
+		);
 	}
 
 	// collection operations
