@@ -151,34 +151,35 @@ public class LazyGraphProjectIndexer implements Indexer {
 		}
 		
 		for (String documentId : documentIdList) {
-			Set<Term> terms = documentIndexCache.get(documentId);
-			
+			Set<Term> allDocumentTerms = documentIndexCache.get(documentId);
 
-			Term startTerm = terms
-					.parallelStream()
+			// in the case of a phrase query there can be multiple search terms which need to appear in order, but only one match per term
+			// in the case of a wildcard query there will be only one search term, but potentially many matched terms
+			// the loop below is therefore only relevant to wildcard queries (phrase queries start with the first search term and pass the rest to
+			// Term.getPositions)
+			Set<Term> matchedTerms = allDocumentTerms.parallelStream()
 					.filter(term -> termTestFunction.test(term.getLiteral(), termList.get(0)))
-					.findAny()
-					.orElse(null);
-			
-			if (startTerm != null) {
-				List<List<Position>> positionLists = 
-						startTerm.getPositions(
-							termList.size()>1?
-									termList.subList(
-											1, 
-											termList.size()):
-									Collections.emptyList(),
-							termTestFunction);
-				
+					.collect(Collectors.toSet());
+
+			for (Term term : matchedTerms) {
+				List<List<Position>> positionLists =
+						term.getPositions(
+								termList.size() > 1 ?
+										termList.subList(
+												1,
+												termList.size()) :
+										Collections.emptyList(),
+								termTestFunction);
+
 				for (List<Position> positions : positionLists) {
 					result.add(
-						new QueryResultRow(
-								queryId,
-								documentId,
-								new Range(
-									positions.get(0).getStartOffset(), 
-									positions.get(positions.size()-1).getEndOffset()),
-								phrase));
+							new QueryResultRow(
+									queryId,
+									documentId,
+									new Range(
+											positions.get(0).getStartOffset(),
+											positions.get(positions.size() - 1).getEndOffset()),
+									phrase));
 				}
 			}
 		}
