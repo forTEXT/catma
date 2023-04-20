@@ -9,6 +9,7 @@ import de.catma.tag.TagsetDefinition;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public interface GitProjectResourceProvider {
 	boolean isReadOnly();
@@ -18,4 +19,5 @@ public interface GitProjectResourceProvider {
 	AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary) throws IOException;
 	List<SourceDocument> getDocuments();
 	SourceDocument getDocument(String documentId) throws IOException;
+	Map getDocumentIndex(String documentId) throws IOException;
 }

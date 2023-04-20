@@ -2,7 +2,6 @@ package de.catma.repository.git;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.gson.Gson;
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -33,7 +32,6 @@ import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Constants;
@@ -515,18 +513,8 @@ public class GitProjectHandler {
 		return resourceProvider.getDocument(documentId);
 	}
 
-	public Path getSourceDocumentPath(String sourceDocumentId) {
-		return Paths.get(
-				user.getIdentifier(),
-				projectReference.getNamespace(),
-				projectReference.getProjectId(),
-				DOCUMENTS_DIRECTORY_NAME,
-				sourceDocumentId
-		);
-	}
-
-	public Map getDocumentIndex(Path tokensPath) throws IOException {
-		return new Gson().fromJson(FileUtils.readFileToString(tokensPath.toFile(), "UTF-8"), Map.class);
+	public Map getDocumentIndex(String documentId) throws IOException {
+		return resourceProvider.getDocumentIndex(documentId);
 	}
 
 	/**

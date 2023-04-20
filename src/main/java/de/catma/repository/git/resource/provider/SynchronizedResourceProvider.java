@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -290,5 +291,17 @@ public class SynchronizedResourceProvider implements GitProjectResourceProvider 
 		);
 
 		return gitSourceDocumentHandler.open(documentId);
+	}
+
+	@Override
+	public Map getDocumentIndex(String documentId) throws IOException {
+		GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+				localGitRepositoryManager,
+				projectPath,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
+
+		return gitSourceDocumentHandler.openIndex(documentId);
 	}
 }

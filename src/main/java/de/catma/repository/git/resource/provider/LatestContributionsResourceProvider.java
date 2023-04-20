@@ -569,4 +569,34 @@ public class LatestContributionsResourceProvider implements GitProjectResourcePr
 
 		return gitSourceDocumentHandler.open(documentId);
 	}
+
+	@Override
+	public Map getDocumentIndex(String documentId) throws IOException {
+		GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+				localGitRepositoryManager,
+				projectPath,
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
+		);
+
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+
+			for (LatestContribution latestContribution : latestContributions) {
+				if (!latestContribution.getDocumentIds().contains(documentId)) {
+					continue;
+				}
+
+				localGitRepoManager.checkout(latestContribution.getBranch(), false);
+
+				Map documentIndex = gitSourceDocumentHandler.openIndex(documentId);
+
+				localGitRepoManager.checkout(remoteGitServerManager.getUsername(), false);
+
+				return documentIndex;
+			}
+		}
+
+		return gitSourceDocumentHandler.openIndex(documentId);
+	}
 }

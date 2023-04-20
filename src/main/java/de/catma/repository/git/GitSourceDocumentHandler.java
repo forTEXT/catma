@@ -1,6 +1,7 @@
 package de.catma.repository.git;
 
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import de.catma.document.source.*;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class GitSourceDocumentHandler {
 	private static final String HEADER_FILE_NAME = "header.json";
 	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
+	private static final String TOKENIZED_FILE_EXTENSION = "json";
 
 	private final LocalGitRepositoryManager localGitRepositoryManager;
 	private final File projectDirectory;
@@ -125,6 +127,16 @@ public class GitSourceDocumentHandler {
 		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 		SourceDocument sourceDocument = sourceDocumentHandler.loadSourceDocument(sourceDocumentId, sourceContentHandler);
 		return sourceDocument;
+	}
+
+	public Map openIndex(String sourceDocumentId) throws IOException {
+		String sourceDocumentDirectory = String.format("%s/%s", GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, sourceDocumentId);
+		File indexFile = Paths.get(
+				projectDirectory.getAbsolutePath(),
+				sourceDocumentDirectory,
+				sourceDocumentId + "." + TOKENIZED_FILE_EXTENSION
+		).toFile();
+		return new Gson().fromJson(FileUtils.readFileToString(indexFile, StandardCharsets.UTF_8), Map.class);
 	}
 
 	public String update(SourceDocumentReference sourceDocumentRef) throws IOException {

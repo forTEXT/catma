@@ -59,7 +59,6 @@ import java.beans.PropertyChangeSupport;
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Level;
@@ -131,8 +130,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				new DocumentIndexProvider() {
 					@Override
 					public Map getDocumentIndex(String documentId) throws IOException {
-						Path tokensPath = getTokenizedSourceDocumentPath(documentId);
-						return GraphWorktreeProject.this.gitProjectHandler.getDocumentIndex(tokensPath);
+						return GraphWorktreeProject.this.gitProjectHandler.getDocumentIndex(documentId);
 					}
 				},
 				new CommentsProvider() {
@@ -1400,12 +1398,6 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public SourceDocument getSourceDocument(String sourceDocumentId) throws Exception {
 		return graphProjectHandler.getSourceDocument(sourceDocumentId);
-	}
-
-	private Path getTokenizedSourceDocumentPath(String sourceDocumentId) {
-		return Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
-				.resolve(gitProjectHandler.getSourceDocumentPath(sourceDocumentId))
-				.resolve(sourceDocumentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
 
 	@Override
