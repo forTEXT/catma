@@ -246,14 +246,15 @@ public class GraphWorktreeProject implements IndexedProject {
 
 			gitProjectHandler.ensureUserBranch();
 
-			Set<Member> members = gitProjectHandler.getProjectMembers();
-			List<String> possibleBranches = members.stream()
-					.filter(member -> !member.getIdentifier().equals(getCurrentUser().getIdentifier()))
-					.map(member -> "refs/remotes/origin/" + member.getIdentifier())
-					.collect(Collectors.toList());
-
 			if (enabled) {
+				Set<Member> members = gitProjectHandler.getProjectMembers();
+				List<String> possibleBranches = members.stream()
+						.filter(member -> !member.getIdentifier().equals(getCurrentUser().getIdentifier()))
+						.map(member -> "refs/remotes/origin/" + member.getIdentifier())
+						.collect(Collectors.toList());
+
 				Set<LatestContribution> latestContributions = gitProjectHandler.getLatestContributions(possibleBranches);
+
 				gitProjectHandler.setResourceProvider(new GitProjectResourceProviderFactory() {
 					@Override
 					public GitProjectResourceProvider createResourceProvider(
