@@ -17518,6 +17518,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .icon-button.v-button.v-disabled {
 	background: white;
+	opacity: 0.2;
 }
 
 .catma .catma-menu .v-menubar-menuitem-highlight {
@@ -18045,11 +18046,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .header__context {
 	font-size: 1.5em;
+	cursor: default;
 }
 
-.catma div.v-label-header__context > .v-icon.v-icon-lock, .catma div.v-label-header__context > .v-icon.v-icon-road_branch, .catma div.v-label-header__context > .v-icon.v-icon-random {
-	font-size: smaller;
-	padding-left: 5px;
+.catma .header__context span.header-state-pill {
+	display: inline-block;
+	vertical-align: middle;
+	margin: -2px 0 0 15px;
+	padding: 3px 5px;
+	border: 1px solid;
+	border-radius: 5px;
+	font-size: 0.5em;
+	color: #E5E5E5;
+}
+
+.catma .header__context span.header-state-pill .Vaadin-Icons {
+	margin-right: 5px;
+}
+
+.catma .header__context span.header-state-pill  + span.header-state-pill {
+	margin-left: 5px;
 }
 
 .catma .nav {

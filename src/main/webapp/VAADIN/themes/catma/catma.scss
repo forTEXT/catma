@@ -23,6 +23,7 @@ $contribution-color: blue;
 
   .icon-button.v-button.v-disabled {
     background: white;
+    opacity: 0.2;
   }
 
   .catma-menu .v-menubar-menuitem-highlight {
@@ -569,13 +570,26 @@ $contribution-color: blue;
 
   .header__context {
     font-size: 1.5em;
-  }
+    cursor: default;
 
-  div.v-label-header__context > .v-icon.v-icon-lock,
-  div.v-label-header__context > .v-icon.v-icon-road_branch,
-  div.v-label-header__context > .v-icon.v-icon-random {
-    font-size: smaller;
-    padding-left: 5px;
+    span.header-state-pill {
+      display: inline-block;
+      vertical-align: middle;
+      margin: -2px 0 0 15px;
+      padding: 3px 5px;
+      border: 1px solid;
+      border-radius: 5px;
+      font-size: 0.5em;
+      color: #E5E5E5;
+
+      .Vaadin-Icons {
+        margin-right: 5px;
+      }
+
+      + span.header-state-pill {
+        margin-left: 5px;
+      }
+    }
   }
 
   /* Navigation */

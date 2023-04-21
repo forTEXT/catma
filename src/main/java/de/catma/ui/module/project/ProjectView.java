@@ -131,8 +131,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 	private TreeGrid<Resource> documentGrid;
 	private ActionGridComponent<TreeGrid<Resource>> documentGridComponent;
-	private MenuItem miAddDocument;
-	private MenuItem miAddCollection;
 	private MenuItem miEditDocumentOrCollection;
 	private MenuItem miDeleteDocumentOrCollection;
 	private MenuItem miImportCollection;
@@ -328,14 +326,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		addComponent(mainLayout);
 		setExpandRatio(mainLayout, 1.f);
 
-		btnSynchronize = new IconButton(VaadinIcons.SHARE);
+		btnToggleViewSynchronizedOrLatestContributions = new IconButton(VaadinIcons.DESKTOP);
+		btnToggleViewSynchronizedOrLatestContributions.setData(false); // default is synchronized view, false = synchronized, true = latest contributions
+		btnToggleViewSynchronizedOrLatestContributions.setCaption("Switch View");
+		btnToggleViewSynchronizedOrLatestContributions.setDescription("Switch between 'Synchronized' and 'Latest Contributions' views");
+		getHugeCardBar().addComponentBeforeMoreOptions(btnToggleViewSynchronizedOrLatestContributions);
+
+		btnSynchronize = new IconButton(VaadinIcons.EXCHANGE);
+		btnSynchronize.setCaption("Sync");
 		btnSynchronize.setDescription("Synchronize with the Team");
 		getHugeCardBar().addComponentBeforeMoreOptions(btnSynchronize);
-
-		btnToggleViewSynchronizedOrLatestContributions = new IconButton(VaadinIcons.ROAD_BRANCH);
-		btnToggleViewSynchronizedOrLatestContributions.setData(false); // default is synchronized view, false = synchronized, true = latest contributions
-		btnToggleViewSynchronizedOrLatestContributions.setDescription("Switch between 'Synchronized' view and 'Latest Contributions' view");
-		getHugeCardBar().addComponentBeforeMoreOptions(btnToggleViewSynchronizedOrLatestContributions);
 	}
 
 	private final Function<Resource, String> buildResourceNameHtml = (resource) -> {
@@ -471,8 +471,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		documentGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
 
 		ContextMenu documentGridComponentAddContextMenu = documentGridComponent.getActionGridBar().getBtnAddContextMenu();
-		miAddDocument = documentGridComponentAddContextMenu.addItem("Add Document", menuItem -> handleAddDocumentRequest());
-		miAddCollection = documentGridComponentAddContextMenu.addItem("Add Annotation Collection", menuItem -> handleAddCollectionRequest());
+		documentGridComponentAddContextMenu.addItem("Add Document", menuItem -> handleAddDocumentRequest());
+		documentGridComponentAddContextMenu.addItem("Add Annotation Collection", menuItem -> handleAddCollectionRequest());
 
 		ContextMenu documentGridComponentMoreOptionsContextMenu = documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		miEditDocumentOrCollection = documentGridComponentMoreOptionsContextMenu.addItem(
@@ -695,19 +695,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void setControlsStateBasedOnProjectReadOnlyState() {
 		boolean controlsEnabled = !project.isReadOnly();
 
-		miAddDocument.setEnabled(controlsEnabled);
-		miAddCollection.setEnabled(controlsEnabled);
+		documentGridComponent.getActionGridBar().setAddBtnEnabled(controlsEnabled);
 		miEditDocumentOrCollection.setEnabled(controlsEnabled);
 		miDeleteDocumentOrCollection.setEnabled(controlsEnabled);
 		miImportCollection.setEnabled(controlsEnabled);
+
+		tagsetGridComponent.getActionGridBar().setAddBtnEnabled(controlsEnabled);
 		miEditTagset.setEnabled(controlsEnabled);
 		miDeleteTaget.setEnabled(controlsEnabled);
 		miImportTagset.setEnabled(controlsEnabled);
+
+		btnSynchronize.setEnabled(controlsEnabled);
+
 		miCommit.setEnabled(controlsEnabled);
 		miShareResources.setEnabled(controlsEnabled);
 		miImportCorpus.setEnabled(controlsEnabled);
-		tagsetGridComponent.getActionGridBar().setAddBtnEnabled(controlsEnabled);
-		btnSynchronize.setEnabled(controlsEnabled);
 	}
 
 	private void initData() {
@@ -1991,7 +1993,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			public void ready(Project project) {
 				// default is synchronized view, false = synchronized, true = latest contributions
 				btnToggleViewSynchronizedOrLatestContributions.setData(enabled);
-				btnToggleViewSynchronizedOrLatestContributions.setIcon(enabled ? VaadinIcons.RANDOM : VaadinIcons.ROAD_BRANCH);
 
 				eventBus.post(new HeaderContextChangeEvent(projectReference.getName(), enabled));
 
