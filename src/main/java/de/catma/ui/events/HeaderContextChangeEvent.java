@@ -1,41 +1,40 @@
 package de.catma.ui.events;
 
 /**
- * fired when header context needs to be changed
- *
- * @author db
+ * Fired when the information displayed in the header needs to be changed
+ * <p>
+ * See instantiations and {@link de.catma.ui.module.main.CatmaHeader}
  */
 public class HeaderContextChangeEvent  {
+	private final String projectName;
+	private final boolean dashboard;
+	private final boolean readOnly;
 
-    private final String value;
-    private final boolean dashboard;
-    private final boolean readonly;
-
-    public HeaderContextChangeEvent(String value) {
-    	this(value, false);
-    }
-    
-    public HeaderContextChangeEvent(String value, boolean readonly) {
-        this.value = value;
-        this.dashboard = false;
-        this.readonly = readonly;
-    }
-    
-    public HeaderContextChangeEvent() {
-		this.value = "";
+	public HeaderContextChangeEvent() {
+		this.projectName = "";
 		this.dashboard = true;
-		this.readonly = false;
+		this.readOnly = false;
 	}
 
-	public String getValue() {
-        return value;
-    }
-	
+	public HeaderContextChangeEvent(String projectName) {
+		this(projectName, false);
+	}
+
+	public HeaderContextChangeEvent(String projectName, boolean readOnly) {
+		this.projectName = projectName;
+		this.dashboard = false;
+		this.readOnly = readOnly;
+	}
+
+	public String getProjectName() {
+		return projectName;
+	}
+
 	public boolean isDashboard() {
 		return dashboard;
 	}
-	
-	public boolean isReadonly() {
-		return readonly;
+
+	public boolean isReadOnly() {
+		return readOnly;
 	}
 }

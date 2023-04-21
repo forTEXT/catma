@@ -83,17 +83,17 @@ public class CatmaHeader extends HorizontalLayout {
 	public void headerContextChange(HeaderContextChangeEvent headerContextChangeEvent) {
 		btnHome.setIcon(headerContextChangeEvent.isDashboard() ? null : VaadinIcons.HOME);
 
-		String contextInfo = Jsoup.clean(headerContextChangeEvent.getValue(), Safelist.basic());
+		String contextInfo = Jsoup.clean(headerContextChangeEvent.getProjectName(), Safelist.basic());
 
 		if (!headerContextChangeEvent.isDashboard()) {
 			contextInfo = contextInfo +
 					"<span class='header-state-pill view-mode'>" +
 					"<span class='Vaadin-Icons'>&#x" + Integer.toHexString(VaadinIcons.DESKTOP.getCodepoint()) + "</span>" +
-					(headerContextChangeEvent.isReadonly() ? "Latest Contributions" : "Synchronized") +
+					(headerContextChangeEvent.isReadOnly() ? "Latest Contributions" : "Synchronized") +
 					"</span>";
 		}
 
-		if (headerContextChangeEvent.isReadonly()) {
+		if (headerContextChangeEvent.isReadOnly()) {
 			contextInfo = contextInfo +
 					"<span class='header-state-pill rw-mode'>" +
 					"<span class='Vaadin-Icons'>&#x" + Integer.toHexString(VaadinIcons.BAN.getCodepoint()) + "</span>" +
