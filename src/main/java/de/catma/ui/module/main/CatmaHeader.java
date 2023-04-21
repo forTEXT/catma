@@ -29,8 +29,8 @@ public class CatmaHeader extends HorizontalLayout {
 	private final LoginService loginService;
 	private final RemoteGitManagerPrivileged gitManagerPrivileged;
 
-	private Button btHome;
-	private Label contextInformation;
+	private Button btnHome;
+	private Label lblContext;
 
 	public CatmaHeader(EventBus eventBus, LoginService loginService, RemoteGitManagerPrivileged gitManagerPrivileged){
 		super();
@@ -44,49 +44,46 @@ public class CatmaHeader extends HorizontalLayout {
 		this.eventBus.register(this);
 	}
 
-    private void initComponents() {
-    	addStyleName("header");
-    	setWidth("100%");
-    	
-		btHome = new Button("Catma " + Version.LATEST);
-		btHome.addClickListener((evt) -> eventBus.post(new RouteToDashboardEvent()));
-		btHome.addStyleNames(ValoTheme.BUTTON_LINK, ValoTheme.LABEL_H3);
-		btHome.addStyleName("header-home-button");
-		
-        addComponent(btHome);
-        setComponentAlignment(btHome, Alignment.MIDDLE_LEFT);
+	private void initComponents() {
+		addStyleName("header");
+		setWidth("100%");
 
-        contextInformation = new Label("", ContentMode.HTML);
-        contextInformation.addStyleName("header__context");
-        addComponent(contextInformation);
-        setComponentAlignment(contextInformation, Alignment.MIDDLE_CENTER);
-        setExpandRatio(contextInformation, 1f);
-        
-        IconButton btnAccount = new IconButton( VaadinIcons.USER);
-        btnAccount.setDescription(loginService.getAPI().getUser().getName());
-        ContextMenu ctxAccount = new ContextMenu(btnAccount, true);
-        ctxAccount.addItem("Edit Account", (item) -> {
-        	EditAccountDialog editAccount = new EditAccountDialog(gitManagerPrivileged, loginService, eventBus);
-        	editAccount.show();
-        });
-        ctxAccount.addItem("Get Access Token", (item) -> {
-            AccessTokenDialog accessTokenDialog = new AccessTokenDialog(gitManagerPrivileged, loginService);
-            accessTokenDialog.show();
-        });
-        ctxAccount.addItem("Sign Out", (item) -> {
-        	loginService.logout();
-    	});
-        
-        
-        btnAccount.addClickListener((evt) ->  ctxAccount.open(evt.getClientX(), evt.getClientY()));
-        
-        addComponent(btnAccount);
-        setComponentAlignment(btHome, Alignment.MIDDLE_RIGHT);
-    }
+		btnHome = new Button("Catma " + Version.LATEST);
+		btnHome.addStyleNames(ValoTheme.BUTTON_LINK, ValoTheme.LABEL_H3, "header-home-button");
+		btnHome.addClickListener((clickEvent) -> eventBus.post(new RouteToDashboardEvent()));
+		addComponent(btnHome);
+		setComponentAlignment(btnHome, Alignment.MIDDLE_LEFT);
 
-    @Subscribe
-    public void headerChangeEvent(HeaderContextChangeEvent headerContextChangeEvent){
-    	String contextInfo = Jsoup.clean(headerContextChangeEvent.getValue(), Safelist.basic());
+		lblContext = new Label("", ContentMode.HTML);
+		lblContext.addStyleName("header__context");
+		addComponent(lblContext);
+		setComponentAlignment(lblContext, Alignment.MIDDLE_CENTER);
+		setExpandRatio(lblContext, 1f);
+
+		IconButton btnAccount = new IconButton(VaadinIcons.USER);
+		btnAccount.setDescription(loginService.getAPI().getUser().getName());
+
+		ContextMenu accountMenu = new ContextMenu(btnAccount, true);
+		accountMenu.addItem("Edit Account", (menuItem) -> {
+			EditAccountDialog editAccountDialog = new EditAccountDialog(gitManagerPrivileged, loginService, eventBus);
+			editAccountDialog.show();
+		});
+		accountMenu.addItem("Get Access Token", (menuItem) -> {
+			AccessTokenDialog accessTokenDialog = new AccessTokenDialog(gitManagerPrivileged, loginService);
+			accessTokenDialog.show();
+		});
+		accountMenu.addItem("Sign Out", (menuItem) -> loginService.logout());
+
+		btnAccount.addClickListener((clickEvent) -> accountMenu.open(clickEvent.getClientX(), clickEvent.getClientY()));
+
+		addComponent(btnAccount);
+	}
+
+	@Subscribe
+	public void headerContextChange(HeaderContextChangeEvent headerContextChangeEvent) {
+		btnHome.setIcon(headerContextChangeEvent.isDashboard() ? null : VaadinIcons.HOME);
+
+		String contextInfo = Jsoup.clean(headerContextChangeEvent.getValue(), Safelist.basic());
 
 		if (!headerContextChangeEvent.isDashboard()) {
 			contextInfo = contextInfo +
@@ -95,21 +92,14 @@ public class CatmaHeader extends HorizontalLayout {
 					(headerContextChangeEvent.isReadonly() ? "Latest Contributions" : "Synchronized") +
 					"</span>";
 		}
-    	
-    	if (headerContextChangeEvent.isReadonly()) {
-    		contextInfo = contextInfo +
+
+		if (headerContextChangeEvent.isReadonly()) {
+			contextInfo = contextInfo +
 					"<span class='header-state-pill rw-mode'>" +
 					"<span class='Vaadin-Icons'>&#x" + Integer.toHexString(VaadinIcons.BAN.getCodepoint()) + "</span>" +
 					"Read-only</span>";
-    	}
-    	
-        contextInformation.setValue(contextInfo);
-        if (headerContextChangeEvent.isDashboard()) {
-        	btHome.setIcon(null);
-        }
-        else {
-        	btHome.setIcon(VaadinIcons.HOME);
-        }
-    }
+		}
 
+		lblContext.setValue(contextInfo);
+	}
 }
