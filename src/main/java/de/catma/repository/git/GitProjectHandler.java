@@ -855,13 +855,22 @@ public class GitProjectHandler {
 					for (MergeRequestInfo mergeRequestInfo : openMergeRequests) {
 						mergeRequestInfo = refreshMergeRequestInfo(mergeRequestInfo);
 
-						if (mergeRequestInfo.isOpen() && mergeRequestInfo.canBeMerged()) {
-							MergeRequestInfo result = remoteGitServerManager.mergeMergeRequest(mergeRequestInfo);
-							logger.info(String.format("Attempted merge of %s", result));
+						// state can be 'opened', 'closed', 'merged' or 'locked'
+						if (!mergeRequestInfo.isOpen()) {
+							continue; // assume 'closed' or 'merged' ('locked' is apparently a transitive state that we hopefully won't have to deal with)
+						}
 
-							if (!result.isMerged()) {
-								return false;
-							}
+						// merge_status can be 'unchecked', 'checking', 'can_be_merged', 'cannot_be_merged' or 'cannot_be_merged_recheck'
+						// TODO: merge_status is deprecated, use detailed_merge_status instead
+						if (!mergeRequestInfo.canBeMerged()) {
+							return false;
+						}
+
+						MergeRequestInfo result = remoteGitServerManager.mergeMergeRequest(mergeRequestInfo);
+						logger.info(String.format("Attempted merge of %s", result));
+
+						if (!result.isMerged()) {
+							return false;
 						}
 					}
 				}
