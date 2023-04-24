@@ -142,7 +142,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		RESPONSIBLE,
 	}
 	private Grid<TagsetDefinition> tagsetGrid;
-	private ListDataProvider<TagsetDefinition> tagsetData;
+	private ListDataProvider<TagsetDefinition> tagsetDataProvider;
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetGridComponent;
 	private MenuItem miEditTagset;
 	private MenuItem miDeleteTaget;
@@ -150,7 +150,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	// team components
 	private VerticalFlexLayout teamLayout;
-	private Grid<Member> teamGrid;
+	private Grid<Member> memberGrid;
+	private ActionGridComponent<Grid<Member>> memberGridComponent;
 
 	// project components
 	private LocalTime lastSynchronization;
@@ -220,14 +221,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		Object newValue = evt.getNewValue();
 
 		if (oldValue == null) { // creation
-			tagsetData.refreshAll();
+			tagsetDataProvider.refreshAll();
 		}
 		else if (newValue == null) { // removal
-			tagsetData.refreshAll();
+			tagsetDataProvider.refreshAll();
 		}
 		else { // metadata update
 			TagsetDefinition tagsetDefinition = (TagsetDefinition) newValue;
-			tagsetData.refreshItem(tagsetDefinition);
+			tagsetDataProvider.refreshItem(tagsetDefinition);
 		}
 	}
 
@@ -285,8 +286,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	@Subscribe
 	public void handleMembersChanged(MembersChangedEvent membersChangedEvent) {
 		try {
-			ListDataProvider<Member> memberListDataProvider = new ListDataProvider<>(project.getProjectMembers());
-			teamGrid.setDataProvider(memberListDataProvider);
+			ListDataProvider<Member> memberDataProvider = new ListDataProvider<>(project.getProjectMembers());
+			memberGrid.setDataProvider(memberDataProvider);
 		}
 		catch (IOException e) {
 			errorHandler.showAndLogError("Failed to load project members", e);
@@ -428,41 +429,27 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private Component initTeamContent() {
-		HorizontalFlexLayout teamContent = new HorizontalFlexLayout();
+		HorizontalFlexLayout teamContentLayout = new HorizontalFlexLayout();
 
-		teamGrid = new Grid<>();
-		teamGrid.setHeaderVisible(false);
-		teamGrid.setWidth("402px");
-		teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-		teamGrid.addColumn(User::getName)
+		memberGrid = new Grid<>();
+		memberGrid.setHeaderVisible(false);
+		memberGrid.setWidth("402px");
+		memberGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
+		memberGrid.addColumn(User::getName)
 				.setWidth(200)
 				.setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
 				.setDescriptionGenerator(User::preciseName);
-		teamGrid.addColumn(Member::getRole).setExpandRatio(1);
+		memberGrid.addColumn(Member::getRole).setExpandRatio(1);
 
-		ActionGridComponent<Grid<Member>> membersGridComponent = new ActionGridComponent<>(
+		memberGridComponent = new ActionGridComponent<>(
 				new Label("Members"),
-				teamGrid
+				memberGrid
 		);
-		membersGridComponent.addStyleName("project-view-action-grid");
+		memberGridComponent.addStyleName("project-view-action-grid");
 
-		ContextMenu addContextMenu = membersGridComponent.getActionGridBar().getBtnAddContextMenu();
-		addContextMenu.addItem(
-				"Add Member",
-				(selectedItem) -> new AddMemberDialog(
-						project::assignRoleToSubject,
-						(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : ""),
-						(evt) -> eventBus.post(new MembersChangedEvent())
-				).show()
-		);
+		teamContentLayout.addComponent(memberGridComponent);
 
-		ContextMenu moreOptionsContextMenu = membersGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		moreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
-		moreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
-		moreOptionsContextMenu.addItem("Invite Someone to the Project", (selectedItem) -> handleProjectInvitationRequest());
-
-		teamContent.addComponent(membersGridComponent);
-		return teamContent;
+		return teamContentLayout;
 	}
 
 	private void initActions() {
@@ -564,6 +551,20 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		FileDownloader tagsetsCsvExportFileDownloader =	new FileDownloader(tagsetsCsvExportStreamResource);
 		tagsetsCsvExportFileDownloader.extend(miExportTagsetsAsCsv);
+
+		// members actions
+		memberGridComponent.getActionGridBar().addBtnAddClickListener(clickEvent -> {
+			new AddMemberDialog(
+					project::assignRoleToSubject,
+					(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : ""),
+					(evt) -> eventBus.post(new MembersChangedEvent())
+			).show();
+		});
+
+		ContextMenu memberGridComponentMoreOptionsContextMenu = memberGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+		memberGridComponentMoreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
+		memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
+		memberGridComponentMoreOptionsContextMenu.addItem("Invite Someone to the Project", (selectedItem) -> handleProjectInvitationRequest());
 
 		// global project actions
 		btnSynchronize.addClickListener(clickEvent -> handleSynchronize());
@@ -724,12 +725,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			documentGrid.sort(DocumentGridColumn.NAME.name());
 			documentGrid.expand(resourceDataProvider.getTreeData().getRootItems());
 
-			tagsetData = new ListDataProvider<>(project.getTagsets());
-			tagsetGrid.setDataProvider(tagsetData);
+			tagsetDataProvider = new ListDataProvider<>(project.getTagsets());
+			tagsetGrid.setDataProvider(tagsetDataProvider);
 			tagsetGrid.sort(TagsetGridColumn.NAME.name());
 
-			ListDataProvider<Member> memberData = new ListDataProvider<>(projectMembers);
-			teamGrid.setDataProvider(memberData);
+			ListDataProvider<Member> memberDataProvider = new ListDataProvider<>(projectMembers);
+			memberGrid.setDataProvider(memberDataProvider);
 		}
 		catch (Exception e) {
 			errorHandler.showAndLogError("Failed to initialize data", e);
@@ -1737,7 +1738,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	// team actions
 	private void handleEditMembers() {
-		Set<Member> membersToEdit = teamGrid.getSelectedItems();
+		Set<Member> membersToEdit = memberGrid.getSelectedItems();
 
 		if (membersToEdit.isEmpty()) {
 			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
@@ -1771,7 +1772,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleRemoveMembers() {
-		Set<Member> membersToRemove = teamGrid.getSelectedItems();
+		Set<Member> membersToRemove = memberGrid.getSelectedItems();
 
 		if (membersToRemove.isEmpty()) {
 			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);

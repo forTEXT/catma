@@ -77,6 +77,7 @@ public class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
 	protected void addContent(ComponentContainer content) {
 		content.addComponent(descriptionLabel);
 		content.addComponent(cbUsers);
+		cbUsers.focus();
 
 		Label lblMemberComboboxDescription = new Label(
 				"Start typing above to search by username or public name,"
