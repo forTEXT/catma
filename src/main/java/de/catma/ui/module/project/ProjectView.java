@@ -288,6 +288,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		try {
 			ListDataProvider<Member> memberDataProvider = new ListDataProvider<>(project.getProjectMembers());
 			memberGrid.setDataProvider(memberDataProvider);
+			setToggleViewButtonStateBasedOnMemberCount();
 		}
 		catch (IOException e) {
 			errorHandler.showAndLogError("Failed to load project members", e);
@@ -689,6 +690,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		teamLayout.setVisible(isMembersEditAllowed);
 
 		setControlsStateBasedOnProjectReadOnlyState();
+		setToggleViewButtonStateBasedOnMemberCount();
 
 		eventBus.post(new ProjectReadyEvent(project));
 	}
@@ -711,6 +713,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		miCommit.setEnabled(controlsEnabled);
 		miShareResources.setEnabled(controlsEnabled);
 		miImportCorpus.setEnabled(controlsEnabled);
+	}
+
+	private void setToggleViewButtonStateBasedOnMemberCount() {
+		@SuppressWarnings("unchecked")
+		ListDataProvider<Member> memberDataProvider = (ListDataProvider<Member>) memberGrid.getDataProvider();
+		btnToggleViewSynchronizedOrLatestContributions.setEnabled(memberDataProvider.getItems().size() > 1);
 	}
 
 	private void initData() {
