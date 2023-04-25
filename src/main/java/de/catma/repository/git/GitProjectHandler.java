@@ -832,6 +832,12 @@ public class GitProjectHandler {
 					mergeRequestInfo = refreshMergeRequestInfo(mergeRequestInfo);
 					logger.info(String.format("Created %s", mergeRequestInfo));
 
+					// merge_status can be 'unchecked', 'checking', 'can_be_merged', 'cannot_be_merged' or 'cannot_be_merged_recheck'
+					// TODO: merge_status is deprecated, use detailed_merge_status instead
+					if (!mergeRequestInfo.canBeMerged()) {
+						return false;
+					}
+
 					MergeRequestInfo result = remoteGitServerManager.mergeMergeRequest(mergeRequestInfo);
 					logger.info(String.format("Attempted merge of %s", result));
 
