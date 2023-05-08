@@ -35,6 +35,7 @@ public class ProjectScanner implements AutoCloseable {
 
 	private static final String SCAN_RESULTS_FILE_NAME = "project_scan_result.csv";
 	private final String migrationBranchName;
+	private final HashSet<String> projectIdsToSkipInByProjectScanMode;
 
 	private final GitLabApi privilegedGitLabApi;
 	private final LegacyProjectHandler legacyProjectHandler;
@@ -48,6 +49,14 @@ public class ProjectScanner implements AutoCloseable {
 		CATMAProperties.INSTANCE.setProperties(catmaProperties);
 
 		this.migrationBranchName = CATMAPropertyKey.V6_REPO_MIGRATION_BRANCH.getValue();
+
+		String projectIdsToSkipSettingValue = CATMAPropertyKey.V6_REPO_MIGRATION_PROJECT_ID_LIST_TO_SKIP.getValue();
+		if (projectIdsToSkipSettingValue == null || projectIdsToSkipSettingValue.isEmpty()) {
+			this.projectIdsToSkipInByProjectScanMode = new HashSet<>();
+		}
+		else {
+			this.projectIdsToSkipInByProjectScanMode = new HashSet<>(Arrays.asList(projectIdsToSkipSettingValue.split(",")));
+		}
 
 		this.privilegedGitLabApi = new GitLabApi(
 				 CATMAPropertyKey.GITLAB_SERVER_URL.getValue(),
@@ -472,6 +481,11 @@ public class ProjectScanner implements AutoCloseable {
 	}
 
 	public void scanProject(String projectId) throws IOException {
+		if (projectIdsToSkipInByProjectScanMode.contains(projectId)) {
+			logger.info(String.format("Skipping project with ID %s", projectId));
+			return;
+		}
+
 		logger.info(String.format("Scanning project with ID %s", projectId));
 
 		Set<Member> members = legacyProjectHandler.getLegacyProjectMembers(projectId);
