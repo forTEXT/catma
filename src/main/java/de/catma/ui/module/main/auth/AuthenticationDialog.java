@@ -23,16 +23,16 @@ public abstract class AuthenticationDialog extends Window {
         VaadinSession.getCurrent().setAttribute("OAUTHTOKEN", token);
 
         Totp totp = new Totp(
-                CATMAPropertyKey.otpSecret.getValue() + token,
-                new Clock(Integer.parseInt(CATMAPropertyKey.otpDuration.getValue()))
+                CATMAPropertyKey.OTP_SECRET.getValue() + token,
+                new Clock(CATMAPropertyKey.OTP_DURATION.getIntValue())
         );
 
         return String.format(
                 // note %% escape, otherwise an exception is thrown
                 "%s?client_id=%s&response_type=code&scope=openid%%20email&redirect_uri=%s&state=%s",
-                CATMAPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
-                CATMAPropertyKey.Google_oauthClientId.getValue(),
-                URLEncoder.encode(CATMAPropertyKey.BaseURL.getValue(CATMAPropertyKey.BaseURL.getDefaultValue()), "UTF-8"),
+                CATMAPropertyKey.GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL.getValue(),
+                CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.getValue(),
+                URLEncoder.encode(CATMAPropertyKey.BASE_URL.getValue(), "UTF-8"),
                 totp.now()
         );
     }

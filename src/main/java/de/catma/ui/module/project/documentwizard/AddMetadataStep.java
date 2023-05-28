@@ -36,7 +36,7 @@ public class AddMetadataStep extends VerticalLayout implements WizardStep {
 	public AddMetadataStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
 		this.progressStepFactory = progressStepFactory;
 		this.wizardContext = wizardContext; 
-		this.progressStep = progressStepFactory.create(3, "Add some metadata");
+		this.progressStep = progressStepFactory.create(3, "Add Some Metadata");
 		
 		this.fileList = (ArrayList<UploadFile>) wizardContext.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
 		this.fileDataProvider = new ListDataProvider<UploadFile>(this.fileList);
@@ -46,7 +46,7 @@ public class AddMetadataStep extends VerticalLayout implements WizardStep {
 	
 
 	private void initActions() {
-		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set author", menuItem -> {
+		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set Author", menuItem -> {
 			if (fileGrid.getSelectedItems().isEmpty()) {
 				Notification.show("Info", "Please select one or more entries first!", Type.HUMANIZED_MESSAGE);
 			}
@@ -59,7 +59,7 @@ public class AddMetadataStep extends VerticalLayout implements WizardStep {
 				authorInputDialog.show();
 			}
 		});
-		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set author", menuItem -> {
+		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set Publisher", menuItem -> {
 			if (fileGrid.getSelectedItems().isEmpty()) {
 				Notification.show("Info", "Please select one or more entries first!", Type.HUMANIZED_MESSAGE);
 			}
@@ -72,7 +72,7 @@ public class AddMetadataStep extends VerticalLayout implements WizardStep {
 				publisherInputDialog.show();
 			}
 		});
-		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set description", menuItem -> {
+		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set Description", menuItem -> {
 			if (fileGrid.getSelectedItems().isEmpty()) {
 				Notification.show("Info", "Please select one or more entries first!", Type.HUMANIZED_MESSAGE);
 			}
@@ -91,7 +91,7 @@ public class AddMetadataStep extends VerticalLayout implements WizardStep {
 	private void initComponents() {
 		setSizeFull();
         Label infoLabel = new Label(
-        		"Add some metadata by doubleclicking on a row");
+        		"Add some metadata by double clicking on a row");
         infoLabel.setContentMode(ContentMode.HTML);
 		addComponent(infoLabel);
 		

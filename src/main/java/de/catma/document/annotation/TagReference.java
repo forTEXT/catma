@@ -48,9 +48,9 @@ public class TagReference {
 		}
 	}
 	
-	private TagInstance tagInstance;
-	private Range range;
-	private URI target;
+	private final TagInstance tagInstance;
+	private final Range range;
+	private final URI target;
 	private String userMarkupCollectionUuid;
 
 	/**
@@ -63,6 +63,10 @@ public class TagReference {
 	public TagReference(TagInstance tagInstance, String uri, Range range, String userMarkupCollectionUuid)
 			throws URISyntaxException {
 		this.tagInstance = tagInstance;
+		// the 'catma' protocol prefix is deprecated and no longer supported
+		if (uri.startsWith("catma://")) {
+			uri = uri.substring(8);
+		}
 		this.target = new URI(uri);
 		this.range = range;
 		this.userMarkupCollectionUuid = userMarkupCollectionUuid;

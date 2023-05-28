@@ -118,7 +118,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 	
 	public UploadStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
 		
-		this.progressStep = progressStepFactory.create(1, "Upload some files");
+		this.progressStep = progressStepFactory.create(1, "Upload Some Files");
 		
 		this.fileList = new ArrayList<>();
 		wizardContext.put(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST, fileList);
@@ -153,7 +153,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 				String urlConnContentEncoding = conn.getContentEncoding();
 				final String fileId = idGenerator.generateDocumentId();
 				String tempDir = 
-						((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+						((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
 				final File tempFile = new File(new File(tempDir), fileId);
 				if (tempFile.exists()) {
 					tempFile.delete();
@@ -164,7 +164,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 				progressBar.setVisible(true);
 				
 				BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
-				backgroundServiceProvider.submit("fetch URL", new DefaultProgressCallable<Long>() {
+				backgroundServiceProvider.submit("fetch-url", new DefaultProgressCallable<Long>() {
 					@Override
 					public Long call() throws Exception {
 						ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
@@ -226,7 +226,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 							Notification.show(
 								"Error", 
 								String.format(
-									"Error loading %1$s, file will be skipped!\n%2$s", 
+									"Error loading %s, file will be skipped!\nThe underlying error message was:\n%s",
 									originalFilename, errorMsg) , Type.WARNING_MESSAGE);
 						}
 
@@ -243,11 +243,11 @@ class UploadStep extends VerticalLayout implements WizardStep {
 						Notification.show(
 							"Error", 
 							String.format(
-								"Error loading %1$s, file will be skipped!\n"
-										+ "This can happen for a lot of reasons, e. g. archive providers block third party access to their archives "
-										+ " or problems with a SSL connection. Try to download the file with your browser and then use the upload mechanism\n\n"
-										+ "The underlying error was:"
-										+ "\n%2$s", 
+								"Error loading %s, file will be skipped!\n"
+										+ "This can happen for a lot of reasons, e.g. archive providers blocking third party access to their archives "
+										+ "or problems with an SSL connection. Try to download the file with your browser and then use the upload mechanism.\n\n"
+										+ "The underlying error message was:\n"
+										+ "%s",
 								originalFilename, errorMsg) , Type.WARNING_MESSAGE);					
 						}
 				});
@@ -263,11 +263,11 @@ class UploadStep extends VerticalLayout implements WizardStep {
 				Notification.show(
 					"Error", 
 					String.format(
-						"Error loading %1$s, file will be skipped!\n"
-						+ "This can happen for a lot of reasons, e. g. archive providers block third party access to ther archives "
-						+ " or problems with SSL. Try to download the file with your browser and then use the upload mechanism\n"
-						+ "The underlying error was:"
-						+ "\n%2$s", 
+						"Error loading %s, file will be skipped!\n"
+						+ "This can happen for a lot of reasons, e.g. archive providers blocking third party access to their archives "
+						+ "or problems with an SSL connection. Try to download the file with your browser and then use the upload mechanism.\n\n"
+						+ "The underlying error message was:\n"
+						+ "%s",
 						urlValue, errorMsg) , Type.WARNING_MESSAGE);
 			}
 		}		
@@ -323,7 +323,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 			public void handleFile(InputStream stream, String fileName, String mimeType, long length, int filesLeftInQueue) {
 				try {
 					String tempDir = 
-							((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+							((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
 					
 					final String fileId = idGenerator.generateDocumentId();
 					File tempFile = new File(new File(tempDir), fileId);
@@ -360,7 +360,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 					Notification.show(
 						"Error", 
 						String.format(
-							"Error uploading %1$s, file will be skipped!\n%2$s", 
+							"Error uploading %s, file will be skipped!\nThe underlying error message was:\n%s",
 							fileName, errorMsg) , Type.ERROR_MESSAGE);
 				}
 			}
@@ -412,7 +412,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 		ZipFile zipFile = new ZipFile(uri.getPath());
 		Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
 		
-		String tempDir = ((CatmaApplication)UI.getCurrent()).accquirePersonalTempFolder();
+		String tempDir = ((CatmaApplication)UI.getCurrent()).acquirePersonalTempFolder();
 		IDGenerator idGenerator = new IDGenerator();
 		
 		while (entries.hasMoreElements()) {

@@ -22,7 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.MessageFormat;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,11 +72,11 @@ import de.catma.backgroundservice.LogProgressListener;
 import de.catma.backgroundservice.ProgressCallable;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.sqlite.SqliteService;
-import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.di.IRemoteGitManagerFactory;
+import de.catma.ui.di.RemoteGitManagerFactory;
+import de.catma.ui.dialog.ErrorDialog;
 import de.catma.ui.events.RefreshEvent;
 import de.catma.ui.events.TokenInvalidEvent;
 import de.catma.ui.events.TokenValidEvent;
@@ -93,106 +93,93 @@ import de.catma.ui.util.Version;
 @Theme("catma")
 @PreserveOnRefresh
 @Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET_XHR )
-public class CatmaApplication extends UI implements KeyValueStorage,
-	BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler {
+public class CatmaApplication extends UI implements KeyValueStorage, BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler {
+	private final Logger logger = Logger.getLogger(CatmaApplication.class.getName());
 
-	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private Map<String, String[]> parameters = new HashMap<String, String[]>();
-		
-    private final ConcurrentHashMap<String,Object> _attributes = new ConcurrentHashMap<String, Object>();
+	private final Map<String, String[]> parameters = new HashMap<>();
+	private final ConcurrentHashMap<String,Object> attributes = new ConcurrentHashMap<>();
+
 	private final SignupTokenManager signupTokenManager = new SignupTokenManager();
-	 
-	
-	// Bind later when UI is ready.
-	private LoginService loginservice;
-	private InitializationService initService;
+
+	// bind later when the UI is ready
 	private EventBus eventBus;
+	private InitializationService initService;
+	private LoginService loginservice;
 	private HazelCastService hazelCastService;
 	private SqliteService sqliteService;
-	
+
 	@Override
 	protected void init(VaadinRequest request) {
 		eventBus = new EventBus();
 		initService = new Vaadin8InitializationService();
-		
-		loginservice = new GitlabLoginService(new IRemoteGitManagerFactory() {
-			
+
+		loginservice = new GitlabLoginService(new RemoteGitManagerFactory() {
 			@Override
-			public IRemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password)
-					throws IOException {
-				
-				return new GitlabManagerRestricted(eventBus, initService.acquireBackgroundService(), username, password);
-			}
-			
-			@Override
-			public IRemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
-				return new GitlabManagerRestricted(eventBus, initService.acquireBackgroundService(), userImpersonationToken);
+			public RemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException {
+				return new GitlabManagerRestricted(eventBus, username, password);
 			}
 
+			@Override
+			public RemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
+				return new GitlabManagerRestricted(eventBus, userImpersonationToken);
+			}
 		});
-		
-		hazelCastService = new HazelCastService();
-		this.eventBus.register(this);
 
+		hazelCastService = new HazelCastService();
 
 		try {
 			sqliteService = new SqliteService();
 		}
 		catch (Exception e) {
-			showAndLogError("error initialising sqlite service", e);
+			showAndLogError(null, e);
 		}
 
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
 		Page.getCurrent().setTitle("CATMA " + Version.LATEST);
-		
-		try {
-			Component component = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
-			setContent(component);
-		} catch (IOException e) {
-			showAndLogError("error creating landing page", e);
-		}
+
+		Component entryPage = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
+		setContent(entryPage);
+
+		eventBus.register(this);
 		eventBus.post(new RouteToDashboardEvent());
 
-		// A fresh UI and session doesn't have a request handler registered yet.
-		// we need to verify tokens here too.
-		
+		// handle signup token and OAuth requests
 		handleRequestToken(request);
 		handleRequestOauth(request);
 	}
-	
+
+	private void storeParameters(Map<String, String[]> parameters) {
+		this.parameters.putAll(parameters);
+	}
+
 	@Override
 	protected void refresh(VaadinRequest request) {
 		super.refresh(request);
+
+		// handle signup token and OAuth requests
 		handleRequestToken(request);
 		handleRequestOauth(request);
 
 		eventBus.post(new RefreshEvent());
 	}
-	
-	private void storeParameters(Map<String, String[]> parameters) {
-		this.parameters.putAll(parameters);
-	}
-	
-	private void handleRequestToken(VaadinRequest request){
-		if(signupTokenManager.parseUri(request.getPathInfo())) {
-			SignupTokenManager tokenManager = new SignupTokenManager();
-			tokenManager.handleVerify(request.getParameter("token"), eventBus);
+
+	private void handleRequestToken(VaadinRequest request) {
+		if (signupTokenManager.parseUri(request.getPathInfo())) {
+			new SignupTokenManager().handleVerify(request.getParameter("token"), eventBus);
 		}
 	}
-	private void handleRequestOauth(VaadinRequest request){
-		if(request.getParameter("code") != null 
-				&& VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
+
+	private void handleRequestOauth(VaadinRequest request) {
+		if (request.getParameter("code") != null && VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
 			handleOauth(request);
-			try {
-				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
-				UI.getCurrent().setContent(mainView);
-				eventBus.post(new RouteToDashboardEvent());
-				getCurrent().getPage().pushState("/catma/");
-			} catch (IOException e) {
-				showAndLogError("can't login properly", e);
-			}
+
+			Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
+			setContent(mainView);
+
+			eventBus.post(new RouteToDashboardEvent());
+			getPage().pushState("/catma/");
 		}
 	}
 
@@ -214,7 +201,6 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		if ((values != null) && (values.length > 0)) {
 			return values[0];
 		}
-
 		return null;
 	}
 
@@ -226,17 +212,17 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		return parameters.get(key);
 	}
 
-	public String accquirePersonalTempFolder() throws IOException {
+	public String acquirePersonalTempFolder() throws IOException {
 		return initService.acquirePersonalTempFolder();
 	}
 
-	public BackgroundService accuireBackgroundService() {
+	public BackgroundService acquireBackgroundService() {
 		return initService.acquireBackgroundService();
 	}
 
 	public <T> void submit(String caption, final ProgressCallable<T> callable, final ExecutionListener<T> listener) {
-		logger.info("submitting job '" + caption + "' " + callable); //$NON-NLS-1$ //$NON-NLS-2$
-		accuireBackgroundService().submit(callable, new ExecutionListener<T>() {
+		logger.info("Submitting job '" + caption + "' " + callable); //$NON-NLS-1$ //$NON-NLS-2$
+		acquireBackgroundService().submit(callable, new ExecutionListener<T>() {
 			public void done(T result) {
 				listener.done(result);
 			};
@@ -256,7 +242,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 			try {
 				((Closeable) content).close();
 			} catch (IOException e) {
-				logger.log(Level.WARNING, "couldn't cleanup UI content", e);
+				logger.log(Level.WARNING, "Couldn't clean up UI content", e);
 			}
 		}
 		
@@ -267,39 +253,34 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 		
 		super.detach();
 	}
-	
+
 	@Override
 	public void close() {
 		logger.info("Closing UI");
-		getPage().setLocation(CATMAPropertyKey.LogoutURL.getValue(CATMAPropertyKey.LogoutURL.getDefaultValue()));
+		getPage().setLocation(CATMAPropertyKey.LOGOUT_URL.getValue());
 
 		super.close();
 	}
 
 	@Override
 	public void showAndLogError(String message, Throwable e) {
-		IRemoteGitManagerRestricted api = null;
+		RemoteGitManagerRestricted api = null;
 		try {
 			api = loginservice.getAPI();
 		}
-		catch(Exception notOfInterest) {}
-		
-		logger.log(Level.SEVERE, "[" + (api==null?"not logged in":api.getUsername()) + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
+		catch (Exception ignored) {}
+
+		logger.log(
+				Level.SEVERE,
+				String.format("[%s] %s", api == null ? "not logged in" : api.getUsername(), message),
+				e
+		);
 
 		if (message == null) {
 			message = "Internal Error"; 
 		}
-		if (Page.getCurrent() != null) {
-			HTMLNotification.show("Error", 
-				MessageFormat.format(
-					"An error has occurred!<br />"
-					+ "The error has been logged "
-					+ "but you can help us by sending an email with a more detailed description.<br />"
-					+ "Or you open an issue at <a href=\"https://github.com/mpetris/catma\">GitHub</a>.<br />"
-					+ "<br />The underlying error message is:<br /> {0} <br /> {1}", 
-					message, e.getMessage()==null?"":e.getMessage()),
-				Type.ERROR_MESSAGE);
-		}
+
+		new ErrorDialog(message, e).show();
 	}
 
 	@Override
@@ -315,107 +296,98 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 
 	public ScheduledFuture<?> schedule(Runnable command,
 			long delay, TimeUnit unit) {
-		return accuireBackgroundService().schedule(command, delay, unit);
+		return acquireBackgroundService().schedule(command, delay, unit);
 	}
 	
 	@Override
 	public Object setAttribute(String key, Object obj){
-		return this._attributes.computeIfAbsent(key, (noop) -> obj);
+		return this.attributes.computeIfAbsent(key, (noop) -> obj);
 	}
 
 	@Override
 	public Object getAttribute(String key){
-		return this._attributes.get(key);
+		return this.attributes.get(key);
 	}
-	
-	/**
-	 * Based on: https://developers.google.com/accounts/docs/OpenIDConnect
-	 * @param request
-	 */
-	public void handleOauth(VaadinRequest request){
+
+	// based on: https://developers.google.com/identity/protocols/oauth2/openid-connect#authenticatingtheuser
+	// this starts at step 3: "Confirm the anti-forgery state token"
+	// prior steps are handled by AuthenticationDialog and its descendants
+	public void handleOauth(VaadinRequest request) {
 		try {
 			// extract answer
-			String authorizationCode = request.getParameter("code"); //$NON-NLS-1$
-		
-			String state = request.getParameter("state"); //$NON-NLS-1$
-		
-			String error = request.getParameter("error"); //$NON-NLS-1$
-		
+			String authorizationCode = request.getParameter("code");
+			String state = request.getParameter("state");
+			String error = request.getParameter("error");
 			String token = (String)VaadinSession.getCurrent().getAttribute("OAUTHTOKEN");
-			
-			// do we have a authorization request error?
+
+			// do we have an authorization request error?
 			if (error == null) {
 				// no, so we validate the state token
 				Totp totp = new Totp(
-						CATMAPropertyKey.otpSecret.getValue()+token, 
-						new Clock(Integer.valueOf(
-							CATMAPropertyKey.otpDuration.getValue())));
+						CATMAPropertyKey.OTP_SECRET.getValue() + token,
+						new Clock(CATMAPropertyKey.OTP_DURATION.getIntValue())
+				);
 				if (!totp.verify(state)) {
-					error = "state token verification failed"; //$NON-NLS-1$
+					error = "state token verification failed";
 				}
 			}
-			
-			// state token get validation success?	
+
+			// state token get validation success?
 			if (error == null) {
 				CloseableHttpClient httpclient = HttpClients.createDefault();
-				HttpPost httpPost = 
-					new HttpPost(CATMAPropertyKey.Google_oauthAccessTokenRequestURL.getValue());
-				List <NameValuePair> data = new ArrayList <NameValuePair>();
-				data.add(new BasicNameValuePair("code", authorizationCode)); //$NON-NLS-1$
-				data.add(new BasicNameValuePair("grant_type", "authorization_code")); //$NON-NLS-1$ //$NON-NLS-2$
-				data.add(new BasicNameValuePair(
-					"client_id", CATMAPropertyKey.Google_oauthClientId.getValue())); //$NON-NLS-1$
-				data.add(new BasicNameValuePair(
-					"client_secret", CATMAPropertyKey.Google_oauthClientSecret.getValue())); //$NON-NLS-1$
-				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BaseURL.getValue(
-						CATMAPropertyKey.BaseURL.getDefaultValue()))); //$NON-NLS-1$
+
+				HttpPost httpPost = new HttpPost(CATMAPropertyKey.GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL.getValue());
+				List <NameValuePair> data = new ArrayList<>();
+				data.add(new BasicNameValuePair("code", authorizationCode));
+				data.add(new BasicNameValuePair("grant_type", "authorization_code"));
+				data.add(new BasicNameValuePair("client_id", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.getValue()));
+				data.add(new BasicNameValuePair("client_secret", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_SECRET.getValue()));
+				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BASE_URL.getValue()));
 				httpPost.setEntity(new UrlEncodedFormEntity(data));
+
 				CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
+
 				HttpEntity entity = tokenRequestResponse.getEntity();
 				InputStream content = entity.getContent();
 				ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
 				IOUtils.copy(content, bodyBuffer);
-				
-				logger.info("access token request result: " + bodyBuffer.toString("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
-				
+
+				logger.info("Google OAuth access token request result: " + bodyBuffer.toString(StandardCharsets.UTF_8.name()));
+
 				ObjectMapper mapper = new ObjectMapper();
-		
-				ObjectNode accessTokenResponseJSon = 
-						mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
-		
-				String idToken = accessTokenResponseJSon.get("id_token").asText(); //$NON-NLS-1$
-				
-				String[] pieces = idToken.split("\\."); //$NON-NLS-1$
+
+				ObjectNode accessTokenResponseJson = mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
+				String idToken = accessTokenResponseJson.get("id_token").asText();
+				String[] pieces = idToken.split("\\.");
 				// we skip the header and go ahead with the payload
 				String payload = pieces[1];
-		
-				String decodedPayload = 
-						new String(Base64.decodeBase64(payload), "UTF-8"); //$NON-NLS-1$
+				String decodedPayload = new String(Base64.decodeBase64(payload), StandardCharsets.UTF_8);
+				logger.info("Google OAuth access token request result (decoded): " + decodedPayload);
+
 				ObjectNode payloadJson = mapper.readValue(decodedPayload, ObjectNode.class);
-				
-				logger.info("decodedPayload: " + decodedPayload); //$NON-NLS-1$
-				
-				String identifier = payloadJson.get("sub").asText(); //$NON-NLS-1$
-				String email = payloadJson.get("email").asText(); //$NON-NLS-1$
-				String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
+				String identifier = payloadJson.get("sub").asText();
 				String provider = "google_com";
+				String email = payloadJson.get("email").asText();
+				String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
+
 				loginservice.loggedInFromThirdParty(identifier, provider, email, name);
+
 				setAttribute("OAUTHTOKEN", null);
 			}
 			else {
-		        logger.info("authentication failure: " + error); //$NON-NLS-1$
+				logger.warning("Google OAuth authentication failure: " + error);
 				new Notification(
-		            "Authentication failure",
-		            "The authentication failed!",
-		            Type.ERROR_MESSAGE).show(getPage());
+					"Authentication failure",
+					"The authentication failed!",
+					Type.ERROR_MESSAGE
+				).show(getPage());
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			((ErrorHandler)this).showAndLogError(
-					"Error during login!", e);
+		}
+		catch (Exception e) {
+			showAndLogError("Error during login", e);
 		}
 	}
-	
+
 	@Subscribe
 	public void handleTokenValid(TokenValidEvent tokenValidEvent){
 		getUI().access(() -> {

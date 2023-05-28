@@ -155,7 +155,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 			cbTagsets = new ComboBox<TagsetDefinition>("Tagset", availableTagsets);
 			cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
 			cbTagsets.setWidth("100%");
-			cbTagsets.setDescription("The Tagset that will be the container of the new Tag.");
+			cbTagsets.setDescription("The tagset that will be the container of the new tag");
 			cbTagsets.setEmptySelectionAllowed(false);
 			preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));
 		}		
@@ -172,7 +172,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		int[] randomRGBColor = ColorConverter.getRandomColor();
 		
 		colorPicker = new ColorPicker(
-				"Tag color", 
+				"Tag Color",
 				new Color(randomRGBColor[0], randomRGBColor[1], randomRGBColor[2]));
 		colorPicker.addStyleName(MaterialTheme.BUTTON_FLAT);
 		colorPicker.addStyleName("inputfield-color-picker");
@@ -186,7 +186,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		propertyDefNamePanel.setMargin(new MarginInfo(true, true, false, true));
 		
 		tfPropertyDefName = new TextField("Add Properties");
-		tfPropertyDefName.setPlaceholder("Enter a Property name");
+		tfPropertyDefName.setPlaceholder("Enter a property name");
 		tfPropertyDefName.setWidth("250px");
 		propertyDefNamePanel.addComponent(tfPropertyDefName);
 		
@@ -264,7 +264,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		}
 		content.addComponent(
 			new Label(
-				"Enter name, color and Properties (optional) of the Tag you want to add"));
+				"Enter name, color and properties (optional) of the tag you want to add"));
 		content.addComponent(tagPanel);
 		content.addComponent(propertyDefNamePanel);
 		content.addComponent(propertyDefPanel);
@@ -289,13 +289,13 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		String name = tfName.getValue();
 		
 		if ((name == null) || name.isEmpty()) {
-			Notification.show("Info", "Please enter the Tag's name!", Type.ERROR_MESSAGE);
+			Notification.show("Info", "Please enter the tag's name!", Type.ERROR_MESSAGE);
 		}
 		else if (colorPicker.getValue() == null) {
-			Notification.show("Info", "Please choose the Tag's color!", Type.ERROR_MESSAGE);
+			Notification.show("Info", "Please choose the tag's color!", Type.ERROR_MESSAGE);
 		}
 		else if (isWithTagsetSelection() && cbTagsets.getValue() == null) {
-			Notification.show("Info", "Please choose the Tag's Tagset!", Type.ERROR_MESSAGE);
+			Notification.show("Info", "Please choose the tag's tagset!", Type.ERROR_MESSAGE);
 		}
 		else {
 			super.handleOkPressed();

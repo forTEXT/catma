@@ -4,8 +4,6 @@ import java.util.List;
 
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.AbstractOrderedLayout;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -30,8 +28,8 @@ public class CollectionImportDialog extends AbstractOkCancelDialog<List<TagsetDe
 	protected void addContent(ComponentContainer content) {
 		Label intro = new Label(
 				String.format(
-						"We found %1$d Tagset(s) in the uploaded Collection.<br />"
-						+ "Importing the Collection will also import or update the following Tagsets:", 
+						"We found %1$d tagset(s) in the uploaded collection.<br />"
+						+ "Importing the collection will also import or update the following tagsets:",
 						tagsetDefinitionImportStatusList.size()), ContentMode.HTML);
 		content.addComponent(intro);
 		VerticalLayout tagsetPanel = new VerticalLayout();
@@ -48,30 +46,22 @@ public class CollectionImportDialog extends AbstractOkCancelDialog<List<TagsetDe
 			
 			Label rowLabel = new Label("", ContentMode.HTML);
 			
-			if (!tagsetDefinitionImportStatus.isInProjectHistory()) {
-				
-				String doImportText = 
-						String.format(
-								"<b>%1$s</b> is new to this Project and will be imported!", 
-								tagsetDefinitionImportStatus.getTagset().getName()); 
+			if (!tagsetDefinitionImportStatus.isCurrent()) {
+				String doImportText = String.format(
+						"<strong>%s</strong> is new to this project and will be imported!",
+						tagsetDefinitionImportStatus.getTagset().getName()
+				);
 
 				rowLabel.setValue(doImportText);
 			}
-			else if (!tagsetDefinitionImportStatus.isCurrent()) {
-				String doImportText = 
-						String.format("<b>%1$s</b> was part of this Project, but had been removed!<br />"
-						+ "Importing the Collection will re-add the removed Tagset and create a new version of it with the imported content.<br />"
-						+ "%1$s will be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
-				rowLabel.setValue(doImportText);
-			}
 			else {
-				String doImportText = 
-						String.format("<b>%1$s</b> is already part of this Project!<br />"
-						+ "Importing the Collection will merge not yet included Tags, Properties "
-						+ "and Values<br />from the Tagset of the imported Collection into the existing Tagset.<br />" 
-						+ "%1$s will be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
+				String doImportText = String.format(
+						"<strong>%1$s</strong> is already part of this project!<br />"
+						+ "Importing the collection will merge not yet included tags, properties "
+						+ "and values<br />from the tagset of the imported collection into the existing tagset.<br />"
+						+ "%1$s will be imported!",
+						tagsetDefinitionImportStatus.getTagset().getName()
+				);
 				rowLabel.setValue(doImportText);
 			}
 			row.addComponent(rowLabel);

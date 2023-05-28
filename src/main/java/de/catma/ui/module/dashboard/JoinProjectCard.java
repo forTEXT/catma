@@ -10,7 +10,7 @@ import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.user.User;
 
 /**
- * Renders a new Project link styled as a card.
+ * Renders a join project link styled as a card.
  * 
  * @author db
  *
@@ -28,25 +28,28 @@ public class JoinProjectCard extends VerticalFlexLayout {
 	}
 
 	private void initComponents() {
-        addStyleName("projectlist__newproject");
+		addStyleName("projectlist__newproject");
 
-        CssLayout newproject = new CssLayout();
-        newproject.addStyleName("projectlist__newproject__link");
-        Label labelDesc = new Label("join project");
-        labelDesc.setWidth("100%");
-        newproject.addComponents(labelDesc);
+		CssLayout joinProjectLayout = new CssLayout();
+		joinProjectLayout.addStyleName("projectlist__newproject__link");
+		joinProjectLayout.addLayoutClickListener(
+				layoutClickEvent -> new JoinProjectDialog(
+						currentUser,
+						eventBus
+				).show()
+		);
 
-        newproject.addLayoutClickListener(evt -> {
-        	new JoinProjectDialog(currentUser, eventBus).show();
-        });
-        addComponent(newproject);
+		Label labelDesc = new Label("join project");
+		labelDesc.setWidth("100%");
+		joinProjectLayout.addComponents(labelDesc);
 
-        HorizontalFlexLayout descriptionBar = new HorizontalFlexLayout();
-        descriptionBar.addStyleName("projectlist__card__descriptionbar");
-        descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
-        descriptionBar.setWidth("100%");
+		addComponent(joinProjectLayout);
 
-        addComponents(descriptionBar);
-		
+		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
+		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");
+		titleAndActionsLayout.setAlignItems(FlexLayout.AlignItems.BASELINE);
+		titleAndActionsLayout.setWidth("100%");
+
+		addComponents(titleAndActionsLayout);
 	}
 }

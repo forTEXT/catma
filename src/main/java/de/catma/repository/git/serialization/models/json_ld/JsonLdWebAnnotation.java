@@ -1,9 +1,9 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import com.google.gson.annotations.SerializedName;
 import de.catma.document.Range;
 import de.catma.document.annotation.TagReference;
 import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.GitProjectManager;
+import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -42,8 +42,9 @@ public class JsonLdWebAnnotation {
 	private String id;
 	private JsonLdWebAnnotationBody_Dataset body;
 	private JsonLdWebAnnotationTarget_List target;
-
-	
+	private transient String pageFilename;
+	private transient String serializedListItem; 
+			
 	/**
 	 * Constructor for deserialization
 	 */
@@ -52,7 +53,8 @@ public class JsonLdWebAnnotation {
 	}
 
 	public JsonLdWebAnnotation(
-			String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
+			Collection<TagReference> tagReferences, TagLibrary tagLibrary, 
+			String pageFilename)
 			throws IOException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
@@ -64,49 +66,31 @@ public class JsonLdWebAnnotation {
 			);
 		}
 
-		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-
 		this.id = this.buildTagInstanceUrl(
-			gitServerBaseUrl, projectRootRepositoryName, tagReferences.iterator().next().getUserMarkupCollectionUuid(),
+			tagReferences.iterator().next().getUserMarkupCollectionUuid(),
 			tagReferences.iterator().next().getTagInstance().getUuid()
 		).toString();
 
-		this.body = new JsonLdWebAnnotationBody_Dataset(gitServerBaseUrl, projectId, tagReferences, tagLibrary);
+		this.body = new JsonLdWebAnnotationBody_Dataset(tagReferences, tagLibrary);
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
+		this.pageFilename = pageFilename;
 	}
 
-	static URL sanitizeUrl(String url) throws MalformedURLException {
-		// absence of a trailing slash on the file/path component is handled really badly by both URI and URL
-		// URL(URL context, String spec) only works if the file/path component of context has a trailing slash...
-		// URI normalize or resolve methods do not fix it either
-		// NB: this method does not care about query params and will strip them if they exist in the URL
-		URL _url = new URL(url);
-		String path = _url.getPath();
-		if (!path.endsWith("/")) {
-			path = path + "/";
+	private URI buildTagInstanceUrl(String userMarkupCollectionUuid, String tagInstanceUuid)
+			throws IOException {
+
+		try {
+			return new URI(
+					String.format(
+							"%s/%s/annotations/%s",
+							GitProjectHandler.ANNOTATION_COLLECTIONS_DIRECTORY_NAME,
+							userMarkupCollectionUuid,
+							tagInstanceUuid
+					)
+			);
+		} catch (URISyntaxException ue) {
+			throw new IOException(ue);
 		}
-		return new URL(_url.getProtocol(), _url.getHost(), _url.getPort(), path);
-	}
-
-	private URL buildTagInstanceUrl(String gitServerBaseUrl, String projectRootRepositoryName,
-									String userMarkupCollectionUuid, String tagInstanceUuid)
-			throws MalformedURLException {
-
-		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
-
-		return new URL(
-				gitServerUrl.getProtocol(),
-				gitServerUrl.getHost(),
-				gitServerUrl.getPort(),
-				String.format(
-						"%s%s/%s/%s/annotations/%s.json",
-						gitServerUrl.getPath(),
-						projectRootRepositoryName,
-						GitProjectHandler.ANNOTATION_COLLECTION_SUBMODULES_DIRECTORY_NAME,
-						userMarkupCollectionUuid,
-						tagInstanceUuid
-				)
-		);
 	}
 
 	public String getContext() {
@@ -122,7 +106,15 @@ public class JsonLdWebAnnotation {
 	}
 
 	public void setId(String id) {
+		if (serializedListItem != null) {
+			throw new IllegalStateException("This annotation instance has already been serialized and cannot be modified anymore!");
+		}
+
 		this.id = id;
+	}
+	
+	public void setPageFilename(String pageFilename) {
+		this.pageFilename = pageFilename;
 	}
 
 	public JsonLdWebAnnotationBody_Dataset getBody() {
@@ -130,6 +122,9 @@ public class JsonLdWebAnnotation {
 	}
 
 	public void setBody(JsonLdWebAnnotationBody_Dataset body) {
+		if (serializedListItem != null) {
+			throw new IllegalStateException("This annotation instance has already been serialized and cannot be modified anymore!");
+		}
 		this.body = body;
 	}
 
@@ -138,11 +133,15 @@ public class JsonLdWebAnnotation {
 	}
 
 	public void setTarget(JsonLdWebAnnotationTarget_List target) {
+		if (serializedListItem != null) {
+			throw new IllegalStateException("This annotation instance has already been serialized and cannot be modified anymore!");
+		}
+
 		this.target = target;
 	}
 
 	public List<TagReference> toTagReferenceList(String projectId, String markupCollectionId)
-				throws Exception {
+				throws IOException {
 		TagInstance tagInstance = this.getTagInstance();
 		String sourceDocumentUri = this.getSourceDocumentUri();
 		List<Range> ranges = this.getRanges();
@@ -155,7 +154,7 @@ public class JsonLdWebAnnotation {
 		}
 		catch (URISyntaxException e) {
 			throw new IOException(
-				String.format("error loading Collection %1$s of project %2$s ",
+				String.format("Error loading collection with ID %s of project with ID %s",
 						markupCollectionId,
 						projectId), 
 				e);
@@ -180,7 +179,7 @@ public class JsonLdWebAnnotation {
 	}
 
 	public TagInstance getTagInstance()
-			throws Exception {
+			throws IOException {
 
 		TagInstance tagInstance = new TagInstance(
 			this.getTagInstanceUuid(),
@@ -190,7 +189,8 @@ public class JsonLdWebAnnotation {
 			Collections.emptyList(), //these get added with the user defined properties below
 			getBody().getTagset().substring(getBody().getTagset().lastIndexOf('/')+1)
 		);
-
+		tagInstance.setPageFilename(pageFilename);
+		
 		TreeMap<String, TreeMap<String, TreeSet<String>>> properties = this.body.getProperties();
 
 		for (Map.Entry<String, TreeMap<String, TreeSet<String>>> entry : properties.entrySet()) {
@@ -214,5 +214,22 @@ public class JsonLdWebAnnotation {
 
 	private String getLastPathSegmentFromUrl(String url) {
 		return url.substring(url.lastIndexOf("/") + 1);
+	}
+	
+	public String getPageFilename() {
+		return pageFilename;
+	}
+	
+	public String asSerializedListItem() {
+		if (this.serializedListItem == null) {
+			this.serializedListItem =
+				new SerializationHelper<JsonLdWebAnnotation>().serialize(Collections.singletonList(this));
+		}
+		
+		return serializedListItem;
+	}
+	
+	public int getSerializedItemUTF8ByteSize() {
+		return asSerializedListItem().getBytes(StandardCharsets.UTF_8).length;
 	}
 }

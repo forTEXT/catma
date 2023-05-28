@@ -2,17 +2,17 @@ package de.catma.ui.module.annotate.resourcepanel;
 
 import com.vaadin.icons.VaadinIcons;
 
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 
 class DocumentDataItem implements DocumentTreeItem {
 	
-	private SourceDocument document;
+	private SourceDocumentReference documentReference;
 	private boolean selected;
 	
 	
-	public DocumentDataItem(SourceDocument document, boolean selected) {
+	public DocumentDataItem(SourceDocumentReference documentReference, boolean selected) {
 		super();
-		this.document = document;
+		this.documentReference = documentReference;
 		this.selected = selected;
 	}
 
@@ -23,7 +23,7 @@ class DocumentDataItem implements DocumentTreeItem {
 
 	@Override
 	public String getName() {
-		return document.toString();
+		return documentReference.toString();
 	}
 
 	@Override
@@ -35,7 +35,7 @@ class DocumentDataItem implements DocumentTreeItem {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((document == null) ? 0 : document.hashCode());
+		result = prime * result + ((documentReference == null) ? 0 : documentReference.hashCode());
 		return result;
 	}
 
@@ -48,10 +48,10 @@ class DocumentDataItem implements DocumentTreeItem {
 		if (getClass() != obj.getClass())
 			return false;
 		DocumentDataItem other = (DocumentDataItem) obj;
-		if (document == null) {
-			if (other.document != null)
+		if (documentReference == null) {
+			if (other.documentReference != null)
 				return false;
-		} else if (!document.equals(other.document))
+		} else if (!documentReference.equals(other.documentReference))
 			return false;
 		return true;
 	}
@@ -66,8 +66,8 @@ class DocumentDataItem implements DocumentTreeItem {
 		return true;
 	}
 
-	public SourceDocument getDocument() {
-		return document;
+	public SourceDocumentReference getDocument() {
+		return documentReference;
 	}
 	
 	@Override
@@ -77,17 +77,12 @@ class DocumentDataItem implements DocumentTreeItem {
 	
 	@Override
 	public String toString() {
-		return document.toString();
+		return documentReference.toString();
 	}
 	
 	@Override
 	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener) {
-		resourceSelectionListener.documentSelected(document);
-	}
-	
-	@Override
-	public String getPermissionIcon() {
-		return null; //writable Documents not supported yet
+		resourceSelectionListener.documentSelected(documentReference);
 	}
 
 }

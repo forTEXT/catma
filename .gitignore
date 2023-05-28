@@ -21,3 +21,6 @@ catma*.properties
 
 # Mac
 .DS_Store
+project*.log
+project*.csv
+project*.ods

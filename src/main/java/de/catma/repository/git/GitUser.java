@@ -18,7 +18,7 @@ public class GitUser implements User {
 
 	@Override
 	public String getIdentifier() {
-		return gitlabUser.getUsername(); //TODO: rather combination of extern uid and provider...
+		return gitlabUser.getUsername();
 	}
 
 	@Override

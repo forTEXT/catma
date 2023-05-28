@@ -27,9 +27,11 @@ import de.catma.tag.Version;
 public class TeiTagLibrarySerializer {
 
 	private TeiDocument teiDocument;
+	private String version;
 
-	public TeiTagLibrarySerializer(TeiDocument teiDocument) {
+	public TeiTagLibrarySerializer(TeiDocument teiDocument, String version) {
 		this.teiDocument = teiDocument;
+		this.version = version;
 	}
 
 	public void serialize(TagLibrary tagLibrary) {
@@ -45,7 +47,7 @@ public class TeiTagLibrarySerializer {
 		TeiElement fsdDecl = new TeiElement(TeiElementName.fsdDecl);
 		fsdDecl.setID(tagset.getUuid());
 		fsdDecl.setAttributeValue(
-			Attribute.n, tagset.getName() + " " + tagset.getRevisionHash());
+			Attribute.n, tagset.getName() + " " + version); //TODO: this is a project version and should go to the header
 		encodingDesc.appendChild(fsdDecl);
 		
 		for (TagDefinition td : tagset) {

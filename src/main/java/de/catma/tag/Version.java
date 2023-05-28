@@ -33,6 +33,7 @@ import java.util.Date;
  * @author Marco Petris
  *
  */
+@Deprecated
 public class Version {
 	public static final String DATETIMEPATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 

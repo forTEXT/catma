@@ -4,18 +4,19 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 
 public class DocumentDataItem implements DocumentTreeItem {
 	
-	private SourceDocument document;
+	private SourceDocumentReference documentRef;
 	
-	public DocumentDataItem(SourceDocument document) {
-		this.document = document;
+	public DocumentDataItem(SourceDocumentReference docRef) {
+		this.documentRef = docRef;
 	}
 
 	@Override
 	public String getName() {
-		return document.toString();
+		return documentRef.toString();
 	}
 
 	@Override
@@ -23,23 +24,18 @@ public class DocumentDataItem implements DocumentTreeItem {
 		return VaadinIcons.BOOK.getHtml();
 	}
 
-	public SourceDocument getDocument() {
-		return document;
-	}
-	
-	@Override
-	public String getPermissionIcon() {
-		return null; //writable docs not supported yet
+	public SourceDocumentReference getDocument() {
+		return documentRef;
 	}
 	
 	@Override
 	public void addToCorpus(Corpus corpus) {
-		corpus.addSourceDocument(document);
+		corpus.addSourceDocument(documentRef);
 	}
 	
 	@Override
 	public String getUuid() {
-		return document.getUuid();
+		return documentRef.getUuid();
 	}
 	
 	@Override

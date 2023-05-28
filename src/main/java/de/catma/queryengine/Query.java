@@ -32,19 +32,19 @@ public abstract class Query {
     private QueryOptions queryOptions;
 
     /**
-     * Executes a query and returns a {@link de.catma.queryengine.QueryResult.queryengine.result.ResultList} that has
-     * not been refined yet by the {@link org.catma.queryengine.Refinement} of this query.
-     * <br><br>
+     * Executes a query and returns a {@link QueryResult} that has
+     * not been refined yet by the {@link Refinement} of this query.
+     * <p>
      * Normally this method does not need to be called directly. To execute a query
      * and to retrieve the final execution result you should call {@link #getResult()} instead.
      *
-     * @return the <b>unrefined</b> result, never <code>null</code>
+     * @return the <strong>unrefined</strong> result, never <code>null</code>
      * @throws Exception see instance for details
      */
     protected abstract QueryResult execute() throws Exception;
 
     /**
-     * @return the result of the execution, optionally refined by a {@link org.catma.queryengine.Refinement}.
+     * @return the result of the execution, optionally refined by a {@link Refinement}.
      * @throws Exception see instance for details 
      */
     public QueryResult getResult() throws Exception {

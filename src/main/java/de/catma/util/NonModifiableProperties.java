@@ -21,23 +21,23 @@ public class NonModifiableProperties extends Properties {
 	
 	@Override
 	public synchronized Object setProperty(String key, String value) {
-		throw new UnsupportedOperationException("non modifiable properties");
+		throw new UnsupportedOperationException("Non-modifiable properties");
 	}
 
 	@Override
 	public synchronized void load(Reader reader) throws IOException {
-		throw new UnsupportedOperationException("non modifiable properties");
+		throw new UnsupportedOperationException("Non-modifiable properties");
 	}
 
 	@Override
 	public synchronized void load(InputStream inStream) throws IOException {
-		throw new UnsupportedOperationException("non modifiable properties");
+		throw new UnsupportedOperationException("Non-modifiable properties");
 	}
 
 	@Override
 	public synchronized void loadFromXML(InputStream in) throws IOException,
 			InvalidPropertiesFormatException {
-		throw new UnsupportedOperationException("non modifiable properties");
+		throw new UnsupportedOperationException("Non-modifiable properties");
 	}
 
 	@Override

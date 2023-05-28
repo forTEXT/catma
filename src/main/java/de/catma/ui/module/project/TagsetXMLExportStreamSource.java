@@ -44,15 +44,16 @@ public class TagsetXMLExportStreamSource implements StreamSource {
 			try {
 				final TeiDocument teiDocument = teiDocumentFactory.createEmptyDocument(null);
 				
-				final TeiTagLibrarySerializer teiTagSerializer = new TeiTagLibrarySerializer(teiDocument);
+				final TeiTagLibrarySerializer teiTagSerializer = 
+						new TeiTagLibrarySerializer(teiDocument, project.getVersion());
 				final TagManager tagManager = new TagManager(new TagLibrary());
 				tagsets.forEach(tagset -> tagManager.addTagsetDefinition(tagset));
 				
 				final ContentInfoSet contentInfoSet = 
 						new ContentInfoSet(
-								project.getUser().toString(),
+								project.getCurrentUser().toString(),
 								project.getDescription(),
-								project.getUser().toString(), 
+								project.getCurrentUser().toString(),
 								project.getName());
 				
 				teiDocument.getTeiHeader().setValues(contentInfoSet);
@@ -68,7 +69,7 @@ public class TagsetXMLExportStreamSource implements StreamSource {
 		        return new FileInputStream(tempFile);
 		        		
 			} catch (Exception e) {
-				((ErrorHandler)ui).showAndLogError("Error exporting Tagsets to XML!", e);
+				((ErrorHandler) ui).showAndLogError("Error exporting tagsets to XML", e);
 			}
 		}
 		

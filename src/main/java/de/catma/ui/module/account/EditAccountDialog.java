@@ -1,112 +1,95 @@
 package de.catma.ui.module.account;
 
-import java.io.IOException;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
+import com.vaadin.data.ValidationResult;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
+import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
-
-import de.catma.repository.git.interfaces.IRemoteGitManagerPrivileged;
-import de.catma.ui.events.ChangeUserAttributeEvent;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
+import de.catma.ui.events.ChangeUserAttributesEvent;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.auth.ChangePasswordValidator;
 import de.catma.ui.module.main.auth.UserData;
 import de.catma.user.User;
 
-public class EditAccountDialog extends Window {
+import java.io.IOException;
+import java.util.stream.Collectors;
 
-	private UserData userData = new UserData();
-	
-	private final Binder<UserData> userBinder = new Binder<>();
-	private final IRemoteGitManagerPrivileged gitManagerPrivileged ;
+public class EditAccountDialog extends Window {
+	private final RemoteGitManagerPrivileged gitManagerPrivileged;
 	private final EventBus eventBus;
 
-	private final String email;
-	private final String username;
-	private final String name;
 	private final long userId;
+	private final String name;
+	private final String username;
 
+	private final Binder<UserData> userBinder = new Binder<>();
+	private final UserData userData = new UserData();
+
+	private PasswordField pfPassword;
+	private PasswordField pfVerifyPassword;
+	private Button btnSave;
 	private Button btnCancel;
 
-	private Button btnSave;
-
-	private PasswordField tfPassword;
-
-	private PasswordField tfVerifyPassword;
-	
-	public EditAccountDialog(IRemoteGitManagerPrivileged gitManagerPrivileged, 
-			LoginService loginService, EventBus eventBus) {
+	public EditAccountDialog(RemoteGitManagerPrivileged gitManagerPrivileged, LoginService loginService, EventBus eventBus) {
 		this.gitManagerPrivileged = gitManagerPrivileged;
 		this.eventBus = eventBus;
-		
-		User user = Objects.requireNonNull(loginService.getAPI()).getUser();
-		this.email = user.getEmail();
-		this.username = user.getIdentifier();
-		this.name = user.getName();
+
+		User user = loginService.getAPI().getUser();
 		this.userId = user.getUserId();
-	
-		this.setCaption("Account details");
+		this.name = user.getName();
+		this.username = user.getIdentifier();
+
+		this.setCaption("Account Details");
 		initComponents();
 		initActions();
 	}
 
-
-
 	private void initActions() {
 		btnCancel.addClickListener(evt -> close());
-		
-		btnSave.addClickListener(click -> {
 
+		btnSave.addClickListener(evt -> {
 			// sanity check the password
-			if(! tfPassword.getValue().equals(tfVerifyPassword.getValue())) {
-				Notification.show("Passwords don't match",Type.ERROR_MESSAGE);
+			if(!pfPassword.getValue().equals(pfVerifyPassword.getValue())) {
+				Notification.show("The passwords don't match!", Type.ERROR_MESSAGE);
 				return;
 			}
 
 			// validate the bean!
 			try {
 				userBinder.writeBean(userData);
-			} catch (ValidationException e) {
+			}
+			catch (ValidationException e) {
 				Notification.show(
-						Joiner
-						.on("\n")
-						.join(
-								e.getValidationErrors().stream()
-								.map(msg -> msg.getErrorMessage())
-								.collect(Collectors.toList())),Type.ERROR_MESSAGE);
+						Joiner.on("\n").join(
+								e.getValidationErrors().stream().map(ValidationResult::getErrorMessage).collect(Collectors.toList())
+						),
+						Type.ERROR_MESSAGE
+				);
 				return;
 			}
+
 			try {
-				gitManagerPrivileged.modifyUserAttributes(userId,
-						userData.getName(), userData.getPassword().isEmpty()? null : userData.getPassword());
-				
-				eventBus.post(new ChangeUserAttributeEvent());
-				Notification.show("Profile modification successful", Type.TRAY_NOTIFICATION);
-				
-			} catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Couldn't change profile", e);
+				gitManagerPrivileged.modifyUserAttributes(
+						userId,
+						userData.getName(),
+						userData.getPassword().isEmpty() ? null : userData.getPassword()
+				);
+
+				eventBus.post(new ChangeUserAttributesEvent());
+				Notification.show("Account details updated", Type.TRAY_NOTIFICATION);
 			}
+			catch (IOException e) {
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to update account details", e);
+			}
+
 			this.close();
 		});
 	}
-
-
 
 	private void initComponents(){
 		setWidth("40%");
@@ -129,17 +112,12 @@ public class EditAccountDialog extends Window {
 			tfUsername.setValue(username);
 		}
 		tfUsername.setEnabled(false);
-		TextField tfEmail = new TextField("Email");
-		tfEmail.setWidth("100%");
-		tfEmail.setValue(email);
-		tfEmail.setEnabled(false);
-		tfEmail.setDescription("Email has already been verified");
 		
-		tfPassword = new PasswordField("Password");
-		tfPassword.setWidth("100%");
+		pfPassword = new PasswordField("Password");
+		pfPassword.setWidth("100%");
 		
-		tfVerifyPassword = new PasswordField("Verify password");
-		tfVerifyPassword.setWidth("100%");
+		pfVerifyPassword = new PasswordField("Verify password");
+		pfVerifyPassword.setWidth("100%");
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setWidth("100%");
@@ -157,25 +135,22 @@ public class EditAccountDialog extends Window {
 		content.addComponent(lDescription);
 		content.addComponent(tfName);
 		content.addComponent(tfUsername);
-		content.addComponent(tfEmail);
-		content.addComponent(tfPassword);
-		content.addComponent(tfVerifyPassword);
-		content.setExpandRatio(tfVerifyPassword, 1f);
+		content.addComponent(pfPassword);
+		content.addComponent(pfVerifyPassword);
+		content.setExpandRatio(pfVerifyPassword, 1f);
 		
 		content.addComponent(buttonPanel);
 		
 		userBinder.forField(tfName)
 		.bind(UserData::getName, UserData::setName);
-		userBinder.forField(tfPassword)
+		userBinder.forField(pfPassword)
 	    .withValidator(new ChangePasswordValidator(8))
 	    .bind(UserData::getPassword, UserData::setPassword);
 		
 		setContent(content);
-
 	}
 	
 	public void show() {
 		UI.getCurrent().addWindow(this);
 	}
-	
 }

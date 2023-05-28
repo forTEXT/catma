@@ -73,7 +73,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 		this.wizardContext = wizardContext; 
 		this.wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, false);
 		
-		this.progressStep = progressStepFactory.create(2, "Inspect the content");
+		this.progressStep = progressStepFactory.create(2, "Inspect the Content");
 		
 		ArrayList<UploadFile> fileList = (ArrayList<UploadFile>) wizardContext.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
 		
@@ -87,14 +87,14 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 	private void initActions() {
 		fileGrid.addItemClickListener(event -> updatePreview(event.getItem()));
 		
-		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set language", menuItem -> {
+		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set Language", menuItem -> {
 			if (fileGrid.getSelectedItems().isEmpty()) {
 				Notification.show("Info", "Please select one or more entries first!", Type.HUMANIZED_MESSAGE);
 			}
 			else {
 				SingleOptionInputDialog<LanguageItem> languageSelectionDialog = 
 					new SingleOptionInputDialog<>(
-						"Language selection", "Please select a language:", languageItems, result -> {
+						"Language Selection", "Please select a language:", languageItems, result -> {
 					fileGrid.getSelectedItems().forEach(uploadFile -> uploadFile.setLanguage(result));
 					fileDataProvider.refreshAll();
 					fileGrid.getSelectedItems().stream().findFirst().ifPresent(uploadFile -> updatePreview(uploadFile));
@@ -156,7 +156,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 		catch (Exception e) {
 			Logger.getLogger(InspectContentStep.class.getName()).log(
 					Level.SEVERE, 
-					String.format("Error loading preview of %1$s", uploadFile.getOriginalFilename()), 
+					String.format("Error loading preview of %s", uploadFile.getOriginalFilename()),
 					e);
 			String errorMsg = e.getMessage();
 			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
@@ -166,8 +166,8 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 			Notification.show(
 				"Error", 
 				String.format(
-						"Error loading content of %1$s! "
-						+ "Adding this file to your Project might fail!\n The underlying error message was:\n%2$s", 
+						"Error loading content of %s! "
+						+ "Adding this file to your project might fail.\nThe underlying error message was:\n%s",
 						uploadFile.getOriginalFilename(), errorMsg), 
 				Type.ERROR_MESSAGE);
 		}
@@ -243,7 +243,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
         fileGrid.getEditor().setEnabled(true).setBuffered(false);
         
         
-        fileActionGridComponent = new ActionGridComponent<Grid<UploadFile>>(new Label("Language and encoding"), fileGrid); 
+        fileActionGridComponent = new ActionGridComponent<Grid<UploadFile>>(new Label("Language and Encoding"), fileGrid);
         fileActionGridComponent.setMargin(false);
         fileActionGridComponent.getActionGridBar().setAddBtnVisible(false);
         
@@ -255,9 +255,9 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
         leftColumn.addComponent(fileActionGridComponent);
         leftColumn.setExpandRatio(fileActionGridComponent, 1.0f);
         
-        cbUseApostrophe = new CheckBox("always use the apostrophe as a word separator");
+        cbUseApostrophe = new CheckBox("Always use the apostrophe as a word separator");
         cbUseApostrophe.setDescription(
-        	"This has influence on the segmentation of the text, i. e. on how the wordlist is created.");
+        	"This has influence on the segmentation of the text, i.e. on how the wordlist is created.");
         leftColumn.addComponent(cbUseApostrophe);
         
         contentPanel.addComponent(leftColumn);
@@ -306,7 +306,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 				try {
 					languageDetector.loadModels();
 				} catch (IOException e) {
-					((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading language detection models!", e);
+					((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading language detection models", e);
 				}
 
 
@@ -349,7 +349,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 						} catch (Exception e) {
 							Logger.getLogger(InspectContentStep.class.getName()).log(
 									Level.SEVERE, 
-									String.format("Error inspecting %1$s", uploadFile.getOriginalFilename()), 
+									String.format("Error inspecting %s", uploadFile.getOriginalFilename()),
 									e);
 							String errorMsg = e.getMessage();
 							if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
@@ -359,8 +359,8 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 							Notification.show(
 								"Error", 
 								String.format(
-										"Error inspecting content of %1$s! "
-										+ "Adding this file to your Project might fail!\n The underlying error message was:\n%2$s", 
+										"Error inspecting content of %s! "
+										+ "Adding this file to your project might fail.\nThe underlying error message was:\n%s",
 										uploadFile.getOriginalFilename(), errorMsg), 
 								Type.ERROR_MESSAGE);								
 						}
@@ -404,8 +404,8 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 				Notification.show(
 					"Error", 
 					String.format(
-							"Error inspecting the contents! "
-							+ "\n The underlying error message was:\n%1$s", 
+							"Error inspecting the contents!\n"
+							+ "The underlying error message was:\n%s",
 							errorMsg), 
 					Type.ERROR_MESSAGE);						
 			}

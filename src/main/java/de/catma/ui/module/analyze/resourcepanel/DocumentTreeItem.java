@@ -8,7 +8,6 @@ public interface DocumentTreeItem {
 	public String getUuid();
 	public String getName();
 	public String getIcon();
-	public String getPermissionIcon();
 	public void addToCorpus(Corpus corpus);
 	public default void ensureSelectedParent(TreeGrid<DocumentTreeItem> documentTree) { /* noop */ }
 }

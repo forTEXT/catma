@@ -104,7 +104,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		}
 	}
 
-	private void initMainView() throws IOException {
+	private void initMainView() {
 		Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
 		UI.getCurrent().setContent(mainView);
 		eventBus.post(new RouteToDashboardEvent());
@@ -144,7 +144,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 				// TODO: under which circumstances does this occur (and is it relevant for btnPatSignIn's click listener too)?
 				String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
 				if (message != null && !message.equals("invalid_grant")) {
-					logger.log(Level.SEVERE, "login services", e);
+					logger.log(Level.SEVERE, "Login services", e);
 				}
 			}
 		});
@@ -155,7 +155,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 				close();
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error during authentication!", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error during authentication", e);
 			}
 		});
 
@@ -208,7 +208,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 		Link forgotPasswordLink = new Link(
 				"Forgot your password?",
-				new ExternalResource(CATMAPropertyKey.ResetPasswordURL.getValue(CATMAPropertyKey.ResetPasswordURL.getDefaultValue()))
+				new ExternalResource(CATMAPropertyKey.RESET_PASSWORD_URL.getValue())
 		);
 		forgotPasswordLink.setStyleName("authdialog-forgot-password-link");
 
@@ -260,7 +260,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 		Link termsOfUseLink = new Link(
 				"Terms of Use",
-				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue()))
+				new ExternalResource(CATMAPropertyKey.TERMS_OF_USE_URL.getValue())
 		);
 		termsOfUseLink.setTargetName("_blank");
 		termsOfUseLink.setStyleName("authdialog-tou-link");
@@ -269,7 +269,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 		Link privacyPolicyLink = new Link(
 				"Privacy Policy",
-				new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue()))
+				new ExternalResource(CATMAPropertyKey.PRIVACY_POLICY_URL.getValue())
 		);
 		privacyPolicyLink.setTargetName("_blank");
 		privacyPolicyLink.setStyleName("authdialog-pp-link");

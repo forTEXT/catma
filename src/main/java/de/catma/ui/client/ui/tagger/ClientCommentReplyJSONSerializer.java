@@ -35,7 +35,7 @@ public class ClientCommentReplyJSONSerializer extends JSONSerializer {
 			getStringValueFromStringObject(
 				jsonObject.get(SerializationField.username.name()));
 				
-		Long userId =
+		Long userId = 
 			getLongValueFromNumberObject(
 				jsonObject.get(SerializationField.userId.name()));
 		String body = 

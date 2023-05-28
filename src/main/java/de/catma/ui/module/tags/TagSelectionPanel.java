@@ -24,16 +24,16 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.Project;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -78,7 +78,7 @@ public class TagSelectionPanel extends VerticalLayout {
             }
             
         } catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading data", e);
         }
 	}
 	
@@ -161,15 +161,17 @@ public class TagSelectionPanel extends VerticalLayout {
 	
 	private void handleAddTagsetRequest() {
     	SingleTextInputDialog tagsetNameDlg = 
-        		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+        		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
         				new SaveCancelListener<String>() {
     						
     						@Override
     						public void savePressed(String result) {
     							IDGenerator idGenerator = new IDGenerator();
+    							TagsetDefinition tagset = new TagsetDefinition(
+    									idGenerator.generateTagsetId(), result);
+    							tagset.setResponsibleUser(project.getCurrentUser().getIdentifier());
     							project.getTagManager().addTagsetDefinition(
-    								new TagsetDefinition(
-    									idGenerator.generateTagsetId(), result, new Version()));
+    								tagset);
     						}
     					});
             	
@@ -183,63 +185,47 @@ public class TagSelectionPanel extends VerticalLayout {
 			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
 			.findFirst()
 			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
-			
-		if (selectedTagset.isPresent() 
-				&& !project.hasPermission(
-						project.getRoleForTagset(selectedTagset.get().getUuid()), 
-						RBACPermission.TAGSET_WRITE)) {
+
+		if (tagsetData.getRootItems().isEmpty()) {
 			Notification.show(
 				"Info", 
-				String.format(
-					"You do not have the permission to make changes to Tagset %1$s, "
-					+ "Please contact the Project maintainer!", 
-					selectedTagset.get().getName()), 
+				"You do not have any tagsets to add tags to yet, please create a tagset first!",
 				Type.HUMANIZED_MESSAGE);
-			return;
-		}
-		
-		
-		if (tagsetData.getRootItems().isEmpty()) {
-			if (project.isAuthorizedOnProject(RBACPermission.TAGSET_CREATE_OR_UPLOAD)) {
-				Notification.show(
-					"Info", 
-					"You do not have any Tagsets to add Tags to yet, please create a Tagset first!", 
-					Type.HUMANIZED_MESSAGE);
-			}
-			else {
-				Notification.show(
-					"Info", 
-					"You do not have any Tagsets to add Tags to yet, please contact the Project maintainer!", 
-					Type.HUMANIZED_MESSAGE);
-			}
 			return;
 		}
 	
 		List<TagsetDefinition> editableTagsets = 
 				tagsetData.getRootItems().stream()
 				.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset())
-				.filter(tagset -> project.hasPermission(project.getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE))
 				.collect(Collectors.toList());
-		if (editableTagsets.isEmpty()) {
-			Notification.show(
-				"Info",
-				"You do not have the permission to make changes to any of the available Tagsets! "
-				+ "Please contact the Project maintainer for changes!",
-				Type.HUMANIZED_MESSAGE);
-		}
-		AddParenttagDialog addTagDialog = 
-			new AddParenttagDialog(
-				editableTagsets, 
-				selectedTagset, 
-				new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
-				
-				@Override
-				public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
-					project.getTagManager().addTagDefinition(
-							result.getFirst(), result.getSecond());
-				}
-			});
-		addTagDialog.show();
+
+		boolean beyondUsersResponsibility =
+				editableTagsets.stream()
+				.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
+				.findAny()
+				.isPresent();
+		
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				true,
+				new Action() {
+					@Override
+					public void execute() {
+						AddParenttagDialog addTagDialog = 
+							new AddParenttagDialog(
+								editableTagsets, 
+								selectedTagset, 
+								new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
+								
+								@Override
+								public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
+									project.getTagManager().addTagDefinition(
+											result.getFirst(), result.getSecond());
+								}
+							});
+						addTagDialog.show();
+					}
+				});
 		
 	}
 	
@@ -250,45 +236,46 @@ public class TagSelectionPanel extends VerticalLayout {
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
 		
-		for (TagDefinition parentTag : parentTags) {
-			if (!project.hasPermission(project.getRoleForTagset(
-					parentTag.getTagsetDefinitionUuid()), 
-					RBACPermission.TAGSET_WRITE)) {
-				
-				Notification.show(
-					"Info", 
-					String.format(
-						"You do not have the permission to make changes to the Tagset of Tag %1$s, "
-						+ "Please contact the Project maintainer!", 
-						parentTag.getName()), 
-					Type.HUMANIZED_MESSAGE);
-				return;
-			}
-		}
-		
 		if (!parentTags.isEmpty()) {
-			AddSubtagDialog addTagDialog =
-				new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
-					public void savePressed(TagDefinition result) {
-						for (TagDefinition parent : parentTags) {
-							
-							TagsetDefinition tagset = 
-								project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
-							
-							TagDefinition tag = new TagDefinition(result);
-							tag.setUuid(idGenerator.generate());
-							tag.setParentUuid(parent.getUuid());
-							tag.setTagsetDefinitionUuid(tagset.getUuid());
-							
-							project.getTagManager().addTagDefinition(
-									tagset, tag);
+			boolean beyondUsersResponsibility =
+					parentTags.stream()
+					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
+					.distinct()
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
+					.findAny()
+					.isPresent();
+				
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+					true,
+					new Action() {
+						@Override
+						public void execute() {
+				
+							AddSubtagDialog addTagDialog =
+								new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
+									public void savePressed(TagDefinition result) {
+										for (TagDefinition parent : parentTags) {
+											
+											TagsetDefinition tagset = 
+												project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
+											
+											TagDefinition tag = new TagDefinition(result);
+											tag.setUuid(idGenerator.generate());
+											tag.setParentUuid(parent.getUuid());
+											tag.setTagsetDefinitionUuid(tagset.getUuid());
+											
+											project.getTagManager().addTagDefinition(
+													tagset, tag);
+										}
+									};
+								});
+							addTagDialog.show();
 						}
-					};
-				});
-			addTagDialog.show();
+					});
 		}
 		else {
-			Notification.show("Info", "Please select at least one parent Tag!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select at least one parent tag!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 

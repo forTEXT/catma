@@ -18,6 +18,7 @@ import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.PersonalAccessToken;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
@@ -28,8 +29,6 @@ import com.google.common.collect.Maps;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
-import de.catma.repository.git.managers.gitlab4j_api_custom.models.PersonalAccessToken;
 import de.catma.user.UserProperty;
 import helpers.Randomizer;
 import helpers.UserIdentification;
@@ -139,10 +138,7 @@ public class GitLabServerManagerTest {
 
 
 		// assert that the user has the expected impersonation token
-		CustomUserApi customUserApi = new CustomUserApi(this.serverManager.getAdminGitLabApi());
-		List<PersonalAccessToken> impersonationTokens = customUserApi.getImpersonationTokens(
-			this.serverManager.getGitLabUser().getId(), null
-		);
+		List<PersonalAccessToken> impersonationTokens = userApi.getImpersonationTokens(this.serverManager.getGitLabUser().getId());
 
 		assertEquals(1, impersonationTokens.size());
 		assertEquals(GitLabServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME,

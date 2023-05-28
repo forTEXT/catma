@@ -55,7 +55,7 @@ public class JSONQueryResultRequestHandler implements RequestHandler {
 				String pathInfo = request.getPathInfo();
 				String encodedQuery = pathInfo.substring(queryUrlPath.length());
 				String query = URLDecoder.decode(encodedQuery, "UTF-8");
-				logger.info("query: " + query);
+				logger.info("Query: " + query);
 				
 				QueryJob queryJob = new QueryJob(query, queryOptionsProvider.getQueryOptions());
 				queryJob.setProgressListener(new LogProgressListener());

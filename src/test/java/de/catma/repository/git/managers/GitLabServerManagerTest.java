@@ -1,43 +1,36 @@
 package de.catma.repository.git.managers;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.google.common.eventbus.EventBus;
-import de.catma.backgroundservice.BackgroundService;
-import de.catma.properties.CATMAProperties;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.UserApi;
-import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.PersonalAccessToken;
-import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.catma.repository.git.CreateRepositoryResponse;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import com.google.common.eventbus.EventBus;
+
+import de.catma.project.ProjectReference;
+import de.catma.properties.CATMAProperties;
 
 public class GitLabServerManagerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
-	private ArrayList<String> groupsToDeleteOnTearDown = new ArrayList<>();
-	private ArrayList<Long> repositoriesToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<ProjectReference> repositoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<Long> usersToDeleteOnTearDown = new ArrayList<>();
 
 	public GitLabServerManagerTest() throws Exception {
@@ -61,27 +54,18 @@ public class GitLabServerManagerTest {
 		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
 
 		EventBus mockEventBus = mock(EventBus.class);
-		BackgroundService mockBackgroundService = mock(BackgroundService.class);
-		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, mockBackgroundService, impersonationToken);
+		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, impersonationToken);
 	}
 
 	@AfterEach
 	public void tearDown() throws Exception {
 		GitLabApi adminGitLabApi = gitlabManagerPrivileged.getGitLabApi();
-		GroupApi groupApi = adminGitLabApi.getGroupApi();
 		ProjectApi projectApi = adminGitLabApi.getProjectApi();
 		UserApi userApi = adminGitLabApi.getUserApi();
 
-		if (groupsToDeleteOnTearDown.size() > 0) {
-			for (String groupPath : groupsToDeleteOnTearDown) {
-				gitlabManagerRestricted.deleteGroup(groupPath);
-				await().until(() -> groupApi.getGroups().isEmpty());
-			}
-		}
-
 		if (repositoriesToDeleteOnTearDown.size() > 0) {
-			for (Long repositoryId : repositoriesToDeleteOnTearDown) {
-				gitlabManagerRestricted.deleteRepository(repositoryId);
+			for (ProjectReference projectRef : repositoriesToDeleteOnTearDown) {
+				gitlabManagerRestricted.deleteProject(projectRef);
 				await().until(() -> projectApi.getProjects().isEmpty());
 			}
 		}
@@ -93,8 +77,8 @@ public class GitLabServerManagerTest {
 			}
 		}
 
-		// delete the GitLab user that we created in setUp, including associated groups/repos
-		// TODO: explicit deletion of associated groups/repos (above) is now superfluous since we are doing a hard delete
+		// delete the GitLab user that we created in setUp, including associated repos
+		// TODO: explicit deletion of associated repos (above) is now superfluous since we are doing a hard delete
 		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
 //		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}

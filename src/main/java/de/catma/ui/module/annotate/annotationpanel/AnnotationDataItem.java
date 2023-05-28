@@ -13,9 +13,7 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 	private Annotation annotation;
 	private String annotatedText;
 	private String keywordInContext;
-	private KwicProvider kwicProvider;
 	private TagsetDefinition tagset;
-	private boolean editable;
 	private Supplier<Boolean> inCurrentCollectionSupplier;
 	
 	public AnnotationDataItem(
@@ -23,9 +21,7 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 		boolean editable, Supplier<Boolean> inCurrentCollectionSupplier) {
 		super();
 		this.annotation = annotation;
-		this.kwicProvider = kwicProvider;
 		this.tagset = tagset;
-		this.editable = editable;
 		this.inCurrentCollectionSupplier = inCurrentCollectionSupplier;
 		TagDefinition tagDefinition = 
 			tagset.getTagDefinition(annotation.getTagInstance().getTagDefinitionId());
@@ -80,31 +76,21 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 
 	@Override
 	public String getEditIcon() {
-		if (!editable) {
-			return VaadinIcons.LOCK.getHtml();
+		if (inCurrentCollectionSupplier.get()) {
+			return VaadinIcons.EDIT.getHtml();
 		}
 		else {
-			if (inCurrentCollectionSupplier.get()) {
-				return VaadinIcons.EDIT.getHtml();
-			}
-			else {
-				return null;
-			}
-		}		
+			return null;
+		}
 	}
 	
 	@Override
 	public String getDeleteIcon() {
-		if (!editable) {
-			return VaadinIcons.LOCK.getHtml();
+		if (inCurrentCollectionSupplier.get()) {
+			return VaadinIcons.TRASH.getHtml();
 		}
 		else {
-			if (inCurrentCollectionSupplier.get()) {
-				return VaadinIcons.TRASH.getHtml();
-			}
-			else {
-				return VaadinIcons.EXCHANGE.getHtml() + VaadinIcons.NOTEBOOK.getHtml();
-			}
+			return VaadinIcons.EXCHANGE.getHtml() + VaadinIcons.NOTEBOOK.getHtml();
 		}
 	}
 	

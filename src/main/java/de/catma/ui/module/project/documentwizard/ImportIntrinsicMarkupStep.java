@@ -32,7 +32,6 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
-import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.project.Project;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
@@ -86,7 +85,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 
 	private void initActions() {
 		tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(
-				"Change action", miChangeAction -> handleChangeActionRequest());
+				"Change Action", miChangeAction -> handleChangeActionRequest());
 	}
 
 	private void handleChangeActionRequest() {
@@ -95,7 +94,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 		
 		if (tagsetImports.isEmpty()) {
 			Notification.show(
-				"Info", "Please select one or more Tagsets first!", Type.HUMANIZED_MESSAGE);
+				"Info", "Please select one or more tagsets first!", Type.HUMANIZED_MESSAGE);
 		}
 		else {
 			try {
@@ -131,7 +130,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 				changeImportActionDialog.show();
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading Tagsets!", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading tagsets", e);
 			}
 		}
 	}
@@ -139,13 +138,13 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 	private void initComponents() {
 		setSizeFull();
 		progressBar = new ProgressBar();
-		progressBar.setCaption("Inspecting Annotations...");
+		progressBar.setCaption("Inspecting annotations...");
 		progressBar.setVisible(false);
 		progressBar.setIndeterminate(false);
 		addComponent(progressBar);
 		
         Label infoLabel = new Label(
-        		"We found the following Tagsets in your intrinsic markup, you can change the action per Tagset using the options menu:");
+        		"We found the following tagsets in your intrinsic markup, you can change the action per tagset using the options menu:");
         infoLabel.setContentMode(ContentMode.HTML);
 		addComponent(infoLabel);
 		
@@ -247,7 +246,9 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 				.filter(uploadFile -> uploadFile.getMimetype().equals(FileType.XML2.getMimeType()))
 				.collect(Collectors.toList()));
 		final TagManager tagmanager = new TagManager(new TagLibrary());
-		
+		final boolean useApostropheAsSeparator = 
+				(Boolean)wizardContext.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
+
 		BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
 		
 		backgroundServiceProvider.submit("inspecting-intrinsic-markup", new DefaultProgressCallable<List<UploadFile>>() {
@@ -259,14 +260,15 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 					XML2ContentHandler contentHandler = new XML2ContentHandler();
 					SourceDocument doc = new SourceDocument(uploadFile.getUuid(), contentHandler);
 					SourceDocumentInfo documentInfo = new SourceDocumentInfo();
-					TechInfoSet techInfoSet = new TechInfoSet();
-					techInfoSet.setURI(uploadFile.getTempFilename());
-					documentInfo.setTechInfoSet(techInfoSet);
+					documentInfo.setTechInfoSet(uploadFile.getTechInfoSet());
+					documentInfo.setContentInfoSet(uploadFile.getContentInfoSet());
+
+					documentInfo.setIndexInfoSet(uploadFile.getIndexInfoSet(useApostropheAsSeparator));
 					contentHandler.setSourceDocumentInfo(documentInfo);
 					
 					XmlMarkupCollectionSerializationHandler handler =
 							new XmlMarkupCollectionSerializationHandler(
-									tagmanager, contentHandler, project.getUser().getIdentifier());
+									tagmanager, contentHandler, project.getCurrentUser().getIdentifier());
 					try (FileInputStream fis = new FileInputStream(new File(uploadFile.getTempFilename()))) {
 						AnnotationCollection collection = 
 							handler.deserialize(doc, idGenerator.generateCollectionId(), fis);
@@ -339,8 +341,8 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 				Notification.show(
 					"Error", 
 					String.format(
-							"Error inspecting the contents! "
-							+ "\n The underlying error message was:\n%1$s", 
+							"Error inspecting the contents!\n"
+							+ "The underlying error message was:\n%s",
 							errorMsg), 
 					Type.ERROR_MESSAGE);						
 			}

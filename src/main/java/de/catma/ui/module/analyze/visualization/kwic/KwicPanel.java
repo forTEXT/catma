@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.Query;
@@ -44,13 +44,13 @@ import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
+import de.catma.project.event.ProjectReadyEvent;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -63,7 +63,6 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.module.analyze.CSVExportFlatStreamSource;
-import de.catma.ui.module.analyze.CSVExportGroupedStreamSource;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
@@ -94,20 +93,33 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	private Registration defaultDoubleClickRegistration;
 	private MenuItem miRemoveAnnotations;
 	private IconButton btnClearSelectedRows;
+	private MenuItem miAnnotateRows;
+	private EventBus eventBus;
 
 	public KwicPanel(
 			EventBus eventBus,
 			Project project, 
 			LoadingCache<String, KwicProvider> kwicProviderCache) {
+		this.eventBus = eventBus;
 		this.project = project;
 		this.kwicItemHandler = new KwicItemHandler(project, kwicProviderCache);
+		
 		initComponents();
+
+		eventBus.register(this);
 		initActions(eventBus);
+	}
+
+	@Subscribe
+	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
+		miAnnotateRows.setEnabled(!projectReadyEvent.getProject().isReadOnly());
+		miRemoveAnnotations.setEnabled(!projectReadyEvent.getProject().isReadOnly());
 	}
 
 	private void initActions(EventBus eventBus) {
 		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		moreOptionsMenu.addItem("Annotate selected rows", mi -> handleAnnotateSelectedRequest(eventBus));
+		miAnnotateRows = moreOptionsMenu.addItem("Annotate Selected Rows", mi -> handleAnnotateSelectedRequest(eventBus));
+		miAnnotateRows.setEnabled(!this.project.isReadOnly());
 		
 		ActionGridBar actionBar = kwicGridComponent.getActionGridBar();
 		
@@ -122,7 +134,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			
 		miRemoveAnnotations = 
 			moreOptionsMenu.addItem(
-				"Remove selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
+				"Delete Selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
 		miRemoveAnnotations.setEnabled(false);
 		
 		MenuItem miExport = moreOptionsMenu.addItem("Export");
@@ -171,7 +183,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		if (selectedRows.isEmpty()) {
 			Notification.show(
 				"Info", 
-				"Please select one or more Annotation rows!", 
+				"Please select one or more annotation rows!",
 				Type.HUMANIZED_MESSAGE);
 			return;
 		}
@@ -186,27 +198,18 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		Set<QueryResultRow> rowsToBeRemoved = new HashSet<>();
 		
 		try {
-			LoadingCache<String, Boolean> collectionIdToHasWritePermission = 
-					CacheBuilder.newBuilder().build(new CacheLoader<String, Boolean>() {
-
-						@Override
-						public Boolean load(String collectionId) throws Exception {
-							return project.hasPermission(project.getRoleForCollection(
-									collectionId), RBACPermission.COLLECTION_WRITE);
-						}
-						
-					});
 			for (QueryResultRow row : selectedRows) {
 				if (row instanceof TagQueryResultRow) {
 					annotationRows++;
-					if (project.hasDocument(row.getSourceDocumentId())) {
-						SourceDocument document = project.getSourceDocument(row.getSourceDocumentId());
+					if (project.hasSourceDocument(row.getSourceDocumentId())) {
+						SourceDocumentReference document = 
+								project.getSourceDocumentReference(row.getSourceDocumentId());
 						AnnotationCollectionReference collRef = 
 							document.getUserMarkupCollectionReference(
 									((TagQueryResultRow) row).getMarkupCollectionId());
 						
 						if (collRef != null) {
-							if (collectionIdToHasWritePermission.get(collRef.getId())) {
+							if (collRef.isResponsible(project.getCurrentUser().getIdentifier())) {
 								annotationCollectionReferences.add(collRef);
 								tagInstanceIdsToBeRemoved.add(((TagQueryResultRow) row).getTagInstanceId());
 								rowsToBeRemoved.add(row);
@@ -228,14 +231,14 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (permissionsMissing) {
 				Notification.show(
 					"Info", 
-					"You do not have the write permission for one or more Collections referenced by your selection. Those Collections will be ignored!", 
+					"One or more collections referenced by your selection are beyond your responsibility. Those collections will be ignored!",
 					Type.HUMANIZED_MESSAGE);
 			}
 			
 			if (annotationRows == 0) {
 				Notification.show(
 					"Info", 
-					"Your selection does not contain any Annotations! Please select Annotations only!", 
+					"Your selection does not contain any annotations! Please select annotations only!",
 					Type.HUMANIZED_MESSAGE);
 				return;
 			}
@@ -243,7 +246,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (annotationCollectionReferences.isEmpty()) {
 				Notification.show(
 					"Info", 
-					"The Documents and/or Collections referenced by your selection are no longer part of the Project!", 
+					"The documents and/or collections referenced by your selection are no longer part of the project!",
 					Type.HUMANIZED_MESSAGE);
 					return;			
 			}
@@ -251,8 +254,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (resourcesMissing) {
 				Notification.show(
 					"Info", 
-					"Some of the Documents and/or Collections referenced by your selection "
-					+ "are no longer part of the Project and will be ignored, "
+					"Some of the documents and/or collections referenced by your selection "
+					+ "are no longer part of the project and will be ignored, "
 					+ "see columns 'Document' and 'Collection' for details!", 
 					Type.HUMANIZED_MESSAGE);
 			}
@@ -260,21 +263,21 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			if (annotationRows != selectedRows.size()) {
 				Notification.show(
 					"Info", 
-					"Some rows of your selection do not represent Annotations and will be ignored, see column 'Tag' for details!", 
+					"Some rows of your selection do not represent annotations and will be ignored, see column 'Tag' for details!",
 					Type.HUMANIZED_MESSAGE);
 			}
 			
 			AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
 			for (AnnotationCollectionReference ref : annotationCollectionReferences) {
-				collectionManager.add(project.getUserMarkupCollection(ref));
+				collectionManager.add(project.getAnnotationCollection(ref));
 			}
 			
-			collectionManager.removeTagInstance(tagInstanceIdsToBeRemoved, true);
+			collectionManager.removeTagInstances(tagInstanceIdsToBeRemoved, true);
 			kwicDataProvider.getItems().removeAll(rowsToBeRemoved);
 			kwicDataProvider.refreshAll();
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error deleting Annotations!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error deleting annotations", e);
 		}
 	}
 	
@@ -294,19 +297,19 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 					.filter(row -> row.getSourceDocumentId().equals(documentId))
 					.collect(Collectors.toList());
 			try {
-				if (project.hasDocument(documentId)) {
+				if (project.hasSourceDocument(documentId)) {
 					eventBus.post(new QueryResultRowInAnnotateEvent(
 						documentId, selectedRow, documentRows, project));
 				}
 				else {
 					Notification.show(
 							"Info", 
-							"The corresponding Document is no longer part of the Project!", 
+							"The corresponding document is no longer part of the project!",
 							Type.WARNING_MESSAGE);
 				}
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("error accessing project data", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing project data", e);
 			}
 		}
 	}
@@ -339,8 +342,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 						try {
 							annotateSelection(selectedRows, result);
 						} catch (Exception e) {
-							((ErrorHandler)UI.getCurrent()).showAndLogError(
-									"error annotating selected rows", e);
+							((ErrorHandler) UI.getCurrent()).showAndLogError(
+									"Error annotating selected rows", e);
 						}						
 					}
 					
@@ -355,44 +358,43 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		Map<String, AnnotationCollectionReference> collectionRefsByDocId = 
 				(Map<String, AnnotationCollectionReference>) result.get(AnnotationWizardContextKey.COLLECTIONREFS_BY_DOCID);
 		TagDefinition tag = (TagDefinition) result.get(AnnotationWizardContextKey.TAG);
-		
+
 		AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
-		for (AnnotationCollectionReference ref : collectionRefsByDocId.values()) {
-			collectionManager.add(project.getUserMarkupCollection(ref));
+		for (AnnotationCollectionReference collectionRef : collectionRefsByDocId.values()) {
+			collectionManager.add(project.getAnnotationCollection(collectionRef));
 		}
+
+		ArrayListMultimap<String, TagReference> tagRefsByCollectionId = ArrayListMultimap.create();
 
 		for (QueryResultRow row : selectedRows) {
 			AnnotationCollectionReference collectionRef = collectionRefsByDocId.get(row.getSourceDocumentId());
-			
-			TagInstance tagInstance = 
-					new TagInstance(
-						idGenerator.generate(), 
-						tag.getUuid(),
-						project.getUser().getIdentifier(),
-			        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
-			        	tag.getUserDefinedPropertyDefinitions(),
-			        	tag.getTagsetDefinitionUuid());
-			
-			List<TagReference> tagReferences = new ArrayList<TagReference>();
-			
-			for (Property protoProp : properties) {
-				tagInstance.getUserDefinedPropetyByUuid(
-					protoProp.getPropertyDefinitionId()).setPropertyValueList(
-							protoProp.getPropertyValueList());
-			}
 
+			TagInstance tagInstance = new TagInstance(
+					idGenerator.generate(),
+					tag.getUuid(),
+					project.getCurrentUser().getIdentifier(),
+					ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+					tag.getUserDefinedPropertyDefinitions(),
+					tag.getTagsetDefinitionUuid()
+			);
+
+			for (Property property : properties) {
+				tagInstance.getUserDefinedPropetyByUuid(property.getPropertyDefinitionId())
+						.setPropertyValueList(property.getPropertyValueList());
+			}
 
 			Set<Range> ranges = row.getRanges();
-			
 			for (Range range : ranges) {
-				TagReference tagReference = 
-						new TagReference(tagInstance, row.getSourceDocumentId(), range, collectionRef.getId());
-				tagReferences.add(tagReference);
+				TagReference tagReference = new TagReference(tagInstance, row.getSourceDocumentId(), range, collectionRef.getId());
+				tagRefsByCollectionId.put(collectionRef.getId(), tagReference);
 			}
-			collectionManager.addTagReferences(
-					tagReferences,
-					collectionRef.getId());
 		}
+
+		for (String collectionId : tagRefsByCollectionId.keySet()) {
+			collectionManager.addTagReferences(tagRefsByCollectionId.get(collectionId), collectionId);
+		}
+
+		project.addAndCommitCollections(collectionRefsByDocId.values(), "Auto-committing semi-automatic annotations from KWIC");
 	}
 
 	private void handleMaxMinRequest() {
@@ -416,91 +418,93 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		setSizeFull();
 		setMargin(false);
 		setSpacing(false);
-		
+
 		btExpandCompress = new IconButton(expandResource);
 		btExpandCompress.setVisible(false);
 
 		kwicDataProvider = new ListDataProvider<>(new HashSet<>());
-		kwicGrid = new Grid<QueryResultRow>(kwicDataProvider);
+		kwicGrid = new Grid<>(kwicDataProvider);
 
 		kwicGrid.setSizeFull();
 
-		kwicGrid.addColumn(row -> kwicItemHandler.getDocumentName(row)).setCaption("Document")
-			.setWidth(200)
-			.setHidable(true);
+		kwicGrid.addColumn(row -> kwicItemHandler.getDocumentName(row))
+				.setCaption("Document")
+				.setWidth(200)
+				.setHidable(true);
+
 		kwicGrid.addColumn(row -> kwicItemHandler.getCollectionName(row))
-			.setCaption("Collection")
-			.setWidth(200)
-			.setId(ColumnId.COLLECION_NAME.name())
-			.setHidable(true)
-			.setHidden(true);
-		
-		Column<QueryResultRow, ?> backwardCtxColumn = 
-			kwicGrid.addColumn(row -> kwicItemHandler.getBackwardContext(row))
-			.setCaption("Left Context")
-			.setStyleGenerator(row -> kwicItemHandler.getBackwardContextStyle(row))
-			.setWidth(200);
+				.setCaption("Collection")
+				.setWidth(200)
+				.setId(ColumnId.COLLECION_NAME.name())
+				.setHidable(true)
+				.setHidden(true);
+
+		Column<QueryResultRow, ?> backwardCtxColumn = kwicGrid.addColumn(row -> kwicItemHandler.getBackwardContext(row))
+				.setCaption("Left Context")
+				.setStyleGenerator(row -> kwicItemHandler.getBackwardContextStyle(row))
+				.setWidth(200);
 
 		Column<QueryResultRow, ?> keywordColumn = kwicGrid.addColumn(row -> kwicItemHandler.getKeyword(row))
-			.setCaption("Keyword")
-			.setWidth(200)
-			.setRenderer(new HtmlRenderer())
-			.setStyleGenerator(row -> kwicItemHandler.getKeywordStyle(row))
-			.setDescriptionGenerator(row -> kwicItemHandler.getKeywordDescription(row), ContentMode.HTML);
+				.setCaption("Keyword")
+				.setWidth(200)
+				.setRenderer(new HtmlRenderer())
+				.setStyleGenerator(row -> kwicItemHandler.getKeywordStyle(row))
+				.setDescriptionGenerator(row -> kwicItemHandler.getKeywordDescription(row), ContentMode.HTML);
 
 		kwicGrid.addColumn(row -> kwicItemHandler.getForwardContext(row))
-			.setCaption("Right Context")
-			.setStyleGenerator(row -> kwicItemHandler.getForwardContextStyle(row))
-			.setWidth(200);
-		
-		kwicGrid.addColumn(row -> row.getRange().getStartPoint())
-			.setCaption("Start Point")
-			.setWidth(100)
-			.setId(ColumnId.START_POS.name())
-			.setHidable(true);
+				.setCaption("Right Context")
+				.setStyleGenerator(row -> kwicItemHandler.getForwardContextStyle(row))
+				.setWidth(200);
+
+		Column<QueryResultRow, ?> startPointColumn = kwicGrid.addColumn(row -> row.getRange().getStartPoint())
+				.setCaption("Start Point")
+				.setWidth(100)
+				.setId(ColumnId.START_POS.name())
+				.setHidable(true);
+
 		kwicGrid.addColumn(row -> row.getRange().getEndPoint())
-			.setCaption("End Point")
-			.setWidth(100)
-			.setHidable(true);
+				.setCaption("End Point")
+				.setWidth(100)
+				.setHidable(true);
 
 		kwicGrid.addColumn(row -> kwicItemHandler.getTagPath(row))
-			.setCaption("Tag")
-			.setHidable(true)
-			.setHidden(true)
-			.setId(ColumnId.TAG.name())
-			.setWidth(200);
-		
-		kwicGrid.addColumn(row -> kwicItemHandler.getPropertyName(row))
-			.setCaption("Property")
-			.setHidable(true)
-			.setHidden(true)
-			.setId(ColumnId.PROPERTY_NAME.name())
-			.setWidth(200);
-		
-		kwicGrid.addColumn(row -> kwicItemHandler.getPropertyValue(row))
-			.setCaption("Value")
-			.setHidable(true)
-			.setHidden(true)
-			.setId(ColumnId.PROPERTY_VALUE.name())
-			.setWidth(200);
+				.setCaption("Tag")
+				.setHidable(true)
+				.setHidden(true)
+				.setId(ColumnId.TAG.name())
+				.setWidth(200);
 
-		kwicGrid.sort(keywordColumn);
-		
+		kwicGrid.addColumn(row -> kwicItemHandler.getPropertyName(row))
+				.setCaption("Property")
+				.setHidable(true)
+				.setHidden(true)
+				.setId(ColumnId.PROPERTY_NAME.name())
+				.setWidth(200);
+
+		kwicGrid.addColumn(row -> kwicItemHandler.getPropertyValue(row))
+				.setCaption("Value")
+				.setHidable(true)
+				.setHidden(true)
+				.setId(ColumnId.PROPERTY_VALUE.name())
+				.setWidth(200);
+
+		kwicGrid.sort(startPointColumn);
+
 		kwicGrid.getDefaultHeaderRow().getCell(keywordColumn).setStyleName("kwic-panel-keyword-header");
 		kwicGrid.getDefaultHeaderRow().getCell(backwardCtxColumn).setStyleName("kwic-panel-backwardctx-header");
-		
-		kwicGridComponent = new ActionGridComponent<>(new Label("Keyword in context"), kwicGrid);
+
+		kwicGridComponent = new ActionGridComponent<>(new Label("KeyWord In Context"), kwicGrid);
 		kwicGridComponent.getActionGridBar().setAddBtnVisible(false);
 		kwicGridComponent.getActionGridBar().addButtonRight(btExpandCompress);
 		kwicGridComponent.setMargin(new MarginInfo(false, false, false, true));
 		addComponent(kwicGridComponent);
 		setExpandRatio(kwicGridComponent, 1f);
-		
+
 		btnClearSelectedRows = new IconButton(VaadinIcons.ERASER);
 		btnClearSelectedRows.setVisible(false);
 		btnClearSelectedRows.setDescription("Remove the selected rows from this list");
 	}
-	
+
 	public void setBtnClearSelectedRowsVisible(boolean visible) {
 		btnClearSelectedRows.setVisible(visible);
 	}
@@ -529,7 +533,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 				kwicGrid.getColumn(ColumnId.PROPERTY_NAME.name()).setHidden(false);
 				kwicGrid.getColumn(ColumnId.PROPERTY_VALUE.name()).setHidden(false);
 			}
-			miRemoveAnnotations.setEnabled(true);
+			miRemoveAnnotations.setEnabled(!project.isReadOnly());
 		}
 		
 		kwicGrid.getDataProvider().refreshAll();
@@ -574,7 +578,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	
 	@Override
 	public void close() {
-		// noop
+		this.eventBus.unregister(this);
 	}
 	
 	@Override

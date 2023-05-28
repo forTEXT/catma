@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,15 +38,17 @@ import java.util.stream.Stream;
  */
 public class TagsetDefinition implements Iterable<TagDefinition> {
 	
-	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private String uuid;
 	private String name;
-	@Deprecated
-	private Version version; // TODO: obsolete
-	private String revisionHash;
+
+	private String description;
+	private String forkedFromCommitURL;
+	private String responsibleUser;
+	
 	private Map<String,TagDefinition> tagDefinitions;
 	private Map<String,Set<String>> tagDefinitionChildren;
 	private Set<String> deletedDefinitions;
+	private transient boolean contribution = false;
 
 	/**
 	 * @param id a repository dependent identifier
@@ -56,19 +57,18 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	 * @param version the version of the tagset
 	 */
 	public TagsetDefinition(
-			String uuid, String tagsetName, Version version) {
-		this(uuid, tagsetName, version, new HashSet<>());
+			String uuid, String tagsetName) {
+		this(uuid, tagsetName, new HashSet<>());
 	}
 	
 	public TagsetDefinition(
-			String uuid, String tagsetName, Version version, 
+			String uuid, String tagsetName,
 			Set<String> deletedDefinitions) {
 		this.tagDefinitions = new HashMap<String, TagDefinition>();
 		this.tagDefinitionChildren = new HashMap<String, Set<String>>();
 		this.deletedDefinitions = deletedDefinitions;
 		this.uuid = uuid;
 		this.name = tagsetName;
-		this.version = version;
 	}
 
 	/**
@@ -76,7 +76,7 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	 * @param toCopy
 	 */
 	public TagsetDefinition(TagsetDefinition toCopy) {
-		this (toCopy.uuid, toCopy.name, new Version(toCopy.version));
+		this (toCopy.uuid, toCopy.name);
 		for (TagDefinition tagDefinition : toCopy) {
 			addTagDefinition(new TagDefinition(tagDefinition));
 		}
@@ -84,7 +84,7 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	
 	@Override
 	public String toString() {
-		return "TAGSET_DEF["+name+",#"+uuid+","+version+"]";
+		return "TAGSET_DEF["+name+",#"+uuid+"]";
 	}
 
 	public void addTagDefinition(TagDefinition tagDef) {
@@ -265,22 +265,10 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 		return builder.toString();
 	}
 	
-	void setVersion() {
-		this.version = new Version();
-	}
-	
 	public boolean isEmpty() {
 		return tagDefinitions.isEmpty();
 	}
 
-	public String getRevisionHash() {
-		return this.revisionHash;
-	}
-
-	public void setRevisionHash(String revisionHash) {
-		this.revisionHash = revisionHash;
-	}
-	
 	public boolean isDeleted(String definitionUuid) {
 		return this.deletedDefinitions.contains(definitionUuid);
 	}
@@ -325,5 +313,62 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 
 	public Stream<TagDefinition> stream() {
 		return getRootTagDefinitions().stream().flatMap(root -> root.directChildrenStream(this));
+	}
+	
+	public String getDescription() {
+		return description;
+	}
+	
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	
+	public String getForkedFromCommitURL() {
+		return forkedFromCommitURL;
+	}
+	
+	public void setForkedFromCommitURL(String forkedFromCommitURL) {
+		this.forkedFromCommitURL = forkedFromCommitURL;
+	}
+	
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
+	}
+	
+	public String getResponsibleUser() {
+		return responsibleUser;
+	}
+
+	public boolean isResponsible(String userIdentifier) {
+		if (responsibleUser != null) {
+			return responsibleUser.equals(userIdentifier);
+		}
+		return true; // shared responsibility
+	}
+
+	public void mergeAdditive(TagsetDefinition tagset) {
+		
+		for (TagDefinition tag: tagset) {
+			if (hasTagDefinition(tag.getUuid())) {
+				boolean tagHashContributions = getTagDefinition(tag.getUuid()).mergeAdditive(tag);
+				if (tagHashContributions) {
+					contribution = true;
+				}
+			}
+			else {
+				tag.setContribution(true);
+				addTagDefinition(tag);
+				contribution = true;
+			}
+		}
+		
+	}
+	
+	public boolean isContribution() {
+		return contribution;
+	}
+	
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
 	}
 }

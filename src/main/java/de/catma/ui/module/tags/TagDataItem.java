@@ -111,7 +111,7 @@ class TagDataItem implements TagsetTreeItem {
 		if (editable) {
 			return VaadinIcons.TRASH.getHtml();
 		}
-		return VaadinIcons.LOCK.getHtml();
+		return null;
 	}
 
 	@Override
@@ -126,5 +126,10 @@ class TagDataItem implements TagsetTreeItem {
 		}
 		
 	} 
+	
+	@Override
+	public String generateStyle() {
+		return tag.isContribution()?"annotate-panel-tag-with-contributions":TagsetTreeItem.super.generateStyle();
+	}
 	
 }

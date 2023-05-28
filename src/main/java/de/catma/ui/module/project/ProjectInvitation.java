@@ -21,7 +21,6 @@ public final class ProjectInvitation implements Serializable {
 	private String description;
 	private int defaultRole;
 	private boolean createOwnCollection;
-	private Set<String> documentIds;
 	private int key;
 	
 	private static final int generateKey(){
@@ -34,9 +33,9 @@ public final class ProjectInvitation implements Serializable {
 	public ProjectInvitation(
 			String projectId, int defaultRole, 
 			String name, String description, 
-			boolean createOwnCollection, Set<String> documentIds) {
+			boolean createOwnCollection) {
 		
-		this(projectId, defaultRole, name, description, createOwnCollection,documentIds, generateKey());
+		this(projectId, defaultRole, name, description, createOwnCollection, generateKey());
 		
 	}
 	
@@ -46,7 +45,6 @@ public final class ProjectInvitation implements Serializable {
 			String name,
 			String description,
 			boolean createOwnCollection,
-			Set<String> documentIds,
 			int key) {
 		
 		this.projectId = projectId;
@@ -55,7 +53,6 @@ public final class ProjectInvitation implements Serializable {
 		this.description = description;
 		this.key = key;
 		this.createOwnCollection = createOwnCollection;
-		this.documentIds = documentIds;
 	}
 
 	public String getProjectId() {
@@ -86,10 +83,7 @@ public final class ProjectInvitation implements Serializable {
 	public boolean getCreateOwnCollection() {
 		return createOwnCollection;
 	}
-	
-	public Set<String> getDocumentIds() {
-		return documentIds;
-	}
+
 
 	@Override
 	public String toString() {

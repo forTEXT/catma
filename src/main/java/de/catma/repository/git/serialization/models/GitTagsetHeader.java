@@ -7,13 +7,10 @@ public class GitTagsetHeader extends GitHeaderBase {
 	
 	private TreeSet<String> deletedDefinitions;
 	
-	public GitTagsetHeader() {
-		super();
-		this.deletedDefinitions = new TreeSet<>();
-	}
-
-	public GitTagsetHeader(String name, String description, TreeSet<String> deletedDefinitions) {
-		super(name, description);
+	public GitTagsetHeader(
+			String name, String description, String responsibleUser, 
+			String forkedFromCommitURL, TreeSet<String> deletedDefinitions) {
+		super(name, description, responsibleUser, forkedFromCommitURL);
 		this.deletedDefinitions = deletedDefinitions;
 	}
 	

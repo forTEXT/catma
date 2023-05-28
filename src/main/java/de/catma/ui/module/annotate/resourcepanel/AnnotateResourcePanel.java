@@ -33,17 +33,14 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
@@ -60,14 +57,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private Grid<TagsetDefinition> tagsetGrid;
 	private ResourceSelectionListener resourceSelectionListener;
 	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
-	private PropertyChangeListener projectExceptionListener;
 	private ErrorHandler errorHandler;
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent;
 	private EventBus eventBus;
 
-	public AnnotateResourcePanel(Project project, SourceDocument currentlySelectedSourceDocument, EventBus eventBus) {
+	public AnnotateResourcePanel(Project project, SourceDocumentReference currentlySelectedSourceDocument, EventBus eventBus) {
 		super();
 		this.project = project;
         this.errorHandler = (ErrorHandler)UI.getCurrent();
@@ -87,13 +83,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		this.resourceSelectionListener = null;
 		
 		Collection<TagsetDefinition> tagsets = getSelectedTagsets();
-
+		
+		SourceDocumentReference selectedDocumentReference = 
+				getSelectedDocument();
+		
 		initData(
-			getSelectedDocument(), 
-			getSelectedAnnotationCollectionReferences()
-				.stream()
-				.map(AnnotationCollectionReference::getId)
-				.collect(Collectors.toSet()));
+			selectedDocumentReference, 
+			Collections.emptySet()); // select all collections visible
 		
 		tagsetData.getItems().forEach(tagset -> {
 			if (tagsets.contains(tagset)) {
@@ -109,32 +105,17 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		this.resourceSelectionListener.resourcesChanged();
 	}
 
-    private void initProjectListeners() {
-        this.projectExceptionListener = new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				Exception e = (Exception) evt.getNewValue();
-				errorHandler.showAndLogError("Error handling Project!", e);
-				
-			}
-		};
-		project.addPropertyChangeListener(
-				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
-		
-		this.tagsetChangeListener = new PropertyChangeListener() {
-			
+	private void initProjectListeners() {
+		tagsetChangeListener = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				handleTagsetChange(evt);
 			}
-		};		
-		
-        project.getTagManager().addPropertyChangeListener(
-        		TagManagerEvent.tagsetDefinitionChanged,
-        		tagsetChangeListener);
-    }
-    
+		};
+
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
+	}
+
 	private void handleTagsetChange(PropertyChangeEvent evt) {
 		Object oldValue = evt.getOldValue();
 		Object newValue = evt.getNewValue();
@@ -160,7 +141,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
 			
-    		SourceDocument document = collectionChangeEvent.getDocument();
+    		SourceDocumentReference document = collectionChangeEvent.getDocument();
     		AnnotationCollectionReference collectionReference = 
     				collectionChangeEvent.getCollectionReference();
 
@@ -168,10 +149,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			CollectionDataItem collectionDataItem = 
 				new CollectionDataItem(
 					collectionReference, 
-					project.hasPermission(
-						project.getRoleForCollection(
-							collectionReference.getId()), 
-							RBACPermission.COLLECTION_WRITE));
+					collectionReference.isResponsible(project.getCurrentUser().getIdentifier()));
 			documentData.getRootItems()
 			.stream()
 			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
@@ -184,7 +162,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			if (isAttached()) {
 				Notification.show(
 					"Info", 
-					String.format("Collection %1$s has been created!", collectionReference.toString()),  
+					String.format("Collection \"%s\" has been created", collectionReference),
 					Type.TRAY_NOTIFICATION);
 			}
 			
@@ -241,15 +219,17 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private void handleAddTagsetRequest() {
     	
     	SingleTextInputDialog tagsetNameDlg = 
-    		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+    		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
     				new SaveCancelListener<String>() {
 						
 						@Override
 						public void savePressed(String result) {
 							IDGenerator idGenerator = new IDGenerator();
+							TagsetDefinition tagset = new TagsetDefinition(
+									idGenerator.generateTagsetId(), result);
+							tagset.setResponsibleUser(project.getCurrentUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
-								new TagsetDefinition(
-									idGenerator.generateTagsetId(), result, new Version()));
+								tagset);
 						}
 					});
         	
@@ -266,7 +246,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private void handleAddCollectionRequest() {
     	Set<DocumentTreeItem> selectedItems = documentTree.getSelectedItems();
     	
-    	Set<SourceDocument> selectedDocuments = new HashSet<>();
+    	Set<SourceDocumentReference> selectedDocuments = new HashSet<>();
     	
     	for (DocumentTreeItem resource : selectedItems) {
     		DocumentTreeItem root = documentData.getParent(resource);
@@ -280,23 +260,23 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	}
     	
     	if (selectedDocuments.isEmpty()) {
-    		SourceDocument document = getSelectedDocument();
+    		SourceDocumentReference document = getSelectedDocument();
     		if (document != null) {
     			selectedDocuments.add(document);
     		}
     	}
     	if (selectedDocuments.isEmpty()) {
-    		Notification.show("Info", "Please select at least one Document first!", Type.HUMANIZED_MESSAGE);
+    		Notification.show("Info", "Please select at least one document first!", Type.HUMANIZED_MESSAGE);
     	}
     	else {
 	    	SingleTextInputDialog collectionNameDlg = 
-	    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+	    		new SingleTextInputDialog("Create Annotation Collection", "Please enter the collection name:",
 	    				new SaveCancelListener<String>() {
 							
 							@Override
 							public void savePressed(String result) {
-								for (SourceDocument document : selectedDocuments) {
-									project.createUserMarkupCollection(result, document);
+								for (SourceDocumentReference document : selectedDocuments) {
+									project.createAnnotationCollection(result, document);
 								}
 							}
 						});
@@ -305,13 +285,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	}
     }
     
-	private void initData(SourceDocument currentlySelectedSourceDocument, Set<String> currentlysSelectedColletionIds) {
+	private void initData(SourceDocumentReference currentlySelectedSourceDocument, Set<String> currentlysSelectedColletionIds) {
 		try {
 			documentData = new TreeData<>();
 			
-			Collection<SourceDocument> documents = project.getSourceDocuments(); 
+			Collection<SourceDocumentReference> documents = project.getSourceDocumentReferences(); 
 			
-			final SourceDocument preselection = currentlySelectedSourceDocument;
+			final SourceDocumentReference preselection = currentlySelectedSourceDocument;
 			
 			documentData.addRootItems(
 				documents
@@ -332,9 +312,6 @@ public class AnnotateResourcePanel extends VerticalLayout {
 						documentDataItem, 
 						new CollectionDataItem(
 							umcRef,
-							project.hasPermission(
-									project.getRoleForCollection(umcRef.getId()),
-									RBACPermission.COLLECTION_WRITE),
 							(currentlysSelectedColletionIds.isEmpty() || currentlysSelectedColletionIds.contains(umcRef.getId()))
 						)
 					);
@@ -358,7 +335,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				.ifPresent(documentItem -> documentTree.expand(documentItem));
 			
 		} catch (Exception e) {
-			errorHandler.showAndLogError("Error loading data!", e);
+			errorHandler.showAndLogError("Error loading data", e);
 		}
 	}
 	
@@ -409,13 +386,9 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		documentTree
 			.addColumn(documentTreeItem -> documentTreeItem.getName())
 			.setCaption("Name")
-			.setWidth(150);
+			.setWidth(300);
 		
 		documentTree.setHeight("250px");
-
-		documentTree.addColumn(
-				documentTreeItem -> documentTreeItem.getPermissionIcon(), new HtmlRenderer())
-		.setWidth(50);
 			
 		documentTree.addColumn(
 				documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer())
@@ -439,14 +412,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")
-			.setWidth(150);
-		
-		tagsetGrid.addColumn(
-				tagset -> project.hasPermission(
-					project.getRoleForTagset(tagset.getUuid()),
-					RBACPermission.TAGSET_WRITE)?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
-				new HtmlRenderer())
-		.setWidth(50);
+			.setWidth(300);
 		
 		tagsetGrid
 			.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())
@@ -512,8 +478,8 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	
     @Subscribe
     public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
-    	SourceDocument currentlySelectedDocument = getSelectedDocument();
-    	SourceDocument nextSelectedDocument = null;
+    	SourceDocumentReference currentlySelectedDocument = getSelectedDocument();
+    	SourceDocumentReference nextSelectedDocument = null;
     	if ((currentlySelectedDocument != null)
     			&& !(documentChangeEvent.getChangeType().equals(ChangeType.DELETED)
     					&& documentChangeEvent.getDocument().equals(currentlySelectedDocument))) {
@@ -523,7 +489,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	initData(nextSelectedDocument, Collections.emptySet());
     }
     
-    private SourceDocument getSelectedDocument() {
+    private SourceDocumentReference getSelectedDocument() {
     	for (DocumentTreeItem documentTreeItem : documentData.getRootItems()) {
     		if ((documentTreeItem instanceof DocumentDataItem) && documentTreeItem.isSelected()) {
     			return ((DocumentDataItem)documentTreeItem).getDocument();
@@ -533,13 +499,13 @@ public class AnnotateResourcePanel extends VerticalLayout {
     	return null;
     }
     
-    public void setSelectedDocument(SourceDocument sourceDocument) {
-    	SourceDocument selected = getSelectedDocument();
-    	if ((selected == null) || !selected.equals(sourceDocument)) {
+    public void setSelectedDocument(SourceDocumentReference sourceDocumentReference) {
+    	SourceDocumentReference selected = getSelectedDocument();
+    	if ((selected == null) || !selected.equals(sourceDocumentReference)) {
     		for (DocumentTreeItem documentTreeItem : documentData.getRootItems()) {
     			if (documentTreeItem instanceof DocumentDataItem) {
     				DocumentDataItem documentDataItem = (DocumentDataItem)documentTreeItem;
-    				if (documentDataItem.getDocument().equals(sourceDocument)) {
+    				if (documentDataItem.getDocument().equals(sourceDocumentReference)) {
     					documentDataItem.setSelected(true);
     					documentTree.getDataProvider().refreshItem(documentDataItem);
     					documentTree.expand(documentDataItem);
@@ -548,17 +514,12 @@ public class AnnotateResourcePanel extends VerticalLayout {
     		}
     	}
     }
-	
+
 	public void close() {
 		if (project != null) {
-			project.removePropertyChangeListener(
-				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
-
-	        project.getTagManager().removePropertyChangeListener(
-        		TagManagerEvent.tagsetDefinitionChanged,
-        		tagsetChangeListener);
+			project.getTagManager().removePropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
 		}
-		
+
 		eventBus.unregister(this);
 	}
 }

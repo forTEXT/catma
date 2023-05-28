@@ -34,9 +34,9 @@ public class AnaValueHandler implements AttributeValueHandler {
 	
 	/**
 	 * Creates a value string with an existent value string and 
-	 * a new reference to the given Tag.
+	 * a new reference to the given tag.
 	 * @param anaValue the existent value string
-	 * @param tag the Tag we want to reference
+	 * @param tag the tag we want to reference
 	 * @return the new value string
 	 */
 //	public String makeValueFrom( String anaValue, Tag tag ) {
@@ -50,7 +50,7 @@ public class AnaValueHandler implements AttributeValueHandler {
 //	}
 //	
 	/**
-	 * Creates a value string with references to the Tags in the given list.
+	 * Creates a value string with references to the tags in the given list.
 	 * @param tags the tags we want to reference
 	 * @return the new value string
 	 */
@@ -72,7 +72,7 @@ public class AnaValueHandler implements AttributeValueHandler {
 	}
 
 	/**
-	 * Extracts the Tags that are referenced by the given value string.
+	 * Extracts the tags that are referenced by the given value string.
 	 * @param anaValue the value string which contains the references
 	 * @return the list of referenced tags
 	 */
@@ -95,7 +95,7 @@ public class AnaValueHandler implements AttributeValueHandler {
 //	
 	
 	/**
-	 * Extracts the xml:ids of the Tags that are referenced by the given value 
+	 * Extracts the xml:ids of the tags that are referenced by the given value
 	 * string.
 	 * @param anaValue the value string which contains the references
 	 * @return the list of referenced tag-xml:ids
@@ -116,10 +116,10 @@ public class AnaValueHandler implements AttributeValueHandler {
 	
 	/**
 	 * Creates a value string with an existent value string but strips off
-	 * the reference to the given Tag.
+	 * the reference to the given tag.
 	 * @param anaValue the existent value string (has to contain a reference to 
-	 * the given Tag!)
-	 * @param tag the Tag for which we want to remove the reference
+	 * the given tag!)
+	 * @param tag the tag for which we want to remove the reference
 	 * @return the new value string
 	 */
 //	public String makeListWithoutTag( String anaValue, Tag tag ) {

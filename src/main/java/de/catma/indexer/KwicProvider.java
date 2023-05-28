@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache;
 import de.catma.document.Range;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 
 public class KwicProvider {
@@ -40,14 +41,14 @@ public class KwicProvider {
 	private String content;
 	private String sourceDocumentId;
 	private String sourceDocumentName;
-	private SourceDocument sourceDocument;
+	private SourceDocumentReference sourceDocumentReference;
 	private IndexInfoSet indexInfoSet;
 	
-	public KwicProvider(SourceDocument sourceDocument) throws IOException {
+	public KwicProvider(SourceDocument sourceDocument, SourceDocumentReference sourceDocumentReference) throws IOException {
 		this.sourceDocumentId = sourceDocument.getUuid();
 		this.content = sourceDocument.getContent();
 		this.sourceDocumentName = sourceDocument.toString();
-		this.sourceDocument= sourceDocument;
+		this.sourceDocumentReference = sourceDocumentReference;
 		indexInfoSet = 
 				sourceDocument.getSourceContentHandler()
 					.getSourceDocumentInfo().getIndexInfoSet();
@@ -286,8 +287,8 @@ public class KwicProvider {
 		return sourceDocumentName;
 	}
 
-	public SourceDocument getSourceDocument() {
-		return sourceDocument;
+	public SourceDocumentReference getSourceDocumentReference() {
+		return sourceDocumentReference;
 	}
 
 	public static LoadingCache<String, KwicProvider> buildKwicProviderByDocumentIdCache(Project project) {
@@ -297,7 +298,8 @@ public class KwicProvider {
 			@Override
 			public KwicProvider load(String key) throws Exception {
 				 SourceDocument sd = project.getSourceDocument(key);
-				 KwicProvider kwicProvider = new KwicProvider(sd);
+				 SourceDocumentReference docRef = project.getSourceDocumentReference(key); 
+				 KwicProvider kwicProvider = new KwicProvider(sd, docRef);
 				 return kwicProvider;
 			}
 		});		

@@ -43,7 +43,11 @@ class PropertyDataItem implements TagsetTreeItem {
 				(valuesExpanded?VaadinIcons.CARET_DOWN.getHtml():VaadinIcons.CARET_RIGHT.getHtml()));
 		}
 			
-		propertySummary.append("<div class=\"annotation-panel-property-summary\">");
+		propertySummary.append(
+			String.format(
+				"<div class=\"annotation-panel-property-summary %1$s\">",
+				propertyDefinition.isContribution()?"annotate-panel-tagset-with-contributions":""));
+		
 		propertySummary.append(Cleaner.clean(propertyDefinition.getName())); 
 
 		if (!valuesExpanded) {
@@ -68,7 +72,9 @@ class PropertyDataItem implements TagsetTreeItem {
 	
 	@Override
 	public String generateStyle() {
-		return "annotate-panel-property-data-item";
+		return (propertyDefinition.isContribution()
+				?"annotate-panel-property-with-contributions "
+				:"") + "annotate-panel-property-data-item";
 	}
 	
 	public PropertyDefinition getPropertyDefinition() {
@@ -118,7 +124,7 @@ class PropertyDataItem implements TagsetTreeItem {
 		if (editable) {
 			return VaadinIcons.TRASH.getHtml();
 		}
-		return VaadinIcons.LOCK.getHtml();
+		return null;
 	}
 
 	@Override

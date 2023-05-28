@@ -82,7 +82,7 @@ public enum TeiDocumentVersion {
         }
 
         throw new IllegalArgumentException( 
-        		TeiDocumentVersion.class.getSimpleName() + " " + version + " unknown!");
+        		TeiDocumentVersion.class.getSimpleName() + " " + version + " unknown");
     }
 
     public static void convertToLatest(TeiDocument teiDocument) {

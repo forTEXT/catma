@@ -17,7 +17,6 @@ import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -29,12 +28,12 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
 import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.module.main.ErrorHandler;
@@ -66,7 +65,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	private void initData() {
 		documentData = new TreeData<>();
 		try {
-			Collection<SourceDocument> documents = project.getSourceDocuments(); 
+			Collection<SourceDocumentReference> documents = project.getSourceDocumentReferences(); 
 			
 			documentData.addRootItems(
 				documents
@@ -77,18 +76,13 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 				for (AnnotationCollectionReference umcRef : 
 					((DocumentDataItem)documentDataItem).getDocument().getUserMarkupCollectionRefs()) {
 					documentData.addItem(
-						documentDataItem, 
-						new CollectionDataItem(
-							umcRef,
-							project.hasPermission(
-									project.getRoleForCollection(umcRef.getId()),
-									RBACPermission.COLLECTION_WRITE)));
+						documentDataItem, new CollectionDataItem(umcRef));
 				}
 			}
 			
 			documentTree.setDataProvider(new TreeDataProvider<>(documentData));			
 			
-			Collection<SourceDocument> selectedDocuments = corpus.getSourceDocuments();
+			Collection<SourceDocumentReference> selectedDocuments = corpus.getSourceDocuments();
 			Collection<AnnotationCollectionReference> selectedCollections = 
 					corpus.getUserMarkupCollectionRefs();
 			
@@ -109,7 +103,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 			documentTree.expand(documentData.getRootItems());
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error loading Project data", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading project data", e);
 		}
 	}
 	
@@ -141,8 +135,8 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	@Subscribe
     public void handleDocumentChanged(DocumentChangeEvent documentChangeEvent) {
     	if (documentChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
-    		SourceDocument document = documentChangeEvent.getDocument();
-			documentData.addItem(null, new DocumentDataItem(document));    		
+    		SourceDocumentReference documentRef = documentChangeEvent.getDocument();
+			documentData.addItem(null, new DocumentDataItem(documentRef));    		
     	}
     	else if (documentChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
     		Optional<DocumentTreeItem> optionalDocItem = 
@@ -183,21 +177,17 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
 			
-    		SourceDocument document = collectionChangeEvent.getDocument();
+    		SourceDocumentReference documentRef = collectionChangeEvent.getDocument();
     		AnnotationCollectionReference collectionReference = 
     				collectionChangeEvent.getCollectionReference();
 
     		
 			CollectionDataItem collectionDataItem = 
-				new CollectionDataItem(
-					collectionReference, 
-					project.hasPermission(
-						project.getRoleForCollection(
-							collectionReference.getId()), 
-							RBACPermission.COLLECTION_WRITE));
+				new CollectionDataItem(collectionReference); 
+
 			documentData.getRootItems()
 			.stream()
-			.filter(item -> ((DocumentDataItem)item).getDocument().equals(document))
+			.filter(item -> ((DocumentDataItem)item).getDocument().equals(documentRef))
 			.findAny().ifPresent(documentDataItem -> {
 				documentData.addItem(
 	    				documentDataItem, collectionDataItem);
@@ -208,7 +198,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 				documentTree.expand(documentData.getParent(collectionDataItem));
 				Notification.show(
 					"Info", 
-					String.format("Collection %1$s has been created!", collectionReference.toString()),  
+					String.format("Collection \"%s\" has been created", collectionReference.toString()),
 					Type.TRAY_NOTIFICATION);
 			}
     		
@@ -254,14 +244,9 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 		documentTree
 			.addColumn(documentTreeItem -> documentTreeItem.getName())
 			.setCaption("Name")
-			.setWidth(150);
+			.setWidth(300);
 	
 
-		documentTree
-			.addColumn(
-				documentTreeItem -> documentTreeItem.getPermissionIcon(), new HtmlRenderer())
-			.setWidth(50);
-		
 		documentTree
 			.addColumn(
 				documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer())

@@ -69,12 +69,12 @@ public interface Indexer {
 	public QueryResult searchTagDefinitionPath(
 			QueryId queryId, 
 			List<String> userMarkupCollectionIdList, 
-			String tagDefinitionPath) throws Exception;
+			String tagDefinitionPath);
 	
 	public QueryResult searchProperty(
 			QueryId queryId, 
 			List<String> userMarkupCollectionIdList,
-			String propertyName, String propertyValue, String tagValue) throws Exception;
+			String propertyName, String propertyValue, String tagValue);
 	
 	public QueryResult searchFrequency(
 			QueryId queryId, 
@@ -89,9 +89,7 @@ public interface Indexer {
 			QueryId queryId, 
 			QueryResult baseResult, QueryResult collocationConditionResult,
 			int spanContextSize, SpanDirection direction) throws IOException;
-	
-	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException;
-	
+		
 	public void close();
 
 	public QueryResult searchTagDiff(QueryId queryId, List<String> relevantUserMarkupCollIDs,

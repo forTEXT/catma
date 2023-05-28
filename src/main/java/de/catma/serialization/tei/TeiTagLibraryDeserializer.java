@@ -27,7 +27,6 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 
@@ -65,8 +64,7 @@ public class TeiTagLibraryDeserializer {
 			TagsetDefinition tagsetDefinition = 
 					new TagsetDefinition(
 							tagsetDefinitionElement.getID(),
-							tagsetName, 
-							new Version());
+							tagsetName);
 			
 			tagManager.addTagsetDefinition(tagsetDefinition);
 			
@@ -119,7 +117,7 @@ public class TeiTagLibraryDeserializer {
 				tagDef.addSystemPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
-				logger.log(Level.SEVERE, "error adding system property " + systemPropertyNodes.get(i), uee);
+				logger.log(Level.SEVERE, "Error adding system property " + systemPropertyNodes.get(i), uee);
 			}
 				
 		}
@@ -131,7 +129,7 @@ public class TeiTagLibraryDeserializer {
 				tagDef.addUserDefinedPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
-				logger.log(Level.SEVERE, "error adding user property " + userPropertyNodes.get(i), uee);
+				logger.log(Level.SEVERE, "Error adding user property " + userPropertyNodes.get(i), uee);
 			}
 				
 		}
@@ -148,7 +146,7 @@ public class TeiTagLibraryDeserializer {
 			pvf = new ValueRangePropertyValueFactory(propElement);
 		}
 		else {
-			throw new UnknownElementException(valueElement.getLocalName() + " is not supported!");
+			throw new UnknownElementException(valueElement.getLocalName() + " is not supported");
 		}
 		
 		return new PropertyDefinition(

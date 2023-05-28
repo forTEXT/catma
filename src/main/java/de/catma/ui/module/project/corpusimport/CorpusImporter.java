@@ -39,6 +39,7 @@ import de.catma.document.source.FileType;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.AbstractSourceContentHandler;
 import de.catma.document.source.contenthandler.OldXMLContentHandler;
@@ -84,7 +85,7 @@ public class CorpusImporter {
 		final String tempDir,
 		final UI ui,
 		final Project project) throws Exception {
-		progressListener.setProgress("Importing Corpus");
+		progressListener.setProgress("Importing corpus");
 		
 		GZIPInputStream gzipIs = new GZIPInputStream(new FileInputStream(corpusFile));
 		
@@ -100,16 +101,16 @@ public class CorpusImporter {
 				
 				if (pathParts[3].equals("annotationcollections")) {
 					
-					progressListener.setProgress("Importing Collection %1$s", pathParts[4]);
+					progressListener.setProgress("Importing annotation collection \"%s\"", pathParts[4]);
 					
 					ui.accessSynchronously(() -> {
 						try {
 							final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 							IOUtils.copy(taIs, buffer);
 							
-							SourceDocument document = project.getSourceDocument(documentId);
+							SourceDocumentReference documentRef = project.getSourceDocumentReference(documentId);
 							Pair<AnnotationCollection, List<TagsetDefinitionImportStatus>> loadResult =
-									project.loadAnnotationCollection(new ByteArrayInputStream(buffer.toByteArray()), document);
+									project.prepareAnnotationCollectionForImport(new ByteArrayInputStream(buffer.toByteArray()), documentRef);
 							
 							List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatusList = loadResult.getSecond();
 							final AnnotationCollection annotationCollection = loadResult.getFirst();
@@ -140,7 +141,7 @@ public class CorpusImporter {
 							.forEach(status -> status.setDoImport(false));
 							
 							if (!annotationCollection.isEmpty()) {
-								project.importCollection(
+								project.importAnnotationCollection(
 										tagsetDefinitionImportStatusList, annotationCollection);
 							}
 							
@@ -148,7 +149,7 @@ public class CorpusImporter {
 						catch (Exception e) {
 			    			Logger.getLogger(ProjectView.class.getName()).log(
 			    					Level.SEVERE, 
-			    					"Error importing the CATMA 5 Corpus: " + entryName, 
+			    					String.format("Error importing the CATMA 5 corpus \"%s\"", entryName),
 			    					e);
 			    			String errorMsg = e.getMessage();
 			    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
@@ -158,8 +159,8 @@ public class CorpusImporter {
 			    			Notification.show(
 			    				"Error", 
 			    				String.format(
-			    						"Error importing the CATMA 5 Corpus! "
-			    						+ "This Collection will be skipped!\n The underlying error message was:\n%1$s", 
+			    						"Error importing the CATMA 5 corpus! "
+			    						+ "This collection will be skipped.\nThe underlying error message was:\n%s",
 			    						errorMsg), 
 			    				Type.ERROR_MESSAGE);										
 			    		}
@@ -179,7 +180,7 @@ public class CorpusImporter {
 								documentId
 								:documentMetadata.getSourceDocName();
 					
-					progressListener.setProgress("Importing Document %1$s", title);
+					progressListener.setProgress("Importing document \"%s\"", title);
 					
 					final File tempFile = new File(new File(tempDir), documentId);
 					
@@ -228,7 +229,7 @@ public class CorpusImporter {
 						
 						SourceDocument document = new SourceDocument(documentId, handler);
 						try {
-							project.insert(document, false);
+							project.addSourceDocument(document, false);
 							
 							
 							if (loadIntrinsicMarkup) {
@@ -237,7 +238,7 @@ public class CorpusImporter {
 								XmlMarkupCollectionSerializationHandler markupHandler =
 										new XmlMarkupCollectionSerializationHandler(
 												tagmanager, (XML2ContentHandler)handler, 
-												project.getUser().getIdentifier());
+												project.getCurrentUser().getIdentifier());
 								
 								try (FileInputStream fis = new FileInputStream(tempFile)) {
 									AnnotationCollection intrinsicMarkupCollection = 
@@ -276,7 +277,7 @@ public class CorpusImporter {
 										}
 									}
 									
-									// Creating Tagsets
+									// Creating tagsets
 									tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_CREATED)).forEach(tagsetImport -> {
 										if (project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid()) != null) {
 											// already imported, so it will be a merge
@@ -290,13 +291,12 @@ public class CorpusImporter {
 													Collections.singletonList(
 														new TagsetDefinitionImportStatus(
 																extractedTagset, 
-																project.inProjectHistory(extractedTagset.getUuid()), 
 																project.getTagManager().getTagLibrary().getTagsetDefinition(extractedTagset.getUuid()) != null)));
 											}
 											catch (Exception e) {
 												Logger.getLogger(ProjectView.class.getName()).log(
 														Level.SEVERE, 
-														String.format("Error importing tagset %1$s with ID %2$s", 
+														String.format("Error importing tagset \"%s\" with ID %s",
 																extractedTagset.getName(), 
 																extractedTagset.getUuid()), 
 														e);
@@ -308,15 +308,15 @@ public class CorpusImporter {
 												Notification.show(
 													"Error", 
 													String.format(
-															"Error importing tagset %1$s! "
-															+ "This tagset will be skipped!\n The underlying error message was:\n%2$s", 
+															"Error importing tagset \"%s\"! "
+															+ "This tagset will be skipped.\nThe underlying error message was:\n%s",
 															extractedTagset.getName(), errorMsg), 
 													Type.ERROR_MESSAGE);					
 											}
 										}
 									});
 									
-									// Merging Tagsets
+									// Merging tagsets
 									tagsetImports.stream().filter(ti -> ti.getImportState().equals(TagsetImportState.WILL_BE_MERGED)).forEach(tagsetImport -> {
 										TagsetDefinition targetTagset = 
 											project.getTagManager().getTagLibrary().getTagsetDefinition(tagsetImport.getTargetTagset().getUuid());
@@ -396,7 +396,7 @@ public class CorpusImporter {
 										}
 									});
 									
-									project.importCollection(Collections.emptyList(), intrinsicMarkupCollection);
+									project.importAnnotationCollection(Collections.emptyList(), intrinsicMarkupCollection);
 								}
 								
 								if (tempFile.exists()) {
@@ -408,7 +408,7 @@ public class CorpusImporter {
 						catch (Exception e) {
 			    			Logger.getLogger(ProjectView.class.getName()).log(
 			    					Level.SEVERE, 
-			    					"Error importing the CATMA 5 Corpus: " + entryName, 
+			    					String.format("Error importing the CATMA 5 corpus \"%s\"", entryName),
 			    					e);
 			    			String errorMsg = e.getMessage();
 			    			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
@@ -418,8 +418,8 @@ public class CorpusImporter {
 			    			Notification.show(
 			    				"Error", 
 			    				String.format(
-			    						"Error importing the CATMA 5 Corpus! "
-			    						+ "This Document will be skipped!\n The underlying error message was:\n%1$s", 
+			    						"Error importing the CATMA 5 corpus! "
+			    						+ "This document will be skipped.\nThe underlying error message was:\n%s",
 			    						errorMsg), 
 			    				Type.ERROR_MESSAGE);		
 			    		}

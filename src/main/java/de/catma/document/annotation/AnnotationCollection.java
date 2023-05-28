@@ -18,21 +18,21 @@
  */
 package de.catma.document.annotation;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import de.catma.document.source.ContentInfoSet;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
-import de.catma.util.IDGenerator;
 
 /**
  * A collection of user generated markup in the form of {@link TagReference}s.
@@ -45,10 +45,12 @@ public class AnnotationCollection {
 	private final String uuid;
 	private ContentInfoSet contentInfoSet;
 	private TagLibrary tagLibrary;
-	private List<TagReference> tagReferences;
-	private String revisionHash;
+	private ArrayListMultimap<String, TagReference> tagReferencesByInstanceId;
+	private ArrayListMultimap<String, TagReference> tagReferencesByTagId;
 	private String sourceDocumentId;
-	private String sourceDocumentRevisionHash;
+	private String forkedFromCommitURL;
+	private String responsibleUser;
+	private transient boolean contribution = false;
 	
 	/**
 	 * @param id the identifier of the collections (depends on the repository)
@@ -58,21 +60,25 @@ public class AnnotationCollection {
 	 */
 	public AnnotationCollection(
 			String uuid, ContentInfoSet contentInfoSet, TagLibrary tagLibrary, 
-			String sourceDocumentId, String sourceDocumentRevisionHash) {
+			String sourceDocumentId, String forkedFromCommitURL,
+			String responsibleUser) {
 		this(uuid ,contentInfoSet, tagLibrary, new ArrayList<TagReference>(), 
-				sourceDocumentId, sourceDocumentRevisionHash);
+				sourceDocumentId, forkedFromCommitURL, responsibleUser);
 	}
 	
 	public AnnotationCollection(
 			String uuid, ContentInfoSet contentInfoSet, TagLibrary tagLibrary, List<TagReference> tagReferences,
-			String sourceDocumentId, String sourceDocumentRevisionHash) {
+			String sourceDocumentId, String forkedFromCommitURL,
+			String responsibleUser) {
 		this.uuid = uuid;
 		this.contentInfoSet = contentInfoSet;
 		this.tagLibrary = tagLibrary;
-		this.tagReferences = new ArrayList<TagReference>();
-		this.tagReferences.addAll(tagReferences);
+		this.tagReferencesByInstanceId = ArrayListMultimap.create();
+		this.tagReferencesByTagId = ArrayListMultimap.create();
+		this.addTagReferences(tagReferences);
 		this.sourceDocumentId = sourceDocumentId;
-		this.sourceDocumentRevisionHash = sourceDocumentRevisionHash;
+		this.forkedFromCommitURL = forkedFromCommitURL;
+		this.responsibleUser = responsibleUser;
 	}
 
 	/**
@@ -86,13 +92,13 @@ public class AnnotationCollection {
 	 * @return unmodifiable version of referenced text ranges and referencing {@link TagInstance}s.
 	 */
 	public List<TagReference> getTagReferences() {
-		return Collections.unmodifiableList(tagReferences);
+		return Collections.unmodifiableList(new ArrayList<>(tagReferencesByInstanceId.values()));
 	}
 
 	/**
-	 * @param tagDefinition return all references with this tagdefinition (<b>excluding</b>
-	 * all references that have a tag definition that is a child of the given definition, i. e.
-	 * this is not a deep list of references)
+	 * @param tagDefinition return all references with this {@link TagDefinition}
+	 *                      (<strong>excluding</strong> references that have a tag definition that is a child of the given definition,
+	 *                      i.e. this is not a deep list of references)
 	 * 
 	 * @return the matching references
 	 */
@@ -118,10 +124,8 @@ public class AnnotationCollection {
 			tagDefinitionIDs.addAll(getChildIDs(tagDefinition));
 		}
 		
-		for (TagReference tr : tagReferences) {
-			if (tagDefinitionIDs.contains(tr.getTagDefinitionId())) {
-				result.add(tr);
-			}
+		for (String tagDefinitionID : tagDefinitionIDs) {
+			result.addAll(tagReferencesByTagId.get(tagDefinitionID));
 		}
 		
 		return result;
@@ -151,11 +155,14 @@ public class AnnotationCollection {
 	}
 	
 	public void addTagReferences(List<TagReference> tagReferences) {
-		this.tagReferences.addAll(tagReferences);	
+		tagReferences.forEach(tr -> {
+			tagReferencesByInstanceId.put(tr.getTagInstanceId(), tr);
+			tagReferencesByTagId.put(tr.getTagDefinitionId(), tr);
+		});
 	}
 	
 	public void addTagReference(TagReference tagReference) {
-		this.tagReferences.add(tagReference);
+		this.addTagReferences(Collections.singletonList(tagReference));
 	}
 	
 	/**
@@ -191,7 +198,7 @@ public class AnnotationCollection {
 	 * @return <code>true</code> if there are no tag references in this collection
 	 */
 	public boolean isEmpty() {
-		return tagReferences.isEmpty();
+		return tagReferencesByInstanceId.isEmpty();
 	}
 	
 	/**
@@ -203,34 +210,22 @@ public class AnnotationCollection {
 		this.tagLibrary = tagLibrary;
 	}
 
-	public String getRevisionHash() {
-		return this.revisionHash;
-	}
 
-	public void setRevisionHash(String revisionHash) {
-		this.revisionHash = revisionHash;
+	public String getForkedFromCommitURL() {
+		return forkedFromCommitURL;
 	}
 	
-	/**
-	 * {@link TagInstance#synchronizeProperties() Synchronizes} all the Tag Instances. 
-	 */
-	@Deprecated
-	public void synchronizeTagInstances() {
-		HashSet<TagInstance> tagInstances = new HashSet<TagInstance>();
-		for (TagReference tr : tagReferences) {
-			tagInstances.add(tr.getTagInstance());
-		}
-		
-		for (TagInstance ti : tagInstances) {
-//			if (getTagLibrary().getTagsetDefinition(ti.getTagDefinition()) != null) {
-//				ti.synchronizeProperties();
-//			}
-//			else {
-//				tagReferences.removeAll(getTagReferences(ti.getUuid()));
-//			}
-		}
+	public void setForkedFromCommitURL(String forkedFromCommitURL) {
+		this.forkedFromCommitURL = forkedFromCommitURL;
 	}
-
+	
+	public String getResponsibleUser() {
+		return responsibleUser;
+	}
+	
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
+	}
 	
 	/**
 	 * @param tagInstanceID
@@ -238,12 +233,7 @@ public class AnnotationCollection {
 	 */
 	public List<TagReference> getTagReferences(String tagInstanceID) {
 		List<TagReference> result = new ArrayList<TagReference>();
-		
-		for (TagReference tr : getTagReferences()) {
-			if (tr.getTagInstanceId().equals(tagInstanceID)) {
-				result.add(tr);
-			}
-		}
+		result.addAll(tagReferencesByInstanceId.get(tagInstanceID));
 		
 		return result;
 	}
@@ -261,21 +251,18 @@ public class AnnotationCollection {
 	 * @return <code>true</code> if there is a TagReference with the given TagInstance's ID
 	 */
 	public boolean hasTagInstance(String instanceID) {
-		for (TagReference tr : getTagReferences()) {
-			if (tr.getTagInstanceId().equals(instanceID)) {
-				return true;
-			}
-		}
-		return false;
+		return tagReferencesByInstanceId.containsKey(instanceID);
 	}
-	
+
 	/**
 	 * @param tagReferences references to be removed
 	 */
 	public void removeTagReferences(List<TagReference> tagReferences) {
-		this.tagReferences.removeAll(tagReferences);
+		for (TagReference tagReference : tagReferences) {
+			tagReferencesByInstanceId.remove(tagReference.getTagInstanceId(), tagReference);
+			tagReferencesByTagId.remove(tagReference.getTagDefinitionId(), tagReference);
+		}
 	}
-
 
 	/**
 	 * @param tagsetDefinition
@@ -342,20 +329,64 @@ public class AnnotationCollection {
 	}
 
 	public boolean containsTag(TagDefinition tag) {
-		for (TagReference t : tagReferences) {
-			if (t.getTagDefinitionId().equals(tag.getUuid())) {
-				return true;
-			}
-		}
-		
-		return false;
+		return this.tagReferencesByTagId.containsKey(tag.getUuid());
 	}
 
 	public String getSourceDocumentId() {
 		return sourceDocumentId;
 	}
-	
-	public String getSourceDocumentRevisionHash() {
-		return sourceDocumentRevisionHash;
+
+	public boolean isResponsible(String userIdentifier) {
+		if (responsibleUser != null) {
+			return responsibleUser.equals(userIdentifier);
+		}
+		return true; // shared responsibility
 	}
+
+	public Multimap<String, TagReference> getTagReferencesByInstanceId(TagDefinition tag) {
+		Multimap<String, TagReference> tagReferencesByInstanceId = ArrayListMultimap.create();
+		
+		getTagReferences(tag).stream()
+			.forEach(tr -> tagReferencesByInstanceId.put(tr.getTagInstanceId(), tr));
+		
+		return tagReferencesByInstanceId;
+
+	}
+
+	public void mergeAdditive(AnnotationCollection collection) {
+		
+		Set<TagInstance> toBeMerged = new HashSet<TagInstance>();
+		for (TagReference reference : collection.getTagReferences()) {
+			if (!hasTagInstance(reference.getTagInstanceId())) {
+				addTagReference(reference);
+				setContribution(true);
+			}
+			else {
+				toBeMerged.add(reference.getTagInstance());
+			}
+		}
+		
+		for (TagInstance tagInstance : toBeMerged) {
+			boolean merged = 
+				tagReferencesByInstanceId
+				.get(tagInstance.getUuid())
+				.get(0)
+				.getTagInstance()
+				.mergeAdditive(tagInstance);
+			if (merged) {
+				setContribution(true);
+			}
+		}
+		
+	}
+
+	public boolean isContribution() {
+		return contribution;
+	}
+	
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
+	}
+
+
 }

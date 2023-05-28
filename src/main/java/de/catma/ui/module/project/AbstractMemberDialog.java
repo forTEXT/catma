@@ -39,7 +39,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		cbUsers.setItemCaptionGenerator(User::preciseName);
 		
 		cbRole = new ComboBox<RBACRole>("Role", 
-				Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
+				Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 
 		cbRole.setWidth("100%");
 		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);

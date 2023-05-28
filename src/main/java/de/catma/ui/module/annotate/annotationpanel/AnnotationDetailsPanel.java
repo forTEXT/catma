@@ -38,12 +38,12 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.annotation.Annotation;
+import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionManager;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
-import de.catma.rbac.RBACPermission;
+import de.catma.project.Project.ProjectEvent;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -52,6 +52,8 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.module.main.ErrorHandler;
 
@@ -129,14 +131,14 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 					try {
 						addAnnotation(annotation);
 					} catch (Exception e) {
-						((ErrorHandler)UI.getCurrent()).showAndLogError("error adding Annotation", e);
+						((ErrorHandler) UI.getCurrent()).showAndLogError("Error adding annotation", e);
 					}
 				});
 				
 			}
 		};
-		project.addPropertyChangeListener(
-				RepositoryChangeEvent.propertyValueChanged,
+		project.addEventListener(
+				ProjectEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
 		
 		propertyDefinitionChangedListener = new PropertyChangeListener() {
@@ -155,12 +157,9 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-				
-				if ((evt.getOldValue() != null) && (evt.getNewValue() == null)) {
-					
+				if (evt.getOldValue() != null) { // update or deletion					
+					refreshAnnotations();
 				}
-				
-				refreshAnnotations();
 			}
 		};
 		
@@ -181,7 +180,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		try {
 			addAnnotations(annotations);
 		} catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error refreshing Annotations", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error refreshing annotations", e);
 		}
 	}
 
@@ -195,9 +194,13 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		return Optional.empty();
 	}
 
-	public void setDocument(SourceDocument document) throws IOException {
-		this.kwicProvider = new KwicProvider(document);
+	public void setDocument(SourceDocumentReference sdRef) throws Exception {
+		this.kwicProvider = new KwicProvider(project.getSourceDocument(sdRef.getUuid()), sdRef);
 		handleClearSelected();
+	}
+	
+	public void refreshAnnotationDetailsProvider() {
+		annotationDetailsProvider.refreshAll();
 	}
 	
 	private void initComponents() {
@@ -212,7 +215,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		addComponent(headerPanel);
 		
 		btClearSelected = new IconButton(VaadinIcons.ERASER);
-		btClearSelected.setDescription("Clear the list of selected Annotations");
+		btClearSelected.setDescription("Clear the list of selected annotations");
 		headerPanel.addComponent(btClearSelected);
 		headerPanel.setComponentAlignment(btClearSelected, Alignment.TOP_RIGHT);
 		headerPanel.setExpandRatio(btClearSelected, 1.0f);
@@ -302,88 +305,104 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	}
 	
 	private void handleDeleteAnnotationRequest(RendererClickEvent<AnnotationTreeItem> clickEvent) {
+		if (project.isReadOnly()) {
+			Notification.show(
+					"Info", 
+					"This project is currently in read-only mode!",
+					Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
 		AnnotationDataItem item = (AnnotationDataItem) clickEvent.getItem();
 		
 		final Annotation annotation = item.getAnnotation();
+		final AnnotationCollection collection = annotation.getUserMarkupCollection();
 		
-		if (project.hasPermission(project.getRoleForCollection(
-				annotation.getUserMarkupCollection().getUuid()), 
-				RBACPermission.COLLECTION_WRITE)) {
-			if (!isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid())) {
-				changeCollectionListener.accept(annotation.getUserMarkupCollection().getUuid());
-				annotationDetailsProvider.refreshAll();
-			}
-			else {
-				ConfirmDialog.show(
-						UI.getCurrent(), 
-						"Info", 
-						"Are you sure you want to delete this Annotation?", 
-						"Delete", 
-						"Cancel", dlg -> {
-							if (dlg.isConfirmed()) {
-								collectionManager.removeTagInstance(annotation.getTagInstance().getUuid());
-							}
-						}	
-				);
-			}
-		}
-		else {
-			Notification.show(
-				"Info", 
-				"You do not have the permission to make changes to the Collection of this Annotation, "
-				+ "please contact the Project maintainer!",
-				Type.HUMANIZED_MESSAGE);
-		}
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+			!collection.isResponsible(project.getCurrentUser().getIdentifier()),
+			true,
+			new Action() {
+				
+				@Override
+				public void execute() {
+					if (!isCurrentEditedCollection.apply(collection.getUuid())) {
+						changeCollectionListener.accept(collection.getUuid());
+						annotationDetailsProvider.refreshAll();
+					}
+					else {
+						ConfirmDialog.show(
+								UI.getCurrent(), 
+								"Info", 
+								"Are you sure you want to delete this annotation?",
+								"Delete", 
+								"Cancel", dlg -> {
+									if (dlg.isConfirmed()) {
+										collectionManager.removeTagInstance(annotation.getTagInstance().getUuid());
+									}
+								}	
+								);
+					}
+				}
+			});
+		
 	}
 	
 	
 	private void handleEditAnnotationRequest(RendererClickEvent<AnnotationTreeItem> clickEvent) {
+		if (project.isReadOnly()) {
+			Notification.show(
+					"Info", 
+					"This project is currently in read-only mode!",
+					Type.HUMANIZED_MESSAGE);
+			return;
+		}
+		
 		AnnotationDataItem item = (AnnotationDataItem) clickEvent.getItem();
 		
 		final Annotation annotation = item.getAnnotation();
 		
-		if (project.hasPermission(project.getRoleForCollection(
-				annotation.getUserMarkupCollection().getUuid()), 
-				RBACPermission.COLLECTION_WRITE)) {
-
-			String tagId = annotation.getTagInstance().getTagDefinitionId();
-			TagDefinition tag = project.getTagManager().getTagLibrary().getTagDefinition(tagId);
-			if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
-				Notification.show(
-						"Info", 
-						"There are no Properties defined for the Tag of this Annotation!", 
-						Type.HUMANIZED_MESSAGE);
-			}
-			else {
-				EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-					new EditAnnotationPropertiesDialog(project, annotation, 
-							new SaveCancelListener<List<Property>>() {
-					
-					
-					@Override
-					public void savePressed(List<Property> result) {
-						try {
-							collectionManager.updateProperty(
-								annotation.getUserMarkupCollection(), 
-								annotation.getTagInstance(), result);
-							
-							
-						} catch (IOException e) {
-							((ErrorHandler)UI.getCurrent()).showAndLogError("error updating Annotation Properties", e);
-						}
-					}
-				});
-				
-				editAnnotationPropertiesDialog.show();
-			}
+		String tagId = annotation.getTagInstance().getTagDefinitionId();
+		TagDefinition tag = project.getTagManager().getTagLibrary().getTagDefinition(tagId);
+		if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
+			Notification.show(
+					"Info", 
+					"There are no properties defined for the tag of this annotation!",
+					Type.HUMANIZED_MESSAGE);
 		}
 		else {
-			Notification.show(
-				"Info", 
-				"You do not have the permission to make changes to the Collection of this Annotation, "
-				+ "please contact the Project maintainer!",
-				Type.HUMANIZED_MESSAGE);
-		}			
+			final AnnotationCollection collection = annotation.getUserMarkupCollection();
+			
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				!collection.isResponsible(project.getCurrentUser().getIdentifier()),
+				true,
+				new Action() {
+					
+					@Override
+					public void execute() {
+						
+						EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
+							new EditAnnotationPropertiesDialog(project, annotation, 
+									new SaveCancelListener<List<Property>>() {
+							
+							
+							@Override
+							public void savePressed(List<Property> result) {
+								try {
+									collectionManager.updateTagInstanceProperties(
+										annotation.getUserMarkupCollection(), 
+										annotation.getTagInstance(), result);
+									
+									
+								} catch (Exception e) {
+									((ErrorHandler) UI.getCurrent()).showAndLogError("Error updating annotation properties", e);
+								}
+							}
+						});
+						
+						editAnnotationPropertiesDialog.show();
+					}
+				});
+		}
 	}
 
 	public Registration addMinimizeButtonClickListener(ClickListener listener) {
@@ -411,9 +430,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 						project.getTagManager().getTagLibrary().getTagsetDefinition(
 							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider,
-						project.hasPermission(
-							project.getRoleForCollection(annotation.getUserMarkupCollection().getId()), 
-							RBACPermission.COLLECTION_WRITE),
+						annotation.getUserMarkupCollection().isResponsible(project.getCurrentUser().getIdentifier()),
 						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
 			
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());
@@ -462,8 +479,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		annotationSelectionListener = null;
 		if (project != null) {
 			if (annotationPropertiesChangedListener != null) {
-				project.removePropertyChangeListener(
-					RepositoryChangeEvent.propertyValueChanged, annotationPropertiesChangedListener);
+				project.removeEventListener(
+					ProjectEvent.propertyValueChanged, annotationPropertiesChangedListener);
 				annotationPropertiesChangedListener = null;
 			}
 			

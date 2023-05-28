@@ -1,26 +1,5 @@
 package de.catma.api.pre;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.vaadin.server.RequestHandler;
-import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinResponse;
-import com.vaadin.server.VaadinSession;
-import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
-import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
-import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
-import de.catma.api.pre.serialization.models.Export;
-import de.catma.api.pre.serialization.models.ExportDocument;
-import de.catma.document.annotation.AnnotationCollection;
-import de.catma.document.annotation.AnnotationCollectionReference;
-import de.catma.document.annotation.TagReference;
-import de.catma.document.source.SourceDocument;
-import de.catma.project.Project;
-import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagsetDefinition;
-import de.catma.util.IDGenerator;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -30,8 +9,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.vaadin.server.RequestHandler;
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinResponse;
+import com.vaadin.server.VaadinSession;
+
+import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
+import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
+import de.catma.api.pre.serialization.models.Export;
+import de.catma.api.pre.serialization.models.ExportDocument;
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
+import de.catma.project.Project;
+import de.catma.properties.CATMAPropertyKey;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
+import de.catma.util.IDGenerator;
+
 public class ProjectResourceExportApiRequestHandler implements RequestHandler {
-    private static final String BASE_URL = CATMAPropertyKey.BaseURL.getValue();
+    private static final String BASE_URL = CATMAPropertyKey.BASE_URL.getValue();
     private static final String API_BASE_PATH = "/api";
     private static final String API_PACKAGE = "pre"; // project resource export
     private static final String API_VERSION = "beta";
@@ -99,10 +101,12 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
         try {
             Export export = new Export();
 
-            for (SourceDocument sourceDocument : project.getSourceDocuments()) {
+            for (SourceDocumentReference sourceDocumentRef : project.getSourceDocumentReferences()) {
+                SourceDocument sourceDocument = project.getSourceDocument(sourceDocumentRef.getUuid());
+
                 ArrayList<AnnotationCollection> annotationCollections = new ArrayList<>();
-                for (AnnotationCollectionReference annotationCollectionReference : sourceDocument.getUserMarkupCollectionRefs()) {
-                    annotationCollections.add(project.getUserMarkupCollection(annotationCollectionReference));
+                for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentRef.getUserMarkupCollectionRefs()) {
+                    annotationCollections.add(project.getAnnotationCollection(annotationCollectionReference));
                 }
 
                 ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();

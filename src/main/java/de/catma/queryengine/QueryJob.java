@@ -81,7 +81,7 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
             QueryResult queryResult = query.getResult();
             
             getProgressListener().setProgress("Query finished!");
-            logger.info("query finished " + inputQuery +  " duration: " + stopWatch);
+            logger.info("Query finished, query: " + inputQuery +  ", duration: " + stopWatch);
             return queryResult;
         }
         catch (Exception e) {

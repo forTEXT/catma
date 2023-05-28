@@ -8,6 +8,7 @@ public class InvitationRequestMessage implements Serializable {
 	
 	private final int code;
 	private final String name;
+
 	private final long userId;
 
 	public InvitationRequestMessage(long userId, String name, int code){

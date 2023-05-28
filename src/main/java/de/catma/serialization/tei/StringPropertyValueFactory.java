@@ -22,7 +22,7 @@ package de.catma.serialization.tei;
 import nu.xom.Elements;
 
 /**
- * A factory sets and gets string Property values. TEI: &lt;string&gt;
+ * A factory that sets and gets string property values. TEI: &lt;string&gt;
  *
  * @author Marco Petris
  *

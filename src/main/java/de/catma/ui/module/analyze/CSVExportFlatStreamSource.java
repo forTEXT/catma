@@ -93,8 +93,8 @@ public class CSVExportFlatStreamSource implements StreamSource {
         	            				kwic.toString(),
         	            				range.getStartPoint(),
         	            				range.getEndPoint(),
-        	            				tRow.getMarkupCollectionId(),
-        	            				kwicProvider.getSourceDocument().getUserMarkupCollectionReference(tRow.getMarkupCollectionId()).toString(),
+        	            				tRow.getMarkupCollectionId(),        	            				
+        	            				kwicProvider.getSourceDocumentReference().getUserMarkupCollectionReference(tRow.getMarkupCollectionId()).toString(),
         	            				tRow.getTagDefinitionPath(),
         	            				tRow.getTagDefinitionVersion(),
         	            				colorCache.get(tRow.getTagDefinitionId()),
@@ -138,21 +138,21 @@ public class CSVExportFlatStreamSource implements StreamSource {
 			}
 			@Override
 			public void error(Throwable t) {
-				((ErrorHandler)ui).showAndLogError("Error export data to CSV!", t);
+				((ErrorHandler) ui).showAndLogError("Error exporting data to CSV", t);
 			}
 		});
         
         // waiting on the background thread to send data to the pipe
-        try {
-	        try {
-				sending.await(10, TimeUnit.SECONDS);
-			} catch (InterruptedException e1) {
-				Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export!", e1);
-			}
-        }
-        finally {
-       		lock.unlock();
-        }
+		try {
+			sending.await(10, TimeUnit.SECONDS);
+		}
+		catch (InterruptedException e) {
+			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export", e);
+		}
+		finally {
+			lock.unlock();
+		}
+
 
         
         return in;

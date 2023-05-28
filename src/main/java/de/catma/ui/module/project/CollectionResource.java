@@ -4,17 +4,20 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.project.Project;
+import de.catma.user.User;
 
 public class CollectionResource implements Resource {
 
     private final AnnotationCollectionReference collectionReference;
 	private final String projectId;
-	private boolean hasWritePermission;
+	private User responsibleUser;
 
-    public CollectionResource(AnnotationCollectionReference userMarkupCollectionReference, String projectId, boolean hasWritePermission){
+    public CollectionResource(
+    		AnnotationCollectionReference userMarkupCollectionReference, 
+    		String projectId, User responsibleUser){
         this.collectionReference = userMarkupCollectionReference;
         this.projectId = projectId;
-        this.hasWritePermission = hasWritePermission;
+        this.responsibleUser = responsibleUser;
     }
 
     @Override
@@ -48,7 +51,7 @@ public class CollectionResource implements Resource {
     
     @Override
     public void deleteFrom(Project project) throws Exception {
-    	project.delete(collectionReference);
+    	project.deleteAnnotationCollection(collectionReference);
     }
     
     @Override
@@ -67,13 +70,17 @@ public class CollectionResource implements Resource {
 	}
 
 	@Override
-	public String getPermissionIcon() {
-		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
+	public String getResponsibleUser() {
+		return responsibleUser != null ? responsibleUser.getName() : "Not assigned";
 	}
 	
 	@Override
-	public boolean hasWritePermission() {
-		return hasWritePermission;
+	public boolean isResponsible(String userIdentifier) {
+		return collectionReference.isResponsible(userIdentifier);
 	}
-
+	
+	@Override
+	public boolean isContribution() {
+		return collectionReference.isContribution();
+	}
 }

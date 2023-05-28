@@ -65,8 +65,8 @@ public class AnnotatedTextProvider {
 			builder.append(Cleaner.clean(kwic.getForwardContext()));
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError(
-					"Error loading keyword in context!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
+					"Error loading keyword in context", e);
 		}		
 		
 		return builder.toString();
@@ -112,16 +112,18 @@ public class AnnotatedTextProvider {
 				builder.append(Cleaner.clean(kwic.getBackwardContext()));
 
 				builder.append("<span");
-				builder.append(" class=\"annotation-details-tag-color\"");
-				builder.append(" style=\"");
-				builder.append(" background-color:");
-				builder.append("#"+ColorConverter.toHex(
-						tagDefinition.getColor()));
-				builder.append(";");
-				builder.append(" color:");
-				builder.append(ColorConverter.isLightColor(
-					tagDefinition.getColor())?"black":"white");
-				builder.append(";");
+				if (tagDefinition != null) { // can happen when switching back to synch mode
+					builder.append(" class=\"annotation-details-tag-color\"");
+					builder.append(" style=\"");
+					builder.append(" background-color:");
+					builder.append("#"+ColorConverter.toHex(
+							tagDefinition.getColor()));
+					builder.append(";");
+					builder.append(" color:");
+					builder.append(ColorConverter.isLightColor(
+						tagDefinition.getColor())?"black":"white");
+					builder.append(";");
+				}
 				builder.append("\">");
 				builder.append(
 					Cleaner.clean(
@@ -136,13 +138,13 @@ public class AnnotatedTextProvider {
 			}
 			
 			builder.append("<br /><hr />");
-			builder.append("Tag Path: <b>");
+			builder.append("Tag Path: <strong>");
 			builder.append(tagPath);
-			builder.append("</b>");
+			builder.append("</strong>");
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError(
-					"Error loading keyword in context!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
+					"Error loading keyword in context", e);
 		}		
 		
 		return builder.toString();
@@ -187,8 +189,8 @@ public class AnnotatedTextProvider {
 			builder.append(joinedAnnotatedText);
 		}
 		catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError(
-					"Error loading annotated text!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
+					"Error loading annotated text", e);
 			builder.append("&nbsp;");
 		}		
 		builder.append("</div>");		

@@ -5,23 +5,19 @@ import com.hazelcast.core.Message;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
-
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.events.JoinedProjectMessage;
-import de.catma.ui.events.ProjectChangedEvent;
+import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.module.project.ProjectInvitation;
 
 public class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage> {
-	
-	public static interface CloseHandler {
-		public void close();
+	public interface CloseHandler {
+		void close();
 	}
-	
+
 	private final CloseHandler closeHandler;
 	private final ProjectInvitation invitation;
 	private final EventBus eventBus;
-	
-	
 
 	public ProjectJoinHandler(UI ui, CloseHandler closeHandler, ProjectInvitation invitation, EventBus eventBus) {
 		super(ui);
@@ -31,14 +27,18 @@ public class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage> 
 	}
 
 	@Override
-	public void uiOnMessage(Message<JoinedProjectMessage> message) {
-		if(message.getMessageObject().getInvitation().getKey() == this.invitation.getKey()) {	
-			this.eventBus.post(new ProjectChangedEvent());
-			Notification.show("Joined successfully", "Sucessfully joined Project " + 
-					this.invitation.getName() , Type.HUMANIZED_MESSAGE);
-			this.getUi().push();
-			closeHandler.close();
-		}	
-	}
+	public void uiOnMessage(Message<JoinedProjectMessage> joinedProjectMessage) {
+		if (joinedProjectMessage.getMessageObject().getInvitation().getKey() == invitation.getKey()) {
+			eventBus.post(new ProjectsChangedEvent());
 
+			Notification.show(
+					"Joined successfully",
+					String.format("Successfully joined project \"%s\"", invitation.getName()),
+					Type.HUMANIZED_MESSAGE
+			);
+			getUi().push();
+
+			closeHandler.close();
+		}
+	}
 }

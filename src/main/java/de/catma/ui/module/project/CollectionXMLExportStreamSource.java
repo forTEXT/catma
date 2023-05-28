@@ -15,19 +15,19 @@ import com.vaadin.ui.UI;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.corpus.CorpusExporter;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 
 public class CollectionXMLExportStreamSource implements StreamSource {
 
-	private Supplier<Collection<SourceDocument>> documentSupplier;
+	private Supplier<Collection<SourceDocumentReference>> documentSupplier;
 	private Supplier<Collection<AnnotationCollectionReference>> collectionReferenceSupplier;
 	private Supplier<Project> projectSupplier;
 
 	public CollectionXMLExportStreamSource(
-			Supplier<Collection<SourceDocument>> documentSupplier,
+			Supplier<Collection<SourceDocumentReference>> documentSupplier,
 			Supplier<Collection<AnnotationCollectionReference>> collectionReferenceSupplier,
 			Supplier<Project> projectSupplier) {
 		this.documentSupplier = documentSupplier;
@@ -40,7 +40,7 @@ public class CollectionXMLExportStreamSource implements StreamSource {
 		final UI ui = UI.getCurrent();
 		final Project project = projectSupplier.get();
 		final Corpus corpus = new Corpus();
-		final Collection<SourceDocument> documents = documentSupplier.get();
+		final Collection<SourceDocumentReference> documents = documentSupplier.get();
 		final Collection<AnnotationCollectionReference> collectionReferences = collectionReferenceSupplier.get();
 		try {
 		
@@ -50,7 +50,7 @@ public class CollectionXMLExportStreamSource implements StreamSource {
 				.forEach(ref -> documentIds.add(ref.getSourceDocumentId()));
 	
 			for (String documentId : documentIds) {
-				corpus.addSourceDocument(project.getSourceDocument(documentId));
+				corpus.addSourceDocument(project.getSourceDocumentReference(documentId));
 			}
 			
 			if (corpus.getSourceDocuments().size() == 0) {
@@ -67,7 +67,7 @@ public class CollectionXMLExportStreamSource implements StreamSource {
 	
 	        return new FileInputStream(tempFile);
 		} catch (Exception e) {
-			((ErrorHandler)ui).showAndLogError("Error exporting Documents and Collections!", e);
+			((ErrorHandler) ui).showAndLogError("Error exporting documents and collections", e);
 		}		
 
 		return null;

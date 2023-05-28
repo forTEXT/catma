@@ -15,15 +15,17 @@ class TagsetDataItem implements TagsetTreeItem {
 	private TagsetDefinition tagset;
 	private boolean editable;
 	private boolean expanded = false;
+	private String responsibleUser;
 
 	public TagsetDataItem(TagsetDefinition tagset) {
-		this(tagset, false);
+		this(tagset, null, false);
 	}
 	
-	public TagsetDataItem(TagsetDefinition tagset, boolean editable) {
+	public TagsetDataItem(TagsetDefinition tagset, String responsibleUser, boolean editable) {
 		super();
 		this.tagset = tagset;
 		this.editable = editable;
+		this.responsibleUser = responsibleUser;
 	}
 
 	@Override
@@ -87,7 +89,7 @@ class TagsetDataItem implements TagsetTreeItem {
 	
 	@Override
 	public String getPropertySummary() {
-		return null; // no properties for Tagsets
+		return null; // no properties for tagsets
 	}
 	
 	@Override
@@ -100,7 +102,7 @@ class TagsetDataItem implements TagsetTreeItem {
 		if (editable) {
 			return VaadinIcons.TRASH.getHtml();
 		}
-		return VaadinIcons.LOCK.getHtml();
+		return null;
 	}
 	
 	@Override
@@ -118,5 +120,15 @@ class TagsetDataItem implements TagsetTreeItem {
 	@Override
 	public void setTagsetExpanded(boolean expanded) {
 		this.expanded = expanded;
+	}
+	
+	@Override
+	public String getResponsibleUser() {
+		return responsibleUser;
+	}
+	
+	@Override
+	public String generateStyle() {
+		return tagset.isContribution()? "annotate-panel-tagset-with-contributions" : TagsetTreeItem.super.generateStyle();
 	}
 }

@@ -18,160 +18,113 @@
  */
 package de.catma.properties;
 
-import java.util.Properties;
-
 /**
- * All possible keys for a CATMA property. 
- * 
- * @author marco.petris@web.de
+ * The available property (settings) keys and their default values.
+ * @see "/src/main/resources/catma.properties"
  *
  */
 public enum CATMAPropertyKey {
+	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
+	BASE_URL("http://localhost:8080/catma/"),
 
-	TempDir,
-	LoginType,
-	InitType,
-	BaseURL("http://localhost:8080/catma/"),
-	otpSecret,
-	otpDuration,
-	signup_tokenKey,
-	version,
-	LogoutURL("https://app.catma.de"),
-	AboutURL("https://catma.de"),
-	TermsOfUseURL("https://catma.de/documentation/terms-of-use/"),
-	PrivacyPolicyURL("https://catma.de/documentation/privacy-policy/"),
-	ImprintURL("https://catma.de/about/imprint/"),
-	StatusURL("https://catma.de/status/"),
-	ResetPasswordURL("https://git.catma.de/users/password/new"),
+	TEMP_DIR,
 
-	Google_oauthAuthorizationCodeRequestURL,
-	Google_oauthAccessTokenRequestURL,
-	Google_oauthClientId,
-	Google_oauthClientSecret,
-	Google_recaptchaSiteKey,
-	Google_recaptchaSecretKey,
+	GITLAB_SERVER_URL,
+	GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN,
 
-	GitLabAdminPersonalAccessToken, 
-	GitLabServerUrl,
+	GIT_REPOSITORY_BASE_PATH,
 
-	GitBasedRepositoryBasePath,
-	GraphDbGitMountBasePath,
+	// this setting is somewhat related to the "Maximum diff patch size" setting in GitLab (GitLab admin area > Settings > General > Diff limits)
+	// ideally all diffs should be viewable in GitLab (especially for conflict resolution in merge requests), however a diff can be significantly
+	// larger than the underlying file (a simple test showed almost double for a new annotation page file)
+	// therefore this should be set lower than the GitLab setting - recommendation: about half the value of the GitLab setting, or lower
+	// with the default value of 200 000 you should set the GitLab setting to the maximum permissible value (512 KB)
+	// NB: setting this too low will have performance implications
+	MAX_ANNOTATION_PAGE_FILE_SIZE_BYTES("200000"),
 
-	SqliteDbBasePath,
-	
-	MailHost,
-	MailPort,
-	MailAuthenticationNeeded,
-	MailUser,
-	MailPass,
-	MailFrom, 
-	
-	SpamProtectionAnswer, 
-	SpamProtectionQuestion, 
-	CATMA5API("https://portal.catma.de/catma/api/"), 
-	EXPERT("false"),
-	devPreventPush("false"),
+	MIN_TIME_BETWEEN_SYNCHRONIZATIONS_SECONDS("30"),
+	DEV_PREVENT_PUSH("false"),
+
+	SQLITE_DB_BASE_PATH,
+
+	MAIL_SMTP_HOST("localhost"),
+	MAIL_SMTP_PORT("587"),
+	MAIL_SMTP_AUTHENTICATION_REQUIRED("false"),
+	MAIL_SMTP_USER,
+	MAIL_SMTP_PASS,
+	MAIL_FROM,
+
+	GOOGLE_RECAPTCHA_SITE_KEY,
+	GOOGLE_RECAPTCHA_SECRET_KEY,
+	SIGNUP_TOKEN_KEY,
+
+	GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL("https://accounts.google.com/o/oauth2/v2/auth"),
+	GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL("https://oauth2.googleapis.com/token"),
+	GOOGLE_OAUTH_CLIENT_ID,
+	GOOGLE_OAUTH_CLIENT_SECRET,
+	OTP_SECRET,
+	OTP_DURATION,
+
+	ABOUT_URL("https://catma.de"),
+	IMPRINT_URL("https://catma.de/about/imprint/"),
+	TERMS_OF_USE_URL("https://catma.de/documentation/terms-of-use/"),
+	PRIVACY_POLICY_URL("https://catma.de/documentation/privacy-policy/"),
+	STATUS_URL("https://catma.de/status/"),
+	RESET_PASSWORD_URL("https://git.catma.de/users/password/new"),
+	LOGOUT_URL("https://app.catma.de"),
+	CONTEXT_DEFINITION_URL("https://www.catma.de/"),
+
+	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
+	CATMA_5_API_URL("https://portal.catma.de/catma/api/"),
+	EXPERT_MODE("false"),
+
+	V6_REPO_MIGRATION_MAX_USERS("1"),
+	V6_REPO_MIGRATION_USER_LIST,
+
+	V6_REPO_MIGRATION_MAX_PROJECTS("1"),
+	V6_REPO_MIGRATION_PROJECT_ID_LIST,
+	V6_REPO_MIGRATION_PROJECT_ID_LIST_TO_SKIP,
+
+	V6_REPO_MIGRATION_BACKUP_PATH,
+	V6_REPO_MIGRATION_SCAN_WITH_MERGE_AND_PUSH("false"),
+	V6_REPO_MIGRATION_CLEANUP_CONVERTED_V6_PROJECT("false"),
+	V6_REPO_MIGRATION_REMOVE_USER_TEMP_DIRECTORY("false"),
+	V6_REPO_MIGRATION_OVERWRITE_V6_PROJECT_BACKUP("false"),
+	V6_REPO_MIGRATION_SCAN_MODE("ByProject"),
+	V6_REPO_MIGRATION_BRANCH("v6migration"),
 	;
 
 	private final String defaultValue;
 	
-	private CATMAPropertyKey() {
+	CATMAPropertyKey() {
 		this(null);
 	}
 
-	private CATMAPropertyKey(String defaultValue) {
+	CATMAPropertyKey(String defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 
-	public String getDefaultValue() {
-		return defaultValue;
-	}
-
-	/**
-	 * @param properties the key/value store
-	 * @param index the index of this property
-	 * @param defaultValue a default value if the given properties do not contain
-	 * this key 
-	 * @return if the key exist either true or false depending on the value present
-	 * or if the key does not exist the default value
-	 */
-	public boolean isTrue(Properties properties, int index, boolean defaultValue) {
-		if (properties.containsKey(this.name()+index)) {
-			return isTrue(properties, index);
-		}
-		else {
-			return defaultValue;
-		}
-	}
-	
-	public boolean isTrue(Properties properties, boolean defaultValue) {
-		if (properties.containsKey(this.name())) {
-			return isTrue(properties);
-		}
-		else {
-			return defaultValue;
-		}
-	}
-	
-	/**
-	 * @param properties the key/value store
-	 * @param index the index of this property
-	 * @return <code>true</code> if the key is present and its value is true, else <code>false</code>
-	 */
-	public boolean isTrue(Properties properties, int index) {
-		return Boolean.parseBoolean(properties.getProperty(this.name()+index));
-	}
-
-	public boolean isTrue(Properties properties) {
-		return Boolean.parseBoolean(properties.getProperty(this.name()));
-	}
-	
-	/**
-	 * @param properties the key/value store
-	 * @param index the index of this property
-	 * @return the value or <code>null</code> if the key is not present
-	 */
-	public String getProperty(Properties properties, int index) {
-		return properties.getProperty(this.name()+index);
-	}
-	
-	/**
-	 * @param properties the key/value store
-	 * @param index the index of this property
-	 * @return <code>true</code> if the key is present, else <code>false</code>
-	 */
-	public boolean exists(Properties properties, int index) {
-		return properties.containsKey(this.name()+index);
-	}
-	
-	public String getIndexedValue(int index) {
-		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name()+index);
-	}
-	
-	public String getIndexedValue(int index, String defaultValue) {
-		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name()+index, defaultValue);
-	}
-	
-	public int getIndexedValue(int index, int defaultValue) {
-		return Integer.valueOf(CATMAProperties.INSTANCE.getProperties().getProperty(this.name()+index, String.valueOf(defaultValue)));
-	}
-	
 	public String getValue() {
-		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name());
-	}
-	public String getValue(String defaultValue) {
 		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValue);
 	}
-	
-	public long getValue(long defaultValue) {
-		return Long.valueOf(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValue)));
+
+	public String getValue(String defaultValueOverride) {
+		return CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValueOverride);
 	}
 
-	public int getValue(int defaultValue) {
-		return Integer.valueOf(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValue)));
+	public int getIntValue() {
+		return Integer.parseInt(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValue));
 	}
 
-	public boolean getValue(boolean defaultValue) {
-		return Boolean.valueOf(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValue)));
+	public int getIntValue(int defaultValueOverride) {
+		return Integer.parseInt(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValueOverride)));
+	}
+
+	public boolean getBooleanValue() {
+		return Boolean.parseBoolean(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), defaultValue));
+	}
+
+	public boolean getBooleanValue(boolean defaultValueOverride) {
+		return Boolean.parseBoolean(CATMAProperties.INSTANCE.getProperties().getProperty(this.name(), String.valueOf(defaultValueOverride)));
 	}
 }

@@ -1,7 +1,6 @@
 package de.catma.document.corpus;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
@@ -14,27 +13,27 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.source.contenthandler.SourceContentHandler;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 
 public class CorpusExporter {
 	private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("yyMMddhhmm");
 
-	private Project repo;
+	private Project project;
 
 	private String date;
 
 	private boolean simpleEntryStyle;
 	
-	public CorpusExporter(Project repo, boolean simpleEntryStyle) {
-		this.repo = repo;
+	public CorpusExporter(Project project, boolean simpleEntryStyle) {
+		this.project = project;
 		this.simpleEntryStyle = simpleEntryStyle;
 		this.date = FORMATTER.format(new Date());
 	}
 
 	public void export(
-		String exportName, Corpus corpus,  OutputStream os) throws IOException {
+		String exportName, Corpus corpus,  OutputStream os) throws Exception {
 		
 		OutputStream tarFileOs = new GZIPOutputStream(os);
 		
@@ -44,11 +43,12 @@ public class CorpusExporter {
 			taOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
 			taOut.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
 			
-			for (SourceDocument sd : corpus.getSourceDocuments()) {
+			for (SourceDocumentReference sdRef : corpus.getSourceDocuments()) {
 				
 				TarArchiveEntry sdEntry = 
-					new TarArchiveEntry(getSourceDocEntryName(exportName, sd));
-			
+					new TarArchiveEntry(getSourceDocEntryName(exportName, sdRef));
+				SourceDocument sd = project.getSourceDocument(sdRef.getUuid());
+				
 				byte[] sdContent = 
 					sd.getContent().getBytes(Charset.forName("UTF8"));
 				
@@ -61,21 +61,23 @@ public class CorpusExporter {
 				taOut.closeArchiveEntry();
 				
 				for (AnnotationCollectionReference umcRef 
-						: corpus.getUserMarkupCollectionRefs(sd)) {
+						: corpus.getUserMarkupCollectionRefs(sdRef)) {
 					
 					AnnotationCollection umc = 
-							repo.getUserMarkupCollection(umcRef);
+							project.getAnnotationCollection(umcRef);
 
 					TeiUserMarkupCollectionSerializationHandler handler =
 							new TeiUserMarkupCollectionSerializationHandler(
-									repo.getTagManager(), false);
+									project.getTagManager(), 
+									project.getVersion(), 
+									false);
 					ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
 					handler.serialize(
-						repo.getUserMarkupCollection(umcRef), sd, teiDocOut);
+						project.getAnnotationCollection(umcRef), sd, teiDocOut);
 
 					byte[] umcContent = teiDocOut.toByteArray();
 					
-					String umcEntryName = getUmcEntryName(exportName, umc, sd);
+					String umcEntryName = getUmcEntryName(exportName, umc, sdRef);
 					
 					TarArchiveEntry umcEntry = 
 						new TarArchiveEntry(umcEntryName);
@@ -96,7 +98,7 @@ public class CorpusExporter {
 		
 	}
 	
-	private String getUmcEntryName(String exportName, AnnotationCollection umc, SourceDocument sd) {
+	private String getUmcEntryName(String exportName, AnnotationCollection umc, SourceDocumentReference sd) {
 		if (simpleEntryStyle) {
 			return cleanupName(getFilename(sd, false))
 					+ "/annotationcollections/" 
@@ -114,7 +116,7 @@ public class CorpusExporter {
 
 	}
 
-	private String getSourceDocEntryName(String exportName, SourceDocument sd) {
+	private String getSourceDocEntryName(String exportName, SourceDocumentReference sd) {
 		if (simpleEntryStyle) {
 			return cleanupName(getFilename(sd, false)) 
 					+ "/" 
@@ -137,16 +139,15 @@ public class CorpusExporter {
 		return name.replaceAll("[/:]|\\s", "_");
 	}
 	
-	private String getFilename(SourceDocument sourceDocument, boolean withFileExtension) {
-		SourceContentHandler sourceContentHandler = 
-				sourceDocument.getSourceContentHandler();
+	private String getFilename(SourceDocumentReference sourceDocumentReference, boolean withFileExtension) {
+
 		String title = 
-				sourceContentHandler.getSourceDocumentInfo()
+				sourceDocumentReference.getSourceDocumentInfo()
 					.getContentInfoSet().getTitle();
 		if (simpleEntryStyle) {
-			return sourceDocument.toString() + (withFileExtension?".txt":"");
+			return sourceDocumentReference.toString() + (withFileExtension?".txt":"");
 		}
-		return sourceDocument.getUuid() 
+		return sourceDocumentReference.getUuid() 
 			+ (((title==null)||title.isEmpty())?"":("_"+title)) 
 			+ (withFileExtension?".txt":"");
 	};

@@ -79,7 +79,7 @@ public class AddAnnotationCollectionsStep extends VerticalLayout implements Wiza
 	private void initComponents() {
 		setSizeFull();
 		
-		this.collectionNamePatternInput = new TextField("Enter a pattern for the generation of Collection names:");
+		this.collectionNamePatternInput = new TextField("Enter a pattern for the generation of collection names:");
 		this.collectionNamePatternInput.setValueChangeMode(ValueChangeMode.LAZY);
 		this.collectionNamePatternInput.setWidth("400px");
 		addComponent(collectionNamePatternInput);

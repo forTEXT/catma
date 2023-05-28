@@ -1,70 +1,42 @@
 package de.catma.ui.module.main;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.function.Consumer;
-
-import org.vaadin.dialogs.ConfirmDialog;
-import org.vaadin.dialogs.ConfirmDialog.ContentMode;
-
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
-import de.catma.ui.events.routing.RouteToAnalyzeEvent;
-import de.catma.ui.events.routing.RouteToAnnotateEvent;
-import de.catma.ui.events.routing.RouteToConflictedProjectEvent;
-import de.catma.ui.events.routing.RouteToDashboardEvent;
-import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.events.routing.RouteToTagsEvent;
+import de.catma.ui.events.routing.*;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.analyze.AnalyzeManagerView;
 import de.catma.ui.module.annotate.TaggerManagerView;
 import de.catma.ui.module.dashboard.DashboardView;
-import de.catma.ui.module.project.ConflictedProjectView;
 import de.catma.ui.module.project.ProjectView;
 import de.catma.ui.module.tags.TagsView;
+import org.vaadin.dialogs.ConfirmDialog;
+import org.vaadin.dialogs.ConfirmDialog.ContentMode;
 
-/**
- * Main entrypoint for CATMA, it renders a header and a main section
- *
- * @author db
- */
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.function.Consumer;
+
 public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
-
+	private final ProjectsManager projectsManager;
 	private final CatmaHeader header;
-
-	/*
-	 * mainSection is the combined section (navigation and viewSection / content) of CATMA
-	 */
-	private final HorizontalLayout mainSection = new HorizontalLayout();
-
-	/*
-	 * left side main navigation
-	 */
-	private final CatmaNav navigation;
-
-	/*
-	 * viewSection is the content section
-	 */
-	private final VerticalLayout viewSection = new VerticalLayout();
-
-	/*
-	 * global communication via EventBus
-	 */
 	private final EventBus eventBus;
+	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
-	private final ProjectManager projectManager;
-
-	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
+	// mainSection is the combined section (navigation and viewSection / content)
+	private final HorizontalLayout mainSection = new HorizontalLayout();
+	// left side main navigation
+	private final CatmaNav navigation;
+	// viewSection is the content section
+	private final VerticalLayout viewSection = new VerticalLayout();
 
 	private Class<?> currentRoute;
 	private ProjectView projectView;
@@ -73,18 +45,19 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	private AnalyzeManagerView analyzeManagerView;
 
 	public MainView(
-			ProjectManager projectManager,
+			ProjectsManager projectsManager,
 			CatmaHeader catmaHeader,
 			EventBus eventBus,
-			IRemoteGitManagerRestricted remoteGitManagerRestricted,
+			RemoteGitManagerRestricted remoteGitManagerRestricted,
 			LoginService loginLogoutService,
 			boolean termsOfUseConsentGiven,
 			Consumer<Boolean> termsOfUseUpdater
 	) {
-		this.projectManager = projectManager;
+		this.projectsManager = projectsManager;
 		this.header = catmaHeader;
 		this.eventBus = eventBus;
 		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
+
 		this.navigation = new CatmaNav(eventBus);
 
 		initComponents();
@@ -103,8 +76,8 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 									"carefully. You need to accept both in order to continue to work with CATMA.<br />" +
 									"<br />" +
 									"Do you <strong>accept</strong> our Terms of Use and our Privacy Policy?",
-							CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue()),
-							CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue())
+							CATMAPropertyKey.TERMS_OF_USE_URL.getValue(),
+							CATMAPropertyKey.PRIVACY_POLICY_URL.getValue()
 					),
 					"Yes",
 					"No",
@@ -177,7 +150,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	public void handleRouteToDashboard(RouteToDashboardEvent routeToDashboardEvent) {
 		closeViews();
 		if (isNewTarget(routeToDashboardEvent.getClass())) {
-			setContent(new DashboardView(projectManager, remoteGitManagerRestricted, eventBus));
+			setContent(new DashboardView(projectsManager, remoteGitManagerRestricted, eventBus));
 			viewSection.addStyleName("no-margin-view-section");
 			eventBus.post(new HeaderContextChangeEvent());
 			currentRoute = routeToDashboardEvent.getClass();
@@ -188,26 +161,14 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	public void handleRouteToProject(RouteToProjectEvent routeToProjectEvent) {
 		if (isNewTarget(routeToProjectEvent.getClass())) {
 			if (projectView == null) {
-				projectView = new ProjectView(projectManager, eventBus);
+				projectView = new ProjectView(projectsManager, eventBus);
 				setContent(projectView);
-				projectView.setProjectReference(routeToProjectEvent.getProjectReference());
+				projectView.openProject(routeToProjectEvent.getProjectReference());
 			}
 			else {
 				setContent(projectView);
-				if (routeToProjectEvent.isReloadProject()) {
-					projectView.reloadProject(routeToProjectEvent.getProjectReference());
-				}
 			}
 			currentRoute = routeToProjectEvent.getClass();
-		}
-	}
-
-	@Override
-	public void handleRouteToConflictedProject(RouteToConflictedProjectEvent routeToConflictedProjectEvent) {
-		if (isNewTarget(routeToConflictedProjectEvent.getClass())) {
-			ConflictedProjectView conflictedProjectView = new ConflictedProjectView(routeToConflictedProjectEvent.getConflictedProject(), eventBus);
-			setContent(conflictedProjectView);
-			currentRoute = routeToConflictedProjectEvent.getClass();
 		}
 	}
 
@@ -239,7 +200,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 
 			try {
 				taggerManagerView.openSourceDocument(
-					queryResultRowInAnnotateEvent.getProject().getSourceDocument(queryResultRowInAnnotateEvent.getDocumentId()),
+					queryResultRowInAnnotateEvent.getProject().getSourceDocumentReference(queryResultRowInAnnotateEvent.getDocumentId()),
 					queryResultRowInAnnotateEvent.getProject(),
 					(taggerView) -> {
 						taggerView.showQueryResultRows(queryResultRowInAnnotateEvent.getSelection(), queryResultRowInAnnotateEvent.getRows());
@@ -247,7 +208,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 				);
 			}
 			catch (Exception e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("Error opening document in annotate module!", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error opening document in annotate module", e);
 			}
 
 			currentRoute = queryResultRowInAnnotateEvent.getClass();

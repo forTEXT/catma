@@ -62,8 +62,8 @@ public class XmlMarkupCollectionSerializationHandler implements
 			SourceDocument sourceDocument, OutputStream outputStream)
 			throws IOException {
 		throw new UnsupportedOperationException(
-			"serialization of xml intrinsic markup collections to their "
-			+ "original format is not supported yet!");
+			"Serialization of XML intrinsic annotation collections to their "
+			+ "original format is not supported yet");
 	}
 
 	@Override
@@ -84,7 +84,9 @@ public class XmlMarkupCollectionSerializationHandler implements
 		        		TagsetDefinition tagsetDefinition = 
 		        				new TagsetDefinition(
 		        						tagsetId, 
-		        						namespaceURI, new Version());
+		        						namespaceURI);
+		        		tagsetDefinition.setResponsibleUser(author);
+		        		
 		        		tagManager.addTagsetDefinition(tagsetDefinition);
 		        	}
 		        	namespacePrefixToTagsetIdMap.put(prefix, tagsetId);
@@ -100,7 +102,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        	TagsetDefinition tagsetDefinition = 
 	        			new TagsetDefinition(
 	        					defaultIntrinsicXmlTagsetId, 
-	        					null, new Version());
+	        					null);
 	        	
 	        	tagManager.addTagsetDefinition(tagsetDefinition);
 	        }
@@ -111,10 +113,14 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        	new AnnotationCollection(
 	        		id,
 	        		new ContentInfoSet(
-	        			"", "Intrinsic Markup", "", DEFAULT_COLLECTION_TITLE), 
+	        			"", 
+	        			sourceDocument.toString() + " Intrinsic Markup", 
+	        			"", 
+	        			DEFAULT_COLLECTION_TITLE), 
 	        		tagManager.getTagLibrary(),
 	        		sourceDocument.getUuid(),
-	        		sourceDocument.getRevisionHash());
+	        		null,
+	        		null);
 	        
 	        scanElements(
 	        		contentBuilder, 

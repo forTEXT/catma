@@ -17,7 +17,7 @@ public class PropertiesInitializerServlet extends HttpServlet {
         super.init(cfg);
 
         try {
-	        log("CATMA Properties initializing...");
+	        log("CATMA properties initializing...");
 	        
 			String propertiesFile = 
 					System.getProperties().containsKey("prop") ? System.getProperties().getProperty(
@@ -32,7 +32,7 @@ public class PropertiesInitializerServlet extends HttpServlet {
 			CATMAProperties.INSTANCE.setProperties( 
 				new NonModifiableProperties(properties));
 			
-			log("CATMA Properties initialized.");
+			log("CATMA properties initialized");
         }
         catch (Exception e) {
         	throw new ServletException(e);

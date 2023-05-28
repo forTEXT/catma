@@ -10,12 +10,10 @@ import de.catma.document.corpus.Corpus;
 public class CollectionDataItem implements DocumentTreeItem {
 
 	private AnnotationCollectionReference collectionRef;
-	private boolean hasWritePermission;
 
-	public CollectionDataItem(AnnotationCollectionReference collectionRef, boolean hasWritePermission) {
+	public CollectionDataItem(AnnotationCollectionReference collectionRef) {
 		super();
 		this.collectionRef = collectionRef;
-		this.hasWritePermission = hasWritePermission;
 	}
 
 	@Override
@@ -32,11 +30,6 @@ public class CollectionDataItem implements DocumentTreeItem {
 		return VaadinIcons.NOTEBOOK.getHtml();
 	}
 	
-	@Override
-	public String getPermissionIcon() {
-		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
-	}
-
 	@Override
 	public void addToCorpus(Corpus corpus) {
 		corpus.addUserMarkupCollectionReference(collectionRef);

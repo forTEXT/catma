@@ -1,25 +1,23 @@
 package de.catma.repository.git;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
-import com.google.common.eventbus.EventBus;
-import de.catma.backgroundservice.BackgroundService;
-import de.catma.indexer.TermExtractor;
-import de.catma.indexer.TermInfo;
-import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.GitlabManagerRestricted;
-import de.catma.util.IDGenerator;
-import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.UserApi;
@@ -27,23 +25,34 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.catma.properties.CATMAProperties;
-import de.catma.properties.CATMAPropertyKey;
+import com.google.common.collect.Lists;
+import com.google.common.eventbus.EventBus;
+
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.GitLabServerManagerTest;
+import de.catma.indexer.TermExtractor;
+import de.catma.indexer.TermInfo;
+import de.catma.project.ProjectReference;
+import de.catma.properties.CATMAProperties;
+import de.catma.properties.CATMAPropertyKey;
+import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.repository.git.managers.GitProjectsManager;
 import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
+import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 public class GitProjectHandlerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
-	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<ProjectReference> projectsToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 
 	public GitProjectHandlerTest() throws Exception {
@@ -57,18 +66,10 @@ public class GitProjectHandlerTest {
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate GitlabManagerRestricted (using the corresponding impersonation token) & JGitRepoManager
-		Integer randomUserId = Integer.parseInt(RandomStringUtils.randomNumeric(3));
-		String username = String.format("testuser-%s", randomUserId);
-		String email = String.format("%s@catma.de", username);
-		String name = String.format("Test User %s", randomUserId);
-
-		gitlabManagerPrivileged = new GitlabManagerPrivileged();
-		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
-
-		EventBus mockEventBus = mock(EventBus.class);
-		BackgroundService mockBackgroundService = mock(BackgroundService.class);
-		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, mockBackgroundService, impersonationToken);
+		Pair<GitlabManagerRestricted, GitlabManagerPrivileged> result = 
+				GitLabTestHelper.createGitLabManagers();
+		this.gitlabManagerRestricted = result.getFirst();
+		this.gitlabManagerPrivileged = result.getSecond();
 	}
 
 	@AfterEach
@@ -77,16 +78,16 @@ public class GitProjectHandlerTest {
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
 					mockEventBus
 			);
 
-			for (String projectId : projectsToDeleteOnTearDown) {
-				gitProjectManager.delete(projectId);
+			for (ProjectReference projectRef : projectsToDeleteOnTearDown) {
+				gitProjectManager.deleteProject(projectRef);
 			}
 			projectsToDeleteOnTearDown.clear();
 		}
@@ -94,6 +95,8 @@ public class GitProjectHandlerTest {
 		if (directoriesToDeleteOnTearDown.size() > 0) {
 			for (File dir : directoriesToDeleteOnTearDown) {
 				// files have read-only attribute set on Windows, which we need to clear before the call to `deleteDirectory` will work
+				// TODO: this was added before the explicit repository close call was added in JGitRepoManager.close
+				//       and can potentially be removed now
 				for (Iterator<File> it = FileUtils.iterateFiles(dir, null, true); it.hasNext(); ) {
 					File file = it.next();
 					file.setWritable(true);
@@ -113,46 +116,49 @@ public class GitProjectHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
-				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+		try (LocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(
+				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
-			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getUserRepositoryBasePath());
 
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
 					mockEventBus
 			);
 
-			String projectId = gitProjectManager.create(
+			ProjectReference projectReference = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
-			assertNotNull(projectId);
-			assert projectId.startsWith("CATMA_");
+			assertNotNull(projectReference.getProjectId());
+			assert projectReference.getProjectId().startsWith("CATMA_");
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			File expectedRepositoryPath = 
+					Paths.get(
+							jGitRepoManager.getUserRepositoryBasePath().getPath(),
+							projectReference.getNamespace(),
+							projectReference.getProjectId()
+					).toFile();
 
-			File expectedRootRepositoryPath = Paths.get(jGitRepoManager.getRepositoryBasePath().getPath(), projectId, expectedRootRepositoryName).toFile();
-
-			assert expectedRootRepositoryPath.exists();
-			assert expectedRootRepositoryPath.isDirectory();
+			assert expectedRepositoryPath.exists();
+			assert expectedRepositoryPath.isDirectory();
 		}
 	}
 
 //	@Test
 //	public void delete() throws Exception {
-//		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(CATMAPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+//		try (LocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(CATMAPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 //			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 //
 //			GitProjectManager gitProjectHandler = new GitProjectManager(
@@ -329,23 +335,23 @@ public class GitProjectHandlerTest {
 		 */
 
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(), gitlabManagerRestricted.getUser()
+				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), gitlabManagerRestricted.getUser()
 		)) {
 
-			directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+			directoriesToDeleteOnTearDown.add(jGitRepoManager.getUserRepositoryBasePath());
 
 			BackgroundService mockBackgroundService = mock(BackgroundService.class);
 			EventBus mockEventBus = mock(EventBus.class);
 
-			GitProjectManager gitProjectManager = new GitProjectManager(
-					CATMAPropertyKey.GitBasedRepositoryBasePath.getValue(),
+			GitProjectsManager gitProjectManager = new GitProjectsManager(
+					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
 					gitlabManagerRestricted,
 					(projectId) -> {}, // noop deletion handler
 					mockBackgroundService,
 					mockEventBus
 			);
 
-			String projectId = gitProjectManager.create(
+			ProjectReference projectReference = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
@@ -353,9 +359,17 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(gitlabManagerRestricted.getUser(), projectId, jGitRepoManager, gitlabManagerRestricted);
+			File projectPath = Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
+					.resolve(gitlabManagerRestricted.getUsername())
+					.resolve(projectReference.getNamespace())
+					.resolve(projectReference.getProjectId())
+					.toFile();
 
-			gitProjectHandler.loadRolesPerResource(); // would usually happen when the project is opened via GraphWorktreeProject
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(
+					gitlabManagerRestricted.getUser(),
+					projectReference, projectPath,
+					jGitRepoManager, gitlabManagerRestricted
+			);
 
 			String revisionHash = gitProjectHandler.createSourceDocument(
 					sourceDocumentUuid,
@@ -369,7 +383,7 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 			Status status = jGitRepoManager.getGitApi().status().call();
 //			Set<String> added = status.getAdded();
 //
@@ -387,15 +401,13 @@ public class GitProjectHandlerTest {
 			assertFalse(status.hasUncommittedChanges());
 
 			Iterable<RevCommit> commits = jGitRepoManager.getGitApi().log().all().call();
-			@SuppressWarnings("unchecked")
-			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+			List<RevCommit> commitsList = Lists.newArrayList(commits);
 
-			assertEquals(1, commitsList.size());
-			// TODO: it would be good to check that the revision hash of the commit matches, however GitProjectHandler currently returns the revision hash
-			//       from the source document repo itself rather than from the root repo
+			assertEquals(2, commitsList.size()); // in desc. order, 0: document creation, 1: project creation
+			assertEquals(revisionHash, commitsList.get(0).getName());
 			assertEquals(gitlabManagerRestricted.getUser().getIdentifier(), commitsList.get(0).getCommitterIdent().getName());
 			assertEquals(gitlabManagerRestricted.getUser().getEmail(), commitsList.get(0).getCommitterIdent().getEmailAddress());
-			assert commitsList.get(0).getFullMessage().contains(String.format("Added document \"%s\" with ID", contentInfoSet.getTitle()));
+			assert commitsList.get(0).getFullMessage().contains(String.format("Created document \"%s\" with ID", contentInfoSet.getTitle()));
 			// TODO: add assertions for actual paths changed (see commented above - would need to be modified for already committed changes)
 		}
 	}

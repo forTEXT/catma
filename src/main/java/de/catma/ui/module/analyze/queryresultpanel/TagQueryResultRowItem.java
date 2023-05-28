@@ -111,7 +111,7 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 			}
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error displaying annotated query results", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error displaying annotated query results", e);
 		}
 	}
 
@@ -209,6 +209,6 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 	}
 
 	public static String getNoTagAvailableKey() {
-		return "no Tag available / not annotated";
+		return "no tag available / not annotated";
 	}
 }

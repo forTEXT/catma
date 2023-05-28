@@ -19,12 +19,9 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -39,7 +36,6 @@ public class TagResourcePanel extends VerticalLayout {
 	private PropertyChangeListener tagsetChangeListener;
 	private ListDataProvider<TagsetDefinition> tagsetDataProvider;
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent;
-	private PropertyChangeListener projectExceptionListener;
 	private ErrorHandler errorHandler;
 	private TagsetSelectionListener tagsetSelectionListener;
 	private EventBus eventBus;
@@ -63,7 +59,7 @@ public class TagResourcePanel extends VerticalLayout {
 			tagsetDataProvider.getItems().forEach(tagsetGrid::select);
     	}
     	catch (Exception e) {
-			errorHandler.showAndLogError("Error loading data!", e);
+			errorHandler.showAndLogError("Error loading data", e);
     	}
 	}
 
@@ -95,15 +91,17 @@ public class TagResourcePanel extends VerticalLayout {
 	private void handleAddTagsetRequest() {
     	
     	SingleTextInputDialog tagsetNameDlg = 
-    		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+    		new SingleTextInputDialog("Create Tagset", "Please enter the tagset name:",
     				new SaveCancelListener<String>() {
 						
 						@Override
 						public void savePressed(String result) {
 							IDGenerator idGenerator = new IDGenerator();
+							TagsetDefinition tagset = new TagsetDefinition(
+									idGenerator.generateTagsetId(), result);
+							tagset.setResponsibleUser(project.getCurrentUser().getIdentifier());
 							project.getTagManager().addTagsetDefinition(
-								new TagsetDefinition(
-									idGenerator.generateTagsetId(), result, new Version()));
+								tagset);
 						}
 					});
         	
@@ -113,33 +111,18 @@ public class TagResourcePanel extends VerticalLayout {
 	public void setTagsetChangeListener(PropertyChangeListener tagsetChangeListener) {
 		this.tagsetChangeListener = tagsetChangeListener;
 	}
-	
+
 	private void initProjectListeners() {
-        this.projectExceptionListener = new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				Exception e = (Exception) evt.getNewValue();
-				errorHandler.showAndLogError("Error handling Project!", e);
-				
-			}
-		};
-		project.addPropertyChangeListener(
-				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
-		
-		this.tagsetChangeListener = new PropertyChangeListener() {
-			
+		tagsetChangeListener = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				handleTagsetChange(evt);
 			}
-		};		
-		
-        project.getTagManager().addPropertyChangeListener(
-        		TagManagerEvent.tagsetDefinitionChanged,
-        		tagsetChangeListener);
-    }	
-    
+		};
+
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
+	}
+
 	private void handleTagsetChange(PropertyChangeEvent evt) {
 		Object oldValue = evt.getOldValue();
 		Object newValue = evt.getNewValue();
@@ -198,14 +181,7 @@ public class TagResourcePanel extends VerticalLayout {
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")
-			.setWidth(150);
-		
-		tagsetGrid.addColumn(
-				tagset -> project.hasPermission(
-					project.getRoleForTagset(tagset.getUuid()),
-					RBACPermission.TAGSET_WRITE)?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml(),
-				new HtmlRenderer())
-		.setWidth(50);
+			.setWidth(250);
 		
 		tagsetGrid
 			.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())
@@ -218,19 +194,14 @@ public class TagResourcePanel extends VerticalLayout {
 		addComponent(tagsetActionGridComponent);
 	}
 
-	
 	public void close() {
 		if (project != null) {
-			project.removePropertyChangeListener(
-				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
-
-	        project.getTagManager().removePropertyChangeListener(
-        		TagManagerEvent.tagsetDefinitionChanged,
-        		tagsetChangeListener);
+			project.getTagManager().removePropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
 		}
+
 		eventBus.unregister(this);
 	}
-	
+
 	@Subscribe
 	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
 		TagsetSelectionListener tagsetSelectionListener = this.tagsetSelectionListener;

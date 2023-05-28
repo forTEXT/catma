@@ -1,58 +1,63 @@
 package de.catma.ui.module.dashboard;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import com.vaadin.icons.VaadinIcons;
+import com.vaadin.ui.*;
+import de.catma.project.ProjectReference;
+import de.catma.project.ProjectsManager;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
+import de.catma.ui.component.IconButton;
+import de.catma.ui.events.ProjectsChangedEvent;
+import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.module.main.ErrorHandler;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-
-import de.catma.project.ProjectManager;
-import de.catma.project.ProjectReference;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.ui.component.IconButton;
-import de.catma.ui.events.ProjectChangedEvent;
-import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.module.main.ErrorHandler;
-
 /**
  * Displays a list of all projects in a card style layout.
- * @author db
  */
 public class ProjectListView extends VerticalLayout {
-
-    private final ProjectManager projectManager;
+	private final ProjectsManager projectsManager;
 	private final EventBus eventBus;
-	private final Comparator<ProjectReference> sortByNameAsc = 
-			(ref1,ref2) -> String.CASE_INSENSITIVE_ORDER.compare(ref1.getName(), ref2.getName());
-	private final Comparator<ProjectReference> sortByNameDesc = 
-			(ref1,ref2) -> String.CASE_INSENSITIVE_ORDER.compare(ref1.getName(), ref2.getName())*-1;
-	private final IRemoteGitManagerRestricted remoteGitManagerRestricted;
-	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
+	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
+
 	private final Set<String> deletedProjectIds;
-	private HorizontalFlexLayout projectsLayout = new HorizontalFlexLayout();
+	private final HorizontalFlexLayout projectsLayout;
+
+	private final Comparator<ProjectReference> sortByNameAsc = new Comparator<ProjectReference>() {
+		@Override
+		public int compare(ProjectReference o1, ProjectReference o2) {
+			return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+		}
+	};
+	private final Comparator<ProjectReference> sortByNameDesc = new Comparator<ProjectReference>() {
+		@Override
+		public int compare(ProjectReference o1, ProjectReference o2) {
+			return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName()) * -1;
+		}
+	};
+	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
+
+	private ProjectManagerHelpWindow helpWindow;
 	private IconButton sortButton;
 	private IconButton helpButton;
-	private ProjectManagerHelpWindow helpWindow;
 
-    public ProjectListView(ProjectManager projectManager, 
-    		EventBus eventBus, 
-    		IRemoteGitManagerRestricted remoteGitManagerRestricted){ 
-        this.projectManager = projectManager;
-        this.eventBus = eventBus;
-        this.remoteGitManagerRestricted = remoteGitManagerRestricted;
-        this.deletedProjectIds = new HashSet<String>();
-        initComponents();
-        initActions();
-        eventBus.register(this);
-        initData();
-    }
+	public ProjectListView(ProjectsManager projectsManager, EventBus eventBus, RemoteGitManagerRestricted remoteGitManagerRestricted) {
+		this.projectsManager = projectsManager;
+		this.eventBus = eventBus;
+		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
+
+		this.deletedProjectIds = new HashSet<>();
+		this.projectsLayout = new HorizontalFlexLayout();
+
+		initComponents();
+		initActions();
+		eventBus.register(this);
+		initData();
+	}
 
     private void initActions() {
         
@@ -80,19 +85,20 @@ public class ProjectListView extends VerticalLayout {
 
     private void initData() {
         projectsLayout.removeAllComponents();
-        projectsLayout.addComponent(new CreateProjectCard(projectManager, eventBus));
+        projectsLayout.addComponent(new CreateProjectCard(projectsManager, eventBus));
         projectsLayout.addComponent(new JoinProjectCard(remoteGitManagerRestricted.getUser(), eventBus));
         
         try {
-	        projectManager.getProjectReferences()
+	        projectsManager.getProjectReferences()
 	        .stream()
-	        .filter(projectRef -> !deletedProjectIds.contains(projectRef.getProjectId())) // gitlab group removal is a background operation, we usually still get the removed Project immediately after removal
+			// GitLab project deletion is a background operation, we usually still get the deleted project for some time after deletion
+	        .filter(projectRef -> !deletedProjectIds.contains(projectRef.getProjectId()))
 	        .sorted(selectedSortOrder)
-	        .map(prj -> new ProjectCard(prj, projectManager, eventBus, remoteGitManagerRestricted))
+	        .map(prj -> new ProjectCard(prj, projectsManager, eventBus, remoteGitManagerRestricted))
 	        .forEach(projectsLayout::addComponent);
         }
         catch (Exception e) {
-        	((ErrorHandler)UI.getCurrent()).showAndLogError("Error accessing Projects", e);
+        	((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing projects", e);
         }
     }
 
@@ -129,9 +135,9 @@ public class ProjectListView extends VerticalLayout {
     }
 
 	@Subscribe
-	public void resourceChanged(ProjectChangedEvent projectChangedEvent) {
-		if (projectChangedEvent.getDeletedProjectId() != null) {
-			deletedProjectIds.add(projectChangedEvent.getDeletedProjectId());
+	public void handleProjectsChanged(ProjectsChangedEvent projectsChangedEvent) {
+		if (projectsChangedEvent.getDeletedProjectId() != null) {
+			deletedProjectIds.add(projectsChangedEvent.getDeletedProjectId());
 		}
 		initData();
 	}

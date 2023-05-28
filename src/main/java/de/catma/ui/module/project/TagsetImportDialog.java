@@ -30,7 +30,7 @@ public class TagsetImportDialog extends AbstractOkCancelDialog<List<TagsetDefini
 	protected void addContent(ComponentContainer content) {
 		Label intro = new Label(
 				String.format(
-						"We found %1$d Tagset(s) in the uploaded Library:", 
+						"We found %1$d tagset(s) in the uploaded tag library:",
 						tagsetDefinitionImportStatusList.size()));
 		content.addComponent(intro);
 		VerticalLayout tagsetPanel = new VerticalLayout();
@@ -49,38 +49,16 @@ public class TagsetImportDialog extends AbstractOkCancelDialog<List<TagsetDefini
 			
 			CheckBox cbImport = new CheckBox(null, true);
 			
-			if (!tagsetDefinitionImportStatus.isInProjectHistory()) {
+			if (!tagsetDefinitionImportStatus.isCurrent()) {
 				
-				String doImportText = 
-						String.format(
-								"<b>%1$s</b> will be imported!", 
-								tagsetDefinitionImportStatus.getTagset().getName()); 
-				String doNotImportText = 
-						String.format(
-								"<b>%1$s</b> will <b>NOT</b> be imported!", 
-								tagsetDefinitionImportStatus.getTagset().getName());
-				rowLabel.setValue(doImportText);
-				
-				cbImport.addValueChangeListener(event -> {
-					if (event.getValue()) {
-						rowLabel.setValue(doImportText);
-					}  
-					else {
-						rowLabel.setValue(doNotImportText);
-					}
-				});
-			}
-			else if (!tagsetDefinitionImportStatus.isCurrent()) {
-				String doImportText = 
-						String.format("<b>%1$s</b> was part of this Project, but had been removed!<br />"
-						+ "Importing it will re-add the removed Tagset and create a new version of it with the imported content.<br />"
-						+ "%1$s will be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
-				String doNotImportText = 
-					String.format("<b>%1$s</b> was part of this Project, but had been removed!<br />"
-						+ "Importing it will re-add the removed Tagset and create a new version of it with the imported content.<br />"
-						+ "%1$s will <b>NOT</b> be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
+				String doImportText = String.format(
+						"<strong>%s</strong> will be imported!",
+						tagsetDefinitionImportStatus.getTagset().getName()
+				);
+				String doNotImportText = String.format(
+						"<strong>%s</strong> will <strong>NOT</strong> be imported!",
+						tagsetDefinitionImportStatus.getTagset().getName()
+				);
 				rowLabel.setValue(doImportText);
 				
 				cbImport.addValueChangeListener(event -> {
@@ -93,18 +71,20 @@ public class TagsetImportDialog extends AbstractOkCancelDialog<List<TagsetDefini
 				});
 			}
 			else {
-				String doImportText = 
-						String.format("<b>%1$s</b> is already part of this Project!<br />"
-						+ "Importing it will merge new Tags, Properties and Values from the imported Tagset into the existing Tagset.<br />" 
-						+ "Please tick off the check box to import this Tagset!<br />"
+				String doImportText = String.format(
+						"<strong>%1$s</strong> is already part of this project!<br />"
+						+ "Importing it will merge new tags, properties and values from the imported tagset into the existing tagset.<br />"
+						+ "Please tick off the check box to import this tagset!<br />"
 						+ "%1$s will be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
-				String doNotImportText = 
-						String.format("<b>%1$s</b> is already part of this Project!<br />"
-						+ "Importing it will merge new Tags, Properties and Values from the imported Tagset into the existing Tagset.<br />" 
-						+ "Please tick off the check box to import this Tagset!<br />"
-						+ "%1$s will <b>NOT</b> be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName());
+						tagsetDefinitionImportStatus.getTagset().getName()
+				);
+				String doNotImportText = String.format(
+						"<strong>%1$s</strong> is already part of this project!<br />"
+						+ "Importing it will merge new tags, properties and values from the imported tagset into the existing tagset.<br />"
+						+ "Please tick off the check box to import this tagset!<br />"
+						+ "%1$s will <strong>NOT</strong> be imported!",
+						tagsetDefinitionImportStatus.getTagset().getName()
+				);
 
 				rowLabel.setValue(doNotImportText);
 				cbImport.setValue(false);

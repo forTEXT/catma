@@ -66,7 +66,7 @@ public class PeekableTokenStream {
 	public <A extends Attribute> A getAttribute(Class<A> attClass) {
 		
 		if (!bufferFull) {
-			throw new IllegalStateException("no more tokens in stream");
+			throw new IllegalStateException("No more tokens in stream");
 		}
 		
 		if (attClass.equals(CharTermAttribute.class)) {
@@ -77,7 +77,7 @@ public class PeekableTokenStream {
 		}
 		else {
 			throw new IllegalArgumentException(
-				"cannot provide attribute " 
+				"Cannot provide attribute "
 			+ attClass +" in PeekableTokenStream");
 		}
 	}
@@ -113,7 +113,7 @@ public class PeekableTokenStream {
 	public <A extends Attribute> A peekAttribute(Class<A> attClass) {
 		if (!canPeek) {
 			throw new IllegalStateException(
-					"no more tokens in stream, cannot peek");
+					"No more tokens in stream, cannot peek");
 		}
 		else {
 			return tokenStream.getAttribute(attClass);

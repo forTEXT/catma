@@ -35,7 +35,7 @@ public class ReadOnlyOffsetAttribute implements OffsetAttribute {
 	}
 
 	public void setOffset(int startOffset, int endOffset) {
-		throw new UnsupportedOperationException("read only attribute");
+		throw new UnsupportedOperationException("Read-only attribute");
 	}
 
 	public int endOffset() {

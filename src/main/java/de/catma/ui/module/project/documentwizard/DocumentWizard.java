@@ -16,7 +16,7 @@ public class DocumentWizard extends Wizard {
 	
 	public DocumentWizard(WizardContext wizardContext, SaveCancelListener<WizardContext> saveCancelListener) {
 		super(
-			"Add Documents to your Project",
+			"Add Documents to Your Project",
 			progressPanel -> new UploadStep(wizardContext, (number, description) -> progressPanel.addStep(number, description)),
 			wizardContext,
 			saveCancelListener

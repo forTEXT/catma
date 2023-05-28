@@ -34,6 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -71,12 +72,13 @@ import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.document.corpus.Corpus;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.indexer.IndexedProject;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
-import de.catma.project.Project.RepositoryChangeEvent;
+import de.catma.project.Project.ProjectEvent;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CommentChangeEvent;
 import de.catma.project.event.ReplyChangeEvent;
@@ -166,12 +168,19 @@ public class TaggerView extends HorizontalLayout
 	
 	public TaggerView(
 			int taggerID, 
-			SourceDocument sourceDocument, final Project project, 
+			SourceDocumentReference sourceDocumentReference, final Project project, 
 			EventBus eventBus,
-			AfterDocumentLoadedOperation afterDocumentLoadedOperation){
+			AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 		this.tagManager = project.getTagManager();
 		this.project = project;
-		this.sourceDocument = sourceDocument;
+		try {
+			if (sourceDocumentReference != null) {
+				this.sourceDocument = project.getSourceDocument(sourceDocumentReference.getUuid());
+			}
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Error showing the document", e);
+		}
 		this.eventBus = eventBus;
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 		this.userMarkupCollectionManager = new AnnotationCollectionManager(project);
@@ -180,7 +189,7 @@ public class TaggerView extends HorizontalLayout
 		initActions();
 		initListeners();
 		pager.setMaxPageLengthInLines(maxPageLengthInLines);
-		initData(afterDocumentLoadedOperation);
+		initData(sourceDocumentReference, afterDocumentLoadedOperation);
 		this.eventBus.register(this);
 		final UI ui = UI.getCurrent();
 		
@@ -190,7 +199,7 @@ public class TaggerView extends HorizontalLayout
 				cbAutoShowComments, 
 				comments, 
 				tagger, 
-				() -> getSourceDocument());
+				() -> getSourceDocumentReference());
 		
 		addCommentMessageListener();
 	}
@@ -209,7 +218,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error registering for comment messages", e);
+			logger.log(Level.WARNING, "Error registering listener for comment messages", e);
 		}	
 	}
 	
@@ -222,7 +231,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error removing comment listener", e);
+			logger.log(Level.WARNING, "Error removing listener for comment messages", e);
 		}
 	}
 
@@ -238,13 +247,13 @@ public class TaggerView extends HorizontalLayout
 		}
 	}
 	
-	private void initData(final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
+	private void initData(final SourceDocumentReference sdRef, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 		if (sourceDocument != null) {
 			
-			// loading of the Document is done in an extra step, 
+			// loading of the document is done in an extra step,
 			// because of a client side rendering racing condition which prevents the first page to be displayed
 			final UI ui = UI.getCurrent();
-			((CatmaApplication)ui).submit("Load Document",
+			((CatmaApplication)ui).submit("load-document",
 			new DefaultProgressCallable<Void>() {
 				@Override
 				public Void call() throws Exception {
@@ -270,7 +279,7 @@ public class TaggerView extends HorizontalLayout
 							userMarkupCollectionManager.clear();
 							
 							for (AnnotationCollectionReference collectionRef : collectionReferences) {
-								AnnotationCollection collection = project.getUserMarkupCollection(collectionRef);
+								AnnotationCollection collection = project.getAnnotationCollection(collectionRef);
 								userMarkupCollectionManager.add(collection);
 							}
 							
@@ -278,9 +287,9 @@ public class TaggerView extends HorizontalLayout
 									new HashSet<>(resourcePanel.getSelectedTagsets());
 							
 							annotationPanel.setData(
-									sourceDocument, 
+									sdRef,
 									tagsets, 
-									new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
+									new ArrayList<>(userMarkupCollectionManager.getAnnotationCollections()));
 							if (taggerContextMenu != null) {
 								taggerContextMenu.setTagsets(tagsets);
 							}
@@ -290,8 +299,8 @@ public class TaggerView extends HorizontalLayout
 							}
 							
 							ui.push();
-						} catch (IOException e) {
-							errorHandler.showAndLogError("Error showing the Document!", e);
+						} catch (Exception e) {
+							errorHandler.showAndLogError("Error showing the document", e);
 						}
 					});
 					return null;
@@ -302,7 +311,7 @@ public class TaggerView extends HorizontalLayout
 				
 				@Override
 				public void error(Throwable t) {
-					errorHandler.showAndLogError("Error showing the Document!", t);
+					errorHandler.showAndLogError("Error showing the document", t);
 				}
 			});
 		}			
@@ -331,7 +340,7 @@ public class TaggerView extends HorizontalLayout
 					for (TagReference tr : tagReferences) {
 						if (isRelevantTagReference(
 								tr, 
-								userMarkupCollectionManager.getUserMarkupCollections())) {
+								userMarkupCollectionManager.getAnnotationCollections())) {
 							relevantTagReferences.add(tr);
 						}
 					}
@@ -356,7 +365,7 @@ public class TaggerView extends HorizontalLayout
 					Collection<String> annotationIds = changeValue.getSecond(); 
 
 					if (userMarkupCollectionManager.contains(collectionId)) {
-						userMarkupCollectionManager.removeTagInstance(annotationIds, false);
+						userMarkupCollectionManager.removeTagInstances(annotationIds, false);
 					}
 					
 					tagger.removeTagInstances(annotationIds);
@@ -365,8 +374,8 @@ public class TaggerView extends HorizontalLayout
 			}
 		};
 		
-		project.addPropertyChangeListener(
-			RepositoryChangeEvent.tagReferencesChanged, 
+		project.addEventListener(
+			ProjectEvent.tagReferencesChanged,
 			tagReferencesChangedListener);
 		
 		annotationPropertiesChangedListener = new PropertyChangeListener() {
@@ -377,8 +386,8 @@ public class TaggerView extends HorizontalLayout
 				tagger.updateAnnotation(tagInstance.getUuid());
 			}
 		};
-		project.addPropertyChangeListener(
-				RepositoryChangeEvent.propertyValueChanged,
+		project.addEventListener(
+				ProjectEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
 		
 		tagChangedListener = new PropertyChangeListener() {
@@ -395,7 +404,7 @@ public class TaggerView extends HorizontalLayout
 						(Pair<TagsetDefinition, TagDefinition>) oldValue;
 					
 					for (AnnotationCollectionReference ref : 
-						userMarkupCollectionManager.getCollections(deleted.getSecond())) {
+						userMarkupCollectionManager.getCollectionReferencesForTagDefinition(deleted.getSecond())) {
 					
 						setAnnotationCollectionSelected(ref, false);
 						setAnnotationCollectionSelected(ref, true);
@@ -406,7 +415,7 @@ public class TaggerView extends HorizontalLayout
 					TagDefinition tag = (TagDefinition) newValue;
 					
 					for (AnnotationCollection collection : 
-						userMarkupCollectionManager.getUserMarkupCollections()) {
+						userMarkupCollectionManager.getAnnotationCollections()) {
 						List<TagReference> relevantTagReferences = 
 								collection.getTagReferences(tag);
 						tagger.setVisible(relevantTagReferences, false);
@@ -438,19 +447,25 @@ public class TaggerView extends HorizontalLayout
 
 	public void  analyzeDocument(){
 		Corpus corpus = new Corpus();
-		corpus.addSourceDocument(sourceDocument);
-		for (AnnotationCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
-			AnnotationCollectionReference userMarkupCollRef =
-				sourceDocument.getUserMarkupCollectionReference(
-						umc.getId());
-			if (userMarkupCollRef != null) {
-				corpus.addUserMarkupCollectionReference(
-						userMarkupCollRef);
+		try {
+			SourceDocumentReference docRef = getSourceDocumentReference();
+			corpus.addSourceDocument(docRef);
+			
+			for (AnnotationCollection umc : userMarkupCollectionManager.getAnnotationCollections()) {
+				AnnotationCollectionReference userMarkupCollRef =
+					docRef.getUserMarkupCollectionReference(umc.getId());
+				if (userMarkupCollRef != null) {
+					corpus.addUserMarkupCollectionReference(
+							userMarkupCollRef);
+				}
+			}	
+			if (project instanceof IndexedProject) {
+				eventBus.post(new RouteToAnalyzeEvent((IndexedProject)project, corpus));
 			}
-		}	
-		if (project instanceof IndexedProject) {
-			eventBus.post(new RouteToAnalyzeEvent((IndexedProject)project, corpus));
-		}	
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Error analyzing the document", e);
+		}
 	}
 
 	private void initActions() {
@@ -485,7 +500,7 @@ public class TaggerView extends HorizontalLayout
 					TaggerView.this.comments.addAll(TaggerView.this.project.getComments(sourceDocument.getUuid()));
 					tagger.updateComments(comments);
 				} catch (IOException e) {
-					logger.log(Level.SEVERE, "unable to reload comments", e);
+					logger.log(Level.SEVERE, "Failed to reload comments", e);
 				}
 			}
 			else {
@@ -526,7 +541,7 @@ public class TaggerView extends HorizontalLayout
 	
 						pagerComponent.setPage(previousPageNumber);
 					} catch (IOException e) {
-						errorHandler.showAndLogError("Error showing the Document!", e);
+						errorHandler.showAndLogError("Error showing the document", e);
 					}
 				}
 			}
@@ -543,7 +558,7 @@ public class TaggerView extends HorizontalLayout
 						resourcePanel.getSelectedAnnotationCollectionReferences();
 				
 				for (AnnotationCollection collection : 
-						userMarkupCollectionManager.getUserMarkupCollections()) {
+						userMarkupCollectionManager.getAnnotationCollections()) {
 					userMarkupCollectionManager.remove(collection.getId());
 					annotationPanel.removeCollection(collection.getId());
 					tagger.setVisible(collection.getTagReferences(), false);						
@@ -553,20 +568,20 @@ public class TaggerView extends HorizontalLayout
 				
 				for (AnnotationCollectionReference collectionReference : selectedAnnotationCollectionRefs) {
 					try {
-						AnnotationCollection collection = project.getUserMarkupCollection(collectionReference);
+						AnnotationCollection collection = project.getAnnotationCollection(collectionReference);
 						setAnnotationCollectionSelected(
 							new AnnotationCollectionReference(collection), 
 							true);
 					}
 					catch (IOException e) {
-						((ErrorHandler)UI.getCurrent()).showAndLogError("error refreshing Annotation Collection!", e);
+						errorHandler.showAndLogError("Error refreshing annotation collection", e);
 					}
 				}
 				
 				if ((selectedEditableCollection != null) 
 						&& (userMarkupCollectionManager.contains(selectedEditableCollection.getId()))) {
 					annotationPanel.setSelectedEditableCollection(
-						userMarkupCollectionManager.getUserMarkupCollection(
+						userMarkupCollectionManager.getAnnotationCollection(
 								selectedEditableCollection.getId()));
 				}
 				
@@ -575,8 +590,8 @@ public class TaggerView extends HorizontalLayout
 			}
 
 			@Override
-			public void documentSelected(SourceDocument sourceDocument) {
-				setSourceDocument(sourceDocument, null);
+			public void documentSelected(SourceDocumentReference sourceDocumentReference) {
+				setSourceDocument(sourceDocumentReference, null);
 			}
 
 			@Override
@@ -592,7 +607,7 @@ public class TaggerView extends HorizontalLayout
 					if (taggerContextMenu != null) {
 						taggerContextMenu.setTagsets(tagsets);
 					}
-					for (AnnotationCollection collection : userMarkupCollectionManager.getUserMarkupCollections()) {
+					for (AnnotationCollection collection : userMarkupCollectionManager.getAnnotationCollections()) {
 						tagger.setVisible(collection.getTagReferences(), false);
 						List<TagReference> visibleRefs = 
 								annotationPanel.getVisibleTagReferences(collection.getTagReferences());
@@ -602,7 +617,7 @@ public class TaggerView extends HorizontalLayout
 					}
 				}
 				catch (Exception e) {
-					errorHandler.showAndLogError("Error handling Tagset!", e);
+					errorHandler.showAndLogError("Error handling tagset", e);
 				}
 			}
 
@@ -642,7 +657,7 @@ public class TaggerView extends HorizontalLayout
 	private void setAnnotationCollectionSelected(AnnotationCollectionReference collectionReference,
 			boolean selected) {
 		try {
-			AnnotationCollection collection = project.getUserMarkupCollection(collectionReference);
+			AnnotationCollection collection = project.getAnnotationCollection(collectionReference);
 			if (selected) {
 				userMarkupCollectionManager.add(collection);
 				annotationPanel.addCollection(collection);
@@ -660,7 +675,7 @@ public class TaggerView extends HorizontalLayout
 			
 		}
 		catch (Exception e) {
-			errorHandler.showAndLogError("Error handling Annotation Collection!", e);
+			errorHandler.showAndLogError("Error handling annotation collection", e);
 		}
 
 	}
@@ -723,7 +738,7 @@ public class TaggerView extends HorizontalLayout
 		actionPanel.addComponent(btClearSearchHighlights);
 		
 		cbAutoShowComments = new IconButton(VaadinIcons.COMMENT);
-		cbAutoShowComments.setDescription("Toggle live Comments");
+		cbAutoShowComments.setDescription("Toggle live comments");
 		cbAutoShowComments.setData(true); //state
 		actionPanel.addComponent(cbAutoShowComments);
 		
@@ -746,9 +761,9 @@ public class TaggerView extends HorizontalLayout
 			project, 
 			userMarkupCollectionManager,
 			selectedAnnotationId -> tagger.setTagInstanceSelected(selectedAnnotationId),
-			collection -> handleCollectionValueChange(collection),
+			collectionChangeEvent -> handleCollectionValueChange(collectionChangeEvent),
 			tag -> tagger.addTagInstanceWith(tag),
-			() -> sourceDocument,
+			() -> getSourceDocumentReference(),
 			eventBus);
 		rightSplitPanel.addComponent(annotationPanel);
 		
@@ -797,7 +812,7 @@ public class TaggerView extends HorizontalLayout
 	
 						pagerComponent.setPage(previousPageNumber);
 					} catch (IOException e) {
-						errorHandler.showAndLogError("Error showing the Document!", e); //$NON-NLS-1$
+						errorHandler.showAndLogError("Error showing the document", e); //$NON-NLS-1$
 					}
 				}
 			}
@@ -806,8 +821,19 @@ public class TaggerView extends HorizontalLayout
 		
 		splitPanel.addListener(SplitterPositionChangedEvent.class,
                 listener, SplitterPositionChangedListener.positionChangedMethod);
+		SourceDocumentReference preselection = null;
 		
-		resourcePanel = new AnnotateResourcePanel(project, sourceDocument, eventBus); 
+		try {
+			if (this.sourceDocument != null) {
+				preselection = project.getSourceDocumentReference(this.sourceDocument.getUuid());
+			}
+		} catch (Exception e) {
+			errorHandler.showAndLogError("Error loading document", e);
+		} 
+		resourcePanel = new AnnotateResourcePanel(
+				project, 
+				preselection, eventBus);
+
 		drawer = new SliderPanelBuilder(resourcePanel)
 				.mode(SliderMode.LEFT).expanded(sourceDocument == null).build();
 		
@@ -817,14 +843,15 @@ public class TaggerView extends HorizontalLayout
 		setExpandRatio(splitPanel, 1.0f);
 	}
 	
-	private void handleCollectionValueChange(AnnotationCollection collection) {
+	private void handleCollectionValueChange(ValueChangeEvent<AnnotationCollection> collectionChangeEvent) {
+		AnnotationCollection collection = collectionChangeEvent.getValue();
 		if (collection == null) {
 			if (taggerContextMenu != null) {
 				taggerContextMenu.close();
 				taggerContextMenu = null;
 			}
 		}
-		else if (taggerContextMenu == null) {
+		else if (taggerContextMenu == null && !project.isReadOnly()) {
 			taggerContextMenu = new TaggerContextMenu(
 					tagger, 
 					this.tagManager);
@@ -835,7 +862,17 @@ public class TaggerView extends HorizontalLayout
 					new HashSet<>(resourcePanel.getSelectedTagsets());
 			taggerContextMenu.setTagsets(tagsets);
 		}
-		
+	
+		if (collectionChangeEvent.getOldValue() != null && !project.isReadOnly()) {
+			try {
+				project.commitAndPushChanges("Auto-committing annotations");
+			} catch (Exception e) {
+				logger.log(
+					Level.WARNING, 
+					"Error auto-committing annotations due to a switch to a "
+					+ "different editable target collection", e);
+			}
+		}
 	}
 
 	public int getApproximateMaxLineLengthForSplitterPanel(float width){
@@ -845,13 +882,22 @@ public class TaggerView extends HorizontalLayout
 		return approxMaxLineLength;
 	}
 
-	public SourceDocument getSourceDocument() {
-		return sourceDocument;
+	public SourceDocumentReference getSourceDocumentReference() {
+		if (this.sourceDocument == null) {
+			return null;
+		}
+		
+		try {
+			return project.getSourceDocumentReference(this.sourceDocument.getUuid());
+		} catch (Exception e) {
+			errorHandler.showAndLogError("Error loading document", e);
+			return null;
+		}
 	}
 	
 	public AnnotationCollection openUserMarkupCollection(
 			AnnotationCollectionReference userMarkupCollectionRef) throws IOException {
-		AnnotationCollection umc = project.getUserMarkupCollection(userMarkupCollectionRef);
+		AnnotationCollection umc = project.getAnnotationCollection(userMarkupCollectionRef);
 		openUserMarkupCollection(umc);
 		return umc;
 	}
@@ -870,16 +916,24 @@ public class TaggerView extends HorizontalLayout
 		if (taggerContextMenu != null) {
 			taggerContextMenu.close();
 		}
-		project.removePropertyChangeListener(
-				RepositoryChangeEvent.tagReferencesChanged, 
+		project.removeEventListener(
+				ProjectEvent.tagReferencesChanged,
 				tagReferencesChangedListener);
-		project.removePropertyChangeListener(
-				RepositoryChangeEvent.propertyValueChanged,
+		project.removeEventListener(
+				ProjectEvent.propertyValueChanged,
 				annotationPropertiesChangedListener);
 		project.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);
-				
+		
+		try {
+			project.commitAndPushChanges("Auto-committing annotations");
+		} catch (Exception e) {
+			logger.log(
+				Level.WARNING, 
+				"Error auto-committing annotations due to closing the TaggerView", e);
+		}	
+		
 		project = null;
 	}
 	
@@ -889,9 +943,9 @@ public class TaggerView extends HorizontalLayout
 		AnnotationCollection collection = annotationPanel.getSelectedEditableCollection();
 		if (collection == null) { //shouldn't happen, but just in case
 			Notification.show("Info", 
-					"Please make sure you have an editable Collection available "
-					+ "and select this Collection as 'currently being edited'! "
-					+ "Your Annotation hasn't been saved!",
+					"Please make sure you have an editable collection available "
+					+ "and select this collection as 'currently being edited'! "
+					+ "Your annotation hasn't been saved!",
 					Type.ERROR_MESSAGE);
 		}
 		else {
@@ -905,7 +959,7 @@ public class TaggerView extends HorizontalLayout
 				new TagInstance(
 					clientTagInstance.getInstanceID(), 
 					tagDef.getUuid(),
-					project.getUser().getIdentifier(),
+					project.getCurrentUser().getIdentifier(),
 		        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 		        	tagDef.getUserDefinedPropertyDefinitions(),
 		        	tagDef.getTagsetDefinitionUuid());
@@ -943,7 +997,7 @@ public class TaggerView extends HorizontalLayout
 				}
 				
 			} catch (URISyntaxException e) {
-				errorHandler.showAndLogError("Error adding Annotations!", e);
+				errorHandler.showAndLogError("Error adding annotations", e);
 			}
 		}
 	}
@@ -975,7 +1029,7 @@ public class TaggerView extends HorizontalLayout
 					try {
 						pager.setText(sourceDocument.getContent(), comments);
 					} catch (IOException e) {
-						logger.log(Level.SEVERE, "error adjusting  page zoom", e); //$NON-NLS-1$
+						logger.log(Level.SEVERE, "Error adjusting page zoom", e); //$NON-NLS-1$
 					}
 	
 					startPage = pager.getPageNumberFor(range.getStartPoint());
@@ -993,7 +1047,7 @@ public class TaggerView extends HorizontalLayout
 			
 			tagger.highlight(range);
 		} catch (ValueOutOfBoundsException e) {
-			logger.log(Level.SEVERE, "error during highlighting", e); //$NON-NLS-1$
+			logger.log(Level.SEVERE, "Error during highlighting", e); //$NON-NLS-1$
 		}
 	}
 	
@@ -1001,10 +1055,10 @@ public class TaggerView extends HorizontalLayout
 		if (pager.hasPages()) {
 			try {
 				annotationPanel.showAnnotationDetails(
-						userMarkupCollectionManager.getAnnotations(
+						userMarkupCollectionManager.getAnnotationsForTagInstances(
 								pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID)));
 			} catch (IOException e) {
-				((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
+				errorHandler.showAndLogError("Error showing annotation details", e);
 			}
 		}
 	}
@@ -1013,9 +1067,9 @@ public class TaggerView extends HorizontalLayout
 	public void tagInstanceSelected(Set<String> tagInstanceIDs) {
 		try {
 			annotationPanel.showAnnotationDetails(
-				userMarkupCollectionManager.getAnnotations(tagInstanceIDs));
+				userMarkupCollectionManager.getAnnotationsForTagInstances(tagInstanceIDs));
 		} catch (IOException e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error showing Annotation details", e);
+			errorHandler.showAndLogError("Error showing annotation details", e);
 		}
 	}
 	
@@ -1023,29 +1077,46 @@ public class TaggerView extends HorizontalLayout
 	
 	public void removeClickshortCuts() { /* noop*/ }
 
-	public void setSourceDocument(SourceDocument sd, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
-		this.sourceDocument = sd;
-		this.resourcePanel.setSelectedDocument(sd);
-		
-		pager.setRightToLeftWriting(
-			this.sourceDocument
-			.getSourceContentHandler()
-			.getSourceDocumentInfo()
-			.getIndexInfoSet()
-			.isRightToLeftWriting());
-		
-		initData(afterDocumentLoadedOperation);
-		if (tabNameChangeListener != null) {
-			tabNameChangeListener.tabCaptionChange(this);
+	public void setSourceDocument(SourceDocumentReference sdRef, final AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
+		boolean tryAutoCommit = this.sourceDocument != null;
+		try {
+			this.sourceDocument = project.getSourceDocument(sdRef.getUuid());
+			
+			this.resourcePanel.setSelectedDocument(sdRef);
+			
+			pager.setRightToLeftWriting(
+				this.sourceDocument
+				.getSourceContentHandler()
+				.getSourceDocumentInfo()
+				.getIndexInfoSet()
+				.isRightToLeftWriting());
+			
+			initData(sdRef, afterDocumentLoadedOperation);
+			if (tabNameChangeListener != null) {
+				tabNameChangeListener.tabCaptionChange(this);
+			}
+			this.drawer.collapse();
+			
+			addCommentMessageListener();
+		} catch (Exception e) {
+			errorHandler.showAndLogError("Error opening document", e);
 		}
-		this.drawer.collapse();
 		
-		addCommentMessageListener();
+		if (tryAutoCommit) {
+			try {
+				project.commitAndPushChanges("Auto-committing annotations");
+			} catch (Exception e) {
+				logger.log(
+					Level.WARNING, 
+					"Error auto-committing annotations due to a switch to a "
+					+ "different document", e);
+			}			
+		}
 	}
 
 	@Override
 	public Annotation getTagInstanceInfo(String tagInstanceId) {
-		return userMarkupCollectionManager.getAnnotation(tagInstanceId);
+		return userMarkupCollectionManager.getAnnotationForTagInstance(tagInstanceId);
 	}
 	
 	@Override
@@ -1057,143 +1128,188 @@ public class TaggerView extends HorizontalLayout
 	public String getCaption() {
 		return this.sourceDocument==null?"no selection yet":sourceDocument.toString();
 	}
-	
+
 	@Override
 	public void addComment(List<Range> absoluteRanges, int x, int y) {
-		User user = project.getUser();
+		User user = project.getCurrentUser();
 		IDGenerator idGenerator = new IDGenerator();
 		CommentDialog commentDialog = new CommentDialog(
 				commentBody -> {
-					try {
-						project.addComment(
-							new Comment(
-								idGenerator.generate(), 
-								user.getName(), user.getUserId(), 
-								commentBody, absoluteRanges, this.sourceDocument.getUuid()));
-					} catch (IOException e) {
-						errorHandler.showAndLogError("Error adding Comment!", e);
+					if (!StringUtils.isBlank(commentBody)) {
+						try {
+							project.addComment(
+									new Comment(
+											idGenerator.generate(),
+											user.getName(),
+											user.getUserId(),
+											commentBody,
+											absoluteRanges,
+											sourceDocument.getUuid()
+									)
+							);
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to create comment", e);
+						}
 					}
-				});
+				}
+		);
 		commentDialog.show(x, y);
 	}
-	
+
 	@Override
 	public void editComment(Optional<Comment> optionalComment, int x, int y) {
-		if (optionalComment.isPresent()) {
-			CommentDialog commentDialog = new CommentDialog(optionalComment.get().getBody(), false, commentBody -> {
-				final String oldBody = optionalComment.get().getBody();
-				optionalComment.get().setBody(commentBody);
-				try {
-					project.updateComment(optionalComment.get());
-				} catch (IOException e) {
-					errorHandler.showAndLogError("Error updating Comment!", e);
-					optionalComment.get().setBody(oldBody);
-				}
-			});
-			commentDialog.show(x, y);
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment to edit", Type.HUMANIZED_MESSAGE);
+			return;
 		}
-		else {
-			Notification.show("Info", "Couldn't find a Comment to edit!", Type.HUMANIZED_MESSAGE);
-		}
-	}
-	
-	@Override
-	public void removeComment(Optional<Comment> optionalComment) {
-		if (optionalComment.isPresent()) {
-			ConfirmDialog.show(UI.getCurrent(),"Remove Comment", "Are you sure you want to remove the Comment?", "Yes", "Cancel", dlg -> {
-				if (dlg.isConfirmed()) {
-					try {
-						project.removeComment(optionalComment.get());
-					} catch (IOException e) {
-						errorHandler.showAndLogError("Error removing Comment!", e);
-					}
-				}
-			});
-		}
-		else {
-			Notification.show("Info", "Couldn't find the Comment to remove!", Type.HUMANIZED_MESSAGE);
-		}	
-	}
-	
-	@Override
-	public void replyToComment(Optional<Comment> optionalComment, int x, int y) {
-		if (optionalComment.isPresent()) {
-			User user = project.getUser();
-			IDGenerator idGenerator = new IDGenerator();
-			CommentDialog commentDialog = new CommentDialog(
-					true,
-					replyBody -> {
+
+		CommentDialog commentDialog = new CommentDialog(
+				optionalComment.get().getBody(),
+				false,
+				commentBody -> {
+					if (!StringUtils.isBlank(commentBody)) {
+						final String oldBody = optionalComment.get().getBody();
+						optionalComment.get().setBody(commentBody);
 						try {
-							project.addReply(optionalComment.get(), 
-								new Reply(
-									idGenerator.generate(),
-									replyBody, 
-									user.getName(), user.getUserId(), 
-									optionalComment.get().getUuid()));
-						} catch (IOException e) {
-							errorHandler.showAndLogError("Error adding Reply!", e);
+							project.updateComment(optionalComment.get());
 						}
-					});
-			commentDialog.show(x, y);
-		}
-		else {
-			Notification.show("Info", "Couldn't find a Comment to reply to!", Type.HUMANIZED_MESSAGE);
-		}
-	}
-	
-	public void updateReplyToComment(Optional<Comment> optionalComment, String replyUuid, int x, int y) {
-		if (optionalComment.isPresent()) {
-			Comment comment = optionalComment.get();
-			Reply reply = comment.getReply(replyUuid);
-			if (reply != null) {
-				
-				CommentDialog commentDialog = new CommentDialog(
-						reply.getBody(),
-						true,
-						replyBody -> {
-							try {
-								reply.setBody(replyBody);
-								project.updateReply(optionalComment.get(), reply);
-							} catch (IOException e) {
-								errorHandler.showAndLogError("Error updating Reply!", e);
-							}
-						});
-				commentDialog.show(x, y);
-			}
-			else {
-				Notification.show("Info", "Couldn't find a Reply to edit!", Type.HUMANIZED_MESSAGE);
-			}
-		}
-		else {
-			Notification.show("Info", "Couldn't find the Comment of the reply!", Type.HUMANIZED_MESSAGE);
-		}
-	}
-	
-	public void removeReplyToComment(Optional<Comment> optionalComment, String replyUuid) {
-		if (optionalComment.isPresent()) {
-			Comment comment = optionalComment.get();
-			Reply reply = comment.getReply(replyUuid);
-			if (reply != null) {
-	
-				ConfirmDialog.show(UI.getCurrent(),"Remove Reply", "Are you sure you want to remove the Reply?", "Yes", "Cancel", dlg -> {
-					if (dlg.isConfirmed()) {
-						try {
-							project.removeReply(optionalComment.get(), reply);
-						} catch (IOException e) {
-							errorHandler.showAndLogError("Error removing Comment!", e);
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to update comment", e);
+							optionalComment.get().setBody(oldBody);
 						}
 					}
-				});
-			}
-			else {
-				Notification.show("Info", "Couldn't find a Reply to remove!", Type.HUMANIZED_MESSAGE);
-			}	
-		}
-		else {
-			Notification.show("Info", "Couldn't find the Comment of the Reply!", Type.HUMANIZED_MESSAGE);
-		}	
+				}
+		);
+		commentDialog.show(x, y);
 	}
 
+	@Override
+	public void removeComment(Optional<Comment> optionalComment) {
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment to delete", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		ConfirmDialog.show(
+				UI.getCurrent(),
+				"Delete Comment",
+				"Are you sure you want to delete this comment?",
+				"Yes",
+				"Cancel",
+				dlg -> {
+					if (dlg.isConfirmed()) {
+						try {
+							project.removeComment(optionalComment.get());
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to delete comment", e);
+						}
+					}
+				}
+		);
+	}
+
+	@Override
+	public void replyToComment(Optional<Comment> optionalComment, int x, int y) {
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment to reply to", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		User user = project.getCurrentUser();
+		IDGenerator idGenerator = new IDGenerator();
+		CommentDialog commentDialog = new CommentDialog(
+				true,
+				replyBody -> {
+					if (!StringUtils.isBlank(replyBody)) {
+						try {
+							project.addCommentReply(
+									optionalComment.get(),
+									new Reply(
+											idGenerator.generate(),
+											replyBody,
+											user.getName(),
+											user.getUserId(),
+											optionalComment.get().getUuid()
+									)
+							);
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to create reply", e);
+						}
+					}
+				}
+		);
+		commentDialog.show(x, y);
+	}
+
+	public void updateReplyToComment(Optional<Comment> optionalComment, String replyUuid, int x, int y) {
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment that the reply relates to", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		Comment comment = optionalComment.get();
+		Reply reply = comment.getReply(replyUuid);
+
+		if (reply == null) {
+			Notification.show("Info", "Couldn't find the reply to edit", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		CommentDialog commentDialog = new CommentDialog(
+				reply.getBody(),
+				true,
+				replyBody -> {
+					if (!StringUtils.isBlank(replyBody)) {
+						final String oldBody = reply.getBody();
+						reply.setBody(replyBody);
+						try {
+							project.updateCommentReply(optionalComment.get(), reply);
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to update reply", e);
+							reply.setBody(oldBody);
+						}
+					}
+				}
+		);
+		commentDialog.show(x, y);
+	}
+
+	public void removeReplyToComment(Optional<Comment> optionalComment, String replyUuid) {
+		if (!optionalComment.isPresent()) {
+			Notification.show("Info", "Couldn't find the comment that the reply relates to", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		Comment comment = optionalComment.get();
+		Reply reply = comment.getReply(replyUuid);
+
+		if (reply == null) {
+			Notification.show("Info", "Couldn't find the reply to delete", Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		ConfirmDialog.show(
+				UI.getCurrent(),
+				"Delete Reply",
+				"Are you sure you want to delete this reply?",
+				"Yes",
+				"Cancel",
+				dlg -> {
+					if (dlg.isConfirmed()) {
+						try {
+							project.deleteCommentReply(optionalComment.get(), reply);
+						}
+						catch (IOException e) {
+							errorHandler.showAndLogError("Failed to delete reply", e);
+						}
+					}
+				}
+		);
+	}
 
 	@Subscribe
 	public void handleCommentChange(CommentChangeEvent commentChangeEvent) {
@@ -1203,7 +1319,7 @@ public class TaggerView extends HorizontalLayout
 				comments.add(commentChangeEvent.getComment());
 				tagger.addComment(commentChangeEvent.getComment());
 			} catch (IOException e) {
-				errorHandler.showAndLogError("Error adding Comment!", e);
+				errorHandler.showAndLogError("Error adding comment", e);
 			}
 			break;
 		}
@@ -1236,7 +1352,7 @@ public class TaggerView extends HorizontalLayout
 					new CommentMessage(
 						comment.getId(),
 						comment.getIid(),
-						project.getUser().getUserId(),
+						project.getCurrentUser().getUserId(),
 						clientComment,
 						comment.getDocumentId(),
 						commentChangeEvent.getChangeType() == ChangeType.DELETED
@@ -1244,7 +1360,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error publishing a comment message", e);
+			logger.log(Level.WARNING, "Error publishing a comment message", e);
 		}
 	}
 	
@@ -1255,7 +1371,7 @@ public class TaggerView extends HorizontalLayout
 			try {
 				tagger.addReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
 			} catch (IOException e) {
-				errorHandler.showAndLogError("Error adding Reply!", e);
+				errorHandler.showAndLogError("Error adding reply", e);
 			}
 			break;
 		}
@@ -1263,7 +1379,7 @@ public class TaggerView extends HorizontalLayout
 			try {
 				tagger.updateReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
 			} catch (IOException e) {
-				errorHandler.showAndLogError("Error updating Reply!", e);
+				errorHandler.showAndLogError("Error updating reply", e);
 			}
 			break;
 		}
@@ -1271,7 +1387,7 @@ public class TaggerView extends HorizontalLayout
 			try {
 				tagger.removeReply(replyChangeEvent.getComment(), replyChangeEvent.getReply());
 			} catch (IOException e) {
-				errorHandler.showAndLogError("Error removing Reply!", e);
+				errorHandler.showAndLogError("Error removing reply", e);
 			}
 			break;
 		}
@@ -1305,7 +1421,7 @@ public class TaggerView extends HorizontalLayout
 					new CommentMessage(
 						comment.getId(),
 						comment.getIid(),
-						project.getUser().getUserId(),
+						project.getCurrentUser().getUserId(),
 						clientComment,
 						comment.getDocumentId(),
 						replyChangeEvent.getChangeType() == ChangeType.DELETED,
@@ -1314,7 +1430,7 @@ public class TaggerView extends HorizontalLayout
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error publishing a comment message", e);
+			logger.log(Level.WARNING, "Error publishing a comment message", e);
 		}
 	}
 	
@@ -1334,7 +1450,7 @@ public class TaggerView extends HorizontalLayout
 								ui.push();
 							}
 							catch(IOException e) {
-								logger.log(Level.WARNING, "error loading replies", e);
+								logger.log(Level.WARNING, "Error loading replies", e);
 							}
 						});
 						
@@ -1348,7 +1464,7 @@ public class TaggerView extends HorizontalLayout
 					}
 					@Override
 					public void error(Throwable t) {
-						errorHandler.showAndLogError("Error loading Replies!", t);
+						errorHandler.showAndLogError("Error loading replies", t);
 					}
 				});
 		}

@@ -96,8 +96,8 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 			}
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError(
-				"error displaying annotated kwic query results", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
+				"Error displaying annotated KWIC query results", e);
 		}
 	}
 

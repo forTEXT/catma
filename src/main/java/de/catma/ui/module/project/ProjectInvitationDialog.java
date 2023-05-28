@@ -2,8 +2,6 @@ package de.catma.ui.module.project;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.cache.Cache;
 import javax.cache.Caching;
@@ -13,7 +11,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
-import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
@@ -21,8 +18,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
@@ -32,7 +27,6 @@ import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.hazelcast.HazelCastService;
 import de.catma.hazelcast.HazelcastConfiguration;
@@ -52,7 +46,6 @@ public class ProjectInvitationDialog extends Window {
 	private Label lInvitationCode; 
 	private ComboBox<RBACRole> roleBox;
 	private CheckBox cbOwnCollection;
-	private Grid<DocumentResource> documentGrid;
 	private ListSelect<String> joinedUsersConsole;
 	private Button btnInvite;
 	private Button btnStopInvite;
@@ -81,7 +74,7 @@ public class ProjectInvitationDialog extends Window {
 			EventBus eventBus,
 			HazelCastService hazelcastService) {
 		
-		super("Invite others to the Project");
+		super("Invite Others to the Project");
 		
 		this.project = project;
 		this.documentsForCollectionCreation = documentsForCollectionCreation;
@@ -96,24 +89,19 @@ public class ProjectInvitationDialog extends Window {
 	}
 
 	private void initActions() {
-		cbOwnCollection.addValueChangeListener(event -> documentGrid.setEnabled(event.getValue()));
 		btnInvite.addClickListener(this::handleInvitePressed);
 		btnStopInvite.addClickListener(evt -> close());
 	}
 
 	private void setInvitationSettingsEnabled(boolean enabled) {
 		cbOwnCollection.setEnabled(enabled);
-		if (cbOwnCollection.getValue()) {
-			documentGrid.setEnabled(enabled);
-		}
-		
 		roleBox.setEnabled(enabled);
 	}
 	
 	private void initComponents() {
 		setModal(true);
-		setWidth("60%");
-		setHeight("90%");
+		setWidth("30%");
+		setHeight("50%");
 		
 		VerticalLayout content = new VerticalLayout();
 		content.setSizeFull();
@@ -123,53 +111,15 @@ public class ProjectInvitationDialog extends Window {
 		
 		content.addComponent(lInvitationCode);
 
-		cbOwnCollection = new CheckBox("Create one collection per Document and joined User", false);
+		cbOwnCollection = new CheckBox("Create one collection per document and joined user", false);
 		cbOwnCollection.setValue(false);
+		cbOwnCollection.setVisible(false); //TODO: value of this CB as no effect on the joining side so far 
 		
 		content.addComponent(cbOwnCollection);
 		cbOwnCollection.setEnabled(!documentsForCollectionCreation.isEmpty());
 		
-		documentGrid = new Grid<>();
-		documentGrid.setSizeFull();
-		documentGrid.setRowHeight(45);
-        documentGrid.setCaption("Documents");
-	    documentGrid.setDataProvider(new ListDataProvider<>(documentsForCollectionCreation));
-	    documentGrid.setSelectionMode(SelectionMode.MULTI);
-	    
-		documentGrid
-			.addColumn(resource -> resource.getIcon(), new HtmlRenderer())
-			.setWidth(100);
-        
-		Function<Resource,String> buildNameFunction = (resource) -> {
-			StringBuilder sb = new StringBuilder()
-			  .append("<div class='documentsgrid__doc'> ")
-		      .append("<div class='documentsgrid__doc__title'> ")
-		      .append(resource.getName())
-		      .append("</div>");
-			if(resource.hasDetail()){
-		        sb
-		        .append("<span class='documentsgrid__doc__author'> ")
-		        .append(resource.getDetail())
-		        .append("</span>");
-			}
-			sb.append("</div>");
-				        
-		    return sb.toString();
-		};
-      
-        documentGrid
-        	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
-        	.setCaption("Name");
-//        	.setExpandRatio(1);
-        
-        documentGrid.setEnabled(false);
-        
-        content.addComponent(documentGrid);
-        content.setExpandRatio(documentGrid, 1f);
-        
-
 		roleBox = new ComboBox<RBACRole>("Role", 
-				Lists.newArrayList(RBACRole.GUEST, RBACRole.REPORTER, RBACRole.ASSISTANT, RBACRole.MAINTAINER));
+				Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 		roleBox.setWidth("100%");
 		roleBox.setItemCaptionGenerator(RBACRole::getRoleName);
 		roleBox.setEmptySelectionAllowed(false);
@@ -213,16 +163,8 @@ public class ProjectInvitationDialog extends Window {
 		if (roleBox.getValue() == null) {
 			Notification.show(
 				"Info", 
-				"Please select a Project role for the joining users!", 
+				"Please select a project role for the joining users!",
 				Type.HUMANIZED_MESSAGE);
-			return;
-		}
-		
-		if(cbOwnCollection.getValue() && documentGrid.getSelectedItems().isEmpty() ){
-			Notification.show(
-					"Info", 
-					"Please select at least one Document to create a Collection for each joining user!", 
-					Notification.Type.HUMANIZED_MESSAGE);
 			return;
 		}
 		
@@ -232,12 +174,11 @@ public class ProjectInvitationDialog extends Window {
 		progressIndicator.setCaption("Invitation running, keep this dialog window open...");
 		
 		projectInvitation = new ProjectInvitation(
-				project.getProjectId(), 
+				project.getId(),
 				roleBox.getValue().getAccessLevel(), 
 				project.getName(), 
 				project.getDescription(),
-				cbOwnCollection.getValue(),
-				documentGrid.getSelectedItems().stream().map(Resource::getResourceId).collect(Collectors.toSet()));
+				cbOwnCollection.getValue());
 		
 		invitationCache.put(projectInvitation.getKey(), new Gson().toJson(projectInvitation));
 		
@@ -250,8 +191,6 @@ public class ProjectInvitationDialog extends Window {
 	    String regid = invitationTopic.addMessageListener(
 	    	new ProjectInvitationHandler(
 	    		UI.getCurrent(),
-	    		documentsForCollectionCreation.stream().collect(
-	    				Collectors.toMap(Resource::getResourceId, res -> res)),
 	    		projectInvitation,
 	    		project,
 	    		joinedTopic,

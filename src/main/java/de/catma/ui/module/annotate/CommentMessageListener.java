@@ -11,7 +11,7 @@ import com.vaadin.ui.UI;
 
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.ui.UIMessageListener;
 import de.catma.ui.component.IconButton;
@@ -22,7 +22,7 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 	
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	
-	private final Supplier<SourceDocument> documentSupplier;
+	private final Supplier<SourceDocumentReference> documentSupplier;
 
 	private final IconButton cbAutoShowComments;
 
@@ -36,7 +36,7 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 	
 	public CommentMessageListener(
 			UI ui, Project project, IconButton cbAutoShowComments, List<Comment> comments,
-			Tagger tagger, Supplier<SourceDocument> documentSupplier) {
+			Tagger tagger, Supplier<SourceDocumentReference> documentSupplier) {
 		super(ui);
 		this.project = project;
 		this.cbAutoShowComments = cbAutoShowComments;
@@ -59,10 +59,10 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 			final boolean replyMessage = commentMessage.isReplyMessage();
 			final long senderId = commentMessage.getSenderId();
 			final boolean deleted= commentMessage.isDeleted();
-			final SourceDocument document = documentSupplier.get();
+			final SourceDocumentReference document = documentSupplier.get();
 			if ((document != null) 
 					&& document.getUuid().equals(documentId)) {
-				User user = project.getUser();
+				User user = project.getCurrentUser();
 				Long receiverId = user.getUserId();
 				
 				if (!receiverId.equals(senderId)) {
@@ -121,7 +121,7 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "error processing an incoming Comment", e);
+			logger.log(Level.WARNING, "Error processing an incoming comment", e);
 		}
 	}
 

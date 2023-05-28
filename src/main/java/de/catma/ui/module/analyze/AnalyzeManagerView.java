@@ -22,7 +22,7 @@ public class AnalyzeManagerView extends TabbedView {
 			addClosableTab(new AnalyzeView(corpus, repository, this.eventBus));	
 		}	
 		catch (Exception e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError("error initializing Analyzer", e);
+			((CatmaApplication) UI.getCurrent()).showAndLogError("Error initializing analyzer", e);
 		}
 			
 	}

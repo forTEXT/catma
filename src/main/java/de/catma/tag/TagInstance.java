@@ -18,11 +18,14 @@
  */
 package de.catma.tag;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
+import com.google.common.collect.Lists;
 
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.util.IDGenerator;
@@ -41,6 +44,7 @@ public class TagInstance {
 	private String tagsetId;
 	private String author;
 	private String timestamp;
+	private String pageFilename;
 	
 	/**
 	 * System properties get the {@link PropertyDefinition#getFirstValue() default} value set.
@@ -133,46 +137,7 @@ public class TagInstance {
 	public Collection<Property> getUserDefinedProperties() {
 		return Collections.unmodifiableCollection(userDefinedProperties.values());
 	}
-	
-	/**
-	 * Sychnronizes the properties of this instance which the attached 
-	 * {@link PropertyDefinition}, property values don't get overridden 
-	 */
-	@Deprecated
-	public void synchronizeProperties() {
 		
-//		Iterator<Map.Entry<String, Property>> iterator = systemProperties.entrySet().iterator();
-//		while (iterator.hasNext()) {
-//			Map.Entry<String, Property> entry = iterator.next();
-//			Property p = entry.getValue();
-////			if (getTagDefinition().getPropertyDefinition(entry.getKey())==null) {
-////				iterator.remove();
-////			}
-////			else {
-////				p.synchronize();
-////			}
-//		}
-		
-		// we do not update Property values, therefore we handle only ...
-		
-		// ... deletion and ...
-//		iterator = userDefinedProperties.entrySet().iterator();
-//		while (iterator.hasNext()) {
-//			Map.Entry<String, Property> entry = iterator.next();
-//			
-////			if (getTagDefinition().getPropertyDefinition(entry.getKey())==null) {
-////				iterator.remove();
-////			}
-//		}
-//		
-////		// ... addition of properties
-////		for (PropertyDefinition pd : getTagDefinition().getUserDefinedPropertyDefinitions()) {
-////			if (!userDefinedProperties.containsKey(pd.getUuid())) {
-//////				addUserDefinedProperty(new Property(pd, Collections.<String>emptySet()));
-////			}
-////		}
-	}
-	
 	public void removeUserDefinedProperty(String propertyDefId) {
 		this.userDefinedProperties.remove(propertyDefId);
 	}
@@ -218,4 +183,33 @@ public class TagInstance {
 		this.author = author;	
 	}
 	
+	public String getPageFilename() {
+		return pageFilename;
+	}
+	
+	public void setPageFilename(String pageFilename) {
+		this.pageFilename = pageFilename;
+	}
+
+	public boolean mergeAdditive(TagInstance tagInstance) {
+		boolean merged = false;
+		for (Property property : tagInstance.getUserDefinedProperties()) {
+			if (userDefinedProperties.containsKey(property.getPropertyDefinitionId())) {
+				Property existingProperty = userDefinedProperties.get(property.getPropertyDefinitionId());
+				ArrayList<String> values = new ArrayList<>(existingProperty.getPropertyValueList());
+				for (String value : property.getPropertyValueList()) {
+					if (!values.contains(value)) {
+						values.add(value);
+						merged = true;
+					}
+				}
+				existingProperty.setPropertyValueList(values);
+			}
+			else {
+				addUserDefinedProperty(property);
+				merged = true;
+			}
+		}
+		return merged;
+	}
 }

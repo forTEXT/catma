@@ -105,7 +105,7 @@ public class PhraseQueryResultRowItem implements QueryResultRowItem {
 			}
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error displaying query results", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error displaying query results", e);
 		}
 	}
 

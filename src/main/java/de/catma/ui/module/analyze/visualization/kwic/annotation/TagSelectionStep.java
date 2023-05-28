@@ -44,7 +44,7 @@ public class TagSelectionStep extends VerticalLayout implements WizardStep {
 				project.getTagManager().getTagLibrary().getTagPath(tag.getUuid()));
 			
 			if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
-				nextStep.getProgressStep().setCompleted("no Properties available");
+				nextStep.getProgressStep().setCompleted("no properties available");
 				nextStep.setSkipped(true);
 			}
 			else {

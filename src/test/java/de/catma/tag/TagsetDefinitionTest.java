@@ -12,13 +12,13 @@ import de.catma.util.IDGenerator;
 class TagsetDefinitionTest {
 
 	/**
-	 * During traversal each Tag is traversed after its parent Tag.
+	 * During traversal each tag is traversed after its parent tag.
 	 */
 	@Test
 	void testTagIteration() {
 		IDGenerator idGenerator = new IDGenerator();
 		
-		TagsetDefinition tagset = new TagsetDefinition(idGenerator.generate(), "Test", new Version());
+		TagsetDefinition tagset = new TagsetDefinition(idGenerator.generate(), "Test");
 		
 		TagDefinition root1 = new TagDefinition(idGenerator.generate(), "root1", null, tagset.getUuid());
 		tagset.addTagDefinition(root1);

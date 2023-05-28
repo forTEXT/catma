@@ -12,7 +12,7 @@ import de.catma.sqlite.SqliteService;
 public interface InitializationService {	
 	BackgroundService acquireBackgroundService();
 	String acquirePersonalTempFolder() throws IOException;
-	Component newEntryPage(EventBus eventBus, LoginService loginService, HazelCastService hazelcastService, SqliteService sqliteService) throws IOException;
+	Component newEntryPage(EventBus eventBus, LoginService loginService, HazelCastService hazelcastService, SqliteService sqliteService);
 	
 	void shutdown();
 }

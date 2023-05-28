@@ -20,6 +20,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
+import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
@@ -49,11 +50,10 @@ import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -63,6 +63,8 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.module.main.ErrorHandler;
@@ -99,16 +101,17 @@ public class AnnotationPanel extends VerticalLayout {
 	private Button btMaximizeAnnotationDetailsRibbon;
 	private VerticalSplitPanel rightSplitPanel;
 	private AnnotationCollectionManager collectionManager;
-	private Supplier<SourceDocument> currentDocumentProvider;
+	private Supplier<SourceDocumentReference> currentDocumentProvider;
 	private EventBus eventBus;
+	private IconButton btFilterCollection;
 
 	public AnnotationPanel(
 			Project project, 
 			AnnotationCollectionManager collectionManager, 
 			Consumer<String> annotationSelectionListener,
-			Consumer<AnnotationCollection> collectionSelectionListener,
+			Consumer<ValueChangeEvent<AnnotationCollection>> collectionSelectionListener,
 			Consumer<TagDefinition> tagSelectionListener,
-			Supplier<SourceDocument> currentDocumentProvider,
+			Supplier<SourceDocumentReference> currentDocumentProvider,
 			EventBus eventBus) {
 		this.project = project;
 		this.collectionManager = collectionManager;
@@ -121,7 +124,7 @@ public class AnnotationPanel extends VerticalLayout {
 		initListeners();
 		initData();
 	}
-
+	
 	private void initListeners() {
 		tagChangedListener = new PropertyChangeListener() {
 			
@@ -316,15 +319,15 @@ public class AnnotationPanel extends VerticalLayout {
 	@Subscribe
 	public void handleCollectionChanged(CollectionChangeEvent collectionChangeEvent) {
 		if (collectionChangeEvent.getChangeType().equals(ChangeType.CREATED)) {
-			SourceDocument document = currentDocumentProvider.get();
+			SourceDocumentReference document = currentDocumentProvider.get();
 			if (document != null) {
 	    		AnnotationCollectionReference collectionReference = 
 	    				collectionChangeEvent.getCollectionReference();
 	    		if (document.getUuid().equals(collectionReference.getSourceDocumentId())) {
 					try {
-						addCollection(project.getUserMarkupCollection(collectionReference));
+						addCollection(project.getAnnotationCollection(collectionReference));
 					} catch (IOException e) {
-						((ErrorHandler)UI.getCurrent()).showAndLogError("error add new Collection", e);
+						((ErrorHandler) UI.getCurrent()).showAndLogError("Error adding new collection", e);
 					}
 	    		}
 			}
@@ -353,54 +356,51 @@ public class AnnotationPanel extends VerticalLayout {
             	expandTagsetDefinition(tagset);
             }
             
-            editableCollections.clear();
-            editableCollections.addAll(
-            		collections
-            		.stream()
-            		.filter(
-            				collection -> project.hasPermission(
-            						project.getRoleForCollection(collection.getId()), 
-            						RBACPermission.COLLECTION_WRITE))
-            		.collect(Collectors.toList()));
-            	
-            
-            ListDataProvider<AnnotationCollection> editableCollectionProvider = 
-            		new ListDataProvider<>(editableCollections);
-            currentEditableCollectionBox.setValue(null);
-            currentEditableCollectionBox.setDataProvider(editableCollectionProvider);
-            
-            
-    		if (!project.isAuthorizedOnProject(RBACPermission.COLLECTION_CREATE)) {
-    			if (editableCollectionProvider.getItems().isEmpty()) {
-    				currentEditableCollectionBox.setPlaceholder(
-    						"Please contact the Project maintainer to get an editable Collection!");
-    			}
-    			else {
-    				currentEditableCollectionBox.setPlaceholder(
-    						"Please select a Collection...");
-    			}
-    		}
-    		else if (editableCollectionProvider.getItems().isEmpty()) {
-				currentEditableCollectionBox.setPlaceholder(
-						"Please create a Collection...");
-    		}
-    		else {
-				currentEditableCollectionBox.setPlaceholder(
-						"Please select a Collection...");    			
-    		}
-    		
-    		if (editableCollectionProvider.getItems().size() == 1) {
-    			handleCollectionChangeRequest(editableCollectionProvider.getItems().iterator().next().getUuid());
-    		}
-
-    		btAddCollection.setVisible(project.isAuthorizedOnProject(RBACPermission.COLLECTION_CREATE));
-
+            initEditableCollectionData(null);
         } catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading data", e);
         }
     }
 
-    private void expandTagsetDefinition(TagsetDefinition tagset) {
+    private void initEditableCollectionData(AnnotationCollection preselectedCollection) {
+        editableCollections.clear();
+        editableCollections.addAll(
+        		collections.stream()
+        		.filter(collection -> !(Boolean)btFilterCollection.getData() 
+        			|| collection.isResponsible(project.getCurrentUser().getIdentifier()))
+        		.sorted((c1, c2) -> c1.getName().compareTo(c2.getName()))
+        		.collect(Collectors.toList()));
+        	
+        
+        ListDataProvider<AnnotationCollection> editableCollectionProvider = 
+        		new ListDataProvider<>(editableCollections);
+        currentEditableCollectionBox.setValue(null);
+        currentEditableCollectionBox.setDataProvider(editableCollectionProvider);
+        
+		if (editableCollectionProvider.getItems().isEmpty()) {
+			currentEditableCollectionBox.setPlaceholder(
+					"Please create a collection...");
+		}
+		else {
+			currentEditableCollectionBox.setPlaceholder(
+					"Please select a collection...");
+		}
+		
+		if (preselectedCollection != null 
+				&& editableCollections.contains(preselectedCollection) 
+				&& !project.isReadOnly()) {
+			currentEditableCollectionBox.setValue(preselectedCollection);
+		}
+		else if (editableCollectionProvider.getItems().size() == 1) {
+			AnnotationCollection collection = 
+					editableCollectionProvider.getItems().iterator().next();
+			if (collection.isResponsible(project.getCurrentUser().getIdentifier())) {
+				handleCollectionChangeRequest(collection.getUuid());
+			}
+		}
+	}
+
+	private void expandTagsetDefinition(TagsetDefinition tagset) {
     	for (TagDefinition tag : tagset) {
     		TagDataItem item = new TagDataItem(tag);
     		tagsetGrid.expand(item);
@@ -431,7 +431,7 @@ public class AnnotationPanel extends VerticalLayout {
     }
 
 	private void initActions(
-			Consumer<AnnotationCollection> collectionSelectionListener, 
+			Consumer<ValueChangeEvent<AnnotationCollection>> collectionSelectionListener, 
 			Consumer<TagDefinition> tagSelectionListener) {
 		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Tagsets")
@@ -537,14 +537,39 @@ public class AnnotationPanel extends VerticalLayout {
 		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
 		
 		currentEditableCollectionBox.addValueChangeListener(
-			event -> collectionSelectionListener.accept(event.getValue()));
+			event -> collectionSelectionListener.accept(event));
+		currentEditableCollectionBox.addValueChangeListener(event -> annotationDetailsPanel.refreshAnnotationDetailsProvider());
+		
 		annotationDetailsPanel.addMinimizeButtonClickListener(
 				clickEvent -> setAnnotationDetailsPanelVisible(false));
 		btMaximizeAnnotationDetailsRibbon.addClickListener(
 				ClickEvent -> setAnnotationDetailsPanelVisible(true));
 		
 		btAddCollection.addClickListener(clickEvent -> handelAddCollectionRequest());
+		btFilterCollection.addClickListener(clickEvent -> handleFilterCollectionChangeRequest());
 		
+        toggleEditComponentsEnabledState();
+	}
+
+	private void handleFilterCollectionChangeRequest() {
+		
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				(Boolean)btFilterCollection.getData(), 
+				true,
+				new Action() {
+					@Override
+					public void execute() {
+						// toggle filtered state
+						boolean newFilteredState  = !(Boolean)btFilterCollection.getData();
+						btFilterCollection.setData(newFilteredState);
+						btFilterCollection.setIcon(newFilteredState?VaadinIcons.LOCK:VaadinIcons.UNLOCK);
+						btFilterCollection.setDescription(newFilteredState?"Hiding collections beyond my responsibility":"Showing all available collections");
+						AnnotationCollection currentSelection = 
+								currentEditableCollectionBox.getValue();
+						initEditableCollectionData(currentSelection);
+					}
+				});
+
 	}
 
 	private void handleTagSelection(
@@ -566,7 +591,7 @@ public class AnnotationPanel extends VerticalLayout {
 	public void highlightCurrentEditableCollectionBox() {
 		currentEditableCollectionBox.addStyleName("annotationpanel-current-editable-collection-box-highlight");
 		final UI currentUI = UI.getCurrent(); 
-		((BackgroundServiceProvider)currentUI).accuireBackgroundService().schedule(
+		((BackgroundServiceProvider)currentUI).acquireBackgroundService().schedule(
 				() -> {
 					currentUI.access(() -> {
 						currentEditableCollectionBox.removeStyleName(
@@ -579,23 +604,23 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handelAddCollectionRequest() {
-		final SourceDocument document = currentDocumentProvider.get();
+		final SourceDocumentReference document = currentDocumentProvider.get();
 		
 		if (document != null) {
 	    	SingleTextInputDialog collectionNameDlg = 
-	        		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+	        		new SingleTextInputDialog("Create Annotation Collection", "Please enter the collection name:",
 	        				new SaveCancelListener<String>() {
 	    						
 	    						@Override
 	    						public void savePressed(String result) {
-	   								project.createUserMarkupCollection(result, document);
+	   								project.createAnnotationCollection(result, document);
 	    						}
 	    					});
 	        	
         	collectionNameDlg.show();
 		}
 		else {
-			Notification.show("Info", "Please select a Document first!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select a document first!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 
@@ -611,7 +636,7 @@ public class AnnotationPanel extends VerticalLayout {
 		.collect(Collectors.toList());
 		
 		if (targetTags.isEmpty()) {
-			Notification.show("Info", "Please select a Tag first!", Type.TRAY_NOTIFICATION);
+			Notification.show("Info", "Please select a tag first!", Type.TRAY_NOTIFICATION);
 		}
 		else if (targetTags.size() > 1) {
 			handleAddPropertyRequest();
@@ -619,30 +644,27 @@ public class AnnotationPanel extends VerticalLayout {
 		else {
 			
 			final TagDefinition targetTag = targetTags.get(0);
+			boolean beyondUsersResponsibility =
+					!project.getTagManager().getTagLibrary()
+						.getTagsetDefinition(targetTag)
+						.isResponsible(project.getCurrentUser().getIdentifier());
 			
-			if (!project.hasPermission(
-					project.getRoleForTagset(targetTag.getTagsetDefinitionUuid()), 
-					RBACPermission.TAGSET_WRITE)) {
-				Notification.show(
-					"Info", 
-					String.format(
-						"You do not have the permission to make changes to the Tagset of Tag %1$s, "
-						+ "Please contact the Project maintainer!", 
-						targetTag.getName()), 
-					Type.HUMANIZED_MESSAGE);
-				return;
-			}			
-			
-			EditTagDialog editTagDialog = new EditTagDialog(new TagDefinition(targetTag), 
-					new SaveCancelListener<TagDefinition>() {
-						public void savePressed(TagDefinition result) {
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+					true,
+					new Action() {
+						@Override
+						public void execute() {
 							
-							project.getTagManager().updateTagDefinition(targetTag, result);
-							
-							//TODO: reload on error
-						};
+							EditTagDialog editTagDialog = new EditTagDialog(new TagDefinition(targetTag), 
+									new SaveCancelListener<TagDefinition>() {
+										public void savePressed(TagDefinition result) {
+											project.getTagManager().updateTagDefinition(targetTag, result);
+										};
+									});
+							editTagDialog.show();
+						}
 					});
-			editTagDialog.show();
 		}
 		
 	}
@@ -671,26 +693,9 @@ public class AnnotationPanel extends VerticalLayout {
 		}
 		
 		if (targetTags.isEmpty()) {
-			Notification.show("Info", "Please select one ore more Tags first!", Type.TRAY_NOTIFICATION);
+			Notification.show("Info", "Please select one ore more tags first!", Type.TRAY_NOTIFICATION);
 		}
 		else {
-			
-			for (TagDefinition targetTag : targetTags) {
-				if (!project.hasPermission(
-						project.getRoleForTagset(targetTag.getTagsetDefinitionUuid()), 
-						RBACPermission.TAGSET_WRITE)) {
-					Notification.show(
-						"Info", 
-						String.format(
-							"You do not have the permission to make changes to the Tagset of Tag %1$s, "
-							+ "Please contact the Project maintainer!", 
-							targetTag.getName()), 
-						Type.HUMANIZED_MESSAGE);
-					return;
-				}
-			}			
-			
-			
 			Multimap<String, PropertyDefinition> propertiesByName = 
 					ArrayListMultimap.create();
 			
@@ -712,24 +717,41 @@ public class AnnotationPanel extends VerticalLayout {
 				.collect(Collectors.toList());
 			final boolean bulkEdit = targetTags.size() > 1; // just a single tag's properties or is it a bulk(>1) edit?
 					
-			AddEditPropertyDialog addPropertyDialog = new AddEditPropertyDialog(
-				bulkEdit,
-				commonProperties,
-				new SaveCancelListener<List<PropertyDefinition>>() {
-					@Override
-					public void savePressed(List<PropertyDefinition> result) {
-						if (bulkEdit) {
-							handleBulkEditProperties(result,
-									commonProperties, targetTags);
-						}
-						else {
-							handleSingleEditProperties(result, targetTags.iterator().next());
-						}
-						
-					}
-			});
+			boolean beyondUsersResponsibility =
+					targetTags.stream()
+					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
+					.distinct()
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
+					.findAny()
+					.isPresent();
 			
-			addPropertyDialog.show();
+			BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				true,
+				new Action() {
+					@Override
+					public void execute() {
+
+						AddEditPropertyDialog addPropertyDialog = new AddEditPropertyDialog(
+							bulkEdit,
+							commonProperties,
+							new SaveCancelListener<List<PropertyDefinition>>() {
+								@Override
+								public void savePressed(List<PropertyDefinition> result) {
+									if (bulkEdit) {
+										handleBulkEditProperties(result,
+												commonProperties, targetTags);
+									}
+									else {
+										handleSingleEditProperties(result, targetTags.iterator().next());
+									}
+									
+								}
+						});
+						
+						addPropertyDialog.show();
+					}
+				});
 		}
 	}
 
@@ -839,45 +861,46 @@ public class AnnotationPanel extends VerticalLayout {
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
 		
-		for (TagDefinition parentTag : parentTags) {
-			if (!project.hasPermission(project.getRoleForTagset(
-					parentTag.getTagsetDefinitionUuid()), 
-					RBACPermission.TAGSET_WRITE)) {
-				
-				Notification.show(
-					"Info", 
-					String.format(
-						"You do not have the permission to make changes to the Tagset of Tag %1$s, "
-						+ "Please contact the Project maintainer!", 
-						parentTag.getName()), 
-					Type.HUMANIZED_MESSAGE);
-				return;
-			}
-		}
-		
 		if (!parentTags.isEmpty()) {
-			AddSubtagDialog addTagDialog =
-				new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
-					public void savePressed(TagDefinition result) {
-						for (TagDefinition parent : parentTags) {
-							
-							TagsetDefinition tagset = 
-								project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
-							
-							TagDefinition tag = new TagDefinition(result);
-							tag.setUuid(idGenerator.generate());
-							tag.setParentUuid(parent.getUuid());
-							tag.setTagsetDefinitionUuid(tagset.getUuid());
-							
-							project.getTagManager().addTagDefinition(
-									tagset, tag);
+			boolean beyondUsersResponsibility =
+					parentTags.stream()
+					.map(tag -> project.getTagManager().getTagLibrary().getTagsetDefinition(tag))
+					.distinct()
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
+					.findAny()
+					.isPresent();
+				
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+					true,
+					new Action() {
+						@Override
+						public void execute() {
+
+							AddSubtagDialog addTagDialog =
+								new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
+									public void savePressed(TagDefinition result) {
+										for (TagDefinition parent : parentTags) {
+											
+											TagsetDefinition tagset = 
+												project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
+											
+											TagDefinition tag = new TagDefinition(result);
+											tag.setUuid(idGenerator.generate());
+											tag.setParentUuid(parent.getUuid());
+											tag.setTagsetDefinitionUuid(tagset.getUuid());
+											
+											project.getTagManager().addTagDefinition(
+													tagset, tag);
+										}
+									};
+								});
+							addTagDialog.show();
 						}
-					};
-				});
-			addTagDialog.show();
+					});
 		}
 		else {
-			Notification.show("Info", "Please select at least one parent Tag!", Type.HUMANIZED_MESSAGE);
+			Notification.show("Info", "Please select at least one parent tag!", Type.HUMANIZED_MESSAGE);
 		}
 	}
 
@@ -889,62 +912,47 @@ public class AnnotationPanel extends VerticalLayout {
 			.findFirst()
 			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
 			
-		if (selectedTagset.isPresent() 
-				&& !project.hasPermission(
-						project.getRoleForTagset(selectedTagset.get().getUuid()), 
-						RBACPermission.TAGSET_WRITE)) {
+		if (tagsets.isEmpty()) {
 			Notification.show(
 				"Info", 
-				String.format(
-					"You do not have the permission to make changes to Tagset %1$s, "
-					+ "Please contact the Project maintainer!", 
-					selectedTagset.get().getName()), 
+				"You do not have any tagsets to add tags to yet, please create a tagset first!",
 				Type.HUMANIZED_MESSAGE);
-			return;
-		}
-		
-		
-		if (tagsets.isEmpty()) {
-			if (project.isAuthorizedOnProject(RBACPermission.TAGSET_CREATE_OR_UPLOAD)) {
-				Notification.show(
-					"Info", 
-					"You do not have any Tagsets to add Tags to yet, please create a Tagset first!", 
-					Type.HUMANIZED_MESSAGE);
-			}
-			else {
-				Notification.show(
-					"Info", 
-					"You do not have any Tagsets to add Tags to yet, please contact the Project maintainer!", 
-					Type.HUMANIZED_MESSAGE);
-			}
+
 			return;
 		}
 	
 		List<TagsetDefinition> editableTagsets = 
 				tagsets.stream()
-				.filter(tagset -> project.hasPermission(project.getRoleForTagset(tagset.getUuid()), RBACPermission.TAGSET_WRITE))
 				.collect(Collectors.toList());
-		if (editableTagsets.isEmpty()) {
-			Notification.show(
-				"Info",
-				"You do not have the permission to make changes to any of the available Tagsets! "
-				+ "Please contact the Project maintainer for changes!",
-				Type.HUMANIZED_MESSAGE);
-			return;
-		}
-		AddParenttagDialog addTagDialog = 
-			new AddParenttagDialog(
-				editableTagsets, 
-				selectedTagset, 
-				new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
-				
-				@Override
-				public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
-					project.getTagManager().addTagDefinition(
-							result.getFirst(), result.getSecond());
-				}
-			});
-		addTagDialog.show();
+
+		boolean beyondUsersResponsibility =
+				editableTagsets.stream()
+				.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
+				.findAny()
+				.isPresent();
+		
+		BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+				beyondUsersResponsibility, 
+				true,
+				new Action() {
+					@Override
+					public void execute() {
+
+						AddParenttagDialog addTagDialog = 
+							new AddParenttagDialog(
+								editableTagsets, 
+								selectedTagset, 
+								new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
+								
+								@Override
+								public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
+									project.getTagManager().addTagDefinition(
+											result.getFirst(), result.getSecond());
+								}
+							});
+						addTagDialog.show();
+					}
+				});
 		
 	}
 
@@ -1051,19 +1059,20 @@ public class AnnotationPanel extends VerticalLayout {
 		currentEditableCollectionBox = new ComboBox<>("Collection currently being edited");
 		currentEditableCollectionBox.setWidth("100%");
 		currentEditableCollectionBox.setPlaceholder(
-				"Please select a Document first!");
-
-		btAddCollection = new IconButton(VaadinIcons.PLUS);
-		btAddCollection.setVisible(project.isAuthorizedOnProject(RBACPermission.COLLECTION_CREATE));
+				"Please select a document first!");
 		
+		btAddCollection = new IconButton(VaadinIcons.PLUS);
+		btFilterCollection = new IconButton(VaadinIcons.LOCK);
+		btFilterCollection.setData(Boolean.TRUE); //editable colletions are filtered
+		btFilterCollection.setDescription("Hiding collections beyond my responsibility");
 		HorizontalLayout editableCollectionPanel = 
-				new HorizontalLayout(currentEditableCollectionBox, btAddCollection);
+				new HorizontalLayout(currentEditableCollectionBox, btAddCollection, btFilterCollection);
 		editableCollectionPanel.addStyleName("annotate-right-padding");
 		
 		editableCollectionPanel.setWidth("100%");
 		editableCollectionPanel.setExpandRatio(currentEditableCollectionBox, 1.0f);
 		editableCollectionPanel.setComponentAlignment(btAddCollection, Alignment.BOTTOM_CENTER);
-		
+		editableCollectionPanel.setComponentAlignment(btFilterCollection, Alignment.BOTTOM_CENTER);
 		addComponent(editableCollectionPanel);
 		
 		Label tagsetsLabel = new Label("Tagsets");
@@ -1095,6 +1104,7 @@ public class AnnotationPanel extends VerticalLayout {
         btMaximizeAnnotationDetailsRibbon.addStyleName("annotation-panel-button-right-align");
         rightSplitPanel.addComponent(btMaximizeAnnotationDetailsRibbon);
         
+        
         annotationDetailsPanel = new AnnotationDetailsPanel(
         		project, 
         		collectionManager,
@@ -1109,22 +1119,31 @@ public class AnnotationPanel extends VerticalLayout {
 		.filter(collection -> collection.getUuid().equals(collectionId))
 		.findFirst()
 		.ifPresent(collection -> {
-			currentEditableCollectionBox.setValue(collection);
-			Notification.show("Info", 
-				String.format(
-					"The Collection currently being edited has been changed to '%1$s'!",  
-					collection.getName()),
-				Type.HUMANIZED_MESSAGE);
+			if (!collection.isResponsible(project.getCurrentUser().getIdentifier())
+					&& (Boolean)btFilterCollection.getData()) {
+				handleFilterCollectionChangeRequest();
+			}
+			if (!editableCollections.contains(collection)) {
+				editableCollections.add(collection);
+			}
+			if (!project.isReadOnly()) {
+				currentEditableCollectionBox.setValue(collection);
+				Notification.show("Info", 
+					String.format(
+						"The collection currently being edited has been changed to \"%s\"",
+						collection.getName()),
+					Type.HUMANIZED_MESSAGE);
+			}
 		});
 	}
 
 	public void setData(
-			SourceDocument document, 
+			SourceDocumentReference sdRef,
 			Collection<TagsetDefinition> tagsets, 
-			List<AnnotationCollection> collections) throws IOException {
+			List<AnnotationCollection> collections) throws Exception {
 		this.tagsets = tagsets;
 		this.collections = collections;
-		this.annotationDetailsPanel.setDocument(document);
+		this.annotationDetailsPanel.setDocument(sdRef);
 		initData();
 	}
 	
@@ -1141,32 +1160,32 @@ public class AnnotationPanel extends VerticalLayout {
 			this.collections.add(collection);
 		}
 		
-		// if it is an imported XML Collection it is not likely that the collection is going to be edited
+		// if it is an imported XML collection it is not likely that the collection is going to be edited
 		// and we do not automatically select it for editing
 		if (!Objects.equals(collection.getName(), XmlMarkupCollectionSerializationHandler.DEFAULT_COLLECTION_TITLE)) {
 			setSelectedEditableCollection(collection);
 		}
-		//TODO: show Annotations from this collection and selected Tagsets
+		//TODO: show annotations from this collection and selected tagsets
 	}
 
 	public void setSelectedEditableCollection(AnnotationCollection collection) {
-		if (project.hasPermission(
-			project.getRoleForCollection(collection.getId()), 
-			RBACPermission.COLLECTION_WRITE)) {
+		if (!(Boolean)btFilterCollection.getData() 
+				|| collection.isResponsible(project.getCurrentUser().getIdentifier())) {
 			if (!this.editableCollections.contains(collection)) {
 				this.editableCollections.add(collection);
 				currentEditableCollectionBox.getDataProvider().refreshAll();
 			}
 			if ((currentEditableCollectionBox.getValue() == null) 
-					&& !this.editableCollections.isEmpty()) {
+					&& !this.editableCollections.isEmpty()
+					&& !project.isReadOnly()) {
 				currentEditableCollectionBox.setValue(collection);
 				Notification.show("Info", 
 						String.format(
-							"The Collection currently being edited has been changed to '%1$s'!",  
+							"The collection currently being edited has been changed to \"%s\"",
 							collection.getName()),
 						Type.HUMANIZED_MESSAGE);				
 			}
-		}	
+		}
 	}
 	
 	private void removeCollection(AnnotationCollection collection) {
@@ -1182,6 +1201,16 @@ public class AnnotationPanel extends VerticalLayout {
 		annotationDetailsPanel.removeAnnotations(
 			collection.getTagReferences().stream().map(
 					tr -> tr.getTagInstanceId()).collect(Collectors.toSet()));
+		
+		toggleEditComponentsEnabledState();		
+	}
+	
+	private void toggleEditComponentsEnabledState() {
+		currentEditableCollectionBox.setEnabled(!project.isReadOnly());
+		btAddCollection.setEnabled(!project.isReadOnly());
+		btFilterCollection.setEnabled(!project.isReadOnly());	
+        tagsetGridComponent.getActionGridBar().setAddBtnEnabled(!project.isReadOnly());
+        tagsetGridComponent.getActionGridBar().setMoreOptionsBtnEnabled(!project.isReadOnly());
 	}
 
 	public void removeCollection(String collectionId) {

@@ -35,8 +35,9 @@ public interface Resource {
 	public default boolean isCollection() { return false; }
 	public default boolean isTagset() { return false; }
 
-	public String getPermissionIcon();
+	public String getResponsibleUser();
 	
-	public boolean hasWritePermission();
+	public boolean isResponsible(String userIdentifier);
 
+	public boolean isContribution();
 }

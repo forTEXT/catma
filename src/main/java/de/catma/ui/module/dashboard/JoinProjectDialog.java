@@ -31,7 +31,7 @@ import de.catma.user.User;
 import de.catma.util.DammAlgorithm;
 
 /**
- * Dialog that creates a Project
+ * Dialog to join a project
  * 
  * @author db
  *
@@ -61,7 +61,7 @@ public class JoinProjectDialog extends Window {
 	private ProjectInvitation invitation;
 	
 	public JoinProjectDialog(User currentUser, EventBus eventBus) {
-		super("Join project");
+		super("Join Project");
 		this.currentUser = currentUser;
 		this.eventBus = eventBus;
 		HazelCastService hazelcastService = ((CatmaApplication)UI.getCurrent()).getHazelCastService();
@@ -90,7 +90,7 @@ public class JoinProjectDialog extends Window {
 		VerticalLayout content = new VerticalLayout();
 		content.setSizeFull();
 		
-		Label lDescription = new Label("Please enter your invitation code to find and join a Project");
+		Label lDescription = new Label("Please enter your invitation code to find and join a project");
 		lDescription.addStyleName("label-with-word-wrap");
 		
 		content.addComponent(lDescription);
@@ -108,7 +108,7 @@ public class JoinProjectDialog extends Window {
 		content.addComponent(tfName);
 		
 		cbRole = new ComboBox<RBACRole>("Role", 
-				Lists.newArrayList(RBACRole.values()));
+				Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 		cbRole.setWidth("100%");
 		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);
 		cbRole.setEmptySelectionAllowed(false);

@@ -17,5 +17,7 @@ interface TagsetTreeItem {
 	boolean isEditable();
 	
 	public default void setTagsetExpanded(boolean expanded) {};
+	
+	public default String getResponsibleUser() { return null; };
 
 }

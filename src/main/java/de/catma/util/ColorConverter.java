@@ -108,7 +108,7 @@ public class ColorConverter {
 	 */
 	public static int toRGBInt(String hex) {
 		if (hex.length() < 6) {
-			throw new IllegalArgumentException("cannot convert " + hex);
+			throw new IllegalArgumentException("Cannot convert " + hex);
 		}
 		String redString = hex.substring(0,2);
 		String greenString = hex.substring(2,4);

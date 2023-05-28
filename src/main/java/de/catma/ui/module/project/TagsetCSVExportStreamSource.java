@@ -84,7 +84,7 @@ public class TagsetCSVExportStreamSource implements StreamSource {
 								csvPrinter.print("#"+ColorConverter.toHex(tag.getColor()));
 								csvPrinter.print(tag.getAuthor());
 								csvPrinter.print(project.getName());
-								csvPrinter.print(project.getProjectId());
+								csvPrinter.print(project.getId());
 								ArrayList<PropertyDefinition> sortedProperties = 
 									new ArrayList<>(tag.getUserDefinedPropertyDefinitions());
 								
@@ -109,7 +109,7 @@ public class TagsetCSVExportStreamSource implements StreamSource {
 		        return new FileInputStream(tempFile);
 		        		
 			} catch (Exception e) {
-				((ErrorHandler)ui).showAndLogError("Error exporting Tagsets to XML!", e);
+				((ErrorHandler) ui).showAndLogError("Error exporting tagsets to XML", e);
 			}
 		}
 		

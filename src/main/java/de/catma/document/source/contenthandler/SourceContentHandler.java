@@ -16,25 +16,22 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-
 package de.catma.document.source.contenthandler;
-
 
 import java.io.IOException;
 import java.io.InputStream;
 
+import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 
 /**
- * A content handler for a Source Document. The content handler is responsible for 
- * loading content from a Source Document and keeping it in memory. 
- * It uses the proper encoding and {@link de.catma.document.source.FileType FileType}. 
- * <br><br>
- * <b> SourceContentHandlers need to have a default no arg constructor!</b>
- *
- * @author marco.petris@web.de
- *
+ * A content handler for a source document. The content handler is responsible for
+ * loading content from a source document and keeping it in memory.
+ * <p>
+ * It uses the proper encoding and {@link FileType}.
+ * <p>
+ * <strong>SourceContentHandler implementations need to have a default no-arg constructor!</strong>
  */
 public interface SourceContentHandler {
 

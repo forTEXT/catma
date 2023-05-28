@@ -85,8 +85,8 @@ public class Tagger extends AbstractComponent {
 						instancePartIDLineID.getFirst(), instancePartIDLineID.getSecond());
 				
 			} catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error displaying Annotation Instance information!", e); 
+				((CatmaApplication) UI.getCurrent()).showAndLogError(
+					"Error displaying annotation instance information", e);
 			}
 		}
 		
@@ -97,8 +97,8 @@ public class Tagger extends AbstractComponent {
 				taggerListener.tagInstanceSelected(tagInstanceIDs);
 			
 			} catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error displaying Annotation Instances information!", e); 
+				((CatmaApplication) UI.getCurrent()).showAndLogError(
+					"Error displaying annotation instances information", e);
 			}
 			
 		}
@@ -114,8 +114,8 @@ public class Tagger extends AbstractComponent {
 					taggerListener.tagInstanceAdded(
 							pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
 				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error adding Annotation!", e); 
+					((CatmaApplication) UI.getCurrent()).showAndLogError(
+						"Error adding annotation", e);
 				}
 			}
 		}
@@ -243,8 +243,8 @@ public class Tagger extends AbstractComponent {
 			serializedComments = new ClientCommentJSONSerializer().toJSON(relativeComments);
 		}
 		catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error serializing Comments!", e); 
+			((CatmaApplication) UI.getCurrent()).showAndLogError(
+					"Error serializing comments", e);
 		}
 		
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
@@ -321,15 +321,17 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void addTagInstanceWith(TagDefinition tagDefinition) {
-		try {
-			getRpcProxy(TaggerClientRpc.class).addTagInstanceWith(
-				new ClientTagDefinitionJSONSerializer().toJSON(
-						new ClientTagDefinition(
-							tagDefinition.getUuid(),
-							ColorConverter.toHex(tagDefinition.getColor()))));
-		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error adding Annotation!", e); 
+		if (!project.isReadOnly()) {
+			try {
+				getRpcProxy(TaggerClientRpc.class).addTagInstanceWith(
+					new ClientTagDefinitionJSONSerializer().toJSON(
+							new ClientTagDefinition(
+								tagDefinition.getUuid(),
+								ColorConverter.toHex(tagDefinition.getColor()))));
+			} catch (IOException e) {
+				((CatmaApplication) UI.getCurrent()).showAndLogError(
+						"Error adding annotation", e);
+			}
 		}
 	}
 

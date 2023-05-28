@@ -11,7 +11,7 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACConstraint;
@@ -19,7 +19,7 @@ import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.ui.component.IconButton;
-import de.catma.ui.events.ProjectChangedEvent;
+import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
@@ -40,7 +40,7 @@ public class ProjectCard extends VerticalFlexLayout  {
     private ProjectReference projectReference;
 
     private final ErrorHandler errorLogger;
-    private final ProjectManager projectManager;
+    private final ProjectsManager projectManager;
 
 	private final EventBus eventBus;
 
@@ -52,21 +52,19 @@ public class ProjectCard extends VerticalFlexLayout  {
 	private Label nameLabel;
 
 	private final ClickAction clickAction;
-	
-	ProjectCard(ProjectReference projectReference, ProjectManager projectManager, 
-    		EventBus eventBus, IRBACManager rbacManager) {
-		this(projectReference, projectManager, eventBus, rbacManager, 
-				ref -> eventBus.post(new RouteToProjectEvent(ref, false)));
+
+	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, EventBus eventBus, IRBACManager rbacManager) {
+		this(projectReference, projectManager, eventBus, rbacManager, ref -> eventBus.post(new RouteToProjectEvent(ref)));
 	}
-	
-	public ProjectCard(ProjectReference projectReference, ProjectManager projectManager, 
+
+	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, 
     		EventBus eventBus, ClickAction clickAction) {
 		this(projectReference, projectManager, eventBus, new NoopRBACManager(), 
 				ref -> clickAction.projectCardClicked(ref));
 	}
 
     private ProjectCard(
-    		ProjectReference projectReference, ProjectManager projectManager, 
+    		ProjectReference projectReference, ProjectsManager projectManager, 
     		EventBus eventBus, IRBACManager rbacManager, 
     		ClickAction clickAction){
         this.projectReference = Objects.requireNonNull(projectReference) ;
@@ -83,136 +81,134 @@ public class ProjectCard extends VerticalFlexLayout  {
 
     private void initData() {
 		try {
-			RBACRole projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference.getProjectId());
+			RBACRole projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference);
 			rbacEnforcer.enforceConstraints(projectRole); // normally done in reload();
 		} catch (IOException e) {
-            errorLogger.showAndLogError("can't fetch permissions" + projectReference.getName(), e);
+            errorLogger.showAndLogError(String.format("Can't fetch permissions for project \"%s\"", projectReference.getName()), e);
 		}
 	}
 
 	protected void initComponents() {
-        addStyleName("projectlist__card");
+		addStyleName("projectlist__card");
 
-        CssLayout preview = new CssLayout();
-        preview.addStyleName("projectlist__card__preview");
-        descriptionLabel = new Label(projectReference.getDescription());
-        descriptionLabel.setWidth("100%");
-        preview.addComponents(descriptionLabel);
+		CssLayout previewLayout = new CssLayout();
+		previewLayout.addStyleName("projectlist__card__preview");
+		previewLayout.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
 
-        preview.addLayoutClickListener(evt -> handleOpenProjectRequest());
-        addComponent(preview);
+		descriptionLabel = new Label(projectReference.getDescription());
+		descriptionLabel.setWidth("100%");
+		previewLayout.addComponents(descriptionLabel);
 
-        HorizontalFlexLayout descriptionBar = new HorizontalFlexLayout();
-        descriptionBar.addStyleName("projectlist__card__descriptionbar");
-        descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
-        descriptionBar.setWidth("100%");
-        
-        
-        nameLabel = new Label(projectReference.getName());
-        nameLabel.setWidth("100%");
-        
-        descriptionBar.addComponent(nameLabel);
+		addComponent(previewLayout);
 
-        IconButton btnRemove = new IconButton(VaadinIcons.TRASH);
-        descriptionBar.addComponents(btnRemove);
+		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
+		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");
+		titleAndActionsLayout.setAlignItems(FlexLayout.AlignItems.BASELINE);
+		titleAndActionsLayout.setWidth("100%");
 
-        btnRemove.addClickListener(
-            (event -> {
-                ConfirmDialog.show(UI.getCurrent(),"Delete Project",
-                        "Do you want to delete the whole Project '" + projectReference.getName() + "'?",
-                        "OK",
-                        "Cancel"
-                , (evt) -> {
-                    try {
-                        if(evt.isConfirmed()){
-                        	projectManager.delete(projectReference.getProjectId());
-                        	eventBus.post(new ProjectChangedEvent(projectReference.getProjectId()));
-                        }
-                    } catch (Exception e) {
-                        errorLogger.showAndLogError("can't delete Project " + projectReference.getName(), e);
-                    }
-                });
-            })
-        );
-        
-        IconButton btnEdit = new IconButton(VaadinIcons.PENCIL);
-        btnEdit.addClickListener(click -> {
-        	new EditProjectDialog(
-        			projectReference, 
-        			projectManager,
-        			result -> {
-        				try {
-							projectManager.updateProject(result);
-							descriptionLabel.setValue(result.getDescription());
-							nameLabel.setValue(result.getName());
-						} catch (IOException e) {
-							errorLogger.showAndLogError("Failed to update Project", e);
-							eventBus.post(new ProjectChangedEvent());
+		nameLabel = new Label(projectReference.getName());
+		nameLabel.setWidth("100%");
+
+		titleAndActionsLayout.addComponent(nameLabel);
+
+		IconButton btnRemove = new IconButton(VaadinIcons.TRASH);
+		btnRemove.addClickListener(
+				clickEvent -> ConfirmDialog.show(
+						UI.getCurrent(),
+						"Delete Project",
+						String.format("Do you want to delete the whole project \"%s\"?", projectReference.getName()),
+						"OK",
+						"Cancel",
+						confirmDialog -> {
+							try {
+								if (confirmDialog.isConfirmed()) {
+									projectManager.deleteProject(projectReference);
+									eventBus.post(new ProjectsChangedEvent(projectReference.getProjectId()));
+								}
+							}
+							catch (IOException e) {
+								errorLogger.showAndLogError(String.format("Failed to delete project \"%s\"", projectReference.getName()), e);
+							}
 						}
-        			}).show();
-        });
-        descriptionBar.addComponent(btnEdit);
-        
-        IconButton btnLeave = new IconButton(VaadinIcons.EXIT);
-        btnLeave.addClickListener(
-		   (event -> {
-               ConfirmDialog.show(UI.getCurrent(),"Leave Project",
-                       "Do you want to leave '" + projectReference.getName() + "'?",
-                       "OK",
-                       "Cancel"
-               , (evt) -> {
-                   try {
-                       if(evt.isConfirmed()) {
-                    	   projectManager.leaveProject(projectReference.getProjectId());
-                       }
-                   } catch (Exception e) {
-                       errorLogger.showAndLogError("can't leave project " + projectReference.getName(), e);
-                   }
-                   eventBus.post(new ProjectChangedEvent());
-               });
-           })
-		
+				)
 		);
-        
-        descriptionBar.addComponent(btnLeave);
-        
-        rbacEnforcer.register(
-        		RBACConstraint.ifNotAuthorized((role) -> 
-        			(rbacManager.hasPermission(role, RBACPermission.PROJECT_EDIT)),
-        			() -> { 
-        				btnEdit.setVisible(false);
-        				btnEdit.setEnabled(false);
-        			})
-        		);
-        
-        rbacEnforcer.register(
-        		RBACConstraint.ifNotAuthorized((role) -> 
-        			(rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE)),
-        			() -> { 
-        				btnRemove.setVisible(false);
-        				btnRemove.setEnabled(false);
-        			})
-        		);
-        
-        rbacEnforcer.register(
-        		RBACConstraint.ifNotAuthorized(
-        				(role) -> 
-        					rbacManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
-        					&&
-        					! rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE)	
-        				,
-        			() -> { 
-        				btnLeave.setVisible(false);
-        				btnLeave.setEnabled(false);
-        			})
-        		);
-        
-//        IconButton buttonAction = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
-//        descriptionBar.addComponents(buttonAction);
+		titleAndActionsLayout.addComponents(btnRemove);
 
-        addComponents(descriptionBar);
-        
-    }
+		IconButton btnEdit = new IconButton(VaadinIcons.PENCIL);
+		btnEdit.addClickListener(
+				clickEvent -> new EditProjectDialog(
+						projectReference,
+						projectManager,
+						result -> {
+							try {
+								projectManager.updateProjectMetadata(result);
+								nameLabel.setValue(result.getName());
+								descriptionLabel.setValue(result.getDescription());
+							}
+							catch (IOException e) {
+								errorLogger.showAndLogError(String.format("Failed to update project \"%s\"", projectReference.getName()), e);
+							}
+						}
+				).show()
+		);
+		titleAndActionsLayout.addComponent(btnEdit);
+
+		IconButton btnLeave = new IconButton(VaadinIcons.EXIT);
+		btnLeave.addClickListener(
+				clickEvent -> ConfirmDialog.show(
+						UI.getCurrent(),
+						"Leave Project",
+						"Do you want to leave the project \"" + projectReference.getName() + "\"?",
+						"OK",
+						"Cancel",
+						confirmDialog -> {
+							try {
+								if (confirmDialog.isConfirmed()) {
+									projectManager.leaveProject(projectReference);
+									eventBus.post(new ProjectsChangedEvent());
+								}
+							}
+							catch (IOException e) {
+								errorLogger.showAndLogError(String.format("Failed to leave project \"%s\"", projectReference.getName()), e);
+							}
+						}
+				)
+		);
+		titleAndActionsLayout.addComponent(btnLeave);
+
+		rbacEnforcer.register(
+				RBACConstraint.ifNotAuthorized(
+						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_EDIT),
+						() -> {
+							btnEdit.setVisible(false);
+							btnEdit.setEnabled(false);
+						}
+				)
+		);
+
+		rbacEnforcer.register(
+				RBACConstraint.ifNotAuthorized(
+						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE),
+						() -> {
+							btnRemove.setVisible(false);
+							btnRemove.setEnabled(false);
+						}
+				)
+		);
+
+		rbacEnforcer.register(
+				RBACConstraint.ifNotAuthorized(
+						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
+								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // TODO: why do we care about the delete permission here?
+						() -> {
+							btnLeave.setVisible(false);
+							btnLeave.setEnabled(false);
+						}
+				)
+		);
+
+		addComponents(titleAndActionsLayout);
+	}
 
     private void handleOpenProjectRequest() {
     	clickAction.projectCardClicked(this.projectReference);

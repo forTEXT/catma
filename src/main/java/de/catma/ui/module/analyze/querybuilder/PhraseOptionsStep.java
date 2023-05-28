@@ -164,7 +164,7 @@ public class PhraseOptionsStep extends VerticalLayout implements WizardStep {
 
 	@Override
 	public String getStepDescription() {
-		return "How does your phrase look like?";
+		return "What does your phrase look like?";
 	}
 	
 	@Override

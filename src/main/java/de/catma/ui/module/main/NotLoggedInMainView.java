@@ -6,12 +6,7 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.Image;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Link;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.UI;
-
+import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.sqlite.SqliteService;
@@ -28,132 +23,127 @@ import de.catma.ui.module.main.auth.SignUpDialog;
 
 import java.util.ArrayList;
 
-/**
- * Main layout when not logged in
- * 
- * @author db
- *
- */
 public class NotLoggedInMainView extends VerticalFlexLayout {
-
-	private final UIHelpWindow uiHelpWindow = new UIHelpWindow();
 	private final InitializationService initService;
 	private final LoginService loginService;
-	private final EventBus eventBus;
 	private final HazelCastService hazelCastService;
 	private final SqliteService sqliteService;
+	private final EventBus eventBus;
+
+	private final UIHelpWindow uiHelpWindow;
 
 	private Link statusLink;
-	private VerticalLayout noticePanelVerticalLayout;
+	private VerticalLayout noticeLayoutInnerLayout;
 
 	public NotLoggedInMainView(
 			InitializationService initService,
 			LoginService loginService,
 			HazelCastService hazelCastService,
 			SqliteService sqliteService,
-			EventBus eventBus) {
+			EventBus eventBus
+	) {
 		this.initService = initService;
 		this.loginService = loginService;
 		this.hazelCastService = hazelCastService;
 		this.sqliteService = sqliteService;
 		this.eventBus = eventBus;
 		eventBus.register(this);
+
+		uiHelpWindow = new UIHelpWindow();
+
 		initComponents();
 	}
-	
-	private void initComponents(){
+
+	private void initComponents() {
 		setSizeFull();
 		setAlignItems(AlignItems.CENTER);
 		addStyleName("home");
-		
 
 		HorizontalFlexLayout menuLayout = new HorizontalFlexLayout();
 		menuLayout.setWidth("100%");
 		menuLayout.setJustifyContent(JustifyContent.FLEX_END);
 		menuLayout.setAlignItems(AlignItems.CENTER);
 		menuLayout.addStyleName("home__menu");
-		menuLayout.setWidth("100%"); //$NON-NLS-1$
-		
-		addComponent(menuLayout);
-		
-		Link aboutLink = new Link("About",
-				new ExternalResource(CATMAPropertyKey.AboutURL.getValue(CATMAPropertyKey.AboutURL.getDefaultValue())));
-		aboutLink.setTargetName("_blank"); //$NON-NLS-1$
+		menuLayout.setWidth("100%");
+
+		Link aboutLink = new Link("About", new ExternalResource(CATMAPropertyKey.ABOUT_URL.getValue()));
+		aboutLink.setTargetName("_blank");
 		menuLayout.addComponent(aboutLink);
 
-		Link imprintLink = new Link("Imprint",
-				new ExternalResource(CATMAPropertyKey.ImprintURL.getValue(CATMAPropertyKey.ImprintURL.getDefaultValue())));
+		Link imprintLink = new Link("Imprint", new ExternalResource(CATMAPropertyKey.IMPRINT_URL.getValue()));
 		imprintLink.setTargetName("_blank");
 		menuLayout.addComponent(imprintLink);
 
-		Link termsOfUseLink = new Link("Terms of Use",
-				new ExternalResource(CATMAPropertyKey.TermsOfUseURL.getValue(CATMAPropertyKey.TermsOfUseURL.getDefaultValue())));
-		termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
+		Link termsOfUseLink = new Link("Terms of Use", new ExternalResource(CATMAPropertyKey.TERMS_OF_USE_URL.getValue()));
+		termsOfUseLink.setTargetName("_blank");
 		menuLayout.addComponent(termsOfUseLink);
 
-		Link privacyLink = new Link("Privacy Policy",
-				new ExternalResource(CATMAPropertyKey.PrivacyPolicyURL.getValue(CATMAPropertyKey.PrivacyPolicyURL.getDefaultValue())));
+		Link privacyLink = new Link("Privacy Policy", new ExternalResource(CATMAPropertyKey.PRIVACY_POLICY_URL.getValue()));
 		privacyLink.setTargetName("_blank");
 		menuLayout.addComponent(privacyLink);
 
-		statusLink = new Link("Status",
-				new ExternalResource(CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue())));
+		statusLink = new Link("Status", new ExternalResource(CATMAPropertyKey.STATUS_URL.getValue()));
 		statusLink.setTargetName("_blank");
 		menuLayout.addComponent(statusLink);
 
-		IconButton btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE, click -> {
+		IconButton btnHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE, click -> {
 			if (uiHelpWindow.getParent() == null) {
 				UI.getCurrent().addWindow(uiHelpWindow);
-			} else {
+			}
+			else {
 				UI.getCurrent().removeWindow(uiHelpWindow);
 			}
-		});	
-		menuLayout.addComponent(btHelp);
+		});
+		menuLayout.addComponent(btnHelp);
 
+		addComponent(menuLayout);
 
-		VerticalFlexLayout contentPanel = new VerticalFlexLayout();
-		contentPanel.setHeight("100%"); //$NON-NLS-1$
-		contentPanel.addStyleName("home__content"); //$NON-NLS-1$
+		VerticalFlexLayout contentLayout = new VerticalFlexLayout();
+		contentLayout.setHeight("100%");
+		contentLayout.addStyleName("home__content");
 
-		ThemeResource logoResource = new ThemeResource("img/catma-tailright-final-cmyk.svg"); //$NON-NLS-1$
+		ThemeResource logoResource = new ThemeResource("img/catma-tailright-final-cmyk.svg");
 		Image logoImage = new Image(null, logoResource);
 		logoImage.setStyleName("not-logged-in-main-view-logo");
-		contentPanel.addComponent(logoImage);
+		contentLayout.addComponent(logoImage);
 
-		noticePanelVerticalLayout = new VerticalLayout();
-		noticePanelVerticalLayout.addStyleName("vlayout");
+		noticeLayoutInnerLayout = new VerticalLayout();
+		noticeLayoutInnerLayout.addStyleName("vlayout");
 
-		HorizontalFlexLayout noticePanel = new HorizontalFlexLayout(noticePanelVerticalLayout);
-		noticePanel.addStyleName("not-logged-in-main-view-noticepanel");
-		noticePanel.setJustifyContent(JustifyContent.CENTER);
-		contentPanel.addComponent(noticePanel);
+		HorizontalFlexLayout noticeLayout = new HorizontalFlexLayout(noticeLayoutInnerLayout);
+		noticeLayout.addStyleName("not-logged-in-main-view-notice-layout");
+		noticeLayout.setJustifyContent(JustifyContent.CENTER);
+		contentLayout.addComponent(noticeLayout);
 
 		renderNotices();
 
-		LabelButton btn_signup = new LabelButton("Sign up", event -> new SignUpDialog("Sign Up").show());
+		LabelButton btnSignUp = new LabelButton("Sign Up", event -> new SignUpDialog("Sign Up").show());
 
-		LabelButton btn_login = new LabelButton("Sign in", event -> new SignInDialog(
+		LabelButton btnSignIn = new LabelButton(
 				"Sign In",
-				loginService,
-				initService,
-				hazelCastService,
-				sqliteService,
-				eventBus).show());
+				event -> new SignInDialog(
+						"Sign In",
+						loginService,
+						initService,
+						hazelCastService,
+						sqliteService,
+						eventBus
+				).show()
+		);
 		Link newsLetterLink = new Link("Newsletter", new ExternalResource("https://catma.de/newsletter/"));
 		newsLetterLink.setTargetName("_blank");
 		newsLetterLink.addStyleName("button__label");
 
-		HorizontalFlexLayout buttonPanel = new HorizontalFlexLayout(btn_signup,btn_login,newsLetterLink);
-		buttonPanel.addStyleName("home__content__btns");
-		buttonPanel.setJustifyContent(JustifyContent.CENTER);
-		contentPanel.addComponent(buttonPanel);
-		
-		addComponent(contentPanel);		
+		HorizontalFlexLayout buttonLayout = new HorizontalFlexLayout(btnSignUp, btnSignIn, newsLetterLink);
+		buttonLayout.addStyleName("home__content__btns");
+		buttonLayout.setJustifyContent(JustifyContent.CENTER);
+		contentLayout.addComponent(buttonLayout);
 
-		HorizontalFlexLayout bottomPanel = new HorizontalFlexLayout();
-		bottomPanel.addStyleName("not-logged-in-main-view-fortext-bottom-panel");
-		addComponent(bottomPanel);
-		
+		addComponent(contentLayout);
+
+		HorizontalFlexLayout fortextLayout = new HorizontalFlexLayout();
+		fortextLayout.addStyleName("not-logged-in-main-view-fortext-layout");
+
 		Link fortextButton = new Link("", new ExternalResource("https://fortext.net"));
 		fortextButton.setIcon(new ThemeResource("img/fortext_logo.png"));
 		fortextButton.setTargetName("_blank");
@@ -162,15 +152,16 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 		Label fortextLabel = new Label("developed and maintained</br>in cooperation with");
 		fortextLabel.setContentMode(ContentMode.HTML);
 		fortextLabel.addStyleName("not-logged-in-main-view-fortext-label");
-		
-		bottomPanel.addComponent(fortextLabel);
-		bottomPanel.addComponent(fortextButton);
-		
+
+		fortextLayout.addComponent(fortextLabel);
+		fortextLayout.addComponent(fortextButton);
+
+		addComponent(fortextLayout);
 	}
 
 	private void renderNotices() {
 		statusLink.setIcon(null);
-		noticePanelVerticalLayout.removeAllComponents();
+		noticeLayoutInnerLayout.removeAllComponents();
 
 		ArrayList<SqliteService.SqliteModel.Notice> notices = sqliteService.getNotices();
 		boolean haveIssues = notices.stream().anyMatch(notice -> notice.isIssue);
@@ -181,22 +172,23 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 					ContentMode.HTML
 			);
 			noticesTitle.addStyleName("title");
-			noticePanelVerticalLayout.addComponent(noticesTitle);
+			noticeLayoutInnerLayout.addComponent(noticesTitle);
 
 			notices.forEach(notice -> {
-				noticePanelVerticalLayout.addComponent(new Label(notice.message, ContentMode.HTML));
+				noticeLayoutInnerLayout.addComponent(new Label(notice.message, ContentMode.HTML));
 			});
 
 			if (haveIssues) {
 				statusLink.setIcon(VaadinIcons.WARNING);
 
 				Label statusPageText = new Label(
-						"See the <a href=\"" +
-								CATMAPropertyKey.StatusURL.getValue(CATMAPropertyKey.StatusURL.getDefaultValue()) +
-								"\" target=\"_blank\">status page</a> for the latest information on current issues",
+						String.format(
+								"See the <a href=\"%s\" target=\"_blank\">status page</a> for the latest information on current issues",
+								CATMAPropertyKey.STATUS_URL.getValue()
+						),
 						ContentMode.HTML
 				);
-				noticePanelVerticalLayout.addComponent(statusPageText);
+				noticeLayoutInnerLayout.addComponent(statusPageText);
 			}
 		}
 	}
@@ -205,5 +197,4 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 	public void handleRefresh(RefreshEvent refreshEvent) {
 		renderNotices();
 	}
-	
 }

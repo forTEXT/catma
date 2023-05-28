@@ -58,7 +58,7 @@ public class SignupTokenManager {
      * @return token
      */
     public Optional<SignupToken> get(String token){
-    	logger.log(Level.INFO, "called with token " + token);
+    	logger.info("SignupTokenManager.get called with token " + token);
     	Objects.requireNonNull(token);
     	if(!containsToken(token)){
     		return Optional.empty();
@@ -67,7 +67,7 @@ public class SignupTokenManager {
     	try {
     		return Optional.of(new Gson().fromJson(encodedToken, SignupToken.class));
 	    } catch (JsonSyntaxException e){
-	    	logger.log(Level.INFO,"Signuptoken corrupt", e);
+	    	logger.log(Level.WARNING,"Signup token corrupt", e);
 			return Optional.empty();
 		}
     }
@@ -112,7 +112,7 @@ public class SignupTokenManager {
     	Optional<SignupToken> signupToken = get(token);
     	if(!signupToken.isPresent()){
     		eventBus.post(new TokenInvalidEvent("Token is corrupt. Please sign up again!"));
-    		logger.log(Level.WARNING, "token was found but content was null");
+    		logger.warning("Token was found but content was null");
     		return;
     	}
     	  

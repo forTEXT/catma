@@ -24,6 +24,7 @@ import com.vaadin.ui.Component;
 
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.DocumentChangeEvent;
@@ -54,7 +55,7 @@ public class TaggerManagerView extends TabbedView {
 			}
 		}
 		else if (documentChangeEvent.getChangeType().equals(ChangeType.UPDATED)) {
-			SourceDocument document = documentChangeEvent.getDocument();
+			SourceDocumentReference document = documentChangeEvent.getDocument();
 			TaggerView taggerView = getTaggerView(document);
 			if (taggerView != null) {
 				taggerView.setSourceDocument(document, null);
@@ -63,14 +64,14 @@ public class TaggerManagerView extends TabbedView {
     }
     
 	public TaggerView openSourceDocument(
-			final SourceDocument sourceDocument, Project repository,
+			final SourceDocumentReference sourceDocumentReference, Project repository,
 			AfterDocumentLoadedOperation afterDocumentLoadedOperation) {
 
-		TaggerView taggerView = getTaggerView(sourceDocument);
+		TaggerView taggerView = getTaggerView(sourceDocumentReference);
 		if (taggerView != null) {
 			setSelectedTab(taggerView);
-			if (taggerView.getSourceDocument() == null) {
-				taggerView.setSourceDocument(sourceDocument, afterDocumentLoadedOperation);
+			if (taggerView.getSourceDocumentReference() == null) {
+				taggerView.setSourceDocument(sourceDocumentReference, afterDocumentLoadedOperation);
 			}
 			else if (afterDocumentLoadedOperation != null) {
 				afterDocumentLoadedOperation.afterDocumentLoaded(taggerView);
@@ -78,9 +79,9 @@ public class TaggerManagerView extends TabbedView {
 		}
 		else {
 			taggerView = new TaggerView(
-					nextTaggerID++, sourceDocument, repository,
+					nextTaggerID++, sourceDocumentReference, repository,
 					eventBus, afterDocumentLoadedOperation);
-			addClosableTab(taggerView, sourceDocument.toString());
+			addClosableTab(taggerView, sourceDocumentReference.toString());
 			setSelectedTab(taggerView);
 		}
 		
@@ -88,11 +89,11 @@ public class TaggerManagerView extends TabbedView {
 	}
 	
 	
-	private TaggerView getTaggerView(SourceDocument sourceDocument) {
+	private TaggerView getTaggerView(SourceDocumentReference sourceDocumentReference) {
 		for (Component tabContent : this.getTabSheet()) {
 			TaggerView taggerView = (TaggerView)tabContent;
-			if (taggerView.getSourceDocument() == null || taggerView.getSourceDocument().getUuid().equals(
-					sourceDocument.getUuid())) {
+			if (taggerView.getSourceDocumentReference() == null || taggerView.getSourceDocumentReference().getUuid().equals(
+					sourceDocumentReference.getUuid())) {
 				return taggerView;
 			}
 		}

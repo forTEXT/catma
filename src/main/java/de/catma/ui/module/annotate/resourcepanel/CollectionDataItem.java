@@ -8,20 +8,16 @@ class CollectionDataItem implements DocumentTreeItem {
 
 	private AnnotationCollectionReference collectionRef;
 	private boolean selected = true;
-	private boolean hasWritePermission;
 
 	public CollectionDataItem(
-			AnnotationCollectionReference collectionRef, 
-			boolean hasWritePermission) {
-		this(collectionRef, hasWritePermission, true);
+			AnnotationCollectionReference collectionRef) {
+		this(collectionRef, true);
 	}
 	
 	public CollectionDataItem(
 			AnnotationCollectionReference collectionRef, 
-			boolean hasWritePermission, 
 			boolean selected) {
 		this.collectionRef = collectionRef;
-		this.hasWritePermission = hasWritePermission;
 		this.selected = selected;
 	}
 	
@@ -67,10 +63,5 @@ class CollectionDataItem implements DocumentTreeItem {
 	@Override
 	public String toString() {
 		return collectionRef.getName();
-	}
-
-	@Override
-	public String getPermissionIcon() {
-		return hasWritePermission?VaadinIcons.UNLOCK.getHtml():VaadinIcons.LOCK.getHtml();
 	}
 }

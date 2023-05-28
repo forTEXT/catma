@@ -127,7 +127,7 @@ public class JSONQueryResultBuilder {
 		try {
 			rowNode.put(Field.tagColor.name(), colorCache.get(row.getTagDefinitionId()));
 		} catch (ExecutionException e) {
-			Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Could not load Tag Color for JSON export!", e);
+			Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Couldn't load tag color for JSON export", e);
 		}
 		rowNode.put(Field.annotationId.name(),  row.getTagInstanceId());
 		rowNode.put(Field.propertyId.name(),  row.getPropertyDefinitionId());

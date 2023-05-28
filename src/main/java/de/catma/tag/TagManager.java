@@ -143,14 +143,21 @@ public class TagManager {
 				listener);
 	}
 
-	public void setTagsetDefinitionName(
-			TagsetDefinition tagsetDefinition, String name) {
-		String oldName = tagsetDefinition.getName();
-		tagsetDefinition.setName(name);
-		tagsetDefinition.setVersion();
+	public void setTagsetMetadata(
+			TagsetDefinition tagsetDefinition, TagsetMetadata tagsetMetadata) {
+		TagsetMetadata oldMetadata = 
+				new TagsetMetadata(
+						tagsetDefinition.getName(), 
+						tagsetDefinition.getDescription(), 
+						tagsetDefinition.getResponsibleUser());
+		
+		tagsetDefinition.setName(tagsetMetadata.getName());
+		tagsetDefinition.setDescription(tagsetMetadata.getDescription());
+		tagsetDefinition.setResponsibleUser(tagsetMetadata.getResponsibleUser());
+		
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagsetDefinitionChanged.name(),
-				oldName,
+				oldMetadata,
 				tagsetDefinition);
 	}
 
@@ -166,7 +173,6 @@ public class TagManager {
 	public void addTagDefinition(TagsetDefinition tagsetDefinition,
 			TagDefinition tagDefinition) {
 		tagsetDefinition.addTagDefinition(tagDefinition);
-		tagsetDefinition.setVersion();
 		this.propertyChangeSupport.firePropertyChange(
 			TagManagerEvent.tagDefinitionChanged.name(),
 			null,
@@ -180,7 +186,6 @@ public class TagManager {
 			removeTagDefinition(tagsetDefinition, child);
 		}
 		tagsetDefinition.remove(tagDefinition);
-		tagsetDefinition.setVersion();
 		this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionChanged.name(),
 				new Pair<TagsetDefinition, TagDefinition>(tagsetDefinition, tagDefinition),

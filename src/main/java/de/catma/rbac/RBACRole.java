@@ -11,8 +11,8 @@ public enum RBACRole {
     NONE(0,"None"), 
     GUEST(10,"Student"), 
     REPORTER(20,"Observer"), 
-    ASSISTANT(30,"Assistant"), 
-    MAINTAINER(40,"Partner"), 
+    ASSISTANT(30,"Assistant"), // Developer, default role for CATMA project participants
+    MAINTAINER(40,"Partner"), // Maintainer, allowed to manage the team members, suitable for tutors
     OWNER(50,"Owner");
 
     private final int accessLevel;

@@ -1,8 +1,8 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,14 +10,11 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.gson.annotations.SerializedName;
 
 import de.catma.document.annotation.TagReference;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.GitProjectManager;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -31,8 +28,8 @@ import de.catma.tag.TagLibrary;
 public class JsonLdWebAnnotationBody_Dataset {
 	// we use the TreeMap and TreeSet types so that we get automatic sorting
 	private @SerializedName("@context") TreeMap<String, String> context;
-	private String tagset;
-	private String tag;
+	private String tagset; // tagset URI, do not rename
+	private String tag; // tag URI, do not rename
 	private TreeMap<String, TreeMap<String, TreeSet<String>>> properties;
 	@SuppressWarnings("unused") // used by reflection
 	private String type = "Dataset";
@@ -47,89 +44,79 @@ public class JsonLdWebAnnotationBody_Dataset {
 		this.properties.put(USER_PROPERTIES_KEY, new TreeMap<>());
 	}
 
-	public JsonLdWebAnnotationBody_Dataset(
-		String gitServerBaseUrl, String projectId, Collection<TagReference> tagReferences, TagLibrary tagLibrary)
-			throws IOException {
+	public JsonLdWebAnnotationBody_Dataset(Collection<TagReference> tagReferences, TagLibrary tagLibrary) throws IOException {
 		this();
-		this.context.put("tagset", CATMAPropertyKey.BaseURL.getValue() + "/tagset");
-		this.context.put("tag", CATMAPropertyKey.BaseURL.getValue() + "/tag");
 
-		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
-		// properties
-		Set<TagInstance> uniqueTagInstances = new HashSet<>(tagReferences.stream().map(TagReference::getTagInstance)
-				.collect(Collectors.toSet()));
+		String contextDefinitionURL = CATMAPropertyKey.CONTEXT_DEFINITION_URL.getValue();
+		if (!contextDefinitionURL.endsWith("/")) {
+			contextDefinitionURL += "/";
+		}
+		this.context.put("tagset", contextDefinitionURL + "tagset");
+		this.context.put("tag", contextDefinitionURL + "tag");
+
+		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and properties
+		Set<TagInstance> uniqueTagInstances = new HashSet<>(
+				tagReferences.stream().map(TagReference::getTagInstance).collect(Collectors.toSet())
+		);
 		if (uniqueTagInstances.size() > 1) {
-			throw new IllegalArgumentException(
-				"Supplied TagReference objects are not all for the same TagInstance"
-			);
+			throw new IllegalArgumentException("Supplied TagReference objects are not all for the same TagInstance");
 		}
 
 		String tagDefinitionId = tagReferences.iterator().next().getTagDefinitionId();
 		TagDefinition tagDefinition = tagLibrary.getTagDefinition(tagDefinitionId);
-		
+
 		TagInstance tagInstance = tagReferences.iterator().next().getTagInstance();
 
-		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+		this.tagset = this.buildTagsetUri(tagInstance.getTagsetId()).toString();
+		this.tag = this.buildTagDefinitionUri(tagDefinition).toString();
 
-		this.tagset = this.buildTagsetUrl(
-			gitServerBaseUrl, projectRootRepositoryName, tagInstance.getTagsetId()
-		).toString();
-
-		this.tag = this.buildTagDefinitionUrl(this.tagset, tagDefinition).toString();
-
-		this.addProperties(this.tag, tagInstance.getUserDefinedProperties(), false);
-		this.addProperties(this.tag, tagInstance.getSystemProperties(), true);
+		this.addProperties(tagInstance.getUserDefinedProperties(), false);
+		this.addProperties(tagInstance.getSystemProperties(), true);
 	}
 
-	private URL buildTagsetUrl(String gitServerBaseUrl, String projectRootRepositoryName, String tagsetUuid)
-			throws MalformedURLException {
-		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
-
-		return new URL(
-				gitServerUrl.getProtocol(),
-				gitServerUrl.getHost(),
-				gitServerUrl.getPort(),
+	private URI buildTagsetUri(String tagsetUuid) throws IOException {
+		try {
+			return new URI(
 				String.format(
-						"%s%s/%s/%s",
-						gitServerUrl.getPath(),
-						projectRootRepositoryName,
-						GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+						"%s/%s",
+						GitProjectHandler.TAGSETS_DIRECTORY_NAME,
 						tagsetUuid
 				)
-		);
+			);
+		}
+		catch (URISyntaxException e) {
+			throw new IOException(e);
+		}
 	}
 
-	private URL buildTagDefinitionUrl(String tagsetUrl, TagDefinition tagDefinition)
-			throws MalformedURLException {
-		URL _tagsetUrl = JsonLdWebAnnotation.sanitizeUrl(tagsetUrl);
-
-		return new URL(
-			_tagsetUrl.getProtocol(), _tagsetUrl.getHost(), _tagsetUrl.getPort(),
-			StringUtils.isEmpty(tagDefinition.getParentUuid()) ?
-					String.format("%s%s", _tagsetUrl.getPath(), tagDefinition.getUuid()) :
-					String.format(
-						"%s%s/%s", _tagsetUrl.getPath(), tagDefinition.getParentUuid(), tagDefinition.getUuid()
-					)
-		);
+	private URI buildTagDefinitionUri(TagDefinition tagDefinition) throws IOException{
+		try {
+			return new URI(
+				String.format("%s/%s", this.tagset, tagDefinition.getUuid())
+			);
+		}
+		catch (URISyntaxException e) {
+			throw new IOException(e);
+		}
 	}
 
-	private URL buildPropertyDefinitionUrl(String tagDefinitionUrl, String propertyDefinitionUuid)
-			throws MalformedURLException {
-		URL _tagDefinitionUrl = JsonLdWebAnnotation.sanitizeUrl(tagDefinitionUrl);
-
-		return new URL(
-			_tagDefinitionUrl.getProtocol(), _tagDefinitionUrl.getHost(), _tagDefinitionUrl.getPort(),
-			String.format("%spropertydefs.json/%s", _tagDefinitionUrl.getPath(), propertyDefinitionUuid)
-		);
+	private URI buildPropertyDefinitionUri(String propertyDefinitionUuid) throws IOException {
+		try {
+			return new URI(
+				String.format("%s/%s", this.tag, propertyDefinitionUuid)
+			);
+		}
+		catch (URISyntaxException e) {
+			throw new IOException(e);
+		}
 	}
 
-	private void addProperties(String tagDefinitionUrl, Collection<Property> properties, boolean system)
-			throws MalformedURLException {
+	private void addProperties(Collection<Property> properties, boolean system) throws IOException {
 		for (Property property : properties) {
 			// add entries to the context that allow us to have PropertyDefinition URLs aliased by name
 			this.context.put(
 				property.getPropertyDefinitionId(),
-				this.buildPropertyDefinitionUrl(tagDefinitionUrl, property.getPropertyDefinitionId()).toString()
+				this.buildPropertyDefinitionUri(property.getPropertyDefinitionId()).toString()
 			);
 
 			// add property values
@@ -157,5 +144,4 @@ public class JsonLdWebAnnotationBody_Dataset {
 	public TreeMap<String, TreeMap<String, TreeSet<String>>> getProperties() {
 		return this.properties;
 	}
-
 }

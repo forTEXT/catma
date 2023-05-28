@@ -1,484 +1,96 @@
 package de.catma.repository.git.managers;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
+import de.catma.project.MergeRequestInfo;
+import de.catma.project.ProjectReference;
+import de.catma.project.ProjectsManager.ProjectMetadataSerializationField;
+import de.catma.properties.CATMAPropertyKey;
+import de.catma.rbac.RBACRole;
+import de.catma.repository.git.GitLabUtils;
+import de.catma.repository.git.GitMember;
+import de.catma.repository.git.GitUser;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.ui.events.ChangeUserAttributesEvent;
+import de.catma.user.Member;
+import de.catma.user.User;
+import org.eclipse.jgit.lib.Constants;
+import org.gitlab4j.api.Constants.IssueState;
+import org.gitlab4j.api.Constants.MergeRequestState;
+import org.gitlab4j.api.*;
+import org.gitlab4j.api.models.*;
+
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-import org.gitlab4j.api.Constants.IssueState;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GroupApi;
-import org.gitlab4j.api.IssuesApi;
-import org.gitlab4j.api.NotesApi;
-import org.gitlab4j.api.Pager;
-import org.gitlab4j.api.ProjectApi;
-import org.gitlab4j.api.models.AccessLevel;
-import org.gitlab4j.api.models.Author;
-import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.GroupFilter;
-import org.gitlab4j.api.models.Issue;
-import org.gitlab4j.api.models.IssueFilter;
-import org.gitlab4j.api.models.Member;
-import org.gitlab4j.api.models.Namespace;
-import org.gitlab4j.api.models.Note;
-import org.gitlab4j.api.models.Permissions;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectFilter;
-import org.gitlab4j.api.models.ImportStatus.Status;
-import org.gitlab4j.api.models.Visibility;
+public class GitlabManagerRestricted extends GitlabManagerCommon implements RemoteGitManagerRestricted {
+	public static final String CATMA_COMMENT_LABEL = "CATMA Comment";
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Maps;
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import de.catma.backgroundservice.BackgroundService;
-import de.catma.document.comment.Comment;
-import de.catma.document.comment.Reply;
-import de.catma.project.ForkStatus;
-import de.catma.project.ProjectReference;
-import de.catma.properties.CATMAPropertyKey;
-import de.catma.rbac.RBACPermission;
-import de.catma.rbac.RBACRole;
-import de.catma.repository.git.CreateRepositoryResponse;
-import de.catma.repository.git.GitMember;
-import de.catma.repository.git.GitProjectManager;
-import de.catma.repository.git.GitUser;
-import de.catma.repository.git.GitlabUtils;
-import de.catma.repository.git.interfaces.IGitUserInformation;
-import de.catma.repository.git.interfaces.IRemoteGitManagerRestricted;
-import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.ui.events.ChangeUserAttributeEvent;
-import de.catma.user.User;
-import de.catma.util.IDGenerator;
-
-public class GitlabManagerRestricted extends GitlabManagerCommon implements IRemoteGitManagerRestricted, IGitUserInformation {
-	
-	private static final String CATMA_COMMENT_LABEL = "CATMA Comment";
+	private final Logger logger = Logger.getLogger(GitlabManagerRestricted.class.getName());
 
 	private final GitLabApi restrictedGitLabApi;
-	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private final Cache<String, List<ProjectReference>> projectsCache;
+
 	private GitUser user;
-	// Cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
-	private final Cache<String, List<ProjectReference>> projectsCache = CacheBuilder.newBuilder()
-		       .expireAfterWrite(5, TimeUnit.SECONDS)
-		       .build();
-	
-	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, String userImpersonationToken) throws IOException {
-		this(eventBus, backgroundService, new GitLabApi(CATMAPropertyKey.GitLabServerUrl.getValue(), userImpersonationToken));
-	}
-	
-	public GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, String username, String password) throws IOException {
-		this(eventBus, backgroundService, oauth2Login(CATMAPropertyKey.GitLabServerUrl.getValue(), username, password));
+
+	public GitlabManagerRestricted(EventBus eventBus, String userImpersonationToken) throws IOException {
+		this(eventBus, new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
 	}
 
-	private GitlabManagerRestricted(EventBus eventBus, BackgroundService backgroundService, GitLabApi api) throws IOException {
-		org.gitlab4j.api.models.User currentUser;
+	public GitlabManagerRestricted(EventBus eventBus, String username, String password) throws IOException {
+		this(eventBus, oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
+	}
+
+	private GitlabManagerRestricted(EventBus eventBus, GitLabApi api) throws IOException {
+		this.restrictedGitLabApi = api;
+
+		// cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
+		this.projectsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
+
 		try {
-			currentUser = api.getUserApi().getCurrentUser();
-			this.user = new GitUser(currentUser);
-			this.restrictedGitLabApi = api;
-			eventBus.register(this);
-		} catch (GitLabApiException e) {
+			this.user = new GitUser(this.restrictedGitLabApi.getUserApi().getCurrentUser());
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(e);
 		}
+
+		eventBus.register(this);
 	}
-	
-	/**
-	 * A wrapper to hide imports from outside world 
-	 * @param url
-	 * @param username
-	 * @param password
-	 * @return
-	 * @throws IOException
-	 */
+
 	private static GitLabApi oauth2Login(String url, String username, String password) throws IOException {
 		try {
-			return GitLabApi.oauth2Login(CATMAPropertyKey.GitLabServerUrl.getValue(), username, password);
-		} catch (GitLabApiException e) {
+			return GitLabApi.oauth2Login(url, username, password);
+		}
+		catch (GitLabApiException e) {
 			throw new IOException(e);
 		}
 	}
 
-	@Override
-	public CreateRepositoryResponse createRepository(
-			String name, String path, String groupPath)
-			throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
-		try {
-			Group group = groupApi.getGroup(groupPath);
-
-			Namespace namespace = new Namespace();
-			namespace.setId(group.getId());
-
-			Project project = new Project();
-			project.setName(name);
-			project.setNamespace(namespace);
-
-			if (StringUtils.isNotEmpty(path)) {
-				project.setPath(path);
-			}
-
-			project = projectApi.createProject(project);
-			return new CreateRepositoryResponse(
-				groupPath, project.getId(),
-				GitlabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo())
-			);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to create remote Git repository", e);
-		}
-	}
-
-	/**
-	 * Deletes an existing remote repository identified by <code>repositoryId</code>.
-	 *
-	 * @param repositoryId the ID of the repository to delete
-	 * @throws IOException if something went wrong while deleting the remote
-	 *         repository
-	 */
-	@Override
-	public void deleteRepository(long repositoryId) throws IOException {
-		ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
-		try {
-			projectApi.deleteProject(repositoryId);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to delete remote Git repository", e);
-		}
-	}
-	
-
-	@Override
-	public String createGroup(String name, String path, String description)
-			throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-
-		try {
-			// none of the addGroup overloads accept a Group object parameter
-			groupApi.addGroup(
-				name, path, description,
-				Visibility.PRIVATE,
-				null, null, null
-			);
-
-			return path;
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to create remote group", e);
-		}
-	}
-	
-	@Override
-	public void updateGroup(String name, String path, String description) throws IOException {
-		try {
-			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-			groupApi.updateGroup(path, name, path, description, null, null, null, null);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-				"Failed to update name/description for group", e
-			);
-		}
-	}
-
-	@Override
-	public List<String> getGroupRepositoryNames(String path)
-			throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-
-		try {
-			List<Project> projects = groupApi.getProjects(path);
-			return projects.stream().map(Project::getName).collect(Collectors.toList());
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-				"Failed to get repository names for group", e
-			);
-		}
-	}
-	
-	@Override
-	public void deleteGroup(String path) throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-
-		try {
-			Group group = groupApi.getGroup(path); // TODO: remove, deleteGroup can work with the path
-			groupApi.deleteGroup(group);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to delete remote group", e);
-		}
-	}
-	
-	@Override
-	public ProjectReference findProjectReferenceById(String projectId) throws IOException {
-		try {
-
-			Group group = restrictedGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
-			return unmarshallProjectReference(group.getPath(),group.getDescription());
-		} catch (GitLabApiException e) {
-			throw new IOException("failed to fetch project ", e);
-		}
-	}
-
-	@Override
-	public Set<de.catma.user.Member> getProjectMembers(String projectId) throws IOException {
-		try {
-			Group group = restrictedGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
-			return restrictedGitLabApi.getGroupApi().getMembers(group.getId())
-					.stream()
-					.map(member -> new GitMember(member))
-					.collect(Collectors.toSet());
-		} catch (GitLabApiException e) {
-			throw new IOException("group unknown",e);
-		}
-	}
-
-	@Override
-	public List<ProjectReference> getProjectReferences() throws IOException {
-		return getProjectReferences(AccessLevel.forValue(RBACRole.GUEST.getAccessLevel()));
-	}
-	
-	@Override
-	public List<ProjectReference> getProjectReferences(RBACPermission withPermission) throws IOException {
-		return getProjectReferences(AccessLevel.forValue(withPermission.getRoleRequired().getAccessLevel()));
-	}
-	
-	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
-		GroupApi groupApi = new GroupApi(restrictedGitLabApi);
-		try {
-			return projectsCache.get("projects", () -> 
-			 groupApi.getGroups(new GroupFilter().withMinAccessLevel(minAccessLevel))
-			 	.stream()
-			 	.map(group -> 
-			 		unmarshallProjectReference(group.getPath(),  group.getDescription()))
-				.collect(Collectors.toList()));
-		}
-		catch (Exception e) {
-			throw new IOException("Failed to load groups", e);
-		}
-	}
-	
-	@Override
-	public String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException {
-		try {
-			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project rootProject = projectApi.getProject(
-				projectReference.getProjectId(), 
-				GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
-			
-			return GitlabUtils.rewriteGitLabServerUrl(rootProject.getHttpUrlToRepo());
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-				"Failed to load Project's Root Repository URL: " 
-					+ GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()), e);
-		}
-	}
-	
-	@Override
-	public boolean existsUserOrEmail(String usernameOrEmail) throws IOException {
-		try {
-			List<org.gitlab4j.api.models.User> userPager = this.restrictedGitLabApi.getUserApi().findUsers(usernameOrEmail);
-			
-			return userPager.stream()
-			.filter(u -> usernameOrEmail.equals(u.getUsername()) || usernameOrEmail.equals(u.getEmail()))
-			.filter(u -> user.getUserId() != u.getId())
-			.count() > 0;
-			
-		} catch(GitLabApiException e){
-			throw new IOException("failed to check for username",e);
-		}
-	}
-	
-	@Override
-	public List<User> findUser(String usernameOrEmail, int offset, int limit) throws IOException {
-		try {
-			List<org.gitlab4j.api.models.User> userPager;
-			
-			if(usernameOrEmail.isEmpty() || usernameOrEmail.length() < 3) {
-				return Collections.emptyList();
-			} else {
-				userPager = this.restrictedGitLabApi.getUserApi()
-						.findUsers(usernameOrEmail,offset, limit);
-			}
-			return userPager.stream()
-			.filter(u -> ! user.getUserId().equals(u.getId()))
-			.map(u -> new GitUser(u))
-			.collect(Collectors.toList());
-			
-		} catch(GitLabApiException e){
-			throw new IOException("failed to check for username",e);
-		}
-	}
-	
-	@Override 
-	public void leaveGroup(String path) throws IOException {
-		GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-		
-		try {
-			Group group = groupApi.getGroup(path);
-			Member member = groupApi.getMember(group.getId(), user.getUserId());
-			if(member != null && 
-					member.getAccessLevel().value >= AccessLevel.GUEST.value && 
-					member.getAccessLevel().value < AccessLevel.OWNER.value 
-					){
-				groupApi.removeMember(group.getId(), user.getUserId());
-			}
-		} catch (GitLabApiException ge){
-			throw new IOException("Couldn't leave group",ge);
-		}
-	}
-	
-	@Override
-	public Set<de.catma.user.Member> getResourceMembers(String projectId, String resourceId) throws IOException {
-		try {
-			Project project = restrictedGitLabApi.getProjectApi().getProject(projectId, resourceId);
-			if(project != null ){
-				List<GitMember> allMembers = new ProjectApi(restrictedGitLabApi)
-						.getAllMembers(project.getId())
-						.stream()
-						.map(member -> new GitMember(member))
-						.collect(Collectors.toList());
-				
-				Map<Long,de.catma.user.Member> mergedList = new HashMap<>();
-				
-				for(de.catma.user.Member m : allMembers){
-					if(! mergedList.containsKey(m.getUserId()) 
-							|| mergedList.get(m.getUserId()).getRole().getAccessLevel() < m.getRole().getAccessLevel()){
-						mergedList.put(m.getUserId(), m);
-					}
-				}
-				return mergedList.values().stream().collect(Collectors.toSet());
-				
-			} else {
-				throw new IOException("resource unknown");
-			}	
-		} catch (GitLabApiException e){
-			throw new IOException("resource unknown");
-		}
-	}
-
-	public Map<String, RBACRole> getRolesPerResource(String projectId) throws IOException {
-		try {
-			Group group = restrictedGitLabApi.getGroupApi().getGroup(projectId);
-			Map<String, AccessLevel> permMap = getResourcePermissions(group.getId());
-			
-			return permMap.entrySet()
-					.stream()
-					.collect(Collectors.toMap(
-							Map.Entry::getKey,
-							e -> RBACRole.forValue(e.getValue().value)));
-
-		} catch (GitLabApiException e) {
-			throw new IOException("Permission retrieval failed!",e);
-		}
-	}
-
-	private Map<String, AccessLevel> getResourcePermissions(Long groupId) throws GitLabApiException {
-
-        Map<String, AccessLevel> resultMap = Maps.newHashMap();
-        ProjectApi projectApi = new ProjectApi(restrictedGitLabApi);
-
-        logger.info("Loading project permissions");
-
-    	List<Project> resourceAndContainerProjects = 
-    			projectApi.getProjects(new ProjectFilter().withMembership(true));
-
-    	logger.info(String.format("Filtering %1$d resources on group #%2$d", resourceAndContainerProjects.size(), groupId));
-        Set<Project> filteredOnGroupProjects = 
-        	resourceAndContainerProjects
-				.stream()
-				.filter(p -> 
-					p.getNamespace().getId().equals(groupId)) // the GitLab namespace/groupId
-				.collect(Collectors.toSet());
-
-        logger.info(String.format("Updating accesslevel registry for %1$d resources", filteredOnGroupProjects.size()));
-		for (Project p : filteredOnGroupProjects) {
-			Permissions permission = p.getPermissions();
-			if (permission.getGroupAccess() != null) {
-				resultMap.put(p.getName(), permission.getGroupAccess().getAccessLevel());
-			}
-			
-    		if(permission.getProjectAccess() != null && 
-    			(!resultMap.containsKey(p.getName()) 
-        			|| resultMap.get(p.getName()).value.intValue() < permission.getProjectAccess().getAccessLevel().value.intValue())) {
-        			
-    			resultMap.put(p.getName(), permission.getProjectAccess().getAccessLevel());
-    		}
-		}
-
-        return resultMap;
-    }
-
-	private ProjectReference unmarshallProjectReference(String path, String eventuallyMarshalledMetadata) {
-		String name = "unknown";
-		String description = "unknown";
-		try {
-			JsonObject metaDataJson = JsonParser.parseString(eventuallyMarshalledMetadata).getAsJsonObject();
-			
-			name = metaDataJson.get(GroupSerializationField.name.name()).getAsString();
-			description = metaDataJson.get(GroupSerializationField.description.name()).getAsString();
-		}
-		catch (Exception e) {
-			logger.log(
-				Level.WARNING, 
-				String.format(
-					"Error retrieving Project name or description for %1$s from %2$s", 
-					path, 
-					eventuallyMarshalledMetadata), 
-				e);
-		}
-		return new ProjectReference(path, name, description);
-	}
-
-	@Override
-	public User getUser() {
-		return user;
-	}
-
-	@Override
-	public String getUsername() {
-		return user.getIdentifier();
-	}
-	
-	@Override
-	public String getPassword() {
-		return restrictedGitLabApi.getAuthToken();
-	}
-
-	@Override
-	public String getEmail() {
-		return user.getEmail();
-	}
-		
+	// event handlers
 	@Subscribe
-	public void handleChangeUserAttributes(ChangeUserAttributeEvent event){
+	public void handleChangeUserAttributes(ChangeUserAttributesEvent event){
 		try {
-			this.user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
-		} catch (GitLabApiException e) {
-			logger.log(Level.WARNING, "can't fetch user from backend", e);
+			user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
 		}
-	}	
-	
+		catch (GitLabApiException e) {
+			logger.log(Level.WARNING, "Failed to fetch user from backend", e);
+		}
+	}
+
+
+	// GitlabManagerCommon implementations
 	@Override
 	public Logger getLogger() {
 		return logger;
@@ -488,337 +100,681 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements IRem
 	public GitLabApi getGitLabApi() {
 		return restrictedGitLabApi;
 	}
-	
-	@Override
-	public ForkStatus forkResource(String resourceId, String sourceProjectId, String targetProjectId) throws IOException {
-		try {
-			Project sourceResourceProject = restrictedGitLabApi.getProjectApi().getProject(sourceProjectId, resourceId);
-			Optional<Project> optionalTargetResource = restrictedGitLabApi.getProjectApi().getOptionalProject(targetProjectId, resourceId);
-			if (optionalTargetResource.isPresent()) {
-				return ForkStatus.resourceAlreadyExists();
-			}
-			
-			restrictedGitLabApi.getProjectApi().forkProject(sourceResourceProject, targetProjectId);
 
-			Project targetProject = restrictedGitLabApi.getProjectApi().getProject(targetProjectId, resourceId);
-			Status importStatus = targetProject.getImportStatus();
-			
-			int tries = 10;
-			while (importStatus != Status.FINISHED && tries > 0) {
-				tries--;
-				
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					break;
-				}
-				logger.info(
+
+	// RemoteGitManagerCommon implementations
+	@Override
+	public boolean existsUserOrEmail(String usernameOrEmail) throws IOException {
+		try {
+			List<org.gitlab4j.api.models.User> users = restrictedGitLabApi.getUserApi().findUsers(usernameOrEmail);
+
+			return users.stream()
+					// exclude current user, exact matches only
+					.filter(gitlabUser -> !gitlabUser.getId().equals(user.getUserId()))
+					.anyMatch(gitlabUser -> gitlabUser.getUsername().equals(usernameOrEmail) || gitlabUser.getEmail().equals(usernameOrEmail));
+		}
+		catch (GitLabApiException e){
+			throw new IOException("Failed to check whether user exists", e);
+		}
+	}
+
+
+	// GitUserInformationProvider implementations
+	@Override
+	public String getUsername() {
+		return user.getIdentifier();
+	}
+
+	@Override
+	public String getPassword() {
+		return restrictedGitLabApi.getAuthToken();
+	}
+
+	@Override
+	public String getEmail() {
+		return user.getEmail();
+	}
+
+	@Override
+	public void refreshUserCredentials() throws IOException {
+		try {
+			logger.info("Attempting to refresh user credentials...");
+			restrictedGitLabApi.oauth2RefreshAccessToken();
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to refresh user credentials", e);
+		}
+	}
+
+
+	// RemoteGitManagerRestricted implementations
+	@Override
+	public User getUser() {
+		return user;
+	}
+
+	@Override
+	public List<User> findUser(String usernameOrEmail) throws IOException {
+		// only search with 3 or more characters
+		if (usernameOrEmail == null || usernameOrEmail.length() < 3) {
+			return Collections.emptyList();
+		}
+
+		try {
+			List<org.gitlab4j.api.models.User> users = restrictedGitLabApi.getUserApi().findUsers(usernameOrEmail);
+			return users.stream()
+					.filter(gitlabUser -> !gitlabUser.getId().equals(user.getUserId())) // exclude current user
+					.map(GitUser::new)
+					.collect(Collectors.toList());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to search for users", e);
+		}
+	}
+
+
+	private ProjectReference getProjectReference(String namespace, String path, String description) throws IOException {
+		try {
+			JsonObject metaDataJson = JsonParser.parseString(description).getAsJsonObject();
+			String catmaProjectName = metaDataJson.get(ProjectMetadataSerializationField.name.name()).getAsString();
+			String catmaProjectDescription = metaDataJson.get(ProjectMetadataSerializationField.description.name()).getAsString();
+			return new ProjectReference(path, namespace, catmaProjectName, catmaProjectDescription);
+		}
+		catch (Exception e) {
+			// while we could still return a ProjectReference with placeholder name and description, we probably want to investigate what
+			// happened to this project before allowing the user to open it again (as it was likely modified externally)
+			throw new IOException(
 					String.format(
-						"Trying to retrieve forked resource status for %1$s from group %2$s (try %3$d)",
-						resourceId,
-						targetProjectId,
-						10-tries));
-				importStatus = targetProject.getImportStatus();
-			}
-			
-			if (importStatus != Status.FINISHED) {
-				logger.warning(String.format("Status is still '%1$s' and not 'finished'! Trying to continue anyway!", importStatus));
-			}
-			
-			
-			return ForkStatus.success();
+							"Failed to deserialize project metadata for GitLab project %s. The GitLab project description was: %s",
+							namespace + "/" + path,
+							description
+					),
+					e
+			);
+		}
+	}
+
+	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+
+			return projectsCache.get(
+					"projects",
+					() -> projectApi.getProjects(new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true))
+							.stream()
+							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
+							.map(project -> {
+								try {
+									return getProjectReference(
+											project.getNamespace().getPath(),
+											project.getPath(),
+											project.getDescription()
+									);
+								}
+								catch (IOException e) {
+									logger.log(
+											Level.WARNING,
+											String.format(
+													"Failed to get ProjectReference for GitLab project %s. The user won't be able to open this project.",
+													project.getNamespace().getPath() + "/" + project.getPath()
+											),
+											e
+									);
+									return null;
+								}
+							})
+							.filter(Objects::nonNull)
+							.collect(Collectors.toList())
+			);
+		}
+		catch (Exception e) {
+			throw new IOException("Failed to load projects", e);
+		}
+	}
+
+	@Override
+	public List<ProjectReference> getProjectReferences() throws IOException {
+		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()));
+	}
+
+	@Override
+	public String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project project = projectApi.getProject(projectReference.getFullPath());
+
+			return GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
-				String.format("Failed to fork resource %1$s from group %2$s into group %3$s", resourceId, sourceProjectId, targetProjectId), e);
+					String.format(
+							"Failed to get repository URL for project \"%s\" with ID %s",
+							projectReference.getName(),
+							projectReference.getProjectId()
+					),
+					e
+			);
 		}
 	}
 
-	
 	@Override
-	public void addComment(String projectId, Comment comment) throws IOException {
-		
-		String resourceId = comment.getDocumentId();
+	public Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			return projectApi.getMembers(projectReference.getFullPath())
+					.stream()
+					.map(GitMember::new)
+					.collect(Collectors.toSet());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to fetch project members", e);
+		}
+	}
+
+
+	@Override
+	public String createProject(String name, String description) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+
+			Project project = new Project();
+			project.setName(name);
+			project.setDescription(description);
+			project.setRemoveSourceBranchAfterMerge(false);
+			project = projectApi.createProject(project);
+
+			return GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to create remote Git repository", e);
+		}
+	}
+
+	@Override
+	public void updateProjectDescription(ProjectReference projectReference, String description) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project project = projectApi.getProject(projectReference.getFullPath());
+			project.setDescription(description);
+			projectApi.updateProject(project);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to update project description", e);
+		}
+	}
+
+	@Override
+	public void leaveProject(ProjectReference projectReference) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			org.gitlab4j.api.models.Member member = projectApi.getMember(projectReference.getFullPath(), user.getUserId());
+
+			if (member != null
+					&& member.getAccessLevel().value >= AccessLevel.GUEST.value
+					&& member.getAccessLevel().value < AccessLevel.OWNER.value
+			) {
+				projectApi.removeMember(projectReference.getFullPath(), user.getUserId());
+			}
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to leave project", e);
+		}
+	}
+
+	@Override
+	public void deleteProject(ProjectReference projectReference) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			projectApi.deleteProject(projectReference.getFullPath());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to delete remote Git repository", e);
+		}
+	}
+
+
+	@Override
+	public List<Comment> getComments(ProjectReference projectReference, String documentId) throws IOException {
+		try {
+			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
+
+			Pager<Issue> issuePager = issuesApi.getIssues(
+					projectReference.getFullPath(),
+					new IssueFilter()
+							.withLabels(Arrays.asList(CATMA_COMMENT_LABEL, documentId))
+							.withState(IssueState.OPENED),
+					100
+			);
+
+			List<Comment> comments = new ArrayList<>();
+
+			for (Issue issue : issuePager.all()) {
+				Comment comment;
+				String issueDescription = issue.getDescription();
+
+				try {
+					comment = new SerializationHelper<Comment>().deserialize(issueDescription, Comment.class);
+				}
+				catch (Exception e) {
+					logger.log(
+							Level.SEVERE,
+							String.format(
+									"Failed to deserialize comment from issue with IID %1$d for document with ID %2$s in project \"%3$s\". " +
+											"The issue description was: %4$s",
+									issue.getIid(),
+									documentId,
+									projectReference.getName(),
+									issueDescription
+							),
+							e
+					);
+					continue;
+				}
+
+				comment.setId(issue.getId());
+				comment.setIid(issue.getIid());
+				comment.setUserId(issue.getAuthor().getId());
+				comment.setUsername(issue.getAuthor().getName()); // TODO: if we're using the public name it shouldn't be called 'username' on the Comment class
+				comment.setReplyCount(issue.getUserNotesCount());
+
+				comments.add(comment);
+			}
+
+			return comments;
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to fetch comments for document with ID %s in project \"%s\"",
+							documentId,
+							projectReference.getName()
+					),
+					e
+			);
+		}
+	}
+
+	@Override
+	public void addComment(ProjectReference projectReference, Comment comment) throws IOException {
+		String documentId = comment.getDocumentId();
 
 		try {
-			
-			String projectPath = projectId + "/" + resourceId;
-			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-			
-			
-			String title = comment.getBody().substring(0, Math.min(100, comment.getBody().length()));
+
+			String title = comment.getBody().substring(0, Math.min(97, comment.getBody().length()));
 			if (title.length() < comment.getBody().length()) {
 				title += "...";
 			}
 			String description = new SerializationHelper<Comment>().serialize(comment);
-			
+
 			Issue issue = issuesApi.createIssue(
-					projectPath, title, description, 
-					null, null, null, 
-					CATMA_COMMENT_LABEL, 
-					null, null, null, null);
-			
+					projectReference.getFullPath(),
+					title,
+					description,
+					null,
+					null,
+					null,
+					CATMA_COMMENT_LABEL + "," + documentId,
+					null,
+					null,
+					null,
+					null
+			);
+
 			comment.setId(issue.getId());
 			comment.setIid(issue.getIid());
 		}
-		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to add a new Comment for resource %1$s in group %2$s!", resourceId, projectId), e);
+		catch (GitLabApiException | IllegalArgumentException e) { // missing issue title throws IllegalArgumentException
+			throw new IOException(
+					String.format(
+							"Failed to create comment for document with ID %s in project \"%s\"",
+							documentId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 	}
 
 	@Override
-	public List<Comment> getComments(String projectId, String resourceId) throws IOException {
+	public void updateComment(ProjectReference projectReference, Comment comment) throws IOException {
+		String documentId = comment.getDocumentId();
+
 		try {
-			List<Comment> result = new ArrayList<Comment>();
-			
 			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-			String projectPath = projectId + "/" + resourceId;
-			Pager<Issue> issuePager = 
-				issuesApi.getIssues(
-						projectPath, 
-						new IssueFilter()
-							.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
-							.withState(IssueState.OPENED), 100);
-			
-			
-			for (Issue issue : issuePager.all()) {
-				String description = issue.getDescription();
-				int noteCount = issue.getUserNotesCount();
-				try {
-					Author author = issue.getAuthor();
-					
-					Comment comment = new SerializationHelper<Comment>().deserialize(description, Comment.class);
-					comment.setId(issue.getId());
-					comment.setIid(issue.getIid());
-					comment.setUserId(author.getId());
-					comment.setUsername(author.getName());
-					comment.setReplyCount(noteCount);
-					comment.setReplies(new ArrayList<Reply>());
-					result.add(comment);
-				}
-				catch (Exception e) {
-					logger.log(Level.SEVERE, String.format("Error deserializing Comment #%1$d %2$s", issue.getId(), description), e);
-				}
-			}
-			
-			return result;
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to retrieve Comments resource %1$s in group %2$s!", resourceId, projectId), e);
-		}
 
-	}
-	
-
-	@Override
-	public List<Comment> getComments(String projectId) throws IOException {
-		try {
-			List<Comment> result = new ArrayList<Comment>();
-			
-			IssuesApi issuesApi = new IssuesApi(restrictedGitLabApi);
-			String projectPath = projectId;
-			List<Issue> issues =
-				issuesApi.getGroupIssues(projectPath, 
-						new IssueFilter()
-							.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
-							.withState(IssueState.OPENED));
-			
-			
-			for (Issue issue : issues) {
-				String description = issue.getDescription();
-				int noteCount = issue.getUserNotesCount();
-				try {
-					Author author = issue.getAuthor();
-					
-					Comment comment = new SerializationHelper<Comment>().deserialize(description, Comment.class);
-					comment.setId(issue.getId());
-					comment.setIid(issue.getIid());
-					comment.setUserId(author.getId());
-					comment.setUsername(author.getName());
-					comment.setReplyCount(noteCount);
-					
-					result.add(comment);
-				}
-				catch (Exception e) {
-					logger.log(Level.SEVERE, String.format("Error deserializing Comment #%1$d %2$s", issue.getId(), description), e);
-				}
-			}
-			
-			return result;
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to retrieve Comments in group %1$s!", projectId), e);
-		}
-
-	}
-	
-	@Override
-	public void removeComment(String projectId, Comment comment) throws IOException {
-		String resourceId = comment.getDocumentId();
-
-		try {
-			
-			String projectPath = projectId + "/" + resourceId;
-			
-			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-		
-			issuesApi.closeIssue(projectPath, comment.getIid());
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to remove Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId),
-				e);
-		}
-	}
-	
-	@Override
-	public void updateComment(String projectId, Comment comment) throws IOException {
-		String resourceId = comment.getDocumentId();
-
-		try {
-			
-			String projectPath = projectId + "/" + resourceId;
-			
-			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-			
-			
-			String title = comment.getBody().substring(0, Math.min(100, comment.getBody().length()));
+			String title = comment.getBody().substring(0, Math.min(97, comment.getBody().length()));
 			if (title.length() < comment.getBody().length()) {
 				title += "...";
 			}
 			String description = new SerializationHelper<Comment>().serialize(comment);
-			
+
 			issuesApi.updateIssue(
-					projectPath, 
+					projectReference.getFullPath(),
 					comment.getIid(),
-					title, description, 
-					null, null, null, 
-					CATMA_COMMENT_LABEL, 
-					null, null, null);
+					title,
+					description,
+					null,
+					null,
+					null,
+					CATMA_COMMENT_LABEL + "," + documentId,
+					null,
+					null,
+					null
+			);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to update Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId), 
-				e);
+			throw new IOException(
+					String.format(
+							"Failed to update comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
+							comment.getUuid(),
+							comment.getIid(),
+							documentId,
+							projectReference.getName()
+					),
+					e
+			);
 		}
 	}
-	
-	@Override
-	public void addReply(String projectId, Comment comment, Reply reply) throws IOException {
-		String resourceId = comment.getDocumentId();
-		
-		String projectPath = projectId + "/" + resourceId;
 
-		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-	
+	@Override
+	public void removeComment(ProjectReference projectReference, Comment comment) throws IOException {
 		try {
+			IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
+			issuesApi.closeIssue(projectReference.getFullPath(), comment.getIid());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to delete comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
+							comment.getUuid(),
+							comment.getIid(),
+							comment.getDocumentId(),
+							projectReference.getName()
+					),
+					e
+			);
+		}
+	}
+
+	@Override
+	public List<Reply> getCommentReplies(ProjectReference projectReference, Comment comment) throws IOException {
+		try {
+			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+			List<Note> notes = notesApi.getIssueNotes(projectReference.getFullPath(), comment.getIid());
+
+			List<Reply> replies = new ArrayList<>();
+
+			for (Note note : notes.stream().filter(n -> !n.getSystem()).collect(Collectors.toList())) { // filter system notes
+				Reply reply;
+				String noteBody = note.getBody();
+
+				try {
+					reply = new SerializationHelper<Reply>().deserialize(noteBody, Reply.class);
+				}
+				catch (Exception e) {
+					logger.log(
+							Level.SEVERE,
+							String.format(
+									"Failed to deserialize reply from note with ID %1$d on comment with ID %2$s (issue IID %3$d) in project \"%4$s\". " +
+											"The note body was: %5$s",
+									note.getId(),
+									comment.getUuid(),
+									comment.getIid(),
+									projectReference.getName(),
+									noteBody
+							),
+							e
+					);
+					continue;
+				}
+
+				reply.setCommentUuid(comment.getUuid());
+				reply.setId(note.getId());
+				reply.setUserId(note.getAuthor().getId());
+				reply.setUsername(note.getAuthor().getName()); // TODO: if we're using the public name it shouldn't be called 'username' on the Reply class
+
+				replies.add(reply);
+			}
+
+			comment.setReplies(replies);
+
+			return replies;
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to fetch replies to comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
+							comment.getUuid(),
+							comment.getIid(),
+							comment.getDocumentId(),
+							projectReference.getName()
+					),
+					e
+			);
+		}
+	}
+
+	@Override
+	public void addReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
+		try {
+			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
-			Note note = notesApi.createIssueNote(projectPath, comment.getIid(), noteBody);
+			Note note = notesApi.createIssueNote(projectReference.getFullPath(), comment.getIid(), noteBody);
+
 			reply.setId(note.getId());
 			comment.addReply(reply);
 		}
-		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId), 
-				e);
+		catch (GitLabApiException | IllegalArgumentException e) { // missing note body throws IllegalArgumentException
+			throw new IOException(
+					String.format(
+							"Failed to create reply to comment with ID %1$s (issue IID %2$d) for document with ID %3$s in project \"%4$s\"",
+							comment.getUuid(),
+							comment.getIid(),
+							comment.getDocumentId(),
+							projectReference.getName()
+					),
+					e
+			);
 		}
-		
 	}
-	
-	@Override
-	public void updateReply(String projectId, Comment comment, Reply reply) throws IOException {
-		String resourceId = comment.getDocumentId();
-		
-		String projectPath = projectId + "/" + resourceId;
 
-		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-		
-		
+	@Override
+	public void updateReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
 		try {
+			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+
 			String noteBody = new SerializationHelper<Reply>().serialize(reply);
-			notesApi.updateIssueNote(projectPath, comment.getIid(), reply.getId(), noteBody);
+			notesApi.updateIssueNote(projectReference.getFullPath(), comment.getIid(), reply.getId(), noteBody);
 		}
-		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId), 
-				e);
+		catch (GitLabApiException | IllegalArgumentException e) { // missing note body throws IllegalArgumentException
+			throw new IOException(
+					String.format(
+							"Failed to update reply with ID %1$s (note ID %2$d) on comment with ID %3$s (issue IID %4$d) " +
+									"for document with ID %5$s in project \"%6$s\"",
+							reply.getUuid(),
+							reply.getId(),
+							comment.getUuid(),
+							comment.getIid(),
+							comment.getDocumentId(),
+							projectReference.getName()
+					),
+					e
+			);
 		}
 	}
-	
-	@Override
-	public void removeReply(String projectId, Comment comment, Reply reply) throws IOException {
-		String resourceId = comment.getDocumentId();
-		
-		String projectPath = projectId + "/" + resourceId;
 
-		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-		
-		
+	@Override
+	public void removeReply(ProjectReference projectReference, Comment comment, Reply reply) throws IOException {
 		try {
-			notesApi.deleteIssueNote(projectPath, comment.getIid(), reply.getId());
+			NotesApi notesApi = restrictedGitLabApi.getNotesApi();
+			notesApi.deleteIssueNote(projectReference.getFullPath(), comment.getIid(), reply.getId());
+
 			comment.removeReply(reply);
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format(
-				"Failed to create Reply for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-					comment.getUuid(), comment.getIid(), resourceId, projectId), 
-				e);
+			throw new IOException(
+					String.format(
+							"Failed to delete reply with ID %1$s (note ID %2$d) from comment with ID %3$s (issue IID %4$d) " +
+									"for document with ID %5$s in project \"%6$s\"",
+							reply.getUuid(),
+							reply.getId(),
+							comment.getUuid(),
+							comment.getIid(),
+							comment.getDocumentId(),
+							projectReference.getName()
+					),
+					e
+			);
 		}
-		
 	}
-	
-	@Override
-	public List<Reply> getCommentReplies(String projectId, Comment comment) throws IOException {
-		String resourceId = comment.getDocumentId();
-		
-		String projectPath = projectId + "/" + resourceId;
 
-		NotesApi notesApi = restrictedGitLabApi.getNotesApi();
-		List<Reply> result = new ArrayList<Reply>();
+
+	@Override
+	public List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException {
 		try {
-			
-			List<Note> notes = notesApi.getIssueNotes(projectPath, comment.getIid());
-			
-			for (Note note : notes.stream().filter(n -> !n.getSystem()).collect(Collectors.toList())) { // filter system notes
-				String noteBody = note.getBody();
-				Reply reply = null;
-				try {
-					reply = new SerializationHelper<Reply>().deserialize(noteBody, Reply.class);
-					reply.setCommentUuid(comment.getUuid());
-					reply.setId(note.getId());
-					reply.setUserId(note.getAuthor().getId());
-					reply.setUsername(note.getAuthor().getName());
-				}
-				catch (Exception e) {
-					logger.log(Level.SEVERE, String.format("Error deserializing Reply #%1$d %2$s", note.getId(), noteBody), e);
-					IDGenerator idGenerator = new IDGenerator();
-					
-					reply = new Reply(
-						idGenerator.generate(), 
-						noteBody, note.getAuthor().getUsername(), 
-						note.getAuthor().getId(), 
-						comment.getUuid(), 
-						note.getId());
-				}
-				
-				result.add(reply);
-			}
-			comment.setReplies(result);
-			
-			return result;
-		} catch (GitLabApiException e) {
-			throw new IOException(String.format(
-					"Failed to retrieve Replies for Comment %1$s %2$d for resource %3$s in group %4$s!", 
-						comment.getUuid(), comment.getIid(), resourceId, projectId), 
-					e);
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
+
+			MergeRequestFilter filter = new MergeRequestFilter();
+			filter.setProjectId(gitlabProjectId);
+			filter.setSourceBranch(user.getIdentifier());
+			filter.setTargetBranch(Constants.MASTER);
+			filter.setState(MergeRequestState.OPENED);
+
+			MergeRequestApi mergeRequestApi = restrictedGitLabApi.getMergeRequestApi();
+			List<MergeRequest> mergeRequests = mergeRequestApi.getMergeRequests(filter);
+
+			return mergeRequests.stream()
+					.map(
+							mr -> new MergeRequestInfo(
+									mr.getIid(),
+									mr.getTitle(),
+									mr.getDescription(),
+									mr.getCreatedAt(),
+									mr.getState(),
+									mr.getMergeStatus(),
+									gitlabProjectId
+							)
+					)
+					.sorted(Comparator.comparing(MergeRequestInfo::getCreatedAt))
+					.collect(Collectors.toList());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to retrieve open merge requests for project \"%s\" and user \"%s\"",
+							projectReference.getName(),
+							user.getIdentifier()
+					),
+					e
+			);
+		}
+	}
+
+	@Override
+	public MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
+
+			MergeRequestApi mergeRequestApi = restrictedGitLabApi.getMergeRequestApi();
+			MergeRequest mergeRequest = mergeRequestApi.getMergeRequest(gitlabProjectId, mergeRequestIid);
+
+			return new MergeRequestInfo(
+					mergeRequest.getIid(),
+					mergeRequest.getTitle(),
+					mergeRequest.getDescription(),
+					mergeRequest.getCreatedAt(),
+					mergeRequest.getState(),
+					mergeRequest.getMergeStatus(),
+					gitlabProjectId
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to retrieve merge request with IID %d for project \"%s\"",
+							mergeRequestIid,
+							projectReference.getName()
+					),
+					e
+			);
+		}
+	}
+
+	@Override
+	public MergeRequestInfo createMergeRequest(ProjectReference projectReference) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
+
+			MergeRequestApi mergeRequestApi = restrictedGitLabApi.getMergeRequestApi();
+			MergeRequest mergeRequest = mergeRequestApi.createMergeRequest(
+					gitlabProjectId,
+					user.getIdentifier(),
+					Constants.MASTER,
+					String.format("Integration of latest changes by %s (%s)", user.getName(), user.getIdentifier()),
+					String.format("Integration of latest changes by %s (%s)", user.getName(), user.getIdentifier()),
+					null,
+					null,
+					null,
+					null,
+					false // do not remove source branch
+			);
+
+			return new MergeRequestInfo(
+					mergeRequest.getIid(),
+					mergeRequest.getTitle(),
+					mergeRequest.getDescription(),
+					mergeRequest.getCreatedAt(),
+					mergeRequest.getState(),
+					mergeRequest.getMergeStatus(),
+					gitlabProjectId
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to create merge request for project \"%s\" and user \"%s\"",
+							projectReference.getName(),
+							user.getIdentifier()
+					),
+					e
+			);
+		}
+	}
+
+	@Override
+	public MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException {
+		try {
+			MergeRequestApi mergeRequestApi = restrictedGitLabApi.getMergeRequestApi();
+			MergeRequest result = mergeRequestApi.acceptMergeRequest(
+					mergeRequestInfo.getGlProjectId(),
+					mergeRequestInfo.getIid()
+			);
+
+			return new MergeRequestInfo(
+					result.getIid(),
+					result.getTitle(),
+					result.getDescription(),
+					result.getCreatedAt(),
+					result.getState(),
+					result.getMergeStatus(),
+					mergeRequestInfo.getGlProjectId()
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to merge merge request with IID %1$d for GitLab project ID %2$d and user \"%3$s\"",
+							mergeRequestInfo.getIid(),
+							mergeRequestInfo.getGlProjectId(),
+							user.getIdentifier()
+					),
+					e
+			);
 		}
 	}
 }

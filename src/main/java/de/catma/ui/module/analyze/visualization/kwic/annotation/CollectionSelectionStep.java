@@ -18,6 +18,7 @@ import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
@@ -26,11 +27,10 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.annotation.AnnotationCollectionReference;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;
 import de.catma.project.event.CollectionChangeEvent;
-import de.catma.rbac.RBACPermission;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -44,8 +44,13 @@ import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.CollectionResource;
 import de.catma.ui.module.project.DocumentResource;
 import de.catma.ui.module.project.Resource;
+import de.catma.user.Member;
 
 public class CollectionSelectionStep extends VerticalLayout implements WizardStep {
+	private enum DocumentGridColumn {
+		NAME,
+		RESPONSIBLE,
+	}
 
 	private ProgressStep progressStep;
     private TreeGrid<Resource> documentGrid;
@@ -56,6 +61,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	private TreeDataProvider<Resource> documentDataProvider;
 	private StepChangeListener stepChangeListener;
 	private EventBus eventBus;
+	private MenuItem miToggleResponsibiltityFilter;
     
 	public CollectionSelectionStep(EventBus eventBus, Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		this.eventBus = eventBus;
@@ -67,7 +73,7 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		try {
 			initData();
 		} catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error loading available Collections", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading available collections", e);
 		}
 	}
 	
@@ -80,67 +86,71 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 		}
 	}	
 
-	private void addCollection(AnnotationCollectionReference userMarkupCollectionReference) {
-		documentData.getRootItems()
-			.stream()
-			.filter(resource -> 
-				((DocumentResource)resource).getDocument().getUuid().equals(
-						userMarkupCollectionReference.getSourceDocumentId()))
-			.findAny()
-			.ifPresent(sourceDocResource -> 
-				documentData.addItem(
-						sourceDocResource, 
-						new CollectionResource(userMarkupCollectionReference, project.getProjectId(), true)));
+	private void addCollection(AnnotationCollectionReference annotationCollectionRef) {
+		documentData.getRootItems().stream()
+				.filter(resource -> ((DocumentResource) resource).getSourceDocumentRef().getUuid().equals(annotationCollectionRef.getSourceDocumentId()))
+				.findAny()
+				.ifPresent(documentResource -> documentData.addItem(
+						documentResource,
+						new CollectionResource(
+								annotationCollectionRef,
+								project.getId(),
+								project.getCurrentUser()
+						)
+				));
 		documentDataProvider.refreshAll();
 	}
 
 	private void initData() throws Exception {
+    	Map<String, Member> membersByIdentfier = project.getProjectMembers().stream()
+			.collect(Collectors.toMap(
+					Member::getIdentifier, 
+					Function.identity()));
+
         documentData = new TreeData<>();
         
         @SuppressWarnings("unchecked")
 		Set<String> documentIds = (Set<String>) context.get(AnnotationWizardContextKey.DOCUMENTIDS);
         
         for(String documentId : documentIds) {
-        	SourceDocument srcDoc = project.getSourceDocument(documentId);
+        	SourceDocumentReference srcDoc = project.getSourceDocumentReference(documentId);
             DocumentResource docResource = 
             		new DocumentResource(
             			srcDoc, 
-            			project.getProjectId(), 
-            			project.hasPermission(project.getRoleForDocument(srcDoc.getUuid()), RBACPermission.DOCUMENT_WRITE));
+            			project.getId(),
+            			srcDoc.getResponsibleUser()!= null?membersByIdentfier.get(srcDoc.getResponsibleUser()):null);
             
-            if(project.hasPermission(project.getRoleForDocument(srcDoc.getUuid()), RBACPermission.DOCUMENT_READ)) {
-                documentData.addItem(null,docResource);
-                
-                List<AnnotationCollectionReference> collections = 
-                		srcDoc.getUserMarkupCollectionRefs();
-                
-            	List<Resource> readableCollectionResources = collections
-        		.stream()
-        		.map(collectionRef -> 
-        			(Resource)new CollectionResource(
-        				collectionRef, 
-        				project.getProjectId(),
-        				project.hasPermission(project.getRoleForCollection(collectionRef.getId()), RBACPermission.COLLECTION_WRITE))
-        		)
-        		.filter(colRes -> project.hasPermission(
-        			project.getRoleForCollection(colRes.getResourceId()), RBACPermission.COLLECTION_WRITE))
-        		.collect(Collectors.toList());
-        		
-                
-                if(!collections.isEmpty()){
-                	
-                    documentData.addItems(
-                    	docResource,
-                    	readableCollectionResources
-                    );
-                }
-                else {
-                	//TODO: improve message
-                	Notification.show(
-                		"Info", 
-                		String.format("You do not have a writable Collection available for Document %1$s", srcDoc.toString()), 
-                		Type.HUMANIZED_MESSAGE);
-                }
+            documentData.addItem(null,docResource);
+            
+            List<AnnotationCollectionReference> collections = 
+            		srcDoc.getUserMarkupCollectionRefs();
+            
+        	List<Resource> collectionResources = collections
+    		.stream()
+    		.filter(collectionRef -> 
+    			!miToggleResponsibiltityFilter.isChecked() 
+    			|| collectionRef.isResponsible(project.getCurrentUser().getIdentifier()))
+    		.map(collectionRef -> 
+    			(Resource)new CollectionResource(
+    				collectionRef, 
+    				project.getId(),
+    				collectionRef.getResponsibleUser()!= null?membersByIdentfier.get(collectionRef.getResponsibleUser()):null)
+    		)
+    		.collect(Collectors.toList());
+    		
+            
+            if(!collections.isEmpty()){
+            	
+                documentData.addItems(
+                	docResource,
+                	collectionResources
+                );
+            }
+            else {
+            	Notification.show(
+            		"Info", 
+            		String.format("There is no collection yet for document \"%s\"", srcDoc),
+            		Type.HUMANIZED_MESSAGE);
             }
         }
         
@@ -155,9 +165,9 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
             	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 
         documentsGridMoreOptionsContextMenu.addItem(
-        	"Select filtered Documents", mi-> handleSelectFilteredDocuments());
+        	"Select Filtered Documents", mi-> handleSelectFilteredDocuments());
         documentsGridMoreOptionsContextMenu.addItem(
-        	"Select filtered Collections", mi-> handleSelectFilteredCollections());
+        	"Select Filtered Collections", mi-> handleSelectFilteredCollections());
         
         documentGrid.addSelectionListener(event -> {
         	if (stepChangeListener != null) {
@@ -203,59 +213,47 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 			.forEach(child -> documentGrid.select(child));
 		});
 	}
-	
+
 	private void handleAddCollectionRequest() {
 		try {
-			if (!project.hasPermission(project.getRoleOnProject(), RBACPermission.COLLECTION_CREATE)) {
-				Notification.show(
-						"Info", 
-						"You do not have the permission to create Collections, please contact a Project maintainer!", 
-						Type.HUMANIZED_MESSAGE);
+			@SuppressWarnings("unchecked")
+			TreeDataProvider<Resource> resourceDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
+
+			Set<Resource> selectedResources = documentGrid.getSelectedItems();
+
+			Set<SourceDocumentReference> selectedSourceDocumentRefs = new HashSet<>();
+
+			for (Resource resource : selectedResources) {
+				Resource root = resourceDataProvider.getTreeData().getParent(resource);
+				if (root == null) {
+					root = resource;
+				}
+
+				DocumentResource documentResource = (DocumentResource) root;
+				selectedSourceDocumentRefs.add(documentResource.getSourceDocumentRef());
+			}
+
+			if (selectedSourceDocumentRefs.isEmpty()) {
+				Notification.show("Info", "Please select one or more documents first!", Type.HUMANIZED_MESSAGE);
 				return;
 			}
-			
-			
-			@SuppressWarnings("unchecked")
-			TreeDataProvider<Resource> resourceDataProvider = 
-					(TreeDataProvider<Resource>) documentGrid.getDataProvider();
-			
-	    	Set<Resource> selectedResources = documentGrid.getSelectedItems();
-	    	
-	    	Set<SourceDocument> selectedDocuments = new HashSet<>();
-	    	
-	    	for (Resource resource : selectedResources) {
-	    		Resource root = 
-	        			resourceDataProvider.getTreeData().getParent(resource);
-	
-	    		if (root == null) {
-	    			root = resource;
-	    		}
-	    		
-	    		DocumentResource documentResource = (DocumentResource)root;
-	    		selectedDocuments.add(documentResource.getDocument());
-	    	}
-	    	
-	    	if (!selectedDocuments.isEmpty()) {
-		    	SingleTextInputDialog collectionNameDlg = 
-		    		new SingleTextInputDialog("Add Annotation Collection(s)", "Please enter the Collection name:",
-		    				new SaveCancelListener<String>() {
-								
-								@Override
-								public void savePressed(String result) {
-									for (SourceDocument document : selectedDocuments) {
-										project.createUserMarkupCollection(result, document);
-									}
-								}
-							});
-		    	
-		    	collectionNameDlg.show();
-	    	}
-	    	else {
-	    		Notification.show("Info", "Please select one or more Documents first!", Type.HUMANIZED_MESSAGE);
-	    	}
+
+			SingleTextInputDialog collectionNameDlg = new SingleTextInputDialog(
+					"Create Annotation Collection(s)",
+					"Please enter the collection name:",
+					new SaveCancelListener<String>() {
+						@Override
+						public void savePressed(String collectionName) {
+							for (SourceDocumentReference sourceDocumentRef : selectedSourceDocumentRefs) {
+								project.createAnnotationCollection(collectionName, sourceDocumentRef);
+							}
+						}
+					}
+			);
+			collectionNameDlg.show();
 		}
 		catch (Exception e) {
-			((ErrorHandler)UI.getCurrent()).showAndLogError("error adding a Collection", e);
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to create annotation collection", e);
 		}
 	}
 
@@ -290,26 +288,74 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 				        
 		    return sb.toString();
 		};
-      
+		
+		Function<Resource,String> buildResponsibleFunction = (resource) -> {
+			
+			if (resource.getResponsibleUser() == null) {
+				return "";
+			}
+			
+			StringBuilder sb = new StringBuilder()
+			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
+		      .append(resource.getResponsibleUser())
+		      .append("</div>"); //$NON-NLS-1$
+			sb.append("</div>"); //$NON-NLS-1$
+				        
+		    return sb.toString();
+		};
+		
         documentGrid
         	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
-        	.setWidth(300);
-        
+        	.setId(DocumentGridColumn.NAME.name());
+        	
         documentGrid
-    	.addColumn(res -> res.getPermissionIcon() , new HtmlRenderer())
-    	.setCaption("Permission")
-    	.setExpandRatio(1);      
+		  	.addColumn(res -> buildResponsibleFunction.apply(res), new HtmlRenderer())
+		  	.setCaption("Responsible")
+		  	.setId(DocumentGridColumn.RESPONSIBLE.name())
+		  	.setExpandRatio(1)
+		  	.setHidden(true);
 
-        Label documentsAnnotations = new Label("Select one Collection per Document");
+        Label documentsAnnotations = new Label("Select one collection per document");
 
         documentGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
                 documentGrid
         );
         documentGridComponent.setSizeFull();
+        miToggleResponsibiltityFilter = 
+        	documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(
+        			"Hide others' responsibilities", mi -> toggleResponsibilityFilter());
+        
+        miToggleResponsibiltityFilter.setCheckable(true);
+        miToggleResponsibiltityFilter.setChecked(true);
+
         
         addComponent(documentGridComponent);
+	}
+
+	private void toggleResponsibilityFilter() {
+		if (!miToggleResponsibiltityFilter.isChecked()) {
+			Notification.show(
+					"Warning",
+					"Selecting collections that are beyond your responsibility "
+					+ "might result in conflicts with operations of other project members!",
+					Type.WARNING_MESSAGE
+			);
+		}
+
+		documentGrid.getColumn(DocumentGridColumn.RESPONSIBLE.name()).setHidden(
+				miToggleResponsibiltityFilter.isChecked()
+		);
+
+		try {
+			initData();
+		}
+		catch (Exception e) {
+			((ErrorHandler) UI.getCurrent()).showAndLogError(
+					"Error loading available collections", e
+			);
+		}
 	}
 
 	@Override

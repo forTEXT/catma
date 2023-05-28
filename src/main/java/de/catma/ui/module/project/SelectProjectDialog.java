@@ -13,7 +13,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.project.ProjectManager;
+import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
@@ -30,15 +30,15 @@ public class SelectProjectDialog extends AbstractOkCancelDialog<ProjectReference
 	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 
 	private List<ProjectReference> projectRefs;
-	private ProjectManager projectManager;
+	private ProjectsManager projectManager;
 	private EventBus eventBus;
 	private ProjectReference result;
 
 	public SelectProjectDialog(
-			ProjectManager projectManager, 
+			ProjectsManager projectManager, 
 			EventBus eventBus,
 			List<ProjectReference> projectRefs, SaveCancelListener<ProjectReference> saveCancelListener) {
-		super("Select a Project", saveCancelListener);
+		super("Select Project", saveCancelListener);
 		this.projectRefs = projectRefs;
 		this.projectManager = projectManager;
 		this.eventBus = eventBus;
@@ -59,7 +59,7 @@ public class SelectProjectDialog extends AbstractOkCancelDialog<ProjectReference
     	projectsLayout.addStyleNames("select-project-dialog-list");
     	
     	HorizontalLayout descriptionBar = new HorizontalLayout();
-        Label description = new Label("Please select the target Project:");
+        Label description = new Label("Please select the target project:");
 
         Label title = new Label("Title");
 

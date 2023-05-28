@@ -221,7 +221,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			return new Pair<String, Range>(uri, r);
 		}
 		catch (UnsupportedEncodingException uee) {
-			throw new IllegalStateException("UTF8 characterset not supported!");
+			throw new IllegalStateException("UTF8 character set not supported");
 		}
 	}
 
@@ -374,7 +374,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		if (parent == null) {
 			throw new IllegalStateException(
-					"could not find tagset definition for " + tagElement.getLocalName());
+					"Failed to find tagset definition for " + tagElement.getLocalName());
 		}	
 		
 		if (parent.is(TeiElementName.text)||parent.is(TeiElementName.fvLib)) {
@@ -387,7 +387,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			
 		}
 		else {
-			throw new IllegalStateException("unexpected parent element: " + parent);
+			throw new IllegalStateException("Unexpected parent element: " + parent);
 		}
 
 	}
@@ -397,7 +397,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		if (parent == null) {
 			throw new IllegalStateException(
-					"could not find tagset definition for " + tagElement.getLocalName());
+					"Failed to find tagset definition for " + tagElement.getLocalName());
 		}
 		
 		if (parent.is(TeiElementName.text)) {
@@ -418,7 +418,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 				return curProperty.getChildElements().get(0).getValue();
 			}
 		}
-		throw new IllegalStateException("catma_tagname could not be found!");
+		throw new IllegalStateException("catma_tagname could not be found");
 	}
 
 	private String getColorValue(Elements properties) {
@@ -429,7 +429,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 						Attribute.numeric_value);
 			}
 		}
-		throw new IllegalStateException("catma_displaycolor could not be found!");
+		throw new IllegalStateException("catma_displaycolor could not be found");
 	}
 
 	private TeiElement addTagdefinition(

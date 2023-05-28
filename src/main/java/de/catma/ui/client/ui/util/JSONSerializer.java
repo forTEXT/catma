@@ -19,6 +19,7 @@
 package de.catma.ui.client.ui.util;
 
 import com.google.gwt.json.client.JSONBoolean;
+
 import com.google.gwt.json.client.JSONNumber;
 import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
@@ -44,7 +45,7 @@ public class JSONSerializer {
 			throw new IllegalArgumentException("jsonValue cannot be null");
 		}
 	}
-	
+
 	public String getStringValueFromStringObject(JSONValue jsonValue) {
 		if (jsonValue != null) {
 			String result = ((JSONString)jsonValue).stringValue();
@@ -53,6 +54,7 @@ public class JSONSerializer {
 		else {
 			return null;
 		}
+
 	}
 	
 	public boolean getBooleanValueFromBooleanObject(JSONValue jsonValue) {

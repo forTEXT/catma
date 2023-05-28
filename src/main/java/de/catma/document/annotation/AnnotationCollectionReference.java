@@ -29,30 +29,33 @@ import de.catma.document.source.ContentInfoSet;
 public class AnnotationCollectionReference {
 	
 	private String id;
-	private String revisionHash;
 	private ContentInfoSet contentInfoSet;
 	private String sourceDocumentId;
-	private String sourceDocumentRevisiohHash;
+	private String forkedFromCommitURL;
+	private String responsibleUser;
+	private transient boolean contribution = false;
 	
 	public AnnotationCollectionReference(AnnotationCollection annotationCollection) {
 		this(annotationCollection.getId(),
-				annotationCollection.getRevisionHash(),
 				annotationCollection.getContentInfoSet(),
 				annotationCollection.getSourceDocumentId(),
-				annotationCollection.getRevisionHash());
+				annotationCollection.getForkedFromCommitURL(),
+				annotationCollection.getResponsibleUser());
+		this.contribution = annotationCollection.isContribution();
 	}
 	
 	public AnnotationCollectionReference(
-		String id, String revisionHash, 
+		String id,
 		ContentInfoSet contentInfoSet, 
 		String sourceDocumentId,
-		String sourceDocumentRevisiohHash) {
+		String forkedFromCommitURL,
+		String responsibleUser) {
 		super();
 		this.id = id;
-		this.revisionHash = revisionHash;
 		this.contentInfoSet = contentInfoSet;
 		this.sourceDocumentId = sourceDocumentId;
-		this.sourceDocumentRevisiohHash = sourceDocumentRevisiohHash;
+		this.forkedFromCommitURL = forkedFromCommitURL;
+		this.responsibleUser = responsibleUser;
 	}
 
 	@Override
@@ -107,19 +110,40 @@ public class AnnotationCollectionReference {
 		return true;
 	}
 	
-	public String getRevisionHash() {
-		return this.revisionHash;
-	}
-	
-	public void setRevisionHash(String revisionHash) {
-		this.revisionHash = revisionHash;
-	}
-
 	public String getSourceDocumentId() {
 		return sourceDocumentId;
 	}
 
-	public String getSourceDocumentRevisiohHash() {
-		return sourceDocumentRevisiohHash;
+	public String getForkedFromCommitURL() {
+		return forkedFromCommitURL;
 	}
+	
+	public void setForkedFromCommitURL(String forkedFromCommitURL) {
+		this.forkedFromCommitURL = forkedFromCommitURL;
+	}
+
+	public boolean isResponsible(String userIdentifier) {
+		if (responsibleUser != null) {
+			return responsibleUser.equals(userIdentifier);
+		}
+
+		return true; // shared responsibility
+	}
+
+	public String getResponsibleUser() {
+		return responsibleUser;
+	}
+	
+	public void setResponsibleUser(String responsibleUser) {
+		this.responsibleUser = responsibleUser;
+	}
+	
+	public boolean isContribution() {
+		return contribution;
+	}
+	
+	public void setContribution(boolean contribution) {
+		this.contribution = contribution;
+	}
+
 }

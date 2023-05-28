@@ -6,10 +6,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.antlr.runtime.RecognitionException;
@@ -22,7 +24,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
@@ -61,7 +62,6 @@ import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanelSetting;
 import de.catma.ui.module.analyze.queryresultpanel.RefreshQueryResultPanel;
 import de.catma.ui.module.analyze.resourcepanel.AnalyzeResourcePanel;
-import de.catma.ui.module.analyze.visualization.doubletree.DoubleTreePanel;
 import de.catma.ui.module.analyze.visualization.doubletree.DoubleTreePanel;
 import de.catma.ui.module.analyze.visualization.kwic.KwicPanel;
 import de.catma.ui.module.analyze.visualization.vega.DistributionDisplaySettingHandler;
@@ -263,7 +263,7 @@ public class AnalyzeView extends HorizontalLayout
 		if (!corpus.isEmpty()) {
 			
 			//TODO: provide a facility where the user can select between different IndexInfoSets -> AnalyzeResourcePanel
-			indexInfoSet = corpus.getSourceDocuments().get(0).getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
+			indexInfoSet = corpus.getSourceDocuments().get(0).getSourceDocumentInfo().getIndexInfoSet();
 			btQueryBuilder.setEnabled(true);
 			btExecuteSearch.setEnabled(true);
 		}
@@ -287,6 +287,25 @@ public class AnalyzeView extends HorizontalLayout
 			    QueryResultPanel queryResultPanel = (QueryResultPanel)component;
 			    handleMarkAsStale(queryResultPanel);
 			}
+		}
+		
+		for (int i=0; i<getComponentCount(); i++) {
+			Component component = getComponent(i);
+			if (component instanceof VizMaxPanel) {
+				setContent(contentPanel, component);
+				break;
+			}
+		}
+		
+		Set<Component> staleVizMinPanels = new HashSet<Component>();
+		for (Iterator<Component> compIter=vizCardsPanel.iterator(); compIter.hasNext();) {
+			VizMinPanel vizMinPanel = (VizMinPanel)compIter.next();
+			staleVizMinPanels.add(vizMinPanel);
+			vizMinPanel.close();
+		}
+		
+		for (Component comp : staleVizMinPanels) {
+			vizCardsPanel.removeComponent(comp);
 		}
 	}
 
@@ -599,7 +618,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		showProgress(true);
 		
-		((BackgroundServiceProvider) UI.getCurrent()).submit("Searching...",
+		((BackgroundServiceProvider) UI.getCurrent()).submit("search",
 				job, new ExecutionListener<QueryResult>() {
 					public void done(QueryResult result) {
 						try {
@@ -626,20 +645,31 @@ public class AnalyzeView extends HorizontalLayout
 							if ((idx >= 0) && (input.length() > idx)) {
 								char character = input.charAt(idx);
 								String message = MessageFormat.format(
-										"<html><p>There is something wrong with your query <b>{0}</b> approximately at positon {1} character <b>{2}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
-										input, idx + 1, character);
+										"<html>" +
+										"<p>There is something wrong with your query <strong>{0}</strong> " +
+										"approximately at position {1} character <strong>{2}</strong>.</p>" +
+										"<p>If you are unsure about how to construct a query, try the Query Builder!</p>" +
+										"</html>",
+										input,
+										idx + 1,
+										character
+								);
 								HTMLNotification.show("Info", message, 
 										Type.TRAY_NOTIFICATION);
 							} else {
 								String message = MessageFormat.format(
-										"<html><p>There is something wrong with your query <b>{0}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
-										input);
+										"<html>" +
+										"<p>There is something wrong with your query <strong>{0}</strong>.</p>" +
+										"<p>If you are unsure about how to construct a query, try the Query Builder!</p>" +
+										"</html>",
+										input
+								);
 								HTMLNotification.show("Info", message, 
 										Type.TRAY_NOTIFICATION);
 							}
 						} else {
 							((ErrorHandler) UI.getCurrent())
-									.showAndLogError("Error during search!", t);
+									.showAndLogError("Error during search", t);
 						}
 					}
 				});

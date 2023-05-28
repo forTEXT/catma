@@ -100,7 +100,7 @@ public class PtrValueHandler implements AttributeValueHandler {
 			
 			throw new IllegalArgumentException(
 					"The fragment identifier " + fragmentIdentifier 
-					+ " is malformed!\n It does not match RFC 5147", e );
+					+ " is malformed!\nIt does not match RFC 5147.", e );
 		}
 	}
 	

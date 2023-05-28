@@ -2,6 +2,7 @@ $v-font-family: "Open Sans", sans-serif;
 $v-font-size: 16px;
 $v-unit-size: round(1.8 * $v-font-size);
 $v-focus-color: #5A98A1;
+$contribution-color: blue;
 
 @import "../material/material.scss";
 @import "flex-layout.scss";
@@ -22,6 +23,7 @@ $v-focus-color: #5A98A1;
 
   .icon-button.v-button.v-disabled {
     background: white;
+    opacity: 0.2;
   }
 
   .catma-menu .v-menubar-menuitem-highlight {
@@ -447,7 +449,7 @@ $v-focus-color: #5A98A1;
     margin: 0 auto;
   }
 
-  .not-logged-in-main-view-fortext-bottom-panel {
+  .not-logged-in-main-view-fortext-layout {
     margin-top: 60px;
     padding-bottom: 10px;
   }
@@ -470,7 +472,7 @@ $v-focus-color: #5A98A1;
     padding-right: 10px;
   }
 
-  .not-logged-in-main-view-noticepanel {
+  .not-logged-in-main-view-notice-layout {
     margin-top: 60px;
     padding: 0 80px;
     max-width: 1366px;
@@ -568,6 +570,26 @@ $v-focus-color: #5A98A1;
 
   .header__context {
     font-size: 1.5em;
+    cursor: default;
+
+    span.header-state-pill {
+      display: inline-block;
+      vertical-align: middle;
+      margin: -2px 0 0 15px;
+      padding: 3px 5px;
+      border: 1px solid;
+      border-radius: 5px;
+      font-size: 0.5em;
+      color: #E5E5E5;
+
+      .Vaadin-Icons {
+        margin-right: 5px;
+      }
+
+      + span.header-state-pill {
+        margin-left: 5px;
+      }
+    }
   }
 
   /* Navigation */
@@ -745,9 +767,17 @@ $v-focus-color: #5A98A1;
   .documentsgrid__doc__title {
   }
 
+  .documentsgrid__doc__contrib {
+    color: $contribution-color;
+  }
+
   .documentsgrid__doc__author {
     font-size: 0.75em;
     color: rgba(0, 0, 0, 0.54);
+  }
+
+  .project-view-tagset-with-contribution {
+    color: $contribution-color;
   }
 
   .project-view-action-grid {
@@ -757,11 +787,6 @@ $v-focus-color: #5A98A1;
   .project-view-main-panel {
     padding-top: 10px;
     padding-left: 25px;
-  }
-
-  .project-view-synch-bell {
-    color: yellow !important;
-    font-weight: bold;
   }
 
   /* Dashboard */
@@ -838,7 +863,7 @@ $v-focus-color: #5A98A1;
     width: 100%
   }
 
-  .projectlist__card__descriptionbar {
+  .projectlist__card__title-and-actions {
     padding: 10px;
   }
 
@@ -862,6 +887,18 @@ $v-focus-color: #5A98A1;
 
   .annotate-panel-tagsetname {
     font-size: 12px;
+  }
+
+  .annotate-panel-tagset-with-contributions span.annotate-panel-tagsetname {
+    color: $contribution-color;
+  }
+
+  .annotate-panel-tag-with-contributions {
+    color: $contribution-color;
+  }
+
+  tr.annotate-panel-property-with-contributions div.annotation-panel-property-summary {
+    color: $contribution-color;
   }
 
   div.annotation-panel-property-summary {
@@ -1160,5 +1197,51 @@ $v-focus-color: #5A98A1;
   .pre-api-dialog .jsclipboardbutton-label-invisible {
     //display: none; // breaks the clipboard button
     color: transparent;
+  }
+
+  /* Error Dialog */
+  .error-dialog {
+    background-color: #D32F2F;
+    color: #F0DCDC;
+
+    .v-window-header {
+      color: #FFF;
+
+      .v-icon {
+        font-size: 32px;
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+    }
+
+    .v-window-contents > .v-scrollable::before {
+      border-color: #D84141;
+    }
+
+    .v-window-maximizebox, .v-window-restorebox, .v-window-closebox {
+      color: #FFF;
+    }
+
+    .v-button-clipboard {
+      background-color: #D84141 !important; /* TODO: find a better way */
+
+      .v-button-wrap {
+        color: #F0DCDC;
+      }
+    }
+
+    a, a:visited, a:hover, a:active {
+      color: #F0DCDC;
+    }
+
+    li > span.subtext {
+      font-size: 14px;
+      font-style: italic;
+    }
+  }
+
+  /* Add Member Dialog */
+  .add-member-dialog-member-combobox-description {
+    font-size: 12px;
   }
 }

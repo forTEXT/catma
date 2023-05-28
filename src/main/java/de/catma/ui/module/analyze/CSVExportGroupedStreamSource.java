@@ -112,7 +112,7 @@ public class CSVExportGroupedStreamSource implements StreamSource {
             		header.add(kwicProvider.getSourceDocumentName() + " (" + documentId + ")");
             		for (String collectionId : new TreeSet<String>(collectionIdByDocumentId.get(documentId))) {
             			
-            			header.add(kwicProvider.getSourceDocument().getUserMarkupCollectionReference(collectionId).toString() + " (" +collectionId + ")");
+            			header.add(kwicProvider.getSourceDocumentReference().getUserMarkupCollectionReference(collectionId).toString() + " (" +collectionId + ")");
             		}
             	}
 
@@ -143,7 +143,7 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 			}
 			@Override
 			public void error(Throwable t) {
-				((ErrorHandler)ui).showAndLogError("Error export data to CSV!", t);
+				((ErrorHandler) ui).showAndLogError("Error exporting data to CSV", t);
 			}
 		});
 
@@ -156,7 +156,7 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 				tries--;
 			}
 		} catch (IOException | InterruptedException e) {
-			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export!", e);
+			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export", e);
 		}
         
         return in;
