@@ -3,8 +3,10 @@ package de.catma.ui.module.dashboard;
 import java.util.Objects;
 
 import com.google.common.eventbus.EventBus;
+import com.vaadin.server.Page;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 
 import de.catma.project.ProjectManager;
 import de.catma.ui.events.ProjectChangedEvent;
@@ -40,9 +42,13 @@ public class CreateProjectCard extends VerticalFlexLayout {
         newproject.addComponents(labelDesc);
 
         newproject.addLayoutClickListener(evt -> {
-        	new CreateProjectDialog(projectManager, result -> eventBus.post(new ProjectChangedEvent())).show();
-
-
+//            new CreateProjectDialog(projectManager, result -> eventBus.post(new ProjectChangedEvent())).show();
+            Notification projectCreationDisabledNotification = new Notification(
+                    "New project creation is disabled in CATMA 6, please use CATMA 7!",
+                    Notification.Type.WARNING_MESSAGE
+            );
+            projectCreationDisabledNotification.setDelayMsec(-1);
+            projectCreationDisabledNotification.show(Page.getCurrent());
         });
         addComponent(newproject);
 
