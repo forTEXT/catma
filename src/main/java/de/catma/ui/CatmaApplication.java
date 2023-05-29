@@ -189,7 +189,7 @@ public class CatmaApplication extends UI implements KeyValueStorage,
 				Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
 				UI.getCurrent().setContent(mainView);
 				eventBus.post(new RouteToDashboardEvent());
-				getCurrent().getPage().pushState("/catma/");
+				getCurrent().getPage().pushState("/six/");
 			} catch (IOException e) {
 				showAndLogError("can't login properly", e);
 			}
