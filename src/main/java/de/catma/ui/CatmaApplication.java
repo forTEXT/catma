@@ -179,7 +179,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 			setContent(mainView);
 
 			eventBus.post(new RouteToDashboardEvent());
-			getPage().pushState("/catma/");
+			getPage().pushState("/seven/");
 		}
 	}
 
