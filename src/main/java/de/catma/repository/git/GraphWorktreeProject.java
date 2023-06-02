@@ -1271,7 +1271,7 @@ public class GraphWorktreeProject implements IndexedProject {
 		List<TagsetDefinitionImportStatus> tagsetDefinitionImportStatuses = new ArrayList<>();
 
 		for (TagsetDefinition tagsetDefinition : tagLibraryToImport) {
-			boolean tagsetAlreadyInProject = (tagManager.getTagLibrary().getTagsetDefinition(tagsetDefinition.getUuid()) != null);
+			boolean tagsetAlreadyInProject = getTagManager().getTagLibrary().getTagsetDefinition(tagsetDefinition.getUuid()) != null;
 			tagsetDefinitionImportStatuses.add(new TagsetDefinitionImportStatus(tagsetDefinition, tagsetAlreadyInProject));
 		}
 
