@@ -103,12 +103,14 @@ public class ProjectConverter implements AutoCloseable {
 				String migrationTempPath = new File(CATMAPropertyKey.TEMP_DIR.getValue(), "project_migration").getAbsolutePath();
 				Path userTempPath = Paths.get(migrationTempPath, ownerUser.getIdentifier()); // this is the same path that JGitRepoManager constructs internally
 
-				if (userTempPath.toFile().exists()) {
-					legacyProjectHandler.deleteUserTempPath(userTempPath);
+				if (!userTempPath.toFile().exists() && !userTempPath.toFile().mkdirs()) {
+					throw new IllegalStateException(String.format("Failed to create temp directory at path %s", userTempPath));
 				}
 
-				if (!userTempPath.toFile().mkdirs()) {
-					throw new IllegalStateException(String.format("Failed to create temp directory at path %s", userTempPath));
+				Path projectPath = userTempPath.resolve(projectId);
+				if (projectPath.toFile().exists()) {
+					legacyProjectHandler.setUserWritablePermissions(projectPath);
+					FileUtils.deleteDirectory(projectPath.toFile());
 				}
 
 				String rootRepoName = projectId + "_root";
@@ -122,7 +124,7 @@ public class ProjectConverter implements AutoCloseable {
 					);
 				}
 
-				Path projectPath = userTempPath.resolve(projectId);
+				logger.info(String.format("Creating backup for project with ID %s", projectId));
 				Path projectBackupPath = backupPath.resolve(projectId);
 
 				if (projectBackupPath.toFile().exists() && projectBackupPath.toFile().list().length > 0) {
@@ -134,11 +136,13 @@ public class ProjectConverter implements AutoCloseable {
 					FileUtils.deleteDirectory(projectBackupPath.toFile());
 				}
 
-				logger.info(String.format("Creating backup for project with ID %s", projectId));
 				FileUtils.copyDirectory(projectPath.toFile(), projectBackupPath.toFile());
 
 				legacyProjectHandler.setUserWritablePermissions(projectPath);
 
+				logger.info(String.format(
+						"Opening root repo, checking out migration branch and initing/updating submodules for project with ID %s", projectId)
+				);
 				Path projectRootPath = projectPath.resolve(rootRepoName);
 
 				try (JGitRepoManager repoManager = new JGitRepoManager(migrationTempPath, userAndImpersonationToken.getFirst())) {
@@ -159,6 +163,8 @@ public class ProjectConverter implements AutoCloseable {
 					// delete them so that we don't accidentally add them again later
 					Set<String> untracked = repoManager.getStatus().getUntracked();
 					if (!untracked.isEmpty()) {
+						logger.info(String.format("Deleting untracked old submodule dirs and associated config for project with ID %s", projectId));
+
 						for (String relativePath : untracked) {
 							String unixStyleRelativePath = FilenameUtils.separatorsToUnix(relativePath);
 							if (!unixStyleRelativePath.startsWith("documents/")
@@ -228,7 +234,7 @@ public class ProjectConverter implements AutoCloseable {
 					logger.info(String.format("Deleting .gitmodules from project with ID %s", projectId));
 					repoManager.remove(projectRootPath.resolve(".gitmodules").toFile());
 
-					logger.info("Committing integration of submodules");
+					logger.info(String.format("Committing integration of submodules for project with ID %s", projectId));
 					repoManager.commit("Direct integration of submodules", SYSTEM_COMMITTER_NAME, SYSTEM_COMMITTER_EMAIL, false);
 
 					if (!hasAnyResources(projectRootPath)) {
@@ -250,7 +256,9 @@ public class ProjectConverter implements AutoCloseable {
 							.replaceAll("^_|_$", ""); // strip any leading or trailing underscore
 					String newProjectId = uuidPart + cleanedName;
 
-					logger.info(String.format("Creating new target project with ID %s in the owner's namespace \"%s\"", newProjectId, ownerUser.getIdentifier()));
+					logger.info(
+							String.format("Creating new target project with ID %s in the owner's namespace \"%s\"", newProjectId, ownerUser.getIdentifier())
+					);
 					Project project = restrictedGitLabApi.getProjectApi().createProject(
 							newProjectId,
 							null,
@@ -277,6 +285,7 @@ public class ProjectConverter implements AutoCloseable {
 					repoManager.remoteAdd(Constants.DEFAULT_REMOTE_NAME, GitLabUtils.rewriteGitLabServerUrl(project.getHttpUrlToRepo()));
 
 					// convert collections to the new storage layout
+					logger.info(String.format("Converting collections for project with ID %s", projectId));
 					TagLibrary tagLibrary = legacyProjectHandler.getTagLibrary(repoManager, projectRootPath.toFile(), ownerUser);
 
 					for (String relativeSubmodulePath : relativeSubmodulePaths) {
@@ -297,6 +306,7 @@ public class ProjectConverter implements AutoCloseable {
 
 					repoManager.addAllAndCommit("Converted annotation collections", SYSTEM_COMMITTER_NAME, SYSTEM_COMMITTER_EMAIL, false);
 
+					logger.info(String.format("Merging migration branch into master for project with ID %s", projectId));
 					MergeResult mergeResult = null;
 
 					if (repoManager.hasRef(Constants.MASTER)) {
