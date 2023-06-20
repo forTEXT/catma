@@ -13,9 +13,12 @@ import de.catma.util.Pair;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Group;
@@ -41,6 +44,9 @@ public class ProjectScanner implements AutoCloseable {
 	private final LegacyProjectHandler legacyProjectHandler;
 
 	private final Map<String, ProjectReport> projectReportsById;
+
+	private static final String SYSTEM_COMMITTER_NAME = "CATMA System";
+	private static final String SYSTEM_COMMITTER_EMAIL = "support@catma.de";
 
 	public ProjectScanner() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ? System.getProperties().getProperty("prop") : "catma.properties";
@@ -99,6 +105,12 @@ public class ProjectScanner implements AutoCloseable {
 			// get the list of submodules/resources
 			String rootRepoName = projectId + "_root";
 			repoManager.open(projectId, rootRepoName);
+
+			// for debugging on Windows
+//			StoredConfig repositoryConfig = repoManager.getGitApi().getRepository().getConfig();
+//			repositoryConfig.setBoolean("core", null, "filemode", false);
+//			repositoryConfig.save();
+
 			List<String> resources = repoManager.getSubmodulePaths();
 			repoManager.detach();
 
@@ -118,6 +130,12 @@ public class ProjectScanner implements AutoCloseable {
 
 				// open the submodule repo and check out the dev branch
 				repoManager.open(projectId, rootRepoName + "/" + resource);
+
+				// for debugging on Windows
+//				StoredConfig submoduleRepositoryConfig = repoManager.getGitApi().getRepository().getConfig();
+//				submoduleRepositoryConfig.setBoolean("core", null, "filemode", false);
+//				submoduleRepositoryConfig.save();
+
 				repoManager.checkout("dev", true);
 
 				// get the Git status and add it to the project report
@@ -306,7 +324,46 @@ public class ProjectScanner implements AutoCloseable {
 
 		// if the migration branch exists remotely, merge it into the local migration branch
 		if (hasRemoteMigrationBranch) {
-			MergeResult mrOriginC6MigrationIntoC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
+			MergeResult mrOriginC6MigrationIntoC6Migration;
+
+			try {
+				mrOriginC6MigrationIntoC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
+			}
+			catch (IOException e) {
+				if (e.getMessage().contains("Failed to merge branch") && e.getCause() instanceof CheckoutConflictException) {
+					String checkoutConflictExceptionMessage = e.getCause().getMessage();
+					status = repoManager.getStatus();
+					if (!status.getUntracked().isEmpty()
+							&& status.getRemoved().containsAll(status.getUntracked())
+							&& status.getUntracked().stream().allMatch(checkoutConflictExceptionMessage::contains)
+					) {
+						// handles the case where a merge is aborted because of untracked deleted submodules
+						for (String relativeSubmodulePath : status.getUntracked()) {
+							String unixStyleRelativeSubmodulePath = FilenameUtils.separatorsToUnix(relativeSubmodulePath);
+							File submoduleDir = repoManager.getRepositoryWorkTree().toPath().resolve(unixStyleRelativeSubmodulePath).toFile();
+							FileUtils.deleteDirectory(submoduleDir);
+						}
+
+						// commit the merge
+						repoManager.commit(
+								String.format("Merge remote-tracking branch '%1$s/%2$s' into %2$s", Constants.DEFAULT_REMOTE_NAME, migrationBranchName),
+								SYSTEM_COMMITTER_NAME,
+								SYSTEM_COMMITTER_EMAIL,
+								false
+						);
+
+						// get a fresh MergeResult
+						mrOriginC6MigrationIntoC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
+					}
+					else {
+						throw e;
+					}
+				}
+				else {
+					throw e;
+				}
+			}
+
 			getProjectReport(projectId).addMergeResultOriginC6MigrationToC6Migration(projectId, mrOriginC6MigrationIntoC6Migration);
 			clean = resolveRootConflicts(repoManager, user, jGitCredentialsManager, mrOriginC6MigrationIntoC6Migration, projectId, rootRepoName);
 		}
@@ -498,7 +555,7 @@ public class ProjectScanner implements AutoCloseable {
 
 		getProjectReport(projectId).setOwnerEmail(owner.getEmail() == null ? owner.getIdentifier() : owner.getEmail());
 
-		legacyProjectHandler.removeC6MigrationBranches(projectId, migrationBranchName);
+//		legacyProjectHandler.removeC6MigrationBranches(projectId, migrationBranchName);
 
 		for (Member member : members) {
 			// we use the owner for authentication, since merging requires full access to all resources
