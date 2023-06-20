@@ -17,8 +17,11 @@ import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.Pair;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.IssuesApi;
 import org.gitlab4j.api.Pager;
@@ -151,6 +154,38 @@ public class ProjectConverter implements AutoCloseable {
 
 					repoManager.checkoutFromOrigin(migrationBranch);
 					repoManager.initAndUpdateSubmodules(jGitCredentialsManager, new HashSet<>(repoManager.getSubmodulePaths()));
+
+					// at this stage there could be untracked old submodule dirs because we checked out the migration branch and called initAndUpdateSubmodules
+					// delete them so that we don't accidentally add them again later
+					Set<String> untracked = repoManager.getStatus().getUntracked();
+					if (!untracked.isEmpty()) {
+						for (String relativePath : untracked) {
+							String unixStyleRelativePath = FilenameUtils.separatorsToUnix(relativePath);
+							if (!unixStyleRelativePath.startsWith("documents/")
+									&& !unixStyleRelativePath.startsWith("collections/")
+									&& !unixStyleRelativePath.startsWith("tagsets/")
+							) {
+								throw new IllegalStateException(String.format("Encountered unexpected untracked path: %s", unixStyleRelativePath));
+							}
+						}
+
+						for (String relativeSubmodulePath : untracked) {
+							String unixStyleRelativeSubmodulePath = FilenameUtils.separatorsToUnix(relativeSubmodulePath);
+
+							StoredConfig repositoryConfig = repoManager.getGitApi().getRepository().getConfig();
+							repositoryConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, unixStyleRelativeSubmodulePath);
+							repositoryConfig.save();
+
+							File submoduleGitDir = projectRootPath
+									.resolve(Constants.DOT_GIT)
+									.resolve(Constants.MODULES)
+									.resolve(relativeSubmodulePath)
+									.toFile();
+							File submoduleDir = projectRootPath.resolve(relativeSubmodulePath).toFile();
+							FileUtils.deleteDirectory(submoduleGitDir);
+							FileUtils.deleteDirectory(submoduleDir);
+						}
+					}
 
 					List<String> relativeSubmodulePaths = repoManager.getSubmodulePaths();
 
