@@ -212,10 +212,10 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 	@Override
 	public void fetch(JGitCredentialsManager jGitCredentialsManager) throws IOException {
-		fetch(jGitCredentialsManager, 0);
+		fetch(jGitCredentialsManager, 0, 0);
 	}
 
-	private void fetch(JGitCredentialsManager jGitCredentialsManager, int refreshCredentialsTryCount) throws IOException {
+	private void fetch(JGitCredentialsManager jGitCredentialsManager, int refreshCredentialsTryCount, int tryCount) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `fetch` on a detached instance");
 		}
@@ -230,12 +230,27 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				// it's likely that the user is logged in using the username/password authentication method and that their
 				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
 				jGitCredentialsManager.refreshTransientCredentials();
-				fetch(jGitCredentialsManager, refreshCredentialsTryCount + 1);
+				fetch(jGitCredentialsManager, refreshCredentialsTryCount + 1, tryCount);
 				return;
 			}
 
-			// give up, refreshing credentials didn't work or unexpected error
-			throw new IOException("Failed to fetch", e);
+			if (e instanceof TransportException && e.getMessage().contains("authentication not supported") && tryCount < 3) {
+				// sometimes GitLab refuses to accept the fetch and returns this error message
+				// subsequent fetch attempts succeed however, so we retry the fetch up to 3 times before giving up
+				try {
+					Thread.sleep(100L * (tryCount + 1));
+				}
+				catch (InterruptedException ignored) {}
+
+				fetch(jGitCredentialsManager, refreshCredentialsTryCount, tryCount + 1);
+				return;
+			}
+
+			// give up, refreshing credentials didn't work, retries exhausted, or unexpected error
+			throw new IOException(
+					String.format("Failed to fetch, tried %d times", tryCount + 1),
+					e
+			);
 		}
 	}
 
@@ -722,7 +737,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				return push(jGitCredentialsManager, branch, skipBranchChecks, refreshCredentialsTryCount + 1, tryCount);
 			}
 
-			if (e.getMessage().contains("authentication not supported") && tryCount < 3) {
+			if (e instanceof TransportException && e.getMessage().contains("authentication not supported") && tryCount < 3) {
 				// sometimes GitLab refuses to accept the push and returns this error message
 				// subsequent push attempts succeed however, so we retry the push up to 3 times before giving up
 				try {
