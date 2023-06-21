@@ -233,6 +233,8 @@ public class ProjectConverter implements AutoCloseable {
 
 					logger.info(String.format("Deleting .gitmodules from project with ID %s", projectId));
 					repoManager.remove(projectRootPath.resolve(".gitmodules").toFile());
+					// explicitly add .gitmodules here, otherwise it remains unstaged on the live server for some reason
+					repoManager.add(projectRootPath.resolve(".gitmodules").toFile());
 
 					logger.info(String.format("Committing integration of submodules for project with ID %s", projectId));
 					repoManager.commit("Direct integration of submodules", SYSTEM_COMMITTER_NAME, SYSTEM_COMMITTER_EMAIL, false);
