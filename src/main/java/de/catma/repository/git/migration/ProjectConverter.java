@@ -23,6 +23,7 @@ import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.IssuesApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.*;
@@ -346,55 +347,7 @@ public class ProjectConverter implements AutoCloseable {
 					}
 
 					// migrate comments
-					logger.info(String.format("Migrating comments for project with ID %s", projectId));
-
-					IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
-
-					// get a pager for all issues of the group
-					Pager<Issue> issues = issuesApi.getGroupIssues(
-							projectId,
-							new IssueFilter()
-									.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
-									.withOrderBy(org.gitlab4j.api.Constants.IssueOrderBy.CREATED_AT)
-									.withSort(org.gitlab4j.api.Constants.SortOrder.ASC),
-							100
-					);
-
-					List<Long> processedIssueIds = new ArrayList<>();
-
-					// move issues to the new project and add the document ID label
-					for (Issue issue : issues.all()) {
-						// guard against multiple processing (happened during testing, not sure how)
-						if (processedIssueIds.contains(issue.getId())) {
-							continue;
-						}
-
-						Comment comment = new SerializationHelper<Comment>().deserialize(issue.getDescription(), Comment.class);
-
-						// move issue
-						Issue movedIssue = issuesApi.moveIssue(issue.getProjectId(), issue.getIid(), project.getId());
-
-						// update labels
-						List<String> labels = new ArrayList<>();
-						labels.add(CATMA_COMMENT_LABEL); // existing labels 'belong' to the source project and are not moved
-						labels.add(comment.getDocumentId());
-
-						issuesApi.updateIssue(
-								movedIssue.getProjectId(),
-								movedIssue.getIid(),
-								movedIssue.getTitle(),
-								movedIssue.getDescription(),
-								null,
-								null,
-								null,
-								String.join(",", labels),
-								null,
-								null,
-								null
-						);
-
-						processedIssueIds.add(issue.getId());
-					}
+					migrateComments(projectId, restrictedGitLabApi, project);
 
 					if (CATMAPropertyKey.V6_REPO_MIGRATION_CLEANUP_CONVERTED_V6_PROJECT.getBooleanValue()) {
 						logger.info(String.format("Deleting legacy project (group) with ID %s", projectId));
@@ -510,6 +463,58 @@ public class ProjectConverter implements AutoCloseable {
 				}
 				repoManager.remove(legacyAnnotationFile);
 			}
+		}
+	}
+
+	private void migrateComments(String projectId, GitLabApi restrictedGitLabApi, Project project) throws GitLabApiException {
+		logger.info(String.format("Migrating comments for project with ID %s", projectId));
+
+		IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
+
+		// get a pager for all issues of the group
+		Pager<Issue> issues = issuesApi.getGroupIssues(
+				projectId,
+				new IssueFilter()
+						.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
+						.withOrderBy(org.gitlab4j.api.Constants.IssueOrderBy.CREATED_AT)
+						.withSort(org.gitlab4j.api.Constants.SortOrder.ASC),
+				100
+		);
+
+		List<Long> processedIssueIds = new ArrayList<>();
+
+		// move issues to the new project and add the document ID label
+		for (Issue issue : issues.all()) {
+			// guard against multiple processing (happened during testing, not sure how)
+			if (processedIssueIds.contains(issue.getId())) {
+				continue;
+			}
+
+			Comment comment = new SerializationHelper<Comment>().deserialize(issue.getDescription(), Comment.class);
+
+			// move issue
+			Issue movedIssue = issuesApi.moveIssue(issue.getProjectId(), issue.getIid(), project.getId());
+
+			// update labels
+			List<String> labels = new ArrayList<>();
+			labels.add(CATMA_COMMENT_LABEL); // existing labels 'belong' to the source project and are not moved
+			labels.add(comment.getDocumentId());
+
+			issuesApi.updateIssue(
+					movedIssue.getProjectId(),
+					movedIssue.getIid(),
+					movedIssue.getTitle(),
+					movedIssue.getDescription(),
+					null,
+					null,
+					null,
+					String.join(",", labels),
+					null,
+					null,
+					null
+			);
+
+			processedIssueIds.add(issue.getId());
 		}
 	}
 
