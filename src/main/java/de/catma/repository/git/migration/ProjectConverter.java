@@ -347,9 +347,15 @@ public class ProjectConverter implements AutoCloseable {
 					}
 
 					// migrate comments
-					migrateComments(projectId, restrictedGitLabApi, project);
+					if (!CATMAPropertyKey.V6_REPO_MIGRATION_SKIP_COMMENT_MIGRATION.getBooleanValue()) {
+						migrateComments(projectId, restrictedGitLabApi, project);
+					}
 
-					if (CATMAPropertyKey.V6_REPO_MIGRATION_CLEANUP_CONVERTED_V6_PROJECT.getBooleanValue()) {
+					if (
+							CATMAPropertyKey.V6_REPO_MIGRATION_CLEANUP_CONVERTED_V6_PROJECT.getBooleanValue()
+									// don't allow cleanup if comments haven't been migrated
+									&& !CATMAPropertyKey.V6_REPO_MIGRATION_SKIP_COMMENT_MIGRATION.getBooleanValue()
+					) {
 						logger.info(String.format("Deleting legacy project (group) with ID %s", projectId));
 						restrictedGitLabApi.getGroupApi().deleteGroup(projectId);
 
