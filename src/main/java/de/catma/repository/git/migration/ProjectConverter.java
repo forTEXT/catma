@@ -245,19 +245,7 @@ public class ProjectConverter implements AutoCloseable {
 						return;
 					}
 
-					// clean the project ID, ref 39770b
-					if (!projectId.matches("CATMA_[\\w&&[^_]]{8}-[\\w&&[^_]]{4}-[\\w&&[^_]]{4}-[\\w&&[^_]]{4}-[\\w&&[^_]]{12}_.*")) {
-						throw new IllegalStateException(String.format("Encountered unexpected project ID format: %s", projectId));
-					}
-
-					String uuidPart = projectId.substring(0, 43);
-					String namePart = projectId.substring(43);
-					String cleanedName = namePart.trim()
-							.replaceAll("[\\p{Punct}\\p{Space}]", "_") // replace punctuation and whitespace characters with underscore ( _ )
-							.replaceAll("_+", "_") // collapse multiple consecutive underscores into one
-							.replaceAll("[^\\p{Alnum}_]", "x") // replace any remaining non-alphanumeric characters with x (excluding underscore)
-							.replaceAll("^_|_$", ""); // strip any leading or trailing underscore
-					String newProjectId = uuidPart + cleanedName;
+					String newProjectId = cleanProjectId(projectId);
 
 					logger.info(
 							String.format("Creating new target project with ID %s in the owner's namespace \"%s\"", newProjectId, ownerUser.getIdentifier())
@@ -522,6 +510,24 @@ public class ProjectConverter implements AutoCloseable {
 
 			processedIssueIds.add(issue.getId());
 		}
+	}
+
+	private String cleanProjectId(String projectId) {
+		// clean the project ID, ref 39770b
+		if (!projectId.matches("CATMA_[\\w&&[^_]]{8}-[\\w&&[^_]]{4}-[\\w&&[^_]]{4}-[\\w&&[^_]]{4}-[\\w&&[^_]]{12}_.*")) {
+			throw new IllegalStateException(String.format("Encountered unexpected project ID format: %s", projectId));
+		}
+
+		String uuidPart = projectId.substring(0, 43);
+		String namePart = projectId.substring(43);
+		String cleanedName = namePart.trim()
+				.replaceAll("[\\p{Punct}\\p{Space}]", "_") // replace punctuation and whitespace characters with underscore ( _ )
+				.replaceAll("_+", "_") // collapse multiple consecutive underscores into one
+				.replaceAll("[^\\p{Alnum}_]", "x") // replace any remaining non-alphanumeric characters with x (excluding underscore)
+				.replaceAll("^_|_$", ""); // strip any leading or trailing underscore
+		String newProjectId = uuidPart + cleanedName;
+
+		return newProjectId;
 	}
 
 	@Override
