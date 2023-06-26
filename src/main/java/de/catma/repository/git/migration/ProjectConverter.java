@@ -92,6 +92,13 @@ public class ProjectConverter implements AutoCloseable {
 
 			Pair<User, String> userAndImpersonationToken = legacyProjectHandler.acquireUser(owner.getIdentifier());
 
+			if (CATMAPropertyKey.V6_REPO_MIGRATION_ONLY_COMMENT_MIGRATION.getBooleanValue()) {
+				// only run comment migration, nothing else
+				// (for this to work convertProject must have run previously with V6_REPO_MIGRATION_ONLY_COMMENT_MIGRATION set to False)
+				onlyMigrateComments(projectId, userAndImpersonationToken.getFirst().getIdentifier(), userAndImpersonationToken.getSecond());
+				return;
+			}
+
 			try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userAndImpersonationToken.getSecond())) {
 				logger.info(String.format("Retrieving legacy project (group) with ID %s", projectId));
 				Group legacyProject = restrictedGitLabApi.getGroupApi().getGroup(projectId);
@@ -509,6 +516,20 @@ public class ProjectConverter implements AutoCloseable {
 			);
 
 			processedIssueIds.add(issue.getId());
+		}
+	}
+
+	private void onlyMigrateComments(String projectId, String username, String impersonationToken) throws GitLabApiException {
+		logger.info(String.format("ONLY migrating comments for project with ID %s", projectId));
+
+		String newProjectId = cleanProjectId(projectId);
+
+		try (GitLabApi restrictedGitLabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), impersonationToken)) {
+			Project project = restrictedGitLabApi.getProjectApi().getProject(username, newProjectId);
+
+			if (project != null) {
+				migrateComments(projectId, restrictedGitLabApi, project);
+			}
 		}
 	}
 
