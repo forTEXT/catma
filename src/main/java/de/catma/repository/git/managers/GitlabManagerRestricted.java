@@ -200,7 +200,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 			return projectsCache.get(
 					"projects",
-					() -> projectApi.getProjects(new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true))
+					() -> projectApi.getProjects(new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true).withSimple(true))
 							.stream()
 							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
 							.map(project -> {

@@ -20,6 +20,7 @@ import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.PersonalAccessToken;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -76,7 +77,7 @@ public class GitLabServerManagerTest {
 		if (this.repositoriesToDeleteOnTearDown.size() > 0) {
 			for (Integer repositoryId : this.repositoriesToDeleteOnTearDown) {
 				this.serverManager.deleteRepository(repositoryId);
-				await().until(() -> projectApi.getProjects().isEmpty());
+				await().until(() -> projectApi.getProjects(new ProjectFilter().withSimple(true)).isEmpty());
 			}
 		}
 
@@ -244,7 +245,7 @@ public class GitLabServerManagerTest {
 		this.serverManager.deleteRepository(createRepositoryResponse.repositoryId);
 
 		await().until(
-			() -> this.serverManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+			() -> this.serverManager.getAdminGitLabApi().getProjectApi().getProjects(new ProjectFilter().withSimple(true)).isEmpty()
 		);
 	}
 

@@ -16,6 +16,7 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.PersonalAccessToken;
+import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +67,7 @@ public class GitLabServerManagerTest {
 		if (repositoriesToDeleteOnTearDown.size() > 0) {
 			for (ProjectReference projectRef : repositoriesToDeleteOnTearDown) {
 				gitlabManagerRestricted.deleteProject(projectRef);
-				await().until(() -> projectApi.getProjects().isEmpty());
+				await().until(() -> projectApi.getProjects(new ProjectFilter().withSimple(true)).isEmpty());
 			}
 		}
 
@@ -214,7 +215,7 @@ public class GitLabServerManagerTest {
 //		this.serverManager.deleteRepository(createRepositoryResponse.repositoryId);
 //
 //		await().until(
-//			() -> this.serverManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+//			() -> this.serverManager.getAdminGitLabApi().getProjectApi().getProjects(new ProjectFilter().withSimple(true)).isEmpty()
 //		);
 //	}
 //

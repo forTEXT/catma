@@ -23,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.ProjectFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -101,8 +102,9 @@ public class GitSourceDocumentHandlerTest {
 
 		if (sourceDocumentReposToDeleteOnTearDown.size() > 0) {
 			for (String sourceDocumentId : sourceDocumentReposToDeleteOnTearDown) {
-				// this getProjects overload does a search
-				List<Project> projects = gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(sourceDocumentId);
+				List<Project> projects = gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(
+						new ProjectFilter().withSearch(sourceDocumentId).withSimple(true)
+				);
 
 				for (Project project : projects) {
 					gitlabManagerRestricted.deleteProject(
@@ -116,7 +118,7 @@ public class GitSourceDocumentHandlerTest {
 				}
 
 				await().until(
-					() -> gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects().isEmpty()
+					() -> gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(new ProjectFilter().withSimple(true)).isEmpty()
 				);
 			}
 			sourceDocumentReposToDeleteOnTearDown.clear();

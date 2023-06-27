@@ -18,6 +18,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -85,13 +86,13 @@ public class GitTagsetHandlerTest {
 			for (String tagsetId : this.tagsetReposToDeleteOnTearDown) {
 				String tagsetRepoName = GitTagsetHandler.getTagsetRepositoryName(tagsetId);
 				List<Project> projects = this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(
-					tagsetRepoName
-				); // this getProjects overload does a search
+						new ProjectFilter().withSearch(tagsetRepoName).withSimple(true)
+				);
 				for (Project project : projects) {
 					this.gitLabServerManager.deleteRepository(project.getId());
 				}
 				await().until(
-					() -> this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+					() -> this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(new ProjectFilter().withSimple(true)).isEmpty()
 				);
 			}
 			this.tagsetReposToDeleteOnTearDown.clear();

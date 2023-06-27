@@ -19,6 +19,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.URIish;
 import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.models.Commit;
+import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -210,7 +211,7 @@ public class JGitRepoManagerTest {
 		// cleanup (these are not handled by tearDown)
 		gitLabServerManager.deleteRepository(createRepositoryResponse.repositoryId);
 		await().until(
-			() -> gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+			() -> gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(new ProjectFilter().withSimple(true)).isEmpty()
 		);
 
 		// see GitLabServerManagerTest tearDown() for more info
@@ -528,7 +529,7 @@ public class JGitRepoManagerTest {
 			// cleanup (these are not handled by tearDown)
 			gitLabServerManager.deleteRepository(createRepositoryResponse.repositoryId);
 			await().until(
-				() -> gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+				() -> gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(new ProjectFilter().withSimple(true)).isEmpty()
 			);
 
 			// see GitLabServerManagerTest tearDown() for more info
