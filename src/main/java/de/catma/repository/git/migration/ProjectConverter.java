@@ -447,7 +447,18 @@ public class ProjectConverter implements AutoCloseable {
 				}
 				else {
 					Pair<User, String> userAndImpersonationToken = legacyProjectHandler.acquireUser(author);
-					authorUser = userAndImpersonationToken.getFirst();
+
+					if (userAndImpersonationToken == null) {
+						// if a user couldn't be found then 'author' is probably an email address rather than a username
+						// this happens as a result of importing annotations and https://github.com/forTEXT/catma/issues/251
+						// as there is a good chance that 'author' is wrong anyway, we simply write these annotations into ownerUser's pages - the actual
+						// property value in the annotation JSON remains unchanged
+						logger.info(String.format("Couldn't find a user for author \"%s\", defaulting to project owner", author));
+						authorUser = ownerUser;
+					}
+					else {
+						authorUser = userAndImpersonationToken.getFirst();
+					}
 				}
 
 				GitAnnotationCollectionHandler gitAnnotationCollectionHandler =	new GitAnnotationCollectionHandler(
