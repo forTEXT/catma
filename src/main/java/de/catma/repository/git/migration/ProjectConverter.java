@@ -528,6 +528,8 @@ public class ProjectConverter implements AutoCloseable {
 
 			processedIssueIds.add(issue.getId());
 		}
+
+		logger.info(String.format("Migrated %d comments for project with ID %s", processedIssueIds.size(), projectId));
 	}
 
 	private void onlyMigrateComments(String projectId, String username, String impersonationToken) throws GitLabApiException {
