@@ -1,6 +1,7 @@
 package de.catma.repository.git.migration;
 
 import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Lists;
 import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
@@ -17,8 +18,11 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Group;
@@ -32,6 +36,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ProjectScanner implements AutoCloseable {
 	private final Logger logger = Logger.getLogger(ProjectScanner.class.getName());
@@ -223,7 +229,7 @@ public class ProjectScanner implements AutoCloseable {
 				 // if we had a clean rootStatus before merging resources we merge and push the root repo
 				if (rootStatus.isClean()) { 
 					repoManager.open(projectId, rootRepoName);
-					mergeAndPushRoot(repoManager, user, jGitCredentialsManager, projectId, rootRepoName);
+					mergeAndPushRoot(repoManager, user, jGitCredentialsManager, projectId, rootRepoName, readableResources);
 					repoManager.detach();
 				}
 			}
@@ -292,7 +298,8 @@ public class ProjectScanner implements AutoCloseable {
 			User user,
 			JGitCredentialsManager jGitCredentialsManager,
 			String projectId,
-			String rootRepoName
+			String rootRepoName,
+			List<String> readableResources
 	) throws Exception {
 		if (!repoManager.hasRef(Constants.MASTER)) {
 			logger.warning(
@@ -358,6 +365,64 @@ public class ProjectScanner implements AutoCloseable {
 					else {
 						throw e;
 					}
+				}
+				else {
+					throw e;
+				}
+			}
+			catch (JGitInternalException e) {
+				if (e.getMessage().contains("Exception caught during execution of merge command") && e.getCause() instanceof MissingObjectException
+						&& e.getCause().getMessage().contains("Missing blob")) {
+					Pattern p = Pattern.compile("Missing blob ([a-z0-9]{40})");
+					Matcher m = p.matcher(e.getCause().getMessage());
+
+					if (!m.matches()) {
+						throw new IllegalStateException("Couldn't find blob hash in error message");
+					}
+
+					String missingBlobHash = m.group(1);
+
+					// check if the missing blob is a commit that exists on the master branch of one of the resources
+					repoManager.detach();
+
+					boolean found = false;
+					for (String resource : readableResources) {
+						repoManager.open(projectId, rootRepoName + "/" + resource);
+
+						try {
+							List<RevCommit> matchedCommits = Lists.newArrayList(
+									repoManager.getGitApi().log().add(ObjectId.fromString(missingBlobHash)).call()
+							);
+
+							if (!matchedCommits.isEmpty()) {
+								found = true;
+								break;
+							}
+						}
+						catch (MissingObjectException moe) {
+							// not found, continue
+						}
+						finally {
+							repoManager.detach();
+						}
+					}
+
+					repoManager.open(projectId, rootRepoName);
+
+					// if not throw
+					if (!found) {
+						throw new IllegalStateException("Couldn't find missing blob, investigate", e);
+					}
+
+					// if yes, ignore the error, force commit, and get a fresh MergeResult
+					repoManager.commit(
+							String.format("Merge remote-tracking branch '%1$s/%2$s' into %2$s", Constants.DEFAULT_REMOTE_NAME, migrationBranchName),
+							SYSTEM_COMMITTER_NAME,
+							SYSTEM_COMMITTER_EMAIL,
+							true
+					);
+
+					mrOriginC6MigrationIntoC6Migration = repoManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + migrationBranchName);
 				}
 				else {
 					throw e;
