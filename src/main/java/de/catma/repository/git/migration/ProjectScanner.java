@@ -415,6 +415,8 @@ public class ProjectScanner implements AutoCloseable {
 					}
 
 					// if yes, ignore the error, force commit, and get a fresh MergeResult
+					logger.warning("#!#!#!#!#! Force committing after a 'missing blob' error !#!#!#!#!#");
+
 					repoManager.commit(
 							String.format("Merge remote-tracking branch '%1$s/%2$s' into %2$s", Constants.DEFAULT_REMOTE_NAME, migrationBranchName),
 							SYSTEM_COMMITTER_NAME,
