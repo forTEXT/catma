@@ -554,6 +554,12 @@ public class ProjectConverter implements AutoCloseable {
 
 		String uuidPart = projectId.substring(0, 43);
 		String namePart = projectId.substring(43);
+
+		if (namePart.matches("_+")) {
+			// if the name part is all underscores, convert it to all xs (as would be the case for an all Hebrew name, for example)
+			namePart = namePart.replaceAll("_", "x");
+		}
+
 		String cleanedName = namePart.trim()
 				.replaceAll("[\\p{Punct}\\p{Space}]", "_") // replace punctuation and whitespace characters with underscore ( _ )
 				.replaceAll("_+", "_") // collapse multiple consecutive underscores into one

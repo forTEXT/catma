@@ -2,86 +2,81 @@ Manifest-Version: 1.0
 Main-Class: de.catma.repository.git.migration.ProjectScanner
 Class-Path: . lib/activation-1.1.jar lib/annotations-12.0.jar lib/antlr-
  runtime-3.5.3.jar lib/aopalliance-repackaged-2.6.1.jar lib/apache-mime4
- j-core-0.8.4.jar lib/apache-mime4j-dom-0.8.4.jar lib/apiguardian-api-1.
- 1.2.jar lib/asm-5.0.3.jar lib/atmosphere-runtime-2.4.30.vaadin4.jar lib
- /awaitility-4.2.0.jar lib/base-1.0.0.jar lib/bcmail-jdk15on-1.70.jar li
- b/bcpkix-jdk15on-1.70.jar lib/bcprov-jdk15on-1.70.jar lib/bcutil-jdk15o
- n-1.70.jar lib/boilerpipe-1.1.0.jar lib/byte-buddy-1.12.19.jar lib/byte
- -buddy-agent-1.12.19.jar lib/bzip2-0.9.1.jar lib/c3p0-0.9.5.5.jar lib/c
- ache-api-1.1.1.jar lib/cdm-4.5.5.jar lib/cglib-3.1.jar lib/checker-qual
- -3.12.0.jar lib/commons-codec-1.11.jar lib/commons-collections4-4.4.jar
-  lib/commons-compress-1.21.jar lib/commons-csv-1.9.0.jar lib/commons-em
- ail-1.5.jar lib/commons-exec-1.3.jar lib/commons-io-2.11.0.jar lib/comm
- ons-lang3-3.3.2.jar lib/commons-logging-1.2.jar lib/commons-math3-3.6.1
- .jar lib/confirmdialog-3.2.0.jar lib/curvesapi-1.07.jar lib/cxf-core-3.
- 5.3.jar lib/cxf-rt-frontend-jaxrs-3.5.3.jar lib/cxf-rt-rs-client-3.5.3.
- jar lib/cxf-rt-security-3.5.3.jar lib/cxf-rt-transports-http-3.5.3.jar 
- lib/dd-plist-1.24.jar lib/dec-0.1.2.jar lib/ehcache-core-2.6.2.jar lib/
- elemental2-promise-1.1.0.jar lib/elements-0.2.3-SNAPSHOT.jar lib/error_
- prone_annotations-2.11.0.jar lib/failureaccess-1.0.1.jar lib/flute-1.3.
- 0.gg2.jar lib/fontbox-2.0.26.jar lib/gentyref-1.2.0.vaadin1.jar lib/geo
- api-3.0.1.jar lib/gitlab4j-api-5.0.1-CATMA-v2.jar lib/grib-4.5.5.jar li
- b/gson-2.8.9.jar lib/guava-31.1-jre.jar lib/guava-gwt-31.1-jre.jar lib/
- gwt-elemental-2.8.2.jar lib/gwt-elemental-2.8.2.vaadin2.jar lib/gwt-use
- r-2.8.2.jar lib/hamcrest-2.1.jar lib/hazelcast-3.12.13.jar lib/hazelcas
- t-client-3.12.13.jar lib/HikariCP-java7-2.4.13.jar lib/hk2-api-2.6.1.ja
- r lib/hk2-locator-2.6.1.jar lib/hk2-utils-2.6.1.jar lib/httpclient-4.5.
- 13.jar lib/httpcore-4.4.13.jar lib/httpmime-4.5.13.jar lib/httpservices
- -4.5.5.jar lib/isoparser-1.9.41.7.jar lib/istack-commons-runtime-3.0.12
- .jar lib/j2objc-annotations-1.3.jar lib/jackcess-4.0.2.jar lib/jackcess
- -encrypt-4.0.1.jar lib/jackson-annotations-2.13.4.jar lib/jackson-core-
- 2.13.4.jar lib/jackson-databind-2.13.4.jar lib/jackson-module-jaxb-anno
- tations-2.12.2.jar lib/jai-imageio-core-1.4.0.jar lib/jakarta.activatio
- n-1.2.2.jar lib/jakarta.activation-api-1.2.2.jar lib/jakarta.annotation
- -api-1.3.5.jar lib/jakarta.inject-2.6.1.jar lib/jakarta.servlet-api-4.0
- .4.jar lib/jakarta.ws.rs-api-2.1.6.jar lib/jakarta.xml.bind-api-2.3.3.j
- ar lib/java-libpst-0.9.3.jar lib/JavaEWAH-1.1.6.jar lib/javassist-3.25.
- 0-GA.jar lib/javax.mail-1.5.6.jar lib/javax.servlet-api-3.1.0.jar lib/j
- axb-runtime-2.3.5.jar lib/jbig2-imageio-3.0.4.jar lib/jcip-annotations-
- 1.0.jar lib/jcl-over-slf4j-1.7.36.jar lib/jcommander-1.82.jar lib/jdom2
- -2.0.6.1.jar lib/jempbox-1.8.16.jar lib/jersey-apache-connector-2.35.ja
- r lib/jersey-client-2.35.jar lib/jersey-common-2.35.jar lib/jersey-enti
- ty-filtering-2.35.jar lib/jersey-hk2-2.35.jar lib/jersey-media-json-jac
- kson-2.35.jar lib/jersey-media-multipart-2.35.jar lib/jhighlight-1.1.0.
- jar lib/jmatio-1.5.jar lib/jna-5.12.1.jar lib/joda-time-2.2.jar lib/jsc
- h-0.1.54.jar lib/jsclipboard-1.0.12.jar lib/jsinterop-annotations-1.0.2
- -sources.jar lib/jsinterop-annotations-2.0.0.jar lib/json-simple-1.1.1.
- jar lib/jsonic-1.2.11.jar lib/jsoup-1.14.3.jar lib/jul-to-slf4j-1.7.36.
- jar lib/junit-jupiter-api-5.9.2.jar lib/junit-platform-commons-1.9.2.ja
- r lib/juniversalchardet-1.0.3.jar lib/junrar-7.5.3.jar lib/jzlib-1.1.1.
- jar lib/language-detector-0.6.jar lib/listenablefuture-9999.0-empty-to-
- avoid-conflict-with-guava.jar lib/log4j-api-2.17.2.jar lib/lucene-analy
- zers-common-8.11.2.jar lib/lucene-core-8.11.2.jar lib/material-1.1.8.ja
- r lib/mchange-commons-java-0.2.19.jar lib/metadata-extractor-2.17.1.0.j
- ar lib/mimepull-1.9.13.jar lib/mockito-core-4.11.0.jar lib/netcdf4-4.5.
- 5.jar lib/netty-buffer-4.1.90.Final.jar lib/netty-codec-4.1.90.Final.ja
- r lib/netty-codec-http-4.1.90.Final.jar lib/netty-common-4.1.90.Final.j
- ar lib/netty-handler-4.1.90.Final.jar lib/netty-resolver-4.1.90.Final.j
- ar lib/netty-transport-4.1.90.Final.jar lib/netty-transport-native-unix
- -common-4.1.90.Final.jar lib/objenesis-3.3.jar lib/openjson-1.0.12.jar 
- lib/opennlp-tools-1.9.4.jar lib/opentest4j-1.2.0.jar lib/org.eclipse.jg
- it-4.11.8.201904181247-r.jar lib/osgi-resource-locator-1.0.3.jar lib/pa
- rso-2.0.14.jar lib/pdfbox-2.0.26.jar lib/pdfbox-tools-2.0.26.jar lib/po
- i-5.2.2.jar lib/poi-ooxml-5.2.2.jar lib/poi-ooxml-lite-5.2.2.jar lib/po
- i-scratchpad-5.2.2.jar lib/preflight-2.0.26.jar lib/protobuf-java-3.21.
- 5.jar lib/quartz-2.3.2.jar lib/rome-1.18.0.jar lib/rome-utils-1.18.0.ja
- r lib/sac-1.3.jar lib/sentiment-analysis-parser-0.1.jar lib/sis-feature
- -1.2.jar lib/sis-metadata-1.2.jar lib/sis-netcdf-1.2.jar lib/sis-refere
- ncing-1.2.jar lib/sis-storage-1.2.jar lib/sis-utility-1.2.jar lib/slf4j
- -api-1.7.2.jar lib/SparseBitSet-1.2.jar lib/sqlite-jdbc-3.41.2.0.jar li
- b/stax2-api-4.2.1.jar lib/system-stubs-core-1.2.0.jar lib/system-stubs-
- jupiter-1.2.0.jar lib/tagsoup-1.2.1.jar lib/tika-core-1.28.5.jar lib/ti
- ka-langdetect-1.28.5.jar lib/tika-parsers-1.28.5.jar lib/txw2-2.3.5.jar
-  lib/udunits-4.5.5.jar lib/unit-api-1.0.jar lib/vaadin-client-8.14.3.ja
- r lib/vaadin-client-compiled-8.14.3.jar lib/vaadin-context-menu-3.1.0.j
- ar lib/vaadin-push-8.14.3.jar lib/vaadin-sass-compiler-0.9.13.jar lib/v
- aadin-server-8.14.3.jar lib/vaadin-shared-8.14.3.jar lib/vaadin-slf4j-j
- dk14-1.6.1.jar lib/vaadin-sliderpanel-2.2.1.jar lib/vaadin-themes-8.14.
- 3.jar lib/validation-api-1.0.0.GA-sources.jar lib/validation-api-1.0.0.
- GA.jar lib/vorbis-java-core-0.8.jar lib/vorbis-java-tika-0.8.jar lib/wc
- slib-vaadin-widget-multifileupload-4.0.jar lib/woodstox-core-6.3.1.jar 
- lib/xalan-2.7.0.jar lib/xercesImpl-2.12.2.jar lib/xml-apis-1.4.01.jar l
- ib/xmlbeans-5.0.3.jar lib/xmlschema-core-2.3.0.jar lib/xmpbox-2.0.26.ja
- r lib/xmpcore-6.1.10.jar lib/xmpcore-shaded-6.1.10.jar lib/xom-1.2.10.j
- ar lib/xz-1.9.jar
+ j-core-0.8.4.jar lib/apache-mime4j-dom-0.8.4.jar lib/asm-5.0.3.jar lib/
+ atmosphere-runtime-2.4.30.vaadin4.jar lib/bcmail-jdk15on-1.70.jar lib/b
+ cpkix-jdk15on-1.70.jar lib/bcprov-jdk15on-1.70.jar lib/bcutil-jdk15on-1
+ .70.jar lib/boilerpipe-1.1.0.jar lib/bzip2-0.9.1.jar lib/c3p0-0.9.5.5.j
+ ar lib/cache-api-1.1.1.jar lib/cdm-4.5.5.jar lib/cglib-3.1.jar lib/chec
+ ker-qual-3.33.0.jar lib/commons-codec-1.11.jar lib/commons-collections4
+ -4.4.jar lib/commons-compress-1.21.jar lib/commons-csv-1.9.0.jar lib/co
+ mmons-email-1.5.jar lib/commons-exec-1.3.jar lib/commons-io-2.11.0.jar 
+ lib/commons-lang3-3.3.2.jar lib/commons-logging-1.2.jar lib/commons-mat
+ h3-3.6.1.jar lib/confirmdialog-3.2.0.jar lib/curvesapi-1.07.jar lib/cxf
+ -core-3.5.3.jar lib/cxf-rt-frontend-jaxrs-3.5.3.jar lib/cxf-rt-rs-clien
+ t-3.5.3.jar lib/cxf-rt-security-3.5.3.jar lib/cxf-rt-transports-http-3.
+ 5.3.jar lib/dd-plist-1.24.jar lib/dec-0.1.2.jar lib/ehcache-core-2.6.2.
+ jar lib/elements-0.2.3-SNAPSHOT.jar lib/error_prone_annotations-2.18.0.
+ jar lib/failureaccess-1.0.1.jar lib/flute-1.3.0.gg2.jar lib/fontbox-2.0
+ .26.jar lib/gentyref-1.2.0.vaadin1.jar lib/geoapi-3.0.1.jar lib/gitlab4
+ j-api-5.0.1-CATMA-v2.jar lib/grib-4.5.5.jar lib/gson-2.8.9.jar lib/guav
+ a-32.1.1-jre.jar lib/guava-gwt-32.1.1-jre.jar lib/gwt-elemental-2.8.2.j
+ ar lib/gwt-elemental-2.8.2.vaadin2.jar lib/gwt-user-2.8.2.jar lib/hazel
+ cast-3.12.13.jar lib/hazelcast-client-3.12.13.jar lib/HikariCP-java7-2.
+ 4.13.jar lib/hk2-api-2.6.1.jar lib/hk2-locator-2.6.1.jar lib/hk2-utils-
+ 2.6.1.jar lib/httpclient-4.5.13.jar lib/httpcore-4.4.13.jar lib/httpmim
+ e-4.5.13.jar lib/httpservices-4.5.5.jar lib/isoparser-1.9.41.7.jar lib/
+ istack-commons-runtime-3.0.12.jar lib/j2objc-annotations-2.8.jar lib/ja
+ ckcess-4.0.2.jar lib/jackcess-encrypt-4.0.1.jar lib/jackson-annotations
+ -2.13.4.jar lib/jackson-core-2.13.4.jar lib/jackson-databind-2.13.4.jar
+  lib/jackson-module-jaxb-annotations-2.12.2.jar lib/jai-imageio-core-1.
+ 4.0.jar lib/jakarta.activation-1.2.2.jar lib/jakarta.activation-api-1.2
+ .2.jar lib/jakarta.annotation-api-1.3.5.jar lib/jakarta.inject-2.6.1.ja
+ r lib/jakarta.servlet-api-4.0.4.jar lib/jakarta.ws.rs-api-2.1.6.jar lib
+ /jakarta.xml.bind-api-2.3.3.jar lib/java-libpst-0.9.3.jar lib/JavaEWAH-
+ 1.1.6.jar lib/javassist-3.25.0-GA.jar lib/javax.mail-1.5.6.jar lib/jaxb
+ -runtime-2.3.5.jar lib/jbig2-imageio-3.0.4.jar lib/jcip-annotations-1.0
+ .jar lib/jcl-over-slf4j-1.7.36.jar lib/jcommander-1.82.jar lib/jdom2-2.
+ 0.6.1.jar lib/jempbox-1.8.16.jar lib/jersey-apache-connector-2.35.jar l
+ ib/jersey-client-2.35.jar lib/jersey-common-2.35.jar lib/jersey-entity-
+ filtering-2.35.jar lib/jersey-hk2-2.35.jar lib/jersey-media-json-jackso
+ n-2.35.jar lib/jersey-media-multipart-2.35.jar lib/jhighlight-1.1.0.jar
+  lib/jmatio-1.5.jar lib/jna-5.12.1.jar lib/joda-time-2.2.jar lib/jsch-0
+ .1.54.jar lib/jsclipboard-1.0.12.jar lib/jsinterop-annotations-1.0.2-so
+ urces.jar lib/jsinterop-annotations-1.0.2.jar lib/json-simple-1.1.1.jar
+  lib/jsonic-1.2.11.jar lib/jsoup-1.14.3.jar lib/jul-to-slf4j-1.7.36.jar
+  lib/juniversalchardet-1.0.3.jar lib/junrar-7.5.3.jar lib/jzlib-1.1.1.j
+ ar lib/language-detector-0.6.jar lib/listenablefuture-9999.0-empty-to-a
+ void-conflict-with-guava.jar lib/log4j-api-2.17.2.jar lib/lucene-analyz
+ ers-common-8.11.2.jar lib/lucene-core-8.11.2.jar lib/material-1.1.8.jar
+  lib/mchange-commons-java-0.2.19.jar lib/metadata-extractor-2.17.1.0.ja
+ r lib/mimepull-1.9.13.jar lib/netcdf4-4.5.5.jar lib/netty-buffer-4.1.90
+ .Final.jar lib/netty-codec-4.1.90.Final.jar lib/netty-codec-http-4.1.90
+ .Final.jar lib/netty-common-4.1.90.Final.jar lib/netty-handler-4.1.90.F
+ inal.jar lib/netty-resolver-4.1.90.Final.jar lib/netty-transport-4.1.90
+ .Final.jar lib/netty-transport-native-unix-common-4.1.90.Final.jar lib/
+ openjson-1.0.12.jar lib/opennlp-tools-1.9.4.jar lib/org.eclipse.jgit-4.
+ 11.8.201904181247-r.jar lib/osgi-resource-locator-1.0.3.jar lib/parso-2
+ .0.14.jar lib/pdfbox-2.0.26.jar lib/pdfbox-tools-2.0.26.jar lib/poi-5.2
+ .2.jar lib/poi-ooxml-5.2.2.jar lib/poi-ooxml-lite-5.2.2.jar lib/poi-scr
+ atchpad-5.2.2.jar lib/preflight-2.0.26.jar lib/protobuf-java-3.21.5.jar
+  lib/quartz-2.3.2.jar lib/rome-1.18.0.jar lib/rome-utils-1.18.0.jar lib
+ /sac-1.3.jar lib/sentiment-analysis-parser-0.1.jar lib/sis-feature-1.2.
+ jar lib/sis-metadata-1.2.jar lib/sis-netcdf-1.2.jar lib/sis-referencing
+ -1.2.jar lib/sis-storage-1.2.jar lib/sis-utility-1.2.jar lib/slf4j-api-
+ 1.7.2.jar lib/SparseBitSet-1.2.jar lib/sqlite-jdbc-3.41.2.2.jar lib/sta
+ x2-api-4.2.1.jar lib/system-stubs-core-1.2.0.jar lib/system-stubs-jupit
+ er-1.2.0.jar lib/tagsoup-1.2.1.jar lib/tika-core-1.28.5.jar lib/tika-la
+ ngdetect-1.28.5.jar lib/tika-parsers-1.28.5.jar lib/txw2-2.3.5.jar lib/
+ udunits-4.5.5.jar lib/unit-api-1.0.jar lib/vaadin-client-8.14.3.jar lib
+ /vaadin-client-compiled-8.14.3.jar lib/vaadin-context-menu-3.1.0.jar li
+ b/vaadin-push-8.14.3.jar lib/vaadin-sass-compiler-0.9.13.jar lib/vaadin
+ -server-8.14.3.jar lib/vaadin-shared-8.14.3.jar lib/vaadin-slf4j-jdk14-
+ 1.6.1.jar lib/vaadin-sliderpanel-2.2.1.jar lib/vaadin-themes-8.14.3.jar
+  lib/validation-api-1.0.0.GA-sources.jar lib/validation-api-1.0.0.GA.ja
+ r lib/vorbis-java-core-0.8.jar lib/vorbis-java-tika-0.8.jar lib/wcslib-
+ vaadin-widget-multifileupload-4.0.jar lib/woodstox-core-6.3.1.jar lib/x
+ alan-2.7.0.jar lib/xercesImpl-2.12.2.jar lib/xml-apis-1.4.01.jar lib/xm
+ lbeans-5.0.3.jar lib/xmlschema-core-2.3.0.jar lib/xmpbox-2.0.26.jar lib
+ /xmpcore-6.1.10.jar lib/xmpcore-shaded-6.1.10.jar lib/xom-1.2.10.jar li
+ b/xz-1.9.jar
 
