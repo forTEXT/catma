@@ -18,7 +18,6 @@
  */
 package de.catma.document.annotation;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Comparator;
 
@@ -50,31 +49,31 @@ public class TagReference {
 	
 	private final TagInstance tagInstance;
 	private final Range range;
-	private final URI target;
+	private String sourceDocumentId;
 	private String userMarkupCollectionUuid;
 
 	/**
 	 * @param tagInstance the referencing instance
-	 * @param uri a reference to the source document
+	 * @param sourceDocumentId a reference to the source document
 	 * @param range the referenced range of text
 	 * @param userMarkupCollectionUuid the ID of the containing collection
 	 * @throws URISyntaxException
 	 */
-	public TagReference(TagInstance tagInstance, String uri, Range range, String userMarkupCollectionUuid)
+	public TagReference(TagInstance tagInstance, String sourceDocumentId, Range range, String userMarkupCollectionUuid)
 			throws URISyntaxException {
 		this.tagInstance = tagInstance;
-		// the 'catma' protocol prefix is deprecated and no longer supported
-		if (uri.startsWith("catma://")) {
-			uri = uri.substring(8);
+		// the 'catma' protocol prefix is deprecated and no longer supported (sourceDocumentId used to be called 'target' and was of type URI)
+		if (sourceDocumentId.startsWith("catma://")) {
+			sourceDocumentId = sourceDocumentId.substring(8);
 		}
-		this.target = new URI(uri);
+		this.sourceDocumentId = sourceDocumentId;
 		this.range = range;
 		this.userMarkupCollectionUuid = userMarkupCollectionUuid;
 	}
 	
 	@Override
 	public String toString() {
-		return tagInstance + "@" + target + "#" + range;
+		return tagInstance + "@" + sourceDocumentId + "#" + range;
 	}
 
 	/**
@@ -108,8 +107,12 @@ public class TagReference {
 	/**
 	 * @return link to source document
 	 */
-	public URI getTarget() {
-		return target;
+	public String getSourceDocumentId() {
+		return sourceDocumentId;
+	}
+
+	public void setSourceDocumentId(String sourceDocumentId) {
+		this.sourceDocumentId = sourceDocumentId;
 	}
 
 	public String getUserMarkupCollectionUuid() {

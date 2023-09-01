@@ -376,7 +376,7 @@ public class CorpusImporter {
 															newReferences.add(
 																new TagReference(
 																	newTagInstance, 
-																	tr.getTarget().toString(), 
+																	tr.getSourceDocumentId().toString(),
 																	tr.getRange(), 
 																	tr.getUserMarkupCollectionUuid()));
 														} catch (URISyntaxException e) {

@@ -1054,7 +1054,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 																try {
 																	newTagReferences.add(new TagReference(
 																			newTagInstance,
-																			incomingTagReference.getTarget().toString(),
+																			incomingTagReference.getSourceDocumentId().toString(),
 																			incomingTagReference.getRange(),
 																			incomingTagReference.getUserMarkupCollectionUuid()
 																	));

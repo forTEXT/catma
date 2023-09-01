@@ -17,7 +17,7 @@ public class JsonLdWebAnnotationTarget implements Comparable<JsonLdWebAnnotation
 	}
 
 	public JsonLdWebAnnotationTarget(TagReference tagReference) {
-		this.source = tagReference.getTarget().toString();
+		this.source = tagReference.getSourceDocumentId().toString();
 
 		Range range = tagReference.getRange();
 		this.selector = new JsonLdWebAnnotationTextPositionSelector(range.getStartPoint(), range.getEndPoint());

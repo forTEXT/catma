@@ -57,7 +57,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.*;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
@@ -1147,8 +1146,8 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 
 		try {
-			URI collectionTarget = new URI(annotationCollection.getSourceDocumentId());
-			Set<URI> annotationTargets = tagReferences.stream().map(TagReference::getTarget).collect(Collectors.toSet());
+			String collectionTarget = annotationCollection.getSourceDocumentId();
+			Set<String> annotationTargets = tagReferences.stream().map(TagReference::getSourceDocumentId).collect(Collectors.toSet());
 
 			if (!annotationTargets.stream().allMatch(annotationTarget -> annotationTarget.equals(collectionTarget))) {
 				throw new IllegalStateException("One or more annotations don't reference the same document as the collection!");
@@ -1186,8 +1185,8 @@ public class GraphWorktreeProject implements IndexedProject {
 		}
 
 		try {
-			URI collectionTarget = new URI(annotationCollection.getSourceDocumentId());
-			Set<URI> annotationTargets = tagReferences.stream().map(TagReference::getTarget).collect(Collectors.toSet());
+			String collectionTarget = annotationCollection.getSourceDocumentId();
+			Set<String> annotationTargets = tagReferences.stream().map(TagReference::getSourceDocumentId).collect(Collectors.toSet());
 
 			if (!annotationTargets.stream().allMatch(annotationTarget -> annotationTarget.equals(collectionTarget))) {
 				throw new IllegalStateException("One or more annotations don't reference the same document as the collection!");
@@ -1275,7 +1274,7 @@ public class GraphWorktreeProject implements IndexedProject {
 			tagsetDefinitionImportStatuses.add(new TagsetDefinitionImportStatus(tagsetDefinition, tagsetAlreadyInProject));
 		}
 
-		String collectionId = idGenerator.generate();
+		String collectionId = idGenerator.generateCollectionId();
 
 		TeiUserMarkupCollectionDeserializer deserializer = new TeiUserMarkupCollectionDeserializer(
 				teiTagLibrarySerializationHandler.getTeiDocument(),
@@ -1287,7 +1286,7 @@ public class GraphWorktreeProject implements IndexedProject {
 				collectionId,
 				teiTagLibrarySerializationHandler.getTeiDocument().getContentInfoSet(),
 				tagManager.getTagLibrary(),
-				deserializer.getTagReferences(),
+				deserializer.getTagReferences().stream().peek(tr -> tr.setSourceDocumentId(sourceDocumentRef.getUuid())).collect(Collectors.toList()),
 				sourceDocumentRef.getUuid(),
 				null,
 				user.getIdentifier()
