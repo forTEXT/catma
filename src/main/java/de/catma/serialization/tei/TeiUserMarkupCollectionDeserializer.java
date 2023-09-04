@@ -18,6 +18,13 @@
  */
 package de.catma.serialization.tei;
 
+import de.catma.document.annotation.TagReference;
+import de.catma.serialization.tei.PtrValueHandler.TargetValues;
+import de.catma.tag.*;
+import de.catma.util.IDGenerator;
+import nu.xom.Elements;
+import nu.xom.Nodes;
+
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -27,186 +34,167 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import de.catma.document.annotation.TagReference;
-import de.catma.serialization.tei.PtrValueHandler.TargetValues;
-import de.catma.tag.Property;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.Version;
-import de.catma.util.IDGenerator;
-import nu.xom.Elements;
-import nu.xom.Nodes;
-
 public class TeiUserMarkupCollectionDeserializer {
-	
-	private Logger logger = Logger.getLogger(TeiUserMarkupCollectionDeserializer.class.getName());
+	private final Logger logger = Logger.getLogger(TeiUserMarkupCollectionDeserializer.class.getName());
 
-	private TeiDocument teiDocument;
-	private List<TagReference> tagReferences;
-	private TagLibrary tagLibrary;
-	private HashMap<String,String> old2newTagInstanceIDs = new HashMap<String, String>();
+	private final TeiDocument teiDocument;
+	private final TagLibrary tagLibrary;
 
-	public TeiUserMarkupCollectionDeserializer(
-			TeiDocument teiDocument, TagLibrary tagLibrary, String collectionId) {
+	private final List<TagReference> tagReferences;
+	private final HashMap<String,String> oldToNewTagInstanceIds;
+	private final IDGenerator idGenerator;
+
+	public TeiUserMarkupCollectionDeserializer(TeiDocument teiDocument, TagLibrary tagLibrary, String collectionId) {
 		this.teiDocument = teiDocument;
 		this.tagLibrary = tagLibrary;
-		this.tagReferences = new ArrayList<TagReference>();
+
+		this.tagReferences = new ArrayList<>();
+		this.oldToNewTagInstanceIds = new HashMap<>();
+		this.idGenerator = new IDGenerator();
+
 		deserialize(collectionId);
 	}
 
-	private void deserialize(String collectionId) {
-		Nodes segmentNodes = teiDocument.getNodes(
-				TeiElementName.seg, AttributeValue.seg_ana_catma_tag_ref.getStartsWith());
-		
-		for (int i=0; i<segmentNodes.size(); i++) {
-			TeiElement curSegment = (TeiElement)segmentNodes.get(i);
-			AnaValueHandler anaValueHandler = new AnaValueHandler();
-			List<String> tagInstanceIDs = 
-					anaValueHandler.makeTagInstanceIDListFrom(
-							curSegment.getAttributeValue(Attribute.ana));
-			Elements pointerElements = curSegment.getChildElements(TeiElementName.ptr);
-			for(String tagInstanceID : tagInstanceIDs) {
-				TagInstance tagInstance = createTagInstance(tagInstanceID);
-				
-				for (int j=0; j<pointerElements.size();j++) {
-					TeiElement curPointer = (TeiElement)pointerElements.get(j);
-					PtrValueHandler ptrValueHandler = new PtrValueHandler();
-					TargetValues targetValues =
-							ptrValueHandler.getTargetValuesFrom(
-									curPointer.getAttributeValue(Attribute.ptr_target));
-
-					TagReference tagReference = new TagReference(
-							collectionId,
-							tagInstance,
-							targetValues.getURI(),
-							targetValues.getRange()
-					);
-					tagReferences.add(tagReference);
-				}
-			}
-		}
-		
-	}
-	
 	public List<TagReference> getTagReferences() {
 		return tagReferences;
 	}
 
-	private TagInstance createTagInstance(String tagInstanceID) {
-		TeiElement tagInstanceElement = teiDocument.getElementByID(tagInstanceID);
-		TagDefinition tagDefinition = tagLibrary.getTagDefinition(
-				tagInstanceElement.getAttributeValue(Attribute.type));
-		if (!old2newTagInstanceIDs.containsKey(tagInstanceElement.getID())) {
-			old2newTagInstanceIDs.put(tagInstanceElement.getID(), new IDGenerator().generate());
+	private void deserialize(String collectionId) {
+		Nodes segmentNodes = teiDocument.getNodes(TeiElementName.seg, AttributeValue.seg_ana_catma_tag_ref.getStartsWith());
+
+		// TODO: make these static
+		AnaValueHandler anaValueHandler = new AnaValueHandler();
+		PtrValueHandler ptrValueHandler = new PtrValueHandler();
+
+		for (int i=0; i<segmentNodes.size(); i++) {
+			TeiElement currentSegment = (TeiElement) segmentNodes.get(i);
+
+			List<String> tagInstanceIds = anaValueHandler.makeTagInstanceIDListFrom(currentSegment.getAttributeValue(Attribute.ana));
+
+			Elements pointerElements = currentSegment.getChildElements(TeiElementName.ptr);
+			List<TargetValues> pointerElementsTargetValues = new ArrayList<>();
+			for (int j=0; j<pointerElements.size(); j++) {
+				TeiElement currentPointer = (TeiElement) pointerElements.get(j);
+				pointerElementsTargetValues.add(
+						ptrValueHandler.getTargetValuesFrom(currentPointer.getAttributeValue(Attribute.ptr_target))
+				);
+			}
+
+			for (String tagInstanceId : tagInstanceIds) {
+				TagInstance tagInstance = createTagInstance(tagInstanceId);
+				pointerElementsTargetValues.forEach(targetValues -> tagReferences.add(
+						new TagReference(collectionId, tagInstance, targetValues.getURI(), targetValues.getRange())
+				));
+			}
 		}
-		final TagInstance tagInstance = 
-			new TagInstance(
-				old2newTagInstanceIDs.get(tagInstanceElement.getID()), 
+	}
+
+	private TagInstance createTagInstance(String tagInstanceId) {
+		TeiElement tagInstanceElement = teiDocument.getElementByID(tagInstanceId);
+		TagDefinition tagDefinition = tagLibrary.getTagDefinition(tagInstanceElement.getAttributeValue(Attribute.type));
+
+		if (!oldToNewTagInstanceIds.containsKey(tagInstanceElement.getID())) {
+			oldToNewTagInstanceIds.put(tagInstanceElement.getID(), idGenerator.generate());
+		}
+
+		final TagInstance tagInstance = new TagInstance(
+				oldToNewTagInstanceIds.get(tagInstanceElement.getID()),
 				tagDefinition.getUuid(),
 				tagDefinition.getAuthor(),
 				ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 				tagDefinition.getUserDefinedPropertyDefinitions(),
-				tagDefinition.getTagsetDefinitionUuid());
-		
+				tagDefinition.getTagsetDefinitionUuid()
+		);
+
 		Nodes systemPropertyElements = tagInstanceElement.getChildNodes(
 				TeiElementName.f,
-				AttributeValue.f_name_catma_system_property.getStartsWithFilter());
+				AttributeValue.f_name_catma_system_property.getStartsWithFilter()
+		);
 		addProperties(
-				tagDefinition, 
+				tagDefinition,
 				new AddPropertyHandler() {
 					public void addProperty(Property property) {
 						tagInstance.addSystemProperty(property);
 					}
-				}, 
-				systemPropertyElements);
+				},
+				systemPropertyElements
+		);
+
 		Nodes userDefinedPropertyElements = tagInstanceElement.getChildNodes(
 				TeiElementName.f,
-				AttributeValue.f_name_catma_system_property.getNotStartsWithFilter());
+				AttributeValue.f_name_catma_system_property.getNotStartsWithFilter()
+		);
 		addProperties(
 				tagDefinition, 
 				new AddPropertyHandler() {
-			
 					public void addProperty(Property property) {
 						tagInstance.addUserDefinedProperty(property);
-						
 					}
 				}, 
-				userDefinedPropertyElements);
+				userDefinedPropertyElements
+		);
+
 		return tagInstance;
 	}
 
-	private void addProperties(
-			TagDefinition tagDefinition, 
-			AddPropertyHandler addPropertyHandler, Nodes propertyElements) {
-		
+	private void addProperties(TagDefinition tagDefinition, AddPropertyHandler addPropertyHandler, Nodes propertyElements) {
 		for (int i=0; i<propertyElements.size(); i++) {
 			try {
-				TeiElement curPropertyElement = (TeiElement)propertyElements.get(i);
+				TeiElement currentPropertyElement = (TeiElement) propertyElements.get(i);
 
-				PropertyDefinition propertyDefinition =
-						tagDefinition.getPropertyDefinition(
-								curPropertyElement.getAttributeValue(Attribute.f_name));
-				
-				
-				if (curPropertyElement.getChildElements().size() == 0) {
+				PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinition(
+						currentPropertyElement.getAttributeValue(Attribute.f_name)
+				);
+
+				if (currentPropertyElement.getChildElements().size() == 0) {
 					addPropertyHandler.addProperty(
-							new Property(
-								propertyDefinition.getUuid(),
-								Collections.emptyList()));
+							new Property(propertyDefinition.getUuid(), Collections.emptyList())
+					);
+					return;
+				}
+
+				TeiElement valueElement = (TeiElement) currentPropertyElement.getChildElements().get(0);
+
+				if (valueElement.is(TeiElementName.numeric)) {
+					addPropertyHandler.addProperty(
+							new Property(propertyDefinition.getUuid(), new NumericPropertyValueFactory(currentPropertyElement).getValueAsList())
+					);
+				}
+				else if (valueElement.is(TeiElementName.string)) {
+					StringPropertyValueFactory stringPropertyValueFactory = new StringPropertyValueFactory(currentPropertyElement);
+					if (!stringPropertyValueFactory.getValue().trim().isEmpty()) {
+						addPropertyHandler.addProperty(
+								new Property(propertyDefinition.getUuid(), stringPropertyValueFactory.getValueAsList())
+						);
+					}
+				}
+				else if (valueElement.is(TeiElementName.vRange)) {
+					TeiElement vColl = (TeiElement) valueElement.getChildElements().get(0);
+					if (vColl.hasChildElements()) {
+						List<String> values = new ArrayList<>();
+
+						for (int j=0; j<vColl.getChildElements().size(); j++) {
+							values.add(new StringPropertyValueFactory(vColl, j).getValue());
+						}
+
+						addPropertyHandler.addProperty(
+								new Property(propertyDefinition.getUuid(), values)
+						);
+					}
 				}
 				else {
-					TeiElement valueElement = 
-							(TeiElement)curPropertyElement.getChildElements().get(0);
-					
-					if (valueElement.is(TeiElementName.numeric)) {
-						addPropertyHandler.addProperty(
-							new Property(
-								propertyDefinition.getUuid(),
-									new NumericPropertyValueFactory(
-										curPropertyElement).getValueAsList()));
-					}
-					else if (valueElement.is(TeiElementName.string)) {
-						StringPropertyValueFactory stringPropFact = 
-								new StringPropertyValueFactory(
-										curPropertyElement);
-						if (!stringPropFact.getValue().trim().isEmpty()) {
-							addPropertyHandler.addProperty(
-								new Property(
-									propertyDefinition.getUuid(),
-										stringPropFact.getValueAsList()));
-						}
-					}
-					else if (valueElement.is(TeiElementName.vRange)) {
-						TeiElement vColl = (TeiElement)valueElement.getChildElements().get(0);
-						if (vColl.hasChildElements()) {
-							List<String> valueList = new ArrayList<String>();
-							
-							for (int j=0; j<vColl.getChildElements().size(); j++) {
-								valueList.add(new StringPropertyValueFactory(
-													vColl, j).getValue());
-							}
-							
-							addPropertyHandler.addProperty(new Property(
-									propertyDefinition.getUuid(), 
-									valueList));
-						}
-					}
-					else {
-						throw new UnknownElementException(
-								valueElement.getLocalName() + " is not supported");
-					}
+					throw new UnknownElementException(
+							String.format("%s is not supported", valueElement.getLocalName())
+					);
 				}
 			}
-			catch(UnknownElementException ue) {
-				logger.log(Level.SEVERE, "Error adding properties", ue);
+			catch (UnknownElementException uee) {
+				logger.log(Level.SEVERE, "Error adding properties", uee);
 			}
 		}
-		
 	}
-	
-	private static interface AddPropertyHandler {
-		public void addProperty(Property property);
+
+	private interface AddPropertyHandler {
+		void addProperty(Property property);
 	}
 }

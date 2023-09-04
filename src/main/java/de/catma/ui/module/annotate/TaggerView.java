@@ -935,64 +935,57 @@ public class TaggerView extends HorizontalLayout
 		
 		project = null;
 	}
-	
-	public void tagInstanceAdded(
-			ClientTagInstance clientTagInstance) {
-		
-		AnnotationCollection collection = annotationPanel.getSelectedEditableCollection();
-		if (collection == null) { //shouldn't happen, but just in case
-			Notification.show("Info", 
-					"Please make sure you have an editable collection available "
-					+ "and select this collection as 'currently being edited'! "
-					+ "Your annotation hasn't been saved!",
-					Type.ERROR_MESSAGE);
+
+	public void tagInstanceAdded(ClientTagInstance clientTagInstance) {
+		AnnotationCollection annotationCollection = annotationPanel.getSelectedEditableCollection();
+
+		if (annotationCollection == null) { // shouldn't happen, but just in case
+			Notification.show(
+					"Info",
+					"Please make sure you have an editable collection available and select this collection as 'currently being edited'! " +
+							"Your annotation hasn't been saved!",
+					Type.ERROR_MESSAGE
+			);
+			return;
+		}
+
+		TagLibrary tagLibrary = annotationCollection.getTagLibrary();
+		TagDefinition tagDefinition = tagLibrary.getTagDefinition(clientTagInstance.getTagDefinitionID());
+
+		TagInstance tagInstance = new TagInstance(
+				clientTagInstance.getInstanceID(),
+				tagDefinition.getUuid(),
+				project.getCurrentUser().getIdentifier(),
+				ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+				tagDefinition.getUserDefinedPropertyDefinitions(),
+				tagDefinition.getTagsetDefinitionUuid()
+		);
+
+		List<TagReference> tagReferences = clientTagInstance.getRanges().stream().map(textRange -> new TagReference(
+				annotationCollection.getId(),
+				tagInstance,
+				sourceDocument.getUuid(),
+				new Range(textRange.getStartPos(), textRange.getEndPos())
+		)).collect(Collectors.toList());
+
+		final Annotation annotation = new Annotation(tagInstance, tagReferences, annotationCollection, tagLibrary.getTagPath(tagDefinition));
+
+		// if the tag has properties, automatically open EditAnnotationPropertiesDialog
+		if (!tagDefinition.getUserDefinedPropertyDefinitions().isEmpty()) {
+			EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = new EditAnnotationPropertiesDialog(
+					project,
+					annotation,
+					new SaveCancelListener<List<Property>>() {
+						@Override
+						public void savePressed(List<Property> notOfInterest) {
+							userMarkupCollectionManager.addTagReferences(tagReferences, annotationCollection);
+						}
+					}
+			);
+			editAnnotationPropertiesDialog.show();
 		}
 		else {
-			TagLibrary tagLibrary = collection.getTagLibrary();
-			
-			TagDefinition tagDef = 
-					tagLibrary.getTagDefinition(
-							clientTagInstance.getTagDefinitionID());
-			
-			TagInstance ti = 
-				new TagInstance(
-					clientTagInstance.getInstanceID(), 
-					tagDef.getUuid(),
-					project.getCurrentUser().getIdentifier(),
-		        	ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
-		        	tagDef.getUserDefinedPropertyDefinitions(),
-		        	tagDef.getTagsetDefinitionUuid());
-			
-			List<TagReference> tagReferences = new ArrayList<TagReference>();
-			
-			String userMarkupCollectionUuid = collection.getId();
-
-			for (TextRange tr : clientTagInstance.getRanges()) {
-				Range r = new Range(tr.getStartPos(), tr.getEndPos());
-				TagReference ref =
-						new TagReference(userMarkupCollectionUuid, ti, sourceDocument.getUuid(), r);
-				tagReferences.add(ref);
-			}
-
-			final Annotation annotation =
-				new Annotation(ti, tagReferences, collection, tagLibrary.getTagPath(tagDef));
-			if (!tagDef.getUserDefinedPropertyDefinitions().isEmpty()) {
-				EditAnnotationPropertiesDialog editAnnotationPropertiesDialog =
-					new EditAnnotationPropertiesDialog(
-						project, annotation,
-						new SaveCancelListener<List<Property>>() {
-
-							@Override
-							public void savePressed(List<Property> notOfInterest) {
-								userMarkupCollectionManager.addTagReferences(
-										tagReferences, collection);
-							}
-					});
-				editAnnotationPropertiesDialog.show();
-			}
-			else {
-				userMarkupCollectionManager.addTagReferences(tagReferences, collection);
-			}
+			userMarkupCollectionManager.addTagReferences(tagReferences, annotationCollection);
 		}
 	}
 

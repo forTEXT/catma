@@ -264,52 +264,54 @@ public class GitAnnotationCollectionHandler {
 		return pageFileUser.equals(username);		
 	}
 
-	private boolean isAnnotationFilename(String fileName){
+	private boolean isAnnotationFilename(String fileName) {
+		// TODO: hidden assumption that anything that isn't a header file or .git is an annotation page file
+		//       consider testing against the expected "<user>_<pagenumber>.json" pattern
 		return !(
 				fileName.equalsIgnoreCase(HEADER_FILE_NAME) || fileName.equalsIgnoreCase(".git")
 		);
 	}
 
 	private ArrayList<TagReference> openTagReferences(
-		String collectionId, String collectionName, File parentDirectory, 
-		ProgressListener progressListener, AtomicInteger counter)
-			throws IOException {
-
+			String collectionId,
+			String collectionName,
+			File parentDirectory,
+			ProgressListener progressListener,
+			AtomicInteger counter
+	) throws IOException {
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
 		if (!parentDirectory.exists()) {
 			return tagReferences;
 		}
-		
-		String[] contents = parentDirectory.list();
-		
-		
-		for (String pageFilename : contents) {
-			File pageFile = new File(parentDirectory, pageFilename);
 
-			// if it is a directory, recurse into it adding results to the current tagReferences list
-			if (pageFile.isDirectory() && !pageFile.getName().equalsIgnoreCase(".git")) {
+		String[] directoryContents = parentDirectory.list();
+
+		for (String directoryItemName : directoryContents) {
+			File directoryItem = new File(parentDirectory, directoryItemName);
+
+			// if it's a directory, recurse into it
+			if (directoryItem.isDirectory() && !directoryItem.getName().equalsIgnoreCase(".git")) {
 				tagReferences.addAll(
-					this.openTagReferences(collectionId, collectionName, pageFile, progressListener, counter));
+						openTagReferences(collectionId, collectionName, directoryItem, progressListener, counter)
+				);
 			}
-			// if item is <user>_<pagenumber>.json, read it into a list of TagReference objects
-			else if (pageFile.isFile() && isAnnotationFilename(pageFile.getName())) {
-				String pageContent =  
-						new String(Files.readAllBytes(pageFile.toPath()), StandardCharsets.UTF_8);
-				
-				Type listType = new TypeToken<ArrayList<JsonLdWebAnnotation>>(){}.getType();
-				
-				ArrayList<JsonLdWebAnnotation> list = 
-						new SerializationHelper<ArrayList<JsonLdWebAnnotation>>().deserialize(
-								pageContent, listType);
+			// otherwise, if it's an annotation page file, read it into a list of TagReference objects
+			else if (directoryItem.isFile() && isAnnotationFilename(directoryItem.getName())) {
+				String pageContent = new String(Files.readAllBytes(directoryItem.toPath()), StandardCharsets.UTF_8);
 
-				for (JsonLdWebAnnotation webAnnotation : list) {
+				Type listType = new TypeToken<ArrayList<JsonLdWebAnnotation>>(){}.getType();
+				ArrayList<JsonLdWebAnnotation> jsonLdWebAnnotations = new SerializationHelper<ArrayList<JsonLdWebAnnotation>>().deserialize(
+						pageContent, listType
+				);
+
+				for (JsonLdWebAnnotation webAnnotation : jsonLdWebAnnotations) {
 					counter.incrementAndGet();
 					if (counter.intValue() % 1000 == 0) {
 						progressListener.setProgress("Loading annotations from collection \"%s\" (%d)", collectionName, counter.intValue());
 					}
 
-					webAnnotation.setPageFilename(pageFile.getName());
+					webAnnotation.setPageFilename(directoryItem.getName());
 					tagReferences.addAll(webAnnotation.toTagReferences(collectionId));
 				}
 			}
