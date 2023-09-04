@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -372,16 +371,14 @@ public class CorpusImporter {
 													
 													ArrayList<TagReference> newReferences = new ArrayList<>();
 													referencesByInstance.get(incomingTagInstance).forEach(tr -> {
-														try {
-															newReferences.add(
+														newReferences.add(
 																new TagReference(
-																	newTagInstance, 
-																	tr.getSourceDocumentId().toString(),
-																	tr.getRange(), 
-																	tr.getUserMarkupCollectionUuid()));
-														} catch (URISyntaxException e) {
-															e.printStackTrace();
-														}
+																		tr.getAnnotationCollectionId(),
+																		newTagInstance,
+																		tr.getSourceDocumentId(),
+																		tr.getRange()
+																)
+														);
 													});
 													
 													intrinsicMarkupCollection.addTagReferences(newReferences);

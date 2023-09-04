@@ -18,95 +18,65 @@
  */
 package de.catma.document.annotation;
 
-import java.net.URISyntaxException;
-import java.util.Comparator;
-
 import de.catma.document.Range;
 import de.catma.tag.TagInstance;
 
+import java.util.Comparator;
+
 /**
- * A {@link Range} of text referenced by a {@link TagInstance}.
- * 
- * @author marco.petris@web.de
- *
+ * A TagReference represents a {@link Range} of text referenced by a {@link TagInstance}.
+ * It targets a particular source document and belongs to a particular annotation collection.
  */
 public class TagReference {
-
 	/**
 	 * Compares TagReferences by their {@link Range}s.
-	 *
 	 */
 	public static class RangeComparator implements Comparator<TagReference> {
-		/**
-		 * uses {@link Range}s for comparison
-		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-		 */
 		@Override
 		public int compare(TagReference o1, TagReference o2) {
 			return o1.getRange().compareTo(o2.getRange());
 		}
 	}
-	
-	private final TagInstance tagInstance;
-	private final Range range;
-	private String sourceDocumentId;
-	private String userMarkupCollectionUuid;
 
-	/**
-	 * @param tagInstance the referencing instance
-	 * @param sourceDocumentId a reference to the source document
-	 * @param range the referenced range of text
-	 * @param userMarkupCollectionUuid the ID of the containing collection
-	 * @throws URISyntaxException
-	 */
-	public TagReference(TagInstance tagInstance, String sourceDocumentId, Range range, String userMarkupCollectionUuid)
-			throws URISyntaxException {
+	private final String annotationCollectionId;
+	private final TagInstance tagInstance;
+	private String sourceDocumentId;
+	private final Range range;
+
+	public TagReference(String annotationCollectionId, TagInstance tagInstance, String sourceDocumentId, Range range) {
+		this.annotationCollectionId = annotationCollectionId;
 		this.tagInstance = tagInstance;
+
 		// the 'catma' protocol prefix is deprecated and no longer supported (sourceDocumentId used to be called 'target' and was of type URI)
 		if (sourceDocumentId.startsWith("catma://")) {
 			sourceDocumentId = sourceDocumentId.substring(8);
 		}
 		this.sourceDocumentId = sourceDocumentId;
+
 		this.range = range;
-		this.userMarkupCollectionUuid = userMarkupCollectionUuid;
 	}
-	
+
 	@Override
 	public String toString() {
 		return tagInstance + "@" + sourceDocumentId + "#" + range;
 	}
 
-	/**
-	 * @return definition of the {@link TagInstance}'s tag 
-	 */
-	public String getTagDefinitionId() {
-		return tagInstance.getTagDefinitionId();
-	}
-	
-	/**
-	 * @return uuid of the {@link TagInstance}.
-	 */
-	public String getTagInstanceId() {
-		return tagInstance.getUuid();
-	}
-	
-	/**
-	 * @return referenced text
-	 */
-	public Range getRange() {
-		return range;
+	public String getAnnotationCollectionId() {
+		return this.annotationCollectionId;
 	}
 
-	/**
-	 * @return the referencing instance
-	 */
 	public TagInstance getTagInstance() {
 		return tagInstance;
 	}
-	
-	/**
-	 * @return link to source document
-	 */
+
+	public String getTagInstanceId() {
+		return tagInstance.getUuid();
+	}
+
+	public String getTagDefinitionId() {
+		return tagInstance.getTagDefinitionId();
+	}
+
 	public String getSourceDocumentId() {
 		return sourceDocumentId;
 	}
@@ -115,11 +85,7 @@ public class TagReference {
 		this.sourceDocumentId = sourceDocumentId;
 	}
 
-	public String getUserMarkupCollectionUuid() {
-		return this.userMarkupCollectionUuid;
-	}
-
-	public void setUserMarkupCollectionUuid(String userMarkupCollectionUuid) {
-		this.userMarkupCollectionUuid = userMarkupCollectionUuid;
+	public Range getRange() {
+		return range;
 	}
 }

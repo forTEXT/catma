@@ -6,7 +6,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -67,7 +66,7 @@ public class JsonLdWebAnnotation {
 		}
 
 		this.id = this.buildTagInstanceUrl(
-			tagReferences.iterator().next().getUserMarkupCollectionUuid(),
+			tagReferences.iterator().next().getAnnotationCollectionId(),
 			tagReferences.iterator().next().getTagInstance().getUuid()
 		).toString();
 
@@ -140,35 +139,20 @@ public class JsonLdWebAnnotation {
 		this.target = target;
 	}
 
-	public List<TagReference> toTagReferenceList(String projectId, String markupCollectionId)
-				throws IOException {
-		TagInstance tagInstance = this.getTagInstance();
-		String sourceDocumentUri = this.getSourceDocumentUri();
-		List<Range> ranges = this.getRanges();
+	public List<TagReference> toTagReferences(String annotationCollectionId) {
+		TagInstance tagInstance = getTagInstance();
+		String sourceDocumentId = getSourceDocumentId();
+		List<Range> ranges = getRanges();
 
-		List<TagReference> tagReferences = new ArrayList<>();
-		try {
-			for (Range range : ranges) {
-				tagReferences.add(new TagReference(tagInstance, sourceDocumentUri, range, markupCollectionId));
-			}
-		}
-		catch (URISyntaxException e) {
-			throw new IOException(
-				String.format("Error loading collection with ID %s of project with ID %s",
-						markupCollectionId,
-						projectId), 
-				e);
-		}
-
-		return tagReferences;
+		return ranges.stream().map(range -> new TagReference(annotationCollectionId, tagInstance, sourceDocumentId, range)).collect(Collectors.toList());
 	}
 
-	private String getSourceDocumentUri() throws IOException {
-		return this.target.getItems().first().getSource();
+	private String getSourceDocumentId() {
+		return target.getItems().first().getSource();
 	}
 
-	private List<Range> getRanges() throws IOException {
-		return this.target.getItems().stream().map(jsonLdWebAnnotationTarget -> {
+	private List<Range> getRanges() {
+		return target.getItems().stream().map(jsonLdWebAnnotationTarget -> {
 			JsonLdWebAnnotationTextPositionSelector selector = jsonLdWebAnnotationTarget.getSelector();
 			return new Range(selector.getStart(), selector.getEnd());
 		}).collect(Collectors.toList());
@@ -178,9 +162,7 @@ public class JsonLdWebAnnotation {
 		return this.getLastPathSegmentFromUrl(this.id).replace(".json", "");
 	}
 
-	public TagInstance getTagInstance()
-			throws IOException {
-
+	public TagInstance getTagInstance() {
 		TagInstance tagInstance = new TagInstance(
 			this.getTagInstanceUuid(),
 			getBody().getTag().substring(getBody().getTag().lastIndexOf('/')+1),

@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -223,7 +222,7 @@ public class LegacyProjectHandler {
 			File annotationDirectory,
 			TagLibrary tagLibrary
 	) throws Exception {
-		ArrayList<TagReference> legacyTagReferences = loadLegacyTagReferences(projectId, markupCollectionId, annotationDirectory);
+		ArrayList<TagReference> legacyTagReferences = loadLegacyTagReferences(markupCollectionId, annotationDirectory);
 		Multimap<TagInstance, TagReference> legacyTagReferencesByTagInstance = Multimaps.index(legacyTagReferences, TagReference::getTagInstance);
 
 		List<Pair<JsonLdWebAnnotation, TagInstance>> annotationTagInstanceMap =	Lists.newArrayList();
@@ -241,41 +240,35 @@ public class LegacyProjectHandler {
 		return annotationTagInstanceMap;
 	}
 
-	private ArrayList<TagReference> loadLegacyTagReferences(
-			String projectId, String markupCollectionId, File parentDirectory)
-				throws Exception {
-
+	private ArrayList<TagReference> loadLegacyTagReferences(String markupCollectionId, File parentDirectory) throws Exception {
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
-		List<String> contents = Arrays.asList(parentDirectory.list());
-		
-		for (String item : contents) {
+		String[] directoryContents = parentDirectory.list();
+
+		for (String item : directoryContents) {
 			File target = new File(parentDirectory, item);
 
 			// if it is a directory, recurse into it adding results to the current tagReferences list
 			if (target.isDirectory() && !target.getName().equalsIgnoreCase(".git")) {
 				tagReferences.addAll(
-					this.loadLegacyTagReferences(projectId, markupCollectionId,  target));
+						loadLegacyTagReferences(markupCollectionId, target)
+				);
 			}
 			// if item is <CATMA_UUID>.json, read it into a list of TagReference objects
 			else if (target.isFile() && isTagInstanceFilename(target.getName())) {
-
 				String serialized = readFileToString(target, StandardCharsets.UTF_8);
 				JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
 						.deserialize(serialized, JsonLdWebAnnotation.class);
 
 				tagReferences.addAll(
-						jsonLdWebAnnotation.toTagReferenceList(
-								projectId, 
-								markupCollectionId
-						)
+						jsonLdWebAnnotation.toTagReferences(markupCollectionId)
 				);
 			}
 		}
 
 		return tagReferences;
 	}
-	
+
 	private boolean isTagInstanceFilename(String fileName){
 		return !(
 				fileName.equalsIgnoreCase("header.json") || fileName.equalsIgnoreCase(".git")

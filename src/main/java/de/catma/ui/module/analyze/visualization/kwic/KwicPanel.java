@@ -385,7 +385,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 
 			Set<Range> ranges = row.getRanges();
 			for (Range range : ranges) {
-				TagReference tagReference = new TagReference(tagInstance, row.getSourceDocumentId(), range, collectionRef.getId());
+				TagReference tagReference = new TagReference(collectionRef.getId(), tagInstance, row.getSourceDocumentId(), range);
 				tagRefsByCollectionId.put(collectionRef.getId(), tagReference);
 			}
 		}

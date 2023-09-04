@@ -18,7 +18,6 @@
  */
 package de.catma.serialization.tei;
 
-import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -77,18 +76,14 @@ public class TeiUserMarkupCollectionDeserializer {
 					TargetValues targetValues =
 							ptrValueHandler.getTargetValuesFrom(
 									curPointer.getAttributeValue(Attribute.ptr_target));
-					
-					try {
-						TagReference tagReference = 
-							new TagReference(
-									tagInstance, targetValues.getURI(), 
-									targetValues.getRange(),
-									collectionId);
-						tagReferences.add(tagReference);
-					}
-					catch(URISyntaxException ue) {
-						logger.log(Level.SEVERE, "Error during deserialization", ue);
-					}
+
+					TagReference tagReference = new TagReference(
+							collectionId,
+							tagInstance,
+							targetValues.getURI(),
+							targetValues.getRange()
+					);
+					tagReferences.add(tagReference);
 				}
 			}
 		}

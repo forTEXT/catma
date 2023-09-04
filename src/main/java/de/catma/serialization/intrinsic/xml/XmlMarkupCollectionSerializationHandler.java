@@ -299,7 +299,7 @@ public class XmlMarkupCollectionSerializationHandler implements
         	
         														
         TagReference tagReference = new TagReference(
-        	tagInstance, docId, range, userMarkupCollection.getId());
+                userMarkupCollection.getId(), tagInstance, docId, range);
         userMarkupCollection.addTagReference(tagReference);
      
         elementStack.pop();	

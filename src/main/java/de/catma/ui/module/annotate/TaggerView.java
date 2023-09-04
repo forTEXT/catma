@@ -21,7 +21,6 @@ package de.catma.ui.module.annotate;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -966,38 +965,33 @@ public class TaggerView extends HorizontalLayout
 			
 			List<TagReference> tagReferences = new ArrayList<TagReference>();
 			
-			try {
-				String userMarkupCollectionUuid = collection.getId();
-	
-				for (TextRange tr : clientTagInstance.getRanges()) {
-					Range r = new Range(tr.getStartPos(), tr.getEndPos());
-					TagReference ref = 
-							new TagReference(ti, sourceDocument.getUuid(), r, userMarkupCollectionUuid);
-					tagReferences.add(ref);
-				}
-				
-				final Annotation annotation = 
-					new Annotation(ti, tagReferences, collection, tagLibrary.getTagPath(tagDef));
-				if (!tagDef.getUserDefinedPropertyDefinitions().isEmpty()) {
-					EditAnnotationPropertiesDialog editAnnotationPropertiesDialog = 
-						new EditAnnotationPropertiesDialog(
-							project, annotation, 
-							new SaveCancelListener<List<Property>>() {
-								
-								@Override
-								public void savePressed(List<Property> notOfInterest) {
-									userMarkupCollectionManager.addTagReferences(
-											tagReferences, collection);
-								}
-						});
-					editAnnotationPropertiesDialog.show();
-				}
-				else {
-					userMarkupCollectionManager.addTagReferences(tagReferences, collection);
-				}
-				
-			} catch (URISyntaxException e) {
-				errorHandler.showAndLogError("Error adding annotations", e);
+			String userMarkupCollectionUuid = collection.getId();
+
+			for (TextRange tr : clientTagInstance.getRanges()) {
+				Range r = new Range(tr.getStartPos(), tr.getEndPos());
+				TagReference ref =
+						new TagReference(userMarkupCollectionUuid, ti, sourceDocument.getUuid(), r);
+				tagReferences.add(ref);
+			}
+
+			final Annotation annotation =
+				new Annotation(ti, tagReferences, collection, tagLibrary.getTagPath(tagDef));
+			if (!tagDef.getUserDefinedPropertyDefinitions().isEmpty()) {
+				EditAnnotationPropertiesDialog editAnnotationPropertiesDialog =
+					new EditAnnotationPropertiesDialog(
+						project, annotation,
+						new SaveCancelListener<List<Property>>() {
+
+							@Override
+							public void savePressed(List<Property> notOfInterest) {
+								userMarkupCollectionManager.addTagReferences(
+										tagReferences, collection);
+							}
+					});
+				editAnnotationPropertiesDialog.show();
+			}
+			else {
+				userMarkupCollectionManager.addTagReferences(tagReferences, collection);
 			}
 		}
 	}

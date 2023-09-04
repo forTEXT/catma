@@ -310,7 +310,7 @@ public class GitAnnotationCollectionHandler {
 					}
 
 					webAnnotation.setPageFilename(pageFile.getName());
-					tagReferences.addAll(webAnnotation.toTagReferenceList(projectId, collectionId));
+					tagReferences.addAll(webAnnotation.toTagReferences(collectionId));
 				}
 			}
 		}

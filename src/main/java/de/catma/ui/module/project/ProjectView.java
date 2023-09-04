@@ -88,7 +88,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.text.Collator;
 import java.time.LocalDateTime;
@@ -1014,9 +1013,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 														intrinsicAnnotationCollection.removeTagReferences(incomingTagReferences);
 
 														Multimap<TagInstance, TagReference> incomingTagReferencesByTagInstance = ArrayListMultimap.create();
-														incomingTagReferences.forEach(incomingTagReference ->
-																							  incomingTagReferencesByTagInstance.put(incomingTagReference.getTagInstance(), incomingTagReference)
-														);
+														incomingTagReferences.forEach(incomingTagReference -> incomingTagReferencesByTagInstance.put(
+																incomingTagReference.getTagInstance(), incomingTagReference
+														));
 
 														for (TagInstance incomingTagInstance : incomingTagReferencesByTagInstance.keySet()) {
 															TagInstance newTagInstance = new TagInstance(
@@ -1050,20 +1049,16 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 															// re-write tag references
 															ArrayList<TagReference> newTagReferences = new ArrayList<>();
 
-															incomingTagReferencesByTagInstance.get(incomingTagInstance).forEach(incomingTagReference -> {
-																try {
-																	newTagReferences.add(new TagReference(
-																			newTagInstance,
-																			incomingTagReference.getSourceDocumentId().toString(),
-																			incomingTagReference.getRange(),
-																			incomingTagReference.getUserMarkupCollectionUuid()
-																	));
-																}
-																catch (URISyntaxException e) {
-																	// shouldn't ever happen as we get the URI string from an existing URI object
-																	e.printStackTrace();
-																}
-															});
+															incomingTagReferencesByTagInstance.get(incomingTagInstance).forEach(
+																	incomingTagReference -> newTagReferences.add(
+																			new TagReference(
+																					incomingTagReference.getAnnotationCollectionId(),
+																					newTagInstance,
+																					incomingTagReference.getSourceDocumentId(),
+																					incomingTagReference.getRange()
+																			)
+																	)
+															);
 
 															intrinsicAnnotationCollection.addTagReferences(newTagReferences);
 														}
