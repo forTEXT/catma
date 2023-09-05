@@ -90,7 +90,7 @@ class GitTagsetHandlerTest {
 					gitlabManagerRestricted.getUsername(), gitlabManagerRestricted.getEmail()
 			);
 
-			String tagsetId = new IDGenerator().generate();
+			String tagsetId = new IDGenerator().generateTagsetId();
 			File tagsetDirectory = Paths.get(projectDirectory.toURI())
 					.resolve(GitProjectHandler.TAGSETS_DIRECTORY_NAME)
 					.resolve(tagsetId)
