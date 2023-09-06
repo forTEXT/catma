@@ -480,8 +480,12 @@ public class GraphWorktreeProject implements IndexedProject {
 
 			gitProjectHandler.ensureUserBranch();
 
+			boolean forceGraphReload = false;
 			if (gitProjectHandler.hasUncommittedChanges() || gitProjectHandler.hasUntrackedChanges()) {
 				commitAndPushChanges("Auto-committing changes on project open");
+				// calling commitAndPushChanges at this stage causes the project revision to be updated, so GraphProjectHandler.ensureProjectRevisionIsLoaded
+				// won't do anything unless we force it
+				forceGraphReload = true;
 			}
 
 			gitProjectHandler.verifyCollections();
@@ -496,7 +500,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 			graphProjectHandler.ensureProjectRevisionIsLoaded(
 					rootRevisionHash,
-					false, // forceGraphReload
+					forceGraphReload,
 					// TODO: unfortunately we can't pass the CollectionsProvider into the LazyGraphProjectHandler ctor (yet) because of the ProgressListener
 					new CollectionsProvider() {
 						@Override
