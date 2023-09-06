@@ -1669,7 +1669,7 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		String oldRootRevisionHash = rootRevisionHash;
 
-		rootRevisionHash = gitProjectHandler.commitProject(commitMessage);
+		rootRevisionHash = gitProjectHandler.commitAndPushProject(commitMessage);
 
 		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}

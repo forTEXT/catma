@@ -763,7 +763,7 @@ public class GitProjectHandler {
 		return false;
 	}
 
-	public String commitProject(String commitMessage) throws IOException {
+	public String commitAndPushProject(String commitMessage) throws IOException {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
 
