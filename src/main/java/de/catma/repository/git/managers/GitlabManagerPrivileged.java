@@ -19,6 +19,7 @@ import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
@@ -180,7 +181,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 
 		try {
 			PersonalAccessToken impersonationToken = userApi.createImpersonationToken(
-				userId, tokenName, null, new Scope[] {Scope.API}
+					userId, tokenName, Date.from(ZonedDateTime.now().plusDays(2).toInstant()), new Scope[] {Scope.API}
 			);
 			return impersonationToken.getToken();
 		}
