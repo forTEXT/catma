@@ -11,10 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.time.ZonedDateTime;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -150,7 +148,7 @@ public class LegacyProjectHandler {
 			}
 	
 			PersonalAccessToken pat = userApi.createImpersonationToken(
-					user.getId(), tokenName, null, new Scope[] {Scope.API}
+					user.getId(), tokenName, Date.from(ZonedDateTime.now().plusDays(2).toInstant()), new Scope[] {Scope.API}
 				);
 			
 			String impersonationToken = pat.getToken();
