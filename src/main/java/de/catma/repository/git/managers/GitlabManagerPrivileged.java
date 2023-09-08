@@ -16,10 +16,7 @@ import org.gitlab4j.api.models.PersonalAccessToken.Scope;
 
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
@@ -59,8 +56,8 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 				user.getId(), ImpersonationState.ACTIVE
 			);
 
-			// TODO: why are we revoking and re-creating this non-expiring token every time?
 			// revoke the default token if it exists already
+			// we do this because the actual token string is only returned on creation and we don't store it
 			for (PersonalAccessToken token : impersonationTokens) {
 				if (token.getName().equals(GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
 					userApi.revokeImpersonationToken(user.getId(), token.getId());
@@ -89,13 +86,15 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 
 	@Override
 	public String createPersonalAccessToken(long userId, String tokenName, LocalDate expiresAt) throws IOException {
-		UserApi userApi = this.privilegedGitLabApi.getUserApi();
+		UserApi userApi = privilegedGitLabApi.getUserApi();
 
 		try {
 			PersonalAccessToken personalAccessToken = userApi.createPersonalAccessToken(
 					userId,
 					tokenName,
-					Date.from(expiresAt.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+					// GitLab ignores anything but the date component and interprets it as UTC
+					// see related TODO in AccessTokenDialog
+					Date.from(expiresAt.atStartOfDay().toInstant(ZoneOffset.UTC)),
 					new Scope[] {Scope.READ_API}
 			);
 			logger.info(String.format("Created personal access token for user with ID %s", userId));
@@ -175,13 +174,17 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 	 * @throws IOException if something went wrong while creating the
 	 *         impersonation token
 	 */
-	private String createImpersonationToken(long userId, String tokenName)
-			throws IOException {
-		UserApi userApi = this.privilegedGitLabApi.getUserApi();
+	private String createImpersonationToken(long userId, String tokenName) throws IOException {
+		UserApi userApi = privilegedGitLabApi.getUserApi();
 
 		try {
 			PersonalAccessToken impersonationToken = userApi.createImpersonationToken(
-					userId, tokenName, Date.from(ZonedDateTime.now().plusDays(2).toInstant()), new Scope[] {Scope.API}
+					userId,
+					tokenName,
+					// GitLab ignores anything but the date component and interprets it as UTC
+					// sessions are unlikely to last more than a couple of days (also see session config in web.xml)
+					Date.from(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(2).toInstant()),
+					new Scope[] {Scope.API}
 			);
 			return impersonationToken.getToken();
 		}
@@ -189,7 +192,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 			throw new IOException("Failed to create impersonation token", e);
 		}
 	}
-	
+
 	@Override
 	public void modifyUserAttributes(long userId, String name, String password) throws IOException {
 		try {
