@@ -103,6 +103,10 @@ public class AccessTokenDialog extends Window {
 
 		DateField dfDate = new DateField(Messages.getString("AccessTokenDialog.expiresAt"));
 		dfDate.setWidth("100%");
+		// TODO: so as not to confuse users in time zones that have a different date than the server, consider switching to ZonedDateTime
+		//       and getting the current date from the browser (converting as appropriate)
+		//       refs: https://vaadin.com/api/framework/8.14.3/com/vaadin/server/WebBrowser.html#getCurrentDate--
+		//             https://stackoverflow.com/questions/10313668/how-to-get-the-time-of-computer-and-not-server-java-vaadin
 		dfDate.setValue(LocalDate.now().plusMonths(1));
 
 		binder.forField(tfName)

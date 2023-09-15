@@ -2,9 +2,7 @@ package de.catma.repository.git.managers;
 
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
@@ -53,62 +51,56 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	public GitlabManagerPrivileged() {
 		this.privilegedGitLabApi.getUserApi().enableCustomAttributes();
 	}
-	
+
 	@Override
-	public Pair<GitUser, String> acquireImpersonationToken(String identifier, String provider, String email, String name)
-			throws IOException {
-		User user = this.acquireUser(identifier,provider,email,name);
-		
-		UserApi customUserApi = this.privilegedGitLabApi.getUserApi();
+	public Pair<GitUser, String> acquireImpersonationToken(String identifier, String provider, String email, String name) throws IOException {
+		User user = acquireUser(identifier, provider, email, name);
+		UserApi userApi = privilegedGitLabApi.getUserApi();
 
 		try {
-			List<PersonalAccessToken> impersonationTokens = customUserApi.getImpersonationTokens(
+			List<PersonalAccessToken> impersonationTokens = userApi.getImpersonationTokens(
 				user.getId(), ImpersonationState.ACTIVE
 			);
 
-			// revoke the default token if it exists actively
+			// revoke the default token if it exists already
+			// we do this because the actual token string is only returned on creation and we don't store it
 			for (PersonalAccessToken token : impersonationTokens) {
 				if (token.getName().equals(GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
-					privilegedGitLabApi.getUserApi().revokeImpersonationToken(user.getId(), token.getId());
+					userApi.revokeImpersonationToken(user.getId(), token.getId());
 					break;
 				}
 			}
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(
-				"Failed to revoke existing impersonation token", e
-			);
+			throw new IOException("Failed to revoke existing impersonation token", e);
 		}
 
-		String impersonationToken = this.createImpersonationToken(
-			user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
-		);
+		String impersonationToken = createImpersonationToken(user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
 
 		if (impersonationToken == null) {
-			String errorMessage = String.format(
-				"Failed to acquire impersonation token for CATMA with identifier `%s`. " +
-				"The creation of the token the associated GitLab user ID `%s` failed, no " +
-				"active impersonation token called `%s` can be found!",
-				identifier,
-				user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
+			throw new IOException(
+					String.format(
+							"Failed to acquire impersonation token for user \"%s\". No active impersonation token called \"%s\" can be found.",
+							user.getUsername(),
+							GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
+					)
 			);
-			throw new IOException(errorMessage);
 		}
-		
-		Pair<GitUser, String> retVal = new Pair<>(new GitUser(user), impersonationToken);
 
-		return retVal;
+		return new Pair<>(new GitUser(user), impersonationToken);
 	}
 
 	@Override
 	public String createPersonalAccessToken(long userId, String tokenName, LocalDate expiresAt) throws IOException {
-		UserApi userApi = this.privilegedGitLabApi.getUserApi();
+		UserApi userApi = privilegedGitLabApi.getUserApi();
 
 		try {
 			PersonalAccessToken personalAccessToken = userApi.createPersonalAccessToken(
 					userId,
 					tokenName,
-					Date.from(expiresAt.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+					// GitLab ignores anything but the date component and interprets it as UTC
+					// see related TODO in AccessTokenDialog
+					Date.from(expiresAt.atStartOfDay().toInstant(ZoneOffset.UTC)),
 					new Scope[] {Scope.READ_API}
 			);
 			logger.info(String.format("Created personal access token for user with ID %1$s.", userId));
@@ -118,7 +110,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 			throw new IOException("Failed to create personal access token", e);
 		}
 	}
-	
+
 	@Override
 	public long createUser(String email, String username, String password,
 			   String publicname)
@@ -171,7 +163,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 			throw new IOException("Failed to acquire remote user", e);
 		}
 	}
-	
+
 	/**
 	 * Creates a new impersonation token for the GitLab user identified by <code>userId</code>.
 	 * <p>
@@ -183,13 +175,17 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 	 * @throws IOException if something went wrong while creating the
 	 *         impersonation token
 	 */
-	private String createImpersonationToken(long userId, String tokenName)
-			throws IOException {
-		UserApi userApi = this.privilegedGitLabApi.getUserApi();
+	private String createImpersonationToken(long userId, String tokenName) throws IOException {
+		UserApi userApi = privilegedGitLabApi.getUserApi();
 
 		try {
 			PersonalAccessToken impersonationToken = userApi.createImpersonationToken(
-				userId, tokenName, null, new Scope[] {Scope.API}
+					userId,
+					tokenName,
+					// GitLab ignores anything but the date component and interprets it as UTC
+					// sessions are unlikely to last more than a couple of days (also see session config in web.xml)
+					Date.from(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(2).toInstant()),
+					new Scope[] {Scope.API}
 			);
 			return impersonationToken.getToken();
 		}
@@ -197,7 +193,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements IRem
 			throw new IOException("Failed to create impersonation token", e);
 		}
 	}
-	
+
 	@Override
 	public void modifyUserAttributes(long userId, String name, String password) throws IOException {
 		try {
