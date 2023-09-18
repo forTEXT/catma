@@ -30,9 +30,14 @@ import org.gitlab4j.api.models.*;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -79,10 +84,27 @@ public class ProjectConverter implements AutoCloseable {
 				|| (projectPath.resolve("tagsets").toFile().exists() && projectPath.resolve("tagsets").toFile().list().length > 0);
 	}
 
+	private boolean wasOpenedToday(String projectId) throws IOException {
+		LocalDate todayUtc = LocalDate.now(ZoneId.of("UTC"));
+		File currentLogFile = new File(
+				CATMAPropertyKey.V6_REPO_MIGRATION_OPENCHECK_LOG_PATH.getValue(),
+				String.format("%s.jetty.log", todayUtc.format(DateTimeFormatter.ofPattern("yyyy_MM_dd"))) // eg: 2023_09_18.jetty.log
+		);
+
+		String currentLogFileContents = FileUtils.readFileToString(currentLogFile, StandardCharsets.UTF_8);
+
+		return currentLogFileContents.contains(projectId);
+	}
+
 	public void convertProject(String projectId) {
 		logger.info(String.format("Converting project with ID %s", projectId));
 
 		try {
+			if (!CATMAPropertyKey.V6_REPO_MIGRATION_SKIP_OPENCHECK.getBooleanValue() && wasOpenedToday(projectId)) {
+				logger.warning(String.format("Project with ID %s might be being worked on, skipping conversion", projectId));
+				return;
+			}
+
 			logger.info(String.format("Retrieving members of project with ID %s", projectId));
 			Set<Member> members = legacyProjectHandler.getLegacyProjectMembers(projectId);
 			Member owner = members.stream().filter(member -> member.getRole().equals(RBACRole.OWNER)).findAny().orElse(null);
