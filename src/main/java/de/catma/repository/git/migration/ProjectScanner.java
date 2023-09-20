@@ -6,6 +6,7 @@ import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACRole;
+import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.user.Member;
@@ -26,6 +27,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.Project;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +40,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ProjectScanner implements AutoCloseable {
 	private final Logger logger = Logger.getLogger(ProjectScanner.class.getName());
@@ -604,6 +607,126 @@ public class ProjectScanner implements AutoCloseable {
 		
 	}
 
+	public void scanProjectNoHeadCommit(String projectId) {
+		logger.info(String.format("Scanning project with ID %s (no HEAD commit)", projectId));
+
+		try {
+			boolean deleteProject = CATMAPropertyKey.V6_REPO_MIGRATION_DELETE_EMPTY_PROJECTS_IN_BYPROJECTNOHEADCOMMIT_SCAN_MODE.getBooleanValue();
+
+			String repositoryBasePath = CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue();
+			Set<Member> members = legacyProjectHandler.getLegacyProjectMembers(projectId);
+
+			// check GitLab for resource repos and whether the root repo is empty
+			List<Project> projects = privilegedGitLabApi.getGroupApi().getProjects(projectId);
+			List<Project> resourceProjects = projects.stream().filter(project -> !project.getName().endsWith("_root")).collect(Collectors.toList());
+			Project rootProject = projects.stream().filter(project -> project.getName().endsWith("_root")).findFirst().orElse(null);
+
+			if (resourceProjects.size() > 0) {
+				deleteProject = false;
+				logger.info(
+						String.format(
+								"Group has the following resource projects (%d):\n%s",
+								resourceProjects.size(),
+								resourceProjects.stream().map(Project::getName).collect(Collectors.joining("\n"))
+						)
+				);
+			}
+			else {
+				logger.info("Group has no resource projects");
+			}
+
+			logger.info(String.format("Root project %s empty", rootProject.getEmptyRepo() ? "is" : "is NOT"));
+			if (!rootProject.getEmptyRepo()) {
+				deleteProject = false;
+			}
+
+			// check whether any of the project members have local resources
+			for (Member member : members) {
+				String username = member.getIdentifier();
+
+				Path projectBasePath = Paths.get(new File(repositoryBasePath).getAbsolutePath(), username, projectId);
+				if (!projectBasePath.toFile().exists()) {
+					logger.info(String.format("User \"%s\" has no local copy of the project", username));
+					continue;
+				}
+
+				// did the user create any resources?
+				String[] resourceDirs = projectBasePath.toFile().list((dir, name) -> !name.endsWith("_root"));
+				if (resourceDirs.length > 0) {
+					deleteProject = false;
+					logger.info(
+							String.format(
+									"User \"%s\" has the following resource directories (%d):\n%s",
+									username,
+									resourceDirs.length,
+									String.join("\n", resourceDirs)
+							)
+					);
+				}
+
+				File rootDir = projectBasePath.resolve(String.format("%s_root", projectId)).toFile();
+				if (!rootDir.exists()) {
+					logger.info(String.format("User \"%s\" has no root directory", username));
+					continue;
+				}
+
+				String[] rootDirContents = rootDir.list((dir, name) -> !name.equals(".git"));
+				logger.info(String.format("The root directory for user \"%s\" %s empty", username, rootDirContents.length == 0 ? "is" : "is NOT"));
+				if (rootDirContents.length > 0) {
+					deleteProject = false;
+				}
+
+				User user = new GitUser(privilegedGitLabApi.getUserApi().getUser(username));
+
+				try (JGitRepoManager repoManager = new JGitRepoManager(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(), user)) {
+					repoManager.open(projectId, String.format("%s_root", projectId));
+
+					logger.info(String.format("The root repo for user \"%s\" %s clean", username, repoManager.getStatus().isClean() ? "is" : "is NOT"));
+					if (!repoManager.getStatus().isClean()) {
+						deleteProject = false;
+					}
+
+					List<RevCommit> revCommits;
+					ObjectId startingCommitForLog = repoManager.getGitApi().getRepository().resolve("refs/heads/master");
+					if (startingCommitForLog == null) {
+						// no master branch, check if we have a HEAD
+						startingCommitForLog = repoManager.getGitApi().getRepository().resolve(Constants.HEAD);
+					}
+					if (startingCommitForLog == null) {
+						// no HEAD either, no commits
+						revCommits = new ArrayList<>();
+					}
+					else {
+						revCommits = Lists.newArrayList(repoManager.getGitApi().log().add(startingCommitForLog).call());
+					}
+
+					logger.info(String.format("The root repo for user \"%s\" has %d commits", username, revCommits.size()));
+					if (!revCommits.isEmpty()) {
+						deleteProject = false;
+					}
+				}
+			}
+
+			if (deleteProject) {
+				privilegedGitLabApi.getGroupApi().deleteGroup(projectId);
+
+				for (Member member : members) {
+					String username = member.getIdentifier();
+					Path projectBasePath = Paths.get(new File(repositoryBasePath).getAbsolutePath(), username, projectId);
+					FileUtils.deleteDirectory(projectBasePath.toFile());
+				}
+
+				logger.info(String.format("Project with ID %s deleted", projectId));
+			}
+			else {
+				logger.info(String.format("Not deleting project with ID %s, investigate", projectId));
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, String.format("Error scanning project with ID %s (no HEAD commit)", projectId), e);
+		}
+	}
+
 	public void scanProject(String projectId) throws IOException {
 		if (projectIdsToSkipInByProjectScanMode.contains(projectId)) {
 			logger.info(String.format("Skipping project with ID %s", projectId));
@@ -765,9 +888,23 @@ public class ProjectScanner implements AutoCloseable {
 						projectScanner.scanProjects(limit);
 					}
 					break;
+				case ByProjectNoHeadCommit:
+					// special scan mode that scans projects that were determined to have no HEAD commit by previous scans in one of the other modes
+					// verifies that there are no commits and no resources in GitLab, or locally for any of the project members, then deletes the project
+					// and cleans up (otherwise flagging it for manual investigation)
+
+					// a list of project IDs must be supplied for this scan mode
+					String projectListNoHeadCommit = CATMAPropertyKey.V6_REPO_MIGRATION_PROJECT_ID_LIST.getValue();
+
+					for (String projectId : projectListNoHeadCommit.split(",")) {
+						projectScanner.scanProjectNoHeadCommit(projectId);
+					}
+					break;
 			}
 
-			projectScanner.logSummaryProjectReport();
+			if (scanMode != ScanMode.ByProjectNoHeadCommit) {
+				projectScanner.logSummaryProjectReport();
+			}
 
 			// if we got that ^ far this hook is no longer necessary
 			Runtime.getRuntime().removeShutdownHook(finalReportHook);
