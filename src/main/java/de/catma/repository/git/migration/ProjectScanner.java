@@ -207,9 +207,11 @@ public class ProjectScanner implements AutoCloseable {
 				getProjectReport(projectId).addNeedMergeMasterToOriginMaster(projectId, commitsMasterIntoOriginMaster);
 
 				if (!commitsMasterIntoOriginMaster.isEmpty()) {
+					boolean hasProjectEverBeenPushed = repoManager.hasRef(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER);
+
 					getProjectReport(projectId).addCanMergeMasterToOriginMaster(
-						projectId, 
-						repoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER)
+						projectId,
+						hasProjectEverBeenPushed ? repoManager.canMerge(Constants.DEFAULT_REMOTE_NAME + "/" + Constants.MASTER) : true
 					);
 				}
 			}

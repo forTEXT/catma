@@ -380,6 +380,11 @@ public class ProjectConverter implements AutoCloseable {
 						File gitRepositoryBaseDir = new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue());
 
 						for (File userDir : gitRepositoryBaseDir.listFiles()) {
+							if (userDir.isFile()) {
+								logger.warning(String.format("Skipping unexpected file %s in %s", userDir.getName(), gitRepositoryBaseDir));
+								continue;
+							}
+
 							for (File projectDir : userDir.listFiles()) {
 								if (projectDir.getName().equals(projectId)) {
 									legacyProjectHandler.setUserWritablePermissions(Paths.get(projectDir.getAbsolutePath()));
