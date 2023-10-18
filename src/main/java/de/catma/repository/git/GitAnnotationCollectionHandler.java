@@ -162,9 +162,7 @@ public class GitAnnotationCollectionHandler {
 		String currentPageFilename = getCurrentPageFilename(annotationsDirectory, false); // <username>_<pagenumber>.json
 
 		File currentPageFile = Paths.get(
-				projectDirectory.getAbsolutePath(),
-				collectionDirectory,
-				ANNNOTATIONS_DIR,
+				annotationsDirectory.getAbsolutePath(),
 				currentPageFilename
 		).toFile();
 
@@ -183,9 +181,7 @@ public class GitAnnotationCollectionHandler {
 					raPageFile.close();
 					currentPageFilename = getCurrentPageFilename(annotationsDirectory, true);
 					currentPageFile = Paths.get(
-							projectDirectory.getAbsolutePath(),
-							collectionDirectory,
-							ANNNOTATIONS_DIR,
+							annotationsDirectory.getAbsolutePath(),
 							currentPageFilename
 					).toFile();
 					raPageFile = new RandomAccessFile(currentPageFile, "rw");
@@ -193,15 +189,14 @@ public class GitAnnotationCollectionHandler {
 
 				String serializedAnnotation = annotation.asSerializedListItem();
 
-				// condition is '> 2' because a page file can contain only "[]" (if all of the annotations that the page
-				// contains are deleted)
+				// condition is '> 2' because a page file can contain only "[]" (if all the annotations that the page contains are deleted)
 				if (currentPageFile.length() > 2) {
 					// replace the opening list bracket of the serialized annotation to be written with a comma
 					// in preparation for appending the annotation to the list of existing annotations in the page file
 					serializedAnnotation = "," + serializedAnnotation.substring(1);
 
-					// seek so that the closing list bracket in the page file will be overwritten with the new annotation
-					// + a new closing bracket
+					// seek so that the closing list bracket and the preceding newline in the page file will be overwritten
+					// with the new annotation + a new closing bracket
 					raPageFile.seek(currentPageFile.length() - 2);
 				}
 
