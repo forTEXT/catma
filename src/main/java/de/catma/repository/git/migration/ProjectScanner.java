@@ -25,6 +25,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
@@ -743,7 +744,17 @@ public class ProjectScanner implements AutoCloseable {
 
 		logger.info(String.format("Scanning project with ID %s", projectId));
 
-		Set<Member> members = legacyProjectHandler.getLegacyProjectMembers(projectId);
+		Set<Member> members = new HashSet<>();
+		try {
+			members = legacyProjectHandler.getLegacyProjectMembers(projectId);
+		}
+		catch (IOException e) {
+			if (e.getCause() instanceof GitLabApiException && e.getCause().getMessage().contains("404 Group Not Found")) {
+				logger.warning(String.format("Project with ID %s no longer exists in GitLab, skipping", projectId));
+				return;
+			}
+		}
+
 		Member owner = members.stream().filter(member -> member.getRole().equals(RBACRole.OWNER)).findAny().orElse(null);
 
 		if (owner == null) {
