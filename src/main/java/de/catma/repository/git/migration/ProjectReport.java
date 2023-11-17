@@ -1059,8 +1059,10 @@ public class ProjectReport {
 	}
 
 	public void setRequiresManualCheck() {
-		requiresManualCheck = true;
-		checkProjects++;
+		if (!requiresManualCheck) {
+			requiresManualCheck = true;
+			checkProjects++;
+		}
 	}
 
 	public void exportToCsv(CSVPrinter csvPrinter) throws IOException {
