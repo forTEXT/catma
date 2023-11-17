@@ -23,9 +23,12 @@ public class ProjectReport {
 
 	private String projectId;
 	private String ownerEmail;
+
+	private int issuesCount;
 	
 
 	private int totalUsers;
+	private int googleUsers;
 	
 	private int totalRoots;	
 	private int totalDocuments;
@@ -57,6 +60,7 @@ public class ProjectReport {
 	private int staleProjects;
 	private int staleUsers;
 	private int errorProjects;
+	private int checkProjects;
 	
 	private int documentsNeedMergeDevToMaster;
 	private int collectionsNeedMergeDevToMaster;
@@ -129,17 +133,21 @@ public class ProjectReport {
 	private int tagsetsPushFailedC6MigrationToOriginC6Migration;
 	private int rootsPushFailedC6MigrationToOriginC6Migration;
 	
-	private String lastError;
 	private LocalDateTime lastUnsynchronizedCommitTime;
 	private LocalDateTime lastHeadCommitTime;
-	
+	private String lastError;
+	private boolean requiresManualCheck;
+
 	public ProjectReport(String projectId) {
 		this.projectId = projectId;
 	}
 	
 	public ProjectReport(Collection<ProjectReport> reports) {
 		for (ProjectReport report : reports) {
+			issuesCount+=report.issuesCount;
+
 			totalUsers+=report.totalUsers;
+			googleUsers+=report.googleUsers;
 			
 			totalRoots+=report.totalRoots;	
 			readyToMigrateRoots+=report.readyToMigrateRoots;
@@ -170,6 +178,7 @@ public class ProjectReport {
 			staleProjects+=report.staleProjects;
 			staleUsers+=report.staleUsers;
 			errorProjects+=report.errorProjects;
+			checkProjects+=report.checkProjects;
 			
 			documentsNeedMergeDevToMaster+=report.documentsNeedMergeDevToMaster;
 			collectionsNeedMergeDevToMaster+=report.collectionsNeedMergeDevToMaster;
@@ -362,10 +371,23 @@ public class ProjectReport {
 				builder.append(lastError);
 				builder.append("\n");
 			}
+
+			builder.append("Requires Manual Check: ");
+			builder.append(requiresManualCheck);
+			builder.append("\n");
+
 			builder.append("\n");
 		}
+
+		builder.append("Issues Count: ");
+		builder.append(issuesCount);
+		builder.append("\n\n");
+
 		builder.append("Total Users: ");
 		builder.append(totalUsers);
+		builder.append("\n");
+		builder.append("Google Users: ");
+		builder.append(googleUsers);
 		builder.append("\n\n");
 
 		builder.append("Total Roots: ");
@@ -461,6 +483,9 @@ public class ProjectReport {
 
 		builder.append("Projects with Errors: ");
 		builder.append(errorProjects);
+		builder.append("\n");
+		builder.append("Projects Requiring Manual Check: ");
+		builder.append(checkProjects);
 		builder.append("\n\n");
 
 		builder.append("Resources Needing Merge, dev->master: ");
@@ -724,6 +749,7 @@ public class ProjectReport {
 	public void addError(Exception e) {
 		errorProjects++;
 		lastError = e.getClass().getName() + ": " + e.getMessage();
+		setRequiresManualCheck();
 	}
 
 
@@ -734,7 +760,6 @@ public class ProjectReport {
 
 
 	public void addCanMergeMasterToOriginMaster(String resource, boolean canMerge) {
-		
 		if (canMerge) {
 			logger.info(String.format("%1$s can be merged master->origin/master!", resource));
 
@@ -747,6 +772,7 @@ public class ProjectReport {
 		}
 		else {
 			logger.info(String.format("%1$s would conflict when being merged master->origin/master!", resource));
+			setRequiresManualCheck();
 
 			if (resource.startsWith("CATMA") && !resource.contains("/")) {
 				this.rootsConflictingMergeMasterToOriginMaster++;
@@ -758,7 +784,6 @@ public class ProjectReport {
 	}
 	
 	public void addCanMergeDevToMaster(String resource, boolean canMerge) {
-		
 		if (canMerge) {
 			logger.info(String.format("%1$s can be merged dev->master!", resource));
 
@@ -777,6 +802,7 @@ public class ProjectReport {
 		}
 		else {
 			logger.info(String.format("%1$s would conflict when being merged dev->master!", resource));
+			setRequiresManualCheck();
 
 			if (resource.startsWith("collections")) {
 				this.collectionsConflictingMergeDevToMaster++;
@@ -794,7 +820,6 @@ public class ProjectReport {
 	}
 	
 	public void addCanMergeDevToOriginMaster(String resource, boolean canMerge) {
-		
 		if (canMerge) {
 			logger.info(String.format("%1$s can be merged dev->origin/master!", resource));
 
@@ -813,6 +838,7 @@ public class ProjectReport {
 		}
 		else {
 			logger.info(String.format("%1$s would conflict when being merged dev->origin/master!", resource));
+			setRequiresManualCheck();
 
 			if (resource.startsWith("collections")) {
 				this.collectionsConflictingMergeDevToOriginMaster++;
@@ -832,6 +858,7 @@ public class ProjectReport {
 	public void addMergeResultDevToC6Migration(String resource, MergeResult mergeResult) {
 		if (mergeResult.getMergeStatus().isSuccessful()) {
 			logger.info(String.format("Successfully merged %s dev->%s", resource, migrationBranchName));
+
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeSuccessfulDevToC6Migration++;
 			}
@@ -847,6 +874,8 @@ public class ProjectReport {
 		}
 		else {
 			logger.info(String.format("Conflicting merge %s dev->%s", resource, migrationBranchName));
+			setRequiresManualCheck();
+
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeConflictingDevToC6Migration++;
 			}
@@ -865,6 +894,7 @@ public class ProjectReport {
 	public void addMergeResulMasterToC6Migration(String resource, MergeResult mergeResult) {
 		if (mergeResult.getMergeStatus().isSuccessful()) {
 			logger.info(String.format("Successfully merged %s master->%s", resource, migrationBranchName));
+
 			if (resource.startsWith("CATMA") && !resource.contains("/")) {
 				this.rootsMergeSuccessfulMasterToC6Migration++;
 			}
@@ -874,6 +904,8 @@ public class ProjectReport {
 		}
 		else {
 			logger.info(String.format("Conflicting merge %s master->%s", resource, migrationBranchName));
+			setRequiresManualCheck();
+
 			if (resource.startsWith("CATMA") && !resource.contains("/")) {
 				this.rootsMergeConflictingMasterToC6Migration++;
 			}
@@ -886,6 +918,7 @@ public class ProjectReport {
 	public void addMergeResultOriginMasterToC6Migration(String resource, MergeResult mergeResult) {
 		if (mergeResult.getMergeStatus().isSuccessful()) {
 			logger.info(String.format("Successfully merged %s origin/master->%s", resource, migrationBranchName));
+
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeSuccessfulOriginMasterToC6Migration++;
 			}
@@ -904,6 +937,8 @@ public class ProjectReport {
 		}
 		else {
 			logger.info(String.format("Conflicting merge %s origin/master->%s", resource, migrationBranchName));
+			setRequiresManualCheck();
+
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeConflictingOriginMasterToC6Migration++;
 			}
@@ -925,6 +960,7 @@ public class ProjectReport {
 	public void addMergeResultOriginC6MigrationToC6Migration(String resource, MergeResult mergeResult) {
 		if (mergeResult.getMergeStatus().isSuccessful()) {
 			logger.info(String.format("Successfully merged %1$s origin/%2$s->%2$s", resource, migrationBranchName));
+
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeSuccessfulOriginC6MigrationToC6Migration++;
 			}
@@ -943,6 +979,8 @@ public class ProjectReport {
 		}
 		else {
 			logger.info(String.format("Conflicting merge %1$s origin/%2$s->%2$s", resource, migrationBranchName));
+			setRequiresManualCheck();
+
 			if (resource.startsWith("collections")) {
 				this.collectionsMergeConflictingOriginC6MigrationToC6Migration++;
 			}
@@ -1002,10 +1040,27 @@ public class ProjectReport {
 
 	public void addUser(String username) {
 		totalUsers++;
+
+		if (username.contains("google_com")) {
+			googleUsers++;
+		}
 	}
 	
 	public void setOwnerEmail(String ownerEmail) {
 		this.ownerEmail = ownerEmail;
+	}
+
+	public void setIssuesCount(int issuesCount) {
+		this.issuesCount = issuesCount;
+	}
+
+	public boolean getRequiresManualCheck() {
+		return requiresManualCheck;
+	}
+
+	public void setRequiresManualCheck() {
+		requiresManualCheck = true;
+		checkProjects++;
 	}
 
 	public void exportToCsv(CSVPrinter csvPrinter) throws IOException {
@@ -1015,7 +1070,9 @@ public class ProjectReport {
 			lastUnsynchronizedCommitTime==null?null:lastUnsynchronizedCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
 			lastHeadCommitTime==null?null:lastHeadCommitTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
 			lastError,
+			issuesCount,
 			totalUsers,
+			googleUsers,
 			totalRoots,	
 			readyToMigrateRoots,
 			totalDocuments+totalCollections+totalTagsets,
@@ -1045,6 +1102,7 @@ public class ProjectReport {
 			staleProjects,
 			staleUsers,
 			errorProjects,
+			checkProjects,
 			collectionsNeedMergeDevToMaster+documentsNeedMergeDevToMaster+tagsetsNeedMergeDevToMaster,
 			documentsNeedMergeDevToMaster,
 			collectionsNeedMergeDevToMaster,
@@ -1124,7 +1182,9 @@ public class ProjectReport {
 				"Last Unsynchronized Commit Time",
 				"Last HEAD Commit Time",
 				"Last Error",
+				"Issues Count",
 				"Total Users",
+				"Google Users",
 				"Total Roots",
 				"Ready to Migrate Roots",
 				"Total Resources",
@@ -1154,6 +1214,7 @@ public class ProjectReport {
 				"Stale Projects",
 				"Stale Users",
 				"Projects with Errors",
+				"Projects Requiring Manual Check",
 				"Resources Needing Merge, dev->master",
 				"Documents Needing Merge, dev->master",
 				"Collections Needing Merge, dev->master",

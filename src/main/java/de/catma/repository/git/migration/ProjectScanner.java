@@ -259,6 +259,7 @@ public class ProjectScanner implements AutoCloseable {
 		if (!mergeResult.getMergeStatus().isSuccessful()) {
 			if (mergeResult.getConflicts().containsKey(Constants.DOT_GIT_MODULES)) {
 				logger.info(String.format("Found conflicts in .gitmodules of project with ID %s, trying auto resolution", projectId));
+				getProjectReport(projectId).setRequiresManualCheck();
 				repoManager.resolveGitSubmoduleFileConflicts();
 			}
 
@@ -421,6 +422,7 @@ public class ProjectScanner implements AutoCloseable {
 
 					// if yes, ignore the error, force commit, and get a fresh MergeResult
 					logger.warning("#!#!#!#!#! Force committing after a 'missing blob' error !#!#!#!#!#");
+					getProjectReport(projectId).setRequiresManualCheck();
 
 					repoManager.commit(
 							String.format("Merge remote-tracking branch '%1$s/%2$s' into %2$s", Constants.DEFAULT_REMOTE_NAME, migrationBranchName),
@@ -596,7 +598,12 @@ public class ProjectScanner implements AutoCloseable {
 			logger.log(Level.SEVERE, String.format("Error scanning user projects for user \"%s\"", username), e);
 		}
 		finally {
-			if (userTempPath != null && CATMAPropertyKey.V6_REPO_MIGRATION_REMOVE_USER_TEMP_DIRECTORY.getBooleanValue(true)) {
+			if (getProjectReport(projectId).getRequiresManualCheck()) {
+				logger.warning(
+						String.format("Manual check required - not deleting temp directory for user \"%s\" and project with ID %s", username, projectId)
+				);
+			}
+			else if (userTempPath != null && CATMAPropertyKey.V6_REPO_MIGRATION_REMOVE_USER_TEMP_DIRECTORY.getBooleanValue(true)) {
 				logger.info(String.format("Deleting temp directory at path %s", userTempPath));
 				try {
 					legacyProjectHandler.deleteUserTempPath(userTempPath);
@@ -606,7 +613,6 @@ public class ProjectScanner implements AutoCloseable {
 				}
 			}
 		}
-		
 	}
 
 	public void scanProjectNoHeadCommit(String projectId) {
@@ -746,6 +752,9 @@ public class ProjectScanner implements AutoCloseable {
 		}
 
 		getProjectReport(projectId).setOwnerEmail(owner.getEmail() == null ? owner.getIdentifier() : owner.getEmail());
+
+		int issuesCount = legacyProjectHandler.getLegacyProjectIssuesCount(projectId);
+		getProjectReport(projectId).setIssuesCount(issuesCount);
 
 //		legacyProjectHandler.removeC6MigrationBranches(projectId, migrationBranchName);
 

@@ -20,24 +20,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.FileUtils;
-import org.gitlab4j.api.Constants.GroupOrderBy;
-import org.gitlab4j.api.Constants.ImpersonationState;
-import org.gitlab4j.api.Constants.SortOrder;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GroupApi;
-import org.gitlab4j.api.Pager;
-import org.gitlab4j.api.ProjectApi;
-import org.gitlab4j.api.UserApi;
-import org.gitlab4j.api.models.AccessLevel;
-import org.gitlab4j.api.models.Branch;
-import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.GroupFilter;
-import org.gitlab4j.api.models.Permissions;
-import org.gitlab4j.api.models.PersonalAccessToken;
+import org.gitlab4j.api.*;
+import org.gitlab4j.api.models.*;
 import org.gitlab4j.api.models.PersonalAccessToken.Scope;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectAccess;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -79,8 +64,8 @@ public class LegacyProjectHandler {
 		GroupApi groupApi = privilegedGitLabApi.getGroupApi();
 		GroupFilter groupFilter = 
 				new GroupFilter()
-					.withSortOder(SortOrder.ASC)
-					.withOrderBy(GroupOrderBy.ID);
+					.withSortOder(Constants.SortOrder.ASC)
+					.withOrderBy(Constants.GroupOrderBy.ID);
 		return groupApi.getGroups(groupFilter, 10);
 	}	
 	
@@ -125,7 +110,18 @@ public class LegacyProjectHandler {
 		}
 	}
 
-	
+	public int getLegacyProjectIssuesCount(String projectId) throws IOException {
+		try {
+			IssuesStatistics issuesStats = privilegedGitLabApi.getIssuesApi().getGroupIssuesStatistics(
+					projectId, new IssuesStatisticsFilter().withScope(Constants.IssueScope.ALL)
+			);
+			return issuesStats.getCounts().getAll();
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Unknown group", e);
+		}
+	}
+
 	public Pair<User, String> acquireUser(String username) throws Exception {
 		String tokenName = "migration_admin_token";
 		UserApi userApi = this.privilegedGitLabApi.getUserApi();
@@ -137,7 +133,7 @@ public class LegacyProjectHandler {
 		}
 		else {
 			List<PersonalAccessToken> impersonationTokens = userApi.getImpersonationTokens(
-				user.getId(), ImpersonationState.ACTIVE
+				user.getId(), Constants.ImpersonationState.ACTIVE
 			);
 	
 			// revoke the default token, if it exists, actively
