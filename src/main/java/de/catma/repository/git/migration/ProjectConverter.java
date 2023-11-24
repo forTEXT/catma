@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.FileHandler;
@@ -511,14 +512,21 @@ public class ProjectConverter implements AutoCloseable {
 		IssuesApi issuesApi = restrictedGitLabApi.getIssuesApi();
 
 		// get a pager for all issues of the group
-		Pager<Issue> issues = issuesApi.getGroupIssues(
-				projectId,
-				new IssueFilter()
-						.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
-						.withOrderBy(org.gitlab4j.api.Constants.IssueOrderBy.CREATED_AT)
-						.withSort(org.gitlab4j.api.Constants.SortOrder.ASC),
-				100
-		);
+		IssueFilter issueFilter = new IssueFilter()
+				.withLabels(Collections.singletonList(CATMA_COMMENT_LABEL))
+				.withOrderBy(org.gitlab4j.api.Constants.IssueOrderBy.CREATED_AT)
+				.withSort(org.gitlab4j.api.Constants.SortOrder.ASC);
+
+		// if comment migration fails but some comments have already been migrated, set this filter to exclude the ones already migrated
+		// attempting to move an issue that has already been moved results in: GitLabApiException: Cannot move issue due to insufficient permissions!
+		String updatedBeforeSettingValue = CATMAPropertyKey.V6_REPO_MIGRATION_ONLY_COMMENT_MIGRATION_UPDATED_BEFORE.getValue();
+		if (updatedBeforeSettingValue != null && !updatedBeforeSettingValue.trim().isEmpty()) {
+			issueFilter.withUpdatedBefore(
+					Date.from(ZonedDateTime.parse(updatedBeforeSettingValue, DateTimeFormatter.ISO_DATE_TIME).toInstant())
+			);
+		}
+
+		Pager<Issue> issues = issuesApi.getGroupIssues(projectId, issueFilter, 100);
 
 		List<Long> processedIssueIds = new ArrayList<>();
 
