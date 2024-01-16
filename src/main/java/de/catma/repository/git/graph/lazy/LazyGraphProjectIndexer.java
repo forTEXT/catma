@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollection;
@@ -22,7 +23,6 @@ import de.catma.tag.*;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
-import org.glassfish.jersey.internal.guava.Sets;
 
 import java.io.IOException;
 import java.util.*;
