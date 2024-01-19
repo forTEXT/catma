@@ -130,7 +130,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 						eventBus
 				).show()
 		);
-		Link newsLetterLink = new Link("Newsletter", new ExternalResource("https://catma.de/newsletter/"));
+		Link newsLetterLink = new Link("Newsletter", new ExternalResource("https://catma.de/about/newsletter/"));
 		newsLetterLink.setTargetName("_blank");
 		newsLetterLink.addStyleName("button__label");
 
