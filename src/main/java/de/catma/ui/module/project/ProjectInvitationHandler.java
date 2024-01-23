@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Message;
+import com.hazelcast.topic.ITopic;
+import com.hazelcast.topic.Message;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.UI;
 

@@ -23,12 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -41,7 +36,7 @@ import org.vaadin.sliderpanel.client.SliderMode;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.hazelcast.core.ITopic;
+import com.hazelcast.topic.ITopic;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
@@ -162,7 +157,7 @@ public class TaggerView extends HorizontalLayout
 	private TaggerSplitPanel splitPanel;
 	private ITopic<CommentMessage> commentTopic;
 	private UIMessageListener<CommentMessage> commentMessageListener;
-	private String commentMessageListenerRegId;
+	private UUID commentMessageListenerRegId;
 	private IconButton cbAutoShowComments;
 	
 	public TaggerView(

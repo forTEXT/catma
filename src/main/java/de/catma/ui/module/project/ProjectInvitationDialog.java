@@ -2,6 +2,7 @@ package de.catma.ui.module.project;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.cache.Cache;
 import javax.cache.Caching;
@@ -10,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
+import com.hazelcast.topic.ITopic;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
@@ -188,7 +189,7 @@ public class ProjectInvitationDialog extends Window {
 		lInvitationCode.setVisible(true);
 		btnInvite.setEnabled(false);
 		
-	    String regid = invitationTopic.addMessageListener(
+	    UUID regid = invitationTopic.addMessageListener(
 	    	new ProjectInvitationHandler(
 	    		UI.getCurrent(),
 	    		projectInvitation,

@@ -40,6 +40,6 @@ public final class HazelcastConfiguration {
     		new MutableConfiguration<Integer, String>()
     		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(TimeUnit.MINUTES, 30)));
 
-    public final static ClientConfig CLIENT_CONFIG = new ClientConfig().setExecutorPoolSize(1);
+    public final static ClientConfig CLIENT_CONFIG = new ClientConfig().setProperty("hazelcast.client.internal.executor.pool.size", "1");
     
 }

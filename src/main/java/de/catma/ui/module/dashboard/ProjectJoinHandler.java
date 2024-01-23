@@ -1,7 +1,7 @@
 package de.catma.ui.module.dashboard;
 
 import com.google.common.eventbus.EventBus;
-import com.hazelcast.core.Message;
+import com.hazelcast.topic.Message;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
