@@ -3,6 +3,7 @@ package de.catma.ui.module.dashboard;
 import java.io.IOException;
 import java.util.Objects;
 
+import com.vaadin.shared.ui.ContentMode;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
@@ -91,6 +92,8 @@ public class ProjectCard extends VerticalFlexLayout  {
 	protected void initComponents() {
 		addStyleName("projectlist__card");
 
+		HorizontalFlexLayout topLayout = new HorizontalFlexLayout();
+		addComponent(topLayout);
 		CssLayout previewLayout = new CssLayout();
 		previewLayout.addStyleName("projectlist__card__preview");
 		previewLayout.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
@@ -99,7 +102,16 @@ public class ProjectCard extends VerticalFlexLayout  {
 		descriptionLabel.setWidth("100%");
 		previewLayout.addComponents(descriptionLabel);
 
-		addComponent(previewLayout);
+		topLayout.addComponent(previewLayout);
+
+		VerticalFlexLayout groupLayout = new VerticalFlexLayout();
+		groupLayout.addStyleName("projectlist__card__groups");
+		topLayout.addComponent(groupLayout);
+		Label groupTitle = new Label("Participating groups");
+		groupTitle.addStyleName("projectlist__card_groups__title");
+		groupLayout.addComponent(groupTitle);
+		Label groups = new Label("<ul class=\"projectlist__card__groups_ul\"><li>SeminarXY</li><li>Gruppe47undeinlangerText</li></ul>", ContentMode.HTML);
+		groupLayout.addComponent(groups);
 
 		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
 		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");

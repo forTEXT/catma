@@ -111,14 +111,14 @@ public class ProjectListView extends VerticalLayout {
     	setSizeFull();
     	
     	HorizontalLayout descriptionBar = new HorizontalLayout();
-        Label description = new Label("All Projects");
 
         Label title = new Label("Title");
 
         sortButton = new IconButton(VaadinIcons.ARROW_DOWN);
-        descriptionBar.addComponent(description);
-        descriptionBar.setExpandRatio(description, 1f);
+
         descriptionBar.addComponent(title);
+		descriptionBar.setComponentAlignment(title, Alignment.MIDDLE_RIGHT);
+		descriptionBar.setExpandRatio(title, 1f);
         descriptionBar.addComponent(sortButton);
         descriptionBar.setComponentAlignment(sortButton, Alignment.MIDDLE_RIGHT);
         

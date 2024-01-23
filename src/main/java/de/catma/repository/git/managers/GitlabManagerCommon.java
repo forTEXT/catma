@@ -33,7 +33,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				return false;
 			}
 
-			Member projectMember = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
+			Member projectMember = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId(), true);
 			if (projectMember == null || permission == null) {
 				return false;
 			}
@@ -170,7 +170,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				throw new IOException(String.format("Unknown project \"%s\"", projectReference.getName()));
 			}
 
-			Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
+			Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId(), true);
 			if (member == null ) {
 				throw new IOException(String.format("Member \"%s\" not found in project \"%s\"", subject, projectReference.getName()));
 			}

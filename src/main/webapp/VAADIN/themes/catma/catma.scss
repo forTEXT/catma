@@ -860,7 +860,25 @@ $contribution-color: blue;
     flex-direction: column;
     padding: 0.5em;
     cursor: pointer;
-    width: 100%
+    width: 100%;
+    overflow: auto;
+  }
+
+  .projectlist__card__groups {
+    padding-right: 5px;
+    border-left: 1px solid rgba(151, 151, 151, 0.12);
+    background-color: #cdcdcd;
+    font-size: xx-small;
+    width: 70%;
+    overflow: auto;
+  }
+
+  .projectlist__card__groups_ul {
+    padding-inline-start: 20px;
+  }
+
+  .projectlist__card_groups__title {
+    font-size: xx-small;
   }
 
   .projectlist__card__title-and-actions {
