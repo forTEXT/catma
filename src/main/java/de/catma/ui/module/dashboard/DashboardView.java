@@ -24,6 +24,6 @@ public class DashboardView extends VerticalLayout {
 
 		ProjectListView projectListView = new ProjectListView(projectsManager, eventBus, remoteGitManagerRestricted);
 		tabSheet.addTab(projectListView, "All Projects");
-		tabSheet.addTab(new Label(), "Groups");
+		tabSheet.addTab(new GroupListView(projectsManager, eventBus, remoteGitManagerRestricted), "Groups");
 	}
 }

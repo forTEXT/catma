@@ -18353,6 +18353,46 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 10px;
 }
 
+.catma .groupslist__list {
+	flex-wrap: wrap;
+}
+
+.catma .groupslist__card {
+	border: solid 1px rgba(151, 151, 151, 0.12);
+	border-radius: 4px;
+	margin: 10px;
+	padding: 0px;
+}
+
+.catma .groupslist__card__topPanel {
+	background-color: #cdcdcd;
+}
+
+.catma .groupslist__card__title-and-actions {
+	padding: 10px;
+}
+
+.catma .groupslist__newgroup {
+	width: 352px;
+	border-radius: 4px;
+	background-color: #ffffff;
+	border: dashed 3px rgba(151, 151, 151, 0.12);
+	margin: 10px;
+	padding: 10px;
+	align-items: center;
+}
+
+.catma .groupslist__newgroup__link {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	padding: 0.5em;
+	cursor: pointer;
+	font-size: 1.5em;
+	text-transform: uppercase;
+	justify-content: center;
+}
+
 .catma .annotate-tag-tree-item {
 	width: 15px;
 	height: 100%;

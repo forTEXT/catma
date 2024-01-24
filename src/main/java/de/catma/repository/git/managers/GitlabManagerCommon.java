@@ -6,6 +6,8 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitMember;
+import de.catma.user.Group;
+
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
@@ -182,6 +184,34 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 					String.format(
 							"Failed to get role on project \"%s\" for member \"%s\"",
 							projectReference.getName(),
+							subject
+					),
+					e
+			);
+		}
+	}
+	
+	@Override
+	public final RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException {
+		try {
+			org.gitlab4j.api.models.Group gitlabGroup = getGitLabApi().getGroupApi().getGroup(group.getId());
+			
+			if (gitlabGroup == null) {
+				throw new IOException(String.format("Unknown group \"%s\"", group.getName()));
+			}
+
+			Member member = getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId(), true);
+			if (member == null ) {
+				throw new IOException(String.format("Member \"%s\" not found in group \"%s\"", subject, group.getName()));
+			}
+
+			return RBACRole.forValue(member.getAccessLevel().value);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to get role on group \"%s\" for member \"%s\"",
+							group.getName(),
 							subject
 					),
 					e

@@ -211,7 +211,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
 						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
-								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // TODO: why do we care about the delete permission here?
+								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // the owner is the only one with 'delete' permission and the owner should cannot leave his project
 						() -> {
 							btnLeave.setVisible(false);
 							btnLeave.setEnabled(false);

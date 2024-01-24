@@ -2,6 +2,7 @@ package de.catma.project;
 
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.TagManager;
+import de.catma.user.Group;
 import de.catma.user.User;
 
 import java.io.IOException;
@@ -36,6 +37,8 @@ public interface ProjectsManager {
 	 * @throws IOException if an error occurs when getting the projects
 	 */
 	List<ProjectReference> getProjectReferences() throws IOException;
+
+	List<Group> getGroups() throws  IOException;
 
 	/**
 	 * Opens an existing project.
@@ -83,4 +86,13 @@ public interface ProjectsManager {
 	 * @throws IOException if an error occurs when deleting the project
 	 */
 	void deleteProject(ProjectReference projectReference) throws IOException;
+
+	/**
+	 * Creates a new group.
+	 * 
+	 * @param name the name of the group
+	 * @return the group
+	 * @throws IOException if an error occurs when creating the group.
+	 */
+	Group createGroup(String name) throws IOException;
 }

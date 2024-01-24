@@ -3,6 +3,7 @@ package de.catma.rbac;
 import java.io.IOException;
 
 import de.catma.project.ProjectReference;
+import de.catma.user.Group;
 
 /**
  * Manages all access controls
@@ -59,14 +60,23 @@ public interface IRBACManager {
 
 	
 	/**
-	 * get's the defined Role for a subject on a specific project
+	 * gets the defined Role for a subject on a specific project
 	 * 
 	 * @param subject
-	 * @param projectId
+	 * @param projectReference
 	 * @return
 	 * @throws IOException 
 	 */
 	RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
+
+	/**
+	 * gets the defined Role for a subject on a specific group
+	 * @param subject
+	 * @param group
+	 * @return
+	 * @throws IOException
+	 */
+	RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException;
 
 	
 }

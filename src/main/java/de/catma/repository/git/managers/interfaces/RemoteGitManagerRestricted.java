@@ -4,6 +4,7 @@ import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
+import de.catma.user.Group;
 import de.catma.user.Member;
 import de.catma.user.User;
 
@@ -39,6 +40,24 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if an error occurs when getting the projects
 	 */
 	List<ProjectReference> getProjectReferences() throws IOException;
+
+	/**
+	 * Get all groups the curren user is part of.
+	 *
+	 * @return a {@link List} of {@link de.catma.user.Group}s
+	 * @throws IOException if an error occurs when getting the groups
+	 */
+	List<de.catma.user.Group> getGroups() throws IOException;
+	
+	
+	/**
+	 * Creates a new group.
+	 * @param name the name of the group
+	 * @return the group
+	 * @throws IOException if an error occurs when creating the group
+	 */
+	Group createGroup(String name) throws IOException;
+
 
 	/**
 	 * Gets a project's repository URL.
@@ -210,5 +229,5 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @return a new {@link MergeRequestInfo} containing the result
 	 * @throws IOException if an error occurs when merging the merge request
 	 */
-	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
+	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;	
 }

@@ -14,6 +14,7 @@ import de.catma.repository.git.graph.interfaces.GraphProjectDeletionHandler;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.tag.TagManager;
+import de.catma.user.Group;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
@@ -68,6 +69,16 @@ public class GitProjectsManager implements ProjectsManager {
 	@Override
 	public List<ProjectReference> getProjectReferences() throws IOException {
 		return remoteGitServerManager.getProjectReferences();
+	}
+
+	@Override
+	public List<Group> getGroups() throws  IOException {
+		return remoteGitServerManager.getGroups();
+	}
+	
+	@Override
+	public Group createGroup(String name) throws IOException {
+		return remoteGitServerManager.createGroup(name);
 	}
 
 	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws IOException {

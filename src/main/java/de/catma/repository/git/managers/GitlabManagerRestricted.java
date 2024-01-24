@@ -2,6 +2,7 @@ package de.catma.repository.git.managers;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonObject;
@@ -13,6 +14,7 @@ import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager.ProjectMetadataSerializationField;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACRole;
+import de.catma.repository.git.GitGroup;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitMember;
 import de.catma.repository.git.GitUser;
@@ -40,7 +42,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	private final Logger logger = Logger.getLogger(GitlabManagerRestricted.class.getName());
 
 	private final GitLabApi restrictedGitLabApi;
-	private final Cache<String, List<ProjectReference>> projectsCache;
+	private final Cache<String, List<?>> gitlabModelsCache;
 
 	private GitUser user;
 
@@ -56,7 +58,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		this.restrictedGitLabApi = api;
 
 		// cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
-		this.projectsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
+		this.gitlabModelsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
 
 		try {
 			this.user = new GitUser(this.restrictedGitLabApi.getUserApi().getCurrentUser());
@@ -194,11 +196,100 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<de.catma.user.Group> getGroups() throws IOException {
+		try {
+			return (List<de.catma.user.Group>) gitlabModelsCache.get("groups", () -> {
+				List<de.catma.user.Group> result = new ArrayList<>();
+				GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+				Pager<Group> groupPager = groupApi.getGroups(
+						new GroupFilter()
+								.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
+								.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC)
+								.withTopLevelOnly(true),
+						20);
+
+				while (groupPager.hasNext()) {
+					List<Group> groupPage = groupPager.next();
+
+					for (Group group : groupPage) {
+						if (group.getName().startsWith("CATMA_")) { // we reached legacy CATMA 6 groups and exit early with what we got so far
+							return result;
+						} else {
+							Set<Member> members =
+									groupApi.getMembers(group.getId())
+											.stream()
+											.map(GitMember::new)
+											.collect(Collectors.toSet());
+
+							List<ProjectReference> sharedProjects =
+									groupApi.getProjects(
+											group.getId(), new GroupProjectsFilter().withShared(true).withSimple(true)).stream().map(project -> {
+										try {
+											return getProjectReference(
+													project.getNamespace().getPath(),
+													project.getPath(),
+													project.getDescription()
+											);
+										} catch (IOException e) {
+											logger.log(
+													Level.WARNING,
+													String.format(
+															"Failed to get ProjectReference for GitLab project %s. The user won't be able to open this project.",
+															project.getNamespace().getPath() + "/" + project.getPath()
+													),
+													e
+											);
+											return null;
+										}
+									})
+									.filter(Objects::nonNull)
+									.toList();
+							result.add(new GitGroup(group, members, sharedProjects));
+						}
+					}
+
+
+				}
+				return result;
+			});
+		}
+		catch (Exception e) {
+			throw new IOException("Failed to load groups", e);
+		}
+	}
+	
+	@Override
+	public  de.catma.user.Group createGroup(String name) throws IOException {
+		try {
+			
+			name = name.trim();
+			String pathName = name.replaceAll("\s", "-").toLowerCase();
+			
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+
+			GroupParams groupParams = new GroupParams().withName(name).withPath(pathName).withVisibility(Visibility.PRIVATE.name().toLowerCase());
+
+			Group group = groupApi.createGroup(groupParams);
+
+			return new GitGroup(group, Collections.emptySet(), Collections.emptyList());
+		}
+		catch (GitLabApiException e) {
+			if (e.getMessage().contains("has already been taken")) {
+				throw new IllegalArgumentException(String.format("The name '%1$s' has already been taken, please choose a different name!", name), e);
+			}
+			throw new IOException("Failed to create remote Git repository", e);
+		}
+	}
+
+
+	@SuppressWarnings("unchecked")
 	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 
-			return projectsCache.get(
+			return (List<ProjectReference>) gitlabModelsCache.get(
 					"projects",
 					() -> projectApi.getProjects(new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true).withSimple(true))
 							.stream()
