@@ -97,7 +97,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	// methods that require the instance to be in a detached state
 	@Override
 	public String clone(String namespace, String name, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException {
-		return clone(namespace, name, uri, jGitCredentialsManager, 0);
+		return clone(namespace, name, uri, jGitCredentialsManager, 0, 0);
 	}
 
 	private String clone(
@@ -105,7 +105,8 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			String name,
 			String uri,
 			JGitCredentialsManager jGitCredentialsManager,
-			int refreshCredentialsTryCount
+			int refreshCredentialsTryCount,
+			int tryCount
 	) throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
@@ -126,11 +127,25 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				// it's likely that the user is logged in using the username/password authentication method and that their
 				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
 				jGitCredentialsManager.refreshTransientCredentials();
-				return clone(namespace, name, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1);
+				return clone(namespace, name, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1, tryCount);
 			}
 
-			// give up, refreshing credentials didn't work or unexpected error
-			throw new IOException("Failed to clone remote Git repository", e);
+			if (e instanceof TransportException && e.getMessage().contains("authentication not supported") && tryCount < 3) {
+				// sometimes GitLab refuses to accept the clone and returns this error message
+				// subsequent clone attempts succeed however, so we retry the clone up to 3 times before giving up
+				try {
+					Thread.sleep(100L * (tryCount + 1));
+				}
+				catch (InterruptedException ignored) {}
+
+				return clone(namespace, name, uri, jGitCredentialsManager, refreshCredentialsTryCount, tryCount + 1);
+			}
+
+			// give up, refreshing credentials didn't work, retries exhausted, or unexpected error
+			throw new IOException(
+					String.format("Failed to clone, tried %d times", tryCount + 1),
+					e
+			);
 		}
 
 		return targetPath.getName();
@@ -962,6 +977,17 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 	@Deprecated
 	public String cloneWithSubmodules(String group, String uri, JGitCredentialsManager jGitCredentialsManager) throws IOException {
+		return cloneWithSubmodules(group, uri, jGitCredentialsManager, 0, 0);
+	}
+
+	@Deprecated
+	private String cloneWithSubmodules(
+			String group,
+			String uri,
+			JGitCredentialsManager jGitCredentialsManager,
+			int refreshCredentialsTryCount,
+			int tryCount
+	) throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `cloneWithSubmodules` on an attached instance");
 		}
@@ -987,7 +1013,29 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			submoduleUpdateCommand.call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("Failed to clone with submodules", e);
+			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
+				// it's likely that the user is logged in using the username/password authentication method and that their
+				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+				jGitCredentialsManager.refreshTransientCredentials();
+				return cloneWithSubmodules(group, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1, tryCount);
+			}
+
+			if (e instanceof TransportException && e.getMessage().contains("authentication not supported") && tryCount < 3) {
+				// sometimes GitLab refuses to accept the clone and returns this error message
+				// subsequent clone attempts succeed however, so we retry the clone up to 3 times before giving up
+				try {
+					Thread.sleep(100L * (tryCount + 1));
+				}
+				catch (InterruptedException ignored) {}
+
+				return cloneWithSubmodules(group, uri, jGitCredentialsManager, refreshCredentialsTryCount, tryCount + 1);
+			}
+
+			// give up, refreshing credentials didn't work, retries exhausted, or unexpected error
+			throw new IOException(
+					String.format("Failed to clone with submodules, tried %d times", tryCount + 1),
+					e
+			);
 		}
 
 		return targetPath.getName();
