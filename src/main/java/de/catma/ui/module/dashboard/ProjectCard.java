@@ -3,7 +3,6 @@ package de.catma.ui.module.dashboard;
 import java.io.IOException;
 import java.util.Objects;
 
-import com.vaadin.shared.ui.ContentMode;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
@@ -92,8 +91,6 @@ public class ProjectCard extends VerticalFlexLayout  {
 	protected void initComponents() {
 		addStyleName("projectlist__card");
 
-		HorizontalFlexLayout topLayout = new HorizontalFlexLayout();
-		addComponent(topLayout);
 		CssLayout previewLayout = new CssLayout();
 		previewLayout.addStyleName("projectlist__card__preview");
 		previewLayout.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
@@ -102,16 +99,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 		descriptionLabel.setWidth("100%");
 		previewLayout.addComponents(descriptionLabel);
 
-		topLayout.addComponent(previewLayout);
-
-		VerticalFlexLayout groupLayout = new VerticalFlexLayout();
-		groupLayout.addStyleName("projectlist__card__groups");
-		topLayout.addComponent(groupLayout);
-		Label groupTitle = new Label("Participating groups");
-		groupTitle.addStyleName("projectlist__card_groups__title");
-		groupLayout.addComponent(groupTitle);
-		Label groups = new Label("<ul class=\"projectlist__card__groups_ul\"><li>SeminarXY</li><li>Gruppe47undeinlangerText</li></ul>", ContentMode.HTML);
-		groupLayout.addComponent(groups);
+		addComponent(previewLayout);
 
 		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
 		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");
@@ -211,7 +199,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
 						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
-								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // the owner is the only one with 'delete' permission and the owner should cannot leave his project
+								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // TODO: why do we care about the delete permission here?
 						() -> {
 							btnLeave.setVisible(false);
 							btnLeave.setEnabled(false);

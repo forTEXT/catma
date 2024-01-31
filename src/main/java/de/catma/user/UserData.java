@@ -1,4 +1,4 @@
-package de.catma.ui.module.main.auth;
+package de.catma.user;
 
 public class UserData {
 

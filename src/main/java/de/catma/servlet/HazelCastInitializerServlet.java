@@ -11,7 +11,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
 /**
- * Initializes a Hazelcast node and caches to store signup and project invitation tokens.
+ * Initializes a Hazelcast node and caches to store account/group/project-signup and project invitation tokens.
  */
 @WebServlet(name = "HazelCast", urlPatterns = "/hazelcast", loadOnStartup = 2)
 public class HazelCastInitializerServlet extends HttpServlet{
@@ -33,9 +33,14 @@ public class HazelCastInitializerServlet extends HttpServlet{
 
 		CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
 		cacheManager.createCache(
-				HazelcastConfiguration.CacheKeyName.SIGNUP_TOKEN.name(),
-				HazelcastConfiguration.SIGNUP_TOKEN_CONFIG
+				HazelcastConfiguration.CacheKeyName.ACCOUNT_SIGNUP_TOKEN.name(),
+				HazelcastConfiguration.ACCOUNT_SIGNUP_TOKEN_CONFIG
 		);
+		cacheManager.createCache(
+				HazelcastConfiguration.CacheKeyName.GROUP_SIGNUP_TOKEN.name(),
+				HazelcastConfiguration.GROUP_SIGNUP_TOKEN_CONFIG
+		);		
+		
 		cacheManager.createCache(
 				HazelcastConfiguration.CacheKeyName.PROJECT_INVITATION.name(),
 				HazelcastConfiguration.PROJECT_INVITATION_CONFIG

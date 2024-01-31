@@ -1,19 +1,30 @@
 package de.catma.project;
 
+import java.util.Collections;
+import java.util.List;
+
+import de.catma.user.Group;
+
 public class ProjectReference {
 	
 	private final String projectId;
 	private final String namespace;
 	private String name;
 	private String description;
+	private final List<Group> shareGroups;
 	
 	public ProjectReference(
 			String projectId, String namespace, String name, String description) {
+		this(projectId, namespace, name, description, Collections.emptyList());
+	}
+	public ProjectReference(
+			String projectId, String namespace, String name, String description, List<Group> sharedGroups) {
 		super();
 		this.projectId = projectId;
 		this.namespace = namespace;
 		this.name = name;
 		this.description = description;
+		this.shareGroups = sharedGroups;
 	}
 
 	public String getProjectId() {
@@ -80,5 +91,8 @@ public class ProjectReference {
 		return true;
 	}
 	
+	public List<Group> getShareGroups() {
+		return shareGroups;
+	}
 	
 }

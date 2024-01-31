@@ -79,4 +79,14 @@ public interface IRBACManager {
 	RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException;
 
 	
+	/**
+	 * Assign assistant role to the given subject in the context of the given group.
+	 * @param subject 
+	 * @param groupId
+	 * @return
+	 * @throws IOException
+	 */
+	RBACSubject assignOnGroup(RBACSubject subject, Long groupId) throws IOException;
+
+	
 }

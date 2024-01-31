@@ -8,6 +8,7 @@ import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
@@ -139,6 +140,11 @@ public class ProjectListView extends VerticalLayout {
 		if (projectsChangedEvent.getDeletedProjectId() != null) {
 			deletedProjectIds.add(projectsChangedEvent.getDeletedProjectId());
 		}
+		initData();
+	}
+	
+	@Subscribe
+	public void handleGroupsChanged(GroupsChangedEvent groupsChangedEvent) {
 		initData();
 	}
 }

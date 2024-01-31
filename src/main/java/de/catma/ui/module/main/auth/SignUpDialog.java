@@ -1,5 +1,10 @@
 package de.catma.ui.module.main.auth;
 
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import org.apache.commons.mail.EmailException;
+
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.base.Joiner;
 import com.vaadin.data.Binder;
@@ -11,21 +16,23 @@ import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Link;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.module.main.ErrorHandler;
-import io.netty.handler.codec.http.QueryStringEncoder;
-import org.apache.commons.codec.digest.HmacUtils;
-import org.apache.commons.mail.DefaultAuthenticator;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
-
-import java.time.LocalTime;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import de.catma.user.UserData;
+import de.catma.user.signup.SignupTokenManager;
 
 /**
  * SignUpDialog allows users to sign up either by entering an email address (the password is set later), or via Google (OpenID Connect).
@@ -65,40 +72,9 @@ public class SignUpDialog extends AuthenticationDialog {
 		return recaptchaResult.isSuccess() && recaptchaResult.getScore() >= 0.5f && recaptchaResult.getAction().equals(recaptchaVerificationAction);
 	}
 
-	// TODO: this shouldn't be in the UI code
-	// TODO: document how this interacts with handleRequestToken in CatmaApplication
 	private void generateSignupTokenAndSendVerificationEmail() throws EmailException {
-		String token = HmacUtils.hmacSha256Hex(CATMAPropertyKey.SIGNUP_TOKEN_KEY.getValue(), userData.getEmail());
-
-		SignupTokenManager tokenManager = new SignupTokenManager();
-		tokenManager.put(new SignupToken(LocalTime.now().toString(), userData.getEmail(), token));
-
-		QueryStringEncoder qs = new QueryStringEncoder(CATMAPropertyKey.BASE_URL.getValue().trim() + "verify");
-		qs.addParam("token", token);
-
-		Email email = new SimpleEmail();
-		email.setHostName(CATMAPropertyKey.MAIL_SMTP_HOST.getValue());
-		email.setSmtpPort(CATMAPropertyKey.MAIL_SMTP_PORT.getIntValue());
-
-		if (CATMAPropertyKey.MAIL_SMTP_AUTHENTICATION_REQUIRED.getBooleanValue()) {
-			email.setAuthenticator(
-					new DefaultAuthenticator(
-							CATMAPropertyKey.MAIL_SMTP_USER.getValue(),
-							CATMAPropertyKey.MAIL_SMTP_PASS.getValue()
-					)
-			);
-			email.setStartTLSEnabled(true);
-		}
-
-		email.setFrom(CATMAPropertyKey.MAIL_FROM.getValue());
-		email.setSubject("CATMA Email Verification");
-		email.setMsg("Please visit the following link in order to verify your email address and complete your sign up:\n" + qs);
-		email.addTo(userData.getEmail());
-		email.send();
-
-		logger.info(
-				String.format("Generated a new signup token for %s, the full verification URL is: %s", userData.getEmail(), qs)
-		);
+		SignupTokenManager signupTokenManager = new SignupTokenManager();
+		signupTokenManager.sendAccountSignupVerificationEmail(userData);
 	}
 
 	private void initActions() {

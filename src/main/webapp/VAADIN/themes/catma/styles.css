@@ -18341,14 +18341,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	overflow: auto;
 }
 
-.catma .projectlist__card__groups_ul {
-	padding-inline-start: 20px;
-}
-
-.catma .projectlist__card_groups__title {
-	font-size: xx-small;
-}
-
 .catma .projectlist__card__title-and-actions {
 	padding: 10px;
 }

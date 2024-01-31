@@ -13,8 +13,8 @@ import de.catma.ui.events.ChangeUserAttributesEvent;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.auth.ChangePasswordValidator;
-import de.catma.ui.module.main.auth.UserData;
 import de.catma.user.User;
+import de.catma.user.UserData;
 
 import java.io.IOException;
 import java.util.stream.Collectors;

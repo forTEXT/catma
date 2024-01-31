@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 public class GitProjectsManager implements ProjectsManager {
 	private final String gitBasedRepositoryBasePath;
@@ -78,7 +80,23 @@ public class GitProjectsManager implements ProjectsManager {
 	
 	@Override
 	public Group createGroup(String name) throws IOException {
-		return remoteGitServerManager.createGroup(name);
+		String path = generateCleanNameWithIdPrefix(name, () -> idGenerator.generateGroupId());
+		return remoteGitServerManager.createGroup(name, path);
+	}
+
+	@Override
+	public void deleteGroup(Group group) throws IOException {
+		remoteGitServerManager.deleteGroup(group);
+	}
+
+	@Override
+	public Group updateGroup(String name, Group group) throws IOException {
+		return remoteGitServerManager.updateGroup(name, group);
+	}
+
+	@Override
+	public void leaveGroup(Group group) throws IOException {
+		remoteGitServerManager.leaveGroup(group);
 	}
 
 	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws IOException {
@@ -144,17 +162,22 @@ public class GitProjectsManager implements ProjectsManager {
 		return obj.toString();
 	}
 
-	@Override
-	public ProjectReference createProject(String name, String description) throws IOException {
-		String serializedProjectMetadata = serializeProjectMetadata(name, description);
-
-		// note restrictions on project path: https://docs.gitlab.com/ee/api/projects.html#create-project
+	
+	private String generateCleanNameWithIdPrefix(String name, Supplier<String> prefixGenerator) {
+		// note restrictions on project/group path: https://docs.gitlab.com/ee/api/projects.html#create-project
 		String cleanedName = name.trim()
 				.replaceAll("[\\p{Punct}\\p{Space}]", "_") // replace punctuation and whitespace characters with underscore ( _ )
 				.replaceAll("_+", "_") // collapse multiple consecutive underscores into one
 				.replaceAll("[^\\p{Alnum}_]", "x") // replace any remaining non-alphanumeric characters with x (excluding underscore)
 				.replaceAll("^_|_$", ""); // strip any leading or trailing underscore
-		String projectId = String.format("%s_%s", idGenerator.generate(), cleanedName);
+		return String.format("%s_%s", prefixGenerator.get(), cleanedName);
+	}
+	
+	@Override
+	public ProjectReference createProject(String name, String description) throws IOException {
+		String serializedProjectMetadata = serializeProjectMetadata(name, description);
+
+		String projectId = generateCleanNameWithIdPrefix(name, () -> idGenerator.generate());
 
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// create the remote repository

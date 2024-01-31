@@ -54,16 +54,12 @@ public class CreateGroupCard extends VerticalFlexLayout {
 								Notification.show("Info", e.getMessage(), Type.HUMANIZED_MESSAGE);
 							
 							} catch (Exception e) {
-								((ErrorHandler)UI.getCurrent()).showAndLogError("Error creating the group", e);
+								((ErrorHandler)UI.getCurrent()).showAndLogError(String.format("Failed to create group \"%s\"", result), e);
 							}
 						},
 						new StringLengthValidator(
 						        "Name must be between 2 and 50 characters long, please change the name accordingly!",
-						        2, 50),
-						new RegexpValidator(
-								"Name can contain only letters 'a-z/A-Z', digits '0-9', '_', '-' and ' ' "
-								+ "and it cannot start with '-' nor ' ', please change the name accordingly!", "\\w(\\w|-| )+", 
-								true)
+						        2, 50)
 				).show()
 		);
 

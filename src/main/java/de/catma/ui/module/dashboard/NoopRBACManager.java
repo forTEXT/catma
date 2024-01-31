@@ -7,6 +7,7 @@ import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
+import de.catma.user.Group;
 
 public class NoopRBACManager implements IRBACManager {
 
@@ -29,5 +30,17 @@ public class NoopRBACManager implements IRBACManager {
 	public RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
 		return RBACRole.NONE;
 	}
+
+	@Override
+	public RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException {
+		return RBACRole.NONE;
+	}
+
+	@Override
+	public RBACSubject assignOnGroup(RBACSubject subject, Long groupId) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+	
+	
 
 }

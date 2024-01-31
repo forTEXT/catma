@@ -38,6 +38,12 @@ public interface ProjectsManager {
 	 */
 	List<ProjectReference> getProjectReferences() throws IOException;
 
+	/**
+	 * Get all the groups the current user has access to.
+	 * 
+	 * @return a {@link List} of {@link Group}s
+	 * @throws IOException if an error occurs when getting the groups
+	 */
 	List<Group> getGroups() throws  IOException;
 
 	/**
@@ -95,4 +101,27 @@ public interface ProjectsManager {
 	 * @throws IOException if an error occurs when creating the group.
 	 */
 	Group createGroup(String name) throws IOException;
+
+	/**
+	 * Deletes the given group.
+	 * @param group the group to delete
+	 * @throws IOException if an error occurs when deleting the group.
+	 */
+	void deleteGroup(Group group) throws IOException;
+
+	/**
+	 * Updates the given group with the new name.
+	 * @param name the new name
+	 * @param group the group to update
+	 * @return the updated group
+	 * @throws IOException if an error occurs when updating the group
+	 */
+	Group updateGroup(String name, Group group) throws IOException;
+
+	/**
+	 * Leave the given group.
+	 * @param group the group to leave
+	 * @throws IOException if an error occurs when leaving the group
+	 */
+	void leaveGroup(Group group) throws IOException;
 }

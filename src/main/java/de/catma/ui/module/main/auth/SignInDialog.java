@@ -18,6 +18,7 @@ import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.user.UserData;
 import de.catma.util.ExceptionUtil;
 
 import java.io.IOException;

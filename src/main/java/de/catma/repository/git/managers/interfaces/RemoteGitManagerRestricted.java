@@ -53,12 +53,35 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	/**
 	 * Creates a new group.
 	 * @param name the name of the group
+	 * @param path the path of the group
 	 * @return the group
 	 * @throws IOException if an error occurs when creating the group
 	 */
-	Group createGroup(String name) throws IOException;
+	Group createGroup(String name, String path) throws IOException;
 
+	/**
+	 * Deletes a group
+	 * @param group the group to delete
+	 * @throws IOException if an error occurs when deleting the group
+	 */
+	void deleteGroup(Group group) throws IOException;	
 
+	/**
+	 * Updates the given group with the given new name.
+	 * @param name the new name
+	 * @param group the group to update
+	 * @return the updated group
+	 * @throws IOException if an error occurs when updating the group
+	 */
+	Group updateGroup(String name, Group group) throws IOException;
+
+	/**
+	 * Leave the given group.
+	 * @param group the group to leave
+	 * @throws IOException if an error occurs when leaving the group
+	 */
+	void leaveGroup(Group group) throws IOException;
+	
 	/**
 	 * Gets a project's repository URL.
 	 *
@@ -229,5 +252,5 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @return a new {@link MergeRequestInfo} containing the result
 	 * @throws IOException if an error occurs when merging the merge request
 	 */
-	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;	
+	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
 }

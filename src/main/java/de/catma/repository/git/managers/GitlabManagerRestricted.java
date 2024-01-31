@@ -23,6 +23,8 @@ import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.ui.events.ChangeUserAttributesEvent;
 import de.catma.user.Member;
 import de.catma.user.User;
+import de.catma.util.IDGenerator;
+
 import org.eclipse.jgit.lib.Constants;
 import org.gitlab4j.api.Constants.IssueState;
 import org.gitlab4j.api.Constants.MergeRequestState;
@@ -214,9 +216,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					List<Group> groupPage = groupPager.next();
 
 					for (Group group : groupPage) {
-						if (group.getName().startsWith("CATMA_")) { // we reached legacy CATMA 6 groups and exit early with what we got so far
+						if (group.getName().startsWith("CATMA_")) { // we reached legacy CATMA 6 project-groups and exit early with what we got so far
 							return result;
-						} else {
+						} else if (group.getPath().startsWith(IDGenerator.GROUP_ID_PREFIX)) { // valid user groups' paths start with G_
 							Set<Member> members =
 									groupApi.getMembers(group.getId())
 											.stream()
@@ -261,15 +263,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 	
 	@Override
-	public  de.catma.user.Group createGroup(String name) throws IOException {
+	public  de.catma.user.Group createGroup(String name, String path) throws IOException {
 		try {
-			
-			name = name.trim();
-			String pathName = name.replaceAll("\s", "-").toLowerCase();
-			
 			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 
-			GroupParams groupParams = new GroupParams().withName(name).withPath(pathName).withVisibility(Visibility.PRIVATE.name().toLowerCase());
+			GroupParams groupParams = new GroupParams().withName(name).withPath(path).withVisibility(Visibility.PRIVATE.name().toLowerCase());
 
 			Group group = groupApi.createGroup(groupParams);
 
@@ -279,10 +277,59 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			if (e.getMessage().contains("has already been taken")) {
 				throw new IllegalArgumentException(String.format("The name '%1$s' has already been taken, please choose a different name!", name), e);
 			}
-			throw new IOException("Failed to create remote Git repository", e);
+			throw new IOException(String.format("Failed to create group %s", name), e);
+		}
+	}
+	
+	@Override
+	public void deleteGroup(de.catma.user.Group group) throws IOException {
+		try {
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			groupApi.deleteGroup(group.getId());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to delete group %s", group.getName()), e);
 		}
 	}
 
+
+	@Override
+	public de.catma.user.Group updateGroup(String name, de.catma.user.Group group) throws IOException {
+		try {
+			name = name.trim();
+			String pathName = name.replaceAll("\s", "-").toLowerCase();
+			
+
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			GroupParams groupParams = new GroupParams().withName(name).withPath(pathName);
+			Group updatedGroup = groupApi.updateGroup(group.getId(), groupParams);
+			return new GitGroup(
+					updatedGroup, 
+					group.getMembers().stream().collect(Collectors.toUnmodifiableSet()), 
+					group.getSharedProjects().stream().collect(Collectors.toUnmodifiableList()));
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to delete group %s", group.getName()), e);
+		}
+	}
+	
+	@Override
+	public void leaveGroup(de.catma.user.Group group) throws IOException {
+		try {
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			org.gitlab4j.api.models.Member member = groupApi.getMember(group.getId(), user.getUserId());
+
+			if (member != null
+					&& member.getAccessLevel().value >= AccessLevel.GUEST.value
+					&& member.getAccessLevel().value < AccessLevel.OWNER.value
+			) {
+				groupApi.removeMember(group.getId(), user.getUserId());
+			}
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to leave project", e);
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
@@ -291,7 +338,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 			return (List<ProjectReference>) gitlabModelsCache.get(
 					"projects",
-					() -> projectApi.getProjects(new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true).withSimple(true))
+					() -> projectApi.getProjects(
+								new ProjectFilter()
+								.withMinAccessLevel(minAccessLevel)
+								.withMembership(true)
+								.withSimple(true))
 							.stream()
 							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
 							.map(project -> {

@@ -1,16 +1,25 @@
 package de.catma.ui.module.main.auth;
 
 import com.google.common.base.Joiner;
+import com.google.common.eventbus.EventBus;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.server.Page;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
+
+import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
+import de.catma.sqlite.SqliteService;
+import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.login.InitializationService;
+import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.user.UserData;
+import de.catma.user.signup.AccountSignupToken;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -19,17 +28,31 @@ import java.util.stream.Collectors;
  * Dialog for user creation. The email address has already been verified and must not be changed.
  */
 public class CreateUserDialog extends Window {
-	private final SignupToken signupToken;
+	private final AccountSignupToken signupToken;
 	private final RemoteGitManagerPrivileged gitlabManagerPrivileged;
 
 	private final Binder<UserData> userBinder = new Binder<>();
 	private final UserData userData = new UserData();
+	
+	private final EventBus eventBus;
+	private final InitializationService initService;
+	private final LoginService loginservice;
+	private final HazelCastService hazelCastService;
+	private final SqliteService sqliteService;
 
-	public CreateUserDialog(String caption, SignupToken signupToken) {
+
+	public CreateUserDialog(
+			String caption, AccountSignupToken signupToken, EventBus eventBus, 
+			LoginService loginservice, InitializationService initService, HazelCastService hazelCastService, SqliteService sqliteService) {
 		super(caption);
 
 		this.signupToken = signupToken;
 		this.gitlabManagerPrivileged = new GitlabManagerPrivileged();
+		this.eventBus = eventBus;
+		this.loginservice = loginservice;
+		this.initService = initService;
+		this.hazelCastService = hazelCastService;
+		this.sqliteService = sqliteService;
 
 		setWidth("50%");
 		setHeight("80%");
@@ -49,7 +72,7 @@ public class CreateUserDialog extends Window {
 		
 		TextField tfEmail = new TextField("Email");
 		tfEmail.setWidth("100%");
-		tfEmail.setValue(signupToken.getEmail());
+		tfEmail.setValue(signupToken.email());
 		tfEmail.setEnabled(false);
 		tfEmail.setDescription("Email is already been verified");
 		
@@ -123,9 +146,9 @@ public class CreateUserDialog extends Window {
 						userData.getUsername(), userData.getPassword(),
 						userData.getUsername());
 				
-				Notification.show(
-						"Your user account has been created - please sign in.",
-						Type.HUMANIZED_MESSAGE);
+				loginservice.login(userData.getUsername(), userData.getPassword());
+				
+				initMainView();
 				
 			} catch (IOException e) {
 				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't create token in backend", e);
@@ -144,4 +167,12 @@ public class CreateUserDialog extends Window {
 		super.close();
 		Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
 	}
+	
+	private void initMainView() {
+		Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
+		UI.getCurrent().setContent(mainView);
+		eventBus.post(new RouteToDashboardEvent());
+		close();
+	}
+	
 }

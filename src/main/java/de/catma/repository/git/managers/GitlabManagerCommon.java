@@ -53,6 +53,18 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	}
 
 	@Override
+	public final RBACSubject assignOnGroup(RBACSubject subject, Long groupId) throws IOException {
+		try {
+			// we use ASSISTANT/developer as the default role because as far as CATMA is concerned there is not much difference between 
+			// the developer and maintainer roles in groups
+			Member member = getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), RBACRole.ASSISTANT.getAccessLevel()); 
+			return new GitMember(member);
+		} catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to add member %s to group with the ID %d with the ASSISTANT role", subject, groupId), e);
+		}
+	}
+	
+	@Override
 	public final RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference) throws IOException {
 		try {
 			Project project = getGitLabApi().getProjectApi().getProject(

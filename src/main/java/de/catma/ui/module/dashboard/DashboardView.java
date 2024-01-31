@@ -1,9 +1,9 @@
 package de.catma.ui.module.dashboard;
 
 import com.google.common.eventbus.EventBus;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
+
 import de.catma.project.ProjectsManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 
