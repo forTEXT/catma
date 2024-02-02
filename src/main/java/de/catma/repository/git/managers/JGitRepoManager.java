@@ -126,6 +126,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
 				// it's likely that the user is logged in using the username/password authentication method and that their
 				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+				detach();
 				jGitCredentialsManager.refreshTransientCredentials();
 				return clone(namespace, name, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1, tryCount);
 			}
@@ -133,6 +134,8 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			if (e instanceof TransportException && e.getMessage().contains("authentication not supported") && tryCount < 3) {
 				// sometimes GitLab refuses to accept the clone and returns this error message
 				// subsequent clone attempts succeed however, so we retry the clone up to 3 times before giving up
+				detach();
+
 				try {
 					Thread.sleep(100L * (tryCount + 1));
 				}
@@ -1016,6 +1019,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
 				// it's likely that the user is logged in using the username/password authentication method and that their
 				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+				detach();
 				jGitCredentialsManager.refreshTransientCredentials();
 				return cloneWithSubmodules(group, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1, tryCount);
 			}
@@ -1023,6 +1027,8 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			if (e instanceof TransportException && e.getMessage().contains("authentication not supported") && tryCount < 3) {
 				// sometimes GitLab refuses to accept the clone and returns this error message
 				// subsequent clone attempts succeed however, so we retry the clone up to 3 times before giving up
+				detach();
+
 				try {
 					Thread.sleep(100L * (tryCount + 1));
 				}
