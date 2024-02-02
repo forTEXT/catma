@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class GitGroup implements de.catma.user.Group {
 
-    private final Set<Member> members;
+    private Set<Member> members;
     private final Group delegate;
     private final List<ProjectReference> sharedProjects;
 
@@ -45,6 +45,11 @@ public class GitGroup implements de.catma.user.Group {
         return members;
     }
 
+    @Override
+    public void setMembers(Set<Member> members) {
+    	this.members = members;
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -1,12 +1,14 @@
 package de.catma.ui.module.dashboard;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
@@ -39,7 +41,6 @@ public class GroupListView extends VerticalLayout {
         this.groupsLayout = new HorizontalFlexLayout();
 
         initComponents();
-        initActions();
         eventBus.register(this);
         initData();
     }
@@ -60,8 +61,6 @@ public class GroupListView extends VerticalLayout {
         catch (Exception e) {
             ((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing projects", e);
         }
-    }
-    private void initActions() {
     }
 
     private void initComponents() {
@@ -102,4 +101,8 @@ public class GroupListView extends VerticalLayout {
 		}
 		initData();
 	}
-}
+	
+	
+	public void close() {
+		eventBus.unregister(this);
+	}}

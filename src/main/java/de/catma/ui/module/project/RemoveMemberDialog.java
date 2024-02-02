@@ -1,23 +1,21 @@
 package de.catma.ui.module.project;
 
+import java.util.Set;
+
 import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.ListSelect;
+
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.rbac.RBACUnAssignmentFunction;
 import de.catma.user.Member;
 import de.catma.user.User;
 
-import java.util.Set;
-
-public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
+public class RemoveMemberDialog extends AbstractMemberDialog<Set<Member>> {
 	private final Set<Member> members;
-	private final RBACUnAssignmentFunction rbacUnAssignmentFunction;
 
 	public RemoveMemberDialog(
-			RBACUnAssignmentFunction rbacUnAssignmentFunction,
 			Set<Member> members,
-			SaveCancelListener<Void> saveCancelListener
+			SaveCancelListener<Set<Member>> saveCancelListener
 	) {
 		super(
 				"Remove Members",
@@ -26,7 +24,6 @@ public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
 		);
 
 		this.members = members;
-		this.rbacUnAssignmentFunction = rbacUnAssignmentFunction;
 	}
 
 	@Override
@@ -42,16 +39,8 @@ public class RemoveMemberDialog extends AbstractMemberDialog<Void> {
 	}
 
 	@Override
-	protected Void getResult() {
-		try {
-			for (Member member : members) {
-				rbacUnAssignmentFunction.unassign(member);
-			}
-		}
-		catch (Exception e) {
-			errorLogger.showAndLogError(null, e);
-		}
-		return null;
+	protected Set<Member> getResult() {
+		return members;
 	}
 
 	@Override

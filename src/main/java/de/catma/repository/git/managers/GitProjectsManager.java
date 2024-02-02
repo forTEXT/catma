@@ -8,6 +8,7 @@ import de.catma.project.Project;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
 import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GraphWorktreeProject;
 import de.catma.repository.git.graph.interfaces.GraphProjectDeletionHandler;
@@ -15,6 +16,7 @@ import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.tag.TagManager;
 import de.catma.user.Group;
+import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
@@ -24,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
@@ -97,6 +100,16 @@ public class GitProjectsManager implements ProjectsManager {
 	@Override
 	public void leaveGroup(Group group) throws IOException {
 		remoteGitServerManager.leaveGroup(group);
+	}
+	
+	@Override
+	public Set<Member> getMembers(Group group) throws IOException {
+		return remoteGitServerManager.getGroupMembers(group);
+	}
+	
+	@Override
+	public void unassignFromGroup(RBACSubject subject, Group group) throws IOException {
+		remoteGitServerManager.unassignFromGroup(subject, group);
 	}
 
 	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws IOException {

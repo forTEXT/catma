@@ -1,15 +1,19 @@
 package de.catma.ui.module.dashboard;
 
 import java.io.IOException;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.mail.EmailException;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
+import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.Page;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
@@ -37,6 +41,7 @@ import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.project.RemoveMemberDialog;
 import de.catma.user.Group;
 import de.catma.user.Member;
 import de.catma.user.User;
@@ -142,9 +147,75 @@ public class GroupCard extends VerticalFlexLayout {
         memberGridComponent.getActionGridBar().addBtnAddClickListener(clickEvent -> {
         	handleAddClickEvent();
         });
+        
+        ContextMenu memberGridComponentMoreOptionsContextMenu = memberGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+		memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
 
 	}
     
+	private void handleRemoveMembers() {
+		Set<Member> membersToRemove = memberGrid.getSelectedItems();
+
+		if (membersToRemove.isEmpty()) {
+			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
+		// remove any owner members from the selection and display an informational message
+		// TODO: allow the original owner (whose namespace the project is in) to remove any other owner
+		if (membersToRemove.stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
+			membersToRemove = membersToRemove.stream().filter(
+					member -> member.getRole() != RBACRole.OWNER
+			).collect(Collectors.toSet());
+
+			Notification ownerMembersSelectedNotification = new Notification(
+					"Your selection includes members with the 'Owner' role, who you cannot remove.\n"
+							+ "Those members have been ignored. (click to dismiss)",
+					Notification.Type.WARNING_MESSAGE
+			);
+			ownerMembersSelectedNotification.setDelayMsec(-1);
+			ownerMembersSelectedNotification.show(Page.getCurrent());
+		}
+
+		// remove the current user from the selection and display an informational message
+		Optional<Member> selectedMemberCurrentUser = membersToRemove.stream().filter(
+				member -> member.getUserId().equals(projectsManager.getUser().getUserId())
+		).findAny();
+
+		if (selectedMemberCurrentUser.isPresent()) {
+			membersToRemove = membersToRemove.stream().filter(
+					member -> member != selectedMemberCurrentUser.get()
+			).collect(Collectors.toSet());
+
+			Notification selfSelectedNotification = new Notification(
+					"You cannot remove yourself from the project.\n"
+							+ "Please use the 'Leave Group' button on the group card on the dashboard instead.\n"
+							+ "\n"
+							+ "If you are the owner of the group, please contact support to request a transfer\n"
+							+ "of ownership. (click to dismiss)",
+					Notification.Type.WARNING_MESSAGE
+			);
+			selfSelectedNotification.setDelayMsec(-1);
+			selfSelectedNotification.show(Page.getCurrent());
+		}
+
+		if (!membersToRemove.isEmpty()) {
+			new RemoveMemberDialog(
+					membersToRemove,
+					members -> {
+						for (Member member : members) {
+							try {
+									projectsManager.unassignFromGroup(member, group);
+							}
+							catch (Exception e) {
+								errorHandler.showAndLogError(String.format("Failed to remove %s from %s", member, group), e);
+							}
+							group.getMembers().remove(member);
+						}
+						memberGrid.getDataProvider().refreshAll();
+					}).show();
+		}
+	}
 	private void handleAddClickEvent() {
 
 		TextAreaInputDialog dialog = new TextAreaInputDialog("Add members by email", "Comma- or newline-separated list of email addresses", new SaveCancelListener<String>() {
@@ -174,8 +245,6 @@ public class GroupCard extends VerticalFlexLayout {
 		
 		
 	}
-
-	
 	
 	private void initData() {
 		try {

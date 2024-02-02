@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * Dialog for user creation. The email address has already been verified and must not be changed.
  */
 public class CreateUserDialog extends Window {
-	private final AccountSignupToken signupToken;
+	private final String emailAddress;
 	private final RemoteGitManagerPrivileged gitlabManagerPrivileged;
 
 	private final Binder<UserData> userBinder = new Binder<>();
@@ -42,11 +42,11 @@ public class CreateUserDialog extends Window {
 
 
 	public CreateUserDialog(
-			String caption, AccountSignupToken signupToken, EventBus eventBus, 
+			String caption, final String emailAddress, EventBus eventBus, 
 			LoginService loginservice, InitializationService initService, HazelCastService hazelCastService, SqliteService sqliteService) {
 		super(caption);
 
-		this.signupToken = signupToken;
+		this.emailAddress = emailAddress;
 		this.gitlabManagerPrivileged = new GitlabManagerPrivileged();
 		this.eventBus = eventBus;
 		this.loginservice = loginservice;
@@ -72,7 +72,7 @@ public class CreateUserDialog extends Window {
 		
 		TextField tfEmail = new TextField("Email");
 		tfEmail.setWidth("100%");
-		tfEmail.setValue(signupToken.email());
+		tfEmail.setValue(emailAddress);
 		tfEmail.setEnabled(false);
 		tfEmail.setDescription("Email is already been verified");
 		

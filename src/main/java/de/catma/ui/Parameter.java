@@ -11,6 +11,7 @@ public enum Parameter {
 	TAGGER_TAGSETDEF("catma.tagger.tsduuid"), //$NON-NLS-1$
 	AUTOLOGIN("catma.autologin"),  //$NON-NLS-1$
 	EXPERT("catma.expert"),
+	TOKEN("token"),
 	;
 	
 	private String key;

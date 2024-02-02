@@ -147,4 +147,8 @@ public class ProjectListView extends VerticalLayout {
 	public void handleGroupsChanged(GroupsChangedEvent groupsChangedEvent) {
 		initData();
 	}
+	
+	public void close() {
+		eventBus.unregister(this);
+	}
 }

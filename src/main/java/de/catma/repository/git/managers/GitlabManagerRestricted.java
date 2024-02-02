@@ -14,6 +14,7 @@ import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager.ProjectMetadataSerializationField;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitGroup;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitMember;
@@ -315,20 +316,40 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	
 	@Override
 	public void leaveGroup(de.catma.user.Group group) throws IOException {
+		unassignFromGroup(user, group);
+	}
+	
+	@Override
+	public void unassignFromGroup(RBACSubject subject, de.catma.user.Group group) throws IOException {
 		try {
 			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-			org.gitlab4j.api.models.Member member = groupApi.getMember(group.getId(), user.getUserId());
-
+			org.gitlab4j.api.models.Member member = groupApi.getMember(group.getId(), subject.getUserId());
+	
 			if (member != null
 					&& member.getAccessLevel().value >= AccessLevel.GUEST.value
 					&& member.getAccessLevel().value < AccessLevel.OWNER.value
 			) {
-				groupApi.removeMember(group.getId(), user.getUserId());
+				groupApi.removeMember(group.getId(), member.getId());
 			}
 		}
 		catch (GitLabApiException e) {
-			throw new IOException("Failed to leave project", e);
+			throw new IOException("Failed to remove subject from group", e);
+		}		
+	}
+	
+	@Override
+	public Set<Member> getGroupMembers(de.catma.user.Group group) throws IOException {
+		try {
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			return groupApi.getMembers(group.getId())
+				.stream()											
+				.map(GitMember::new)
+				.collect(Collectors.toSet());
 		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to load members for group %s", group.getName()), e);
+		}
+
 	}
 
 	@SuppressWarnings("unchecked")

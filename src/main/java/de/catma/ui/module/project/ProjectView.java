@@ -1822,9 +1822,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		if (!membersToRemove.isEmpty()) {
 			new RemoveMemberDialog(
-					project::removeSubject,
 					membersToRemove,
-					evt -> eventBus.post(new MembersChangedEvent())
+					members -> {
+						for (Member member : members) {
+							try {
+									project.removeSubject(member);
+							}
+							catch (Exception e) {
+								errorHandler.showAndLogError(String.format("Failed to remove member %s from project %s", member, project.getName()), e);
+							}
+						}
+
+						eventBus.post(new MembersChangedEvent());						
+					}
 			).show();
 		}
 	}

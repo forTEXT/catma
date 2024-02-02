@@ -18,6 +18,7 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
+import de.catma.ui.module.main.auth.CreateUserDialog;
 import de.catma.ui.module.main.auth.SignInDialog;
 import de.catma.ui.module.main.auth.SignUpDialog;
 
@@ -34,6 +35,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 
 	private Link statusLink;
 	private VerticalLayout noticeLayoutInnerLayout;
+	private String signupEmail;
 
 	public NotLoggedInMainView(
 			InitializationService initService,
@@ -117,7 +119,18 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 
 		renderNotices();
 
-		LabelButton btnSignUp = new LabelButton("Sign Up", event -> new SignUpDialog("Sign Up").show());
+		LabelButton btnSignUp = new LabelButton("Sign Up", event -> {
+			if (signupEmail != null) {				
+				CreateUserDialog createUserDialog = new CreateUserDialog(
+						"Create User", signupEmail, 
+						eventBus, loginService, initService, hazelCastService, sqliteService);
+				createUserDialog.show();
+				signupEmail = null;
+			}
+			else {
+				new SignUpDialog("Sign Up").show();
+			}
+		});
 
 		LabelButton btnSignIn = new LabelButton(
 				"Sign In",
@@ -196,5 +209,10 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 	@Subscribe
 	public void handleRefresh(RefreshEvent refreshEvent) {
 		renderNotices();
+	}
+
+	public void setSignupEmail(String email) {
+		this.signupEmail = email;
+		
 	}
 }

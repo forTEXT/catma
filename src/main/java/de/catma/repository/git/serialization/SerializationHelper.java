@@ -11,6 +11,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.ConstructorConstructor;
 import com.google.gson.internal.Excluder;
+import com.google.gson.internal.bind.JsonAdapterAnnotationTypeAdapterFactory;
+import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
 
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
@@ -39,11 +41,16 @@ public class SerializationHelper<T> {
 		gson.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gson.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gson.registerTypeAdapterFactory(new CharsetAdapterFactory());
+		ConstructorConstructor constructorConstructor = new ConstructorConstructor(Collections.emptyMap(), false, Collections.emptyList());
 		gson.registerTypeAdapterFactory(
 			new SortedReflectiveTypeAdapterFactory(
-					new ConstructorConstructor(Collections.emptyMap()), 
-					FieldNamingPolicy.IDENTITY, 
-					Excluder.DEFAULT)); 
+				new ReflectiveTypeAdapterFactory(
+					constructorConstructor, 
+					FieldNamingPolicy.IDENTITY, Excluder.DEFAULT,
+					new JsonAdapterAnnotationTypeAdapterFactory(constructorConstructor), Collections.emptyList()
+				)
+			)
+		); 
 		return gson.setPrettyPrinting().serializeNulls().create().toJson(object);
 	}
 	

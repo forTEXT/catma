@@ -13,4 +13,6 @@ public interface Group {
     List<ProjectReference> getSharedProjects();
 
     Set<Member> getMembers();
+    
+    void setMembers(Set<Member> members);
 }

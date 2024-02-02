@@ -1,12 +1,15 @@
 package de.catma.project;
 
-import de.catma.rbac.RBACPermission;
-import de.catma.tag.TagManager;
-import de.catma.user.Group;
-import de.catma.user.User;
-
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+
+import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACSubject;
+import de.catma.tag.TagManager;
+import de.catma.user.Group;
+import de.catma.user.Member;
+import de.catma.user.User;
 
 public interface ProjectsManager {
 	enum ProjectMetadataSerializationField {
@@ -124,4 +127,14 @@ public interface ProjectsManager {
 	 * @throws IOException if an error occurs when leaving the group
 	 */
 	void leaveGroup(Group group) throws IOException;
+	
+	/**
+	 * Unassign the given member subject from the given group.
+	 * @param subject the member
+	 * @param group the group to remove from
+	 * @throws IOException if an error occurs when removing the subject from the group
+	 */
+	void unassignFromGroup(RBACSubject subject, Group group) throws IOException;
+
+	Set<Member> getMembers(Group group) throws IOException;
 }

@@ -47,6 +47,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.jboss.aerogear.security.otp.Totp;
 import org.jboss.aerogear.security.otp.api.Clock;
+import org.vaadin.dialogs.ConfirmDialog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -79,14 +80,18 @@ import de.catma.ui.di.RemoteGitManagerFactory;
 import de.catma.ui.dialog.ErrorDialog;
 import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.RefreshEvent;
+import de.catma.ui.events.ShowGroupsEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.GitlabLoginService;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.login.Vaadin8InitializationService;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.main.NotLoggedInMainView;
 import de.catma.ui.module.main.auth.CreateUserDialog;
+import de.catma.ui.module.main.auth.SignInDialog;
 import de.catma.ui.util.Version;
+import de.catma.user.Group;
 import de.catma.user.User;
 import de.catma.user.signup.AccountSignupToken;
 import de.catma.user.signup.GroupSignupToken;
@@ -96,7 +101,7 @@ import de.catma.user.signup.SignupTokenManager.TokenValidityHandler;
 @Theme("catma")
 @PreserveOnRefresh
 @Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET_XHR )
-public class CatmaApplication extends UI implements KeyValueStorage, BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler {
+public class CatmaApplication extends UI implements KeyValueStorage, BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler, RequestTokenHandlerProvider {
 	private final Logger logger = Logger.getLogger(CatmaApplication.class.getName());
 
 	private final Map<String, String[]> parameters = new HashMap<>();
@@ -110,6 +115,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 	private LoginService loginService;
 	private HazelCastService hazelCastService;
 	private SqliteService sqliteService;
+	private RequestTokenHandler requestTokenHandler;
 
 	@Override
 	protected void init(VaadinRequest request) {
@@ -148,8 +154,13 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		eventBus.register(this);
 		eventBus.post(new RouteToDashboardEvent());
 
+		requestTokenHandler = new RequestTokenHandler(
+				signupTokenManager, eventBus, loginService, initService, 
+				hazelCastService, sqliteService, 
+				this, this, () -> this.getContent(), this);
+		
 		// handle signup token and OAuth requests
-		handleRequestToken(request);
+		requestTokenHandler.handleRequestToken(request.getPathInfo());
 		handleRequestOauth(request);
 	}
 
@@ -162,72 +173,10 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		super.refresh(request);
 
 		// handle signup token and OAuth requests
-		handleRequestToken(request);
+		requestTokenHandler.handleRequestToken(request.getPathInfo());
 		handleRequestOauth(request);
 
 		eventBus.post(new RefreshEvent());
-	}
-
-	private void handleRequestToken(VaadinRequest request) {
-		switch (signupTokenManager.getTokenActionFromPath(request.getPathInfo())) {
-			case verify: {				
-				// validate token to either display the reason for invalidity or show the create account creation dialog
-				signupTokenManager.validateAccountSignupToken(request.getParameter("token"), new TokenValidityHandler<AccountSignupToken>() {
-					
-					@Override
-					public void tokenValid(AccountSignupToken signupToken) {
-						CreateUserDialog createUserDialog = new CreateUserDialog(
-								"Create User", signupToken, 
-								eventBus, loginService, initService, hazelCastService, sqliteService);
-						createUserDialog.show();
-					}
-					
-					@Override
-					public void tokenInvalid(String reason) {
-						// show reason for invalidity
-						Notification.show(reason, Type.WARNING_MESSAGE);
-					}
-				});
-				break;
-			}
-			case joingroup: {
-				// validate token to either display the reason for invalidity or to join the group
-				signupTokenManager.validateGroupSignupToken(request.getParameter("token"), new TokenValidityHandler<GroupSignupToken>() {
-					
-					@Override
-					public void tokenValid(GroupSignupToken groupSignupToken) {
-
-
-						// TODO: handle not logged in case
-						try {
-							User user = loginService.getAPI().getUser();
-							
-							GitlabManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
-							gitlabManagerPrivileged.assignOnGroup(user, groupSignupToken.groupId());
-							eventBus.post(new GroupsChangedEvent());
-
-							
-						} catch (Exception e) {
-							showAndLogError(String.format("Error adding user %s to group with ID %d", groupSignupToken.groupId()), e);
-						}
-						finally {
-							Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
-						}
-						
-					}
-					
-					@Override
-					public void tokenInvalid(String reason) {
-						// show reason for invalidity
-						Notification.show(reason, Type.WARNING_MESSAGE);
-					}
-				});
-				break;
-			}
-			case none: {
-				break;
-			}
-		}
 	}
 
 	private void handleRequestOauth(VaadinRequest request) {
@@ -453,5 +402,10 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 
 	public SqliteService getSqliteService() {
 		return sqliteService;
+	}
+	
+	@Override
+	public RequestTokenHandler getRequestTokenHandler() {
+		return requestTokenHandler;
 	}
 }
