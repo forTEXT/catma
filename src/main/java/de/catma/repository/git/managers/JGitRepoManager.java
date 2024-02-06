@@ -136,6 +136,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				// subsequent clone attempts succeed however, so we retry the clone up to 3 times before giving up
 				detach();
 
+				// delete the repo dir if it already exists, as that will prevent the recursive call from succeeding, throwing
+				// org.eclipse.jgit.api.errors.JGitInternalException: Destination path "<path>" already exists and is not an empty directory
+				if (targetPath.exists()) {
+					FileUtils.deleteDirectory(targetPath);
+				}
+
 				try {
 					Thread.sleep(100L * (tryCount + 1));
 				}
@@ -1028,6 +1034,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				// sometimes GitLab refuses to accept the clone and returns this error message
 				// subsequent clone attempts succeed however, so we retry the clone up to 3 times before giving up
 				detach();
+
+				// delete the repo dir if it already exists, as that will prevent the recursive call from succeeding, throwing
+				// org.eclipse.jgit.api.errors.JGitInternalException: Destination path "<path>" already exists and is not an empty directory
+				if (targetPath.exists()) {
+					FileUtils.deleteDirectory(targetPath);
+				}
 
 				try {
 					Thread.sleep(100L * (tryCount + 1));
