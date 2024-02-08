@@ -37,10 +37,9 @@ public class HazelCastInitializerServlet extends HttpServlet{
 				HazelcastConfiguration.ACCOUNT_SIGNUP_TOKEN_CONFIG
 		);
 		cacheManager.createCache(
-				HazelcastConfiguration.CacheKeyName.GROUP_SIGNUP_TOKEN.name(),
-				HazelcastConfiguration.GROUP_SIGNUP_TOKEN_CONFIG
-		);		
-		
+				HazelcastConfiguration.CacheKeyName.GROUP_PROJECT_SIGNUP_TOKEN.name(),
+				HazelcastConfiguration.GROUP_PROJECT_SIGNUP_TOKEN_CONFIG
+		);			
 		cacheManager.createCache(
 				HazelcastConfiguration.CacheKeyName.PROJECT_INVITATION.name(),
 				HazelcastConfiguration.PROJECT_INVITATION_CONFIG

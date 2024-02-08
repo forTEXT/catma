@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import de.catma.project.ProjectReference;
 import de.catma.user.Group;
+import de.catma.user.SharedGroup;
 
 /**
  * Manages all access controls
@@ -87,6 +88,24 @@ public interface IRBACManager {
 	 * @throws IOException
 	 */
 	RBACSubject assignOnGroup(RBACSubject subject, Long groupId) throws IOException;
+	
+	/**
+	 * Assign the given role to the given group in the context of the given project.
+	 * @param sharedGroup
+	 * @param projectReference
+	 * @return
+	 * @throws IOException
+	 */
+	SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, boolean reassign) throws IOException;
 
+
+	
+	/**
+	 * Unassign the given group from the given project.
+	 * @param sharedGroup
+	 * @param projectReference
+	 * @throws IOException
+	 */
+	public void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException;
 	
 }

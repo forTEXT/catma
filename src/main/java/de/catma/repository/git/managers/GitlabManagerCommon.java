@@ -7,6 +7,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitMember;
 import de.catma.user.Group;
+import de.catma.user.SharedGroup;
 
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -112,6 +113,38 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			);
 		}
 	}
+	
+	@Override
+	public SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, boolean reassign)
+			throws IOException {
+		try {
+			Project project = getGitLabApi().getProjectApi().getProject(
+					projectReference.getNamespace(), projectReference.getProjectId()
+			);
+
+			if (project == null) {
+				throw new IOException(String.format("Unknown project \"%s\"", projectReference.getName()));
+			}
+			
+			if (reassign) {
+				getGitLabApi().getProjectApi().unshareProject(project.getId(), sharedGroup.groupId());
+			}
+
+			getGitLabApi().getProjectApi().shareProject(
+					project.getId(), 
+					sharedGroup.groupId(), 
+					AccessLevel.forValue(role.getAccessLevel()), 
+					null); // does not expire
+			
+		
+			return sharedGroup;
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+				String.format("Failed to assign group '%s' on project '%s'", sharedGroup.name(), projectReference.getName()), e
+			);
+		}
+	}
 
 	@Override
 	public final void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
@@ -137,8 +170,13 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			);
 		}
 	}
+	
+	@Override
+	public void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException {
+		
+	}
 
-	private de.catma.user.Member createProjectMember(RBACSubject subject, RBACRole role, Long projectId) throws IOException {
+	private RBACSubject createProjectMember(RBACSubject subject, RBACRole role, Long projectId) throws IOException {
 		try {
 			return new GitMember(
 					getGitLabApi().getProjectApi().addMember(
@@ -156,7 +194,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		}
 	}
 
-	private de.catma.user.Member updateProjectMember(RBACSubject subject, RBACRole role, long projectId) throws IOException {
+	private RBACSubject updateProjectMember(RBACSubject subject, RBACRole role, long projectId) throws IOException {
 		try {
 			return new GitMember(
 					getGitLabApi().getProjectApi().updateMember(

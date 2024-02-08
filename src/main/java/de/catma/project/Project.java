@@ -18,6 +18,14 @@
  */
 package de.catma.project;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -29,18 +37,15 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.serialization.TagsetDefinitionImportStatus;
-import de.catma.tag.*;
+import de.catma.tag.Property;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
 import de.catma.user.Member;
+import de.catma.user.SharedGroup;
 import de.catma.user.User;
 import de.catma.util.Pair;
-
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Conceptually, and in the persistence layer, a project is a container for {@link SourceDocument}s, {@link AnnotationCollection}s
@@ -415,16 +420,7 @@ public interface Project {
 	void deleteCommentReply(Comment comment, Reply reply) throws IOException;
 
 	// member, role and permissions related things
-	// TODO: strictly speaking findUser & hasPermission don't belong in this interface as they don't relate to a particular project
-	/**
-	 * Searches for users amongst all available users.
-	 *
-	 * @param usernameOrEmail the partial or complete username or email address to search for
-	 * @return a {@link List} of {@link User}s
-	 * @throws IOException if an error occurs when searching
-	 */
-	List<User> findUser(String usernameOrEmail) throws IOException;
-
+	// TODO: strictly speaking 'hasPermission' doesn't belong in this interface as they don't relate to a particular project
 	/**
 	 * Whether the given role has the given permission.
 	 *
@@ -461,12 +457,31 @@ public interface Project {
 	RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role) throws IOException;
 
 	/**
+	 * Shares this project with a user group.
+	 * @param group the group to share with
+	 * @param projectRole the project role for group members
+	 * @param reassign set to true for updates of already existing shares, for shares to be created set to false
+	 * @return the group
+	 * @throws IOException if an error occurs when sharing with the group
+	 */
+	SharedGroup assignRoleToGroup(SharedGroup group, RBACRole projectRole, boolean reassign) throws IOException;
+	
+	/**
 	 * Removes a member from this project.
 	 *
 	 * @param subject the {@link RBACSubject} to remove
 	 * @throws IOException if an error occurs when removing the member
 	 */
 	void removeSubject(RBACSubject subject) throws IOException;
+	
+	/**
+	 * Remove a group from this project.
+	 * 
+	 * @param sharedGroup the group to remove
+	 * @throws IOException if an error occurs when removing the group
+	 */
+	void removeGroup(SharedGroup sharedGroup) throws IOException;
+
 
 	// synchronization related things
 	// TODO: strictly speaking none of these belong in this interface as they are implementation-specific
@@ -510,4 +525,5 @@ public interface Project {
 	 * @throws IOException if an error occurs when adding and committing the collections
 	 */
 	void addAndCommitCollections(Collection<AnnotationCollectionReference> annotationCollectionRefs, String commitMessage) throws IOException;
+
 }

@@ -41,6 +41,7 @@ import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.project.ProjectParticipant;
 import de.catma.ui.module.project.RemoveMemberDialog;
 import de.catma.user.Group;
 import de.catma.user.Member;
@@ -201,16 +202,16 @@ public class GroupCard extends VerticalFlexLayout {
 
 		if (!membersToRemove.isEmpty()) {
 			new RemoveMemberDialog(
-					membersToRemove,
+					membersToRemove.stream().map(m -> new GroupMemberParticipant(m)).collect(Collectors.toSet()),
 					members -> {
-						for (Member member : members) {
+						for (ProjectParticipant member : members) {
 							try {
-									projectsManager.unassignFromGroup(member, group);
+									projectsManager.unassignFromGroup(((GroupMemberParticipant)member).getMember(), group);
 							}
 							catch (Exception e) {
 								errorHandler.showAndLogError(String.format("Failed to remove %s from %s", member, group), e);
 							}
-							group.getMembers().remove(member);
+							group.getMembers().remove(((GroupMemberParticipant)member).getMember());
 						}
 						memberGrid.getDataProvider().refreshAll();
 					}).show();
@@ -218,7 +219,7 @@ public class GroupCard extends VerticalFlexLayout {
 	}
 	private void handleAddClickEvent() {
 
-		TextAreaInputDialog dialog = new TextAreaInputDialog("Add members by email", "Comma- or newline-separated list of email addresses", new SaveCancelListener<String>() {
+		TextAreaInputDialog dialog = new TextAreaInputDialog("Add members by email", "Type in the email addresses of the new members as a comma- or newline separated list:", new SaveCancelListener<String>() {
 			
 			@Override
 			public void savePressed(String result) {

@@ -1,33 +1,34 @@
 package de.catma.repository.git;
 
-import de.catma.project.ProjectReference;
-import de.catma.user.Member;
-import org.gitlab4j.api.models.Group;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import de.catma.project.ProjectReference;
+import de.catma.user.Member;
+
 public class GitGroup implements de.catma.user.Group {
 
     private Set<Member> members;
-    private final Group delegate;
     private final List<ProjectReference> sharedProjects;
+	private Long id;
+	private String name;
 
-    public GitGroup(Group delegate, Set<Member> members, List<ProjectReference> sharedProjects) {
-        this.delegate = delegate;
+    public GitGroup(Long id, String name, Set<Member> members, List<ProjectReference> sharedProjects) {
+        this.id = id;
+        this.name = name;
         this.members = members;
         this.sharedProjects = sharedProjects;
     }
 
     @Override
     public Long getId() {
-        return delegate.getId();
+        return id;
     }
 
     @Override
     public String getName() {
-        return delegate.getName();
+        return name;
     }
 
     @Override

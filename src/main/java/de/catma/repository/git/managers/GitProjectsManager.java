@@ -103,11 +103,6 @@ public class GitProjectsManager implements ProjectsManager {
 	}
 	
 	@Override
-	public Set<Member> getMembers(Group group) throws IOException {
-		return remoteGitServerManager.getGroupMembers(group);
-	}
-	
-	@Override
 	public void unassignFromGroup(RBACSubject subject, Group group) throws IOException {
 		remoteGitServerManager.unassignFromGroup(subject, group);
 	}
@@ -290,5 +285,10 @@ public class GitProjectsManager implements ProjectsManager {
 		catch (Exception e) {
 			throw new IOException(e);
 		}
+	}
+	
+	@Override
+	public List<User> findUser(String usernameOrEmail) throws IOException {
+		return remoteGitServerManager.findUser(usernameOrEmail);
 	}
 }

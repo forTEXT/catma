@@ -47,7 +47,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.jboss.aerogear.security.otp.Totp;
 import org.jboss.aerogear.security.otp.api.Clock;
-import org.vaadin.dialogs.ConfirmDialog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -72,31 +71,20 @@ import de.catma.backgroundservice.LogProgressListener;
 import de.catma.backgroundservice.ProgressCallable;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.sqlite.SqliteService;
 import de.catma.ui.di.RemoteGitManagerFactory;
 import de.catma.ui.dialog.ErrorDialog;
-import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.RefreshEvent;
-import de.catma.ui.events.ShowGroupsEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.GitlabLoginService;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.login.Vaadin8InitializationService;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.module.main.NotLoggedInMainView;
-import de.catma.ui.module.main.auth.CreateUserDialog;
-import de.catma.ui.module.main.auth.SignInDialog;
 import de.catma.ui.util.Version;
-import de.catma.user.Group;
-import de.catma.user.User;
-import de.catma.user.signup.AccountSignupToken;
-import de.catma.user.signup.GroupSignupToken;
 import de.catma.user.signup.SignupTokenManager;
-import de.catma.user.signup.SignupTokenManager.TokenValidityHandler;
 
 @Theme("catma")
 @PreserveOnRefresh
@@ -160,8 +148,9 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 				this, this, () -> this.getContent(), this);
 		
 		// handle signup token and OAuth requests
-		requestTokenHandler.handleRequestToken(request.getPathInfo());
-		handleRequestOauth(request);
+		if (!handleRequestOauth(request)) {
+			requestTokenHandler.handleRequestToken(request.getPathInfo());
+		}
 	}
 
 	private void storeParameters(Map<String, String[]> parameters) {
@@ -171,15 +160,17 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 	@Override
 	protected void refresh(VaadinRequest request) {
 		super.refresh(request);
+		storeParameters(request.getParameterMap());
 
 		// handle signup token and OAuth requests
-		requestTokenHandler.handleRequestToken(request.getPathInfo());
-		handleRequestOauth(request);
+		if (!handleRequestOauth(request)) {
+			requestTokenHandler.handleRequestToken(request.getPathInfo());
+		}
 
 		eventBus.post(new RefreshEvent());
 	}
 
-	private void handleRequestOauth(VaadinRequest request) {
+	private boolean handleRequestOauth(VaadinRequest request) {
 		if (request.getParameter("code") != null && VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
 			handleOauth(request);
 
@@ -187,8 +178,9 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 			setContent(mainView);
 
 			eventBus.post(new RouteToDashboardEvent());
-			getPage().pushState(request.getContextPath() + "/");
+			return true;
 		}
+		return false;
 	}
 
 	public Map<String, String[]> getParameters() {

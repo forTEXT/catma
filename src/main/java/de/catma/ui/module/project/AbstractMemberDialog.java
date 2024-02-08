@@ -2,7 +2,6 @@ package de.catma.ui.module.project;
 
 import com.google.common.collect.Lists;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
@@ -44,14 +43,6 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		cbRole.setWidth("100%");
 		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);
 		cbRole.setEmptySelectionAllowed(false);
-	}
-
-
-	@Override
-	protected void addContent(ComponentContainer content) {
-		content.addComponent(descriptionLabel);
-		content.addComponent(cbUsers);
-		content.addComponent(cbRole);
 	}
 
 }

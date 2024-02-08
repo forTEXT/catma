@@ -136,5 +136,13 @@ public interface ProjectsManager {
 	 */
 	void unassignFromGroup(RBACSubject subject, Group group) throws IOException;
 
-	Set<Member> getMembers(Group group) throws IOException;
+	
+	/**
+	 * Searches for users amongst all available users.
+	 *
+	 * @param usernameOrEmail the partial or complete username or email address to search for
+	 * @return a {@link List} of {@link User}s
+	 * @throws IOException if an error occurs when searching
+	 */
+	List<User> findUser(String usernameOrEmail) throws IOException;
 }

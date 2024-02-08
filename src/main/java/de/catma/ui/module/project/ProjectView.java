@@ -1,5 +1,38 @@
 package de.catma.ui.module.project;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.text.Collator;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.zip.CRC32;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.mail.EmailException;
+import org.vaadin.dialogs.ConfirmDialog;
+
+import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
@@ -14,17 +47,35 @@ import com.vaadin.server.FileDownloader;
 import com.vaadin.server.Page;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.server.StreamResource;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.ProgressBar;
+import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.renderers.HtmlRenderer;
-import de.catma.backgroundservice.*;
+
+import de.catma.backgroundservice.BackgroundService;
+import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.backgroundservice.DefaultProgressCallable;
+import de.catma.backgroundservice.ExecutionListener;
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.corpus.Corpus;
-import de.catma.document.source.*;
+import de.catma.document.source.ContentInfoSet;
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.SourceDocumentReference;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.TikaContentHandler;
@@ -43,8 +94,15 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.serialization.TagsetDefinitionImportStatus;
-import de.catma.tag.*;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
+import de.catma.tag.TagsetDefinition;
+import de.catma.tag.TagsetMetadata;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
 import de.catma.ui.component.IconButton;
@@ -67,6 +125,7 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.CanReloadAll;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.project.InviteMembersWithGroupDialog.MemberData;
 import de.catma.ui.module.project.corpusimport.CorpusImportDialog;
 import de.catma.ui.module.project.corpusimport.CorpusImportDocumentMetadata;
 import de.catma.ui.module.project.corpusimport.CorpusImporter;
@@ -74,32 +133,14 @@ import de.catma.ui.module.project.documentwizard.DocumentWizard;
 import de.catma.ui.module.project.documentwizard.TagsetImport;
 import de.catma.ui.module.project.documentwizard.TagsetImportState;
 import de.catma.ui.module.project.documentwizard.UploadFile;
+import de.catma.user.Group;
 import de.catma.user.Member;
-import de.catma.user.User;
+import de.catma.user.SharedGroup;
+import de.catma.user.SharedGroupMember;
+import de.catma.user.signup.SignupTokenManager;
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
-import org.apache.commons.lang3.StringUtils;
-import org.vaadin.dialogs.ConfirmDialog;
-
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.text.Collator;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.zip.CRC32;
 
 /**
  * Renders a single project with all of its resources and members
@@ -149,8 +190,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	// team components
 	private VerticalFlexLayout teamLayout;
-	private Grid<Member> memberGrid;
-	private ActionGridComponent<Grid<Member>> memberGridComponent;
+	private TreeGrid<ProjectParticipant> memberGrid;
+	private ActionGridComponent<TreeGrid<ProjectParticipant>> memberGridComponent;
 
 	// project components
 	private LocalTime lastSynchronization;
@@ -285,13 +326,42 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	@Subscribe
 	public void handleMembersChanged(MembersChangedEvent membersChangedEvent) {
 		try {
-			ListDataProvider<Member> memberDataProvider = new ListDataProvider<>(project.getProjectMembers());
-			memberGrid.setDataProvider(memberDataProvider);
-			setToggleViewButtonStateBasedOnMemberCount();
+			
+			Set<Member> members = project.getProjectMembers();
+			initMemberData(members);
 		}
 		catch (IOException e) {
 			errorHandler.showAndLogError("Failed to load project members", e);
 		}
+	}
+
+
+	private void initMemberData(Set<Member> members) {
+		// add direct members and group others by their shared group
+		Map<Long, GroupParticipant> groupParticipantByGroupId = Maps.newHashMap();
+		TreeData<ProjectParticipant> memberData = new TreeData<ProjectParticipant>();
+		
+		for (Member member : members) {
+			if (member instanceof SharedGroupMember) {
+				SharedGroupMember sharedGroupMember = (SharedGroupMember)member;
+				Long groupId = sharedGroupMember.getSharedGroup().groupId();
+				GroupParticipant groupParticipant = groupParticipantByGroupId.get(groupId);
+				if (groupParticipant == null) {
+					groupParticipant = new GroupParticipant(sharedGroupMember.getSharedGroup());
+					memberData.addItem(null, groupParticipant);
+					groupParticipantByGroupId.put(groupId, groupParticipant);
+				}
+				memberData.addItem(groupParticipant, new ProjectMemberParticipant(sharedGroupMember, false));					
+			}
+			else {
+				memberData.addItem(null, new ProjectMemberParticipant(member, true));
+			}
+		}
+		
+		TreeDataProvider<ProjectParticipant> memberDataProvider = new TreeDataProvider<ProjectParticipant>(memberData);
+		
+		memberGrid.setDataProvider(memberDataProvider);
+		setToggleViewButtonStateBasedOnMemberCount();
 	}
 
 
@@ -431,15 +501,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private Component initTeamContent() {
 		HorizontalFlexLayout teamContentLayout = new HorizontalFlexLayout();
 
-		memberGrid = new Grid<>();
+		memberGrid = new TreeGrid<>();
 		memberGrid.setHeaderVisible(false);
 		memberGrid.setWidth("402px");
-		memberGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-		memberGrid.addColumn(User::getName)
+		memberGrid.addColumn(ProjectParticipant::getIcon, new HtmlRenderer());
+		memberGrid.addColumn(ProjectParticipant::getName)
 				.setWidth(200)
 				.setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
-				.setDescriptionGenerator(User::preciseName);
-		memberGrid.addColumn(Member::getRole).setExpandRatio(1);
+				.setDescriptionGenerator(ProjectParticipant::getDescription);
+		memberGrid.addColumn(ProjectParticipant::getRole).setExpandRatio(1);
 
 		memberGridComponent = new ActionGridComponent<>(
 				new Label("Members"),
@@ -553,18 +623,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		tagsetsCsvExportFileDownloader.extend(miExportTagsetsAsCsv);
 
 		// members actions
-		memberGridComponent.getActionGridBar().addBtnAddClickListener(clickEvent -> {
-			new AddMemberDialog(
-					project::assignRoleToSubject,
-					(query) -> project.findUser(query.getFilter().isPresent() ? query.getFilter().get() : ""),
-					(evt) -> eventBus.post(new MembersChangedEvent())
-			).show();
-		});
+		ContextMenu memberGridComponentAddContextMenu = memberGridComponent.getActionGridBar().getBtnAddContextMenu();
+		memberGridComponentAddContextMenu.addItem("Add a user group", menuItem -> handleAddGroupRequest());
+		memberGridComponentAddContextMenu.addItem("Invite someone to the Project by email", menuItem -> handleInviteUserRequest());
 
 		ContextMenu memberGridComponentMoreOptionsContextMenu = memberGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		memberGridComponentMoreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
 		memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
-		memberGridComponentMoreOptionsContextMenu.addItem("Invite Someone to the Project", (selectedItem) -> handleProjectInvitationRequest());
+		memberGridComponentMoreOptionsContextMenu.addItem("Add someone directly by username", (selectedItem) -> handleAddMemberByNameRequest());
+		memberGridComponentMoreOptionsContextMenu.addItem("Invite someone to the Project by a shared code", (selectedItem) -> handleProjectInvitationByCodeRequest());
 
 		// global project actions
 		btnSynchronize.addClickListener(clickEvent -> handleSynchronize());
@@ -716,8 +783,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void setToggleViewButtonStateBasedOnMemberCount() {
 		@SuppressWarnings("unchecked")
-		ListDataProvider<Member> memberDataProvider = (ListDataProvider<Member>) memberGrid.getDataProvider();
-		btnToggleViewSynchronizedOrLatestContributions.setEnabled(memberDataProvider.getItems().size() > 1);
+		TreeDataProvider<ProjectParticipant> memberDataProvider = (TreeDataProvider<ProjectParticipant>) memberGrid.getDataProvider();
+		btnToggleViewSynchronizedOrLatestContributions.setEnabled(memberDataProvider.getTreeData().getRootItems().size() > 1); // owner + (group | direct other users)
 	}
 
 	private void initData() {
@@ -736,8 +803,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			tagsetGrid.setDataProvider(tagsetDataProvider);
 			tagsetGrid.sort(TagsetGridColumn.NAME.name());
 
-			ListDataProvider<Member> memberDataProvider = new ListDataProvider<>(projectMembers);
-			memberGrid.setDataProvider(memberDataProvider);
+			initMemberData(projectMembers);
 		}
 		catch (Exception e) {
 			errorHandler.showAndLogError("Failed to initialize data", e);
@@ -1741,20 +1807,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	// team actions
 	private void handleEditMembers() {
-		Set<Member> membersToEdit = memberGrid.getSelectedItems();
-
-		if (membersToEdit.isEmpty()) {
-			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
-			return;
-		}
+		
 
 		// remove any owner members from the selection and display an informational message
 		// TODO: allow the original owner (whose namespace the project is in) to edit any other owner's role, as well as
 		//       assign additional owners (also see GitlabManagerCommon.assignOnProject which does its own check)
-		if (membersToEdit.stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
-			membersToEdit = membersToEdit.stream().filter(
-					member -> member.getRole() != RBACRole.OWNER
-			).collect(Collectors.toSet());
+		if (memberGrid.getSelectedItems().stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
 
 			Notification ownerMembersSelectedNotification = new Notification(
 					"Your selection includes members with the 'Owner' role, whose role you cannot change.\n"
@@ -1764,31 +1822,60 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			ownerMembersSelectedNotification.setDelayMsec(-1);
 			ownerMembersSelectedNotification.show(Page.getCurrent());
 		}
+		
+		if (memberGrid.getSelectedItems().stream().anyMatch(member -> !member.isDirect())) {
+
+			Notification ownerMembersSelectedNotification = new Notification(
+					"Your selection includes members participating via a user group. You cannot change the role of those members directly, you need to change the role of the whole user group!\n"
+							+ "Those members have been ignored. (click to dismiss)",
+					Notification.Type.WARNING_MESSAGE
+			);
+			ownerMembersSelectedNotification.setDelayMsec(-1);
+			ownerMembersSelectedNotification.show(Page.getCurrent());
+		}
+		
+		
+		final Set<ProjectParticipant> membersToEdit = 
+				memberGrid.getSelectedItems().stream()
+				.filter(member -> member.getRole() != RBACRole.OWNER && member.isDirect())
+				.collect(Collectors.toSet());
+		
+		if (memberGrid.getSelectedItems().isEmpty()) {
+			Notification.show("Info", "Please select one or more direct members or groups first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
 
 		if (!membersToEdit.isEmpty()) {
 			new EditMemberDialog(
-					project::assignRoleToSubject,
 					membersToEdit,
-					(evt) -> eventBus.post(new MembersChangedEvent())
+					new SaveCancelListener<RBACRole>() {
+						public void savePressed(RBACRole role) {
+							try {
+								for (ProjectParticipant participant : membersToEdit) {
+									if (participant instanceof GroupParticipant) {
+										project.assignRoleToGroup(((GroupParticipant) participant).getSharedGroup(), role, true);
+									}
+									else {
+										project.assignRoleToSubject(((ProjectMemberParticipant)participant).getMember(), role);
+									}
+								}
+							}
+							catch (Exception e) {
+								errorHandler.showAndLogError("Error changing role!", e);
+							}
+							
+							eventBus.post(new MembersChangedEvent());
+						};
+					}
 			).show();
 		}
 	}
 
 	private void handleRemoveMembers() {
-		Set<Member> membersToRemove = memberGrid.getSelectedItems();
-
-		if (membersToRemove.isEmpty()) {
-			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
-			return;
-		}
 
 		// remove any owner members from the selection and display an informational message
 		// TODO: allow the original owner (whose namespace the project is in) to remove any other owner
-		if (membersToRemove.stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
-			membersToRemove = membersToRemove.stream().filter(
-					member -> member.getRole() != RBACRole.OWNER
-			).collect(Collectors.toSet());
-
+		if (memberGrid.getSelectedItems().stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
 			Notification ownerMembersSelectedNotification = new Notification(
 					"Your selection includes members with the 'Owner' role, who you cannot remove.\n"
 							+ "Those members have been ignored. (click to dismiss)",
@@ -1799,14 +1886,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 
 		// remove the current user from the selection and display an informational message
-		Optional<Member> selectedMemberCurrentUser = membersToRemove.stream().filter(
-				member -> member.getUserId().equals(project.getCurrentUser().getUserId())
+		Optional<ProjectParticipant> selectedMemberCurrentUser = memberGrid.getSelectedItems().stream().filter(
+				member -> member.getId().equals(project.getCurrentUser().getUserId())
 		).findAny();
 
 		if (selectedMemberCurrentUser.isPresent()) {
-			membersToRemove = membersToRemove.stream().filter(
-					member -> member != selectedMemberCurrentUser.get()
-			).collect(Collectors.toSet());
 
 			Notification selfSelectedNotification = new Notification(
 					"You cannot remove yourself from the project.\n"
@@ -1820,26 +1904,139 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			selfSelectedNotification.show(Page.getCurrent());
 		}
 
+		if (memberGrid.getSelectedItems().stream().anyMatch(member -> !member.isDirect())) {
+
+			Notification ownerMembersSelectedNotification = new Notification(
+					"Your selection includes members participating via a user group. You cannot remove those members directly. You need to remove them from the user group!\n"
+							+ "Those members have been ignored. (click to dismiss)",
+					Notification.Type.WARNING_MESSAGE
+			);
+			ownerMembersSelectedNotification.setDelayMsec(-1);
+			ownerMembersSelectedNotification.show(Page.getCurrent());
+		}
+		
+		final Set<ProjectParticipant> membersToRemove = memberGrid.getSelectedItems().stream()
+				.filter(
+						member -> member.getRole() != RBACRole.OWNER 
+					&& (selectedMemberCurrentUser.isEmpty() || !member.equals(selectedMemberCurrentUser.get())) 
+					&& member.isDirect())
+				.collect(Collectors.toSet());
+
+		if (memberGrid.getSelectedItems().isEmpty()) {
+			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+
 		if (!membersToRemove.isEmpty()) {
 			new RemoveMemberDialog(
 					membersToRemove,
 					members -> {
-						for (Member member : members) {
+						for (ProjectParticipant participant : members) {
 							try {
-									project.removeSubject(member);
+								if (participant instanceof GroupParticipant) {
+									project.removeGroup(((GroupParticipant)participant).getSharedGroup());
+								}
+								else {
+									project.removeSubject(((ProjectMemberParticipant)participant).getMember());
+								}
 							}
 							catch (Exception e) {
-								errorHandler.showAndLogError(String.format("Failed to remove member %s from project %s", member, project.getName()), e);
+								errorHandler.showAndLogError(String.format("Failed to remove member %s from project %s", participant, project.getName()), e);
 							}
 						}
-
+	
 						eventBus.post(new MembersChangedEvent());						
 					}
 			).show();
 		}
 	}
 
-	private void handleProjectInvitationRequest() {
+	private void handleAddMemberByNameRequest() {
+		new AddMemberDialog(
+				project::assignRoleToSubject,
+				(query) -> projectsManager.findUser(query.getFilter().orElse("")),
+				(evt) -> eventBus.post(new MembersChangedEvent())
+		).show();
+	}
+
+
+	private void handleInviteUserRequest() {
+		InviteMembersWithGroupDialog.buildInviteProjectMembersDialog(new SaveCancelListener<InviteMembersWithGroupDialog.MemberData>() {
+			
+			@Override
+			public void savePressed(MemberData result) {
+				handleMemberData(result);
+			}
+		}).show();
+	}
+
+
+	private void handleAddGroupRequest() {
+		
+		InviteMembersWithGroupDialog.buildAddGroupDialog(
+				new SaveCancelListener<InviteMembersWithGroupDialog.MemberData>() {
+					
+					@Override
+					public void savePressed(MemberData result) {
+						handleMemberData(result);
+					}
+				},
+				() -> {
+					try {
+						return projectsManager.getGroups();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}).show();
+	}
+	
+
+	private void handleMemberData(MemberData result) {
+		Group group = null;
+		try {
+			
+			if (result.group() != null) {
+				group = result.group();
+			}
+			else if ((result.groupName() != null) && !result.groupName().isEmpty()) {
+				group = projectsManager.createGroup(result.groupName());
+
+				if ((result.emailAdresses() != null) && !result.emailAdresses().isEmpty()) {									
+					SignupTokenManager signupTokenManager = new SignupTokenManager();
+					for (String address : result.emailAdresses()) {			
+						try {
+							signupTokenManager.sendGroupSignupEmail(address, group);
+						} catch (EmailException e) {
+							errorHandler.showAndLogError(String.format("Error sending group invitation link to address %s" ,  address), e);
+						}
+					}
+				}
+			}							
+			
+			if (group != null) {
+				project.assignRoleToGroup(new SharedGroup(group.getId(), group.getName(), result.projectRole()), result.projectRole(), false);
+				eventBus.post(new MembersChangedEvent());
+			}
+			else if ((result.emailAdresses() != null) && !result.emailAdresses().isEmpty()) {
+				SignupTokenManager signupTokenManager = new SignupTokenManager();
+				for (String address : result.emailAdresses()) {			
+					try {
+						signupTokenManager.sendProjectSignupEmail(address, projectReference, result.projectRole());
+					} catch (EmailException e) {
+						errorHandler.showAndLogError(String.format("Error sending group invitation link to address %s" ,  address), e);
+					}
+				}
+			}
+		}
+		catch (IOException e) {
+			if (group != null) {
+				errorHandler.showAndLogError(String.format("Error sharing this project '%s' with group '%s'!", project.getName(), result.group()), e);
+			}
+		}
+	}
+
+
+	private void handleProjectInvitationByCodeRequest() {
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<Resource> resourceDataProvider = (TreeDataProvider<Resource>) documentGrid.getDataProvider();
 

@@ -152,6 +152,8 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 		googleSignInLink.addClickListener(event -> {
 			try {
+				String oauthRequestUrl = getGoogleOauthAuthorisationRequestUrl();
+				logger.info(String.format("Redirecting to OAUTH URL: %s", oauthRequestUrl));
 				UI.getCurrent().getPage().setLocation(getGoogleOauthAuthorisationRequestUrl());
 				close();
 			}

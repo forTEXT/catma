@@ -4,9 +4,11 @@ import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
+import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.user.Group;
 import de.catma.user.Member;
+import de.catma.user.SharedGroup;
 import de.catma.user.User;
 
 import java.io.IOException;
@@ -91,8 +93,6 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 */
 	void unassignFromGroup(RBACSubject subject, Group group) throws IOException;
 
-	Set<Member> getGroupMembers(Group group) throws IOException;
-	
 	
 	/**
 	 * Gets a project's repository URL.
@@ -265,6 +265,4 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if an error occurs when merging the merge request
 	 */
 	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
-
-
 }

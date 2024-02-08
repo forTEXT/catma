@@ -1,12 +1,52 @@
 package de.catma.repository.git.managers;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import org.eclipse.jgit.lib.Constants;
+import org.gitlab4j.api.Constants.IssueState;
+import org.gitlab4j.api.Constants.MergeRequestState;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.GroupApi;
+import org.gitlab4j.api.IssuesApi;
+import org.gitlab4j.api.MergeRequestApi;
+import org.gitlab4j.api.NotesApi;
+import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.models.AccessLevel;
+import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.GroupFilter;
+import org.gitlab4j.api.models.GroupParams;
+import org.gitlab4j.api.models.GroupProjectsFilter;
+import org.gitlab4j.api.models.Issue;
+import org.gitlab4j.api.models.IssueFilter;
+import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.MergeRequestFilter;
+import org.gitlab4j.api.models.Note;
+import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.ProjectFilter;
+import org.gitlab4j.api.models.ProjectSharedGroup;
+import org.gitlab4j.api.models.Visibility;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.MergeRequestInfo;
@@ -18,26 +58,15 @@ import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitGroup;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitMember;
+import de.catma.repository.git.GitSharedGroupMember;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.ui.events.ChangeUserAttributesEvent;
 import de.catma.user.Member;
+import de.catma.user.SharedGroup;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
-
-import org.eclipse.jgit.lib.Constants;
-import org.gitlab4j.api.Constants.IssueState;
-import org.gitlab4j.api.Constants.MergeRequestState;
-import org.gitlab4j.api.*;
-import org.gitlab4j.api.models.*;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class GitlabManagerRestricted extends GitlabManagerCommon implements RemoteGitManagerRestricted {
 	public static final String CATMA_COMMENT_LABEL = "CATMA Comment";
@@ -249,7 +278,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 									})
 									.filter(Objects::nonNull)
 									.toList();
-							result.add(new GitGroup(group, members, sharedProjects));
+							result.add(new GitGroup(group.getId(), group.getName(), members, sharedProjects));
 						}
 					}
 
@@ -272,7 +301,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 			Group group = groupApi.createGroup(groupParams);
 
-			return new GitGroup(group, Collections.emptySet(), Collections.emptyList());
+			return new GitGroup(group.getId(), group.getName(), Collections.emptySet(), Collections.emptyList());
 		}
 		catch (GitLabApiException e) {
 			if (e.getMessage().contains("has already been taken")) {
@@ -305,7 +334,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			GroupParams groupParams = new GroupParams().withName(name).withPath(pathName);
 			Group updatedGroup = groupApi.updateGroup(group.getId(), groupParams);
 			return new GitGroup(
-					updatedGroup, 
+					updatedGroup.getId(),
+					updatedGroup.getName(),
 					group.getMembers().stream().collect(Collectors.toUnmodifiableSet()), 
 					group.getSharedProjects().stream().collect(Collectors.toUnmodifiableList()));
 		}
@@ -335,21 +365,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to remove subject from group", e);
 		}		
-	}
-	
-	@Override
-	public Set<Member> getGroupMembers(de.catma.user.Group group) throws IOException {
-		try {
-			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-			return groupApi.getMembers(group.getId())
-				.stream()											
-				.map(GitMember::new)
-				.collect(Collectors.toSet());
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(String.format("Failed to load members for group %s", group.getName()), e);
-		}
-
 	}
 
 	@SuppressWarnings("unchecked")
@@ -424,10 +439,30 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	public Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			return projectApi.getMembers(projectReference.getFullPath())
+			// add members via direct membership
+			Set<Member> members =  projectApi.getMembers(projectReference.getFullPath())
 					.stream()
 					.map(GitMember::new)
-					.collect(Collectors.toSet());
+					.collect(Collectors.toCollection(() -> new HashSet<>()));
+			
+			// all members via group membership
+			Project project = projectApi.getProject(projectReference.getFullPath());
+			
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			
+			for (ProjectSharedGroup projectSharedGroup : project.getSharedWithGroups()) {
+
+				List<org.gitlab4j.api.models.Member> groupMembers = groupApi.getMembers(projectSharedGroup.getGroupId());
+				for (org.gitlab4j.api.models.Member groupMember : groupMembers) {
+					members.add(
+						new GitSharedGroupMember(
+								groupMember, 
+								new SharedGroup(projectSharedGroup.getGroupId(), projectSharedGroup.getGroupName(), RBACRole.forValue(projectSharedGroup.getGroupAccessLevel().value))));
+				}
+				
+			}
+			
+			return members;
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to fetch project members", e);

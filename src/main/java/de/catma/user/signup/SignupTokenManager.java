@@ -21,7 +21,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 import de.catma.hazelcast.HazelcastConfiguration;
+import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
+import de.catma.rbac.RBACRole;
 import de.catma.user.Group;
 import de.catma.user.UserData;
 import de.catma.util.MailSender;
@@ -38,6 +40,7 @@ public class SignupTokenManager {
 		none, // default, no action in path
 		verify, // verify sign up for CATMA accounts
 		joingroup, // join a user group
+		joinproject, // join a project
 		;
 
 		static TokenAction findAction(String pathAction) {
@@ -62,9 +65,9 @@ public class SignupTokenManager {
     		Caching.getCachingProvider().getCacheManager().getCache(
     				HazelcastConfiguration.CacheKeyName.ACCOUNT_SIGNUP_TOKEN.name());
 
-    private final Cache<String, String> groupSignupTokenCache = 
+    private final Cache<String, String> groupProjectSignupTokenCache = 
     		Caching.getCachingProvider().getCacheManager().getCache(
-    				HazelcastConfiguration.CacheKeyName.GROUP_SIGNUP_TOKEN.name());
+    				HazelcastConfiguration.CacheKeyName.GROUP_PROJECT_SIGNUP_TOKEN.name());
 
     /**
      * checks if a token exists
@@ -76,11 +79,11 @@ public class SignupTokenManager {
     	return accountSignupTokenCache.containsKey(token);
     }
 
-    public boolean containsGroupSignupToken(String token){
+    public boolean containsGroupOrProjectSignupToken(String token){
     	Objects.requireNonNull(token);
-    	return groupSignupTokenCache.containsKey(token);
+    	return groupProjectSignupTokenCache.containsKey(token);
     }
-    
+
     /**
      * puts a token in memory cache
      * @param token
@@ -96,7 +99,16 @@ public class SignupTokenManager {
      */
     public void put(GroupSignupToken token){
     	Objects.requireNonNull(token);
-    	groupSignupTokenCache.put(token.token(), new Gson().toJson(token));
+    	groupProjectSignupTokenCache.put(token.token(), new Gson().toJson(token));
+    }
+    
+    /**
+     * puts a token in memory cache
+     * @param token
+     */
+    public void put(ProjectSignupToken token){
+    	Objects.requireNonNull(token);
+    	groupProjectSignupTokenCache.put(token.token(), new Gson().toJson(token));
     }
     
     /**
@@ -123,12 +135,27 @@ public class SignupTokenManager {
     public Optional<GroupSignupToken> getGroupSignupToken(String token){
     	logger.info("SignupTokenManager.getGroupSignupToken called with token " + token);
     	Objects.requireNonNull(token);
-    	if(!containsGroupSignupToken(token)){
+    	if(!containsGroupOrProjectSignupToken(token)){
     		return Optional.empty();
     	}
-    	String encodedToken = groupSignupTokenCache.getAndRemove(token);
+    	String encodedToken = groupProjectSignupTokenCache.getAndRemove(token);
     	try {
     		return Optional.of(new Gson().fromJson(encodedToken, GroupSignupToken.class));
+	    } catch (JsonSyntaxException e){
+	    	logger.log(Level.WARNING,"Signup token corrupt", e);
+			return Optional.empty();
+		}
+    }
+    
+    public Optional<ProjectSignupToken> getProjectSignupToken(String token){
+    	logger.info("SignupTokenManager.getProjectSignupToken called with token " + token);
+    	Objects.requireNonNull(token);
+    	if(!containsGroupOrProjectSignupToken(token)){
+    		return Optional.empty();
+    	}
+    	String encodedToken = groupProjectSignupTokenCache.getAndRemove(token);
+    	try {
+    		return Optional.of(new Gson().fromJson(encodedToken, ProjectSignupToken.class));
 	    } catch (JsonSyntaxException e){
 	    	logger.log(Level.WARNING,"Signup token corrupt", e);
 			return Optional.empty();
@@ -187,13 +214,35 @@ public class SignupTokenManager {
     		return;
 
     	}
-    	if(!containsGroupSignupToken(token)){
+    	if(!containsGroupOrProjectSignupToken(token)){
     		tokenValidityHandler.tokenInvalid("Token is unknown, it can only be used once. Please contact the group owner to get a new link!");
     		return;
     	}
     	Optional<GroupSignupToken> signupToken = getGroupSignupToken(token);
     	if(!signupToken.isPresent()){
     		tokenValidityHandler.tokenInvalid("Token is corrupt. Please contact the group owner to get a new link!");
+    		logger.warning("Token was found but content was null");
+    		return;
+    	}
+    	  
+    	tokenValidityHandler.tokenValid(signupToken.get());
+    	return ;
+    }
+
+    
+    public void validateProjectSignupToken(String token, TokenValidityHandler<ProjectSignupToken> tokenValidityHandler) {
+    	if(token == null || token.isEmpty() ){
+    		tokenValidityHandler.tokenInvalid("Token is empty. Please contact the project owner/maintainer to get a new link!");
+    		return;
+
+    	}
+    	if(!containsGroupOrProjectSignupToken(token)){
+    		tokenValidityHandler.tokenInvalid("Token is unknown, it can only be used once. Please contact the project owner/maintainer to get a new link!");
+    		return;
+    	}
+    	Optional<ProjectSignupToken> signupToken = getProjectSignupToken(token);
+    	if(!signupToken.isPresent()){
+    		tokenValidityHandler.tokenInvalid("Token is corrupt. Please contact the project owner/maintainer to get a new link!");
     		logger.warning("Token was found but content was null");
     		return;
     	}
@@ -239,7 +288,7 @@ public class SignupTokenManager {
 		// create a token based on the user's email address
 		Long groupId = group.getId();
 		String token = createHmacSha256Token(address+groupId);
-		put(new GroupSignupToken(LocalTime.now().toString(), address, group.getId(), token));
+		put(new GroupSignupToken(LocalTime.now().toString(), address, group.getId(), group.getName(), token));
 
 		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
 		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.joingroup.name() + "?token=" + encToken;
@@ -249,6 +298,23 @@ public class SignupTokenManager {
 		MailSender.sendMail(address, String.format("CATMA Join Group %s", group.getName()), String.format("Please visit the following link in order to join the group %s:\n%s", group.getName(), joinUrl));
 		logger.info(
 				String.format("Generated a new join-group-token for %s, the full join URL is: %s", address, joinUrl)
+		);		
+	}
+	
+	public void sendProjectSignupEmail(String address, ProjectReference project, RBACRole role) throws EmailException {
+		// create a token based on the user's email address
+		String projectId = project.getProjectId();
+		String token = createHmacSha256Token(address+projectId);
+		put(new ProjectSignupToken(LocalTime.now().toString(), address, project.getNamespace(), projectId, project.getName(), role, token));
+
+		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
+		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.joinproject.name() + "?token=" + encToken;
+
+		// send join-group-link that contains the generated token
+		// this verification link brings the user back to CATMA and it brings up the user account creation dialog if the token can be verified, see handleVerify above and CatmaApplication#handleRequestToken 
+		MailSender.sendMail(address, String.format("CATMA Join Project %s", project.getName()), String.format("Please visit the following link in order to join the project %s:\n%s", project.getName(), joinUrl));
+		logger.info(
+				String.format("Generated a new join-project-token for %s, the full join URL is: %s", address, joinUrl)
 		);		
 	}
 }

@@ -8,6 +8,7 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.user.Group;
+import de.catma.user.SharedGroup;
 
 public class NoopRBACManager implements IRBACManager {
 
@@ -41,6 +42,14 @@ public class NoopRBACManager implements IRBACManager {
 		throw new UnsupportedOperationException();
 	}
 	
-	
+	@Override
+	public SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference,
+			boolean reassign) throws IOException {
+		throw new UnsupportedOperationException();
+	}
 
+	@Override
+	public void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException {
+		throw new UnsupportedOperationException();
+	}
 }

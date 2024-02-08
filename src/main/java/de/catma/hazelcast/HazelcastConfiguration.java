@@ -27,11 +27,13 @@ public final class HazelcastConfiguration {
 		 */
 		ACCOUNT_SIGNUP_TOKEN,
 		/**
-		 * group sign up token cache
+		 * group sign up token cache <br>
+		 * project sign up token cache (issued by the inviting user, handled by the invited user, as opposed to the PROJECT_INVITATIONs), no inter-session communication needed
+		 *
 		 */
-		GROUP_SIGNUP_TOKEN,
+		GROUP_PROJECT_SIGNUP_TOKEN,
 		/**
-		 * cache for project invitations accepted by the invited user that needs to be handled by the inviting user 
+		 * cache for project invitations accepted by the invited user that needs to be handled by the inviting user, needs inter-session communication
 		 */
 		PROJECT_INVITATION,
 		;
@@ -54,7 +56,7 @@ public final class HazelcastConfiguration {
     		new MutableConfiguration<String, String>()
     		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(HOURS, 4)));
 
-	public final static Configuration<String, String> GROUP_SIGNUP_TOKEN_CONFIG = 
+	public final static Configuration<String, String> GROUP_PROJECT_SIGNUP_TOKEN_CONFIG = 
     		new MutableConfiguration<String, String>()
     		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(DAYS, 7)));
 

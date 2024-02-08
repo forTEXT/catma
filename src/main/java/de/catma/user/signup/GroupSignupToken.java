@@ -5,5 +5,5 @@ package de.catma.user.signup;
  * @author db
  *
  */
-public record GroupSignupToken(String requestDate, String email, Long groupId, String token) {
+public record GroupSignupToken(String requestDate, String email, Long groupId, String groupName, String token) {
 }

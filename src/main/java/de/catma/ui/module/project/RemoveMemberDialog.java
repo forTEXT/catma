@@ -10,12 +10,12 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.user.Member;
 import de.catma.user.User;
 
-public class RemoveMemberDialog extends AbstractMemberDialog<Set<Member>> {
-	private final Set<Member> members;
+public class RemoveMemberDialog extends AbstractMemberDialog<Set<ProjectParticipant>> {
+	private final Set<ProjectParticipant> members;
 
 	public RemoveMemberDialog(
-			Set<Member> members,
-			SaveCancelListener<Set<Member>> saveCancelListener
+			Set<ProjectParticipant> members,
+			SaveCancelListener<Set<ProjectParticipant>> saveCancelListener
 	) {
 		super(
 				"Remove Members",
@@ -30,16 +30,16 @@ public class RemoveMemberDialog extends AbstractMemberDialog<Set<Member>> {
 	protected void addContent(ComponentContainer content) {
 		content.addComponent(descriptionLabel);
 
-		ListSelect<Member> lsMembers = new ListSelect<>("Members", members);
+		ListSelect<ProjectParticipant> lsMembers = new ListSelect<>("Members", members);
 		lsMembers.setReadOnly(true);
 		lsMembers.setSizeFull();
-		lsMembers.setItemCaptionGenerator(User::preciseName);
+		lsMembers.setItemCaptionGenerator(ProjectParticipant::getDescription);
 		content.addComponent(lsMembers);
 		((AbstractOrderedLayout) content).setExpandRatio(lsMembers, 1f);
 	}
 
 	@Override
-	protected Set<Member> getResult() {
+	protected Set<ProjectParticipant> getResult() {
 		return members;
 	}
 
