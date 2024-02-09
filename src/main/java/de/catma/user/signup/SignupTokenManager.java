@@ -1,21 +1,34 @@
 package de.catma.user.signup;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.cache.Cache;
 import javax.cache.Caching;
+import javax.servlet.ServletException;
 
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.commons.mail.EmailException;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Splitter;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -60,7 +73,15 @@ public class SignupTokenManager {
 	}
 
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
-
+	
+	private final static Logger CACHETRANSACTIONLOGGER = 
+			Logger.getLogger(HazelcastConfiguration.CacheKeyName.class.getName()+"."+HazelcastConfiguration.CacheKeyName.GROUP_PROJECT_SIGNUP_TOKEN);
+	private final static char ADD_TRANSACTION_FLAG = '1';
+	private final static char REMOVE_TRANSACTION_FLAG = '0';
+	private final static char GROUP_TRANSACTION_FLAG = 'G';
+	private final static char PROJECT_TRANSACTION_FLAG = 'P';
+	private final static char TRANSACTION_COLUMN_SEPARATOR = ';';
+	
     private final Cache<String, String> accountSignupTokenCache = 
     		Caching.getCachingProvider().getCacheManager().getCache(
     				HazelcastConfiguration.CacheKeyName.ACCOUNT_SIGNUP_TOKEN.name());
@@ -99,7 +120,13 @@ public class SignupTokenManager {
      */
     public void put(GroupSignupToken token){
     	Objects.requireNonNull(token);
-    	groupProjectSignupTokenCache.put(token.token(), new Gson().toJson(token));
+    	String encodedToken = new Gson().toJson(token);
+    	put(token.token(), encodedToken, GROUP_TRANSACTION_FLAG);
+    }
+    
+    private void put(String key, String encodedToken, char groupOrProjectTransactionFlag) {
+    	groupProjectSignupTokenCache.put(key, encodedToken);
+    	CACHETRANSACTIONLOGGER.info(String.format("%c%c%c%c%s", groupOrProjectTransactionFlag, TRANSACTION_COLUMN_SEPARATOR, ADD_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, encodedToken));    	
     }
     
     /**
@@ -108,7 +135,8 @@ public class SignupTokenManager {
      */
     public void put(ProjectSignupToken token){
     	Objects.requireNonNull(token);
-    	groupProjectSignupTokenCache.put(token.token(), new Gson().toJson(token));
+    	String encodedToken = new Gson().toJson(token);
+    	put(token.token(), encodedToken, PROJECT_TRANSACTION_FLAG);
     }
     
     /**
@@ -139,6 +167,8 @@ public class SignupTokenManager {
     		return Optional.empty();
     	}
     	String encodedToken = groupProjectSignupTokenCache.getAndRemove(token);
+    	CACHETRANSACTIONLOGGER.info(String.format("%c%c%c%c%s", GROUP_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, REMOVE_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, token));
+
     	try {
     		return Optional.of(new Gson().fromJson(encodedToken, GroupSignupToken.class));
 	    } catch (JsonSyntaxException e){
@@ -154,6 +184,8 @@ public class SignupTokenManager {
     		return Optional.empty();
     	}
     	String encodedToken = groupProjectSignupTokenCache.getAndRemove(token);
+    	CACHETRANSACTIONLOGGER.info(String.format("%c%c%c%c%s", PROJECT_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, REMOVE_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, token));
+
     	try {
     		return Optional.of(new Gson().fromJson(encodedToken, ProjectSignupToken.class));
 	    } catch (JsonSyntaxException e){
@@ -288,7 +320,7 @@ public class SignupTokenManager {
 		// create a token based on the user's email address
 		Long groupId = group.getId();
 		String token = createHmacSha256Token(address+groupId);
-		put(new GroupSignupToken(LocalTime.now().toString(), address, group.getId(), group.getName(), token));
+		put(new GroupSignupToken(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), address, group.getId(), group.getName(), token));
 
 		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
 		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.joingroup.name() + "?token=" + encToken;
@@ -305,7 +337,7 @@ public class SignupTokenManager {
 		// create a token based on the user's email address
 		String projectId = project.getProjectId();
 		String token = createHmacSha256Token(address+projectId);
-		put(new ProjectSignupToken(LocalTime.now().toString(), address, project.getNamespace(), projectId, project.getName(), role, token));
+		put(new ProjectSignupToken(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), address, project.getNamespace(), projectId, project.getName(), role, token));
 
 		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
 		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.joinproject.name() + "?token=" + encToken;
@@ -316,5 +348,46 @@ public class SignupTokenManager {
 		logger.info(
 				String.format("Generated a new join-project-token for %s, the full join URL is: %s", address, joinUrl)
 		);		
+	}
+
+	public void initGroupProjectSignupTokenCacheFromTransactionLog() throws IOException {
+		String groupProjectSignupTokenTransactionLogPath = CATMAPropertyKey.GROUP_PROJECT_SIGNUP_TOKEN_CACHE_TRANSACTION_LOG_PATH.getValue();
+
+		Path tLogPath = Paths.get(groupProjectSignupTokenTransactionLogPath);
+		
+		Map<String, Runnable> tokenReAddMap = new HashMap<String, Runnable>();
+		
+		if (tLogPath.toFile().exists()) {
+			List<String> transactions = Files.readAllLines(tLogPath);
+			LocalDateTime now = LocalDateTime.now();
+			for (String transaction : transactions) {
+				boolean isRemoval = transaction.charAt(2) == REMOVE_TRANSACTION_FLAG;
+				boolean isGroupTransaction = transaction.charAt(0) == GROUP_TRANSACTION_FLAG;
+				String encodedToken = transaction.substring(4);
+				if (isRemoval) {
+					String token = transaction.substring(4);
+					tokenReAddMap.remove(token);
+				}
+				else if (isGroupTransaction) {
+					GroupSignupToken groupSignupToken = new Gson().fromJson(encodedToken, GroupSignupToken.class);
+					if (LocalDateTime.parse(groupSignupToken.requestDate(), DateTimeFormatter.ISO_LOCAL_DATE_TIME).plus(7, ChronoUnit.DAYS).isAfter(now)) {
+						tokenReAddMap.put(groupSignupToken.token(), () -> put(groupSignupToken.token(), encodedToken, GROUP_TRANSACTION_FLAG));
+					}
+				}
+				else {
+					ProjectSignupToken projectSignupToken = new Gson().fromJson(encodedToken, ProjectSignupToken.class);
+					if (LocalDateTime.parse(projectSignupToken.requestDate(), DateTimeFormatter.ISO_LOCAL_DATE_TIME).plus(7, ChronoUnit.DAYS).isAfter(now)) {
+						tokenReAddMap.put(projectSignupToken.token(), () -> put(projectSignupToken.token(), encodedToken, PROJECT_TRANSACTION_FLAG));
+					}
+				}
+			}
+		}			
+		
+		FileHandler transactionLogHandler = new FileHandler(groupProjectSignupTokenTransactionLogPath);
+		transactionLogHandler.setFormatter(new GroupProjectSignupTokenCacheTransactionLogFormatter());
+		CACHETRANSACTIONLOGGER.addHandler(transactionLogHandler);
+		
+		
+		tokenReAddMap.values().forEach(reAddAction -> reAddAction.run());
 	}
 }

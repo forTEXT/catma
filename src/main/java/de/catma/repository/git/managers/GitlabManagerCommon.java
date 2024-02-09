@@ -173,7 +173,27 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	
 	@Override
 	public void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException {
-		
+		try {
+			Project project = getGitLabApi().getProjectApi().getProject(
+					projectReference.getNamespace(), projectReference.getProjectId()
+			);
+	
+			if (project == null) {
+				throw new IOException(String.format("Unknown project \"%s\"", projectReference.getName()));
+			}
+			
+			getGitLabApi().getProjectApi().unshareProject(project.getId(), sharedGroup.groupId());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format(
+							"Failed to unshare project '%s' for group '%s'",
+							projectReference.getName(),
+							sharedGroup.name()
+					),
+					e
+			);			
+		}
 	}
 
 	private RBACSubject createProjectMember(RBACSubject subject, RBACRole role, Long projectId) throws IOException {

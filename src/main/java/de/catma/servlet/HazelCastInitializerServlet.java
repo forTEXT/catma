@@ -1,14 +1,37 @@
 package de.catma.servlet;
 
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import de.catma.hazelcast.HazelcastConfiguration;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
+import javax.cache.Cache;
+import javax.cache.Cache.Entry;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
+
+import com.google.gson.Gson;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+
+import de.catma.hazelcast.HazelcastConfiguration;
+import de.catma.properties.CATMAPropertyKey;
+import de.catma.user.signup.GroupProjectSignupTokenCacheTransactionLogFormatter;
+import de.catma.user.signup.GroupSignupToken;
+import de.catma.user.signup.ProjectSignupToken;
+import de.catma.user.signup.SignupTokenManager;
 
 /**
  * Initializes a Hazelcast node and caches to store account/group/project-signup and project invitation tokens.
@@ -16,6 +39,7 @@ import javax.servlet.http.HttpServlet;
 @WebServlet(name = "HazelCast", urlPatterns = "/hazelcast", loadOnStartup = 2)
 public class HazelCastInitializerServlet extends HttpServlet{
 	private volatile HazelcastInstance hazelcastNode;
+	private volatile Cache<String, String> groupProjectSignupTokenCache;
 
 	@Override
     public void init() throws ServletException {
@@ -29,6 +53,7 @@ public class HazelCastInitializerServlet extends HttpServlet{
 		// we don't use Hazelcast to pass any XML messages, and certainly not anything that comes from outside, so there shouldn't be any security impact
 		System.setProperty("hazelcast.ignoreXxeProtectionFailures", "true");
 
+
 		hazelcastNode = Hazelcast.newHazelcastInstance();
 
 		CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
@@ -36,7 +61,7 @@ public class HazelCastInitializerServlet extends HttpServlet{
 				HazelcastConfiguration.CacheKeyName.ACCOUNT_SIGNUP_TOKEN.name(),
 				HazelcastConfiguration.ACCOUNT_SIGNUP_TOKEN_CONFIG
 		);
-		cacheManager.createCache(
+		Cache<String, String> groupProjectSignupTokenCache = cacheManager.createCache(
 				HazelcastConfiguration.CacheKeyName.GROUP_PROJECT_SIGNUP_TOKEN.name(),
 				HazelcastConfiguration.GROUP_PROJECT_SIGNUP_TOKEN_CONFIG
 		);			
@@ -45,10 +70,22 @@ public class HazelCastInitializerServlet extends HttpServlet{
 				HazelcastConfiguration.PROJECT_INVITATION_CONFIG
 		);
 
+		SignupTokenManager signupTokenManager = new SignupTokenManager();
+		
+		try {			
+			signupTokenManager.initGroupProjectSignupTokenCacheFromTransactionLog();
+		}
+		catch (IOException e) {
+			throw new ServletException("Unable to initialize the transaction log for the group/project singup tokens", e);
+		}
+		
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
 				try {
+					Iterator<Entry<String, String>> cacheIterator = groupProjectSignupTokenCache.iterator();
+					
+					
 					hazelcastNode.shutdown();
 				}
 				catch (Exception e) {

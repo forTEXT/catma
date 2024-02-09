@@ -46,6 +46,8 @@ public enum CATMAPropertyKey {
 	DEV_PREVENT_PUSH("false"),
 
 	SQLITE_DB_BASE_PATH,
+	
+	GROUP_PROJECT_SIGNUP_TOKEN_CACHE_TRANSACTION_LOG_PATH("group_project_signup_token.log"),
 
 	MAIL_SMTP_HOST("localhost"),
 	MAIL_SMTP_PORT("587"),
