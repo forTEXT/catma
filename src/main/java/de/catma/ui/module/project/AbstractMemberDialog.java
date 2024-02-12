@@ -2,6 +2,7 @@ package de.catma.ui.module.project;
 
 import com.google.common.collect.Lists;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.DateField;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
@@ -16,6 +17,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 	protected ComboBox<User> cbUsers;
 	protected ComboBox<RBACRole> cbRole; 
 	protected Label descriptionLabel;
+	protected DateField expiresAtInput;
 		
 	protected ErrorHandler errorLogger;
 	
@@ -43,6 +45,12 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		cbRole.setWidth("100%");
 		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);
 		cbRole.setEmptySelectionAllowed(false);
+		
+		expiresAtInput = new DateField("Membership expires at (optional)");
+		expiresAtInput.setDateFormat("yyyy/MM/dd");
+		expiresAtInput.setPlaceholder("yyyy/mm/dd");
+		expiresAtInput.setWidth("100%");
+
 	}
 
 }

@@ -1,6 +1,7 @@
 package de.catma.ui.module.dashboard;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
 import de.catma.project.ProjectReference;
 import de.catma.rbac.IRBACManager;
@@ -18,7 +19,7 @@ public class NoopRBACManager implements IRBACManager {
 	}
 
 	@Override
-	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference) throws IOException {
+	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException {
 		throw new UnsupportedOperationException("Operation not supported");
 	}
 
@@ -38,12 +39,12 @@ public class NoopRBACManager implements IRBACManager {
 	}
 
 	@Override
-	public RBACSubject assignOnGroup(RBACSubject subject, Long groupId) throws IOException {
+	public RBACSubject assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference,
+	public SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt,
 			boolean reassign) throws IOException {
 		throw new UnsupportedOperationException();
 	}

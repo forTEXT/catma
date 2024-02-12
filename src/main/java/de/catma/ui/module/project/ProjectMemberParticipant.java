@@ -1,5 +1,8 @@
 package de.catma.ui.module.project;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.rbac.RBACRole;
@@ -53,5 +56,12 @@ public class ProjectMemberParticipant implements ProjectParticipant {
 	@Override
 	public boolean isDirect() {
 		return direct;
+	}
+	
+	@Override
+	public LocalDate getExpiresAt() {
+		return member.getExpiresAt() == null?null:member.getExpiresAt().toInstant()
+			      .atZone(ZoneId.systemDefault())
+			      .toLocalDate();
 	}
 }

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.Collator;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -1848,15 +1849,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		if (!membersToEdit.isEmpty()) {
 			new EditMemberDialog(
 					membersToEdit,
-					new SaveCancelListener<RBACRole>() {
-						public void savePressed(RBACRole role) {
+					new SaveCancelListener<Pair<RBACRole, LocalDate>>() {
+						public void savePressed(Pair<RBACRole, LocalDate> roleAndExpiresAt) {
 							try {
 								for (ProjectParticipant participant : membersToEdit) {
 									if (participant instanceof GroupParticipant) {
-										project.assignRoleToGroup(((GroupParticipant) participant).getSharedGroup(), role, true);
+										project.assignRoleToGroup(((GroupParticipant) participant).getSharedGroup(), roleAndExpiresAt.getFirst(), roleAndExpiresAt.getSecond(), true);
 									}
 									else {
-										project.assignRoleToSubject(((ProjectMemberParticipant)participant).getMember(), role);
+										project.assignRoleToSubject(((ProjectMemberParticipant)participant).getMember(), roleAndExpiresAt.getFirst(), roleAndExpiresAt.getSecond());
 									}
 								}
 							}
@@ -1953,9 +1954,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleAddMemberByNameRequest() {
 		new AddMemberDialog(
-				project::assignRoleToSubject,
 				(query) -> projectsManager.findUser(query.getFilter().orElse("")),
-				(evt) -> eventBus.post(new MembersChangedEvent())
+				(evt) -> {
+					try {
+						project.assignRoleToSubject(evt.user(), evt.role(), evt.expiresAt());
+						eventBus.post(new MembersChangedEvent());
+					} catch (IOException e) {
+						errorHandler.showAndLogError(String.format("Failed to add new member %s to project %s", evt.user().toString(), project.toString()), e);
+					}
+				}
 		).show();
 	}
 
@@ -2005,7 +2012,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					SignupTokenManager signupTokenManager = new SignupTokenManager();
 					for (String address : result.emailAdresses()) {			
 						try {
-							signupTokenManager.sendGroupSignupEmail(address, group);
+							signupTokenManager.sendGroupSignupEmail(address, group, result.expiresAt());
 						} catch (EmailException e) {
 							errorHandler.showAndLogError(String.format("Error sending group invitation link to address %s" ,  address), e);
 						}
@@ -2014,14 +2021,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			}							
 			
 			if (group != null) {
-				project.assignRoleToGroup(new SharedGroup(group.getId(), group.getName(), result.projectRole()), result.projectRole(), false);
+				project.assignRoleToGroup(new SharedGroup(group.getId(), group.getName(), result.projectRole()), result.projectRole(), result.expiresAt(), false);
 				eventBus.post(new MembersChangedEvent());
 			}
 			else if ((result.emailAdresses() != null) && !result.emailAdresses().isEmpty()) {
 				SignupTokenManager signupTokenManager = new SignupTokenManager();
 				for (String address : result.emailAdresses()) {			
 					try {
-						signupTokenManager.sendProjectSignupEmail(address, projectReference, result.projectRole());
+						signupTokenManager.sendProjectSignupEmail(address, projectReference, result.projectRole(), result.expiresAt());
 					} catch (EmailException e) {
 						errorHandler.showAndLogError(String.format("Error sending group invitation link to address %s" ,  address), e);
 					}

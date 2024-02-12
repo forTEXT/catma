@@ -1,5 +1,7 @@
 package de.catma.ui.module.project;
 
+import java.time.LocalDate;
+
 import de.catma.rbac.RBACRole;
 
 public interface ProjectParticipant {
@@ -11,5 +13,7 @@ public interface ProjectParticipant {
 	String getName();
 	String getDescription();
 	boolean isDirect();
+	
+	LocalDate getExpiresAt();
 	
 }

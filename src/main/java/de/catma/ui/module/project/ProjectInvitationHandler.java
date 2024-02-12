@@ -1,6 +1,8 @@
 package de.catma.ui.module.project;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,7 +55,8 @@ public class ProjectInvitationHandler extends UIMessageListener<InvitationReques
 					
 					project.assignRoleToSubject(
 							() -> userId, 
-							RBACRole.forValue(projectInvitation.getDefaultRole()));
+							RBACRole.forValue(projectInvitation.getDefaultRole()),
+							projectInvitation.getExpiresAtDate()==null?null:LocalDate.parse(projectInvitation.getExpiresAtDate(), DateTimeFormatter.ISO_LOCAL_DATE));
 
 					joinedTopic.publish(new JoinedProjectMessage(projectInvitation));
 					

@@ -1,6 +1,8 @@
 package de.catma.ui.module.dashboard;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,12 +37,13 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
-import de.catma.ui.dialog.TextAreaInputDialog;
 import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.project.InviteMembersWithGroupDialog;
+import de.catma.ui.module.project.InviteMembersWithGroupDialog.MemberData;
 import de.catma.ui.module.project.ProjectParticipant;
 import de.catma.ui.module.project.RemoveMemberDialog;
 import de.catma.user.Group;
@@ -218,27 +221,25 @@ public class GroupCard extends VerticalFlexLayout {
 		}
 	}
 	private void handleAddClickEvent() {
-
-		TextAreaInputDialog dialog = new TextAreaInputDialog("Add members by email", "Type in the email addresses of the new members as a comma- or newline separated list:", new SaveCancelListener<String>() {
+		
+		InviteMembersWithGroupDialog dialog = InviteMembersWithGroupDialog.buildInviteGroupMembersDialog(new SaveCancelListener<InviteMembersWithGroupDialog.MemberData>() {
 			
 			@Override
-			public void savePressed(String result) {
-				handleAddListOfEmailAddresses(result);
+			public void savePressed(MemberData result) {
+				handleAddListOfEmailAddresses(result.emailAdresses(), result.expiresAt());
 			}
 		});
-		
+
 		dialog.show();
 		
 	}
 
-	private void handleAddListOfEmailAddresses(String addressList) {
-		
-		String[] addresses = addressList.split("[,;\n]");
-		
+	private void handleAddListOfEmailAddresses(List<String> addresses, LocalDate expiresAt) {
+				
 		SignupTokenManager signupTokenManager = new SignupTokenManager();
 		for (String address : addresses) {			
 			try {
-				signupTokenManager.sendGroupSignupEmail(address, group);
+				signupTokenManager.sendGroupSignupEmail(address, group, expiresAt);
 			} catch (EmailException e) {
 				errorHandler.showAndLogError(String.format("Error sending group invitation link to address %s" ,  address), e);
 			}

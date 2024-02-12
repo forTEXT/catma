@@ -1,5 +1,7 @@
 package de.catma.ui.module.project;
 
+import java.time.LocalDate;
+
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.rbac.RBACRole;
@@ -46,6 +48,11 @@ public class GroupParticipant implements ProjectParticipant {
 
 	public SharedGroup getSharedGroup() {
 		return sharedGroup;
+	}
+	
+	@Override
+	public LocalDate getExpiresAt() {
+		return null;
 	}
 	
 	@Override

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -1658,13 +1659,13 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role) throws IOException {
-		return gitProjectHandler.assignOnProject(subject, role);
+	public RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException {
+		return gitProjectHandler.assignOnProject(subject, role, expiresAt);
 	}
 	
 	@Override
-	public SharedGroup assignRoleToGroup(SharedGroup group, RBACRole projectRole, boolean reassign) throws IOException {
-		return gitProjectHandler.assignOnProject(group, projectRole, reassign);
+	public SharedGroup assignRoleToGroup(SharedGroup group, RBACRole projectRole, LocalDate expiresAt, boolean reassign) throws IOException {
+		return gitProjectHandler.assignOnProject(group, projectRole, expiresAt, reassign);
 	}
 
 	@Override

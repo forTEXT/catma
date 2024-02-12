@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -696,12 +697,12 @@ public class GitProjectHandler {
 		return remoteGitServerManager.getRoleOnProject(subject, projectReference);
 	}
 
-	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {
-		return remoteGitServerManager.assignOnProject(subject, role, projectReference);
+	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException {
+		return remoteGitServerManager.assignOnProject(subject, role, projectReference, expiresAt);
 	}
 	
-	public SharedGroup assignOnProject(SharedGroup group, RBACRole role, boolean reassign) throws IOException {
-		return remoteGitServerManager.assignOnProject(group, role, projectReference, reassign);
+	public SharedGroup assignOnProject(SharedGroup group, RBACRole role, LocalDate expiresAt, boolean reassign) throws IOException {
+		return remoteGitServerManager.assignOnProject(group, role, projectReference, expiresAt, reassign);
 	}
 
 

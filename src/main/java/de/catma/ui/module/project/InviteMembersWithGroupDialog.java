@@ -1,5 +1,6 @@
 package de.catma.ui.module.project;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -18,11 +19,12 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.DateField;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
-import com.vaadin.ui.Notification.Type;
 
 import de.catma.rbac.RBACRole;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
@@ -31,7 +33,7 @@ import de.catma.user.Group;
 
 public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catma.ui.module.project.InviteMembersWithGroupDialog.MemberData> {
 	
-	public static record MemberData(String groupName, RBACRole projectRole, List<String> emailAdresses, Group group) {}; 
+	public static record MemberData(String groupName, RBACRole projectRole, List<String> emailAdresses, Group group, LocalDate expiresAt) {}; 
 	protected static class Mode {
 		private final Set<Component> modeComponents;
 		private final Set<Component> nonModeComponents;
@@ -79,10 +81,12 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 	private Button btSwitchMemberInvitationtoCreateGroup;
 	
 	private ComboBox<RBACRole> cbRole;
+	private DateField expiresAtInput;
 	
 	private Mode addGroupMode;
 	private Mode createGroupMode;
 	private Mode inviteProjectMembersMode;
+	private Mode inviteGroupMembersMode;
 	
 	private Mode currentMode;
 	
@@ -116,7 +120,13 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		dialog.currentMode = dialog.inviteProjectMembersMode;
 		return dialog;
 	}
-	
+
+	public static InviteMembersWithGroupDialog buildInviteGroupMembersDialog(SaveCancelListener<MemberData> saveCancelListener) {
+		InviteMembersWithGroupDialog dialog = new InviteMembersWithGroupDialog(saveCancelListener);
+		dialog.currentMode = dialog.inviteGroupMembersMode;
+		return dialog;
+	}
+
 
 	private void createComponents(Supplier<List<Group>> groupsSupplier) {
 		groupSelectionPanel = new HorizontalLayout();
@@ -144,14 +154,18 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		cbRole.setEmptySelectionAllowed(false);
 		cbRole.setValue(RBACRole.MAINTAINER);
 		
+		expiresAtInput = new DateField("Membership expires at (optional)");
+		expiresAtInput.setDateFormat("yyyy/MM/dd");
+		expiresAtInput.setPlaceholder("yyyy/mm/dd");
+		expiresAtInput.setWidth("100%");
 		
 		addGroupMode = new Mode(
-				Set.of(cbGroup, btSwitchGroupSelectionToCreateGroup, groupSelectionPanel), 
+				Set.of(cbGroup, btSwitchGroupSelectionToCreateGroup, groupSelectionPanel, expiresAtInput), 
 				Set.of(groupName, emailAddressListInput, btSwitchMemberInvitationtoCreateGroup), 
 				(content) -> {
 					return () -> {
 						setCaption("Add user group");
-						content.setExpandRatio(cbRole, 1.0f);
+						content.setExpandRatio(expiresAtInput, 1.0f);
 						cbGroup.focus();
 					};
 				},
@@ -159,7 +173,8 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 						null, 
 						cbRole.getValue(), 
 						null, 
-						cbGroup.getValue()), 
+						cbGroup.getValue(),
+						expiresAtInput.getValue()), 
 				new Validator<MemberData>() {
 
 					@Override
@@ -174,13 +189,13 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		);
 		
 		createGroupMode = new Mode(
-				Set.of(groupName, emailAddressListInput), 
+				Set.of(groupName, emailAddressListInput, expiresAtInput), 
 				Set.of(cbGroup, btSwitchGroupSelectionToCreateGroup, btSwitchMemberInvitationtoCreateGroup, groupSelectionPanel), 
 				(content) -> {
 					return () -> {
 						setCaption("Add user group");
 						content.setExpandRatio(emailAddressListInput, 1.0f);
-						content.setExpandRatio(cbRole, 0.0f);
+						content.setExpandRatio(expiresAtInput, 0.0f);
 						groupName.focus();
 					};
 				},
@@ -188,7 +203,8 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 						groupName.getValue(), 
 						cbRole.getValue(), 
 						Arrays.stream(emailAddressListInput.getValue().split("[,;\n]")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList()), 
-						null),
+						null,
+						expiresAtInput.getValue()),
 				new Validator<MemberData>() {
 					@Override
 					public ValidationResult apply(MemberData memberData, ValueContext context) {
@@ -202,13 +218,13 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		);
 		
 		inviteProjectMembersMode = new Mode(
-				Set.of(emailAddressListInput, btSwitchMemberInvitationtoCreateGroup), 
+				Set.of(emailAddressListInput, btSwitchMemberInvitationtoCreateGroup, expiresAtInput), 
 				Set.of(cbGroup, groupName, btSwitchGroupSelectionToCreateGroup, groupSelectionPanel), 
 				(content) -> {
 					return () -> {
 						setCaption("Add members");
 						content.setExpandRatio(emailAddressListInput, 1.0f);
-						content.setExpandRatio(cbRole, 0.0f);
+						content.setExpandRatio(expiresAtInput, 0.0f);
 						emailAddressListInput.focus();
 					};
 				},
@@ -216,7 +232,36 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 						null, 
 						cbRole.getValue(), 
 						Arrays.stream(emailAddressListInput.getValue().split("[,;\n]")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList()), 
-						null),
+						null,
+						expiresAtInput.getValue()),
+				new Validator<MemberData>() {
+					@Override
+					public ValidationResult apply(MemberData memberData, ValueContext context) {
+						if (memberData.emailAdresses.isEmpty()) {
+							return ValidationResult.error("You have provide at least one valid email address to invite someone to the Group!");
+						}
+						return ValidationResult.ok();
+					}
+				}
+		);
+		
+		inviteGroupMembersMode = new Mode(
+				Set.of(emailAddressListInput, expiresAtInput), 
+				Set.of(cbGroup, groupName, btSwitchGroupSelectionToCreateGroup, btSwitchMemberInvitationtoCreateGroup, groupSelectionPanel, cbRole), 
+				(content) -> {
+					return () -> {
+						setCaption("Add members");
+						content.setExpandRatio(emailAddressListInput, 1.0f);
+						content.setExpandRatio(expiresAtInput, 0.0f);
+						emailAddressListInput.focus();
+					};
+				},
+				() -> new MemberData(
+						null, 
+						null, 
+						Arrays.stream(emailAddressListInput.getValue().split("[,;\n]")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList()), 
+						null,
+						expiresAtInput.getValue()),
 				new Validator<MemberData>() {
 					@Override
 					public ValidationResult apply(MemberData memberData, ValueContext context) {
@@ -243,6 +288,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		content.addComponent(emailAddressListInput);
 		content.addComponent(btSwitchMemberInvitationtoCreateGroup);
 		content.addComponent(cbRole);
+		content.addComponent(expiresAtInput);
 		
 		btSwitchGroupSelectionToCreateGroup.addClickListener(event -> {
 			createGroupMode.activate(content);

@@ -1,5 +1,18 @@
 package de.catma.repository.git.managers;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.AccessLevel;
+import org.gitlab4j.api.models.Member;
+import org.gitlab4j.api.models.Project;
+
 import de.catma.project.ProjectReference;
 import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACPermission;
@@ -8,16 +21,6 @@ import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitMember;
 import de.catma.user.Group;
 import de.catma.user.SharedGroup;
-
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.AccessLevel;
-import org.gitlab4j.api.models.Member;
-import org.gitlab4j.api.models.Project;
-
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public abstract class GitlabManagerCommon implements IRBACManager {
 	protected abstract Logger getLogger();
@@ -54,11 +57,14 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	}
 
 	@Override
-	public final RBACSubject assignOnGroup(RBACSubject subject, Long groupId) throws IOException {
+	public final RBACSubject assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException {
 		try {
 			// we use ASSISTANT/developer as the default role because as far as CATMA is concerned there is not much difference between 
 			// the developer and maintainer roles in groups
-			Member member = getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), RBACRole.ASSISTANT.getAccessLevel()); 
+			java.util.Date expirationDate = expiresAt==null?null:
+				java.util.Date.from(expiresAt.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+
+			Member member = getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), RBACRole.ASSISTANT.getAccessLevel(), expirationDate); 
 			return new GitMember(member);
 		} catch (GitLabApiException e) {
 			throw new IOException(String.format("Failed to add member %s to group with the ID %d with the ASSISTANT role", subject, groupId), e);
@@ -66,7 +72,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	}
 	
 	@Override
-	public final RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference) throws IOException {
+	public final RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException {
 		try {
 			Project project = getGitLabApi().getProjectApi().getProject(
 					projectReference.getNamespace(), projectReference.getProjectId()
@@ -75,6 +81,8 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			if (project == null) {
 				throw new IOException(String.format("Unknown project \"%s\"", projectReference.getName()));
 			}
+			java.util.Date expirationDate = expiresAt==null?null:
+				java.util.Date.from(expiresAt.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 
 			try {
 				Member projectMember = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
@@ -87,7 +95,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 					return subject;
 				}
 
-				return updateProjectMember(subject, role, project.getId());
+				return updateProjectMember(subject, role, project.getId(), expirationDate);
 			}
 			catch (GitLabApiException e) {
 				// TODO: refactor this, don't just assume the error means we need to create a new project member
@@ -104,7 +112,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 						),
 						e
 				);
-				return createProjectMember(subject, role, project.getId());
+				return createProjectMember(subject, role, project.getId(), expirationDate);
 			}
 		}
 		catch (GitLabApiException e) {
@@ -115,7 +123,7 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	}
 	
 	@Override
-	public SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, boolean reassign)
+	public SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign)
 			throws IOException {
 		try {
 			Project project = getGitLabApi().getProjectApi().getProject(
@@ -130,11 +138,14 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 				getGitLabApi().getProjectApi().unshareProject(project.getId(), sharedGroup.groupId());
 			}
 
+			java.util.Date expirationDate = expiresAt==null?null:
+				java.util.Date.from(expiresAt.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+			
 			getGitLabApi().getProjectApi().shareProject(
 					project.getId(), 
 					sharedGroup.groupId(), 
 					AccessLevel.forValue(role.getAccessLevel()), 
-					null); // does not expire
+					expirationDate);
 			
 		
 			return sharedGroup;
@@ -196,13 +207,14 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		}
 	}
 
-	private RBACSubject createProjectMember(RBACSubject subject, RBACRole role, Long projectId) throws IOException {
+	private RBACSubject createProjectMember(RBACSubject subject, RBACRole role, Long projectId, Date expiresAt) throws IOException {
 		try {
 			return new GitMember(
 					getGitLabApi().getProjectApi().addMember(
 							projectId,
 							subject.getUserId(),
-							AccessLevel.forValue(role.getAccessLevel())
+							AccessLevel.forValue(role.getAccessLevel()),
+							expiresAt
 					)
 			);
 		}
@@ -214,14 +226,14 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		}
 	}
 
-	private RBACSubject updateProjectMember(RBACSubject subject, RBACRole role, long projectId) throws IOException {
+	private RBACSubject updateProjectMember(RBACSubject subject, RBACRole role, long projectId, Date expiresAt) throws IOException {
 		try {
 			return new GitMember(
 					getGitLabApi().getProjectApi().updateMember(
 							projectId,
 							subject.getUserId(),
-							AccessLevel.forValue(role.getAccessLevel())
-					)
+							AccessLevel.forValue(role.getAccessLevel()),
+							expiresAt)
 			);
 		}
 		catch (GitLabApiException e) {

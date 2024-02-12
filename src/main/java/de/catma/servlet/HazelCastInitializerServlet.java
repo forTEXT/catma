@@ -73,7 +73,7 @@ public class HazelCastInitializerServlet extends HttpServlet{
 		SignupTokenManager signupTokenManager = new SignupTokenManager();
 		
 		try {			
-			signupTokenManager.initGroupProjectSignupTokenCacheFromTransactionLog();
+			signupTokenManager.initGroupProjectSignupTokenCacheTransactionLog();
 		}
 		catch (IOException e) {
 			throw new ServletException("Unable to initialize the transaction log for the group/project singup tokens", e);

@@ -1,5 +1,8 @@
 package de.catma.ui.module.dashboard;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.rbac.RBACRole;
@@ -52,5 +55,12 @@ public class GroupMemberParticipant implements ProjectParticipant {
 
 	public Member getMember() {
 		return member;
+	}
+	
+	@Override
+	public LocalDate getExpiresAt() {
+		return member.getExpiresAt() == null?null:member.getExpiresAt().toInstant()
+			      .atZone(ZoneId.systemDefault())
+			      .toLocalDate();
 	}
 }

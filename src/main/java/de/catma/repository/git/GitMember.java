@@ -1,5 +1,6 @@
 package de.catma.repository.git;
 
+import java.util.Date;
 import java.util.Objects;
 
 import de.catma.rbac.RBACRole;
@@ -23,7 +24,7 @@ public class GitMember implements Member {
 			return true;
 		if (!(obj instanceof GitMember))
 			return false;
-		GitMember other = (GitMember) obj;
+		Member other = (Member) obj;
 		return Objects.equals(getUserId(), other.getUserId());
 	}
 
@@ -61,6 +62,11 @@ public class GitMember implements Member {
 	}
     
     @Override
+	public Date getExpiresAt() {
+		return delegate.getExpiresAt();
+	}
+
+	@Override
     public int compareTo(Member o) {
     	
     	String n1 = this.getName();

@@ -43,7 +43,7 @@ public class CreateGroupCard extends VerticalFlexLayout {
 		newProjectLayout.addStyleName("groupslist__newgroup__link");
 		newProjectLayout.addLayoutClickListener(
 				layoutClickEvent -> new SingleTextInputDialog(
-						"Create Group",
+						"Create User Group",
 						"Name",
 						null,
 						result -> {
@@ -63,7 +63,7 @@ public class CreateGroupCard extends VerticalFlexLayout {
 				).show()
 		);
 
-		Label labelDesc = new Label("create new group");
+		Label labelDesc = new Label("create new user group");
 		labelDesc.setWidth("100%");
 		newProjectLayout.addComponents(labelDesc);
 

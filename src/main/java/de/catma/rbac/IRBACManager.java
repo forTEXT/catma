@@ -1,6 +1,7 @@
 package de.catma.rbac;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
 import de.catma.project.ProjectReference;
 import de.catma.user.Group;
@@ -34,7 +35,7 @@ public interface IRBACManager {
 	 * @return
 	 * @throws IOException
 	 */
-	RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference) throws IOException;
+	RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException;
 
 	/**
 	 * unassigns a subject from a project
@@ -87,7 +88,7 @@ public interface IRBACManager {
 	 * @return
 	 * @throws IOException
 	 */
-	RBACSubject assignOnGroup(RBACSubject subject, Long groupId) throws IOException;
+	RBACSubject assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException;
 	
 	/**
 	 * Assign the given role to the given group in the context of the given project.
@@ -96,7 +97,7 @@ public interface IRBACManager {
 	 * @return
 	 * @throws IOException
 	 */
-	SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, boolean reassign) throws IOException;
+	SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign) throws IOException;
 
 
 	
