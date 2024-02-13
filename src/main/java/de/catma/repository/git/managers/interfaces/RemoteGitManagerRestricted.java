@@ -45,14 +45,23 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	List<ProjectReference> getProjectReferences() throws IOException;
 
 	/**
-	 * Get all groups the curren user is part of.
+	 * Get all groups the current user is part of.
 	 *
 	 * @return a {@link List} of {@link de.catma.user.Group}s
 	 * @throws IOException if an error occurs when getting the groups
 	 */
 	List<de.catma.user.Group> getGroups() throws IOException;
 	
-	
+	/**
+	/**
+	 * Get all groups the current user is part of and having at least the given role. 
+	 *
+	 * @param minRole the minimum role the user must have in the result groups
+	 * @return a {@link List} of {@link de.catma.user.Group}s
+	 * @throws IOException if an error occurs when getting the groups
+	 */
+	List<de.catma.user.Group> getGroups(RBACRole minRole) throws IOException;
+
 	/**
 	 * Creates a new group.
 	 * @param name the name of the group

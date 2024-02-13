@@ -1,6 +1,8 @@
 package de.catma.repository.git.managers;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -207,12 +209,15 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 
-	private ProjectReference getProjectReference(String namespace, String path, String description) throws IOException {
+	private ProjectReference getProjectReference(String namespace, String path, String description, LocalDate createdAt,
+			LocalDate lastActivityAt) throws IOException {
 		try {
 			JsonObject metaDataJson = JsonParser.parseString(description).getAsJsonObject();
 			String catmaProjectName = metaDataJson.get(ProjectMetadataSerializationField.name.name()).getAsString();
 			String catmaProjectDescription = metaDataJson.get(ProjectMetadataSerializationField.description.name()).getAsString();
-			return new ProjectReference(path, namespace, catmaProjectName, catmaProjectDescription);
+			return new ProjectReference(
+					path, namespace, catmaProjectName, catmaProjectDescription,
+					createdAt, lastActivityAt);
 		}
 		catch (Exception e) {
 			// while we could still return a ProjectReference with placeholder name and description, we probably want to investigate what
@@ -228,18 +233,27 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<de.catma.user.Group> getGroups() throws IOException {
+		return getGroups(null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<de.catma.user.Group> getGroups(RBACRole minRole) throws IOException {
 		try {
 			return (List<de.catma.user.Group>) gitlabModelsCache.get("groups", () -> {
 				List<de.catma.user.Group> result = new ArrayList<>();
 				GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+				GroupFilter groupFilter = new GroupFilter()
+						.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
+						.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC)
+						.withTopLevelOnly(true);
+				if (minRole != null) {
+					groupFilter = groupFilter.withMinAccessLevel(AccessLevel.forValue(minRole.getAccessLevel()));
+				}
 				Pager<Group> groupPager = groupApi.getGroups(
-						new GroupFilter()
-								.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
-								.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC)
-								.withTopLevelOnly(true),
+						groupFilter,
 						20);
 
 				while (groupPager.hasNext()) {
@@ -262,7 +276,13 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 											return getProjectReference(
 													project.getNamespace().getPath(),
 													project.getPath(),
-													project.getDescription()
+													project.getDescription(),
+													project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
+														      .atZone(ZoneId.systemDefault())
+														      .toLocalDate(),
+													project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
+														      .atZone(ZoneId.systemDefault())
+														      .toLocalDate()
 											);
 										} catch (IOException e) {
 											logger.log(
@@ -386,7 +406,13 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 									return getProjectReference(
 											project.getNamespace().getPath(),
 											project.getPath(),
-											project.getDescription()
+											project.getDescription(),
+											project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
+												      .atZone(ZoneId.systemDefault())
+												      .toLocalDate(),
+											project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
+												      .atZone(ZoneId.systemDefault())
+												      .toLocalDate()
 									);
 								}
 								catch (IOException e) {

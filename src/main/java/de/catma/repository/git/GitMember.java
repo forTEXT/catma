@@ -1,6 +1,7 @@
 package de.catma.repository.git;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Objects;
 
 import de.catma.rbac.RBACRole;
@@ -62,8 +63,10 @@ public class GitMember implements Member {
 	}
     
     @Override
-	public Date getExpiresAt() {
-		return delegate.getExpiresAt();
+	public LocalDate getExpiresAt() {
+		return delegate.getExpiresAt() == null?null:delegate.getExpiresAt().toInstant()
+			      .atZone(ZoneId.systemDefault())
+			      .toLocalDate();
 	}
 
 	@Override

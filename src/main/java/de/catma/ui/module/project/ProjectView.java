@@ -1990,7 +1990,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				},
 				() -> {
 					try {
-						return projectsManager.getGroups();
+						return projectsManager.getGroups(RBACRole.MAINTAINER);
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}

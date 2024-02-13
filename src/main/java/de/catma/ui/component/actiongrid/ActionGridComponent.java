@@ -172,7 +172,6 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
     
 	private void initComponents() {
         setHeight("100%");
-		
         addComponents(actionGridBar, dataGrid);
         setExpandRatio(dataGrid, 1f);
         setSpacing(false);

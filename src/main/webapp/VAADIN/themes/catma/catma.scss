@@ -755,6 +755,7 @@ $contribution-color: blue;
     color: rgba(0, 0, 0, 0.87);
     padding-top: 14px;
     padding-bottom: 14px;
+    width: 100%;
   }
 
   div.documentsgrid__doc {
@@ -809,7 +810,28 @@ $contribution-color: blue;
   .projectlist__list {
     flex-wrap: wrap;
   }
-
+  
+  .v-caption-project-list-view__sorted-by-box {
+   	font-size: xx-small !important;
+   }
+   
+   .project-list-view__sorted-by-box {
+   	font-size: x-small;
+   }
+   
+   .v-filterselect-suggestpopup-project-list-view__sorted-by-box {
+   	font-size: x-small;	   
+   }
+   
+   .v-caption-project-list-view__sorted-by-box > span.v-captiontext {
+    float: right;
+    height: 5px;
+   }
+   
+   .v-textfield-project-list-view__search-field {
+    margin-top: 5px !important;
+   }
+   
   .projectlist vaadin-button {
     background-color: transparent;
   }

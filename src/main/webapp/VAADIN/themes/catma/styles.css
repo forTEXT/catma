@@ -18228,6 +18228,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: rgba(0, 0, 0, 0.87);
 	padding-top: 14px;
 	padding-bottom: 14px;
+	width: 100%;
 }
 
 .catma div.documentsgrid__doc {
@@ -18276,6 +18277,27 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .projectlist__list {
 	flex-wrap: wrap;
+}
+
+.catma .v-caption-project-list-view__sorted-by-box {
+	font-size: xx-small !important;
+}
+
+.catma .project-list-view__sorted-by-box {
+	font-size: x-small;
+}
+
+.catma .v-filterselect-suggestpopup-project-list-view__sorted-by-box {
+	font-size: x-small;
+}
+
+.catma .v-caption-project-list-view__sorted-by-box > span.v-captiontext {
+	float: right;
+	height: 5px;
+}
+
+.catma .project-list-view__search-field > v-textfield {
+	margin-top: 5px;
 }
 
 .catma .projectlist vaadin-button {

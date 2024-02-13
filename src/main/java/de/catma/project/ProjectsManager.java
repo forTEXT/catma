@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.tag.TagManager;
 import de.catma.user.Group;
@@ -48,6 +49,15 @@ public interface ProjectsManager {
 	 * @throws IOException if an error occurs when getting the groups
 	 */
 	List<Group> getGroups() throws  IOException;
+
+	/**
+	 * Get all the groups the current user has access to with at least the given role.
+	 * 
+	 * @param minRole the minimum role the user must have in the result groups
+	 * @return a {@link List} of {@link Group}s
+	 * @throws IOException if an error occurs when getting the groups
+	 */
+	List<Group> getGroups(RBACRole minRole) throws  IOException;
 
 	/**
 	 * Opens an existing project.

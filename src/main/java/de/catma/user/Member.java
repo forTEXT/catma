@@ -1,6 +1,6 @@
 package de.catma.user;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import de.catma.rbac.RBACRole;
 
@@ -12,5 +12,5 @@ public interface Member extends User, Comparable<Member> {
 	 */
 	RBACRole getRole();
 
-	Date getExpiresAt();
+	LocalDate getExpiresAt();
 }

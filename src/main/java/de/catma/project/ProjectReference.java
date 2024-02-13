@@ -1,9 +1,6 @@
 package de.catma.project;
 
-import java.util.Collections;
-import java.util.List;
-
-import de.catma.user.Group;
+import java.time.LocalDate;
 
 public class ProjectReference {
 	
@@ -11,20 +8,25 @@ public class ProjectReference {
 	private final String namespace;
 	private String name;
 	private String description;
-	private final List<Group> shareGroups;
+	private final LocalDate createdAt;
+	private final LocalDate lastActivityAt;
 	
 	public ProjectReference(
 			String projectId, String namespace, String name, String description) {
-		this(projectId, namespace, name, description, Collections.emptyList());
+		this(projectId, namespace, name, description, null, null);
 	}
-	public ProjectReference(
-			String projectId, String namespace, String name, String description, List<Group> sharedGroups) {
+
+	
+	
+	public ProjectReference(String projectId, String namespace, String name, String description, LocalDate createdAt,
+			LocalDate lastActivityAt) {
 		super();
 		this.projectId = projectId;
 		this.namespace = namespace;
 		this.name = name;
 		this.description = description;
-		this.shareGroups = sharedGroups;
+		this.createdAt = createdAt;
+		this.lastActivityAt = lastActivityAt;
 	}
 
 	public String getProjectId() {
@@ -60,6 +62,14 @@ public class ProjectReference {
 		return String.format("%s/%s", namespace, projectId);
 	}
 
+	public LocalDate getCreatedAt() {
+		return createdAt;
+	}
+	
+	public LocalDate getLastActivityAt() {
+		return lastActivityAt;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -89,10 +99,6 @@ public class ProjectReference {
 		} else if (!projectId.equals(other.projectId))
 			return false;
 		return true;
-	}
-	
-	public List<Group> getShareGroups() {
-		return shareGroups;
 	}
 	
 }

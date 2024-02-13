@@ -59,8 +59,6 @@ public class GroupMemberParticipant implements ProjectParticipant {
 	
 	@Override
 	public LocalDate getExpiresAt() {
-		return member.getExpiresAt() == null?null:member.getExpiresAt().toInstant()
-			      .atZone(ZoneId.systemDefault())
-			      .toLocalDate();
+		return member.getExpiresAt();
 	}
 }

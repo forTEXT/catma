@@ -18,6 +18,7 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Page;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -38,6 +39,7 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.events.GroupsChangedEvent;
+import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
@@ -153,10 +155,33 @@ public class GroupCard extends VerticalFlexLayout {
         });
         
         ContextMenu memberGridComponentMoreOptionsContextMenu = memberGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
-
+        
+        rbacEnforcer.register(
+    		RBACConstraint.ifAuthorized(
+				role -> rbacManager.hasPermission(role, RBACPermission.GROUP_MEMBERS_EDIT), 
+				() -> memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers())));
+        rbacEnforcer.register(
+    		RBACConstraint.ifNotAuthorized(
+				role -> rbacManager.hasPermission(role, RBACPermission.GROUP_MEMBERS_EDIT), 
+				() -> {
+					memberGridComponent.getActionGridBar().setAddBtnVisible(false);
+					memberGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
+			        memberGridComponent.getActionGridBar().setMargin(new MarginInfo(false, true, false, true));
+				}));
+        
+        sharedProjectsGrid.addItemClickListener(itemClickEvent -> handleProjectItemClick(itemClickEvent));
 	}
     
+	private void handleProjectItemClick(ItemClick<ProjectReference> itemClickEvent) {
+		if (!itemClickEvent.getMouseEventDetails().isDoubleClick()) {
+			return;
+
+		}
+		ProjectReference projectReference = itemClickEvent.getItem();
+		
+		eventBus.post(new RouteToProjectEvent(projectReference));
+	}
+
 	private void handleRemoveMembers() {
 		Set<Member> membersToRemove = memberGrid.getSelectedItems();
 
@@ -250,8 +275,8 @@ public class GroupCard extends VerticalFlexLayout {
 	
 	private void initData() {
 		try {
-			RBACRole projectRole = rbacManager.getRoleOnGroup(projectsManager.getUser(), group);
-			rbacEnforcer.enforceConstraints(projectRole); // normally done in reload();
+			RBACRole groupRole = rbacManager.getRoleOnGroup(projectsManager.getUser(), group);
+			rbacEnforcer.enforceConstraints(groupRole); // normally done in reload();
 		} catch (IOException e) {
             errorHandler.showAndLogError(String.format("Can't fetch permissions for group \"%s\"", group.getName()), e);
 		}
@@ -286,7 +311,7 @@ public class GroupCard extends VerticalFlexLayout {
                 new Label("Members"),
                 memberGrid
         );
-
+        
         topPanel.addComponent(memberGridComponent);
         topPanel.setExpandRatio(memberGridComponent, 1f);
 

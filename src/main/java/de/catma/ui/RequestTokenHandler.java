@@ -277,7 +277,7 @@ public class RequestTokenHandler {
 							projectSignupToken.projectId(), 
 							projectSignupToken.namespace(), 
 							projectSignupToken.projectName(), 
-							null), // description is not used during role assignment
+							null),  // description is not used during role assignment
 					(projectSignupToken.expiresAt()==null)?null:LocalDate.parse(projectSignupToken.expiresAt(), DateTimeFormatter.ISO_LOCAL_DATE));
 			
 			backgroundServiceProvider.acquireBackgroundService().schedule(() -> {							

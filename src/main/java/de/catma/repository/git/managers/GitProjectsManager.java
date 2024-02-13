@@ -8,6 +8,7 @@ import de.catma.project.Project;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
 import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GraphWorktreeProject;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -80,7 +82,12 @@ public class GitProjectsManager implements ProjectsManager {
 	public List<Group> getGroups() throws  IOException {
 		return remoteGitServerManager.getGroups();
 	}
-	
+
+	@Override
+	public List<Group> getGroups(RBACRole minRole) throws  IOException {
+		return remoteGitServerManager.getGroups(minRole);
+	}
+
 	@Override
 	public Group createGroup(String name) throws IOException {
 		String path = generateCleanNameWithIdPrefix(name, () -> idGenerator.generateGroupId());
@@ -215,7 +222,7 @@ public class GitProjectsManager implements ProjectsManager {
 			localGitRepoManager.push(jGitCredentialsManager);
 		}
 
-		return new ProjectReference(projectId, user.getIdentifier(), name, description);
+		return new ProjectReference(projectId, user.getIdentifier(), name, description, LocalDate.now(), null);
 	}
 
 	@Override
