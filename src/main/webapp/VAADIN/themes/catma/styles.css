@@ -18296,8 +18296,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 5px;
 }
 
-.catma .project-list-view__search-field > v-textfield {
-	margin-top: 5px;
+.catma .v-textfield-project-list-view__search-field {
+	margin-top: 5px !important;
 }
 
 .catma .projectlist vaadin-button {

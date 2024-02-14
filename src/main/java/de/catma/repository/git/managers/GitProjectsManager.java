@@ -221,8 +221,8 @@ public class GitProjectsManager implements ProjectsManager {
 			// create remote user specific branch
 			localGitRepoManager.push(jGitCredentialsManager);
 		}
-
-		return new ProjectReference(projectId, user.getIdentifier(), name, description, LocalDate.now(), null);
+		LocalDate now = LocalDate.now();
+		return new ProjectReference(projectId, user.getIdentifier(), name, description, now, now);
 	}
 
 	@Override
@@ -266,16 +266,18 @@ public class GitProjectsManager implements ProjectsManager {
 		// during testing and prevented project deletion
 		// TODO: this was added before the explicit repository close call was added in JGitRepoManager.close
 		//       and can potentially be removed now
-		Files.walkFileTree(
-				projectDir,
-				new SimpleFileVisitor<Path>() {
-					public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
-						filePath.toFile().setWritable(true, true);
-						return FileVisitResult.CONTINUE;
+		if (projectDir.toFile().exists()) {
+			Files.walkFileTree(
+					projectDir,
+					new SimpleFileVisitor<Path>() {
+						public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
+							filePath.toFile().setWritable(true, true);
+							return FileVisitResult.CONTINUE;
+						}
 					}
-				}
-		);
-
+			);
+		}
+		
 		FileUtils.deleteDirectory(
 			Paths.get(
 				localGitRepositoryManager.getUserRepositoryBasePath().getAbsolutePath(),
@@ -297,5 +299,22 @@ public class GitProjectsManager implements ProjectsManager {
 	@Override
 	public List<User> findUser(String usernameOrEmail) throws IOException {
 		return remoteGitServerManager.findUser(usernameOrEmail);
+	}
+	
+	@Override
+	public ProjectReference forkProject(ProjectReference projectReference, String name, String description) throws IOException {
+
+		String targetProjectId = generateCleanNameWithIdPrefix(name, () -> idGenerator.generate());
+
+		// fork the remote repository
+		remoteGitServerManager.forkProject(projectReference, targetProjectId);
+
+		LocalDate now = LocalDate.now();
+		return new ProjectReference(targetProjectId, user.getIdentifier(), name, description, now, now);
+	}
+	
+	@Override
+	public boolean isProjectImportFinished(ProjectReference projectReference) throws IOException {
+		return remoteGitServerManager.isProjectImportFinished(projectReference);
 	}
 }

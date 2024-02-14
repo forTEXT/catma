@@ -155,4 +155,22 @@ public interface ProjectsManager {
 	 * @throws IOException if an error occurs when searching
 	 */
 	List<User> findUser(String usernameOrEmail) throws IOException;
+
+	/**
+	 * Forks the given project by using the given name and description for the new project.
+	 * @param projectReference the source project to be forked
+	 * @param name the name of the new project
+	 * @param description the description of the new project
+	 * @return the new project, make sure to check the import status before using it (e. g. cloning)
+	 * @throws IOException if an error occurs when forking
+	 */
+	ProjectReference forkProject(ProjectReference projectReference, String name, String description) throws IOException;
+
+	/**
+	 * Checks the import status of the given project.
+	 * @param projectReference the project to check
+	 * @return true if the project has been imported successfully else false
+	 * @throws IOException if an error occurs during the check or if the import status is 'failed'.
+	 */
+	boolean isProjectImportFinished(ProjectReference projectReference) throws IOException;
 }

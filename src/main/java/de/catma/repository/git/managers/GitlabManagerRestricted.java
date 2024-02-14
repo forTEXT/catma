@@ -16,11 +16,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
+
 import org.eclipse.jgit.lib.Constants;
 import org.gitlab4j.api.Constants.IssueState;
 import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.GitLabApiForm;
 import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.IssuesApi;
 import org.gitlab4j.api.MergeRequestApi;
@@ -32,6 +36,7 @@ import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.GroupFilter;
 import org.gitlab4j.api.models.GroupParams;
 import org.gitlab4j.api.models.GroupProjectsFilter;
+import org.gitlab4j.api.models.ImportStatus.Status;
 import org.gitlab4j.api.models.Issue;
 import org.gitlab4j.api.models.IssueFilter;
 import org.gitlab4j.api.models.MergeRequest;
@@ -1000,5 +1005,48 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					e
 			);
 		}
+	}
+	
+	@Override
+	public void forkProject(ProjectReference projectReference, String targetProjectId) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project sourceProject = projectApi.getProject(projectReference.getFullPath());
+			
+			
+			projectApi.forkProject(
+					sourceProject.getId(), 
+					this.user.getIdentifier(), // we always fork into the namespace of the current user 
+					targetProjectId, // path 
+					targetProjectId); // name
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to fork remote Git repository", e);
+		}
+	}
+	
+	@Override
+	public boolean isProjectImportFinished(ProjectReference projectReference) throws IOException {
+		try {
+			
+			ExtendedProjectApi projectApi = new ExtendedProjectApi(restrictedGitLabApi);
+			ExtendedProject project = projectApi.getExtendedProject(projectReference.getFullPath());
+			Status status = project.getImportStatus();
+			if (status.equals(Status.NONE) || status.equals(Status.FINISHED)) {
+				return true;
+			}
+			
+			if (status.equals(Status.FAILED)) {
+				throw new IOException(String.format(
+						"Forking the new project '%s' with ID '%s' failed with error message '%s'", 
+						projectReference.getName(), projectReference.getProjectId(), project.getImportError()));
+			}
+			
+			return false;
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to check import status for remote Git repository", e);
+		}
+		
 	}
 }

@@ -274,4 +274,22 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if an error occurs when merging the merge request
 	 */
 	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
+
+	/**
+	 * Forks the given project by using the targetProjectId for gitlab-project-name and gitlab-project-path
+	 * @param projectReference the project to fork
+	 * @param targetProjectId the projectId of the new project
+	 * @return the new project's repository URL
+	 * @throws IOException if an error occurs when forking the project
+	 */
+	void forkProject(ProjectReference projectReference, String targetProjectId)
+			throws IOException;
+
+	/**
+	 * Checks the import status of the given project.
+	 * @param projectReference the project to check
+	 * @return true if the project has been imported successfully else false
+	 * @throws IOException if an error occurs during the check or if the import status is 'failed'.
+	 */
+	boolean isProjectImportFinished(ProjectReference projectReference) throws IOException;
 }

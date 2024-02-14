@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -118,12 +119,16 @@ import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.MembersChangedEvent;
+import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
+import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.events.routing.RouteToTagsEvent;
 import de.catma.ui.layout.FlexLayout.FlexWrap;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
+import de.catma.ui.module.dashboard.ForkProjectDialog;
 import de.catma.ui.module.main.CanReloadAll;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.InviteMembersWithGroupDialog.MemberData;
@@ -166,7 +171,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private ProgressBar progressBar;
 
 	// documents & annotations components
-	private enum DocumentGridColumn {
+	enum DocumentGridColumn {
 		NAME,
 		RESPONSIBLE,
 	}
@@ -178,7 +183,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private MenuItem miToggleResponsibilityFilter;
 
 	// tagsets components
-	private enum TagsetGridColumn {
+	enum TagsetGridColumn {
 		NAME,
 		RESPONSIBLE,
 	}
@@ -199,6 +204,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private Button btnSynchronize;
 	private IconButton btnToggleViewSynchronizedOrLatestContributions;
 	private MenuItem miCommit;
+	private MenuItem miCopyProject;
+
 	private MenuItem miShareResources;
 	private MenuItem miImportCorpus;
 	private ProjectResourceExportApiDialog projectResourceExportApiDialog;
@@ -642,6 +649,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		miCommit = hugeCardMoreOptionsContextMenu.addItem(
 				"Commit All Changes", menuItem -> handleCommitRequest()
 		);
+		
+		miCopyProject = hugeCardMoreOptionsContextMenu.addItem(
+				"Copy Project", menuItem -> handleCopyProjectRequest()
+		);
+		
+		
 		hugeCardMoreOptionsContextMenu.addSeparator();
 		miShareResources = hugeCardMoreOptionsContextMenu.addItem(
 				"Share Project Resources (Experimental API)", menuItem -> handleShareProjectResources()
@@ -655,6 +668,53 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				)
 		);
 	}
+
+	private void handleCopyProjectRequest() {
+		ForkProjectDialog dialog = new ForkProjectDialog(projectsManager, projectReference,  new SaveCancelListener<ProjectReference>() {
+			
+			@Override
+			public void savePressed(ProjectReference forkedProjectReference) {
+				handleForkedProject(forkedProjectReference, 2, 0);
+			}
+		});
+		dialog.show();
+	}
+
+
+	private void handleForkedProject(final ProjectReference forkedProjectReference, final long delay, final long accumulatedWaitingTime) {
+		setEnabled(false);
+		setProgressBarVisible(true);
+		
+		progressBar.setCaption(String.format("Copying in progress...%s The new project will open automatically once it becomes available.", accumulatedWaitingTime>0?(accumulatedWaitingTime+"s"):""));
+		
+		final UI currentUI = UI.getCurrent();
+		currentUI.push();
+		
+		((BackgroundServiceProvider)UI.getCurrent()).acquireBackgroundService().schedule(() -> {
+			currentUI.access(() -> {
+				try {
+				
+					if (projectsManager.isProjectImportFinished(forkedProjectReference)) {
+						setProgressBarVisible(false);
+						setEnabled(true);
+						projectsManager.updateProjectMetadata(forkedProjectReference);
+						eventBus.post(new ProjectsChangedEvent());
+						eventBus.post(new RouteToDashboardEvent());
+						eventBus.post(new RouteToProjectEvent(forkedProjectReference, true));
+					}
+					else {
+						handleForkedProject(forkedProjectReference, 5, accumulatedWaitingTime+delay);
+					}
+				}
+				catch (IOException e) {
+					setProgressBarVisible(false);
+					setEnabled(true);
+					errorHandler.showAndLogError(String.format("Error copying old project '%s' into new project '%s'", projectReference, forkedProjectReference), e);
+				}
+			});
+		}, delay, TimeUnit.SECONDS);
+	}
+
 
 	private SerializablePredicate<Object> createDocumentGridComponentSearchFilterProvider(String searchInput) {
 		@SuppressWarnings("unchecked")
@@ -698,7 +758,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 
 	// open project / load data
-	public void openProject(ProjectReference projectReference) {
+	public void openProject(ProjectReference projectReference, boolean needsForkConfiguration) {
 		setEnabled(false);
 		setProgressBarVisible(true);
 
@@ -738,6 +798,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				setProgressBarVisible(false);
 				reloadAll();
 				setEnabled(true);
+//				if (needsForkConfiguration) {
+					showForkConfigurationDialog();
+//				}
 			}
 
 			@Override
@@ -748,6 +811,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			}
 		});
 	}
+
+	private void showForkConfigurationDialog() {
+		new ForkConfigurationDialog(project, membersByIdentifier, new SaveCancelListener<Set<String>>() {
+			
+			@Override
+			public void savePressed(Set<String> result) {
+				// TODO Auto-generated method stub
+				
+			}
+		}).show();
+	}
+
 
 	@Override
 	public void reloadAll() {

@@ -35,6 +35,4 @@ public class GitUser implements User {
 	public String getEmail() {
 		return gitlabUser.getEmail();
 	}
-
-
 }
