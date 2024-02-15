@@ -389,4 +389,7 @@ public class AnnotationCollection {
 	}
 
 
+	public Set<String> getTagDefinitionIds() {
+		return Collections.unmodifiableSet(tagReferencesByTagId.keySet());
+	}
 }

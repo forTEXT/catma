@@ -297,15 +297,13 @@ public class GroupCard extends VerticalFlexLayout {
         addComponent(topPanel);
 
         memberGrid = new Grid<>();
-        memberGrid.setWidth("376px");
+        memberGrid.setWidth("100%");
         memberGrid.setHeightByRows(4);
         memberGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
         memberGrid.addColumn(User::getName)
-//                .setWidth(300)
                 .setCaption("Name")
                 .setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
                 .setDescriptionGenerator(User::preciseName).setExpandRatio(1);
-//        memberGrid.addColumn(Member::getRole).setExpandRatio(1);
 
         memberGridComponent = new ActionGridComponent<>(
                 new Label("Members"),
@@ -316,7 +314,7 @@ public class GroupCard extends VerticalFlexLayout {
         topPanel.setExpandRatio(memberGridComponent, 1f);
 
         sharedProjectsGrid = new Grid<>();
-        sharedProjectsGrid.setWidth("291px");
+        sharedProjectsGrid.setWidth("100%");
         sharedProjectsGrid.setHeightByRows(4);
 
         sharedProjectsGrid.addColumn(ProjectReference::getName)

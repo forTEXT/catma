@@ -57,6 +57,7 @@ import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TreeGrid;
@@ -798,9 +799,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				setProgressBarVisible(false);
 				reloadAll();
 				setEnabled(true);
-//				if (needsForkConfiguration) {
+				if (needsForkConfiguration) {
 					showForkConfigurationDialog();
-//				}
+				}
 			}
 
 			@Override
@@ -816,8 +817,68 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		new ForkConfigurationDialog(project, membersByIdentifier, new SaveCancelListener<Set<String>>() {
 			
 			@Override
-			public void savePressed(Set<String> result) {
-				// TODO Auto-generated method stub
+			public void savePressed(final Set<String> selectedResourceIdsToKeep) {
+				setEnabled(false);
+				setProgressBarVisible(true);
+
+				final UI currentUI = UI.getCurrent();
+
+				
+				((BackgroundServiceProvider)UI.getCurrent()).acquireBackgroundService().submit(
+						new DefaultProgressCallable<Void>() {
+							@Override
+							public Void call() throws Exception {
+								getProgressListener().setProgress("Start removing unwanted resources...");
+								
+								currentUI.access(() -> {
+									
+									try {
+										for (SourceDocumentReference docRef : project.getSourceDocumentReferences().stream().toList()) {
+											if (!selectedResourceIdsToKeep.contains(docRef.getUuid())) {
+												getProgressListener().setProgress("Removing Document '%s' and its Collections...", docRef.toString());
+												project.deleteSourceDocument(docRef);
+											}
+											else {
+												for (AnnotationCollectionReference collRef : docRef.getUserMarkupCollectionRefs().stream().toList()) {
+													if (!selectedResourceIdsToKeep.contains(collRef.getId())) {
+														getProgressListener().setProgress("Removing Collection '%s'...", collRef.toString());
+														project.deleteAnnotationCollection(collRef);
+													}
+												}
+											}
+										}
+										
+										for (TagsetDefinition tagset : project.getTagsets().stream().toList()) {
+											if (!selectedResourceIdsToKeep.contains(tagset.getUuid())) {
+												getProgressListener().setProgress("Removing Tagset '%s'...", tagset.getName());
+												project.getTagManager().removeTagsetDefinition(tagset);											
+											}
+										}
+									} catch (Exception e) {
+										setEnabled(true);
+										setProgressBarVisible(false);
+										errorHandler.showAndLogError(String.format("Error removing unwanted resources from Project '%s'", project.getName()), e);			
+									}
+								});
+								return null;
+							}
+							
+						}, 
+						new ExecutionListener<Void>() {
+							@Override
+							public void done(Void result) {
+								setEnabled(true);
+								setProgressBarVisible(false);
+								Notification.show("Info", "We will now synchronize your Project once and then you can start to work with your Project!", Type.HUMANIZED_MESSAGE);
+								handleSynchronize();
+							}
+							
+							@Override
+							public void error(Throwable t) {
+								errorHandler.showAndLogError(String.format("Error removing unwanted resources from Project '%s'", project.getName()), t);			
+							}
+						},
+						progressListener);
 				
 			}
 		}).show();

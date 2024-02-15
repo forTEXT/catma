@@ -371,4 +371,8 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	public void setContribution(boolean contribution) {
 		this.contribution = contribution;
 	}
+	
+	public Set<String> getTagDefinitionIds() {
+		return Collections.unmodifiableSet(tagDefinitions.keySet());
+	}
 }

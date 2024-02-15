@@ -790,6 +790,14 @@ $contribution-color: blue;
     padding-left: 25px;
   }
 
+  .fork-configuration-dialog__bt-deselect-all-collections {
+	color: white;  
+  }
+  
+  .fork-configuration-dialog__tagset-grid .v-horizontallayout-actiongrid__bar {
+	  padding-right: 10px;
+  }
+  
   /* Dashboard */
   .dashboard-view {
     background-color: white;

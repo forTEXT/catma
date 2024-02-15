@@ -18260,6 +18260,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-left: 25px;
 }
 
+.catma .fork-configuration-dialog__bt-deselect-all-collections {
+	color: white;
+}
+
+.catma .fork-configuration-dialog__tagset-grid .v-horizontallayout-actiongrid__bar {
+	padding-right: 10px;
+}
+
 .catma .dashboard-view {
 	background-color: white;
 	overflow: auto;
