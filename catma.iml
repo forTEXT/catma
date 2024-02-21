@@ -69,7 +69,7 @@
     <orderEntry type="library" name="Maven: com.github.vaadin4qbanos:jsclipboard:1.0.12" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.3.2" level="project" />
     <orderEntry type="library" name="Maven: com.github.appreciated:material:1.1.8" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.commons:commons-compress:1.21" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-compress:1.26.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-csv:1.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-email:1.5" level="project" />
     <orderEntry type="library" name="Maven: com.sun.mail:javax.mail:1.5.6" level="project" />
