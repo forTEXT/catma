@@ -346,7 +346,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 
 	private void initMemberData(Set<Member> members) {
-		// add direct members and group others by their shared group
+		// add direct members and group non direct members by their shared group
 		Map<Long, GroupParticipant> groupParticipantByGroupId = Maps.newHashMap();
 		TreeData<ProjectParticipant> memberData = new TreeData<ProjectParticipant>();
 		

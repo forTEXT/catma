@@ -320,7 +320,7 @@ public class SignupTokenManager {
 		// create a token based on the user's email address
 		Long groupId = group.getId();
 		String token = createHmacSha256Token(address+groupId);
-		put(new GroupSignupToken(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), address, group.getId(), group.getName(), token, expiresAt.format(DateTimeFormatter.ISO_LOCAL_DATE)));
+		put(new GroupSignupToken(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), address, group.getId(), group.getName(), token, expiresAt==null?null:expiresAt.format(DateTimeFormatter.ISO_LOCAL_DATE)));
 
 		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
 		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.joingroup.name() + "?token=" + encToken;
@@ -337,7 +337,7 @@ public class SignupTokenManager {
 		// create a token based on the user's email address
 		String projectId = project.getProjectId();
 		String token = createHmacSha256Token(address+projectId);
-		put(new ProjectSignupToken(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), address, project.getNamespace(), projectId, project.getName(), role, token, expiresAt.format(DateTimeFormatter.ISO_LOCAL_DATE)));
+		put(new ProjectSignupToken(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), address, project.getNamespace(), projectId, project.getName(), role, token, expiresAt==null?null:expiresAt.format(DateTimeFormatter.ISO_LOCAL_DATE)));
 
 		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
 		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.joinproject.name() + "?token=" + encToken;
