@@ -35,6 +35,7 @@ import org.apache.commons.mail.EmailException;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.beust.jcommander.internal.Maps;
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
@@ -833,16 +834,21 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								currentUI.access(() -> {
 									
 									try {
+										Set<SourceDocumentReference> docsToBeDeleted = Sets.newHashSet();
+										Set<AnnotationCollectionReference> collectionsToBeDeleted = Sets.newHashSet();
+										Set<TagsetDefinition> tagsetsToBeDeleted = Sets.newHashSet();
+										
 										for (SourceDocumentReference docRef : project.getSourceDocumentReferences().stream().toList()) {
 											if (!selectedResourceIdsToKeep.contains(docRef.getUuid())) {
 												getProgressListener().setProgress("Removing Document '%s' and its Collections...", docRef.toString());
-												project.deleteSourceDocument(docRef);
+												docsToBeDeleted.add(docRef);
+												collectionsToBeDeleted.addAll(docRef.getUserMarkupCollectionRefs());
 											}
 											else {
 												for (AnnotationCollectionReference collRef : docRef.getUserMarkupCollectionRefs().stream().toList()) {
 													if (!selectedResourceIdsToKeep.contains(collRef.getId())) {
 														getProgressListener().setProgress("Removing Collection '%s'...", collRef.toString());
-														project.deleteAnnotationCollection(collRef);
+														collectionsToBeDeleted.add(collRef);
 													}
 												}
 											}
@@ -851,9 +857,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 										for (TagsetDefinition tagset : project.getTagsets().stream().toList()) {
 											if (!selectedResourceIdsToKeep.contains(tagset.getUuid())) {
 												getProgressListener().setProgress("Removing Tagset '%s'...", tagset.getName());
-												project.getTagManager().removeTagsetDefinition(tagset);											
+												tagsetsToBeDeleted.add(tagset);
 											}
 										}
+										
+										project.removeResources(docsToBeDeleted, collectionsToBeDeleted, tagsetsToBeDeleted, getProgressListener());
+										
 									} catch (Exception e) {
 										setEnabled(true);
 										setProgressBarVisible(false);
@@ -2126,7 +2135,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				},
 				() -> {
 					try {
-						return projectsManager.getGroups(RBACRole.MAINTAINER);
+						return projectsManager.getGroups(RBACRole.MAINTAINER, true);
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}

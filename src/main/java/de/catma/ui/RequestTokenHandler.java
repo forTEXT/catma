@@ -104,7 +104,7 @@ public class RequestTokenHandler {
 								final User user = loginService.getAPI().getUser();
 								final UI currentUI = UI.getCurrent();
 								
-								if (loginService.getAPI().getGroups()
+								if (loginService.getAPI().getGroups(true)
 										.stream()
 										.filter(g -> g.getId().equals(groupSignupToken.groupId()))
 										.findAny()
@@ -173,7 +173,7 @@ public class RequestTokenHandler {
 							final User user = loginService.getAPI().getUser();
 							final UI currentUI = UI.getCurrent();
 							try {
-								if (loginService.getAPI().getProjectReferences().stream().filter(p -> p.getProjectId().equals(projectSignupToken.projectId())).findAny().isPresent()) {
+								if (loginService.getAPI().getProjectReferences(true).stream().filter(p -> p.getProjectId().equals(projectSignupToken.projectId())).findAny().isPresent()) {
 									joinProject(currentUI, user, projectSignupToken, true);
 								}
 								else {
@@ -244,7 +244,7 @@ public class RequestTokenHandler {
 						eventBus.post(new GroupsChangedEvent());
 						eventBus.post(new ProjectsChangedEvent());
 						Group group = 
-								loginService.getAPI().getGroups().stream().filter(g -> g.getId().equals(groupSignupToken.groupId())).findFirst().orElse(null);
+								loginService.getAPI().getGroups(true).stream().filter(g -> g.getId().equals(groupSignupToken.groupId())).findFirst().orElse(null);
 						if (group != null && !alreadyJoined) {
 			        		new Notification(
 			        				"Info", 
@@ -287,7 +287,7 @@ public class RequestTokenHandler {
 						eventBus.post(new ProjectsChangedEvent());
 						
 						ProjectReference projectReference = 
-								loginService.getAPI().getProjectReferences()
+								loginService.getAPI().getProjectReferences(true)
 								.stream()
 								.filter(pr -> pr.getProjectId().equals(projectSignupToken.projectId()))
 								.findFirst()

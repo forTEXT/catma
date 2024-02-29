@@ -1,9 +1,11 @@
 package de.catma.ui.module.dashboard;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -92,6 +94,10 @@ public class ProjectListView extends VerticalLayout {
 			}, 
 			"Last activity: oldest first");
 	
+	
+	private final SortItem<ProjectReference> sortByOwnedAsc;
+	private final SortItem<ProjectReference> sortByOwnedDesc;
+	
 	private ProjectManagerHelpWindow helpWindow;
 	private IconButton helpButton;
 	private ComboBox<SortItem<ProjectReference>> sortedByBox;
@@ -105,14 +111,55 @@ public class ProjectListView extends VerticalLayout {
 		this.deletedProjectIds = new HashSet<>();
 		this.projectsLayout = new HorizontalFlexLayout();
 
+		this.sortByOwnedAsc = new SortItem<ProjectReference>(
+				new Comparator<ProjectReference>() {
+					@Override
+					public int compare(ProjectReference o1, ProjectReference o2) {
+						try {
+							List<String> ownedProjectIds = projectsManager.getOwnedProjectIds(false);
+							if (ownedProjectIds.contains(o1.getProjectId()) && !ownedProjectIds.contains(o2.getProjectId())) {
+								return -1;
+							}
+							else if (ownedProjectIds.contains(o2.getProjectId()) && !ownedProjectIds.contains(o1.getProjectId())) {
+								return 1;
+							}
+							else return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName()); 
+ 
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
+					}
+				}, 
+				"Owned projects first");
+
+		this.sortByOwnedDesc = new SortItem<ProjectReference>(
+				new Comparator<ProjectReference>() {
+					@Override
+					public int compare(ProjectReference o1, ProjectReference o2) {
+						try {
+							List<String> ownedProjectIds = projectsManager.getOwnedProjectIds(false);
+							if (ownedProjectIds.contains(o1.getProjectId()) && !ownedProjectIds.contains(o2.getProjectId())) {
+								return 1;
+							}
+							else if (ownedProjectIds.contains(o2.getProjectId()) && !ownedProjectIds.contains(o1.getProjectId())) {
+								return -1;
+							}
+							else return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName())*1; 
+ 
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
+					}
+				}, 
+				"Owned projects last");
 		initComponents();
 		initActions();
 		eventBus.register(this);
-		initData();
+		initData(false);
 	}
 
     private void initActions() {        
-        sortedByBox.addSelectionListener(evt -> initData());
+        sortedByBox.addSelectionListener(evt -> initData(false));
         
         helpButton.addClickListener(evt -> {
         	if (helpWindow.getParent() == null) {
@@ -122,16 +169,16 @@ public class ProjectListView extends VerticalLayout {
         		UI.getCurrent().removeWindow(helpWindow);
         	}
         });
-    	searchField.addValueChangeListener(valueChange -> initData());
+    	searchField.addValueChangeListener(valueChange -> initData(false));
 	}
 
-    private void initData() {
+    private void initData(boolean forceReload) {
         projectsLayout.removeAllComponents();
         projectsLayout.addComponent(new CreateProjectCard(projectsManager, eventBus));
         projectsLayout.addComponent(new JoinProjectCard(remoteGitManagerRestricted.getUser(), eventBus));
         
         try {
-	        projectsManager.getProjectReferences()
+	        projectsManager.getProjectReferences(forceReload)
 	        .stream()
 	        .filter(projectRef -> searchField.getValue() == null || searchField.getValue().trim().isEmpty() || projectRef.getName().contains(searchField.getValue().trim()))
 			// GitLab project deletion is a background operation, we usually still get the deleted project for some time after deletion
@@ -139,6 +186,9 @@ public class ProjectListView extends VerticalLayout {
 	        .sorted(sortedByBox.getValue().getSortComparator())
 	        .map(prj -> new ProjectCard(prj, projectsManager, eventBus, remoteGitManagerRestricted))
 	        .forEach(projectsLayout::addComponent);
+	        if (forceReload) {
+	        	projectsManager.getOwnedProjectIds(true);
+	        }
         }
         catch (Exception e) {
         	((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing projects", e);
@@ -168,7 +218,8 @@ public class ProjectListView extends VerticalLayout {
         		Arrays.asList(
         				sortByNameAsc, sortByNameDesc, 
         				sortByCreatedAtAsc, sortByCreatedAtDesc, 
-        				sortByLastActivityAtAsc, sortByLastActivityAtDesc));
+        				sortByLastActivityAtAsc, sortByLastActivityAtDesc,
+        				sortByOwnedAsc, sortByOwnedDesc));
         sortedByBox.setSelectedItem(sortByNameAsc);
         sortedByBox.setEmptySelectionAllowed(false);
         sortedByBox.addStyleName("project-list-view__sorted-by-box");
@@ -193,12 +244,12 @@ public class ProjectListView extends VerticalLayout {
 		if (projectsChangedEvent.getDeletedProjectId() != null) {
 			deletedProjectIds.add(projectsChangedEvent.getDeletedProjectId());
 		}
-		initData();
+		initData(true);
 	}
 	
 	@Subscribe
 	public void handleGroupsChanged(GroupsChangedEvent groupsChangedEvent) {
-		initData();
+		initData(true);
 	}
 	
 	public void close() {

@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -337,6 +338,19 @@ public interface Project {
 	 * @throws Exception if an error occurs when deleting the document
 	 */
 	void deleteSourceDocument(SourceDocumentReference sourceDocument) throws Exception;
+	
+	/**
+	 * Bulk removal of resources
+	 * @param documents docs to be removed
+	 * @param collections collections to be removed
+	 * @param tagsets tagsets to be removed
+	 * @param progressListener the listener that gets informed about the progess
+	 * @throws Exception if an error occurs during bulk removal
+	 */
+	void removeResources(Collection<SourceDocumentReference> documents,
+			Collection<AnnotationCollectionReference> collections, Collection<TagsetDefinition> tagsets,
+			ProgressListener progressListener) throws Exception;
+
 
 	// comment operations
 	/**

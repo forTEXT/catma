@@ -26,6 +26,7 @@ import javax.lang.model.type.NullType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.mime.MediaType;
 
+import com.fasterxml.jackson.databind.introspect.AnnotationCollector;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.eventbus.EventBus;
@@ -1593,6 +1594,51 @@ public class GraphWorktreeProject implements IndexedProject {
 		graphProjectHandler.removeSourceDocument(sourceDocumentRef, oldRootRevisionHash, rootRevisionHash);
 
 		eventBus.post(new DocumentChangeEvent(sourceDocumentRef, ChangeType.DELETED));
+	}
+	
+	// bulk removal of resources
+	@Override
+	public void removeResources(
+			final Collection<SourceDocumentReference> documents, 
+			final Collection<AnnotationCollectionReference> collections, 
+			final Collection<TagsetDefinition> tagsets, 
+			ProgressListener progressListener) throws Exception {
+
+		String oldRootRevisionHash = rootRevisionHash;
+
+		this.rootRevisionHash = gitProjectHandler.removeResources(documents, collections, tagsets, progressListener);
+
+		
+		for (AnnotationCollectionReference collRef : collections) {
+			graphProjectHandler.removeAnnotationCollection(collRef, oldRootRevisionHash, rootRevisionHash);
+
+			SourceDocumentReference sourceDocumentRef = getSourceDocumentReference(collRef.getSourceDocumentId());
+			sourceDocumentRef.removeUserMarkupCollectionReference(collRef);
+
+			eventBus.post(
+					new CollectionChangeEvent(
+							collRef,
+							sourceDocumentRef,
+							ChangeType.DELETED
+					)
+			);
+		}
+		
+		for (SourceDocumentReference docRef : documents) {
+			graphProjectHandler.removeSourceDocument(docRef, oldRootRevisionHash, rootRevisionHash);
+
+			eventBus.post(new DocumentChangeEvent(docRef, ChangeType.DELETED));
+		}
+
+		try {
+			tagManagerListenersEnabled = false;
+			for (TagsetDefinition tagset : tagsets) {
+				tagManager.removeTagsetDefinition(tagset);
+			}
+		}
+		finally {
+			tagManagerListenersEnabled = true;
+		}
 	}
 
 	// comment operations

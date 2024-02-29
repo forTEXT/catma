@@ -97,7 +97,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		this.restrictedGitLabApi = api;
 
 		// cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
-		this.gitlabModelsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
+		this.gitlabModelsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
 
 		try {
 			this.user = new GitUser(this.restrictedGitLabApi.getUserApi().getCurrentUser());
@@ -239,15 +239,21 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@Override
-	public List<de.catma.user.Group> getGroups() throws IOException {
-		return getGroups(null);
+	public List<de.catma.user.Group> getGroups(boolean forceRefetch) throws IOException {
+		return getGroups(null, forceRefetch);
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<de.catma.user.Group> getGroups(RBACRole minRole) throws IOException {
+	public List<de.catma.user.Group> getGroups(RBACRole minRole, boolean forceRefetch) throws IOException {
 		try {
-			return (List<de.catma.user.Group>) gitlabModelsCache.get("groups", () -> {
+			
+			String cacheKey = "groups" + minRole;
+			if (forceRefetch) {
+				gitlabModelsCache.invalidate(cacheKey);
+			}
+			
+			return (List<de.catma.user.Group>) gitlabModelsCache.get(cacheKey, () -> {
 				List<de.catma.user.Group> result = new ArrayList<>();
 				GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 				GroupFilter groupFilter = new GroupFilter()
@@ -315,6 +321,49 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		catch (Exception e) {
 			throw new IOException("Failed to load groups", e);
 		}
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<Long> getOwnedGroupIds(boolean forceRefetch) throws IOException {
+		try {
+			String cacheKey = "ownedGroupIds"; 
+
+			if (forceRefetch) {
+				gitlabModelsCache.invalidate(cacheKey);
+			}
+			
+			return (List<Long>) gitlabModelsCache.get(cacheKey, () -> {
+				List<Long> result = new ArrayList<>();
+				GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+				GroupFilter groupFilter = new GroupFilter()
+						.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
+						.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC)
+						.withTopLevelOnly(true)
+						.withOwned(true);
+
+				Pager<Group> groupPager = groupApi.getGroups(
+						groupFilter,
+						20);
+
+				while (groupPager.hasNext()) {
+					List<Group> groupPage = groupPager.next();
+
+					for (Group group : groupPage) {
+						if (group.getName().startsWith("CATMA_")) { // we reached legacy CATMA 6 project-groups and exit early with what we got so far
+							return result;
+						} else if (group.getPath().startsWith(IDGenerator.GROUP_ID_PREFIX)) { // valid user groups' paths start with G_
+							result.add(group.getId());
+						}
+					}
+				}
+				return result;
+			});
+		}
+		catch (Exception e) {
+			throw new IOException("Failed to load owned groupIds", e);
+		}
+
 	}
 	
 	@Override
@@ -393,17 +442,21 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 	@SuppressWarnings("unchecked")
-	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
+	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel, Boolean owned, boolean forceRefresh) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
+			String cacheKey = "projects" + minAccessLevel + owned; 
+			if (forceRefresh) {
+				gitlabModelsCache.invalidate(cacheKey);
+			}
 			return (List<ProjectReference>) gitlabModelsCache.get(
-					"projects",
+					cacheKey,
 					() -> projectApi.getProjects(
 								new ProjectFilter()
 								.withMinAccessLevel(minAccessLevel)
 								.withMembership(true)
-								.withSimple(true))
+								.withSimple(true)
+								.withOwned(owned))
 							.stream()
 							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
 							.map(project -> {
@@ -443,9 +496,45 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public List<ProjectReference> getProjectReferences() throws IOException {
-		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()));
+		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()), null, false);
 	}
 
+	@Override
+	public List<ProjectReference> getProjectReferences(boolean forceRefetch) throws IOException {
+		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()), null, forceRefetch);
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<String> getOwnedProjectIds(boolean forceRefetch) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			String cacheKey = "ownedProjectIds"; 
+
+			if (forceRefetch) {
+				gitlabModelsCache.invalidate(cacheKey);
+			}
+
+			return (List<String>) gitlabModelsCache.get(
+					cacheKey,
+					() -> projectApi.getProjects(
+								new ProjectFilter()
+								.withMinAccessLevel(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()))
+								.withSimple(true)
+								.withOwned(true))
+							.stream()
+							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
+							.map(Project::getPath)
+							.filter(Objects::nonNull)
+							.collect(Collectors.toList())
+			);
+		}
+		catch (Exception e) {
+			throw new IOException("Failed to load owned projectIds", e);
+		}
+	}
+	
+	
 	@Override
 	public String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {

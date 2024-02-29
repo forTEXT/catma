@@ -43,21 +43,52 @@ public interface ProjectsManager {
 	List<ProjectReference> getProjectReferences() throws IOException;
 
 	/**
+	 * Gets all projects the current user has access to.
+	 * 
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 * @return a {@link List} of {@link ProjectReference}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */
+	List<ProjectReference> getProjectReferences(boolean forceRefetch) throws IOException;
+
+	
+	/**
+	 * Get a list of the IDs of all projects owned by the current user.
+	 *
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 * @return a {@link List} of {@link ProjectReference#getProjectId()}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */	
+	List<String> getOwnedProjectIds(boolean forceRefetch) throws IOException;
+
+	/**
+	 * Get a list of the IDs of all groups owned by the current user.
+	 *
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 * @return a {@link List} of {@link Group#getId()}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */	
+	List<Long> getOwnedGroupIds(boolean forceRefetch) throws IOException;
+
+	
+	/**
 	 * Get all the groups the current user has access to.
 	 * 
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
 	 * @return a {@link List} of {@link Group}s
 	 * @throws IOException if an error occurs when getting the groups
 	 */
-	List<Group> getGroups() throws  IOException;
+	List<Group> getGroups(boolean forceRefetch) throws  IOException;
 
 	/**
 	 * Get all the groups the current user has access to with at least the given role.
 	 * 
 	 * @param minRole the minimum role the user must have in the result groups
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
 	 * @return a {@link List} of {@link Group}s
 	 * @throws IOException if an error occurs when getting the groups
 	 */
-	List<Group> getGroups(RBACRole minRole) throws  IOException;
+	List<Group> getGroups(RBACRole minRole, boolean forceRefetch) throws  IOException;
 
 	/**
 	 * Opens an existing project.

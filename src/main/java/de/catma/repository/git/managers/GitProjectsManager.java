@@ -1,7 +1,22 @@
 package de.catma.repository.git.managers;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.apache.commons.io.FileUtils;
+
 import com.google.common.eventbus.EventBus;
 import com.google.gson.JsonObject;
+
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
@@ -17,20 +32,8 @@ import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.tag.TagManager;
 import de.catma.user.Group;
-import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 
 public class GitProjectsManager implements ProjectsManager {
 	private final String gitBasedRepositoryBasePath;
@@ -79,13 +82,29 @@ public class GitProjectsManager implements ProjectsManager {
 	}
 
 	@Override
-	public List<Group> getGroups() throws  IOException {
-		return remoteGitServerManager.getGroups();
+	public List<ProjectReference> getProjectReferences(boolean forceRefetch) throws IOException {
+		return remoteGitServerManager.getProjectReferences(forceRefetch);
+	}
+	
+	
+	@Override
+	public List<String> getOwnedProjectIds(boolean forceRefetch) throws IOException {
+		return remoteGitServerManager.getOwnedProjectIds(forceRefetch);
+	}
+	
+	@Override
+	public List<Long> getOwnedGroupIds(boolean forceRefetch) throws IOException {
+		return remoteGitServerManager.getOwnedGroupIds(forceRefetch);
 	}
 
 	@Override
-	public List<Group> getGroups(RBACRole minRole) throws  IOException {
-		return remoteGitServerManager.getGroups(minRole);
+	public List<Group> getGroups(boolean forceRefetch) throws  IOException {
+		return remoteGitServerManager.getGroups(forceRefetch);
+	}
+
+	@Override
+	public List<Group> getGroups(RBACRole minRole, boolean forceRefetch) throws  IOException {
+		return remoteGitServerManager.getGroups(minRole, forceRefetch);
 	}
 
 	@Override

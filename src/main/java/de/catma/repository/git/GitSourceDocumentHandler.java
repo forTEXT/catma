@@ -183,4 +183,14 @@ public class GitSourceDocumentHandler {
 		);
 		return revisionHash;
 	}
+	
+	public void removeDocumentWithoutCommit(SourceDocumentReference sourceDocumentRef) throws IOException {
+		String sourceDocumentDirectory = String.format("%s/%s", GitProjectHandler.DOCUMENTS_DIRECTORY_NAME, sourceDocumentRef.getUuid());
+		File sourceDocumentDirectoryAbsolutePath = Paths.get(
+				projectDirectory.getAbsolutePath(),
+				sourceDocumentDirectory
+		).toFile();
+
+		localGitRepositoryManager.remove(sourceDocumentDirectoryAbsolutePath);
+	}
 }

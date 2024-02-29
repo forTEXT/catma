@@ -37,6 +37,8 @@ import de.catma.indexer.TermInfo;
 import de.catma.project.CommitInfo;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
+import de.catma.project.event.ChangeType;
+import de.catma.project.event.DocumentChangeEvent;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
@@ -634,6 +636,101 @@ public class GitProjectHandler {
 			return projectRevision;
 		}
 	}
+	
+	
+	
+	// bulk removal of resources
+	public String removeResources(
+			final Collection<SourceDocumentReference> documents, 
+			final Collection<AnnotationCollectionReference> collections, 
+			final Collection<TagsetDefinition> tagsets, 
+			ProgressListener progressListener) throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+			StringBuilder commitMessageBuilder = new StringBuilder("Bulk removal of unwanted resources");
+			
+			if (!collections.isEmpty()) {
+				GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+						localGitRepoManager,
+						projectPath,
+						projectId,
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail()
+						);
+				for (AnnotationCollectionReference collRef : collections) {
+					progressListener.setProgress("Removing Collection '%s'...", collRef.toString());
+					gitAnnotationCollectionHandler.removeCollectionWithoutCommit(collRef);
+					commitMessageBuilder.append("\n");
+					commitMessageBuilder.append(
+							String.format(
+									"Deleted annotation collection \"%s\" with ID %s",
+									collRef.getName(), 
+									collRef.getId()));
+
+				}
+			}	
+
+			if (!documents.isEmpty()) {
+				GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+						localGitRepoManager,
+						projectPath,
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail()
+						);
+				for (SourceDocumentReference docRef : documents.stream().toList()) {
+					progressListener.setProgress("Removing Document '%s' and its Collections...", docRef.toString());
+					gitSourceDocumentHandler.removeDocumentWithoutCommit(docRef);
+					commitMessageBuilder.append("\n");
+					commitMessageBuilder.append(				
+						String.format(
+							"Deleted document \"%s\" with ID %s",
+							docRef.getSourceDocumentInfo().getContentInfoSet().getTitle(),
+							docRef.getUuid()));
+				}
+
+			}
+
+			
+			if (!tagsets.isEmpty()) {
+				GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
+						localGitRepoManager,
+						projectPath,
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail()
+						);
+				
+				for (TagsetDefinition tagset : tagsets) {
+					progressListener.setProgress("Removing Tagset '%s'...", tagset.getName());
+					gitTagsetHandler.removeTagsetDefinitionWithoutCommit(tagset);											
+					commitMessageBuilder.append("\n");
+					commitMessageBuilder.append( 
+						String.format(
+							"Deleted tagset \"%s\" with ID %s",
+							tagset.getName(), 
+							tagset.getUuid()));
+				}
+			}
+
+			if (!localGitRepoManager.hasUncommittedChanges() && !localGitRepoManager.hasUntrackedChanges()) {
+				return localGitRepoManager.getRevisionHash();
+			}
+
+			String projectRevision = localGitRepoManager.commit(
+					commitMessageBuilder.toString(),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail(),
+					false
+			);
+
+			localGitRepoManager.push(jGitCredentialsManager);
+
+
+			return projectRevision;
+		}
+	}
+	
+	
+	
 
 	// comment operations
 	public List<Comment> getComments(String documentId) throws IOException {

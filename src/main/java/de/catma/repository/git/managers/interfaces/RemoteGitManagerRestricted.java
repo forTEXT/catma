@@ -1,5 +1,9 @@
 package de.catma.repository.git.managers.interfaces;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
 import de.catma.project.MergeRequestInfo;
@@ -8,12 +12,7 @@ import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.user.Group;
 import de.catma.user.Member;
-import de.catma.user.SharedGroup;
 import de.catma.user.User;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Provides restricted access (current user scope) to the remote Git server API
@@ -43,25 +42,57 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if an error occurs when getting the projects
 	 */
 	List<ProjectReference> getProjectReferences() throws IOException;
+	
+	/**
+	 * Gets all projects the current user has access to.
+	 * 
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 * @return a {@link List} of {@link ProjectReference}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */
+	List<ProjectReference> getProjectReferences(boolean forceRefetch) throws IOException;
 
+	
+	/**
+	 * Get a list of the IDs of all projects owned by the current user.
+	 * 
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 *
+	 * @return a {@link List} of {@link ProjectReference#getProjectId()}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */	
+	List<String> getOwnedProjectIds(boolean forceRefetch) throws IOException;
+	
 	/**
 	 * Get all groups the current user is part of.
 	 *
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab)
 	 * @return a {@link List} of {@link de.catma.user.Group}s
 	 * @throws IOException if an error occurs when getting the groups
 	 */
-	List<de.catma.user.Group> getGroups() throws IOException;
+	List<de.catma.user.Group> getGroups(boolean forceRefetch) throws IOException;
 	
-	/**
 	/**
 	 * Get all groups the current user is part of and having at least the given role. 
 	 *
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab)
 	 * @param minRole the minimum role the user must have in the result groups
 	 * @return a {@link List} of {@link de.catma.user.Group}s
 	 * @throws IOException if an error occurs when getting the groups
 	 */
-	List<de.catma.user.Group> getGroups(RBACRole minRole) throws IOException;
+	List<de.catma.user.Group> getGroups(RBACRole minRole, boolean forceRefetch) throws IOException;
 
+	
+	/**
+	 * Get a list of the IDs of all groups owned by the current user.
+	 * 
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 *
+	 * @return a {@link List} of {@link Group#getId()}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */	
+	List<Long> getOwnedGroupIds(boolean forceRefetch) throws IOException;
+	
 	/**
 	 * Creates a new group.
 	 * @param name the name of the group

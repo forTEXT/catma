@@ -23,6 +23,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
 import com.google.gson.Gson;
+import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
@@ -39,7 +40,6 @@ import de.catma.user.signup.SignupTokenManager;
 @WebServlet(name = "HazelCast", urlPatterns = "/hazelcast", loadOnStartup = 2)
 public class HazelCastInitializerServlet extends HttpServlet{
 	private volatile HazelcastInstance hazelcastNode;
-	private volatile Cache<String, String> groupProjectSignupTokenCache;
 
 	@Override
     public void init() throws ServletException {
@@ -53,15 +53,19 @@ public class HazelCastInitializerServlet extends HttpServlet{
 		// we don't use Hazelcast to pass any XML messages, and certainly not anything that comes from outside, so there shouldn't be any security impact
 		System.setProperty("hazelcast.ignoreXxeProtectionFailures", "true");
 
-
-		hazelcastNode = Hazelcast.newHazelcastInstance();
+		Config config = Config.load();
+		config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
+		config.getNetworkConfig().getJoin().getAutoDetectionConfig().setEnabled(false);
+		config.getAdvancedNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
+		config.getNetworkConfig().getJoin().getAutoDetectionConfig().setEnabled(false);
+		hazelcastNode = Hazelcast.newHazelcastInstance(config);
 
 		CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
 		cacheManager.createCache(
 				HazelcastConfiguration.CacheKeyName.ACCOUNT_SIGNUP_TOKEN.name(),
 				HazelcastConfiguration.ACCOUNT_SIGNUP_TOKEN_CONFIG
 		);
-		Cache<String, String> groupProjectSignupTokenCache = cacheManager.createCache(
+		cacheManager.createCache(
 				HazelcastConfiguration.CacheKeyName.GROUP_PROJECT_SIGNUP_TOKEN.name(),
 				HazelcastConfiguration.GROUP_PROJECT_SIGNUP_TOKEN_CONFIG
 		);			
@@ -83,9 +87,6 @@ public class HazelCastInitializerServlet extends HttpServlet{
 			@Override
 			public void run() {
 				try {
-					Iterator<Entry<String, String>> cacheIterator = groupProjectSignupTokenCache.iterator();
-					
-					
 					hazelcastNode.shutdown();
 				}
 				catch (Exception e) {
