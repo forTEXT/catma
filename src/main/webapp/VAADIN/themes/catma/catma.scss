@@ -811,7 +811,7 @@ $contribution-color: blue;
   .project-event-panel-commits-action-grid-component .v-horizontallayout-actiongrid__bar {
 	  padding-right: 10px;
   }
-  
+
   /* Dashboard */
   .dashboard-view {
     background-color: white;
@@ -1040,6 +1040,32 @@ $contribution-color: blue;
     height: inherit;
   }
 
+  
+   .v-caption-annotate-resource-panel__member-box {
+   	font-size: xx-small !important;
+   }
+   
+   .annotate-resource-panel__member-box {
+   	font-size: x-small;
+   }
+   
+   .v-filterselect-suggestpopup-annotate-resource-panel__member-box {
+   	font-size: x-small;	   
+   }
+
+   .v-caption-annotate-resource-panel__member-box > span.v-captiontext {
+    float: right;
+    height: 5px;
+   }
+   
+   .v-verticallayout-annotate-resource-panel__document-grid .action-grid-bar__search-field {
+	   margin-top: 5px;
+   }
+
+	.annotate-resource-panel__toggle-visibility-button {
+		margin-top: 3px;
+	}
+	
   .resource-grid {
     background: #FFFFFF;
     color: #000000;

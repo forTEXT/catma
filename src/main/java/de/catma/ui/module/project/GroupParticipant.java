@@ -59,4 +59,9 @@ public class GroupParticipant implements ProjectParticipant {
 	public boolean isDirect() {
 		return true;
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

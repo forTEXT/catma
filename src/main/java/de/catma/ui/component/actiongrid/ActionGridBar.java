@@ -35,6 +35,7 @@ public class ActionGridBar extends HorizontalLayout {
         btnToggleMultiselect = new IconButton(VaadinIcons.TASKS);
         searchField = new TextField();
         searchField.setPlaceholder("\u2315");
+        searchField.addStyleName("action-grid-bar__search-field");
   
         ctmAdd = new ContextMenu(btnAdd,true);
         ctmMoreOptions = new ContextMenu(btnMoreOptions,true);

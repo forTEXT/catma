@@ -1,7 +1,6 @@
 package de.catma.ui.module.dashboard;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 import com.vaadin.icons.VaadinIcons;
 
@@ -60,5 +59,10 @@ public class GroupMemberParticipant implements ProjectParticipant {
 	@Override
 	public LocalDate getExpiresAt() {
 		return member.getExpiresAt();
+	}
+	
+	@Override
+	public String toString() {
+		return getName();
 	}
 }

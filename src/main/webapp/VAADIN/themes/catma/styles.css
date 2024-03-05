@@ -18506,6 +18506,31 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: inherit;
 }
 
+.catma .v-caption-annotate-resource-panel__member-box {
+	font-size: xx-small !important;
+}
+
+.catma .annotate-resource-panel__member-box {
+	font-size: x-small;
+}
+
+.catma .v-filterselect-suggestpopup-annotate-resource-panel__member-box {
+	font-size: x-small;
+}
+
+.catma .v-caption-annotate-resource-panel__member-box > span.v-captiontext {
+	float: right;
+	height: 5px;
+}
+
+.catma .v-verticallayout-annotate-resource-panel__document-grid .action-grid-bar__search-field {
+	margin-top: 5px;
+}
+
+.catma .annotate-resource-panel__toggle-visibility-button {
+	margin-top: 3px;
+}
+
 .catma .resource-grid {
 	background: #FFFFFF;
 	color: #000000;

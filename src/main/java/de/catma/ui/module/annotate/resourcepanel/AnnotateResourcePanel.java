@@ -2,6 +2,8 @@ package de.catma.ui.module.annotate.resourcepanel;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -10,15 +12,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
@@ -41,12 +47,21 @@ import de.catma.project.event.DocumentChangeEvent;
 import de.catma.project.event.ProjectReadyEvent;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.events.RefreshEvent;
+import de.catma.ui.module.dashboard.GroupMemberParticipant;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.project.GroupParticipant;
+import de.catma.ui.module.project.ProjectMemberParticipant;
+import de.catma.ui.module.project.ProjectParticipant;
+import de.catma.user.Member;
+import de.catma.user.SharedGroup;
+import de.catma.user.SharedGroupMember;
 import de.catma.util.IDGenerator;
 
 public class AnnotateResourcePanel extends VerticalLayout {
@@ -54,6 +69,9 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private Project project;
 	private TreeGrid<DocumentTreeItem> documentTree;
 	private TreeData<DocumentTreeItem> documentData;
+	private ComboBox<ProjectParticipant> cbMembers;	
+	private Button btSelectMemberCollections;
+	private Button btDeselectMemberCollections;
 	private Grid<TagsetDefinition> tagsetGrid;
 	private ResourceSelectionListener resourceSelectionListener;
 	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
@@ -73,6 +91,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		
 		initComponents();
 		initActions();
+		this.handleRefresh(new RefreshEvent());
 		initData(currentlySelectedSourceDocument, Collections.emptySet());
 	}
 	
@@ -103,6 +122,39 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		// switch on resourceSelectionListener
 		this.resourceSelectionListener = resourceSelectionListener;
 		this.resourceSelectionListener.resourcesChanged();
+		
+		this.handleRefresh(new RefreshEvent());
+	}
+	
+	@Subscribe
+	public void handleRefresh(RefreshEvent refreshEvent) {
+		try {
+			Set<Member> members = project.getProjectMembers();
+			
+			Set<SharedGroup> groups = 
+					members.stream().filter(member -> member instanceof SharedGroupMember).map(member -> ((SharedGroupMember)member).getSharedGroup()).sorted().collect(Collectors.toSet());
+			
+			
+			ArrayList<ProjectParticipant> participants = new ArrayList<ProjectParticipant>();
+			for (SharedGroup group : groups) {
+				participants.add(new GroupParticipant(group));
+			}
+			
+			for (Member member : members) {
+				if (member instanceof SharedGroupMember) {					
+					participants.add(new GroupMemberParticipant(member));
+				}
+				else {
+					participants.add(new ProjectMemberParticipant(member, true));
+				}
+			}
+			
+			cbMembers.setDataProvider(DataProvider.ofCollection(participants));
+			
+		} catch (IOException e) {
+			errorHandler.showAndLogError(String.format("Failed to load members for project %s", project), e);
+		}
+		
 	}
 
 	private void initProjectListeners() {
@@ -214,6 +266,42 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				};
         	}
 		});
+        
+        btSelectMemberCollections.addClickListener(event -> selectCollectionsForSelectedMembers(true));
+        btDeselectMemberCollections.addClickListener(event -> selectCollectionsForSelectedMembers(false));
+	}
+
+	private void selectCollectionsForSelectedMembers(boolean selected) {
+		ProjectParticipant participant = cbMembers.getValue();
+		Set<String> responsableIdentfifiers = Sets.newHashSet();
+		if (participant instanceof ProjectMemberParticipant) {
+			responsableIdentfifiers.add(((ProjectMemberParticipant)participant).getMember().getIdentifier());
+		}
+		else if (participant instanceof GroupMemberParticipant) {
+			responsableIdentfifiers.add(((GroupMemberParticipant)participant).getMember().getIdentifier());
+		}
+		else if (participant instanceof GroupParticipant) {
+			for (ProjectParticipant p : ((ListDataProvider<ProjectParticipant>)cbMembers.getDataProvider()).getItems()) {
+				if (p instanceof GroupMemberParticipant) {
+					Member groupMember = ((GroupMemberParticipant) p).getMember();
+					if (groupMember instanceof SharedGroupMember) {
+						if (((SharedGroupMember) groupMember).getSharedGroup().groupId().equals(participant.getId())) {
+							responsableIdentfifiers.add(groupMember.getIdentifier());
+						}
+					}
+				}
+			}
+		}
+		for (DocumentTreeItem documentTreeItem : documentData.getRootItems()) {
+			for (DocumentTreeItem collectionItem : documentData.getChildren(documentTreeItem)) {
+				String responsableIdentifier = ((CollectionDataItem)collectionItem).getCollectionRef().getResponsibleUser();
+				if (responsableIdentfifiers.contains(responsableIdentifier)) {
+					collectionItem.setSelected(selected);
+					documentTree.getDataProvider().refreshItem(collectionItem);
+					collectionItem.fireSelectedEvent(this.resourceSelectionListener);
+				}
+			}
+		}
 	}
 
 	private void handleAddTagsetRequest() {
@@ -364,13 +452,14 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	}
 
 	private void initComponents() {
+		setWidth("800px");
 		addStyleName("annotate-resource-panel");
 		Label documentTreeLabel = new Label("Documents & Annotations");
 		documentTree = TreeGridFactory.createDefaultTreeGrid();
 		documentTree.addStyleNames(
 				"resource-grid", 
 				"flat-undecorated-icon-buttonrenderer");
-		
+		documentTree.setWidth("100%");
 		ButtonRenderer<DocumentTreeItem> documentSelectionRenderer = 
 				new ButtonRenderer<DocumentTreeItem>(
 					documentSelectionClick -> handleVisibilityClickEvent(documentSelectionClick));
@@ -397,6 +486,22 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		documentActionGridComponent = 
 				new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
 		documentActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
+		documentActionGridComponent.addStyleName("annotate-resource-panel__document-grid");
+		
+		cbMembers = new ComboBox<ProjectParticipant>("toggle visibility by responsible");
+		cbMembers.addStyleName("annotate-resource-panel__member-box");
+		String toggleVisibilityDescription = "Select a member or user group from the list of responsables on the left and use the visibility buttons "
+				+ "to toggle the visibilty of all collections belonging to the selected responsable.";
+		btSelectMemberCollections = new IconButton(VaadinIcons.EYE);
+		btSelectMemberCollections.setDescription(toggleVisibilityDescription);
+		btSelectMemberCollections.addStyleName("annotate-resource-panel__toggle-visibility-button");
+		btDeselectMemberCollections = new IconButton(VaadinIcons.EYE_SLASH);
+		btDeselectMemberCollections.setDescription(toggleVisibilityDescription);
+		btDeselectMemberCollections.addStyleName("annotate-resource-panel__toggle-visibility-button");
+
+		documentActionGridComponent.getActionGridBar().addComponentAfterSearchField(btDeselectMemberCollections);
+		documentActionGridComponent.getActionGridBar().addComponentAfterSearchField(btSelectMemberCollections);
+		documentActionGridComponent.getActionGridBar().addComponentAfterSearchField(cbMembers);
 		
 		addComponent(documentActionGridComponent);
 		
@@ -409,6 +514,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				"no-focused-before-border");
 
 		tagsetGrid.setHeight("250px");
+		tagsetGrid.setWidth("100%");
 		tagsetGrid
 			.addColumn(tagset -> tagset.getName())
 			.setCaption("Name")

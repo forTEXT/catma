@@ -529,7 +529,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private Component initTeamContent() {
 		HorizontalFlexLayout teamContentLayout = new HorizontalFlexLayout();
 
-		memberGrid = new TreeGrid<>();
+		memberGrid = TreeGridFactory.createDefaultTreeGrid();
 		memberGrid.setHeaderVisible(false);
 		memberGrid.setWidth("402px");
 		memberGrid.addColumn(ProjectParticipant::getIcon, new HtmlRenderer());
