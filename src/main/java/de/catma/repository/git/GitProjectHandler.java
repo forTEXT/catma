@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.TermInfo;
+import de.catma.project.BackendPager;
 import de.catma.project.CommitInfo;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
@@ -1116,5 +1118,9 @@ public class GitProjectHandler {
 		}
 
 		return latestContributions;
+	}
+
+	public BackendPager<CommitInfo> getCommits(LocalDate after, LocalDate before, String branch, String author) throws IOException {
+		return remoteGitServerManager.getCommits(projectReference, after, before, branch, author);
 	}
 }

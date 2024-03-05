@@ -16,7 +16,10 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */   
-package de.catma.ui.module.annotate.pager;
+package de.catma.ui.component;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
@@ -28,9 +31,6 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
-
-import de.catma.ui.component.IconButton;
-import de.catma.ui.module.annotate.pager.Pager.PagerListener;
 
 /**
  * @author marco.petris@web.de
@@ -75,15 +75,16 @@ public class PagerComponent extends HorizontalLayout {
 	private int currentPageNumber = 1;
 	private int lastPageNumber;
 	private Label lastPageNumberLabel;
+	private boolean allowInputPastLastPageNumber = false;
 	
-	public PagerComponent(final Pager pager, PageChangeListener pageChangeListener) {
+	public PagerComponent(final Consumer<PagerListener> pagerListenerConsumer, Supplier<Integer> lastPageNumberSupplier, PageChangeListener pageChangeListener) {
 		this.pageChangeListener = pageChangeListener;
 		initComponents();
 		initActions();
-		pager.setPagerListener(new PagerListener() {
+		pagerListenerConsumer.accept(new PagerListener() {
 			
 			public void textChanged() {
-				setLastPageNumber(pager.getLastPageNumber());
+				setLastPageNumber(lastPageNumberSupplier.get());
 			}
 		});
 		previousPageButton.setEnabled(false);
@@ -142,7 +143,7 @@ public class PagerComponent extends HorizontalLayout {
 			
 			public void valueChange(ValueChangeEvent<String> event) {
 				currentPageNumber = pageInput.getNumber();
-				if (currentPageNumber > lastPageNumber) {
+				if ((currentPageNumber > lastPageNumber) && !allowInputPastLastPageNumber) {
 					currentPageNumber = lastPageNumber;
 				}
 				else if (currentPageNumber < 1) {
@@ -189,5 +190,13 @@ public class PagerComponent extends HorizontalLayout {
 	public void setPage(int pageNumber) {
 		currentPageNumber = pageNumber;
 		pageInput.setNumber(currentPageNumber);
+	}
+	
+	public void setLastPageButtonVisible(boolean visible) {		
+		this.lastPageButton.setVisible(visible);
+	}
+	
+	public void setAllowInputPastLastPageNumber(boolean allowInputPastLastPageNumber) {
+		this.allowInputPastLastPageNumber = allowInputPastLastPageNumber;
 	}
 }

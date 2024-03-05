@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -542,5 +543,16 @@ public interface Project {
 	 * @throws IOException if an error occurs when adding and committing the collections
 	 */
 	void addAndCommitCollections(Collection<AnnotationCollectionReference> annotationCollectionRefs, String commitMessage) throws IOException;
+
+	/**
+	 * Gets commits for the current project and the given filter criteria.
+	 * @param after commits with timestamp after or equal this date
+	 * @param before commits with timestamp before or equal this date
+	 * @param branch the branch to look at
+	 * @param author commits with this author
+	 * @return a pager for the resulting commits
+	 * @throws IOException if an error occurs during retrieval
+	 */
+	BackendPager<CommitInfo> getCommits(LocalDate after, LocalDate before, String branch, String author) throws IOException;
 
 }

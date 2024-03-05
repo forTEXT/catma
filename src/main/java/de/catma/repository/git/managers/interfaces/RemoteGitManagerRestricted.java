@@ -1,11 +1,15 @@
 package de.catma.repository.git.managers.interfaces;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
+import de.catma.project.BackendPager;
+import de.catma.project.CommitInfo;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACRole;
@@ -323,4 +327,18 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if an error occurs during the check or if the import status is 'failed'.
 	 */
 	boolean isProjectImportFinished(ProjectReference projectReference) throws IOException;
+
+	
+	/**
+	 * Gets commits for the given project and filter criteria.
+	 * @param projectReference the project to get commits for
+	 * @param after commits with timestamp after or equal this date
+	 * @param before commits with timestamp before or equal this date
+	 * @param branch the branch to look at
+	 * @param author commits with this author
+	 * @return a pager for the resulting commits
+	 * @throws IOException if an error occurs during retrieval
+	 */
+	BackendPager<CommitInfo> getCommits(ProjectReference projectReference, LocalDate after, LocalDate before, String branch, String author)
+			throws IOException;
 }

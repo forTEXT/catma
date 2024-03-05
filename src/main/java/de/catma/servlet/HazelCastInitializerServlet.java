@@ -54,10 +54,13 @@ public class HazelCastInitializerServlet extends HttpServlet{
 		System.setProperty("hazelcast.ignoreXxeProtectionFailures", "true");
 
 		Config config = Config.load();
+		
+		// we do not operate a cluster, so we can switch of network configuration
 		config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
 		config.getNetworkConfig().getJoin().getAutoDetectionConfig().setEnabled(false);
 		config.getAdvancedNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
 		config.getNetworkConfig().getJoin().getAutoDetectionConfig().setEnabled(false);
+		
 		hazelcastNode = Hazelcast.newHazelcastInstance(config);
 
 		CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();

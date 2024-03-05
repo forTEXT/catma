@@ -33,6 +33,9 @@ import java.util.zip.CRC32;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.mail.EmailException;
 import org.vaadin.dialogs.ConfirmDialog;
+import org.vaadin.sliderpanel.SliderPanel;
+import org.vaadin.sliderpanel.SliderPanelBuilder;
+import org.vaadin.sliderpanel.client.SliderMode;
 
 import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
@@ -56,6 +59,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification.Type;
@@ -171,6 +175,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private Map<String, Member> membersByIdentifier;
 
 	private ProgressBar progressBar;
+	private SliderPanel drawer;
 
 	// documents & annotations components
 	enum DocumentGridColumn {
@@ -211,6 +216,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private MenuItem miShareResources;
 	private MenuItem miImportCorpus;
 	private ProjectResourceExportApiDialog projectResourceExportApiDialog;
+
+	private ProjectEventPanel projectEventPanel;
 
 	public ProjectView(ProjectsManager projectsManager, EventBus eventBus) {
 		super("Project");
@@ -382,11 +389,22 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		progressBar.setVisible(false);
 		addComponent(progressBar);
 		setComponentAlignment(progressBar, Alignment.TOP_CENTER);
-
+		
+		HorizontalLayout content = new HorizontalLayout();
+		addComponent(content);
+		setExpandRatio(content, 1.f);
+		
+		projectEventPanel = new ProjectEventPanel(eventBus);
+		drawer = new SliderPanelBuilder(projectEventPanel)
+				.mode(SliderMode.LEFT).expanded(false).build();
+		content.addComponent(drawer);
+		
 		HorizontalFlexLayout mainLayout = new HorizontalFlexLayout();
 		mainLayout.setFlexWrap(FlexWrap.WRAP);
 		mainLayout.addStyleName("project-view-main-panel");
-
+		content.addComponent(mainLayout);
+		content.setExpandRatio(mainLayout, 1.0f);
+		
 		VerticalFlexLayout resourcesLayout = new VerticalFlexLayout();
 		resourcesLayout.setSizeUndefined(); // don't set width 100%
 		resourcesLayout.addComponent(new Label("Resources"));
@@ -404,8 +422,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		mainLayout.addComponent(teamLayout);
 
-		addComponent(mainLayout);
-		setExpandRatio(mainLayout, 1.f);
+//		addComponent(mainLayout);
+//		setExpandRatio(mainLayout, 1.f);
 
 		btnToggleViewSynchronizedOrLatestContributions = new IconButton(VaadinIcons.DESKTOP);
 		btnToggleViewSynchronizedOrLatestContributions.setData(false); // default is synchronized view, false = synchronized, true = latest contributions
@@ -950,6 +968,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			tagsetGrid.sort(TagsetGridColumn.NAME.name());
 
 			initMemberData(projectMembers);
+			
+			projectEventPanel.setProject(project);
 		}
 		catch (Exception e) {
 			errorHandler.showAndLogError("Failed to initialize data", e);
@@ -2506,6 +2526,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 			if (projectResourceExportApiDialog != null) {
 				projectResourceExportApiDialog.removeRequestHandlerFromVaadinService();
+			}
+			
+			if (projectEventPanel != null) {
+				projectEventPanel.close();
 			}
 
 			if (project != null) {

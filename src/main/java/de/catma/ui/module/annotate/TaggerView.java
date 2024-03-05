@@ -92,6 +92,8 @@ import de.catma.ui.client.ui.tagger.shared.ClientCommentReply;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.component.PagerComponent;
+import de.catma.ui.component.PagerComponent.PageChangeListener;
 import de.catma.ui.component.tabbedview.ClosableTab;
 import de.catma.ui.component.tabbedview.TabCaptionChangeListener;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -107,8 +109,6 @@ import de.catma.ui.module.annotate.annotationpanel.EditAnnotationPropertiesDialo
 import de.catma.ui.module.annotate.contextmenu.TaggerContextMenu;
 import de.catma.ui.module.annotate.pager.Page;
 import de.catma.ui.module.annotate.pager.Pager;
-import de.catma.ui.module.annotate.pager.PagerComponent;
-import de.catma.ui.module.annotate.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.module.annotate.resourcepanel.AnnotateResourcePanel;
 import de.catma.ui.module.annotate.resourcepanel.ResourceSelectionListener;
 import de.catma.ui.module.main.ErrorHandler;
@@ -707,12 +707,14 @@ public class TaggerView extends HorizontalLayout
 		taggerPanel.addComponent(actionPanel);
 		
 		pagerComponent = new PagerComponent(
-				pager, new PageChangeListener() {
-					
-			public void pageChanged(int number) {
-				tagger.setPage(number);
+			pager, 
+			() -> pager.getLastPageNumber(), 
+			new PageChangeListener() {						
+				public void pageChanged(int number) {
+					tagger.setPage(number);
+				}
 			}
-		});
+		);
 		
 		
 		actionPanel.addComponent(pagerComponent);

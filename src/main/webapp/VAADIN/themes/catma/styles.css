@@ -18268,6 +18268,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 10px;
 }
 
+.catma .project-event-panel-pager-component {
+	background: white;
+	margin-right: 10px;
+}
+
+.catma .project-event-panel-commits-action-grid-component {
+	padding-bottom: 1px;
+}
+
+.catma .project-event-panel-commits-action-grid-component .v-horizontallayout-actiongrid__bar {
+	padding-right: 10px;
+}
+
 .catma .dashboard-view {
 	background-color: white;
 	overflow: auto;

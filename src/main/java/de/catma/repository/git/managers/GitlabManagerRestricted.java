@@ -16,15 +16,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.Response;
-
 import org.eclipse.jgit.lib.Constants;
 import org.gitlab4j.api.Constants.IssueState;
 import org.gitlab4j.api.Constants.MergeRequestState;
+import org.gitlab4j.api.EnhancedPager;
+import org.gitlab4j.api.ExtendedCommitsApi;
+import org.gitlab4j.api.ExtendedProject;
+import org.gitlab4j.api.ExtendedProjectApi;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GitLabApiForm;
 import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.IssuesApi;
 import org.gitlab4j.api.MergeRequestApi;
@@ -32,6 +32,7 @@ import org.gitlab4j.api.NotesApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AccessLevel;
+import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.GroupFilter;
 import org.gitlab4j.api.models.GroupParams;
@@ -56,6 +57,8 @@ import com.google.gson.JsonParser;
 
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
+import de.catma.project.BackendPager;
+import de.catma.project.CommitInfo;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager.ProjectMetadataSerializationField;
@@ -65,6 +68,7 @@ import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitGroup;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitMember;
+import de.catma.repository.git.GitPager;
 import de.catma.repository.git.GitSharedGroupMember;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
@@ -1135,6 +1139,35 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to check import status for remote Git repository", e);
+		}
+		
+	}
+	
+	@Override
+	public BackendPager<CommitInfo> getCommits(ProjectReference projectReference, LocalDate after, LocalDate before, String branch, String author) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
+
+			ExtendedCommitsApi commitsApi = new ExtendedCommitsApi(restrictedGitLabApi);
+			
+			EnhancedPager<Commit> commitsPager = commitsApi.getCommitsWithEnhancedPager(
+					gitlabProjectId, 
+					branch, 
+					after==null?null:java.util.Date.from(
+							after.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
+					before==null?null:java.util.Date.from(
+							before.plusDays(1).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
+					author,
+					15
+			);
+			
+			
+			return new GitPager<Commit, CommitInfo>(commitsPager, commit -> new CommitInfo(commit.getId(), commit.getTitle(), commit.getMessage(), commit.getCommittedDate(), commit.getAuthorName()));
+			
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to retrieve commits", e);
 		}
 		
 	}

@@ -798,6 +798,20 @@ $contribution-color: blue;
 	  padding-right: 10px;
   }
   
+  
+  .project-event-panel-pager-component {
+	  background: white;
+	  margin-right: 10px;
+  }
+  
+  .project-event-panel-commits-action-grid-component {
+	  padding-bottom: 1px;
+  }
+  
+  .project-event-panel-commits-action-grid-component .v-horizontallayout-actiongrid__bar {
+	  padding-right: 10px;
+  }
+  
   /* Dashboard */
   .dashboard-view {
     background-color: white;

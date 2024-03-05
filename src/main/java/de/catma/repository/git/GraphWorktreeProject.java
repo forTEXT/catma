@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +49,8 @@ import de.catma.indexer.IndexedProject;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
+import de.catma.project.BackendPager;
+import de.catma.project.CommitInfo;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
 import de.catma.project.event.ChangeType;
@@ -1899,4 +1902,11 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
+	
+	@Override
+	public BackendPager<CommitInfo> getCommits(LocalDate after, LocalDate before, String branch, String author) throws IOException {
+		return gitProjectHandler.getCommits(after, before, branch, author);
+	}
+	
+	
 }

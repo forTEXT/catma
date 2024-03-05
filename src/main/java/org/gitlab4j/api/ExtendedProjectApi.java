@@ -1,4 +1,4 @@
-package de.catma.repository.git.managers;
+package org.gitlab4j.api;
 
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
