@@ -25,6 +25,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.ProjectReference;
@@ -42,7 +43,6 @@ import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
-import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.InviteMembersWithGroupDialog;
 import de.catma.ui.module.project.InviteMembersWithGroupDialog.MemberData;
@@ -53,7 +53,7 @@ import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.user.signup.SignupTokenManager;
 
-public class GroupCard extends VerticalFlexLayout {
+public class GroupCard extends VerticalLayout {
 	
 	private final Group group;
 	private final ProjectsManager projectsManager;
@@ -290,6 +290,7 @@ public class GroupCard extends VerticalFlexLayout {
     }
 
     private void initComponents() {
+    	setSizeUndefined();
         addStyleName("groupslist__card");
 
         HorizontalLayout topPanel = new HorizontalLayout();
@@ -297,7 +298,6 @@ public class GroupCard extends VerticalFlexLayout {
         addComponent(topPanel);
 
         memberGrid = new Grid<>();
-        memberGrid.setWidth("100%");
         memberGrid.setHeightByRows(4);
         memberGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
         memberGrid.addColumn(User::getName)
@@ -310,11 +310,11 @@ public class GroupCard extends VerticalFlexLayout {
                 memberGrid
         );
         
+        memberGridComponent.addStyleName("groupslist__card__grid");
+        
         topPanel.addComponent(memberGridComponent);
-        topPanel.setExpandRatio(memberGridComponent, 1f);
 
         sharedProjectsGrid = new Grid<>();
-        sharedProjectsGrid.setWidth("100%");
         sharedProjectsGrid.setHeightByRows(4);
 
         sharedProjectsGrid.addColumn(ProjectReference::getName)
@@ -333,7 +333,6 @@ public class GroupCard extends VerticalFlexLayout {
         sharedProjectsGridComponent.setSelectionModeFixed(SelectionMode.SINGLE);
 
         topPanel.addComponent(sharedProjectsGridComponent);
-        topPanel.setExpandRatio(sharedProjectsGridComponent, 2f);
         
         HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
         addComponent(titleAndActionsLayout);

@@ -1,6 +1,8 @@
 package de.catma.ui.module.dashboard;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Objects;
 import java.util.Set;
 
@@ -8,6 +10,7 @@ import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -16,7 +19,6 @@ import com.vaadin.ui.UI;
 
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
-import de.catma.rbac.IRBACManager;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
@@ -95,6 +97,19 @@ public class ProjectCard extends VerticalFlexLayout  {
 		previewLayout.addStyleName("projectlist__card__preview");
 		previewLayout.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
 
+		Label datesLabel = 
+			new Label(
+				String.format(
+					"Last activity at: %s <span class=\"%s\">Created at %s</span>", 
+					projectReference.getLastActivityAt()==null?"N/A":projectReference.getLastActivityAt().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)),
+					"projectlist__card__created-date",
+					projectReference.getCreatedAt()==null?"N/A":projectReference.getCreatedAt().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+				),
+				ContentMode.HTML
+					
+			);
+		datesLabel.addStyleName("projectlist__card__dates");
+		previewLayout.addComponent(datesLabel);
 		descriptionLabel = new Label(projectReference.getDescription());
 		descriptionLabel.setWidth("100%");
 		previewLayout.addComponents(descriptionLabel);

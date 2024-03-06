@@ -873,7 +873,7 @@ $contribution-color: blue;
   }
 
   .projectlist__newproject__link {
-    height: 176px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     padding: 0.5em;
@@ -907,14 +907,15 @@ $contribution-color: blue;
     width: 100%;
     overflow: auto;
   }
-
-  .projectlist__card__groups {
-    padding-right: 5px;
-    border-left: 1px solid rgba(151, 151, 151, 0.12);
-    background-color: #cdcdcd;
-    font-size: xx-small;
-    width: 70%;
-    overflow: auto;
+  
+  .projectlist__card__dates {
+	  font-size: xx-small;
+	  border-bottom: 1px solid lightgrey;
+	  margin-bottom: 5px;
+  }
+  
+  .projectlist__card__created-date {
+	  float: right;
   }
 
   .projectlist__card__title-and-actions {
@@ -931,6 +932,11 @@ $contribution-color: blue;
       margin: 10px;
       padding: 0px;
   }
+  
+  .groupslist__card__grid .v-slot-action-grid-bar__search-field {
+    width: 269px;
+  }
+  
 
   .groupslist__card__topPanel {
       background-color: #cdcdcd

@@ -1,7 +1,5 @@
 package de.catma.ui.module.dashboard;
 
-import java.util.logging.Logger;
-
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.ui.TabSheet;

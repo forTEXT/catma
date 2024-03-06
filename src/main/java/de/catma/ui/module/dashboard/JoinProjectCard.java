@@ -4,8 +4,6 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 
-import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.user.User;
 
@@ -44,12 +42,5 @@ public class JoinProjectCard extends VerticalFlexLayout {
 		joinProjectLayout.addComponents(labelDesc);
 
 		addComponent(joinProjectLayout);
-
-		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
-		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");
-		titleAndActionsLayout.setAlignItems(FlexLayout.AlignItems.BASELINE);
-		titleAndActionsLayout.setWidth("100%");
-
-		addComponents(titleAndActionsLayout);
 	}
 }

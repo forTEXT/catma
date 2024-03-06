@@ -17,7 +17,6 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
@@ -158,12 +157,11 @@ public class GroupListView extends VerticalLayout {
     }
 
     private void initComponents() {
+    	
     	helpWindow = new GroupManagerHelpWindow();
     	
         addStyleName("groupslist");
         groupsLayout.addStyleNames("groupslist__list");
-
-        setSizeFull();
 
         HorizontalLayout actionBar = new HorizontalLayout();
 
@@ -178,7 +176,8 @@ public class GroupListView extends VerticalLayout {
         sortedByBox = new ComboBox<SortItem<Group>>(
         		"sorted by", 
         		Arrays.asList(
-        				sortByNameAsc, sortByNameDesc));
+        				sortByNameAsc, sortByNameDesc, 
+        				sortByOwnedAsc, sortByOwnedDesc));
         sortedByBox.setSelectedItem(sortByNameAsc);
         sortedByBox.setEmptySelectionAllowed(false);
         sortedByBox.addStyleName("project-list-view__sorted-by-box");
