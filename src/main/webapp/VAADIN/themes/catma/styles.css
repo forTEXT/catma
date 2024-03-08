@@ -18378,6 +18378,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .projectlist__card__dates {
 	font-size: xx-small;
 	border-bottom: 1px solid lightgrey;
+	margin-bottom: 5px;
 }
 
 .catma .projectlist__card__created-date {

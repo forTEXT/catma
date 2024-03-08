@@ -113,12 +113,12 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		loginService = new GitlabLoginService(new RemoteGitManagerFactory() {
 			@Override
 			public RemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException {
-				return new GitlabManagerRestricted(eventBus, username, password);
+				return new GitlabManagerRestricted(username, password);
 			}
 
 			@Override
 			public RemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
-				return new GitlabManagerRestricted(eventBus, userImpersonationToken);
+				return new GitlabManagerRestricted(userImpersonationToken);
 			}
 		});
 

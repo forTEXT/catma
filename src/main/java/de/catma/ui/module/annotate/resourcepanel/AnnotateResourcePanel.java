@@ -3,13 +3,14 @@ package de.catma.ui.module.annotate.resourcepanel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
@@ -132,10 +133,10 @@ public class AnnotateResourcePanel extends VerticalLayout {
 			Set<Member> members = project.getProjectMembers();
 			
 			Set<SharedGroup> groups = 
-					members.stream().filter(member -> member instanceof SharedGroupMember).map(member -> ((SharedGroupMember)member).getSharedGroup()).sorted().collect(Collectors.toSet());
+					members.stream().filter(member -> member instanceof SharedGroupMember).map(member -> ((SharedGroupMember)member).getSharedGroup()).collect(Collectors.toSet());
 			
 			
-			ArrayList<ProjectParticipant> participants = new ArrayList<ProjectParticipant>();
+			SortedSet<ProjectParticipant> participants = new TreeSet<ProjectParticipant>((p1, p2) -> p1.toString().compareToIgnoreCase(p2.toString()));
 			for (SharedGroup group : groups) {
 				participants.add(new GroupParticipant(group));
 			}
@@ -490,6 +491,8 @@ public class AnnotateResourcePanel extends VerticalLayout {
 		
 		cbMembers = new ComboBox<ProjectParticipant>("toggle visibility by responsible");
 		cbMembers.addStyleName("annotate-resource-panel__member-box");
+		cbMembers.setItemCaptionGenerator(item -> item.getName());
+		cbMembers.setItemIconGenerator(item -> item.getIconAsResource());
 		String toggleVisibilityDescription = "Select a member or user group from the list of responsables on the left and use the visibility buttons "
 				+ "to toggle the visibilty of all collections belonging to the selected responsable.";
 		btSelectMemberCollections = new IconButton(VaadinIcons.EYE);

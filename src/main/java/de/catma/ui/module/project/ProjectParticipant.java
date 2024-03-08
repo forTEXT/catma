@@ -8,6 +8,7 @@ public interface ProjectParticipant {
 
 	Long getId();
 	String getIcon();
+	com.vaadin.server.Resource getIconAsResource();
 	RBACRole getRole();
 	boolean isGroup();
 	String getName();

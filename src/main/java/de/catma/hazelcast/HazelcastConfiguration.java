@@ -36,6 +36,7 @@ public final class HazelcastConfiguration {
 		 * cache for project invitations accepted by the invited user that needs to be handled by the inviting user, needs inter-session communication
 		 */
 		PROJECT_INVITATION,
+		API_AUTH,
 		;
 	}
 
@@ -63,6 +64,10 @@ public final class HazelcastConfiguration {
     public final static Configuration<Integer, String> PROJECT_INVITATION_CONFIG = 
     		new MutableConfiguration<Integer, String>()
     		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(MINUTES, 30)));
+    
+    public final static Configuration<Integer, String> API_AUTH_CONFIG = 
+    		new MutableConfiguration<Integer, String>()
+    		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(HOURS, 12))); //cache entry expiration corresponds to JWT expiration
 
     public final static ClientConfig CLIENT_CONFIG = new ClientConfig().setProperty("hazelcast.client.internal.executor.pool.size", "1");
     

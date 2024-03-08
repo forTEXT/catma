@@ -3,6 +3,8 @@ package de.catma.ui.module.project;
 import java.time.LocalDate;
 
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.FontIcon;
+import com.vaadin.server.Resource;
 
 import de.catma.rbac.RBACRole;
 import de.catma.user.Member;
@@ -25,7 +27,12 @@ public class ProjectMemberParticipant implements ProjectParticipant {
 
 	@Override
 	public String getIcon() {
-		return VaadinIcons.USER.getHtml();
+		return ((FontIcon)getIconAsResource()).getHtml();
+	}
+	
+	@Override
+	public Resource getIconAsResource() {
+		return VaadinIcons.USER;
 	}
 
 	@Override

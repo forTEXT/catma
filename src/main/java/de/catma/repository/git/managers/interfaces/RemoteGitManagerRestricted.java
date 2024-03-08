@@ -2,7 +2,6 @@ package de.catma.repository.git.managers.interfaces;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -22,6 +21,12 @@ import de.catma.user.User;
  * Provides restricted access (current user scope) to the remote Git server API
  */
 public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitUserInformationProvider {
+	
+	/**
+	 * Re-fetches the current user from the backend.
+	 */
+	void refreshUser();
+	
 	/**
 	 * Gets the user for the current session.
 	 *
@@ -46,6 +51,14 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if an error occurs when getting the projects
 	 */
 	List<ProjectReference> getProjectReferences() throws IOException;
+
+	/**
+	 * Gets the project with the given CATMA projectId and namespace.
+	 *
+	 * @return a {@link ProjectReference}
+	 * @throws IOException if an error occurs when getting the projects
+	 */
+	ProjectReference getProjectReference(String namespace, String projectId) throws IOException;
 	
 	/**
 	 * Gets all projects the current user has access to.

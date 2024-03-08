@@ -1,7 +1,5 @@
 package de.catma.repository.git;
 
-import java.util.Date;
-
 import de.catma.rbac.RBACRole;
 import de.catma.user.SharedGroup;
 import de.catma.user.SharedGroupMember;

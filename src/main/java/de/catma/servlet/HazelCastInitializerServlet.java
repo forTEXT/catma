@@ -76,6 +76,10 @@ public class HazelCastInitializerServlet extends HttpServlet{
 				HazelcastConfiguration.CacheKeyName.PROJECT_INVITATION.name(),
 				HazelcastConfiguration.PROJECT_INVITATION_CONFIG
 		);
+		
+		cacheManager.createCache(
+				HazelcastConfiguration.CacheKeyName.API_AUTH.name(), 
+				HazelcastConfiguration.API_AUTH_CONFIG);
 
 		SignupTokenManager signupTokenManager = new SignupTokenManager();
 		

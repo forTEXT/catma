@@ -50,8 +50,6 @@ import org.gitlab4j.api.models.Visibility;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -73,7 +71,6 @@ import de.catma.repository.git.GitSharedGroupMember;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.ui.events.ChangeUserAttributesEvent;
 import de.catma.user.Member;
 import de.catma.user.SharedGroup;
 import de.catma.user.User;
@@ -89,15 +86,15 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	private GitUser user;
 
-	public GitlabManagerRestricted(EventBus eventBus, String userImpersonationToken) throws IOException {
-		this(eventBus, new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
+	public GitlabManagerRestricted(String userImpersonationToken) throws IOException {
+		this(new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
 	}
 
-	public GitlabManagerRestricted(EventBus eventBus, String username, String password) throws IOException {
-		this(eventBus, oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
+	public GitlabManagerRestricted(String username, String password) throws IOException {
+		this(oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
 	}
 
-	private GitlabManagerRestricted(EventBus eventBus, GitLabApi api) throws IOException {
+	private GitlabManagerRestricted(GitLabApi api) throws IOException {
 		this.restrictedGitLabApi = api;
 
 		// cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
@@ -109,8 +106,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		catch (GitLabApiException e) {
 			throw new IOException(e);
 		}
-
-		eventBus.register(this);
 	}
 
 	private static GitLabApi oauth2Login(String url, String username, String password) throws IOException {
@@ -119,18 +114,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(e);
-		}
-	}
-
-
-	// event handlers
-	@Subscribe
-	public void handleChangeUserAttributes(ChangeUserAttributesEvent event){
-		try {
-			user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
-		}
-		catch (GitLabApiException e) {
-			logger.log(Level.WARNING, "Failed to fetch user from backend", e);
 		}
 	}
 
@@ -193,6 +176,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 
 	// RemoteGitManagerRestricted implementations
+	@Override
+	public void refreshUser() {
+		try {
+			user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
+		}
+		catch (GitLabApiException e) {
+			logger.log(Level.WARNING, "Failed to fetch user from backend", e);
+		}
+	}
+
 	@Override
 	public User getUser() {
 		return user;
@@ -501,6 +494,29 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	@Override
 	public List<ProjectReference> getProjectReferences() throws IOException {
 		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()), null, false);
+	}
+	
+	@Override
+	public ProjectReference getProjectReference(String namespace, String projectId) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project project = projectApi.getProject(namespace, projectId);
+			return getProjectReference(
+					project.getNamespace().getPath(),
+					project.getPath(),
+					project.getDescription(),
+					project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
+						      .atZone(ZoneId.systemDefault())
+						      .toLocalDate(),
+					project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
+						      .atZone(ZoneId.systemDefault())
+						      .toLocalDate()
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to load project %s/%s", namespace, projectId), e);
+		}
+
 	}
 
 	@Override

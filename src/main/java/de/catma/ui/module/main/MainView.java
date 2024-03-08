@@ -273,6 +273,9 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 
 	@Override
 	public void close() throws IOException {
+		if (header != null) {
+			header.close();
+		}
 		closeViews();
 	}
 }
