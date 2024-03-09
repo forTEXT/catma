@@ -2,6 +2,7 @@ package de.catma.repository.git.managers;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -211,8 +212,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 
-	private ProjectReference getProjectReference(String namespace, String path, String description, LocalDate createdAt,
-			LocalDate lastActivityAt) throws IOException {
+	private ProjectReference getProjectReference(String namespace, String path, String description, LocalDateTime createdAt,
+			LocalDateTime lastActivityAt) throws IOException {
 		try {
 			JsonObject metaDataJson = JsonParser.parseString(description).getAsJsonObject();
 			String catmaProjectName = metaDataJson.get(ProjectMetadataSerializationField.name.name()).getAsString();
@@ -287,10 +288,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 													project.getDescription(),
 													project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
 														      .atZone(ZoneId.systemDefault())
-														      .toLocalDate(),
+														      .toLocalDateTime(),
 													project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
 														      .atZone(ZoneId.systemDefault())
-														      .toLocalDate()
+														      .toLocalDateTime()
 											);
 										} catch (IOException e) {
 											logger.log(
@@ -464,10 +465,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 											project.getDescription(),
 											project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
 												      .atZone(ZoneId.systemDefault())
-												      .toLocalDate(),
+												      .toLocalDateTime(),
 											project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
 												      .atZone(ZoneId.systemDefault())
-												      .toLocalDate()
+												      .toLocalDateTime()
 									);
 								}
 								catch (IOException e) {
@@ -507,10 +508,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					project.getDescription(),
 					project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
 						      .atZone(ZoneId.systemDefault())
-						      .toLocalDate(),
+						      .toLocalDateTime(),
 					project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
 						      .atZone(ZoneId.systemDefault())
-						      .toLocalDate()
+						      .toLocalDateTime()
 			);
 		}
 		catch (GitLabApiException e) {

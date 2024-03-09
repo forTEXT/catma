@@ -61,6 +61,10 @@
              <param-name>jersey.config.server.provider.packages</param-name>
              <param-value>de.catma.api.pre</param-value>
         </init-param>
+        <init-param>
+            <param-name>javax.ws.rs.Application</param-name>
+             <param-value>de.catma.api.pre.PreApplication</param-value>
+        </init-param>
         <load-on-startup>4</load-on-startup>
     </servlet>
    

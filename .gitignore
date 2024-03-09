@@ -24,3 +24,9 @@ catma*.properties
 project*.log
 project*.csv
 project*.ods
+
+# Eclipse scratch files
+*.jpage
+
+# catma group/project signup-token transaction log
+group_project_signup_token*.*

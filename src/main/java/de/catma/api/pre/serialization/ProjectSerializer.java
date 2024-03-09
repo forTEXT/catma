@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import de.catma.api.pre.PreProject;
 import de.catma.api.pre.PreProjectService;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
 import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
@@ -18,7 +19,6 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.graph.interfaces.GraphProjectHandler;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
@@ -26,17 +26,17 @@ import de.catma.tag.TagsetDefinition;
 public class ProjectSerializer {
 	private static final Logger logger = Logger.getLogger(ProjectSerializer.class.getName());
 	
-    public String serializeProjectResources(GraphProjectHandler graphProjectHandler) {
+    public String serializeProjectResources(PreProject project) {
         try {
             Export export = new Export();
 
             		
-            for (SourceDocumentReference sourceDocumentReference : graphProjectHandler.getSourceDocumentReferences()) {
-            	SourceDocument sourceDocument = graphProjectHandler.getSourceDocument(sourceDocumentReference.getUuid());
+            for (SourceDocumentReference sourceDocumentReference : project.getSourceDocumentReferences()) {
+            	SourceDocument sourceDocument = project.getSourceDocument(sourceDocumentReference.getUuid());
             	
                 ArrayList<AnnotationCollection> annotationCollections = new ArrayList<>();
                 for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentReference.getUserMarkupCollectionRefs()) {
-                    annotationCollections.add(graphProjectHandler.getAnnotationCollection(annotationCollectionReference));
+                    annotationCollections.add(project.getAnnotationCollection(annotationCollectionReference));
                 }
 
                 ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();
@@ -52,10 +52,12 @@ public class ProjectSerializer {
                 ExportDocument exportDocument = new ExportDocument(
                         new PreApiSourceDocument(
                                 sourceDocument,
-                                String.format("%s%s/%s/doc/%s", 
+                                String.format("%s%s/%s/project/%s/%s/doc/%s", 
                                 		CATMAPropertyKey.API_BASE_URL.getValue(), 
                                 		PreProjectService.API_PACKAGE, 
                                 		PreProjectService.API_VERSION, 
+                                		project.getNamespace(),
+                                		project.getProjectId(),
                                 		sourceDocument.getUuid().toLowerCase())
                         ),
                         tagDefinitions.stream().map(PreApiTagDefinition::new).collect(Collectors.toList()),

@@ -2,13 +2,16 @@ package de.catma.api.pre;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
 import javax.cache.Cache;
 import javax.cache.Caching;
+import javax.inject.Inject;
 import javax.lang.model.type.NullType;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +27,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+import de.catma.api.pre.ProjectCache.CacheKey;
 import de.catma.api.pre.serialization.ProjectSerializer;
 import de.catma.backgroundservice.DefaultBackgroundService;
 import de.catma.backgroundservice.ExecutionListener;
@@ -41,6 +45,7 @@ import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
+import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
@@ -57,6 +62,8 @@ public class PreProjectService {
     		Caching.getCachingProvider().getCacheManager().getCache(
     				HazelcastConfiguration.CacheKeyName.API_AUTH.name());
 
+	@Inject
+	private ProjectCache projectCache;
 	
 	@Context
 	private UriInfo info;
@@ -69,17 +76,26 @@ public class PreProjectService {
 	
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<ProjectReference> getProjects(@QueryParam("token") String token) throws IOException {
-    	RemoteGitManagerRestricted remoteGitManagerRestricted = new GitlabManagerRestricted(token);
-    	return remoteGitManagerRestricted.getProjectReferences();
+    public Response getProjects(@Context SecurityContext securityContext) throws IOException {
+    	Principal principal = securityContext.getUserPrincipal();
+    	if (principal == null) {
+    		return Response.status(Status.UNAUTHORIZED).build();
+    	}
+    	
+    	RemoteGitManagerRestricted remoteGitManagerRestricted = authenticatedUsersCache.get(principal.getName()).createRemoteGitManagerRestricted();
+    	if (remoteGitManagerRestricted == null) {
+    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "token expired").build();
+    	}
+    	
+    	return Response.ok(new SerializationHelper<ProjectReference>().serialize(remoteGitManagerRestricted.getProjectReferences())).build();
     }
     
     @GET
     @Path("/{namespace}/{catmaProjectId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getProject(@Context SecurityContext securityContex, @PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjecId) {
+    public Response getProject(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId) {
     	try {
-	    	Principal principal = securityContex.getUserPrincipal();
+	    	Principal principal = securityContext.getUserPrincipal();
 	    	if (principal == null) {
 	    		return Response.status(Status.UNAUTHORIZED).build();
 	    	}
@@ -89,9 +105,54 @@ public class PreProjectService {
 	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "token expired").build();
 	    	}
 	    	
+	    	PreProject project = projectCache.get(
+	    			new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId), 
+	    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
 	    	
+			ProjectSerializer projectSerializer = new ProjectSerializer();
+			
+			return Response.ok(projectSerializer.serializeProjectResources(project), MediaType.APPLICATION_JSON).build();
+    	}
+    	catch (Exception e) {
+    		e.printStackTrace();
+    		return Response.status(Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage()).build();
+    	}
+    }
+    
+    
+    @GET
+    @Path("/{namespace}/{catmaProjectId}/doc/{documentId}")    
+    public Response getDocument(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId, @PathParam("documentId") String documentId) {
+    	try {
+	    	Principal principal = securityContext.getUserPrincipal();
+	    	if (principal == null) {
+	    		return Response.status(Status.UNAUTHORIZED).build();
+	    	}
+	    	
+	    	RemoteGitManagerRestricted remoteGitManagerRestricted = authenticatedUsersCache.get(principal.getName()).createRemoteGitManagerRestricted();
+	    	if (remoteGitManagerRestricted == null) {
+	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "token expired").build();
+	    	}
+	    	
+	    	PreProject project = projectCache.get(
+	    			new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId), 
+	    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
+	    	
+
+	    	File plainTextFile = new File(project.getSourceDocument(documentId).getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI());
+	    	
+			return Response.ok(plainTextFile, MediaType.TEXT_PLAIN_TYPE.withCharset(StandardCharsets.UTF_8.name())).build();
+    	}
+    	catch (Exception e) {
+    		e.printStackTrace();
+    		return Response.status(Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage()).build();
+    	}    	
+    }
+    
+    private Callable<PreProject> createPreProjectLoader(final RemoteGitManagerRestricted remoteGitManagerRestricted, final String namespace, final String catmaProjectId) {
+    	return () -> {    	
 	    	User user = remoteGitManagerRestricted.getUser();
-	    	ProjectReference projectReference = remoteGitManagerRestricted.getProjectReference(namespace, catmaProjecId);
+	    	ProjectReference projectReference = remoteGitManagerRestricted.getProjectReference(namespace, catmaProjectId);
 	    	JGitRepoManager localGitRepositoryManager = new JGitRepoManager(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), user);
 	    	JGitCredentialsManager jGitCredentialsManager = new JGitCredentialsManager(remoteGitManagerRestricted);
 	    	
@@ -104,7 +165,7 @@ public class PreProjectService {
 					.exists()
 			) {
 				try (LocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
-
+	
 					// clone the repository locally
 					localRepoManager.clone(
 							projectReference.getNamespace(),
@@ -140,7 +201,7 @@ public class PreProjectService {
 							rootRevisionHash
 					)
 			);
-
+	
 			logger.info(
 					String.format("Checking for conflicts in project \"%s\" with ID %s", projectReference.getName(), projectReference.getProjectId())
 			);
@@ -153,9 +214,9 @@ public class PreProjectService {
 						)
 				);
 			}
-
+	
 			gitProjectHandler.ensureUserBranch();
-
+	
 			if (gitProjectHandler.hasUncommittedChanges() || gitProjectHandler.hasUntrackedChanges()) {
 				throw new IllegalStateException(
 						String.format(
@@ -165,63 +226,55 @@ public class PreProjectService {
 						)
 				);
 			}
-
+	
 			gitProjectHandler.verifyCollections();
 			
-            
-            TagManager tagManager = new TagManager(new TagLibrary());
-            
-            LazyGraphProjectHandler graphProjectHandler = 
-            		new LazyGraphProjectHandler(
-            				projectReference, 
-            				user, 
-            				tagManager, 
-            				() -> gitProjectHandler.getTagsets(), 
-            				() -> gitProjectHandler.getDocuments(), 
-            				documentId -> gitProjectHandler.getDocument(documentId),
-            				documentId -> gitProjectHandler.getDocumentIndex(documentId), 
-            				documentIds -> gitProjectHandler.getCommentsWithReplies(documentIds), 
-            				new CollectionProvider() {
-            					@Override
-            					public AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary)
-            							throws IOException {
-            						return gitProjectHandler.getCollection(collectionId, tagLibrary);
-            					}
+	        
+	        TagManager tagManager = new TagManager(new TagLibrary());
+	        
+	        LazyGraphProjectHandler graphProjectHandler = 
+	        		new LazyGraphProjectHandler(
+	        				projectReference, 
+	        				user, 
+	        				tagManager, 
+	        				() -> gitProjectHandler.getTagsets(), 
+	        				() -> gitProjectHandler.getDocuments(), 
+	        				documentId -> gitProjectHandler.getDocument(documentId),
+	        				documentId -> gitProjectHandler.getDocumentIndex(documentId), 
+	        				documentIds -> gitProjectHandler.getCommentsWithReplies(documentIds), 
+	        				new CollectionProvider() {
+	        					@Override
+	        					public AnnotationCollection getCollection(String collectionId, TagLibrary tagLibrary)
+	        							throws IOException {
+	        						return gitProjectHandler.getCollection(collectionId, tagLibrary);
+	        					}
 							});
-            
+	        
 			ProgressListener progressListener = new ProgressListener() {
 				@Override
 				public void setProgress(String value, Object... args) {
 					logger.info(String.format(value, args));
 				}
 			};
-
-            graphProjectHandler.ensureProjectRevisionIsLoaded(
-            		gitProjectHandler.getRootRevisionHash(), 
-            		false, 
-            		new CollectionsProvider() {
+	
+	        graphProjectHandler.ensureProjectRevisionIsLoaded(
+	        		gitProjectHandler.getRootRevisionHash(), 
+	        		false, 
+	        		new CollectionsProvider() {
 						
 						@Override
 						public List<AnnotationCollection> getCollections(TagLibrary tagLibrary) throws IOException {
 							return gitProjectHandler.getCollections(tagLibrary, progressListener, false);
 						}
 					}, 
-            		new DefaultBackgroundService(null, false),
-            		new ExecutionListener<NullType>() {
+	        		new DefaultBackgroundService(null, false),
+	        		new ExecutionListener<NullType>() {
 						public void done(NullType result) {};
 						public void error(Throwable t) {};
 					},
 					progressListener);
-
-			ProjectSerializer projectSerializer = new ProjectSerializer();
-			
-			return Response.ok(projectSerializer.serializeProjectResources(graphProjectHandler), MediaType.APPLICATION_JSON).build();
-    	}
-    	catch (Exception e) {
-    		e.printStackTrace();
-    		return Response.status(Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage()).build();
-    	}
+	        return new PreProject(namespace, catmaProjectId, gitProjectHandler, graphProjectHandler);
+	    };
     }
-    
     
 }

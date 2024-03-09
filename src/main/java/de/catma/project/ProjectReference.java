@@ -1,6 +1,6 @@
 package de.catma.project;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ProjectReference {
 	
@@ -8,8 +8,8 @@ public class ProjectReference {
 	private final String namespace;
 	private String name;
 	private String description;
-	private final LocalDate createdAt;
-	private final LocalDate lastActivityAt;
+	private final LocalDateTime createdAt;
+	private final LocalDateTime lastActivityAt;
 	
 	public ProjectReference(
 			String projectId, String namespace, String name, String description) {
@@ -18,8 +18,8 @@ public class ProjectReference {
 
 	
 	
-	public ProjectReference(String projectId, String namespace, String name, String description, LocalDate createdAt,
-			LocalDate lastActivityAt) {
+	public ProjectReference(String projectId, String namespace, String name, String description, LocalDateTime createdAt,
+			LocalDateTime lastActivityAt) {
 		super();
 		this.projectId = projectId;
 		this.namespace = namespace;
@@ -62,11 +62,11 @@ public class ProjectReference {
 		return String.format("%s/%s", namespace, projectId);
 	}
 
-	public LocalDate getCreatedAt() {
+	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
 	
-	public LocalDate getLastActivityAt() {
+	public LocalDateTime getLastActivityAt() {
 		return lastActivityAt;
 	}
 	

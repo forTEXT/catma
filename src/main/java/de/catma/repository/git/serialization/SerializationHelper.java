@@ -2,6 +2,7 @@ package de.catma.repository.git.serialization;
 
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
@@ -41,6 +42,7 @@ public class SerializationHelper<T> {
 		gson.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gson.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gson.registerTypeAdapterFactory(new CharsetAdapterFactory());
+		gson.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
 		ConstructorConstructor constructorConstructor = new ConstructorConstructor(Collections.emptyMap(), false, Collections.emptyList());
 		gson.registerTypeAdapterFactory(
 			new SortedReflectiveTypeAdapterFactory(
@@ -61,6 +63,7 @@ public class SerializationHelper<T> {
 		gson.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gson.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gson.registerTypeAdapterFactory(new CharsetAdapterFactory());
+		gson.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
 		
 		return gson.create().fromJson(json, clazz);
 	}
@@ -72,6 +75,8 @@ public class SerializationHelper<T> {
 		gsonBuilder.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gsonBuilder.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gsonBuilder.registerTypeAdapterFactory(new CharsetAdapterFactory());
+		gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
+		
 		Gson gson = gsonBuilder.create();
 		return gson.fromJson(json, type);		
 	}
@@ -83,6 +88,7 @@ public class SerializationHelper<T> {
 		gsonBuilder.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gsonBuilder.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gsonBuilder.registerTypeAdapterFactory(new CharsetAdapterFactory());
+		gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
 		Gson gson = gsonBuilder.setPrettyPrinting().serializeNulls().create();
 		return gson.toJson(objects);	
 	}

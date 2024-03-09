@@ -121,7 +121,7 @@ public class PreAuthService {
 		    .subject(user.getIdentifier())
 		    .issuer(CATMAPropertyKey.API_BASE_URL.getValue())
 		    .expirationTime(
-		    		java.util.Date.from(LocalDateTime.now().plus(12, ChronoUnit.HOURS).atZone(ZoneId.systemDefault())
+		    		java.util.Date.from(LocalDateTime.now().plus(1, ChronoUnit.HOURS).atZone(ZoneId.systemDefault())
 		    	    	      .toInstant()))
 		    .build();
 
