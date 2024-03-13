@@ -23,7 +23,6 @@ import com.google.common.eventbus.Subscribe;
 import com.vaadin.ui.Component;
 
 import de.catma.document.annotation.AnnotationCollection;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
 import de.catma.project.event.ChangeType;

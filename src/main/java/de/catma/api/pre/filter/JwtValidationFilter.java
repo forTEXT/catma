@@ -1,18 +1,13 @@
-package de.catma.api.pre;
+package de.catma.api.pre.filter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.cache.Cache;
-import javax.cache.Caching;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
@@ -24,9 +19,11 @@ import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
 
-import de.catma.hazelcast.HazelcastConfiguration;
+import de.catma.api.pre.PreSecurityContext;
+import de.catma.api.pre.backend.AccessTokenRemoteGitManagerRestrictedProvider;
+import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
+import de.catma.api.pre.cache.RemoteGitManagerRestrictedProviderCache;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 
 @Provider
@@ -37,9 +34,10 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 	
 	private final Logger logger = Logger.getLogger(JwtValidationFilter.class.getName());
 	
-	private final Cache<String, RemoteGitManagerRestrictedProvider> authenticatedUsersCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache(
-    				HazelcastConfiguration.CacheKeyName.API_AUTH.name());
+	@Inject
+	private RemoteGitManagerRestrictedProviderCache remoteGitManagerRestrictedProviderCache;
+	@Inject
+	private RemoteGitManagerRestrictedFactory remoteGitMangerRestrictedFactory;
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -93,9 +91,9 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 		catch (ParseException e) {
 			logger.log(Level.WARNING, String.format("The token could not be parsed as a JWT, will try using it as a backend token, the error was: %s", e.getMessage()));
 			try {
-				RemoteGitManagerRestricted remoteGitManagerRestricted = new GitlabManagerRestricted(token);
+				RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(token);
 				
-				authenticatedUsersCache.put(remoteGitManagerRestricted.getUsername(), new AccessTokenRemoteGitManagerRestrictedProvider(token));
+				remoteGitManagerRestrictedProviderCache.put(remoteGitManagerRestricted.getUsername(), new AccessTokenRemoteGitManagerRestrictedProvider(token, remoteGitMangerRestrictedFactory));
 
 				requestContext.setSecurityContext(new PreSecurityContext(remoteGitManagerRestricted.getUsername(), requestContext.getSecurityContext().isSecure(), scheme));
 			}

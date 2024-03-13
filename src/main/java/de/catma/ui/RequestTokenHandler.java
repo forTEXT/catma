@@ -36,6 +36,7 @@ import de.catma.user.signup.AccountSignupToken;
 import de.catma.user.signup.GroupSignupToken;
 import de.catma.user.signup.ProjectSignupToken;
 import de.catma.user.signup.SignupTokenManager;
+import de.catma.user.signup.SignupTokenManager.TokenAction;
 import de.catma.user.signup.SignupTokenManager.TokenValidityHandler;
 
 public class RequestTokenHandler {
@@ -47,7 +48,6 @@ public class RequestTokenHandler {
 	private final HazelCastService hazelCastService;
 	private final SqliteService sqliteService;
 	private final ErrorHandler errorHandler;
-	private final ParameterProvider parameterProvider; 
 	private final Supplier<Component> contentComponentSupplier;
 	private final BackgroundServiceProvider backgroundServiceProvider;
 	
@@ -63,17 +63,18 @@ public class RequestTokenHandler {
 		this.hazelCastService = hazelCastService;
 		this.sqliteService = sqliteService;
 		this.errorHandler = errorHandler;
-		this.parameterProvider = parameterProvider;
 		this.contentComponentSupplier = contentComponentSupplier;
 		this.backgroundServiceProvider = backgroundServiceProvider;
 	}
 
-	public void handleRequestToken(String path) {
+	public void handleRequestToken(String action, String token) {
 		
-		switch (signupTokenManager.getTokenActionFromPath(path)) {
+		TokenAction tokenAction = action==null?TokenAction.none:TokenAction.findAction(action);
+		
+		switch (tokenAction) {
 			case verify: {				
 				// validate token to either display the reason for invalidity or show the create account creation dialog
-				signupTokenManager.validateAccountSignupToken(parameterProvider.getParameter(Parameter.TOKEN), new TokenValidityHandler<AccountSignupToken>() {
+				signupTokenManager.validateAccountSignupToken(token, new TokenValidityHandler<AccountSignupToken>() {
 					
 					@Override
 					public void tokenValid(AccountSignupToken signupToken) {
@@ -93,7 +94,7 @@ public class RequestTokenHandler {
 			}
 			case joingroup: {
 				// validate token to either display the reason for invalidity or to join the group
-				signupTokenManager.validateGroupSignupToken(parameterProvider.getParameter(Parameter.TOKEN), new TokenValidityHandler<GroupSignupToken>() {
+				signupTokenManager.validateGroupSignupToken(token, new TokenValidityHandler<GroupSignupToken>() {
 					
 					@Override
 					public void tokenValid(GroupSignupToken groupSignupToken) {
@@ -163,7 +164,7 @@ public class RequestTokenHandler {
 			}
 			case joinproject: {
 				// validate token to either display the reason for invalidity or to join the project
-				signupTokenManager.validateProjectSignupToken(parameterProvider.getParameter(Parameter.TOKEN), new TokenValidityHandler<ProjectSignupToken>() {
+				signupTokenManager.validateProjectSignupToken(token, new TokenValidityHandler<ProjectSignupToken>() {
 					
 					@Override
 					public void tokenValid(ProjectSignupToken projectSignupToken) {

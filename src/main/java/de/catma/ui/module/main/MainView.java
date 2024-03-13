@@ -17,6 +17,8 @@ import de.catma.project.ProjectsManager;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
+import de.catma.ui.Parameter;
+import de.catma.ui.ParameterProvider;
 import de.catma.ui.RequestTokenHandlerProvider;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
@@ -171,7 +173,9 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			currentRoute = routeToDashboardEvent.getClass();
 		}
 		// handle project- and group-join-tokens
-		((RequestTokenHandlerProvider)UI.getCurrent()).getRequestTokenHandler().handleRequestToken(UI.getCurrent().getPage().getLocation().getPath());
+		((RequestTokenHandlerProvider)UI.getCurrent()).getRequestTokenHandler().handleRequestToken(
+				UI.getCurrent().getPage().getLocation().getPath(), 
+				((ParameterProvider)UI.getCurrent()).getParameter(Parameter.ACTION));
 	}
 
 	@Override

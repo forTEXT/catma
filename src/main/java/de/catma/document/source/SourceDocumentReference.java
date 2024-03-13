@@ -30,6 +30,15 @@ public class SourceDocumentReference {
 		this.userMarkupCollectionRefs = new ArrayList<AnnotationCollectionReference>();
 	}
 
+	public SourceDocumentReference(String uuid, SourceContentHandler sourceContentHandler,
+			List<AnnotationCollectionReference> userMarkupCollectionRefs, boolean contribution) {
+		super();
+		this.uuid = uuid;
+		this.sourceContentHandler = sourceContentHandler;
+		this.userMarkupCollectionRefs = userMarkupCollectionRefs;
+		this.contribution = contribution;
+	}
+
 	/**
 	 * displays title or id
 	 */
@@ -139,5 +148,9 @@ public class SourceDocumentReference {
 
 	public void setContribution(boolean contribution) {
 		this.contribution = contribution;
+	}
+	
+	public SourceContentHandler getSourceContentHandler() {
+		return sourceContentHandler;
 	}
 }

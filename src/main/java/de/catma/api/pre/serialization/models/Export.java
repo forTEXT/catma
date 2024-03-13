@@ -6,31 +6,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Export {
-    private String exportId;
-    private List<ExportDocument> exportDocuments;
+    private final String exportId;
+    private final List<ExportDocument> exportDocuments;
 
-    public Export() {
-        exportId = new IDGenerator().generateExportId();
-        exportDocuments = new ArrayList<>();
-    }
+    public Export(List<ExportDocument> exportDocuments) {
+		exportId = new IDGenerator().generateExportId();
+		this.exportDocuments = exportDocuments;
+	}
 
     public String getExportId() {
         return exportId;
     }
 
-    public void setExportId(String exportId) {
-        this.exportId = exportId;
-    }
-
     public List<ExportDocument> getExportDocuments() {
         return exportDocuments;
-    }
-
-    public void setExportDocuments(List<ExportDocument> exportDocuments) {
-        this.exportDocuments = exportDocuments;
-    }
-
-    public void addExportDocument(ExportDocument exportDocument) {
-        exportDocuments.add(exportDocument);
     }
 }

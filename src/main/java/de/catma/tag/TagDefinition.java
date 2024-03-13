@@ -33,11 +33,11 @@ import de.catma.util.IDGenerator;
  */
 public class TagDefinition {
 
-	private String uuid;
+	private final String uuid;
 	private String name;
-	private Map<String,PropertyDefinition> systemPropertyDefinitions;
-	private Map<String,PropertyDefinition> userDefinedPropertyDefinitions;
-	private String parentUuid;
+	private final Map<String,PropertyDefinition> systemPropertyDefinitions;
+	private final Map<String,PropertyDefinition> userDefinedPropertyDefinitions;
+	private final String parentUuid;
 	private String tagsetDefinitionUuid;
 	private transient boolean contribution = false;
 
@@ -52,12 +52,20 @@ public class TagDefinition {
 			String uuid, 
 			String name,  
 			String parentUuid, String tagsetDefinitionUuid) {
-		this();
+
+		systemPropertyDefinitions = new HashMap<String, PropertyDefinition>();
+		userDefinedPropertyDefinitions = new HashMap<String, PropertyDefinition>();
+		addSystemPropertyDefinition(
+			new PropertyDefinition(
+				new IDGenerator().generate(PropertyDefinition.SystemPropertyName.catma_markuptimestamp.name()), 
+				PropertyDefinition.SystemPropertyName.catma_markuptimestamp.name(),
+				Collections.emptyList()));
 		this.uuid = uuid;
 		this.name = name;
-		this.parentUuid = parentUuid;
-		if (this.parentUuid == null) {
+		if (parentUuid == null) {
 			this.parentUuid = "";
+		} else {
+			this.parentUuid = parentUuid;			
 		}
 		this.tagsetDefinitionUuid = tagsetDefinitionUuid;
 	}
@@ -67,9 +75,14 @@ public class TagDefinition {
 	 * @param toCopy
 	 */
 	public TagDefinition(TagDefinition toCopy) {
-		this(toCopy.uuid, 
+		this(toCopy, toCopy.getUuid(), toCopy.getParentUuid(), toCopy.getTagsetDefinitionUuid());
+	}
+	
+	
+	public TagDefinition(TagDefinition toCopy, String uuid, String parentUuid, String tagsetDefinitionUuid) {
+		this(uuid, 
 				toCopy.name, 
-				toCopy.parentUuid, toCopy.tagsetDefinitionUuid);
+				parentUuid, tagsetDefinitionUuid);
 		
 		for (PropertyDefinition pd : toCopy.getSystemPropertyDefinitions()) {
 			addSystemPropertyDefinition(new PropertyDefinition(pd));
@@ -79,17 +92,6 @@ public class TagDefinition {
 		}	
 	}
 
-	public TagDefinition() {
-		systemPropertyDefinitions = new HashMap<String, PropertyDefinition>();
-		userDefinedPropertyDefinitions = new HashMap<String, PropertyDefinition>();
-		addSystemPropertyDefinition(
-			new PropertyDefinition(
-				new IDGenerator().generate(PropertyDefinition.SystemPropertyName.catma_markuptimestamp.name()), 
-				PropertyDefinition.SystemPropertyName.catma_markuptimestamp.name(),
-				Collections.emptyList()));
-	}
-	
-	
 	@Override
 	public String toString() {
 		return "TAG_DEF[" + name 
@@ -116,10 +118,6 @@ public class TagDefinition {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
-	
 	/**
 	 * @param name {@link #getName() name} of the PropertyDefinition
 	 * @return the corresponding PropertyDefinition or <code>null</code> 
@@ -151,10 +149,6 @@ public class TagDefinition {
 	 */
 	public String getParentUuid() {
 		return parentUuid;
-	}
-
-	public void setParentUuid(String uuid){
-		this.parentUuid = uuid;
 	}
 
 	public String getTagsetDefinitionUuid() {

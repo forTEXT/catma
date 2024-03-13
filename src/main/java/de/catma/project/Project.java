@@ -120,6 +120,9 @@ public interface Project {
 
 	String getId();
 
+	String getNamespace();
+
+	
 	String getName();
 
 	String getDescription();

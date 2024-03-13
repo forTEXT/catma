@@ -34,7 +34,7 @@ import java.util.Set;
  */
 public class TagLibrary implements Iterable<TagsetDefinition> {
 
-	private Map<String,TagsetDefinition> tagsetDefinitionsByID;
+	private final Map<String,TagsetDefinition> tagsetDefinitionsByID;
 	
 	public TagLibrary() {
 		tagsetDefinitionsByID = new HashMap<String, TagsetDefinition>();

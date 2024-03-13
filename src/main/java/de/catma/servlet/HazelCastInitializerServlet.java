@@ -1,37 +1,18 @@
 package de.catma.servlet;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
 
-import javax.cache.Cache;
-import javax.cache.Cache.Entry;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
-import com.google.gson.Gson;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
 import de.catma.hazelcast.HazelcastConfiguration;
-import de.catma.properties.CATMAPropertyKey;
-import de.catma.user.signup.GroupProjectSignupTokenCacheTransactionLogFormatter;
-import de.catma.user.signup.GroupSignupToken;
-import de.catma.user.signup.ProjectSignupToken;
 import de.catma.user.signup.SignupTokenManager;
 
 /**
@@ -77,10 +58,6 @@ public class HazelCastInitializerServlet extends HttpServlet{
 				HazelcastConfiguration.PROJECT_INVITATION_CONFIG
 		);
 		
-		cacheManager.createCache(
-				HazelcastConfiguration.CacheKeyName.API_AUTH.name(), 
-				HazelcastConfiguration.API_AUTH_CONFIG);
-
 		SignupTokenManager signupTokenManager = new SignupTokenManager();
 		
 		try {			

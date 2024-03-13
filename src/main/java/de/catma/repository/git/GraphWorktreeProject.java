@@ -206,6 +206,11 @@ public class GraphWorktreeProject implements IndexedProject {
 	public String getId() {
 		return projectReference.getProjectId();
 	}
+	
+	@Override
+	public String getNamespace() {
+		return projectReference.getNamespace();
+	}
 
 	@Override
 	public String getName() {

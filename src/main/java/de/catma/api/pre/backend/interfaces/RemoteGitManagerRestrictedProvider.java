@@ -1,4 +1,4 @@
-package de.catma.api.pre;
+package de.catma.api.pre.backend.interfaces;
 
 import java.io.IOException;
 

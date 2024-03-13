@@ -83,6 +83,7 @@ import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.login.Vaadin8InitializationService;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.main.auth.AuthenticationDialog;
 import de.catma.ui.util.Version;
 import de.catma.user.signup.SignupTokenManager;
 
@@ -147,9 +148,9 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 				hazelCastService, sqliteService, 
 				this, this, () -> this.getContent(), this);
 		
-		// handle signup token and OAuth requests
-		if (!handleRequestOauth(request)) {
-			requestTokenHandler.handleRequestToken(request.getPathInfo());
+		if (!handleRequestOauth(request)) { // handle oauth
+			// otherwise handle token actions (signup, join)
+			requestTokenHandler.handleRequestToken(getParameter(Parameter.ACTION), getParameter(Parameter.TOKEN));
 		}
 	}
 
@@ -162,22 +163,32 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		super.refresh(request);
 		storeParameters(request.getParameterMap());
 
-		// handle signup token and OAuth requests
-		if (!handleRequestOauth(request)) {
-			requestTokenHandler.handleRequestToken(request.getPathInfo());
+		if (!handleRequestOauth(request)) { // handle oauth
+			// otherwise handle token actions (signup, join)
+			requestTokenHandler.handleRequestToken(getParameter(Parameter.ACTION), getParameter(Parameter.TOKEN));
 		}
 
 		eventBus.post(new RefreshEvent());
 	}
 
 	private boolean handleRequestOauth(VaadinRequest request) {
+		// do we have an oauth authentication process ongoing?
 		if (request.getParameter("code") != null && VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
-			handleOauth(request);
+			// yes, handle oauth authentication result
+			String[] stateParts = handleOauth(request).split(":");
 
+			
 			Component mainView = initService.newEntryPage(eventBus, loginService, hazelCastService, sqliteService);
 			setContent(mainView);
 
 			eventBus.post(new RouteToDashboardEvent());
+			
+			// handle 'joinproject' and 'joingroup' actions
+			if (stateParts.length >= 3) {
+				String action = stateParts[1];
+				String actionToken = stateParts[2];
+				requestTokenHandler.handleRequestToken(action, actionToken);
+			}
 			return true;
 		}
 		return false;
@@ -309,30 +320,39 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		return this.attributes.get(key);
 	}
 
-	// based on: https://developers.google.com/identity/protocols/oauth2/openid-connect#authenticatingtheuser
-	// this starts at step 3: "Confirm the anti-forgery state token"
-	// prior steps are handled by AuthenticationDialog and its descendants
-	public void handleOauth(VaadinRequest request) {
+	/**
+	 * based on: https://developers.google.com/identity/protocols/oauth2/openid-connect#authenticatingtheuser
+	 * this starts at step 3: "Confirm the anti-forgery state token"
+	 * prior steps are handled by AuthenticationDialog and its descendants
+	 * 
+	 * @see AuthenticationDialog#getGoogleOauthAuthorisationRequestUrl
+	 */
+	public String handleOauth(VaadinRequest request) {
 		try {
 			// extract answer
 			String authorizationCode = request.getParameter("code");
 			String state = request.getParameter("state");
 			String error = request.getParameter("error");
-			String token = (String)VaadinSession.getCurrent().getAttribute("OAUTHTOKEN");
+			String oauthToken = (String)VaadinSession.getCurrent().getAttribute("OAUTHTOKEN");
 
+			String decodedState = new String(Base64.decodeBase64(state), StandardCharsets.UTF_8);
+			
+			String[] stateParts = decodedState.split(":");
+			String otpTimestamp = stateParts[0];
+			
 			// do we have an authorization request error?
 			if (error == null) {
-				// no, so we validate the state token
+				// no, so we validate the oauthToken
 				Totp totp = new Totp(
-						CATMAPropertyKey.OTP_SECRET.getValue() + token,
+						CATMAPropertyKey.OTP_SECRET.getValue() + oauthToken,
 						new Clock(CATMAPropertyKey.OTP_DURATION.getIntValue())
 				);
-				if (!totp.verify(state)) {
+				if (!totp.verify(otpTimestamp)) {
 					error = "state token verification failed";
 				}
 			}
 
-			// state token get validation success?
+			// oauthToken validation success?
 			if (error == null) {
 				CloseableHttpClient httpclient = HttpClients.createDefault();
 
@@ -342,6 +362,8 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 				data.add(new BasicNameValuePair("grant_type", "authorization_code"));
 				data.add(new BasicNameValuePair("client_id", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.getValue()));
 				data.add(new BasicNameValuePair("client_secret", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_SECRET.getValue()));
+				// although there is no redirect happening in access token request, this parameter needs to be added as it is mandatory
+				// and it needs to match the redirect_uri argument of preceding authorization code request (see AuthenticationDialog) 
 				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BASE_URL.getValue()));
 				httpPost.setEntity(new UrlEncodedFormEntity(data));
 
@@ -373,6 +395,9 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 				loginService.loggedInFromThirdParty(identifier, provider, email, name);
 
 				setAttribute("OAUTHTOKEN", null);
+				
+				// the decoded state might contain 'joinproject' or 'joingroup' actions which are handled up the chain
+				return decodedState;
 			}
 			else {
 				logger.warning("Google OAuth authentication failure: " + error);
@@ -386,6 +411,8 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		catch (Exception e) {
 			showAndLogError("Error during login", e);
 		}
+		
+		return ""; // no state
 	}
 
 	public HazelCastService getHazelCastService() {

@@ -56,9 +56,9 @@ public class SignupTokenManager {
 		joinproject, // join a project
 		;
 
-		static TokenAction findAction(String pathAction) {
+		public static TokenAction findAction(String actionIdentifier) {
 			for (TokenAction action : values()) {
-				if (Objects.equals(action.name(), pathAction)) {
+				if (Objects.equals(action.name(), actionIdentifier)) {
 					return action;
 				}
 					
@@ -193,24 +193,6 @@ public class SignupTokenManager {
 			return Optional.empty();
 		}
     }
-    /**
-     * Checks whether the given path is for account sign up verification 
-     * 
-     * @param path
-     * @return true if path ends with '{@link TokenAction#verify verify}', false otherwise
-     */
-    public TokenAction getTokenActionFromPath(String path){
-		if(path != null ){
-			Iterator<String> it = Splitter.on("/").split(path).iterator();
-			String lastPart = "";
-			while(it.hasNext()){
-				lastPart = it.next();
-			}
-			
-			return TokenAction.findAction(lastPart);
-		}
-		return TokenAction.none;
-    }
     
     /**
      * Verifies a given token, if it's valid a {@link TokenValidityHandler#tokenValid(AccountSignupToken)} is called with the valid signup token 
@@ -323,7 +305,8 @@ public class SignupTokenManager {
 		put(new GroupSignupToken(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), address, group.getId(), group.getName(), token, expiresAt==null?null:expiresAt.format(DateTimeFormatter.ISO_LOCAL_DATE)));
 
 		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
-		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.joingroup.name() + "?token=" + encToken;
+		// action is send as a param to keep redirect_url management in oauth simple
+		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + "?action=" +TokenAction.joingroup.name() + "&token=" + encToken;
 
 		// send join-group-link that contains the generated token
 		// this verification link brings the user back to CATMA and it brings up the user account creation dialog if the token can be verified, see handleVerify above and CatmaApplication#handleRequestToken 
@@ -340,7 +323,8 @@ public class SignupTokenManager {
 		put(new ProjectSignupToken(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), address, project.getNamespace(), projectId, project.getName(), role, token, expiresAt==null?null:expiresAt.format(DateTimeFormatter.ISO_LOCAL_DATE)));
 
 		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
-		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.joinproject.name() + "?token=" + encToken;
+		// action is send as a param to keep redirect_url management in oauth simple
+		String joinUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + "?action=" + TokenAction.joinproject.name() + "&token=" + encToken;
 
 		// send join-group-link that contains the generated token
 		// this verification link brings the user back to CATMA and it brings up the user account creation dialog if the token can be verified, see handleVerify above and CatmaApplication#handleRequestToken 
