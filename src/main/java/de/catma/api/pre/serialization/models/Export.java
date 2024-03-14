@@ -1,9 +1,8 @@
 package de.catma.api.pre.serialization.models;
 
-import de.catma.util.IDGenerator;
-
-import java.util.ArrayList;
 import java.util.List;
+
+import de.catma.util.IDGenerator;
 
 public class Export {
     private final String exportId;

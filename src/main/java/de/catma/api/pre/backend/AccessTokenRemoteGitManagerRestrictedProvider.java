@@ -19,6 +19,8 @@ public class AccessTokenRemoteGitManagerRestrictedProvider implements RemoteGitM
 
 	@Override
 	public RemoteGitManagerRestricted createRemoteGitManagerRestricted() throws IOException {
+		// Note: this creates a new instance of RemoteGitManagerRestricted for each request, that is intended
+		// as the RemoteGitManagerRestricted implementation is not threadsafe and its usage is not protected by locks
 		return remoteGitMangerRestrictedFactory.create(accessToken);
 	}
 
