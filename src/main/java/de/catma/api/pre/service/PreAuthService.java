@@ -100,8 +100,11 @@ public class PreAuthService {
 			else if (username != null && password != null) {
 				return Response.ok(authenticateWithUsernamePassword(username, password)).build();				
 			}
+			else if (oauthError != null) {
+				logger.log(Level.SEVERE, String.format("Got an oauthError: %s", oauthError));	
+			}
 			else if (oauthAuthorizationCode != null) {
-				return Response.ok(authenticateWithThirdPartyToken(oauthAuthorizationCode, oauthState, oauthError)).build();
+				return Response.ok(authenticateWithThirdPartyToken(oauthAuthorizationCode, oauthState)).build();
 			}
 
 		}
@@ -147,13 +150,7 @@ public class PreAuthService {
 		return createJWToken(remoteGitManagerRestricted.getUser());
 	}
 	
-	private String authenticateWithThirdPartyToken(String oauthAuthorizationCode, String otpTimestamp, String oauthError) throws ClientProtocolException, IOException, JOSEException {
-
-		// do we have an authorization request error?
-		if (oauthError != null) {
-			throw new IllegalStateException(oauthError);
-		}
-
+	private String authenticateWithThirdPartyToken(String oauthAuthorizationCode, String otpTimestamp) throws ClientProtocolException, IOException, JOSEException {
 		OauthIdentity oauthIdentity = oauthHandler.getIdentity(oauthAuthorizationCode, otpTimestamp);
 		
 		RemoteGitManagerPrivileged gitlabManagerPrivileged = remoteGitManagerPrivilegedFactory.create();

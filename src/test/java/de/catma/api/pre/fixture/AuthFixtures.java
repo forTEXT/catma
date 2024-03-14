@@ -1,4 +1,4 @@
-package de.catma.api.pre;
+package de.catma.api.pre.fixture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;

@@ -12,8 +12,6 @@ import java.util.logging.Logger;
 
 import javax.inject.Inject;
 import javax.lang.model.type.NullType;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -23,7 +21,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 
 import de.catma.api.pre.PreProject;
 import de.catma.api.pre.cache.ProjectCache;
@@ -58,15 +55,6 @@ public class PreProjectService {
 
 	@Inject
 	private ProjectCache projectCache;
-	
-	@Context
-	private UriInfo info;
-
-	@Context
-	private HttpServletRequest servletRequest;    
-
-	@Context 
-	private ServletContext servletContext;
 	
     @GET
     @Produces(MediaType.APPLICATION_JSON)

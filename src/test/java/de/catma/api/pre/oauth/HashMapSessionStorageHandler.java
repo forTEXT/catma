@@ -1,4 +1,4 @@
-package de.catma.api.pre;
+package de.catma.api.pre.oauth;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

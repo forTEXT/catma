@@ -1,4 +1,4 @@
-package de.catma.api.pre;
+package de.catma.api.pre.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,8 +28,11 @@ import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
 
+import de.catma.api.pre.PreApplication;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerPrivilegedFactory;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
+import de.catma.api.pre.fixture.AuthFixtures;
+import de.catma.api.pre.oauth.HashMapSessionStorageHandler;
 import de.catma.api.pre.oauth.interfaces.HttpClientFactory;
 import de.catma.api.pre.oauth.interfaces.SessionStorageHandler;
 import de.catma.properties.CATMAProperties;
@@ -45,7 +48,11 @@ class PreAuthServiceTest extends JerseyTest {
 	@Override
 	protected Application configure() {
 		PreApplication app = new PreApplication();
-		app.packages("de.catma.api.pre");
+		
+		// try to make sure that the configured package to scan is as expected
+		assertEquals("de.catma.api.pre", PreApplication.class.getPackage().getName());
+		
+		app.packages("de.catma.api.pre"); // the corresponding configuration for the production code is in the web.xml
 		app.register(new AbstractBinder() {
 			
 			@Override
@@ -205,6 +212,37 @@ class PreAuthServiceTest extends JerseyTest {
 		String userIdentifier = signedJWT.getJWTClaimsSet().getSubject();
 		
 		assertEquals(dummyIdent, userIdentifier);
+	}
+	
+	@Test
+	void failedAuthentificationWithThirdPartyOauthShouldReturn403Forbidden() throws Exception {
+		Response response = target("auth").queryParam("error", "authentication failed").request().get();
+		
+		assertEquals(Status.FORBIDDEN.getStatusCode(), response.getStatus());
+	}
+
+	@Test
+	void failedAuthentificationWithThirdPartyOauthShouldReturn403ForbiddenEvenWithAuthCode() throws Exception {
+		Response response = target("auth").queryParam("code", "4711").queryParam("error", "authentication failed").request().get();
+		
+		assertEquals(Status.FORBIDDEN.getStatusCode(), response.getStatus());
+	}
+	
+	@Test
+	void wrongStateWithAuthentificationWithThirdPartyOauthShouldReturn403Forbidden() throws Exception {
+		String dummyIdent = "dummyIdent";
+		
+		AuthFixtures.setUpValidThirdPartyOauth(dummyIdent, remoteGitManagerPrivilegedFactoryMock, remoteGitManagerRestrictedFactoryMock, httpClientFactoryMock);
+		
+		Response authRedirectResponse = target("auth/google").request().get();
+		assertEquals(Status.TEMPORARY_REDIRECT.getStatusCode(), authRedirectResponse.getStatus());
+		assertTrue(authRedirectResponse.getLocation().toString().startsWith(CATMAPropertyKey.GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL.getValue()));
+		
+		// wrong state
+		String state = "666";
+
+		Response authResponse = target("auth").queryParam("code", "1234").queryParam("state", state).request().get();
+		assertEquals(Status.FORBIDDEN.getStatusCode(), authResponse.getStatus());		
 	}
 
 }

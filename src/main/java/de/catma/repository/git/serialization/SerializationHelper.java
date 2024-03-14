@@ -77,7 +77,7 @@ public class SerializationHelper<T> {
 		gsonBuilder.registerTypeAdapterFactory(new CharsetAdapterFactory());
 		gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
 		
-		Gson gson = gsonBuilder.create();
+		Gson gson = gsonBuilder.serializeNulls().create();
 		return gson.fromJson(json, type);		
 	}
 	
