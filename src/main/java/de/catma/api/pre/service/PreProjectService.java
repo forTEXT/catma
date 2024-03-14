@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,12 +92,20 @@ public class PreProjectService {
 	    	if (remoteGitManagerRestricted == null) {
 	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "token expired").build();
 	    	}
-	    	
-	    	PreProject project = projectCache.get(
-	    			new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId), 
-	    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
-	    	
-			return Response.ok(project.serializeProjectResources(), MediaType.APPLICATION_JSON).build();
+	    	try {
+		    	PreProject project = projectCache.get(
+		    			new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId), 
+		    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
+		    	return Response.ok(project.serializeProjectResources(), MediaType.APPLICATION_JSON).build();
+	    	}
+	    	catch (ExecutionException ee) {
+	    		if (ee.getMessage().contains("404")) {
+	    			return Response.status(Status.NOT_FOUND).build();
+	    		}
+	    		else {
+	    			throw new Exception(ee);
+	    		}
+	    	}
     	}
     	catch (Exception e) {
     		logger.log(Level.SEVERE, String.format("Failed to deliver project export for %s/%s", namespace, catmaProjectId), e);
@@ -137,7 +146,9 @@ public class PreProjectService {
     private Callable<PreProject> createPreProjectLoader(final RemoteGitManagerRestricted remoteGitManagerRestricted, final String namespace, final String catmaProjectId) {
     	return () -> {    	
 	    	User user = remoteGitManagerRestricted.getUser();
+
 	    	ProjectReference projectReference = remoteGitManagerRestricted.getProjectReference(namespace, catmaProjectId);
+
 	    	JGitRepoManager localGitRepositoryManager = new JGitRepoManager(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), user);
 	    	JGitCredentialsManager jGitCredentialsManager = new JGitCredentialsManager(remoteGitManagerRestricted);
 	    	

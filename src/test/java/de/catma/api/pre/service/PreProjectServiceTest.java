@@ -1,13 +1,13 @@
 package de.catma.api.pre.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 
@@ -16,11 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.InitCommand;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,6 +28,10 @@ import com.google.gson.reflect.TypeToken;
 import de.catma.api.pre.PreApplication;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.api.pre.fixture.ProjectFixtures;
+import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotationProperty;
+import de.catma.api.pre.serialization.models.Export;
+import de.catma.api.pre.serialization.models.ExportDocument;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
@@ -41,9 +41,6 @@ import de.catma.util.IDGenerator;
 public class PreProjectServiceTest extends JerseyTest {
 
 	private RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock = Mockito.mock(RemoteGitManagerRestrictedFactory.class);
-//	private RemoteGitManagerPrivilegedFactory remoteGitManagerPrivilegedFactoryMock = Mockito.mock(RemoteGitManagerPrivilegedFactory.class);
-//	
-//	private HttpClientFactory httpClientFactoryMock = Mockito.mock(HttpClientFactory.class); 
 	
 	@Override
 	protected Application configure() {
@@ -58,9 +55,6 @@ public class PreProjectServiceTest extends JerseyTest {
 			@Override
 			protected void configure() {
 				bind(remoteGitManagerRestrictedFactoryMock).to(RemoteGitManagerRestrictedFactory.class).ranked(2);
-//				bind(remoteGitManagerPrivilegedFactoryMock).to(RemoteGitManagerPrivilegedFactory.class).ranked(2);
-//				bind(httpClientFactoryMock).to(HttpClientFactory.class).ranked(2);
-//				bind(HashMapSessionStorageHandler.class).to(SessionStorageHandler.class).ranked(2);
 			}
 		});
 		return app;
@@ -72,22 +66,23 @@ public class PreProjectServiceTest extends JerseyTest {
 		properties.setProperty(CATMAPropertyKey.API_HMAC_SECRET.name(), "mySecret".repeat(4));
 		properties.setProperty(CATMAPropertyKey.API_BASE_URL.name(), "http://test.local/api");
 		properties.setProperty(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.name(), System.getProperty("java.io.tmpdir"));
-//		properties.setProperty(CATMAPropertyKey.OTP_SECRET.name(), "the_otp_secret");
-//		properties.setProperty(CATMAPropertyKey.OTP_DURATION.name(), "600");
-//		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL.name(), "http://oauthprovider.local/authorize");
-//		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.name(), "4711");
-//		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL.name(), "http://oauthprovider.local/access");
-//		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_SECRET.name(), "the_client_secret");
 		
 		CATMAProperties.INSTANCE.setProperties(properties);
 	}
 	
+	@Test
+	void shouldProduce403UnauthorizedWithoutAuthArgs() throws Exception {
+		Response response = target("project").request(MediaType.APPLICATION_JSON).get();
+		
+		assertEquals(Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+	}
 	
 	@Test
 	void shouldProduceProjectListWithJwtAccessTokenQueryParam() throws Exception {
-		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock);
+		String personalAccessToken = "my_personal_token";
+		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, personalAccessToken);
 
-		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		Response authResponse = target("auth").queryParam("accesstoken", personalAccessToken).request(MediaType.APPLICATION_JSON).get();
 		
 		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
@@ -103,44 +98,180 @@ public class PreProjectServiceTest extends JerseyTest {
 	}
 	
 	@Test
-	void shouldProduceProjectExportWithJwtAccessTokenQueryParam() throws Exception {
-		String projectName = "test_project";
-		String namespace = "test_namespace";
+	void shouldProduceProjectListWithJwtAccessTokenInBearerHeader() throws Exception {
+		String personalAccessToken = "my_personal_token";
+		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, personalAccessToken);
+
+		Response authResponse = target("auth").queryParam("accesstoken", personalAccessToken).request(MediaType.APPLICATION_JSON).get();
 		
-		IDGenerator idGenerator = new IDGenerator();
-		String projectId = idGenerator.generate(projectName);
+		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+
+		Response response = 
+				target("project")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", String.format("Bearer %s", new String(Base64.getEncoder().encode(token.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)))
+				.get();
 		
-		InitCommand init = Git.init();
-		File remoteGitDir = Paths.get(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), "remote", namespace, projectId).toFile();
-		System.out.println(remoteGitDir.getAbsolutePath());
-		if (remoteGitDir.exists()) {
-			FileUtils.deleteDirectory(remoteGitDir);
-		}
-		remoteGitDir.mkdirs();
-		init.setDirectory(remoteGitDir);
-		try (Git gitApi = init.call()) {
-			
-			gitApi.commit().setAllowEmpty(true).setMessage("Created Project my_remote_project").setCommitter("dummyIdent", "dummy@dummy.org").call();
-			
-			
-			
-			gitApi.getRepository().close();
-		}
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
-		File localGitDir = Paths.get(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), "local", namespace, projectId).toFile();
-		System.out.println(localGitDir.getAbsolutePath());
-		if (localGitDir.exists()) {
-			FileUtils.deleteDirectory(localGitDir);
-		}
-		localGitDir.mkdirs();
-	
-		CloneCommand cloneCommand = Git.cloneRepository();
-		try (Git gitApi = cloneCommand.setURI(localGitDir.toURI().toString()).setDirectory(localGitDir).call()) {
-			
-		}
-		
+		String serializedList = IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8);
+		Type listType = new TypeToken<ArrayList<ProjectReference>>(){}.getType();
+		ArrayList<ProjectReference> resultList = new SerializationHelper<ArrayList<ProjectReference>>().deserialize(serializedList, listType);
+
+		assertEquals(expectedList, resultList);
 	}
 	
-	
+	@Test
+	void shouldProduceProjectListWithBackendAccessTokenInBearerHeader() throws Exception {
+		String personalAccessToken = "my_personal_token";
+		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, personalAccessToken);
 
+		Response response = 
+				target("project")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", String.format("Bearer %s", new String(Base64.getEncoder().encode(personalAccessToken.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)))
+				.get();
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		String serializedList = IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8);
+		Type listType = new TypeToken<ArrayList<ProjectReference>>(){}.getType();
+		ArrayList<ProjectReference> resultList = new SerializationHelper<ArrayList<ProjectReference>>().deserialize(serializedList, listType);
+
+		assertEquals(expectedList, resultList);
+	}
+	
+	@Test
+	void shouldProduceProjectListWithBackendAccessTokenQueryParam() throws Exception {
+		String personalAccessToken = "my_personal_token";
+		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, personalAccessToken);
+
+		Response response = target("project").queryParam("accesstoken", personalAccessToken).request(MediaType.APPLICATION_JSON).get();
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		String serializedList = IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8);
+		Type listType = new TypeToken<ArrayList<ProjectReference>>(){}.getType();
+		ArrayList<ProjectReference> resultList = new SerializationHelper<ArrayList<ProjectReference>>().deserialize(serializedList, listType);
+
+		assertEquals(expectedList, resultList);
+	}
+
+	@Test
+	void shouldProduce403UnauthorizedWithWrongBackendAccessTokenQueryParam() throws Exception {
+		ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, "my_personal_token");
+
+		Response response = target("project").queryParam("accesstoken", "wrong_access_token").request(MediaType.APPLICATION_JSON).get();
+		
+		assertEquals(Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+	}
+	
+	@Test
+	void shouldProduce404OnProjectNotFound() throws Exception {
+		IDGenerator idGenerator = new IDGenerator();
+		
+		String namespace = "test_namespace";
+		String projectName = "test_project";
+		String projectId = idGenerator.generate(projectName);
+
+		ProjectFixtures.setUpRemoteGitManagerThrowing404(remoteGitManagerRestrictedFactoryMock);
+		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+
+		Response response = target("project/"+namespace+"/"+projectId).queryParam("accesstoken", token).request(MediaType.APPLICATION_JSON).get();
+		assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatus());
+	}
+	
+	@Test
+	void shouldProduceProjectExportWithJwtAccessTokenQueryParam() throws Exception {
+		
+		IDGenerator idGenerator = new IDGenerator();
+
+		String namespace = "test_namespace";
+		String projectName = "test_project";
+		String projectId = idGenerator.generate(projectName);
+		String sourceDocumentUuid = idGenerator.generateDocumentId();
+		String tagId = idGenerator.generate();
+		String tagName = "my tag";
+		String annotationId = idGenerator.generate();
+		String propertyName = "my property";
+		String propertyValue = "value1";
+		String tagsetId = idGenerator.generateTagsetId();
+		String tagsetName = "my tagset";
+
+		
+		
+		String annotatedPhrase = 
+			ProjectFixtures.setUpFullProject(
+					remoteGitManagerRestrictedFactoryMock, 
+					namespace, projectId, projectName, 
+					sourceDocumentUuid, 
+					tagsetId, tagsetName,
+					tagId, tagName, 
+					annotationId, propertyName, propertyValue);
+		
+		
+		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		
+		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+
+		Response response = target("project/"+namespace+"/"+projectId).queryParam("accesstoken", token).request(MediaType.APPLICATION_JSON).get();
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		
+		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
+		
+		List<ExportDocument> exportDocuments = export.getExportDocuments();
+		assertTrue(exportDocuments.size() == 1);
+
+		ExportDocument exportDocument = export.getExportDocuments().get(0);
+		
+		
+		
+		assertEquals(sourceDocumentUuid, exportDocument.getSourceDocument().getId());
+		assertTrue(exportDocument.getAnnotations().size() == 1);
+		PreApiAnnotation annotation = exportDocument.getAnnotations().get(0);
+		assertEquals(annotatedPhrase, annotation.getPhrase());
+		assertEquals(annotationId, annotation.getId());
+		assertEquals(tagId, annotation.getTagId());
+		assertEquals(sourceDocumentUuid, annotation.getSourceDocumentId());
+		assertEquals(tagName, annotation.getTagName());
+		assertTrue(annotation.getProperties().size() == 1);
+		PreApiAnnotationProperty property = annotation.getProperties().get(0);
+		assertEquals(propertyName, property.getName());
+		assertTrue(property.getValues().size() == 1);
+		assertEquals(propertyValue, property.getValues().get(0));
+	}
+	
+	@Test
+	void shouldProduceDocumentContentWithJwtAccessTokenQueryParam() throws Exception {
+		
+		IDGenerator idGenerator = new IDGenerator();
+
+		String namespace = "test_namespace";
+		String projectName = "test_project";
+		String projectId = idGenerator.generate(projectName);
+		String sourceDocumentUuid = idGenerator.generateDocumentId();
+		
+		String expectedContent = 
+			ProjectFixtures.setUpProjectWithDocument(
+					remoteGitManagerRestrictedFactoryMock, 
+					namespace, projectId, projectName, 
+					sourceDocumentUuid);
+		
+		
+		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		
+		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+
+		Response response = target("project/"+namespace+"/"+projectId+"/doc/"+sourceDocumentUuid).queryParam("accesstoken", token).request(MediaType.APPLICATION_JSON).get();
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		String content = IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8);
+		
+		assertEquals(expectedContent.substring(0, 10), content.substring(0,10));
+	}
+	
 }
