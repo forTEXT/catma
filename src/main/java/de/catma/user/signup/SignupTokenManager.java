@@ -287,7 +287,7 @@ public class SignupTokenManager {
 		put(new AccountSignupToken(LocalTime.now().toString(), userData.getEmail(), token));
 
 		String encToken = URLEncoder.encode(token, StandardCharsets.UTF_8); // although there are better alternatives, we stick to the java.net encoder to minimize dependencies
-		String verificationUrl = CATMAPropertyKey.BASE_URL.getValue().trim() + TokenAction.verify.name() + "?token=" + encToken;
+		String verificationUrl = CATMAPropertyKey.BASE_URL.getValue().trim() +"?action=" + TokenAction.verify.name() + "&token=" + encToken;
 
 		// send verification link that contains the generated token
 		// this verification link brings the user back to CATMA and it brings up the user account creation dialog if the token can be verified, see handleVerify above and CatmaApplication#handleRequestToken 
