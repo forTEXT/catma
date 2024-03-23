@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
@@ -1032,13 +1033,17 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handleVisibilityClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
-		rendererClickEvent.getItem().setVisible(!rendererClickEvent.getItem().isVisible());
-		tagsetDataProvider.refreshItem(rendererClickEvent.getItem());
-		
 		TagsetTreeItem tagsetTreeItem = rendererClickEvent.getItem();
+		setTagsetVisible(tagsetTreeItem, !tagsetTreeItem.isVisible());
+	}
+	
+	private void setTagsetVisible(TagsetTreeItem tagsetTreeItem, boolean visible) {
+		tagsetTreeItem.setVisible(visible);
+		tagsetDataProvider.refreshItem(tagsetTreeItem);
+		
 		List<TagReference> tagReferences = tagsetTreeItem.getTagReferences(collections);
 		
-		boolean selected = rendererClickEvent.getItem().isVisible();
+		boolean selected = tagsetTreeItem.isVisible();
 		
 		if (selectionListener != null) {
 			selectionListener.tagReferenceSelectionChanged(tagReferences, selected);
@@ -1047,6 +1052,7 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetTreeItem.setChildrenVisible(
 				tagsetDataProvider, selected, false);
 		tagsetDataProvider.refreshAll();
+		
 	}
 
 	private void initComponents(Consumer<String> annotationSelectionListener) {
@@ -1142,6 +1148,45 @@ public class AnnotationPanel extends VerticalLayout {
 		this.collections = collections;
 		this.annotationDetailsPanel.setDocument(sdRef);
 		initData();
+		if (!tagsets.isEmpty()) {
+			if (tagsets.size() == 1) {
+				TagsetDefinition tagset = tagsets.iterator().next();
+				TagsetTreeItem tagsetTreeItem = findTagsetItem(tagset.getUuid());
+				setTagsetVisible(tagsetTreeItem, true);				
+			}
+			else {
+				AnnotationCollection collection = getSelectedEditableCollection();
+				if (collection != null) {
+					Set<String> usedTagIds = collection.getTagDefinitionIds();
+					tagsets.stream()
+						.filter(tagset -> !Sets.intersection(usedTagIds, tagset.getTagDefinitionIds()).isEmpty())
+						.findFirst()
+						.ifPresent(tagset -> {
+							TagsetTreeItem tagsetTreeItem = findTagsetItem(tagset.getUuid());
+							setTagsetVisible(tagsetTreeItem, true);
+							Notification.show(
+								"Info", 
+								String.format("You have more than one Tagset available. "
+										+ "As a starter we visualize Annotations from Tagset '%s'. But you can show more: "
+										+ "Toggle the visibility of Annotations by clicking on the eye icons of the corresponding Tagset.", 
+										tagset.getName()), 
+								Type.HUMANIZED_MESSAGE);
+						});
+				}
+				else {
+					TagsetDefinition tagset = tagsets.iterator().next();
+					TagsetTreeItem tagsetTreeItem = findTagsetItem(tagset.getUuid());
+					setTagsetVisible(tagsetTreeItem, true);
+					Notification.show(
+							"Info", 
+							String.format("You have more than one Tagset available. "
+									+ "As a starter we visualize Annotations from Tagset '%s'. But you can show more: "
+									+ "Toggle the visibility of Annotations by clicking on the eye icons of the corresponding Tagset.", 
+									tagset.getName()), 
+							Type.HUMANIZED_MESSAGE);
+				}
+			}
+		}
 	}
 	
 	public void setTagReferenceSelectionChangeListener(TagReferenceSelectionChangeListener selectionListener) {
@@ -1313,6 +1358,15 @@ public class AnnotationPanel extends VerticalLayout {
 		}
 		
 		return false;
+	}
+	
+	private TagsetTreeItem findTagsetItem(String tagsetId) {
+		for (TagsetTreeItem item : tagsetData.getRootItems()) {
+			if (item.getId().equals(tagsetId)) {
+				return item;
+			}
+		}
+		return null;
 	}
 
 	private TagsetTreeItem findTagItem(TagsetTreeItem parentItem, String tagId) {
