@@ -33,7 +33,7 @@ public class SortedReflectiveTypeAdapterFactoryTest {
 		// the order asserted here could actually be different as there is no guaranteed sort 
 		// order without SortedReflectiveTypeAdapterFactory
 		// at the time of writing the sort order was the order of the properties defined in DomainEntity
-		// a failing test is therefore only a hint that something might have changed in the default behaviour
+		// a failing of this test is therefore only a hint that something might have changed in the default behaviour
 		// of gson
 		assertTrue(serialized.indexOf("cProperty") < serialized.indexOf("aProperty"));
 		assertTrue(serialized.indexOf("aProperty") < serialized.indexOf("dProperty"));
