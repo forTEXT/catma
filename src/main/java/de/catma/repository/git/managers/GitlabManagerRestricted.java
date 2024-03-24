@@ -715,7 +715,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 				comment.setUserId(issue.getAuthor().getId());
 				comment.setUsername(issue.getAuthor().getName()); // TODO: if we're using the public name it shouldn't be called 'username' on the Comment class
 				comment.setReplyCount(issue.getUserNotesCount());
-
+				
+				// gson doesn't initialize transient fields, so we need to do it explicitly
+				comment.setReplies(new ArrayList<>());
+				
 				comments.add(comment);
 			}
 
