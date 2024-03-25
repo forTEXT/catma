@@ -154,7 +154,7 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-codec-http</artifactId>
-			<version>4.1.90.Final</version>
+			<version>4.1.108.Final</version>
 		</dependency>
 
 		<!-- Hazelcast & caching (used for cross-session comms and caching of signup tokens and project invitation codes) -->
