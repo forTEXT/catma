@@ -2,7 +2,6 @@ package de.catma.document.source.contenthandler;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +28,7 @@ public class XML2ContentHandler extends AbstractSourceContentHandler {
 	        
 	        Document document = builder.build(is);
 	        StringBuilder contentBuilder = new StringBuilder();
-	        processTextNodes(
-	        		contentBuilder, 
-	        		document.getRootElement());
+	        processTextNodes(contentBuilder, document.getRootElement(), null);
 	        setContent(contentBuilder.toString());	
 		} catch (Exception e) {
 			throw new IOException(e);
@@ -59,31 +56,39 @@ public class XML2ContentHandler extends AbstractSourceContentHandler {
 
     }
 
+	public interface AdditionalElementProcessingCallback {
+		void process(final Element element, final int elementRangeStart, final int elementRangeEnd);
+	}
+
     /**
      * Appends text elements to the given builder otherwise descents deeper into the
      * document tree.
      * @param contentBuilder the builder is filled with text elements
      * @param element the current element to process
-     * @throws URISyntaxException 
      */
-    protected void processTextNodes(
-    		StringBuilder contentBuilder, Element element) throws URISyntaxException {
-    	
+    public void processTextNodes(
+			StringBuilder contentBuilder, Element element, AdditionalElementProcessingCallback additionalElementProcessingCallback) {
+    	int elementRangeStart = contentBuilder.length();
+
 		for( int idx=0; idx<element.getChildCount(); idx++) {
             Node curChild = element.getChild(idx);
             if (curChild instanceof Text) {
             	addTextContent(contentBuilder, element, curChild.getValue());
             }
             else if (curChild instanceof Element) { //descent
-                processTextNodes(
-                	contentBuilder, 
-                	(Element)curChild);
+                processTextNodes(contentBuilder, (Element)curChild, additionalElementProcessingCallback);
             
             }
         }
 		
 		if (element.getChildCount() != 0) {
 			addBreak(contentBuilder, element);
+		}
+
+		int elementRangeEnd = contentBuilder.length();
+
+		if (additionalElementProcessingCallback != null) {
+			additionalElementProcessingCallback.process(element, elementRangeStart, elementRangeEnd);
 		}
     }
 
