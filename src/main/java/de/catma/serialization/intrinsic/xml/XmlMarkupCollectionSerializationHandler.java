@@ -119,17 +119,7 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 				contentBuilder,
 				element,
 				(currentElement, elementRangeStart, elementRangeEnd) -> {
-//					int start = contentBuilder.length();
-
 					StringBuilder parentPathBuilder = new StringBuilder();
-//					for (String s : elementStack) {
-//						parentPathBuilder.append("/").append(s);
-//					}
-//					String parentPath = parentPathBuilder.toString();
-
-//					String tagName = element.getLocalName();
-//					elementStack.push(tagName);
-
 					Node parentNode = currentElement.getParent();
 					while (parentNode != null) {
 						if (parentNode instanceof Element) {
@@ -143,7 +133,6 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 
 					String elementPath = String.format("%s/%s", parentPath, tagName);
 
-//					String tagsetId = namespacePrefixesToTagsetIds.get(element.getNamespacePrefix());
 					String tagsetId = namespacePrefixesToTagsetIds.get(currentElement.getNamespacePrefix());
 					if (tagsetId == null) {
 						tagsetId = KnownTagsetDefinitionName.DEFAULT_INTRINSIC_XML.asTagsetId();
@@ -191,31 +180,6 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 						tagManager.addTagDefinition(tagsetDefinition, tagDefinition);
 					}
 
-//					for (int i=0; i<element.getChildCount(); i++) {
-//						Node currentChild = element.getChild(i);
-//
-//						if (currentChild instanceof Text) {
-//							xmlContentHandler.addTextContent(contentBuilder, element, currentChild.getValue());
-//						}
-//						else if (currentChild instanceof Element) { // recursion
-//							scanElements(
-//									contentBuilder,
-//									elementStack,
-//									(Element) currentChild,
-//									tagManager,
-//									namespacePrefixesToTagsetIds,
-//									annotationCollection,
-//									sourceDocumentId,
-//									sourceDocumentLength
-//							);
-//						}
-//					}
-//
-//					if (element.getChildCount() != 0) {
-//						xmlContentHandler.addBreak(contentBuilder, element);
-//					}
-//
-//					int end = contentBuilder.length();
 					Range range = new Range(elementRangeStart, elementRangeEnd);
 
 					if (range.isSinglePoint()) {
@@ -241,32 +205,25 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 							tagDefinition.getTagsetDefinitionUuid()
 					);
 
-//					for (int i=0; i<element.getAttributeCount(); i++) {
 					for (int i=0; i<currentElement.getAttributeCount(); i++) {
-//						PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinition(element.getAttribute(i).getQualifiedName());
 						PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinition(currentElement.getAttribute(i).getQualifiedName());
 
 						if (propertyDefinition == null) {
 							propertyDefinition = new PropertyDefinition(
 									idGenerator.generate(),
-//									element.getAttribute(i).getQualifiedName(),
 									currentElement.getAttribute(i).getQualifiedName(),
-//									Collections.singleton(element.getAttribute(i).getValue())
 									Collections.singleton(currentElement.getAttribute(i).getValue())
 							);
 							tagManager.addUserDefinedPropertyDefinition(tagDefinition, propertyDefinition);
 						}
-//						else if (!propertyDefinition.getPossibleValueList().contains(element.getAttribute(i).getValue())) {
 						else if (!propertyDefinition.getPossibleValueList().contains(currentElement.getAttribute(i).getValue())) {
 							List<String> newValueList = new ArrayList<>(propertyDefinition.getPossibleValueList());
-//							newValueList.add(element.getAttribute(i).getValue());
 							newValueList.add(currentElement.getAttribute(i).getValue());
 							propertyDefinition.setPossibleValueList(newValueList);
 						}
 
 						Property property = new Property(
 								propertyDefinition.getUuid(),
-//								Collections.singleton(element.getAttribute(i).getValue())
 								Collections.singleton(currentElement.getAttribute(i).getValue())
 						);
 						tagInstance.addUserDefinedProperty(property);
@@ -282,8 +239,6 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 							range
 					);
 					annotationCollection.addTagReference(tagReference);
-
-//					elementStack.pop();
 		});
 	}
 }
