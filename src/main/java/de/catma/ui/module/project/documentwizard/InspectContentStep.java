@@ -66,12 +66,14 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 	private AddMetadataStep nextStep;
 	private StepChangeListener stepChangeListener;
 	private CheckBox cbUseApostrophe;
+	private CheckBox cbSimpleXml;
 
 	@SuppressWarnings("unchecked")
 	public InspectContentStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
 		
 		this.wizardContext = wizardContext; 
 		this.wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, false);
+		this.wizardContext.put(DocumentWizard.WizardContextKey.SIMPLE_XML, false);
 		
 		this.progressStep = progressStepFactory.create(2, "Inspect the Content");
 		
@@ -106,6 +108,11 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 		
 		cbUseApostrophe.addValueChangeListener(
 			event -> this.wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, event.getValue()));
+
+		cbSimpleXml.addValueChangeListener(event -> {
+			wizardContext.put(DocumentWizard.WizardContextKey.SIMPLE_XML, event.getValue());
+			fileGrid.getSelectedItems().stream().findFirst().ifPresent(this::updatePreview);
+		});
 	}
 
 	private void updatePreview(UploadFile uploadFile) {
@@ -124,7 +131,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 				new IndexInfoSet(Collections.emptyList(), Collections.emptyList(), uploadFile.getLocale());
 			
 			if (uploadFile.getMimetype().equals(FileType.XML2.getMimeType())) {
-				XML2ContentHandler contentHandler = new XML2ContentHandler();
+				XML2ContentHandler contentHandler = new XML2ContentHandler(cbSimpleXml.getValue());
 				TechInfoSet techInfoSet = 
 					new TechInfoSet(
 						uploadFile.getOriginalFilename(), 
@@ -259,6 +266,10 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
         cbUseApostrophe.setDescription(
         	"This has influence on the segmentation of the text, i.e. on how the wordlist is created.");
         leftColumn.addComponent(cbUseApostrophe);
+
+		cbSimpleXml = new CheckBox("Simple XML mode");
+		cbSimpleXml.setDescription("Preserves whitespace and does not insert any newlines.");
+		leftColumn.addComponent(cbSimpleXml);
         
         contentPanel.addComponent(leftColumn);
         contentPanel.setExpandRatio(leftColumn, 0.6f);
@@ -313,7 +324,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 				for (UploadFile uploadFile : files) {
 					
 					if (uploadFile.getMimetype().equals(FileType.XML2.getMimeType())) {
-						XML2ContentHandler contentHandler = new XML2ContentHandler();
+						XML2ContentHandler contentHandler = new XML2ContentHandler(cbSimpleXml.getValue());
 						SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo();
 						TechInfoSet techInfoSet = new TechInfoSet(uploadFile.getOriginalFilename(), uploadFile.getMimetype(), uploadFile.getTempFilename());
 						

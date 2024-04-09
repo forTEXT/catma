@@ -12,13 +12,16 @@ import nu.xom.Node;
 import nu.xom.Text;
 
 public class XML2ContentHandler extends AbstractSourceContentHandler {
-	protected List<String> inlineElements = new ArrayList<String>();
+	private boolean simpleXml;
 
-	public XML2ContentHandler() {
-		inlineElements = new ArrayList<String>();
+	protected List<String> inlineElements;
+
+	public XML2ContentHandler(boolean simpleXml) {
+		this.simpleXml = simpleXml;
+
+		this.inlineElements = new ArrayList<>();
 	}
-	
-	
+
 	/* (non-Javadoc)
 	 * @see de.catma.document.source.contenthandler.SourceContentHandler#load(java.io.InputStream)
 	 */
@@ -81,7 +84,7 @@ public class XML2ContentHandler extends AbstractSourceContentHandler {
             }
         }
 		
-		if (element.getChildCount() != 0) {
+		if (!simpleXml && element.getChildCount() != 0) {
 			addBreak(contentBuilder, element);
 		}
 
@@ -94,7 +97,7 @@ public class XML2ContentHandler extends AbstractSourceContentHandler {
 
 	public void addTextContent(StringBuilder contentBuilder, Element element,
 			String content) {
-    	if (!content.trim().isEmpty()) {
+    	if (simpleXml || !content.trim().isEmpty()) {
     		contentBuilder.append(content);
     	}
 	}

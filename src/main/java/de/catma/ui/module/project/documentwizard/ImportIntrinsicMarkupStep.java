@@ -257,7 +257,7 @@ public class ImportIntrinsicMarkupStep extends VerticalLayout implements WizardS
 				IDGenerator idGenerator = new IDGenerator();
 				
 				for (UploadFile uploadFile : files) {
-					XML2ContentHandler contentHandler = new XML2ContentHandler();
+					XML2ContentHandler contentHandler = new XML2ContentHandler((boolean) wizardContext.get(DocumentWizard.WizardContextKey.SIMPLE_XML));
 					SourceDocument doc = new SourceDocument(uploadFile.getUuid(), contentHandler);
 					SourceDocumentInfo documentInfo = new SourceDocumentInfo();
 					documentInfo.setTechInfoSet(uploadFile.getTechInfoSet());

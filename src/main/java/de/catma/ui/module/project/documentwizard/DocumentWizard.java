@@ -10,6 +10,7 @@ public class DocumentWizard extends Wizard {
 		UPLOAD_FILE_LIST,
 		PROJECT,
 		APOSTROPHE_AS_SEPARATOR,
+		SIMPLE_XML,
 		TAGSET_IMPORT_LIST,
 		;
 	}
