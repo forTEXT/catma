@@ -13,8 +13,7 @@ import de.catma.document.source.FileType;
 
 public class TikaContentHandler extends AbstractSourceContentHandler {
 
-	@Override
-	public void load(InputStream is) throws IOException {
+	private void load(InputStream is) throws IOException {
 		Tika tika = new Tika();
 		tika.setMaxStringLength(-1);
 		

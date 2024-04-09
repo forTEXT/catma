@@ -48,11 +48,6 @@ public interface SourceContentHandler {
 	public SourceDocumentInfo getSourceDocumentInfo();
 	
 	/**
-	 * @param is the {@link SourceDocument} as raw data.
-	 * @throws IOException error accessing the input stream.
-	 */
-	public void load(InputStream is) throws IOException;
-	/**
 	 * Loading via {@link de.catma.document.source.TechInfoSet#getURI()} of the {@link SourceDocumentInfo}.
 	 * @throws IOException error accessing {@link de.catma.document.source.TechInfoSet#getURI()}.
 	 */

@@ -25,7 +25,7 @@ public class XML2ContentHandler extends AbstractSourceContentHandler {
 	/* (non-Javadoc)
 	 * @see de.catma.document.source.contenthandler.SourceContentHandler#load(java.io.InputStream)
 	 */
-	public void load(InputStream is) throws IOException {
+	private void load(InputStream is) throws IOException {
 		try {
 	        Builder builder = new Builder();
 	        

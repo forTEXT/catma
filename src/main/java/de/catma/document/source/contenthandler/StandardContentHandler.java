@@ -45,7 +45,7 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 	/* (non-Javadoc)
 	 * @see de.catma.document.source.contenthandler.SourceContentHandler#load(java.io.InputStream)
 	 */
-	public void load(InputStream is) throws IOException {
+	private void load(InputStream is) throws IOException {
 		
 		Charset charset = 
 			getSourceDocumentInfo().getTechInfoSet().getCharset();
