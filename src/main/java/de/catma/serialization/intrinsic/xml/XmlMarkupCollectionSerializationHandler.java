@@ -115,151 +115,175 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 			String sourceDocumentId,
 			int sourceDocumentLength
 	) {
-		int start = contentBuilder.length();
+		xmlContentHandler.processTextNodes(
+				contentBuilder,
+				element,
+				(currentElement, elementRangeStart, elementRangeEnd) -> {
+//					int start = contentBuilder.length();
 
-		StringBuilder parentPathBuilder = new StringBuilder();
-		for (String s : elementStack) {
-			parentPathBuilder.append("/").append(s);
-		}
-		String parentPath = parentPathBuilder.toString();
+					StringBuilder parentPathBuilder = new StringBuilder();
+//					for (String s : elementStack) {
+//						parentPathBuilder.append("/").append(s);
+//					}
+//					String parentPath = parentPathBuilder.toString();
 
-		String tagName = element.getLocalName();
-		elementStack.push(tagName);
+//					String tagName = element.getLocalName();
+//					elementStack.push(tagName);
 
-		String elementPath = String.format("%s/%s", parentPath, tagName);
+					Node parentNode = currentElement.getParent();
+					while (parentNode != null) {
+						if (parentNode instanceof Element) {
+							parentPathBuilder.insert(0, "/" + ((Element) parentNode).getLocalName());
+						}
+						parentNode = parentNode.getParent();
+					}
+					String parentPath = parentPathBuilder.toString();
 
-		String tagsetId = namespacePrefixesToTagsetIds.get(element.getNamespacePrefix());
-		if (tagsetId == null) {
-			tagsetId = KnownTagsetDefinitionName.DEFAULT_INTRINSIC_XML.asTagsetId();
-		}
+					String tagName = currentElement.getLocalName();
 
-		TagsetDefinition tagsetDefinition = tagManager.getTagLibrary().getTagsetDefinition(tagsetId);
-		TagDefinition tagDefinition = tagsetDefinition.getTagDefinitionsByName(tagName).findFirst().orElse(null);
+					String elementPath = String.format("%s/%s", parentPath, tagName);
 
-		String pathPropertyDefinitionId;
+//					String tagsetId = namespacePrefixesToTagsetIds.get(element.getNamespacePrefix());
+					String tagsetId = namespacePrefixesToTagsetIds.get(currentElement.getNamespacePrefix());
+					if (tagsetId == null) {
+						tagsetId = KnownTagsetDefinitionName.DEFAULT_INTRINSIC_XML.asTagsetId();
+					}
 
-		if (tagDefinition != null) {
-			pathPropertyDefinitionId = tagDefinition.getPropertyDefinition("path").getUuid();
-		}
-		else {
-			tagDefinition = new TagDefinition(
-					idGenerator.generate(),
-					tagName,
-					null, // no parent, hierarchy is stored in 'path' annotation property
-					tagsetId
-			);
-			tagDefinition.addSystemPropertyDefinition(
-					new PropertyDefinition(
-							idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
-							PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
-							Collections.singletonList(ColorConverter.toRGBIntAsString(ColorConverter.randomHex()))
-					)
-			);
-			tagDefinition.addSystemPropertyDefinition(
-					new PropertyDefinition(
-							idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()),
-							PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
-							Collections.singletonList(author)
-					)
-			);
+					TagsetDefinition tagsetDefinition = tagManager.getTagLibrary().getTagsetDefinition(tagsetId);
+					TagDefinition tagDefinition = tagsetDefinition.getTagDefinitionsByName(tagName).findFirst().orElse(null);
 
-			pathPropertyDefinitionId = idGenerator.generate();
+					String pathPropertyDefinitionId;
 
-			PropertyDefinition pathPropertyDefinition = new PropertyDefinition(
-					pathPropertyDefinitionId,
-					"path",
-					Collections.emptyList()
-			);
-			tagDefinition.addUserDefinedPropertyDefinition(pathPropertyDefinition);
+					if (tagDefinition != null) {
+						pathPropertyDefinitionId = tagDefinition.getPropertyDefinition("path").getUuid();
+					}
+					else {
+						tagDefinition = new TagDefinition(
+								idGenerator.generate(),
+								tagName,
+								null, // no parent, hierarchy is stored in 'path' annotation property
+								tagsetId
+						);
+						tagDefinition.addSystemPropertyDefinition(
+								new PropertyDefinition(
+										idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
+										PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
+										Collections.singletonList(ColorConverter.toRGBIntAsString(ColorConverter.randomHex()))
+								)
+						);
+						tagDefinition.addSystemPropertyDefinition(
+								new PropertyDefinition(
+										idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()),
+										PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
+										Collections.singletonList(author)
+								)
+						);
 
-			tagManager.addTagDefinition(tagsetDefinition, tagDefinition);
-		}
+						pathPropertyDefinitionId = idGenerator.generate();
 
-		for (int i=0; i<element.getChildCount(); i++) {
-			Node currentChild = element.getChild(i);
+						PropertyDefinition pathPropertyDefinition = new PropertyDefinition(
+								pathPropertyDefinitionId,
+								"path",
+								Collections.emptyList()
+						);
+						tagDefinition.addUserDefinedPropertyDefinition(pathPropertyDefinition);
 
-			if (currentChild instanceof Text) {
-				xmlContentHandler.addTextContent(contentBuilder, element, currentChild.getValue());
-			}
-			else if (currentChild instanceof Element) { // recursion
-				scanElements(
-						contentBuilder,
-						elementStack,
-						(Element) currentChild,
-						tagManager,
-						namespacePrefixesToTagsetIds,
-						annotationCollection,
-						sourceDocumentId,
-						sourceDocumentLength
-				);
-			}
-		}
+						tagManager.addTagDefinition(tagsetDefinition, tagDefinition);
+					}
 
-		if (element.getChildCount() != 0) {
-			xmlContentHandler.addBreak(contentBuilder, element);
-		}
+//					for (int i=0; i<element.getChildCount(); i++) {
+//						Node currentChild = element.getChild(i);
+//
+//						if (currentChild instanceof Text) {
+//							xmlContentHandler.addTextContent(contentBuilder, element, currentChild.getValue());
+//						}
+//						else if (currentChild instanceof Element) { // recursion
+//							scanElements(
+//									contentBuilder,
+//									elementStack,
+//									(Element) currentChild,
+//									tagManager,
+//									namespacePrefixesToTagsetIds,
+//									annotationCollection,
+//									sourceDocumentId,
+//									sourceDocumentLength
+//							);
+//						}
+//					}
+//
+//					if (element.getChildCount() != 0) {
+//						xmlContentHandler.addBreak(contentBuilder, element);
+//					}
+//
+//					int end = contentBuilder.length();
+					Range range = new Range(elementRangeStart, elementRangeEnd);
 
-		int end = contentBuilder.length();
-		Range range = new Range(start, end);
+					if (range.isSinglePoint()) {
+						int newStart = range.getStartPoint();
+						if (newStart > 0) {
+							newStart = newStart - 1;
+						}
 
-		if (range.isSinglePoint()) {
-			int newStart = range.getStartPoint();
-			if (newStart > 0) {
-				newStart = newStart - 1;
-			}
+						int newEnd = range.getEndPoint();
+						if (newEnd < sourceDocumentLength - 1) {
+							newEnd = newEnd + 1;
+						}
 
-			int newEnd = range.getEndPoint();
-			if (newEnd < sourceDocumentLength - 1) {
-				newEnd = newEnd + 1;
-			}
+						range = new Range(newStart, newEnd);
+					}
 
-			range = new Range(newStart, newEnd);
-		}
+					TagInstance tagInstance = new TagInstance(
+							idGenerator.generate(),
+							tagDefinition.getUuid(),
+							author,
+							ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+							tagDefinition.getUserDefinedPropertyDefinitions(),
+							tagDefinition.getTagsetDefinitionUuid()
+					);
 
-		TagInstance tagInstance = new TagInstance(
-				idGenerator.generate(),
-				tagDefinition.getUuid(),
-				author,
-				ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
-				tagDefinition.getUserDefinedPropertyDefinitions(),
-				tagDefinition.getTagsetDefinitionUuid()
-		);
+//					for (int i=0; i<element.getAttributeCount(); i++) {
+					for (int i=0; i<currentElement.getAttributeCount(); i++) {
+//						PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinition(element.getAttribute(i).getQualifiedName());
+						PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinition(currentElement.getAttribute(i).getQualifiedName());
 
-		for (int i=0; i<element.getAttributeCount(); i++) {
-			PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinition(element.getAttribute(i).getQualifiedName());
+						if (propertyDefinition == null) {
+							propertyDefinition = new PropertyDefinition(
+									idGenerator.generate(),
+//									element.getAttribute(i).getQualifiedName(),
+									currentElement.getAttribute(i).getQualifiedName(),
+//									Collections.singleton(element.getAttribute(i).getValue())
+									Collections.singleton(currentElement.getAttribute(i).getValue())
+							);
+							tagManager.addUserDefinedPropertyDefinition(tagDefinition, propertyDefinition);
+						}
+//						else if (!propertyDefinition.getPossibleValueList().contains(element.getAttribute(i).getValue())) {
+						else if (!propertyDefinition.getPossibleValueList().contains(currentElement.getAttribute(i).getValue())) {
+							List<String> newValueList = new ArrayList<>(propertyDefinition.getPossibleValueList());
+//							newValueList.add(element.getAttribute(i).getValue());
+							newValueList.add(currentElement.getAttribute(i).getValue());
+							propertyDefinition.setPossibleValueList(newValueList);
+						}
 
-			if (propertyDefinition == null) {
-				propertyDefinition = new PropertyDefinition(
-						idGenerator.generate(),
-						element.getAttribute(i).getQualifiedName(),
-						Collections.singleton(element.getAttribute(i).getValue())
-				);
-				tagManager.addUserDefinedPropertyDefinition(tagDefinition, propertyDefinition);
-			}
-			else if (!propertyDefinition.getPossibleValueList().contains(element.getAttribute(i).getValue())) {
-				List<String> newValueList = new ArrayList<>(propertyDefinition.getPossibleValueList());
-				newValueList.add(element.getAttribute(i).getValue());
-				propertyDefinition.setPossibleValueList(newValueList);
-			}
+						Property property = new Property(
+								propertyDefinition.getUuid(),
+//								Collections.singleton(element.getAttribute(i).getValue())
+								Collections.singleton(currentElement.getAttribute(i).getValue())
+						);
+						tagInstance.addUserDefinedProperty(property);
+					}
 
-			Property property = new Property(
-					propertyDefinition.getUuid(),
-					Collections.singleton(element.getAttribute(i).getValue())
-			);
-			tagInstance.addUserDefinedProperty(property);
-		}
+					Property pathProperty = new Property(pathPropertyDefinitionId, Collections.singletonList(elementPath));
+					tagInstance.addUserDefinedProperty(pathProperty);
 
-		Property pathProperty = new Property(pathPropertyDefinitionId, Collections.singletonList(elementPath));
-		tagInstance.addUserDefinedProperty(pathProperty);
+					TagReference tagReference = new TagReference(
+							annotationCollection.getId(),
+							tagInstance,
+							sourceDocumentId,
+							range
+					);
+					annotationCollection.addTagReference(tagReference);
 
-		TagReference tagReference = new TagReference(
-				annotationCollection.getId(),
-				tagInstance,
-				sourceDocumentId,
-				range
-		);
-		annotationCollection.addTagReference(tagReference);
-
-		elementStack.pop();
+//					elementStack.pop();
+		});
 	}
 }
