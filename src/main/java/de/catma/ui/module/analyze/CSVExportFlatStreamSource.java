@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -79,27 +78,12 @@ public class CSVExportFlatStreamSource implements StreamSource {
         				});
         		
                 try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.builder().setDelimiter(';').build())) {
-                	Iterator<QueryResultRow> peekIter = queryResult.iterator();
-                	if (peekIter.hasNext()) {
-                		QueryResultRow peekRow = peekIter.next();
-                		if (peekRow instanceof TagQueryResultRow) {
-                        	csvPrinter.printRecord((Object[])CSVFormat.EXCEL.builder().setHeader(
-                        			"Query ID", "Document ID", "Document Name", "Document length", "Keyword", "Keyword in context", "Start offset", "End offset",
-                        			"Collection ID", "Collection Name", "Tag", "Tag Version", "Tag Color", "Annotation ID", "Property ID", "Property Name", "Property Value"
-                        			).build().getHeader());
-                		}
-                		else if (peekRow instanceof CommentQueryResultRow) {
-                        	csvPrinter.printRecord((Object[])CSVFormat.EXCEL.builder().setHeader(
-                        			"Query ID", "Document ID", "Document Name", "Document length", "Keyword", "Keyword in context", "Start offset", "End offset",
-                        			"Comment ID", "Comment/Reply", "Comment Author", "Reply count", "Reply ID"
-                        			).build().getHeader());                			
-                		}
-                		else {
-                        	csvPrinter.printRecord((Object[])CSVFormat.EXCEL.builder().setHeader(
-                        			"Query ID", "Document ID", "Document Name", "Document length", "Keyword", "Keyword in context", "Start offset", "End offset"
-                        			).build().getHeader());
-                		}
-                	}
+                	// we add all possible headers as we do not know which kind of rows we get
+                	csvPrinter.printRecord((Object[])CSVFormat.EXCEL.builder().setHeader(
+                			"Query ID", "Document ID", "Document Name", "Document length", "Keyword", "Keyword in context", "Start offset", "End offset",
+                			"Collection ID", "Collection Name", "Tag", "Tag Version", "Tag Color", "Annotation ID", "Property ID", "Property Name", "Property Value",
+                			"Comment ID", "Comment/Reply", "Comment Author", "Reply count", "Reply ID"
+                			).build().getHeader());
                 	
     	            for (QueryResultRow row : queryResult) {
     	            	KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
@@ -145,6 +129,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
         	            				kwic.toString(),
         	            				range.getStartPoint(),
         	            				range.getEndPoint(),
+        	            				"", "", "", "", "", "", "", "", "", // empty fields for tag rows
         	            				cRow.getComment().getUuid(),
         	            				cRow.getComment().getBody(),
         	            				cRow.getComment().getUsername(),
@@ -162,6 +147,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
             	            				kwic.toString(),
             	            				range.getStartPoint(),
             	            				range.getEndPoint(),
+            	            				"", "", "", "", "", "", "", "", "", // empty fields for tag rows
             	            				cRow.getComment().getUuid(),
             	            				reply.getBody(),
             	            				reply.getUsername(),

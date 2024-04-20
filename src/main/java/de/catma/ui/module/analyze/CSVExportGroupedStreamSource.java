@@ -1,6 +1,5 @@
 package de.catma.ui.module.analyze;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
@@ -8,6 +7,10 @@ import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,6 +75,8 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 		for (QueryResultRow row : queryResult) {
 			
 			String group = row.getPhrase();
+			
+			// change group to tag path if "group by tag" is selected
 			if (groupByTagSupplier.get()) {
 				if (row instanceof TagQueryResultRow) {
 					group = ((TagQueryResultRow) row).getTagDefinitionPath();
@@ -97,6 +102,10 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 		
         final PipedInputStream in = new PipedInputStream();
         final UI ui = UI.getCurrent();
+        final Lock lock = new ReentrantLock();
+        final Condition sending  = lock.newCondition();
+        lock.lock();
+
         backgroundServiceProvider.submit("csv-export", new DefaultProgressCallable<Void>() {
         	@Override
         	public Void call() throws Exception {
@@ -116,7 +125,7 @@ public class CSVExportGroupedStreamSource implements StreamSource {
             		}
             	}
 
-                try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.withDelimiter(';').withHeader(header.toArray(new String[]{})))) {
+                try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.builder().setDelimiter(';').setHeader(header.toArray(new String[]{})).build())) {
                 	
                 	for (String group : new TreeSet<String>(groupings.rowKeySet())) {
                 		csvPrinter.print(group);
@@ -131,7 +140,14 @@ public class CSVExportGroupedStreamSource implements StreamSource {
                 	}
     	
     	            csvPrinter.flush();  
-    	            
+	                lock.lock();
+	                try {
+	                	sending.signal();
+	                }
+	                finally {
+	                	lock.unlock();
+	                }
+
                 }
 
         		return null; //intended
@@ -149,14 +165,14 @@ public class CSVExportGroupedStreamSource implements StreamSource {
 
         
         // waiting on the background thread to send data to the pipe
-        int tries = 100;
-        try {
-			while (!(in.available() > 0) && tries > 0) {
-				Thread.sleep(10);
-				tries--;
-			}
-		} catch (IOException | InterruptedException e) {
+		try {
+			sending.await(10, TimeUnit.SECONDS);
+		}
+		catch (InterruptedException e) {
 			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error while waiting on CSV export", e);
+		}
+		finally {
+			lock.unlock();
 		}
         
         return in;
