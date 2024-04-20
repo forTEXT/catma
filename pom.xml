@@ -27,9 +27,9 @@
 		<maven.compiler.target>21</maven.compiler.target>
 		<maven.compiler.release>21</maven.compiler.release>
 
-		<jetty.plugin.version>9.4.51.v20230217</jetty.plugin.version>
+		<jetty.plugin.version>9.4.54.v20240208</jetty.plugin.version>
 		
-		<jersey.version>2.35</jersey.version>
+		<jersey.version>2.42</jersey.version>
 	</properties>
 
 	<repositories>
