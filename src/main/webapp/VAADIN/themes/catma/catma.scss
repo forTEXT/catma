@@ -84,7 +84,6 @@ $contribution-color: blue;
     border-left: 1px solid #C5C5C5;
     padding: 20px;
     font-family: Arial Unicode MS, Arial, sans-serif;
-    font-size: 12px;
     color: #000;
     white-space: nowrap;
     overflow: auto;
@@ -94,7 +93,35 @@ $contribution-color: blue;
     -o-user-select: text;
     user-select: text;
   }
-
+  
+  .tagger-bt-increase {
+	font-size: larger;
+  }
+  
+  .tagger-bt-decrease {
+	font-size: smaller;
+  }
+  
+  .tagger-font-xsmall {
+	font-size: 8px;
+  }
+  
+  .tagger-font-small {
+	font-size: 10px;
+  }
+  
+  .tagger-font-normal {
+	font-size: 12px;
+  }
+  
+  .tagger-font-large {
+	font-size: 14px;
+  }
+  
+  .tagger-font-xlarge {
+	font-size: 16px;
+  }
+  
   .tagger-editor {
     display: inline-block;
   }

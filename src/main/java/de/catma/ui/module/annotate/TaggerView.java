@@ -23,7 +23,13 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -123,6 +129,81 @@ public class TaggerView extends HorizontalLayout
 		public void afterDocumentLoaded(TaggerView taggerView);
 	}
 	
+	private static interface FontStateHandler {
+		public FontState increase();
+		public FontState decrease();
+	}
+	
+	private static enum FontState {
+		XSMALL("tagger-font-xsmall", new FontStateHandler() {
+			@Override
+			public FontState decrease() {
+				return FontState.XSMALL;
+			}
+			@Override
+			public FontState increase() {
+				return FontState.SMALL;
+			}
+		}),
+		SMALL("tagger-font-small", new FontStateHandler() {
+			@Override
+			public FontState decrease() {
+				return FontState.XSMALL;
+			}
+			@Override
+			public FontState increase() {
+				return FontState.NORMAL;
+			}
+		}),
+		NORMAL("tagger-font-normal", new FontStateHandler() {
+			@Override
+			public FontState decrease() {
+				return FontState.SMALL;
+			}
+			@Override
+			public FontState increase() {
+				return FontState.LARGE;
+			}
+		}),
+		LARGE("tagger-font-large", new FontStateHandler() {
+			@Override
+			public FontState decrease() {
+				return FontState.NORMAL;
+			}
+			@Override
+			public FontState increase() {
+				return FontState.XLARGE;
+			}
+		}),
+		XLARGE("tagger-font-xlarge", new FontStateHandler() {
+			@Override
+			public FontState decrease() {
+				return FontState.LARGE;
+			}
+			@Override
+			public FontState increase() {
+				return FontState.XLARGE;
+			}
+		}),
+		;
+		
+		private String style;
+		private FontStateHandler fontStateHandler;
+		private FontState(String style, FontStateHandler fontStateHandler) {
+			this.style = style;
+			this.fontStateHandler = fontStateHandler;
+		}
+		
+		public String getStyle() {
+			return style;
+		}
+		
+		public FontStateHandler getFontStateHandler() {
+			return fontStateHandler;
+		}
+	}
+	
+	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
@@ -159,6 +240,10 @@ public class TaggerView extends HorizontalLayout
 	private UIMessageListener<CommentMessage> commentMessageListener;
 	private UUID commentMessageListenerRegId;
 	private IconButton cbAutoShowComments;
+	
+	private IconButton btIncreaseFont;
+	private IconButton btDecreaseFont;
+	private FontState fontState = FontState.NORMAL;
 	
 	public TaggerView(
 			int taggerID, 
@@ -646,6 +731,21 @@ public class TaggerView extends HorizontalLayout
 			}
 		});
 		
+		btIncreaseFont.addClickListener(event -> {
+			tagger.removeStyleName(fontState.getStyle());
+			fontState = fontState.getFontStateHandler().increase();
+			tagger.addStyleName(fontState.getStyle());
+			btIncreaseFont.setEnabled(!fontState.equals(fontState.getFontStateHandler().increase()));
+			btDecreaseFont.setEnabled(true);
+		});
+		
+		btDecreaseFont.addClickListener(event -> {
+			tagger.removeStyleName(fontState.getStyle());
+			fontState = fontState.getFontStateHandler().decrease();
+			tagger.addStyleName(fontState.getStyle());	
+			btDecreaseFont.setEnabled(!fontState.equals(fontState.getFontStateHandler().decrease()));
+			btIncreaseFont.setEnabled(true);
+		});
 	}
 
 	private void setAnnotationCollectionSelected(AnnotationCollectionReference collectionReference,
@@ -696,6 +796,8 @@ public class TaggerView extends HorizontalLayout
 		
 		tagger = new Tagger(taggerID, pager, this, project);
 		tagger.addStyleName("tagger"); //$NON-NLS-1$
+		tagger.addStyleName(this.fontState.getStyle());
+		
 		tagger.setWidth("100%"); //$NON-NLS-1$
 		
 		taggerPanel.addComponent(tagger);
@@ -742,7 +844,16 @@ public class TaggerView extends HorizontalLayout
 		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
 		btAnalyze.setEnabled(project instanceof IndexedProject);
 		actionPanel.addComponent(btAnalyze);
-
+		
+		btDecreaseFont = new IconButton(VaadinIcons.FONT);
+		btDecreaseFont.addStyleName("tagger-bt-decrease");
+		actionPanel.addComponent(btDecreaseFont);
+		
+		btIncreaseFont = new IconButton(VaadinIcons.FONT);
+		btIncreaseFont.addStyleName("tagger-bt-increase");
+		actionPanel.addComponent(btIncreaseFont);
+		
+		
 		rightSplitPanel = new VerticalSplitPanel();
 		rightSplitPanel.setSizeFull();
 		
