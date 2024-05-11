@@ -2095,6 +2095,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		if (!membersToRemove.isEmpty()) {
 			new RemoveMemberDialog(
+					"Project",
 					membersToRemove,
 					members -> {
 						for (ProjectParticipant participant : members) {

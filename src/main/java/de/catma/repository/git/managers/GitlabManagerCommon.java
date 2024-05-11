@@ -70,6 +70,22 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			throw new IOException(String.format("Failed to add member %s to group with the ID %d with the ASSISTANT role", subject, groupId), e);
 		}
 	}
+
+	@Override
+	public final RBACSubject updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException {
+		try {
+			java.util.Date expirationDate = expiresAt==null?null:
+				java.util.Date.from(expiresAt.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+
+			Member projectMember = getGitLabApi().getGroupApi().getMember(groupId, userId);
+
+			Member updatedMember = getGitLabApi().getGroupApi().updateMember(groupId, userId, role.getAccessLevel(), expirationDate); 
+			return new GitMember(updatedMember);
+		} catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to update member with ID %d in group with the ID %d and the %s role", userId, groupId, role.toString()), e);
+		}
+	}
+	
 	
 	@Override
 	public final RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException {

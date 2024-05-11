@@ -21,6 +21,8 @@ import de.catma.project.ProjectsManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.GroupsChangedEvent;
+import de.catma.ui.events.MembersChangedEvent;
+import de.catma.ui.events.RefreshEvent;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.Group;
@@ -198,13 +200,22 @@ public class GroupListView extends VerticalLayout {
     }
     
 	@Subscribe
-	public void handleProjectsChanged(GroupsChangedEvent groupsChangedEvent) {
+	public void handleGroupsChanged(GroupsChangedEvent groupsChangedEvent) {
 		if (groupsChangedEvent.getDeletedGroupId() != null) {
 			deletedGroupIds.add(groupsChangedEvent.getDeletedGroupId());
 		}
 		initData(true);
 	}
 	
+	@Subscribe
+	public void handleMembersChanged(MembersChangedEvent membersChangedEvent) {
+		initData(true);
+	}
+	
+	@Subscribe
+	public void refresh(RefreshEvent refreshEvent) {
+		initData(true);
+	}
 	
 	public void close() {
 		eventBus.unregister(this);

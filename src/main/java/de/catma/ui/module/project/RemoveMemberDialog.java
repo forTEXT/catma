@@ -7,19 +7,18 @@ import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.ListSelect;
 
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.user.Member;
-import de.catma.user.User;
 
 public class RemoveMemberDialog extends AbstractMemberDialog<Set<ProjectParticipant>> {
 	private final Set<ProjectParticipant> members;
 
 	public RemoveMemberDialog(
+			String targetName,
 			Set<ProjectParticipant> members,
 			SaveCancelListener<Set<ProjectParticipant>> saveCancelListener
 	) {
 		super(
 				"Remove Members",
-				"Confirm that you would like to remove the members below from the project",
+				String.format("Confirm that you would like to remove the members below from the %s", targetName),
 				saveCancelListener
 		);
 

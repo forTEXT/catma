@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import de.catma.project.ProjectReference;
 import de.catma.user.Group;
+import de.catma.user.Member;
 import de.catma.user.SharedGroup;
 
 /**
@@ -107,6 +108,18 @@ public interface IRBACManager {
 	 * @param projectReference
 	 * @throws IOException
 	 */
-	public void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException;
+	void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException;
+
+	
+	/**
+	 * Updates role and/or expiration date of a member of a group.
+	 * @param userId the ID of the member of the group
+	 * @param groupId the ID of the group
+	 * @param role the new role
+	 * @param expiresAt new expiration date
+	 * @return the updated member
+	 * @throws IOException
+	 */
+	RBACSubject updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException;
 	
 }

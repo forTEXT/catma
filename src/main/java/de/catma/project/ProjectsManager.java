@@ -1,6 +1,7 @@
 package de.catma.project;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -204,4 +205,14 @@ public interface ProjectsManager {
 	 * @throws IOException if an error occurs during the check or if the import status is 'failed'.
 	 */
 	boolean isProjectImportFinished(ProjectReference projectReference) throws IOException;
+
+	/**
+	 * Updates role and/or expiration date of a member of a group.
+	 * @param userId the ID of the member of the group
+	 * @param groupId the ID of the group
+	 * @param role the new role
+	 * @param expiresAt new expiration date
+	 * @throws IOException
+	 */
+	void updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException;
 }

@@ -1,5 +1,7 @@
 package de.catma.ui.module.project;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.DateField;
@@ -25,11 +27,17 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 			SaveCancelListener<T> saveCancelListener) {
 		super(title, saveCancelListener);
 		this.errorLogger = (ErrorHandler) UI.getCurrent();
-		initComponents(description);
+		initComponents(description, Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 	}
 
-
-	private void initComponents(String description) {
+	public AbstractMemberDialog(String title, String description, List<RBACRole> availableRoles,
+			SaveCancelListener<T> saveCancelListener) {
+		super(title, saveCancelListener);
+		this.errorLogger = (ErrorHandler) UI.getCurrent();
+		initComponents(description, availableRoles);
+	}
+	
+	private void initComponents(String description, List<RBACRole> availableRoles) {
 		
 		this.descriptionLabel = new Label(description);
 		descriptionLabel.setHeight("50px");
@@ -39,8 +47,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		cbUsers.setPageLength(20);
 		cbUsers.setItemCaptionGenerator(User::preciseName);
 		
-		cbRole = new ComboBox<RBACRole>("Role", 
-				Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
+		cbRole = new ComboBox<RBACRole>("Role", availableRoles);
 
 		cbRole.setWidth("100%");
 		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);

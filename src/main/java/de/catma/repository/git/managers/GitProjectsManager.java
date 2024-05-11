@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Supplier;
@@ -32,6 +33,7 @@ import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.tag.TagManager;
 import de.catma.user.Group;
+import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 
@@ -133,6 +135,11 @@ public class GitProjectsManager implements ProjectsManager {
 		remoteGitServerManager.unassignFromGroup(subject, group);
 	}
 
+	@Override
+	public void updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException {
+		remoteGitServerManager.updateAssignmentOnGroup(userId, groupId, role, expiresAt);
+	}
+	
 	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws IOException {
 		if (!Paths.get(new File(gitBasedRepositoryBasePath).toURI())
 				.resolve(user.getIdentifier())

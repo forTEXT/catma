@@ -2,9 +2,11 @@ package de.catma.ui.module.project;
 
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.ListSelect;
@@ -18,11 +20,20 @@ public class EditMemberDialog extends AbstractMemberDialog<Pair<RBACRole, LocalD
 
 	private final RBACRole defaultRole;
 
+	
 	public EditMemberDialog(
 			Set<ProjectParticipant> participants,
 			SaveCancelListener<Pair<RBACRole, LocalDate>> saveCancelListener
 	) {
-		super("Update Members","Change the role of the members below", saveCancelListener);
+		this(participants, Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER), saveCancelListener);
+	}
+	
+	public EditMemberDialog(
+			Set<ProjectParticipant> participants,
+			List<RBACRole> availableRoles,
+			SaveCancelListener<Pair<RBACRole, LocalDate>> saveCancelListener
+	) {
+		super("Update Members","Change the role of the members below", availableRoles, saveCancelListener);
 
 		this.participants = participants;
 

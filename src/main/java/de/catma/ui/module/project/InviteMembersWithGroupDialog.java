@@ -246,13 +246,16 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		);
 		
 		inviteGroupMembersMode = new Mode(
-				Set.of(emailAddressListInput, expiresAtInput), 
-				Set.of(cbGroup, groupName, btSwitchGroupSelectionToCreateGroup, btSwitchMemberInvitationtoCreateGroup, groupSelectionPanel, cbRole), 
+				Set.of(emailAddressListInput, cbRole, expiresAtInput), 
+				Set.of(cbGroup, groupName, btSwitchGroupSelectionToCreateGroup, btSwitchMemberInvitationtoCreateGroup, groupSelectionPanel), 
 				(content) -> {
 					return () -> {
 						setCaption("Add members");
 						content.setExpandRatio(emailAddressListInput, 1.0f);
 						content.setExpandRatio(expiresAtInput, 0.0f);
+						cbRole.setItems(Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER, RBACRole.OWNER));
+						
+						cbRole.setValue(RBACRole.ASSISTANT);
 						emailAddressListInput.focus();
 					};
 				},

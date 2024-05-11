@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.mail.EmailException;
 import org.vaadin.dialogs.ConfirmDialog;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
@@ -40,10 +41,12 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.events.GroupsChangedEvent;
+import de.catma.ui.events.MembersChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.module.project.EditMemberDialog;
 import de.catma.ui.module.project.InviteMembersWithGroupDialog;
 import de.catma.ui.module.project.InviteMembersWithGroupDialog.MemberData;
 import de.catma.ui.module.project.ProjectParticipant;
@@ -52,6 +55,7 @@ import de.catma.user.Group;
 import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.user.signup.SignupTokenManager;
+import de.catma.util.Pair;
 
 public class GroupCard extends VerticalLayout {
 	
@@ -159,7 +163,10 @@ public class GroupCard extends VerticalLayout {
         rbacEnforcer.register(
     		RBACConstraint.ifAuthorized(
 				role -> rbacManager.hasPermission(role, RBACPermission.GROUP_MEMBERS_EDIT), 
-				() -> memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers())));
+				() -> {
+					memberGridComponentMoreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
+					memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
+				}));
         rbacEnforcer.register(
     		RBACConstraint.ifNotAuthorized(
 				role -> rbacManager.hasPermission(role, RBACPermission.GROUP_MEMBERS_EDIT), 
@@ -182,28 +189,69 @@ public class GroupCard extends VerticalLayout {
 		eventBus.post(new RouteToProjectEvent(projectReference));
 	}
 
+	private void handleEditMembers() {
+		Set<Member> membersToEdit = memberGrid.getSelectedItems();
+
+		if (membersToEdit.isEmpty()) {
+			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
+			return;
+		}
+	
+		// remove the current user from the selection and display an informational message
+		Optional<Member> selectedMemberCurrentUser = membersToEdit.stream().filter(
+				member -> member.getUserId().equals(projectsManager.getUser().getUserId())
+		).findAny();
+
+		if (selectedMemberCurrentUser.isPresent()) {
+			membersToEdit = membersToEdit.stream().filter(
+					member -> member != selectedMemberCurrentUser.get()
+			).collect(Collectors.toSet());
+
+			Notification selfSelectedNotification = new Notification(
+					"You cannot change your own role.\n"
+							+ "Please have another owner of the group change your role instead.\n"
+							+ "\n"
+							+ "If you are the only owner of the group, assign ownership to another member of the group. \n"
+							+ "(click to dismiss)",
+					Notification.Type.WARNING_MESSAGE
+			);
+			selfSelectedNotification.setDelayMsec(-1);
+			selfSelectedNotification.show(Page.getCurrent());
+			
+			
+		}
+	
+		if (!membersToEdit.isEmpty()) {
+			final Set<Member> participants = membersToEdit;
+			new EditMemberDialog(
+					membersToEdit.stream().map(GroupMemberParticipant::new).collect(Collectors.toSet()),
+					Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER, RBACRole.OWNER),
+					new SaveCancelListener<Pair<RBACRole, LocalDate>>() {
+						public void savePressed(Pair<RBACRole, LocalDate> roleAndExpiresAt) {
+							try {
+								for (Member participant : participants) {
+									projectsManager.updateAssignmentOnGroup(participant.getUserId(), group.getId(), roleAndExpiresAt.getFirst(), roleAndExpiresAt.getSecond());
+								}
+							}
+							catch (Exception e) {
+								errorHandler.showAndLogError("Error changing role!", e);
+							}
+							
+							eventBus.post(new MembersChangedEvent());
+						};
+					}
+			).show();
+		}
+
+	}
+	
+	
 	private void handleRemoveMembers() {
 		Set<Member> membersToRemove = memberGrid.getSelectedItems();
 
 		if (membersToRemove.isEmpty()) {
 			Notification.show("Info", "Please select one or more members first!", Notification.Type.HUMANIZED_MESSAGE);
 			return;
-		}
-
-		// remove any owner members from the selection and display an informational message
-		// TODO: allow the original owner (whose namespace the project is in) to remove any other owner
-		if (membersToRemove.stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
-			membersToRemove = membersToRemove.stream().filter(
-					member -> member.getRole() != RBACRole.OWNER
-			).collect(Collectors.toSet());
-
-			Notification ownerMembersSelectedNotification = new Notification(
-					"Your selection includes members with the 'Owner' role, who you cannot remove.\n"
-							+ "Those members have been ignored. (click to dismiss)",
-					Notification.Type.WARNING_MESSAGE
-			);
-			ownerMembersSelectedNotification.setDelayMsec(-1);
-			ownerMembersSelectedNotification.show(Page.getCurrent());
 		}
 
 		// remove the current user from the selection and display an informational message
@@ -217,7 +265,7 @@ public class GroupCard extends VerticalLayout {
 			).collect(Collectors.toSet());
 
 			Notification selfSelectedNotification = new Notification(
-					"You cannot remove yourself from the project.\n"
+					"You cannot remove yourself from the group.\n"
 							+ "Please use the 'Leave Group' button on the group card on the dashboard instead.\n"
 							+ "\n"
 							+ "If you are the owner of the group, please contact support to request a transfer\n"
@@ -230,6 +278,7 @@ public class GroupCard extends VerticalLayout {
 
 		if (!membersToRemove.isEmpty()) {
 			new RemoveMemberDialog(
+					"Group",
 					membersToRemove.stream().map(m -> new GroupMemberParticipant(m)).collect(Collectors.toSet()),
 					members -> {
 						for (ProjectParticipant member : members) {
@@ -304,7 +353,7 @@ public class GroupCard extends VerticalLayout {
                 .setCaption("Name")
                 .setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
                 .setDescriptionGenerator(User::preciseName).setExpandRatio(1);
-
+        memberGrid.addColumn(Member::getRole);
         memberGridComponent = new ActionGridComponent<>(
                 new Label("Members"),
                 memberGrid
