@@ -109,7 +109,6 @@
     <orderEntry type="library" name="Maven: jakarta.activation:jakarta.activation-api:1.2.2" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.jersey.inject:jersey-hk2:2.35" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.jersey.core:jersey-common:2.35" level="project" />
-    <orderEntry type="library" name="Maven: jakarta.annotation:jakarta.annotation-api:1.3.5" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.hk2:osgi-resource-locator:1.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.hk2:hk2-locator:2.6.1" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.hk2.external:aopalliance-repackaged:2.6.1" level="project" />
@@ -182,11 +181,17 @@
     <orderEntry type="library" name="Maven: org.apache.ws.xmlschema:xmlschema-core:2.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-frontend-jaxrs:3.5.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-security:3.5.3" level="project" />
+    <orderEntry type="library" name="Maven: jakarta.annotation:jakarta.annotation-api:1.3.5" level="project" />
+    <orderEntry type="library" name="Maven: jakarta.xml.ws:jakarta.xml.ws-api:2.3.3" level="project" />
+    <orderEntry type="library" name="Maven: jakarta.jws:jakarta.jws-api:2.1.0" level="project" />
+    <orderEntry type="library" name="Maven: jakarta.xml.soap:jakarta.xml.soap-api:1.4.2" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.activation:jakarta.activation:1.2.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: com.sun.xml.messaging.saaj:saaj-impl:1.5.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: org.jvnet.staxex:stax-ex:1.8.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.jaxb:jaxb-runtime:2.3.5" level="project" />
-    <orderEntry type="library" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:2.3.3" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.jaxb:txw2:2.3.5" level="project" />
     <orderEntry type="library" name="Maven: com.sun.istack:istack-commons-runtime:3.0.12" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: com.sun.activation:jakarta.activation:1.2.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-exec:1.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.opennlp:opennlp-tools:1.9.4" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1.1" level="project" />
@@ -225,6 +230,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.13.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.pdfbox:jbig2-imageio:3.0.4" level="project" />
     <orderEntry type="library" name="Maven: com.github.jai-imageio:jai-imageio-core:1.4.0" level="project" />
+    <orderEntry type="library" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:2.3.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.tika:tika-langdetect:1.28.5" level="project" />
     <orderEntry type="library" name="Maven: com.optimaize.languagedetector:language-detector:0.6" level="project" />
     <orderEntry type="library" name="Maven: net.arnx:jsonic:1.2.11" level="project" />
