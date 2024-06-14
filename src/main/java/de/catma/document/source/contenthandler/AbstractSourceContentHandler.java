@@ -18,40 +18,28 @@
  */
 package de.catma.document.source.contenthandler;
 
-import java.io.IOException;
-
 import de.catma.document.source.SourceDocumentInfo;
+
+import java.io.IOException;
 
 /**
  * Basic implementation that provides lazy loading.
- * 
- * @author marco.petris@web.de
- *
  */
 public abstract class AbstractSourceContentHandler implements SourceContentHandler {
+	private SourceDocumentInfo sourceDocumentInfo;
+	private String content;
 
-    private SourceDocumentInfo sourceDocumentInfo;
-    private String content;
-    
-    /* (non-Javadoc)
-     * @see de.catma.document.source.contenthandler.SourceContentHandler#setSourceDocumentInfo(de.catma.document.source.SourceDocumentInfo)
-     */
-    public void setSourceDocumentInfo(SourceDocumentInfo sourceDocumentInfo) {
+	@Override
+	public void setSourceDocumentInfo(SourceDocumentInfo sourceDocumentInfo) {
 		this.sourceDocumentInfo = sourceDocumentInfo;
 	}
-    
-    /* (non-Javadoc)
-     * @see de.catma.document.source.contenthandler.SourceContentHandler#getSourceDocumentInfo()
-     */
-    public SourceDocumentInfo getSourceDocumentInfo() {
+
+	@Override
+	public SourceDocumentInfo getSourceDocumentInfo() {
 		return sourceDocumentInfo;
 	}
 
-	/**
-	 * Does lazy loading, first call will lead to a {@link #load()}.
-	 * 
-	 * @see de.catma.document.source.contenthandler.SourceContentHandler#getContent()
-	 */
+	@Override
 	public String getContent() throws IOException {
 		if (content == null) {
 			load();
@@ -60,29 +48,26 @@ public abstract class AbstractSourceContentHandler implements SourceContentHandl
 	}
 
 	/**
-	 * @param content the content of the {@link de.catma.document.source.SourceDocument}. To be used
-	 * by concrete implementations.
+	 * To be used by concrete implementations to set the content.
+	 *
+	 * @param content the entire document text
 	 */
 	protected void setContent(String content) {
 		this.content = content;
 	}
-	
-	/* (non-Javadoc)
-	 * @see de.catma.document.source.contenthandler.SourceContentHandler#unload()
-	 */
+
+	@Override
 	public void unload() {
 		content = null;
 	}
 
-    /* (non-Javadoc)
-     * @see de.catma.document.source.contenthandler.SourceContentHandler#isLoaded()
-     */
-    public boolean isLoaded() {
-    	return (content != null);
-    }
-    
-    @Override
-    public boolean hasIntrinsicMarkupCollection() {
-    	return false;
-    }
+	@Override
+	public boolean isLoaded() {
+		return content != null;
+	}
+
+	@Override
+	public boolean hasIntrinsicAnnotationCollection() {
+		return false;
+	}
 }

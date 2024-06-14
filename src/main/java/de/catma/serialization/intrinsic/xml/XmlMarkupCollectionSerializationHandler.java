@@ -10,7 +10,10 @@ import de.catma.serialization.AnnotationCollectionSerializationHandler;
 import de.catma.tag.*;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
-import nu.xom.*;
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Node;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class XmlMarkupCollectionSerializationHandler implements AnnotationCollectionSerializationHandler {
-	public final static String DEFAULT_COLLECTION_TITLE = "Intrinsic Markup";
+	public final static String DEFAULT_ANNOTATION_COLLECTION_TITLE = "Intrinsic Markup";
 
 	private final TagManager tagManager;
 	private final XML2ContentHandler xmlContentHandler;
@@ -77,7 +80,7 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 							"",
 							String.format("%s Intrinsic Markup", sourceDocument),
 							"",
-							DEFAULT_COLLECTION_TITLE
+							DEFAULT_ANNOTATION_COLLECTION_TITLE
 					),
 					tagManager.getTagLibrary(),
 					sourceDocument.getUuid(),
@@ -86,10 +89,8 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 			);
 
 			StringBuilder contentBuilder = new StringBuilder();
-			Stack<String> elementStack = new Stack<>();
 			scanElements(
 					contentBuilder,
-					elementStack,
 					document.getRootElement(),
 					tagManager,
 					namespacePrefixesToTagsetIds,
@@ -107,7 +108,6 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 
 	private void scanElements(
 			StringBuilder contentBuilder,
-			Stack<String> elementStack,
 			Element element,
 			TagManager tagManager,
 			Map<String, String> namespacePrefixesToTagsetIds,

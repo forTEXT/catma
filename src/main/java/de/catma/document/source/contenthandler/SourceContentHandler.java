@@ -18,57 +18,70 @@
  */ 
 package de.catma.document.source.contenthandler;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.TechInfoSet;
+
+import java.io.IOException;
 
 /**
- * A content handler for a source document. The content handler is responsible for
- * loading content from a source document and keeping it in memory.
+ * A content handler for a {@link SourceDocument}. It is responsible for loading content from a source document and keeping it in memory.
  * <p>
  * It uses the proper encoding and {@link FileType}.
- * <p>
- * <strong>SourceContentHandler implementations need to have a default no-arg constructor!</strong>
  */
 public interface SourceContentHandler {
+	/**
+	 * Sets all the metadata for the source document with which this instance is associated. Must be called immediately after instantiation.
+	 *
+	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object containing the metadata
+	 */
+	void setSourceDocumentInfo(SourceDocumentInfo sourceDocumentInfo);
 
 	/**
-	 * @param sourceDocumentInfo all the metadata for the {@link SourceDocument}, has
-	 * to be set right after instance creation completed
+	 * Returns all the metadata for the source document with which this instance is associated.
+	 *
+	 * @return a {@link SourceDocumentInfo} object containing the metadata
 	 */
-	public void setSourceDocumentInfo(
-			SourceDocumentInfo sourceDocumentInfo);
-	
+	SourceDocumentInfo getSourceDocumentInfo();
+
 	/**
-	 * @return all the metadata for the {@link SourceDocument}
+	 * Loads the content of the source document with which this instance is associated.
+	 * <p>
+	 * Loading is performed from the resource identified via {@link TechInfoSet#getURI()} of the {@link SourceDocumentInfo}.
+	 *
+	 * @throws IOException if an error occurs while loading the content
 	 */
-	public SourceDocumentInfo getSourceDocumentInfo();
-	
+	void load() throws IOException;
+
 	/**
-	 * Loading via {@link de.catma.document.source.TechInfoSet#getURI()} of the {@link SourceDocumentInfo}.
-	 * @throws IOException error accessing {@link de.catma.document.source.TechInfoSet#getURI()}.
+	 * Returns the content of the source document with which this instance is associated.
+	 *
+	 * @return the entire document text
+	 * @throws IOException if an error occurs while loading the content
 	 */
-	public void load() throws IOException;
-	
+	String getContent() throws IOException;
+
 	/**
-	 * @return the extracted text of the {@link SourceDocument}.
-	 * @throws IOException
+	 * Discards the content of the source document with which this instance is associated.
 	 */
-	public String getContent() throws IOException;
-	
+	void unload();
+
 	/**
-	 * Discards the content.
+	 * Whether the content of the source document with which this instance is associated has been loaded.
+	 *
+	 * @return <code>true</code> if the content has been loaded, <code>false</code> if the content has not yet been loaded or was unloaded via
+	 *         {@link SourceContentHandler#unload()}
 	 */
-	public void unload();
-	
+	boolean isLoaded();
+
 	/**
-	 * @return <code>true</code> if the content has been loaded and not yet unloaded, else <code>false</code>.
+	 * Whether the source document with which this instance is associated contains embedded annotations.
+	 * <p>
+	 * Can only be true for XML documents.
+	 *
+	 * @return <code>true</code> if embedded annotations exist, otherwise <code>false</code>
 	 */
-	public boolean isLoaded();
-	
-	public boolean hasIntrinsicMarkupCollection();
-	
+	@Deprecated
+	boolean hasIntrinsicAnnotationCollection();
 }

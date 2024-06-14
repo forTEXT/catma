@@ -1055,7 +1055,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								});
 
 						// creating documents and collections
-						boolean useApostropheAsSeparator = (Boolean) result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
+						boolean useApostropheAsSeparator = (boolean) result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
 						String collectionNamePattern = (String) result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
 						boolean simpleXml = (boolean) result.get(DocumentWizard.WizardContextKey.SIMPLE_XML);
 
@@ -1097,7 +1097,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		);
 
 		SourceContentHandler sourceContentHandler =
-				sourceDocumentInfo.getTechInfoSet().getMimeType().equals(FileType.XML2.getMimeType()) ? new XML2ContentHandler(simpleXml) : new TikaContentHandler();
+				sourceDocumentInfo.getTechInfoSet().getMimeType().equals(FileType.XML2.getMimeType())
+						? new XML2ContentHandler(simpleXml) : new TikaContentHandler();
 		sourceContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
 
 		SourceDocument sourceDocument = new SourceDocument(uploadFile.getUuid(), sourceContentHandler);
