@@ -181,11 +181,12 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 
 	private void updatePreview(UploadFile uploadFile) {
 		try {
-			String content;
+			final int maxPreviewLength = 3000;
+			String previewContent;
 
 			if (uploadFile.getMimetype().equals(FileType.XML2.getMimeType())) {
 				// handle XML
-				content = loadXmlFileContent(uploadFile);
+				previewContent = loadXmlFileContent(uploadFile);
 			}
 			else {
 				// handle non-XML (parse with Tika)
@@ -197,16 +198,23 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 				}
 
 				try (FileInputStream fileInputStream = new FileInputStream(new File(uploadFile.getTempFilename()))) {
-					content = new Tika().parseToString(fileInputStream, metadata, 3000);
+					previewContent = new Tika().parseToString(fileInputStream, metadata, maxPreviewLength);
 				}
 			}
 
-			if (!content.isEmpty()) {
-				Pattern pattern = Pattern.compile(".*\\s\\z", Pattern.DOTALL);
-				Matcher matcher = pattern.matcher(content);
-				content += matcher.matches() ? "[...]" : " [...]";
+			// truncate the preview content if necessary (for XML files the entire content is loaded)
+			if (previewContent.length() > maxPreviewLength) {
+				previewContent = previewContent.substring(0, maxPreviewLength);
 			}
-			taPreview.setValue(content);
+
+			// append an ellipsis to the preview content if it is likely to have been truncated
+			if (previewContent.length() == maxPreviewLength) {
+				Pattern pattern = Pattern.compile(".*\\s\\z", Pattern.DOTALL);
+				Matcher matcher = pattern.matcher(previewContent);
+				previewContent += matcher.matches() ? "[...]" : " [...]";
+			}
+
+			taPreview.setValue(previewContent);
 
 			IndexInfoSet indexInfoSet = new IndexInfoSet(Collections.emptyList(), Collections.emptyList(), uploadFile.getLocale());
 			if (indexInfoSet.isRightToLeftWriting()) {
