@@ -1,151 +1,222 @@
 package de.catma.ui.module.project.documentwizard;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.vaadin.data.Binder.Binding;
+import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.ui.*;
+import com.vaadin.ui.Notification.Type;
+import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.backgroundservice.DefaultProgressCallable;
+import de.catma.backgroundservice.ExecutionListener;
+import de.catma.document.source.*;
+import de.catma.document.source.contenthandler.XML2ContentHandler;
+import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.dialog.SingleOptionInputDialog;
+import de.catma.ui.dialog.wizard.*;
+import de.catma.ui.module.main.ErrorHandler;
 import org.apache.tika.Tika;
 import org.apache.tika.language.detect.LanguageDetector;
 import org.apache.tika.language.detect.LanguageResult;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 
-import com.vaadin.data.Binder.Binding;
-import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.ProgressBar;
-import com.vaadin.ui.TextArea;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-
-import de.catma.backgroundservice.BackgroundServiceProvider;
-import de.catma.backgroundservice.DefaultProgressCallable;
-import de.catma.backgroundservice.ExecutionListener;
-import de.catma.document.source.FileType;
-import de.catma.document.source.IndexInfoSet;
-import de.catma.document.source.LanguageItem;
-import de.catma.document.source.SourceDocumentInfo;
-import de.catma.document.source.TechInfoSet;
-import de.catma.document.source.contenthandler.XML2ContentHandler;
-import de.catma.ui.component.actiongrid.ActionGridComponent;
-import de.catma.ui.dialog.SingleOptionInputDialog;
-import de.catma.ui.dialog.wizard.ProgressStep;
-import de.catma.ui.dialog.wizard.ProgressStepFactory;
-import de.catma.ui.dialog.wizard.StepChangeListener;
-import de.catma.ui.dialog.wizard.WizardContext;
-import de.catma.ui.dialog.wizard.WizardStep;
-import de.catma.ui.module.main.ErrorHandler;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class InspectContentStep extends VerticalLayout implements WizardStep {
-	
+	private static final Logger logger = Logger.getLogger(InspectContentStep.class.getName());
 
-	private WizardContext wizardContext;
-	private ProgressStep progressStep;
-	private ListDataProvider<UploadFile> fileDataProvider;
-	private Grid<UploadFile> fileGrid;
-	private ArrayList<LanguageItem> languageItems;
-	private TextArea taPreview;
-	private ProgressBar progressBar;
-	private ActionGridComponent<Grid<UploadFile>> fileActionGridComponent;
-	private HorizontalLayout contentPanel;
-	private AddMetadataStep nextStep;
+	private final WizardContext wizardContext;
+
+	private final ProgressStep progressStep;
+	private final WizardStep nextStep;
+
+	private final ArrayList<UploadFile> uploadFiles;
+	private final ListDataProvider<UploadFile> uploadFileListDataProvider;
+
 	private StepChangeListener stepChangeListener;
-	private CheckBox cbUseApostrophe;
 
-	@SuppressWarnings("unchecked")
+	private ProgressBar progressBar;
+	private HorizontalLayout contentLayout;
+	private Grid<UploadFile> fileGrid;
+	private Binding<UploadFile, Charset> uploadFileCharsetBinding;
+	private ArrayList<LanguageItem> languageItems;
+	private ActionGridComponent<Grid<UploadFile>> fileActionGridComponent;
+	private CheckBox cbUseApostrophe;
+	private CheckBox cbSimpleXml;
+	private TextArea taPreview;
+
 	public InspectContentStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
-		
-		this.wizardContext = wizardContext; 
+		this.wizardContext = wizardContext;
 		this.wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, false);
-		
+		this.wizardContext.put(DocumentWizard.WizardContextKey.SIMPLE_XML, false);
+
 		this.progressStep = progressStepFactory.create(2, "Inspect the Content");
-		
-		ArrayList<UploadFile> fileList = (ArrayList<UploadFile>) wizardContext.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
-		
-		this.fileDataProvider = new ListDataProvider<UploadFile>(fileList);
 		this.nextStep = new AddMetadataStep(wizardContext, progressStepFactory);
+
+		this.uploadFiles = new ArrayList<>();
+		this.uploadFileListDataProvider = new ListDataProvider<>(uploadFiles);
 
 		initComponents();
 		initActions();
 	}
 
-	private void initActions() {
-		fileGrid.addItemClickListener(event -> updatePreview(event.getItem()));
-		
-		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem("Set Language", menuItem -> {
-			if (fileGrid.getSelectedItems().isEmpty()) {
-				Notification.show("Info", "Please select one or more entries first!", Type.HUMANIZED_MESSAGE);
-			}
-			else {
-				SingleOptionInputDialog<LanguageItem> languageSelectionDialog = 
-					new SingleOptionInputDialog<>(
-						"Language Selection", "Please select a language:", languageItems, result -> {
-					fileGrid.getSelectedItems().forEach(uploadFile -> uploadFile.setLanguage(result));
-					fileDataProvider.refreshAll();
-					fileGrid.getSelectedItems().stream().findFirst().ifPresent(uploadFile -> updatePreview(uploadFile));
-				});
-				
-				languageSelectionDialog.show();
-			}
-		});
-		
-		cbUseApostrophe.addValueChangeListener(
-			event -> this.wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, event.getValue()));
+	private void initComponents() {
+		setSizeFull();
+
+		progressBar = new ProgressBar();
+		progressBar.setCaption("Inspecting files...");
+		progressBar.setVisible(false);
+		progressBar.setIndeterminate(false);
+		addComponent(progressBar);
+
+		Label infoLabel = new Label(
+				"Please check if the language has been detected correctly and if the content preview looks fine. "
+						+ "For plain text files you might need to adjust the encoding.\n"
+						+ "Double click on a row to change the settings."
+		);
+		addComponent(infoLabel);
+
+		contentLayout = new HorizontalLayout();
+		contentLayout.setSizeFull();
+		contentLayout.setMargin(false);
+
+		VerticalLayout leftColumnLayout = new VerticalLayout();
+		leftColumnLayout.setMargin(false);
+		leftColumnLayout.setSizeFull();
+
+		fileGrid = new Grid<>(uploadFileListDataProvider);
+		fileGrid.setSizeFull();
+		fileGrid.addColumn(UploadFile::getOriginalFilename)
+				.setCaption("File")
+				.setWidth(150)
+				.setDescriptionGenerator(UploadFile::getOriginalFilename);
+		fileGrid.addColumn(UploadFile::getMimetype)
+				.setCaption("Type")
+				.setWidth(150)
+				.setDescriptionGenerator(UploadFile::getMimetype);
+
+		uploadFileCharsetBinding = fileGrid.getEditor().getBinder().bind(
+				new ComboBox<>(null, Charset.availableCharsets().values()),
+				UploadFile::getCharset,
+				(uploadFile, charset) -> {
+					uploadFile.setCharset(charset);
+					updatePreview(uploadFile);
+				}
+		);
+		fileGrid.addColumn(UploadFile::getCharset)
+				.setCaption("Character Set / Encoding")
+				.setExpandRatio(2)
+				.setEditorBinding(uploadFileCharsetBinding);
+
+		languageItems = new ArrayList<>();
+		for (Locale locale : Locale.getAvailableLocales()) {
+			languageItems.add(new LanguageItem(locale));
+		}
+		fileGrid.addColumn(UploadFile::getLanguage)
+				.setCaption("Language")
+				.setExpandRatio(2)
+				.setEditorComponent(
+						new ComboBox<>(null, languageItems),
+						(uploadFile, language) -> {
+							uploadFile.setLanguage(language);
+							updatePreview(uploadFile);
+						}
+				);
+
+		fileGrid.getEditor().setEnabled(true).setBuffered(false);
+
+		fileActionGridComponent = new ActionGridComponent<>(new Label("Language and Encoding"), fileGrid);
+		fileActionGridComponent.setMargin(false);
+		fileActionGridComponent.getActionGridBar().setAddBtnVisible(false);
+
+		leftColumnLayout.addComponent(fileActionGridComponent);
+		leftColumnLayout.setExpandRatio(fileActionGridComponent, 1.0f);
+
+		cbUseApostrophe = new CheckBox("Always use the apostrophe as a word separator");
+		cbUseApostrophe.setDescription("This influences the segmentation of the text, i.e. how the wordlist is created.");
+		leftColumnLayout.addComponent(cbUseApostrophe);
+
+		cbSimpleXml = new CheckBox("Simple XML mode");
+		cbSimpleXml.setDescription("Preserves whitespace and does not insert any newlines (only affects XML files).");
+		leftColumnLayout.addComponent(cbSimpleXml);
+
+		contentLayout.addComponent(leftColumnLayout);
+		contentLayout.setExpandRatio(leftColumnLayout, 0.6f);
+
+		taPreview = new TextArea("Preview");
+		taPreview.setReadOnly(true);
+		taPreview.setSizeFull();
+
+		contentLayout.addComponent(taPreview);
+		contentLayout.setExpandRatio(taPreview, 0.4f);
+
+		addComponent(contentLayout);
+		setExpandRatio(contentLayout, 1f);
+	}
+
+	private String loadXmlFileContent(UploadFile uploadFile) throws IOException {
+		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo();
+		sourceDocumentInfo.setTechInfoSet(new TechInfoSet(
+				uploadFile.getOriginalFilename(),
+				uploadFile.getMimetype(),
+				uploadFile.getTempFilename()
+		));
+
+		XML2ContentHandler xmlContentHandler = new XML2ContentHandler(cbSimpleXml.getValue());
+		xmlContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
+
+		xmlContentHandler.load();
+		return xmlContentHandler.getContent();
 	}
 
 	private void updatePreview(UploadFile uploadFile) {
-		Tika tika = new Tika();
-		Metadata metadata = new Metadata();
-		MediaType type = MediaType.parse(uploadFile.getMimetype());
-		
-		if (type.getBaseType().toString().equals(FileType.TEXT.getMimeType())) {
-			metadata.set(Metadata.CONTENT_TYPE, new MediaType(type, uploadFile.getCharset()).toString());
-		}
-		
 		try {
-			String content = "";
-			SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo();
-			IndexInfoSet indexInfoSet = 
-				new IndexInfoSet(Collections.emptyList(), Collections.emptyList(), uploadFile.getLocale());
-			
+			final int maxPreviewLength = 3000;
+			String previewContent;
+
 			if (uploadFile.getMimetype().equals(FileType.XML2.getMimeType())) {
-				XML2ContentHandler contentHandler = new XML2ContentHandler();
-				TechInfoSet techInfoSet = 
-					new TechInfoSet(
-						uploadFile.getOriginalFilename(), 
-						uploadFile.getMimetype(), 
-						uploadFile.getTempFilename());
-				
-				sourceDocumentInfo.setTechInfoSet(techInfoSet);
-				contentHandler.setSourceDocumentInfo(sourceDocumentInfo);
-				
-				contentHandler.load();
-				content = contentHandler.getContent();
+				// handle XML
+				previewContent = loadXmlFileContent(uploadFile);
 			}
 			else {
-				try (FileInputStream fis = new FileInputStream(new File(uploadFile.getTempFilename()))) {
-					content = tika.parseToString(fis, metadata, 3000);
+				// handle non-XML (parse with Tika)
+				MediaType mediaType = MediaType.parse(uploadFile.getMimetype());
+
+				Metadata metadata = new Metadata();
+				if (mediaType.getBaseType().toString().equals(FileType.TEXT.getMimeType())) {
+					metadata.set(Metadata.CONTENT_TYPE, new MediaType(mediaType, uploadFile.getCharset()).toString());
+				}
+
+				try (FileInputStream fileInputStream = new FileInputStream(new File(uploadFile.getTempFilename()))) {
+					previewContent = new Tika().parseToString(fileInputStream, metadata, maxPreviewLength);
 				}
 			}
-			if (!content.isEmpty()) {
-				content += " [...] ";
+
+			// truncate the preview content if necessary (for XML files the entire content is loaded)
+			if (previewContent.length() > maxPreviewLength) {
+				previewContent = previewContent.substring(0, maxPreviewLength);
 			}
-			taPreview.setValue(content);
+
+			// append an ellipsis to the preview content if it is likely to have been truncated
+			if (previewContent.length() == maxPreviewLength) {
+				Pattern pattern = Pattern.compile(".*\\s\\z", Pattern.DOTALL);
+				Matcher matcher = pattern.matcher(previewContent);
+				previewContent += matcher.matches() ? "[...]" : " [...]";
+			}
+
+			taPreview.setValue(previewContent);
+
+			IndexInfoSet indexInfoSet = new IndexInfoSet(Collections.emptyList(), Collections.emptyList(), uploadFile.getLocale());
 			if (indexInfoSet.isRightToLeftWriting()) {
 				taPreview.addStyleName("document-wizard-rtl-preview");
 			}
@@ -154,122 +225,55 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 			}
 		}
 		catch (Exception e) {
-			Logger.getLogger(InspectContentStep.class.getName()).log(
-					Level.SEVERE, 
-					String.format("Error loading preview of %s", uploadFile.getOriginalFilename()),
-					e);
-			String errorMsg = e.getMessage();
-			if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-				errorMsg = "";
-			}
+			logger.log(Level.SEVERE, String.format("Error loading preview of %s", uploadFile.getOriginalFilename()), e);
 
 			Notification.show(
-				"Error", 
-				String.format(
-						"Error loading content of %s! "
-						+ "Adding this file to your project might fail.\nThe underlying error message was:\n%s",
-						uploadFile.getOriginalFilename(), errorMsg), 
-				Type.ERROR_MESSAGE);
+					"Error",
+					String.format(
+							"Failed to load content of %s! Adding this file to your project might fail.\nThe underlying error message was:\n%s",
+							uploadFile.getOriginalFilename(),
+							e.getMessage()
+					),
+					Type.ERROR_MESSAGE
+			);
 		}
 	}
 
-	private void initComponents() {
-		setSizeFull();
-		progressBar = new ProgressBar();
-		progressBar.setCaption("Inspecting files...");
-		progressBar.setVisible(false);
-		progressBar.setIndeterminate(false);
-		addComponent(progressBar);
-		
-        Label infoLabel = new Label(
-        		"Please check if the language has been detected correctly and if the "
-        		+ "content preview looks fine. "
-        		+ "For plain text files you might need to adjust the encoding.<br />"
-        		+ "Double click on a row to change the settings.");
-        infoLabel.setContentMode(ContentMode.HTML);
-		addComponent(infoLabel);
-		
-		contentPanel = new HorizontalLayout();
-		contentPanel.setSizeFull();
-		contentPanel.setMargin(false);
-		
-		addComponent(contentPanel);
-		setExpandRatio(contentPanel, 1f);
-		
-		
-        fileGrid = new Grid<UploadFile>(fileDataProvider);
-        fileGrid.setSizeFull();
-		
-		ComboBox<Charset> charsetEditor = new ComboBox<Charset>(null, Charset.availableCharsets().values());
-		Locale[] availableLocales = Locale.getAvailableLocales();
-		languageItems = new ArrayList<LanguageItem>();
-		for (Locale locale : availableLocales) {
-			languageItems.add(new LanguageItem(locale));
-		}
-		ComboBox<LanguageItem> languageEditor = new ComboBox<LanguageItem>(null, languageItems);
-        
-        fileGrid.addColumn(UploadFile::getOriginalFilename)
-        	.setCaption("File")
-        	.setWidth(150)
-        	.setDescriptionGenerator(UploadFile::getOriginalFilename);
-        fileGrid.addColumn(UploadFile::getMimetype)
-        	.setCaption("Type")
-        	.setWidth(150)
-        	.setDescriptionGenerator(UploadFile::getMimetype);
-        
-        Binding<UploadFile, Charset> encBinding = fileGrid.getEditor().getBinder().bind(
-        		charsetEditor, UploadFile::getCharset,(uploadFile, charset) -> {
-        		uploadFile.setCharset(charset);
-        		updatePreview(uploadFile);
-        });
-        fileGrid.getEditor().addOpenListener(event -> {
-        	MediaType type = MediaType.parse(event.getBean().getMimetype());
-        	encBinding.setReadOnly(!type.getBaseType().toString().equals(FileType.TEXT.getMimeType()));
-        });
-        
-        fileGrid.addColumn(UploadFile::getCharset)
-        	.setCaption("Characterset/Encoding")
-        	.setExpandRatio(2)
-        	.setEditorBinding(encBinding);
+	private void initActions() {
+		fileGrid.addItemClickListener(event -> updatePreview(event.getItem()));
+		fileGrid.getEditor().addOpenListener(event -> {
+			MediaType mediaType = MediaType.parse(event.getBean().getMimetype());
+			uploadFileCharsetBinding.setReadOnly(!mediaType.getBaseType().toString().equals(FileType.TEXT.getMimeType()));
+		});
 
-        fileGrid.addColumn(UploadFile::getLanguage)
-        	.setCaption("Language")
-        	.setExpandRatio(2)
-        	.setEditorComponent(languageEditor, (uploadFile, language) -> {
-        		uploadFile.setLanguage(language);
-        		updatePreview(uploadFile);
-        	});
+		fileActionGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(
+				"Set Language",
+				menuItem -> {
+					if (fileGrid.getSelectedItems().isEmpty()) {
+						Notification.show("Info", "Please select one or more entries first!", Type.HUMANIZED_MESSAGE);
+						return;
+					}
 
-        fileGrid.getEditor().setEnabled(true).setBuffered(false);
-        
-        
-        fileActionGridComponent = new ActionGridComponent<Grid<UploadFile>>(new Label("Language and Encoding"), fileGrid);
-        fileActionGridComponent.setMargin(false);
-        fileActionGridComponent.getActionGridBar().setAddBtnVisible(false);
-        
-        VerticalLayout leftColumn = new VerticalLayout();
-        leftColumn.setMargin(false);
-        leftColumn.setSizeFull();
-        
-        
-        leftColumn.addComponent(fileActionGridComponent);
-        leftColumn.setExpandRatio(fileActionGridComponent, 1.0f);
-        
-        cbUseApostrophe = new CheckBox("Always use the apostrophe as a word separator");
-        cbUseApostrophe.setDescription(
-        	"This has influence on the segmentation of the text, i.e. on how the wordlist is created.");
-        leftColumn.addComponent(cbUseApostrophe);
-        
-        contentPanel.addComponent(leftColumn);
-        contentPanel.setExpandRatio(leftColumn, 0.6f);
-        
-		this.taPreview = new TextArea("Preview");
-		this.taPreview.setReadOnly(true);
-		this.taPreview.setSizeFull();
-		
-		contentPanel.addComponent(this.taPreview);
-		contentPanel.setExpandRatio(this.taPreview, 0.4f);
-		
+					SingleOptionInputDialog<LanguageItem> languageSelectionDialog = new SingleOptionInputDialog<>(
+							"Language Selection",
+							"Please select a language:",
+							languageItems,
+							result -> {
+								fileGrid.getSelectedItems().forEach(uploadFile -> uploadFile.setLanguage(result));
+								uploadFileListDataProvider.refreshAll();
+								fileGrid.getSelectedItems().stream().findFirst().ifPresent(this::updatePreview);
+							}
+					);
+					languageSelectionDialog.show();
+				}
+		);
+
+		cbUseApostrophe.addValueChangeListener(event -> wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, event.getValue()));
+
+		cbSimpleXml.addValueChangeListener(event -> {
+			wizardContext.put(DocumentWizard.WizardContextKey.SIMPLE_XML, event.getValue());
+			fileGrid.getSelectedItems().stream().findFirst().ifPresent(this::updatePreview);
+		});
 	}
 
 	@Override
@@ -281,136 +285,6 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 	public WizardStep getNextStep() {
 		return nextStep;
 	}
-	
-	@Override
-	public void enter(boolean back) {
-		if (back) {
-			return;
-		}
-		
-		@SuppressWarnings("unchecked")
-		Collection<UploadFile> fileList = 
-			(Collection<UploadFile>)wizardContext.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
-		contentPanel.setEnabled(false);
-		progressBar.setVisible(true);
-		progressBar.setIndeterminate(true);
-		final ArrayList<UploadFile> files = new ArrayList<UploadFile>(fileList);
-		
-		BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider)UI.getCurrent();
-		
-		backgroundServiceProvider.submit("inspecting-files", new DefaultProgressCallable<List<UploadFile>>() {
-			@Override
-			public List<UploadFile> call() throws Exception {
-			    Tika tika = new Tika();
-				LanguageDetector languageDetector = LanguageDetector.getDefaultLanguageDetector();
-				try {
-					languageDetector.loadModels();
-				} catch (IOException e) {
-					((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading language detection models", e);
-				}
-
-
-				for (UploadFile uploadFile : files) {
-					
-					if (uploadFile.getMimetype().equals(FileType.XML2.getMimeType())) {
-						XML2ContentHandler contentHandler = new XML2ContentHandler();
-						SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo();
-						TechInfoSet techInfoSet = new TechInfoSet(uploadFile.getOriginalFilename(), uploadFile.getMimetype(), uploadFile.getTempFilename());
-						
-						sourceDocumentInfo.setTechInfoSet(techInfoSet);
-						contentHandler.setSourceDocumentInfo(sourceDocumentInfo);
-						
-						contentHandler.load();
-						String content = contentHandler.getContent();
-						LanguageResult languageResult = languageDetector.detect(content);
-						if (languageResult.isReasonablyCertain() && languageResult.getLanguage() != null) {
-							uploadFile.setLanguage(new LanguageItem(new Locale(languageResult.getLanguage())));
-						}
-					}
-					else {
-						Metadata metadata = new Metadata();
-						try {
-							
-							try (FileInputStream fis = new FileInputStream(new File(uploadFile.getTempFilename()))) {
-								String content = tika.parseToString(fis, metadata);
-								String contentType = metadata.get(Metadata.CONTENT_TYPE);
-								MediaType mediaType = MediaType.parse(contentType);
-								String charset = mediaType.getParameters().get("charset");
-								if (charset != null) {
-									uploadFile.setCharset(Charset.forName(charset));
-								}
-								LanguageResult languageResult = languageDetector.detect(content);
-								if (languageResult.isReasonablyCertain() && languageResult.getLanguage() != null) {
-									uploadFile.setLanguage(new LanguageItem(new Locale(languageResult.getLanguage())));
-								}
-							}
-							
-							
-						} catch (Exception e) {
-							Logger.getLogger(InspectContentStep.class.getName()).log(
-									Level.SEVERE, 
-									String.format("Error inspecting %s", uploadFile.getOriginalFilename()),
-									e);
-							String errorMsg = e.getMessage();
-							if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-								errorMsg = "";
-							}
-
-							Notification.show(
-								"Error", 
-								String.format(
-										"Error inspecting content of %s! "
-										+ "Adding this file to your project might fail.\nThe underlying error message was:\n%s",
-										uploadFile.getOriginalFilename(), errorMsg), 
-								Type.ERROR_MESSAGE);								
-						}
-					}
-				}
-				return files;
-			}
-		}, new ExecutionListener<List<UploadFile>>() {
-			@Override
-			public void done(List<UploadFile> result) {
-				contentPanel.setEnabled(true);
-				progressBar.setVisible(false);
-				progressBar.setIndeterminate(false);
-				
-				fileList.clear();
-				fileList.addAll(result);
-				
-				fileDataProvider.refreshAll();
-				if (!fileList.isEmpty()) {
-					fileList.stream().findFirst().ifPresent(uploadFile -> {
-						fileGrid.select(uploadFile);
-						updatePreview(uploadFile);
-					});
-				}
-				if (stepChangeListener != null) {
-					stepChangeListener.stepChanged(InspectContentStep.this);
-				}
-
-			}
-			@Override
-			public void error(Throwable t) {
-				Logger.getLogger(InspectContentStep.class.getName()).log(
-						Level.SEVERE, 
-						"Error inspecting files", 
-						t);
-				String errorMsg = t.getMessage();
-				if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
-					errorMsg = "";
-				}
-
-				Notification.show(
-					"Error", 
-					String.format(
-							"Error inspecting the contents!\n"
-							+ "The underlying error message was:\n%s",
-							errorMsg), 
-					Type.ERROR_MESSAGE);						
-			}
-		});
-	}
 
 	@Override
 	public boolean isValid() {
@@ -420,5 +294,120 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 	@Override
 	public void setStepChangeListener(StepChangeListener stepChangeListener) {
 		this.stepChangeListener = stepChangeListener;
+	}
+
+	@Override
+	public void enter(boolean back) {
+		if (back) {
+			return;
+		}
+
+		contentLayout.setEnabled(false);
+		progressBar.setVisible(true);
+		progressBar.setIndeterminate(true);
+
+		@SuppressWarnings("unchecked")
+		final List<UploadFile> files = (List<UploadFile>) wizardContext.get(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST);
+
+		BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider) UI.getCurrent();
+
+		backgroundServiceProvider.submit(
+				"inspecting-files",
+				new DefaultProgressCallable<List<UploadFile>>() {
+					@Override
+					public List<UploadFile> call() throws Exception {
+						LanguageDetector languageDetector = LanguageDetector.getDefaultLanguageDetector();
+						try {
+							languageDetector.loadModels();
+						}
+						catch (IOException e) {
+							((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to load language detection models", e);
+						}
+
+						for (UploadFile uploadFile : files) {
+							if (uploadFile.getMimetype().equals(FileType.XML2.getMimeType())) {
+								// handle XML
+								String content = loadXmlFileContent(uploadFile);
+
+								LanguageResult languageResult = languageDetector.detect(content);
+								if (languageResult.isReasonablyCertain() && languageResult.getLanguage() != null) {
+									uploadFile.setLanguage(new LanguageItem(new Locale(languageResult.getLanguage())));
+								}
+							}
+							else {
+								// handle non-XML (parse with Tika)
+								// TODO: figure out and document why this works differently than in updatePreview & TikaContentHandler
+								try (FileInputStream fileInputStream = new FileInputStream(new File(uploadFile.getTempFilename()))) {
+									Metadata metadata = new Metadata();
+									String content = new Tika().parseToString(fileInputStream, metadata);
+
+									String contentType = metadata.get(Metadata.CONTENT_TYPE);
+									MediaType mediaType = MediaType.parse(contentType);
+									String charset = mediaType.getParameters().get("charset");
+									if (charset != null) {
+										uploadFile.setCharset(Charset.forName(charset));
+									}
+
+									LanguageResult languageResult = languageDetector.detect(content);
+									if (languageResult.isReasonablyCertain() && languageResult.getLanguage() != null) {
+										uploadFile.setLanguage(new LanguageItem(new Locale(languageResult.getLanguage())));
+									}
+								}
+								catch (Exception e) {
+									logger.log(Level.SEVERE, String.format("Error inspecting %s", uploadFile.getOriginalFilename()), e);
+
+									Notification.show(
+											"Error",
+											String.format(
+													"Failed to load content of %s! Adding this file to your project might fail.\n" +
+															"The underlying error message was:\n%s",
+													uploadFile.getOriginalFilename(),
+													e.getMessage()
+											),
+											Type.ERROR_MESSAGE
+									);
+								}
+							}
+						}
+
+						return files;
+					}
+				},
+				new ExecutionListener<List<UploadFile>>() {
+					@Override
+					public void done(List<UploadFile> result) {
+						contentLayout.setEnabled(true);
+						progressBar.setVisible(false);
+						progressBar.setIndeterminate(false);
+
+						uploadFiles.clear();
+						uploadFiles.addAll(result);
+
+						uploadFileListDataProvider.refreshAll();
+
+						// load preview for first file
+						if (!result.isEmpty()) {
+							UploadFile firstFile = result.get(0);
+							fileGrid.select(firstFile);
+							updatePreview(firstFile);
+						}
+
+						if (stepChangeListener != null) {
+							stepChangeListener.stepChanged(InspectContentStep.this);
+						}
+					}
+
+					@Override
+					public void error(Throwable t) {
+						logger.log(Level.SEVERE, "Error inspecting files", t);
+
+						Notification.show(
+								"Error",
+								String.format("Failed to inspect file contents!\nThe underlying error message was:\n%s", t.getMessage()),
+								Type.ERROR_MESSAGE
+						);
+					}
+				}
+		);
 	}
 }

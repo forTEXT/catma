@@ -46,7 +46,6 @@ import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.tag.*;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.Parameter;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
@@ -67,9 +66,6 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.CanReloadAll;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.module.project.corpusimport.CorpusImportDialog;
-import de.catma.ui.module.project.corpusimport.CorpusImportDocumentMetadata;
-import de.catma.ui.module.project.corpusimport.CorpusImporter;
 import de.catma.ui.module.project.documentwizard.DocumentWizard;
 import de.catma.ui.module.project.documentwizard.TagsetImport;
 import de.catma.ui.module.project.documentwizard.TagsetImportState;
@@ -85,7 +81,6 @@ import org.vaadin.dialogs.ConfirmDialog;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -158,7 +153,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private IconButton btnToggleViewSynchronizedOrLatestContributions;
 	private MenuItem miCommit;
 	private MenuItem miShareResources;
-	private MenuItem miImportCorpus;
 	private ProjectResourceExportApiDialog projectResourceExportApiDialog;
 
 	public ProjectView(ProjectsManager projectsManager, EventBus eventBus) {
@@ -578,14 +572,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		miShareResources = hugeCardMoreOptionsContextMenu.addItem(
 				"Share Project Resources (Experimental API)", menuItem -> handleShareProjectResources()
 		);
-		miImportCorpus = hugeCardMoreOptionsContextMenu.addItem(
-				"Import CATMA 5 Corpus", menuItem -> handleCorpusImport()
-		);
-		miImportCorpus.setVisible(
-				CATMAPropertyKey.EXPERT_MODE.getBooleanValue() || Boolean.parseBoolean(
-						((CatmaApplication) UI.getCurrent()).getParameter(Parameter.EXPERT, "false")
-				)
-		);
 	}
 
 	private SerializablePredicate<Object> createDocumentGridComponentSearchFilterProvider(String searchInput) {
@@ -711,7 +697,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		miCommit.setEnabled(controlsEnabled);
 		miShareResources.setEnabled(controlsEnabled);
-		miImportCorpus.setEnabled(controlsEnabled);
 	}
 
 	private void setToggleViewButtonStateBasedOnMemberCount() {
@@ -1070,14 +1055,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								});
 
 						// creating documents and collections
-						boolean useApostropheAsSeparator = (Boolean) result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
+						boolean useApostropheAsSeparator = (boolean) result.get(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR);
 						String collectionNamePattern = (String) result.get(DocumentWizard.WizardContextKey.COLLECTION_NAME_PATTERN);
+						boolean simpleXml = (boolean) result.get(DocumentWizard.WizardContextKey.SIMPLE_XML);
 
 						for (UploadFile uploadFile : uploadFiles) {
 							getProgressListener().setProgress("Importing document \"%s\"", uploadFile.getTitle());
 
 							ui.accessSynchronously(() -> {
-								addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern);
+								addUploadFile(uploadFile, useApostropheAsSeparator, collectionNamePattern, simpleXml);
 								ui.push();
 							});
 						}
@@ -1103,7 +1089,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		);
 	}
 
-	private void addUploadFile(UploadFile uploadFile, boolean useApostropheAsSeparator, String collectionNamePattern) {
+	private void addUploadFile(UploadFile uploadFile, boolean useApostropheAsSeparator, String collectionNamePattern, boolean simpleXml) {
 		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
 				uploadFile.getIndexInfoSet(useApostropheAsSeparator),
 				uploadFile.getContentInfoSet(),
@@ -1111,7 +1097,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		);
 
 		SourceContentHandler sourceContentHandler =
-				sourceDocumentInfo.getTechInfoSet().getMimeType().equals(FileType.XML2.getMimeType()) ? new XML2ContentHandler() : new TikaContentHandler();
+				sourceDocumentInfo.getTechInfoSet().getMimeType().equals(FileType.XML2.getMimeType())
+						? new XML2ContentHandler(simpleXml) : new TikaContentHandler();
 		sourceContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
 
 		SourceDocument sourceDocument = new SourceDocument(uploadFile.getUuid(), sourceContentHandler);
@@ -2048,98 +2035,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 		projectResourceExportApiDialog.show();
 	}
-
-	private void handleCorpusImport() {
-		try {
-			CorpusImportDialog corpusImportDialog = new CorpusImportDialog(
-					new SaveCancelListener<Pair<File,List<CorpusImportDocumentMetadata>>>() {
-						@Override
-						public void savePressed(Pair<File, List<CorpusImportDocumentMetadata>> result) {
-							importCorpus(result.getFirst(), result.getSecond());
-						}
-					}
-			);
-
-			if (!project.hasUncommittedChanges() && !project.hasUntrackedChanges()) {
-				corpusImportDialog.show();
-			}
-			else {
-				SingleTextInputDialog dlg = new SingleTextInputDialog(
-						"Commit All Changes",
-						"You have changes that need to be committed first, please enter a short description for this commit:",
-						commitMsg -> {
-							try {
-								project.commitAndPushChanges(commitMsg);
-								corpusImportDialog.show();
-							}
-							catch (IOException e) {
-								errorHandler.showAndLogError("Failed to import CATMA 5 corpus", e);
-							}
-						}
-				);
-				dlg.show();
-			}
-		}
-		catch (Exception e) {
-			errorHandler.showAndLogError("Failed to import CATMA 5 corpus", e);
-		}
-	}
-
-	private void handleImportCorpusError(Throwable t) {
-		setProgressBarVisible(false);
-		setEnabled(true);
-
-		errorHandler.showAndLogError(
-				"Failed to import CATMA 5 corpus. The import operation has been aborted.",
-				t
-		);
-	}
-
-	private void importCorpus(final File corpusFile, final List<CorpusImportDocumentMetadata> documentMetadataList) {
-		setEnabled(false);
-		setProgressBarVisible(true);
-
-		try {
-			final UI ui = UI.getCurrent();
-			final String tempDir = ((CatmaApplication) ui).acquirePersonalTempFolder();
-
-			BackgroundServiceProvider backgroundServiceProvider = (BackgroundServiceProvider) ui;
-			BackgroundService backgroundService = backgroundServiceProvider.acquireBackgroundService();
-
-			backgroundService.submit(
-					new DefaultProgressCallable<Void>() {
-						@Override
-						public Void call() throws Exception {
-							return new CorpusImporter().importCorpus(
-									getProgressListener(),
-									corpusFile,
-									documentMetadataList,
-									tempDir,
-									ui,
-									project
-							);
-						}
-					},
-					new ExecutionListener<Void>() {
-						@Override
-						public void done(Void result) {
-							setProgressBarVisible(false);
-							setEnabled(true);
-						}
-
-						@Override
-						public void error(Throwable t) {
-							handleImportCorpusError(t);
-						}
-					},
-					progressListener
-			);
-		}
-		catch (IOException e) {
-			handleImportCorpusError(e);
-		}
-	}
-
 
 	public void close() {
 		try {

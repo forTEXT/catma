@@ -10,17 +10,16 @@ public class DocumentWizard extends Wizard {
 		UPLOAD_FILE_LIST,
 		PROJECT,
 		APOSTROPHE_AS_SEPARATOR,
-		TAGSET_IMPORT_LIST,
-		;
-	}
-	
-	public DocumentWizard(WizardContext wizardContext, SaveCancelListener<WizardContext> saveCancelListener) {
-		super(
-			"Add Documents to Your Project",
-			progressPanel -> new UploadStep(wizardContext, (number, description) -> progressPanel.addStep(number, description)),
-			wizardContext,
-			saveCancelListener
-		);
+		SIMPLE_XML,
+		TAGSET_IMPORT_LIST
 	}
 
+	public DocumentWizard(WizardContext wizardContext, SaveCancelListener<WizardContext> saveCancelListener) {
+		super(
+				"Add Documents to Your Project",
+				progressPanel -> new UploadStep(wizardContext, progressPanel::addStep),
+				wizardContext,
+				saveCancelListener
+		);
+	}
 }

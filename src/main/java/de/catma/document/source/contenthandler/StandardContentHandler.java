@@ -16,117 +16,71 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-
 package de.catma.document.source.contenthandler;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.Charset;
 
-import org.apache.tika.Tika;
-import org.apache.tika.metadata.Metadata;
-
 /**
- * The standard content handler which handles plain text files.
+ * The standard content handler that handles plain text files.
  *
- * @author marco.petris@web.de
  * @see de.catma.document.source.TechInfoSet
  */
 public class StandardContentHandler extends AbstractSourceContentHandler {
-	
-	/* (non-Javadoc)
-	 * @see de.catma.document.source.contenthandler.SourceContentHandler#load(java.io.InputStream)
-	 */
-	public void load(InputStream is) throws IOException {
-		
-		Charset charset = 
-			getSourceDocumentInfo().getTechInfoSet().getCharset();
-		
-		StringBuilder contentBuffer = new StringBuilder(); 
-		
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        BufferedInputStream bis = new BufferedInputStream(is);
-        byte[] byteBuffer = new byte[65536];
-        int bCount = -1;
-        while ((bCount=bis.read(byteBuffer)) != -1) {
-            bos.write(byteBuffer, 0, bCount);
-        }
+	private static final int KB64 = 65536;
 
-        byte[] byteBuf = bos.toByteArray();
-        ByteArrayInputStream toCharBis = new ByteArrayInputStream(byteBuf);
+	private void load(BufferedInputStream bufferedInputStream) throws IOException {
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		byte[] inputByteBuffer = new byte[KB64];
+		int bytesRead;
+		while ((bytesRead = bufferedInputStream.read(inputByteBuffer)) != -1) {
+			byteArrayOutputStream.write(inputByteBuffer, 0, bytesRead);
+		}
 
-		InputStream fr = null; 
-		if (BOMFilterInputStream.hasBOM(byteBuf)) {
-			fr = new BOMFilterInputStream( toCharBis, charset );
+		byte[] allBytes = byteArrayOutputStream.toByteArray();
+		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(allBytes);
+
+		Charset charset = getSourceDocumentInfo().getTechInfoSet().getCharset();
+
+		InputStream conditionallyFilteredInputStream;
+		if (BOMFilterInputStream.hasBOM(allBytes)) {
+			conditionallyFilteredInputStream = new BOMFilterInputStream(byteArrayInputStream, charset);
 		}
 		else {
-			fr = toCharBis;
+			conditionallyFilteredInputStream = byteArrayInputStream;
 		}
 
-		BufferedReader reader = new BufferedReader(
-				new InputStreamReader( fr, charset ) );
-		
-		char[] charBuf = new char[65536];
-		int cCount = -1;
-        while((cCount=reader.read(charBuf)) != -1) {
-        	contentBuffer.append( charBuf, 0, cCount);
-        }
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(conditionallyFilteredInputStream, charset));
+		char[] charBuffer = new char[KB64];
+		int charsRead;
+		StringBuilder contentBuilder = new StringBuilder();
+		while ((charsRead = bufferedReader.read(charBuffer)) != -1) {
+			contentBuilder.append(charBuffer, 0, charsRead);
+		}
 
-        // some texts seem to include non valid unicode characters
-        // and this causes problems when converting text to HTML
-        // for GUI delivery and during indexing 
 		setContent(
-			contentBuffer.toString().replaceAll(
-				"[^\\x09\\x0A\\x0D\\x20-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]", "?"));
+				// some texts seem to include invalid unicode characters and this causes problems when converting text to HTML for GUI delivery and during
+				// indexing
+				contentBuilder.toString().replaceAll("[^\\x09\\x0A\\x0D\\x20-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]", "?")
+		);
 	}
 
-    /* (non-Javadoc)
-     * @see de.catma.document.source.contenthandler.SourceContentHandler#load()
-     */
-    public void load() throws IOException {
-        BufferedInputStream bis = null;
-        try {
-        	
-            bis = new BufferedInputStream(
-            		getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream());
+	@Override
+	public void load() throws IOException {
+		try (BufferedInputStream bufferedInputStream = new BufferedInputStream(getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream())) {
+			load(bufferedInputStream);
+		}
+	}
 
-            load(bis);
-        }
-        finally {
-            if (bis != null) {
-				bis.close();
-            }
-        }
-    }
-    
 	@SuppressWarnings("unused")
-	private void showBytes( File file, int byteCount ) {
-		FileInputStream fis = null;
-		try {
-			fis = new FileInputStream( file );
-			for( int i=0; i<byteCount; i++ ) {
-				System.out.printf( "%1$x\n", fis.read() );
+	private void showBytes(File file, int byteCount) {
+		try (FileInputStream fileInputStream = new FileInputStream(file)) {
+			for (int i=0; i<byteCount; i++) {
+				System.out.printf("%1$x\n", fileInputStream.read());
 			}
-			
 		}
-		catch( Exception exc ) {
-			exc.printStackTrace();
-		}
-		finally {
-			if( fis != null ) {
-				try {
-					fis.close();
-				} catch( IOException ignored) {}
-			}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
-	
 }
