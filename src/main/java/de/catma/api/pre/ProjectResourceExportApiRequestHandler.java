@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,13 +20,14 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinSession;
 
+import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotatedPhrase;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotationProperty;
 import de.catma.api.pre.serialization.model_wrappers.PreApiPropertyDefinition;
 import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
 import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
-import de.catma.api.pre.serialization.models.Export;
-import de.catma.api.pre.serialization.models.ExportDocument;
+import de.catma.api.pre.serialization.models.LegacyExport;
+import de.catma.api.pre.serialization.models.LegacyExportDocument;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -38,6 +40,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
 
+@Deprecated
 public class ProjectResourceExportApiRequestHandler implements RequestHandler {
     private static final String BASE_URL = CATMAPropertyKey.BASE_URL.getValue();
     private static final String API_BASE_PATH = "/api";
@@ -105,7 +108,7 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
 
     private String serializeProjectResources() {
         try {
-            Builder<ExportDocument> exportListBuilder = ImmutableList.builder();
+            Builder<LegacyExportDocument> exportListBuilder = ImmutableList.builder();
 
             for (SourceDocumentReference sourceDocumentRef : project.getSourceDocumentReferences()) {
                 SourceDocument sourceDocument = project.getSourceDocument(sourceDocumentRef.getUuid());
@@ -125,7 +128,7 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                     tagReferences.addAll(annotationCollection.getTagReferences());
                 }
 
-                ExportDocument exportDocument = new ExportDocument(
+                LegacyExportDocument exportDocument = new LegacyExportDocument(
                 		getPreApiSourceDocument(sourceDocument),
                         tagDefinitions.stream()
 	                        .map(td -> new PreApiTagDefinition(
@@ -146,9 +149,7 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                                     	return new PreApiAnnotation(
                                     			tagReference.getTagInstanceId(), 
                                     			sourceDocument.getUuid(), 
-                                    			tagReference.getRange().getStartPoint(), 
-                                    			tagReference.getRange().getEndPoint(), 
-                                    			sourceDocument.getContent(tagReference.getRange()), 
+                                    			List.of(new PreApiAnnotatedPhrase(tagReference.getRange().getStartPoint(), tagReference.getRange().getEndPoint(), sourceDocument.getContent(tagReference.getRange()))),
                                     			tag.getUuid(), 
                                     			tag.getName(), 
                                     			tagReference.getTagInstance().getUserDefinedProperties().stream()
@@ -172,7 +173,8 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                 exportListBuilder.add(exportDocument);
             }
 
-            return new SerializationHelper<Export>().serialize(new Export(exportListBuilder.build()));
+            return new SerializationHelper<LegacyExport>().serialize(
+            		new LegacyExport(exportListBuilder.build()));
         }
         catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to serialize project resources", e);
@@ -214,6 +216,9 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                 crc32bChecksum,
                 size,
                 sourceDocument.toString(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getDescription(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getPublisher(),
                 sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI());
 	}
 

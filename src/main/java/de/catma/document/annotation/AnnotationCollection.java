@@ -380,4 +380,12 @@ public class AnnotationCollection {
 	public Set<String> getTagDefinitionIds() {
 		return Collections.unmodifiableSet(tagReferencesByTagId.keySet());
 	}
+	
+	public int getSize() {
+		return this.tagReferencesByInstanceId.keySet().size();
+	}
+	
+	public TagInstance getTagInstance(String tagInstanceId) {
+		return tagReferencesByInstanceId.get(tagInstanceId).stream().findAny().map(TagReference::getTagInstance).orElse(null);
+	}
 }

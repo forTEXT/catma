@@ -17,6 +17,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -24,6 +25,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 
 import de.catma.api.pre.PreProject;
+import de.catma.api.pre.cache.AnnotationCountCache;
 import de.catma.api.pre.cache.ProjectCache;
 import de.catma.api.pre.cache.ProjectCache.CacheKey;
 import de.catma.api.pre.cache.RemoteGitManagerRestrictedProviderCache;
@@ -57,6 +59,9 @@ public class PreProjectService {
 	@Inject
 	private ProjectCache projectCache;
 	
+	@Inject
+	private AnnotationCountCache annotationCountCache;
+	
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProjects(@Context SecurityContext securityContext) throws IOException {
@@ -81,7 +86,10 @@ public class PreProjectService {
     @GET
     @Path("/{namespace}/{catmaProjectId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getProject(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId) {
+    public Response getProject(
+    		@Context SecurityContext securityContext, 
+    		@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId, 
+    		@QueryParam("includeExtendedMetadata") Boolean includeExtendedMetadata, @QueryParam("page") Integer page, @QueryParam("pageSize") Integer pageSize) {
     	try {
     		Principal principal = securityContext.getUserPrincipal();
 	    	if (principal == null) {
@@ -96,7 +104,7 @@ public class PreProjectService {
 		    	PreProject project = projectCache.get(
 		    			new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId), 
 		    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
-		    	return Response.ok(project.serializeProjectResources(), MediaType.APPLICATION_JSON).build();
+		    	return Response.ok(project.serializeProjectResources(includeExtendedMetadata==null?true:includeExtendedMetadata, page==null?1:page, pageSize==null?PreProject.DEFAULT_PAGE_SIZE:pageSize), MediaType.APPLICATION_JSON).build();
 	    	}
 	    	catch (ExecutionException ee) {
 	    		if (ee.getMessage().contains("404")) {
@@ -269,7 +277,7 @@ public class PreProjectService {
 						public void error(Throwable t) {};
 					},
 					progressListener);
-	        return new PreProject(namespace, catmaProjectId, gitProjectHandler, graphProjectHandler);
+	        return new PreProject(user.getIdentifier(), namespace, catmaProjectId, tagManager, gitProjectHandler, graphProjectHandler, annotationCountCache);
 	    };
     }
     

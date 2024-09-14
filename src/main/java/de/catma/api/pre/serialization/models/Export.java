@@ -6,18 +6,24 @@ import de.catma.util.IDGenerator;
 
 public class Export {
     private final String exportId;
-    private final List<ExportDocument> exportDocuments;
+    private final ExtendedMetadata extendedMetadata;
+    private final List<ExportDocument> documents;
 
-    public Export(List<ExportDocument> exportDocuments) {
+    public Export(ExtendedMetadata extendedMetadata, List<ExportDocument> documents) {
 		exportId = new IDGenerator().generateExportId();
-		this.exportDocuments = exportDocuments;
+		this.documents = documents;
+		this.extendedMetadata = extendedMetadata;
 	}
 
     public String getExportId() {
         return exportId;
     }
 
-    public List<ExportDocument> getExportDocuments() {
-        return exportDocuments;
+    public ExtendedMetadata getExtendedMetadata() {
+    	return extendedMetadata;
+    }
+
+    public List<ExportDocument> getDocuments() {
+        return documents;
     }
 }
