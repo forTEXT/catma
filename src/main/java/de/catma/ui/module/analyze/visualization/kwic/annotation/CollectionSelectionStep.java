@@ -402,6 +402,20 @@ public class CollectionSelectionStep extends VerticalLayout implements WizardSte
 	@Override
 	public void enter(boolean back) {
 		eventBus.register(this);
+		if (!back && !isValid()) {
+	        
+	        documentData.getRootItems().forEach(docResource -> {
+	        	List<Resource> collectionResources = documentData.getChildren(docResource);
+	        	if (collectionResources.size()==1) {
+	        		CollectionResource collectionResource = (CollectionResource) collectionResources.get(0);
+	        		
+	        		if (collectionResource.getCollectionReference().isResponsible(project.getCurrentUser().getIdentifier())) {
+	        			documentGrid.select(collectionResource);
+	        			documentGrid.expand(docResource);
+	        		}
+	        	}
+	        });			
+		}
 	}
 	
 	@Override
