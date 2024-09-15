@@ -42,6 +42,7 @@ import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.graph.interfaces.GraphProjectHandler;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager;
 
 public class PreProject {
@@ -189,58 +190,41 @@ public class PreProject {
         		pageSize = DEFAULT_PAGE_SIZE;
         	}
         	
-        	int startAnnotationOffset = page-1*pageSize;
-        	int currentAnnotationOffset = 0;
+        	
+        	int pageCapacityLeft = pageSize;
+        	int startAnnotationCount = (page-1)*pageSize;
+        	int processedAnnotationsCount = 0;
         	
             Builder<ExportDocument> documentListBuilder = ImmutableList.builder();
             
             
             for (SourceDocumentReference sourceDocumentReference : graphProjectHandler.getSourceDocumentReferences().stream().sorted((sRef1, sRef2)->sRef1.getUuid().compareTo(sRef2.getUuid())).toList()) {
+            	
             	SourceDocument sourceDocument = graphProjectHandler.getSourceDocument(sourceDocumentReference.getUuid());
             	
                 for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentReference.getUserMarkupCollectionRefs().stream().sorted((cRef1, cRef2)->cRef1.getId().compareTo(cRef2.getId())).toList()) {
                 	int annotationCount = annotationCountCache.get(
                 			new CacheKey(userName, namespace, projectId, annotationCollectionReference.getId(), gitProjectHandler.getRootRevisionHash()), 
                 			() -> graphProjectHandler.getAnnotationCollection(annotationCollectionReference).getSize());
-                	
-                	
-                	if (currentAnnotationOffset+annotationCount >=  startAnnotationOffset) {
-                		int skip = startAnnotationOffset-currentAnnotationOffset;
+                	                	
+                	// did we reach the collection where we start to include annotations?
+                	if (processedAnnotationsCount+annotationCount >= startAnnotationCount) {
+                		// if the last page already included annotations of this collection we need to skip
+                		int skip = Math.max(startAnnotationCount-processedAnnotationsCount, 0);
+                		
                 		AnnotationCollection annotationCollection = graphProjectHandler.getAnnotationCollection(annotationCollectionReference);
                 		List<PreApiAnnotation> annotations = 
-	                        annotationCollection.getTagReferences().stream().sorted(tagReferenceComparator).map(TagReference::getTagInstance).distinct().skip(skip).limit(pageSize).map(
-	                                (tagInstance) -> {
-	                                	List<Range> ranges = Range.mergeRanges(annotationCollection.getTagReferences(tagInstance).stream().map(TagReference::getRange).sorted());
-                                    	TagDefinition tag = tagManager.getTagLibrary().getTagDefinition(tagInstance.getTagDefinitionId());
-                                    	return new PreApiAnnotation(
-                                    			tagInstance.getUuid(), 
-                                    			sourceDocumentReference.getUuid(),
-                                    			ranges.stream()
-                                    				.map(range -> {
-                                    					try {
-                                    						return new PreApiAnnotatedPhrase(range.getStartPoint(), range.getEndPoint(), sourceDocument.getContent(range));
-                                    					}
-                                    					catch (IOException e) {
-                	                                        logger.log(Level.WARNING, String.format("Error serializing TagInstance: %s", tagInstance), e);
-                                    						return null;
-                                    					}
-                                    				})
-                                    				.toList(), 
-                                    			tag.getUuid(), 
-                                    			tag.getName(), 
-                                    			tagInstance.getUserDefinedProperties().stream()
-                                    				.map((p) -> 
-                                    					new PreApiAnnotationProperty(
-                                    						p.getPropertyDefinitionId(),
-                                    						tag.getUserDefinedPropertyDefinitions().stream()
-                                    							.filter(pd -> pd.getUuid().equals(p.getPropertyDefinitionId())).findFirst().get().getName(),
-                                    						p.getPropertyValueList()
-                                    					)
-                                    				).toList()
-                                                );
-	                                }
-	                        ).collect(Collectors.toList());
-                		currentAnnotationOffset += annotations.size();
+	                        annotationCollection.getTagReferences()
+	                        .stream()
+	                        .sorted(tagReferenceComparator)
+	                        .map(TagReference::getTagInstance)
+	                        .distinct() // to compute skip and limit we only need one tag instance per corresponding reference
+	                        .skip(skip)
+	                        .limit(pageCapacityLeft)
+	                        .map(tagInstance -> toPreApiAnnotation(tagInstance, annotationCollection, sourceDocument))
+	                        .toList();
+                		
+                		pageCapacityLeft -= annotations.size();
                 		
                 		ExportDocument exportDocument = new ExportDocument(
                 				sourceDocument.getUuid(),
@@ -250,7 +234,17 @@ public class PreProject {
                 		
                 		documentListBuilder.add(exportDocument);
                 	}
+                	
+                	processedAnnotationsCount += annotationCount;
+                	
+                	if (pageCapacityLeft <= 0) {
+                		break;
+                	}
                 }
+            	
+            	if (pageCapacityLeft <= 0) {
+            		break;
+            	}
             }
 
             return new SerializationHelper<Export>().serialize(new Export(extendedMetadata, documentListBuilder.build()));
@@ -263,6 +257,37 @@ public class PreProject {
         	readLock.unlock();
         }
     }
+
+	private PreApiAnnotation toPreApiAnnotation(TagInstance tagInstance, AnnotationCollection annotationCollection, SourceDocument sourceDocument) {
+    	List<Range> ranges = Range.mergeRanges(annotationCollection.getTagReferences(tagInstance).stream().map(TagReference::getRange).sorted());
+    	TagDefinition tag = tagManager.getTagLibrary().getTagDefinition(tagInstance.getTagDefinitionId());
+    	return new PreApiAnnotation(
+    			tagInstance.getUuid(), 
+    			sourceDocument.getUuid(),
+    			ranges.stream()
+    				.map(range -> {
+    					try {
+    						return new PreApiAnnotatedPhrase(range.getStartPoint(), range.getEndPoint(), sourceDocument.getContent(range));
+    					}
+    					catch (IOException e) {
+                            logger.log(Level.WARNING, String.format("Error serializing TagInstance: %s", tagInstance), e);
+    						return null;
+    					}
+    				})
+    				.toList(), 
+    			tag.getUuid(), 
+    			tag.getName(), 
+    			tagInstance.getUserDefinedProperties().stream()
+    				.map((p) -> 
+    					new PreApiAnnotationProperty(
+    						p.getPropertyDefinitionId(),
+    						tag.getUserDefinedPropertyDefinitions().stream()
+    							.filter(pd -> pd.getUuid().equals(p.getPropertyDefinitionId())).findFirst().get().getName(),
+    						p.getPropertyValueList()
+    					)
+    				).toList()
+                );
+	}
 
 	public URI getFileUri(String documentId) {
 		Lock readLock = accessLock.readLock();

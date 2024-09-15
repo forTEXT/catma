@@ -222,17 +222,17 @@ public class PreProjectServiceTest extends JerseyTest {
 		
 		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
 		
-		List<ExportDocument> exportDocuments = export.getExportDocuments();
+		List<ExportDocument> exportDocuments = export.getDocuments();
 		assertTrue(exportDocuments.size() == 1);
 
-		ExportDocument exportDocument = export.getExportDocuments().get(0);
+		ExportDocument exportDocument = export.getDocuments().get(0);
 		
 		
 		
-		assertEquals(sourceDocumentUuid, exportDocument.getSourceDocument().getId());
+		assertEquals(sourceDocumentUuid, exportDocument.getId());
 		assertTrue(exportDocument.getAnnotations().size() == 1);
 		PreApiAnnotation annotation = exportDocument.getAnnotations().get(0);
-		assertEquals(annotatedPhrase, annotation.getPhrase());
+		assertEquals(annotatedPhrase, annotation.getPhrases().get(0).getPhrase());
 		assertEquals(annotationId, annotation.getId());
 		assertEquals(tagId, annotation.getTagId());
 		assertEquals(sourceDocumentUuid, annotation.getSourceDocumentId());

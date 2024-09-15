@@ -9,6 +9,7 @@ import de.catma.api.pre.backend.GitlabManagerPrivilegedFactory;
 import de.catma.api.pre.backend.GitlabManagerRestrictedFactory;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerPrivilegedFactory;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
+import de.catma.api.pre.cache.AnnotationCountCache;
 import de.catma.api.pre.cache.ProjectCache;
 import de.catma.api.pre.cache.RemoteGitManagerRestrictedProviderCache;
 import de.catma.api.pre.oauth.DefaultHttpClientFactory;
@@ -25,6 +26,7 @@ public class PreApiInjectionBinder extends AbstractBinder {
 	protected void configure() {
 		// singletons
 		bind(ProjectCache.class).to(ProjectCache.class).in(Singleton.class);
+		bind(AnnotationCountCache.class).to(AnnotationCountCache.class).in(Singleton.class);
 		bind(RemoteGitManagerRestrictedProviderCache.class).to(RemoteGitManagerRestrictedProviderCache.class).in(Singleton.class);
 		
 		// per request, can be overwritten e.g. for testing purposes with a higher rank like .ranked(2)

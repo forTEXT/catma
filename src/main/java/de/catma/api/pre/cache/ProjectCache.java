@@ -23,4 +23,8 @@ public class ProjectCache {
 	public PreProject get(CacheKey key, Callable<PreProject> loader) throws ExecutionException {
 		return projects.get(key, loader);
 	}
+	
+	public void invalidate(CacheKey key) {
+		projects.invalidate(key);
+	}
 }

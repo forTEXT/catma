@@ -22,6 +22,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import org.eclipse.jgit.lib.Constants;
+
 import javax.ws.rs.core.SecurityContext;
 
 import de.catma.api.pre.PreProject;
@@ -89,7 +92,8 @@ public class PreProjectService {
     public Response getProject(
     		@Context SecurityContext securityContext, 
     		@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId, 
-    		@QueryParam("includeExtendedMetadata") Boolean includeExtendedMetadata, @QueryParam("page") Integer page, @QueryParam("pageSize") Integer pageSize) {
+    		@QueryParam("includeExtendedMetadata") Boolean includeExtendedMetadata, @QueryParam("page") Integer page, @QueryParam("pageSize") Integer pageSize,
+    		@QueryParam("forcePull") Boolean forcePull) {
     	try {
     		Principal principal = securityContext.getUserPrincipal();
 	    	if (principal == null) {
@@ -101,6 +105,10 @@ public class PreProjectService {
 	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "token expired").build();
 	    	}
 	    	try {
+	    		CacheKey key = new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId);
+	    		if (forcePull != null && forcePull) {
+	    			projectCache.invalidate(key);
+	    		}
 		    	PreProject project = projectCache.get(
 		    			new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId), 
 		    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
@@ -160,7 +168,6 @@ public class PreProjectService {
 	    	JGitRepoManager localGitRepositoryManager = new JGitRepoManager(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), user);
 	    	JGitCredentialsManager jGitCredentialsManager = new JGitCredentialsManager(remoteGitManagerRestricted);
 	    	
-	    	
 			if (!Paths.get(new File(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 					.resolve(user.getIdentifier())
 					.resolve(projectReference.getNamespace())
@@ -179,9 +186,21 @@ public class PreProjectService {
 					);
 				}
 			}
-	    	
-			
-			
+			else {
+				logger.info(
+						String.format(
+								"Project \"%1$s\" with ID %2$s already cloned, pulling changes...",
+								projectReference.getName(),
+								projectReference.getProjectId()
+						)
+				);
+				try (LocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
+					localRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+					localRepoManager.checkout(user.getIdentifier(), true);
+					localGitRepositoryManager.fetch(jGitCredentialsManager);
+					localGitRepositoryManager.merge(Constants.DEFAULT_REMOTE_NAME + "/" + user.getIdentifier());
+				}
+			}
 	    	
 			GitProjectHandler gitProjectHandler = new GitProjectHandler(
 					user,
@@ -194,7 +213,6 @@ public class PreProjectService {
 					localGitRepositoryManager,
 					remoteGitManagerRestricted
 			);
-			
 			
 			String rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 			logger.info(
@@ -230,7 +248,7 @@ public class PreProjectService {
 						)
 				);
 			}
-	
+			
 			gitProjectHandler.verifyCollections();
 			
 	        
