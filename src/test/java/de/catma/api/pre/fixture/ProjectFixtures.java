@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import de.catma.api.pre.PreProject;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.document.Range;
 import de.catma.document.annotation.TagReference;
@@ -240,13 +241,29 @@ public class ProjectFixtures {
 	}
 
 
-	public static String setUpFullProject(
+	public static List<String> setUpFullProject(
 			RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock,
 			String namespace, String projectId, String projectName, 
 			String sourceDocumentUuid, 
 			String tagsetId, String tagsetName,
 			String tagId, String tagName, 
-			String annotationId, String propertyName, String propertyValue) throws Exception {
+			String annotationId1, String propertyName, String propertyValue) throws Exception {
+		IDGenerator idGenerator = new IDGenerator();
+		return setUpFullProject(
+				remoteGitManagerRestrictedFactoryMock, namespace, projectId, projectName, sourceDocumentUuid, 
+				tagsetId, tagsetName, tagId, tagName,
+				annotationId1, propertyName, propertyValue, 
+				idGenerator.generate(),idGenerator.generate(),idGenerator.generate());
+	}
+	
+	public static List<String> setUpFullProject(
+			RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock,
+			String namespace, String projectId, String projectName, 
+			String sourceDocumentUuid, 
+			String tagsetId, String tagsetName,
+			String tagId, String tagName, 
+			String annotationId1, String propertyName, String propertyValue,
+			String annotationId2, String annotationId3, String annotationId4) throws Exception {
 		
 		String dummyIdent = "dummyIdent";
 		String email = "dummy@dummy.org";
@@ -256,6 +273,8 @@ public class ProjectFixtures {
 		// set up a fake remote git project
 		InitCommand init = Git.init();
 		File remoteGitDir = Paths.get(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), "remote", namespace, projectId).toFile();
+		
+		LOGGER.info(String.format("'Fake' remote git dir is %s", remoteGitDir.toString()));
 		
 		if (remoteGitDir.exists()) {
 			FileUtils.deleteDirectory(remoteGitDir);
@@ -272,6 +291,8 @@ public class ProjectFixtures {
 
 		// clone the fake remote git project to a local git project
 		File localProjectGitDir = Paths.get(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), dummyIdent, namespace, projectId).toFile();
+		
+		LOGGER.info(String.format("Local git dir is %s", localProjectGitDir.toString()));
 		
 		if (localProjectGitDir.exists()) {
 			FileUtils.deleteDirectory(localProjectGitDir);
@@ -396,26 +417,74 @@ public class ProjectFixtures {
 		gitProjectHandler.createAnnotationCollection(collectionId, "my collection", "all the annotations", sourceDocumentUuid, null, true);
 		
 		
-		LOGGER.info("adding an Annotation to the project");
-		// add Annotation
-		TagInstance tagInstance = 
+		LOGGER.info("adding Annotations to the project");
+		// add Annotations
+		TagInstance tagInstance1 = 
 				new TagInstance(
-						annotationId, 
+						annotationId1, 
 						tagId, 
 						dummyIdent, 
 						ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 						tag.getUserDefinedPropertyDefinitions(),
 						tagsetId);
 		
-		tagInstance.addUserDefinedProperty(new Property(propertyDef.getUuid(), Collections.singletonList(propertyValue)));
+		tagInstance1.addUserDefinedProperty(new Property(propertyDef.getUuid(), Collections.singletonList(propertyValue)));
+
+		TagInstance tagInstance2 = 
+				new TagInstance(
+						annotationId2, 
+						tagId, 
+						dummyIdent, 
+						ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+						tag.getUserDefinedPropertyDefinitions(),
+						tagsetId);
+
+		TagInstance tagInstance3 = 
+				new TagInstance(
+						annotationId3, 
+						tagId, 
+						dummyIdent, 
+						ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+						tag.getUserDefinedPropertyDefinitions(),
+						tagsetId);
+
+		TagInstance tagInstance4 = 
+				new TagInstance(
+						annotationId4, 
+						tagId, 
+						dummyIdent, 
+						ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+						tag.getUserDefinedPropertyDefinitions(),
+						tagsetId);
+
+		tagInstance1.addUserDefinedProperty(new Property(propertyDef.getUuid(), Collections.singletonList(propertyValue)));
+
+		Range range1 = new Range(2, 10);
+		TagReference tagReference1 = new TagReference(collectionId, tagInstance1, sourceDocumentUuid, range1);
 		
-		Range range = new Range(2, 10);
-		TagReference tagReference = new TagReference(collectionId, tagInstance, sourceDocumentUuid, range);
-		gitProjectHandler.addTagReferencesToCollection(collectionId, Collections.singletonList(tagReference), tagLibrary);
-		gitProjectHandler.addCollectionsToStagedAndCommit(Collections.singleton(collectionId), "a nice annotation", false, true);
+		Range range2 = new Range(15, 20);
+		TagReference tagReference2 = new TagReference(collectionId, tagInstance2, sourceDocumentUuid, range2);
+
+		Range range3 = new Range(25, 30);
+		TagReference tagReference3 = new TagReference(collectionId, tagInstance3, sourceDocumentUuid, range3);
+
+		Range range4 = new Range(35, 40);
+		TagReference tagReference4 = new TagReference(collectionId, tagInstance4, sourceDocumentUuid, range4);
 		
-		// return annotated phrase for validation
-		String annotatedPhrase = gitProjectHandler.getDocument(sourceDocumentUuid).getContent(range);
-		return annotatedPhrase;
+		List<TagReference> refs = List.of(tagReference1, tagReference2, tagReference3, tagReference4);
+		gitProjectHandler.addTagReferencesToCollection(collectionId, refs, tagLibrary);
+
+		gitProjectHandler.addCollectionsToStagedAndCommit(Collections.singleton(collectionId), "some nice annotations", false, true);
+		
+		// return annotated phrases for validation
+		return refs.stream().sorted(PreProject.TAG_REFERENCE_COMPARATOR).map(tr -> {
+			try {
+				return gitProjectHandler.getDocument(sourceDocumentUuid).getContent(tr.getRange());
+			}
+			catch(IOException e) {
+				throw new RuntimeException(e);
+			}
+		
+		}).toList();
 	}
 }

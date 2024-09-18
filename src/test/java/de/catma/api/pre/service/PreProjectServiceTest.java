@@ -1,6 +1,7 @@
 package de.catma.api.pre.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
@@ -30,8 +31,10 @@ import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.api.pre.fixture.ProjectFixtures;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotationProperty;
+import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
 import de.catma.api.pre.serialization.models.Export;
 import de.catma.api.pre.serialization.models.ExportDocument;
+import de.catma.api.pre.serialization.models.ExtendedMetadata;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
@@ -188,27 +191,29 @@ public class PreProjectServiceTest extends JerseyTest {
 		IDGenerator idGenerator = new IDGenerator();
 
 		String namespace = "test_namespace";
-		String projectName = "test_project";
+		String projectName = "test_project_ForProjectExport";
 		String projectId = idGenerator.generate(projectName);
 		String sourceDocumentUuid = idGenerator.generateDocumentId();
 		String tagId = idGenerator.generate();
 		String tagName = "my tag";
-		String annotationId = idGenerator.generate();
+		String annotationId1 = idGenerator.generate();
+		String annotationId2 = idGenerator.generate();
+		String annotationId3 = idGenerator.generate();
+		String annotationId4 = idGenerator.generate();
 		String propertyName = "my property";
 		String propertyValue = "value1";
 		String tagsetId = idGenerator.generateTagsetId();
 		String tagsetName = "my tagset";
 
-		
-		
-		String annotatedPhrase = 
+		List<String> annotatedPhrasesSortedByAnnotationId = 
 			ProjectFixtures.setUpFullProject(
 					remoteGitManagerRestrictedFactoryMock, 
 					namespace, projectId, projectName, 
 					sourceDocumentUuid, 
 					tagsetId, tagsetName,
 					tagId, tagName, 
-					annotationId, propertyName, propertyValue);
+					annotationId1, propertyName, propertyValue,
+					annotationId2, annotationId3, annotationId4);
 		
 		
 		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
@@ -227,21 +232,158 @@ public class PreProjectServiceTest extends JerseyTest {
 
 		ExportDocument exportDocument = export.getDocuments().get(0);
 		
-		
-		
+
 		assertEquals(sourceDocumentUuid, exportDocument.getId());
-		assertTrue(exportDocument.getAnnotations().size() == 1);
-		PreApiAnnotation annotation = exportDocument.getAnnotations().get(0);
-		assertEquals(annotatedPhrase, annotation.getPhrases().get(0).getPhrase());
-		assertEquals(annotationId, annotation.getId());
-		assertEquals(tagId, annotation.getTagId());
-		assertEquals(sourceDocumentUuid, annotation.getSourceDocumentId());
-		assertEquals(tagName, annotation.getTagName());
-		assertTrue(annotation.getProperties().size() == 1);
-		PreApiAnnotationProperty property = annotation.getProperties().get(0);
+		assertTrue(exportDocument.getAnnotations().size() == annotatedPhrasesSortedByAnnotationId.size());
+		PreApiAnnotation annotation1 = exportDocument.getAnnotations().stream().filter(a -> a.getId().equals(annotationId1)).findFirst().get();
+		assertEquals(
+				annotatedPhrasesSortedByAnnotationId.get(
+						List.of(annotationId1, annotationId2, annotationId3, annotationId4).stream().sorted().toList().indexOf(annotationId1)), 
+				annotation1.getPhrases().get(0).getPhrase());
+		assertEquals(annotationId1, annotation1.getId());
+		assertEquals(tagId, annotation1.getTagId());
+		assertEquals(sourceDocumentUuid, annotation1.getSourceDocumentId());
+		assertEquals(tagName, annotation1.getTagName());
+		assertTrue(annotation1.getProperties().size() == 1);
+		PreApiAnnotationProperty property = annotation1.getProperties().get(0);
 		assertEquals(propertyName, property.getName());
 		assertTrue(property.getValues().size() == 1);
 		assertEquals(propertyValue, property.getValues().get(0));
+	}
+	
+	@Test
+	void shouldProduceProjectExportPage2WithJwtAccessTokenQueryParam() throws Exception {
+		
+		IDGenerator idGenerator = new IDGenerator();
+
+		String namespace = "test_namespace";
+		String projectName = "test_project_ForExportPage2";
+		String projectId = idGenerator.generate(projectName);
+		String sourceDocumentUuid = idGenerator.generateDocumentId();
+		String tagId = idGenerator.generate();
+		String tagName = "my tag";
+		String annotationId = idGenerator.generate();
+		String propertyName = "my property";
+		String propertyValue = "value1";
+		String tagsetId = idGenerator.generateTagsetId();
+		String tagsetName = "my tagset";
+
+		
+		
+		List<String> annotatedPhrasesSortedByAnnotationId = 
+			ProjectFixtures.setUpFullProject(
+					remoteGitManagerRestrictedFactoryMock, 
+					namespace, projectId, projectName, 
+					sourceDocumentUuid, 
+					tagsetId, tagsetName,
+					tagId, tagName, 
+					annotationId, propertyName, propertyValue);
+		
+		
+		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		
+		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+
+		Response response = target("project/"+namespace+"/"+projectId).queryParam("accesstoken", token).queryParam("page", 2).queryParam("pageSize", 2).request(MediaType.APPLICATION_JSON).get();
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		
+		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
+		
+		ExportDocument exportDocument = export.getDocuments().get(0);
+		PreApiAnnotation annotation = exportDocument.getAnnotations().get(0);
+
+		
+		assertTrue(annotatedPhrasesSortedByAnnotationId.subList(2,3).contains(annotation.getPhrases().get(0).getPhrase()));
+	}
+	
+	@Test
+	void shouldProduceProjectExportWithExtendedMetadataWithJwtAccessTokenQueryParam() throws Exception {
+		
+		IDGenerator idGenerator = new IDGenerator();
+
+		String namespace = "test_namespace";
+		String projectName = "test_project_ForExportWithExtendedMetadata";
+		String projectId = idGenerator.generate(projectName);
+		String sourceDocumentUuid = idGenerator.generateDocumentId();
+		String tagId = idGenerator.generate();
+		String tagName = "my tag";
+		String annotationId = idGenerator.generate();
+		String propertyName = "my property";
+		String propertyValue = "value1";
+		String tagsetId = idGenerator.generateTagsetId();
+		String tagsetName = "my tagset";
+
+		ProjectFixtures.setUpFullProject(
+				remoteGitManagerRestrictedFactoryMock, 
+				namespace, projectId, projectName, 
+				sourceDocumentUuid, 
+				tagsetId, tagsetName,
+				tagId, tagName, 
+				annotationId, propertyName, propertyValue);
+		
+		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		
+		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+
+		Response response = target("project/"+namespace+"/"+projectId).queryParam("accesstoken", token).queryParam("page", 2).queryParam("pageSize", 2).request(MediaType.APPLICATION_JSON).get();
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		
+		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
+		
+		ExtendedMetadata extendedMetadata = export.getExtendedMetadata();
+		
+		PreApiSourceDocument document = extendedMetadata.documents().get(sourceDocumentUuid);
+		
+		assertEquals(document.getId(), sourceDocumentUuid);
+	}
+	
+	@Test
+	void shouldProduceProjectExportWithoutExtendedMetadataWithJwtAccessTokenQueryParam() throws Exception {
+		
+		IDGenerator idGenerator = new IDGenerator();
+
+		String namespace = "test_namespace";
+		String projectName = "test_project_ForExportWithoutExtendedMetadata";
+		String projectId = idGenerator.generate(projectName);
+		String sourceDocumentUuid = idGenerator.generateDocumentId();
+		String tagId = idGenerator.generate();
+		String tagName = "my tag";
+		String annotationId = idGenerator.generate();
+		String propertyName = "my property";
+		String propertyValue = "value1";
+		String tagsetId = idGenerator.generateTagsetId();
+		String tagsetName = "my tagset";
+
+		ProjectFixtures.setUpFullProject(
+				remoteGitManagerRestrictedFactoryMock, 
+				namespace, projectId, projectName, 
+				sourceDocumentUuid, 
+				tagsetId, tagsetName,
+				tagId, tagName, 
+				annotationId, propertyName, propertyValue);
+		
+		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		
+		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+
+		Response response = target("project/"+namespace+"/"+projectId)
+				.queryParam("accesstoken", token)
+				.queryParam("page", 2)
+				.queryParam("pageSize", 2)
+				.queryParam("includeExtendedMetadata", false).request(MediaType.APPLICATION_JSON).get();
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		
+		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
+		
+		ExtendedMetadata extendedMetadata = export.getExtendedMetadata();
+		
+		assertNull(extendedMetadata);
 	}
 	
 	@Test
@@ -250,7 +392,7 @@ public class PreProjectServiceTest extends JerseyTest {
 		IDGenerator idGenerator = new IDGenerator();
 
 		String namespace = "test_namespace";
-		String projectName = "test_project";
+		String projectName = "test_project_ForDocumentContent";
 		String projectId = idGenerator.generate(projectName);
 		String sourceDocumentUuid = idGenerator.generateDocumentId();
 		

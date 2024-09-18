@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -47,7 +48,8 @@ import de.catma.tag.TagManager;
 
 public class PreProject {
 	public static final int DEFAULT_PAGE_SIZE = 100;
-	private static final Comparator<TagReference> tagReferenceComparator = 
+	@VisibleForTesting
+	public static final Comparator<TagReference> TAG_REFERENCE_COMPARATOR = 
 			(tRef1, tRef2) -> tRef1.getTagInstanceId().equals(tRef2.getTagInstanceId())?tRef1.getRange().compareTo(tRef2.getRange()):tRef1.getTagInstanceId().compareTo(tRef2.getTagInstanceId());
 	
 	private final Logger logger = Logger.getLogger(PreProject.class.getName());
@@ -216,7 +218,7 @@ public class PreProject {
                 		List<PreApiAnnotation> annotations = 
 	                        annotationCollection.getTagReferences()
 	                        .stream()
-	                        .sorted(tagReferenceComparator)
+	                        .sorted(TAG_REFERENCE_COMPARATOR)
 	                        .map(TagReference::getTagInstance)
 	                        .distinct() // to compute skip and limit we only need one tag instance per corresponding reference
 	                        .skip(skip)
