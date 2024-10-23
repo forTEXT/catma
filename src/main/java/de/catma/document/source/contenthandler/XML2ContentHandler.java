@@ -1,109 +1,100 @@
 package de.catma.document.source.contenthandler;
 
+import nu.xom.*;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Node;
-import nu.xom.Text;
-
+/**
+ * The content handler that handles XML files.
+ *
+ * @see de.catma.document.source.TechInfoSet
+ */
 public class XML2ContentHandler extends AbstractSourceContentHandler {
-	protected List<String> inlineElements = new ArrayList<String>();
+	private final boolean simpleXml;
 
-	public XML2ContentHandler() {
-		inlineElements = new ArrayList<String>();
+	protected List<String> inlineElements;
+
+	public XML2ContentHandler(boolean simpleXml) {
+		this.simpleXml = simpleXml;
+
+		this.inlineElements = new ArrayList<>();
 	}
-	
-	
-	/* (non-Javadoc)
-	 * @see de.catma.document.source.contenthandler.SourceContentHandler#load(java.io.InputStream)
-	 */
-	public void load(InputStream is) throws IOException {
+
+	private void load(InputStream inputStream) throws IOException {
 		try {
-	        Builder builder = new Builder();
-	        
-	        Document document = builder.build(is);
-	        StringBuilder contentBuilder = new StringBuilder();
-	        processTextNodes(
-	        		contentBuilder, 
-	        		document.getRootElement());
-	        setContent(contentBuilder.toString());	
-		} catch (Exception e) {
+			Builder builder = new Builder();
+			Document document = builder.build(inputStream);
+
+			StringBuilder contentBuilder = new StringBuilder();
+			processTextNodes(contentBuilder, document.getRootElement(), null);
+
+			setContent(contentBuilder.toString());
+		}
+		catch (Exception e) {
 			throw new IOException(e);
 		}
 	}
-    
-    /* (non-Javadoc)
-     * @see de.catma.document.source.contenthandler.SourceContentHandler#load()
-     */
-    public void load() throws IOException {
-    	
-        try {
-        	InputStream is = getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream();
-        	try {
-        		load(is);
-        	}
-        	finally {
-        		is.close();
-        	}
-        }
-        catch (Exception e) {
-        	throw new IOException(e);
-        }
-        
 
-    }
+	@Override
+	public void load() throws IOException {
+		try (InputStream inputStream = getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream()) {
+			load(inputStream);
+		}
+	}
 
-    /**
-     * Appends text elements to the given builder otherwise descents deeper into the
-     * document tree.
-     * @param contentBuilder the builder is filled with text elements
-     * @param element the current element to process
-     * @throws URISyntaxException 
-     */
-    protected void processTextNodes(
-    		StringBuilder contentBuilder, Element element) throws URISyntaxException {
-    	
-		for( int idx=0; idx<element.getChildCount(); idx++) {
-            Node curChild = element.getChild(idx);
-            if (curChild instanceof Text) {
-            	addTextContent(contentBuilder, element, curChild.getValue());
-            }
-            else if (curChild instanceof Element) { //descent
-                processTextNodes(
-                	contentBuilder, 
-                	(Element)curChild);
-            
-            }
-        }
-		
-		if (element.getChildCount() != 0) {
+	public interface AdditionalElementProcessingCallback {
+		void process(final Element element, final int elementRangeStart, final int elementRangeEnd);
+	}
+
+	/**
+	 * Recursively appends text elements to the given StringBuilder, starting from the given element.
+	 *
+	 * @param contentBuilder the {@link StringBuilder} to be populated
+	 * @param element the {@link Element} from which to start processing
+	 * @param additionalElementProcessingCallback an optional callback function to perform additional processing for each element
+	 */
+	public void processTextNodes(StringBuilder contentBuilder, Element element, AdditionalElementProcessingCallback additionalElementProcessingCallback) {
+		int elementRangeStart = contentBuilder.length();
+
+		for (int i=0; i<element.getChildCount(); i++) {
+			Node currentChildNode = element.getChild(i);
+
+			if (currentChildNode instanceof Text) {
+				addTextContent(contentBuilder, currentChildNode.getValue());
+			}
+			else if (currentChildNode instanceof Element) {
+				processTextNodes(contentBuilder, (Element) currentChildNode, additionalElementProcessingCallback);
+			}
+		}
+
+		if (!simpleXml && element.getChildCount() != 0) {
 			addBreak(contentBuilder, element);
 		}
-    }
 
-	public void addTextContent(StringBuilder contentBuilder, Element element,
-			String content) {
-    	if (!content.trim().isEmpty()) {
-    		contentBuilder.append(content);
-    	}
+		int elementRangeEnd = contentBuilder.length();
+
+		if (additionalElementProcessingCallback != null) {
+			additionalElementProcessingCallback.process(element, elementRangeStart, elementRangeEnd);
+		}
 	}
-	
+
+	public void addTextContent(StringBuilder contentBuilder, String content) {
+		if (simpleXml || !content.trim().isEmpty()) {
+			contentBuilder.append(content);
+		}
+	}
+
 	public void addBreak(StringBuilder contentBuilder, Element element) {
 		if (!inlineElements.contains(element.getLocalName())) {
 			contentBuilder.append("\n");
 		}
 	}
 
-
-    @Override
-    public boolean hasIntrinsicMarkupCollection() {
-    	return true;
-    }
-
+	@Override
+	public boolean hasIntrinsicAnnotationCollection() {
+		return true;
+	}
 }

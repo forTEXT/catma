@@ -1204,7 +1204,7 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		// if it is an imported XML collection it is not likely that the collection is going to be edited
 		// and we do not automatically select it for editing
-		if (!Objects.equals(collection.getName(), XmlMarkupCollectionSerializationHandler.DEFAULT_COLLECTION_TITLE)) {
+		if (!Objects.equals(collection.getName(), XmlMarkupCollectionSerializationHandler.DEFAULT_ANNOTATION_COLLECTION_TITLE)) {
 			setSelectedEditableCollection(collection);
 		}
 		//TODO: show annotations from this collection and selected tagsets

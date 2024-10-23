@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Jetty [Dev GitLab, v6]" type="JettyConfiguration" factoryName="Local" APPLICATION_SERVER_NAME="Jetty 9.4.51.v20230217" ALTERNATIVE_JRE_ENABLED="false">
+  <configuration default="false" name="Jetty [Dev GitLab, v6]" type="JettyConfiguration" factoryName="Local" APPLICATION_SERVER_NAME="Jetty 9.4.55.v20240627" ALTERNATIVE_JRE_ENABLED="false">
     <option name="OPEN_IN_BROWSER_URL" value="http://apptest2.catma.de:8080/catma/" />
     <option name="COMMON_VM_ARGUMENTS" value="-Dprop=catma6_local-dev.properties" />
     <option name="SHOW_DIALOG_ON_UPDATE" value="false" />
