@@ -7,7 +7,7 @@
 
 	<groupId>de.catma</groupId>
 	<artifactId>catma</artifactId>
-	<version>7.0-SNAPSHOT</version>
+	<version>7.2-SNAPSHOT</version>
 	<name>catma</name>
 	<packaging>war</packaging>
 
