@@ -1,7 +1,7 @@
 package de.catma.ui.module.project;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail2.core.EmailException;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;

@@ -2,10 +2,10 @@ package de.catma.util;
 
 import java.util.logging.Logger;
 
-import org.apache.commons.mail.DefaultAuthenticator;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
+import org.apache.commons.mail2.core.EmailException;
+import org.apache.commons.mail2.jakarta.DefaultAuthenticator;
+import org.apache.commons.mail2.jakarta.Email;
+import org.apache.commons.mail2.jakarta.SimpleEmail;
 
 import de.catma.properties.CATMAPropertyKey;
 
