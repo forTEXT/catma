@@ -4,7 +4,7 @@
 		 xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
 		 version="5.0">
 
-    <display-name>catma</display-name>
+	<display-name>catma</display-name>
 
 	<context-param>
 		<description>Vaadin production mode</description>
@@ -13,15 +13,15 @@
 	</context-param>
 
 	<session-config>
-    	<session-timeout>120</session-timeout>
+		<session-timeout>120</session-timeout>
 	</session-config>
 
-	<servlet> 
+	<servlet>
 		<servlet-name>CATMAProperties</servlet-name> 
 		<servlet-class>de.catma.servlet.PropertiesInitializerServlet</servlet-class> 
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	
+
 	<servlet>
 		<servlet-name>CATMAApp</servlet-name>
 		<servlet-class>de.catma.ui.CatmaApplicationServlet</servlet-class>
@@ -41,39 +41,34 @@
 			<param-name>org.atmosphere.container.JSR356AsyncSupport.mappingPath</param-name>
 			<param-value>/PUSH</param-value>
 		</init-param>
-		<load-on-startup>3</load-on-startup>
+		<load-on-startup>2</load-on-startup>
 		<async-supported>true</async-supported>
 	</servlet>
 
+	<servlet>
+		<servlet-name>CATMAApi</servlet-name>
+		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+		<init-param>
+			<param-name>jersey.config.server.provider.packages</param-name>
+			<param-value>de.catma.api.pre</param-value>
+		</init-param>
+		<init-param>
+			<param-name>javax.ws.rs.Application</param-name>
+			<param-value>de.catma.api.pre.PreApplication</param-value>
+		</init-param>
+		<load-on-startup>3</load-on-startup>
+	</servlet>
+
 	<servlet-mapping>
-    	<servlet-name>default</servlet-name>
-    	<url-pattern>/manual/*</url-pattern>
+		<servlet-name>CATMAApi</servlet-name>
+		<url-pattern>/api/pre/v1/*</url-pattern>
 	</servlet-mapping>
+
 	<servlet-mapping>
 		<servlet-name>CATMAApp</servlet-name>
-		<url-pattern>/catma/*</url-pattern>
-		<url-pattern>/VAADIN/*</url-pattern>
+		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
-	
-	<servlet>
-        <servlet-name>CATMAApi</servlet-name>
-        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-        <init-param>
-             <param-name>jersey.config.server.provider.packages</param-name>
-             <param-value>de.catma.api.pre</param-value>
-        </init-param>
-        <init-param>
-            <param-name>javax.ws.rs.Application</param-name>
-             <param-value>de.catma.api.pre.PreApplication</param-value>
-        </init-param>
-        <load-on-startup>4</load-on-startup>
-    </servlet>
-   
-    <servlet-mapping>
-        <servlet-name>CATMAApi</servlet-name>
-        <url-pattern>/api/pre/v1/*</url-pattern>
-    </servlet-mapping>
-	
+
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 		<welcome-file>index.htm</welcome-file>
