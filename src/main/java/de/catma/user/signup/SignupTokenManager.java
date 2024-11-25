@@ -27,7 +27,7 @@ import javax.cache.Caching;
 
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
-import org.apache.commons.mail2.core.EmailException;
+import org.apache.commons.mail.EmailException;
 
 import com.google.common.base.Splitter;
 import com.google.gson.Gson;

@@ -3,7 +3,7 @@ package de.catma.ui.module.main.auth;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.apache.commons.mail2.core.EmailException;
+import org.apache.commons.mail.EmailException;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.base.Joiner;
