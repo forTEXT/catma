@@ -27,7 +27,7 @@
 		<maven.compiler.target>21</maven.compiler.target>
 		<maven.compiler.release>21</maven.compiler.release>
 
-		<jetty.plugin.version>9.4.55.v20240627</jetty.plugin.version>
+		<jetty.plugin.version>12.0.15</jetty.plugin.version>
 		
 		<jersey.version>2.45</jersey.version>
 	</properties>
@@ -387,25 +387,20 @@
 
 			<!-- The Jetty plugin allows us to easily test the development build by running jetty:run on the command line -->
 			<plugin>
-				<groupId>org.eclipse.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
+				<groupId>org.eclipse.jetty.ee8</groupId>
+				<artifactId>jetty-ee8-maven-plugin</artifactId>
 				<version>${jetty.plugin.version}</version>
 				<configuration>
-					<scanIntervalSeconds>0</scanIntervalSeconds>
+					<scan>0</scan>
 					<webApp>
 						<contextPath>/</contextPath>
 					</webApp>
 				</configuration>
 				<dependencies>
-					<dependency>
-						<groupId>org.eclipse.jetty.websocket</groupId>
-						<artifactId>websocket-api</artifactId>
-						<version>${jetty.plugin.version}</version>
-					</dependency>
 					<!-- To run websockets in embedded server -->
 					<dependency>
-						<groupId>org.eclipse.jetty.websocket</groupId>
-						<artifactId>websocket-server</artifactId>
+						<groupId>org.eclipse.jetty.ee8.websocket</groupId>
+						<artifactId>jetty-ee8-websocket-javax-server</artifactId>
 						<version>${jetty.plugin.version}</version>
 					</dependency>
 				</dependencies>

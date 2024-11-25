@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4">
+  <component name="AdditionalModuleElements">
+    <content url="file://$MODULE_DIR$" dumb="true">
+      <excludeFolder url="file://$MODULE_DIR$/.run/catma_base" />
+      <excludeFolder url="file://$MODULE_DIR$/db" />
+      <excludeFolder url="file://$MODULE_DIR$/repo" />
+      <excludeFolder url="file://$MODULE_DIR$/temp" />
+    </content>
+  </component>
   <component name="FacetManager">
     <facet type="gwt" name="GWT">
       <configuration>
