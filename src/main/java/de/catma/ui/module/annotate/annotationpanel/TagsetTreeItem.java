@@ -6,8 +6,11 @@ import com.vaadin.data.provider.TreeDataProvider;
 
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.TagReference;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 
-interface TagsetTreeItem {
+interface TagsetTreeItem extends Comparable<TagsetTreeItem> {
 	public String getId();
 	public String getColor();
 	public String getName();
@@ -24,5 +27,9 @@ interface TagsetTreeItem {
 	public default String getPropertyValue() { return null; }
 
 	public default void setTagsetExpanded(boolean expanded) {};
+	
+	public TagsetDefinition getTagset();
+	public TagDefinition getTag();
+	public PropertyDefinition getPropertyDefinition();
 
 }

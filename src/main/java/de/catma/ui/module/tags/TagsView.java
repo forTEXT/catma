@@ -3,6 +3,7 @@ package de.catma.ui.module.tags;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,8 +25,12 @@ import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.server.SerializableComparator;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.data.sort.SortDirection;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -61,6 +66,7 @@ import de.catma.util.Pair;
 
 public class TagsView extends HugeCard {
 	private static final Logger logger = Logger.getLogger(TagsView.class.getName());
+	private final static SerializableComparator<TagsetTreeItem> TAGSET_TREE_ITEM_COMPARATOR_ASC = (t1, t2) -> t1.compareTo(t2);
 
 	private EventBus eventBus;
 	private Project project;
@@ -74,11 +80,13 @@ public class TagsView extends HugeCard {
 	private SliderPanel drawer;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener propertyDefinitionChangedListener;
+	private final Collator tagsetCollator;
 
 	public TagsView(EventBus eventBus, Project project) {
 		super("Manage Tags");
 		this.eventBus = eventBus;
 		this.project = project;
+		this.tagsetCollator = Collator.getInstance(project.getTagManager().getTagLibrary().getLocale());
 		eventBus.register(this);
 		initComponents();
 		initActions();
@@ -121,8 +129,8 @@ public class TagsView extends HugeCard {
 					}
 
 					// yes, add the newly created tag to the corresponding tagset
-					TagsetDataItem tagsetDataItem = optionalTagsetDataItem.get();
-					TagDataItem tagDataItem = new TagDataItem(createdTagDefinition, tagsetDataItem.isEditable());
+					TagsetTreeItem tagsetDataItem = optionalTagsetDataItem.get();
+					TagDataItem tagDataItem = new TagDataItem(createdTagDefinition, tagsetDefinition, tagsetDataItem.isEditable(), tagsetCollator);
 
 					if (!tagsetData.contains(tagDataItem)) {
 						String parentTagId = createdTagDefinition.getParentUuid();
@@ -134,7 +142,7 @@ public class TagsView extends HugeCard {
 						}
 						else { // the new tag is a subtag
 							TagDefinition parentTagDefinition = project.getTagManager().getTagLibrary().getTagDefinition(parentTagId);
-							TagsetTreeItem parentTagsetTreeItem = new TagDataItem(parentTagDefinition, tagsetDataItem.isEditable());
+							TagsetTreeItem parentTagsetTreeItem = new TagDataItem(parentTagDefinition, tagsetDefinition, tagsetDataItem.isEditable(), tagsetCollator);
 							tagsetData.addItem(parentTagsetTreeItem, tagDataItem);
 							tagsetDataProvider.refreshAll();
 							tagsetGrid.expand(parentTagsetTreeItem);
@@ -145,7 +153,7 @@ public class TagsView extends HugeCard {
 					Pair<TagsetDefinition, TagDefinition> deletedPair = (Pair<TagsetDefinition, TagDefinition>) oldValue;
 					TagDefinition deletedTagDefinition = deletedPair.getSecond();
 
-					tagsetData.removeItem(new TagDataItem(deletedTagDefinition, true));
+					tagsetData.removeItem(new TagDataItem(deletedTagDefinition, deletedPair.getFirst(), true, tagsetCollator));
 					tagsetDataProvider.refreshAll();
 				}
 				else { // tag updated
@@ -173,8 +181,8 @@ public class TagsView extends HugeCard {
 					}
 
 					// yes, add the updated tag to the corresponding tagset
-					TagsetDataItem tagsetDataItem = optionalTagsetDataItem.get();
-					TagDataItem tagDataItem = new TagDataItem(updatedTagDefinition, tagsetDataItem.isEditable());
+					TagsetTreeItem tagsetDataItem = optionalTagsetDataItem.get();
+					TagDataItem tagDataItem = new TagDataItem(updatedTagDefinition, tagsetDefinition, tagsetDataItem.isEditable(), tagsetCollator);
 
 					// the old tag can be removed using the newly constructed TagDataItem because TagDefinitions are compared by UUID
 					tagsetData.removeItem(tagDataItem);
@@ -182,7 +190,7 @@ public class TagsView extends HugeCard {
 					TagsetTreeItem parentTagsetTreeItem = tagsetDataItem;
 					String parentTagId = updatedTagDefinition.getParentUuid();
 					if (!parentTagId.isEmpty()) {
-						parentTagsetTreeItem = new TagDataItem(tagsetDefinition.getTagDefinition(parentTagId), tagsetDataItem.isEditable());
+						parentTagsetTreeItem = new TagDataItem(tagsetDefinition.getTagDefinition(parentTagId), tagsetDefinition, tagsetDataItem.isEditable(), tagsetCollator);
 					}
 
 					tagDataItem.setPropertiesExpanded(true);
@@ -225,12 +233,15 @@ public class TagsView extends HugeCard {
 
 				if (tagDefinition.getParentUuid().isEmpty()) {
 					parentTagsetTreeItem = new TagsetDataItem(
-						project.getTagManager().getTagLibrary().getTagsetDefinition(tagDefinition.getTagsetDefinitionUuid())
+						project.getTagManager().getTagLibrary().getTagsetDefinition(tagDefinition.getTagsetDefinitionUuid()),
+						tagsetCollator
 					);
 				}
 				else {
 					parentTagsetTreeItem = new TagDataItem(
-						project.getTagManager().getTagLibrary().getTagDefinition(tagDefinition.getParentUuid())
+						project.getTagManager().getTagLibrary().getTagDefinition(tagDefinition.getParentUuid()),
+						project.getTagManager().getTagLibrary().getTagsetDefinition(tagDefinition.getTagsetDefinitionUuid()),
+						tagsetCollator
 					);
 				}
 
@@ -269,13 +280,18 @@ public class TagsView extends HugeCard {
 	}
 
 	private void initActions() {
-		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
+		Grid.Column<TagsetTreeItem, String> tagsetColumn = tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Tagsets")
-			.setSortable(false)
+			.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
+			.setSortable(true)
 			.setWidth(200);
+		
+		tagsetGrid.setSortOrder(List.of(new GridSortOrder<>(tagsetColumn, SortDirection.ASCENDING)));
+
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
 			.setCaption("Tags")
+			.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 			.setSortable(false)
 			.setWidth(300));
 		
@@ -288,6 +304,7 @@ public class TagsView extends HugeCard {
 			propertySummaryRenderer)
 		.setCaption("Properties")
 		.setSortable(false)
+		.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 		.setHidable(true)
 		.setWidth(300);
 		
@@ -295,6 +312,7 @@ public class TagsView extends HugeCard {
 			tagsetTreeItem -> tagsetTreeItem.getPropertyValue())
 		.setCaption("Values")
 		.setSortable(false)
+		.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 		.setHidable(true)
 		.setWidth(300);
 		
@@ -452,7 +470,12 @@ public class TagsView extends HugeCard {
 		for (String possibleValue : propertyDefinition.getPossibleValueList()) {
 			tagsetGrid.getTreeData().addItem(
 				propertyDataItem, 
-				new PossibleValueDataItem(possibleValue, propertyDataItem.isEditable()));
+				new PossibleValueDataItem(
+						possibleValue, 
+						propertyDataItem.getPropertyDefinition(), 
+						propertyDataItem.getTag(), 
+						propertyDataItem.getTagset(), 
+						propertyDataItem.isEditable(), tagsetCollator));
 		}
 		
 		tagsetGrid.expand(propertyDataItem);
@@ -463,7 +486,7 @@ public class TagsView extends HugeCard {
 		
 		PropertyDataItem lastPropertyDataItem = null; 
 		for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
-			lastPropertyDataItem = new PropertyDataItem(propertyDefinition, tagDataItem.isEditable());
+			lastPropertyDataItem = new PropertyDataItem(propertyDefinition, tagDataItem.getTag(), tagDataItem.getTagset(), tagDataItem.isEditable(), tagsetCollator);
 			tagsetGrid.getTreeData().addItem(tagDataItem, lastPropertyDataItem);
 		}
 		
@@ -491,7 +514,7 @@ public class TagsView extends HugeCard {
 		Collection<TagsetDefinition> selectedTagsets = 
 			tagsetGrid.getSelectedItems().stream()
 			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
-			.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
+			.map(tagsetDataItem -> ((TagsetTreeItem)tagsetDataItem).getTagset())
 			.collect(Collectors.toList());
 		if (selectedTagsets.isEmpty()) {
 			Notification.show(
@@ -551,7 +574,7 @@ public class TagsView extends HugeCard {
 		Collection<TagsetDefinition> selectedTagsets = 
 				tagsetGrid.getSelectedItems().stream()
 				.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
-				.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
+				.map(tagsetDataItem -> ((TagsetTreeItem)tagsetDataItem).getTagset())
 				.collect(Collectors.toList());
 		
 		if (!selectedTagsets.isEmpty()) {
@@ -829,7 +852,7 @@ public class TagsView extends HugeCard {
 			}
 		}
 		
-		TagsetDataItem tagsetDataItem = (TagsetDataItem) tagsetDataItemCandidate;
+		TagsetTreeItem tagsetDataItem = (TagsetTreeItem) tagsetDataItemCandidate;
 		if (tagsetDataItem != null) {
 			String msg = String.format(
 					"Are you sure you want to delete the property \"%s\"?",
@@ -1023,7 +1046,7 @@ public class TagsView extends HugeCard {
 			.stream()
 			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
 			.findFirst()
-			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
+			.map(tagsetTreeItem -> ((TagsetTreeItem)tagsetTreeItem).getTagset());
 			
 		if (tagsets.isEmpty()) {
 			Notification.show(
@@ -1089,7 +1112,8 @@ public class TagsView extends HugeCard {
         			new TagsetDataItem(
     					tagset, 
     					responsibleUser,
-    					!project.isReadOnly());
+    					!project.isReadOnly(),
+    					tagsetCollator);
             	tagsetData.addItem(null, tagsetItem);
             	addTags(tagsetItem, tagset);
             }
@@ -1109,7 +1133,7 @@ public class TagsView extends HugeCard {
 	
     private void expandTagsetDefinition(TagsetDefinition tagset) {
     	for (TagDefinition tag : tagset) {
-    		TagDataItem item = new TagDataItem(tag);
+    		TagDataItem item = new TagDataItem(tag, tagset, tagsetCollator);
     		tagsetGrid.expand(item);
     	}
 	}
@@ -1139,7 +1163,7 @@ public class TagsView extends HugeCard {
 		
         for (TagDefinition tag : tagset) {
             if (tag.getParentUuid().isEmpty()) {
-            	TagDataItem tagItem =  new TagDataItem(tag, tagsetItem.isEditable());
+            	TagDataItem tagItem =  new TagDataItem(tag, tagset, tagsetItem.isEditable(), tagsetCollator);
                 tagsetData.addItem(tagsetItem, tagItem);
                 addTagSubTree(tagset, tag, tagItem);
             }
@@ -1150,7 +1174,7 @@ public class TagsView extends HugeCard {
     		TagsetDefinition tagset, 
     		TagDefinition tag, TagsetTreeItem parentItem) {
         for (TagDefinition childDefinition : tagset.getDirectChildren(tag)) {
-        	TagDataItem childItem = new TagDataItem(childDefinition, parentItem.isEditable());
+        	TagDataItem childItem = new TagDataItem(childDefinition, tagset, parentItem.isEditable(), tagsetCollator);
             tagsetData.addItem(parentItem, childItem);
             addTagSubTree(tagset, childDefinition, childItem);
         }
@@ -1163,7 +1187,7 @@ public class TagsView extends HugeCard {
         
 		tagsetData.clear();
         for (TagsetDefinition tagset : tagsets) {
-        	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+        	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset, tagsetCollator);
         	tagsetData.addItem(null, tagsetItem);
         	addTags(tagsetItem, tagset);
         }

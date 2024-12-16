@@ -3,6 +3,7 @@ package de.catma.ui.module.annotate.annotationpanel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.collect.ArrayListMultimap;
@@ -22,13 +24,18 @@ import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.data.provider.QuerySortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.SerializableComparator;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.data.sort.SortDirection;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
@@ -40,6 +47,7 @@ import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
+import com.vaadin.ui.components.grid.SortOrderProvider;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -83,6 +91,8 @@ public class AnnotationPanel extends VerticalLayout {
 				List<TagReference> tagReferences, boolean selected);
 	}
 	
+	private final static SerializableComparator<TagsetTreeItem> TAGSET_TREE_ITEM_COMPARATOR_ASC = (t1, t2) -> t1.compareTo(t2);
+	
 	private ComboBox<AnnotationCollection> currentEditableCollectionBox;
 	private Button btAddCollection;
 	private TreeGrid<TagsetTreeItem> tagsetGrid;
@@ -104,6 +114,7 @@ public class AnnotationPanel extends VerticalLayout {
 	private Supplier<SourceDocumentReference> currentDocumentProvider;
 	private EventBus eventBus;
 	private IconButton btFilterCollection;
+	private final Collator tagsetCollator;
 
 	public AnnotationPanel(
 			Project project, 
@@ -119,6 +130,7 @@ public class AnnotationPanel extends VerticalLayout {
 		this.eventBus = eventBus;
 		this.eventBus.register(this);
 		this.tagsetData = new TreeData<TagsetTreeItem>();
+		this.tagsetCollator = Collator.getInstance(project.getTagManager().getTagLibrary().getLocale());
 		initComponents(annotationSelectionListener);
 		initActions(collectionSelectionListener, tagSelectionListener);
 		initListeners();
@@ -146,7 +158,7 @@ public class AnnotationPanel extends VerticalLayout {
 		            	optionalTagsetItem.ifPresent(tagsetItem -> {
 		            		if (tagsetData.contains(tagsetItem)) {
 		            			tagsetData.addItem(
-		            					tagsetItem, new TagDataItem(tag));
+		            					tagsetItem, new TagDataItem(tag, tagset, tagsetCollator));
 		            			
 		            			tagsetDataProvider.refreshAll();
 		            			tagsetGrid.expand(tagsetItem);
@@ -159,7 +171,7 @@ public class AnnotationPanel extends VerticalLayout {
 		            	Optional<TagsetTreeItem> optionalParentTagItem = findItem(parentTag.getUuid());
 		            	optionalParentTagItem.ifPresent(parentTagItem -> {
 		            		if (tagsetData.contains(parentTagItem)) {
-		            			tagsetData.addItem(parentTagItem, new TagDataItem(tag));
+		            			tagsetData.addItem(parentTagItem, new TagDataItem(tag, tagset, tagsetCollator));
 		            			
 		            			tagsetDataProvider.refreshAll();
 		            			tagsetGrid.expand(parentTagItem);
@@ -346,7 +358,7 @@ public class AnnotationPanel extends VerticalLayout {
             tagsetData.clear();
             
             for (TagsetDefinition tagset : tagsets) {
-            	TagsetDataItem tagsetItem = new TagsetDataItem(tagset);
+            	TagsetDataItem tagsetItem = new TagsetDataItem(tagset, tagsetCollator);
             	tagsetData.addItem(null, tagsetItem);
             	addTags(tagsetItem, tagset);
             }
@@ -402,7 +414,7 @@ public class AnnotationPanel extends VerticalLayout {
 
 	private void expandTagsetDefinition(TagsetDefinition tagset) {
     	for (TagDefinition tag : tagset) {
-    		TagDataItem item = new TagDataItem(tag);
+    		TagDataItem item = new TagDataItem(tag, tagset, tagsetCollator);
     		tagsetGrid.expand(item);
     	}
 	}
@@ -413,7 +425,7 @@ public class AnnotationPanel extends VerticalLayout {
 		
         for (TagDefinition tag : tagset) {
             if (tag.getParentUuid().isEmpty()) {
-            	TagDataItem tagItem =  new TagDataItem(tag);
+            	TagDataItem tagItem =  new TagDataItem(tag, tagset, tagsetCollator);
                 tagsetData.addItem(tagsetItem, tagItem);
                 addTagSubTree(tagset, tag, tagItem);
             }
@@ -424,7 +436,7 @@ public class AnnotationPanel extends VerticalLayout {
     		TagsetDefinition tagset, 
     		TagDefinition tag, TagDataItem parentItem) {
         for (TagDefinition childDefinition : tagset.getDirectChildren(tag)) {
-        	TagDataItem childItem = new TagDataItem(childDefinition);
+        	TagDataItem childItem = new TagDataItem(childDefinition, tagset, tagsetCollator);
             tagsetData.addItem(parentItem, childItem);
             addTagSubTree(tagset, childDefinition, childItem);
         }
@@ -433,14 +445,19 @@ public class AnnotationPanel extends VerticalLayout {
 	private void initActions(
 			Consumer<ValueChangeEvent<AnnotationCollection>> collectionSelectionListener, 
 			Consumer<TagDefinition> tagSelectionListener) {
-		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
+		Grid.Column<TagsetTreeItem, String> tagsetColumn = tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Tagsets")
-			.setSortable(false)
+			.setSortable(true)
+			.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 			.setWidth(100);
+		
+		tagsetGrid.setSortOrder(List.of(new GridSortOrder<>(tagsetColumn, SortDirection.ASCENDING)));
+		
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
 			.setCaption("Tags")
 			.setSortable(false)
+			.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 			.setWidth(200));
 		
 		ButtonRenderer<TagsetTreeItem> propertySummaryRenderer = 
@@ -452,6 +469,7 @@ public class AnnotationPanel extends VerticalLayout {
 			propertySummaryRenderer)
 		.setCaption("Properties")
 		.setSortable(false)
+		.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 		.setHidable(true)
 		.setWidth(100);
 		
@@ -459,6 +477,7 @@ public class AnnotationPanel extends VerticalLayout {
 			tagsetTreeItem -> tagsetTreeItem.getPropertyValue())
 		.setCaption("Values")
 		.setSortable(false)
+		.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 		.setHidable(true)
 		.setWidth(100);
 			
@@ -995,11 +1014,13 @@ public class AnnotationPanel extends VerticalLayout {
 
 	private void showExpandedPossibleValues(PropertyDataItem propertyDataItem) {
 		PropertyDefinition propertyDefinition = propertyDataItem.getPropertyDefinition();
+		TagDefinition tag = propertyDataItem.getTag();
+		TagsetDefinition tagset = propertyDataItem.getTagset();
 		
 		for (String possibleValue : propertyDefinition.getPossibleValueList()) {
 			tagsetGrid.getTreeData().addItem(
-				new PropertyDataItem(propertyDefinition), 
-				new PossibleValueDataItem(possibleValue));
+				new PropertyDataItem(propertyDefinition, tag, tagset, tagsetCollator), 
+				new PossibleValueDataItem(possibleValue, propertyDefinition, tag, tagset, tagsetCollator));
 		}
 		
 		tagsetGrid.expand(propertyDataItem);
@@ -1007,10 +1028,11 @@ public class AnnotationPanel extends VerticalLayout {
 
 	private void showExpandedProperties(TagDataItem tagDataItem) {
 		TagDefinition tag = tagDataItem.getTag();
+		TagsetDefinition tagset = tagDataItem.getTagset();
 		
 		PropertyDataItem lastPropertyDataItem = null; 
 		for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
-			lastPropertyDataItem = new PropertyDataItem(propertyDefinition);
+			lastPropertyDataItem = new PropertyDataItem(propertyDefinition, tag, tagset, tagsetCollator);
 			tagsetGrid.getTreeData().addItem(tagDataItem, lastPropertyDataItem);
 		}
 		
@@ -1236,7 +1258,7 @@ public class AnnotationPanel extends VerticalLayout {
 
 	public void addTagset(TagsetDefinition tagset) {
 		tagsets.add(tagset);
-		TagsetDataItem tagsetItem = new TagsetDataItem(tagset);
+		TagsetDataItem tagsetItem = new TagsetDataItem(tagset, tagsetCollator);
 		tagsetData.addRootItems(tagsetItem);
 		addTags(tagsetItem, tagset);
 		expandTagsetDefinition(tagset);
@@ -1246,7 +1268,7 @@ public class AnnotationPanel extends VerticalLayout {
 	
 	public void removeTagset(TagsetDefinition tagset) {
 		tagsets.remove(tagset);
-		TagsetDataItem tagsetDataItem = new TagsetDataItem(tagset);
+		TagsetDataItem tagsetDataItem = new TagsetDataItem(tagset, tagsetCollator);
 		if (tagsetData.contains(tagsetDataItem)) {
 			tagsetData.removeItem(tagsetDataItem);
 		}
