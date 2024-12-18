@@ -8,12 +8,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.rometools.utils.Strings;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.Query;
@@ -34,6 +36,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.components.grid.ItemClickListener;
@@ -64,10 +67,13 @@ import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.module.analyze.CSVExportFlatStreamSource;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
+import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.AnnotationWizard;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.AnnotationWizardContextKey;
+import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
+import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider.ContextSizeEditCommand;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 
@@ -95,6 +101,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	private IconButton btnClearSelectedRows;
 	private MenuItem miAnnotateRows;
 	private EventBus eventBus;
+	private final ContextSizeEditCommand contextSizeEditCommand;
+	private final Supplier<Integer> contextSizeSupplier;
 
 	public KwicPanel(
 			EventBus eventBus,
@@ -102,8 +110,12 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			LoadingCache<String, KwicProvider> kwicProviderCache) {
 		this.eventBus = eventBus;
 		this.project = project;
-		this.kwicItemHandler = new KwicItemHandler(project, kwicProviderCache);
-		
+		this.contextSizeEditCommand = new ContextSizeEditCommand((newContextSize) -> { 
+			kwicItemHandler.updateContextSize();
+			kwicDataProvider.refreshAll();
+		});
+		contextSizeSupplier = () -> contextSizeEditCommand.getContextSize();
+		this.kwicItemHandler = new KwicItemHandler(project, kwicProviderCache, contextSizeSupplier);
 		initComponents();
 
 		eventBus.register(this);
@@ -145,7 +157,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 						() -> getFilteredQueryResult(), 
 						project, 
 						kwicItemHandler.getKwicProviderCache(), 
-						((BackgroundServiceProvider)UI.getCurrent())),
+						((BackgroundServiceProvider)UI.getCurrent()),
+						contextSizeSupplier),
 					"CATMA-KWIC_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
 		csvFlatExportResource.setCacheTime(0);
 		csvFlatExportResource.setMIMEType("text/comma-separated-values");
@@ -158,7 +171,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
 			@Override
 			public SerializablePredicate<QueryResultRow> createSearchFilter(String searchInput) {
-				return (row) -> kwicItemHandler.containsSearchInput(row, searchInput);
+				return (row) -> kwicItemHandler.containsSearchInput(row, searchInput, contextSizeSupplier.get());
 			}
 		});
 		
@@ -444,12 +457,12 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 				.setStyleGenerator(row -> kwicItemHandler.getBackwardContextStyle(row))
 				.setWidth(200);
 
-		Column<QueryResultRow, ?> keywordColumn = kwicGrid.addColumn(row -> kwicItemHandler.getKeyword(row))
+		Column<QueryResultRow, ?> keywordColumn = kwicGrid.addColumn(row -> kwicItemHandler.getKeyword(row, contextSizeSupplier.get()))
 				.setCaption("Keyword")
 				.setWidth(200)
 				.setRenderer(new HtmlRenderer())
 				.setStyleGenerator(row -> kwicItemHandler.getKeywordStyle(row))
-				.setDescriptionGenerator(row -> kwicItemHandler.getKeywordDescription(row), ContentMode.HTML);
+				.setDescriptionGenerator(row -> kwicItemHandler.getKeywordDescription(row, contextSizeSupplier.get()), ContentMode.HTML);
 
 		kwicGrid.addColumn(row -> kwicItemHandler.getForwardContext(row))
 				.setCaption("Right Context")
@@ -496,6 +509,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		kwicGridComponent = new ActionGridComponent<>(new Label("KeyWord In Context"), kwicGrid);
 		kwicGridComponent.getActionGridBar().setAddBtnVisible(false);
 		kwicGridComponent.getActionGridBar().addButtonRight(btExpandCompress);
+		kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(contextSizeEditCommand.getContextSizeMenuEntry(), contextSizeEditCommand);
 		kwicGridComponent.setMargin(new MarginInfo(false, false, false, true));
 		addComponent(kwicGridComponent);
 		setExpandRatio(kwicGridComponent, 1f);

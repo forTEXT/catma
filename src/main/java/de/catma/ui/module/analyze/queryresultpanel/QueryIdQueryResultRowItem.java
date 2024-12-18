@@ -18,13 +18,15 @@ public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 	
 	private final QueryId queryId;
 	protected final String identity;
-	protected GroupedQueryResult groupedQueryResult;
+	protected final GroupedQueryResult groupedQueryResult;
+	protected final int contextSize;
 	private QueryResultRowArray rows;
 
-	public QueryIdQueryResultRowItem(String parentIdentity, GroupedQueryResult groupedQueryResult) {
+	public QueryIdQueryResultRowItem(String parentIdentity, GroupedQueryResult groupedQueryResult, int contextSize) {
 		this.queryId = (QueryId)groupedQueryResult.getGroup();
 		this.identity = parentIdentity + queryId.toSerializedString();
 		this.groupedQueryResult = groupedQueryResult;
+		this.contextSize = contextSize;
 	}
 
 	@Override
@@ -81,7 +83,7 @@ public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 				DocumentQueryResultRowItem item = 
 						new DocumentQueryResultRowItem(
 							identity,
-							documentName, documentId, groupedQueryResult.getSubResult(documentId));
+							documentName, documentId, groupedQueryResult.getSubResult(documentId), contextSize);
 				if (!treeData.contains(item)) {
 					treeData.addItem(this, item);
 					treeData.addItem(item, new DummyQueryResultRowItem());

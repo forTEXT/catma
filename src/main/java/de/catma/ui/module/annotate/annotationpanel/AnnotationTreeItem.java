@@ -24,6 +24,6 @@ public interface AnnotationTreeItem {
 				+ keyword.substring(keyword.length()-((maxLength/2)-2), keyword.length());
 	}
 
-
+	default void refreshDescription() {};
 
 }

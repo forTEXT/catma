@@ -17,11 +17,11 @@ import de.catma.ui.module.main.ErrorHandler;
 
 public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowItem {
 
-	private Project project;
+	private final Project project;
 
 	public AnnotatedDocumentQueryResultRowItem(String parentIdentity, String documentName, String documentId,
-			GroupedQueryResult groupedQueryResult, Project project) {
-		super(parentIdentity, documentName, documentId, groupedQueryResult);
+			GroupedQueryResult groupedQueryResult, Project project, int contextSize) {
+		super(parentIdentity, documentName, documentId, groupedQueryResult, contextSize);
 		this.project = project;
 	}
 
@@ -60,7 +60,8 @@ public class AnnotatedDocumentQueryResultRowItem extends DocumentQueryResultRowI
 						identity,
 						collectionName,
 						getDocumentId(), collectionId, 
-						rows, project);
+						rows, project,
+						contextSize);
 				
 				if (!treeData.contains(item)) {
 					treeData.addItem(this, item);

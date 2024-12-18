@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.vaadin.dialogs.ConfirmDialog;
@@ -55,6 +56,7 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider.ContextSizeEditCommand;
 import de.catma.ui.module.main.ErrorHandler;
 
 public class AnnotationDetailsPanel extends VerticalLayout {
@@ -73,6 +75,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	private PropertyChangeListener tagChangedListener;
 	private Function<String, Boolean> isCurrentEditedCollection; //takes a collectionId and returns true if this is the collection currently being edited
 	private Consumer<String> changeCollectionListener; //takes a target collectionId to switch to 
+	private final ContextSizeEditCommand contextSizeEditCommand;
+	private final Supplier<Integer> contextSizeSupplier;
 
 	public AnnotationDetailsPanel(
 		Project project, AnnotationCollectionManager collectionManager, 
@@ -84,11 +88,20 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		this.annotationSelectionListener = annotationSelectionListener;
 		this.isCurrentEditedCollection = isCurrentEditedCollection;
 		this.changeCollectionListener = changeCollectionListener;
+		this.contextSizeEditCommand = new ContextSizeEditCommand((newContextSize) -> { 
+			refreshAnnotationDetailDescriptions();
+		});
+		contextSizeSupplier = () -> contextSizeEditCommand.getContextSize();
 		initComponents();
 		initActions();
 		initListeners();
 	}
 	
+	private void refreshAnnotationDetailDescriptions() {
+		annotationDetailData.getRootItems().forEach(AnnotationTreeItem::refreshDescription);
+		annotationDetailsProvider.refreshAll();
+	}
+
 	private void initActions() {
 		annotationDetailsTree.addSelectionListener(
 			selectionEvent -> handleSelectAnnotationRequest(selectionEvent));
@@ -299,7 +312,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		ActionGridComponent<TreeGrid<AnnotationTreeItem>> annotationDetailsGridComponent = 
 				new ActionGridComponent<>(new Label("Selected Annotations"), annotationDetailsTree);
 		annotationDetailsGridComponent.setMargin(false);
-		
+		annotationDetailsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(contextSizeEditCommand.getContextSizeMenuEntry(), contextSizeEditCommand);
+
 		addComponent(annotationDetailsGridComponent);
 		setExpandRatio(annotationDetailsGridComponent, 1.0f);
 	}
@@ -431,7 +445,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider,
 						annotation.getUserMarkupCollection().isResponsible(project.getCurrentUser().getIdentifier()),
-						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
+						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()),
+						contextSizeSupplier);
 			
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());
 			annotationDetailData.addItem(null, annotationDataItem);

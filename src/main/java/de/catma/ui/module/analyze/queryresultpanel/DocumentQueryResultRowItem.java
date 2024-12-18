@@ -17,16 +17,18 @@ import de.catma.ui.util.Cleaner;
 public class DocumentQueryResultRowItem implements QueryResultRowItem {
 
 	protected final String identity;
-	private String documentName;
-	private String documentId;
-	protected GroupedQueryResult groupedQueryResult;
+	private final String documentName;
+	private final String documentId;
+	protected final GroupedQueryResult groupedQueryResult;
+	protected final int contextSize;
 	private QueryResultRowArray rows;
 	
 	public DocumentQueryResultRowItem(
-			String parentKey, String documentName, String documentId, GroupedQueryResult groupedQueryResult) {
+			String parentKey, String documentName, String documentId, GroupedQueryResult groupedQueryResult, int contextSize) {
 		this.documentName = documentName;
 		this.documentId = documentId;
 		this.groupedQueryResult = groupedQueryResult;
+		this.contextSize = contextSize;
 		this.identity = parentKey + documentId;
 		
 	}
@@ -86,9 +88,9 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 				KwicQueryResultRowItem item = new KwicQueryResultRowItem(
 						row, 
 						AnnotatedTextProvider.buildKeywordInContext(
-							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())),
+							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()), contextSize),
 						AnnotatedTextProvider.buildKeywordInContextLarge(
-							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())),
+							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()), contextSize),
 						false);
 				if (!treeData.contains(item)) {
 					treeData.addItem(this, item);

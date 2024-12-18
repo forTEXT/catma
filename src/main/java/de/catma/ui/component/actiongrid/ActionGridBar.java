@@ -115,4 +115,8 @@ public class ActionGridBar extends HorizontalLayout {
         addComponent(button);
         setComponentAlignment(button, Alignment.MIDDLE_RIGHT);		
 	}
+	
+	public void addTextFieldBeforeSearchField(TextField textField) {
+		addComponent(textField, getComponentIndex(searchField));
+	}
 }

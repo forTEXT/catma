@@ -15,10 +15,11 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 	private String keywordInContext;
 	private TagsetDefinition tagset;
 	private Supplier<Boolean> inCurrentCollectionSupplier;
+	private Supplier<String> descriptionSupplier;
 	
 	public AnnotationDataItem(
 		Annotation annotation, TagsetDefinition tagset, KwicProvider kwicProvider, 
-		boolean editable, Supplier<Boolean> inCurrentCollectionSupplier) {
+		boolean editable, Supplier<Boolean> inCurrentCollectionSupplier, Supplier<Integer> descriptionContextSizeSupplier) {
 		super();
 		this.annotation = annotation;
 		this.tagset = tagset;
@@ -28,9 +29,17 @@ public class AnnotationDataItem implements AnnotationTreeItem {
 		this.annotatedText = AnnotatedTextProvider.buildAnnotatedText(
 				annotation.getTagReferences(), 
 				kwicProvider, 
-				tagDefinition);
-		this.keywordInContext = AnnotatedTextProvider.buildAnnotatedKeywordInContext(
-			annotation.getTagReferences(), kwicProvider, tagDefinition, tagset.getTagPath(tagDefinition));
+				tagDefinition,
+				0);
+		this.descriptionSupplier = () -> AnnotatedTextProvider.buildAnnotatedKeywordInContext(
+				annotation.getTagReferences(), kwicProvider, tagDefinition, tagset.getTagPath(tagDefinition),
+				descriptionContextSizeSupplier.get());
+		refreshDescription();
+	}
+	
+	@Override
+	public void refreshDescription() {
+		this.keywordInContext = this.descriptionSupplier.get();
 	}
 	
 	@Override
