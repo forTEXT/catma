@@ -17,7 +17,7 @@
 
 	<properties>
 		<vaadin.version>8.14.3</vaadin.version>
-		<vaadin.plugin.version>8.14.3</vaadin.plugin.version>
+		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
 		<!-- If there are no local customizations, this can also be "fetch" or "cdn" -->
 		<vaadin.widgetset.mode>local</vaadin.widgetset.mode>
 
@@ -101,8 +101,8 @@
 		<dependency>
 			<groupId>org.vaadin</groupId>
 			<artifactId>elements</artifactId>
-			<!-- https://github.com/forTEXT/serverside-elements/commit/5745bbf32ab9e31a1eb6bb81ce490bcdabc4fcf2 -->
-			<version>0.2.3-SNAPSHOT</version>
+			<!-- https://github.com/forTEXT/serverside-elements/releases/tag/0.2.3-CATMA -->
+			<version>0.2.3-CATMA</version>
 		</dependency>
 		<dependency>
 		   <groupId>org.vaadin.addon</groupId>
