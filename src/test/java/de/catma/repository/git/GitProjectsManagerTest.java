@@ -24,7 +24,7 @@ import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.GitProjectsManager;
 import de.catma.util.Pair;
 
-class GitProjectsManagerTest {
+public class GitProjectsManagerTest {
 	
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
