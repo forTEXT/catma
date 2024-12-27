@@ -62,7 +62,7 @@ public class SignUpDialog extends AuthenticationDialog {
 	}
 
 	private boolean isRecaptchaVerified() {
-		return recaptchaResult.isSuccess() && recaptchaResult.getScore() >= 0.5f && recaptchaResult.getAction().equals(recaptchaVerificationAction);
+		return recaptchaSiteKey.equals("XXXXXXXXXXXX") || (recaptchaResult.isSuccess() && recaptchaResult.getScore() >= 0.5f && recaptchaResult.getAction().equals(recaptchaVerificationAction));
 	}
 
 	// TODO: this shouldn't be in the UI code
@@ -223,8 +223,12 @@ public class SignUpDialog extends AuthenticationDialog {
 		);
 
 		btnSignup = new Button("Sign Up");
-		btnSignup.setEnabled(false);
-		btnSignup.setDescription("Please wait a moment while we verify that you're not a bot...");
+		if (recaptchaSiteKey.equals("XXXXXXXXXXXX")) {
+			btnSignup.setEnabled(true);
+		} else {
+			btnSignup.setEnabled(false);
+			btnSignup.setDescription("Please wait a moment while we verify that you're not a bot...");
+		}
 		btnSignup.setClickShortcut(ShortcutAction.KeyCode.ENTER);
 
 		hlEmailDescriptionAndButton.addComponent(lblDescription);
@@ -301,7 +305,8 @@ public class SignUpDialog extends AuthenticationDialog {
 		// (can't specify the site key dynamically)
 		// https://stackoverflow.com/questions/14521108/dynamically-load-js-inside-js
 		// note that exceptions are silently swallowed if not logged explicitly, hence the try ... catch
-		com.vaadin.ui.JavaScript.getCurrent().execute(
+                if (!recaptchaSiteKey.equals("XXXXXXXXXXXX")) {
+			com.vaadin.ui.JavaScript.getCurrent().execute(
 				"try {" +
 				"    var script = document.createElement('script');" +
 				"    script.onload = function() {" +
@@ -318,7 +323,8 @@ public class SignUpDialog extends AuthenticationDialog {
 				"} catch (error) {" +
 				"    console.error(error);" +
 				"}"
-		);
+			);
+		}
 	}
 
 	public void show() {
