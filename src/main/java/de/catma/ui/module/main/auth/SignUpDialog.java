@@ -76,26 +76,28 @@ public class SignUpDialog extends AuthenticationDialog {
 		QueryStringEncoder qs = new QueryStringEncoder(CATMAPropertyKey.BASE_URL.getValue().trim() + "verify");
 		qs.addParam("token", token);
 
-		Email email = new SimpleEmail();
-		email.setHostName(CATMAPropertyKey.MAIL_SMTP_HOST.getValue());
-		email.setSmtpPort(CATMAPropertyKey.MAIL_SMTP_PORT.getIntValue());
-
-		if (CATMAPropertyKey.MAIL_SMTP_AUTHENTICATION_REQUIRED.getBooleanValue()) {
-			email.setAuthenticator(
-					new DefaultAuthenticator(
-							CATMAPropertyKey.MAIL_SMTP_USER.getValue(),
-							CATMAPropertyKey.MAIL_SMTP_PASS.getValue()
-					)
-			);
-			email.setStartTLSEnabled(true);
+		// If the email server isn't configured, it wont send an email, since you
+                // can just get the token from the logger anyways
+		if (!(CATMAPropertyKey.MAIL_SMTP_USER.getValue().equals("XXXXXXXXXXXX") &&
+		    CATMAPropertyKey.MAIL_SMTP_PASS.getValue().equals("XXXXXXXXXXXX"))) {
+			Email email = new SimpleEmail();
+			email.setHostName(CATMAPropertyKey.MAIL_SMTP_HOST.getValue());
+			email.setSmtpPort(CATMAPropertyKey.MAIL_SMTP_PORT.getIntValue());
+			if (CATMAPropertyKey.MAIL_SMTP_AUTHENTICATION_REQUIRED.getBooleanValue()) {
+				email.setAuthenticator(
+						new DefaultAuthenticator(
+								CATMAPropertyKey.MAIL_SMTP_USER.getValue(),
+								CATMAPropertyKey.MAIL_SMTP_PASS.getValue()
+						)
+				);
+				email.setStartTLSEnabled(true);
+			}
+			email.setFrom(CATMAPropertyKey.MAIL_FROM.getValue());
+			email.setSubject("CATMA Email Verification");
+			email.setMsg("Please visit the following link in order to verify your email address and complete your sign up:\n" + qs);
+			email.addTo(userData.getEmail());
+			email.send();
 		}
-
-		email.setFrom(CATMAPropertyKey.MAIL_FROM.getValue());
-		email.setSubject("CATMA Email Verification");
-		email.setMsg("Please visit the following link in order to verify your email address and complete your sign up:\n" + qs);
-		email.addTo(userData.getEmail());
-		email.send();
-
 		logger.info(
 				String.format("Generated a new signup token for %s, the full verification URL is: %s", userData.getEmail(), qs)
 		);
@@ -153,10 +155,16 @@ public class SignUpDialog extends AuthenticationDialog {
 
 			try {
 				generateSignupTokenAndSendVerificationEmail();
+				String completeMessage = "To complete your sign up, please click the link in the verification email!";
+
+				if (CATMAPropertyKey.MAIL_SMTP_USER.getValue().equals("XXXXXXXXXXXX") &&
+				    CATMAPropertyKey.MAIL_SMTP_PASS.getValue().equals("XXXXXXXXXXXX")) {
+					completeMessage = "Email delivery isn't configured on this instance. See the logs to retrieve the user sign-up link.";
+				}
 
 				Notification completeSignupNotification = new Notification(
-						"To complete your sign up, please click the link in the verification email!",
-						Notification.Type.WARNING_MESSAGE
+					completeMessage,
+					Notification.Type.WARNING_MESSAGE
 				);
 				completeSignupNotification.setDelayMsec(-1);
 				completeSignupNotification.show(Page.getCurrent());
