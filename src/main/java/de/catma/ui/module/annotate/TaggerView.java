@@ -489,22 +489,29 @@ public class TaggerView extends HorizontalLayout
 		});
 		
 		cbAutoShowComments.addClickListener(clickEvent -> {
-			boolean autoShowComments = (boolean) cbAutoShowComments.getData();
-			autoShowComments = !autoShowComments;
-			cbAutoShowComments.setData(autoShowComments);
-			if (autoShowComments) {
-				cbAutoShowComments.setIcon(VaadinIcons.COMMENT);
-				try {
-					TaggerView.this.comments.clear();
-					TaggerView.this.comments.addAll(TaggerView.this.project.getComments(sourceDocument.getUuid()));
-					tagger.updateComments(comments);
-				} catch (IOException e) {
-					logger.log(Level.SEVERE, "Failed to reload comments", e);
-				}
+			CommentToggleState commentToggleState = (CommentToggleState) cbAutoShowComments.getData();
+			
+			switch (commentToggleState) {
+			case OFF: {
+				commentToggleState = CommentToggleState.ON;
+				updateComments();
+				break;
 			}
-			else {
-				cbAutoShowComments.setIcon(VaadinIcons.COMMENT_O);
+			case ON: {
+				commentToggleState = CommentToggleState.LIVE;
+				updateComments();
+				break;
 			}
+			case LIVE: {
+				commentToggleState = CommentToggleState.OFF;
+				break;
+			}
+			}
+
+			tagger.setCommentsVisible(commentToggleState.isVisible());
+			cbAutoShowComments.setIcon(commentToggleState.getIcon());
+			cbAutoShowComments.setDescription(commentToggleState.getDescription());
+			cbAutoShowComments.setData(commentToggleState);
 		});
 
 		btAnalyze.addClickListener(new ClickListener() {	
@@ -653,6 +660,16 @@ public class TaggerView extends HorizontalLayout
 		
 	}
 
+	private void updateComments() {
+		try {
+			TaggerView.this.comments.clear();
+			TaggerView.this.comments.addAll(TaggerView.this.project.getComments(sourceDocument.getUuid()));
+			tagger.updateComments(comments);
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Failed to reload comments", e);
+		}
+	}
+
 	private void setAnnotationCollectionSelected(AnnotationCollectionReference collectionReference,
 			boolean selected) {
 		try {
@@ -736,9 +753,10 @@ public class TaggerView extends HorizontalLayout
 		btClearSearchHighlights.setDescription("Clear all search highlights");
 		actionPanel.addComponent(btClearSearchHighlights);
 		
-		cbAutoShowComments = new IconButton(VaadinIcons.COMMENT);
-		cbAutoShowComments.setDescription("Toggle live comments");
-		cbAutoShowComments.setData(true); //state
+		CommentToggleState initialState = CommentToggleState.LIVE;
+		cbAutoShowComments = new IconButton(initialState.getIcon());
+		cbAutoShowComments.setDescription(initialState.getDescription());
+		cbAutoShowComments.setData(initialState); // state management
 		actionPanel.addComponent(cbAutoShowComments);
 		
 		btAnalyze = new Button("Analyze");

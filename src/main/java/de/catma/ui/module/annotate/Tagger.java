@@ -477,4 +477,8 @@ public class Tagger extends AbstractComponent {
 			setPage(pager.getCurrentPageNumber());
 		}
 	}
+	
+	public void setCommentsVisible(boolean visible) {
+		getRpcProxy(TaggerClientRpc.class).setCommentsVisible(visible);
+	}
 }

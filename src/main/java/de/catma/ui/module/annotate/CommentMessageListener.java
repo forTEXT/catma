@@ -48,8 +48,8 @@ public class CommentMessageListener extends UIMessageListener<CommentMessage> {
 
 	@Override
 	public void uiOnMessage(Message<CommentMessage> message) {
-		boolean autoShowcomments = (boolean) cbAutoShowComments.getData();
-		if (!autoShowcomments) {
+		CommentToggleState commentToggleState = (CommentToggleState) cbAutoShowComments.getData();
+		if ( ! commentToggleState.equals(CommentToggleState.LIVE)) {
 			return;
 		}
 		
