@@ -26,7 +26,7 @@ public class AddSubtagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 
 	@Override
 	protected boolean isWithParentSelection() {
-		return false;
+		return true;
 	}
 	@Override
 	protected TagDefinition getResult() {

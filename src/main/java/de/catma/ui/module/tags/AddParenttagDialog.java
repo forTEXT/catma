@@ -34,7 +34,7 @@ public class AddParenttagDialog extends AbstractAddEditTagDialog<Pair<TagsetDefi
 
 	@Override
 	protected boolean isWithParentSelection() {
-		return true;
+		return false;
 	}
 
 	@Override

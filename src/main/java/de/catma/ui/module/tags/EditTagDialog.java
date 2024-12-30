@@ -41,7 +41,7 @@ public class EditTagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	
 	@Override
 	protected boolean isWithTagsetSelection() {
-		return false;
+		return true;
 	}
 
 	@Override
