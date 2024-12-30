@@ -13,13 +13,21 @@ public class AddSubtagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 		super("Add Subtag", saveCancelListener);
 		initComponents(false);
 		initActions();
+		initData();
 	}
 
+	private void initData() {
+		//tfParent.setValue(isWithTagsetSelection()?cbTagsets.getValue().getUuid().toString():"");
+	}
 	@Override
 	protected boolean isWithTagsetSelection() {
 		return false;
 	}
 
+	@Override
+	protected boolean isWithParentSelection() {
+		return false;
+	}
 	@Override
 	protected TagDefinition getResult() {
 		

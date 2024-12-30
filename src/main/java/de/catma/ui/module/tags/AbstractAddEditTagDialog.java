@@ -35,6 +35,7 @@ import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 
 import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.FocusHandler;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
@@ -56,6 +57,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 	protected ListDataProvider<PropertyDefinition> propertyDefDataProvider;
 	protected ColorPicker colorPicker;
 	protected TextField tfName;
+	protected ComboBox<TagDefinition> cbParent;
 
 	protected AbstractAddEditTagDialog(
 			String dialogCaption, SaveCancelListener<T> saveCancelListener) {
@@ -158,7 +160,15 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 			cbTagsets.setDescription("The tagset that will be the container of the new tag");
 			cbTagsets.setEmptySelectionAllowed(false);
 			preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));
-		}		
+		}
+		if (isWithParentSelection()) {
+		/*	cbTagsets = new ComboBox<TagDefinition>("Parent", availableParent);
+			cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
+			cbTagsets.setWidth("100%");
+			cbTagsets.setDescription("The parent of the new tag");
+			cbTagsets.setEmptySelectionAllowed(false);
+			preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));*/
+		}
 		
 		tagPanel = new HorizontalLayout();
 		tagPanel.setSpacing(true);
@@ -180,7 +190,12 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		colorPicker.setModal(true);
 		
 		tagPanel.addComponent(colorPicker);
-		
+
+		/* TODO: insert cbParent in here */
+		/*tfParent= new TextField("Tag parent");
+		tfParent.setPlaceholder("Tag parent");
+		tagPanel.addComponent(tfParent);*/
+
 		propertyDefNamePanel = new HorizontalLayout();
 		propertyDefNamePanel.setSpacing(true);
 		propertyDefNamePanel.setMargin(new MarginInfo(true, true, false, true));
@@ -255,6 +270,8 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		setWidth("60%");
 	}
 	
+	protected abstract boolean isWithParentSelection();
+
 	protected abstract boolean isWithTagsetSelection();
 
 	@Override

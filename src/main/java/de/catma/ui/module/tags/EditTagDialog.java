@@ -22,6 +22,8 @@ public class EditTagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	private void initData(TagDefinition tagDefinition) {
 		propertyDefDataProvider.getItems().addAll(tagDefinition.getUserDefinedPropertyDefinitions());
 		tfName.setValue(tagDefinition.getName());
+                // Todo fill with tagDefinition
+		// tfParent.setValue(tagDefinition.getParentUuid().toString());
 		colorPicker.setValue(new Color(Integer.valueOf(tagDefinition.getColor())));
 	}
 	
@@ -40,6 +42,11 @@ public class EditTagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	@Override
 	protected boolean isWithTagsetSelection() {
 		return false;
+	}
+
+	@Override
+	protected boolean isWithParentSelection() {
+		return true;
 	}
 
 	@Override
