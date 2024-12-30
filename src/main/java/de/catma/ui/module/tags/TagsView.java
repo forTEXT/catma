@@ -972,7 +972,6 @@ public class TagsView extends HugeCard {
 		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
-
 		
 		if (!parentTags.isEmpty()) {
 			
@@ -990,8 +989,13 @@ public class TagsView extends HugeCard {
 				new Action() {
 					@Override
 					public void execute() {
+						Collection<TagsetDefinition> target = new ArrayList<TagsetDefinition>();
+						project.getTagManager().getTagLibrary().forEach(target::add);
 						AddSubtagDialog addTagDialog =
-							new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
+							new AddSubtagDialog(
+								target,
+								parentTags,
+								new SaveCancelListener<TagDefinition>() {
 								public void savePressed(TagDefinition result) {
 									for (TagDefinition parent : parentTags) {
 										
