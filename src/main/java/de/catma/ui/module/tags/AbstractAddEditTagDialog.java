@@ -1,7 +1,7 @@
 package de.catma.ui.module.tags;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +25,7 @@ import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextArea;
@@ -57,7 +58,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 	protected ListDataProvider<PropertyDefinition> propertyDefDataProvider;
 	protected ColorPicker colorPicker;
 	protected TextField tfName;
-	protected ComboBox<TagDefinition> cbParent;
+	protected ListSelect<TagDefinition> lbParent;
 
 	protected AbstractAddEditTagDialog(
 			String dialogCaption, SaveCancelListener<T> saveCancelListener) {
@@ -147,28 +148,6 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 	}
 	
 	protected void initComponents(boolean allowPropertyDefEditing) {
-		initComponents(Collections.emptyList(), Optional.empty(), allowPropertyDefEditing);
-	}
-	
-	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
-			Optional<TagsetDefinition> preSelectedTagset, boolean allowPropertyDefEditing) {
-		
-		if (isWithTagsetSelection()) {
-			cbTagsets = new ComboBox<TagsetDefinition>("Tagset", availableTagsets);
-			cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
-			cbTagsets.setWidth("100%");
-			cbTagsets.setDescription("The tagset that will be the container of the new tag");
-			cbTagsets.setEmptySelectionAllowed(false);
-			preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));
-		}
-		if (isWithParentSelection()) {
-		/*	cbTagsets = new ComboBox<TagDefinition>("Parent", availableParent);
-			cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
-			cbTagsets.setWidth("100%");
-			cbTagsets.setDescription("The parent of the new tag");
-			cbTagsets.setEmptySelectionAllowed(false);
-			preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));*/
-		}
 		
 		tagPanel = new HorizontalLayout();
 		tagPanel.setSpacing(true);
@@ -190,11 +169,6 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		colorPicker.setModal(true);
 		
 		tagPanel.addComponent(colorPicker);
-
-		/* TODO: insert cbParent in here */
-		/*tfParent= new TextField("Tag parent");
-		tfParent.setPlaceholder("Tag parent");
-		tagPanel.addComponent(tfParent);*/
 
 		propertyDefNamePanel = new HorizontalLayout();
 		propertyDefNamePanel.setSpacing(true);
@@ -246,6 +220,30 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		possibleValuesArea.setSizeFull();
 		
 		propertyDefPanel.addComponent(possibleValuesArea);
+}
+
+	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
+			Optional<TagsetDefinition> preSelectedTagset, boolean allowPropertyDefEditing) {
+
+		cbTagsets = new ComboBox<TagsetDefinition>("Tagset", availableTagsets);
+		cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
+		cbTagsets.setWidth("100%");
+		cbTagsets.setDescription("The tagset that will be the container of the new tag");
+		cbTagsets.setEmptySelectionAllowed(false);
+		preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));
+		this.initComponents(allowPropertyDefEditing);
+	}
+
+	protected void initComponents(Collection<TagDefinition> availableParents,
+			Collection<TagDefinition> preSelectedParents, boolean allowPropertyDefEditing) {
+		lbParent = new ListSelect<TagDefinition>("Parent", availableParents);
+		lbParent.setItemCaptionGenerator(tag -> tag.getName());
+		lbParent.setWidth("100%");
+		lbParent.setDescription("The parent(s) of the new tag");
+		lbParent.setRows(5);
+		// lbParent.setEmptySelectionAllowed(false);
+		preSelectedParents.forEach(tag -> lbParent.select(tag));
+		this.initComponents(allowPropertyDefEditing);
 	}
 	
 	protected void setPropertyDefinitionsVisible() {
