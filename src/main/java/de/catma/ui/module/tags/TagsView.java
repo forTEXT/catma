@@ -335,12 +335,12 @@ public class TagsView extends HugeCard {
 		tagsetGrid.addExpandListener(expandEvent -> handleExpandCollapseTagset(expandEvent.getExpandedItem(), true));
 		tagsetGrid.addCollapseListener(collapseEvent -> handleExpandCollapseTagset(collapseEvent.getCollapsedItem(), false));
 
-	    ContextMenu addContextMenu = 
+		ContextMenu addContextMenu = 
 	    		tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
-	    addContextMenu.addItem("Add Tagset", clickEvent -> handleAddTagsetRequest());
-	    addContextMenu.addItem("Add Tag", clickEvent -> handleAddTagRequest());
-	    addContextMenu.addItem("Add Subtag", clickEvent -> handleAddSubtagRequest());
-	    addContextMenu.addItem("Add Property", clickEvent -> handleAddPropertyRequest());
+		addContextMenu.addItem("Add Tagset", clickEvent -> handleAddTagsetRequest());
+		addContextMenu.addItem("Add Tag", clickEvent -> handleAddTagRequest());
+		addContextMenu.addItem("Add Subtag", clickEvent -> handleAddSubtagRequest());
+		addContextMenu.addItem("Add Property", clickEvent -> handleAddPropertyRequest());
 		
 		ContextMenu moreOptionsContextMenu = 
 				tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
