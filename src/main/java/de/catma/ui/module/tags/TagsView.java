@@ -395,7 +395,7 @@ public class TagsView extends HugeCard {
 		
 		addComponent(content);
 		setExpandRatio(content, 1f);
-        content.addComponent(drawer);
+		content.addComponent(drawer);
 		content.addComponent(tagsetGridComponent);
 		content.setExpandRatio(tagsetGridComponent, 1f);
 	}
