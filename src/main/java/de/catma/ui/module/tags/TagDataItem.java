@@ -30,6 +30,9 @@ class TagDataItem implements TagsetTreeItem {
 		String htmlColor = "#"+ColorConverter.toHex(tag.getColor());
 		return "<div class=\"annotate-tag-tree-item\" style=\"background-color:"+htmlColor+"\">&nbsp;</div>";
 	}
+	public String getTagsetUuid() {
+		return tag.getTagsetDefinitionUuid();
+	}
 
 	@Override
 	public String getName() {

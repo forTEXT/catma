@@ -1018,13 +1018,12 @@ public class TagsView extends HugeCard {
 	}
 	
 	private void handleAddTagRequest() {
-		
-		final Optional<TagsetDefinition> selectedTagset = tagsetGrid.getSelectedItems()
-			.stream()
-			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
-			.findFirst()
+		final Optional<TagsetDefinition> selectedTagset = tagsetGrid.getSelectedItems().stream().filter(tagTreeItem -> tagTreeItem instanceof TagDataItem).count()==1?
+                        tagsetGrid.getSelectedItems().stream().filter(tagTreeItem -> tagTreeItem instanceof TagDataItem).findFirst()
+                        .map(tagTreeItem -> project.getTagManager().getTagLibrary().getTagsetDefinition(((TagDataItem)tagTreeItem).getTagsetUuid())):
+                        tagsetGrid.getSelectedItems().stream().filter(tagTreeItem -> tagTreeItem instanceof TagsetDataItem).findFirst()
 			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
-			
+
 		if (tagsets.isEmpty()) {
 			Notification.show(
 				"Info", 
