@@ -43,6 +43,11 @@ public class EditTagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	}
 
 	@Override
+	protected boolean isWithParentSelection() {
+		return true;
+	}
+
+	@Override
 	protected TagDefinition getResult() {
 		tagDefinition.setName(tfName.getValue());
 		tagDefinition.setColor(String.valueOf(colorPicker.getValue().getRGB()));
