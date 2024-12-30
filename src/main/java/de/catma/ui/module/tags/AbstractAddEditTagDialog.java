@@ -234,9 +234,10 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		this.initComponents(allowPropertyDefEditing);
 	}
 
-	protected void initComponents(Collection<TagDefinition> availableParents,
+	protected void initComponents(Collection<TagsetDefinition> availableParents,
 			Collection<TagDefinition> preSelectedParents, boolean allowPropertyDefEditing) {
-		lbParent = new ListSelect<TagDefinition>("Parent", availableParents);
+		List<TagDefinition> rootTags = availableParents.stream().map(tagset -> tagset.getRootTagDefinitions().get(0)).collect(Collectors.toList());
+		lbParent = new ListSelect<TagDefinition>("Parent", rootTags);
 		lbParent.setItemCaptionGenerator(tag -> tag.getName());
 		lbParent.setWidth("100%");
 		lbParent.setDescription("The parent(s) of the new tag");
@@ -274,6 +275,9 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 
 	@Override
 	protected void addContent(ComponentContainer content) {
+		if (isWithParentSelection()) {
+			content.addComponent(lbParent);
+		}
 		if (isWithTagsetSelection()) {
 			content.addComponent(cbTagsets);
 		}

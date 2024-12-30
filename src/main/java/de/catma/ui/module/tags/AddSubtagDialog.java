@@ -1,17 +1,31 @@
 package de.catma.ui.module.tags;
 
+import java.util.Collection;
 import java.util.Collections;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.dialog.SaveCancelListener;
 
 public class AddSubtagDialog extends AbstractAddEditTagDialog<TagDefinition> {
-	
-	public AddSubtagDialog(SaveCancelListener<TagDefinition> saveCancelListener) {
+
+	/* So I don't have to change all the call to this function while testing, I'm doing two functions w/ different signatures */
+	public AddSubtagDialog(
+			SaveCancelListener<TagDefinition> saveCancelListener) {
 		super("Add Subtag", saveCancelListener);
 		initComponents(false);
+		initActions();
+		initData();
+	}
+
+	public AddSubtagDialog(
+			Collection<TagsetDefinition> availableTags,
+			Collection<TagDefinition> preSelectedTags,
+			SaveCancelListener<TagDefinition> saveCancelListener) {
+		super("Add Subtag", saveCancelListener);
+		initComponents(availableTags, preSelectedTags, false);
 		initActions();
 		initData();
 	}
