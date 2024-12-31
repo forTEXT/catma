@@ -993,20 +993,12 @@ public class TagsView extends HugeCard {
 							new AddSubtagDialog(
 								tagsets,
 								parentTags,
-								new SaveCancelListener<TagDefinition>() {
-								public void savePressed(TagDefinition result) {
-									for (TagDefinition parent : parentTags) {
-										
-										TagsetDefinition tagset = 
-											project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
-										
-										TagDefinition tag = new TagDefinition(result);
-										tag.setUuid(idGenerator.generate());
-										tag.setParentUuid(parent.getUuid());
-										tag.setTagsetDefinitionUuid(tagset.getUuid());
-										
+								new SaveCancelListener<Collection<TagDefinition>>() {
+								public void savePressed(Collection<TagDefinition> result) {
+									System.out.println(result.stream().count());	
+									for (TagDefinition item : result) {
 										project.getTagManager().addTagDefinition(
-												tagset, tag);
+											project.getTagManager().getTagLibrary().getTagsetDefinition(item.getTagsetDefinitionUuid()), item);
 									}
 								};
 							});
