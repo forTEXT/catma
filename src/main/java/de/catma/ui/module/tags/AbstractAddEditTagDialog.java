@@ -37,6 +37,7 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.FocusHandler;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
@@ -220,7 +221,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		possibleValuesArea.setSizeFull();
 		
 		propertyDefPanel.addComponent(possibleValuesArea);
-}
+	}
 
 	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
 			Optional<TagsetDefinition> preSelectedTagset, boolean allowPropertyDefEditing) {
@@ -245,9 +246,8 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		return(listOfIndentedTags);
 
 	}
-
-	protected void initComponents(Collection<TagsetDefinition> availableParents,
-			Collection<TagDefinition> preSelectedParents, boolean allowPropertyDefEditing) {
+	protected void populateParentBox(Collection<TagsetDefinition> availableParents,
+			Collection<TagDefinition> preSelectedParents) {
 		List<List<TagDefinition>> rootTags = availableParents.stream().map(tagset -> tagset.getRootTagDefinitions()).collect(Collectors.toList());
 		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
 		for (TagsetDefinition subTree : availableParents) {
@@ -260,6 +260,32 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		lbParent.setRows(5);
 		// lbParent.setEmptySelectionAllowed(false);
 		preSelectedParents.forEach(tag -> lbParent.select(tag));
+	}
+
+	/*
+	 * This only get called on the edit tag dialog, which has both select tagset and
+         * select parent options. There must be one selected item, which is the
+	 * one we're editing.
+         */
+	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
+			TagLibrary lib,
+			TagDefinition editedTag,
+			boolean allowPropertyDefEditing) {
+		Collection<TagDefinition> parent = new ArrayList<TagDefinition>();
+		if(lib.getTagDefinition(editedTag.getParentUuid()) != null) {
+			parent.add(lib.getTagDefinition(editedTag.getParentUuid()));
+		}
+		populateParentBox(availableTagsets, parent);
+		Optional<TagsetDefinition> otsd = Optional.of(lib.getTagsetDefinition(editedTag.getTagsetDefinitionUuid()));
+		initComponents(availableTagsets, otsd, allowPropertyDefEditing);
+		cbTagsets.addValueChangeListener(event -> {
+		});
+	}
+
+	protected void initComponents(Collection<TagsetDefinition> availableParents,
+			Collection<TagDefinition> preSelectedParents, boolean allowPropertyDefEditing) {
+		populateParentBox(availableParents, preSelectedParents);
+
 		this.initComponents(allowPropertyDefEditing);
 	}
 	

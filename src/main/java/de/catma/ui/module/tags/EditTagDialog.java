@@ -2,6 +2,10 @@ package de.catma.ui.module.tags;
 
 import com.vaadin.shared.ui.colorpicker.Color;
 
+import java.util.Collection;
+
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagsetDefinition;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -10,10 +14,10 @@ public class EditTagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	
 	private TagDefinition tagDefinition;
 
-	public EditTagDialog(TagDefinition tagDefinition, SaveCancelListener<TagDefinition> saveCancelListener) {
+	public EditTagDialog(Collection<TagsetDefinition> scope, TagLibrary tagLibrary, TagDefinition tagDefinition, SaveCancelListener<TagDefinition> saveCancelListener) {
 		super("Edit Tag", saveCancelListener);
 		this.tagDefinition = tagDefinition;
-		initComponents(true);
+		initComponents(scope, tagLibrary, tagDefinition, true);
 		initActions();
 		setPropertyDefinitionsVisible();
 		initData(tagDefinition);

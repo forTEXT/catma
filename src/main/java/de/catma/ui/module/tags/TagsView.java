@@ -705,7 +705,10 @@ public class TagsView extends HugeCard {
 						@Override
 						public void execute() {
 							EditTagDialog editTagDialog = 
-								new EditTagDialog(new TagDefinition(targetTag), 
+								new EditTagDialog(
+									tagsets,
+									project.getTagManager().getTagLibrary(),
+									new TagDefinition(targetTag),
 									new SaveCancelListener<TagDefinition>() {
 								public void savePressed(TagDefinition result) {
 									project.getTagManager().updateTagDefinition(targetTag, result);
