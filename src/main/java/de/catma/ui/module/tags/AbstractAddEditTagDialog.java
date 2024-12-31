@@ -234,10 +234,26 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		this.initComponents(allowPropertyDefEditing);
 	}
 
+	protected List<TagDefinition> unrollTree(TagsetDefinition tsd, List<TagDefinition> tags, String prefix) {
+		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
+		for (TagDefinition subTree : tags) {
+			TagDefinition item = new TagDefinition(subTree);
+			item.setName(prefix.concat(subTree.getName()));
+			listOfIndentedTags.add(item);
+			listOfIndentedTags.addAll(unrollTree(tsd, tsd.getDirectChildren(subTree), prefix.concat("-")));
+		}
+		return(listOfIndentedTags);
+
+	}
+
 	protected void initComponents(Collection<TagsetDefinition> availableParents,
 			Collection<TagDefinition> preSelectedParents, boolean allowPropertyDefEditing) {
-		List<TagDefinition> rootTags = availableParents.stream().map(tagset -> tagset.getRootTagDefinitions().get(0)).collect(Collectors.toList());
-		lbParent = new ListSelect<TagDefinition>("Parent", rootTags);
+		List<List<TagDefinition>> rootTags = availableParents.stream().map(tagset -> tagset.getRootTagDefinitions()).collect(Collectors.toList());
+		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
+		for (TagsetDefinition subTree : availableParents) {
+			listOfIndentedTags.addAll(unrollTree(subTree, subTree.getRootTagDefinitions(), String.valueOf('\\')));
+		}
+		lbParent = new ListSelect<TagDefinition>("Parent", listOfIndentedTags);
 		lbParent.setItemCaptionGenerator(tag -> tag.getName());
 		lbParent.setWidth("100%");
 		lbParent.setDescription("The parent(s) of the new tag");
