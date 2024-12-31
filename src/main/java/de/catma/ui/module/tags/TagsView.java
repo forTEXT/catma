@@ -989,11 +989,9 @@ public class TagsView extends HugeCard {
 				new Action() {
 					@Override
 					public void execute() {
-						Collection<TagsetDefinition> target = new ArrayList<TagsetDefinition>();
-						project.getTagManager().getTagLibrary().forEach(target::add);
 						AddSubtagDialog addTagDialog =
 							new AddSubtagDialog(
-								target,
+								tagsets,
 								parentTags,
 								new SaveCancelListener<TagDefinition>() {
 								public void savePressed(TagDefinition result) {
