@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.github.appreciated.material.MaterialTheme;
@@ -258,12 +259,21 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 			lbParent.setDataProvider(DataProvider.ofCollection(listOfIndentedTags));
 		} else {
 			lbParent = new ListSelect<TagDefinition>("Parent", listOfIndentedTags);
+			if (isWithParentSelection() && isWithTagsetSelection()) {
+				lbParent.addSelectionListener(event -> {
+					if (lbParent.getValue().stream().count()>1) {
+						Notification.show("Info", "You can only select one parent when editing a tag. Deselecting all but the first item.", Type.TRAY_NOTIFICATION);
+						TagDefinition item = lbParent.getValue().stream().findFirst().get();
+						lbParent.deselectAll();
+						lbParent.setValue(Set.of(item));
+					}
+				});
+			}
 			lbParent.setItemCaptionGenerator(tag -> tag.getName());
 			lbParent.setWidth("100%");
 			lbParent.setDescription("The parent(s) of the new tag");
 			lbParent.setRows(5);
 		}
-		// lbParent.setEmptySelectionAllowed(false);
 		preSelectedParents.forEach(tag -> lbParent.select(tag));
 	}
 
