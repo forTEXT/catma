@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.data.provider.DataProvider;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
@@ -260,17 +261,21 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 
 	}
 	protected void populateParentBox(Collection<TagsetDefinition> availableParents,
-			Collection<TagDefinition> preSelectedParents) {
+			Collection<TagDefinition> preSelectedParents, boolean update) {
 		List<List<TagDefinition>> rootTags = availableParents.stream().map(tagset -> tagset.getRootTagDefinitions()).collect(Collectors.toList());
 		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
 		for (TagsetDefinition subTree : availableParents) {
 			listOfIndentedTags.addAll(unrollTree(subTree, subTree.getRootTagDefinitions(), String.valueOf('\\')));
 		}
-		lbParent = new ListSelect<TagDefinition>("Parent", listOfIndentedTags);
-		lbParent.setItemCaptionGenerator(tag -> tag.getName());
-		lbParent.setWidth("100%");
-		lbParent.setDescription("The parent(s) of the new tag");
-		lbParent.setRows(5);
+		if (update) {
+			lbParent.setDataProvider(DataProvider.ofCollection(listOfIndentedTags));
+		} else {
+			lbParent = new ListSelect<TagDefinition>("Parent", listOfIndentedTags);
+			lbParent.setItemCaptionGenerator(tag -> tag.getName());
+			lbParent.setWidth("100%");
+			lbParent.setDescription("The parent(s) of the new tag");
+			lbParent.setRows(5);
+		}
 		// lbParent.setEmptySelectionAllowed(false);
 		preSelectedParents.forEach(tag -> lbParent.select(tag));
 	}
@@ -288,16 +293,29 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		if(lib.getTagDefinition(editedTag.getParentUuid()) != null) {
 			parent.add(lib.getTagDefinition(editedTag.getParentUuid()));
 		}
-		populateParentBox(availableTagsets, parent);
+		if(lib.getTagsetDefinition(editedTag.getTagsetDefinitionUuid()) != null) {
+			ArrayList<TagsetDefinition> tsd = new ArrayList<TagsetDefinition>();
+			tsd.add(lib.getTagsetDefinition(editedTag));
+			populateParentBox(tsd, parent, false);
+		} else {
+			populateParentBox(availableTagsets, parent, false);
+		}
 		Optional<TagsetDefinition> otsd = Optional.of(lib.getTagsetDefinition(editedTag.getTagsetDefinitionUuid()));
 		initComponents(availableTagsets, otsd, allowPropertyDefEditing);
 		cbTagsets.addValueChangeListener(event -> {
+			if (cbTagsets.getSelectedItem().isPresent()) {
+				ArrayList<TagsetDefinition> theList = new ArrayList<TagsetDefinition>();
+				theList.add(cbTagsets.getValue());
+				populateParentBox(theList, new ArrayList<TagDefinition>(), true);
+			} else {
+				populateParentBox(availableTagsets, new ArrayList<TagDefinition>(), true);
+			}
 		});
 	}
 
 	protected void initComponents(Collection<TagsetDefinition> availableParents,
 			Collection<TagDefinition> preSelectedParents, boolean allowPropertyDefEditing) {
-		populateParentBox(availableParents, preSelectedParents);
+		populateParentBox(availableParents, preSelectedParents, false);
 
 		this.initComponents(allowPropertyDefEditing);
 	}
@@ -328,11 +346,18 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 
 	@Override
 	protected void addContent(ComponentContainer content) {
-		if (isWithParentSelection()) {
-			content.addComponent(lbParent);
-		}
-		if (isWithTagsetSelection()) {
-			content.addComponent(cbTagsets);
+		if (isWithParentSelection() && isWithTagsetSelection()) {
+			HorizontalLayout topPanel = new HorizontalLayout();
+			topPanel.addComponent(cbTagsets);
+			topPanel.addComponent(lbParent);
+			content.addComponent(topPanel);
+		} else {
+			if (isWithParentSelection()) {
+				content.addComponent(lbParent);
+			}
+			if (isWithTagsetSelection()) {
+				content.addComponent(cbTagsets);
+			}
 		}
 		content.addComponent(
 			new Label(
