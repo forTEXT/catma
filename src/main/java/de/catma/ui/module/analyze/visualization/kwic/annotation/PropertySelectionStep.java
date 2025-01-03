@@ -1,9 +1,13 @@
 package de.catma.ui.module.analyze.visualization.kwic.annotation;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.Component;
@@ -28,12 +32,20 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 	private CollectionSelectionStep nextStep;
 	private WizardContext context;
 	private boolean skipped;
+	private Comparator<String> valueComparator;
+	private Comparator<PropertyDefinition> pdComparator;
 
 	public PropertySelectionStep(EventBus eventBus, Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		this.context = context;
 		this.context.put(AnnotationWizardContextKey.PROPERTIES, Collections.emptyList());
 		this.progressStep = progressStepFactory.create(2, "Set Property Values");
 		this.nextStep = new CollectionSelectionStep(eventBus, project, context, progressStepFactory);
+		
+		Locale locale = project.getTagManager().getTagLibrary().getLocale();
+		Collator collator = Collator.getInstance(locale);
+		this.pdComparator = (pd1, pd2) -> collator.compare(Optional.ofNullable(pd1.getName()).orElse(""), Optional.ofNullable(pd2.getName()).orElse(""));
+		this.valueComparator = (value1, value2) -> collator.compare(Optional.ofNullable(value1).orElse(""), Optional.ofNullable(value2).orElse(""));
+
 		initComponents();
 	}
 
@@ -70,10 +82,10 @@ public class PropertySelectionStep extends VerticalLayout implements WizardStep 
 	public void setTag(TagDefinition tag) {
 		propertyTabSheet.removeAllComponents();
 		
-		for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
+		for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions().stream().sorted(pdComparator).toList()) {
 			Property property = new Property(propertyDef.getUuid(), Collections.emptySet());
 			EditPropertyTab editPropertyTab = 
-					new EditPropertyTab(property, propertyDef.getPossibleValueList());
+					new EditPropertyTab(property, propertyDef.getPossibleValueList(), valueComparator);
 			editPropertyTab.addSelectionListener(event -> handleSelection());
 			propertyTabSheet.addTab(editPropertyTab, propertyDef.getName());
 		}	

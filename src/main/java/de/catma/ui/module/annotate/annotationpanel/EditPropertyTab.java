@@ -1,7 +1,9 @@
 package de.catma.ui.module.annotate.annotationpanel;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.TreeSet;
 
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.event.selection.SelectionListener;
@@ -28,11 +30,11 @@ public class EditPropertyTab extends HorizontalLayout {
 	private ListDataProvider<String> valueProvider;
 	private List<String> proposedValueList;
 
-	public EditPropertyTab(Property property, List<String> proposedValueList) {
+	public EditPropertyTab(Property property, List<String> proposedValueList, Comparator<String> valueComparator) {
 		super();
 		this.property = property;
 		this.proposedValueList = proposedValueList;
-		initComponents();
+		initComponents(valueComparator);
 		initActions();
 	}
 
@@ -61,12 +63,13 @@ public class EditPropertyTab extends HorizontalLayout {
 		}
 	}
 
-	private void initComponents() {
+	private void initComponents(Comparator<String> valueComparator) {
 		setSizeFull();
 		setSpacing(true);
 		setMargin(true);
 		
-		ArrayList<String> valueList = new ArrayList<>(proposedValueList);
+		TreeSet<String> valueList = new TreeSet<>(valueComparator);
+		valueList.addAll(proposedValueList);
 		for (String value : property.getPropertyValueList()) {
 			if (!valueList.contains(value)) {
 				valueList.add(value);
