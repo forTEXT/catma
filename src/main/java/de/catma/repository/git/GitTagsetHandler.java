@@ -175,8 +175,6 @@ public class GitTagsetHandler {
 	/**
 	 * Moves a tag definition between one or multiple tagsets identified by <code>tagsetId</code>.
 	 *
-	 * @param tsdFrom {@link TagsetDefinition} source
-	 * @param tsdTo {@link TagsetDefinition} destination
 	 * @param tdFrom {@link TagDefinition} source
 	 * @param tdTo {@link TagDefinition} destination
 	 * @param commitMsg commit message
@@ -188,6 +186,7 @@ public class GitTagsetHandler {
 			TagDefinition tdTo,
 			String commitMsg
 	) throws IOException {
+		String pdj = "/propertydefs.json";
 		String common =	String.format("%s/%s/", this.projectDirectory.getAbsolutePath(), GitProjectHandler.TAGSETS_DIRECTORY_NAME);
 		String fromTagsetDir = String.format("%s/%s/", common, tdFrom.getTagsetDefinitionUuid());
 		String toTagsetDir = String.format("%s/%s/", common, tdTo.getTagsetDefinitionUuid());
@@ -209,23 +208,49 @@ public class GitTagsetHandler {
 				move a parent around in the root of the hierarchy, its fine, we just move the folder
                                 around */
 			FileUtils.moveDirectory(from, to);
-			this.localGitRepositoryManager.remove(Paths.get(fromPath + "/propertydefs.json").toFile());
+			this.localGitRepositoryManager.remove(Paths.get(fromPath + pdj).toFile());
 			this.localGitRepositoryManager.remove(from);
 		}
 		if (StringUtils.isEmpty(tdFrom.getParentUuid()) && !StringUtils.isEmpty(tdTo.getParentUuid())) {
-			/* if we moved from an empty parent to an object lower in the hierarchy, we need to bring the child back down */
+			/* if we moved from the root to an object lower in the hierarchy, we need to bring the children back down 
+			(if it has any) */
+			/* There shouldn't be a subdir with the name of the current tag UUID in its parent folder */
+			to.mkdirs();
+			FileUtils.moveFile(Paths.get(fromPath+pdj).toFile(), Paths.get(toPath+pdj).toFile());
+			/* That leaves the children in the root of the tagset under the directory with the name of
+                        their parent, which is what we wanted anyways */
+			this.localGitRepositoryManager.remove(Paths.get(fromPath + pdj).toFile());
 		}
 		if (StringUtils.isEmpty(tdTo.getParentUuid()) && !StringUtils.isEmpty(tdFrom.getParentUuid())) {
 			/* If we moved back to the root, our children are already in a directory called with our UUID at the root,
-			we need to not squish them */
+			we need to not squish them, so we only move the propertydefs there */
+			FileUtils.moveFile(Paths.get(fromPath+pdj).toFile(), Paths.get(toPath+pdj).toFile());
+			this.localGitRepositoryManager.remove(Paths.get(fromPath + pdj).toFile());
 		}
 
 		GitTagDefinition gitTagDefinition = new GitTagDefinition(tdTo);
 		String serializedGitTagDefinition =
 				new SerializationHelper<GitTagDefinition>().serialize(gitTagDefinition);
 
+		File tagsetHeaderFile = Paths.get(fromTagsetDir + HEADER_FILE_NAME).toFile();
+		String serializedTagsetHeader = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);
+		GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
+				.deserialize(
+						serializedTagsetHeader,
+						GitTagsetHeader.class
+				);
+		serializedTagsetHeader = new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
+		gitTagsetHeader.getDeletedDefinitions().add(tdFrom.getUuid());
+
+		serializedTagsetHeader =
+				new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
+
+		this.localGitRepositoryManager.add(
+				tagsetHeaderFile,
+			serializedTagsetHeader.getBytes(StandardCharsets.UTF_8));
+
 		String projectRevision = this.localGitRepositoryManager.addAndCommit(
-			Paths.get(to + "/propertydefs.json").toFile(),
+			Paths.get(toPath + pdj).toFile(),
 			serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8),
 			commitMsg,
 			this.username,
