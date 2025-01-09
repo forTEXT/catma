@@ -201,6 +201,7 @@ public class AnnotationPanel extends VerticalLayout {
 	
 		            			tagsetData.addItem(parent, tagDataItem);
 		            			//TODO: sort
+						addTagSubTree(tagset, tag, (TagDataItem)tagDataItem);
 		            			
 		            			tagsetDataProvider.refreshAll();
 		            			showExpandedProperties(((TagDataItem)tagDataItem));
