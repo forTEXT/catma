@@ -266,6 +266,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		List<List<TagDefinition>> rootTags = availableParents.stream().map(tagset -> tagset.getRootTagDefinitions()).collect(Collectors.toList());
 		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
 		for (TagsetDefinition subTree : availableParents) {
+			/* TODO: We need to prevent the user from unrooting the tree/branch, eg: setting an item parents as one of its children. */
 			listOfIndentedTags.addAll(unrollTree(subTree, subTree.getRootTagDefinitions(), String.valueOf('\\')));
 		}
 		if (update) {
