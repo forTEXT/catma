@@ -409,6 +409,30 @@ public class GraphWorktreeProject implements IndexedProject {
 		};
 		tagManager.addPropertyChangeListener(TagManagerEvent.tagDefinitionChanged, tagDefinitionChangedListener);
 
+		PropertyChangeListener tagDefinitionMovedListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				if (!tagManagerListenersEnabled) {
+					return;
+				}
+
+				try {
+					@SuppressWarnings("unchecked")
+					final Pair<TagsetDefinition, TagDefinition> newVal = (Pair<TagsetDefinition, TagDefinition>) evt.getNewValue();
+					final Pair<TagsetDefinition, TagDefinition> oldVal = (Pair<TagsetDefinition, TagDefinition>) evt.getOldValue();
+					moveTagDefinition((TagsetDefinition)(oldVal.getFirst()), (TagsetDefinition)(newVal.getFirst()), (TagDefinition)(oldVal.getSecond()), (TagDefinition)(newVal.getSecond()));
+				}
+				catch (Exception e) {
+					propertyChangeSupport.firePropertyChange(
+							ProjectEvent.exceptionOccurred.name(),
+							null,
+							e
+					);
+				}
+			}
+		};
+
+		tagManager.addPropertyChangeListener(TagManagerEvent.tagDefinitionMoved, tagDefinitionMovedListener);
+
 		PropertyChangeListener userDefinedPropertyChangedListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (!tagManagerListenersEnabled) {
@@ -652,37 +676,6 @@ public class GraphWorktreeProject implements IndexedProject {
 		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
 
-	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
-		if (isReadOnly()) {
-			throw new IllegalStateException(
-					String.format(
-							"Project \"%1$s\" is in read-only mode! Cannot add tag \"%2$s\" to tagset \"%3$s\".",
-							projectReference.getName(),
-							tagDefinition.getName(),
-							tagsetDefinition.getName()
-					)
-			);
-		}
-
-		String oldRootRevisionHash = rootRevisionHash;
-
-		// create tag in repo and commit
-		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
-				tagsetDefinition.getUuid(),
-				tagDefinition,
-				String.format(
-						"Added tag \"%1$s\" with ID %2$s to tagset \"%3$s\" with ID %4$s",
-						tagDefinition.getName(),
-						tagDefinition.getUuid(),
-						tagsetDefinition.getName(),
-						tagsetDefinition.getUuid()
-				)
-		);
-
-		// update revision hash on GraphProjectHandler
-		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
-	}
-
 	private void updateTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 		if (isReadOnly()) {
 			throw new IllegalStateException(
@@ -711,6 +704,74 @@ public class GraphWorktreeProject implements IndexedProject {
 				)
 		);
 
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
+	}
+
+	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+					String.format(
+							"Project \"%1$s\" is in read-only mode! Cannot add tag \"%2$s\" to tagset \"%3$s\".",
+							projectReference.getName(),
+							tagDefinition.getName(),
+							tagsetDefinition.getName()
+					)
+			);
+		}
+		String oldRootRevisionHash = rootRevisionHash;
+
+		// create tag in repo and commit
+		rootRevisionHash = gitProjectHandler.createOrUpdateTag(
+				tagsetDefinition.getUuid(),
+				tagDefinition,
+				String.format(
+						"Added tag \"%1$s\" with ID %2$s to tagset \"%3$s\" with ID %4$s",
+						tagDefinition.getName(),
+						tagDefinition.getUuid(),
+						tagsetDefinition.getName(),
+						tagsetDefinition.getUuid()
+				)
+		);
+
+		// update revision hash on GraphProjectHandler
+		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
+	}
+
+	private void moveTagDefinition(TagsetDefinition tsdFrom, TagsetDefinition tsdTo, TagDefinition tdFrom, TagDefinition tdTo) throws Exception {
+		if (isReadOnly()) {
+			throw new IllegalStateException(
+					String.format(
+							"Project \"%1$s\" is in read-only mode! Cannot move tag \"%2$s\" with ID %3$s from tagset \"%4$s\".",
+							projectReference.getName(),
+							tdTo.getName(),
+							tdTo.getUuid(),
+							tsdTo.getName()
+					)
+			);
+		}
+
+		String oldRootRevisionHash = rootRevisionHash;
+
+		Multimap<String, TagReference> tagReferencesByCollectionId = graphProjectHandler.getTagReferencesByCollectionId(tdFrom);
+		Multimap<String, TagInstance> tagInstancesByCollectionId = Multimaps.transformValues(
+				tagReferencesByCollectionId, TagReference::getTagInstance
+		);
+
+		// update tag in repo and commit
+		rootRevisionHash = gitProjectHandler.moveTagAndUpdateAnnotations(
+				tsdFrom, tsdTo, tdFrom, tdTo,
+				tagInstancesByCollectionId,
+				String.format(
+						"Moved tag \"%1$s\" with ID %2$s from tagset \"%3$s\" with ID %4$s to tagset \"%5$s\" with id %6$s",
+						tdTo.getName(),
+						tdTo.getUuid(),
+						tsdFrom.getName(),
+						tsdFrom.getUuid(),
+						tsdTo.getName(),
+						tsdTo.getUuid()
+				)
+		);
 		// update revision hash on GraphProjectHandler
 		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
