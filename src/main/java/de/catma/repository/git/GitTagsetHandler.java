@@ -171,6 +171,69 @@ public class GitTagsetHandler {
 
 		return contentInfoSet;
 	}
+
+	/**
+	 * Moves a tag definition between one or multiple tagsets identified by <code>tagsetId</code>.
+	 *
+	 * @param tsdFrom {@link TagsetDefinition} source
+	 * @param tsdTo {@link TagsetDefinition} destination
+	 * @param tdFrom {@link TagDefinition} source
+	 * @param tdTo {@link TagDefinition} destination
+	 * @param commitMsg commit message
+	 * @return the new project revision hash
+	 * @throws IOException if an error occurs during the move of the tag definition
+	 */
+	public String moveTagDefinition(
+			TagDefinition tdFrom,
+			TagDefinition tdTo,
+			String commitMsg
+	) throws IOException {
+		String common =	String.format("%s/%s/", this.projectDirectory.getAbsolutePath(), GitProjectHandler.TAGSETS_DIRECTORY_NAME);
+		String fromTagsetDir = String.format("%s/%s/", common, tdFrom.getTagsetDefinitionUuid());
+		String toTagsetDir = String.format("%s/%s/", common, tdTo.getTagsetDefinitionUuid());
+
+		/* This work like it seems: all the folders having subdirectories have a folder
+		at the root of the tagset folder containing the subitems. This mean that the
+		hiearchy isn't stored as it is in the UI. */
+		String fromPath = fromTagsetDir +
+			(StringUtils.isEmpty(tdFrom.getParentUuid()) ? "" : (tdFrom.getParentUuid() + "/"))
+			+ tdFrom.getUuid();
+		String toPath = toTagsetDir +
+			(StringUtils.isEmpty(tdTo.getParentUuid()) ? "" : (tdTo.getParentUuid() + "/"))
+			+ tdTo.getUuid();
+		File from = Paths.get(fromPath).toFile();
+		File to = Paths.get(toPath).toFile();
+		if ((StringUtils.isEmpty(tdFrom.getParentUuid()) && StringUtils.isEmpty(tdTo.getParentUuid())) ||
+			(!StringUtils.isEmpty(tdFrom.getParentUuid()) && !StringUtils.isEmpty(tdTo.getParentUuid()))) {
+			/* if we move from an item in a tree somewhere to an item in a tree somewhere else, or if we
+				move a parent around in the root of the hierarchy, its fine, we just move the folder
+                                around */
+			FileUtils.moveDirectory(from, to);
+			this.localGitRepositoryManager.remove(Paths.get(fromPath + "/propertydefs.json").toFile());
+			this.localGitRepositoryManager.remove(from);
+		}
+		if (StringUtils.isEmpty(tdFrom.getParentUuid()) && !StringUtils.isEmpty(tdTo.getParentUuid())) {
+			/* if we moved from an empty parent to an object lower in the hierarchy, we need to bring the child back down */
+		}
+		if (StringUtils.isEmpty(tdTo.getParentUuid()) && !StringUtils.isEmpty(tdFrom.getParentUuid())) {
+			/* If we moved back to the root, our children are already in a directory called with our UUID at the root,
+			we need to not squish them */
+		}
+
+		GitTagDefinition gitTagDefinition = new GitTagDefinition(tdTo);
+		String serializedGitTagDefinition =
+				new SerializationHelper<GitTagDefinition>().serialize(gitTagDefinition);
+
+		String projectRevision = this.localGitRepositoryManager.addAndCommit(
+			Paths.get(to + "/propertydefs.json").toFile(),
+			serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8),
+			commitMsg,
+			this.username,
+			this.email);
+		System.out.println("Deletion test commit:" + projectRevision);
+		return projectRevision;
+	}
+
 	
 	/**
 	 * Creates a tag definition within the tagset identified by <code>tagsetId</code>.
@@ -187,6 +250,9 @@ public class GitTagsetHandler {
 			String commitMsg
 	) throws IOException {
 
+		/* This work like it seems: all the folders having subdirectories have a folder
+		at the root of the tagset folder containing the subitems. This mean that the
+		hiearchy isn't stored as it is in the UI. */
 		String targetPropertyDefinitionsFileRelativePath =
 			(StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : (tagDefinition.getParentUuid() + "/"))
 			+ tagDefinition.getUuid()
