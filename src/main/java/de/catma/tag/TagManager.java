@@ -226,9 +226,14 @@ public class TagManager {
 			 * parent, it creates a copy, breaking your tagset, so we manually remove and re-add */
 			this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionMoved.name(),
-				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(updatedTag.getTagsetDefinitionUuid()), tag),
-				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(tag.getTagsetDefinitionUuid()), updatedTag));
+				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(tag.getTagsetDefinitionUuid()), tag),
+				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(updatedTag.getTagsetDefinitionUuid()), updatedTag));
 			tag.setParentUuid(updatedTag.getParentUuid());
+
+			this.propertyChangeSupport.firePropertyChange(
+				TagManagerEvent.tagDefinitionChanged.name(),
+				tagLibrary.getTagsetDefinition(updatedTag.getTagsetDefinitionUuid()),
+				updatedTag);
 		} else {
 			this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionChanged.name(),
