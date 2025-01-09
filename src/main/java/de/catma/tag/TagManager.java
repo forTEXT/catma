@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import de.catma.document.source.ContentInfoSet;
+import de.catma.project.Project;
 import de.catma.util.Pair;
 
 /**
@@ -102,6 +103,13 @@ public class TagManager {
 		 * <li>{@link PropertyChangeEvent#getOldValue()} = the {@link ContentInfoSet old bibliographical data }</li>
 		 */
 		tagLibraryChanged, 
+		/**
+		 * <p>{@link TagDescription} moved:
+		 * <li>{@link PropertyChangeEvent#getNewValue()} = the new tagset and location</li>
+		 * <li>{@link PropertyChangeEvent#getOldValue()} = the old tagset and location</li>
+		 * </p><br />
+		 */
+		tagDefinitionMoved,
 		;
 	}
 	
@@ -210,14 +218,24 @@ public class TagManager {
 					pd.getUuid()).setPossibleValueList(pd.getPossibleValueList());
 			}
 		}
-		
 		tag.setName(updatedTag.getName());
 		tag.setColor(updatedTag.getColor());
-		
-		this.propertyChangeSupport.firePropertyChange(
+		System.out.println("new val: " + updatedTag.getParentUuid() + ", oldVal =" + tag.getParentUuid()  );
+		if (tag.getParentUuid() != updatedTag.getParentUuid()) {
+			/* the update function in the json export module call "createOrModify", hence, if you change the
+			 * parent, it creates a copy, breaking your tagset, so we manually remove and re-add */
+			this.propertyChangeSupport.firePropertyChange(
+				TagManagerEvent.tagDefinitionMoved.name(),
+				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(updatedTag.getTagsetDefinitionUuid()), tag),
+				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(tag.getTagsetDefinitionUuid()), updatedTag));
+			tag.setParentUuid(updatedTag.getParentUuid());
+		} else {
+			this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionChanged.name(),
 				tagset,
 				tag);
+		}
+
 	}
 
 	public void removeUserDefinedPropertyDefinition(
