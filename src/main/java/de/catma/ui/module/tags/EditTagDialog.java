@@ -3,6 +3,7 @@ package de.catma.ui.module.tags;
 import com.vaadin.shared.ui.colorpicker.Color;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
@@ -55,6 +56,8 @@ public class EditTagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 
 	@Override
 	protected TagDefinition getResult() {
+		Optional<TagDefinition> item = lbParent.getValue().stream().findFirst();
+		tagDefinition.setParentUuid(item.isPresent()?item.get().getUuid():null);
 		tagDefinition.setName(tfName.getValue());
 		tagDefinition.setColor(String.valueOf(colorPicker.getValue().getRGB()));
 		
