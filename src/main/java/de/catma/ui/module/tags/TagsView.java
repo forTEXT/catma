@@ -199,6 +199,45 @@ public class TagsView extends HugeCard {
 
 		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagDefinitionChanged, tagDefinitionChangedListener);
 
+		PropertyChangeListener tagDefinitionMovedListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				@SuppressWarnings("unchecked")
+				final Pair<TagsetDefinition, TagDefinition> newVal = (Pair<TagsetDefinition, TagDefinition>) evt.getNewValue();
+				final Pair<TagsetDefinition, TagDefinition> oldVal = (Pair<TagsetDefinition, TagDefinition>) evt.getOldValue();
+
+				System.out.println("inside the tag moved listener for the TagsView");
+				TagsetDefinition fromTagset = newVal.getFirst();
+				TagDefinition fromTag = newVal.getSecond();
+				TagsetDefinition toTagset = newVal.getFirst();
+				TagDefinition toTag = newVal.getSecond();
+				Optional<TagsetDataItem> optionalTsdiTo = tagsetData.getRootItems().stream()
+							.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
+							.filter(tdi -> tdi.getTagset().getUuid().equals(toTagset.getUuid()))
+							.findFirst();
+				if (!optionalTsdiTo.isPresent()) {
+					logger.warning(	String.format( "Failed to find tagset with ID %1$s (to) in the TagsView TreeGrid for project \"%2$s\" with ID %3$s",
+						toTagset.getUuid(), project.getName(), project.getId()));
+						return;
+				}
+				TagsetDataItem tsdiTo = optionalTsdiTo.get();
+				TagDataItem tdiTo = new TagDataItem(toTag, tsdiTo.isEditable());
+				tdiTo.setPropertiesExpanded(true);
+				tagsetData.removeItem(tdiTo);
+				String toParent = toTag.getParentUuid();
+				TagsetTreeItem parentUpdateTo = tsdiTo;
+				if (!toParent.isEmpty()) {
+					parentUpdateTo = new TagDataItem(toTagset.getTagDefinition(toParent));
+				}
+				tagsetData.addItem(parentUpdateTo, tdiTo);
+				addTagSubTree(toTagset, toTag, tdiTo);
+				tagsetDataProvider.refreshAll();
+				showExpandedProperties(tdiTo);
+			}
+		};
+
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagDefinitionMoved, tagDefinitionMovedListener);
+
+
 		propertyDefinitionChangedListener = new PropertyChangeListener() {
 			@SuppressWarnings("unchecked")
 			@Override
