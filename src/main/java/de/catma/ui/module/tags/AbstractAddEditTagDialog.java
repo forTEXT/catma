@@ -300,6 +300,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		}
 		Optional<TagsetDefinition> otsd = Optional.of(lib.getTagsetDefinition(editedTag.getTagsetDefinitionUuid()));
 		initComponents(availableTagsets, otsd, allowPropertyDefEditing);
+		cbTagsets.setEnabled(false);
 		cbTagsets.addValueChangeListener(event -> {
 			if (cbTagsets.getSelectedItem().isPresent()) {
 				ArrayList<TagsetDefinition> theList = new ArrayList<TagsetDefinition>();
