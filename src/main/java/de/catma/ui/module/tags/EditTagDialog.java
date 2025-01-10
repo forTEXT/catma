@@ -55,7 +55,7 @@ public class EditTagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	@Override
 	protected TagDefinition getResult() {
 		Optional<TagDefinition> item = lbParent.getValue().stream().findFirst();
-		tagDefinition.setParentUuid(item.isPresent()?item.get().getUuid():null);
+		tagDefinition.setParentUuid(item.isPresent()?item.get().getUuid():"");
 		tagDefinition.setName(tfName.getValue());
 		tagDefinition.setColor(String.valueOf(colorPicker.getValue().getRGB()));
 		
