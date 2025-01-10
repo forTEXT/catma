@@ -229,11 +229,6 @@ public class TagManager {
 				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(tag.getTagsetDefinitionUuid()), tag),
 				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(updatedTag.getTagsetDefinitionUuid()), updatedTag));
 			tag.setParentUuid(updatedTag.getParentUuid());
-
-			this.propertyChangeSupport.firePropertyChange(
-				TagManagerEvent.tagDefinitionChanged.name(),
-				tagLibrary.getTagsetDefinition(updatedTag.getTagsetDefinitionUuid()),
-				updatedTag);
 		} else {
 			this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionChanged.name(),
