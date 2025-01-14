@@ -250,24 +250,31 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		this.initComponents(allowPropertyDefEditing);
 	}
 
-	protected List<TagDefinition> unrollTree(TagsetDefinition tsd, List<TagDefinition> tags, String prefix) {
+	protected List<TagDefinition> unrollTree(TagsetDefinition tsd, List<TagDefinition> tags, String avoid, String prefix) {
 		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
 		for (TagDefinition subTree : tags) {
 			TagDefinition item = new TagDefinition(subTree);
 			item.setName(prefix.concat(subTree.getName()));
-			listOfIndentedTags.add(item);
-			listOfIndentedTags.addAll(unrollTree(tsd, tsd.getDirectChildren(subTree), prefix.concat("-")));
+			if (item.getUuid() != avoid) {
+				listOfIndentedTags.add(item);
+				listOfIndentedTags.addAll(unrollTree(tsd, tsd.getDirectChildren(subTree), avoid, prefix.concat("-")));
+			}
 		}
 		return(listOfIndentedTags);
 
 	}
+
+	/*
+         * Adds the items in the Parent selection box.
+         * avoid allows to avoid certain UUID of items. Set to anything that isn't a UUID if you
+         * allow to choose everything.
+	 */
 	protected void populateParentBox(Collection<TagsetDefinition> availableParents,
-			Collection<TagDefinition> preSelectedParents, boolean update) {
+			Collection<TagDefinition> preSelectedParents, String avoid, boolean update) {
 		List<List<TagDefinition>> rootTags = availableParents.stream().map(tagset -> tagset.getRootTagDefinitions()).collect(Collectors.toList());
 		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
 		for (TagsetDefinition subTree : availableParents) {
-			/* TODO: We need to prevent the user from unrooting the tree/branch, eg: setting an item parents as one of its children. */
-			listOfIndentedTags.addAll(unrollTree(subTree, subTree.getRootTagDefinitions(), String.valueOf('\\')));
+			listOfIndentedTags.addAll(unrollTree(subTree, subTree.getRootTagDefinitions(), avoid, String.valueOf('\\')));
 		}
 		if (update) {
 			lbParent.setDataProvider(DataProvider.ofCollection(listOfIndentedTags));
@@ -307,9 +314,9 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		if(lib.getTagsetDefinition(editedTag.getTagsetDefinitionUuid()) != null) {
 			ArrayList<TagsetDefinition> tsd = new ArrayList<TagsetDefinition>();
 			tsd.add(lib.getTagsetDefinition(editedTag));
-			populateParentBox(tsd, parent, false);
+			populateParentBox(tsd, parent, editedTag.getUuid(), false);
 		} else {
-			populateParentBox(availableTagsets, parent, false);
+			populateParentBox(availableTagsets, parent, editedTag.getUuid(), false);
 		}
 		Optional<TagsetDefinition> otsd = Optional.of(lib.getTagsetDefinition(editedTag.getTagsetDefinitionUuid()));
 		initComponents(availableTagsets, otsd, allowPropertyDefEditing);
@@ -318,16 +325,16 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 			if (cbTagsets.getSelectedItem().isPresent()) {
 				ArrayList<TagsetDefinition> theList = new ArrayList<TagsetDefinition>();
 				theList.add(cbTagsets.getValue());
-				populateParentBox(theList, new ArrayList<TagDefinition>(), true);
+				populateParentBox(theList, new ArrayList<TagDefinition>(), editedTag.getUuid(), true);
 			} else {
-				populateParentBox(availableTagsets, new ArrayList<TagDefinition>(), true);
+				populateParentBox(availableTagsets, new ArrayList<TagDefinition>(), editedTag.getUuid(), true);
 			}
 		});
 	}
 
 	protected void initComponents(Collection<TagsetDefinition> availableParents,
 			Collection<TagDefinition> preSelectedParents, boolean allowPropertyDefEditing) {
-		populateParentBox(availableParents, preSelectedParents, false);
+		populateParentBox(availableParents, preSelectedParents, "none", false);
 
 		this.initComponents(allowPropertyDefEditing);
 	}
