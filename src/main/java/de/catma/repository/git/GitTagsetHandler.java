@@ -232,23 +232,6 @@ public class GitTagsetHandler {
 		String serializedGitTagDefinition =
 				new SerializationHelper<GitTagDefinition>().serialize(gitTagDefinition);
 
-		File tagsetHeaderFile = Paths.get(fromTagsetDir + HEADER_FILE_NAME).toFile();
-		String serializedTagsetHeader = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);
-		GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
-				.deserialize(
-						serializedTagsetHeader,
-						GitTagsetHeader.class
-				);
-		serializedTagsetHeader = new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
-		gitTagsetHeader.getDeletedDefinitions().add(tdFrom.getUuid());
-
-		serializedTagsetHeader =
-				new SerializationHelper<GitTagsetHeader>().serialize(gitTagsetHeader);
-
-		this.localGitRepositoryManager.add(
-				tagsetHeaderFile,
-			serializedTagsetHeader.getBytes(StandardCharsets.UTF_8));
-
 		String projectRevision = this.localGitRepositoryManager.addAndCommit(
 			Paths.get(toPath + pdj).toFile(),
 			serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8),
