@@ -240,19 +240,18 @@ public class AnnotationPanel extends VerticalLayout {
 				}
 				TagsetDataItem tsdiTo = optionalTsdiTo.get();
 				TagDataItem tdiTo = new TagDataItem(toTag);
-				tdiTo.setPropertiesExpanded(true);
-
-				tagsetData.removeItem(tdiTo);
-
+				TagDataItem tdiFrom = new TagDataItem(fromTag);
 				String toParent = toTag.getParentUuid();
-				TagsetTreeItem parentUpdateTo = tsdiTo;
+				TagsetTreeItem parentUpdateTo = null;
 				if (!toParent.isEmpty()) {
 					parentUpdateTo = new TagDataItem(toTagset.getTagDefinition(toParent));
 				}
-				tagsetData.addItem(parentUpdateTo, tdiTo);
-				addTagSubTree(toTagset, toTag, tdiTo);
-				tagsetDataProvider.refreshAll();
+				System.out.println(String.format("Received info about a move from parent %1$s to %2$s with ID %3$s...",
+						fromTag.getParentUuid(), toTag.getParentUuid(), toTag.getName()));
+				tagsetData.setParent(tdiFrom, parentUpdateTo);
+				tdiTo.setPropertiesExpanded(true);
 				showExpandedProperties(tdiTo);
+				tagsetDataProvider.refreshAll();
 			}
 		};
 		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagDefinitionMoved, tagDefinitionMovedListener);
