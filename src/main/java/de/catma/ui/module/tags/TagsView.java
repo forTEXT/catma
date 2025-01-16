@@ -206,8 +206,8 @@ public class TagsView extends HugeCard {
 				final Pair<TagsetDefinition, TagDefinition> oldVal = (Pair<TagsetDefinition, TagDefinition>) evt.getOldValue();
 
 				System.out.println("inside the tag moved listener for the TagsView");
-				TagsetDefinition fromTagset = newVal.getFirst();
-				TagDefinition fromTag = newVal.getSecond();
+				TagsetDefinition fromTagset = oldVal.getFirst();
+				TagDefinition fromTag = oldVal.getSecond();
 				TagsetDefinition toTagset = newVal.getFirst();
 				TagDefinition toTag = newVal.getSecond();
 				Optional<TagsetDataItem> optionalTsdiTo = tagsetData.getRootItems().stream()
@@ -221,17 +221,19 @@ public class TagsView extends HugeCard {
 				}
 				TagsetDataItem tsdiTo = optionalTsdiTo.get();
 				TagDataItem tdiTo = new TagDataItem(toTag, tsdiTo.isEditable());
-				tdiTo.setPropertiesExpanded(true);
-				tagsetData.removeItem(tdiTo);
+				TagDataItem tdiFrom = new TagDataItem(fromTag, tsdiTo.isEditable());
 				String toParent = toTag.getParentUuid();
-				TagsetTreeItem parentUpdateTo = tsdiTo;
+				TagsetTreeItem parentUpdateTo = null;
 				if (!toParent.isEmpty()) {
 					parentUpdateTo = new TagDataItem(toTagset.getTagDefinition(toParent));
 				}
-				tagsetData.addItem(parentUpdateTo, tdiTo);
-				addTagSubTree(toTagset, toTag, tdiTo);
-				tagsetDataProvider.refreshAll();
+				System.out.println(String.format("Received info about a move from parent %1$s to %2$s with ID %3$s...",
+						fromTag.getParentUuid(), toTag.getParentUuid(), toTag.getName()));
+
+				tagsetData.setParent(tdiFrom, parentUpdateTo);
+				tdiTo.setPropertiesExpanded(true);
 				showExpandedProperties(tdiTo);
+				tagsetDataProvider.refreshAll();
 			}
 		};
 
