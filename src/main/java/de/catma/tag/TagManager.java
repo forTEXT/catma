@@ -220,18 +220,14 @@ public class TagManager {
 		}
 		tag.setName(updatedTag.getName());
 		tag.setColor(updatedTag.getColor());
-		System.out.println("new val: " + updatedTag.getParentUuid() + ", oldVal =" + tag.getParentUuid()  );
 		if (tag.getParentUuid() != updatedTag.getParentUuid()) {
+			tagset.reParent(tag, updatedTag.getParentUuid());
+
 			this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionMoved.name(),
 				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(tag.getTagsetDefinitionUuid()), tag),
-				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(updatedTag.getTagsetDefinitionUuid()), updatedTag));
+				new Pair<TagsetDefinition, TagDefinition>(tagset, updatedTag));
 			tag.setParentUuid(updatedTag.getParentUuid());
-			// This forces the reload of the TagDefinitions of the tagset in the resourcePanel of the annotationpanel
-			// which then sends its item to the annotation panel (which is not necessarily loaded, therefore unable
-			// to get the event above).
-			this.propertyChangeSupport.firePropertyChange(
-				TagManagerEvent.tagsetDefinitionChanged.name(), null, tagLibrary.getTagsetDefinition(updatedTag.getTagsetDefinitionUuid()));
 		} else {
 			this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionChanged.name(),
