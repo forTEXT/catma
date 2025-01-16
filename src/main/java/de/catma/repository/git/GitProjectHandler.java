@@ -199,22 +199,12 @@ public class GitProjectHandler {
 	public String moveTagAndUpdateAnnotations(TagsetDefinition tsdFrom, TagsetDefinition tsdTo, TagDefinition tdFrom, TagDefinition tdTo, Multimap<String, TagInstance> tagInstancesByCollectionId, String commitMsg) throws IOException {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
-
-			for (String collectionId : tagInstancesByCollectionId.keySet()) {
-				// TODO: code the part where we update the Instances
-				// removeTagInstances(collectionId, tagInstancesByCollectionId.get(collectionId));
-				addCollectionToStaged(collectionId);
-			}
-
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
 					localGitRepoManager,
 					projectPath,
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
-			System.out.println(tdFrom.getUuid());
-			System.out.println("parent to:" + tdTo.getParentUuid());
-			System.out.println("parent from:" + tdFrom.getParentUuid());
 			String projectRevision = gitTagsetHandler.moveTagDefinition(tdFrom, tdTo, commitMsg);
 
 			localGitRepoManager.push(jGitCredentialsManager);
