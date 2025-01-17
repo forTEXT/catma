@@ -1061,7 +1061,6 @@ public class TagsView extends HugeCard {
                         .map(tagTreeItem -> project.getTagManager().getTagLibrary().getTagsetDefinition(((TagDataItem)tagTreeItem).getTagsetUuid())):
                         tagsetGrid.getSelectedItems().stream().filter(tagTreeItem -> tagTreeItem instanceof TagsetDataItem).findFirst()
 			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
-
 		if (tagsets.isEmpty()) {
 			Notification.show(
 				"Info", 
@@ -1089,7 +1088,7 @@ public class TagsView extends HugeCard {
 						AddParenttagDialog addTagDialog = 
 							new AddParenttagDialog(
 								editableTagsets, 
-								selectedTagset, 
+								selectedTagset.isEmpty()?editableTagsets.stream().findFirst():selectedTagset, 
 								new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
 								
 								@Override
