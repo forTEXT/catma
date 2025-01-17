@@ -1,17 +1,19 @@
 package de.catma.ui.module.tags;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.data.provider.DataProvider;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
@@ -25,6 +27,7 @@ import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextArea;
@@ -35,6 +38,8 @@ import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 
 import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.FocusHandler;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
@@ -56,6 +61,7 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 	protected ListDataProvider<PropertyDefinition> propertyDefDataProvider;
 	protected ColorPicker colorPicker;
 	protected TextField tfName;
+	protected ListSelect<TagDefinition> lbParent;
 
 	protected AbstractAddEditTagDialog(
 			String dialogCaption, SaveCancelListener<T> saveCancelListener) {
@@ -180,7 +186,6 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		colorPicker.setModal(true);
 		
 		tagPanel.addComponent(colorPicker);
-		
 		propertyDefNamePanel = new HorizontalLayout();
 		propertyDefNamePanel.setSpacing(true);
 		propertyDefNamePanel.setMargin(new MarginInfo(true, true, false, true));
@@ -232,6 +237,107 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 		
 		propertyDefPanel.addComponent(possibleValuesArea);
 	}
+
+	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
+			Optional<TagsetDefinition> preSelectedTagset, boolean allowPropertyDefEditing) {
+
+		cbTagsets = new ComboBox<TagsetDefinition>("Tagset", availableTagsets);
+		cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
+		cbTagsets.setWidth("100%");
+		cbTagsets.setDescription("The tagset that will be the container of the new tag");
+		cbTagsets.setEmptySelectionAllowed(false);
+		preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));
+		this.initComponents(allowPropertyDefEditing);
+	}
+
+	protected List<TagDefinition> unrollTree(TagsetDefinition tsd, List<TagDefinition> tags, String avoid, String prefix) {
+		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
+		for (TagDefinition subTree : tags) {
+			TagDefinition item = new TagDefinition(subTree);
+			item.setName(prefix.concat(subTree.getName()));
+			if (item.getUuid() != avoid) {
+				listOfIndentedTags.add(item);
+				listOfIndentedTags.addAll(unrollTree(tsd, tsd.getDirectChildren(subTree), avoid, prefix.concat("-")));
+			}
+		}
+		return(listOfIndentedTags);
+
+	}
+
+	/*
+         * Adds the items in the Parent selection box.
+         * avoid allows to avoid certain UUID of items. Set to anything that isn't a UUID if you
+         * allow to choose everything.
+	 */
+	protected void populateParentBox(Collection<TagsetDefinition> availableParents,
+			Collection<TagDefinition> preSelectedParents, String avoid, boolean update) {
+		List<List<TagDefinition>> rootTags = availableParents.stream().map(tagset -> tagset.getRootTagDefinitions()).collect(Collectors.toList());
+		List<TagDefinition> listOfIndentedTags = new ArrayList<TagDefinition>();
+		for (TagsetDefinition subTree : availableParents) {
+			listOfIndentedTags.addAll(unrollTree(subTree, subTree.getRootTagDefinitions(), avoid, String.valueOf('\\')));
+		}
+		if (update) {
+			lbParent.setDataProvider(DataProvider.ofCollection(listOfIndentedTags));
+		} else {
+			lbParent = new ListSelect<TagDefinition>("Parent", listOfIndentedTags);
+			if (isWithParentSelection() && isWithTagsetSelection()) {
+				lbParent.addSelectionListener(event -> {
+					if (lbParent.getValue().stream().count()>1) {
+						Notification.show("Info", "You can only select one parent when editing a tag. Deselecting all but the first item.", Type.TRAY_NOTIFICATION);
+						TagDefinition item = lbParent.getValue().stream().findFirst().get();
+						lbParent.deselectAll();
+						lbParent.setValue(Set.of(item));
+					}
+				});
+			}
+			lbParent.setItemCaptionGenerator(tag -> tag.getName());
+			lbParent.setWidth("100%");
+			lbParent.setDescription("The parent(s) of the new tag");
+			lbParent.setRows(5);
+		}
+		preSelectedParents.forEach(tag -> lbParent.select(tag));
+	}
+
+	/*
+	 * This only get called on the edit tag dialog, which has both select tagset and
+         * select parent options. There must be one selected item, which is the
+	 * one we're editing.
+         */
+	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
+			TagLibrary lib,
+			TagDefinition editedTag,
+			boolean allowPropertyDefEditing) {
+		Collection<TagDefinition> parent = new ArrayList<TagDefinition>();
+		if(lib.getTagDefinition(editedTag.getParentUuid()) != null) {
+			parent.add(lib.getTagDefinition(editedTag.getParentUuid()));
+		}
+		if(lib.getTagsetDefinition(editedTag.getTagsetDefinitionUuid()) != null) {
+			ArrayList<TagsetDefinition> tsd = new ArrayList<TagsetDefinition>();
+			tsd.add(lib.getTagsetDefinition(editedTag));
+			populateParentBox(tsd, parent, editedTag.getUuid(), false);
+		} else {
+			populateParentBox(availableTagsets, parent, editedTag.getUuid(), false);
+		}
+		Optional<TagsetDefinition> otsd = Optional.of(lib.getTagsetDefinition(editedTag.getTagsetDefinitionUuid()));
+		initComponents(availableTagsets, otsd, allowPropertyDefEditing);
+		cbTagsets.setEnabled(false);
+		cbTagsets.addValueChangeListener(event -> {
+			if (cbTagsets.getSelectedItem().isPresent()) {
+				ArrayList<TagsetDefinition> theList = new ArrayList<TagsetDefinition>();
+				theList.add(cbTagsets.getValue());
+				populateParentBox(theList, new ArrayList<TagDefinition>(), editedTag.getUuid(), true);
+			} else {
+				populateParentBox(availableTagsets, new ArrayList<TagDefinition>(), editedTag.getUuid(), true);
+			}
+		});
+	}
+
+	protected void initComponents(Collection<TagsetDefinition> availableParents,
+			Collection<TagDefinition> preSelectedParents, boolean allowPropertyDefEditing) {
+		populateParentBox(availableParents, preSelectedParents, "none", false);
+
+		this.initComponents(allowPropertyDefEditing);
+	}
 	
 	protected void setPropertyDefinitionsVisible() {
 		propertyDefPanel.setVisible(true);
@@ -259,8 +365,18 @@ public abstract class AbstractAddEditTagDialog<T> extends AbstractOkCancelDialog
 
 	@Override
 	protected void addContent(ComponentContainer content) {
-		if (isWithTagsetSelection()) {
-			content.addComponent(cbTagsets);
+		if (isWithParentSelection() && isWithTagsetSelection()) {
+			HorizontalLayout topPanel = new HorizontalLayout();
+			topPanel.addComponent(cbTagsets);
+			topPanel.addComponent(lbParent);
+			content.addComponent(topPanel);
+		} else {
+			if (isWithParentSelection()) {
+				content.addComponent(lbParent);
+			}
+			if (isWithTagsetSelection()) {
+				content.addComponent(cbTagsets);
+			}
 		}
 		content.addComponent(
 			new Label(

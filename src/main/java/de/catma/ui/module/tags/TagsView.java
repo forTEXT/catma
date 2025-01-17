@@ -199,6 +199,47 @@ public class TagsView extends HugeCard {
 
 		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagDefinitionChanged, tagDefinitionChangedListener);
 
+		PropertyChangeListener tagDefinitionMovedListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				@SuppressWarnings("unchecked")
+				final Pair<TagsetDefinition, TagDefinition> newVal = (Pair<TagsetDefinition, TagDefinition>) evt.getNewValue();
+				final Pair<TagsetDefinition, TagDefinition> oldVal = (Pair<TagsetDefinition, TagDefinition>) evt.getOldValue();
+
+				System.out.println("inside the tag moved listener for the TagsView");
+				TagsetDefinition fromTagset = oldVal.getFirst();
+				TagDefinition fromTag = oldVal.getSecond();
+				TagsetDefinition toTagset = newVal.getFirst();
+				TagDefinition toTag = newVal.getSecond();
+				Optional<TagsetDataItem> optionalTsdiTo = tagsetData.getRootItems().stream()
+							.map(tagsetTreeItem -> (TagsetDataItem)tagsetTreeItem)
+							.filter(tdi -> tdi.getTagset().getUuid().equals(toTagset.getUuid()))
+							.findFirst();
+				if (!optionalTsdiTo.isPresent()) {
+					logger.warning(	String.format( "Failed to find tagset with ID %1$s (to) in the TagsView TreeGrid for project \"%2$s\" with ID %3$s",
+						toTagset.getUuid(), project.getName(), project.getId()));
+						return;
+				}
+				TagsetDataItem tsdiTo = optionalTsdiTo.get();
+				TagDataItem tdiTo = new TagDataItem(toTag, tsdiTo.isEditable());
+				TagDataItem tdiFrom = new TagDataItem(fromTag, tsdiTo.isEditable());
+				String toParent = toTag.getParentUuid();
+				TagsetTreeItem parentUpdateTo = null;
+				if (!toParent.isEmpty()) {
+					parentUpdateTo = new TagDataItem(toTagset.getTagDefinition(toParent));
+				}
+				System.out.println(String.format("Received info about a move from parent %1$s to %2$s with ID %3$s...",
+						fromTag.getParentUuid(), toTag.getParentUuid(), toTag.getName()));
+
+				tagsetData.setParent(tdiFrom, parentUpdateTo);
+				tdiTo.setPropertiesExpanded(true);
+				showExpandedProperties(tdiTo);
+				tagsetDataProvider.refreshAll();
+			}
+		};
+
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagDefinitionMoved, tagDefinitionMovedListener);
+
+
 		propertyDefinitionChangedListener = new PropertyChangeListener() {
 			@SuppressWarnings("unchecked")
 			@Override
@@ -705,7 +746,10 @@ public class TagsView extends HugeCard {
 						@Override
 						public void execute() {
 							EditTagDialog editTagDialog = 
-								new EditTagDialog(new TagDefinition(targetTag), 
+								new EditTagDialog(
+									tagsets,
+									project.getTagManager().getTagLibrary(),
+									new TagDefinition(targetTag),
 									new SaveCancelListener<TagDefinition>() {
 								public void savePressed(TagDefinition result) {
 									project.getTagManager().updateTagDefinition(targetTag, result);
@@ -972,7 +1016,6 @@ public class TagsView extends HugeCard {
 		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
-
 		
 		if (!parentTags.isEmpty()) {
 			
@@ -991,20 +1034,15 @@ public class TagsView extends HugeCard {
 					@Override
 					public void execute() {
 						AddSubtagDialog addTagDialog =
-							new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
-								public void savePressed(TagDefinition result) {
-									for (TagDefinition parent : parentTags) {
-										
-										TagsetDefinition tagset = 
-											project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
-										
-										TagDefinition tag = new TagDefinition(result);
-										tag.setUuid(idGenerator.generate());
-										tag.setParentUuid(parent.getUuid());
-										tag.setTagsetDefinitionUuid(tagset.getUuid());
-										
+							new AddSubtagDialog(
+								tagsets,
+								parentTags,
+								new SaveCancelListener<Collection<TagDefinition>>() {
+								public void savePressed(Collection<TagDefinition> result) {
+									System.out.println(result.stream().count());	
+									for (TagDefinition item : result) {
 										project.getTagManager().addTagDefinition(
-												tagset, tag);
+											project.getTagManager().getTagLibrary().getTagsetDefinition(item.getTagsetDefinitionUuid()), item);
 									}
 								};
 							});

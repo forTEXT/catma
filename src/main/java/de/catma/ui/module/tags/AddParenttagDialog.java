@@ -25,7 +25,12 @@ public class AddParenttagDialog extends AbstractAddEditTagDialog<Pair<TagsetDefi
 	protected boolean isWithTagsetSelection() {
 		return true;
 	}
-	
+
+	@Override
+	protected boolean isWithParentSelection() {
+		return false;
+	}
+
 	@Override
 	protected String getOkCaption() {
 		return "Add Tag";

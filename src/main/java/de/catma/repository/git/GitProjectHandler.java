@@ -196,6 +196,24 @@ public class GitProjectHandler {
 		}
 	}
 
+	public String moveTagAndUpdateAnnotations(TagsetDefinition tsdFrom, TagsetDefinition tsdTo, TagDefinition tdFrom, TagDefinition tdTo, Multimap<String, TagInstance> tagInstancesByCollectionId, String commitMsg) throws IOException {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
+					localGitRepoManager,
+					projectPath,
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail()
+			);
+			String projectRevision = gitTagsetHandler.moveTagDefinition(tdFrom, tdTo, commitMsg);
+
+			localGitRepoManager.push(jGitCredentialsManager);
+
+			return projectRevision;
+		}
+	}
+
+
 	public String removeTagAndAnnotations(TagDefinition tagDefinition, Multimap<String, TagInstance> tagInstancesByCollectionId) throws IOException {
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
