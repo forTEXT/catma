@@ -59,6 +59,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
 	private ErrorHandler errorHandler;
 	private PropertyChangeListener tagsetChangeListener;
+	private PropertyChangeListener tagMovedListener;
 	private ListDataProvider<TagsetDefinition> tagsetData;
 	private ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent;
 	private EventBus eventBus;
@@ -112,8 +113,14 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				handleTagsetChange(evt);
 			}
 		};
-
+		tagMovedListener = new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				tagsetData.refreshAll();
+			}
+		};
 		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagsetDefinitionChanged, tagsetChangeListener);
+		project.getTagManager().addPropertyChangeListener(TagManagerEvent.tagDefinitionMoved, tagMovedListener);
 	}
 
 	private void handleTagsetChange(PropertyChangeEvent evt) {

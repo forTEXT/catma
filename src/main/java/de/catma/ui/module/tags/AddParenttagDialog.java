@@ -10,6 +10,12 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.Pair;
 
+/**
+ * One of the tree dialogs to modify a single tag: this one is a tag without a parent
+ * 
+ * It gets as argument the tagsets and the the preselected one
+ */
+
 public class AddParenttagDialog extends AbstractAddEditTagDialog<Pair<TagsetDefinition, TagDefinition>> {
 
 	public AddParenttagDialog(
@@ -25,7 +31,12 @@ public class AddParenttagDialog extends AbstractAddEditTagDialog<Pair<TagsetDefi
 	protected boolean isWithTagsetSelection() {
 		return true;
 	}
-	
+
+	@Override
+	protected boolean isWithParentSelection() {
+		return false;
+	}
+
 	@Override
 	protected String getOkCaption() {
 		return "Add Tag";

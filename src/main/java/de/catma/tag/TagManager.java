@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import de.catma.document.source.ContentInfoSet;
+import de.catma.project.Project;
 import de.catma.util.Pair;
 
 /**
@@ -102,6 +103,13 @@ public class TagManager {
 		 * <li>{@link PropertyChangeEvent#getOldValue()} = the {@link ContentInfoSet old bibliographical data }</li>
 		 */
 		tagLibraryChanged, 
+		/**
+		 * <p>{@link TagDescription} moved:
+		 * <li>{@link PropertyChangeEvent#getNewValue()} = the new tagset and location</li>
+		 * <li>{@link PropertyChangeEvent#getOldValue()} = the old tagset and location</li>
+		 * </p><br />
+		 */
+		tagDefinitionMoved,
 		;
 	}
 	
@@ -210,14 +218,23 @@ public class TagManager {
 					pd.getUuid()).setPossibleValueList(pd.getPossibleValueList());
 			}
 		}
-		
 		tag.setName(updatedTag.getName());
 		tag.setColor(updatedTag.getColor());
-		
-		this.propertyChangeSupport.firePropertyChange(
+		if (tag.getParentUuid() != updatedTag.getParentUuid()) {
+			tagset.reParent(tag, updatedTag.getParentUuid());
+
+			this.propertyChangeSupport.firePropertyChange(
+				TagManagerEvent.tagDefinitionMoved.name(),
+				new Pair<TagsetDefinition, TagDefinition>(tagLibrary.getTagsetDefinition(tag.getTagsetDefinitionUuid()), tag),
+				new Pair<TagsetDefinition, TagDefinition>(tagset, updatedTag));
+			tag.setParentUuid(updatedTag.getParentUuid());
+		} else {
+			this.propertyChangeSupport.firePropertyChange(
 				TagManagerEvent.tagDefinitionChanged.name(),
 				tagset,
 				tag);
+		}
+
 	}
 
 	public void removeUserDefinedPropertyDefinition(

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,6 +46,7 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	private String forkedFromCommitURL;
 	private String responsibleUser;
 	
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String,TagDefinition> tagDefinitions;
 	private Map<String,Set<String>> tagDefinitionChildren;
 	private Set<String> deletedDefinitions;
@@ -222,6 +224,30 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 		}
 
 		return Collections.unmodifiableSet(childIDs);	
+	}
+
+	public void reParent(TagDefinition item, String parent) {
+		if (!tagDefinitions.containsKey(item.getUuid())) {
+			logger.warning("Can't reparent: there is no such TagDefinition in this tagset");
+			return;
+		}
+		if (item.getParentUuid() == parent) {
+			logger.warning("Parent hasn't moved, not changing anything");
+			return;
+		}
+		if (!tagDefinitionChildren.containsKey(item.getParentUuid())) {
+			logger.warning("The item parent doesn't seem to have any children");
+			return;
+		}
+		if (!tagDefinitionChildren.get(item.getParentUuid()).contains(item.getUuid())) {
+			logger.warning("The item parent doesn't contain itself");
+			return;
+		}
+		if (!tagDefinitionChildren.containsKey(parent)) {
+			tagDefinitionChildren.put(parent, new HashSet<String>());
+		}
+		tagDefinitionChildren.get(parent).add(item.getUuid());
+		tagDefinitionChildren.get(item.getParentUuid()).remove(item.getUuid());
 	}
 
 	public void remove(TagDefinition tagDefinition) {
