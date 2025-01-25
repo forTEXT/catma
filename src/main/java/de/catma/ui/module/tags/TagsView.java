@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,6 +61,8 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.EditTagsetDialog;
+import de.catma.ui.module.tags.BulkEditPropertyByNameDialog.PropertyNameItem;
+import de.catma.ui.module.tags.BulkEditPropertyByNameDialog.Result;
 import de.catma.user.Member;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -365,6 +368,7 @@ public class TagsView extends HugeCard {
 		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
 		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
 		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
+		moreOptionsContextMenu.addItem("Bulk Edit/Delete Properties by name", clickEvent -> handleBulkEditPropertiesByName());
 		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
 		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 		
@@ -630,6 +634,76 @@ public class TagsView extends HugeCard {
 
 	private void handleEditPropertiesRequest() {
 		handleAddPropertyRequest();
+	}
+	
+	private void handleBulkEditPropertiesByName() {
+		final List<String> selectedPropertyDefNames = new ArrayList<>();
+		final Set<TagsetDefinition> affectedTagsets = new HashSet<>();
+		final Set<TagDefinition> affectedTags = new HashSet<>();
+		
+		selectedPropertyDefNames.addAll(
+				tagsetGrid.getSelectedItems()
+				.stream()
+				.filter(tagsetTreeItem -> tagsetTreeItem instanceof PropertyDataItem || tagsetTreeItem instanceof PossibleValueDataItem)
+				.map(tagsetTreeItem -> {
+					
+					affectedTagsets.add(tagsetTreeItem.getTagset());
+					affectedTags.add(tagsetTreeItem.getTag());
+					
+					if (tagsetTreeItem instanceof PossibleValueDataItem) {
+						var pd = tagsetData.getParent(tagsetTreeItem).getPropertyDefinition(); 
+						return pd != null ? pd.getName() : "";
+					}
+					var pd = tagsetTreeItem.getPropertyDefinition();
+					return pd !=null ? pd.getName() : "";
+				})
+				.filter(name -> !name.isEmpty())
+				.collect(Collectors.toList()));
+
+
+		if (selectedPropertyDefNames.isEmpty()) {
+			Notification.show("Info", "Please select one ore more properties first!", Type.TRAY_NOTIFICATION);	
+			return;
+		}
+		
+		if (affectedTagsets.size() > 1) {
+			Notification.show("Info", "Selected properties must come from the same tagset. Please adjust your selection accordingly!", Type.TRAY_NOTIFICATION);	
+			return;			
+		}
+			
+			boolean beyondUsersResponsibility =
+					affectedTagsets.stream()
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
+					.findAny()
+					.isPresent();
+			
+			boolean isAuthor = 
+					!affectedTags.stream()
+					.filter(tag -> !tag.getAuthor().equals(project.getCurrentUser().getIdentifier()))
+					.findAny()
+					.isPresent();
+			try {
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+					isAuthor || project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+					new Action() {
+						@Override
+						public void execute() {
+							BulkEditPropertyByNameDialog dlg = new BulkEditPropertyByNameDialog(affectedTagsets, selectedPropertyDefNames, tagsetCollator, new SaveCancelListener<>() {
+								@Override
+								public void savePressed(Result result) {
+									handleBulkEditProperties(result);
+								}
+							});
+							
+							dlg.show();
+						}
+				});
+			}
+			catch (IOException e) {
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error editing properties", e);
+			}
+		
 	}
 
 	private void handleDeleteTagRequest() {
@@ -932,6 +1006,31 @@ public class TagsView extends HugeCard {
 			}
 		}
 	}
+	
+	private void handleBulkEditProperties(Result result) {
+		// handle deleted propertyDefs
+		for (PropertyNameItem deletedItem : result.deletedItems()) {
+			for (TagDefinition tag : deletedItem.getTags()) {
+				TagsetDefinition tagset = project.getTagManager().getTagLibrary().getTagsetDefinition(tag.getTagsetDefinitionUuid());
+				PropertyDefinition propertyDef = tag.getPropertyDefinition(deletedItem.getOldName());
+				project.getTagManager().removeUserDefinedPropertyDefinition(
+						propertyDef, tag, tagset);
+			}
+		}
+		
+		// handle modified propertyDefs
+		for (PropertyNameItem modifiedItem : result.modifiedItems()) {
+			for (TagDefinition tag : modifiedItem.getTags()) {
+				PropertyDefinition propertyDef = tag.getPropertyDefinition(modifiedItem.getOldName());
+				propertyDef.setName(modifiedItem.getName());
+				propertyDef.setPossibleValueList(modifiedItem.getPossibleValueList());
+				project.getTagManager().updateUserDefinedPropertyDefinition(
+						tag, propertyDef);
+			}
+		}
+		
+	}
+
 
 	private void handleBulkEditProperties(
 		List<PropertyDefinition> editedProperties, 
