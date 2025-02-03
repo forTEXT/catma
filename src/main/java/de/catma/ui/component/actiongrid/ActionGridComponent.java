@@ -164,6 +164,10 @@ public class ActionGridComponent<G extends Grid<?>> extends VerticalLayout  {
 		setMultiselect(enabled);
 	}
 	
+	public boolean isMultiSelect() {
+		return dataGrid.getSelectionModel().equals(Grid.SelectionMode.MULTI);
+	}
+	
 	public void setSelectionModeFixed(Grid.SelectionMode selectionMode) {
 		this.multiselect = selectionMode.equals(Grid.SelectionMode.MULTI);
 		actionGridBar.getBtnToggleMultiselect().setVisible(false);

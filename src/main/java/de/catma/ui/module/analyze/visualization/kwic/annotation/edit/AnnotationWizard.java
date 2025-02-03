@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.module.analyze.visualization.kwic.annotation.edit;
 
 import com.google.common.eventbus.EventBus;
 
@@ -12,9 +12,8 @@ public class AnnotationWizard extends Wizard {
 	public AnnotationWizard(
 			EventBus eventBus, Project project, 
 			WizardContext context, SaveCancelListener<WizardContext> saveCancelListener) {
-		super("Annotate selected results", 
-				progressPanel -> new TagSelectionStep(
-						eventBus,
+		super("Edit Annotations", 
+				progressPanel -> new CollectionSelectionStep(
 						project, 
 						context,
 						(number, description) -> progressPanel.addStep(number, description)),

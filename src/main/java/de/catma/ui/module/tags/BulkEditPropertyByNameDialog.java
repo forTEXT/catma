@@ -189,7 +189,7 @@ public class BulkEditPropertyByNameDialog extends AbstractOkCancelDialog<Result>
 	private void initComponents(Set<TagsetDefinition> tagsets) {
 		inputLabel = new Label(
 				String.format(
-						"Edit the properties with the selected names across all tags in tagset%s %s",
+						"Edit the properties across all tags in tagset%s %s",
 						tagsets.size()==1?"":"s",
 						tagsets.stream()
 							.sorted((t1,t2) -> tagsetCollator.compare(t1.getName(), t2.getName()))

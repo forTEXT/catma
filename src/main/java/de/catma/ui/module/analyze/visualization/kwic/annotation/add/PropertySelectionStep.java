@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.module.analyze.visualization.kwic.annotation.add;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.dialog.wizard.WizardStep;
 import de.catma.ui.module.annotate.annotationpanel.EditPropertyTab;
 
-public class PropertySelectionStep extends VerticalLayout implements WizardStep {
+class PropertySelectionStep extends VerticalLayout implements WizardStep {
 	
 	private ProgressStep progressStep;
 	private TabSheet propertyTabSheet;

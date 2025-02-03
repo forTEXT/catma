@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.module.analyze.visualization.kwic.annotation.add;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,7 +46,7 @@ import de.catma.ui.module.project.DocumentResource;
 import de.catma.ui.module.project.Resource;
 import de.catma.user.Member;
 
-public class CollectionSelectionStep extends VerticalLayout implements WizardStep {
+class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 	private enum DocumentGridColumn {
 		NAME,
 		RESPONSIBLE,

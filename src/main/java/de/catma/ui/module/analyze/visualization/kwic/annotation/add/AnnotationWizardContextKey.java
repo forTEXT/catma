@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.module.analyze.visualization.kwic.annotation.add;
 
 public enum AnnotationWizardContextKey {
 //	CORPUS,

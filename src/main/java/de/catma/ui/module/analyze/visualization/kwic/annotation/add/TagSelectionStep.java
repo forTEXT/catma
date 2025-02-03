@@ -1,4 +1,4 @@
-package de.catma.ui.module.analyze.visualization.kwic.annotation;
+package de.catma.ui.module.analyze.visualization.kwic.annotation.add;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.VerticalLayout;
@@ -13,7 +13,7 @@ import de.catma.ui.dialog.wizard.WizardStep;
 import de.catma.ui.module.tags.TagSelectionPanel;
 import de.catma.ui.module.tags.TagSelectionPanel.TagSelectionChangedListener;
 
-public class TagSelectionStep extends VerticalLayout implements WizardStep {
+class TagSelectionStep extends VerticalLayout implements WizardStep {
 	
 	private TagSelectionPanel tagSelectionPanel;
 	private TagDefinition selectedTag;

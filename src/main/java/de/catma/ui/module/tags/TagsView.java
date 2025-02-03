@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
@@ -59,6 +60,11 @@ import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.wizard.WizardContext;
+import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.AnnotationWizard;
+import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.EditAnnotationWizardContextKey;
+import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.PropertyAction;
+import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.PropertyActionType;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.EditTagsetDialog;
 import de.catma.ui.module.tags.BulkEditPropertyByNameDialog.PropertyNameItem;
@@ -644,25 +650,28 @@ public class TagsView extends HugeCard {
 		selectedPropertyDefNames.addAll(
 				tagsetGrid.getSelectedItems()
 				.stream()
-				.filter(tagsetTreeItem -> tagsetTreeItem instanceof PropertyDataItem || tagsetTreeItem instanceof PossibleValueDataItem)
-				.map(tagsetTreeItem -> {
+				.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem || tagsetTreeItem instanceof PropertyDataItem || tagsetTreeItem instanceof PossibleValueDataItem)
+				.flatMap(tagsetTreeItem -> {
 					
 					affectedTagsets.add(tagsetTreeItem.getTagset());
 					affectedTags.add(tagsetTreeItem.getTag());
 					
 					if (tagsetTreeItem instanceof PossibleValueDataItem) {
 						var pd = tagsetData.getParent(tagsetTreeItem).getPropertyDefinition(); 
-						return pd != null ? pd.getName() : "";
+						return Stream.of(pd != null ? pd.getName() : "");
+					}
+					else if (tagsetTreeItem instanceof TagDataItem) {
+						return tagsetTreeItem.getTag().getUserDefinedPropertyDefinitions().stream().map(PropertyDefinition::getName);
 					}
 					var pd = tagsetTreeItem.getPropertyDefinition();
-					return pd !=null ? pd.getName() : "";
+					return Stream.of(pd !=null ? pd.getName() : "");
 				})
 				.filter(name -> !name.isEmpty())
 				.collect(Collectors.toList()));
 
 
 		if (selectedPropertyDefNames.isEmpty()) {
-			Notification.show("Info", "Please select one ore more properties first!", Type.TRAY_NOTIFICATION);	
+			Notification.show("Info", "Please select one ore more tags or properties first!", Type.TRAY_NOTIFICATION);	
 			return;
 		}
 		
@@ -692,7 +701,7 @@ public class TagsView extends HugeCard {
 							BulkEditPropertyByNameDialog dlg = new BulkEditPropertyByNameDialog(affectedTagsets, selectedPropertyDefNames, tagsetCollator, new SaveCancelListener<>() {
 								@Override
 								public void savePressed(Result result) {
-									handleBulkEditProperties(result);
+									handleBulkEditProperties(result, affectedTagsets);
 								}
 							});
 							
@@ -1007,27 +1016,81 @@ public class TagsView extends HugeCard {
 		}
 	}
 	
-	private void handleBulkEditProperties(Result result) {
+	private void handleBulkEditProperties(Result result, Set<TagsetDefinition> affectedTagsets) {
+		Set<PropertyAction> propertyActions = new HashSet<>();
+		Set<String> propertyNames = new HashSet<>();
+		Set<TagDefinition> tags = new HashSet<>();
+		
 		// handle deleted propertyDefs
 		for (PropertyNameItem deletedItem : result.deletedItems()) {
+			propertyNames.add(deletedItem.getOldName());
+			
 			for (TagDefinition tag : deletedItem.getTags()) {
+				tags.add(tag);
 				TagsetDefinition tagset = project.getTagManager().getTagLibrary().getTagsetDefinition(tag.getTagsetDefinitionUuid());
 				PropertyDefinition propertyDef = tag.getPropertyDefinition(deletedItem.getOldName());
 				project.getTagManager().removeUserDefinedPropertyDefinition(
 						propertyDef, tag, tagset);
 			}
+			deletedItem.getPossibleValueList().forEach(value -> 
+				propertyActions.add(new PropertyAction(deletedItem.getOldName(), PropertyActionType.REMOVE, value, null)));
 		}
 		
 		// handle modified propertyDefs
 		for (PropertyNameItem modifiedItem : result.modifiedItems()) {
+			propertyNames.add(modifiedItem.getName());
+			
 			for (TagDefinition tag : modifiedItem.getTags()) {
+				tags.add(tag);
+				
 				PropertyDefinition propertyDef = tag.getPropertyDefinition(modifiedItem.getOldName());
+				
 				propertyDef.setName(modifiedItem.getName());
+
+				
+				Set<String> oldValues = propertyDef.getPossibleValueList().stream().filter(value -> !modifiedItem.getPossibleValueList().contains(value)).collect(Collectors.toSet());
+				Set<String> newValues = modifiedItem.getPossibleValueList().stream().filter(value -> !propertyDef.getPossibleValueList().contains(value)).collect(Collectors.toSet());
+				
+				boolean assumeSimpleReplacementOperation = oldValues.size() == 1 && newValues.size() == 1;
+				if (assumeSimpleReplacementOperation) {
+					propertyActions.add(new PropertyAction(propertyDef.getName(), PropertyActionType.REPLACE, oldValues.iterator().next(), newValues.iterator().next()));
+				}
+				
+				boolean assumeSimpleRemoveOperation = oldValues.size() == 1 && newValues.size() == 0;
+				if (assumeSimpleRemoveOperation) {
+					propertyActions.add(new PropertyAction(propertyDef.getName(), PropertyActionType.REMOVE, oldValues.iterator().next(), null));
+				}
+				
 				propertyDef.setPossibleValueList(modifiedItem.getPossibleValueList());
+					
 				project.getTagManager().updateUserDefinedPropertyDefinition(
-						tag, propertyDef);
+						tag, propertyDef);					
 			}
 		}
+		
+		WizardContext wizardContext = new WizardContext();
+		wizardContext.put(EditAnnotationWizardContextKey.TAGSETS, affectedTagsets);
+		wizardContext.put(EditAnnotationWizardContextKey.TAGS, tags);
+		wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_NAMES, propertyNames);
+		wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_ACTIONS, propertyActions);
+		
+		AnnotationWizard wizard = new AnnotationWizard(
+				eventBus, project, wizardContext, 
+				new SaveCancelListener<WizardContext>() {
+		
+					@Override
+					public void savePressed(WizardContext result) {
+//						try {
+//							annotateSelection(selectedRows, result);
+//						} catch (Exception e) {
+//							((ErrorHandler) UI.getCurrent()).showAndLogError(
+//									"Error annotating selected rows", e);
+//						}						
+					}
+					
+				});
+		wizard.show();
+		
 		
 	}
 
