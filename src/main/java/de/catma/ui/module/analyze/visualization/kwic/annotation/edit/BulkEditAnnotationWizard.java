@@ -7,9 +7,9 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.wizard.Wizard;
 import de.catma.ui.dialog.wizard.WizardContext;
 
-public class AnnotationWizard extends Wizard {
+public class BulkEditAnnotationWizard extends Wizard {
 	
-	public AnnotationWizard(
+	public BulkEditAnnotationWizard(
 			EventBus eventBus, Project project, 
 			WizardContext context, SaveCancelListener<WizardContext> saveCancelListener) {
 		super("Edit Annotations", 
