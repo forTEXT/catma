@@ -153,6 +153,12 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 			if (reassign) {
 				getGitLabApi().getProjectApi().unshareProject(project.getId(), sharedGroup.groupId());
 			}
+			else {
+				// check that the project is not already shared with the group (GitLab returns an error if we try to share the same project again)
+				if (project.getSharedWithGroups().stream().anyMatch(group -> group.getGroupId() == sharedGroup.groupId())) {
+					return sharedGroup;
+				}
+			}
 
 			java.util.Date expirationDate = expiresAt==null?null:
 				java.util.Date.from(expiresAt.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
