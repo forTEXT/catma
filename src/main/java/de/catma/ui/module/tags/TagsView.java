@@ -4,8 +4,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.text.Collator;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +17,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -50,13 +47,11 @@ import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
-import de.catma.document.Range;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionManager;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.project.Project;
-import de.catma.queryengine.result.QueryResultRow;
 import de.catma.rbac.RBACPermission;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -65,7 +60,6 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.TagsetMetadata;
-import de.catma.tag.Version;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
@@ -75,7 +69,6 @@ import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.wizard.WizardContext;
-import de.catma.ui.module.analyze.visualization.kwic.annotation.add.AnnotationWizardContextKey;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.BulkEditAnnotationWizard;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.EditAnnotationWizardContextKey;
 import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.PropertyAction;
@@ -1083,38 +1076,44 @@ public class TagsView extends HugeCard {
 						tag, propertyDef);					
 			}
 		}
-		ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected Annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
-			
-			@Override
-			public void onClose(ConfirmDialog dialog) {
-				if (dialog.isConfirmed()) {					
-					WizardContext wizardContext = new WizardContext();
-					wizardContext.put(EditAnnotationWizardContextKey.TAGSETS, affectedTagsets);
-					wizardContext.put(EditAnnotationWizardContextKey.TAGS, tags);
-					wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_NAMES, propertyNames);
-					wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_ACTIONS, propertyActions);
+		try {
+			if (project.getSourceDocumentReferences().stream().anyMatch(doc -> !doc.getUserMarkupCollectionRefs().isEmpty())) {
+
+				ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected Annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
 					
-					BulkEditAnnotationWizard wizard = new BulkEditAnnotationWizard(
-							eventBus, project, wizardContext, 
-							new SaveCancelListener<WizardContext>() {
-								
-								@Override
-								@SuppressWarnings("unchecked")
-								public void savePressed(WizardContext result) {
-									Collection<AnnotationCollectionReference> affectedCollections = (Collection<AnnotationCollectionReference>) result.get(EditAnnotationWizardContextKey.COLLECTIONS);
-									Collection<PropertyAction> actions = (Collection<PropertyAction>) result.get(EditAnnotationWizardContextKey.PROPERTY_ACTIONS);
-									Collection<TagDefinition> affectedTags =  (Collection<TagDefinition>) result.get(EditAnnotationWizardContextKey.TAGS);
-									
-									Collection<TagsetDefinition> affectedTagsets = (Collection<TagsetDefinition>) result.get(EditAnnotationWizardContextKey.TAGSETS);		
-									updateAnnotations(affectedCollections, affectedTagsets, affectedTags, actions);
-								}
-							});
-					wizard.show();
-				}
+					@Override
+					public void onClose(ConfirmDialog dialog) {
+						if (dialog.isConfirmed()) {					
+							WizardContext wizardContext = new WizardContext();
+							wizardContext.put(EditAnnotationWizardContextKey.TAGSETS, affectedTagsets);
+							wizardContext.put(EditAnnotationWizardContextKey.TAGS, tags);
+							wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_NAMES, propertyNames);
+							wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_ACTIONS, propertyActions);
+							
+							BulkEditAnnotationWizard wizard = new BulkEditAnnotationWizard(
+									eventBus, project, wizardContext, 
+									new SaveCancelListener<WizardContext>() {
+										
+										@Override
+										@SuppressWarnings("unchecked")
+										public void savePressed(WizardContext result) {
+											Collection<AnnotationCollectionReference> affectedCollections = (Collection<AnnotationCollectionReference>) result.get(EditAnnotationWizardContextKey.COLLECTIONS);
+											Collection<PropertyAction> actions = (Collection<PropertyAction>) result.get(EditAnnotationWizardContextKey.PROPERTY_ACTIONS);
+											Collection<TagDefinition> affectedTags =  (Collection<TagDefinition>) result.get(EditAnnotationWizardContextKey.TAGS);
+											
+											Collection<TagsetDefinition> affectedTagsets = (Collection<TagsetDefinition>) result.get(EditAnnotationWizardContextKey.TAGSETS);		
+											updateAnnotations(affectedCollections, affectedTagsets, affectedTags, actions);
+										}
+									});
+							wizard.show();
+						}
+					}
+				});
 			}
-		});
-		
-		
+		}
+		catch (Exception e) {
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing Collections", e);	
+		}		
 	}
 
 	private void updateAnnotations(Collection<AnnotationCollectionReference> affectedCollections, Collection<TagsetDefinition> affectedTagsets, Collection<TagDefinition> affectedTags, Collection<PropertyAction> actions) {
@@ -1254,35 +1253,42 @@ public class TagsView extends HugeCard {
 			}
 		}
 		
-		ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected Annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
-			
-			@Override
-			public void onClose(ConfirmDialog dialog) {
-				if (dialog.isConfirmed()) {					
-					WizardContext wizardContext = new WizardContext();
-					wizardContext.put(EditAnnotationWizardContextKey.TAGSETS, affectedTagsets);
-					wizardContext.put(EditAnnotationWizardContextKey.TAGS, targetTags);
-					wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_NAMES, availableCommonPropertyNames);
+		try {
+			if (project.getSourceDocumentReferences().stream().anyMatch(doc -> !doc.getUserMarkupCollectionRefs().isEmpty())) {
+				ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected Annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
 					
-					BulkEditAnnotationWizard wizard = new BulkEditAnnotationWizard(
-							eventBus, project, wizardContext, 
-							new SaveCancelListener<WizardContext>() {
-								
-								@Override
-								@SuppressWarnings("unchecked")
-								public void savePressed(WizardContext result) {
-									Collection<AnnotationCollectionReference> affectedCollections = (Collection<AnnotationCollectionReference>) result.get(EditAnnotationWizardContextKey.COLLECTIONS);
-									Collection<PropertyAction> actions = (Collection<PropertyAction>) result.get(EditAnnotationWizardContextKey.PROPERTY_ACTIONS);
-									Collection<TagDefinition> affectedTags =  (Collection<TagDefinition>) result.get(EditAnnotationWizardContextKey.TAGS);
-									
-									Collection<TagsetDefinition> affectedTagsets = (Collection<TagsetDefinition>) result.get(EditAnnotationWizardContextKey.TAGSETS);		
-									updateAnnotations(affectedCollections, affectedTagsets, affectedTags, actions);
-								}
-							});
-					wizard.show();
-				}
+					@Override
+					public void onClose(ConfirmDialog dialog) {
+						if (dialog.isConfirmed()) {					
+							WizardContext wizardContext = new WizardContext();
+							wizardContext.put(EditAnnotationWizardContextKey.TAGSETS, affectedTagsets);
+							wizardContext.put(EditAnnotationWizardContextKey.TAGS, targetTags);
+							wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_NAMES, availableCommonPropertyNames);
+							
+							BulkEditAnnotationWizard wizard = new BulkEditAnnotationWizard(
+									eventBus, project, wizardContext, 
+									new SaveCancelListener<WizardContext>() {
+										
+										@Override
+										@SuppressWarnings("unchecked")
+										public void savePressed(WizardContext result) {
+											Collection<AnnotationCollectionReference> affectedCollections = (Collection<AnnotationCollectionReference>) result.get(EditAnnotationWizardContextKey.COLLECTIONS);
+											Collection<PropertyAction> actions = (Collection<PropertyAction>) result.get(EditAnnotationWizardContextKey.PROPERTY_ACTIONS);
+											Collection<TagDefinition> affectedTags =  (Collection<TagDefinition>) result.get(EditAnnotationWizardContextKey.TAGS);
+											
+											Collection<TagsetDefinition> affectedTagsets = (Collection<TagsetDefinition>) result.get(EditAnnotationWizardContextKey.TAGSETS);		
+											updateAnnotations(affectedCollections, affectedTagsets, affectedTags, actions);
+										}
+									});
+							wizard.show();
+						}
+					}
+				});
 			}
-		});
+		}
+		catch (Exception e) {
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing Collections", e);	
+		}
 	}
 
 	private void handleAddSubtagRequest() {

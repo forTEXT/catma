@@ -76,7 +76,9 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 
 	private void initData(Collection<String> propertyNames, Collection<PropertyAction> preconfiguredActions) {
 		Multimap<String, PropertyAction> actionsByName = ArrayListMultimap.create();
-		preconfiguredActions.forEach(action -> actionsByName.put(action.propertyName(), action));
+		if (preconfiguredActions != null) {
+			preconfiguredActions.forEach(action -> actionsByName.put(action.propertyName(), action));
+		}
 		
 		actionData = new TreeData<ActionItem>();
 		
@@ -107,7 +109,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 			actionData
 			.getRootItems().stream()
 			.flatMap(item -> actionData.getChildren(item).stream())
-			.map(item -> ((PropertyActionItem)item).getPropertyAction())
+			.map(item -> ((ActionItem)item).getPropertyAction())
 			.flatMap(propertyAction -> 
 				tags.stream()
 				.filter(tag -> {
@@ -212,7 +214,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 						"Value removal", 
 						"Please enter the value to be removed", 
 						value -> {						
-							var item = new PropertyActionItem(
+							ActionItem item = new PropertyActionItem(
 									new PropertyAction(
 											clickEvent.getItem().getPropertyName(), 
 											PropertyActionType.REMOVE, 
@@ -234,7 +236,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 					String value = valuePair.getFirst();
 					String replacement= valuePair.getSecond();
 					if (value != null && !value.trim().isEmpty() && replacement != null && !replacement.trim().isEmpty()) {						
-						var item = new PropertyActionItem(
+						ActionItem item = new PropertyActionItem(
 								new PropertyAction(
 										clickEvent.getItem().getPropertyName(),
 										PropertyActionType.REPLACE,
@@ -258,7 +260,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 						"Value addition", 
 						"Please enter the value to be added", 
 						value -> {	
-							var item = new PropertyActionItem(
+							ActionItem item = new PropertyActionItem(
 									new PropertyAction(
 											clickEvent.getItem().getPropertyName(), 
 											PropertyActionType.ADD, 
@@ -316,6 +318,8 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 			context.put(EditAnnotationWizardContextKey.PROPERTY_ACTIONS, actionData
 				.getRootItems().stream()
 				.flatMap(item -> actionData.getChildren(item).stream())
+				.map(item -> item.getPropertyAction())
+				.filter(action -> action != null)
 				.toList());
 		}
 	}

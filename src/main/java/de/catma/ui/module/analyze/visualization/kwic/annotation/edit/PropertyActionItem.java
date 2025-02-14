@@ -31,6 +31,7 @@ class PropertyActionItem implements ActionItem {
 		return VaadinIcons.TRASH.getHtml();
 	}
 
+	@Override
 	public PropertyAction getPropertyAction() {
 		return propertyAction;
 	}

@@ -1,6 +1,5 @@
 package de.catma.ui.module.analyze.visualization.kwic.annotation.edit;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +26,6 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.project.Project;
-import de.catma.tag.TagDefinition;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.wizard.ProgressStep;
@@ -57,6 +55,7 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 	private StepChangeListener stepChangeListener;
 	private MenuItem miToggleResponsibiltityFilter;
 	private WizardStep nextStep;
+	private boolean skipped;
     
 	public CollectionSelectionStep(Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		this.project = project;
@@ -328,6 +327,15 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 		else {
 			context.put(EditAnnotationWizardContextKey.COLLECTIONS, collections);
 		}
+	}
+
+	public void setSkipped(boolean skipped) {
+		this.skipped = skipped;
+	}
+	
+	@Override
+	public boolean isSkipped() {
+		return skipped;
 	}
 
 }

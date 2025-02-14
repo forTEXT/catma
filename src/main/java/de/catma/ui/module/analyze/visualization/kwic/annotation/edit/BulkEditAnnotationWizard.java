@@ -1,5 +1,7 @@
 package de.catma.ui.module.analyze.visualization.kwic.annotation.edit;
 
+import java.util.Collection;
+
 import com.google.common.eventbus.EventBus;
 
 import de.catma.project.Project;
@@ -13,7 +15,9 @@ public class BulkEditAnnotationWizard extends Wizard {
 			EventBus eventBus, Project project, 
 			WizardContext context, SaveCancelListener<WizardContext> saveCancelListener) {
 		super("Edit Annotations", 
-				progressPanel -> new CollectionSelectionStep(
+				progressPanel -> (context.get(EditAnnotationWizardContextKey.COLLECTIONS) != null && !((Collection<?>)context.get(EditAnnotationWizardContextKey.COLLECTIONS)).isEmpty())? 
+					new PropertyActionSelectionStep(project, context, (number, description) -> progressPanel.addStep(number, description)):
+					new CollectionSelectionStep(
 						project, 
 						context,
 						(number, description) -> progressPanel.addStep(number, description)),

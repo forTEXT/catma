@@ -36,4 +36,10 @@ class PropertyNameItem implements ActionItem {
 		return VaadinIcons.TRASH.getHtml();
 	}
 
+	@Override
+	public PropertyAction getPropertyAction() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

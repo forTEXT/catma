@@ -1,10 +1,11 @@
 package de.catma.ui.module.analyze.visualization.kwic.annotation.edit;
 
 interface ActionItem {
-	public String getPropertyName();
-	public String getActionDescription();
-	public default String getAddValueIcon() {return null;};
-	public default String getReplaceValueIcon() {return null;};
-	public default String getDeleteValueIcon() {return null;};
-	public default String getRemoveItemIcon() {return null;};
+	String getPropertyName();
+	String getActionDescription();
+	default String getAddValueIcon() {return null;};
+	default String getReplaceValueIcon() {return null;};
+	default String getDeleteValueIcon() {return null;};
+	default String getRemoveItemIcon() {return null;};
+	default PropertyAction getPropertyAction() {return null;};
 }
