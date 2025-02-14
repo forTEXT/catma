@@ -272,42 +272,52 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 						if (group.getName().startsWith("CATMA_")) { // we reached legacy CATMA 6 project-groups and exit early with what we got so far
 							return result;
 						} else if (group.getPath().startsWith(IDGenerator.GROUP_ID_PREFIX)) { // valid user groups' paths start with G_
-							Set<Member> members =
-									groupApi.getMembers(group.getId())
-											.stream()
-											.map(GitMember::new)
-											.collect(Collectors.toSet());
+							try {
+								Set<Member> members =
+										groupApi.getMembers(group.getId())
+												.stream()
+												.map(GitMember::new)
+												.collect(Collectors.toSet());
 
-							List<ProjectReference> sharedProjects =
-									groupApi.getProjects(
-											group.getId(), new GroupProjectsFilter().withShared(true).withSimple(true)).stream().map(project -> {
-										try {
-											return getProjectReference(
-													project.getNamespace().getPath(),
-													project.getPath(),
-													project.getDescription(),
-													project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
-														      .atZone(ZoneId.systemDefault())
-														      .toLocalDateTime(),
-													project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
-														      .atZone(ZoneId.systemDefault())
-														      .toLocalDateTime()
-											);
-										} catch (IOException e) {
-											logger.log(
-													Level.WARNING,
-													String.format(
-															"Failed to get ProjectReference for GitLab project %s. The user won't be able to open this project.",
-															project.getNamespace().getPath() + "/" + project.getPath()
-													),
-													e
-											);
-											return null;
-										}
-									})
-									.filter(Objects::nonNull)
-									.toList();
-							result.add(new GitGroup(group.getId(), group.getName(), members, sharedProjects));
+								List<ProjectReference> sharedProjects =
+										groupApi.getProjects(
+														group.getId(), new GroupProjectsFilter().withShared(true).withSimple(true)).stream().map(project -> {
+													try {
+														return getProjectReference(
+																project.getNamespace().getPath(),
+																project.getPath(),
+																project.getDescription(),
+																project.getCreatedAt() == null ? null : project.getCreatedAt().toInstant()
+																		.atZone(ZoneId.systemDefault())
+																		.toLocalDateTime(),
+																project.getLastActivityAt() == null ? null : project.getLastActivityAt().toInstant()
+																		.atZone(ZoneId.systemDefault())
+																		.toLocalDateTime()
+														);
+													}
+													catch (IOException e) {
+														logger.log(
+																Level.WARNING,
+																String.format(
+																		"Failed to get ProjectReference for GitLab project %s. The user won't be able to open this project.",
+																		project.getNamespace().getPath() + "/" + project.getPath()
+																),
+																e
+														);
+														return null;
+													}
+												})
+												.filter(Objects::nonNull)
+												.toList();
+								result.add(new GitGroup(group.getId(), group.getName(), members, sharedProjects));
+							}
+							catch (GitLabApiException e) {
+								// ignore 404 errors when fetching a group's members or projects (groups that have been deleted since fetching the list)
+								// rethrow all others
+								if (e.getHttpStatus() != 404) {
+									throw e;
+								}
+							}
 						}
 					}
 

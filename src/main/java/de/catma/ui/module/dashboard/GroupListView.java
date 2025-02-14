@@ -154,7 +154,7 @@ public class GroupListView extends VerticalLayout {
             }
         }
         catch (Exception e) {
-            ((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing projects", e);
+            ((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing groups", e);
         }
     }
 
