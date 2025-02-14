@@ -11,6 +11,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Member;
+import org.gitlab4j.api.models.MembershipSourceType;
 import org.gitlab4j.api.models.Project;
 
 import de.catma.project.ProjectReference;
@@ -59,12 +60,19 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	@Override
 	public final RBACSubject assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException {
 		try {
-			// we use ASSISTANT/developer as the default role because as far as CATMA is concerned there is not much difference between 
-			// the developer and maintainer roles in groups
+			// check that the user is not already a member of the group (GitLab returns an error if we try to add the same user again)
+			if (getGitLabApi().getUserApi().getMemberships(subject.getUserId()).stream().anyMatch(
+					membership -> membership.getSourceType() == MembershipSourceType.NAMESPACE && membership.getSourceId().equals(groupId)
+			)) {
+				return subject;
+			}
+
 			java.util.Date expirationDate = expiresAt==null?null:
 				java.util.Date.from(expiresAt.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 
-			Member member = getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), RBACRole.ASSISTANT.getAccessLevel(), expirationDate); 
+			// we use ASSISTANT/developer as the default role because as far as CATMA is concerned there is not much difference between
+			// the developer and maintainer roles in groups
+			Member member = getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), RBACRole.ASSISTANT.getAccessLevel(), expirationDate);
 			return new GitMember(member);
 		} catch (GitLabApiException e) {
 			throw new IOException(String.format("Failed to add member %s to group with the ID %d with the ASSISTANT role", subject, groupId), e);
