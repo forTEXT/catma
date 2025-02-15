@@ -17,9 +17,12 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.KwicProvider;
+import de.catma.properties.CATMAProperties;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.SliderInputDialog;
 import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.util.Cleaner;
@@ -242,22 +245,44 @@ public class AnnotatedTextProvider {
 
 		@Override
 		public void menuSelected(MenuItem selectedItem) {
-			SingleTextInputDialog dialog = new SingleTextInputDialog("KWIC context size", "Context size", String.valueOf(contextSize), new SaveCancelListener<String>() {
-				
-				@Override
-				public void savePressed(String result) {
-					try {
-						contextSize = Integer.valueOf(result);
-						
-					}
-					catch (NumberFormatException ignore) {
-						contextSize = 5;
-					}
-					selectedItem.setText(contextSizeMenuEntrySupplier.get());
-					contextSizeConsumer.accept(contextSize);
-				}
-			});
+			SliderInputDialog dialog = new SliderInputDialog(
+					"KWIC context size", 
+					"Context size", 
+					1, CATMAPropertyKey.MAX_KEYWORD_IN_CONTEXT_SIZE.getIntValue(), 
+					((Integer)contextSize).doubleValue(), 
+					"tokens", 
+					new SaveCancelListener<Double>() {
+						@Override
+						public void savePressed(Double result) {
+							try {
+								contextSize = result.intValue();
+								
+							}
+							catch (NumberFormatException ignore) {
+								contextSize = 5;
+							}
+							selectedItem.setText(contextSizeMenuEntrySupplier.get());
+							contextSizeConsumer.accept(contextSize);
+						}
+					});
 			dialog.show();
+			
+//			SingleTextInputDialog dialog = new SingleTextInputDialog("KWIC context size", "Context size", String.valueOf(contextSize), new SaveCancelListener<String>() {
+//				
+//				@Override
+//				public void savePressed(String result) {
+//					try {
+//						contextSize = Integer.valueOf(result);
+//						
+//					}
+//					catch (NumberFormatException ignore) {
+//						contextSize = 5;
+//					}
+//					selectedItem.setText(contextSizeMenuEntrySupplier.get());
+//					contextSizeConsumer.accept(contextSize);
+//				}
+//			});
+//			dialog.show();
 		}
 		
 		public String getContextSizeMenuEntry() {

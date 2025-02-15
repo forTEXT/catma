@@ -63,10 +63,13 @@ public class Slider extends VerticalLayout {
 		
 		sliderLayout.addComponent(minLabel);
 		sliderLayout.addComponent(sliderComp);
+		sliderComp.setWidth("100%");
+		sliderLayout.setExpandRatio(sliderComp, 1.0f);
 		sliderLayout.addComponent(maxLabel);
 		
 		addComponent(sliderLayout);
 		setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);
+		sliderLayout.setWidth("100%");
 		
 		final Label current = new Label(formatter.format(sliderComp.getValue()));
 		current.setWidth("100%"); //$NON-NLS-1$

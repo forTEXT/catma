@@ -11,11 +11,15 @@ import java.util.stream.Collectors;
 import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
+import com.vaadin.server.SerializableComparator;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.data.sort.SortDirection;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -41,6 +45,8 @@ import de.catma.util.Pair;
 
 public class TagSelectionPanel extends VerticalLayout {
 
+	private final static SerializableComparator<TagsetTreeItem> TAGSET_TREE_ITEM_COMPARATOR_ASC = (t1, t2) -> t1.compareTo(t2);
+	
 	public interface TagSelectionChangedListener {
 		public void tagSelectionChanged(TagDefinition tag);
 	}
@@ -115,13 +121,19 @@ public class TagSelectionPanel extends VerticalLayout {
     }	
 	
 	private void initActions() {
-		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
+		Grid.Column<TagsetTreeItem, String> tagsetColumn = tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 		.setCaption("Tagsets")
-		.setSortable(false)
+		.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
+		.setSortable(true)
 		.setWidth(200);
+
+		tagsetGrid.setSortOrder(List.of(new GridSortOrder<>(tagsetColumn, SortDirection.ASCENDING)));
+
+
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
 			.setCaption("Tags")
+			.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 			.setSortable(false)
 			.setExpandRatio(1));
 		
