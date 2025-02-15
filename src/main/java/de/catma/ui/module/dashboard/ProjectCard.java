@@ -1,23 +1,29 @@
 package de.catma.ui.module.dashboard;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Objects;
+import java.util.Set;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 
-import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
-import de.catma.rbac.IRBACManager;
+import de.catma.project.ProjectsManager;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
@@ -25,6 +31,8 @@ import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.user.Member;
+import de.catma.user.SharedGroupMember;
 
 /**
  * Displays a single project reference as a card
@@ -44,7 +52,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 	private final EventBus eventBus;
 
-	private final IRBACManager rbacManager;
+	private final RemoteGitManagerRestricted rbacManager;
 	
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
 
@@ -53,19 +61,13 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 	private final ClickAction clickAction;
 
-	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, EventBus eventBus, IRBACManager rbacManager) {
+	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, EventBus eventBus, RemoteGitManagerRestricted rbacManager) {
 		this(projectReference, projectManager, eventBus, rbacManager, ref -> eventBus.post(new RouteToProjectEvent(ref)));
-	}
-
-	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, 
-    		EventBus eventBus, ClickAction clickAction) {
-		this(projectReference, projectManager, eventBus, new NoopRBACManager(), 
-				ref -> clickAction.projectCardClicked(ref));
 	}
 
     private ProjectCard(
     		ProjectReference projectReference, ProjectsManager projectManager, 
-    		EventBus eventBus, IRBACManager rbacManager, 
+    		EventBus eventBus, RemoteGitManagerRestricted rbacManager, 
     		ClickAction clickAction){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
@@ -95,6 +97,19 @@ public class ProjectCard extends VerticalFlexLayout  {
 		previewLayout.addStyleName("projectlist__card__preview");
 		previewLayout.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
 
+		Label datesLabel = 
+			new Label(
+				String.format(
+					"Last activity at: %s <span class=\"%s\">Created at %s</span>", 
+					projectReference.getLastActivityAt()==null?"N/A":projectReference.getLastActivityAt().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)),
+					"projectlist__card__created-date",
+					projectReference.getCreatedAt()==null?"N/A":projectReference.getCreatedAt().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+				),
+				ContentMode.HTML
+					
+			);
+		datesLabel.addStyleName("projectlist__card__dates");
+		previewLayout.addComponent(datesLabel);
 		descriptionLabel = new Label(projectReference.getDescription());
 		descriptionLabel.setWidth("100%");
 		previewLayout.addComponents(descriptionLabel);
@@ -155,10 +170,33 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 		IconButton btnLeave = new IconButton(VaadinIcons.EXIT);
 		btnLeave.addClickListener(
-				clickEvent -> ConfirmDialog.show(
+				clickEvent -> {
+					
+					try {
+						Set<Member> members = rbacManager.getProjectMembers(projectReference);
+						Member self = members.stream().filter(m -> m.getUserId().equals(rbacManager.getUser().getUserId())).findAny().orElse(null);
+						if (self != null) {
+							if (self instanceof SharedGroupMember) {
+								Notification.show(
+										"Info", 
+										String.format(
+												"You are participating in this project because you are part of the user group '%s'.\n"
+												+ "You cannot leave the project directly, you can only leave the user group.\n"
+												+ "Leaving the user group will disconnect you from all projects shared with this group.", 
+												((SharedGroupMember)self).getSharedGroup().name()), 
+										Type.HUMANIZED_MESSAGE);
+								return;
+							}
+						}
+					} catch (IOException e) {
+						errorLogger.showAndLogError(String.format("Could not load members for project '%s'", projectReference.getName()), e);
+					}
+					
+					ConfirmDialog.show(
+				
 						UI.getCurrent(),
 						"Leave Project",
-						"Do you want to leave the project \"" + projectReference.getName() + "\"?",
+						String.format("Do you want to leave the project '%s'?", projectReference.getName()),
 						"OK",
 						"Cancel",
 						confirmDialog -> {
@@ -169,10 +207,11 @@ public class ProjectCard extends VerticalFlexLayout  {
 								}
 							}
 							catch (IOException e) {
-								errorLogger.showAndLogError(String.format("Failed to leave project \"%s\"", projectReference.getName()), e);
+								errorLogger.showAndLogError(String.format("Failed to leave project '%s'", projectReference.getName()), e);
 							}
 						}
-				)
+					);
+				}
 		);
 		titleAndActionsLayout.addComponent(btnLeave);
 
@@ -199,7 +238,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
 						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
-								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // TODO: why do we care about the delete permission here?
+								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // only owners can delete projects and owners should not be able to leave
 						() -> {
 							btnLeave.setVisible(false);
 							btnLeave.setEnabled(false);

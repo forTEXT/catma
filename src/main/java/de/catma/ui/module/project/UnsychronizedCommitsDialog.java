@@ -58,10 +58,10 @@ public class UnsychronizedCommitsDialog extends Window {
 		
 		for (CommitInfo ci : unsynchronizedChanges) {
 			Label l = new Label(
-					ci.getCommitId() 
+					ci.getId() 
 					+ "<br/><strong>"
 					+ Cleaner.clean(
-						ci.getCommitMsg().replaceAll(
+						ci.getMsg().replaceAll(
 								Pattern.quote("with")
 								+"\\s+" 
 								+ Pattern.quote("ID") 

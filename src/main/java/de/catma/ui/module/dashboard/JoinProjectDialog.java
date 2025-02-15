@@ -6,7 +6,7 @@ import javax.cache.Caching;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
-import com.hazelcast.core.ITopic;
+import com.hazelcast.topic.ITopic;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -29,6 +29,8 @@ import de.catma.ui.events.JoinedProjectMessage;
 import de.catma.ui.module.project.ProjectInvitation;
 import de.catma.user.User;
 import de.catma.util.DammAlgorithm;
+
+import java.util.UUID;
 
 /**
  * Dialog to join a project
@@ -145,7 +147,7 @@ public class JoinProjectDialog extends Window {
 
 	private void handleJoinPressed(ClickEvent event) {
 		if(invitation != null) {
-		    String regid = joinedTopic.addMessageListener(
+		    UUID regid = joinedTopic.addMessageListener(
 	    		new ProjectJoinHandler(
 	    				UI.getCurrent(), 
 	    				() -> this.close(),

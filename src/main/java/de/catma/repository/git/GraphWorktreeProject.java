@@ -1,9 +1,38 @@
 package de.catma.repository.git;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import javax.lang.model.type.NullType;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.tika.mime.MediaType;
+
+import com.fasterxml.jackson.databind.introspect.AnnotationCollector;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.UI;
+
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -20,14 +49,27 @@ import de.catma.indexer.IndexedProject;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
+import de.catma.project.BackendPager;
+import de.catma.project.CommitInfo;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
-import de.catma.project.event.*;
+import de.catma.project.event.ChangeType;
+import de.catma.project.event.CollectionChangeEvent;
+import de.catma.project.event.CommentChangeEvent;
+import de.catma.project.event.DocumentChangeEvent;
+import de.catma.project.event.ReplyChangeEvent;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
-import de.catma.repository.git.graph.interfaces.*;
+import de.catma.repository.git.graph.interfaces.CollectionProvider;
+import de.catma.repository.git.graph.interfaces.CollectionsProvider;
+import de.catma.repository.git.graph.interfaces.CommentsProvider;
+import de.catma.repository.git.graph.interfaces.DocumentIndexProvider;
+import de.catma.repository.git.graph.interfaces.DocumentProvider;
+import de.catma.repository.git.graph.interfaces.DocumentsProvider;
+import de.catma.repository.git.graph.interfaces.GraphProjectHandler;
+import de.catma.repository.git.graph.interfaces.TagsetsProvider;
 import de.catma.repository.git.graph.lazy.LazyGraphProjectHandler;
 import de.catma.repository.git.managers.JGitCredentialsManager;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
@@ -42,27 +84,20 @@ import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.serialization.tei.TeiSerializationHandlerFactory;
 import de.catma.serialization.tei.TeiTagLibrarySerializationHandler;
 import de.catma.serialization.tei.TeiUserMarkupCollectionDeserializer;
-import de.catma.tag.*;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.Member;
+import de.catma.user.SharedGroup;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.tika.mime.MediaType;
-
-import javax.lang.model.type.NullType;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class GraphWorktreeProject implements IndexedProject {
 	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
@@ -170,6 +205,11 @@ public class GraphWorktreeProject implements IndexedProject {
 	@Override
 	public String getId() {
 		return projectReference.getProjectId();
+	}
+	
+	@Override
+	public String getNamespace() {
+		return projectReference.getNamespace();
 	}
 
 	@Override
@@ -1563,6 +1603,51 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		eventBus.post(new DocumentChangeEvent(sourceDocumentRef, ChangeType.DELETED));
 	}
+	
+	// bulk removal of resources
+	@Override
+	public void removeResources(
+			final Collection<SourceDocumentReference> documents, 
+			final Collection<AnnotationCollectionReference> collections, 
+			final Collection<TagsetDefinition> tagsets, 
+			ProgressListener progressListener) throws Exception {
+
+		String oldRootRevisionHash = rootRevisionHash;
+
+		this.rootRevisionHash = gitProjectHandler.removeResources(documents, collections, tagsets, progressListener);
+
+		
+		for (AnnotationCollectionReference collRef : collections) {
+			graphProjectHandler.removeAnnotationCollection(collRef, oldRootRevisionHash, rootRevisionHash);
+
+			SourceDocumentReference sourceDocumentRef = getSourceDocumentReference(collRef.getSourceDocumentId());
+			sourceDocumentRef.removeUserMarkupCollectionReference(collRef);
+
+			eventBus.post(
+					new CollectionChangeEvent(
+							collRef,
+							sourceDocumentRef,
+							ChangeType.DELETED
+					)
+			);
+		}
+		
+		for (SourceDocumentReference docRef : documents) {
+			graphProjectHandler.removeSourceDocument(docRef, oldRootRevisionHash, rootRevisionHash);
+
+			eventBus.post(new DocumentChangeEvent(docRef, ChangeType.DELETED));
+		}
+
+		try {
+			tagManagerListenersEnabled = false;
+			for (TagsetDefinition tagset : tagsets) {
+				tagManager.removeTagsetDefinition(tagset);
+			}
+		}
+		finally {
+			tagManagerListenersEnabled = true;
+		}
+	}
 
 	// comment operations
 	@Override
@@ -1613,11 +1698,6 @@ public class GraphWorktreeProject implements IndexedProject {
 
 	// member, role and permissions related things
 	@Override
-	public List<User> findUser(String usernameOrEmail) throws IOException {
-		return gitProjectHandler.findUser(usernameOrEmail);
-	}
-
-	@Override
 	public boolean hasPermission(RBACRole role, RBACPermission permission) {
 		return gitProjectHandler.hasPermission(role, permission);
 	}
@@ -1633,13 +1713,24 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role) throws IOException {
-		return gitProjectHandler.assignOnProject(subject, role);
+	public RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException {
+		return gitProjectHandler.assignOnProject(subject, role, expiresAt);
+	}
+	
+	@Override
+	public SharedGroup assignRoleToGroup(SharedGroup group, RBACRole projectRole, LocalDate expiresAt, boolean reassign) throws IOException {
+		return gitProjectHandler.assignOnProject(group, projectRole, expiresAt, reassign);
 	}
 
 	@Override
 	public void removeSubject(RBACSubject subject) throws IOException {
 		gitProjectHandler.unassignFromProject(subject);
+	}
+	
+	@Override
+	public void removeGroup(SharedGroup sharedGroup) throws IOException {
+		gitProjectHandler.unassignFromProject(sharedGroup);
+		
 	}
 
 	// synchronization related things
@@ -1816,4 +1907,11 @@ public class GraphWorktreeProject implements IndexedProject {
 
 		graphProjectHandler.updateProjectRevision(oldRootRevisionHash, rootRevisionHash);
 	}
+	
+	@Override
+	public BackendPager<CommitInfo> getCommits(LocalDate after, LocalDate before, String branch, String author) throws IOException {
+		return gitProjectHandler.getCommits(after, before, branch, author);
+	}
+	
+	
 }

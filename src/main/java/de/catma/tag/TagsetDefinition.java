@@ -38,16 +38,16 @@ import java.util.stream.Stream;
  */
 public class TagsetDefinition implements Iterable<TagDefinition> {
 	
-	private String uuid;
+	private final String uuid;
 	private String name;
 
 	private String description;
 	private String forkedFromCommitURL;
 	private String responsibleUser;
 	
-	private Map<String,TagDefinition> tagDefinitions;
-	private Map<String,Set<String>> tagDefinitionChildren;
-	private Set<String> deletedDefinitions;
+	private final Map<String,TagDefinition> tagDefinitions;
+	private final Map<String,Set<String>> tagDefinitionChildren;
+	private final Set<String> deletedDefinitions;
 	private transient boolean contribution = false;
 
 	/**
@@ -103,8 +103,6 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) { this.uuid = uuid; }
-	
 	/**
 	 * @param tagDefID CATMA uuid of the {@link TagDefinition}, see {@link de.catma.util.IDGenerator}
 	 * @return <code>true</code> if this tagset def contains the corresponding tag def
@@ -155,7 +153,7 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 				return o1.getName().compareTo(o2.getName());
 			}
 		})
-		.collect(Collectors.toList());
+		.collect(Collectors.toUnmodifiableList());
 	}
 
 	public List<TagDefinition> getDirectChildren(TagDefinition tagDefinition) {
@@ -370,5 +368,9 @@ public class TagsetDefinition implements Iterable<TagDefinition> {
 	
 	public void setContribution(boolean contribution) {
 		this.contribution = contribution;
+	}
+	
+	public Set<String> getTagDefinitionIds() {
+		return Collections.unmodifiableSet(tagDefinitions.keySet());
 	}
 }

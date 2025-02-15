@@ -2,6 +2,7 @@ package de.catma.repository.git.serialization;
 
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
@@ -11,6 +12,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.ConstructorConstructor;
 import com.google.gson.internal.Excluder;
+import com.google.gson.internal.bind.JsonAdapterAnnotationTypeAdapterFactory;
+import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
 
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
@@ -39,11 +42,17 @@ public class SerializationHelper<T> {
 		gson.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gson.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gson.registerTypeAdapterFactory(new CharsetAdapterFactory());
+		gson.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
+		ConstructorConstructor constructorConstructor = new ConstructorConstructor(Collections.emptyMap(), false, Collections.emptyList());
 		gson.registerTypeAdapterFactory(
 			new SortedReflectiveTypeAdapterFactory(
-					new ConstructorConstructor(Collections.emptyMap()), 
-					FieldNamingPolicy.IDENTITY, 
-					Excluder.DEFAULT)); 
+				new ReflectiveTypeAdapterFactory(
+					constructorConstructor, 
+					FieldNamingPolicy.IDENTITY, Excluder.DEFAULT,
+					new JsonAdapterAnnotationTypeAdapterFactory(constructorConstructor), Collections.emptyList()
+				)
+			)
+		); 
 		return gson.setPrettyPrinting().serializeNulls().create().toJson(object);
 	}
 	
@@ -54,6 +63,7 @@ public class SerializationHelper<T> {
 		gson.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gson.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gson.registerTypeAdapterFactory(new CharsetAdapterFactory());
+		gson.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
 		
 		return gson.create().fromJson(json, clazz);
 	}
@@ -65,7 +75,9 @@ public class SerializationHelper<T> {
 		gsonBuilder.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gsonBuilder.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gsonBuilder.registerTypeAdapterFactory(new CharsetAdapterFactory());
-		Gson gson = gsonBuilder.create();
+		gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
+		
+		Gson gson = gsonBuilder.serializeNulls().create();
 		return gson.fromJson(json, type);		
 	}
 	
@@ -76,6 +88,7 @@ public class SerializationHelper<T> {
 		gsonBuilder.registerTypeAdapter(FileOSType.class, new FileOSTypeAdapter());
 		gsonBuilder.registerTypeAdapter(FileType.class, new FileTypeAdapter());
 		gsonBuilder.registerTypeAdapterFactory(new CharsetAdapterFactory());
+		gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
 		Gson gson = gsonBuilder.setPrettyPrinting().serializeNulls().create();
 		return gson.toJson(objects);	
 	}

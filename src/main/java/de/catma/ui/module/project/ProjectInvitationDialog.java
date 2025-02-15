@@ -1,7 +1,9 @@
 package de.catma.ui.module.project;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.cache.Cache;
 import javax.cache.Caching;
@@ -10,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
+import com.hazelcast.topic.ITopic;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
@@ -18,6 +20,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.DateField;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
@@ -67,6 +70,7 @@ public class ProjectInvitationDialog extends Window {
     private final List<DocumentResource> documentsForCollectionCreation;
     
 	private ProjectInvitation projectInvitation;
+	private DateField expiresAtInput;
 
 	public ProjectInvitationDialog(
 			Project project,
@@ -125,6 +129,13 @@ public class ProjectInvitationDialog extends Window {
 		roleBox.setEmptySelectionAllowed(false);
 		content.addComponent(roleBox);
 		
+		expiresAtInput = new DateField("Membership expires at (optional)");
+		expiresAtInput.setDateFormat("yyyy/MM/dd");
+		expiresAtInput.setPlaceholder("yyyy/mm/dd");
+		expiresAtInput.setWidth("100%");
+		content.addComponent(expiresAtInput);
+
+		
 		joinedUsersConsole = new ListSelect<>("Joined Users", joinedUsers);
 		joinedUsersConsole.setWidth("100%");
 		joinedUsersConsole.setCaption("Users");
@@ -178,7 +189,8 @@ public class ProjectInvitationDialog extends Window {
 				roleBox.getValue().getAccessLevel(), 
 				project.getName(), 
 				project.getDescription(),
-				cbOwnCollection.getValue());
+				cbOwnCollection.getValue(),
+				expiresAtInput.getValue()==null?null:expiresAtInput.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
 		
 		invitationCache.put(projectInvitation.getKey(), new Gson().toJson(projectInvitation));
 		
@@ -188,7 +200,7 @@ public class ProjectInvitationDialog extends Window {
 		lInvitationCode.setVisible(true);
 		btnInvite.setEnabled(false);
 		
-	    String regid = invitationTopic.addMessageListener(
+	    UUID regid = invitationTopic.addMessageListener(
 	    	new ProjectInvitationHandler(
 	    		UI.getCurrent(),
 	    		projectInvitation,

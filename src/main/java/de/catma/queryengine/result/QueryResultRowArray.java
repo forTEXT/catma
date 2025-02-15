@@ -68,9 +68,6 @@ public class QueryResultRowArray extends ArrayList<QueryResultRow> implements Qu
 				new HashMap<>();
 		
 		for (QueryResultRow row : this) {
-			if (row == null) {
-				System.out.println("nase");
-			}
 			Object key = groupingKeyProvider.apply(row); 
 
 			if (!phraseResultMapping.containsKey(key)) {

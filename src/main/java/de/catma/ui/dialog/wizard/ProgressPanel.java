@@ -1,12 +1,11 @@
 package de.catma.ui.dialog.wizard;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.hazelcast.concurrent.countdownlatch.operations.GetCountOperation;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProgressPanel extends HorizontalLayout {
 	

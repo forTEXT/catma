@@ -1,20 +1,32 @@
 package de.catma.repository.git.managers.interfaces;
 
-import de.catma.document.comment.Comment;
-import de.catma.document.comment.Reply;
-import de.catma.project.MergeRequestInfo;
-import de.catma.project.ProjectReference;
-import de.catma.user.Member;
-import de.catma.user.User;
-
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+
+import de.catma.document.comment.Comment;
+import de.catma.document.comment.Reply;
+import de.catma.project.BackendPager;
+import de.catma.project.CommitInfo;
+import de.catma.project.MergeRequestInfo;
+import de.catma.project.ProjectReference;
+import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
+import de.catma.user.Group;
+import de.catma.user.Member;
+import de.catma.user.User;
 
 /**
  * Provides restricted access (current user scope) to the remote Git server API
  */
 public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitUserInformationProvider {
+	
+	/**
+	 * Re-fetches the current user from the backend.
+	 */
+	void refreshUser();
+	
 	/**
 	 * Gets the user for the current session.
 	 *
@@ -40,6 +52,105 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 */
 	List<ProjectReference> getProjectReferences() throws IOException;
 
+	/**
+	 * Gets the project with the given CATMA projectId and namespace.
+	 *
+	 * @return a {@link ProjectReference}
+	 * @throws IOException if an error occurs when getting the projects
+	 */
+	ProjectReference getProjectReference(String namespace, String projectId) throws IOException;
+	
+	/**
+	 * Gets all projects the current user has access to.
+	 * 
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 * @return a {@link List} of {@link ProjectReference}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */
+	List<ProjectReference> getProjectReferences(boolean forceRefetch) throws IOException;
+
+	
+	/**
+	 * Get a list of the IDs of all projects owned by the current user.
+	 * 
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 *
+	 * @return a {@link List} of {@link ProjectReference#getProjectId()}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */	
+	List<String> getOwnedProjectIds(boolean forceRefetch) throws IOException;
+	
+	/**
+	 * Get all groups the current user is part of.
+	 *
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab)
+	 * @return a {@link List} of {@link de.catma.user.Group}s
+	 * @throws IOException if an error occurs when getting the groups
+	 */
+	List<de.catma.user.Group> getGroups(boolean forceRefetch) throws IOException;
+	
+	/**
+	 * Get all groups the current user is part of and having at least the given role. 
+	 *
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab)
+	 * @param minRole the minimum role the user must have in the result groups
+	 * @return a {@link List} of {@link de.catma.user.Group}s
+	 * @throws IOException if an error occurs when getting the groups
+	 */
+	List<de.catma.user.Group> getGroups(RBACRole minRole, boolean forceRefetch) throws IOException;
+
+	
+	/**
+	 * Get a list of the IDs of all groups owned by the current user.
+	 * 
+	 * @param forceRefetch true->force a re-fetch from the underlying remote git manager (currently Gitlab) 
+	 *
+	 * @return a {@link List} of {@link Group#getId()}s
+	 * @throws IOException if an error occurs when getting the projects
+	 */	
+	List<Long> getOwnedGroupIds(boolean forceRefetch) throws IOException;
+	
+	/**
+	 * Creates a new group.
+	 * @param name the name of the group
+	 * @param path the path of the group
+	 * @return the group
+	 * @throws IOException if an error occurs when creating the group
+	 */
+	Group createGroup(String name, String path) throws IOException;
+
+	/**
+	 * Deletes a group
+	 * @param group the group to delete
+	 * @throws IOException if an error occurs when deleting the group
+	 */
+	void deleteGroup(Group group) throws IOException;	
+
+	/**
+	 * Updates the given group with the given new name.
+	 * @param name the new name
+	 * @param group the group to update
+	 * @return the updated group
+	 * @throws IOException if an error occurs when updating the group
+	 */
+	Group updateGroup(String name, Group group) throws IOException;
+
+	/**
+	 * Leave the given group.
+	 * @param group the group to leave
+	 * @throws IOException if an error occurs when leaving the group
+	 */
+	void leaveGroup(Group group) throws IOException;
+	
+	/**
+	 * Unassign the given member subject from the given group.
+	 * @param subject the member
+	 * @param group the group to remove from
+	 * @throws IOException if an error occurs when removing the subject from the group
+	 */
+	void unassignFromGroup(RBACSubject subject, Group group) throws IOException;
+
+	
 	/**
 	 * Gets a project's repository URL.
 	 *
@@ -211,4 +322,36 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if an error occurs when merging the merge request
 	 */
 	MergeRequestInfo mergeMergeRequest(MergeRequestInfo mergeRequestInfo) throws IOException;
+
+	/**
+	 * Forks the given project by using the targetProjectId for gitlab-project-name and gitlab-project-path
+	 * @param projectReference the project to fork
+	 * @param targetProjectId the projectId of the new project
+	 * @return the new project's repository URL
+	 * @throws IOException if an error occurs when forking the project
+	 */
+	void forkProject(ProjectReference projectReference, String targetProjectId)
+			throws IOException;
+
+	/**
+	 * Checks the import status of the given project.
+	 * @param projectReference the project to check
+	 * @return true if the project has been imported successfully else false
+	 * @throws IOException if an error occurs during the check or if the import status is 'failed'.
+	 */
+	boolean isProjectImportFinished(ProjectReference projectReference) throws IOException;
+
+	
+	/**
+	 * Gets commits for the given project and filter criteria.
+	 * @param projectReference the project to get commits for
+	 * @param after commits with timestamp after or equal this date
+	 * @param before commits with timestamp before or equal this date
+	 * @param branch the branch to look at
+	 * @param author commits with this author
+	 * @return a pager for the resulting commits
+	 * @throws IOException if an error occurs during retrieval
+	 */
+	BackendPager<CommitInfo> getCommits(ProjectReference projectReference, LocalDate after, LocalDate before, String branch, String author)
+			throws IOException;
 }

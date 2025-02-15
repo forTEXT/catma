@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.hazelcast.core.Message;
+import com.hazelcast.topic.Message;
 import com.vaadin.ui.UI;
 
 import de.catma.document.comment.Comment;

@@ -23,6 +23,7 @@ import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.lib.IndexDiff.StageState;
+import org.eclipse.jgit.revwalk.FooterLine;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileBasedConfig;
@@ -855,7 +856,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 			for (RevCommit commit : commits) {
 				result.add(
-						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+						new CommitInfo(
+								commit.getId().getName(), 
+								commit.getShortMessage(), 
+								commit.getFullMessage(), 
+								commit.getAuthorIdent().getWhen(),
+								commit.getAuthorIdent().getName())
 				);
 			}
 
@@ -895,7 +901,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 			for (RevCommit commit : commits) {
 				result.add(
-						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+						new CommitInfo(
+								commit.getId().getName(), 
+								commit.getShortMessage(), 
+								commit.getFullMessage(), 
+								commit.getAuthorIdent().getWhen(),
+								commit.getAuthorIdent().getName())
 				);
 			}
 
@@ -951,7 +962,13 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 				if (iterator.hasNext()) {
 					RevCommit revCommit = iterator.next();
-					return new CommitInfo(revCommit.getId().getName(), revCommit.getFullMessage(), revCommit.getAuthorIdent().getWhen());
+					return new CommitInfo(
+							revCommit.getId().getName(), 
+							revCommit.getShortMessage(), 
+							revCommit.getFullMessage(), 
+							revCommit.getAuthorIdent().getWhen(),
+							revCommit.getAuthorIdent().getName());
+
 				}
 			}
 
@@ -1725,7 +1742,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 			for (RevCommit commit : commits) {
 				result.add(
-						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+						new CommitInfo(
+								commit.getId().getName(), 
+								commit.getShortMessage(), 
+								commit.getFullMessage(), 
+								commit.getAuthorIdent().getWhen(),
+								commit.getAuthorIdent().getName())						
 				);
 			}
 
@@ -1766,7 +1788,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 			for (RevCommit commit : commits) {
 				result.add(
-						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+						new CommitInfo(
+								commit.getId().getName(), 
+								commit.getShortMessage(), 
+								commit.getFullMessage(), 
+								commit.getAuthorIdent().getWhen(),
+								commit.getAuthorIdent().getName())						
 				);
 			}
 
@@ -1807,7 +1834,12 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 			for (RevCommit commit : commits) {
 				result.add(
-						new CommitInfo(commit.getId().getName(), commit.getFullMessage(), commit.getAuthorIdent().getWhen())
+					new CommitInfo(
+						commit.getId().getName(), 
+						commit.getShortMessage(), 
+						commit.getFullMessage(), 
+						commit.getAuthorIdent().getWhen(),
+						commit.getAuthorIdent().getName())						
 				);
 			}
 

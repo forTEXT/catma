@@ -1323,10 +1323,7 @@ public class TagsView extends HugeCard {
 										TagsetDefinition tagset = 
 											project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
 										
-										TagDefinition tag = new TagDefinition(result);
-										tag.setUuid(idGenerator.generate());
-										tag.setParentUuid(parent.getUuid());
-										tag.setTagsetDefinitionUuid(tagset.getUuid());
+										TagDefinition tag = new TagDefinition(result, idGenerator.generate(), parent.getUuid(), tagset.getUuid());
 										
 										project.getTagManager().addTagDefinition(
 												tagset, tag);

@@ -400,4 +400,18 @@ public class GitTagsetHandler {
 		
 	}
 
+	public void removeTagsetDefinitionWithoutCommit(TagsetDefinition tagset) throws IOException {
+		String tagsetSubdir = String.format(
+				"%s/%s", 
+				GitProjectHandler.TAGSETS_DIRECTORY_NAME, 
+				tagset.getUuid()
+		);
+
+		File targetTagsetDefinitionFolderAbsolutePath = Paths.get(
+				this.projectDirectory.getAbsolutePath(),
+				tagsetSubdir
+		).toFile();
+		
+		this.localGitRepositoryManager.remove(targetTagsetDefinitionFolderAbsolutePath);
+	}
 }

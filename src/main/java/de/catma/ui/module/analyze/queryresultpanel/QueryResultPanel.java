@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
@@ -60,10 +59,9 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
-import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.module.analyze.CSVExportFlatStreamSource;
 import de.catma.ui.module.analyze.CSVExportGroupedStreamSource;
+import de.catma.ui.module.analyze.CSVExportPropertiesAsColumnsFlatStreamSource;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider.ContextSizeEditCommand;
 import de.catma.ui.module.main.ErrorHandler;
@@ -861,6 +859,22 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		csvGroupedByPhraseExportFileDownloader.extend(miCSVGroupedByPhraseExport);
 		
+		MenuItem miCSVColumnsAsPropertiesExport = miExport.addItem("Export Properties as Columns as CSV");
+		
+		StreamResource csvPropertiesAsColumnsResource = new StreamResource(
+					new CSVExportPropertiesAsColumnsFlatStreamSource(
+						() -> getFilteredQueryResult(), 
+						project, 
+						kwicProviderCache, 
+						((BackgroundServiceProvider)UI.getCurrent())),
+					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+		csvPropertiesAsColumnsResource.setCacheTime(0);
+		csvPropertiesAsColumnsResource.setMIMEType("text/comma-separated-values");
+		
+		FileDownloader csvPropertiesAsColumnsExportFileDownloader = 
+			new FileDownloader(csvPropertiesAsColumnsResource);
+		
+		csvPropertiesAsColumnsExportFileDownloader.extend(miCSVColumnsAsPropertiesExport);
 		
 		MenuItem miFilterPunctuation = optionsMenu.addItem(
 				"Filter Punctuation",

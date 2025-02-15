@@ -7,6 +7,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.ui.UI;
 
 import de.catma.indexer.KwicProvider;
+import de.catma.queryengine.result.CommentQueryResultRow;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -88,9 +89,11 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 				KwicQueryResultRowItem item = new KwicQueryResultRowItem(
 						row, 
 						AnnotatedTextProvider.buildKeywordInContext(
-							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()), contextSize),
-						AnnotatedTextProvider.buildKeywordInContextLarge(
-							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()), contextSize),
+								row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()), contextSize),
+						(row instanceof CommentQueryResultRow)?
+							AnnotatedTextProvider.buildCommentedKeyword(row.getPhrase(), ((CommentQueryResultRow) row).getComment())
+							:AnnotatedTextProvider.buildKeywordInContextLarge(
+								row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()), contextSize),
 						false);
 				if (!treeData.contains(item)) {
 					treeData.addItem(this, item);

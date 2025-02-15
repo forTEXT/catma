@@ -17579,7 +17579,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-left: 1px solid #C5C5C5;
 	padding: 20px;
 	font-family: Arial Unicode MS, Arial, sans-serif;
-	font-size: 12px;
 	color: #000;
 	white-space: nowrap;
 	overflow: auto;
@@ -17588,6 +17587,34 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-user-select: text;
 	-o-user-select: text;
 	user-select: text;
+}
+
+.catma .tagger-bt-increase {
+	font-size: larger;
+}
+
+.catma .tagger-bt-decrease {
+	font-size: smaller;
+}
+
+.catma .tagger-font-xsmall {
+	font-size: 8px;
+}
+
+.catma .tagger-font-small {
+	font-size: 10px;
+}
+
+.catma .tagger-font-normal {
+	font-size: 12px;
+}
+
+.catma .tagger-font-large {
+	font-size: 14px;
+}
+
+.catma .tagger-font-xlarge {
+	font-size: 16px;
 }
 
 .catma .tagger-editor {
@@ -18228,6 +18255,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: rgba(0, 0, 0, 0.87);
 	padding-top: 14px;
 	padding-bottom: 14px;
+	width: 100%;
 }
 
 .catma div.documentsgrid__doc {
@@ -18259,6 +18287,27 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-left: 25px;
 }
 
+.catma .fork-configuration-dialog__bt-deselect-all-collections {
+	color: white;
+}
+
+.catma .fork-configuration-dialog__tagset-grid .v-horizontallayout-actiongrid__bar {
+	padding-right: 10px;
+}
+
+.catma .project-event-panel-pager-component {
+	background: white;
+	margin-right: 10px;
+}
+
+.catma .project-event-panel-commits-action-grid-component {
+	padding-bottom: 1px;
+}
+
+.catma .project-event-panel-commits-action-grid-component .v-horizontallayout-actiongrid__bar {
+	padding-right: 10px;
+}
+
 .catma .dashboard-view {
 	background-color: white;
 	overflow: auto;
@@ -18278,6 +18327,27 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	flex-wrap: wrap;
 }
 
+.catma .v-caption-project-list-view__sorted-by-box {
+	font-size: xx-small !important;
+}
+
+.catma .project-list-view__sorted-by-box {
+	font-size: x-small;
+}
+
+.catma .v-filterselect-suggestpopup-project-list-view__sorted-by-box {
+	font-size: x-small;
+}
+
+.catma .v-caption-project-list-view__sorted-by-box > span.v-captiontext {
+	float: right;
+	height: 5px;
+}
+
+.catma .v-textfield-project-list-view__search-field {
+	margin-top: 5px !important;
+}
+
 .catma .projectlist vaadin-button {
 	background-color: transparent;
 }
@@ -18294,10 +18364,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin: 10px;
 	padding: 10px;
 	align-items: center;
+	height: 226.60001px;
 }
 
 .catma .projectlist__newproject__link {
-	height: 176px;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 	padding: 0.5em;
@@ -18329,10 +18400,66 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0.5em;
 	cursor: pointer;
 	width: 100%;
+	overflow: auto;
+}
+
+.catma .projectlist__card__dates {
+	font-size: xx-small;
+	border-bottom: 1px solid lightgrey;
+	margin-bottom: 5px;
+}
+
+.catma .projectlist__card__created-date {
+	float: right;
 }
 
 .catma .projectlist__card__title-and-actions {
 	padding: 10px;
+}
+
+.catma .groupslist__list {
+	flex-wrap: wrap;
+}
+
+.catma .groupslist__card {
+	border: solid 1px rgba(151, 151, 151, 0.12);
+	border-radius: 4px;
+	margin: 10px;
+	padding: 0px;
+}
+
+.catma .groupslist__card__grid .v-slot-action-grid-bar__search-field {
+	width: 269px;
+}
+
+.catma .groupslist__card__topPanel {
+	background-color: #cdcdcd;
+}
+
+.catma .groupslist__card__title-and-actions {
+	padding: 10px;
+}
+
+.catma .groupslist__newgroup {
+	width: 352px;
+	border-radius: 4px;
+	background-color: #ffffff;
+	border: dashed 3px rgba(151, 151, 151, 0.12);
+	margin: 10px;
+	padding: 10px;
+	align-items: center;
+	height: 226.60001px;
+}
+
+.catma .groupslist__newgroup__link {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	padding: 0.5em;
+	cursor: pointer;
+	font-size: 1.5em;
+	text-transform: uppercase;
+	justify-content: center;
 }
 
 .catma .annotate-tag-tree-item {
@@ -18411,6 +18538,31 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .annotate-resource-panel {
 	overflow: auto;
 	height: inherit;
+}
+
+.catma .v-caption-annotate-resource-panel__member-box {
+	font-size: xx-small !important;
+}
+
+.catma .annotate-resource-panel__member-box {
+	font-size: x-small;
+}
+
+.catma .v-filterselect-suggestpopup-annotate-resource-panel__member-box {
+	font-size: x-small;
+}
+
+.catma .v-caption-annotate-resource-panel__member-box > span.v-captiontext {
+	float: right;
+	height: 5px;
+}
+
+.catma .v-verticallayout-annotate-resource-panel__document-grid .action-grid-bar__search-field {
+	margin-top: 5px;
+}
+
+.catma .annotate-resource-panel__toggle-visibility-button {
+	margin-top: 3px;
 }
 
 .catma .resource-grid {

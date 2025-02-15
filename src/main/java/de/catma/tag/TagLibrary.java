@@ -39,7 +39,7 @@ import org.apache.tika.language.detect.LanguageResult;
  */
 public class TagLibrary implements Iterable<TagsetDefinition> {
 
-	private Map<String,TagsetDefinition> tagsetDefinitionsByID;
+	private final Map<String,TagsetDefinition> tagsetDefinitionsByID;
 	private Locale locale;
 	
 	public TagLibrary() {

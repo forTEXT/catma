@@ -7,7 +7,7 @@
 
 	<groupId>de.catma</groupId>
 	<artifactId>catma</artifactId>
-	<version>7.0-SNAPSHOT</version>
+	<version>7.2-SNAPSHOT</version>
 	<name>catma</name>
 	<packaging>war</packaging>
 
@@ -17,7 +17,7 @@
 
 	<properties>
 		<vaadin.version>8.14.3</vaadin.version>
-		<vaadin.plugin.version>8.14.3</vaadin.plugin.version>
+		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
 		<!-- If there are no local customizations, this can also be "fetch" or "cdn" -->
 		<vaadin.widgetset.mode>local</vaadin.widgetset.mode>
 
@@ -27,7 +27,9 @@
 		<maven.compiler.target>21</maven.compiler.target>
 		<maven.compiler.release>21</maven.compiler.release>
 
-		<jetty.plugin.version>9.4.55.v20240627</jetty.plugin.version>
+		<jetty.plugin.version>12.0.15</jetty.plugin.version>
+		
+		<jersey.version>2.45</jersey.version>
 	</properties>
 
 	<repositories>
@@ -53,26 +55,17 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
-			<version>3.1.0</version>
+			<version>4.0.1</version>
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- Vaadin & addons -->
+		<!-- Vaadin & addons (Ref: https://vaadin.com/docs/v8/framework/getting-started/getting-started-libraries)
+			 "Note that the vaadin-client-compiler and vaadin-client JARs should not be deployed with the web application. The Maven scope provided can be used.
+			 Some other libraries, such as vaadin-sass-compiler, are not needed in production deployment."
+		 -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-server</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-push</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-client-compiled</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
@@ -80,13 +73,36 @@
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-push</artifactId>
+		</dependency>
+		<!-- "This library is not needed if you compile the application widget set with the Vaadin Client Compiler."
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client-compiled</artifactId>
+		</dependency>
+		-->
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<!-- Note: We're using the Vaadin Client Compiler, but it's commented here because compilation is handled by vaadin-maven-plugin.
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client-compiler</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		-->
+
+		<dependency>
+			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-context-menu</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.vaadin</groupId>
 			<artifactId>elements</artifactId>
-			<!-- https://github.com/forTEXT/serverside-elements/commit/5745bbf32ab9e31a1eb6bb81ce490bcdabc4fcf2 -->
-			<version>0.2.3-SNAPSHOT</version>
+			<!-- https://github.com/forTEXT/serverside-elements/releases/tag/0.2.3-CATMA -->
+			<version>0.2.3-CATMA</version>
 		</dependency>
 		<dependency>
 		   <groupId>org.vaadin.addon</groupId>
@@ -130,7 +146,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-email</artifactId>
-			<version>1.5</version>
+			<version>1.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -150,24 +166,11 @@
 			<version>4.5.14</version>
 		</dependency>
 
-		<!-- Netty (used to encode signup token in query string) -->
-		<!-- TODO: use something else and get rid of this dependency -->
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-codec-http</artifactId>
-			<version>4.1.90.Final</version>
-		</dependency>
-
 		<!-- Hazelcast & caching (used for cross-session comms and caching of signup tokens and project invitation codes) -->
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>3.12.13</version>
-		</dependency>
-		<dependency>
-			<groupId>com.hazelcast</groupId>
-			<artifactId>hazelcast-client</artifactId>
-			<version>3.12.13</version>
+			<version>5.3.6</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.cache</groupId>
@@ -263,7 +266,7 @@
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
-			<version>2.8.9</version>
+			<version>2.10.1</version>
 		</dependency>
 
 		<!-- SQLite -->
@@ -273,10 +276,33 @@
 			<version>3.41.2.2</version>
 		</dependency>
 
+		<!-- PRE-API v2 -->
+		<dependency>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-servlet</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.core</groupId>
+			<artifactId>jersey-server</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.nimbusds</groupId>
+			<artifactId>nimbus-jose-jwt</artifactId>
+			<version>9.37.3</version>
+			<exclusions>
+				<exclusion>  <!-- has vulnerabilities and is used only for tests -->
+					<groupId>org.bitbucket.b_c</groupId>
+					<artifactId>jose4j</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
+			<artifactId>junit-jupiter-engine</artifactId>
 			<version>5.9.2</version>
 			<scope>test</scope>
 		</dependency>
@@ -292,6 +318,18 @@
 			<version>4.2.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.test-framework</groupId>
+			<artifactId>jersey-test-framework-core</artifactId>
+			<version>${jersey.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.test-framework.providers</groupId>
+			<artifactId>jersey-test-framework-provider-jetty</artifactId>
+			<version>${jersey.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -299,17 +337,18 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.5.0</version>
+				<version>3.8.0</version>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>3.4.0</version>
 				<configuration>
-					<failOnMissingWebXml>false</failOnMissingWebXml>
-					<!-- Exclude an unnecessary file generated by the GWT compiler -->
-					<packagingExcludes>WEB-INF/classes/VAADIN/widgetsets/WEB-INF/**</packagingExcludes>
+					<failOnMissingWebXml>true</failOnMissingWebXml>
+					<webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+					<!-- Exclude any properties files in src/main/webapp as well as an unnecessary file generated by the GWT compiler -->
+					<packagingExcludes>*.properties,WEB-INF/classes/VAADIN/widgetsets/WEB-INF/**</packagingExcludes>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -331,7 +370,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clean-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.4.0</version>
 				<!-- Also clean up any pre-compiled themes -->
 				<configuration>
 					<filesets>
@@ -348,25 +387,20 @@
 
 			<!-- The Jetty plugin allows us to easily test the development build by running jetty:run on the command line -->
 			<plugin>
-				<groupId>org.eclipse.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
+				<groupId>org.eclipse.jetty.ee8</groupId>
+				<artifactId>jetty-ee8-maven-plugin</artifactId>
 				<version>${jetty.plugin.version}</version>
 				<configuration>
-					<scanIntervalSeconds>0</scanIntervalSeconds>
+					<scan>0</scan>
 					<webApp>
-						<contextPath>/catma</contextPath>
+						<contextPath>/</contextPath>
 					</webApp>
 				</configuration>
 				<dependencies>
-					<dependency>
-						<groupId>org.eclipse.jetty.websocket</groupId>
-						<artifactId>websocket-api</artifactId>
-						<version>${jetty.plugin.version}</version>
-					</dependency>
 					<!-- To run websockets in embedded server -->
 					<dependency>
-						<groupId>org.eclipse.jetty.websocket</groupId>
-						<artifactId>websocket-server</artifactId>
+						<groupId>org.eclipse.jetty.ee8.websocket</groupId>
+						<artifactId>jetty-ee8-websocket-javax-server</artifactId>
 						<version>${jetty.plugin.version}</version>
 					</dependency>
 				</dependencies>

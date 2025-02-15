@@ -22,6 +22,7 @@ import org.vaadin.sliderpanel.client.SliderMode;
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
+import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ThemeResource;
@@ -99,6 +100,10 @@ public class AnalyzeView extends HorizontalLayout
 		@Override
 		public String toString() {
 			return hideName?this.query:(this.name + " (" + this.query + ")");
+		}
+		
+		public boolean isHideName() {
+			return hideName;
 		}
 	}
 
@@ -391,7 +396,7 @@ public class AnalyzeView extends HorizontalLayout
 		});
 		
 		btExecuteSearch.addClickListener(clickEvent -> executeSearch());	
-		queryBox.addValueChangeListener(valueChange -> btExecuteSearch.click());
+		queryBox.addValueChangeListener(valueChange -> handleQueryBoxValueChange(valueChange));
 //		queryBox.addFocusListener(event -> queryBox.setValue(null));
 		
 		kwicBt.addClickListener(event -> addKwicViz());
@@ -403,6 +408,21 @@ public class AnalyzeView extends HorizontalLayout
 		doubleTreeBt.addClickListener(event -> addDoubleTreeViz());
 		
 		btQueryBuilder.addClickListener(clickEvent -> showQueryBuilder());
+	}
+
+	private void handleQueryBoxValueChange(ValueChangeEvent<NamedQuery> valueChange) {
+		// remove descriptive text of the predefined query 
+		// before the query enters the queryBox, that makes editing of the predefined queries easier
+		if (valueChange.isUserOriginated()) {
+			NamedQuery selectedQuery = valueChange.getValue();
+			if (selectedQuery != null && !selectedQuery.isHideName()) {
+				// trigger a new event with the actual query
+				queryBox.setValue(new NamedQuery(selectedQuery.getQuery()));
+				return;
+			}
+		}
+		
+		btExecuteSearch.click();
 	}
 
 	private void showQueryBuilder() {

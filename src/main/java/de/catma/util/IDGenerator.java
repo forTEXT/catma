@@ -34,6 +34,7 @@ public class IDGenerator {
 	public final static String DOCUMENT_ID_PREFIX = "D_";
 	public final static String COLLECTION_ID_PREFIX = "C_";
 	public final static String TAGSET_ID_PREFIX = "T_";
+	public final static String GROUP_ID_PREFIX = "G_";
 
 	public final static String EXPORT_ID_PREFIX = "E_";
 	
@@ -56,6 +57,10 @@ public class IDGenerator {
 
 	public String generateExportId() {
 		return EXPORT_ID_PREFIX + UUID.randomUUID().toString().toUpperCase();
+	}
+	
+	public String generateGroupId() {
+		return GROUP_ID_PREFIX +  UUID.randomUUID().toString().toUpperCase();
 	}
 
 	/**

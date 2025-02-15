@@ -75,6 +75,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.wizard.WizardContext;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
 import de.catma.ui.module.analyze.CSVExportFlatStreamSource;
+import de.catma.ui.module.analyze.CSVExportPropertiesAsColumnsFlatStreamSource;
 import de.catma.ui.module.analyze.queryresultpanel.DisplaySetting;
 import de.catma.ui.module.analyze.visualization.ExpansionListener;
 import de.catma.ui.module.analyze.visualization.Visualization;
@@ -182,6 +183,23 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 			new FileDownloader(csvFlatExportResource);
 		
 		csvFlatExportFileDownloader.extend(miCSVFlatExport);
+		
+		MenuItem miCSVColumnsAsPropertiesExport = miExport.addItem("Export Properties as Columns as CSV");
+		
+		StreamResource csvPropertiesAsColumnsResource = new StreamResource(
+					new CSVExportPropertiesAsColumnsFlatStreamSource(
+						() -> getFilteredQueryResult(), 
+						project, 
+						kwicItemHandler.getKwicProviderCache(), 
+						((BackgroundServiceProvider)UI.getCurrent())),
+					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+		csvPropertiesAsColumnsResource.setCacheTime(0);
+		csvPropertiesAsColumnsResource.setMIMEType("text/comma-separated-values");
+		
+		FileDownloader csvPropertiesAsColumnsExportFileDownloader = 
+			new FileDownloader(csvPropertiesAsColumnsResource);
+		
+		csvPropertiesAsColumnsExportFileDownloader.extend(miCSVColumnsAsPropertiesExport);
 		
 		kwicGridComponent.setSearchFilterProvider(new SearchFilterProvider<QueryResultRow>() {
 			@Override
