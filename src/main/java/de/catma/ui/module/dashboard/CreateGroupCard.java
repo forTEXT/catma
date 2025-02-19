@@ -1,11 +1,8 @@
 package de.catma.ui.module.dashboard;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import com.google.common.eventbus.EventBus;
-import com.vaadin.data.validator.RegexpValidator;
-import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -57,9 +54,7 @@ public class CreateGroupCard extends VerticalFlexLayout {
 								((ErrorHandler)UI.getCurrent()).showAndLogError(String.format("Failed to create group \"%s\"", result), e);
 							}
 						},
-						new StringLengthValidator(
-						        "Name must be between 2 and 50 characters long, please change the name accordingly!",
-						        2, 50)
+						new GroupNameValidator()
 				).show()
 		);
 
