@@ -112,25 +112,11 @@ public class GroupCard extends VerticalLayout {
         );
         
         btnEdit.addClickListener(
-                clickEvent -> new SingleTextInputDialog(
-						"Update Group",
-						"Name",
-						group.getName(),
-						result -> {
-							try {
-								projectsManager.updateGroup(result, group);
-								eventBus.post(new GroupsChangedEvent());
-							} catch (IllegalArgumentException e) {
-								Notification.show("Info", e.getMessage(), Type.HUMANIZED_MESSAGE);
-							
-							} catch (Exception e) {
-                                errorHandler.showAndLogError(String.format("Failed to update group \"%s\"", group.getName()), e);
-							}
-						},
-						new StringLengthValidator(
-						        "Name must be between 2 and 50 characters long, please change the name accordingly!",
-						        2, 50)
-				).show()
+                clickEvent -> new EditGroupDialog(
+                        projectsManager,
+                        group,
+                        result -> eventBus.post(new GroupsChangedEvent())
+                ).show()
         );
 
         btnLeave.addClickListener(

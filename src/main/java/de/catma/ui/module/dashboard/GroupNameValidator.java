@@ -15,10 +15,6 @@ public class GroupNameValidator implements Validator<String>{
 
     @Override
     public ValidationResult apply(String value, ValueContext context) {
-        if (value == null || value.trim().isEmpty()) {
-            return ValidationResult.error("Group name can't be empty");
-        }
-
         if (value.length() < 2 || value.length() > 50) {
             return ValidationResult.error("Group name must be between 2 and 50 characters long");
         }

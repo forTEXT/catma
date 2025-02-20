@@ -10,6 +10,8 @@ public interface Group {
 
     String getName();
 
+    String getDescription();
+
     List<ProjectReference> getSharedProjects();
 
     Set<Member> getMembers();

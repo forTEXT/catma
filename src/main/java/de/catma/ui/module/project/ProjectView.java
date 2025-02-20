@@ -2150,7 +2150,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				group = result.group();
 			}
 			else if ((result.groupName() != null) && !result.groupName().isEmpty()) {
-				group = projectsManager.createGroup(result.groupName());
+				// TODO: pass description? would need to modify InviteMembersWithGroupDialog - irrelevant while group creation via that dialog is disabled
+				group = projectsManager.createGroup(result.groupName(), null);
 
 				if ((result.emailAdresses() != null) && !result.emailAdresses().isEmpty()) {									
 					SignupTokenManager signupTokenManager = new SignupTokenManager();

@@ -73,12 +73,12 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 
 	private HorizontalLayout groupSelectionPanel;
 	private ComboBox<Group> cbGroup;
-	private Button btSwitchGroupSelectionToCreateGroup;
+//	private Button btSwitchGroupSelectionToCreateGroup;
 	
 	private TextField groupName;
 	private TextArea emailAddressListInput;
 
-	private Button btSwitchMemberInvitationtoCreateGroup;
+//	private Button btSwitchMemberInvitationtoCreateGroup;
 	
 	private ComboBox<RBACRole> cbRole;
 	private DateField expiresAtInput;
@@ -135,7 +135,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		cbGroup.setPageLength(20);
 		cbGroup.setItemCaptionGenerator(Group::getName);
 		cbGroup.setRequiredIndicatorVisible(true);
-		btSwitchGroupSelectionToCreateGroup = new Button("Create a new Group");
+//		btSwitchGroupSelectionToCreateGroup = new Button("Create a new Group");
 		
 		groupName = new TextField("Group name");
 		groupName.setWidth("100%");
@@ -143,8 +143,8 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		emailAddressListInput = new TextArea("Type in the email addresses of the new members as a comma- or newline separated list");
 		emailAddressListInput.setSizeFull();
 		
-		btSwitchMemberInvitationtoCreateGroup = new Button("Create a new Group");
-		btSwitchMemberInvitationtoCreateGroup.setDescription("Consider creating a new Group for the project members given above");
+//		btSwitchMemberInvitationtoCreateGroup = new Button("Create a new Group");
+//		btSwitchMemberInvitationtoCreateGroup.setDescription("Consider creating a new Group for the project members given above");
 		
 		cbRole = new ComboBox<RBACRole>("Role", 
 				Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
@@ -160,8 +160,10 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		expiresAtInput.setWidth("100%");
 		
 		addGroupMode = new Mode(
-				Set.of(cbGroup, btSwitchGroupSelectionToCreateGroup, groupSelectionPanel, expiresAtInput), 
-				Set.of(groupName, emailAddressListInput, btSwitchMemberInvitationtoCreateGroup), 
+//				Set.of(cbGroup, btSwitchGroupSelectionToCreateGroup, groupSelectionPanel, expiresAtInput),
+				Set.of(cbGroup, groupSelectionPanel, expiresAtInput),
+//				Set.of(groupName, emailAddressListInput, btSwitchMemberInvitationtoCreateGroup),
+				Set.of(groupName, emailAddressListInput),
 				(content) -> {
 					return () -> {
 						setCaption("Add user group");
@@ -180,7 +182,8 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 					@Override
 					public ValidationResult apply(MemberData memberData, ValueContext context) {
 						if (memberData.group == null) {
-							return ValidationResult.error("You have to select a group! You can also create a new group.");
+//							return ValidationResult.error("You have to select a group! You can also create a new group.");
+							return ValidationResult.error("You have to select a group!");
 						}
 						return ValidationResult.ok();
 					}
@@ -190,7 +193,8 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		
 		createGroupMode = new Mode(
 				Set.of(groupName, emailAddressListInput, expiresAtInput), 
-				Set.of(cbGroup, btSwitchGroupSelectionToCreateGroup, btSwitchMemberInvitationtoCreateGroup, groupSelectionPanel), 
+//				Set.of(cbGroup, btSwitchGroupSelectionToCreateGroup, btSwitchMemberInvitationtoCreateGroup, groupSelectionPanel),
+				Set.of(cbGroup, groupSelectionPanel),
 				(content) -> {
 					return () -> {
 						setCaption("Add user group");
@@ -218,8 +222,10 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		);
 		
 		inviteProjectMembersMode = new Mode(
-				Set.of(emailAddressListInput, btSwitchMemberInvitationtoCreateGroup, expiresAtInput), 
-				Set.of(cbGroup, groupName, btSwitchGroupSelectionToCreateGroup, groupSelectionPanel), 
+//				Set.of(emailAddressListInput, btSwitchMemberInvitationtoCreateGroup, expiresAtInput),
+				Set.of(emailAddressListInput, expiresAtInput),
+//				Set.of(cbGroup, groupName, btSwitchGroupSelectionToCreateGroup, groupSelectionPanel),
+				Set.of(cbGroup, groupName, groupSelectionPanel),
 				(content) -> {
 					return () -> {
 						setCaption("Add members");
@@ -247,7 +253,8 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		
 		inviteGroupMembersMode = new Mode(
 				Set.of(emailAddressListInput, cbRole, expiresAtInput), 
-				Set.of(cbGroup, groupName, btSwitchGroupSelectionToCreateGroup, btSwitchMemberInvitationtoCreateGroup, groupSelectionPanel), 
+//				Set.of(cbGroup, groupName, btSwitchGroupSelectionToCreateGroup, btSwitchMemberInvitationtoCreateGroup, groupSelectionPanel),
+				Set.of(cbGroup, groupName, groupSelectionPanel),
 				(content) -> {
 					return () -> {
 						setCaption("Add members");
@@ -283,25 +290,25 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		
 		groupSelectionPanel.setWidth("100%");
 		groupSelectionPanel.addComponent(cbGroup);
-		groupSelectionPanel.addComponent(btSwitchGroupSelectionToCreateGroup);
-		groupSelectionPanel.setComponentAlignment(btSwitchGroupSelectionToCreateGroup, Alignment.BOTTOM_RIGHT);;
+//		groupSelectionPanel.addComponent(btSwitchGroupSelectionToCreateGroup);
+//		groupSelectionPanel.setComponentAlignment(btSwitchGroupSelectionToCreateGroup, Alignment.BOTTOM_RIGHT);;
 		groupSelectionPanel.setExpandRatio(cbGroup, 1.0f);
 		content.addComponent(groupSelectionPanel);
 		content.addComponent(groupName);
 		content.addComponent(emailAddressListInput);
-		content.addComponent(btSwitchMemberInvitationtoCreateGroup);
+//		content.addComponent(btSwitchMemberInvitationtoCreateGroup);
 		content.addComponent(cbRole);
 		content.addComponent(expiresAtInput);
 		
-		btSwitchGroupSelectionToCreateGroup.addClickListener(event -> {
-			createGroupMode.activate(content);
-			currentMode = createGroupMode;
-		});
-		
-		btSwitchMemberInvitationtoCreateGroup.addClickListener(event -> {
-			createGroupMode.activate(content);
-			currentMode = createGroupMode;
-		});
+//		btSwitchGroupSelectionToCreateGroup.addClickListener(event -> {
+//			createGroupMode.activate(content);
+//			currentMode = createGroupMode;
+//		});
+//
+//		btSwitchMemberInvitationtoCreateGroup.addClickListener(event -> {
+//			createGroupMode.activate(content);
+//			currentMode = createGroupMode;
+//		});
 		
 		currentMode.activate(content);
 	}

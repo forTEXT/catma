@@ -39,22 +39,9 @@ public class CreateGroupCard extends VerticalFlexLayout {
 		CssLayout newProjectLayout = new CssLayout();
 		newProjectLayout.addStyleName("groupslist__newgroup__link");
 		newProjectLayout.addLayoutClickListener(
-				layoutClickEvent -> new SingleTextInputDialog(
-						"Create User Group",
-						"Name",
-						null,
-						result -> {
-							try {
-								projectManager.createGroup(result);
-								eventBus.post(new GroupsChangedEvent());
-							} catch (IllegalArgumentException e) {
-								Notification.show("Info", e.getMessage(), Type.HUMANIZED_MESSAGE);
-							
-							} catch (Exception e) {
-								((ErrorHandler)UI.getCurrent()).showAndLogError(String.format("Failed to create group \"%s\"", result), e);
-							}
-						},
-						new GroupNameValidator()
+				layoutClickEvent -> new CreateGroupDialog(
+						projectManager,
+						result -> eventBus.post(new GroupsChangedEvent())
 				).show()
 		);
 

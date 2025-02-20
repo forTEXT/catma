@@ -142,10 +142,11 @@ public interface ProjectsManager {
 	 * Creates a new group.
 	 * 
 	 * @param name the name of the group
+	 * @param description the description of the group
 	 * @return the group
 	 * @throws IOException if an error occurs when creating the group.
 	 */
-	Group createGroup(String name) throws IOException;
+	Group createGroup(String name, String description) throws IOException;
 
 	/**
 	 * Deletes the given group.
@@ -155,13 +156,14 @@ public interface ProjectsManager {
 	void deleteGroup(Group group) throws IOException;
 
 	/**
-	 * Updates the given group with the new name.
+	 * Updates the given group with the new name and description.
 	 * @param name the new name
+	 * @param description the new description
 	 * @param group the group to update
 	 * @return the updated group
 	 * @throws IOException if an error occurs when updating the group
 	 */
-	Group updateGroup(String name, Group group) throws IOException;
+	Group updateGroup(String name, String description, Group group) throws IOException;
 
 	/**
 	 * Leave the given group.

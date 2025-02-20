@@ -11,12 +11,14 @@ public class GitGroup implements de.catma.user.Group {
 
     private Set<Member> members;
     private final List<ProjectReference> sharedProjects;
-	private Long id;
-	private String name;
+    private Long id;
+    private String name;
+    private String description;
 
-    public GitGroup(Long id, String name, Set<Member> members, List<ProjectReference> sharedProjects) {
+    public GitGroup(Long id, String name, String description, Set<Member> members, List<ProjectReference> sharedProjects) {
         this.id = id;
         this.name = name;
+        this.description = description;
         this.members = members;
         this.sharedProjects = sharedProjects;
     }
@@ -29,6 +31,11 @@ public class GitGroup implements de.catma.user.Group {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
     }
 
     @Override
