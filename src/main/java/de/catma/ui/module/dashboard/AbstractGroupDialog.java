@@ -72,8 +72,8 @@ public abstract class AbstractGroupDialog extends AbstractOkCancelDialog<Group> 
                 .bind(GroupData::getName, GroupData::setName);
         binder.forField(description)
                 .withValidator(new StringLengthValidator(
-                        "Group description must not be longer than 2000 characters",
-                        0, 2000
+                        "Group description must not be longer than 500 characters",
+                        0, 500
                 ))
                 .bind(GroupData::getDescription, GroupData::setDescription);
     }

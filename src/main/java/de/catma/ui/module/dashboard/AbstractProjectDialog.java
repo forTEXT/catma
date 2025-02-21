@@ -66,8 +66,8 @@ public abstract class AbstractProjectDialog extends AbstractOkCancelDialog<Proje
 	    .bind(ProjectData::getName, ProjectData::setName);
 		projectBinder.forField(description)
 	    .withValidator(new StringLengthValidator(
-	        "Description must not be longer than 2000 characters",
-	        0, 2000))
+	        "Description must not be longer than 500 characters",
+	        0, 500))
 	    .bind(ProjectData::getDescription, ProjectData::setDescription);
 		name.setWidth("100%");
 		description.setWidth("100%");

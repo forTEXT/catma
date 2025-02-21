@@ -2,20 +2,16 @@ package de.catma.ui.module.dashboard;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.Objects;
 import java.util.Set;
 
+import com.vaadin.ui.*;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.UI;
 
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
@@ -27,7 +23,6 @@ import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
@@ -55,9 +50,6 @@ public class ProjectCard extends VerticalFlexLayout  {
 	private final RemoteGitManagerRestricted rbacManager;
 	
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
-
-	private Label descriptionLabel;
-	private Label nameLabel;
 
 	private final ClickAction clickAction;
 
@@ -93,38 +85,57 @@ public class ProjectCard extends VerticalFlexLayout  {
 	protected void initComponents() {
 		addStyleName("projectlist__card");
 
-		CssLayout previewLayout = new CssLayout();
-		previewLayout.addStyleName("projectlist__card__preview");
-		previewLayout.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
+		HorizontalFlexLayout hlTitle = new HorizontalFlexLayout();
+		hlTitle.addStyleName("projectlist__card__title");
+		hlTitle.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
 
-		Label datesLabel = 
-			new Label(
+		Label lblName = new Label(projectReference.getName());
+		lblName.setWidth("100%");
+		hlTitle.addComponent(lblName);
+
+		addComponent(hlTitle);
+
+		VerticalLayout vlContent = new VerticalLayout();
+		vlContent.addStyleName("projectlist__card__content");
+		vlContent.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
+
+		Label lblDescription = new Label(projectReference.getDescription());
+		lblDescription.setWidth("100%");
+		vlContent.addComponent(lblDescription);
+
+		addComponent(vlContent);
+
+		HorizontalFlexLayout hflMetadataAndActions = new HorizontalFlexLayout();
+		hflMetadataAndActions.addStyleName("projectlist__card__metadata-and-actions");
+		hflMetadataAndActions.setAlignItems(AlignItems.CENTER);
+		hflMetadataAndActions.setWidth("100%");
+
+		VerticalLayout vlMetadata = new VerticalLayout();
+		vlMetadata.setWidth("100%");
+		vlMetadata.setMargin(false);
+		vlMetadata.setSpacing(false);
+		vlMetadata.addStyleName("projectlist__card__dates");
+		vlMetadata.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
+
+		Label lblCreatedDate = new Label(
 				String.format(
-					"Last activity at: %s <span class=\"%s\">Created at %s</span>", 
-					projectReference.getLastActivityAt()==null?"N/A":projectReference.getLastActivityAt().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)),
-					"projectlist__card__created-date",
-					projectReference.getCreatedAt()==null?"N/A":projectReference.getCreatedAt().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+						"<span>Created on:</span> %s",
+						projectReference.getCreatedAt() == null ? "n/a" : projectReference.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE)
 				),
 				ContentMode.HTML
-					
-			);
-		datesLabel.addStyleName("projectlist__card__dates");
-		previewLayout.addComponent(datesLabel);
-		descriptionLabel = new Label(projectReference.getDescription());
-		descriptionLabel.setWidth("100%");
-		previewLayout.addComponents(descriptionLabel);
+		);
+		vlMetadata.addComponent(lblCreatedDate);
 
-		addComponent(previewLayout);
+		Label lblLastActivityDate = new Label(
+				String.format(
+						"<span>Last activity on:</span> %s",
+						projectReference.getLastActivityAt() == null ? "n/a" : projectReference.getLastActivityAt().format(DateTimeFormatter.ISO_LOCAL_DATE)
+				),
+				ContentMode.HTML
+		);
+		vlMetadata.addComponent(lblLastActivityDate);
 
-		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
-		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");
-		titleAndActionsLayout.setAlignItems(FlexLayout.AlignItems.BASELINE);
-		titleAndActionsLayout.setWidth("100%");
-
-		nameLabel = new Label(projectReference.getName());
-		nameLabel.setWidth("100%");
-
-		titleAndActionsLayout.addComponent(nameLabel);
+		hflMetadataAndActions.addComponent(vlMetadata);
 
 		IconButton btnRemove = new IconButton(VaadinIcons.TRASH);
 		btnRemove.addClickListener(
@@ -147,7 +158,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 						}
 				)
 		);
-		titleAndActionsLayout.addComponents(btnRemove);
+		hflMetadataAndActions.addComponents(btnRemove);
 
 		IconButton btnEdit = new IconButton(VaadinIcons.PENCIL);
 		btnEdit.addClickListener(
@@ -157,8 +168,8 @@ public class ProjectCard extends VerticalFlexLayout  {
 						result -> {
 							try {
 								projectManager.updateProjectMetadata(result);
-								nameLabel.setValue(result.getName());
-								descriptionLabel.setValue(result.getDescription());
+								lblName.setValue(result.getName());
+								lblDescription.setValue(result.getDescription());
 							}
 							catch (IOException e) {
 								errorLogger.showAndLogError(String.format("Failed to update project \"%s\"", projectReference.getName()), e);
@@ -166,7 +177,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 						}
 				).show()
 		);
-		titleAndActionsLayout.addComponent(btnEdit);
+		hflMetadataAndActions.addComponent(btnEdit);
 
 		IconButton btnLeave = new IconButton(VaadinIcons.EXIT);
 		btnLeave.addClickListener(
@@ -213,7 +224,9 @@ public class ProjectCard extends VerticalFlexLayout  {
 					);
 				}
 		);
-		titleAndActionsLayout.addComponent(btnLeave);
+		hflMetadataAndActions.addComponent(btnLeave);
+
+		addComponents(hflMetadataAndActions);
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
@@ -245,8 +258,6 @@ public class ProjectCard extends VerticalFlexLayout  {
 						}
 				)
 		);
-
-		addComponents(titleAndActionsLayout);
 	}
 
     private void handleOpenProjectRequest() {
