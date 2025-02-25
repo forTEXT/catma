@@ -18258,13 +18258,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 }
 
-.catma div.documentsgrid__doc {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	justify-content: center;
-}
-
 .catma .documentsgrid__doc__contrib {
 	color: blue;
 }

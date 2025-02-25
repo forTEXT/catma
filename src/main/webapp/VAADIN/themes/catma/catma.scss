@@ -786,10 +786,11 @@ $contribution-color: blue;
   }
 
   div.documentsgrid__doc {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    justify-content: center;
+    // disabled, see ProjectView.buildResourceNameHtml, ForkConfigurationDialog.buildResourceNameHtml and CollectionSelectionStep.initComponents
+    //display: flex;
+    //flex-direction: column;
+    //height: 100%;
+    //justify-content: center;
   }
 
   .documentsgrid__doc__title {
