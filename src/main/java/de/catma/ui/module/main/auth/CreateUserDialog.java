@@ -14,6 +14,7 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.sqlite.SqliteService;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
@@ -173,6 +174,7 @@ public class CreateUserDialog extends Window {
 		UI.getCurrent().setContent(mainView);
 		eventBus.post(new RouteToDashboardEvent());
 		close();
+		((CatmaApplication)UI.getCurrent()).handleRequestToken();
 	}
 	
 }

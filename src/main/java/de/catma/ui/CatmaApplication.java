@@ -150,8 +150,12 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		
 		if (!handleRequestOauth(request)) { // handle oauth
 			// otherwise handle token actions (signup, join)
-			requestTokenHandler.handleRequestToken(getParameter(Parameter.ACTION), getParameter(Parameter.TOKEN));
+			handleRequestToken();
 		}
+	}
+	
+	public void handleRequestToken() {
+		requestTokenHandler.handleRequestToken(getParameter(Parameter.ACTION), getParameter(Parameter.TOKEN));		
 	}
 
 	private void storeParameters(Map<String, String[]> parameters) {
@@ -165,7 +169,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 
 		if (!handleRequestOauth(request)) { // handle oauth
 			// otherwise handle token actions (signup, join)
-			requestTokenHandler.handleRequestToken(getParameter(Parameter.ACTION), getParameter(Parameter.TOKEN));
+			handleRequestToken();
 		}
 
 		eventBus.post(new RefreshEvent());
