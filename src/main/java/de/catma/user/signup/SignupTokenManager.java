@@ -13,6 +13,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +91,8 @@ public class SignupTokenManager {
     		Caching.getCachingProvider().getCacheManager().getCache(
     				HazelcastConfiguration.CacheKeyName.GROUP_PROJECT_SIGNUP_TOKEN.name());
 
+    private final HashSet<String> consumedTokens = new HashSet<String>();
+    
     /**
      * checks if a token exists
      * @param token
@@ -152,6 +155,8 @@ public class SignupTokenManager {
     		return Optional.empty();
     	}
     	String encodedToken = accountSignupTokenCache.getAndRemove(token);
+    	consumedTokens.add(token);
+    	
     	try {
     		return Optional.of(new Gson().fromJson(encodedToken, AccountSignupToken.class));
 	    } catch (JsonSyntaxException e){
@@ -167,6 +172,8 @@ public class SignupTokenManager {
     		return Optional.empty();
     	}
     	String encodedToken = groupProjectSignupTokenCache.getAndRemove(token);
+    	consumedTokens.add(token);
+    	
     	CACHETRANSACTIONLOGGER.info(String.format("%c%c%c%c%s", GROUP_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, REMOVE_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, token));
 
     	try {
@@ -184,6 +191,8 @@ public class SignupTokenManager {
     		return Optional.empty();
     	}
     	String encodedToken = groupProjectSignupTokenCache.getAndRemove(token);
+    	consumedTokens.add(token);
+    	
     	CACHETRANSACTIONLOGGER.info(String.format("%c%c%c%c%s", PROJECT_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, REMOVE_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, token));
 
     	try {
@@ -207,6 +216,11 @@ public class SignupTokenManager {
     		return;
 
     	}
+    	
+    	if (consumedTokens.contains(token)) {
+    		return; //ignore silently
+    	}
+    	
     	if(!containsAccountSignupToken(token)){
     		tokenValidityHandler.tokenInvalid("Token is unknown, it can only be used once. Please sign up again!");
     		return;
@@ -228,6 +242,11 @@ public class SignupTokenManager {
     		return;
 
     	}
+    	
+    	if (consumedTokens.contains(token)) {
+    		return; //ignore silently
+    	}
+    	
     	if(!containsGroupOrProjectSignupToken(token)){
     		tokenValidityHandler.tokenInvalid("Token is unknown, it can only be used once. Please contact the group owner to get a new link!");
     		return;
@@ -250,6 +269,11 @@ public class SignupTokenManager {
     		return;
 
     	}
+    	
+    	if (consumedTokens.contains(token)) {
+    		return; //ignore silently
+    	}
+    	
     	if(!containsGroupOrProjectSignupToken(token)){
     		tokenValidityHandler.tokenInvalid("Token is unknown, it can only be used once. Please contact the project owner/maintainer to get a new link!");
     		return;
