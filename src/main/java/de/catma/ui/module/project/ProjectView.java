@@ -454,21 +454,19 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		documentGrid = TreeGridFactory.createDefaultTreeGrid();
 		documentGrid.addStyleNames("flat-undecorated-icon-buttonrenderer");
-		documentGrid.setHeaderVisible(false);
 		documentGrid.setRowHeight(45);
 
 		documentGrid.addColumn(Resource::getIcon, new HtmlRenderer())
-				.setWidth(100);
+				.setWidth(71); // we set an explicit width here because automatic sizing is not working properly in this case
 
 		documentGrid.addColumn(buildResourceNameHtml::apply, new HtmlRenderer())
 				.setId(DocumentGridColumn.NAME.name())
-				.setCaption("Name");
+				.setCaption("Name")
+				.setExpandRatio(1);
 
 		documentGrid.addColumn(buildResourceResponsibilityHtml::apply, new HtmlRenderer())
 				.setId(DocumentGridColumn.RESPONSIBLE.name())
-				.setCaption("Responsible")
-				.setExpandRatio(1)
-				.setHidden(false);
+				.setCaption("Responsible");
 
 		documentGridComponent = new ActionGridComponent<>(
 				new Label("Documents & Annotations"),
@@ -479,26 +477,22 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		resourcesContentLayout.addComponent(documentGridComponent);
 
 		tagsetGrid = new Grid<>();
-		tagsetGrid.setHeaderVisible(false);
 		tagsetGrid.setWidth("400px");
 
-		tagsetGrid.addColumn(tagsetDefinition -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())
-				.setWidth(100);
+		tagsetGrid.addColumn(tagsetDefinition -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer());
 
 		tagsetGrid.addColumn(TagsetDefinition::getName)
 				.setId(TagsetGridColumn.NAME.name())
 				.setCaption("Name")
+				.setExpandRatio(1)
 				.setStyleGenerator(tagsetDefinition -> tagsetDefinition.isContribution() ? "project-view-tagset-with-contribution" : null);
 
 		tagsetGrid.addColumn(
 						tagsetDefinition -> tagsetDefinition.getResponsibleUser() == null ?
-								"Not assigned" : membersByIdentifier.get(tagsetDefinition.getResponsibleUser())
+								"" : membersByIdentifier.get(tagsetDefinition.getResponsibleUser())
 				)
 				.setId(TagsetGridColumn.RESPONSIBLE.name())
-				.setCaption("Responsible")
-				.setExpandRatio(1)
-				.setHidden(true)
-				.setHidable(true);
+				.setCaption("Responsible");
 
 		tagsetGridComponent = new ActionGridComponent<>(
 				new Label("Tagsets"),
@@ -515,14 +509,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		HorizontalFlexLayout teamContentLayout = new HorizontalFlexLayout();
 
 		memberGrid = TreeGridFactory.createDefaultTreeGrid();
-		memberGrid.setHeaderVisible(false);
-		memberGrid.setWidth("402px");
+		memberGrid.setWidth("400px");
+
 		memberGrid.addColumn(ProjectParticipant::getIcon, new HtmlRenderer());
+
 		memberGrid.addColumn(ProjectParticipant::getName)
-				.setWidth(200)
+				.setCaption("Name")
+				.setExpandRatio(1)
 				.setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
 				.setDescriptionGenerator(ProjectParticipant::getDescription);
-		memberGrid.addColumn(ProjectParticipant::getRole).setExpandRatio(1);
+
+		memberGrid.addColumn(ProjectParticipant::getRole)
+				.setCaption("Role");
 
 		memberGridComponent = new ActionGridComponent<>(
 				new Label("Members"),
