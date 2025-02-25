@@ -140,6 +140,7 @@ public class SignupTokenManager {
     	Objects.requireNonNull(token);
     	String encodedToken = new Gson().toJson(token);
     	put(token.token(), encodedToken, PROJECT_TRANSACTION_FLAG);
+    	consumedTokens.remove(token.token()); // the token might have been re-added and can be consumed again
     }
     
     /**
