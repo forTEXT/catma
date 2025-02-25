@@ -18408,6 +18408,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 0.75em;
 }
 
+.catma .projectlist__card__metadata-and-actions {
+	padding: 10px;
+}
+
 .catma .projectlist__card__dates {
 	font-size: xx-small;
 	cursor: pointer;
@@ -18417,10 +18421,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .projectlist__card__dates span {
 	display: inline-block;
 	width: 70px;
-}
-
-.catma .projectlist__card__metadata-and-actions {
-	padding: 10px;
 }
 
 .catma .groupslist__list {

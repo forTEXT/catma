@@ -1951,13 +1951,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	// team actions
 	private void handleEditMembers() {
-		
-
 		// remove any owner members from the selection and display an informational message
 		// TODO: allow the original owner (whose namespace the project is in) to edit any other owner's role, as well as
 		//       assign additional owners (also see GitlabManagerCommon.assignOnProject which does its own check)
 		if (memberGrid.getSelectedItems().stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
-
 			Notification ownerMembersSelectedNotification = new Notification(
 					"Your selection includes members with the 'Owner' role, whose role you cannot change.\n"
 							+ "Those members have been ignored. (click to dismiss)",
@@ -1966,19 +1963,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			ownerMembersSelectedNotification.setDelayMsec(-1);
 			ownerMembersSelectedNotification.show(Page.getCurrent());
 		}
-		
-		if (memberGrid.getSelectedItems().stream().anyMatch(member -> !member.isDirect())) {
 
+		if (memberGrid.getSelectedItems().stream().anyMatch(member -> !member.isDirect())) {
 			Notification ownerMembersSelectedNotification = new Notification(
-					"Your selection includes members participating via a user group. You cannot change the role of those members directly, you need to change the role of the whole user group!\n"
-							+ "Those members have been ignored. (click to dismiss)",
+					"Your selection includes members participating via a user group. You cannot change the role of those members directly,\n"
+							+ "you need to change the role of the whole user group! Those members have been ignored. (click to dismiss)",
 					Notification.Type.WARNING_MESSAGE
 			);
 			ownerMembersSelectedNotification.setDelayMsec(-1);
 			ownerMembersSelectedNotification.show(Page.getCurrent());
 		}
-		
-		
+
 		final Set<ProjectParticipant> membersToEdit = 
 				memberGrid.getSelectedItems().stream()
 				.filter(member -> member.getRole() != RBACRole.OWNER && member.isDirect())
@@ -2016,7 +2011,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleRemoveMembers() {
-
 		// remove any owner members from the selection and display an informational message
 		// TODO: allow the original owner (whose namespace the project is in) to remove any other owner
 		if (memberGrid.getSelectedItems().stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
@@ -2035,7 +2029,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		).findAny();
 
 		if (selectedMemberCurrentUser.isPresent()) {
-
 			Notification selfSelectedNotification = new Notification(
 					"You cannot remove yourself from the project.\n"
 							+ "Please use the 'Leave Project' button on the project card on the dashboard instead.\n"
@@ -2049,16 +2042,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 
 		if (memberGrid.getSelectedItems().stream().anyMatch(member -> !member.isDirect())) {
-
 			Notification ownerMembersSelectedNotification = new Notification(
-					"Your selection includes members participating via a user group. You cannot remove those members directly. You need to remove them from the user group!\n"
-							+ "Those members have been ignored. (click to dismiss)",
+					"Your selection includes members participating via a user group. You cannot remove those members directly,\n"
+							+ "you need to remove them from the user group! Those members have been ignored. (click to dismiss)",
 					Notification.Type.WARNING_MESSAGE
 			);
 			ownerMembersSelectedNotification.setDelayMsec(-1);
 			ownerMembersSelectedNotification.show(Page.getCurrent());
 		}
-		
+
 		final Set<ProjectParticipant> membersToRemove = memberGrid.getSelectedItems().stream()
 				.filter(
 						member -> member.getRole() != RBACRole.OWNER 
@@ -2089,7 +2081,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								errorHandler.showAndLogError(String.format("Failed to remove member %s from project %s", participant, project.getName()), e);
 							}
 						}
-	
+
 						eventBus.post(new MembersChangedEvent());						
 					}
 			).show();
