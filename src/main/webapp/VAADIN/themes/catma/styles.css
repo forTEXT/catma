@@ -18258,13 +18258,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 }
 
-.catma div.documentsgrid__doc {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	justify-content: center;
-}
-
 .catma .documentsgrid__doc__contrib {
 	color: blue;
 }
@@ -18319,10 +18312,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	flex-wrap: wrap;
 }
 
-.catma .projectlist {
-	padding: 20px;
-}
-
 .catma .projectlist__list {
 	flex-wrap: wrap;
 }
@@ -18357,64 +18346,74 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .projectlist__newproject {
-	width: 352px;
-	border-radius: 4px;
-	background-color: #ffffff;
+	min-height: 227px;
+	flex: 1 0 352px;
+	max-width: 352px;
+	background-color: #FFF;
 	border: dashed 3px rgba(151, 151, 151, 0.12);
+	border-radius: 4px;
 	margin: 10px;
 	padding: 10px;
 	align-items: center;
-	height: 226.60001px;
+	cursor: pointer;
+}
+
+.catma .projectlist__newproject:hover {
+	border-color: #5A98A1;
 }
 
 .catma .projectlist__newproject__link {
+	width: 100%;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	padding: 0.5em;
-	cursor: pointer;
 	font-size: 1.5em;
 	text-transform: uppercase;
 	justify-content: center;
 }
 
+.catma .projectlist__newproject__link .v-label {
+	text-align: center;
+}
+
 .catma .projectlist__card {
 	width: 352px;
+	background-color: #FFF;
+	border: solid 1px #CDCDCD;
 	border-radius: 4px;
-	background-color: #ffffff;
-	border: solid 1px rgba(151, 151, 151, 0.12);
 	margin: 10px;
-	padding: 0px;
+	padding: 0;
 }
 
-.catma .projectlist__card a {
-	text-decoration: none;
-	color: var(--lumo-body-text-color);
-}
-
-.catma .projectlist__card__preview {
-	height: 176px;
-	background-color: #cdcdcd;
-	display: flex;
-	flex-direction: column;
-	padding: 0.5em;
+.catma .projectlist__card__title {
+	padding: 10px;
 	cursor: pointer;
+}
+
+.catma .projectlist__card__content {
 	width: 100%;
+	height: 176px;
+	background-color: #CDCDCD;
+	padding: 10px;
+	cursor: pointer;
 	overflow: auto;
+	font-size: 0.75em;
+}
+
+.catma .projectlist__card__metadata-and-actions {
+	padding: 10px;
 }
 
 .catma .projectlist__card__dates {
 	font-size: xx-small;
-	border-bottom: 1px solid lightgrey;
-	margin-bottom: 5px;
+	cursor: pointer;
+	margin-right: 20px;
 }
 
-.catma .projectlist__card__created-date {
-	float: right;
-}
-
-.catma .projectlist__card__title-and-actions {
-	padding: 10px;
+.catma .projectlist__card__dates span {
+	display: inline-block;
+	width: 70px;
 }
 
 .catma .groupslist__list {
@@ -18422,44 +18421,64 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .groupslist__card {
-	border: solid 1px rgba(151, 151, 151, 0.12);
+	width: 1052px;
+	background-color: #FFF;
+	border: solid 1px #CDCDCD;
 	border-radius: 4px;
 	margin: 10px;
-	padding: 0px;
+	padding: 0;
 }
 
 .catma .groupslist__card__grid .v-slot-action-grid-bar__search-field {
 	width: 269px;
 }
 
-.catma .groupslist__card__topPanel {
-	background-color: #cdcdcd;
+.catma .groupslist__card__title {
+	padding: 10px;
 }
 
-.catma .groupslist__card__title-and-actions {
+.catma .groupslist__card__content {
+	background-color: #CDCDCD;
+}
+
+.catma .groupslist__card__description-and-actions {
 	padding: 10px;
+}
+
+.catma .groupslist__card__description-and-actions .v-label {
+	font-size: 0.75em;
 }
 
 .catma .groupslist__newgroup {
-	width: 352px;
-	border-radius: 4px;
-	background-color: #ffffff;
+	min-height: 347.79999px;
+	flex: 1 0 352px;
+	max-width: 1052px;
+	background-color: #FFF;
 	border: dashed 3px rgba(151, 151, 151, 0.12);
+	border-radius: 4px;
 	margin: 10px;
 	padding: 10px;
 	align-items: center;
-	height: 226.60001px;
+	cursor: pointer;
+}
+
+.catma .groupslist__newgroup:hover {
+	border-color: #5A98A1;
 }
 
 .catma .groupslist__newgroup__link {
+	width: 100%;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	padding: 0.5em;
-	cursor: pointer;
 	font-size: 1.5em;
 	text-transform: uppercase;
 	justify-content: center;
+}
+
+.catma .groupslist__newgroup__link .v-label {
+	text-align: center;
 }
 
 .catma .annotate-tag-tree-item {

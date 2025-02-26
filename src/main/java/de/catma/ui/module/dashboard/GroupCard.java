@@ -14,7 +14,6 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Page;
 import com.vaadin.shared.ui.MarginInfo;
@@ -24,9 +23,7 @@ import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.ProjectReference;
@@ -39,12 +36,11 @@ import de.catma.rbac.RBACRole;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.MembersChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
+import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.EditMemberDialog;
 import de.catma.ui.module.project.InviteMembersWithGroupDialog;
@@ -57,8 +53,8 @@ import de.catma.user.User;
 import de.catma.user.signup.SignupTokenManager;
 import de.catma.util.Pair;
 
-public class GroupCard extends VerticalLayout {
-	
+public class GroupCard extends VerticalFlexLayout {
+
 	private final Group group;
 	private final ProjectsManager projectsManager;
 	private final EventBus eventBus;
@@ -112,25 +108,11 @@ public class GroupCard extends VerticalLayout {
         );
         
         btnEdit.addClickListener(
-                clickEvent -> new SingleTextInputDialog(
-						"Update Group",
-						"Name",
-						group.getName(),
-						result -> {
-							try {
-								projectsManager.updateGroup(result, group);
-								eventBus.post(new GroupsChangedEvent());
-							} catch (IllegalArgumentException e) {
-								Notification.show("Info", e.getMessage(), Type.HUMANIZED_MESSAGE);
-							
-							} catch (Exception e) {
-                                errorHandler.showAndLogError(String.format("Failed to update group \"%s\"", group.getName()), e);
-							}
-						},
-						new StringLengthValidator(
-						        "Name must be between 2 and 50 characters long, please change the name accordingly!",
-						        2, 50)
-				).show()
+                clickEvent -> new EditGroupDialog(
+                        projectsManager,
+                        group,
+                        result -> eventBus.post(new GroupsChangedEvent())
+                ).show()
         );
 
         btnLeave.addClickListener(
@@ -339,12 +321,19 @@ public class GroupCard extends VerticalLayout {
     }
 
     private void initComponents() {
-    	setSizeUndefined();
         addStyleName("groupslist__card");
 
-        HorizontalLayout topPanel = new HorizontalLayout();
-        topPanel.addStyleName("groupslist__card__topPanel");
-        addComponent(topPanel);
+        HorizontalFlexLayout hflTitle = new HorizontalFlexLayout();
+        hflTitle.addStyleName("groupslist__card__title");
+
+        Label lblName = new Label(group.getName());
+        lblName.setWidth("100%");
+        hflTitle.addComponent(lblName);
+
+        addComponent(hflTitle);
+
+        HorizontalLayout hlContent = new HorizontalLayout();
+        hlContent.addStyleName("groupslist__card__content");
 
         memberGrid = new Grid<>();
         memberGrid.setHeightByRows(4);
@@ -361,7 +350,7 @@ public class GroupCard extends VerticalLayout {
         
         memberGridComponent.addStyleName("groupslist__card__grid");
         
-        topPanel.addComponent(memberGridComponent);
+        hlContent.addComponent(memberGridComponent);
 
         sharedProjectsGrid = new Grid<>();
         sharedProjectsGrid.setHeightByRows(4);
@@ -381,28 +370,30 @@ public class GroupCard extends VerticalLayout {
         sharedProjectsGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
         sharedProjectsGridComponent.setSelectionModeFixed(SelectionMode.SINGLE);
 
-        topPanel.addComponent(sharedProjectsGridComponent);
-        
-        HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
-        addComponent(titleAndActionsLayout);
-        titleAndActionsLayout.addStyleName("groupslist__card__title-and-actions");
-        titleAndActionsLayout.setAlignItems(FlexLayout.AlignItems.BASELINE);
-        titleAndActionsLayout.setWidth("100%");
+        hlContent.addComponent(sharedProjectsGridComponent);
 
-        Label nameLabel = new Label(group.getName());
-        nameLabel.setWidth("100%");
+        addComponent(hlContent);
 
-        titleAndActionsLayout.addComponent(nameLabel);
+        HorizontalFlexLayout hflDescriptionAndActions = new HorizontalFlexLayout();
+        hflDescriptionAndActions.addStyleName("groupslist__card__description-and-actions");
+        hflDescriptionAndActions.setAlignItems(AlignItems.CENTER);
+        hflDescriptionAndActions.setWidth("100%");
+
+        Label lblDescription = new Label(group.getDescription());
+        lblDescription.setWidth("100%");
+
+        hflDescriptionAndActions.addComponent(lblDescription);
 
         btnRemove = new IconButton(VaadinIcons.TRASH);
-        titleAndActionsLayout.addComponents(btnRemove);
+        hflDescriptionAndActions.addComponents(btnRemove);
 
         btnEdit = new IconButton(VaadinIcons.PENCIL);
-        titleAndActionsLayout.addComponent(btnEdit);
+        hflDescriptionAndActions.addComponent(btnEdit);
 
         btnLeave = new IconButton(VaadinIcons.EXIT);
-        titleAndActionsLayout.addComponent(btnLeave);
-        
+        hflDescriptionAndActions.addComponent(btnLeave);
+
+        addComponent(hflDescriptionAndActions);
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(

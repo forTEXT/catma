@@ -31,14 +31,15 @@ public class CreateProjectCard extends VerticalFlexLayout {
 	private void initComponents() {
 		addStyleName("projectlist__newproject");
 
-		CssLayout newProjectLayout = new CssLayout();
-		newProjectLayout.addStyleName("projectlist__newproject__link");
-		newProjectLayout.addLayoutClickListener(
+		addLayoutClickListener(
 				layoutClickEvent -> new CreateProjectDialog(
 						projectManager,
 						result -> eventBus.post(new ProjectsChangedEvent())
 				).show()
 		);
+
+		CssLayout newProjectLayout = new CssLayout();
+		newProjectLayout.addStyleName("projectlist__newproject__link");
 
 		Label labelDesc = new Label("create new project");
 		labelDesc.setWidth("100%");

@@ -110,9 +110,9 @@ public class GitProjectsManager implements ProjectsManager {
 	}
 
 	@Override
-	public Group createGroup(String name) throws IOException {
+	public Group createGroup(String name, String description) throws IOException {
 		String path = generateCleanNameWithIdPrefix(name, () -> idGenerator.generateGroupId());
-		return remoteGitServerManager.createGroup(name, path);
+		return remoteGitServerManager.createGroup(name, path, description);
 	}
 
 	@Override
@@ -121,8 +121,8 @@ public class GitProjectsManager implements ProjectsManager {
 	}
 
 	@Override
-	public Group updateGroup(String name, Group group) throws IOException {
-		return remoteGitServerManager.updateGroup(name, group);
+	public Group updateGroup(String name, String description, Group group) throws IOException {
+		return remoteGitServerManager.updateGroup(name, description, group);
 	}
 
 	@Override

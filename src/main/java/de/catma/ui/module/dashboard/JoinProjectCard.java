@@ -28,14 +28,15 @@ public class JoinProjectCard extends VerticalFlexLayout {
 	private void initComponents() {
 		addStyleName("projectlist__newproject");
 
-		CssLayout joinProjectLayout = new CssLayout();
-		joinProjectLayout.addStyleName("projectlist__newproject__link");
-		joinProjectLayout.addLayoutClickListener(
+		addLayoutClickListener(
 				layoutClickEvent -> new JoinProjectDialog(
 						currentUser,
 						eventBus
 				).show()
 		);
+
+		CssLayout joinProjectLayout = new CssLayout();
+		joinProjectLayout.addStyleName("projectlist__newproject__link");
 
 		Label labelDesc = new Label("join project");
 		labelDesc.setWidth("100%");

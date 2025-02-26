@@ -309,7 +309,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 												})
 												.filter(Objects::nonNull)
 												.toList();
-								result.add(new GitGroup(group.getId(), group.getName(), members, sharedProjects));
+								result.add(new GitGroup(group.getId(), group.getName(), group.getDescription(), members, sharedProjects));
 							}
 							catch (GitLabApiException e) {
 								// ignore 404 errors when fetching a group's members or projects (groups that have been deleted since fetching the list)
@@ -375,20 +375,21 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 	
 	@Override
-	public  de.catma.user.Group createGroup(String name, String path) throws IOException {
+	public de.catma.user.Group createGroup(String name, String path, String description) throws IOException {
 		try {
 			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
 
-			GroupParams groupParams = new GroupParams().withName(name).withPath(path).withVisibility(Visibility.PRIVATE.name().toLowerCase());
+			GroupParams groupParams = new GroupParams()
+					.withName(name.trim())
+					.withDescription(description.trim())
+					.withPath(path)
+					.withVisibility(Visibility.PRIVATE.name().toLowerCase());
 
 			Group group = groupApi.createGroup(groupParams);
 
-			return new GitGroup(group.getId(), group.getName(), Collections.emptySet(), Collections.emptyList());
+			return new GitGroup(group.getId(), group.getName(), group.getDescription(), Collections.emptySet(), Collections.emptyList());
 		}
 		catch (GitLabApiException e) {
-			if (e.getMessage().contains("has already been taken")) {
-				throw new IllegalArgumentException(String.format("The name '%1$s' has already been taken, please choose a different name!", name), e);
-			}
 			throw new IOException(String.format("Failed to create group %s", name), e);
 		}
 	}
@@ -406,18 +407,15 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 
 	@Override
-	public de.catma.user.Group updateGroup(String name, de.catma.user.Group group) throws IOException {
+	public de.catma.user.Group updateGroup(String name, String description, de.catma.user.Group group) throws IOException {
 		try {
-			name = name.trim();
-			String pathName = name.replaceAll("\s", "-").toLowerCase();
-			
-
 			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-			GroupParams groupParams = new GroupParams().withName(name).withPath(pathName);
+			GroupParams groupParams = new GroupParams().withName(name.trim()).withDescription(description.trim());
 			Group updatedGroup = groupApi.updateGroup(group.getId(), groupParams);
 			return new GitGroup(
 					updatedGroup.getId(),
 					updatedGroup.getName(),
+					updatedGroup.getDescription(),
 					group.getMembers().stream().collect(Collectors.toUnmodifiableSet()), 
 					group.getSharedProjects().stream().collect(Collectors.toUnmodifiableList()));
 		}

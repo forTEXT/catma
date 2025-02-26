@@ -114,10 +114,11 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * Creates a new group.
 	 * @param name the name of the group
 	 * @param path the path of the group
+	 * @param description the description of the group
 	 * @return the group
 	 * @throws IOException if an error occurs when creating the group
 	 */
-	Group createGroup(String name, String path) throws IOException;
+	Group createGroup(String name, String path, String description) throws IOException;
 
 	/**
 	 * Deletes a group
@@ -129,11 +130,12 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	/**
 	 * Updates the given group with the given new name.
 	 * @param name the new name
+	 * @param description the new description
 	 * @param group the group to update
 	 * @return the updated group
 	 * @throws IOException if an error occurs when updating the group
 	 */
-	Group updateGroup(String name, Group group) throws IOException;
+	Group updateGroup(String name, String description, Group group) throws IOException;
 
 	/**
 	 * Leave the given group.

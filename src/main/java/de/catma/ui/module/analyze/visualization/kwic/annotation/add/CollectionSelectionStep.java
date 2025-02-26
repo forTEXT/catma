@@ -265,7 +265,8 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
         documentGrid.addStyleNames(
 				"flat-undecorated-icon-buttonrenderer");
 
-        documentGrid.setRowHeight(45);
+        // disabled, custom height needed to display additional document details but causes a styling issue, see below
+//        documentGrid.setRowHeight(45);
         documentGrid.setSelectionMode(SelectionMode.MULTI);
         
 		documentGrid
@@ -278,12 +279,15 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 		      .append("<div class='documentsgrid__doc__title'> ")
 		      .append(resource.getName())
 		      .append("</div>");
-			if(resource.hasDetail()){
-		        sb
-		        .append("<span class='documentsgrid__doc__author'> ")
-		        .append(resource.getDetail())
-		        .append("</span>");
-			}
+			// disabled due to styling issue and not really adding value, also see above and `div.documentsgrid__doc` in CSS
+			// if re-enabling we need to set `height: 100%` on `.catma .v-treegrid:not(.borderless) .v-treegrid-header::after` so that the box-shadow does not
+			// disappear from the header (but this hasn't been tested properly)
+//			if(resource.hasDetail()){
+//		        sb
+//		        .append("<span class='documentsgrid__doc__author'> ")
+//		        .append(resource.getDetail())
+//		        .append("</span>");
+//			}
 			sb.append("</div>");
 				        
 		    return sb.toString();

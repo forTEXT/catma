@@ -430,11 +430,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				.append(resource.getName())
 				.append("</div>");
 
-		if (resource.hasDetail()) {
-			sb.append("<span class='documentsgrid__doc__author'>")
-					.append(resource.getDetail())
-					.append("</span>");
-		}
+		// disabled due to styling issue and not really adding value, also see initResourcesContent and `div.documentsgrid__doc` in CSS
+		// if re-enabling we need to set `height: 100%` on `.catma .v-treegrid:not(.borderless) .v-treegrid-header::after` so that the box-shadow does not
+		// disappear from the header (but this hasn't been tested properly)
+//		if (resource.hasDetail()) {
+//			sb.append("<span class='documentsgrid__doc__author'>")
+//					.append(resource.getDetail())
+//					.append("</span>");
+//		}
 
 		sb.append("</div>");
 
@@ -454,21 +457,20 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		documentGrid = TreeGridFactory.createDefaultTreeGrid();
 		documentGrid.addStyleNames("flat-undecorated-icon-buttonrenderer");
-		documentGrid.setHeaderVisible(false);
-		documentGrid.setRowHeight(45);
+		// disabled, custom height needed to display additional document details but causes a styling issue, see buildResourceNameHtml
+//		documentGrid.setRowHeight(45);
 
 		documentGrid.addColumn(Resource::getIcon, new HtmlRenderer())
-				.setWidth(100);
+				.setWidth(71); // we set an explicit width here because automatic sizing is not working properly in this case
 
 		documentGrid.addColumn(buildResourceNameHtml::apply, new HtmlRenderer())
 				.setId(DocumentGridColumn.NAME.name())
-				.setCaption("Name");
+				.setCaption("Name")
+				.setExpandRatio(1);
 
 		documentGrid.addColumn(buildResourceResponsibilityHtml::apply, new HtmlRenderer())
 				.setId(DocumentGridColumn.RESPONSIBLE.name())
-				.setCaption("Responsible")
-				.setExpandRatio(1)
-				.setHidden(false);
+				.setCaption("Responsible");
 
 		documentGridComponent = new ActionGridComponent<>(
 				new Label("Documents & Annotations"),
@@ -479,26 +481,22 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		resourcesContentLayout.addComponent(documentGridComponent);
 
 		tagsetGrid = new Grid<>();
-		tagsetGrid.setHeaderVisible(false);
 		tagsetGrid.setWidth("400px");
 
-		tagsetGrid.addColumn(tagsetDefinition -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())
-				.setWidth(100);
+		tagsetGrid.addColumn(tagsetDefinition -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer());
 
 		tagsetGrid.addColumn(TagsetDefinition::getName)
 				.setId(TagsetGridColumn.NAME.name())
 				.setCaption("Name")
+				.setExpandRatio(1)
 				.setStyleGenerator(tagsetDefinition -> tagsetDefinition.isContribution() ? "project-view-tagset-with-contribution" : null);
 
 		tagsetGrid.addColumn(
 						tagsetDefinition -> tagsetDefinition.getResponsibleUser() == null ?
-								"Not assigned" : membersByIdentifier.get(tagsetDefinition.getResponsibleUser())
+								"" : membersByIdentifier.get(tagsetDefinition.getResponsibleUser())
 				)
 				.setId(TagsetGridColumn.RESPONSIBLE.name())
-				.setCaption("Responsible")
-				.setExpandRatio(1)
-				.setHidden(true)
-				.setHidable(true);
+				.setCaption("Responsible");
 
 		tagsetGridComponent = new ActionGridComponent<>(
 				new Label("Tagsets"),
@@ -515,14 +513,18 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		HorizontalFlexLayout teamContentLayout = new HorizontalFlexLayout();
 
 		memberGrid = TreeGridFactory.createDefaultTreeGrid();
-		memberGrid.setHeaderVisible(false);
-		memberGrid.setWidth("402px");
+		memberGrid.setWidth("400px");
+
 		memberGrid.addColumn(ProjectParticipant::getIcon, new HtmlRenderer());
+
 		memberGrid.addColumn(ProjectParticipant::getName)
-				.setWidth(200)
+				.setCaption("Name")
+				.setExpandRatio(1)
 				.setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
 				.setDescriptionGenerator(ProjectParticipant::getDescription);
-		memberGrid.addColumn(ProjectParticipant::getRole).setExpandRatio(1);
+
+		memberGrid.addColumn(ProjectParticipant::getRole)
+				.setCaption("Role");
 
 		memberGridComponent = new ActionGridComponent<>(
 				new Label("Members"),
@@ -1951,13 +1953,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	// team actions
 	private void handleEditMembers() {
-		
-
 		// remove any owner members from the selection and display an informational message
 		// TODO: allow the original owner (whose namespace the project is in) to edit any other owner's role, as well as
 		//       assign additional owners (also see GitlabManagerCommon.assignOnProject which does its own check)
 		if (memberGrid.getSelectedItems().stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
-
 			Notification ownerMembersSelectedNotification = new Notification(
 					"Your selection includes members with the 'Owner' role, whose role you cannot change.\n"
 							+ "Those members have been ignored. (click to dismiss)",
@@ -1966,19 +1965,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			ownerMembersSelectedNotification.setDelayMsec(-1);
 			ownerMembersSelectedNotification.show(Page.getCurrent());
 		}
-		
-		if (memberGrid.getSelectedItems().stream().anyMatch(member -> !member.isDirect())) {
 
+		if (memberGrid.getSelectedItems().stream().anyMatch(member -> !member.isDirect())) {
 			Notification ownerMembersSelectedNotification = new Notification(
-					"Your selection includes members participating via a user group. You cannot change the role of those members directly, you need to change the role of the whole user group!\n"
-							+ "Those members have been ignored. (click to dismiss)",
+					"Your selection includes members participating via a user group. You cannot change the role of those members directly,\n"
+							+ "you need to change the role of the whole user group! Those members have been ignored. (click to dismiss)",
 					Notification.Type.WARNING_MESSAGE
 			);
 			ownerMembersSelectedNotification.setDelayMsec(-1);
 			ownerMembersSelectedNotification.show(Page.getCurrent());
 		}
-		
-		
+
 		final Set<ProjectParticipant> membersToEdit = 
 				memberGrid.getSelectedItems().stream()
 				.filter(member -> member.getRole() != RBACRole.OWNER && member.isDirect())
@@ -2016,7 +2013,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleRemoveMembers() {
-
 		// remove any owner members from the selection and display an informational message
 		// TODO: allow the original owner (whose namespace the project is in) to remove any other owner
 		if (memberGrid.getSelectedItems().stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
@@ -2035,7 +2031,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		).findAny();
 
 		if (selectedMemberCurrentUser.isPresent()) {
-
 			Notification selfSelectedNotification = new Notification(
 					"You cannot remove yourself from the project.\n"
 							+ "Please use the 'Leave Project' button on the project card on the dashboard instead.\n"
@@ -2049,16 +2044,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		}
 
 		if (memberGrid.getSelectedItems().stream().anyMatch(member -> !member.isDirect())) {
-
 			Notification ownerMembersSelectedNotification = new Notification(
-					"Your selection includes members participating via a user group. You cannot remove those members directly. You need to remove them from the user group!\n"
-							+ "Those members have been ignored. (click to dismiss)",
+					"Your selection includes members participating via a user group. You cannot remove those members directly,\n"
+							+ "you need to remove them from the user group! Those members have been ignored. (click to dismiss)",
 					Notification.Type.WARNING_MESSAGE
 			);
 			ownerMembersSelectedNotification.setDelayMsec(-1);
 			ownerMembersSelectedNotification.show(Page.getCurrent());
 		}
-		
+
 		final Set<ProjectParticipant> membersToRemove = memberGrid.getSelectedItems().stream()
 				.filter(
 						member -> member.getRole() != RBACRole.OWNER 
@@ -2089,7 +2083,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								errorHandler.showAndLogError(String.format("Failed to remove member %s from project %s", participant, project.getName()), e);
 							}
 						}
-	
+
 						eventBus.post(new MembersChangedEvent());						
 					}
 			).show();
@@ -2150,7 +2144,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				group = result.group();
 			}
 			else if ((result.groupName() != null) && !result.groupName().isEmpty()) {
-				group = projectsManager.createGroup(result.groupName());
+				// TODO: pass description? would need to modify InviteMembersWithGroupDialog - irrelevant while group creation via that dialog is disabled
+				group = projectsManager.createGroup(result.groupName(), null);
 
 				if ((result.emailAdresses() != null) && !result.emailAdresses().isEmpty()) {									
 					SignupTokenManager signupTokenManager = new SignupTokenManager();
