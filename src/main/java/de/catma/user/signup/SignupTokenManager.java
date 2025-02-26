@@ -98,12 +98,12 @@ public class SignupTokenManager {
      * @param token
      * @return
      */
-    public boolean containsAccountSignupToken(String token){
+    private boolean containsAccountSignupToken(String token){
     	Objects.requireNonNull(token);
     	return accountSignupTokenCache.containsKey(token);
     }
 
-    public boolean containsGroupOrProjectSignupToken(String token){
+    private boolean containsGroupOrProjectSignupToken(String token){
     	Objects.requireNonNull(token);
     	return groupProjectSignupTokenCache.containsKey(token);
     }
@@ -129,6 +129,7 @@ public class SignupTokenManager {
     
     private void put(String key, String encodedToken, char groupOrProjectTransactionFlag) {
     	groupProjectSignupTokenCache.put(key, encodedToken);
+		consumedTokens.remove(key); // the token might have been re-added and can be consumed again
     	CACHETRANSACTIONLOGGER.info(String.format("%c%c%c%c%s", groupOrProjectTransactionFlag, TRANSACTION_COLUMN_SEPARATOR, ADD_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, encodedToken));    	
     }
     
@@ -140,7 +141,6 @@ public class SignupTokenManager {
     	Objects.requireNonNull(token);
     	String encodedToken = new Gson().toJson(token);
     	put(token.token(), encodedToken, PROJECT_TRANSACTION_FLAG);
-    	consumedTokens.remove(token.token()); // the token might have been re-added and can be consumed again
     }
     
     /**
@@ -149,13 +149,15 @@ public class SignupTokenManager {
      * @param tokenstring
      * @return token
      */
-    public Optional<AccountSignupToken> getAccountSignupToken(String token){
+    private Optional<AccountSignupToken> getAccountSignupToken(String token){
     	logger.info("SignupTokenManager.getAccountSignupToken called with token " + token);
     	Objects.requireNonNull(token);
     	if(!containsAccountSignupToken(token)){
     		return Optional.empty();
     	}
     	String encodedToken = accountSignupTokenCache.getAndRemove(token);
+		// prevent the same token from being processed again, eg: on refresh, as request parameters remain even though we call replaceState to update the URL
+		// (see RequestTokenHandler)
     	consumedTokens.add(token);
     	
     	try {
@@ -166,13 +168,15 @@ public class SignupTokenManager {
 		}
     }
 
-    public Optional<GroupSignupToken> getGroupSignupToken(String token){
+    private Optional<GroupSignupToken> getGroupSignupToken(String token){
     	logger.info("SignupTokenManager.getGroupSignupToken called with token " + token);
     	Objects.requireNonNull(token);
     	if(!containsGroupOrProjectSignupToken(token)){
     		return Optional.empty();
     	}
     	String encodedToken = groupProjectSignupTokenCache.getAndRemove(token);
+		// prevent the same token from being processed again, eg: on refresh, as request parameters remain even though we call replaceState to update the URL
+		// (see RequestTokenHandler)
     	consumedTokens.add(token);
     	
     	CACHETRANSACTIONLOGGER.info(String.format("%c%c%c%c%s", GROUP_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, REMOVE_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, token));
@@ -185,13 +189,15 @@ public class SignupTokenManager {
 		}
     }
     
-    public Optional<ProjectSignupToken> getProjectSignupToken(String token){
+    private Optional<ProjectSignupToken> getProjectSignupToken(String token){
     	logger.info("SignupTokenManager.getProjectSignupToken called with token " + token);
     	Objects.requireNonNull(token);
     	if(!containsGroupOrProjectSignupToken(token)){
     		return Optional.empty();
     	}
     	String encodedToken = groupProjectSignupTokenCache.getAndRemove(token);
+		// prevent the same token from being processed again, eg: on refresh, as request parameters remain even though we call replaceState to update the URL
+		// (see RequestTokenHandler)
     	consumedTokens.add(token);
     	
     	CACHETRANSACTIONLOGGER.info(String.format("%c%c%c%c%s", PROJECT_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, REMOVE_TRANSACTION_FLAG, TRANSACTION_COLUMN_SEPARATOR, token));
@@ -220,10 +226,14 @@ public class SignupTokenManager {
     	
     	if (consumedTokens.contains(token)) {
     		return; //ignore silently
+			// TODO: consider adding another function to TokenValidityHandler like 'noOp' or 'finally' so that the caller can handle these cases and act
+			//       appropriately, eg: call replaceState to clean up the URL (which doesn't currently happen if a token URL is pasted into a session where
+			//       the token has already been consumed; also applies to other validate... functions below)
     	}
     	
     	if(!containsAccountSignupToken(token)){
     		tokenValidityHandler.tokenInvalid("Token is unknown, it can only be used once. Please sign up again!");
+			consumedTokens.add(token); // prevent the same message from being shown again, eg: on refresh, also see getters above
     		return;
     	}
     	Optional<AccountSignupToken> signupToken = getAccountSignupToken(token);
@@ -250,6 +260,7 @@ public class SignupTokenManager {
     	
     	if(!containsGroupOrProjectSignupToken(token)){
     		tokenValidityHandler.tokenInvalid("Token is unknown, it can only be used once. Please contact the group owner to get a new link!");
+			consumedTokens.add(token); // prevent the same message from being shown again, eg: on refresh, also see getters above
     		return;
     	}
     	Optional<GroupSignupToken> signupToken = getGroupSignupToken(token);
@@ -277,6 +288,7 @@ public class SignupTokenManager {
     	
     	if(!containsGroupOrProjectSignupToken(token)){
     		tokenValidityHandler.tokenInvalid("Token is unknown, it can only be used once. Please contact the project owner/maintainer to get a new link!");
+			consumedTokens.add(token); // prevent the same message from being shown again, eg: on refresh, also see getters above
     		return;
     	}
     	Optional<ProjectSignupToken> signupToken = getProjectSignupToken(token);
