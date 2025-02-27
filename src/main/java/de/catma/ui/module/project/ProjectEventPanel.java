@@ -3,7 +3,6 @@ package de.catma.ui.module.project;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +15,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.DateField;
@@ -97,42 +97,44 @@ public class ProjectEventPanel extends VerticalLayout {
 		commitsGrid = new Grid<CommitInfo>();
 
 		commitsGrid.addStyleName("project-event-panel-commits-grid");
-		commitsGrid.setSelectionMode(SelectionMode.MULTI);
+		commitsGrid.setSelectionMode(SelectionMode.NONE);
 
 		commitsGrid.setSizeFull();
 		
 		commitsGrid
 			.addColumn(commitInfo -> commitInfo.getMsgTitle())
 			.setCaption("Title")
-			.setWidth(350);
+			.setMinimumWidthFromContent(false)
+			.setExpandRatio(1);
+
 		commitsGrid
 			.addColumn(commitInfo -> commitInfo.getAuthor())
 			.setCaption("Author")
-			.setWidth(250);
-		DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
+			.setMinimumWidthFromContent(false)
+			.setMinimumWidth(100);
+
 		commitsGrid
-			.addColumn(commitInfo -> commitInfo.getCommittedDate()==null?"":commitInfo.getCommittedDate().format(formatter))
-			.setCaption("Date")
-			.setWidth(150);
-		
+			.addColumn(commitInfo -> commitInfo.getCommittedDate() == null ? "" :
+					commitInfo.getCommittedDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")))
+			.setCaption("Date");
+
 		commitsGrid.setDescriptionGenerator(commitInfo -> commitInfo.getMsg());
-		
-		
-		commitsActionGridComponent = 
-				new ActionGridComponent<Grid<CommitInfo>>(commitsLabel, commitsGrid);
-		
-		
+
+		commitsActionGridComponent = new ActionGridComponent<Grid<CommitInfo>>(commitsLabel, commitsGrid);
+		commitsActionGridComponent.setSelectionModeFixed(SelectionMode.NONE);
+
+		commitsActionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
 		commitsActionGridComponent.getActionGridBar().setAddBtnVisible(false);
 		commitsActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
 		commitsActionGridComponent.getActionGridBar().setSearchInputVisible(false);
 		
 		commitsActionGridComponent.addStyleName("project-event-panel-commits-action-grid-component");
 		
-		activitiesBeforeDateInput = new DateField("events before");
+		activitiesBeforeDateInput = new DateField("Events Up To");
 		commitsActionGridComponent.getActionGridBar().addComponentAfterSearchField(activitiesBeforeDateInput);
 		activitiesBeforeDateInput.setValue(LocalDate.now());
 		
-		activitiesAfterDateInput = new DateField("events after");
+		activitiesAfterDateInput = new DateField("Events From");
 		commitsActionGridComponent.getActionGridBar().addComponentAfterSearchField(activitiesAfterDateInput);
 		activitiesAfterDateInput.setValue(LocalDate.now().minus(2, ChronoUnit.WEEKS));
 		
@@ -140,14 +142,12 @@ public class ProjectEventPanel extends VerticalLayout {
 		cbAuthor.setEmptySelectionAllowed(true);
 		cbAuthor.setTextInputAllowed(true);
 		cbAuthor.setNewItemProvider(t -> Optional.of(t));
+		commitsActionGridComponent.getActionGridBar().addComponentAfterSearchField(cbAuthor);
 
 		cbBranch = new ComboBox<String>("Branch");
 		cbBranch.setEmptySelectionAllowed(false);
-		
 		commitsActionGridComponent.getActionGridBar().addComponentAfterSearchField(cbBranch);
 
-		commitsActionGridComponent.getActionGridBar().addComponentAfterSearchField(cbAuthor);
-		
 		addComponent(commitsActionGridComponent);
 		setExpandRatio(commitsActionGridComponent, 0.9f);
 		

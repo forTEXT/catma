@@ -120,7 +120,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 		Label lblCreatedDate = new Label(
 				String.format(
 						"<span>Created on:</span> %s",
-						projectReference.getCreatedAt() == null ? "n/a" : projectReference.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE)
+						projectReference.getCreatedAt() == null ? "n/a" : projectReference.getCreatedAt().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
 				),
 				ContentMode.HTML
 		);
@@ -129,7 +129,9 @@ public class ProjectCard extends VerticalFlexLayout  {
 		Label lblLastActivityDate = new Label(
 				String.format(
 						"<span>Last activity on:</span> %s",
-						projectReference.getLastActivityAt() == null ? "n/a" : projectReference.getLastActivityAt().format(DateTimeFormatter.ISO_LOCAL_DATE)
+						projectReference.getLastActivityAt() == null ? "n/a" : projectReference.getLastActivityAt().format(
+								DateTimeFormatter.ofPattern("dd MMM yyyy")
+						)
 				),
 				ContentMode.HTML
 		);

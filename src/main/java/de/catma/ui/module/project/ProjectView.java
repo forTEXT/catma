@@ -466,11 +466,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		documentGrid.addColumn(buildResourceNameHtml::apply, new HtmlRenderer())
 				.setId(DocumentGridColumn.NAME.name())
 				.setCaption("Name")
+				.setMinimumWidthFromContent(false)
 				.setExpandRatio(1);
 
 		documentGrid.addColumn(buildResourceResponsibilityHtml::apply, new HtmlRenderer())
 				.setId(DocumentGridColumn.RESPONSIBLE.name())
-				.setCaption("Responsible");
+				.setCaption("Responsible")
+				.setMinimumWidthFromContent(false)
+				.setMinimumWidth(110);
 
 		documentGridComponent = new ActionGridComponent<>(
 				new Label("Documents & Annotations"),
@@ -488,6 +491,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		tagsetGrid.addColumn(TagsetDefinition::getName)
 				.setId(TagsetGridColumn.NAME.name())
 				.setCaption("Name")
+				.setMinimumWidthFromContent(false)
 				.setExpandRatio(1)
 				.setStyleGenerator(tagsetDefinition -> tagsetDefinition.isContribution() ? "project-view-tagset-with-contribution" : null);
 
@@ -496,7 +500,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								"" : membersByIdentifier.get(tagsetDefinition.getResponsibleUser())
 				)
 				.setId(TagsetGridColumn.RESPONSIBLE.name())
-				.setCaption("Responsible");
+				.setCaption("Responsible")
+				.setMinimumWidthFromContent(false)
+				.setMinimumWidth(110);
 
 		tagsetGridComponent = new ActionGridComponent<>(
 				new Label("Tagsets"),
@@ -519,6 +525,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		memberGrid.addColumn(ProjectParticipant::getName)
 				.setCaption("Name")
+				.setMinimumWidthFromContent(false)
 				.setExpandRatio(1)
 				.setComparator((r1, r2) -> String.CASE_INSENSITIVE_ORDER.compare(r1.getName(), r2.getName()))
 				.setDescriptionGenerator(ProjectParticipant::getDescription);
