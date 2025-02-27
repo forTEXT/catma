@@ -11,8 +11,8 @@ public class ForkProjectDialog extends AbstractProjectDialog {
 	public ForkProjectDialog(ProjectsManager projectManager, ProjectReference sourceProjectReference, SaveCancelListener<ProjectReference> saveCancelListener) {
 		super("Copy Project",projectManager, saveCancelListener);
 		this.sourceProjectReference = sourceProjectReference;
-		name.setPlaceholder("Please enter the name of the new copied Project");
-		description.setPlaceholder("Please add a description for the new copied Project");
+		name.setPlaceholder("Please enter the name of the newly copied project");
+		description.setPlaceholder("Optionally enter a description for the newly copied project");
 	}
 
 	

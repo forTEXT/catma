@@ -21,6 +21,7 @@ import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
@@ -62,7 +63,10 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 	private HorizontalLayout resourcesContentLayout;
 	
 	public ForkConfigurationDialog(Project project, Map<String, Member> membersByIdentifier, SaveCancelListener<Set<String>> saveCancelListener) {
-		super("Configure Project", saveCancelListener);
+		super("Configure Copied Project", saveCancelListener);
+
+		setShowMaximizeRestoreIcon(true);
+
 		this.project = project;
 		this.errorHandler = (ErrorHandler) UI.getCurrent();
 		this.membersByIdentifier = membersByIdentifier;
@@ -76,36 +80,37 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 		
 		documentGrid = TreeGridFactory.createDefaultTreeGrid();
 		documentGrid.addStyleNames("flat-undecorated-icon-buttonrenderer");
-		documentGrid.setHeaderVisible(false);
+		documentGrid.setSelectionMode(SelectionMode.MULTI);
 		// disabled, custom height needed to display additional document details but causes a styling issue, see buildResourceNameHtml
 //		documentGrid.setRowHeight(45);
 		documentGrid.setSizeFull();
 
 		documentGrid.addColumn(Resource::getIcon, new HtmlRenderer())
-				.setWidth(100);
+				.setWidth(71); // we set an explicit width here because automatic sizing is not working properly in this case
 
 		documentGrid.addColumn(buildResourceNameHtml::apply, new HtmlRenderer())
 				.setId(DocumentGridColumn.NAME.name())
 				.setCaption("Name")
-				.setWidth(300);
+				.setMinimumWidthFromContent(false)
+				.setExpandRatio(1);
 
 		documentGrid.addColumn(buildResourceResponsibilityHtml::apply, new HtmlRenderer())
 				.setId(DocumentGridColumn.RESPONSIBLE.name())
 				.setCaption("Responsible")
-				.setExpandRatio(1)
-				.setHidden(false);
-		
+				.setMinimumWidthFromContent(false)
+				.setMinimumWidth(110);
 
 		documentGridComponent = new ActionGridComponent<>(
 				new Label("Documents & Annotations"),
 				documentGrid
 		);
+		documentGridComponent.setSelectionModeFixed(SelectionMode.MULTI);
+		documentGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
 		documentGridComponent.getActionGridBar().setAddBtnVisible(false);
 		documentGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
-		documentGridComponent.setSelectionMode(SelectionMode.MULTI);
+		// NB: if we add this listener before calling one of the ActionGridComponent.setSelectionMode functions then it will be removed, because the Grid's
+		//     GridSelectionModel is replaced
 		documentGrid.addSelectionListener(event -> handleResourceDeselection(event));
-		documentGridComponent.getActionGridBar().addBtnToggleListSelect(
-				listSelectEvent -> documentGrid.addSelectionListener(event -> handleResourceDeselection(event)));
 
 		IconButton btDeselectAllCollections = new IconButton(VaadinIcons.NOTEBOOK);
 		btDeselectAllCollections.addClickListener(event -> setCollectionsSelected(false));
@@ -120,44 +125,45 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 		documentGridComponent.getActionGridBar().addButtonAfterSearchField(btSelectAllCollections);
 
 		resourcesContentLayout.addComponent(documentGridComponent);
-		resourcesContentLayout.setExpandRatio(documentGridComponent, 0.7f);
+		resourcesContentLayout.setExpandRatio(documentGridComponent, 0.6f);
 
 		tagsetGrid = new Grid<>();
-		tagsetGrid.setHeaderVisible(false);
+		tagsetGrid.setSelectionMode(SelectionMode.MULTI);
 		tagsetGrid.setSizeFull();
 		
-		tagsetGrid.addColumn(tagsetDefinition -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer())
-				.setWidth(100);
+		tagsetGrid.addColumn(tagsetDefinition -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer());
 
 		tagsetGrid.addColumn(TagsetDefinition::getName)
 				.setId(TagsetGridColumn.NAME.name())
 				.setCaption("Name")
+				.setMinimumWidthFromContent(false)
+				.setExpandRatio(1)
 				.setStyleGenerator(tagsetDefinition -> tagsetDefinition.isContribution() ? "project-view-tagset-with-contribution" : null);
 
 		tagsetGrid.addColumn(
 						tagsetDefinition -> tagsetDefinition.getResponsibleUser() == null ?
-								"Not assigned" : membersByIdentifier.get(tagsetDefinition.getResponsibleUser())
+								"" : membersByIdentifier.get(tagsetDefinition.getResponsibleUser())
 				)
 				.setId(TagsetGridColumn.RESPONSIBLE.name())
 				.setCaption("Responsible")
-				.setExpandRatio(1)
-				.setHidden(true)
-				.setHidable(true);
+				.setMinimumWidthFromContent(false)
+				.setMinimumWidth(110);
 
 		tagsetGridComponent = new ActionGridComponent<>(
 				new Label("Tagsets"),
 				tagsetGrid
 		);
 		tagsetGridComponent.addStyleName("fork-configuration-dialog__tagset-grid");
-		tagsetGridComponent.setSelectionMode(SelectionMode.MULTI);
+		tagsetGridComponent.setSelectionModeFixed(SelectionMode.MULTI);
+		tagsetGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
 		tagsetGridComponent.getActionGridBar().setAddBtnVisible(false);
 		tagsetGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
+		// NB: if we add this listener before calling one of the ActionGridComponent.setSelectionMode functions then it will be removed, because the Grid's
+		//     GridSelectionModel is replaced
 		tagsetGrid.addSelectionListener(event -> handleTagsetDeselection(event));
-		tagsetGridComponent.getActionGridBar().addBtnToggleListSelect(
-				listSelectEvent -> tagsetGrid.addSelectionListener(event -> handleTagsetDeselection(event)));
 
 		resourcesContentLayout.addComponent(tagsetGridComponent);
-		resourcesContentLayout.setExpandRatio(tagsetGridComponent, 0.3f);
+		resourcesContentLayout.setExpandRatio(tagsetGridComponent, 0.4f);
 	}
 
 	private void handleTagsetDeselection(SelectionEvent<TagsetDefinition> event) {
@@ -183,7 +189,11 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 		})
 		.toList();
 		if (!toBeDeselected.isEmpty()) {
-			Notification.show("Info", "We also deselected the Collections that contain Tags from your deselected Tagsets!", Type.HUMANIZED_MESSAGE);
+			Notification.show(
+					"Info",
+					"We also deselected the collections that use tags from the deselected tagsets!",
+					Type.HUMANIZED_MESSAGE
+			);
 			toBeDeselected.stream().forEach(documentGrid::deselect);
 		}
 	}
@@ -200,7 +210,11 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 			.toList();
 			
 			if (!toBeDeselected.isEmpty()) {
-				Notification.show("Info", "We also deselected the corresponding Collections!", Type.HUMANIZED_MESSAGE);
+				Notification.show(
+						"Info",
+						"We also deselected the collections corresponding with the deselected documents!",
+						Type.HUMANIZED_MESSAGE
+				);
 				toBeDeselected.stream().forEach(documentGrid::deselect);
 			}
 		}
@@ -228,7 +242,9 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 
 	@Override
 	protected void addContent(ComponentContainer content) {
-		Label infoLabel = new Label("Please select the resources you want to <b>keep</b> in your new project:", ContentMode.HTML);
+		setWidth("80%");
+		setHeight("80%");
+		Label infoLabel = new Label("Please select the resources you want to <strong>keep</strong> in your newly copied project:", ContentMode.HTML);
 		content.addComponent(infoLabel);
 		content.addComponent(resourcesContentLayout);
 		if (content instanceof AbstractOrderedLayout) {
