@@ -33,13 +33,12 @@ class PropertyNameItem implements ActionItem {
 	
 	@Override
 	public String getDeleteValueIcon() {
-		return VaadinIcons.TRASH.getHtml();
+		return VaadinIcons.MINUS.getHtml();
 	}
 
 	@Override
 	public PropertyAction getPropertyAction() {
-		// TODO Auto-generated method stub
-		return null;
+		return null; // intended
 	}
 
 }

@@ -95,7 +95,7 @@ public class BulkEditPropertyByNameDialog extends AbstractOkCancelDialog<Result>
 
 	public BulkEditPropertyByNameDialog(Set<TagsetDefinition> affectedTagsets, List<String> selectedPropertyDefNames, Collator tagLibaryCollator,
 			SaveCancelListener<Result> saveCancelListener) {
-		super("Edit Properties", saveCancelListener);
+		super("Bulk Edit/Delete Properties by Name", saveCancelListener);
 		this.tagsetCollator = tagLibaryCollator;
 		this.deletedItems = new ArrayList<>();
 		this.tagsetById = affectedTagsets.stream().collect(Collectors.toMap(TagsetDefinition::getUuid, Function.identity()));
@@ -194,14 +194,14 @@ public class BulkEditPropertyByNameDialog extends AbstractOkCancelDialog<Result>
 						tagsets.stream()
 							.sorted((t1,t2) -> tagsetCollator.compare(t1.getName(), t2.getName()))
 							.map(tagset -> String.format("\"%s\"", tagset.getName()))
-							.collect(Collectors.joining(","))));
+							.collect(Collectors.joining(", "))));
 		
 		propertyDefPanel = new HorizontalLayout();
 		propertyDefPanel.setMargin(new MarginInfo(false, true));
 		propertyDefPanel.setSpacing(true);
 		propertyDefPanel.setSizeFull();
 
-		propertyNameGrid = new Grid<PropertyNameItem>("Property names");
+		propertyNameGrid = new Grid<PropertyNameItem>("Property Names (double click to edit)");
 		propertyNameGrid.addStyleName("flat-undecorated-icon-buttonrenderer");
 		TextField propertyNameField = new TextField();
 		
@@ -233,7 +233,7 @@ public class BulkEditPropertyByNameDialog extends AbstractOkCancelDialog<Result>
 			.addColumn(tag -> tagsetById.get(tag.getTagsetDefinitionUuid()).getTagPath(tag))
 			.setSortable(true)
 			.setComparator((tp1, tp2) -> tagsetCollator.compare(tagsetById.get(tp1.getTagsetDefinitionUuid()).getTagPath(tp1), tagsetById.get(tp2.getTagsetDefinitionUuid()).getTagPath(tp2)))
-			.setCaption("Tag path");
+			.setCaption("Tag Path");
 		tagDefinitionGrid.setSortOrder(List.of(new GridSortOrder<>(tagPathColumn, SortDirection.ASCENDING)));
 		propertyDefPanel.addComponent(tagDefinitionGrid);
 

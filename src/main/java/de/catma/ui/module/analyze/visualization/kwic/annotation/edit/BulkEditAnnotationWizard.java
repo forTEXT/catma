@@ -16,11 +16,13 @@ public class BulkEditAnnotationWizard extends Wizard {
 			WizardContext context, SaveCancelListener<WizardContext> saveCancelListener) {
 		super("Edit Annotations", 
 				progressPanel -> (context.get(EditAnnotationWizardContextKey.COLLECTIONS) != null && !((Collection<?>)context.get(EditAnnotationWizardContextKey.COLLECTIONS)).isEmpty())? 
-					new PropertyActionSelectionStep(project, context, (number, description) -> progressPanel.addStep(number, description)):
+					new PropertyActionSelectionStep(project, context, (number, description) -> progressPanel.addStep(number, description), 1):
 					new CollectionSelectionStep(
 						project, 
 						context,
 						(number, description) -> progressPanel.addStep(number, description)),
 				context, saveCancelListener);
+		setWidth("80%");
+		setHeight("80%");
 	}
 }

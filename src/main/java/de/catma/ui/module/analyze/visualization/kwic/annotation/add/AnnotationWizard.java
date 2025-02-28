@@ -12,7 +12,7 @@ public class AnnotationWizard extends Wizard {
 	public AnnotationWizard(
 			EventBus eventBus, Project project, 
 			WizardContext context, SaveCancelListener<WizardContext> saveCancelListener) {
-		super("Annotate selected results", 
+		super("Annotate Selected Results",
 				progressPanel -> new TagSelectionStep(
 						eventBus,
 						project, 

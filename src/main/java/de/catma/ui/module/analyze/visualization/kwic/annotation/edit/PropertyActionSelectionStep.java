@@ -15,12 +15,14 @@ import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.shared.data.sort.SortDirection;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.components.grid.HeaderRow;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 
@@ -55,10 +57,10 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 
 	
 	@SuppressWarnings("unchecked")
-	public PropertyActionSelectionStep(Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
+	public PropertyActionSelectionStep(Project project, WizardContext context, ProgressStepFactory progressStepFactory, int stepNumber) {
 		this.project = project;
 		this.context = context;
-		this.progressStep = progressStepFactory.create(2, "Select property actions");
+		this.progressStep = progressStepFactory.create(stepNumber, "Select Property Actions");
 		this.tagLibraryCollator = Collator.getInstance(project.getTagManager().getTagLibrary().getLocale());
 		
 		Collection<String> propertyNames = (Collection<String>) context.get(EditAnnotationWizardContextKey.PROPERTY_NAMES);
@@ -94,6 +96,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 		actionDataProvider = new TreeDataProvider<ActionItem>(actionData);
 		
 		actionGrid.setDataProvider(actionDataProvider);
+		actionGrid.expand(actionData.getRootItems());
 		
 		updateAffectedTags();
 	}
@@ -137,10 +140,14 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 				"flat-undecorated-icon-buttonrenderer");
         
         actionGrid.addColumn(actionItem -> actionItem.getPropertyName())
-        .setCaption("Property name");
+        .setCaption("Property Name")
+        .setMinimumWidthFromContent(false)
+        .setExpandRatio(3);
         
         actionGrid.addColumn(actionItem -> actionItem.getActionDescription())
-        .setCaption("Action description").setWidth(500);
+        .setCaption("Action Description")
+        .setMinimumWidthFromContent(false)
+        .setExpandRatio(3);
 
 		ButtonRenderer<ActionItem> removeItemRenderer = 
 				new ButtonRenderer<ActionItem>(clickEvent -> handleRemoveItemRequest(clickEvent));
@@ -148,34 +155,43 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 		
 		actionGrid.addColumn(
 			actionItem -> actionItem.getRemoveItemIcon(),
-			removeItemRenderer).setExpandRatio(1).setDescriptionGenerator(item -> "Remove this action");
+			removeItemRenderer
+		).setExpandRatio(1).setDescriptionGenerator(item -> "Remove this action");
 
 		ButtonRenderer<ActionItem> addValueActionRenderer = 
 				new ButtonRenderer<ActionItem>(clickEvent -> handleAddValueActionRequest(clickEvent));
 		addValueActionRenderer.setHtmlContentAllowed(true);
 		
-		actionGrid.addColumn(
+		Grid.Column<ActionItem, String> addCol = actionGrid.addColumn(
 			actionItem -> actionItem.getAddValueIcon(),
 			addValueActionRenderer)
-		.setDescriptionGenerator(item -> "Add a value from annotations with this property");
+		.setDescriptionGenerator(item -> "Add a value to annotations with this property");
 
-		ButtonRenderer<ActionItem> replaceValueActionRenderer = 
-				new ButtonRenderer<ActionItem>(clickEvent -> handleReplaceValueActionRequest(clickEvent));
-		replaceValueActionRenderer.setHtmlContentAllowed(true);
-
-		actionGrid.addColumn(
-				actionItem -> actionItem.getReplaceValueIcon(),
-				replaceValueActionRenderer);
-
-		ButtonRenderer<ActionItem> removeValueActionRenderer = 
+		ButtonRenderer<ActionItem> removeValueActionRenderer =
 				new ButtonRenderer<ActionItem>(clickEvent -> handleRemoveValueActionRequest(clickEvent));
 		removeValueActionRenderer.setHtmlContentAllowed(true);
-		actionGrid.addColumn(
+		Grid.Column<ActionItem, String> removeCol = actionGrid.addColumn(
 			actionItem -> actionItem.getDeleteValueIcon(),
 			removeValueActionRenderer
 		).setDescriptionGenerator(item -> "Remove a value from annotations with this property");
 
-        Label actionLabel = new Label("Configure actions for each Property. You can add, remove or replace values");
+		ButtonRenderer<ActionItem> replaceValueActionRenderer =
+				new ButtonRenderer<ActionItem>(clickEvent -> handleReplaceValueActionRequest(clickEvent));
+		replaceValueActionRenderer.setHtmlContentAllowed(true);
+
+		Grid.Column<ActionItem, String> replaceCol = actionGrid.addColumn(
+				actionItem -> actionItem.getReplaceValueIcon(),
+				replaceValueActionRenderer
+		).setDescriptionGenerator(item -> "Replace a value for annotations with this property");
+
+		HeaderRow actionGridHeader = actionGrid.getDefaultHeaderRow();
+		actionGridHeader.join(
+				actionGridHeader.getCell(addCol),
+				actionGridHeader.getCell(removeCol),
+				actionGridHeader.getCell(replaceCol)
+		).setText("Choose Action");
+
+        Label actionLabel = new Label("Configure actions for each property. You can add, remove or replace property values.");
 
         
         actionGridComponent = new ActionGridComponent<TreeGrid<ActionItem>>(
@@ -183,9 +199,13 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
                 actionGrid
         );
         actionGridComponent.setSizeFull();
+		actionGridComponent.setSelectionModeFixed(Grid.SelectionMode.NONE);
+		actionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, true, false, true));
+		actionGridComponent.getActionGridBar().setAddBtnVisible(false);
+		actionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
         addComponent(actionGridComponent);
         
-		tagDefinitionGrid = new Grid<TagDefinition>("Affected Annotations");
+		tagDefinitionGrid = new Grid<TagDefinition>("Affected Tags");
 		tagDefinitionGrid.addStyleName("flat-undecorated-icon-buttonrenderer");
 		tagDefinitionGrid.addStyleName("property-action-selection-step-affected-tags-grid");
 		tagDefinitionGrid.setSizeFull();
@@ -194,7 +214,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 			.addColumn(tag -> tagsetById.get(tag.getTagsetDefinitionUuid()).getTagPath(tag))
 			.setSortable(true)
 			.setComparator((tp1, tp2) -> tagLibraryCollator.compare(tagsetById.get(tp1.getTagsetDefinitionUuid()).getTagPath(tp1), tagsetById.get(tp2.getTagsetDefinitionUuid()).getTagPath(tp2)))
-			.setCaption("Tag path");
+			.setCaption("Tag Path");
 		tagDefinitionGrid.setSortOrder(List.of(new GridSortOrder<>(tagPathColumn, SortDirection.ASCENDING)));
 		
 		addComponent(tagDefinitionGrid);
@@ -211,7 +231,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 	private void handleRemoveValueActionRequest(RendererClickEvent<ActionItem> clickEvent) {
 		SingleTextInputDialog dlg = 
 				new SingleTextInputDialog(
-						"Value removal", 
+						"Value Removal",
 						"Please enter the value to be removed", 
 						value -> {						
 							ActionItem item = new PropertyActionItem(
@@ -224,6 +244,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 									clickEvent.getItem(), 
 									item);
 							actionDataProvider.refreshAll();
+							actionGrid.expand(clickEvent.getItem());
 							updateAffectedTags();
 							stepChangeListener.stepChanged(this);
 						});
@@ -232,7 +253,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 
 	private void handleReplaceValueActionRequest(RendererClickEvent<ActionItem> clickEvent) {
 		DoubleTextInputDialog dlg = 
-				new DoubleTextInputDialog("Value replacement", "Please enter the value to be replaced", "and the replacement value", valuePair -> {
+				new DoubleTextInputDialog("Value Replacement", "Please enter the value to be replaced", "and the replacement value", valuePair -> {
 					String value = valuePair.getFirst();
 					String replacement= valuePair.getSecond();
 					if (value != null && !value.trim().isEmpty() && replacement != null && !replacement.trim().isEmpty()) {						
@@ -244,6 +265,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 										replacement));
 						actionData.addItem(clickEvent.getItem(), item);
 						actionDataProvider.refreshAll();
+						actionGrid.expand(clickEvent.getItem());
 						updateAffectedTags();
 						stepChangeListener.stepChanged(this);
 					}
@@ -257,7 +279,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 	private void handleAddValueActionRequest(RendererClickEvent<ActionItem> clickEvent) {
 		SingleTextInputDialog dlg = 
 				new SingleTextInputDialog(
-						"Value addition", 
+						"Value Addition",
 						"Please enter the value to be added", 
 						value -> {	
 							ActionItem item = new PropertyActionItem(
@@ -270,6 +292,7 @@ public class PropertyActionSelectionStep extends VerticalLayout implements Wizar
 									clickEvent.getItem(), 
 									item);
 							actionDataProvider.refreshAll();
+							actionGrid.expand(clickEvent.getItem());
 							updateAffectedTags();
 							stepChangeListener.stepChanged(this);
 						});

@@ -60,8 +60,8 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 	public CollectionSelectionStep(Project project, WizardContext context, ProgressStepFactory progressStepFactory) {
 		this.project = project;
 		this.context = context;
-		this.progressStep = progressStepFactory.create(1, "Select collections");
-		this.nextStep = new PropertyActionSelectionStep(project, context, progressStepFactory);
+		this.progressStep = progressStepFactory.create(1, "Select Collections");
+		this.nextStep = new PropertyActionSelectionStep(project, context, progressStepFactory, 2);
 		initComponents();
 		initActions();
 		try {
@@ -116,7 +116,7 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 	            else {
 	            	Notification.show(
 	            		"Info", 
-	            		String.format("Collections for document \"%s\" are not your responsability and have been filtered out, please toggle the filter to include them!", srcDoc),
+	            		String.format("Collections for document \"%s\" are not your responsibility and have been filtered out, please toggle the filter to include them!", srcDoc),
 	            		Type.HUMANIZED_MESSAGE);
 	            }
         	}
@@ -241,7 +241,7 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 		  	.setExpandRatio(1)
 		  	.setHidden(true);
 
-        Label documentsAnnotations = new Label("Select at least one collections you want to modify");
+        Label documentsAnnotations = new Label("Select at least one collection you want to modify");
 
         documentGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,

@@ -1079,7 +1079,7 @@ public class TagsView extends HugeCard {
 		try {
 			if (project.getSourceDocumentReferences().stream().anyMatch(doc -> !doc.getUserMarkupCollectionRefs().isEmpty())) {
 
-				ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected Annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
+				ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
 					
 					@Override
 					public void onClose(ConfirmDialog dialog) {
@@ -1255,7 +1255,7 @@ public class TagsView extends HugeCard {
 		
 		try {
 			if (project.getSourceDocumentReferences().stream().anyMatch(doc -> !doc.getUserMarkupCollectionRefs().isEmpty())) {
-				ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected Annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
+				ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
 					
 					@Override
 					public void onClose(ConfirmDialog dialog) {
