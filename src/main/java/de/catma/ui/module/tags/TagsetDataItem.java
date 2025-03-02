@@ -1,31 +1,36 @@
 package de.catma.ui.module.tags;
 
+import java.text.Collator;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.vaadin.icons.VaadinIcons;
 
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.util.Cleaner;
 
 class TagsetDataItem implements TagsetTreeItem {
 	
-	private TagsetDefinition tagset;
+	private final TagsetDefinition tagset;
 	private boolean editable;
 	private boolean expanded = false;
 	private String responsibleUser;
+	private final Collator collator;
 
-	public TagsetDataItem(TagsetDefinition tagset) {
-		this(tagset, null, false);
+	public TagsetDataItem(TagsetDefinition tagset, Collator collator) {
+		this(tagset, null, false, collator);
 	}
 	
-	public TagsetDataItem(TagsetDefinition tagset, String responsibleUser, boolean editable) {
+	public TagsetDataItem(TagsetDefinition tagset, String responsibleUser, boolean editable, Collator collator) {
 		super();
 		this.tagset = tagset;
 		this.editable = editable;
 		this.responsibleUser = responsibleUser;
+		this.collator = collator;
 	}
 
 	@Override
@@ -44,8 +49,9 @@ class TagsetDataItem implements TagsetTreeItem {
 			tagSummeryBuilder.append(
 				rootTags.stream()
 				.limit(3)
+				.sorted((t1, t2)->collator.compare(Optional.ofNullable(t1.getName()).orElse(""), Optional.ofNullable(t2.getName()).orElse("")))
 				.map(tag -> Cleaner.clean(tag.getName()))
-				.collect(Collectors.joining(",")));
+				.collect(Collectors.joining(", ")));
 			tagSummeryBuilder.append(
 				((rootTags.size() > 3)?"...":""));
 		}
@@ -57,6 +63,7 @@ class TagsetDataItem implements TagsetTreeItem {
 		return "<span class=\"annotate-panel-tagsetname\">"+tagset.getName()+"</span>";
 	}
 
+	@Override
 	public TagsetDefinition getTagset() {
 		return tagset;
 	}
@@ -130,5 +137,23 @@ class TagsetDataItem implements TagsetTreeItem {
 	@Override
 	public String generateStyle() {
 		return tagset.isContribution()? "annotate-panel-tagset-with-contributions" : TagsetTreeItem.super.generateStyle();
+	}
+
+	@Override
+	public int compareTo(TagsetTreeItem o) {
+		if (!getTagset().getUuid().equals(o.getTagset().getUuid())) {
+			return collator.compare(Optional.ofNullable(getTagset().getName()).orElse(""), Optional.ofNullable(o.getTagset().getName()).orElse(""));
+		}
+		return 1;
+	}
+	
+	@Override
+	public TagDefinition getTag() {
+		return null; //intended
+	}
+	
+	@Override
+	public PropertyDefinition getPropertyDefinition() {
+		return null; //intended
 	}
 }

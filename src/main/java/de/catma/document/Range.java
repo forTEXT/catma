@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.stream.Stream;
 
 /**
  * A range of text with a startPoint and an endPoint. This class is immutable.
@@ -285,6 +286,15 @@ public class Range implements Comparable<Range> {
      * @return the merged ranges.
      */
     public static List<Range> mergeRanges(SortedSet<Range> sortedRanges) {
+        return mergeRanges(sortedRanges.stream());
+    }
+    
+    /**
+     * Merges a SORTED stream of Ranges.
+     * @param sortedRanges an already SORTED stream of ranges
+     * @return the merged ranges
+     */
+    public static List<Range> mergeRanges(Stream<Range> sortedRanges) {
         List<Range> result = new ArrayList<Range>();
 
         Range curRange = null;

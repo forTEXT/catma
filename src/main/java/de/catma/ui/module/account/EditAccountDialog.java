@@ -1,27 +1,36 @@
 package de.catma.ui.module.account;
 
+import java.io.IOException;
+import java.util.stream.Collectors;
+
 import com.google.common.base.Joiner;
-import com.google.common.eventbus.EventBus;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.data.ValidationResult;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
+
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
-import de.catma.ui.events.ChangeUserAttributesEvent;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.auth.ChangePasswordValidator;
-import de.catma.ui.module.main.auth.UserData;
 import de.catma.user.User;
-
-import java.io.IOException;
-import java.util.stream.Collectors;
+import de.catma.user.UserData;
 
 public class EditAccountDialog extends Window {
 	private final RemoteGitManagerPrivileged gitManagerPrivileged;
-	private final EventBus eventBus;
+	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	private final long userId;
 	private final String name;
@@ -35,9 +44,9 @@ public class EditAccountDialog extends Window {
 	private Button btnSave;
 	private Button btnCancel;
 
-	public EditAccountDialog(RemoteGitManagerPrivileged gitManagerPrivileged, LoginService loginService, EventBus eventBus) {
+	public EditAccountDialog(RemoteGitManagerPrivileged gitManagerPrivileged, LoginService loginService, RemoteGitManagerRestricted remoteGitManagerRestricted) {
 		this.gitManagerPrivileged = gitManagerPrivileged;
-		this.eventBus = eventBus;
+		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
 
 		User user = loginService.getAPI().getUser();
 		this.userId = user.getUserId();
@@ -80,7 +89,8 @@ public class EditAccountDialog extends Window {
 						userData.getPassword().isEmpty() ? null : userData.getPassword()
 				);
 
-				eventBus.post(new ChangeUserAttributesEvent());
+				remoteGitManagerRestricted.refreshUser();
+				
 				Notification.show("Account details updated", Type.TRAY_NOTIFICATION);
 			}
 			catch (IOException e) {

@@ -2,6 +2,7 @@ package de.catma.ui.module.analyze.visualization.kwic;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,13 +25,11 @@ import de.catma.ui.util.Cleaner;
 public class KwicItemHandler {
 	private Logger logger = Logger.getLogger(KwicItemHandler.class.getName());
 	
-	private int contextSize = 5; 
-
 	private LoadingCache<String, KwicProvider> kwicProviderCache;
 	private LoadingCache<QueryResultRow, KeywordInSpanContext> spanContextCache;
 	private Project project;
 	
-	public KwicItemHandler(Project project, LoadingCache<String, KwicProvider> kwicProviderCache) {
+	public KwicItemHandler(Project project, LoadingCache<String, KwicProvider> kwicProviderCache, Supplier<Integer> contextSizeSupplier) {
 		super();
 		this.project = project;
 		this.kwicProviderCache = kwicProviderCache;
@@ -38,9 +37,13 @@ public class KwicItemHandler {
 			@Override
 			public KeywordInSpanContext load(QueryResultRow row) throws Exception {
 				KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
-				return kwicProvider.getKwic(row.getRange(), contextSize);
+				return kwicProvider.getKwic(row.getRange(), contextSizeSupplier.get());
 			}
 		});
+	}
+	
+	public void updateContextSize() {
+		spanContextCache.invalidateAll();
 	}
 
 	public String getDocumentName(QueryResultRow row) {
@@ -76,7 +79,7 @@ public class KwicItemHandler {
 		return forwardContext;		
 	}	
 	
-	public String getKeyword(QueryResultRow row) {
+	public String getKeyword(QueryResultRow row, int contextSize) {
 		if (row instanceof TagQueryResultRow) {
 			TagQueryResultRow tRow = (TagQueryResultRow)row;
 			TagDefinition tagDefinition = 
@@ -85,7 +88,8 @@ public class KwicItemHandler {
 				return AnnotatedTextProvider.buildAnnotatedText(
 						new ArrayList<>(tRow.getRanges()), 
 						kwicProviderCache.get(tRow.getSourceDocumentId()), 
-						tagDefinition);
+						tagDefinition,
+						contextSize);
 			} catch (ExecutionException e) {
 				logger.log(Level.SEVERE, "Error retrieving keyword for " + row, e);
 			}
@@ -95,7 +99,7 @@ public class KwicItemHandler {
 			row.getPhrase(), AnnotatedTextProvider.LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH);
 	}
 	
-	public String getKeywordDescription(QueryResultRow row) {
+	public String getKeywordDescription(QueryResultRow row, int contextSize) {
 		if (row instanceof TagQueryResultRow) {
 			TagQueryResultRow tRow = (TagQueryResultRow)row;
 			TagDefinition tagDefinition = 
@@ -106,7 +110,8 @@ public class KwicItemHandler {
 						new ArrayList<>(tRow.getRanges()), 
 						kwicProviderCache.get(tRow.getSourceDocumentId()), 
 						tagDefinition, 
-						tRow.getTagDefinitionPath());
+						tRow.getTagDefinitionPath(),
+						contextSize);
 			} catch (ExecutionException e) {
 				logger.log(Level.SEVERE, "Error retrieving keyword description for " + row, e);
 			}
@@ -175,7 +180,7 @@ public class KwicItemHandler {
 		return null;
 	}
 
-	public boolean containsSearchInput(QueryResultRow row, String searchInput) {
+	public boolean containsSearchInput(QueryResultRow row, String searchInput, int contextSize) {
 		searchInput = searchInput.toLowerCase();
 		
 		if (getDocumentName(row).toLowerCase().contains(searchInput)) {
@@ -190,7 +195,7 @@ public class KwicItemHandler {
 			return true;
 		}		
 		
-		if (getKeywordDescription(row).toLowerCase().contains(searchInput)) {
+		if (getKeywordDescription(row, contextSize).toLowerCase().contains(searchInput)) {
 			return true;
 		}
 		

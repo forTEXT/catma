@@ -4,8 +4,6 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 
-import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.user.User;
 
@@ -30,26 +28,20 @@ public class JoinProjectCard extends VerticalFlexLayout {
 	private void initComponents() {
 		addStyleName("projectlist__newproject");
 
-		CssLayout joinProjectLayout = new CssLayout();
-		joinProjectLayout.addStyleName("projectlist__newproject__link");
-		joinProjectLayout.addLayoutClickListener(
+		addLayoutClickListener(
 				layoutClickEvent -> new JoinProjectDialog(
 						currentUser,
 						eventBus
 				).show()
 		);
 
+		CssLayout joinProjectLayout = new CssLayout();
+		joinProjectLayout.addStyleName("projectlist__newproject__link");
+
 		Label labelDesc = new Label("join project");
 		labelDesc.setWidth("100%");
 		joinProjectLayout.addComponents(labelDesc);
 
 		addComponent(joinProjectLayout);
-
-		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
-		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");
-		titleAndActionsLayout.setAlignItems(FlexLayout.AlignItems.BASELINE);
-		titleAndActionsLayout.setWidth("100%");
-
-		addComponents(titleAndActionsLayout);
 	}
 }

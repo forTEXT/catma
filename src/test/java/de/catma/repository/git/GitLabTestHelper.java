@@ -1,19 +1,17 @@
 package de.catma.repository.git;
 
-import com.google.common.eventbus.EventBus;
-import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.GitlabManagerRestricted;
-import de.catma.util.Pair;
-import org.apache.commons.io.FileUtils;
-import org.gitlab4j.api.UserApi;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Random;
 
-import static org.mockito.Mockito.mock;
+import org.apache.commons.io.FileUtils;
+import org.gitlab4j.api.UserApi;
+
+import de.catma.properties.CATMAPropertyKey;
+import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.util.Pair;
 
 public class GitLabTestHelper {
 	public static Pair<GitlabManagerRestricted, GitlabManagerPrivileged> createGitLabManagers() throws IOException {
@@ -26,8 +24,7 @@ public class GitLabTestHelper {
 		GitlabManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
 		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
 
-		EventBus mockEventBus = mock(EventBus.class);
-		GitlabManagerRestricted gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, impersonationToken);
+		GitlabManagerRestricted gitlabManagerRestricted = new GitlabManagerRestricted(impersonationToken);
 
 		return new Pair<>(gitlabManagerRestricted, gitlabManagerPrivileged);
 	}

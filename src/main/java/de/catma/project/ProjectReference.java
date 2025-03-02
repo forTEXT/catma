@@ -1,19 +1,32 @@
 package de.catma.project;
 
+import java.time.LocalDateTime;
+
 public class ProjectReference {
 	
 	private final String projectId;
 	private final String namespace;
 	private String name;
 	private String description;
+	private final LocalDateTime createdAt;
+	private final LocalDateTime lastActivityAt;
 	
 	public ProjectReference(
 			String projectId, String namespace, String name, String description) {
+		this(projectId, namespace, name, description, null, null);
+	}
+
+	
+	
+	public ProjectReference(String projectId, String namespace, String name, String description, LocalDateTime createdAt,
+			LocalDateTime lastActivityAt) {
 		super();
 		this.projectId = projectId;
 		this.namespace = namespace;
 		this.name = name;
 		this.description = description;
+		this.createdAt = createdAt;
+		this.lastActivityAt = lastActivityAt;
 	}
 
 	public String getProjectId() {
@@ -49,6 +62,14 @@ public class ProjectReference {
 		return String.format("%s/%s", namespace, projectId);
 	}
 
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+	
+	public LocalDateTime getLastActivityAt() {
+		return lastActivityAt;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -79,6 +100,5 @@ public class ProjectReference {
 			return false;
 		return true;
 	}
-	
 	
 }

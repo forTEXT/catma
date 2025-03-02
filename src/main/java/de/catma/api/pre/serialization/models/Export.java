@@ -1,36 +1,29 @@
 package de.catma.api.pre.serialization.models;
 
-import de.catma.util.IDGenerator;
-
-import java.util.ArrayList;
 import java.util.List;
 
-public class Export {
-    private String exportId;
-    private List<ExportDocument> exportDocuments;
+import de.catma.util.IDGenerator;
 
-    public Export() {
-        exportId = new IDGenerator().generateExportId();
-        exportDocuments = new ArrayList<>();
-    }
+public class Export {
+    private final String exportId;
+    private final ExtendedMetadata extendedMetadata;
+    private final List<ExportDocument> documents;
+
+    public Export(ExtendedMetadata extendedMetadata, List<ExportDocument> documents) {
+		exportId = new IDGenerator().generateExportId();
+		this.documents = documents;
+		this.extendedMetadata = extendedMetadata;
+	}
 
     public String getExportId() {
         return exportId;
     }
 
-    public void setExportId(String exportId) {
-        this.exportId = exportId;
+    public ExtendedMetadata getExtendedMetadata() {
+    	return extendedMetadata;
     }
 
-    public List<ExportDocument> getExportDocuments() {
-        return exportDocuments;
-    }
-
-    public void setExportDocuments(List<ExportDocument> exportDocuments) {
-        this.exportDocuments = exportDocuments;
-    }
-
-    public void addExportDocument(ExportDocument exportDocument) {
-        exportDocuments.add(exportDocument);
+    public List<ExportDocument> getDocuments() {
+        return documents;
     }
 }

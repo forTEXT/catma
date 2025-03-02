@@ -44,15 +44,22 @@ public enum CATMAPropertyKey {
 
 	MIN_TIME_BETWEEN_SYNCHRONIZATIONS_SECONDS("30"),
 	DEV_PREVENT_PUSH("false"),
+	
+	MAX_KEYWORD_IN_CONTEXT_SIZE("30"),
 
 	SQLITE_DB_BASE_PATH,
-
+	
+	GROUP_PROJECT_SIGNUP_TOKEN_CACHE_TRANSACTION_LOG_PATH_PATTERN("group_project_signup_token%g.log"),
+	GROUP_PROJECT_SIGNUP_TOKEN_CACHE_TRANSACTION_LOG_SIZE_LIMIT_IN_BYTES("10000000"), // 1MB
+	GROUP_PROJECT_SIGNUP_TOKEN_CACHE_TRANSACTION_LOG_COUNT("10"),
+	
 	MAIL_SMTP_HOST("localhost"),
 	MAIL_SMTP_PORT("587"),
 	MAIL_SMTP_AUTHENTICATION_REQUIRED("false"),
 	MAIL_SMTP_USER,
 	MAIL_SMTP_PASS,
 	MAIL_FROM,
+	DEV_MAIL_LOG_ONLY("false"),
 
 	GOOGLE_RECAPTCHA_SITE_KEY,
 	GOOGLE_RECAPTCHA_SECRET_KEY,
@@ -73,6 +80,10 @@ public enum CATMAPropertyKey {
 	RESET_PASSWORD_URL("https://git.catma.de/users/password/new"),
 	LOGOUT_URL("https://app.catma.de"),
 	CONTEXT_DEFINITION_URL("https://www.catma.de/"),
+	
+	API_BASE_URL,
+	API_GIT_REPOSITORY_BASE_PATH,
+	API_HMAC_SECRET,
 
 	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
 	CATMA_5_API_URL("https://portal.catma.de/catma/api/"),

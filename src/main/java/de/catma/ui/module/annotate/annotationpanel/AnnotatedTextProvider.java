@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.vaadin.ui.MenuBar.Command;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.UI;
 
 import de.catma.document.Range;
@@ -13,12 +17,19 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.KwicProvider;
+import de.catma.properties.CATMAProperties;
+import de.catma.properties.CATMAPropertyKey;
 import de.catma.tag.TagDefinition;
+import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.SliderInputDialog;
+import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.util.Cleaner;
 import de.catma.util.ColorConverter;
 
 public class AnnotatedTextProvider {
+	public static final int DEFAULT_CONTEXT_SIZE = 5;
 	public static final int SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH = 30;
 	public static final int LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH = 300;
 
@@ -40,12 +51,12 @@ public class AnnotatedTextProvider {
 	}
 
 	private static String buildKeywordInContext(
-			String keyword, Range range, KwicProvider kwicProvider, int keywordLength) {
+			String keyword, Range range, KwicProvider kwicProvider, int keywordLength, int contextSize) {
 
 		StringBuilder builder = new StringBuilder();
 
 		try {
-			KeywordInSpanContext kwic = kwicProvider.getKwic(range, 5);
+			KeywordInSpanContext kwic = kwicProvider.getKwic(range, contextSize);
 			builder.append(Cleaner.clean(kwic.getBackwardContext()));
 
 			builder.append("<span");
@@ -73,22 +84,22 @@ public class AnnotatedTextProvider {
 	}
 	
 	public static String buildKeywordInContext(
-		String keyword, Range range, KwicProvider kwicProvider) {
+		String keyword, Range range, KwicProvider kwicProvider, int contextSize) {
 		
 		return buildKeywordInContext(
-			keyword, range, kwicProvider, SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH);
+			keyword, range, kwicProvider, SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH, contextSize);
 	}
 	
 	public static String buildKeywordInContextLarge(
-			String keyword, Range range, KwicProvider kwicProvider) {
+			String keyword, Range range, KwicProvider kwicProvider, int contextSize) {
 		
 		return buildKeywordInContext(
-			keyword, range, kwicProvider, LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH);
+			keyword, range, kwicProvider, LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH, contextSize);
 	}
 
 	public static String buildAnnotatedKeywordInContext(
 			Collection<TagReference> tagReferences, KwicProvider kwicProvider, 
-			TagDefinition tagDefinition, String tagPath) {
+			TagDefinition tagDefinition, String tagPath, int contextSize) {
 		return buildAnnotatedKeywordInContext(
 					tagReferences
 					.stream()
@@ -96,17 +107,18 @@ public class AnnotatedTextProvider {
 					.collect(Collectors.toList()), 
 				kwicProvider, 
 				tagDefinition, 
-				tagPath);
+				tagPath,
+				contextSize);
 	}
 	
 	public static String buildAnnotatedKeywordInContext(
 		List<Range> ranges, KwicProvider kwicProvider, 
-		TagDefinition tagDefinition, String tagPath) {
+		TagDefinition tagDefinition, String tagPath, int contextSize) {
 
 		StringBuilder builder = new StringBuilder();
 		
 		try {
-			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(Range.mergeRanges(new TreeSet<>(ranges)), 5);
+			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(Range.mergeRanges(new TreeSet<>(ranges)), contextSize);
 			String conc = "";
 			for (KeywordInSpanContext kwic : kwics) {
 				builder.append(Cleaner.clean(kwic.getBackwardContext()));
@@ -152,16 +164,16 @@ public class AnnotatedTextProvider {
 
 
 	public static String buildAnnotatedText(
-			Collection<TagReference> tagReferences, KwicProvider kwicProvider, TagDefinition tagDefinition) {
+			Collection<TagReference> tagReferences, KwicProvider kwicProvider, TagDefinition tagDefinition, int contextSize) {
 		return buildAnnotatedText(Range.mergeRanges(
 				new TreeSet<>(
 					tagReferences
 					.stream()
 					.map(tagRef -> tagRef.getRange())
-					.collect(Collectors.toList()))), kwicProvider, tagDefinition);
+					.collect(Collectors.toList()))), kwicProvider, tagDefinition, contextSize);
 	}
 	public static String buildAnnotatedText(
-			List<Range> ranges, KwicProvider kwicProvider, TagDefinition tagDefinition) {
+			List<Range> ranges, KwicProvider kwicProvider, TagDefinition tagDefinition, int contextSize) {
 		StringBuilder builder = new StringBuilder();
 		builder.append("<div");
 		builder.append(" class=\"annotation-details-tag-color\"");
@@ -179,7 +191,7 @@ public class AnnotatedTextProvider {
 		builder.append("\">");
 		
 		try {
-			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(Range.mergeRanges(new TreeSet<>(ranges)), 5);
+			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(Range.mergeRanges(new TreeSet<>(ranges)), contextSize);
 
 			String joinedAnnotatedText = kwics.stream()
 			.map(kwic -> kwic.getKeyword())
@@ -219,6 +231,50 @@ public class AnnotatedTextProvider {
 						LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)));
 		builder.append("</div>");
 		return builder.toString();
+	}
+	
+	public static class ContextSizeEditCommand implements Command {
+		private final Consumer<Integer> contextSizeConsumer;
+		private int contextSize = DEFAULT_CONTEXT_SIZE;
+		private final Supplier<String> contextSizeMenuEntrySupplier = () -> String.format("Edit Context Size (%s)", contextSize);
+
+		public ContextSizeEditCommand(Consumer<Integer> contextSizeConsumer) {
+			super();
+			this.contextSizeConsumer = contextSizeConsumer;
+		}
+
+		@Override
+		public void menuSelected(MenuItem selectedItem) {
+			SliderInputDialog dialog = new SliderInputDialog(
+					"KWIC Context Size",
+					"Context size", 
+					1, CATMAPropertyKey.MAX_KEYWORD_IN_CONTEXT_SIZE.getIntValue(), 
+					((Integer)contextSize).doubleValue(), 
+					"tokens", 
+					new SaveCancelListener<Double>() {
+						@Override
+						public void savePressed(Double result) {
+							try {
+								contextSize = result.intValue();
+								
+							}
+							catch (NumberFormatException ignore) {
+								contextSize = 5;
+							}
+							selectedItem.setText(contextSizeMenuEntrySupplier.get());
+							contextSizeConsumer.accept(contextSize);
+						}
+					});
+			dialog.show();
+		}
+		
+		public String getContextSizeMenuEntry() {
+			return contextSizeMenuEntrySupplier.get();
+		}
+		
+		public int getContextSize() {
+			return contextSize;
+		}
 	}
 	
 }

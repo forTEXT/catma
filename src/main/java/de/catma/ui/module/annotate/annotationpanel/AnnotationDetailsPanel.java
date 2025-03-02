@@ -3,6 +3,7 @@ package de.catma.ui.module.annotate.annotationpanel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.vaadin.dialogs.ConfirmDialog;
@@ -19,6 +21,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.SerializableComparator;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.grid.ScrollDestination;
@@ -55,9 +58,16 @@ import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider.ContextSizeEditCommand;
 import de.catma.ui.module.main.ErrorHandler;
 
 public class AnnotationDetailsPanel extends VerticalLayout {
+	private final static SerializableComparator<AnnotationTreeItem> ANNOTATION_TREE_ITEM_COMPARATOR_ASC = (t1, t2) -> t1.compareTo(t2);
+	private final static SerializableComparator<AnnotationTreeItem> ANNOTATION_TREE_ITEM_BY_TAG_COMPARATOR_ASC = (t1, t2) -> t1.compareToByTag(t2);
+	private final static SerializableComparator<AnnotationTreeItem> ANNOTATION_TREE_ITEM_BY_TAGPATH_COMPARATOR_ASC = (t1, t2) -> t1.compareToByTagPath(t2);
+	private final static SerializableComparator<AnnotationTreeItem> ANNOTATION_TREE_ITEM_BY_AUTHOR_COMPARATOR_ASC = (t1, t2) -> t1.compareToByAuthor(t2);
+	private final static SerializableComparator<AnnotationTreeItem> ANNOTATION_TREE_ITEM_BY_COLLECTION_COMPARATOR_ASC = (t1, t2) -> t1.compareToByCollection(t2);
+	private final static SerializableComparator<AnnotationTreeItem> ANNOTATION_TREE_ITEM_BY_TAGSET_COMPARATOR_ASC = (t1, t2) -> t1.compareToByTagset(t2);
 	private Project project;
 	private AnnotationCollectionManager collectionManager;
 	private TreeGrid<AnnotationTreeItem> annotationDetailsTree;
@@ -73,6 +83,9 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 	private PropertyChangeListener tagChangedListener;
 	private Function<String, Boolean> isCurrentEditedCollection; //takes a collectionId and returns true if this is the collection currently being edited
 	private Consumer<String> changeCollectionListener; //takes a target collectionId to switch to 
+	private final ContextSizeEditCommand contextSizeEditCommand;
+	private final Supplier<Integer> contextSizeSupplier;
+	private final Collator collator;
 
 	public AnnotationDetailsPanel(
 		Project project, AnnotationCollectionManager collectionManager, 
@@ -84,11 +97,21 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		this.annotationSelectionListener = annotationSelectionListener;
 		this.isCurrentEditedCollection = isCurrentEditedCollection;
 		this.changeCollectionListener = changeCollectionListener;
+		this.contextSizeEditCommand = new ContextSizeEditCommand((newContextSize) -> { 
+			refreshAnnotationDetailDescriptions();
+		});
+		this.collator = Collator.getInstance(project.getTagManager().getTagLibrary().getLocale());
+		contextSizeSupplier = () -> contextSizeEditCommand.getContextSize();
 		initComponents();
 		initActions();
 		initListeners();
 	}
 	
+	private void refreshAnnotationDetailDescriptions() {
+		annotationDetailData.getRootItems().forEach(AnnotationTreeItem::refreshDescription);
+		annotationDetailsProvider.refreshAll();
+	}
+
 	private void initActions() {
 		annotationDetailsTree.addSelectionListener(
 			selectionEvent -> handleSelectAnnotationRequest(selectionEvent));
@@ -237,31 +260,45 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			new HtmlRenderer())
 		.setCaption("Annotation")
 		.setWidth(200)
-		.setSortable(false);
+		.setSortable(true)
+		.setComparator(ANNOTATION_TREE_ITEM_COMPARATOR_ASC);
 		
 		annotationDetailsTree.addColumn(
-			annotationTreeItem -> annotationTreeItem.getTag())
+			annotationTreeItem -> annotationTreeItem.getTagName())
 		.setCaption("Tag")
-		.setSortable(false)
-		.setWidth(80);
+		.setSortable(true)
+		.setComparator(ANNOTATION_TREE_ITEM_BY_TAG_COMPARATOR_ASC)
+		.setWidth(200);
+		
+		annotationDetailsTree.addColumn(
+				annotationTreeItem -> annotationTreeItem.getTagPath())
+		.setCaption("Tag Path")
+		.setHidable(true)
+		.setHidden(true)
+		.setSortable(true)
+		.setComparator(ANNOTATION_TREE_ITEM_BY_TAGPATH_COMPARATOR_ASC)
+		.setWidth(200);
 		
 		annotationDetailsTree.addColumn(
 			annotationTreeItem -> annotationTreeItem.getAuthor())
 		.setCaption("Author")
-		.setSortable(false)
+		.setSortable(true)
+		.setComparator(ANNOTATION_TREE_ITEM_BY_AUTHOR_COMPARATOR_ASC)
 		.setWidth(60);
 		
 		annotationDetailsTree.addColumn(
-			annotationTreeItem -> annotationTreeItem.getCollection())
+			annotationTreeItem -> annotationTreeItem.getCollectionName())
 		.setCaption("Collection")
-		.setSortable(false)
-		.setWidth(60);
+		.setSortable(true)
+		.setComparator(ANNOTATION_TREE_ITEM_BY_COLLECTION_COMPARATOR_ASC)
+		.setWidth(100);
 		
 		annotationDetailsTree.addColumn(
-				annotationTreeItem -> annotationTreeItem.getTagset())
+				annotationTreeItem -> annotationTreeItem.getTagsetName())
 		.setCaption("Tagset")
-		.setSortable(false)
-		.setWidth(70);
+		.setSortable(true)
+		.setComparator(ANNOTATION_TREE_ITEM_BY_TAGSET_COMPARATOR_ASC)
+		.setWidth(100);
 		
 		annotationDetailsTree.addColumn(
 				annotationTreeItem -> annotationTreeItem.getAnnotationId())
@@ -278,7 +315,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		annotationDetailsTree.addColumn(
 			annotationTreeItem -> annotationTreeItem.getEditIcon(),
 			editAnnotationRenderer)
-		.setWidth(50);
+		.setWidth(60);
 
 		ButtonRenderer<AnnotationTreeItem> deleteAnnotationRenderer = 
 				new ButtonRenderer<AnnotationTreeItem>(clickEvent -> handleDeleteAnnotationRequest(clickEvent));
@@ -287,7 +324,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		annotationDetailsTree.addColumn(
 			annotationTreeItem -> annotationTreeItem.getDeleteIcon(),
 			deleteAnnotationRenderer)
-		.setExpandRatio(1);
+		.setWidth(60);
+//		.setExpandRatio(1);
 		
 		annotationDetailsTree.setDescriptionGenerator(new DescriptionGenerator<AnnotationTreeItem>() {
 			@Override
@@ -299,7 +337,8 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 		ActionGridComponent<TreeGrid<AnnotationTreeItem>> annotationDetailsGridComponent = 
 				new ActionGridComponent<>(new Label("Selected Annotations"), annotationDetailsTree);
 		annotationDetailsGridComponent.setMargin(false);
-		
+		annotationDetailsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(contextSizeEditCommand.getContextSizeMenuEntry(), contextSizeEditCommand);
+
 		addComponent(annotationDetailsGridComponent);
 		setExpandRatio(annotationDetailsGridComponent, 1.0f);
 	}
@@ -309,7 +348,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			Notification.show(
 					"Info", 
 					"This project is currently in read-only mode!",
-					Type.HUMANIZED_MESSAGE);
+					Type.WARNING_MESSAGE);
 			return;
 		}
 
@@ -353,7 +392,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			Notification.show(
 					"Info", 
 					"This project is currently in read-only mode!",
-					Type.HUMANIZED_MESSAGE);
+					Type.WARNING_MESSAGE);
 			return;
 		}
 		
@@ -424,35 +463,54 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			}
 		}
 		else {
-			AnnotationDataItem annotationDataItem = 
+
+			AnnotationTreeItem annotationDataItem = 
 					new AnnotationDataItem(
 						annotation, 
 						project.getTagManager().getTagLibrary().getTagsetDefinition(
 							annotation.getTagInstance().getTagsetId()), 
 						kwicProvider,
 						annotation.getUserMarkupCollection().isResponsible(project.getCurrentUser().getIdentifier()),
-						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()));
+						() -> isCurrentEditedCollection.apply(annotation.getUserMarkupCollection().getUuid()),
+						contextSizeSupplier,
+						collator
+						);
 			
 			annotationDetailsTree.collapse(annotationDetailData.getRootItems());
 			annotationDetailData.addItem(null, annotationDataItem);
 			
-			String tagId = annotation.getTagInstance().getTagDefinitionId();
 
-			for (Property property : annotation.getTagInstance().getUserDefinedProperties()) {
-				TagDefinition tag = 
-						project.getTagManager().getTagLibrary().getTagDefinition(tagId);
-				if (tag != null) { // may be deleted already
+			String tagId = annotation.getTagInstance().getTagDefinitionId();
+			TagDefinition tag = 
+					project.getTagManager().getTagLibrary().getTagDefinition(tagId);
+			if (tag != null) { // may be deleted already
+				for (Property property : annotation.getTagInstance().getUserDefinedProperties()) {
 					PropertyDefinition propertyDef = 
 							tag.getPropertyDefinitionByUuid(property.getPropertyDefinitionId());
 					if (propertyDef != null) { // may be deleted already
 						AnnotationPropertyDataItem propertyDataItem = 
 								new AnnotationPropertyDataItem(
 										property, 
-										() -> propertyDef.getName());
+										() -> propertyDef.getName(),
+										annotation.getTagInstance().getUuid(),
+										annotation.getTagInstance().getAuthor(),
+										propertyDef,
+										tag,
+										project.getTagManager().getTagLibrary().getTagsetDefinition(tag.getTagsetDefinitionUuid()),
+										annotation.getUserMarkupCollection(),
+										collator);
 						annotationDetailData.addItem(annotationDataItem, propertyDataItem);
 						for (String value : property.getPropertyValueList()) {
 							AnnotationPropertyValueDataItem valueDataItem = 
-									new AnnotationPropertyValueDataItem(value);
+									new AnnotationPropertyValueDataItem(
+											value,
+											annotation.getTagInstance().getUuid(),
+											annotation.getTagInstance().getAuthor(),
+											propertyDef,
+											tag,
+											project.getTagManager().getTagLibrary().getTagsetDefinition(tag.getTagsetDefinitionUuid()),
+											annotation.getUserMarkupCollection(),
+											collator);
 							annotationDetailData.addItem(propertyDataItem, valueDataItem);
 						}
 					}

@@ -3,8 +3,11 @@ package de.catma.ui.module.tags;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,20 +15,26 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
 import org.vaadin.sliderpanel.client.SliderMode;
 
+import com.beust.jcommander.internal.Sets;
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.server.SerializableComparator;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.data.sort.SortDirection;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -38,10 +47,16 @@ import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
+import de.catma.document.annotation.AnnotationCollection;
+import de.catma.document.annotation.AnnotationCollectionManager;
+import de.catma.document.annotation.AnnotationCollectionReference;
+import de.catma.document.annotation.TagReference;
 import de.catma.project.Project;
 import de.catma.rbac.RBACPermission;
+import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.TagsetMetadata;
@@ -53,14 +68,22 @@ import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.dialog.wizard.WizardContext;
+import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.BulkEditAnnotationWizard;
+import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.EditAnnotationWizardContextKey;
+import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.PropertyAction;
+import de.catma.ui.module.analyze.visualization.kwic.annotation.edit.PropertyActionType;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.EditTagsetDialog;
+import de.catma.ui.module.tags.BulkEditPropertyByNameDialog.PropertyNameItem;
+import de.catma.ui.module.tags.BulkEditPropertyByNameDialog.Result;
 import de.catma.user.Member;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class TagsView extends HugeCard {
 	private static final Logger logger = Logger.getLogger(TagsView.class.getName());
+	private final static SerializableComparator<TagsetTreeItem> TAGSET_TREE_ITEM_COMPARATOR_ASC = (t1, t2) -> t1.compareTo(t2);
 
 	private EventBus eventBus;
 	private Project project;
@@ -74,11 +97,13 @@ public class TagsView extends HugeCard {
 	private SliderPanel drawer;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener propertyDefinitionChangedListener;
+	private final Collator tagsetCollator;
 
 	public TagsView(EventBus eventBus, Project project) {
 		super("Manage Tags");
 		this.eventBus = eventBus;
 		this.project = project;
+		this.tagsetCollator = Collator.getInstance(project.getTagManager().getTagLibrary().getLocale());
 		eventBus.register(this);
 		initComponents();
 		initActions();
@@ -121,8 +146,8 @@ public class TagsView extends HugeCard {
 					}
 
 					// yes, add the newly created tag to the corresponding tagset
-					TagsetDataItem tagsetDataItem = optionalTagsetDataItem.get();
-					TagDataItem tagDataItem = new TagDataItem(createdTagDefinition, tagsetDataItem.isEditable());
+					TagsetTreeItem tagsetDataItem = optionalTagsetDataItem.get();
+					TagDataItem tagDataItem = new TagDataItem(createdTagDefinition, tagsetDefinition, tagsetDataItem.isEditable(), tagsetCollator);
 
 					if (!tagsetData.contains(tagDataItem)) {
 						String parentTagId = createdTagDefinition.getParentUuid();
@@ -134,7 +159,7 @@ public class TagsView extends HugeCard {
 						}
 						else { // the new tag is a subtag
 							TagDefinition parentTagDefinition = project.getTagManager().getTagLibrary().getTagDefinition(parentTagId);
-							TagsetTreeItem parentTagsetTreeItem = new TagDataItem(parentTagDefinition, tagsetDataItem.isEditable());
+							TagsetTreeItem parentTagsetTreeItem = new TagDataItem(parentTagDefinition, tagsetDefinition, tagsetDataItem.isEditable(), tagsetCollator);
 							tagsetData.addItem(parentTagsetTreeItem, tagDataItem);
 							tagsetDataProvider.refreshAll();
 							tagsetGrid.expand(parentTagsetTreeItem);
@@ -145,7 +170,7 @@ public class TagsView extends HugeCard {
 					Pair<TagsetDefinition, TagDefinition> deletedPair = (Pair<TagsetDefinition, TagDefinition>) oldValue;
 					TagDefinition deletedTagDefinition = deletedPair.getSecond();
 
-					tagsetData.removeItem(new TagDataItem(deletedTagDefinition, true));
+					tagsetData.removeItem(new TagDataItem(deletedTagDefinition, deletedPair.getFirst(), true, tagsetCollator));
 					tagsetDataProvider.refreshAll();
 				}
 				else { // tag updated
@@ -173,8 +198,8 @@ public class TagsView extends HugeCard {
 					}
 
 					// yes, add the updated tag to the corresponding tagset
-					TagsetDataItem tagsetDataItem = optionalTagsetDataItem.get();
-					TagDataItem tagDataItem = new TagDataItem(updatedTagDefinition, tagsetDataItem.isEditable());
+					TagsetTreeItem tagsetDataItem = optionalTagsetDataItem.get();
+					TagDataItem tagDataItem = new TagDataItem(updatedTagDefinition, tagsetDefinition, tagsetDataItem.isEditable(), tagsetCollator);
 
 					// the old tag can be removed using the newly constructed TagDataItem because TagDefinitions are compared by UUID
 					tagsetData.removeItem(tagDataItem);
@@ -182,7 +207,7 @@ public class TagsView extends HugeCard {
 					TagsetTreeItem parentTagsetTreeItem = tagsetDataItem;
 					String parentTagId = updatedTagDefinition.getParentUuid();
 					if (!parentTagId.isEmpty()) {
-						parentTagsetTreeItem = new TagDataItem(tagsetDefinition.getTagDefinition(parentTagId), tagsetDataItem.isEditable());
+						parentTagsetTreeItem = new TagDataItem(tagsetDefinition.getTagDefinition(parentTagId), tagsetDefinition, tagsetDataItem.isEditable(), tagsetCollator);
 					}
 
 					tagDataItem.setPropertiesExpanded(true);
@@ -225,12 +250,15 @@ public class TagsView extends HugeCard {
 
 				if (tagDefinition.getParentUuid().isEmpty()) {
 					parentTagsetTreeItem = new TagsetDataItem(
-						project.getTagManager().getTagLibrary().getTagsetDefinition(tagDefinition.getTagsetDefinitionUuid())
+						project.getTagManager().getTagLibrary().getTagsetDefinition(tagDefinition.getTagsetDefinitionUuid()),
+						tagsetCollator
 					);
 				}
 				else {
 					parentTagsetTreeItem = new TagDataItem(
-						project.getTagManager().getTagLibrary().getTagDefinition(tagDefinition.getParentUuid())
+						project.getTagManager().getTagLibrary().getTagDefinition(tagDefinition.getParentUuid()),
+						project.getTagManager().getTagLibrary().getTagsetDefinition(tagDefinition.getTagsetDefinitionUuid()),
+						tagsetCollator
 					);
 				}
 
@@ -269,13 +297,18 @@ public class TagsView extends HugeCard {
 	}
 
 	private void initActions() {
-		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
+		Grid.Column<TagsetTreeItem, String> tagsetColumn = tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Tagsets")
-			.setSortable(false)
+			.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
+			.setSortable(true)
 			.setWidth(200);
+		
+		tagsetGrid.setSortOrder(List.of(new GridSortOrder<>(tagsetColumn, SortDirection.ASCENDING)));
+
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
 			.setCaption("Tags")
+			.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 			.setSortable(false)
 			.setWidth(300));
 		
@@ -288,6 +321,7 @@ public class TagsView extends HugeCard {
 			propertySummaryRenderer)
 		.setCaption("Properties")
 		.setSortable(false)
+		.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 		.setHidable(true)
 		.setWidth(300);
 		
@@ -295,6 +329,7 @@ public class TagsView extends HugeCard {
 			tagsetTreeItem -> tagsetTreeItem.getPropertyValue())
 		.setCaption("Values")
 		.setSortable(false)
+		.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 		.setHidable(true)
 		.setWidth(300);
 		
@@ -335,21 +370,25 @@ public class TagsView extends HugeCard {
 		tagsetGrid.addExpandListener(expandEvent -> handleExpandCollapseTagset(expandEvent.getExpandedItem(), true));
 		tagsetGrid.addCollapseListener(collapseEvent -> handleExpandCollapseTagset(collapseEvent.getCollapsedItem(), false));
 
-	    ContextMenu addContextMenu = 
-	    		tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
+	    ContextMenu addContextMenu = tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
 	    addContextMenu.addItem("Add Tagset", clickEvent -> handleAddTagsetRequest());
 	    addContextMenu.addItem("Add Tag", clickEvent -> handleAddTagRequest());
 	    addContextMenu.addItem("Add Subtag", clickEvent -> handleAddSubtagRequest());
 	    addContextMenu.addItem("Add Property", clickEvent -> handleAddPropertyRequest());
 		
-		ContextMenu moreOptionsContextMenu = 
-				tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
-		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
-		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
+		ContextMenu moreOptionsContextMenu = tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+
 		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
 		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
-		
+		moreOptionsContextMenu.addSeparator();
+
+		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
+		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
+		moreOptionsContextMenu.addSeparator();
+
+		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
+		moreOptionsContextMenu.addItem("Bulk Edit/Delete Properties by Name", clickEvent -> handleBulkEditPropertiesByName());
+
 		resourcePanel.setTagsetSelectionListener(selectedTagsets -> {
 			tagsets.clear();
 			tagsets.addAll(selectedTagsets);
@@ -452,7 +491,12 @@ public class TagsView extends HugeCard {
 		for (String possibleValue : propertyDefinition.getPossibleValueList()) {
 			tagsetGrid.getTreeData().addItem(
 				propertyDataItem, 
-				new PossibleValueDataItem(possibleValue, propertyDataItem.isEditable()));
+				new PossibleValueDataItem(
+						possibleValue, 
+						propertyDataItem.getPropertyDefinition(), 
+						propertyDataItem.getTag(), 
+						propertyDataItem.getTagset(), 
+						propertyDataItem.isEditable(), tagsetCollator));
 		}
 		
 		tagsetGrid.expand(propertyDataItem);
@@ -463,7 +507,7 @@ public class TagsView extends HugeCard {
 		
 		PropertyDataItem lastPropertyDataItem = null; 
 		for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
-			lastPropertyDataItem = new PropertyDataItem(propertyDefinition, tagDataItem.isEditable());
+			lastPropertyDataItem = new PropertyDataItem(propertyDefinition, tagDataItem.getTag(), tagDataItem.getTagset(), tagDataItem.isEditable(), tagsetCollator);
 			tagsetGrid.getTreeData().addItem(tagDataItem, lastPropertyDataItem);
 		}
 		
@@ -491,7 +535,7 @@ public class TagsView extends HugeCard {
 		Collection<TagsetDefinition> selectedTagsets = 
 			tagsetGrid.getSelectedItems().stream()
 			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
-			.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
+			.map(tagsetDataItem -> ((TagsetTreeItem)tagsetDataItem).getTagset())
 			.collect(Collectors.toList());
 		if (selectedTagsets.isEmpty()) {
 			Notification.show(
@@ -551,7 +595,7 @@ public class TagsView extends HugeCard {
 		Collection<TagsetDefinition> selectedTagsets = 
 				tagsetGrid.getSelectedItems().stream()
 				.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
-				.map(tagsetDataItem -> ((TagsetDataItem)tagsetDataItem).getTagset())
+				.map(tagsetDataItem -> ((TagsetTreeItem)tagsetDataItem).getTagset())
 				.collect(Collectors.toList());
 		
 		if (!selectedTagsets.isEmpty()) {
@@ -607,6 +651,80 @@ public class TagsView extends HugeCard {
 
 	private void handleEditPropertiesRequest() {
 		handleAddPropertyRequest();
+	}
+	
+	private void handleBulkEditPropertiesByName() {
+		final List<String> selectedPropertyDefNames = new ArrayList<>();
+		final Set<TagsetDefinition> affectedTagsets = new HashSet<>();
+		final Set<TagDefinition> affectedTags = new HashSet<>();
+		
+		selectedPropertyDefNames.addAll(
+				tagsetGrid.getSelectedItems()
+				.stream()
+				.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem || tagsetTreeItem instanceof PropertyDataItem || tagsetTreeItem instanceof PossibleValueDataItem)
+				.flatMap(tagsetTreeItem -> {
+					
+					affectedTagsets.add(tagsetTreeItem.getTagset());
+					affectedTags.add(tagsetTreeItem.getTag());
+					
+					if (tagsetTreeItem instanceof PossibleValueDataItem) {
+						var pd = tagsetData.getParent(tagsetTreeItem).getPropertyDefinition(); 
+						return Stream.of(pd != null ? pd.getName() : "");
+					}
+					else if (tagsetTreeItem instanceof TagDataItem) {
+						return tagsetTreeItem.getTag().getUserDefinedPropertyDefinitions().stream().map(PropertyDefinition::getName);
+					}
+					var pd = tagsetTreeItem.getPropertyDefinition();
+					return Stream.of(pd !=null ? pd.getName() : "");
+				})
+				.filter(name -> !name.isEmpty())
+				.distinct()
+				.collect(Collectors.toList()));
+
+
+		if (selectedPropertyDefNames.isEmpty()) {
+			Notification.show("Info", "Please select one ore more tags or properties first!", Type.TRAY_NOTIFICATION);	
+			return;
+		}
+		
+		if (affectedTagsets.size() > 1) {
+			Notification.show("Info", "Selected properties must come from the same tagset. Please adjust your selection accordingly!", Type.TRAY_NOTIFICATION);	
+			return;			
+		}
+			
+			boolean beyondUsersResponsibility =
+					affectedTagsets.stream()
+					.filter(tagset -> !tagset.isResponsible(project.getCurrentUser().getIdentifier()))
+					.findAny()
+					.isPresent();
+			
+			boolean isAuthor = 
+					!affectedTags.stream()
+					.filter(tag -> !tag.getAuthor().equals(project.getCurrentUser().getIdentifier()))
+					.findAny()
+					.isPresent();
+			try {
+				BeyondResponsibilityConfirmDialog.executeWithConfirmDialog(
+					beyondUsersResponsibility, 
+					isAuthor || project.hasPermission(project.getCurrentUserProjectRole(), RBACPermission.TAGSET_DELETE_OR_EDIT),
+					new Action() {
+						@Override
+						public void execute() {
+							BulkEditPropertyByNameDialog dlg = new BulkEditPropertyByNameDialog(affectedTagsets, selectedPropertyDefNames, tagsetCollator, new SaveCancelListener<>() {
+								@Override
+								public void savePressed(Result result) {
+									handleBulkEditProperties(result, affectedTagsets);
+								}
+							});
+							
+							dlg.show();
+						}
+				});
+			}
+			catch (IOException e) {
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Error editing properties", e);
+			}
+		
 	}
 
 	private void handleDeleteTagRequest() {
@@ -829,7 +947,7 @@ public class TagsView extends HugeCard {
 			}
 		}
 		
-		TagsetDataItem tagsetDataItem = (TagsetDataItem) tagsetDataItemCandidate;
+		TagsetTreeItem tagsetDataItem = (TagsetTreeItem) tagsetDataItemCandidate;
 		if (tagsetDataItem != null) {
 			String msg = String.format(
 					"Are you sure you want to delete the property \"%s\"?",
@@ -909,6 +1027,174 @@ public class TagsView extends HugeCard {
 			}
 		}
 	}
+	
+	private void handleBulkEditProperties(Result result, Set<TagsetDefinition> affectedTagsets) {
+		Set<PropertyAction> propertyActions = new HashSet<>();
+		Set<String> propertyNames = new HashSet<>();
+		Set<TagDefinition> tags = new HashSet<>();
+		
+		// handle deleted propertyDefs
+		for (PropertyNameItem deletedItem : result.deletedItems()) {
+			propertyNames.add(deletedItem.getOldName());
+			
+			for (TagDefinition tag : deletedItem.getTags()) {
+				tags.add(tag);
+				TagsetDefinition tagset = project.getTagManager().getTagLibrary().getTagsetDefinition(tag.getTagsetDefinitionUuid());
+				PropertyDefinition propertyDef = tag.getPropertyDefinition(deletedItem.getOldName());
+				project.getTagManager().removeUserDefinedPropertyDefinition(
+						propertyDef, tag, tagset);
+			}
+			deletedItem.getPossibleValueList().forEach(value -> 
+				propertyActions.add(new PropertyAction(deletedItem.getOldName(), PropertyActionType.REMOVE, value, null)));
+		}
+		
+		// handle modified propertyDefs
+		for (PropertyNameItem modifiedItem : result.modifiedItems()) {
+			propertyNames.add(modifiedItem.getName());
+			
+			for (TagDefinition tag : modifiedItem.getTags()) {
+				tags.add(tag);
+				
+				PropertyDefinition propertyDef = tag.getPropertyDefinition(modifiedItem.getOldName());
+				
+				propertyDef.setName(modifiedItem.getName());
+
+				
+				Set<String> oldValues = propertyDef.getPossibleValueList().stream().filter(value -> !modifiedItem.getPossibleValueList().contains(value)).collect(Collectors.toSet());
+				Set<String> newValues = modifiedItem.getPossibleValueList().stream().filter(value -> !propertyDef.getPossibleValueList().contains(value)).collect(Collectors.toSet());
+				
+				boolean assumeSimpleReplacementOperation = oldValues.size() == 1 && newValues.size() == 1;
+				if (assumeSimpleReplacementOperation) {
+					propertyActions.add(new PropertyAction(propertyDef.getName(), PropertyActionType.REPLACE, oldValues.iterator().next(), newValues.iterator().next()));
+				}
+				
+				boolean assumeSimpleRemoveOperation = oldValues.size() == 1 && newValues.size() == 0;
+				if (assumeSimpleRemoveOperation) {
+					propertyActions.add(new PropertyAction(propertyDef.getName(), PropertyActionType.REMOVE, oldValues.iterator().next(), null));
+				}
+				
+				propertyDef.setPossibleValueList(modifiedItem.getPossibleValueList());
+					
+				project.getTagManager().updateUserDefinedPropertyDefinition(
+						tag, propertyDef);					
+			}
+		}
+		try {
+			if (project.getSourceDocumentReferences().stream().anyMatch(doc -> !doc.getUserMarkupCollectionRefs().isEmpty())) {
+
+				ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
+					
+					@Override
+					public void onClose(ConfirmDialog dialog) {
+						if (dialog.isConfirmed()) {					
+							WizardContext wizardContext = new WizardContext();
+							wizardContext.put(EditAnnotationWizardContextKey.TAGSETS, affectedTagsets);
+							wizardContext.put(EditAnnotationWizardContextKey.TAGS, tags);
+							wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_NAMES, propertyNames);
+							wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_ACTIONS, propertyActions);
+							
+							BulkEditAnnotationWizard wizard = new BulkEditAnnotationWizard(
+									eventBus, project, wizardContext, 
+									new SaveCancelListener<WizardContext>() {
+										
+										@Override
+										@SuppressWarnings("unchecked")
+										public void savePressed(WizardContext result) {
+											Collection<AnnotationCollectionReference> affectedCollections = (Collection<AnnotationCollectionReference>) result.get(EditAnnotationWizardContextKey.COLLECTIONS);
+											Collection<PropertyAction> actions = (Collection<PropertyAction>) result.get(EditAnnotationWizardContextKey.PROPERTY_ACTIONS);
+											Collection<TagDefinition> affectedTags =  (Collection<TagDefinition>) result.get(EditAnnotationWizardContextKey.TAGS);
+											
+											Collection<TagsetDefinition> affectedTagsets = (Collection<TagsetDefinition>) result.get(EditAnnotationWizardContextKey.TAGSETS);		
+											updateAnnotations(affectedCollections, affectedTagsets, affectedTags, actions);
+										}
+									});
+							wizard.show();
+						}
+					}
+				});
+			}
+		}
+		catch (Exception e) {
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing collections", e);
+		}		
+	}
+
+	private void updateAnnotations(Collection<AnnotationCollectionReference> affectedCollections, Collection<TagsetDefinition> affectedTagsets, Collection<TagDefinition> affectedTags, Collection<PropertyAction> actions) {
+		try {
+			Multimap<TagInstance, Property> toBeUpdatedInstances = ArrayListMultimap.create();
+			Set<AnnotationCollectionReference> toBeUpatedCollections = Sets.newHashSet();
+			
+			AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
+			for (AnnotationCollectionReference collectionRef : affectedCollections) {
+				AnnotationCollection collection = project.getAnnotationCollection(collectionRef);
+				collectionManager.add(collection);
+				for (TagDefinition tag : affectedTags) {
+					List<TagReference> tagReferences = collection.getTagReferences(tag);
+					
+					for (PropertyAction action : actions) {
+						String propertyName = action.propertyName();
+						PropertyDefinition propDef = tag.getPropertyDefinition(propertyName);
+						if (propDef != null) {
+							tagReferences.stream()
+							.map(TagReference::getTagInstance)
+							.distinct()
+							.map(tagInstance -> {
+									Property prop = tagInstance.getUserDefinedPropetyByUuid(propDef.getUuid());
+									if (prop == null) {
+										prop = new Property(propDef.getUuid(), Collections.emptySet());
+										tagInstance.addUserDefinedProperty(prop);
+									}
+									return new Pair<>(tagInstance, prop);
+								}
+							
+							).forEach(instancePropPair -> {
+								Property prop = instancePropPair.getSecond();
+								List<String> existingValues = prop.getPropertyValueList();
+								switch (action.type()) {
+								case ADD: {
+									if (!existingValues.contains(action.value())) {
+										prop.setPropertyValueList(Stream.concat(existingValues.stream(), Stream.of(action.value())).toList());
+										toBeUpdatedInstances.put(instancePropPair.getFirst(), prop);
+										toBeUpatedCollections.add(collectionRef);
+									}
+									break;
+								}
+								case REMOVE: {
+									int size = existingValues.size();
+									
+									prop.setPropertyValueList(existingValues.stream().filter(val -> !val.equals(action.value())).toList());
+									if (size != prop.getPropertyValueList().size()) {
+										toBeUpdatedInstances.put(instancePropPair.getFirst(), prop);
+										toBeUpatedCollections.add(collectionRef);
+									}
+									break;
+								}
+								case REPLACE: {
+									prop.setPropertyValueList(existingValues.stream().map(val -> val.equals(action.value())?action.replaceValue():val).toList());
+									if (!existingValues.equals(prop.getPropertyValueList())) {
+										toBeUpdatedInstances.put(instancePropPair.getFirst(), prop);
+										toBeUpatedCollections.add(collectionRef);
+									}
+									break;
+								}
+								}
+							});
+						}
+					}
+				}
+				toBeUpdatedInstances.asMap().forEach((tagInstance, properties) -> {				
+					collectionManager.updateTagInstanceProperties(collection, tagInstance, properties);
+				});
+			}
+	
+			project.addAndCommitCollections(toBeUpatedCollections, "Auto-committing annotations that were updated due to tag modifications");
+		
+	    } catch (Exception e) {
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading data", e);
+	    }
+		
+
+	}
 
 	private void handleBulkEditProperties(
 		List<PropertyDefinition> editedProperties, 
@@ -924,10 +1210,15 @@ public class TagsView extends HugeCard {
 		.filter(name -> !availableCommonPropertyNames.contains(name))
 		.collect(Collectors.toSet());
 		
+		Set<TagsetDefinition> affectedTagsets = Sets.newHashSet();
+		
+		
 		for (TagDefinition tag : targetTags) {
 			TagsetDefinition tagset = 
 				project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
 
+			affectedTagsets.add(tagset);
+			
 			for (PropertyDefinition existingPropertyDef : 
 				new ArrayList<>(tag.getUserDefinedPropertyDefinitions())) {
 				
@@ -964,6 +1255,43 @@ public class TagsView extends HugeCard {
 				}
 			}
 		}
+		
+		try {
+			if (project.getSourceDocumentReferences().stream().anyMatch(doc -> !doc.getUserMarkupCollectionRefs().isEmpty())) {
+				ConfirmDialog.show(UI.getCurrent(), "Edit Annotations", "Do you want to adjust the affected annotations as well?", "Yes", "No", new ConfirmDialog.Listener() {
+					
+					@Override
+					public void onClose(ConfirmDialog dialog) {
+						if (dialog.isConfirmed()) {					
+							WizardContext wizardContext = new WizardContext();
+							wizardContext.put(EditAnnotationWizardContextKey.TAGSETS, affectedTagsets);
+							wizardContext.put(EditAnnotationWizardContextKey.TAGS, targetTags);
+							wizardContext.put(EditAnnotationWizardContextKey.PROPERTY_NAMES, availableCommonPropertyNames);
+							
+							BulkEditAnnotationWizard wizard = new BulkEditAnnotationWizard(
+									eventBus, project, wizardContext, 
+									new SaveCancelListener<WizardContext>() {
+										
+										@Override
+										@SuppressWarnings("unchecked")
+										public void savePressed(WizardContext result) {
+											Collection<AnnotationCollectionReference> affectedCollections = (Collection<AnnotationCollectionReference>) result.get(EditAnnotationWizardContextKey.COLLECTIONS);
+											Collection<PropertyAction> actions = (Collection<PropertyAction>) result.get(EditAnnotationWizardContextKey.PROPERTY_ACTIONS);
+											Collection<TagDefinition> affectedTags =  (Collection<TagDefinition>) result.get(EditAnnotationWizardContextKey.TAGS);
+											
+											Collection<TagsetDefinition> affectedTagsets = (Collection<TagsetDefinition>) result.get(EditAnnotationWizardContextKey.TAGSETS);		
+											updateAnnotations(affectedCollections, affectedTagsets, affectedTags, actions);
+										}
+									});
+							wizard.show();
+						}
+					}
+				});
+			}
+		}
+		catch (Exception e) {
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing collections", e);
+		}
 	}
 
 	private void handleAddSubtagRequest() {
@@ -998,10 +1326,7 @@ public class TagsView extends HugeCard {
 										TagsetDefinition tagset = 
 											project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
 										
-										TagDefinition tag = new TagDefinition(result);
-										tag.setUuid(idGenerator.generate());
-										tag.setParentUuid(parent.getUuid());
-										tag.setTagsetDefinitionUuid(tagset.getUuid());
+										TagDefinition tag = new TagDefinition(result, idGenerator.generate(), parent.getUuid(), tagset.getUuid());
 										
 										project.getTagManager().addTagDefinition(
 												tagset, tag);
@@ -1023,7 +1348,7 @@ public class TagsView extends HugeCard {
 			.stream()
 			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
 			.findFirst()
-			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
+			.map(tagsetTreeItem -> ((TagsetTreeItem)tagsetTreeItem).getTagset());
 			
 		if (tagsets.isEmpty()) {
 			Notification.show(
@@ -1089,7 +1414,8 @@ public class TagsView extends HugeCard {
         			new TagsetDataItem(
     					tagset, 
     					responsibleUser,
-    					!project.isReadOnly());
+    					!project.isReadOnly(),
+    					tagsetCollator);
             	tagsetData.addItem(null, tagsetItem);
             	addTags(tagsetItem, tagset);
             }
@@ -1109,7 +1435,7 @@ public class TagsView extends HugeCard {
 	
     private void expandTagsetDefinition(TagsetDefinition tagset) {
     	for (TagDefinition tag : tagset) {
-    		TagDataItem item = new TagDataItem(tag);
+    		TagDataItem item = new TagDataItem(tag, tagset, tagsetCollator);
     		tagsetGrid.expand(item);
     	}
 	}
@@ -1139,7 +1465,7 @@ public class TagsView extends HugeCard {
 		
         for (TagDefinition tag : tagset) {
             if (tag.getParentUuid().isEmpty()) {
-            	TagDataItem tagItem =  new TagDataItem(tag, tagsetItem.isEditable());
+            	TagDataItem tagItem =  new TagDataItem(tag, tagset, tagsetItem.isEditable(), tagsetCollator);
                 tagsetData.addItem(tagsetItem, tagItem);
                 addTagSubTree(tagset, tag, tagItem);
             }
@@ -1150,7 +1476,7 @@ public class TagsView extends HugeCard {
     		TagsetDefinition tagset, 
     		TagDefinition tag, TagsetTreeItem parentItem) {
         for (TagDefinition childDefinition : tagset.getDirectChildren(tag)) {
-        	TagDataItem childItem = new TagDataItem(childDefinition, parentItem.isEditable());
+        	TagDataItem childItem = new TagDataItem(childDefinition, tagset, parentItem.isEditable(), tagsetCollator);
             tagsetData.addItem(parentItem, childItem);
             addTagSubTree(tagset, childDefinition, childItem);
         }
@@ -1163,7 +1489,7 @@ public class TagsView extends HugeCard {
         
 		tagsetData.clear();
         for (TagsetDefinition tagset : tagsets) {
-        	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+        	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset, tagsetCollator);
         	tagsetData.addItem(null, tagsetItem);
         	addTags(tagsetItem, tagset);
         }

@@ -38,6 +38,19 @@ public class TechInfoSet {
 		
 	}
 	
+	protected TechInfoSet(String fileName, FileType fileType, Charset charset, FileOSType fileOSType, Long checksum,
+			String mimeType, String responsibleUser, URI uri) {
+		super();
+		this.fileName = fileName;
+		this.fileType = fileType;
+		this.charset = charset;
+		this.fileOSType = fileOSType;
+		this.checksum = checksum;
+		this.mimeType = mimeType;
+		this.responsibleUser = responsibleUser;
+		this.uri = uri;
+	}
+
 	/**
 	 * @param fileType the type of the file
 	 * @param charset the charset used in the file

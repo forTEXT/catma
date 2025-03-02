@@ -18,16 +18,18 @@ import de.catma.ui.util.Cleaner;
 
 public class TagQueryResultRowItem implements QueryResultRowItem {
 
+	private final boolean includeQueryId;
+	private final GroupedQueryResult groupedQueryResult;
+	private final Project project;
+	private final int contextSize;
 	private final String identity;
-	private GroupedQueryResult groupedQueryResult;
 	private QueryResultRowArray rows;
-	private Project project;
-	private boolean includeQueryId;
 
-	public TagQueryResultRowItem(boolean includeQueryId, GroupedQueryResult groupedQueryResult, Project project) {
+	public TagQueryResultRowItem(boolean includeQueryId, GroupedQueryResult groupedQueryResult, Project project, int contextSize) {
 		this.includeQueryId = includeQueryId;
 		this.groupedQueryResult = groupedQueryResult;
 		this.project = project;
+		this.contextSize = contextSize;
 		this.identity = groupedQueryResult.getGroup().toString();
 	}
 
@@ -87,7 +89,7 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 				
 				for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
 					AnnotatedQueryIdQueryResultRowItem queryIdQueryResultRowItem = 
-							new AnnotatedQueryIdQueryResultRowItem(identity, groupedQueryResult, project);
+							new AnnotatedQueryIdQueryResultRowItem(identity, groupedQueryResult, project, contextSize);
 					if (!treeData.contains(queryIdQueryResultRowItem)) {
 						treeData.addItem(this, queryIdQueryResultRowItem);
 						treeData.addItem(queryIdQueryResultRowItem, new DummyQueryResultRowItem());
@@ -102,7 +104,8 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 							identity,
 							documentName, documentId, 
 							groupedQueryResult.getSubResult(documentId), 
-							project);
+							project,
+							contextSize);
 					if (!treeData.contains(item)) {
 						treeData.addItem(this, item);
 						treeData.addItem(item, new DummyQueryResultRowItem());

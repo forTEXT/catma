@@ -7,6 +7,7 @@ import com.vaadin.data.TreeData;
 import com.vaadin.ui.UI;
 
 import de.catma.indexer.KwicProvider;
+import de.catma.queryengine.result.CommentQueryResultRow;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -17,16 +18,18 @@ import de.catma.ui.util.Cleaner;
 public class DocumentQueryResultRowItem implements QueryResultRowItem {
 
 	protected final String identity;
-	private String documentName;
-	private String documentId;
-	protected GroupedQueryResult groupedQueryResult;
+	private final String documentName;
+	private final String documentId;
+	protected final GroupedQueryResult groupedQueryResult;
+	protected final int contextSize;
 	private QueryResultRowArray rows;
 	
 	public DocumentQueryResultRowItem(
-			String parentKey, String documentName, String documentId, GroupedQueryResult groupedQueryResult) {
+			String parentKey, String documentName, String documentId, GroupedQueryResult groupedQueryResult, int contextSize) {
 		this.documentName = documentName;
 		this.documentId = documentId;
 		this.groupedQueryResult = groupedQueryResult;
+		this.contextSize = contextSize;
 		this.identity = parentKey + documentId;
 		
 	}
@@ -86,9 +89,11 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 				KwicQueryResultRowItem item = new KwicQueryResultRowItem(
 						row, 
 						AnnotatedTextProvider.buildKeywordInContext(
-							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())),
-						AnnotatedTextProvider.buildKeywordInContextLarge(
-							row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId())),
+								row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()), contextSize),
+						(row instanceof CommentQueryResultRow)?
+							AnnotatedTextProvider.buildCommentedKeyword(row.getPhrase(), ((CommentQueryResultRow) row).getComment())
+							:AnnotatedTextProvider.buildKeywordInContextLarge(
+								row.getPhrase(), row.getRange(), kwicProviderCache.get(row.getSourceDocumentId()), contextSize),
 						false);
 				if (!treeData.contains(item)) {
 					treeData.addItem(this, item);

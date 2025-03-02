@@ -1,7 +1,9 @@
 package de.catma.ui.module.annotate.annotationpanel;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.vaadin.data.provider.TreeDataProvider;
@@ -9,19 +11,22 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.TagReference;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.util.Cleaner;
 
 class TagsetDataItem implements TagsetTreeItem {
 	
-	private TagsetDefinition tagset;
+	private final TagsetDefinition tagset;
 	private boolean visible;
 	private boolean expanded = false;
+	private final Collator collator;
 
-	public TagsetDataItem(TagsetDefinition tagset) {
+	public TagsetDataItem(TagsetDefinition tagset, Collator collator) {
 		super();
 		this.tagset = tagset;
+		this.collator = collator;
 	}
 
 	@Override
@@ -40,8 +45,9 @@ class TagsetDataItem implements TagsetTreeItem {
 			tagSummeryBuilder.append(
 				rootTags.stream()
 				.limit(3)
+				.sorted((t1, t2)->collator.compare(Optional.ofNullable(t1.getName()).orElse(""), Optional.ofNullable(t2.getName()).orElse("")))
 				.map(tag -> Cleaner.clean(tag.getName()))
-				.collect(Collectors.joining(",")));
+				.collect(Collectors.joining(", ")));
 			tagSummeryBuilder.append(
 				((rootTags.size() > 3)?"...":""));
 		}
@@ -143,5 +149,23 @@ class TagsetDataItem implements TagsetTreeItem {
 	@Override
 	public String getId() {
 		return tagset.getUuid();
+	}
+	
+	@Override
+	public int compareTo(TagsetTreeItem o) {
+		if (!getTagset().getUuid().equals(o.getTagset().getUuid())) {
+			return collator.compare(Optional.ofNullable(getTagset().getName()).orElse(""), Optional.ofNullable(o.getTagset().getName()).orElse(""));
+		}
+		return 1;
+	}
+	
+	@Override
+	public TagDefinition getTag() {
+		return null; //intended
+	}
+	
+	@Override
+	public PropertyDefinition getPropertyDefinition() {
+		return null; //intended
 	}
 }

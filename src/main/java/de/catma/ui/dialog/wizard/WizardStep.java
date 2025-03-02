@@ -7,6 +7,14 @@ public interface WizardStep extends Component {
 	public ProgressStep getProgressStep();
 	public WizardStep getNextStep();
 	public boolean isValid();
+	/**
+	 * Passes the step change listener to this step. This step can then use the listener to inform 
+	 * the wizard that the step's state has changed and the wizard should update its own state, 
+	 * e. g. back and finish button states:
+	 * <br>Usage within the step:<br>
+	 * <code>stepChangeListener.stepChanged(this);</code>
+	 * @param stepChangeListener
+	 */
 	public void setStepChangeListener(StepChangeListener stepChangeListener);
 
 	public default String getStepDescription() {

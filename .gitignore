@@ -2,6 +2,7 @@
 .idea
 .settings
 build
+catma_base
 db
 out
 repo
@@ -9,18 +10,21 @@ target
 temp
 tmp
 
-# Properties files that may contain secrets
-catma*.properties
-
 # Eclipse config files
 .classpath
 .project
+
+# Eclipse scratch files
+*.jpage
 
 # MS Office temp files
 ~$$*.*
 
 # Mac
 .DS_Store
-project*.log
-project*.csv
-project*.ods
+
+# Properties files that may contain secrets
+catma*.properties
+
+# Group/project signup-token transaction log
+group_project_signup_token*.*

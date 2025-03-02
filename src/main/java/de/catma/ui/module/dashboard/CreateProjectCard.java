@@ -8,8 +8,6 @@ import com.vaadin.ui.Label;
 
 import de.catma.project.ProjectsManager;
 import de.catma.ui.events.ProjectsChangedEvent;
-import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 
 /**
@@ -33,26 +31,20 @@ public class CreateProjectCard extends VerticalFlexLayout {
 	private void initComponents() {
 		addStyleName("projectlist__newproject");
 
-		CssLayout newProjectLayout = new CssLayout();
-		newProjectLayout.addStyleName("projectlist__newproject__link");
-		newProjectLayout.addLayoutClickListener(
+		addLayoutClickListener(
 				layoutClickEvent -> new CreateProjectDialog(
 						projectManager,
 						result -> eventBus.post(new ProjectsChangedEvent())
 				).show()
 		);
 
+		CssLayout newProjectLayout = new CssLayout();
+		newProjectLayout.addStyleName("projectlist__newproject__link");
+
 		Label labelDesc = new Label("create new project");
 		labelDesc.setWidth("100%");
 		newProjectLayout.addComponents(labelDesc);
 
 		addComponent(newProjectLayout);
-
-		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
-		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");
-		titleAndActionsLayout.setAlignItems(FlexLayout.AlignItems.BASELINE);
-		titleAndActionsLayout.setWidth("100%");
-
-		addComponents(titleAndActionsLayout);
 	}
 }

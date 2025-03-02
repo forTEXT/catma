@@ -6,14 +6,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PreApiAnnotationProperty {
-    private String id;
-    private String name;
-    private List<String> values;
+    private final String id;
+    private final String name;
+    private final List<String> values;
+    
+    
 
-    public PreApiAnnotationProperty() {
-    }
+    public PreApiAnnotationProperty(String id, String name, List<String> values) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.values = values;
+	}
 
-    public PreApiAnnotationProperty(String name, Property property) {
+	public PreApiAnnotationProperty(String name, Property property) {
         this.name = name;
         id = property.getPropertyDefinitionId();
         values = new ArrayList<>(property.getPropertyValueList());
@@ -23,23 +29,11 @@ public class PreApiAnnotationProperty {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public List<String> getValues() {
         return values;
-    }
-
-    public void setValues(List<String> values) {
-        this.values = values;
     }
 }

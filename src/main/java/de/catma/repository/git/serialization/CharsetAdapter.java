@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 public class CharsetAdapter extends TypeAdapter<Charset> {
@@ -17,9 +18,14 @@ public class CharsetAdapter extends TypeAdapter<Charset> {
 	@Override
 	public Charset read(JsonReader in) throws IOException {
 		if (in.hasNext()) {
-			String value = in.nextString();
-			if (value != null) {
-				return Charset.forName(value);
+			if (in.peek().equals(JsonToken.STRING)) {
+				String value = in.nextString();
+				if (value != null) {
+					return Charset.forName(value);
+				}
+			}
+			else if (in.peek() == JsonToken.NULL) {
+				in.nextNull();
 			}
 		}
 		return null;

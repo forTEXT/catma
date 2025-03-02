@@ -1,7 +1,9 @@
 package de.catma.ui.module.annotate.annotationpanel;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.vaadin.data.provider.TreeDataProvider;
@@ -9,19 +11,25 @@ import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.TagReference;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.util.Cleaner;
 import de.catma.util.ColorConverter;
 
 class TagDataItem implements TagsetTreeItem {
 	
-	private TagDefinition tag;
+	private final TagDefinition tag;
 	private boolean visible;
 	private boolean propertiesExpanded;
+	private final TagsetDefinition tagset;
+	private final Collator collator;
 	
-	public TagDataItem(TagDefinition tag) {
+	public TagDataItem(TagDefinition tag, TagsetDefinition tagset, Collator collator) {
 		super();
 		this.tag = tag;
+		this.tagset = tagset;
+		this.collator = collator;
 	}
 
 	@Override
@@ -131,6 +139,7 @@ class TagDataItem implements TagsetTreeItem {
 		if (!propertiesExpanded) {
 			propertySummary.append(tag.getUserDefinedPropertyDefinitions().stream()
 			.limit(3)
+			.sorted((p1,p2)->collator.compare(Optional.ofNullable(p1.getName()).orElse(""), Optional.ofNullable(p2.getName()).orElse("")))
 			.map(property -> Cleaner.clean(property.getName()))
 			.collect(Collectors.joining(",")));
 			propertySummary.append(
@@ -151,5 +160,29 @@ class TagDataItem implements TagsetTreeItem {
 	@Override
 	public String getId() {
 		return tag.getUuid();
+	}
+	
+	@Override
+	public TagsetDefinition getTagset() {
+		return tagset;
+	}
+	
+	@Override
+	public int compareTo(TagsetTreeItem o) {
+		
+		if (!getTagset().getUuid().equals(o.getTagset().getUuid())) {
+			return collator.compare(Optional.ofNullable(getTagset().getName()).orElse(""), Optional.ofNullable(o.getTagset().getName()).orElse(""));
+		}
+		
+		if (getTag() == null) {
+			return -1;
+		}
+
+		return collator.compare(Optional.ofNullable(getTag().getName()).orElse(""), Optional.ofNullable(o.getTag().getName()).orElse(""));		
+	}
+	
+	@Override
+	public PropertyDefinition getPropertyDefinition() {
+		return null; //intended
 	}
 }

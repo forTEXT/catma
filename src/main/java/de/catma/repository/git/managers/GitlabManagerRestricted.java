@@ -1,38 +1,81 @@
 package de.catma.repository.git.managers;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import org.eclipse.jgit.lib.Constants;
+import org.gitlab4j.api.Constants.IssueState;
+import org.gitlab4j.api.Constants.MergeRequestState;
+import org.gitlab4j.api.EnhancedPager;
+import org.gitlab4j.api.ExtendedCommitsApi;
+import org.gitlab4j.api.ExtendedProject;
+import org.gitlab4j.api.ExtendedProjectApi;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.GroupApi;
+import org.gitlab4j.api.IssuesApi;
+import org.gitlab4j.api.MergeRequestApi;
+import org.gitlab4j.api.NotesApi;
+import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.models.AccessLevel;
+import org.gitlab4j.api.models.Commit;
+import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.GroupFilter;
+import org.gitlab4j.api.models.GroupParams;
+import org.gitlab4j.api.models.GroupProjectsFilter;
+import org.gitlab4j.api.models.ImportStatus.Status;
+import org.gitlab4j.api.models.Issue;
+import org.gitlab4j.api.models.IssueFilter;
+import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.MergeRequestFilter;
+import org.gitlab4j.api.models.Note;
+import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.ProjectFilter;
+import org.gitlab4j.api.models.ProjectSharedGroup;
+import org.gitlab4j.api.models.Visibility;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
+import de.catma.project.BackendPager;
+import de.catma.project.CommitInfo;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager.ProjectMetadataSerializationField;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
+import de.catma.repository.git.GitGroup;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.GitMember;
+import de.catma.repository.git.GitPager;
+import de.catma.repository.git.GitSharedGroupMember;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.ui.events.ChangeUserAttributesEvent;
 import de.catma.user.Member;
+import de.catma.user.SharedGroup;
 import de.catma.user.User;
-import org.eclipse.jgit.lib.Constants;
-import org.gitlab4j.api.Constants.IssueState;
-import org.gitlab4j.api.Constants.MergeRequestState;
-import org.gitlab4j.api.*;
-import org.gitlab4j.api.models.*;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import de.catma.util.IDGenerator;
 
 public class GitlabManagerRestricted extends GitlabManagerCommon implements RemoteGitManagerRestricted {
 	public static final String CATMA_COMMENT_LABEL = "CATMA Comment";
@@ -40,23 +83,23 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	private final Logger logger = Logger.getLogger(GitlabManagerRestricted.class.getName());
 
 	private final GitLabApi restrictedGitLabApi;
-	private final Cache<String, List<ProjectReference>> projectsCache;
+	private final Cache<String, List<?>> gitlabModelsCache;
 
 	private GitUser user;
 
-	public GitlabManagerRestricted(EventBus eventBus, String userImpersonationToken) throws IOException {
-		this(eventBus, new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
+	public GitlabManagerRestricted(String userImpersonationToken) throws IOException {
+		this(new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
 	}
 
-	public GitlabManagerRestricted(EventBus eventBus, String username, String password) throws IOException {
-		this(eventBus, oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
+	public GitlabManagerRestricted(String username, String password) throws IOException {
+		this(oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
 	}
 
-	private GitlabManagerRestricted(EventBus eventBus, GitLabApi api) throws IOException {
+	private GitlabManagerRestricted(GitLabApi api) throws IOException {
 		this.restrictedGitLabApi = api;
 
 		// cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
-		this.projectsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
+		this.gitlabModelsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
 
 		try {
 			this.user = new GitUser(this.restrictedGitLabApi.getUserApi().getCurrentUser());
@@ -64,8 +107,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		catch (GitLabApiException e) {
 			throw new IOException(e);
 		}
-
-		eventBus.register(this);
 	}
 
 	private static GitLabApi oauth2Login(String url, String username, String password) throws IOException {
@@ -74,18 +115,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(e);
-		}
-	}
-
-
-	// event handlers
-	@Subscribe
-	public void handleChangeUserAttributes(ChangeUserAttributesEvent event){
-		try {
-			user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
-		}
-		catch (GitLabApiException e) {
-			logger.log(Level.WARNING, "Failed to fetch user from backend", e);
 		}
 	}
 
@@ -149,6 +178,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	// RemoteGitManagerRestricted implementations
 	@Override
+	public void refreshUser() {
+		try {
+			user = new GitUser(restrictedGitLabApi.getUserApi().getCurrentUser());
+		}
+		catch (GitLabApiException e) {
+			logger.log(Level.WARNING, "Failed to fetch user from backend", e);
+		}
+	}
+
+	@Override
 	public User getUser() {
 		return user;
 	}
@@ -173,12 +212,15 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 
-	private ProjectReference getProjectReference(String namespace, String path, String description) throws IOException {
+	private ProjectReference getProjectReference(String namespace, String path, String description, LocalDateTime createdAt,
+			LocalDateTime lastActivityAt) throws IOException {
 		try {
 			JsonObject metaDataJson = JsonParser.parseString(description).getAsJsonObject();
 			String catmaProjectName = metaDataJson.get(ProjectMetadataSerializationField.name.name()).getAsString();
 			String catmaProjectDescription = metaDataJson.get(ProjectMetadataSerializationField.description.name()).getAsString();
-			return new ProjectReference(path, namespace, catmaProjectName, catmaProjectDescription);
+			return new ProjectReference(
+					path, namespace, catmaProjectName, catmaProjectDescription,
+					createdAt, lastActivityAt);
 		}
 		catch (Exception e) {
 			// while we could still return a ProjectReference with placeholder name and description, we probably want to investigate what
@@ -194,13 +236,233 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 	}
 
-	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel) throws IOException {
+	@Override
+	public List<de.catma.user.Group> getGroups(boolean forceRefetch) throws IOException {
+		return getGroups(null, forceRefetch);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<de.catma.user.Group> getGroups(RBACRole minRole, boolean forceRefetch) throws IOException {
+		try {
+			
+			String cacheKey = "groups" + minRole;
+			if (forceRefetch) {
+				gitlabModelsCache.invalidate(cacheKey);
+			}
+			
+			return (List<de.catma.user.Group>) gitlabModelsCache.get(cacheKey, () -> {
+				List<de.catma.user.Group> result = new ArrayList<>();
+				GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+				GroupFilter groupFilter = new GroupFilter()
+						.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
+						.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC)
+						.withTopLevelOnly(true);
+				if (minRole != null) {
+					groupFilter = groupFilter.withMinAccessLevel(AccessLevel.forValue(minRole.getAccessLevel()));
+				}
+				Pager<Group> groupPager = groupApi.getGroups(
+						groupFilter,
+						20);
+
+				while (groupPager.hasNext()) {
+					List<Group> groupPage = groupPager.next();
+
+					for (Group group : groupPage) {
+						if (group.getName().startsWith("CATMA_")) { // we reached legacy CATMA 6 project-groups and exit early with what we got so far
+							return result;
+						} else if (group.getPath().startsWith(IDGenerator.GROUP_ID_PREFIX)) { // valid user groups' paths start with G_
+							try {
+								Set<Member> members =
+										groupApi.getMembers(group.getId())
+												.stream()
+												.map(GitMember::new)
+												.collect(Collectors.toSet());
+
+								List<ProjectReference> sharedProjects =
+										groupApi.getProjects(
+														group.getId(), new GroupProjectsFilter().withShared(true).withSimple(true)).stream().map(project -> {
+													try {
+														return getProjectReference(
+																project.getNamespace().getPath(),
+																project.getPath(),
+																project.getDescription(),
+																project.getCreatedAt() == null ? null : project.getCreatedAt().toInstant()
+																		.atZone(ZoneId.systemDefault())
+																		.toLocalDateTime(),
+																project.getLastActivityAt() == null ? null : project.getLastActivityAt().toInstant()
+																		.atZone(ZoneId.systemDefault())
+																		.toLocalDateTime()
+														);
+													}
+													catch (IOException e) {
+														logger.log(
+																Level.WARNING,
+																String.format(
+																		"Failed to get ProjectReference for GitLab project %s. The user won't be able to open this project.",
+																		project.getNamespace().getPath() + "/" + project.getPath()
+																),
+																e
+														);
+														return null;
+													}
+												})
+												.filter(Objects::nonNull)
+												.toList();
+								result.add(new GitGroup(group.getId(), group.getName(), group.getDescription(), members, sharedProjects));
+							}
+							catch (GitLabApiException e) {
+								// ignore 404 errors when fetching a group's members or projects (groups that have been deleted since fetching the list)
+								// rethrow all others
+								if (e.getHttpStatus() != 404) {
+									throw e;
+								}
+							}
+						}
+					}
+
+
+				}
+				return result;
+			});
+		}
+		catch (Exception e) {
+			throw new IOException("Failed to load groups", e);
+		}
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<Long> getOwnedGroupIds(boolean forceRefetch) throws IOException {
+		try {
+			String cacheKey = "ownedGroupIds"; 
+
+			if (forceRefetch) {
+				gitlabModelsCache.invalidate(cacheKey);
+			}
+			
+			return (List<Long>) gitlabModelsCache.get(cacheKey, () -> {
+				List<Long> result = new ArrayList<>();
+				GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+				GroupFilter groupFilter = new GroupFilter()
+						.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
+						.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC)
+						.withTopLevelOnly(true)
+						.withOwned(true);
+
+				Pager<Group> groupPager = groupApi.getGroups(
+						groupFilter,
+						20);
+
+				while (groupPager.hasNext()) {
+					List<Group> groupPage = groupPager.next();
+
+					for (Group group : groupPage) {
+						if (group.getName().startsWith("CATMA_")) { // we reached legacy CATMA 6 project-groups and exit early with what we got so far
+							return result;
+						} else if (group.getPath().startsWith(IDGenerator.GROUP_ID_PREFIX)) { // valid user groups' paths start with G_
+							result.add(group.getId());
+						}
+					}
+				}
+				return result;
+			});
+		}
+		catch (Exception e) {
+			throw new IOException("Failed to load owned groupIds", e);
+		}
+
+	}
+	
+	@Override
+	public de.catma.user.Group createGroup(String name, String path, String description) throws IOException {
+		try {
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+
+			GroupParams groupParams = new GroupParams()
+					.withName(name.trim())
+					.withDescription(description.trim())
+					.withPath(path)
+					.withVisibility(Visibility.PRIVATE.name().toLowerCase());
+
+			Group group = groupApi.createGroup(groupParams);
+
+			return new GitGroup(group.getId(), group.getName(), group.getDescription(), Collections.emptySet(), Collections.emptyList());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to create group %s", name), e);
+		}
+	}
+	
+	@Override
+	public void deleteGroup(de.catma.user.Group group) throws IOException {
+		try {
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			groupApi.deleteGroup(group.getId());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to delete group %s", group.getName()), e);
+		}
+	}
+
+
+	@Override
+	public de.catma.user.Group updateGroup(String name, String description, de.catma.user.Group group) throws IOException {
+		try {
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			GroupParams groupParams = new GroupParams().withName(name.trim()).withDescription(description.trim());
+			Group updatedGroup = groupApi.updateGroup(group.getId(), groupParams);
+			return new GitGroup(
+					updatedGroup.getId(),
+					updatedGroup.getName(),
+					updatedGroup.getDescription(),
+					group.getMembers().stream().collect(Collectors.toUnmodifiableSet()), 
+					group.getSharedProjects().stream().collect(Collectors.toUnmodifiableList()));
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to delete group %s", group.getName()), e);
+		}
+	}
+	
+	@Override
+	public void leaveGroup(de.catma.user.Group group) throws IOException {
+		unassignFromGroup(user, group);
+	}
+	
+	@Override
+	public void unassignFromGroup(RBACSubject subject, de.catma.user.Group group) throws IOException {
+		try {
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			org.gitlab4j.api.models.Member member = groupApi.getMember(group.getId(), subject.getUserId());
+	
+			if (member != null
+					&& member.getAccessLevel().value >= AccessLevel.GUEST.value
+					&& member.getAccessLevel().value < AccessLevel.OWNER.value
+			) {
+				groupApi.removeMember(group.getId(), member.getId());
+			}
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to remove subject from group", e);
+		}		
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<ProjectReference> getProjectReferences(AccessLevel minAccessLevel, Boolean owned, boolean forceRefresh) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-
-			return projectsCache.get(
-					"projects",
-					() -> projectApi.getProjects(new ProjectFilter().withMinAccessLevel(minAccessLevel).withMembership(true).withSimple(true))
+			String cacheKey = "projects" + minAccessLevel + owned; 
+			if (forceRefresh) {
+				gitlabModelsCache.invalidate(cacheKey);
+			}
+			return (List<ProjectReference>) gitlabModelsCache.get(
+					cacheKey,
+					() -> projectApi.getProjects(
+								new ProjectFilter()
+								.withMinAccessLevel(minAccessLevel)
+								.withMembership(true)
+								.withSimple(true)
+								.withOwned(owned))
 							.stream()
 							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
 							.map(project -> {
@@ -208,7 +470,13 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 									return getProjectReference(
 											project.getNamespace().getPath(),
 											project.getPath(),
-											project.getDescription()
+											project.getDescription(),
+											project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
+												      .atZone(ZoneId.systemDefault())
+												      .toLocalDateTime(),
+											project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
+												      .atZone(ZoneId.systemDefault())
+												      .toLocalDateTime()
 									);
 								}
 								catch (IOException e) {
@@ -234,9 +502,68 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public List<ProjectReference> getProjectReferences() throws IOException {
-		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()));
+		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()), null, false);
+	}
+	
+	@Override
+	public ProjectReference getProjectReference(String namespace, String projectId) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project project = projectApi.getProject(namespace, projectId);
+			return getProjectReference(
+					project.getNamespace().getPath(),
+					project.getPath(),
+					project.getDescription(),
+					project.getCreatedAt() == null?null:project.getCreatedAt().toInstant()
+						      .atZone(ZoneId.systemDefault())
+						      .toLocalDateTime(),
+					project.getLastActivityAt() == null?null:project.getLastActivityAt().toInstant()
+						      .atZone(ZoneId.systemDefault())
+						      .toLocalDateTime()
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(String.format("Failed to load project %s/%s", namespace, projectId), e);
+		}
+
 	}
 
+	@Override
+	public List<ProjectReference> getProjectReferences(boolean forceRefetch) throws IOException {
+		return getProjectReferences(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()), null, forceRefetch);
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<String> getOwnedProjectIds(boolean forceRefetch) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			String cacheKey = "ownedProjectIds"; 
+
+			if (forceRefetch) {
+				gitlabModelsCache.invalidate(cacheKey);
+			}
+
+			return (List<String>) gitlabModelsCache.get(
+					cacheKey,
+					() -> projectApi.getProjects(
+								new ProjectFilter()
+								.withMinAccessLevel(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()))
+								.withSimple(true)
+								.withOwned(true))
+							.stream()
+							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
+							.map(Project::getPath)
+							.filter(Objects::nonNull)
+							.collect(Collectors.toList())
+			);
+		}
+		catch (Exception e) {
+			throw new IOException("Failed to load owned projectIds", e);
+		}
+	}
+	
+	
 	@Override
 	public String getProjectRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {
@@ -261,10 +588,30 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	public Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			return projectApi.getMembers(projectReference.getFullPath())
+			// add members via direct membership
+			Set<Member> members =  projectApi.getMembers(projectReference.getFullPath())
 					.stream()
 					.map(GitMember::new)
-					.collect(Collectors.toSet());
+					.collect(Collectors.toCollection(() -> new HashSet<>()));
+			
+			// all members via group membership
+			Project project = projectApi.getProject(projectReference.getFullPath());
+			
+			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
+			
+			for (ProjectSharedGroup projectSharedGroup : project.getSharedWithGroups()) {
+
+				List<org.gitlab4j.api.models.Member> groupMembers = groupApi.getMembers(projectSharedGroup.getGroupId());
+				for (org.gitlab4j.api.models.Member groupMember : groupMembers) {
+					members.add(
+						new GitSharedGroupMember(
+								groupMember, 
+								new SharedGroup(projectSharedGroup.getGroupId(), projectSharedGroup.getGroupName(), RBACRole.forValue(projectSharedGroup.getGroupAccessLevel().value))));
+				}
+				
+			}
+			
+			return members;
 		}
 		catch (GitLabApiException e) {
 			throw new IOException("Failed to fetch project members", e);
@@ -376,7 +723,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 				comment.setUserId(issue.getAuthor().getId());
 				comment.setUsername(issue.getAuthor().getName()); // TODO: if we're using the public name it shouldn't be called 'username' on the Comment class
 				comment.setReplyCount(issue.getUserNotesCount());
-
+				
+				// gson doesn't initialize transient fields, so we need to do it explicitly
+				comment.setReplies(new ArrayList<>());
+				
 				comments.add(comment);
 			}
 
@@ -776,5 +1126,77 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					e
 			);
 		}
+	}
+	
+	@Override
+	public void forkProject(ProjectReference projectReference, String targetProjectId) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Project sourceProject = projectApi.getProject(projectReference.getFullPath());
+			
+			
+			projectApi.forkProject(
+					sourceProject.getId(), 
+					this.user.getIdentifier(), // we always fork into the namespace of the current user 
+					targetProjectId, // path 
+					targetProjectId); // name
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to fork remote Git repository", e);
+		}
+	}
+	
+	@Override
+	public boolean isProjectImportFinished(ProjectReference projectReference) throws IOException {
+		try {
+			
+			ExtendedProjectApi projectApi = new ExtendedProjectApi(restrictedGitLabApi);
+			ExtendedProject project = projectApi.getExtendedProject(projectReference.getFullPath());
+			Status status = project.getImportStatus();
+			if (status.equals(Status.NONE) || status.equals(Status.FINISHED)) {
+				return true;
+			}
+			
+			if (status.equals(Status.FAILED)) {
+				throw new IOException(String.format(
+						"Forking the new project '%s' with ID '%s' failed with error message '%s'", 
+						projectReference.getName(), projectReference.getProjectId(), project.getImportError()));
+			}
+			
+			return false;
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to check import status for remote Git repository", e);
+		}
+		
+	}
+	
+	@Override
+	public BackendPager<CommitInfo> getCommits(ProjectReference projectReference, LocalDate after, LocalDate before, String branch, String author) throws IOException {
+		try {
+			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
+			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
+
+			ExtendedCommitsApi commitsApi = new ExtendedCommitsApi(restrictedGitLabApi);
+			
+			EnhancedPager<Commit> commitsPager = commitsApi.getCommitsWithEnhancedPager(
+					gitlabProjectId, 
+					branch, 
+					after==null?null:java.util.Date.from(
+							after.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
+					before==null?null:java.util.Date.from(
+							before.plusDays(1).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
+					author,
+					15
+			);
+			
+			
+			return new GitPager<Commit, CommitInfo>(commitsPager, commit -> new CommitInfo(commit.getId(), commit.getTitle(), commit.getMessage(), commit.getCommittedDate(), commit.getAuthorName()));
+			
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Failed to retrieve commits", e);
+		}
+		
 	}
 }

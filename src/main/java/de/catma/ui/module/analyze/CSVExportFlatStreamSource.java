@@ -27,9 +27,11 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Range;
+import de.catma.document.comment.Reply;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.KwicProvider;
 import de.catma.project.Project;
+import de.catma.queryengine.result.CommentQueryResultRow;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -42,15 +44,18 @@ public class CSVExportFlatStreamSource implements StreamSource {
 	private final Project project;
 	private final LoadingCache<String, KwicProvider> kwicProviderCache;
 	private final BackgroundServiceProvider backgroundServiceProvider;
-	   
+	private final Supplier<Integer> contextSizeSupplier;
+
 	public CSVExportFlatStreamSource(
 			Supplier<QueryResult> queryResultSupplier, Project project,
-			LoadingCache<String, KwicProvider> kwicProviderCache, BackgroundServiceProvider backgroundServiceProvider) {
+			LoadingCache<String, KwicProvider> kwicProviderCache, BackgroundServiceProvider backgroundServiceProvider, 
+			Supplier<Integer> contextSizeSupplier) {
 		super();
 		this.queryResultSupplier = queryResultSupplier;
 		this.project = project;
 		this.kwicProviderCache = kwicProviderCache;
 		this.backgroundServiceProvider = backgroundServiceProvider;
+		this.contextSizeSupplier = contextSizeSupplier;
 	}
 
 	@Override
@@ -75,7 +80,14 @@ public class CSVExportFlatStreamSource implements StreamSource {
         					}
         				});
         		
-                try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.withDelimiter(';'))) {
+                try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.builder().setDelimiter(';').build())) {
+                	// we add all possible headers as we do not know which kind of rows we get
+                	csvPrinter.printRecord((Object[])CSVFormat.EXCEL.builder().setHeader(
+                			"Query ID", "Document ID", "Document Name", "Document length", "Keyword", "Keyword in context", "Start offset", "End offset",
+                			"Collection ID", "Collection Name", "Tag", "Tag Version", "Tag Color", "Annotation ID", "Property ID", "Property Name", "Property Value",
+                			"Comment ID", "Comment/Reply", "Comment Author", "Reply count", "Reply ID"
+                			).build().getHeader());
+                	
     	            for (QueryResultRow row : queryResult) {
     	            	KwicProvider kwicProvider = kwicProviderCache.get(row.getSourceDocumentId());
     	            	if (row instanceof TagQueryResultRow) {
@@ -83,7 +95,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
     	    				List<Range> mergedRanges = 
     	    						Range.mergeRanges(new TreeSet<>((tRow).getRanges()));
     	            		for (Range range : mergedRanges) {
-    	            			KeywordInSpanContext kwic = kwicProvider.getKwic(range, 5);
+    	            			KeywordInSpanContext kwic = kwicProvider.getKwic(range, contextSizeSupplier.get());
         	            		csvPrinter.printRecord(
         	            				row.getQueryId().toSerializedString(),
         	            				row.getSourceDocumentId(),
@@ -103,6 +115,51 @@ public class CSVExportFlatStreamSource implements StreamSource {
         	            				tRow.getPropertyName(),
         	            				tRow.getPropertyValue());
     	            		}
+    	            	}
+    	            	else if (row instanceof CommentQueryResultRow) {
+    	            		CommentQueryResultRow cRow = (CommentQueryResultRow)row;
+
+    	    				List<Range> mergedRanges = 
+    	    						Range.mergeRanges(new TreeSet<>((cRow).getRanges()));
+    	            		for (Range range : mergedRanges) {
+    	            			KeywordInSpanContext kwic = kwicProvider.getKwic(row.getRange(), contextSizeSupplier.get());
+
+        	            		csvPrinter.printRecord(
+        	            				row.getQueryId().toSerializedString(),
+        	            				row.getSourceDocumentId(),
+        	            				kwicProvider.getSourceDocumentName(),
+        	            				kwicProvider.getDocumentLength(),
+        	            				kwic.getKeyword(),
+        	            				kwic.toString(),
+        	            				range.getStartPoint(),
+        	            				range.getEndPoint(),
+        	            				"", "", "", "", "", "", "", "", "", // empty fields for tag rows
+        	            				cRow.getComment().getUuid(),
+        	            				cRow.getComment().getBody(),
+        	            				cRow.getComment().getUsername(),
+        	            				cRow.getComment().getReplyCount(),
+        	            				""
+        	            		);
+        	            		
+        	            		for (Reply reply : cRow.getComment().getReplies()) {
+            	            		csvPrinter.printRecord(
+            	            				row.getQueryId().toSerializedString(),
+            	            				row.getSourceDocumentId(),
+            	            				kwicProvider.getSourceDocumentName(),
+            	            				kwicProvider.getDocumentLength(),
+            	            				kwic.getKeyword(),
+            	            				kwic.toString(),
+            	            				range.getStartPoint(),
+            	            				range.getEndPoint(),
+            	            				"", "", "", "", "", "", "", "", "", // empty fields for tag rows
+            	            				cRow.getComment().getUuid(),
+            	            				reply.getBody(),
+            	            				reply.getUsername(),
+            	            				0,
+            	            				reply.getUuid()
+            	            		);
+        	            		}
+    	            		}    	            		
     	            	}
     	            	else {
 	            			KeywordInSpanContext kwic = kwicProvider.getKwic(row.getRange(), 5);

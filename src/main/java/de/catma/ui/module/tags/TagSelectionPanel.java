@@ -2,6 +2,7 @@ package de.catma.ui.module.tags;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.text.Collator;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -10,11 +11,15 @@ import java.util.stream.Collectors;
 import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
+import com.vaadin.server.SerializableComparator;
 import com.vaadin.server.SerializablePredicate;
+import com.vaadin.shared.data.sort.SortDirection;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -31,15 +36,17 @@ import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.actiongrid.SearchFilterProvider;
 import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog;
+import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
-import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class TagSelectionPanel extends VerticalLayout {
 
+	private final static SerializableComparator<TagsetTreeItem> TAGSET_TREE_ITEM_COMPARATOR_ASC = (t1, t2) -> t1.compareTo(t2);
+	
 	public interface TagSelectionChangedListener {
 		public void tagSelectionChanged(TagDefinition tag);
 	}
@@ -52,9 +59,11 @@ public class TagSelectionPanel extends VerticalLayout {
 	private IDGenerator idGenerator;
 	private PropertyChangeListener tagChangedListener;
 	private PropertyChangeListener tagsetChangeListener;
+	private Collator tagsetCollator;
 
 	public TagSelectionPanel(Project project) {
 		this.project = project;
+		this.tagsetCollator = Collator.getInstance(project.getTagManager().getTagLibrary().getLocale());
 		this.idGenerator = new IDGenerator();
 		initComponents();
 		initActions();
@@ -67,7 +76,7 @@ public class TagSelectionPanel extends VerticalLayout {
             tagsetData = new TreeData<TagsetTreeItem>();
             Collection<TagsetDefinition> tagsets = project.getTagManager().getTagLibrary().getTagsetDefinitions();
             for (TagsetDefinition tagset : tagsets) {
-            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset, tagsetCollator);
             	tagsetData.addItem(null, tagsetItem);
             	addTags(tagsetItem, tagset);
             }
@@ -84,7 +93,7 @@ public class TagSelectionPanel extends VerticalLayout {
 	
     private void expandTagsetDefinition(TagsetDefinition tagset) {
     	for (TagDefinition tag : tagset) {
-    		TagDataItem item = new TagDataItem(tag);
+    		TagDataItem item = new TagDataItem(tag, tagset, tagsetCollator);
     		tagsetGrid.expand(item);
     	}
 	}
@@ -94,7 +103,7 @@ public class TagSelectionPanel extends VerticalLayout {
 		
         for (TagDefinition tag : tagset) {
             if (tag.getParentUuid().isEmpty()) {
-            	TagDataItem tagItem =  new TagDataItem(tag);
+            	TagDataItem tagItem =  new TagDataItem(tag, tagset, tagsetCollator);
                 tagsetData.addItem(tagsetItem, tagItem);
                 addTagSubTree(tagset, tag, tagItem);
             }
@@ -105,20 +114,26 @@ public class TagSelectionPanel extends VerticalLayout {
     		TagsetDefinition tagset, 
     		TagDefinition tag, TagDataItem parentItem) {
         for (TagDefinition childDefinition : tagset.getDirectChildren(tag)) {
-        	TagDataItem childItem = new TagDataItem(childDefinition);
+        	TagDataItem childItem = new TagDataItem(childDefinition, tagset, tagsetCollator);
             tagsetData.addItem(parentItem, childItem);
             addTagSubTree(tagset, childDefinition, childItem);
         }
     }	
 	
 	private void initActions() {
-		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
+		Grid.Column<TagsetTreeItem, String> tagsetColumn = tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 		.setCaption("Tagsets")
-		.setSortable(false)
+		.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
+		.setSortable(true)
 		.setWidth(200);
+
+		tagsetGrid.setSortOrder(List.of(new GridSortOrder<>(tagsetColumn, SortDirection.ASCENDING)));
+
+
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
 			.setCaption("Tags")
+			.setComparator(TAGSET_TREE_ITEM_COMPARATOR_ASC)
 			.setSortable(false)
 			.setExpandRatio(1));
 		
@@ -184,7 +199,7 @@ public class TagSelectionPanel extends VerticalLayout {
 			.stream()
 			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagsetDataItem)
 			.findFirst()
-			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
+			.map(tagsetTreeItem -> ((TagsetTreeItem)tagsetTreeItem).getTagset());
 
 		if (tagsetData.getRootItems().isEmpty()) {
 			Notification.show(
@@ -196,7 +211,7 @@ public class TagSelectionPanel extends VerticalLayout {
 	
 		List<TagsetDefinition> editableTagsets = 
 				tagsetData.getRootItems().stream()
-				.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset())
+				.map(tagsetTreeItem -> ((TagsetTreeItem)tagsetTreeItem).getTagset())
 				.collect(Collectors.toList());
 
 		boolean beyondUsersResponsibility =
@@ -260,10 +275,7 @@ public class TagSelectionPanel extends VerticalLayout {
 											TagsetDefinition tagset = 
 												project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
 											
-											TagDefinition tag = new TagDefinition(result);
-											tag.setUuid(idGenerator.generate());
-											tag.setParentUuid(parent.getUuid());
-											tag.setTagsetDefinitionUuid(tagset.getUuid());
+											TagDefinition tag = new TagDefinition(result, idGenerator.generate(), parent.getUuid(), tagset.getUuid());
 											
 											project.getTagManager().addTagDefinition(
 													tagset, tag);
@@ -296,17 +308,17 @@ public class TagSelectionPanel extends VerticalLayout {
 					TagsetDefinition tagset = value.getFirst();
 					TagDefinition tag = value.getSecond();
 		            if (tag.getParentUuid().isEmpty()) {
-		            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+		            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset, tagsetCollator);
 		            	tagsetData.addItem(
-		            		tagsetItem, new TagDataItem(tag));
+		            		tagsetItem, new TagDataItem(tag, tagset, tagsetCollator));
 		            	
 		            	tagsetGrid.expand(tagsetItem);
 		            }
 		            else {
 		            	TagDefinition parentTag = 
 		            		project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid());
-		            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag);
-		            	tagsetData.addItem(parentTagItem, new TagDataItem(tag));
+		            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag, tagset, tagsetCollator);
+		            	tagsetData.addItem(parentTagItem, new TagDataItem(tag, tagset, tagsetCollator));
 		            	
 		            	tagsetGrid.expand(parentTagItem);
 		            }
@@ -319,17 +331,17 @@ public class TagSelectionPanel extends VerticalLayout {
 					
 					TagDefinition deletedTag = deleted.getSecond();
 					
-					tagsetData.removeItem(new TagDataItem(deletedTag));
+					tagsetData.removeItem(new TagDataItem(deletedTag, deleted.getFirst(), tagsetCollator));
 					tagsetDataProvider.refreshAll();
 					
 				}
 				else { //update
 					TagDefinition tag = (TagDefinition) newValue;
 					TagsetDefinition tagset = (TagsetDefinition)oldValue;
-	            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+	            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset, tagsetCollator);
 
-					tagsetData.removeItem(new TagDataItem(tag));
-					TagDataItem tagDataItem = new TagDataItem(tag);
+					tagsetData.removeItem(new TagDataItem(tag, tagset, tagsetCollator));
+					TagDataItem tagDataItem = new TagDataItem(tag, tagset, tagsetCollator);
 					tagDataItem.setPropertiesExpanded(true);
 					tagsetData.addItem(tagsetItem, tagDataItem);
 					//TODO: sort

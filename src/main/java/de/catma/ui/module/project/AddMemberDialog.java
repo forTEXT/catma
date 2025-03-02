@@ -1,27 +1,29 @@
 package de.catma.ui.module.project;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.Query;
+import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.VerticalLayout;
+
 import de.catma.rbac.RBACRole;
-import de.catma.rbac.RBACSubject;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.rbac.RBACAssignmentFunction;
+import de.catma.ui.module.project.AddMemberDialog.MemberData;
 import de.catma.user.User;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-public class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
-	private final RBACAssignmentFunction rbacAssignmentFunction;
+public class AddMemberDialog extends AbstractMemberDialog<MemberData> {
+	public static record MemberData(User user, RBACRole role, LocalDate expiresAt) {};
 	private final QueryFunction<User> userQueryFunction;
 
 	// TODO: the way the user search is implemented here causes the userQueryFunction to be called way more often than needed, fix
@@ -60,13 +62,11 @@ public class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
 	);
 
 	public AddMemberDialog(
-			RBACAssignmentFunction rbacAssignmentFunction,
 			QueryFunction<User> userQueryFunction,
-			SaveCancelListener<RBACSubject> saveCancelListener
+			SaveCancelListener<MemberData> saveCancelListener
 	) {
 		super("Add Member", "Choose a new project member and specify their role", saveCancelListener);
 
-		this.rbacAssignmentFunction = rbacAssignmentFunction;
 		this.userQueryFunction = userQueryFunction;
 
 		this.cbUsers.setDataProvider(userDataProvider);
@@ -77,6 +77,7 @@ public class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
 	protected void addContent(ComponentContainer content) {
 		content.addComponent(descriptionLabel);
 		content.addComponent(cbUsers);
+		
 		cbUsers.focus();
 
 		Label lblMemberComboboxDescription = new Label(
@@ -88,15 +89,19 @@ public class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
 		content.addComponent(lblMemberComboboxDescription);
 
 		content.addComponent(cbRole);
+		
+		content.addComponent(expiresAtInput);
+		
+		if (content instanceof AbstractOrderedLayout) {
+			((AbstractOrderedLayout)content).setExpandRatio(expiresAtInput, 1.0f);
+		}
+
 	}
 
-	@Override
-	protected void layoutWindow() {
-		setWidth("50%");
-	}
 
 	@Override
 	protected void layoutContent(VerticalLayout layout) {
+		super.layoutContent(layout);
 		// prevent layoutContent in AbstractOkCancelDialog from running
 		// we want the layout to have an undefined height, just like the dialog/window
 	}
@@ -117,9 +122,9 @@ public class AddMemberDialog extends AbstractMemberDialog<RBACSubject> {
 	}
 
 	@Override
-	protected RBACSubject getResult() {
+	protected MemberData getResult() {
 		try {
-			return rbacAssignmentFunction.assign(cbUsers.getValue(), cbRole.getValue());
+			return new MemberData(cbUsers.getValue(), cbRole.getValue(), expiresAtInput.getValue()); 
 		}
 		catch (Exception e) {
 			errorLogger.showAndLogError(null, e);

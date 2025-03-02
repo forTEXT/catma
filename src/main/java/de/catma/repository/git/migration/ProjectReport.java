@@ -3,7 +3,6 @@ package de.catma.repository.git.migration;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
@@ -711,9 +710,7 @@ public class ProjectReport {
 	
 	private void setLastUnsynchronizedCommitTime(List<CommitInfo> commits) {
 		for (CommitInfo commit : commits) {
-			LocalDateTime commitTime = commit.getCommitTime().toInstant()
-				      .atZone(ZoneId.systemDefault())
-				      .toLocalDateTime();
+			LocalDateTime commitTime = commit.getCommittedDate();
 			if (this.lastUnsynchronizedCommitTime == null || this.lastUnsynchronizedCommitTime.isBefore(commitTime)) {
 				this.lastUnsynchronizedCommitTime = commitTime;
 			}
@@ -1281,9 +1278,7 @@ public class ProjectReport {
 	}
 
 	public void addLastHeadCommit(CommitInfo commit) {
-		LocalDateTime commitTime = commit.getCommitTime().toInstant()
-			      .atZone(ZoneId.systemDefault())
-			      .toLocalDateTime();
+		LocalDateTime commitTime = commit.getCommittedDate();
 		if (this.lastHeadCommitTime == null || this.lastHeadCommitTime.isBefore(commitTime)) {
 			this.lastHeadCommitTime = commitTime;
 		}

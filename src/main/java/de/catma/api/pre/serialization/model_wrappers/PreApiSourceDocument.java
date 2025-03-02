@@ -1,84 +1,66 @@
 package de.catma.api.pre.serialization.model_wrappers;
 
-import de.catma.document.source.SourceDocument;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.zip.CRC32;
+import java.net.URI;
 
 public class PreApiSourceDocument {
-    private String id;
-    private String bodyUrl;
-    private String crc32bChecksum;
-    private int size;
-    private String title;
+    private final String id;
+    private final String bodyUrl;
+    private final String crc32bChecksum;
+    private final int size;
+    private final String title;
+    private final String author;
+    private final String description;
+    private final String publisher;
+    private final transient URI fileUri;
 
-    private static final Logger logger = Logger.getLogger(PreApiSourceDocument.class.getName());
+    public PreApiSourceDocument(String id, String bodyUrl, String crc32bChecksum, int size, String title, String author,
+			String description, String publisher, URI fileUri) {
+		super();
+		this.id = id;
+		this.bodyUrl = bodyUrl;
+		this.crc32bChecksum = crc32bChecksum;
+		this.size = size;
+		this.title = title;
+		this.author = author;
+		this.description = description;
+		this.publisher = publisher;
+		this.fileUri = fileUri;
+	}
 
-    public PreApiSourceDocument() {
-    }
-
-    public PreApiSourceDocument(SourceDocument sourceDocument, String bodyUrl) {
-        id = sourceDocument.getUuid();
-        this.bodyUrl = bodyUrl;
-        title = sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle();
-
-        try {
-            byte[] bytes = sourceDocument.getContent().getBytes(StandardCharsets.UTF_8);
-
-            // checksum - not using sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getChecksum() because it does not
-            // respect the charset when it is created
-            CRC32 crc = new CRC32();
-            crc.update(bytes);
-            crc32bChecksum = Long.toHexString(crc.getValue());
-
-            // size
-            size = bytes.length;
-        }
-        catch (IOException e) {
-            logger.log(Level.WARNING, "Couldn't get document content", e);
-        }
-    }
-
-    public String getId() {
+	public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getBodyUrl() {
         return bodyUrl;
     }
 
-    public void setBodyUrl(String bodyUrl) {
-        this.bodyUrl = bodyUrl;
-    }
-
     public String getCrc32bChecksum() {
         return crc32bChecksum;
-    }
-
-    public void setCrc32bChecksum(String crc32bChecksum) {
-        this.crc32bChecksum = crc32bChecksum;
     }
 
     public int getSize() {
         return size;
     }
 
-    public void setSize(int size) {
-        this.size = size;
-    }
-
     public String getTitle() {
         return title;
     }
+    
+    public String getAuthor() {
+		return author;
+	}
+    
+    public String getDescription() {
+		return description;
+	}
+    
+    public String getPublisher() {
+		return publisher;
+	}
+    
+    public URI getFileUri() {
+		return fileUri;
+	}
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
 }

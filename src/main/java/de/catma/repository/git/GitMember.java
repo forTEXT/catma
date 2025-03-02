@@ -1,5 +1,9 @@
 package de.catma.repository.git;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Objects;
+
 import de.catma.rbac.RBACRole;
 import de.catma.user.Member;
 
@@ -8,34 +12,24 @@ import de.catma.user.Member;
  */
 public class GitMember implements Member {
 
+	private final org.gitlab4j.api.models.Member delegate;	
+
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((delegate.getId() == null) ? 0 : delegate.getId().hashCode());
-		return result;
+		return Objects.hash(getUserId());
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null)
+		if (!(obj instanceof GitMember))
 			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		GitMember other = (GitMember) obj;
-		if (delegate.getId() == null) {
-			if (other.delegate.getId() != null)
-				return false;
-		} else if (!delegate.getId().equals(other.delegate.getId()))
-			return false;
-		return true;
+		Member other = (Member) obj;
+		return Objects.equals(getUserId(), other.getUserId());
 	}
 
-	private final org.gitlab4j.api.models.Member delegate;
-
-    public GitMember(org.gitlab4j.api.models.Member member){
+	public GitMember(org.gitlab4j.api.models.Member member){
         this.delegate = member;
     }
 
@@ -69,6 +63,13 @@ public class GitMember implements Member {
 	}
     
     @Override
+	public LocalDate getExpiresAt() {
+		return delegate.getExpiresAt() == null?null:delegate.getExpiresAt().toInstant()
+			      .atZone(ZoneId.systemDefault())
+			      .toLocalDate();
+	}
+
+	@Override
     public int compareTo(Member o) {
     	
     	String n1 = this.getName();

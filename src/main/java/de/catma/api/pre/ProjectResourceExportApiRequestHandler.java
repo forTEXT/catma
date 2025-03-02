@@ -4,22 +4,30 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinSession;
 
+import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotatedPhrase;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotationProperty;
+import de.catma.api.pre.serialization.model_wrappers.PreApiPropertyDefinition;
 import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
 import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
-import de.catma.api.pre.serialization.models.Export;
-import de.catma.api.pre.serialization.models.ExportDocument;
+import de.catma.api.pre.serialization.models.LegacyExport;
+import de.catma.api.pre.serialization.models.LegacyExportDocument;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -32,6 +40,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
 
+@Deprecated
 public class ProjectResourceExportApiRequestHandler implements RequestHandler {
     private static final String BASE_URL = CATMAPropertyKey.BASE_URL.getValue();
     private static final String API_BASE_PATH = "/api";
@@ -99,7 +108,7 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
 
     private String serializeProjectResources() {
         try {
-            Export export = new Export();
+            Builder<LegacyExportDocument> exportListBuilder = ImmutableList.builder();
 
             for (SourceDocumentReference sourceDocumentRef : project.getSourceDocumentReferences()) {
                 SourceDocument sourceDocument = project.getSourceDocument(sourceDocumentRef.getUuid());
@@ -119,20 +128,40 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                     tagReferences.addAll(annotationCollection.getTagReferences());
                 }
 
-                ExportDocument exportDocument = new ExportDocument(
-                        new PreApiSourceDocument(
-                                sourceDocument,
-                                String.format("%s%s/doc/%s", BASE_URL, handlerPath.substring(1), sourceDocument.getUuid().toLowerCase())
-                        ),
-                        tagDefinitions.stream().map(PreApiTagDefinition::new).collect(Collectors.toList()),
+                LegacyExportDocument exportDocument = new LegacyExportDocument(
+                		getPreApiSourceDocument(sourceDocument),
+                        tagDefinitions.stream()
+	                        .map(td -> new PreApiTagDefinition(
+	                        		td.getUuid(), 
+	                        		td.getParentUuid(), 
+	                        		td.getName(), 
+	                        		td.getColor(), 
+	                        		td.getUserDefinedPropertyDefinitions().stream()
+	                        			.map(pd -> new PreApiPropertyDefinition(
+	                        					pd.getUuid(), 
+	                        					pd.getName(), 
+	                        					Collections.unmodifiableList(pd.getPossibleValueList()))).collect(Collectors.toList())))
+	                        .collect(Collectors.toList()),
                         tagReferences.stream().map(
                                 (TagReference tagReference) -> {
                                     try {
-                                        return new PreApiAnnotation(
-                                                tagReference,
-                                                tagDefinitions.stream().filter(td -> td.getUuid().equals(tagReference.getTagDefinitionId())).findFirst().get(),
-                                                sourceDocument
-                                        );
+                                    	TagDefinition tag = tagDefinitions.stream().filter(td -> td.getUuid().equals(tagReference.getTagDefinitionId())).findFirst().get();
+                                    	return new PreApiAnnotation(
+                                    			tagReference.getTagInstanceId(), 
+                                    			sourceDocument.getUuid(), 
+                                    			List.of(new PreApiAnnotatedPhrase(tagReference.getRange().getStartPoint(), tagReference.getRange().getEndPoint(), sourceDocument.getContent(tagReference.getRange()))),
+                                    			tag.getUuid(), 
+                                    			tag.getName(), 
+                                    			tagReference.getTagInstance().getUserDefinedProperties().stream()
+                                    				.map((p) -> 
+                                    					new PreApiAnnotationProperty(
+                                    						p.getPropertyDefinitionId(),
+                                    						tag.getUserDefinedPropertyDefinitions().stream()
+                                    							.filter(pd -> pd.getUuid().equals(p.getPropertyDefinitionId())).findFirst().get().getName(),
+                                    						p.getPropertyValueList()
+                                    					)
+                                    				).toList()
+                                                );
                                     } catch (IOException e) {
                                         logger.log(Level.WARNING, String.format("Error serializing TagReference: %s", tagReference), e);
                                         return null;
@@ -141,14 +170,56 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                         ).collect(Collectors.toList())
                 );
 
-                export.addExportDocument(exportDocument);
+                exportListBuilder.add(exportDocument);
             }
 
-            return new SerializationHelper<Export>().serialize(export);
+            return new SerializationHelper<LegacyExport>().serialize(
+            		new LegacyExport(exportListBuilder.build()));
         }
         catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to serialize project resources", e);
             return "{\"error\": \"Failed to serialize project resources, please contact CATMA support\"}";
         }
     }
+    
+    
+	private PreApiSourceDocument getPreApiSourceDocument(SourceDocument sourceDocument) throws Exception {
+		int size = 0;
+		String crc32bChecksum = null;
+		
+		try {
+			byte[] bytes = sourceDocument.getContent().getBytes(StandardCharsets.UTF_8);
+			
+			// checksum - not using sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getChecksum() because it does not
+			// respect the charset when it is created
+			CRC32 crc = new CRC32();
+			crc.update(bytes);
+			crc32bChecksum = Long.toHexString(crc.getValue());
+			
+			// size
+			size = bytes.length;
+		}
+		catch (IOException e) {
+			logger.log(Level.WARNING, "Couldn't get document content", e);
+		}
+		
+		
+		return new PreApiSourceDocument(
+				sourceDocument.getUuid(), 
+                String.format("%s%s/%s/project/%s/%s/doc/%s", 
+                		CATMAPropertyKey.API_BASE_URL.getValue(), 
+                		PreApplication.API_PACKAGE, 
+                		PreApplication.API_VERSION, 
+                		project.getNamespace(),
+                		project.getId(),
+                		sourceDocument.getUuid().toLowerCase()),
+                crc32bChecksum,
+                size,
+                sourceDocument.toString(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getDescription(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getPublisher(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI());
+	}
+
 }

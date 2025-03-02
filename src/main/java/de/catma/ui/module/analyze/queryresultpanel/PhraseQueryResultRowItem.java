@@ -20,11 +20,13 @@ public class PhraseQueryResultRowItem implements QueryResultRowItem {
 	private QueryResultRowArray rows = null;
 	private final String identity;
 	private boolean includeQueryId;
+	private final int contextSize;
 
-	public PhraseQueryResultRowItem(boolean includeQueryId, GroupedQueryResult groupedQueryResult) {
+	public PhraseQueryResultRowItem(boolean includeQueryId, GroupedQueryResult groupedQueryResult, int contextSize) {
 		this.includeQueryId = includeQueryId;
 		this.groupedQueryResult = groupedQueryResult;
 		this.identity = groupedQueryResult.getGroup().toString();
+		this.contextSize = contextSize;
 	}
 
 	@Override
@@ -82,7 +84,7 @@ public class PhraseQueryResultRowItem implements QueryResultRowItem {
 				
 				for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
 					QueryIdQueryResultRowItem queryIdQueryResultRowItem = 
-							new QueryIdQueryResultRowItem(identity, groupedQueryResult);
+							new QueryIdQueryResultRowItem(identity, groupedQueryResult, contextSize);
 					if (!treeData.contains(queryIdQueryResultRowItem)) {
 						treeData.addItem(this, queryIdQueryResultRowItem);
 						treeData.addItem(queryIdQueryResultRowItem, new DummyQueryResultRowItem());
@@ -95,7 +97,7 @@ public class PhraseQueryResultRowItem implements QueryResultRowItem {
 					DocumentQueryResultRowItem item = 
 							new DocumentQueryResultRowItem(
 								identity,
-								documentName, documentId, groupedQueryResult.getSubResult(documentId));
+								documentName, documentId, groupedQueryResult.getSubResult(documentId), contextSize);
 					if (!treeData.contains(item)) {
 						treeData.addItem(this, item);
 						treeData.addItem(item, new DummyQueryResultRowItem());

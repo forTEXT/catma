@@ -126,7 +126,7 @@ public class TagOptionsStep extends VerticalLayout implements WizardStep {
 
 	@Override
 	public String toString() {
-		return "by Tag";
+		return "by tag";
 	}
 	
 	@Override
