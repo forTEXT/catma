@@ -242,14 +242,18 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 
 	@Override
 	protected void addContent(ComponentContainer content) {
-		setWidth("80%");
-		setHeight("80%");
 		Label infoLabel = new Label("Please select the resources you want to <strong>keep</strong> in your newly copied project:", ContentMode.HTML);
 		content.addComponent(infoLabel);
 		content.addComponent(resourcesContentLayout);
 		if (content instanceof AbstractOrderedLayout) {
 			((AbstractOrderedLayout) content).setExpandRatio(resourcesContentLayout, 1.0f);
 		}
+	}
+
+	@Override
+	protected void layoutWindow() {
+		setWidth("80%");
+		setHeight("80%");
 	}
 	
 	private void initData() {
