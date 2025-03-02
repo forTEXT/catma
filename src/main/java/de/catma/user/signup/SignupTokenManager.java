@@ -347,7 +347,7 @@ public class SignupTokenManager {
 
 		// send join-group-link that contains the generated token
 		// this verification link brings the user back to CATMA and it brings up the user account creation dialog if the token can be verified, see handleVerify above and CatmaApplication#handleRequestToken 
-		MailSender.sendMail(address, String.format("CATMA Join Group %s", group.getName()), String.format("Please visit the following link in order to join the group %s:\n%s", group.getName(), joinUrl));
+		MailSender.sendMail(address, String.format("Invitation to join user group \"%s\"", group.getName()), String.format("Please visit the following link in order to join the user group \"%s\":\n%s", group.getName(), joinUrl));
 		logger.info(
 				String.format("Generated a new join-group-token for %s, the full join URL is: %s", address, joinUrl)
 		);		
@@ -365,7 +365,7 @@ public class SignupTokenManager {
 
 		// send join-group-link that contains the generated token
 		// this verification link brings the user back to CATMA and it brings up the user account creation dialog if the token can be verified, see handleVerify above and CatmaApplication#handleRequestToken 
-		MailSender.sendMail(address, String.format("CATMA Join Project %s", project.getName()), String.format("Please visit the following link in order to join the project %s:\n%s", project.getName(), joinUrl));
+		MailSender.sendMail(address, String.format("Invitation to join project \"%s\"", project.getName()), String.format("Please visit the following link in order to join the project \"%s\":\n%s", project.getName(), joinUrl));
 		logger.info(
 				String.format("Generated a new join-project-token for %s, the full join URL is: %s", address, joinUrl)
 		);		

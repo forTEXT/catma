@@ -1188,9 +1188,9 @@ public class AnnotationPanel extends VerticalLayout {
 							setTagsetVisible(tagsetTreeItem, true);
 							Notification.show(
 								"Info", 
-								String.format("You have more than one Tagset available. "
-										+ "As a starter we visualize Annotations from Tagset '%s'. But you can show more: "
-										+ "Toggle the visibility of Annotations by clicking on the eye icons of the corresponding Tagset.", 
+								String.format("You have more than one tagset available.\n"
+										+ "To start we have set annotations from tagset \"%s\" to be visible.\n"
+										+ "Toggle the visibility of annotations from particular tagsets by clicking on the corresponding eye icon.",
 										tagset.getName()), 
 								Type.HUMANIZED_MESSAGE);
 						});
@@ -1201,9 +1201,9 @@ public class AnnotationPanel extends VerticalLayout {
 					setTagsetVisible(tagsetTreeItem, true);
 					Notification.show(
 							"Info", 
-							String.format("You have more than one Tagset available. "
-									+ "As a starter we visualize Annotations from Tagset '%s'. But you can show more: "
-									+ "Toggle the visibility of Annotations by clicking on the eye icons of the corresponding Tagset.", 
+							String.format("You have more than one tagset available.\n"
+									+ "To start we have set annotations from tagset \"%s\" to be visible.\n"
+									+ "Toggle the visibility of annotations from particular tagsets by clicking on the corresponding eye icon.",
 									tagset.getName()), 
 							Type.HUMANIZED_MESSAGE);
 				}

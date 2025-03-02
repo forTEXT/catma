@@ -1112,7 +1112,7 @@ public class TagsView extends HugeCard {
 			}
 		}
 		catch (Exception e) {
-			((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing Collections", e);	
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing collections", e);
 		}		
 	}
 
@@ -1184,7 +1184,7 @@ public class TagsView extends HugeCard {
 				});
 			}
 	
-			project.addAndCommitCollections(toBeUpatedCollections, "Auto-committing updated annotations initiated because of Tag modifications");	
+			project.addAndCommitCollections(toBeUpatedCollections, "Auto-committing annotations that were updated due to tag modifications");
 		
 	    } catch (Exception e) {
 			((ErrorHandler) UI.getCurrent()).showAndLogError("Error loading data", e);
@@ -1287,7 +1287,7 @@ public class TagsView extends HugeCard {
 			}
 		}
 		catch (Exception e) {
-			((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing Collections", e);	
+			((ErrorHandler) UI.getCurrent()).showAndLogError("Error accessing collections", e);
 		}
 	}
 

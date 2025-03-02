@@ -140,7 +140,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 		groupName = new TextField("Group name");
 		groupName.setWidth("100%");
 		groupName.setRequiredIndicatorVisible(true);
-		emailAddressListInput = new TextArea("Type in the email addresses of the new members as a comma- or newline separated list");
+		emailAddressListInput = new TextArea("Type in the email addresses of the new members as a comma- or newline-separated list");
 		emailAddressListInput.setSizeFull();
 		
 //		btSwitchMemberInvitationtoCreateGroup = new Button("Create a new Group");
@@ -166,7 +166,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 				Set.of(groupName, emailAddressListInput),
 				(content) -> {
 					return () -> {
-						setCaption("Add user group");
+						setCaption("Add User Group");
 						content.setExpandRatio(expiresAtInput, 1.0f);
 						cbGroup.focus();
 					};
@@ -197,7 +197,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 				Set.of(cbGroup, groupSelectionPanel),
 				(content) -> {
 					return () -> {
-						setCaption("Add user group");
+						setCaption("Add User Group");
 						content.setExpandRatio(emailAddressListInput, 1.0f);
 						content.setExpandRatio(expiresAtInput, 0.0f);
 						groupName.focus();
@@ -228,7 +228,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 				Set.of(cbGroup, groupName, groupSelectionPanel),
 				(content) -> {
 					return () -> {
-						setCaption("Add members");
+						setCaption("Add Members");
 						content.setExpandRatio(emailAddressListInput, 1.0f);
 						content.setExpandRatio(expiresAtInput, 0.0f);
 						emailAddressListInput.focus();
@@ -244,7 +244,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 					@Override
 					public ValidationResult apply(MemberData memberData, ValueContext context) {
 						if (memberData.emailAdresses.isEmpty()) {
-							return ValidationResult.error("You have provide at least one valid email address to invite someone to the Group!");
+							return ValidationResult.error("You have provide at least one valid email address to invite someone to the group!");
 						}
 						return ValidationResult.ok();
 					}
@@ -257,7 +257,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 				Set.of(cbGroup, groupName, groupSelectionPanel),
 				(content) -> {
 					return () -> {
-						setCaption("Add members");
+						setCaption("Add Members");
 						content.setExpandRatio(emailAddressListInput, 1.0f);
 						content.setExpandRatio(expiresAtInput, 0.0f);
 						cbRole.setItems(Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER, RBACRole.OWNER));
@@ -276,7 +276,7 @@ public class InviteMembersWithGroupDialog extends AbstractOkCancelDialog<de.catm
 					@Override
 					public ValidationResult apply(MemberData memberData, ValueContext context) {
 						if (memberData.emailAdresses.isEmpty()) {
-							return ValidationResult.error("You have provide at least one valid email address to invite someone to the Project!");
+							return ValidationResult.error("You have provide at least one valid email address to invite someone to the project!");
 						}
 						return ValidationResult.ok();
 					}

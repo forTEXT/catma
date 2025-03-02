@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega/v5.json",
-  "description": "A simple phrase based distribution chart with phrase start offsets binned to 10 percent chunks and facets for each Document",
+  "description": "A simple phrase based distribution chart with phrase start offsets binned to 10 percent chunks and facets for each document",
   "autosize": {
     "type": "pad",
     "resize": true

@@ -260,7 +260,7 @@ public class GroupCard extends VerticalFlexLayout {
 
 		if (!membersToRemove.isEmpty()) {
 			new RemoveMemberDialog(
-					"Group",
+					"group",
 					membersToRemove.stream().map(m -> new GroupMemberParticipant(m)).collect(Collectors.toSet()),
 					members -> {
 						for (ProjectParticipant member : members) {

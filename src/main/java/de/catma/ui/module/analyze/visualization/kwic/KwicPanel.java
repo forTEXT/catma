@@ -406,7 +406,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		if (selectedAnnotationRows.isEmpty()) {
 			Notification.show(
 					"Info", 
-					"Please select one or more rows that contain Annotations!", 
+					"Please select one or more rows that contain annotations!",
 					Type.HUMANIZED_MESSAGE);
 				return;			
 		}
@@ -434,7 +434,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		if (propertyNames.isEmpty()) {
 			Notification.show(
 					"Info", 
-					"No modifiable Properties have been found in the selected Annotations!", 
+					"No modifiable properties have been found in the selected annotations!",
 					Type.HUMANIZED_MESSAGE);
 				return;			
 			

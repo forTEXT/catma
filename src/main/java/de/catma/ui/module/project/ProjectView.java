@@ -646,14 +646,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		// members actions
 		ContextMenu memberGridComponentAddContextMenu = memberGridComponent.getActionGridBar().getBtnAddContextMenu();
-		memberGridComponentAddContextMenu.addItem("Add a user group", menuItem -> handleAddGroupRequest());
-		memberGridComponentAddContextMenu.addItem("Invite someone to the Project by email", menuItem -> handleInviteUserRequest());
+		memberGridComponentAddContextMenu.addItem("Add a User Group", menuItem -> handleAddGroupRequest());
+		memberGridComponentAddContextMenu.addItem("Invite Someone to the Project by Email", menuItem -> handleInviteUserRequest());
 
 		ContextMenu memberGridComponentMoreOptionsContextMenu = memberGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		memberGridComponentMoreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
 		memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
-		memberGridComponentMoreOptionsContextMenu.addItem("Add someone directly by username", (selectedItem) -> handleAddMemberByNameRequest());
-		memberGridComponentMoreOptionsContextMenu.addItem("Invite someone to the Project by a shared code", (selectedItem) -> handleProjectInvitationByCodeRequest());
+		memberGridComponentMoreOptionsContextMenu.addItem("Add Someone Directly by Username", (selectedItem) -> handleAddMemberByNameRequest());
+		memberGridComponentMoreOptionsContextMenu.addItem("Invite Someone to the Project by a Shared Code", (selectedItem) -> handleProjectInvitationByCodeRequest());
 
 		// global project actions
 		btnSynchronize.addClickListener(clickEvent -> handleSynchronize());
@@ -665,7 +665,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		);
 		
 		miCopyProject = hugeCardMoreOptionsContextMenu.addItem(
-				"Copy Project", menuItem -> handleCopyProjectRequest()
+				"Create a Copy of this Project", menuItem -> handleCopyProjectRequest()
 		);
 		
 		
@@ -833,7 +833,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						new DefaultProgressCallable<Void>() {
 							@Override
 							public Void call() throws Exception {
-								getProgressListener().setProgress("Start removing unwanted resources...");
+								getProgressListener().setProgress("Starting to remove unwanted resources...");
 								
 								currentUI.access(() -> {
 									
@@ -844,14 +844,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 										
 										for (SourceDocumentReference docRef : project.getSourceDocumentReferences().stream().toList()) {
 											if (!selectedResourceIdsToKeep.contains(docRef.getUuid())) {
-												getProgressListener().setProgress("Removing Document '%s' and its Collections...", docRef.toString());
+												getProgressListener().setProgress("Removing document \"%s\" and its collections...", docRef.toString());
 												docsToBeDeleted.add(docRef);
 												collectionsToBeDeleted.addAll(docRef.getUserMarkupCollectionRefs());
 											}
 											else {
 												for (AnnotationCollectionReference collRef : docRef.getUserMarkupCollectionRefs().stream().toList()) {
 													if (!selectedResourceIdsToKeep.contains(collRef.getId())) {
-														getProgressListener().setProgress("Removing Collection '%s'...", collRef.toString());
+														getProgressListener().setProgress("Removing collection \"%s\" ...", collRef.toString());
 														collectionsToBeDeleted.add(collRef);
 													}
 												}
@@ -860,7 +860,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 										
 										for (TagsetDefinition tagset : project.getTagsets().stream().toList()) {
 											if (!selectedResourceIdsToKeep.contains(tagset.getUuid())) {
-												getProgressListener().setProgress("Removing Tagset '%s'...", tagset.getName());
+												getProgressListener().setProgress("Removing tagset \"%s\" ...", tagset.getName());
 												tagsetsToBeDeleted.add(tagset);
 											}
 										}
@@ -870,7 +870,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 									} catch (Exception e) {
 										setEnabled(true);
 										setProgressBarVisible(false);
-										errorHandler.showAndLogError(String.format("Error removing unwanted resources from Project '%s'", project.getName()), e);			
+										errorHandler.showAndLogError(String.format("Failed to remove resources from project \"%s\"", project.getName()), e);
 									}
 								});
 								return null;
@@ -882,13 +882,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 							public void done(Void result) {
 								setEnabled(true);
 								setProgressBarVisible(false);
-								Notification.show("Info", "We will now synchronize your Project once and then you can start to work with your Project!", Type.HUMANIZED_MESSAGE);
+								Notification.show("Info", "We will now synchronize your project, after which you can start to work with it!", Type.HUMANIZED_MESSAGE);
 								handleSynchronize();
 							}
 							
 							@Override
 							public void error(Throwable t) {
-								errorHandler.showAndLogError(String.format("Error removing unwanted resources from Project '%s'", project.getName()), t);			
+								errorHandler.showAndLogError(String.format("Failed to remove resources from project \"%s\"", project.getName()), t);
 							}
 						},
 						progressListener);
@@ -2074,7 +2074,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		if (!membersToRemove.isEmpty()) {
 			new RemoveMemberDialog(
-					"Project",
+					"project",
 					membersToRemove,
 					members -> {
 						for (ProjectParticipant participant : members) {

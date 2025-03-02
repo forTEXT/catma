@@ -657,7 +657,7 @@ public class GitProjectHandler {
 						remoteGitServerManager.getEmail()
 						);
 				for (AnnotationCollectionReference collRef : collections) {
-					progressListener.setProgress("Removing Collection '%s'...", collRef.toString());
+					progressListener.setProgress("Removing collection \"%s\" ...", collRef.toString());
 					gitAnnotationCollectionHandler.removeCollectionWithoutCommit(collRef);
 					commitMessageBuilder.append("\n");
 					commitMessageBuilder.append(
@@ -677,7 +677,7 @@ public class GitProjectHandler {
 						remoteGitServerManager.getEmail()
 						);
 				for (SourceDocumentReference docRef : documents.stream().toList()) {
-					progressListener.setProgress("Removing Document '%s' and its Collections...", docRef.toString());
+					progressListener.setProgress("Removing document \"%s\" and its collections...", docRef.toString());
 					gitSourceDocumentHandler.removeDocumentWithoutCommit(docRef);
 					commitMessageBuilder.append("\n");
 					commitMessageBuilder.append(				
@@ -699,7 +699,7 @@ public class GitProjectHandler {
 						);
 				
 				for (TagsetDefinition tagset : tagsets) {
-					progressListener.setProgress("Removing Tagset '%s'...", tagset.getName());
+					progressListener.setProgress("Removing tagset \"%s\" ...", tagset.getName());
 					gitTagsetHandler.removeTagsetDefinitionWithoutCommit(tagset);											
 					commitMessageBuilder.append("\n");
 					commitMessageBuilder.append( 
