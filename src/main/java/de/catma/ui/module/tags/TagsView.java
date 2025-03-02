@@ -370,22 +370,25 @@ public class TagsView extends HugeCard {
 		tagsetGrid.addExpandListener(expandEvent -> handleExpandCollapseTagset(expandEvent.getExpandedItem(), true));
 		tagsetGrid.addCollapseListener(collapseEvent -> handleExpandCollapseTagset(collapseEvent.getCollapsedItem(), false));
 
-	    ContextMenu addContextMenu = 
-	    		tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
+	    ContextMenu addContextMenu = tagsetGridComponent.getActionGridBar().getBtnAddContextMenu();
 	    addContextMenu.addItem("Add Tagset", clickEvent -> handleAddTagsetRequest());
 	    addContextMenu.addItem("Add Tag", clickEvent -> handleAddTagRequest());
 	    addContextMenu.addItem("Add Subtag", clickEvent -> handleAddSubtagRequest());
 	    addContextMenu.addItem("Add Property", clickEvent -> handleAddPropertyRequest());
 		
-		ContextMenu moreOptionsContextMenu = 
-				tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
-		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
-		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
-		moreOptionsContextMenu.addItem("Bulk Edit/Delete Properties by name", clickEvent -> handleBulkEditPropertiesByName());
+		ContextMenu moreOptionsContextMenu = tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+
 		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
 		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
-		
+		moreOptionsContextMenu.addSeparator();
+
+		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
+		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
+		moreOptionsContextMenu.addSeparator();
+
+		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handleEditPropertiesRequest());
+		moreOptionsContextMenu.addItem("Bulk Edit/Delete Properties by Name", clickEvent -> handleBulkEditPropertiesByName());
+
 		resourcePanel.setTagsetSelectionListener(selectedTagsets -> {
 			tagsets.clear();
 			tagsets.addAll(selectedTagsets);

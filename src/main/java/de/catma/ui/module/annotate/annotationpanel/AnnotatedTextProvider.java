@@ -236,7 +236,7 @@ public class AnnotatedTextProvider {
 	public static class ContextSizeEditCommand implements Command {
 		private final Consumer<Integer> contextSizeConsumer;
 		private int contextSize = DEFAULT_CONTEXT_SIZE;
-		private final Supplier<String> contextSizeMenuEntrySupplier = () -> "Context size "+contextSize+" "+String.valueOf('\u270e');
+		private final Supplier<String> contextSizeMenuEntrySupplier = () -> String.format("Edit Context Size (%s)", contextSize);
 
 		public ContextSizeEditCommand(Consumer<Integer> contextSizeConsumer) {
 			super();
@@ -246,7 +246,7 @@ public class AnnotatedTextProvider {
 		@Override
 		public void menuSelected(MenuItem selectedItem) {
 			SliderInputDialog dialog = new SliderInputDialog(
-					"KWIC context size", 
+					"KWIC Context Size",
 					"Context size", 
 					1, CATMAPropertyKey.MAX_KEYWORD_IN_CONTEXT_SIZE.getIntValue(), 
 					((Integer)contextSize).doubleValue(), 
@@ -266,23 +266,6 @@ public class AnnotatedTextProvider {
 						}
 					});
 			dialog.show();
-			
-//			SingleTextInputDialog dialog = new SingleTextInputDialog("KWIC context size", "Context size", String.valueOf(contextSize), new SaveCancelListener<String>() {
-//				
-//				@Override
-//				public void savePressed(String result) {
-//					try {
-//						contextSize = Integer.valueOf(result);
-//						
-//					}
-//					catch (NumberFormatException ignore) {
-//						contextSize = 5;
-//					}
-//					selectedItem.setText(contextSizeMenuEntrySupplier.get());
-//					contextSizeConsumer.accept(contextSize);
-//				}
-//			});
-//			dialog.show();
 		}
 		
 		public String getContextSizeMenuEntry() {

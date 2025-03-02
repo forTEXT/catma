@@ -488,16 +488,20 @@ public class AnnotateResourcePanel extends VerticalLayout {
 				new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
 		documentActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
 		documentActionGridComponent.addStyleName("annotate-resource-panel__document-grid");
-		
-		cbMembers = new ComboBox<ProjectParticipant>("toggle visibility by responsible");
+
+		String toggleVisibilityDescription = "Select a member or user group from the list and use the visibility buttons to toggle the visibility "
+				+ "of all collections belonging to the selected member.";
+
+		cbMembers = new ComboBox<ProjectParticipant>("toggle visibility by member");
 		cbMembers.addStyleName("annotate-resource-panel__member-box");
 		cbMembers.setItemCaptionGenerator(item -> item.getName());
 		cbMembers.setItemIconGenerator(item -> item.getIconAsResource());
-		String toggleVisibilityDescription = "Select a member or user group from the list of responsables on the left and use the visibility buttons "
-				+ "to toggle the visibilty of all collections belonging to the selected responsable.";
+		cbMembers.setDescription(toggleVisibilityDescription);
+
 		btSelectMemberCollections = new IconButton(VaadinIcons.EYE);
 		btSelectMemberCollections.setDescription(toggleVisibilityDescription);
 		btSelectMemberCollections.addStyleName("annotate-resource-panel__toggle-visibility-button");
+
 		btDeselectMemberCollections = new IconButton(VaadinIcons.EYE_SLASH);
 		btDeselectMemberCollections.setDescription(toggleVisibilityDescription);
 		btDeselectMemberCollections.addStyleName("annotate-resource-panel__toggle-visibility-button");

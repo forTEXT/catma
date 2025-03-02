@@ -18785,8 +18785,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-align: right !important;
 }
 
-.catma .v-treegrid-footer, .catma .catma .v-treegrid-footer-deco {
-	bottom: 17px;
+.catma .v-treegrid-footer {
+	border-top: 1px solid #D5D5D5;
 }
 
 .catma .v-treegrid-scroller, .catma .catma .v-treegrid-horizontal-scrollbar-deco {

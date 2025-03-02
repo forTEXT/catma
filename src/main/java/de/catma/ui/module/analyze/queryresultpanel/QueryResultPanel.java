@@ -816,12 +816,26 @@ public class QueryResultPanel extends VerticalLayout {
 		}
 		
 		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
-		
+
+		optionsMenu.addItem(contextSizeEditCommand.getContextSizeMenuEntry(), contextSizeEditCommand);
+
+		MenuItem miFilterPunctuation = optionsMenu.addItem(
+				"Filter Punctuation",
+				mi -> queryResultGrid.getDataProvider().refreshAll());
+		miFilterPunctuation.setCheckable(true);
+		miFilterPunctuation.setChecked(true);
+		punctuationFilter = new PunctuationFilter(() -> miFilterPunctuation.isChecked());
+
+		optionsMenu.addSeparator();
+
 		miGroupByPhrase = optionsMenu.addItem("Group by Phrase", mi-> initPhraseBasedData());
 		miGroupByPhrase.setEnabled(false);
 		miGroupByTagPath = optionsMenu.addItem("Group by Tag Path", mi -> initTagBasedData());
 		miFlatTable = optionsMenu.addItem("Display Annotations as Flat Table", mi -> initFlatTagBasedData());
 		miPropertiesAsColumns = optionsMenu.addItem("Display Properties as Columns", mi -> initPropertiesAsColumnsTagBasedData());
+
+		optionsMenu.addSeparator();
+
 		MenuItem miExport = optionsMenu.addItem("Export");
 		MenuItem miCSVFlatExport = miExport.addItem("Export Flat as CSV");
 		
@@ -875,17 +889,7 @@ public class QueryResultPanel extends VerticalLayout {
 			new FileDownloader(csvPropertiesAsColumnsResource);
 		
 		csvPropertiesAsColumnsExportFileDownloader.extend(miCSVColumnsAsPropertiesExport);
-		
-		MenuItem miFilterPunctuation = optionsMenu.addItem(
-				"Filter Punctuation",
-				mi -> queryResultGrid.getDataProvider().refreshAll());
-		miFilterPunctuation.setCheckable(true);
-		miFilterPunctuation.setChecked(true);
-		punctuationFilter = new PunctuationFilter(() -> miFilterPunctuation.isChecked());
-		
-		
-		optionsMenu.addItem(contextSizeEditCommand.getContextSizeMenuEntry(), contextSizeEditCommand);
-		
+
 		if (resultPanelCloseListener != null) {
 			removeBt.addClickListener(clickEvent -> resultPanelCloseListener.closeRequest(QueryResultPanel.this));
 		}
@@ -1227,6 +1231,7 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	public MenuItem addOptionsMenuItem(String caption, Command command) {
+		optionsMenu.addSeparator(); // TODO: this is a hack to add a separator before the 'Select All' / 'Remove All' items that are added, improve
 		return optionsMenu.addItem(caption, command);
 	}
 	

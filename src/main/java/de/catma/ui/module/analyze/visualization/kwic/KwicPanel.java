@@ -138,33 +138,35 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	@Subscribe
 	public void handleProjectReadyEvent(ProjectReadyEvent projectReadyEvent) {
 		miAnnotateRows.setEnabled(!projectReadyEvent.getProject().isReadOnly());
+		miEditAnnotations.setEnabled(!projectReadyEvent.getProject().isReadOnly());
 		miRemoveAnnotations.setEnabled(!projectReadyEvent.getProject().isReadOnly());
 	}
 
 	private void initActions(EventBus eventBus) {
-		ContextMenu moreOptionsMenu = kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-		miAnnotateRows = moreOptionsMenu.addItem("Annotate Selected Rows", mi -> handleAnnotateSelectedRequest(eventBus));
-		miAnnotateRows.setEnabled(!this.project.isReadOnly());
-		
-		miEditAnnotations = moreOptionsMenu.addItem("Edit Annotations", mi -> handleEditAnnotationsRequest(eventBus));
-		miEditAnnotations.setEnabled(!this.project.isReadOnly());
-		
 		ActionGridBar actionBar = kwicGridComponent.getActionGridBar();
-		
+
 		actionBar.addButtonAfterSearchField(btnClearSelectedRows);
 		btnClearSelectedRows.addClickListener(new ClickListener() {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				handleRemoveRowRequest();
-				
+
 			}
 		});
-			
-		miRemoveAnnotations = 
-			moreOptionsMenu.addItem(
-				"Delete Selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
+
+		ContextMenu moreOptionsMenu = actionBar.getBtnMoreOptionsContextMenu();
+
+		miAnnotateRows = moreOptionsMenu.addItem("Annotate Selected Rows", mi -> handleAnnotateSelectedRequest(eventBus));
+		miAnnotateRows.setEnabled(!this.project.isReadOnly());
+
+		miEditAnnotations = moreOptionsMenu.addItem("Edit Selected Annotations", mi -> handleEditAnnotationsRequest(eventBus));
+		miEditAnnotations.setEnabled(!this.project.isReadOnly());
+
+		miRemoveAnnotations = moreOptionsMenu.addItem("Delete Selected Annotations", mi -> handleRemoveAnnotationsRequest(eventBus));
 		miRemoveAnnotations.setEnabled(false);
-		
+
+		moreOptionsMenu.addSeparator();
+
 		MenuItem miExport = moreOptionsMenu.addItem("Export");
 		MenuItem miCSVFlatExport = miExport.addItem("Export as CSV");
 		
@@ -184,7 +186,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		
 		csvFlatExportFileDownloader.extend(miCSVFlatExport);
 		
-		MenuItem miCSVColumnsAsPropertiesExport = miExport.addItem("Export Properties as Columns as CSV");
+		MenuItem miCSVColumnsAsPropertiesExport = miExport.addItem("Export as CSV with Properties as Columns");
 		
 		StreamResource csvPropertiesAsColumnsResource = new StreamResource(
 					new CSVExportPropertiesAsColumnsFlatStreamSource(
@@ -700,6 +702,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		kwicGridComponent.getActionGridBar().setAddBtnVisible(false);
 		kwicGridComponent.getActionGridBar().addButtonRight(btExpandCompress);
 		kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addItem(contextSizeEditCommand.getContextSizeMenuEntry(), contextSizeEditCommand);
+		kwicGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu().addSeparator();
 		kwicGridComponent.setMargin(new MarginInfo(false, false, false, true));
 		addComponent(kwicGridComponent);
 		setExpandRatio(kwicGridComponent, 1f);

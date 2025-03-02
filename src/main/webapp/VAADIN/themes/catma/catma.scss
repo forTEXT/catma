@@ -1336,8 +1336,14 @@ $contribution-color: blue;
     text-align: right !important;
   }
 
+
+  .v-treegrid-footer {
+    border-top: 1px solid #D5D5D5;
+  }
+
+  // TODO: figure out what the now broken overrides on the two deco classes below were good for
   .v-treegrid-footer, .catma .v-treegrid-footer-deco {
-    bottom: 17px;
+    //bottom: 17px;
   }
 
   .v-treegrid-scroller, .catma .v-treegrid-horizontal-scrollbar-deco {

@@ -34,6 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.vaadin.shared.ui.ContentMode;
 import org.apache.commons.lang3.StringUtils;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
@@ -590,7 +591,7 @@ public class TaggerView extends HorizontalLayout
 
 			tagger.setCommentsVisible(commentToggleState.isVisible());
 			cbAutoShowComments.setIcon(commentToggleState.getIcon());
-			cbAutoShowComments.setDescription(commentToggleState.getDescription());
+			cbAutoShowComments.setDescription(commentToggleState.getDescription(), ContentMode.HTML);
 			cbAutoShowComments.setData(commentToggleState);
 		});
 
@@ -854,23 +855,25 @@ public class TaggerView extends HorizontalLayout
 		
 		CommentToggleState initialState = CommentToggleState.LIVE;
 		cbAutoShowComments = new IconButton(initialState.getIcon());
-		cbAutoShowComments.setDescription(initialState.getDescription());
+		cbAutoShowComments.setDescription(initialState.getDescription(), ContentMode.HTML);
 		cbAutoShowComments.setData(initialState); // state management
 		actionPanel.addComponent(cbAutoShowComments);
-		
-		btAnalyze = new Button("Analyze");
-		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
-		btAnalyze.setEnabled(project instanceof IndexedProject);
-		actionPanel.addComponent(btAnalyze);
-		
+
 		btDecreaseFont = new IconButton(VaadinIcons.FONT);
 		btDecreaseFont.addStyleName("tagger-bt-decrease");
+		btDecreaseFont.setDescription("Decrease font size");
 		actionPanel.addComponent(btDecreaseFont);
-		
+
 		btIncreaseFont = new IconButton(VaadinIcons.FONT);
 		btIncreaseFont.addStyleName("tagger-bt-increase");
+		btIncreaseFont.setDescription("Increase font size");
 		actionPanel.addComponent(btIncreaseFont);
-		
+
+		btAnalyze = new Button("Analyze");
+		btAnalyze.addStyleName("primary-button");
+		btAnalyze.setEnabled(project instanceof IndexedProject);
+		actionPanel.addComponent(btAnalyze);
+
 		
 		rightSplitPanel = new VerticalSplitPanel();
 		rightSplitPanel.setSizeFull();

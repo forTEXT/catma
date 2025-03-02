@@ -554,6 +554,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		documentGridComponentAddContextMenu.addItem("Add Annotation Collection", menuItem -> handleAddCollectionRequest());
 
 		ContextMenu documentGridComponentMoreOptionsContextMenu = documentGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+
 		miEditDocumentOrCollection = documentGridComponentMoreOptionsContextMenu.addItem(
 				"Edit Documents / Collections", menuItem -> handleEditResources()
 		);
@@ -563,13 +564,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		documentGridComponentMoreOptionsContextMenu.addItem(
 				"Analyze Documents / Collections", menuItem -> handleAnalyzeResources(documentGrid)
 		);
+		documentGridComponentMoreOptionsContextMenu.addSeparator();
+
 		miImportCollection = documentGridComponentMoreOptionsContextMenu.addItem(
 				"Import a Collection", menuItem -> handleImportCollectionRequest()
 		);
-
 		MenuItem miExportDocumentsAndCollections = documentGridComponentMoreOptionsContextMenu.addItem(
 				"Export Documents & Collections"
 		);
+		documentGridComponentMoreOptionsContextMenu.addSeparator();
 
 		StreamResource documentsAndCollectionsExportStreamResource = new StreamResource(
 				new CollectionXMLExportStreamSource(
@@ -603,12 +606,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		tagsetGridComponent.getActionGridBar().addBtnAddClickListener(clickEvent -> handleAddTagsetRequest());
 
 		ContextMenu tagsetGridComponentMoreOptionsContextMenu = tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+
 		miEditTagset = tagsetGridComponentMoreOptionsContextMenu.addItem(
 				"Edit Tagset", menuItem -> handleEditTagsetRequest()
 		);
 		miDeleteTaget = tagsetGridComponentMoreOptionsContextMenu.addItem(
 				"Delete Tagset", menuItem -> handleDeleteTagsetRequest()
 		);
+		tagsetGridComponentMoreOptionsContextMenu.addSeparator();
+
 		miImportTagset = tagsetGridComponentMoreOptionsContextMenu.addItem(
 				"Import Tagsets", menuItem -> handleImportTagsetsRequest()
 		);
@@ -650,8 +656,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		memberGridComponentAddContextMenu.addItem("Invite Someone to the Project by Email", menuItem -> handleInviteUserRequest());
 
 		ContextMenu memberGridComponentMoreOptionsContextMenu = memberGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+
 		memberGridComponentMoreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
 		memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
+		memberGridComponentMoreOptionsContextMenu.addSeparator();
+
 		memberGridComponentMoreOptionsContextMenu.addItem("Add Someone Directly by Username", (selectedItem) -> handleAddMemberByNameRequest());
 		memberGridComponentMoreOptionsContextMenu.addItem("Invite Someone to the Project by a Shared Code", (selectedItem) -> handleProjectInvitationByCodeRequest());
 

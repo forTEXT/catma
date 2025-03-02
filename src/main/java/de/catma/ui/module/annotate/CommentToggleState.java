@@ -3,9 +3,9 @@ package de.catma.ui.module.annotate;
 import com.vaadin.icons.VaadinIcons;
 
 enum CommentToggleState {
-	OFF(VaadinIcons.COMMENT_O, false, "Comments are off, click to switch comments on, click again to switch on live comments."),
-	ON(VaadinIcons.COMMENT, true, "Comments are on, click to switch on live comments, click again to switch off comments."),
-	LIVE(VaadinIcons.COMMENTS, true, "Live comments are on, click to switch off comments, click again ot switch on comments without live refresh."),
+	OFF(VaadinIcons.COMMENT_O, false, "<strong>OFF</strong> - click to display comments, click again to switch on live comments"),
+	ON(VaadinIcons.COMMENT, true, "<strong>ON</strong> - click to switch on live comments, click again to hide comments"),
+	LIVE(VaadinIcons.COMMENTS, true, "<strong>LIVE</strong> - click to hide comments, click again to display comments without live updates"),
 	;
 	private VaadinIcons icon;
 	private boolean visible;
@@ -26,7 +26,7 @@ enum CommentToggleState {
 	}
 	
 	public String getDescription() {
-		return description;
+		return String.format("Comments display: %s", description);
 	}
 	
 }
