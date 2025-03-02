@@ -30,6 +30,7 @@ import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.QuerySortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.Page;
 import com.vaadin.server.SerializableComparator;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.shared.data.sort.SortDirection;
@@ -1157,7 +1158,7 @@ public class AnnotationPanel extends VerticalLayout {
 					String.format(
 						"The collection currently being edited has been changed to \"%s\"",
 						collection.getName()),
-					Type.HUMANIZED_MESSAGE);
+					Type.TRAY_NOTIFICATION);
 			}
 		});
 	}
@@ -1186,26 +1187,35 @@ public class AnnotationPanel extends VerticalLayout {
 						.ifPresent(tagset -> {
 							TagsetTreeItem tagsetTreeItem = findTagsetItem(tagset.getUuid());
 							setTagsetVisible(tagsetTreeItem, true);
-							Notification.show(
-								"Info", 
+
+							// TODO: factor out common notification
+							Notification multipleTagsetsNotification = new Notification(
+								"Info",
 								String.format("You have more than one tagset available.\n"
 										+ "To start we have set annotations from tagset \"%s\" to be visible.\n"
 										+ "Toggle the visibility of annotations from particular tagsets by clicking on the corresponding eye icon.",
-										tagset.getName()), 
-								Type.HUMANIZED_MESSAGE);
+										tagset.getName()),
+								Type.HUMANIZED_MESSAGE
+							);
+							multipleTagsetsNotification.setDelayMsec(5000);
+							multipleTagsetsNotification.show(Page.getCurrent());
 						});
 				}
 				else {
 					TagsetDefinition tagset = tagsets.iterator().next();
 					TagsetTreeItem tagsetTreeItem = findTagsetItem(tagset.getUuid());
 					setTagsetVisible(tagsetTreeItem, true);
-					Notification.show(
-							"Info", 
+
+					Notification multipleTagsetsNotification = new Notification(
+							"Info",
 							String.format("You have more than one tagset available.\n"
-									+ "To start we have set annotations from tagset \"%s\" to be visible.\n"
-									+ "Toggle the visibility of annotations from particular tagsets by clicking on the corresponding eye icon.",
-									tagset.getName()), 
-							Type.HUMANIZED_MESSAGE);
+												  + "To start we have set annotations from tagset \"%s\" to be visible.\n"
+												  + "Toggle the visibility of annotations from particular tagsets by clicking on the corresponding eye icon.",
+										  tagset.getName()),
+							Type.HUMANIZED_MESSAGE
+					);
+					multipleTagsetsNotification.setDelayMsec(5000);
+					multipleTagsetsNotification.show(Page.getCurrent());
 				}
 			}
 		}
@@ -1247,7 +1257,7 @@ public class AnnotationPanel extends VerticalLayout {
 						String.format(
 							"The collection currently being edited has been changed to \"%s\"",
 							collection.getName()),
-						Type.HUMANIZED_MESSAGE);				
+						Type.TRAY_NOTIFICATION);
 			}
 		}
 	}

@@ -2285,7 +2285,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						return;
 					}
 
-					Notification.show("Info", "Your project has been synchronized", Notification.Type.HUMANIZED_MESSAGE);
+					Notification.show("Info", "Your project has been synchronized", Notification.Type.TRAY_NOTIFICATION);
 				}
 
 				@Override
@@ -2386,7 +2386,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private void handleCommitRequest() {
 		try {
 			if (!project.hasUncommittedChanges() && !project.hasUntrackedChanges()) {
-				Notification.show("Info", "There are no uncommitted changes", Notification.Type.HUMANIZED_MESSAGE);
+				Notification.show("Info", "There are no uncommitted changes", Notification.Type.TRAY_NOTIFICATION);
 				return;
 			}
 		}
@@ -2401,7 +2401,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				commitMsg -> {
 					try {
 						project.commitAndPushChanges(commitMsg);
-						Notification.show("Info", "Your changes have been committed", Notification.Type.HUMANIZED_MESSAGE);
+						Notification.show("Info", "Your changes have been committed", Notification.Type.TRAY_NOTIFICATION);
 					}
 					catch (IOException e) {
 						errorHandler.showAndLogError("Failed to commit changes", e);

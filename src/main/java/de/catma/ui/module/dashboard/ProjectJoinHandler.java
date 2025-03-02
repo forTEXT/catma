@@ -34,7 +34,7 @@ public class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage> 
 			Notification.show(
 					"Joined successfully",
 					String.format("Successfully joined project \"%s\"", invitation.getName()),
-					Type.HUMANIZED_MESSAGE
+					Type.TRAY_NOTIFICATION
 			);
 			getUi().push();
 

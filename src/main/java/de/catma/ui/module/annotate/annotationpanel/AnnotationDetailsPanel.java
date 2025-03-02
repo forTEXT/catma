@@ -348,7 +348,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			Notification.show(
 					"Info", 
 					"This project is currently in read-only mode!",
-					Type.HUMANIZED_MESSAGE);
+					Type.WARNING_MESSAGE);
 			return;
 		}
 
@@ -392,7 +392,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 			Notification.show(
 					"Info", 
 					"This project is currently in read-only mode!",
-					Type.HUMANIZED_MESSAGE);
+					Type.WARNING_MESSAGE);
 			return;
 		}
 		

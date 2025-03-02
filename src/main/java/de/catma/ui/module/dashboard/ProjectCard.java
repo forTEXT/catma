@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.Set;
 
+import com.vaadin.server.Page;
 import com.vaadin.ui.*;
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -190,14 +191,18 @@ public class ProjectCard extends VerticalFlexLayout  {
 						Member self = members.stream().filter(m -> m.getUserId().equals(rbacManager.getUser().getUserId())).findAny().orElse(null);
 						if (self != null) {
 							if (self instanceof SharedGroupMember) {
-								Notification.show(
+								Notification groupMembershipNotification = new Notification(
 										"Info", 
 										String.format(
 												"You are participating in this project because you are part of the user group '%s'.\n"
 												+ "You cannot leave the project directly, you can only leave the user group.\n"
-												+ "Leaving the user group will disconnect you from all projects shared with this group.", 
+												+ "Leaving the user group will disconnect you from all projects shared with this group.\n"
+												+ "(click to dismiss)",
 												((SharedGroupMember)self).getSharedGroup().name()), 
-										Type.HUMANIZED_MESSAGE);
+										Type.WARNING_MESSAGE
+								);
+								groupMembershipNotification.setDelayMsec(-1);
+								groupMembershipNotification.show(Page.getCurrent());
 								return;
 							}
 						}

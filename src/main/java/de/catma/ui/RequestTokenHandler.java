@@ -87,7 +87,9 @@ public class RequestTokenHandler {
 					@Override
 					public void tokenInvalid(String reason) {
 						// show reason for invalidity
-						Notification.show(reason, Type.WARNING_MESSAGE);
+						Notification tokenInvalidNotification = new Notification(reason, Type.WARNING_MESSAGE);
+						tokenInvalidNotification.setDelayMsec(5000);
+						tokenInvalidNotification.show(Page.getCurrent());
 					}
 				});
 				break;
@@ -130,7 +132,13 @@ public class RequestTokenHandler {
 												// we re-add the token to be able to use it after the login/signup with a different account
 												signupTokenManager.put(groupSignupToken);
 												Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
-												Notification.show("Info", "Please logout and re-use the link to join the group with a different account!", Type.HUMANIZED_MESSAGE);
+												Notification logoutNotification = new Notification(
+														"Info",
+														"Please logout and re-use the link to join the group with a different account!",
+														Type.HUMANIZED_MESSAGE
+												);
+												logoutNotification.setDelayMsec(5000);
+												logoutNotification.show(Page.getCurrent());
 											}
 										}
 										
@@ -149,14 +157,22 @@ public class RequestTokenHandler {
 								// use the email from the group invitation for a possible account signup since it is already verified
 								((NotLoggedInMainView)contentComponent).setSignupEmail(groupSignupToken.email());
 							}
-							Notification.show("Info", "Please sign in/up to join the group!", Type.HUMANIZED_MESSAGE);
+							Notification signinNotification = new Notification(
+									"Info",
+									"Please sign in/up to join the group!",
+									Type.HUMANIZED_MESSAGE
+							);
+							signinNotification.setDelayMsec(5000);
+							signinNotification.show(Page.getCurrent());
 						}
 					}
 					
 					@Override
 					public void tokenInvalid(String reason) {
 						// show reason for invalidity
-						Notification.show(reason, Type.WARNING_MESSAGE);
+						Notification tokenInvalidNotification = new Notification(reason, Type.WARNING_MESSAGE);
+						tokenInvalidNotification.setDelayMsec(5000);
+						tokenInvalidNotification.show(Page.getCurrent());
 						Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
 					}
 				});
@@ -195,7 +211,13 @@ public class RequestTokenHandler {
 												// we re-add the token to be able to use it after the login/signup with a different account
 												signupTokenManager.put(projectSignupToken);
 												Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
-												Notification.show("Info", "Please logout and re-use the link to join the project with a different account!", Type.HUMANIZED_MESSAGE);
+												Notification logoutNotification = new Notification(
+														"Info",
+														"Please logout and re-use the link to join the project with a different account!",
+														Type.HUMANIZED_MESSAGE
+												);
+												logoutNotification.setDelayMsec(5000);
+												logoutNotification.show(Page.getCurrent());
 											}
 										}
 									});
@@ -213,14 +235,23 @@ public class RequestTokenHandler {
 								// use the email from the group invitation for a possible account signup since it is already verified
 								((NotLoggedInMainView)contentComponent).setSignupEmail(projectSignupToken.email());
 							}
-							Notification.show("Info", "Please sign in/up to join the project!", Type.HUMANIZED_MESSAGE);
+
+							Notification signinNotification = new Notification(
+									"Info",
+									"Please sign in/up to join the project!",
+									Type.HUMANIZED_MESSAGE
+							);
+							signinNotification.setDelayMsec(5000);
+							signinNotification.show(Page.getCurrent());
 						}
 					}
 					
 					@Override
 					public void tokenInvalid(String reason) {
 						// show reason for invalidity
-						Notification.show(reason, Type.WARNING_MESSAGE);
+						Notification tokenInvalidNotification = new Notification(reason, Type.WARNING_MESSAGE);
+						tokenInvalidNotification.setDelayMsec(5000);
+						tokenInvalidNotification.show(Page.getCurrent());
 						Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
 					}
 				});
@@ -266,7 +297,9 @@ public class RequestTokenHandler {
 			Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
 		}
 	}
-	
+
+	// TODO: it takes a long time to join projects or groups once the token is validated and there is no feedback to the user
+	//       should the project be opened automatically at all?
 	private void joinProject(final UI currentUI, final User user, final ProjectSignupToken projectSignupToken, final boolean alreadyJoined) {
 		try {
 			GitlabManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
