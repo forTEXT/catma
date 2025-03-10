@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Jetty [Live GitLab]" type="JettyConfiguration" factoryName="Local" APPLICATION_SERVER_NAME="Jetty 12.0.15" ALTERNATIVE_JRE_ENABLED="false">
+  <configuration default="false" name="Jetty [Live GitLab]" type="JettyConfiguration" factoryName="Local" APPLICATION_SERVER_NAME="Jetty 12.0.16" ALTERNATIVE_JRE_ENABLED="false">
     <option name="COMMON_VM_ARGUMENTS" value="-Dprop=catma_local-live.properties" />
     <option name="UPDATING_POLICY" value="restart-server" />
     <deployment>
@@ -536,6 +536,9 @@
               <option name="path" value="modules\proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
+              <option name="path" value="modules\qos.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
               <option name="path" value="modules\quiche.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -602,6 +605,9 @@
               <option name="path" value="modules\setuid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
+              <option name="path" value="modules\size-limit.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
               <option name="path" value="modules\ssl-reload.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -621,6 +627,9 @@
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\test-keystore.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\thread-limit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\threadlimit.mod" />
@@ -1181,6 +1190,9 @@
               <option name="path" value="modules\proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
+              <option name="path" value="modules\qos.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
               <option name="path" value="modules\quiche.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -1247,6 +1259,9 @@
               <option name="path" value="modules\setuid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
+              <option name="path" value="modules\size-limit.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
               <option name="path" value="modules\ssl-reload.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -1266,6 +1281,9 @@
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\test-keystore.mod" />
+            </JettyConfigFile>
+            <JettyConfigFile>
+              <option name="path" value="modules\thread-limit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="path" value="modules\threadlimit.mod" />
