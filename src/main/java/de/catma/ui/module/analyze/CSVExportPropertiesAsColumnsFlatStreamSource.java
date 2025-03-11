@@ -117,8 +117,16 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
 
         			List<String> headerNames = new ArrayList<>();
         			// add common field headers
-                    headerNames.addAll(List.of("Query ID", "Document ID", "Document Name", "Document length", "Keyword", "Keyword in context", "Start offset", "End offset",
-                			"Collection ID", "Collection Name", "Tag", "Tag Version", "Tag Color", "Annotation ID"));
+					headerNames.addAll(
+							List.of(
+									"Query ID",
+									"Document ID", "Document Name", "Document Length",
+									"Keyword", "KeyWord In Context", "Start Offset", "End Offset",
+									"Collection ID", "Collection Name",
+									"Tag", "Tag Version", "Tag Color",
+									"Annotation ID"
+							)
+					);
 
                     // add property field headers
                     if (!propertyNames.isEmpty()) {
@@ -126,7 +134,7 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
                     }
                     
                     // add comment fields
-                    headerNames.addAll(List.of("Comment ID", "Comment/Reply", "Comment Author", "Reply count", "Reply ID"));
+                    headerNames.addAll(List.of("Comment ID", "Comment/Reply", "Comment Author", "Reply Count", "Reply ID"));
                     
                 	csvPrinter.printRecord((Object[])CSVFormat.EXCEL.builder().setHeader(headerNames.toArray(new String[] {})).build().getHeader());
                 	

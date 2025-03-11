@@ -83,9 +83,13 @@ public class CSVExportFlatStreamSource implements StreamSource {
                 try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.builder().setDelimiter(';').build())) {
                 	// we add all possible headers as we do not know which kind of rows we get
                 	csvPrinter.printRecord((Object[])CSVFormat.EXCEL.builder().setHeader(
-                			"Query ID", "Document ID", "Document Name", "Document length", "Keyword", "Keyword in context", "Start offset", "End offset",
-                			"Collection ID", "Collection Name", "Tag", "Tag Version", "Tag Color", "Annotation ID", "Property ID", "Property Name", "Property Value",
-                			"Comment ID", "Comment/Reply", "Comment Author", "Reply count", "Reply ID"
+							"Query ID",
+							"Document ID", "Document Name", "Document Length",
+							"Keyword", "KeyWord In Context", "Start Offset", "End Offset",
+							"Collection ID", "Collection Name",
+							"Tag", "Tag Version", "Tag Color",
+							"Annotation ID", "Property ID", "Property Name", "Property Value",
+							"Comment ID", "Comment/Reply", "Comment Author", "Reply Count", "Reply ID"
                 			).build().getHeader());
                 	
     	            for (QueryResultRow row : queryResult) {
