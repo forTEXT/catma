@@ -89,7 +89,7 @@ class PreAuthServiceTest extends JerseyTest {
 		
 		AuthFixtures.setUpValidTokenAuth(dummyIdent, remoteGitManagerRestrictedFactoryMock);
 		
-		Response response = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		Response response = target("auth").queryParam("accesstoken", "my personal token").request().get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
@@ -112,7 +112,7 @@ class PreAuthServiceTest extends JerseyTest {
 		AuthFixtures.setUpValidTokenAuth(dummyIdent, remoteGitManagerRestrictedFactoryMock);
 		
 		Response response = target("auth")
-				.request(MediaType.APPLICATION_JSON)
+				.request()
 				.header("Authorization", String.format("Bearer %s", new String(Base64.getEncoder().encode("my_personal_token".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)))
 				.get();
 		
@@ -137,7 +137,7 @@ class PreAuthServiceTest extends JerseyTest {
 		AuthFixtures.setUpValidUsernamePasswordAuth(dummyIdent, remoteGitManagerRestrictedFactoryMock);
 		
 		Response response = target("auth")
-				.request(MediaType.APPLICATION_JSON)
+				.request()
 				.header("Authorization", String.format("Basic %s", new String(Base64.getEncoder().encode("theusername:1234".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)))
 				.get();
 		
@@ -160,7 +160,7 @@ class PreAuthServiceTest extends JerseyTest {
 		when(remoteGitManagerRestrictedFactoryMock.create(anyString())).thenThrow(
 				new IOException(new GitLabApiException("unknown backend token")));
 
-		Response response = target("auth").queryParam("accesstoken", "my personal token").request(MediaType.APPLICATION_JSON).get();
+		Response response = target("auth").queryParam("accesstoken", "my personal token").request().get();
 		
 		assertEquals(Status.FORBIDDEN.getStatusCode(), response.getStatus());
 	}
@@ -171,7 +171,7 @@ class PreAuthServiceTest extends JerseyTest {
 
 		AuthFixtures.setUpValidUsernamePasswordAuth(dummyIdent, remoteGitManagerRestrictedFactoryMock);
 		
-		Response response = target("auth").queryParam("username", "theusername").queryParam("password", "1234").request(MediaType.APPLICATION_JSON).get();
+		Response response = target("auth").queryParam("username", "theusername").queryParam("password", "1234").request().get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		

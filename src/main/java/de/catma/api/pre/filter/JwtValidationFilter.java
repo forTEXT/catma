@@ -82,17 +82,17 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 					}
 					else {
 						  requestContext.abortWith(
-					                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "token expired").build());
+					                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "Token expired").build());
 					}
 				}
 			}
 			else {
 				  requestContext.abortWith(
-			                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "verification failed").build());
+			                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "Token verification failed").build());
 			}
 		}
 		catch (ParseException e) {
-			logger.log(Level.WARNING, String.format("The token could not be parsed as a JWT, will try using it as a backend token, the error was: %s", e.getMessage()));
+			logger.log(Level.WARNING, String.format("The token could not be parsed as a JWT, will try using it as a backend token. The error was: %s", e.getMessage()));
 			try {
 				RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(token);
 				
@@ -103,13 +103,13 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 			catch (Exception e2) {
 				logger.log(Level.SEVERE, "The token could not be used as backend token", e2);
 				  requestContext.abortWith(
-			                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "token invalid").build());				
+			                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "Token invalid").build());
 			}
 			
 		}
 		catch (JOSEException e) {
 			  requestContext.abortWith(
-		                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "token invalid").build());			
+		                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "Token invalid").build());
 		}
 	}
 

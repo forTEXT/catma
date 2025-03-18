@@ -28,6 +28,7 @@ import org.eclipse.jgit.lib.Constants;
 import javax.ws.rs.core.SecurityContext;
 
 import de.catma.api.pre.PreProject;
+import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedProvider;
 import de.catma.api.pre.cache.AnnotationCountCache;
 import de.catma.api.pre.cache.ProjectCache;
 import de.catma.api.pre.cache.ProjectCache.CacheKey;
@@ -51,7 +52,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
 
-@Path("/project")
+@Path("/projects")
 public class PreProjectService {
 	
     private final Logger logger = Logger.getLogger(PreProjectService.class.getName());
@@ -73,16 +74,20 @@ public class PreProjectService {
     		return Response.status(Status.UNAUTHORIZED).build();
     	}
     	try {
-	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProviderCache.get(principal.getName()).createRemoteGitManagerRestricted();
+			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(principal.getName());
+			if (remoteGitManagerRestrictedProvider == null) { // can happen if the server is restarted
+				return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Please re-authenticate").build();
+			}
+	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 	    	if (remoteGitManagerRestricted == null) {
-	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "token expired").build();
+	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Token expired").build();
 	    	}
 	    	
 	    	return Response.ok(new SerializationHelper<ProjectReference>().serialize(remoteGitManagerRestricted.getProjectReferences())).build();
     	}
     	catch (Exception e) {
-    		logger.log(Level.SEVERE, "Failed to produce list of projects", e);
-    		return Response.status(Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage()).build();    		
+    		logger.log(Level.SEVERE, "API: Failed to deliver list of projects", e);
+    		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     	}
     }
     
@@ -99,10 +104,14 @@ public class PreProjectService {
 	    	if (principal == null) {
 	    		return Response.status(Status.UNAUTHORIZED).build();
 	    	}
-	    	
-	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProviderCache.get(principal.getName()).createRemoteGitManagerRestricted();
+
+			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(principal.getName());
+			if (remoteGitManagerRestrictedProvider == null) { // can happen if the server is restarted
+				return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Please re-authenticate").build();
+			}
+	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 	    	if (remoteGitManagerRestricted == null) {
-	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "token expired").build();
+	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Token expired").build();
 	    	}
 	    	try {
 	    		CacheKey key = new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId);
@@ -124,8 +133,8 @@ public class PreProjectService {
 	    	}
     	}
     	catch (Exception e) {
-    		logger.log(Level.SEVERE, String.format("Failed to deliver project export for %s/%s", namespace, catmaProjectId), e);
-    		return Response.status(Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage()).build();
+    		logger.log(Level.SEVERE, String.format("API: Failed to deliver project export for project %s/%s", namespace, catmaProjectId), e);
+    		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     	}
     }
     
@@ -138,10 +147,14 @@ public class PreProjectService {
 	    	if (principal == null) {
 	    		return Response.status(Status.UNAUTHORIZED).build();
 	    	}
-	    	
-	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProviderCache.get(principal.getName()).createRemoteGitManagerRestricted();
+
+			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(principal.getName());
+			if (remoteGitManagerRestrictedProvider == null) { // can happen if the server is restarted
+				return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Please re-authenticate").build();
+			}
+	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 	    	if (remoteGitManagerRestricted == null) {
-	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "token expired").build();
+	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Token expired").build();
 	    	}
 	    	
 	    	PreProject project = projectCache.get(
@@ -154,8 +167,8 @@ public class PreProjectService {
 			return Response.ok(plainTextFile, MediaType.TEXT_PLAIN_TYPE.withCharset(StandardCharsets.UTF_8.name())).build();
     	}
     	catch (Exception e) {
-    		logger.log(Level.SEVERE, String.format("Failed to deliver document %s in project %s/%s", documentId, namespace, catmaProjectId), e);
-    		return Response.status(Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage()).build();
+    		logger.log(Level.SEVERE, String.format("API: Failed to deliver document %s for project %s/%s", documentId, namespace, catmaProjectId), e);
+    		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     	}    	
     }
     

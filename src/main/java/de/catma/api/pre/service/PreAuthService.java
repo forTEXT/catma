@@ -20,7 +20,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -68,7 +67,7 @@ public class PreAuthService {
 	private HttpServletRequest servletRequest;    
 
 	
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces("application/jwt")
 	@GET
 	public Response authenticate(
 			@HeaderParam("Authorization") String authorization, // user/password or accesstoken in authorization-header
@@ -101,7 +100,7 @@ public class PreAuthService {
 				return Response.ok(authenticateWithUsernamePassword(username, password)).build();				
 			}
 			else if (oauthError != null) {
-				logger.log(Level.SEVERE, String.format("Got an oauthError: %s", oauthError));	
+				logger.log(Level.SEVERE, String.format("API: Encountered an OAuth error: %s", oauthError));
 			}
 			else if (oauthAuthorizationCode != null) {
 				return Response.ok(authenticateWithThirdPartyToken(oauthAuthorizationCode, oauthState)).build();
@@ -112,7 +111,7 @@ public class PreAuthService {
 			logger.log(Level.SEVERE, "Failed to authenticate", e);
 		}
 		
-		return Response.status(Status.FORBIDDEN.getStatusCode(), "authentication failed").build();
+		return Response.status(Status.FORBIDDEN.getStatusCode(), "Authentication failed").build();
 	}
 	
 	@GET
@@ -122,15 +121,15 @@ public class PreAuthService {
 	        String oauthToken = new BigInteger(130, new SecureRandom()).toString(32);
 	        
 	        URI authorizationUri = oauthHandler.getAuthorizationUri(oauthToken);
-	        logger.info(String.format("Redirecting to third party oauth provider %s", authorizationUri));
+	        logger.info(String.format("Redirecting to third party OAuth provider %s", authorizationUri));
 	        
 	        return Response.temporaryRedirect(authorizationUri).build();
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "Failed to create oauth redirection", e);
+			logger.log(Level.SEVERE, "Failed to perform OAuth redirection", e);
 		}
 		
-		return Response.status(Status.FORBIDDEN.getStatusCode(), "authentication failed").build();
+		return Response.status(Status.FORBIDDEN.getStatusCode(), "Authentication failed").build();
 	}
 	
 	
