@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -247,7 +247,7 @@ public class GitProjectsManager implements ProjectsManager {
 			// create remote user specific branch
 			localGitRepoManager.push(jGitCredentialsManager);
 		}
-		LocalDateTime now = LocalDateTime.now();
+		ZonedDateTime now = ZonedDateTime.now();
 		return new ProjectReference(projectId, user.getIdentifier(), name, description, now, now);
 	}
 
@@ -335,7 +335,7 @@ public class GitProjectsManager implements ProjectsManager {
 		// fork the remote repository
 		remoteGitServerManager.forkProject(projectReference, targetProjectId);
 
-		LocalDateTime now = LocalDateTime.now();
+		ZonedDateTime now = ZonedDateTime.now();
 		return new ProjectReference(targetProjectId, user.getIdentifier(), name, description, now, now);
 	}
 	

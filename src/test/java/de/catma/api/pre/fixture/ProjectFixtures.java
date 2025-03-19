@@ -10,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -174,7 +173,7 @@ public class ProjectFixtures {
 		when(remoteGitManagerRestrictedMock.getPassword()).thenReturn("1234");
 		when(userMock.getIdentifier()).thenReturn(dummyIdent);
 
-		LocalDateTime now = LocalDateTime.now();
+		ZonedDateTime now = ZonedDateTime.now();
 		ProjectReference projectReference = new ProjectReference(projectId, namespace, projectName, "a project description", now, now);
 		when(remoteGitManagerRestrictedMock.getProjectReference(eq(namespace), eq(projectId))).thenReturn(projectReference);
 		
@@ -318,7 +317,7 @@ public class ProjectFixtures {
 		when(remoteGitManagerRestrictedMock.getPassword()).thenReturn("1234");
 		when(userMock.getIdentifier()).thenReturn(dummyIdent);
 
-		LocalDateTime now = LocalDateTime.now();
+		ZonedDateTime now = ZonedDateTime.now();
 		ProjectReference projectReference = new ProjectReference(projectId, namespace, projectName, "a project description", now, now);
 		when(remoteGitManagerRestrictedMock.getProjectReference(eq(namespace), eq(projectId))).thenReturn(projectReference);
 		

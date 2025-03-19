@@ -1,7 +1,7 @@
 package de.catma.ui.module.dashboard;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -62,7 +62,7 @@ public class ProjectListView extends VerticalLayout {
 			new Comparator<ProjectReference>() {
 				@Override
 				public int compare(ProjectReference o1, ProjectReference o2) {
-					return Objects.compare(o1.getCreatedAt(), o2.getCreatedAt(), LocalDateTime::compareTo) * -1;
+					return Objects.compare(o1.getCreatedAt(), o2.getCreatedAt(), ZonedDateTime::compareTo) * -1;
 				}
 			}, 
 			"Created: newest first");
@@ -71,7 +71,7 @@ public class ProjectListView extends VerticalLayout {
 			new Comparator<ProjectReference>() {
 				@Override
 				public int compare(ProjectReference o1, ProjectReference o2) {
-					return Objects.compare(o1.getCreatedAt(), o2.getCreatedAt(), LocalDateTime::compareTo);
+					return Objects.compare(o1.getCreatedAt(), o2.getCreatedAt(), ZonedDateTime::compareTo);
 				}
 			}, 
 			"Created: oldest first");
@@ -80,7 +80,7 @@ public class ProjectListView extends VerticalLayout {
 			new Comparator<ProjectReference>() {
 				@Override
 				public int compare(ProjectReference o1, ProjectReference o2) {
-					return Objects.compare(o1.getLastActivityAt(), o2.getLastActivityAt(), LocalDateTime::compareTo) * -1;
+					return Objects.compare(o1.getLastActivityAt(), o2.getLastActivityAt(), ZonedDateTime::compareTo) * -1;
 				}
 			}, 
 			"Last activity: newest first");
@@ -89,7 +89,7 @@ public class ProjectListView extends VerticalLayout {
 			new Comparator<ProjectReference>() {
 				@Override
 				public int compare(ProjectReference o1, ProjectReference o2) {
-					return Objects.compare(o1.getLastActivityAt(), o2.getLastActivityAt(), LocalDateTime::compareTo);
+					return Objects.compare(o1.getLastActivityAt(), o2.getLastActivityAt(), ZonedDateTime::compareTo);
 				}
 			}, 
 			"Last activity: oldest first");
