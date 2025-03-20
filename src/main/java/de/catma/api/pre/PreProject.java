@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
+import javax.ws.rs.core.UriBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -179,6 +180,12 @@ public class PreProject {
 		
 	}
 
+	// TODO: move to a more general package
+	@FunctionalInterface
+	private interface CheckedFunction<T, R, E extends Exception> {
+		R apply(T t) throws E;
+	}
+
     public String serializeProjectResources(boolean includeExtendedMetadata, int page, int pageSize) {
     	Lock readLock = accessLock.readLock();
         try {
@@ -192,6 +199,46 @@ public class PreProject {
         		pageSize = DEFAULT_PAGE_SIZE;
         	}
         	
+			// this CheckedFunction and the template CacheKey simply avoid some repetition later
+			CheckedFunction<AnnotationCollectionReference, Integer, Exception> annotationCountCacheLoaderFn =
+					(annotationCollectionRef) -> graphProjectHandler.getAnnotationCollection(annotationCollectionRef).getSize();
+
+			CacheKey templateAnnotationCountCacheKey = new CacheKey(userName, namespace, projectId, null, gitProjectHandler.getRootRevisionHash());
+
+			List<SourceDocumentReference> sourceDocumentRefs = graphProjectHandler.getSourceDocumentReferences().stream().sorted(
+					Comparator.comparing(SourceDocumentReference::getUuid)
+			).toList();
+
+			// compute total no. of annotations for pagination info, also pre-populates annotationCountCache
+			int totalAnnotationsCount = 0;
+			for (SourceDocumentReference sourceDocumentRef : sourceDocumentRefs) {
+				for (AnnotationCollectionReference annotationCollectionRef : sourceDocumentRef.getUserMarkupCollectionRefs().stream().toList()) {
+					totalAnnotationsCount += annotationCountCache.get(
+							templateAnnotationCountCacheKey.setCollectionId(annotationCollectionRef.getId()),
+							() -> annotationCountCacheLoaderFn.apply(annotationCollectionRef)
+					);
+				}
+			}
+
+			int totalPagesCount = Math.ceilDiv(totalAnnotationsCount, pageSize);
+			String currentUrl = String.format( // TODO: get this from the request context, as only query parameters change
+					"%s%s/%s/project/%s/%s",
+					CATMAPropertyKey.API_BASE_URL.getValue(),
+					PreApplication.API_PACKAGE,
+					PreApplication.API_VERSION,
+					getNamespace(),
+					getProjectId()
+			);
+			UriBuilder uriBuilder = UriBuilder.fromUri(currentUrl)
+					.queryParam("includeExtendedMetadata", includeExtendedMetadata)
+					.queryParam("page", page) // included here purely to preserve the ordering of parameters
+					.queryParam("pageSize", pageSize);
+			String prevPageUrl = page == 1 ? null : uriBuilder
+					.replaceQueryParam("page", page - 1)
+					.build().toString();
+			String nextPageUrl = page >= totalPagesCount ? null : uriBuilder
+					.replaceQueryParam("page", page + 1)
+					.build().toString();
         	
         	int pageCapacityLeft = pageSize;
         	int startAnnotationCount = (page-1)*pageSize;
@@ -200,14 +247,14 @@ public class PreProject {
             Builder<ExportDocument> documentListBuilder = ImmutableList.builder();
             
             
-            for (SourceDocumentReference sourceDocumentReference : graphProjectHandler.getSourceDocumentReferences().stream().sorted((sRef1, sRef2)->sRef1.getUuid().compareTo(sRef2.getUuid())).toList()) {
+            for (SourceDocumentReference sourceDocumentReference : sourceDocumentRefs) {
             	
             	SourceDocument sourceDocument = graphProjectHandler.getSourceDocument(sourceDocumentReference.getUuid());
             	
-                for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentReference.getUserMarkupCollectionRefs().stream().sorted((cRef1, cRef2)->cRef1.getId().compareTo(cRef2.getId())).toList()) {
+                for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentReference.getUserMarkupCollectionRefs().stream().sorted(Comparator.comparing(AnnotationCollectionReference::getId)).toList()) {
                 	int annotationCount = annotationCountCache.get(
-                			new CacheKey(userName, namespace, projectId, annotationCollectionReference.getId(), gitProjectHandler.getRootRevisionHash()), 
-                			() -> graphProjectHandler.getAnnotationCollection(annotationCollectionReference).getSize());
+                			templateAnnotationCountCacheKey.setCollectionId(annotationCollectionReference.getId()),
+                			() -> annotationCountCacheLoaderFn.apply(annotationCollectionReference));
                 	                	
                 	// did we reach the collection where we start to include annotations?
                 	if (processedAnnotationsCount+annotationCount >= startAnnotationCount) {
@@ -249,7 +296,9 @@ public class PreProject {
             	}
             }
 
-            return new SerializationHelper<Export>().serialize(new Export(extendedMetadata, documentListBuilder.build()));
+            return new SerializationHelper<Export>().serialize(
+                    new Export(totalPagesCount, page, pageSize, prevPageUrl, nextPageUrl, extendedMetadata, documentListBuilder.build())
+            );
         }
         catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to serialize project resources", e);

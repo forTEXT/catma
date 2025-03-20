@@ -1,16 +1,17 @@
 package de.catma.api.pre.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -226,7 +227,14 @@ public class PreProjectServiceTest extends JerseyTest {
 		
 		
 		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
-		
+		assertDoesNotThrow(() -> UUID.fromString(export.getExportId().substring(2)));
+		assertTrue(ChronoUnit.SECONDS.between(export.getExportCreatedAt(), ZonedDateTime.now()) <= 5);
+		assertEquals(1, export.getTotalPages());
+		assertEquals(1, export.getPageNo());
+		assertEquals(100, export.getPageSize());
+		assertNull(export.getPrevPage());
+		assertNull(export.getNextPage());
+
 		List<ExportDocument> exportDocuments = export.getDocuments();
 		assertTrue(exportDocuments.size() == 1);
 
@@ -290,7 +298,14 @@ public class PreProjectServiceTest extends JerseyTest {
 		
 		
 		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
-		
+		assertDoesNotThrow(() -> UUID.fromString(export.getExportId().substring(2)));
+		assertTrue(ChronoUnit.SECONDS.between(export.getExportCreatedAt(), ZonedDateTime.now()) <= 5);
+		assertEquals(2, export.getTotalPages());
+		assertEquals(2, export.getPageNo());
+		assertEquals(2, export.getPageSize());
+		assertTrue(export.getPrevPage().contains("page=1"));
+		assertNull(export.getNextPage());
+
 		ExportDocument exportDocument = export.getDocuments().get(0);
 		PreApiAnnotation annotation = exportDocument.getAnnotations().get(0);
 

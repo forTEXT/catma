@@ -9,10 +9,14 @@ import com.google.common.cache.CacheBuilder;
 
 public class AnnotationCountCache {
 	
-	public static record CacheKey(String identifier, String namespace, String catmaProjectId, String collectionId, String rootRevisionHash) {}; 
+	public static record CacheKey(String identifier, String namespace, String catmaProjectId, String collectionId, String rootRevisionHash) {
+		public CacheKey setCollectionId(String collectionId) {
+			return new CacheKey(identifier, namespace, catmaProjectId, collectionId, rootRevisionHash);
+		}
+	}
 	
 	
-	private final Cache<CacheKey, Integer> projects = CacheBuilder.newBuilder().maximumSize(30).expireAfterWrite(1, TimeUnit.HOURS).build();
+	private final Cache<CacheKey, Integer> projects = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).build();
 	
 	public void put(CacheKey key, Integer annotationCount) {
 		projects.put(key, annotationCount);
