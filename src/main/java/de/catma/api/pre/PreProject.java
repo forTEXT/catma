@@ -90,7 +90,7 @@ public class PreProject {
 		
 		return new PreApiSourceDocument(
 				sourceDocument.getUuid(), 
-                String.format("%s%s/%s/project/%s/%s/doc/%s", 
+                String.format("%s%s/%s/projects/%s/%s/doc/%s", // TODO: get this from the request context, only append doc part
                 		CATMAPropertyKey.API_BASE_URL.getValue(), 
                 		PreApplication.API_PACKAGE, 
                 		PreApplication.API_VERSION, 
@@ -240,7 +240,7 @@ public class PreProject {
 
 			int totalPagesCount = Math.ceilDiv(totalAnnotationsCount, pageSize);
 			String currentUrl = String.format( // TODO: get this from the request context, as only query parameters change
-					"%s%s/%s/project/%s/%s",
+					"%s%s/%s/projects/%s/%s",
 					CATMAPropertyKey.API_BASE_URL.getValue(),
 					PreApplication.API_PACKAGE,
 					PreApplication.API_VERSION,
@@ -248,7 +248,6 @@ public class PreProject {
 					getProjectId()
 			);
 			UriBuilder uriBuilder = UriBuilder.fromUri(currentUrl)
-					.queryParam("includeExtendedMetadata", includeExtendedMetadata)
 					.queryParam("page", page) // included here purely to preserve the ordering of parameters
 					.queryParam("pageSize", pageSize);
 			String prevPageUrl = page == 1 ? null : uriBuilder

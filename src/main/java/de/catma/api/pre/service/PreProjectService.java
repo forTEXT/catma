@@ -121,7 +121,15 @@ public class PreProjectService {
 		    	PreProject project = projectCache.get(
 		    			new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId), 
 		    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
-		    	return Response.ok(project.serializeProjectResources(includeExtendedMetadata==null?true:includeExtendedMetadata, page==null?1:page, pageSize==null?PreProject.DEFAULT_PAGE_SIZE:pageSize), MediaType.APPLICATION_JSON).build();
+				return Response.ok(
+						project.serializeProjectResources(
+								// only include extended metadata on the first page by default
+								includeExtendedMetadata == null ? (page == null || page == 1) : includeExtendedMetadata,
+								page == null ? 1 : page,
+								pageSize == null ? PreProject.DEFAULT_PAGE_SIZE : pageSize
+						),
+						MediaType.APPLICATION_JSON
+				).build();
 	    	}
 	    	catch (ExecutionException ee) {
 	    		if (ee.getMessage().contains("404")) {
