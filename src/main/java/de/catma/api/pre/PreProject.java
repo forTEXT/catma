@@ -268,7 +268,12 @@ public class PreProject {
             for (SourceDocumentReference sourceDocumentReference : sourceDocumentRefs) {
             	
             	SourceDocument sourceDocument = graphProjectHandler.getSourceDocument(sourceDocumentReference.getUuid());
-            	
+
+				ExportDocument exportDocument = new ExportDocument(
+						sourceDocument.getUuid(),
+						sourceDocument.toString()
+				);
+
                 for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentReference.getUserMarkupCollectionRefs().stream().sorted(Comparator.comparing(AnnotationCollectionReference::getId)).toList()) {
                 	int annotationCount = annotationCountCache.get(
                 			templateAnnotationCountCacheKey.setCollectionId(annotationCollectionReference.getId()),
@@ -293,13 +298,8 @@ public class PreProject {
                 		
                 		pageCapacityLeft -= annotations.size();
                 		
-                		ExportDocument exportDocument = new ExportDocument( // TODO: this is duplicating documents, move outside collections loop
-                				sourceDocument.getUuid(),
-                				sourceDocument.toString(),
-                				annotations
-                		);
+                		exportDocument.addAnnotations(annotations);
                 		
-                		documentListBuilder.add(exportDocument);
                 	}
                 	
                 	processedAnnotationsCount += annotationCount;
@@ -308,7 +308,9 @@ public class PreProject {
                 		break;
                 	}
                 }
-            	
+
+                documentListBuilder.add(exportDocument);
+
             	if (pageCapacityLeft <= 0) {
             		break;
             	}

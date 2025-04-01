@@ -1,5 +1,6 @@
 package de.catma.api.pre.serialization.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
@@ -10,11 +11,11 @@ public class ExportDocument {
     private final List<PreApiAnnotation> annotations;
     
 
-    public ExportDocument(String id, String title, List<PreApiAnnotation> annotations) {
+    public ExportDocument(String id, String title) {
 		super();
 		this.id = id;
 		this.title = title;
-		this.annotations = annotations;
+		this.annotations = new ArrayList<>();
 	}
 
 	public String getId() {
@@ -27,5 +28,9 @@ public class ExportDocument {
     
     public List<PreApiAnnotation> getAnnotations() {
         return annotations;
+    }
+
+    public void addAnnotations(List<PreApiAnnotation> annotations) {
+        this.annotations.addAll(annotations);
     }
 }
