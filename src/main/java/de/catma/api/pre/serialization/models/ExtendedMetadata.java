@@ -9,7 +9,7 @@ import de.catma.api.pre.serialization.model_wrappers.PreApiTagsetDefinition;
 
 public record ExtendedMetadata(
 	Map<String, PreApiSourceDocument> documents,
-	Map<String, PreApiAnnotationCollection> collections,
+	Map<String, PreApiAnnotationCollection> annotationCollections,
 	Map<String, PreApiTagsetDefinition> tagsets,
 	Map<String, PreApiTagDefinition> tags) {
 }

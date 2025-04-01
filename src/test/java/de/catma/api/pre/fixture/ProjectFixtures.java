@@ -250,7 +250,8 @@ public class ProjectFixtures {
 		IDGenerator idGenerator = new IDGenerator();
 		return setUpFullProject(
 				remoteGitManagerRestrictedFactoryMock, namespace, projectId, projectName, sourceDocumentUuid, 
-				tagsetId, tagsetName, tagId, tagName,
+				tagsetId, tagsetName, tagId, tagName, String.format("#%s", ColorConverter.randomHex()),
+				idGenerator.generateCollectionId(), "my collection",
 				annotationId1, propertyName, propertyValue, 
 				idGenerator.generate(),idGenerator.generate(),idGenerator.generate());
 	}
@@ -260,11 +261,12 @@ public class ProjectFixtures {
 			String namespace, String projectId, String projectName, 
 			String sourceDocumentUuid, 
 			String tagsetId, String tagsetName,
-			String tagId, String tagName, 
+			String tagId, String tagName, String tagHexColor,
+			String annotationCollectionId, String annotationCollectionName,
 			String annotationId1, String propertyName, String propertyValue,
 			String annotationId2, String annotationId3, String annotationId4) throws Exception {
 		
-		String dummyIdent = "dummyIdent";
+		String dummyIdent = namespace;
 		String email = "dummy@dummy.org";
 		
 		LOGGER.info("setting up a 'fake' remote project");
@@ -398,7 +400,9 @@ public class ProjectFixtures {
 				new PropertyDefinition(
 					idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()), 
 					PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
-					Collections.singletonList(ColorConverter.toRGBIntAsString(ColorConverter.randomHex()))));
+					Collections.singletonList(ColorConverter.toRGBIntAsString(tagHexColor.substring(1))) // strip leading #
+				)
+		);
 
 
 		
@@ -412,8 +416,7 @@ public class ProjectFixtures {
 		LOGGER.info("adding an AnnotationCollection to the project");
 
 		// add AnnotationCollection
-		String collectionId = idGenerator.generateCollectionId();
-		gitProjectHandler.createAnnotationCollection(collectionId, "my collection", "all the annotations", sourceDocumentUuid, null, true);
+		gitProjectHandler.createAnnotationCollection(annotationCollectionId, annotationCollectionName, "all the annotations", sourceDocumentUuid, null, true);
 		
 		
 		LOGGER.info("adding Annotations to the project");
@@ -459,21 +462,21 @@ public class ProjectFixtures {
 		tagInstance1.addUserDefinedProperty(new Property(propertyDef.getUuid(), Collections.singletonList(propertyValue)));
 
 		Range range1 = new Range(2, 10);
-		TagReference tagReference1 = new TagReference(collectionId, tagInstance1, sourceDocumentUuid, range1);
+		TagReference tagReference1 = new TagReference(annotationCollectionId, tagInstance1, sourceDocumentUuid, range1);
 		
 		Range range2 = new Range(15, 20);
-		TagReference tagReference2 = new TagReference(collectionId, tagInstance2, sourceDocumentUuid, range2);
+		TagReference tagReference2 = new TagReference(annotationCollectionId, tagInstance2, sourceDocumentUuid, range2);
 
 		Range range3 = new Range(25, 30);
-		TagReference tagReference3 = new TagReference(collectionId, tagInstance3, sourceDocumentUuid, range3);
+		TagReference tagReference3 = new TagReference(annotationCollectionId, tagInstance3, sourceDocumentUuid, range3);
 
 		Range range4 = new Range(35, 40);
-		TagReference tagReference4 = new TagReference(collectionId, tagInstance4, sourceDocumentUuid, range4);
+		TagReference tagReference4 = new TagReference(annotationCollectionId, tagInstance4, sourceDocumentUuid, range4);
 		
 		List<TagReference> refs = List.of(tagReference1, tagReference2, tagReference3, tagReference4);
-		gitProjectHandler.addTagReferencesToCollection(collectionId, refs, tagLibrary);
+		gitProjectHandler.addTagReferencesToCollection(annotationCollectionId, refs, tagLibrary);
 
-		gitProjectHandler.addCollectionsToStagedAndCommit(Collections.singleton(collectionId), "some nice annotations", false, true);
+		gitProjectHandler.addCollectionsToStagedAndCommit(Collections.singleton(annotationCollectionId), "some nice annotations", false, true);
 		
 		// return annotated phrases for validation
 		return refs.stream().sorted(PreProject.TAG_REFERENCE_COMPARATOR).map(tr -> {

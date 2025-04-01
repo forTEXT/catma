@@ -3,6 +3,8 @@ package de.catma.api.pre;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -22,14 +24,7 @@ import com.google.common.collect.ImmutableMap;
 
 import de.catma.api.pre.cache.AnnotationCountCache;
 import de.catma.api.pre.cache.AnnotationCountCache.CacheKey;
-import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotatedPhrase;
-import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
-import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotationCollection;
-import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotationProperty;
-import de.catma.api.pre.serialization.model_wrappers.PreApiPropertyDefinition;
-import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
-import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
-import de.catma.api.pre.serialization.model_wrappers.PreApiTagsetDefinition;
+import de.catma.api.pre.serialization.model_wrappers.*;
 import de.catma.api.pre.serialization.models.Export;
 import de.catma.api.pre.serialization.models.ExportDocument;
 import de.catma.api.pre.serialization.models.ExtendedMetadata;
@@ -43,9 +38,7 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.graph.interfaces.GraphProjectHandler;
 import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagManager;
+import de.catma.tag.*;
 
 public class PreProject {
 	public static final int DEFAULT_PAGE_SIZE = 100;
@@ -103,14 +96,16 @@ public class PreProject {
                 		PreApplication.API_VERSION, 
                 		getNamespace(),
                 		getProjectId(),
-                		sourceDocument.getUuid().toLowerCase()),
+                		sourceDocument.getUuid()),
                 crc32bChecksum,
                 size,
                 sourceDocument.toString(),
                 sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor(),
                 sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getDescription(),
                 sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getPublisher(),
-                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI());
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getResponsibleUser()
+        );
 	}
 	
 	public String getProjectId() {
@@ -151,6 +146,7 @@ public class PreProject {
                 				annotationCollectionReference.getContentInfoSet().getAuthor(),
                 				annotationCollectionReference.getContentInfoSet().getDescription(),
                 				annotationCollectionReference.getContentInfoSet().getPublisher(),
+                				annotationCollectionReference.getResponsibleUser(),
                 				annotationCollectionReference.getSourceDocumentId()));
             }
     	}
@@ -158,21 +154,43 @@ public class PreProject {
     	ImmutableMap.Builder<String, PreApiTagsetDefinition> tagsetMapBuilder = ImmutableMap.builder();
     	ImmutableMap.Builder<String, PreApiTagDefinition> tagMapBuilder = ImmutableMap.builder();
     	tagManager.getTagLibrary().forEach(tagset -> {
-    		tagsetMapBuilder.put(tagset.getUuid(), new PreApiTagsetDefinition(tagset.getUuid(), tagset.getName(), tagset.getDescription()));
+    		tagsetMapBuilder.put(tagset.getUuid(), new PreApiTagsetDefinition(tagset.getUuid(), tagset.getName(), tagset.getDescription(), tagset.getResponsibleUser()));
     		for (TagDefinition tag : tagset) {
     			tagMapBuilder.put(
     					tag.getUuid(), 
     					new PreApiTagDefinition(
     							tag.getUuid(), 
     							tag.getParentUuid(), 
-    							tag.getName(), 
-    							tag.getColor(), 
+    							tag.getName(),
+								tag.getSystemPropertyDefinitions().stream()
+										// PropertyDefinitions never store a value for catma_markuptimestamp
+										.filter(pd -> !pd.getName().equals(PropertyDefinition.SystemPropertyName.catma_markuptimestamp.name()))
+										.collect(Collectors.toMap(
+												pd -> {
+													if (pd.getName().equals(PropertyDefinition.SystemPropertyName.catma_displaycolor.name())) {
+														return "color";
+													}
+													else if (pd.getName().equals(PropertyDefinition.SystemPropertyName.catma_markupauthor.name())) {
+														return "author";
+													}
+													return pd.getName();
+												},
+												pd -> {
+													if (pd.getName().equals(PropertyDefinition.SystemPropertyName.catma_displaycolor.name())) {
+														return TagDefinition.getHexColor(pd.getFirstValue());
+													}
+													return pd.getFirstValue();
+												}
+										)),
     							tag.getUserDefinedPropertyDefinitions()
     								.stream()
-		                			.map(pd -> new PreApiPropertyDefinition(
+		                			.map(pd -> new PreApiUserPropertyDefinition(
 		                					pd.getUuid(), 
 		                					pd.getName(), 
-		                					Collections.unmodifiableList(pd.getPossibleValueList()))).collect(Collectors.toList())));
+		                					Collections.unmodifiableList(pd.getPossibleValueList()))).collect(Collectors.toList()),
+								tag.getTagsetDefinitionUuid()
+						)
+				);
     		}
     	});
     	
@@ -275,7 +293,7 @@ public class PreProject {
                 		
                 		pageCapacityLeft -= annotations.size();
                 		
-                		ExportDocument exportDocument = new ExportDocument(
+                		ExportDocument exportDocument = new ExportDocument( // TODO: this is duplicating documents, move outside collections loop
                 				sourceDocument.getUuid(),
                 				sourceDocument.toString(),
                 				annotations
@@ -313,8 +331,7 @@ public class PreProject {
     	List<Range> ranges = Range.mergeRanges(annotationCollection.getTagReferences(tagInstance).stream().map(TagReference::getRange).sorted());
     	TagDefinition tag = tagManager.getTagLibrary().getTagDefinition(tagInstance.getTagDefinitionId());
     	return new PreApiAnnotation(
-    			tagInstance.getUuid(), 
-    			sourceDocument.getUuid(),
+    			tagInstance.getUuid(),
     			ranges.stream()
     				.map(range -> {
     					try {
@@ -325,9 +342,15 @@ public class PreProject {
     						return null;
     					}
     				})
-    				.toList(), 
-    			tag.getUuid(), 
-    			tag.getName(), 
+    				.toList(),
+    			annotationCollection.getUuid(),
+    			annotationCollection.getName(),
+    			tag.getUuid(),
+    			tag.getName(),
+    			tag.getHexColor(),
+    			annotationCollection.getAnnotation(tagInstance.getUuid()).getTagPath(),
+    			tagInstance.getAuthor(),
+    			ZonedDateTime.parse(tagInstance.getTimestamp(), DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
     			tagInstance.getUserDefinedProperties().stream()
     				.map((p) -> 
     					new PreApiAnnotationProperty(

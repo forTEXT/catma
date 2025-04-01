@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,12 +20,11 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinSession;
 
-import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotatedPhrase;
-import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.LegacyPreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.LegacyPreApiTagDefinition;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotationProperty;
-import de.catma.api.pre.serialization.model_wrappers.PreApiPropertyDefinition;
 import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
-import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
+import de.catma.api.pre.serialization.model_wrappers.PreApiUserPropertyDefinition;
 import de.catma.api.pre.serialization.models.LegacyExport;
 import de.catma.api.pre.serialization.models.LegacyExportDocument;
 import de.catma.document.annotation.AnnotationCollection;
@@ -118,7 +117,7 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                     annotationCollections.add(project.getAnnotationCollection(annotationCollectionReference));
                 }
 
-                ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();
+                HashSet<TagDefinition> tagDefinitions = new HashSet<>();
                 ArrayList<TagReference> tagReferences = new ArrayList<>();
                 for (AnnotationCollection annotationCollection : annotationCollections) {
                     for (TagsetDefinition tagsetDefinition : annotationCollection.getTagLibrary().getTagsetDefinitions()) {
@@ -131,13 +130,13 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                 LegacyExportDocument exportDocument = new LegacyExportDocument(
                 		getPreApiSourceDocument(sourceDocument),
                         tagDefinitions.stream()
-	                        .map(td -> new PreApiTagDefinition(
+	                        .map(td -> new LegacyPreApiTagDefinition(
 	                        		td.getUuid(), 
 	                        		td.getParentUuid(), 
 	                        		td.getName(), 
-	                        		td.getColor(), 
+	                        		td.getHexColor(),
 	                        		td.getUserDefinedPropertyDefinitions().stream()
-	                        			.map(pd -> new PreApiPropertyDefinition(
+	                        			.map(pd -> new PreApiUserPropertyDefinition(
 	                        					pd.getUuid(), 
 	                        					pd.getName(), 
 	                        					Collections.unmodifiableList(pd.getPossibleValueList()))).collect(Collectors.toList())))
@@ -146,10 +145,12 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
                                 (TagReference tagReference) -> {
                                     try {
                                     	TagDefinition tag = tagDefinitions.stream().filter(td -> td.getUuid().equals(tagReference.getTagDefinitionId())).findFirst().get();
-                                    	return new PreApiAnnotation(
+                                    	return new LegacyPreApiAnnotation(
                                     			tagReference.getTagInstanceId(), 
                                     			sourceDocument.getUuid(), 
-                                    			List.of(new PreApiAnnotatedPhrase(tagReference.getRange().getStartPoint(), tagReference.getRange().getEndPoint(), sourceDocument.getContent(tagReference.getRange()))),
+                                    			tagReference.getRange().getStartPoint(),
+                                    			tagReference.getRange().getEndPoint(),
+                                    			sourceDocument.getContent(tagReference.getRange()),
                                     			tag.getUuid(), 
                                     			tag.getName(), 
                                     			tagReference.getTagInstance().getUserDefinedProperties().stream()
@@ -205,21 +206,17 @@ public class ProjectResourceExportApiRequestHandler implements RequestHandler {
 		
 		
 		return new PreApiSourceDocument(
-				sourceDocument.getUuid(), 
-                String.format("%s%s/%s/project/%s/%s/doc/%s", 
-                		CATMAPropertyKey.API_BASE_URL.getValue(), 
-                		PreApplication.API_PACKAGE, 
-                		PreApplication.API_VERSION, 
-                		project.getNamespace(),
-                		project.getId(),
-                		sourceDocument.getUuid().toLowerCase()),
+				sourceDocument.getUuid(),
+                String.format("%s%s/doc/%s", BASE_URL, handlerPath.substring(1), sourceDocument.getUuid().toLowerCase()),
                 crc32bChecksum,
                 size,
                 sourceDocument.toString(),
                 sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor(),
                 sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getDescription(),
                 sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getPublisher(),
-                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI());
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI(),
+                sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getResponsibleUser()
+        );
 	}
 
 }

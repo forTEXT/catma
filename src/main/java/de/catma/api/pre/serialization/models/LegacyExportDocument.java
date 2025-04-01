@@ -1,32 +1,32 @@
 package de.catma.api.pre.serialization.models;
 
-import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.LegacyPreApiAnnotation;
+import de.catma.api.pre.serialization.model_wrappers.LegacyPreApiTagDefinition;
 import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
-import de.catma.api.pre.serialization.model_wrappers.PreApiTagDefinition;
 
 import java.util.List;
 
 @Deprecated
 public class LegacyExportDocument {
     private final PreApiSourceDocument sourceDocument;
-    private final List<PreApiTagDefinition> tags;
-    private final List<PreApiAnnotation> annotations;
+    private final List<LegacyPreApiTagDefinition> tags;
+    private final List<LegacyPreApiAnnotation> annotations;
 
-    public LegacyExportDocument(PreApiSourceDocument preApiSourceDocument, List<PreApiTagDefinition> preApiTagDefinitions, List<PreApiAnnotation> preApiAnnotations) {
+    public LegacyExportDocument(PreApiSourceDocument preApiSourceDocument, List<LegacyPreApiTagDefinition> legacyPreApiTagDefinitions, List<LegacyPreApiAnnotation> legacyPreApiAnnotations) {
         this.sourceDocument = preApiSourceDocument;
-        this.tags = preApiTagDefinitions;
-        this.annotations = preApiAnnotations;
+        this.tags = legacyPreApiTagDefinitions;
+        this.annotations = legacyPreApiAnnotations;
     }
 
     public PreApiSourceDocument getSourceDocument() {
         return sourceDocument;
     }
 
-    public List<PreApiTagDefinition> getTags() {
+    public List<LegacyPreApiTagDefinition> getTags() {
         return tags;
     }
 
-    public List<PreApiAnnotation> getAnnotations() {
+    public List<LegacyPreApiAnnotation> getAnnotations() {
         return annotations;
     }
 }

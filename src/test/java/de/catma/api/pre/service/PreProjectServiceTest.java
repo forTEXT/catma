@@ -197,6 +197,9 @@ public class PreProjectServiceTest extends JerseyTest {
 		String sourceDocumentUuid = idGenerator.generateDocumentId();
 		String tagId = idGenerator.generate();
 		String tagName = "my tag";
+		String tagHexColor = "#ff0000";
+		String annotationCollectionId = idGenerator.generateCollectionId();
+		String annotationCollectionName = "my collection";
 		String annotationId1 = idGenerator.generate();
 		String annotationId2 = idGenerator.generate();
 		String annotationId3 = idGenerator.generate();
@@ -212,7 +215,8 @@ public class PreProjectServiceTest extends JerseyTest {
 					namespace, projectId, projectName, 
 					sourceDocumentUuid, 
 					tagsetId, tagsetName,
-					tagId, tagName, 
+					tagId, tagName, tagHexColor,
+					annotationCollectionId, annotationCollectionName,
 					annotationId1, propertyName, propertyValue,
 					annotationId2, annotationId3, annotationId4);
 		
@@ -244,16 +248,21 @@ public class PreProjectServiceTest extends JerseyTest {
 		assertEquals(sourceDocumentUuid, exportDocument.getId());
 		assertTrue(exportDocument.getAnnotations().size() == annotatedPhrasesSortedByAnnotationId.size());
 		PreApiAnnotation annotation1 = exportDocument.getAnnotations().stream().filter(a -> a.getId().equals(annotationId1)).findFirst().get();
+		assertEquals(annotationId1, annotation1.getId());
 		assertEquals(
 				annotatedPhrasesSortedByAnnotationId.get(
-						List.of(annotationId1, annotationId2, annotationId3, annotationId4).stream().sorted().toList().indexOf(annotationId1)), 
+						List.of(annotationId1, annotationId2, annotationId3, annotationId4).stream().sorted().toList().indexOf(annotationId1)),
 				annotation1.getPhrases().get(0).getPhrase());
-		assertEquals(annotationId1, annotation1.getId());
+		assertEquals(annotationCollectionId, annotation1.getAnnotationCollectionId());
+		assertEquals(annotationCollectionName, annotation1.getAnnotationCollectionName());
 		assertEquals(tagId, annotation1.getTagId());
-		assertEquals(sourceDocumentUuid, annotation1.getSourceDocumentId());
 		assertEquals(tagName, annotation1.getTagName());
-		assertTrue(annotation1.getProperties().size() == 1);
-		PreApiAnnotationProperty property = annotation1.getProperties().get(0);
+		assertEquals(tagHexColor, annotation1.getTagColor());
+		assertEquals(String.format("/%s", tagName), annotation1.getTagPath());
+		assertEquals(namespace, annotation1.getAuthor());
+		assertTrue(ChronoUnit.SECONDS.between(annotation1.getCreatedAt(), ZonedDateTime.now()) <= 5);
+		assertTrue(annotation1.getUserProperties().size() == 1);
+		PreApiAnnotationProperty property = annotation1.getUserProperties().get(0);
 		assertEquals(propertyName, property.getName());
 		assertTrue(property.getValues().size() == 1);
 		assertEquals(propertyValue, property.getValues().get(0));

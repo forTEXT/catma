@@ -176,7 +176,11 @@ public class TagDefinition {
 	}
 
 	public String getHexColor() {
-		int rgb = Integer.parseInt(getColor());
+		return getHexColor(getColor());
+	}
+
+	public static String getHexColor(String propertyValue) {
+		int rgb = Integer.parseInt(propertyValue);
 		int red = (rgb >> 16) & 0xFF;
 		int green = (rgb >> 8) & 0xFF;
 		int blue = rgb & 0xFF;

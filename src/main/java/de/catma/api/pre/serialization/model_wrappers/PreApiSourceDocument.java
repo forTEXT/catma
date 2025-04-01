@@ -12,9 +12,10 @@ public class PreApiSourceDocument {
     private final String description;
     private final String publisher;
     private final transient URI fileUri;
+    private final String responsibleUser;
 
     public PreApiSourceDocument(String id, String bodyUrl, String crc32bChecksum, int size, String title, String author,
-			String description, String publisher, URI fileUri) {
+			String description, String publisher, URI fileUri, String responsibleUser) {
 		super();
 		this.id = id;
 		this.bodyUrl = bodyUrl;
@@ -25,6 +26,7 @@ public class PreApiSourceDocument {
 		this.description = description;
 		this.publisher = publisher;
 		this.fileUri = fileUri;
+		this.responsibleUser = responsibleUser;
 	}
 
 	public String getId() {
@@ -63,4 +65,7 @@ public class PreApiSourceDocument {
 		return fileUri;
 	}
 
+    public String getResponsibleUser() {
+        return responsibleUser;
+    }
 }
