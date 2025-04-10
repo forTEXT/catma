@@ -94,8 +94,8 @@ public class AuthFixtures {
 		// if HttpEntity.getContent() is called
 		when(entityMock.getContent()).thenReturn(idTokenInputStream);
 
-		// if HttpEntity.writeTo() is called
-		// needs to be mocked differently because it is a void method (see https://javadoc.io/doc/org.mockito/mockito-core/4.11.0/org/mockito/Mockito.html#12)
+		// if HttpEntity.writeTo() is called (needs to be mocked differently because it is a void method, see
+		// https://javadoc.io/doc/org.mockito/mockito-core/5.17.0/org.mockito/org/mockito/Mockito.html#12)
 		doAnswer(new Answer() {
 			public Object answer(InvocationOnMock invocation) throws Throwable {
 				Object[] args = invocation.getArguments();
