@@ -83,10 +83,6 @@ public enum CATMAPropertyKey {
 	API_GIT_REPOSITORY_BASE_PATH,
 	API_HMAC_SECRET,
 
-	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
-	CATMA_5_API_URL("https://portal.catma.de/catma/api/"),
-	EXPERT_MODE("false"),
-
 	V6_REPO_MIGRATION_MAX_USERS("1"),
 	V6_REPO_MIGRATION_USER_LIST,
 
