@@ -13,10 +13,8 @@ import de.catma.api.pre.cache.AnnotationCountCache;
 import de.catma.api.pre.cache.ProjectCache;
 import de.catma.api.pre.cache.RemoteGitManagerRestrictedProviderCache;
 import de.catma.api.pre.oauth.DefaultHttpClientFactory;
-import de.catma.api.pre.oauth.GoogleOauthHandler;
 import de.catma.api.pre.oauth.HttpServletRequestSessionStorageHandler;
 import de.catma.api.pre.oauth.interfaces.HttpClientFactory;
-import de.catma.api.pre.oauth.interfaces.OauthHandler;
 import de.catma.api.pre.oauth.interfaces.SessionStorageHandler;
 
 @Provider
@@ -32,7 +30,6 @@ public class PreApiInjectionBinder extends AbstractBinder {
 		// per request, can be overwritten e.g. for testing purposes with a higher rank like .ranked(2)
 		bind(GitlabManagerRestrictedFactory.class).to(RemoteGitManagerRestrictedFactory.class).ranked(1);
 		bind(GitlabManagerPrivilegedFactory.class).to(RemoteGitManagerPrivilegedFactory.class).ranked(1);
-		bind(GoogleOauthHandler.class).to(OauthHandler.class).ranked(1);
 		bind(DefaultHttpClientFactory.class).to(HttpClientFactory.class).ranked(1);
 		bind(HttpServletRequestSessionStorageHandler.class).to(SessionStorageHandler.class).ranked(1);
 	}

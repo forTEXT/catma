@@ -1,14 +1,13 @@
 package de.catma.api.pre.service;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,10 +19,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import org.apache.http.client.ClientProtocolException;
+import javax.ws.rs.core.UriBuilder;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -37,14 +36,18 @@ import de.catma.api.pre.backend.AccessTokenRemoteGitManagerRestrictedProvider;
 import de.catma.api.pre.backend.CredentialsRemoteGitManagerRestrictedProvider;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerPrivilegedFactory;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
+import de.catma.api.pre.oauth.interfaces.HttpClientFactory;
+import de.catma.api.pre.oauth.interfaces.SessionStorageHandler;
 import de.catma.api.pre.cache.RemoteGitManagerRestrictedProviderCache;
-import de.catma.api.pre.oauth.OauthIdentity;
-import de.catma.api.pre.oauth.interfaces.OauthHandler;
+import de.catma.oauth.GoogleOauthHandler;
+import de.catma.oauth.OauthException;
+import de.catma.oauth.OauthIdentity;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.user.User;
+import de.catma.util.ExceptionUtil;
 import de.catma.util.Pair;
 
 @Path("/auth")
@@ -61,20 +64,20 @@ public class PreAuthService {
 	private RemoteGitManagerPrivilegedFactory remoteGitManagerPrivilegedFactory;
 	
 	@Inject
-	private OauthHandler oauthHandler;
-	
+	private HttpClientFactory httpClientFactory;
+	@Inject
+	private SessionStorageHandler sessionStorageHandler;
+
 	@Context
 	private HttpServletRequest servletRequest;    
 
 	
-	@Produces("application/jwt")
+	@Produces(MediaType.TEXT_PLAIN)
 	@GET
 	public Response authenticate(
 			@HeaderParam("Authorization") String authorization, // user/password or accesstoken in authorization-header
 			@QueryParam("accesstoken") String accessToken, 
-			@QueryParam("username") String username, @QueryParam("password") String password,
-			// oauth parameters when redirecting after third party authentication 
-			@QueryParam("code") String oauthAuthorizationCode, @QueryParam("state") String oauthState, @QueryParam("error") String oauthError) {
+			@QueryParam("username") String username, @QueryParam("password") String password) {
 
 		try {
 			if (authorization != null) {
@@ -99,40 +102,58 @@ public class PreAuthService {
 			else if (username != null && password != null) {
 				return Response.ok(authenticateWithUsernamePassword(username, password)).build();				
 			}
-			else if (oauthError != null) {
-				logger.log(Level.SEVERE, String.format("API: Encountered an OAuth error: %s", oauthError));
-			}
-			else if (oauthAuthorizationCode != null) {
-				return Response.ok(authenticateWithThirdPartyToken(oauthAuthorizationCode, oauthState)).build();
-			}
 
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Failed to authenticate", e);
+
+			// check for exceptions caused by invalid credentials
+			String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
+			if (message != null && (message.equals("invalid_grant") || message.equals("401 Unauthorized"))) {
+				// invalid_grant = invalid username / password, 401 = invalid token
+				return Response.status(Status.UNAUTHORIZED).build();
+			}
+
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		
-		return Response.status(Status.FORBIDDEN.getStatusCode(), "Authentication failed").build();
 	}
 	
 	@GET
 	@Path("/google")
 	public Response googleOauth() {
 		try {
-	        String oauthToken = new BigInteger(130, new SecureRandom()).toString(32);
-	        
-	        URI authorizationUri = oauthHandler.getAuthorizationUri(oauthToken);
-	        logger.info(String.format("Redirecting to third party OAuth provider %s", authorizationUri));
+			URI authorizationUri = GoogleOauthHandler.getOauthAuthorizationRequestUri(
+					UriBuilder.fromUri(servletRequest.getRequestURL().toString()).path("callback").build().toString(),
+					sessionStorageHandler::setAttribute,
+					null
+			);
 	        
 	        return Response.temporaryRedirect(authorizationUri).build();
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Failed to perform OAuth redirection", e);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		
-		return Response.status(Status.FORBIDDEN.getStatusCode(), "Authentication failed").build();
 	}
-	
-	
+
+	@Produces(MediaType.TEXT_PLAIN)
+	@GET
+	@Path("/google/callback")
+	public Response googleOauthCallback(@QueryParam("code") String authorizationCode, @QueryParam("state") String state, @QueryParam("error") String error) {
+		try {
+			if (authorizationCode == null || state == null) {
+				return Response.status(Status.BAD_REQUEST).build();
+			}
+
+			return Response.ok(authenticateWithThirdPartyToken(authorizationCode, state, error)).build();
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Failed to process OAuth callback", e);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
 	private String authenticateWithBackendToken(String backendToken) throws IOException, JOSEException {
 		RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(backendToken);
 		
@@ -149,12 +170,30 @@ public class PreAuthService {
 		return createJWToken(remoteGitManagerRestricted.getUser());
 	}
 	
-	private String authenticateWithThirdPartyToken(String oauthAuthorizationCode, String otpTimestamp) throws ClientProtocolException, IOException, JOSEException {
-		OauthIdentity oauthIdentity = oauthHandler.getIdentity(oauthAuthorizationCode, otpTimestamp);
-		
-		RemoteGitManagerPrivileged gitlabManagerPrivileged = remoteGitManagerPrivilegedFactory.create();
-		Pair<GitUser, String> userAndToken = gitlabManagerPrivileged.acquireImpersonationToken(oauthIdentity.identifier(), oauthIdentity.provider(), oauthIdentity.email(), oauthIdentity.name());
-		return authenticateWithBackendToken(userAndToken.getSecond());
+	private String authenticateWithThirdPartyToken(
+			String oauthAuthorizationCode, String oauthState, String oauthError
+	) throws OauthException, IOException, JOSEException {
+			Pair<OauthIdentity, Map<String, String>> resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
+					oauthAuthorizationCode,
+					oauthState,
+					oauthError,
+					servletRequest.getRequestURL().toString(),
+					httpClientFactory.create(),
+					sessionStorageHandler::getAttribute,
+					sessionStorageHandler::setAttribute
+			);
+
+			OauthIdentity oauthIdentity = resultPair.getFirst();
+			Map<String, String> additionalStateParams = resultPair.getSecond(); // should be null, see googleOauth function
+
+			RemoteGitManagerPrivileged gitlabManagerPrivileged = remoteGitManagerPrivilegedFactory.create();
+			Pair<GitUser, String> userAndToken = gitlabManagerPrivileged.acquireImpersonationToken(
+					oauthIdentity.identifier(),
+					oauthIdentity.provider(),
+					oauthIdentity.email(),
+					oauthIdentity.name()
+			);
+			return authenticateWithBackendToken(userAndToken.getSecond());
 	}
 	
 	private String createJWToken(User user) throws JOSEException {

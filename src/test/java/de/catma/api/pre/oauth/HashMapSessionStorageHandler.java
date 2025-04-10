@@ -6,11 +6,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import de.catma.api.pre.oauth.interfaces.SessionStorageHandler;
 
 public class HashMapSessionStorageHandler implements SessionStorageHandler {
-	
-	private final static Map<String, Object> STORAGE = new ConcurrentHashMap<String, Object>();
-	
+	private static final Map<String, Object> STORAGE = new ConcurrentHashMap<>();
+
 	@Override
-	public void put(String key, Object value) {
+	public Object getAttribute(String key) {
+		return STORAGE.get(key);
+	}
+
+	@Override
+	public void setAttribute(String key, Object value) {
 		if (value == null) {
 			STORAGE.remove(key);
 		}
@@ -18,10 +22,4 @@ public class HashMapSessionStorageHandler implements SessionStorageHandler {
 			STORAGE.put(key, value);
 		}
 	}
-
-	@Override
-	public Object get(String key) {
-		return STORAGE.get(key);
-	}
-
 }

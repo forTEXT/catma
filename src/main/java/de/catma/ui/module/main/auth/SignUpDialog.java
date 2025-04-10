@@ -144,15 +144,7 @@ public class SignUpDialog extends AuthenticationDialog {
 			this.close();
 		});
 
-		googleSignUpLink.addClickListener(event -> {
-			try {
-				UI.getCurrent().getPage().setLocation(getGoogleOauthAuthorisationRequestUrl());
-				close();
-			}
-			catch (Exception e) {
-				((ErrorHandler) UI.getCurrent()).showAndLogError("Error during authentication", e);
-			}
-		});
+		googleSignUpLink.addClickListener(this::googleLinkClickListener);
 	}
 
 	private void initComponents() {

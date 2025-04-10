@@ -6,18 +6,16 @@ import javax.ws.rs.core.Context;
 import de.catma.api.pre.oauth.interfaces.SessionStorageHandler;
 
 public class HttpServletRequestSessionStorageHandler implements SessionStorageHandler {
-	
 	@Context
-	private HttpServletRequest servletRequest;    
+	private HttpServletRequest servletRequest;
 
 	@Override
-	public void put(String key, Object value) {
-		servletRequest.getSession().setAttribute(key, value);
-	}
-
-	@Override
-	public Object get(String key) {
+	public Object getAttribute(String key) {
 		return servletRequest.getSession().getAttribute(key);
 	}
 
+	@Override
+	public void setAttribute(String key, Object value) {
+		servletRequest.getSession().setAttribute(key, value);
+	}
 }
