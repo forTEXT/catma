@@ -69,8 +69,6 @@ public enum CATMAPropertyKey {
 	GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL("https://oauth2.googleapis.com/token"),
 	GOOGLE_OAUTH_CLIENT_ID,
 	GOOGLE_OAUTH_CLIENT_SECRET,
-	OTP_SECRET,
-	OTP_DURATION,
 
 	ABOUT_URL("https://catma.de"),
 	IMPRINT_URL("https://catma.de/about/imprint/"),
