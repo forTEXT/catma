@@ -82,7 +82,7 @@ public class PreAuthService {
 		try {
 			if (authorization != null) {
 				if (authorization.toLowerCase().startsWith("bearer")) {
-					String token = new String(Base64.getDecoder().decode(authorization.substring(7).getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+					String token = authorization.substring(7);
 					return Response.ok(authenticateWithBackendToken(token)).build();
 				}
 				else if (authorization.toLowerCase().startsWith("basic")) {

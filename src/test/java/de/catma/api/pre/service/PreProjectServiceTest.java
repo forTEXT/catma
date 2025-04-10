@@ -113,7 +113,7 @@ public class PreProjectServiceTest extends JerseyTest {
 		Response response = 
 				target("projects")
 				.request(MediaType.APPLICATION_JSON)
-				.header("Authorization", String.format("Bearer %s", new String(Base64.getEncoder().encode(token.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)))
+				.header("Authorization", String.format("Bearer %s", token))
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -133,7 +133,7 @@ public class PreProjectServiceTest extends JerseyTest {
 		Response response = 
 				target("projects")
 				.request(MediaType.APPLICATION_JSON)
-				.header("Authorization", String.format("Bearer %s", new String(Base64.getEncoder().encode(personalAccessToken.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)))
+				.header("Authorization", String.format("Bearer %s", personalAccessToken))
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());

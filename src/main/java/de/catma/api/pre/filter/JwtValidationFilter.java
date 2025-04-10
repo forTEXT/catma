@@ -55,7 +55,7 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 		if (authorization != null && authorization.toLowerCase().startsWith(BEARER_SCHEME_NAME.toLowerCase())) {
 			String token = authorization.substring((BEARER_SCHEME_NAME + " ").length());
 			
-			handleJwtToken(new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8), requestContext, BEARER_SCHEME_NAME);
+			handleJwtToken(token, requestContext, BEARER_SCHEME_NAME);
 		}
 		else if (requestContext.getUriInfo().getQueryParameters().keySet().contains(TOKEN_PARAM_NAME)) {
 			String token = requestContext.getUriInfo().getQueryParameters().getFirst(TOKEN_PARAM_NAME);

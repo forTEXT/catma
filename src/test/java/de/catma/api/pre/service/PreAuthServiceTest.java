@@ -138,7 +138,7 @@ class PreAuthServiceTest extends JerseyTest {
 		
 		Response response = target("auth")
 				.request()
-				.header("Authorization", String.format("Bearer %s", new String(Base64.getEncoder().encode("my_personal_token".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)))
+				.header("Authorization", String.format("Bearer %s", "my_personal_token"))
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
