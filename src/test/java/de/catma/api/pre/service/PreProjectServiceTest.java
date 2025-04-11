@@ -238,6 +238,10 @@ public class PreProjectServiceTest extends JerseyTest {
 		assertEquals(100, export.getPageSize());
 		assertNull(export.getPrevPage());
 		assertNull(export.getNextPage());
+		// page 1, so we should also get extended metadata by default
+		assertNotNull(export.getExtendedMetadata());
+		assertEquals(1, export.getExtendedMetadata().documents().size());
+		assertEquals(sourceDocumentUuid, export.getExtendedMetadata().documents().get(sourceDocumentUuid).getId());
 
 		List<ExportDocument> exportDocuments = export.getDocuments();
 		assertTrue(exportDocuments.size() == 1);
@@ -266,6 +270,19 @@ public class PreProjectServiceTest extends JerseyTest {
 		assertEquals(propertyName, property.getName());
 		assertTrue(property.getValues().size() == 1);
 		assertEquals(propertyValue, property.getValues().get(0));
+
+		// explicitly NOT requesting extended metadata should work
+		Response response2 = target("projects/"+namespace+"/"+projectId)
+				.queryParam("accesstoken", token)
+				.queryParam("includeExtendedMetadata", false)
+				.request(MediaType.APPLICATION_JSON).get();
+		assertEquals(Status.OK.getStatusCode(), response2.getStatus());
+
+		Export export2 = new SerializationHelper<Export>().deserialize(
+				IOUtils.toString((InputStream) response2.getEntity(), StandardCharsets.UTF_8),
+				Export.class
+		);
+		assertNull(export2.getExtendedMetadata());
 	}
 	
 	@Test
@@ -314,100 +331,29 @@ public class PreProjectServiceTest extends JerseyTest {
 		assertEquals(2, export.getPageSize());
 		assertTrue(export.getPrevPage().contains("page=1"));
 		assertNull(export.getNextPage());
+		// page 2, so we should NOT get extended metadata by default
+		assertNull(export.getExtendedMetadata());
 
 		ExportDocument exportDocument = export.getDocuments().get(0);
 		PreApiAnnotation annotation = exportDocument.getAnnotations().get(0);
 
 		
 		assertTrue(annotatedPhrasesSortedByAnnotationId.subList(2,3).contains(annotation.getPhrases().get(0).getPhrase()));
-	}
-	
-	@Test
-	void shouldProduceProjectExportWithExtendedMetadataWithJwtAccessTokenQueryParam() throws Exception {
-		
-		IDGenerator idGenerator = new IDGenerator();
 
-		String namespace = "test_namespace";
-		String projectName = "test_project_ForExportWithExtendedMetadata";
-		String projectId = idGenerator.generate(projectName);
-		String sourceDocumentUuid = idGenerator.generateDocumentId();
-		String tagId = idGenerator.generate();
-		String tagName = "my tag";
-		String annotationId = idGenerator.generate();
-		String propertyName = "my property";
-		String propertyValue = "value1";
-		String tagsetId = idGenerator.generateTagsetId();
-		String tagsetName = "my tagset";
-
-		ProjectFixtures.setUpFullProject(
-				remoteGitManagerRestrictedFactoryMock, 
-				namespace, projectId, projectName, 
-				sourceDocumentUuid, 
-				tagsetId, tagsetName,
-				tagId, tagName, 
-				annotationId, propertyName, propertyValue);
-		
-		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request().get();
-		
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
-
-		Response response = target("projects/"+namespace+"/"+projectId).queryParam("accesstoken", token).queryParam("page", 2).queryParam("pageSize", 2).request(MediaType.APPLICATION_JSON).get();
-		
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		
-		
-		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
-		
-		ExtendedMetadata extendedMetadata = export.getExtendedMetadata();
-		
-		PreApiSourceDocument document = extendedMetadata.documents().get(sourceDocumentUuid);
-		
-		assertEquals(document.getId(), sourceDocumentUuid);
-	}
-	
-	@Test
-	void shouldProduceProjectExportWithoutExtendedMetadataWithJwtAccessTokenQueryParam() throws Exception {
-		
-		IDGenerator idGenerator = new IDGenerator();
-
-		String namespace = "test_namespace";
-		String projectName = "test_project_ForExportWithoutExtendedMetadata";
-		String projectId = idGenerator.generate(projectName);
-		String sourceDocumentUuid = idGenerator.generateDocumentId();
-		String tagId = idGenerator.generate();
-		String tagName = "my tag";
-		String annotationId = idGenerator.generate();
-		String propertyName = "my property";
-		String propertyValue = "value1";
-		String tagsetId = idGenerator.generateTagsetId();
-		String tagsetName = "my tagset";
-
-		ProjectFixtures.setUpFullProject(
-				remoteGitManagerRestrictedFactoryMock, 
-				namespace, projectId, projectName, 
-				sourceDocumentUuid, 
-				tagsetId, tagsetName,
-				tagId, tagName, 
-				annotationId, propertyName, propertyValue);
-		
-		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request().get();
-		
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
-
-		Response response = target("projects/"+namespace+"/"+projectId)
+		// explicitly requesting extended metadata should work
+		Response response2 = target("projects/"+namespace+"/"+projectId)
 				.queryParam("accesstoken", token)
 				.queryParam("page", 2)
 				.queryParam("pageSize", 2)
-				.queryParam("includeExtendedMetadata", false).request(MediaType.APPLICATION_JSON).get();
-		
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		
-		
-		Export export = new SerializationHelper<Export>().deserialize(IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8), Export.class);
-		
-		ExtendedMetadata extendedMetadata = export.getExtendedMetadata();
-		
-		assertNull(extendedMetadata);
+				.queryParam("includeExtendedMetadata", true)
+				.request(MediaType.APPLICATION_JSON).get();
+		assertEquals(Status.OK.getStatusCode(), response2.getStatus());
+
+		Export export2 = new SerializationHelper<Export>().deserialize(
+				IOUtils.toString((InputStream) response2.getEntity(), StandardCharsets.UTF_8),
+				Export.class
+		);
+		assertNotNull(export2.getExtendedMetadata());
 	}
 	
 	@Test
