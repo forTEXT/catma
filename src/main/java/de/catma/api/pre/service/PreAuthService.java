@@ -22,15 +22,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 
-import com.google.common.collect.ImmutableList;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
+import de.catma.api.pre.AuthConstants;
 import de.catma.api.pre.backend.AccessTokenRemoteGitManagerRestrictedProvider;
 import de.catma.api.pre.backend.CredentialsRemoteGitManagerRestrictedProvider;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerPrivilegedFactory;
@@ -49,12 +48,8 @@ import de.catma.user.User;
 import de.catma.util.ExceptionUtil;
 import de.catma.util.Pair;
 
-@Path("/auth")
+@Path(AuthConstants.AUTH_SERVICE_PATH) // '/auth', defined as a constant because it's checked in JwtValidationFilter
 public class PreAuthService {
-	public static final ImmutableList<JWSAlgorithm> PERMISSIBLE_JWS_ALGORITHMS = ImmutableList.of(
-			JWSAlgorithm.HS256 // the default, iteration order is guaranteed with ImmutableList
-	);
-
 	private static final Logger logger = Logger.getLogger(PreAuthService.class.getName());
 
 	private final byte[] secret = CATMAPropertyKey.API_HMAC_SECRET.getValue().getBytes(StandardCharsets.UTF_8);
@@ -80,32 +75,34 @@ public class PreAuthService {
 	@Produces(MediaType.TEXT_PLAIN)
 	@GET
 	public Response authenticate(
-			@HeaderParam("Authorization") String authorization, // user/password or accesstoken in authorization-header
-			@QueryParam("accesstoken") String accessToken, 
-			@QueryParam("username") String username, @QueryParam("password") String password) {
-
+			@HeaderParam(AuthConstants.AUTHORIZATION_HEADER_NAME) String authorization, // basic (username/password) or bearer (token) auth schemes
+			@QueryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME) String accessToken, // 'accessToken'
+			@QueryParam("username") String username, @QueryParam("password") String password)
+	{
 		try {
 			if (authorization != null) {
-				if (authorization.toLowerCase().startsWith("bearer")) {
-					String token = authorization.substring(7);
-					return Response.ok(authenticateWithBackendToken(token)).build();
+				if (authorization.toLowerCase().startsWith(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.toLowerCase())) {
+					String bearerToken = authorization.substring(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.length());
+					return Response.ok(authenticateWithBackendToken(bearerToken)).build();
 				}
-				else if (authorization.toLowerCase().startsWith("basic")) {
-					String[] usernamePassword = 
-							new String(
-									Base64.getDecoder().decode(authorization.substring(6).getBytes(StandardCharsets.UTF_8)), 
-									StandardCharsets.UTF_8)
-							.split(":");
+				else if (authorization.toLowerCase().startsWith(AuthConstants.AUTHENTICATION_SCHEME_BASIC_PREFIX.toLowerCase())) {
+					String[] usernamePassword = new String(
+							Base64.getDecoder().decode(
+									authorization.substring(AuthConstants.AUTHENTICATION_SCHEME_BASIC_PREFIX.length()).getBytes(StandardCharsets.UTF_8)
+							),
+							StandardCharsets.UTF_8
+					).split(":");
+
 					if (usernamePassword.length == 2) {
-						return Response.ok(authenticateWithUsernamePassword(usernamePassword[0].trim(), usernamePassword[1].trim())).build();
+						return Response.ok(authenticateWithUsernamePassword(usernamePassword[0], usernamePassword[1])).build();
 					}
 				}
 			}
 			else if (accessToken != null) {
-				return Response.ok(authenticateWithBackendToken(accessToken)).build();				
+				return Response.ok(authenticateWithBackendToken(accessToken)).build();
 			}
 			else if (username != null && password != null) {
-				return Response.ok(authenticateWithUsernamePassword(username, password)).build();				
+				return Response.ok(authenticateWithUsernamePassword(username, password)).build();
 			}
 
 			return Response.status(Status.BAD_REQUEST).build();
@@ -219,7 +216,7 @@ public class PreAuthService {
 		    .build();
 
 		// sign
-		SignedJWT signedJWT = new SignedJWT(new JWSHeader(PERMISSIBLE_JWS_ALGORITHMS.getFirst()), claimsSet);
+		SignedJWT signedJWT = new SignedJWT(new JWSHeader(AuthConstants.PERMISSIBLE_JWS_ALGORITHMS.getFirst()), claimsSet);
 		signedJWT.sign(signer);
 
 		return signedJWT.serialize();

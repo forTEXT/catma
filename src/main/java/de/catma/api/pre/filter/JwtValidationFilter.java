@@ -23,11 +23,11 @@ import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 
+import de.catma.api.pre.AuthConstants;
 import de.catma.api.pre.PreSecurityContext;
 import de.catma.api.pre.backend.AccessTokenRemoteGitManagerRestrictedProvider;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.api.pre.cache.RemoteGitManagerRestrictedProviderCache;
-import de.catma.api.pre.service.PreAuthService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 
@@ -39,9 +39,6 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 	// https://connect2id.com/products/nimbus-jose-jwt/examples/validating-jwt-access-tokens#claims
 	// https://www.javadoc.io/doc/com.nimbusds/nimbus-jose-jwt/latest/com/nimbusds/jwt/proc/DefaultJWTClaimsVerifier.html
 
-	private final static String TOKEN_PARAM_NAME = "accesstoken";
-	private final static String BEARER_SCHEME_NAME = "Bearer";
-	
 	private final Logger logger = Logger.getLogger(JwtValidationFilter.class.getName());
 	
 	@Inject
@@ -51,27 +48,24 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-
-		
-		// auth requests should pass always
-		if (!requestContext.getUriInfo().getPathSegments().isEmpty() 
-				&& requestContext.getUriInfo().getPathSegments().get(0).getPath().equals("auth")) {
+		// auth requests should always pass
+		if (!requestContext.getUriInfo().getPathSegments().isEmpty()
+				&& requestContext.getUriInfo().getPathSegments().getFirst().getPath().equals(AuthConstants.AUTH_SERVICE_PATH.substring(1))) {
 			return;
 		}
-		
-		String authorization = requestContext.getHeaderString("Authorization");
-		if (authorization != null && authorization.toLowerCase().startsWith(BEARER_SCHEME_NAME.toLowerCase())) {
-			String token = authorization.substring((BEARER_SCHEME_NAME + " ").length());
-			
-			handleJwtToken(token, requestContext, BEARER_SCHEME_NAME);
+
+		String authorization = requestContext.getHeaderString(AuthConstants.AUTHORIZATION_HEADER_NAME);
+
+		if (authorization != null && authorization.toLowerCase().startsWith(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.toLowerCase())) {
+			String bearerToken = authorization.substring(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.length());
+			handleJwtToken(bearerToken, requestContext, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.trim());
 		}
-		else if (requestContext.getUriInfo().getQueryParameters().keySet().contains(TOKEN_PARAM_NAME)) {
-			String token = requestContext.getUriInfo().getQueryParameters().getFirst(TOKEN_PARAM_NAME);
-			handleJwtToken(token, requestContext, TOKEN_PARAM_NAME);
+		else if (requestContext.getUriInfo().getQueryParameters().containsKey(AuthConstants.API_TOKEN_PARAMETER_NAME)) { // 'apiToken'
+			String apiToken = requestContext.getUriInfo().getQueryParameters().getFirst(AuthConstants.API_TOKEN_PARAMETER_NAME);
+			handleJwtToken(apiToken, requestContext, AuthConstants.API_TOKEN_PARAMETER_NAME);
 		}
 		else {
-		  requestContext.abortWith(
-	                Response.status(Response.Status.UNAUTHORIZED).build());
+			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
 		}
 	}
 
@@ -93,7 +87,7 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 		try {
 			SignedJWT signedJWT = SignedJWT.parse(token);
 
-			if (!PreAuthService.PERMISSIBLE_JWS_ALGORITHMS.contains(signedJWT.getHeader().getAlgorithm())) {
+			if (!AuthConstants.PERMISSIBLE_JWS_ALGORITHMS.contains(signedJWT.getHeader().getAlgorithm())) {
 				logSecurityWarningAndAbort("algorithm check", null, requestContext, token);
 				return;
 			}
