@@ -97,7 +97,6 @@ class PreAuthServiceTest extends JerseyTest {
 	static void setup() {
 		Properties properties = new Properties();
 		properties.setProperty(CATMAPropertyKey.API_HMAC_SECRET.name(), "mySecret".repeat(4));
-		properties.setProperty(CATMAPropertyKey.API_BASE_URL.name(), "http://test.local/api");
 		properties.setProperty(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.name(), System.getProperty("java.io.tmpdir"));
 		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL.name(), "http://oauthprovider.local/authorize");
 		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.name(), "4711");

@@ -79,7 +79,6 @@ public enum CATMAPropertyKey {
 	LOGOUT_URL("https://app.catma.de"),
 	CONTEXT_DEFINITION_URL("https://www.catma.de/"),
 	
-	API_BASE_URL,
 	API_GIT_REPOSITORY_BASE_PATH,
 	API_HMAC_SECRET,
 	;

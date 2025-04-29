@@ -8,19 +8,22 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.ServletDeploymentContext;
+import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,10 +35,8 @@ import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.api.pre.fixture.ProjectFixtures;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotation;
 import de.catma.api.pre.serialization.model_wrappers.PreApiAnnotationProperty;
-import de.catma.api.pre.serialization.model_wrappers.PreApiSourceDocument;
 import de.catma.api.pre.serialization.models.Export;
 import de.catma.api.pre.serialization.models.ExportDocument;
-import de.catma.api.pre.serialization.models.ExtendedMetadata;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
@@ -45,9 +46,26 @@ import de.catma.util.IDGenerator;
 public class PreProjectServiceTest extends JerseyTest {
 
 	private RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock = Mockito.mock(RemoteGitManagerRestrictedFactory.class);
-	
+
+	// set up a servlet environment, otherwise the HttpServletRequest that is injected into the service under test with the @Context annotation will be null
+	// ref: https://stackoverflow.com/a/29387230/207981
+	// if a servlet environment is not needed you can simply override configure() (see file history)
 	@Override
-	protected Application configure() {
+	protected TestContainerFactory getTestContainerFactory() {
+		// couldn't get the Jetty test container to work as a servlet environment
+		// it appears to need additional configuration (ref: https://github.com/eclipse-ee4j/jersey/issues/4625), but there is almost no documentation,
+		// so I gave up and switched to Grizzly (the exact container technology shouldn't matter anyway)
+		// if you want to give it a shot, uncomment/add the 'jersey-test-framework-provider-jetty' artifact in pom.xml, review the linked issue above,
+		// and also see what little documentation does exist (it was entirely unhelpful at the time of writing this):
+		//   1. the official docs: https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/test-framework.html
+		//   2. the sample tests: https://github.com/eclipse-ee4j/jersey/tree/2.x/test-framework/providers/jetty/src/test/java/org/glassfish/jersey/test/jetty
+//		return new JettyTestContainerFactory();
+
+		return new GrizzlyWebTestContainerFactory();
+	}
+
+	@Override
+	protected DeploymentContext configureDeployment() {
 		PreApplication app = new PreApplication();
 		
 		// try to make sure that the configured package to scan is as expected
@@ -55,20 +73,19 @@ public class PreProjectServiceTest extends JerseyTest {
 		
 		app.packages("de.catma.api.pre"); // the corresponding configuration for the production code is in the web.xml
 		app.register(new AbstractBinder() {
-			
 			@Override
 			protected void configure() {
 				bind(remoteGitManagerRestrictedFactoryMock).to(RemoteGitManagerRestrictedFactory.class).ranked(2);
 			}
 		});
-		return app;
+
+		return ServletDeploymentContext.forServlet(new ServletContainer(app)).build();
 	}
-	
+
 	@BeforeAll
 	static void setup() {
 		Properties properties = new Properties();
 		properties.setProperty(CATMAPropertyKey.API_HMAC_SECRET.name(), "mySecret".repeat(4));
-		properties.setProperty(CATMAPropertyKey.API_BASE_URL.name(), "http://test.local/api");
 		properties.setProperty(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.name(), System.getProperty("java.io.tmpdir"));
 		
 		CATMAProperties.INSTANCE.setProperties(properties);
