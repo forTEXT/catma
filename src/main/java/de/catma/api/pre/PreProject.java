@@ -34,7 +34,6 @@ import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentReference;
-import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.graph.interfaces.GraphProjectHandler;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -68,7 +67,7 @@ public class PreProject {
 		this.annotationCountCache = annotationCountCache;
 	}
 
-	private PreApiSourceDocument getPreApiSourceDocument(SourceDocument sourceDocument) throws Exception {
+	private PreApiSourceDocument getPreApiSourceDocument(String requestUrl, SourceDocument sourceDocument) throws Exception {
 		int size = 0;
 		String crc32bChecksum = null;
 		
@@ -89,14 +88,8 @@ public class PreProject {
 		}
 		
 		return new PreApiSourceDocument(
-				sourceDocument.getUuid(), 
-                String.format("%s%s/%s/projects/%s/%s/doc/%s", // TODO: get this from the request context, only append doc part
-                		CATMAPropertyKey.API_BASE_URL.getValue(), 
-                		PreApplication.API_PACKAGE, 
-                		PreApplication.API_VERSION, 
-                		getNamespace(),
-                		getProjectId(),
-                		sourceDocument.getUuid()),
+				sourceDocument.getUuid(),
+                UriBuilder.fromUri(requestUrl).path("doc").path(sourceDocument.getUuid()).build().toString(),
                 crc32bChecksum,
                 size,
                 sourceDocument.toString(),
@@ -130,13 +123,13 @@ public class PreProject {
 		}	
 	}
 	
-	private ExtendedMetadata createExtendendMetadata() throws Exception {
+	private ExtendedMetadata createExtendendMetadata(String requestUrl) throws Exception {
     	ImmutableMap.Builder<String, PreApiSourceDocument> documentMapBuilder = ImmutableMap.builder();
     	ImmutableMap.Builder<String, PreApiAnnotationCollection> collectionMapBuilder = ImmutableMap.builder();
     	
     	for (SourceDocumentReference sourceDocumentReference : graphProjectHandler.getSourceDocumentReferences()) {
         	SourceDocument sourceDocument = this.graphProjectHandler.getSourceDocument(sourceDocumentReference.getUuid());
-    		documentMapBuilder.put(sourceDocumentReference.getUuid(), getPreApiSourceDocument(sourceDocument));
+    		documentMapBuilder.put(sourceDocumentReference.getUuid(), getPreApiSourceDocument(requestUrl, sourceDocument));
             for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentReference.getUserMarkupCollectionRefs()) {
                 collectionMapBuilder.put(
                 		annotationCollectionReference.getId(), 
@@ -204,12 +197,12 @@ public class PreProject {
 		R apply(T t) throws E;
 	}
 
-    public String serializeProjectResources(boolean includeExtendedMetadata, int page, int pageSize) {
+    public String serializeProjectResources(String requestUrl, boolean includeExtendedMetadata, int page, int pageSize) {
     	Lock readLock = accessLock.readLock();
         try {
         	readLock.lock();
         	
-        	final ExtendedMetadata extendedMetadata = includeExtendedMetadata?createExtendendMetadata():null;
+        	final ExtendedMetadata extendedMetadata = includeExtendedMetadata?createExtendendMetadata(requestUrl):null;
         	if (page<1) {
         		page = 1;
         	}
@@ -239,22 +232,14 @@ public class PreProject {
 			}
 
 			int totalPagesCount = Math.ceilDiv(totalAnnotationsCount, pageSize);
-			String currentUrl = String.format( // TODO: get this from the request context, as only query parameters change
-					"%s%s/%s/projects/%s/%s",
-					CATMAPropertyKey.API_BASE_URL.getValue(),
-					PreApplication.API_PACKAGE,
-					PreApplication.API_VERSION,
-					getNamespace(),
-					getProjectId()
-			);
-			UriBuilder uriBuilder = UriBuilder.fromUri(currentUrl)
-					.queryParam("page", page) // included here purely to preserve the ordering of parameters
-					.queryParam("pageSize", pageSize);
+			UriBuilder uriBuilder = UriBuilder.fromUri(requestUrl);
 			String prevPageUrl = page == 1 ? null : uriBuilder
 					.replaceQueryParam("page", page - 1)
+					.replaceQueryParam("pageSize", pageSize)
 					.build().toString();
 			String nextPageUrl = page >= totalPagesCount ? null : uriBuilder
 					.replaceQueryParam("page", page + 1)
+					.replaceQueryParam("pageSize", pageSize)
 					.build().toString();
         	
         	int pageCapacityLeft = pageSize;

@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 import javax.inject.Inject;
 import javax.lang.model.type.NullType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -65,7 +66,10 @@ public class PreProjectService {
 	
 	@Inject
 	private AnnotationCountCache annotationCountCache;
-	
+
+	@Context
+	private HttpServletRequest servletRequest;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProjects(@Context SecurityContext securityContext) throws IOException {
@@ -123,6 +127,7 @@ public class PreProjectService {
 		    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
 				return Response.ok(
 						project.serializeProjectResources(
+								servletRequest.getRequestURL().toString(),
 								// only include extended metadata on the first page by default
 								includeExtendedMetadata == null ? (page == null || page == 1) : includeExtendedMetadata,
 								page == null ? 1 : page,

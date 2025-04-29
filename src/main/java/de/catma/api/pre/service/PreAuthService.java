@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,12 +19,10 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
 
+import com.google.common.collect.ImmutableList;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -52,8 +51,12 @@ import de.catma.util.Pair;
 
 @Path("/auth")
 public class PreAuthService {
-	
-	private final Logger logger = Logger.getLogger(PreAuthService.class.getName());
+	public static final ImmutableList<JWSAlgorithm> PERMISSIBLE_JWS_ALGORITHMS = ImmutableList.of(
+			JWSAlgorithm.HS256 // the default, iteration order is guaranteed with ImmutableList
+	);
+
+	private static final Logger logger = Logger.getLogger(PreAuthService.class.getName());
+
 	private final byte[] secret = CATMAPropertyKey.API_HMAC_SECRET.getValue().getBytes(StandardCharsets.UTF_8);
 	
 	@Inject
@@ -69,7 +72,9 @@ public class PreAuthService {
 	private SessionStorageHandler sessionStorageHandler;
 
 	@Context
-	private HttpServletRequest servletRequest;    
+	private HttpServletRequest servletRequest;
+	@Context
+	private UriInfo uriInfo;
 
 	
 	@Produces(MediaType.TEXT_PLAIN)
@@ -197,20 +202,24 @@ public class PreAuthService {
 	}
 	
 	private String createJWToken(User user) throws JOSEException {
+		// https://connect2id.com/products/nimbus-jose-jwt/examples/jwt-with-hmac
+		// also see JwtValidationFilter
+
 		// HMAC signer
 		JWSSigner signer = new MACSigner(secret);
 
 		// JWT claims set
 		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
 		    .subject(user.getIdentifier())
-		    .issuer(CATMAPropertyKey.API_BASE_URL.getValue())
+		    .issuer(uriInfo.getBaseUri().toString())
+		    .notBeforeTime(new Date())
 		    .expirationTime(
-		    		java.util.Date.from(LocalDateTime.now().plus(1, ChronoUnit.HOURS).atZone(ZoneId.systemDefault())
+		    		Date.from(LocalDateTime.now().plus(1, ChronoUnit.HOURS).atZone(ZoneId.systemDefault())
 		    	    	      .toInstant()))
 		    .build();
 
 		// sign
-		SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);
+		SignedJWT signedJWT = new SignedJWT(new JWSHeader(PERMISSIBLE_JWS_ALGORITHMS.getFirst()), claimsSet);
 		signedJWT.sign(signer);
 
 		return signedJWT.serialize();
