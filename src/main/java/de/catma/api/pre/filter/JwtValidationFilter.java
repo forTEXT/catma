@@ -141,21 +141,29 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 			requestContext.setSecurityContext(new PreSecurityContext(userIdentifier, requestContext.getSecurityContext().isSecure(), scheme));
 		}
 		catch (ParseException e) {
-			logger.log(Level.WARNING, String.format("The token could not be parsed as a JWT, will try using it as a backend token. The error was: %s", e.getMessage()));
+			// for convenience, we allow GitLab impersonation or personal access tokens to be used directly
+			logger.log(
+					Level.WARNING,
+					"The given token could not be parsed as a JWT, will try using it directly as a backend token.",
+					e
+			);
+
 			try {
 				RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(token);
-				
-				remoteGitManagerRestrictedProviderCache.put(remoteGitManagerRestricted.getUsername(), new AccessTokenRemoteGitManagerRestrictedProvider(token, remoteGitMangerRestrictedFactory));
 
-				requestContext.setSecurityContext(new PreSecurityContext(remoteGitManagerRestricted.getUsername(), requestContext.getSecurityContext().isSecure(), scheme));
+				remoteGitManagerRestrictedProviderCache.put(
+						remoteGitManagerRestricted.getUsername(),
+						new AccessTokenRemoteGitManagerRestrictedProvider(token, remoteGitMangerRestrictedFactory)
+				);
+
+				requestContext.setSecurityContext(
+						new PreSecurityContext(remoteGitManagerRestricted.getUsername(), requestContext.getSecurityContext().isSecure(), scheme)
+				);
 			}
 			catch (Exception e2) {
-				logger.log(Level.SEVERE, "The token could not be used as backend token", e2);
-				  requestContext.abortWith(
-			                Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "Token invalid").build());
+				logger.log(Level.SEVERE, "The given token could not be used directly as a backend token.", e2);
+				requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
 			}
-			
 		}
 	}
-
 }

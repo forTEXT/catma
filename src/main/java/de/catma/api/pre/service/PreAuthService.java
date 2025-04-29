@@ -115,8 +115,8 @@ public class PreAuthService {
 
 			// check for exceptions caused by invalid credentials
 			String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
-			if (message != null && (message.equals("invalid_grant") || message.equals("401 Unauthorized"))) {
-				// invalid_grant = invalid username / password, 401 = invalid token
+			if (message != null && (message.equals("invalid_grant") || message.equals("invalid_token") || message.equals("401 Unauthorized"))) {
+				// 'invalid_grant' = invalid username / password, 'invalid_token' or 401 = invalid token
 				return Response.status(Status.UNAUTHORIZED).build();
 			}
 
