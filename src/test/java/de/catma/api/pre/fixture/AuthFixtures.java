@@ -107,7 +107,7 @@ public class AuthFixtures {
 
 		RemoteGitManagerPrivileged remoteGitManagerPrivilegedMock = Mockito.mock(RemoteGitManagerPrivileged.class);
 		when(remoteGitManagerPrivilegedFactoryMock.create()).thenReturn(remoteGitManagerPrivilegedMock);
-		when(remoteGitManagerPrivilegedMock.acquireImpersonationToken(any(), any(), any(), any())).thenReturn(new Pair<>(null, "my_impersonation_token"));
+		when(remoteGitManagerPrivilegedMock.acquireImpersonationToken(any(), any(), any(), any())).thenReturn(new Pair<>(null, "dummy_impersonation_token"));
 		
 		RemoteGitManagerRestricted remoteGitManagerRestrictedMock = Mockito.mock(RemoteGitManagerRestricted.class);
 		User userMock = Mockito.mock(User.class);

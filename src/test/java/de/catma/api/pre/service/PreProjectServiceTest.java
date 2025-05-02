@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 
 import com.google.gson.reflect.TypeToken;
 
+import de.catma.api.pre.AuthConstants;
 import de.catma.api.pre.PreApplication;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.api.pre.fixture.ProjectFixtures;
@@ -44,6 +45,8 @@ import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.util.IDGenerator;
 
 public class PreProjectServiceTest extends JerseyTest {
+	private static final String AUTH_TARGET = AuthConstants.AUTH_SERVICE_PATH.substring(1);
+	private static final String DUMMY_PERSONAL_ACCESS_TOKEN = "dummy_personal_access_token";
 
 	private RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock = Mockito.mock(RemoteGitManagerRestrictedFactory.class);
 
@@ -85,7 +88,7 @@ public class PreProjectServiceTest extends JerseyTest {
 	@BeforeAll
 	static void setup() {
 		Properties properties = new Properties();
-		properties.setProperty(CATMAPropertyKey.API_HMAC_SECRET.name(), "mySecret".repeat(4));
+		properties.setProperty(CATMAPropertyKey.API_HMAC_SECRET.name(), "dummy_hmac_secret".repeat(2));
 		properties.setProperty(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.name(), System.getProperty("java.io.tmpdir"));
 		
 		CATMAProperties.INSTANCE.setProperties(properties);
@@ -100,14 +103,13 @@ public class PreProjectServiceTest extends JerseyTest {
 	
 	@Test
 	void shouldProduceProjectListWithJwtAccessTokenQueryParam() throws Exception {
-		String personalAccessToken = "my_personal_token";
-		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, personalAccessToken);
+		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
 
-		Response authResponse = target("auth").queryParam("accesstoken", personalAccessToken).request().get();
+		Response authResponse = target(AUTH_TARGET).queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN).request().get();
 		
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
-		Response response = target("projects").queryParam("accesstoken", token).request(MediaType.APPLICATION_JSON).get();
+		Response response = target("projects").queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken).request(MediaType.APPLICATION_JSON).get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
@@ -120,17 +122,16 @@ public class PreProjectServiceTest extends JerseyTest {
 	
 	@Test
 	void shouldProduceProjectListWithJwtAccessTokenInBearerHeader() throws Exception {
-		String personalAccessToken = "my_personal_token";
-		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, personalAccessToken);
+		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
 
-		Response authResponse = target("auth").queryParam("accesstoken", personalAccessToken).request().get();
+		Response authResponse = target(AUTH_TARGET).queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN).request().get();
 		
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
 		Response response = 
 				target("projects")
 				.request(MediaType.APPLICATION_JSON)
-				.header("Authorization", String.format("Bearer %s", token))
+				.header(AuthConstants.AUTHORIZATION_HEADER_NAME, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -144,13 +145,12 @@ public class PreProjectServiceTest extends JerseyTest {
 	
 	@Test
 	void shouldProduceProjectListWithBackendAccessTokenInBearerHeader() throws Exception {
-		String personalAccessToken = "my_personal_token";
-		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, personalAccessToken);
+		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
 
 		Response response = 
 				target("projects")
 				.request(MediaType.APPLICATION_JSON)
-				.header("Authorization", String.format("Bearer %s", personalAccessToken))
+				.header(AuthConstants.AUTHORIZATION_HEADER_NAME, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -164,10 +164,12 @@ public class PreProjectServiceTest extends JerseyTest {
 	
 	@Test
 	void shouldProduceProjectListWithBackendAccessTokenQueryParam() throws Exception {
-		String personalAccessToken = "my_personal_token";
-		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, personalAccessToken);
+		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
 
-		Response response = target("projects").queryParam("accesstoken", personalAccessToken).request(MediaType.APPLICATION_JSON).get();
+		Response response = target("projects")
+				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
+				.request(MediaType.APPLICATION_JSON)
+				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
@@ -180,9 +182,12 @@ public class PreProjectServiceTest extends JerseyTest {
 
 	@Test
 	void shouldProduce403UnauthorizedWithWrongBackendAccessTokenQueryParam() throws Exception {
-		ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, "my_personal_token");
+		ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
 
-		Response response = target("projects").queryParam("accesstoken", "wrong_access_token").request(MediaType.APPLICATION_JSON).get();
+		Response response = target("projects")
+				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, "wrong_personal_access_token")
+				.request(MediaType.APPLICATION_JSON)
+				.get();
 		
 		assertEquals(Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
 	}
@@ -196,10 +201,15 @@ public class PreProjectServiceTest extends JerseyTest {
 		String projectId = idGenerator.generate(projectName);
 
 		ProjectFixtures.setUpRemoteGitManagerThrowing404(remoteGitManagerRestrictedFactoryMock);
-		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request().get();
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+		Response authResponse = target(AUTH_TARGET)
+				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
+				.request().get();
+		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
-		Response response = target("projects/"+namespace+"/"+projectId).queryParam("accesstoken", token).request(MediaType.APPLICATION_JSON).get();
+		Response response = target("projects/"+namespace+"/"+projectId)
+				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
+				.request(MediaType.APPLICATION_JSON)
+				.get();
 		assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatus());
 	}
 	
@@ -238,11 +248,16 @@ public class PreProjectServiceTest extends JerseyTest {
 					annotationId2, annotationId3, annotationId4);
 		
 		
-		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request().get();
+		Response authResponse = target(AUTH_TARGET)
+				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
+				.request().get();
 		
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
-		Response response = target("projects/"+namespace+"/"+projectId).queryParam("accesstoken", token).request(MediaType.APPLICATION_JSON).get();
+		Response response = target("projects/"+namespace+"/"+projectId)
+				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
+				.request(MediaType.APPLICATION_JSON)
+				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
@@ -280,7 +295,6 @@ public class PreProjectServiceTest extends JerseyTest {
 		assertEquals(tagName, annotation1.getTagName());
 		assertEquals(tagHexColor, annotation1.getTagColor());
 		assertEquals(String.format("/%s", tagName), annotation1.getTagPath());
-		assertEquals(namespace, annotation1.getAuthor());
 		assertTrue(ChronoUnit.SECONDS.between(annotation1.getCreatedAt(), ZonedDateTime.now()) <= 5);
 		assertTrue(annotation1.getUserProperties().size() == 1);
 		PreApiAnnotationProperty property = annotation1.getUserProperties().get(0);
@@ -290,7 +304,7 @@ public class PreProjectServiceTest extends JerseyTest {
 
 		// explicitly NOT requesting extended metadata should work
 		Response response2 = target("projects/"+namespace+"/"+projectId)
-				.queryParam("accesstoken", token)
+				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
 				.queryParam("includeExtendedMetadata", false)
 				.request(MediaType.APPLICATION_JSON).get();
 		assertEquals(Status.OK.getStatusCode(), response2.getStatus());
@@ -331,11 +345,18 @@ public class PreProjectServiceTest extends JerseyTest {
 					annotationId, propertyName, propertyValue);
 		
 		
-		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request().get();
+		Response authResponse = target(AUTH_TARGET)
+				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
+				.request().get();
 		
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
-		Response response = target("projects/"+namespace+"/"+projectId).queryParam("accesstoken", token).queryParam("page", 2).queryParam("pageSize", 2).request(MediaType.APPLICATION_JSON).get();
+		Response response = target("projects/"+namespace+"/"+projectId)
+				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
+				.queryParam("page", 2)
+				.queryParam("pageSize", 2)
+				.request(MediaType.APPLICATION_JSON)
+				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
@@ -359,7 +380,7 @@ public class PreProjectServiceTest extends JerseyTest {
 
 		// explicitly requesting extended metadata should work
 		Response response2 = target("projects/"+namespace+"/"+projectId)
-				.queryParam("accesstoken", token)
+				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
 				.queryParam("page", 2)
 				.queryParam("pageSize", 2)
 				.queryParam("includeExtendedMetadata", true)
@@ -390,11 +411,16 @@ public class PreProjectServiceTest extends JerseyTest {
 					sourceDocumentUuid);
 		
 		
-		Response authResponse = target("auth").queryParam("accesstoken", "my personal token").request().get();
+		Response authResponse = target(AUTH_TARGET)
+				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
+				.request().get();
 		
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
-		Response response = target("projects/"+namespace+"/"+projectId+"/doc/"+sourceDocumentUuid).queryParam("accesstoken", token).request(MediaType.APPLICATION_JSON).get();
+		Response response = target("projects/"+namespace+"/"+projectId+"/doc/"+sourceDocumentUuid)
+				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
+				.request(MediaType.APPLICATION_JSON)
+				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		

@@ -62,12 +62,13 @@ import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
 
 public class ProjectFixtures {
-	
+	private static final String DUMMY_USER_IDENTIFIER = "dummyUserIdentifier";
+	private static final String DUMMY_USER_EMAIL_ADDRESS = "dummy@dummy.org";
+	private static final String DUMMY_USER_PASSWORD = "dummyPassword";
+
 	private static final Logger LOGGER = Logger.getLogger(ProjectFixtures.class.getName()); 
 
 	public static List<ProjectReference> setUpProjectList(RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock, String personalAccessToken) throws IOException {
-		String dummyIdent = "dummyIdent";
-		
 		RemoteGitManagerRestricted remoteGitManagerRestrictedMock = Mockito.mock(RemoteGitManagerRestricted.class);
 		
 		when(remoteGitManagerRestrictedFactoryMock.create(anyString())).thenAnswer(new Answer<RemoteGitManagerRestricted>() {
@@ -76,20 +77,20 @@ public class ProjectFixtures {
 				if (invocation.getArguments().length > 0 && invocation.getArgument(0).equals(personalAccessToken)) {
 					return remoteGitManagerRestrictedMock;
 				}
-				throw new GitLabApiException("could not authenticate");
+				throw new GitLabApiException("401 Unauthorized");
 			}
 		});
 		
 		User userMock = Mockito.mock(User.class);
 		
 		when(remoteGitManagerRestrictedMock.getUser()).thenReturn(userMock);
-		when(remoteGitManagerRestrictedMock.getUsername()).thenReturn(dummyIdent);
+		when(remoteGitManagerRestrictedMock.getUsername()).thenReturn(DUMMY_USER_IDENTIFIER);
 		
-		when(userMock.getIdentifier()).thenReturn(dummyIdent);
+		when(userMock.getIdentifier()).thenReturn(DUMMY_USER_IDENTIFIER);
 		
 
-		ProjectReference pr1 = new ProjectReference("p1", "user666", "My first Project", "a description");
-		ProjectReference pr2 = new ProjectReference("p2", "user666", "My second Project", "another description");
+		ProjectReference pr1 = new ProjectReference("project1", DUMMY_USER_IDENTIFIER, "First project", "First description");
+		ProjectReference pr2 = new ProjectReference("project2", DUMMY_USER_IDENTIFIER, "Second project", "Second description");
 		List<ProjectReference> prList = List.of(pr1, pr2);
 		
 		when(remoteGitManagerRestrictedMock.getProjectReferences()).thenReturn(prList);
@@ -97,19 +98,16 @@ public class ProjectFixtures {
 	}
 	
 	public static void setUpRemoteGitManagerThrowing404(RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock) throws Exception {
-		String dummyIdent = "dummyIdent";
-		String email = "dummy@dummy.org";
-		
 		RemoteGitManagerRestricted remoteGitManagerRestrictedMock = Mockito.mock(RemoteGitManagerRestricted.class);
 		User userMock = Mockito.mock(User.class);
 		
 		when(remoteGitManagerRestrictedFactoryMock.create(anyString())).thenReturn(remoteGitManagerRestrictedMock);
 
 		when(remoteGitManagerRestrictedMock.getUser()).thenReturn(userMock);
-		when(remoteGitManagerRestrictedMock.getUsername()).thenReturn(dummyIdent);
-		when(remoteGitManagerRestrictedMock.getEmail()).thenReturn(email);
-		when(remoteGitManagerRestrictedMock.getPassword()).thenReturn("1234");
-		when(userMock.getIdentifier()).thenReturn(dummyIdent);
+		when(remoteGitManagerRestrictedMock.getUsername()).thenReturn(DUMMY_USER_IDENTIFIER);
+		when(remoteGitManagerRestrictedMock.getEmail()).thenReturn(DUMMY_USER_EMAIL_ADDRESS);
+		when(remoteGitManagerRestrictedMock.getPassword()).thenReturn(DUMMY_USER_PASSWORD);
+		when(userMock.getIdentifier()).thenReturn(DUMMY_USER_IDENTIFIER);
 
 		when(remoteGitManagerRestrictedMock.getProjectReference(any(), any())).thenAnswer(new Answer<ProjectReference>() {
 			@Override
@@ -124,9 +122,6 @@ public class ProjectFixtures {
 			String namespace, String projectId, String projectName, 
 			String sourceDocumentUuid) throws Exception {
 		
-		String dummyIdent = "dummyIdent";
-		String email = "dummy@dummy.org";
-		
 		LOGGER.info("setting up a 'fake' remote project");
 		
 		// set up a fake remote git project
@@ -140,14 +135,18 @@ public class ProjectFixtures {
 		init.setDirectory(remoteGitDir);
 		try (Git gitApi = init.call()) {
 			
-			gitApi.commit().setAllowEmpty(true).setMessage("Created Project my_remote_project").setCommitter(dummyIdent, email).call();
+			gitApi.commit()
+					.setAllowEmpty(true)
+					.setMessage("Created Project my_remote_project")
+					.setCommitter(DUMMY_USER_IDENTIFIER, DUMMY_USER_EMAIL_ADDRESS)
+					.call();
 			gitApi.getRepository().close();
 		}
 		
 		LOGGER.info("cloning the 'fake' remote project to a local project");
 
 		// clone the fake remote git project to a local git project
-		File localProjectGitDir = Paths.get(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), dummyIdent, namespace, projectId).toFile();
+		File localProjectGitDir = Paths.get(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), DUMMY_USER_IDENTIFIER, namespace, projectId).toFile();
 		
 		if (localProjectGitDir.exists()) {
 			FileUtils.deleteDirectory(localProjectGitDir);
@@ -168,10 +167,10 @@ public class ProjectFixtures {
 		when(remoteGitManagerRestrictedFactoryMock.create(anyString())).thenReturn(remoteGitManagerRestrictedMock);
 
 		when(remoteGitManagerRestrictedMock.getUser()).thenReturn(userMock);
-		when(remoteGitManagerRestrictedMock.getUsername()).thenReturn(dummyIdent);
-		when(remoteGitManagerRestrictedMock.getEmail()).thenReturn(email);
-		when(remoteGitManagerRestrictedMock.getPassword()).thenReturn("1234");
-		when(userMock.getIdentifier()).thenReturn(dummyIdent);
+		when(remoteGitManagerRestrictedMock.getUsername()).thenReturn(DUMMY_USER_IDENTIFIER);
+		when(remoteGitManagerRestrictedMock.getEmail()).thenReturn(DUMMY_USER_EMAIL_ADDRESS);
+		when(remoteGitManagerRestrictedMock.getPassword()).thenReturn(DUMMY_USER_PASSWORD);
+		when(userMock.getIdentifier()).thenReturn(DUMMY_USER_IDENTIFIER);
 
 		ZonedDateTime now = ZonedDateTime.now();
 		ProjectReference projectReference = new ProjectReference(projectId, namespace, projectName, "a project description", now, now);
@@ -266,9 +265,6 @@ public class ProjectFixtures {
 			String annotationId1, String propertyName, String propertyValue,
 			String annotationId2, String annotationId3, String annotationId4) throws Exception {
 		
-		String dummyIdent = namespace;
-		String email = "dummy@dummy.org";
-		
 		LOGGER.info("setting up a 'fake' remote project");
 		
 		// set up a fake remote git project
@@ -284,14 +280,18 @@ public class ProjectFixtures {
 		init.setDirectory(remoteGitDir);
 		try (Git gitApi = init.call()) {
 			
-			gitApi.commit().setAllowEmpty(true).setMessage("Created Project my_remote_project").setCommitter(dummyIdent, email).call();
+			gitApi.commit()
+					.setAllowEmpty(true)
+					.setMessage("Created Project my_remote_project")
+					.setCommitter(DUMMY_USER_IDENTIFIER, DUMMY_USER_EMAIL_ADDRESS)
+					.call();
 			gitApi.getRepository().close();
 		}
 		
 		LOGGER.info("cloning the 'fake' remote project to a local project");
 
 		// clone the fake remote git project to a local git project
-		File localProjectGitDir = Paths.get(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), dummyIdent, namespace, projectId).toFile();
+		File localProjectGitDir = Paths.get(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), DUMMY_USER_IDENTIFIER, namespace, projectId).toFile();
 		
 		LOGGER.info(String.format("Local git dir is %s", localProjectGitDir.toString()));
 		
@@ -314,10 +314,10 @@ public class ProjectFixtures {
 		when(remoteGitManagerRestrictedFactoryMock.create(anyString())).thenReturn(remoteGitManagerRestrictedMock);
 
 		when(remoteGitManagerRestrictedMock.getUser()).thenReturn(userMock);
-		when(remoteGitManagerRestrictedMock.getUsername()).thenReturn(dummyIdent);
-		when(remoteGitManagerRestrictedMock.getEmail()).thenReturn(email);
-		when(remoteGitManagerRestrictedMock.getPassword()).thenReturn("1234");
-		when(userMock.getIdentifier()).thenReturn(dummyIdent);
+		when(remoteGitManagerRestrictedMock.getUsername()).thenReturn(DUMMY_USER_IDENTIFIER);
+		when(remoteGitManagerRestrictedMock.getEmail()).thenReturn(DUMMY_USER_EMAIL_ADDRESS);
+		when(remoteGitManagerRestrictedMock.getPassword()).thenReturn(DUMMY_USER_PASSWORD);
+		when(userMock.getIdentifier()).thenReturn(DUMMY_USER_IDENTIFIER);
 
 		ZonedDateTime now = ZonedDateTime.now();
 		ProjectReference projectReference = new ProjectReference(projectId, namespace, projectName, "a project description", now, now);
@@ -424,8 +424,8 @@ public class ProjectFixtures {
 		TagInstance tagInstance1 = 
 				new TagInstance(
 						annotationId1, 
-						tagId, 
-						dummyIdent, 
+						tagId,
+						DUMMY_USER_IDENTIFIER,
 						ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 						tag.getUserDefinedPropertyDefinitions(),
 						tagsetId);
@@ -435,8 +435,8 @@ public class ProjectFixtures {
 		TagInstance tagInstance2 = 
 				new TagInstance(
 						annotationId2, 
-						tagId, 
-						dummyIdent, 
+						tagId,
+						DUMMY_USER_IDENTIFIER,
 						ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 						tag.getUserDefinedPropertyDefinitions(),
 						tagsetId);
@@ -444,8 +444,8 @@ public class ProjectFixtures {
 		TagInstance tagInstance3 = 
 				new TagInstance(
 						annotationId3, 
-						tagId, 
-						dummyIdent, 
+						tagId,
+						DUMMY_USER_IDENTIFIER,
 						ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 						tag.getUserDefinedPropertyDefinitions(),
 						tagsetId);
@@ -453,8 +453,8 @@ public class ProjectFixtures {
 		TagInstance tagInstance4 = 
 				new TagInstance(
 						annotationId4, 
-						tagId, 
-						dummyIdent, 
+						tagId,
+						DUMMY_USER_IDENTIFIER,
 						ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 						tag.getUserDefinedPropertyDefinitions(),
 						tagsetId);
