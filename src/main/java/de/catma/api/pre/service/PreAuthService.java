@@ -144,8 +144,19 @@ public class PreAuthService {
 	@Path("/google/callback")
 	public Response googleOauthCallback(@QueryParam("code") String authorizationCode, @QueryParam("state") String state, @QueryParam("error") String error) {
 		try {
-			if (authorizationCode == null || state == null) {
+			// state should always be present; if we don't get a code, we *should* get an error
+			if (state == null || (authorizationCode == null && error == null)) {
 				return Response.status(Status.BAD_REQUEST).build();
+			}
+
+			if (authorizationCode == null && error.equals("access_denied")) {
+				// the user cancelled the auth process with Google or didn't allow the requested access
+				String requestUrl = servletRequest.getRequestURL().toString();
+				String googleAuthUrl = requestUrl.substring(0, requestUrl.lastIndexOf("/"));
+				return Response.ok(
+						"You seem to have cancelled the Google sign-in or you didn't allow the requested access. " +
+								"To restart the process and try again, please visit the following URL:\n" + googleAuthUrl
+				).build();
 			}
 
 			return Response.ok(authenticateWithThirdPartyToken(authorizationCode, state, error)).build();
