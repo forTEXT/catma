@@ -13,21 +13,17 @@ import java.util.logging.Logger;
 
 import javax.inject.Inject;
 import javax.lang.model.type.NullType;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.jgit.lib.Constants;
 
-import javax.ws.rs.core.SecurityContext;
-
+import de.catma.api.pre.AuthConstants;
 import de.catma.api.pre.PreProject;
 import de.catma.api.pre.backend.interfaces.RemoteGitManagerRestrictedProvider;
 import de.catma.api.pre.cache.AnnotationCountCache;
@@ -68,7 +64,7 @@ public class PreProjectService {
 	private AnnotationCountCache annotationCountCache;
 
 	@Context
-	private HttpServletRequest servletRequest;
+	private UriInfo uriInfo;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -127,7 +123,11 @@ public class PreProjectService {
 		    			createPreProjectLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
 				return Response.ok(
 						project.serializeProjectResources(
-								servletRequest.getRequestURL().toString(),
+								// strips any query params that should not be present in URLs built based on this one
+								uriInfo.getRequestUriBuilder()
+										.replaceQueryParam(AuthConstants.API_TOKEN_PARAMETER_NAME)
+										.replaceQueryParam("forcePull")
+										.build(),
 								// only include extended metadata on the first page by default
 								includeExtendedMetadata == null ? (page == null || page == 1) : includeExtendedMetadata,
 								page == null ? 1 : page,

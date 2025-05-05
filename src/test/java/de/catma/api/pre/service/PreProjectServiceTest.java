@@ -12,18 +12,14 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.servlet.ServletContainer;
-import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.ServletDeploymentContext;
-import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -50,25 +46,10 @@ public class PreProjectServiceTest extends JerseyTest {
 
 	private RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock = Mockito.mock(RemoteGitManagerRestrictedFactory.class);
 
-	// set up a servlet environment, otherwise the HttpServletRequest that is injected into the service under test with the @Context annotation will be null
-	// ref: https://stackoverflow.com/a/29387230/207981
-	// if a servlet environment is not needed you can simply override configure() (see file history)
+	// if HttpServletRequest is injected into the service under test with the @Context annotation, then it will be null because the tests don't run in a servlet
+	// environment (see this file @ ffe07daf for how to set up a servlet environment)
 	@Override
-	protected TestContainerFactory getTestContainerFactory() {
-		// couldn't get the Jetty test container to work as a servlet environment
-		// it appears to need additional configuration (ref: https://github.com/eclipse-ee4j/jersey/issues/4625), but there is almost no documentation,
-		// so I gave up and switched to Grizzly (the exact container technology shouldn't matter anyway)
-		// if you want to give it a shot, uncomment/add the 'jersey-test-framework-provider-jetty' artifact in pom.xml, review the linked issue above,
-		// and also see what little documentation does exist (it was entirely unhelpful at the time of writing this):
-		//   1. the official docs: https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/test-framework.html
-		//   2. the sample tests: https://github.com/eclipse-ee4j/jersey/tree/2.x/test-framework/providers/jetty/src/test/java/org/glassfish/jersey/test/jetty
-//		return new JettyTestContainerFactory();
-
-		return new GrizzlyWebTestContainerFactory();
-	}
-
-	@Override
-	protected DeploymentContext configureDeployment() {
+	protected Application configure() {
 		PreApplication app = new PreApplication();
 		
 		// try to make sure that the configured package to scan is as expected
@@ -82,7 +63,7 @@ public class PreProjectServiceTest extends JerseyTest {
 			}
 		});
 
-		return ServletDeploymentContext.forServlet(new ServletContainer(app)).build();
+		return app;
 	}
 
 	@BeforeAll
@@ -368,6 +349,8 @@ public class PreProjectServiceTest extends JerseyTest {
 		assertEquals(2, export.getPageNo());
 		assertEquals(2, export.getPageSize());
 		assertTrue(export.getPrevPage().contains("page=1"));
+		// check that returned URLs don't include the api token
+		assertFalse(export.getPrevPage().contains(AuthConstants.API_TOKEN_PARAMETER_NAME));
 		assertNull(export.getNextPage());
 		// page 2, so we should NOT get extended metadata by default
 		assertNull(export.getExtendedMetadata());
@@ -392,6 +375,8 @@ public class PreProjectServiceTest extends JerseyTest {
 				Export.class
 		);
 		assertNotNull(export2.getExtendedMetadata());
+		// check that the explicitly provided includeExtendedMetadata query param value is preserved
+		assertTrue(export2.getPrevPage().contains("includeExtendedMetadata=true"));
 	}
 	
 	@Test

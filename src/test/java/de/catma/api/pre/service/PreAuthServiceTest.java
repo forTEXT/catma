@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -23,12 +24,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.gitlab4j.api.GitLabApiException;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.servlet.ServletContainer;
-import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.ServletDeploymentContext;
-import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -59,25 +55,10 @@ class PreAuthServiceTest extends JerseyTest {
 	
 	private HttpClientFactory httpClientFactoryMock = Mockito.mock(HttpClientFactory.class); 
 
-	// set up a servlet environment, otherwise the HttpServletRequest that is injected into the service under test with the @Context annotation will be null
-	// ref: https://stackoverflow.com/a/29387230/207981
-	// if a servlet environment is not needed you can simply override configure() (see file history)
+	// if HttpServletRequest is injected into the service under test with the @Context annotation, then it will be null because the tests don't run in a servlet
+	// environment (see this file @ cc6a16d6 for how to set up a servlet environment)
 	@Override
-	protected TestContainerFactory getTestContainerFactory() {
-		// couldn't get the Jetty test container to work as a servlet environment
-		// it appears to need additional configuration (ref: https://github.com/eclipse-ee4j/jersey/issues/4625), but there is almost no documentation,
-		// so I gave up and switched to Grizzly (the exact container technology shouldn't matter anyway)
-		// if you want to give it a shot, uncomment/add the 'jersey-test-framework-provider-jetty' artifact in pom.xml, review the linked issue above,
-		// and also see what little documentation does exist (it was entirely unhelpful at the time of writing this):
-		//   1. the official docs: https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/test-framework.html
-		//   2. the sample tests: https://github.com/eclipse-ee4j/jersey/tree/2.x/test-framework/providers/jetty/src/test/java/org/glassfish/jersey/test/jetty
-//		return new JettyTestContainerFactory();
-
-		return new GrizzlyWebTestContainerFactory();
-	}
-
-	@Override
-	protected DeploymentContext configureDeployment() {
+	protected Application configure() {
 		PreApplication app = new PreApplication();
 
 		// try to make sure that the configured package to scan is as expected
@@ -94,7 +75,7 @@ class PreAuthServiceTest extends JerseyTest {
 			}
 		});
 
-		return ServletDeploymentContext.forServlet(new ServletContainer(app)).build();
+		return app;
 	}
 	
 	@BeforeAll

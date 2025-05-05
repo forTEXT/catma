@@ -13,7 +13,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
@@ -66,8 +65,6 @@ public class PreAuthService {
 	@Inject
 	private SessionStorageHandler sessionStorageHandler;
 
-	@Context
-	private HttpServletRequest servletRequest;
 	@Context
 	private UriInfo uriInfo;
 
@@ -126,7 +123,8 @@ public class PreAuthService {
 	public Response googleOauth() {
 		try {
 			URI authorizationUri = GoogleOauthHandler.getOauthAuthorizationRequestUri(
-					UriBuilder.fromUri(servletRequest.getRequestURL().toString()).path("callback").build().toString(),
+					// appends '/callback' to the current URL path and strips any query params (as they would cause a redirectUrl mismatch)
+					uriInfo.getRequestUriBuilder().path("callback").replaceQuery("").build().toString(),
 					sessionStorageHandler::setAttribute,
 					null
 			);
@@ -151,8 +149,8 @@ public class PreAuthService {
 
 			if (authorizationCode == null && error.equals("access_denied")) {
 				// the user cancelled the auth process with Google or didn't allow the requested access
-				String requestUrl = servletRequest.getRequestURL().toString();
-				String googleAuthUrl = requestUrl.substring(0, requestUrl.lastIndexOf("/"));
+				String requestUrl = uriInfo.getRequestUri().toString();
+				String googleAuthUrl = requestUrl.substring(0, requestUrl.lastIndexOf("/")); // removes '/callback' and any query params
 				return Response.ok(
 						"You seem to have cancelled the Google sign-in or you didn't allow the requested access. " +
 								"To restart the process and try again, please visit the following URL:\n" + googleAuthUrl
@@ -190,7 +188,7 @@ public class PreAuthService {
 					oauthAuthorizationCode,
 					oauthState,
 					oauthError,
-					servletRequest.getRequestURL().toString(),
+					uriInfo.getRequestUriBuilder().replaceQuery("").build().toString(), // strips any query params (prevents redirectUrl mismatch)
 					httpClientFactory.create(),
 					sessionStorageHandler::getAttribute,
 					sessionStorageHandler::setAttribute

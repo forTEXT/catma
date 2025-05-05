@@ -67,7 +67,7 @@ public class PreProject {
 		this.annotationCountCache = annotationCountCache;
 	}
 
-	private PreApiSourceDocument getPreApiSourceDocument(String requestUrl, SourceDocument sourceDocument) throws Exception {
+	private PreApiSourceDocument getPreApiSourceDocument(URI requestUri, SourceDocument sourceDocument) throws Exception {
 		int size = 0;
 		String crc32bChecksum = null;
 		
@@ -89,7 +89,8 @@ public class PreProject {
 		
 		return new PreApiSourceDocument(
 				sourceDocument.getUuid(),
-                UriBuilder.fromUri(requestUrl).path("doc").path(sourceDocument.getUuid()).build().toString(),
+				// strips any query params (as they are irrelevant for the document URL)
+                UriBuilder.fromUri(requestUri).path("doc").path(sourceDocument.getUuid()).replaceQuery("").build().toString(),
                 crc32bChecksum,
                 size,
                 sourceDocument.toString(),
@@ -123,13 +124,13 @@ public class PreProject {
 		}	
 	}
 	
-	private ExtendedMetadata createExtendendMetadata(String requestUrl) throws Exception {
+	private ExtendedMetadata createExtendendMetadata(URI requestUri) throws Exception {
     	ImmutableMap.Builder<String, PreApiSourceDocument> documentMapBuilder = ImmutableMap.builder();
     	ImmutableMap.Builder<String, PreApiAnnotationCollection> collectionMapBuilder = ImmutableMap.builder();
     	
     	for (SourceDocumentReference sourceDocumentReference : graphProjectHandler.getSourceDocumentReferences()) {
         	SourceDocument sourceDocument = this.graphProjectHandler.getSourceDocument(sourceDocumentReference.getUuid());
-    		documentMapBuilder.put(sourceDocumentReference.getUuid(), getPreApiSourceDocument(requestUrl, sourceDocument));
+    		documentMapBuilder.put(sourceDocumentReference.getUuid(), getPreApiSourceDocument(requestUri, sourceDocument));
             for (AnnotationCollectionReference annotationCollectionReference : sourceDocumentReference.getUserMarkupCollectionRefs()) {
                 collectionMapBuilder.put(
                 		annotationCollectionReference.getId(), 
@@ -197,12 +198,12 @@ public class PreProject {
 		R apply(T t) throws E;
 	}
 
-    public String serializeProjectResources(String requestUrl, boolean includeExtendedMetadata, int page, int pageSize) {
+    public String serializeProjectResources(URI requestUri, boolean includeExtendedMetadata, int page, int pageSize) {
     	Lock readLock = accessLock.readLock();
         try {
         	readLock.lock();
         	
-        	final ExtendedMetadata extendedMetadata = includeExtendedMetadata?createExtendendMetadata(requestUrl):null;
+        	final ExtendedMetadata extendedMetadata = includeExtendedMetadata?createExtendendMetadata(requestUri):null;
         	if (page<1) {
         		page = 1;
         	}
@@ -232,7 +233,7 @@ public class PreProject {
 			}
 
 			int totalPagesCount = Math.ceilDiv(totalAnnotationsCount, pageSize);
-			UriBuilder uriBuilder = UriBuilder.fromUri(requestUrl);
+			UriBuilder uriBuilder = UriBuilder.fromUri(requestUri);
 			String prevPageUrl = page == 1 ? null : uriBuilder
 					.replaceQueryParam("page", page - 1)
 					.replaceQueryParam("pageSize", pageSize)
