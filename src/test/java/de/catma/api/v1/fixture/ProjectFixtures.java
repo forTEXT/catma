@@ -29,7 +29,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import de.catma.api.v1.ProjectExportSerializer;
+import de.catma.api.v1.serialization.ProjectExportSerializer;
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.document.Range;
 import de.catma.document.annotation.TagReference;

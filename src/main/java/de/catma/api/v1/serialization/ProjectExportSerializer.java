@@ -1,4 +1,4 @@
-package de.catma.api.v1;
+package de.catma.api.v1.serialization;
 
 import java.io.IOException;
 import java.net.URI;

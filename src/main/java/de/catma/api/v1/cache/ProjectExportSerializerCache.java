@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-import de.catma.api.v1.ProjectExportSerializer;
+import de.catma.api.v1.serialization.ProjectExportSerializer;
 
 public class ProjectExportSerializerCache {
 	

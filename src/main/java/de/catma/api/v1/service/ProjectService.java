@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response.Status;
 import org.eclipse.jgit.lib.Constants;
 
 import de.catma.api.v1.AuthConstants;
-import de.catma.api.v1.ProjectExportSerializer;
+import de.catma.api.v1.serialization.ProjectExportSerializer;
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerRestrictedProvider;
 import de.catma.api.v1.cache.CollectionAnnotationCountCache;
 import de.catma.api.v1.cache.ProjectExportSerializerCache;
