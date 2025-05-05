@@ -23,7 +23,7 @@
 	</servlet>
 
 	<servlet>
-		<servlet-name>CATMAApp</servlet-name>
+		<servlet-name>CATMA_App</servlet-name>
 		<servlet-class>de.catma.ui.CatmaApplicationServlet</servlet-class>
 		<init-param>
 			<param-name>UI</param-name>
@@ -46,26 +46,26 @@
 	</servlet>
 
 	<servlet>
-		<servlet-name>CATMAApi</servlet-name>
+		<servlet-name>CATMA_API_v1</servlet-name>
 		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
 		<init-param>
 			<param-name>jersey.config.server.provider.packages</param-name>
-			<param-value>de.catma.api.pre</param-value>
+			<param-value>de.catma.api.v1</param-value>
 		</init-param>
 		<init-param>
 			<param-name>javax.ws.rs.Application</param-name>
-			<param-value>de.catma.api.pre.PreApplication</param-value>
+			<param-value>de.catma.api.v1.ApiApplication</param-value>
 		</init-param>
 		<load-on-startup>3</load-on-startup>
 	</servlet>
 
 	<servlet-mapping>
-		<servlet-name>CATMAApi</servlet-name>
-		<url-pattern>/api/pre/v1/*</url-pattern>
+		<servlet-name>CATMA_API_v1</servlet-name>
+		<url-pattern>/api/v1/*</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>
-		<servlet-name>CATMAApp</servlet-name>
+		<servlet-name>CATMA_App</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 

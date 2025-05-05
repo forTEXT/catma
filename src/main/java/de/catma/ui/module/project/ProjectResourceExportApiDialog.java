@@ -8,7 +8,7 @@ import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinService;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
-import de.catma.api.pre.ProjectResourceExportApiRequestHandler;
+import de.catma.api.v1.ProjectResourceExportApiRequestHandler;
 import de.catma.project.Project;
 import de.catma.ui.CatmaApplicationServlet.DelegateRequestHandler;
 import de.catma.ui.i18n.Messages;
